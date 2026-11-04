@@ -39,19 +39,15 @@
 .table-tabcell.is-open > .table-tab { padding-left: var(--ork-8); }
 .table-tabcell.is-open { padding-left: var(--ork-4); }
 /* the sword and the shield with the marks of the tools a party's Does and Checks run on (tabmarks.js, spec 111 §3.4, decisions §189): a second line under the name, 14 px, in ink; the open tab's marks are in colour; a column that mixes tools has a dot;
-   a Lean party's shield is faint with no mark; a potion hovered outlines the marks of its tool (`is-marked`, 1 px of ink). A row of heads (the narrow width, a crowded row) has no second line (`.table-tab__txt` is hidden). */
+   a Lean party's shield is faint with no mark; only what differs from the project's default is drawn (decisions §247.7); a potion hovered lights the tabs of the parties that run on its tool (`.is-lit`, as a tab hovered is: orkUI's `.ork-tab:hover`). A row of heads (the narrow width, a crowded row) has no second line (`.table-tab__txt` is hidden). */
 .table-tab__marks { display: flex; align-items: center; gap: var(--ork-2); margin-top: 2px; color: var(--ork-ink-faint); }
 .table-tab__marks .ork-sign, .table-tab__marks .ork-mark { width: 14px; height: 14px; }
 .table-tab__gap { flex: none; width: var(--ork-3); }
 .table-tab__off { display: inline-flex; opacity: 0.35; }
 .table-tab__more { flex: none; align-self: flex-end; width: 4px; height: 4px; margin-left: -1px; background: var(--ork-ink-faint); }
 .table-tab__initial { display: inline-grid; place-items: center; flex: none; width: 14px; height: 14px; font: var(--ork-type-caption); line-height: 1; color: var(--ork-ink-muted); }
-.table-tab__mark.is-marked, .table-tab__initial.is-marked { outline: 1px solid var(--ork-ink); outline-offset: 1px; }
-/* whether a side follows the default (spec 114 B §3.5, decisions §192.4): a following side's mark lies in a small frame, 1 px of ink on the panel with orkUI's corner notch (the default potion's frame), drawn 2 px around the mark and taking no room of its
-   own (the second line keeps its 14 px); a hovered default potion thickens it by a ring inside (a clip-path would cut an outline). A set side is bare; while its tool is dry it is dim with orkUI's moon beside it. */
-.table-tab__follow { display: inline-flex; flex: none; box-sizing: border-box; padding: 1px; margin: -2px; border: 1px solid var(--ork-ink); background: var(--ork-panel); clip-path: var(--ork-notch); }
-.table-tab__follow .is-marked { outline: 0; }
-.table-tab__follow:has(.is-marked) { box-shadow: inset 0 0 0 1px var(--ork-ink); }
+.table-tab.is-lit:not([aria-selected="true"]) { color: var(--ork-ink); background: var(--ork-raised); }
+/* a set side whose tool is dry is dim with orkUI's moon beside it (a side that follows the default is not drawn: decisions §247.7) */
 .table-tab__dry { display: inline-flex; align-items: center; gap: 2px; }
 .table-tab__dry .table-tab__mark, .table-tab__dry .table-tab__initial { opacity: 0.35; }
 .table-tab__dry .ork-sign { color: var(--ork-ink-muted); }

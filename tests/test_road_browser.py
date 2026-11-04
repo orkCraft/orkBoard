@@ -115,6 +115,9 @@ def test_asleep_each_corner_is_its_leaders_head_alone_grey_and_a_press_opens_the
     try:
         pg.locator(".ork-portal-ring").wait_for(timeout=WAIT_MS)
         ring = pg.locator(".ork-portal-ring").bounding_box()
+        assert pg.locator(".portal-host").get_attribute("class").split().count("is-bare") == 1 and pg.locator(".ork-portal-ring").get_attribute("class").split().count("is-bare") == 1, "no goal ready, no check: the ring is not drawn (§247.1)"
+        assert pg.locator(".portal__label, .ork-portal-ring > .ork-portal").count() == 0, "no *Main*, no portal"
+        assert pg.locator(".ork-portal-ring").evaluate("e => [getComputedStyle(e, '::before').display, getComputedStyle(e, '::after').display]") == ["none", "none"], "no dots, no runes: only the corners' heads stand"
         for corner, words, race in ((release(pg), "Release: open its view", "lich-elder"), (live(pg), "Live: open its view", "imp-elder")):
             assert corner.evaluate("e => e.tagName") == "BUTTON" and corner.get_attribute("title") == words and corner.get_attribute("aria-label") == words
             assert "is-asleep" in corner.get_attribute("class") and "is-working" not in corner.get_attribute("class") and corner.get_attribute("data-awake") == "false"
@@ -127,11 +130,10 @@ def test_asleep_each_corner_is_its_leaders_head_alone_grey_and_a_press_opens_the
         shot(pg, "asleep")
         release(pg).click()
         assert sig(pg, "frame/state.js", "tab") == "release"
-        pg.wait_for_function("() => document.querySelector('.table-title__pt')?.textContent.toLowerCase().includes('through release')", timeout=WAIT_MS)    # the pane shows Release
+        assert pg.locator(".table-title__pt").text_content().strip() == ""    # no goal picked: the pane's title says nothing (§247.5); the open tab is Release
         assert pg.locator('.table-tab[aria-selected="true"]').count() == 0, "no tab is lit"
         live(pg).click()
         assert sig(pg, "frame/state.js", "tab") == "live" and pg.locator('.table-tab[aria-selected="true"]').count() == 0
-        pg.wait_for_function("() => document.querySelector('.table-title__pt')?.textContent.toLowerCase().includes('through live')", timeout=WAIT_MS)
         shot(pg, "live-view")
     finally:
         pg.close()
@@ -225,10 +227,7 @@ def test_with_no_gate_there_is_no_ring_and_release_and_live_stay_tabs_with_their
         assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("5" if width == "wide" else "6"), "five parties' lanes, and the project's at the narrow width (at the wide it is the Orkmaster's column: spec 128 B.1)"
         assert pg.locator(".hand-lane").count() == 6
         if width == "wide":
-            label, place = pg.locator(".table-end .table-end__label"), pg.locator(".table-end .ork-card-place")
-            assert label.text_content() == "Discard" and place.count() == 1 and pg.locator(".table-end").locator("button").count() == 0, "the label and the pile's place, nothing else"
-            assert pg.locator(".portal__label").count() == 0, "no *Main*"
-            assert label.bounding_box()["y"] < place.bounding_box()["y"]
+            assert pg.locator(".table-end, .table-end__label, .ork-card-place").count() == 0, "nothing done: no end, no label, no dashed place (§247.1)"
             shot(pg, "c113-no-gate-wide", still=False)
         else:
             assert pg.locator(".table-end").count() == 0

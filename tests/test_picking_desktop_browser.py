@@ -201,7 +201,7 @@ def test_a_press_on_a_part_does_not_lift_it_and_a_press_away_from_the_map_closes
     pg, host, w = picking
     ready(pg)
     open_field(pg)
-    pg.locator(".table-title__pt").click()
+    pg.locator(".table-title").click(position={"x": 2, "y": 2})                                                             # a press on the pane's head (its title says nothing with no goal picked)
     pg.wait_for_selector(".hand-field", state="detached", timeout=WAIT_MS)
 
 

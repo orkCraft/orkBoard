@@ -19,7 +19,7 @@ import { currentProject } from "../shell/projects.js";
 import { levelOf, windowOf } from "../arena/limits.js";
 import { nameOf, routeParties, MARKED, markSrc, mapName } from "./data.js";
 import { hasAlert, lookOf, stepMarked, theLeader } from "./concerns.js";
-import { Marks, marksOf, marksWords, projectMarks } from "./tabmarks.js";
+import { Marks, marksOf, marksWords, projectMarks, runsOn } from "./tabmarks.js";
 import { AskBubble, askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { EmptyChair, useOffer } from "./chairs.js";
 import { StopDoor } from "./door.js";
@@ -68,7 +68,7 @@ function Tab({ slug, g = null, on, name, who = "", head, dot = false, working = 
   const press = usePressName(name), said = marks ? `${name} · ${marksWords(marks)}` : name, mood = moodOf(g), chair = !narrow;
   const size = on && !narrow ? "big" : "mid", key = slug === ORKMASTER ? "" : slug, leader = roleWord(g ? g.leader?.name : "Orkmaster");
   const looking = g ? lookOf(slug).status === "looking" : false, ask = desk() && !!head;
-  const button = html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact, "has-switch": switcher, "is-open": on })} role="tab" id=${`tab-${slug}`} data-tab=${slug} data-working=${working ? "" : undefined} aria-selected=${String(on)} tabindex=${on || stop ? 0 : -1}
+  const button = html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact, "has-switch": switcher, "is-open": on, "is-lit": !on && runsOn(marks) })} role="tab" id=${`tab-${slug}`} data-tab=${slug} data-working=${working ? "" : undefined} aria-selected=${String(on)} tabindex=${on || stop ? 0 : -1}
     aria-label=${said} title=${said} aria-controls="table-pane" onClick=${onPick} ...${press}>
     ${!on && head && html`<${Sit} head=${head} mood=${mood} size=${size} chair=${chair} />`}
     <span class="table-tab__txt"><span class="table-tab__main">${name}</span>${on && who && html`<span class="table-tab__who">${who}</span>`}<${Marks} m=${marks} on=${on} /></span>

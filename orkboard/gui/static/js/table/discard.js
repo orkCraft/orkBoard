@@ -6,8 +6,9 @@
 // A goal done in the night (`ideas.night`, hand/nightcard.js) wears a small moon on its card and its row until its result is seen, and on the first look after the night the night's goals are dealt into the pile one by one (docs/specs/128 C.3, decisions §206.9).
 // The ring in it also holds the road's two corners, Release and Live, and the gate of skeletons while a goal's way into main is checked (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, portal.js, road.js).
 // With no gate (dev and main one branch, or no main: `gateData.same`, docs/specs/113-a-project-with-no-preview-or-no-gate.md §4, decisions §191.2) the end is the label and the pile's place or the pile alone: no ring, no portal, no corners.
-// At the wide width (760 px and up) the end is always laid (docs/specs/110-runes-on-the-table.md §3.2, decisions §185, §186): the portal's ring over the label *Discard*, and with nothing done and nothing ready for main orkUI's `.ork-card-place`
-// (a card's outline in dashes, nothing to press) where the pile will lie, so the first goal done lands on a place. At the narrow width, as before, no part with nothing done and nothing ready for main.
+// The end is laid for what it holds (decisions §247.1, spec 140 A1; before, at the wide width, always: docs/specs/110 §3.2, decisions §185, §186): **the discard is drawn from its first goal done** (the label *Discard* and the pile); with nothing done and nothing
+// ready for main nothing lies there, no frame (no `.ork-card-place`) and no word. The portal's ring over it is drawn only while a goal is ready for main or its checks run, else the road's two corners alone (portal.js); with none of these
+// the end is not laid at all and the table gains its width (discard.css). At the narrow width, as before, no part with nothing done and nothing ready for main.
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
@@ -18,10 +19,9 @@ import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
 import { DEAL_MS, leans } from "../hand/motion.js";
 import { nightFirst, nightMoons } from "../hand/nightcard.js";
-import { Portal, ReadyCards, useNarrow } from "./portal.js";
+import { Portal, ReadyCards, portalHolds, useNarrow } from "./portal.js";
 import { noGate } from "./data.js";
 import { columnPick } from "./column.js";                 // the goal a press in the discard picks does not move the open tab (the leaders' tabs all show it)
-import { uprightNow } from "../frame/upright.js";
 
 const LICH = { race: "lich", tier: "elder" };
 const EDGES = 3;
@@ -114,11 +114,11 @@ export function DiscardView() {
   </div>`;
 }
 
-/** The table's end: the portal's place, the word *Discard* and the pile's place (discard.css). At the wide width it is always laid, the pile's place a dashed outline until a goal is done or ready; at the narrow one (and on a phone) nothing with nothing done and nothing ready for main. */
+/** The table's end: the portal's place, the word *Discard* and the pile (discard.css), each only when it holds something (decisions §247.1): the pile and its word from the first goal done, the portal's place while a goal is ready for main or the road has a corner; else nothing. */
 export function DiscardEnd() {
-  const narrow = useNarrow(), laid = !narrow && !uprightNow.value, dealing = useNightDeal();
-  if (!laid && !hasDiscard()) return null;
-  return html`<div class="table-end" data-end="discard">${!noGate() && html`<${Portal} />`}<span class="table-end__label">Discard</span>${hasDiscard() ? html`<${Discard} dealing=${dealing} />` : html`<span class="ork-card-place table-place" aria-hidden="true"></span>`}</div>`;
+  const narrow = useNarrow(), dealing = useNightDeal(), pile = hasDiscard(), door = !noGate() && !narrow && portalHolds();
+  if (!pile && !door) return null;
+  return html`<div class="table-end" data-end="discard">${!noGate() && html`<${Portal} />`}${pile && html`<span class="table-end__label">Discard</span><${Discard} dealing=${dealing} />`}</div>`;
 }
 
 drawn("discard", DiscardView);

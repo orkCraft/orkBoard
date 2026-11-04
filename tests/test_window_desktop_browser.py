@@ -251,10 +251,10 @@ def test_esc_lowers_a_lifted_card_then_closes_what_is_over_the_pane_then_picks_n
     pg.locator(".table-over").wait_for(state="detached", timeout=WAIT_MS)
     assert "Keep the seat" in title(pg)                                                                                  # the goal is still picked
     pg.keyboard.press("Escape")                                                                                         # 3: picks none
-    pg.wait_for_function("() => document.querySelector('[data-title]').textContent.toLowerCase().startsWith('the whole project')", timeout=WAIT_MS)
-    assert title(pg) == "The whole project · through the Orkmaster"
+    pg.wait_for_function("() => document.querySelector('[data-title]').textContent.trim() === ''", timeout=WAIT_MS)
+    assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
     pg.keyboard.press("Escape")                                                                                         # nothing left: nothing happens
-    assert title(pg) == "The whole project · through the Orkmaster"
+    assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
 
 
 def test_ctrl_o_opens_the_projects_over_the_pane(window):

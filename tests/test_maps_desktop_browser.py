@@ -232,7 +232,7 @@ def test_the_loops_lie_as_rings_one_in_another_the_core_inside_or_as_lists_at_th
     pg, host, w = maps
     go(pg, "game")
     pg.locator(".mp-st").first.wait_for(timeout=WAIT_MS)
-    assert title(pg) == "The whole project · through Game design" and steps_of(pg) == STEPS
+    assert title(pg) == "" and steps_of(pg) == STEPS
     first, mine = card(pg, "join-a-match"), card(pg, "hold-the-tower")
     assert first.locator(".ork-elem").count() == 0                                                                       # no goal changed it: no element
     assert first.locator(".mp-st__meta > span").first.inner_text() == "fellowship" and first.locator(".mp-pips i.d").count() == 2 and mine.locator(".mp-pips i.d").count() == 5      # its feeling, its intensity drawn
@@ -511,7 +511,7 @@ def test_dev_and_main_is_a_card_a_goal_ticked_to_main_with_the_gates_words_and_s
     pg, host, w = maps
     go(pg, "release")
     pg.locator(".mp-goal").first.wait_for(timeout=WAIT_MS)
-    assert title(pg) == "The whole project · through Release"
+    assert title(pg) == ""
     assert names(pg, ".mp-goals") == ["Round timer shows on every phone", "Reconnect keeps your seat in the lobby", "Lobby music loop", "The timer doesn't reset after a reconnect"]
     timer, left = card(pg, "timer"), card(pg, "reset")
     assert timer.locator(".ork-elem.meadow").count() == 1 and timer.locator(".mp-card__l").text_content() == "a3f9c21" and timer.locator(".mp-tick").get_attribute("aria-label") == "In the merge"

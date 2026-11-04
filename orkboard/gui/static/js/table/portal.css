@@ -45,3 +45,6 @@
   .portal-host .ork-portal-ring { flex: none; }
   body:has(.hand-mana[data-rows="2"][data-paid]) .portal-host .portal__hint { display: none; }   /* two rows of potions and the paid slot make the hand 18 px taller: the first-time line gives way so the ring and its label keep clear of the pane's head at 1280 x 800 (spec 114 B) */
 }
+
+/* With no goal ready for main and no check running (decisions §247.1, spec 140 A1) the ring is not drawn: its box stays so Release's and Live's heads stand in its lower-left and upper-right corners, asleep; no dots, no runes, no word. */
+.portal-host .ork-portal-ring.is-bare::before, .portal-host .ork-portal-ring.is-bare::after { display: none; }

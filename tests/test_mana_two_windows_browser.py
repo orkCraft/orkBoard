@@ -1,7 +1,7 @@
 """The mana in two windows (docs/specs/114-the-mana-in-two-windows.md part B, decisions §192), in a real browser against a stub host, at the two widths of `tests/narrow.py`: each potion's liquid is the tool's shortest window and its
 bottle's size the longest (large above 0.6, medium above 0.3, small above 0.1, else the vial; orkUI's `size-*`), every bottle standing on its floor in a slot of the large bottle's size, the colour by the lower of the two shares (a full
-vial is danger), the now share in bold with the week's muted under it and the words of both; a tab's sword and shield framed when their side follows the default (the tool now) and bare when a tool is set, dim with the moon while that
-tool is dry, the default potion's hover marking the framed marks too. The windows themselves (`hand/windows.js`) are read through the page's module. Screenshots to $D114_SHOTS when it is set (d114-*.png)."""
+vial is danger), the now share in bold with the week's muted under it and the words of both; a tab's sword and shield drawn only for a side on another tool than the project's default (decisions §247.7; a side that follows the default is not drawn, its words say it), bare, dim with the moon while that
+tool is dry, a potion hovered lighting the tabs of the parties that run on it (the default's potion those that follow the default). The windows themselves (`hand/windows.js`) are read through the page's module. Screenshots to $D114_SHOTS when it is set (d114-*.png)."""
 from __future__ import annotations
 
 import datetime as dt
@@ -356,7 +356,7 @@ LIMITS = [two("claude", "Claude Code", 0.0, 0.5, soon=WEEK), two("codex", "Codex
 
 def open_tabs(gui, limits=LIMITS, mana=None, width="wide"):
     pg, host, log = open_mana(gui, limits, width, mana or mana_of("claude", "codex", until=WEEK), PARTY_MARKS)
-    pg.locator('.table-tab[data-tab="tech"] .table-tab__marks').wait_for(state="attached", timeout=WAIT_MS)
+    pg.locator('.table-tab[data-tab="design"] .table-tab__marks').wait_for(state="attached", timeout=WAIT_MS)
     return pg, host, log
 
 
@@ -365,117 +365,111 @@ def tab(pg, slug):
 
 
 def line(pg, slug):
-    """A tab's second line in order as `[kind, tool]`: a tool's mark `framed` (in the default's frame), `dry` (dim, with the moon) or bare."""
-    return pg.locator(f'.table-tab[data-tab="{slug}"] .table-tab__marks').evaluate("""e => [...e.querySelectorAll('[data-tool]')].map((m) => [m.closest('.table-tab__follow') ? 'framed' : m.closest('.table-tab__dry') ? 'dry' : 'bare', m.dataset.tool])""")
+    """A tab's second line in order as `[kind, tool]`: a tool's mark `dry` (dim, with the moon) or bare; `[]` with no second line (nothing differs from the default)."""
+    return pg.locator(f'.table-tab[data-tab="{slug}"]').evaluate("""e => [...e.querySelectorAll('.table-tab__marks [data-tool]')].map((m) => [m.closest('.table-tab__dry') ? 'dry' : 'bare', m.dataset.tool])""")
 
 
-def test_a_side_that_follows_the_default_is_framed_with_the_tool_now_and_a_set_side_is_bare(gui):
-    pg, host, log = open_tabs(gui)                                                                         # Claude is out: the work is on Codex
+def test_only_a_side_on_another_tool_than_the_default_is_drawn_and_a_following_side_is_said_in_words_alone(gui):
+    pg, host, log = open_tabs(gui)                                                                         # the default (Main) is Claude; Claude is out: the work is on Codex
     try:
-        assert line(pg, "tech") == [["framed", "codex"], ["framed", "codex"]]                              # both sides follow: the tool now
-        assert line(pg, "design") == [["bare", "codex"], ["framed", "codex"]]                              # Does is Codex on purpose, Checks follow
-        assert [m for m in line(pg, "release")] == [["bare", "codex"]]                                     # Lean: the shield is faint with no mark
-        assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on the default (now Codex) · Checks on the default (now Codex)"
+        assert tab(pg, "tech").locator(".table-tab__marks").count() == 0 and line(pg, "tech") == []        # both sides follow the default: no second line
+        assert line(pg, "design") == [["bare", "codex"]]                                                   # Does is Codex on purpose, Checks follow: only Does is drawn
+        assert line(pg, "product") == [["bare", "codex"]]                                                  # Does is Claude, the default's own tool: not drawn; Checks set to Codex
+        assert line(pg, "release") == [["bare", "codex"]] and tab(pg, "release").locator(".table-tab__off").count() == 1      # Lean: the shield stays, faint, with no mark
+        assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on the default (now Codex) · Checks on the default (now Codex)"      # the words still say all
         assert tab(pg, "design").get_attribute("aria-label") == "Design · Does on Codex, set for this party · Checks on the default (now Codex)"
         assert tab(pg, "release").get_attribute("aria-label") == "Release · Does on Codex, set for this party · no separate check" and tab(pg, "release").get_attribute("title") == tab(pg, "release").get_attribute("aria-label")
-        frame = tab(pg, "tech").locator(".table-tab__follow").first
-        got = frame.evaluate("e => { const s = getComputedStyle(e); return [s.borderTopWidth, s.borderTopStyle, s.borderTopColor, s.clipPath !== 'none']; }")
-        assert got == ["1px", "solid", token(pg, "--ork-ink"), True]                                         # 1 px in the ink, orkUI's notch
-        assert tab(pg, "design").locator(".table-tab__follow").count() == 1 and tab(pg, "product").locator(".table-tab__follow").count() == 0
-        head, line_box = tab(pg, "tech").bounding_box(), tab(pg, "tech").locator(".table-tab__marks").bounding_box()
-        assert head["height"] >= 60 and line_box["y"] + line_box["height"] <= head["y"] + head["height"]      # the frame takes no room: the tab keeps its height (the row's, as high as the open head: spec 123 §7.1)
-        assert tab(pg, "tech").locator(".table-tab__follow").first.evaluate("e => e.closest('.table-tab__marks').getAttribute('aria-hidden')") == "true"
+        assert pg.locator(".table-tab__follow").count() == 0, "no frame for a following side any more"
+        head, line_box = tab(pg, "design").bounding_box(), tab(pg, "design").locator(".table-tab__marks").bounding_box()
+        assert head["height"] >= 60 and line_box["y"] + line_box["height"] <= head["y"] + head["height"]
+        assert tab(pg, "design").locator(".table-tab__marks").get_attribute("aria-hidden") == "true"
         shot(pg, "wide-tabs-marks")
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_framed_mark_changes_when_the_default_moves_on_and_a_bare_one_stays(gui):
+def test_a_following_side_has_no_mark_when_the_default_moves_on_and_a_set_one_stays(gui):
     pg, host, log = open_tabs(gui)
     try:
         host.limits = [two("claude", "Claude Code", 1.0, 0.5), *LIMITS[1:]]                               # Claude is back: the work goes on with it
         host.mana = mana_of("claude", "claude")
         host.bump({})
-        pg.wait_for_function("() => document.querySelector('.table-tab[data-tab=\"tech\"] .table-tab__follow [data-tool]').dataset.tool === 'claude'", timeout=WAIT_MS)
-        assert line(pg, "tech") == [["framed", "claude"], ["framed", "claude"]]
-        assert line(pg, "design") == [["bare", "codex"], ["framed", "claude"]]                             # its set side stays on Codex, its following side moved
+        pg.wait_for_function("() => document.querySelector('.table-tab[data-tab=\"tech\"]').getAttribute('aria-label').includes('now Claude Code')", timeout=WAIT_MS)
+        assert line(pg, "tech") == [] and line(pg, "design") == [["bare", "codex"]]                        # its set side stays on Codex, a following side is not drawn
         assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on the default (now Claude Code) · Checks on the default (now Claude Code)"
-        host.mana = {**mana_of("claude", "claude"), "now": None}                                           # every tool out: the Main tool stands in
+        host.mana = None                                                                                     # the host says nothing
         host.bump({})
         pg.wait_for_timeout(200)
-        assert line(pg, "tech") == [["framed", "claude"], ["framed", "claude"]]
-        host.mana = None                                                                                     # the host says nothing: the Main tool the map names
-        host.bump({})
-        pg.wait_for_timeout(200)
-        assert line(pg, "tech") == [["framed", "claude"], ["framed", "claude"]]
+        assert line(pg, "tech") == [] and line(pg, "design") == [["bare", "codex"]]
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
 def test_a_set_tool_that_is_dry_is_dim_with_the_moon_beside_it_and_the_words_say_when_it_is_back(gui):
-    pg, host, log = open_tabs(gui)
+    pg, host, log = open_tabs(gui, mana=mana_of("codex", "codex", until=WEEK))                           # the default is Codex: a Claude set on purpose is the other tool
     try:
-        assert line(pg, "product") == [["dry", "claude"], ["bare", "codex"]]                               # Claude is dry: Does waits
+        assert line(pg, "product") == [["dry", "claude"]]                                                  # Claude is dry: Does waits (Checks on Codex is the default's: not drawn)
         dim = tab(pg, "product").locator(".table-tab__dry")
         assert dim.count() == 1 and dim.locator(".ork-sign.moon").count() == 1 and dim.locator("[data-tool]").evaluate("e => getComputedStyle(e).opacity") == "0.35"
         assert dim.locator(".ork-sign.moon").bounding_box()["x"] > dim.locator("[data-tool]").bounding_box()["x"]      # the moon beside it
         assert tab(pg, "product").locator(".ork-sign.moon").count() == 1                                    # only the dry one has a moon
         assert tab(pg, "product").get_attribute("aria-label") == f"Product · Does waits for Claude Code until {WEEK_SAID} · Checks on Codex, set for this party"
-        assert tab(pg, "tech").locator(".ork-sign.moon").count() == 0 and tab(pg, "design").locator(".ork-sign.moon").count() == 0       # a following side never waits: it has moved on
+        assert tab(pg, "tech").locator(".ork-sign.moon").count() == 0 and tab(pg, "design").locator(".ork-sign.moon").count() == 0
         host.limits = [two("claude", "Claude Code", 0.6, 0.5), *LIMITS[1:]]                                # Claude has its 5 hours back
         host.bump({})
         pg.wait_for_function("() => document.querySelectorAll('.table-tab[data-tab=\"product\"] .ork-sign.moon').length === 0", timeout=WAIT_MS)
-        assert line(pg, "product") == [["bare", "claude"], ["bare", "codex"]]
+        assert line(pg, "product") == [["bare", "claude"]]
         assert tab(pg, "product").get_attribute("aria-label") == "Product · Does on Claude Code, set for this party · Checks on Codex, set for this party"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_host_that_does_not_say_whether_a_side_follows_draws_bare_marks_in_the_words_of_before(gui):
+def test_a_host_that_does_not_say_whether_a_side_follows_draws_the_sides_that_differ_in_the_words_of_before(gui):
     old = {"does_tool": "claude", "checks_tool": "codex", "does_mixed": False, "checks_mixed": False, "lean": False}
     pg, host, log = open_mana(gui, LIMITS, "wide", mana_of("claude", "codex"), {"tech": old})
     try:
         pg.locator('.table-tab[data-tab="tech"] .table-tab__marks').wait_for(state="attached", timeout=WAIT_MS)
-        assert line(pg, "tech") == [["bare", "claude"], ["bare", "codex"]] and tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude Code · Checks on Codex"
+        assert line(pg, "tech") == [["bare", "codex"]] and tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude Code · Checks on Codex"      # Does on Claude is the default's tool: not drawn
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def outlined(pg):
-    return sorted(pg.locator(".table-tab .is-marked").evaluate_all("els => els.map((e) => [e.closest('.table-tab').dataset.tab, e.dataset.tool, !!e.closest('.table-tab__follow')])"))
+def lit(pg):
+    return sorted(pg.locator(".table-tab.is-lit").evaluate_all("els => els.map((e) => e.dataset.tab)"))
 
 
-def test_the_default_potion_hovered_marks_the_framed_marks_as_well_as_its_tools_own(gui):
+def test_a_potion_hovered_lights_the_tabs_of_the_parties_that_run_on_it_and_the_default_potion_those_that_follow_the_default(gui):
     pg, host, log = open_mana(gui, LIMITS, "wide", mana_of("claude", "codex", until=WEEK), {**PARTY_MARKS, "product": {**PARTY_MARKS["product"], "tool": "claude"}})
     try:
-        pg.locator('.table-tab[data-tab="tech"] .table-tab__marks').wait_for(state="attached", timeout=WAIT_MS)
-        assert outlined(pg) == []
-        pot(pg, "codex").hover()                                                                            # the project's tab: the default potion is the tool now, Codex
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
-        assert outlined(pg) == sorted([["tech", "codex", True], ["tech", "codex", True], ["design", "codex", False], ["design", "codex", True], ["product", "codex", False], ["release", "codex", False]])
-        assert tab(pg, "tech").locator(".table-tab__follow").first.evaluate("e => getComputedStyle(e).boxShadow") != "none"       # a framed mark that is marked has its ring
+        pg.locator('.table-tab[data-tab="design"] .table-tab__marks').wait_for(state="attached", timeout=WAIT_MS)
+        assert lit(pg) == [] and pg.locator(".table-tab .is-marked").count() == 0
+        bg = lambda slug: tab(pg, slug).evaluate("e => getComputedStyle(e).backgroundColor")                  # noqa: E731
+        before = bg("tech")
+        pot(pg, "codex").hover()                                                                            # the default potion is the tool now, Codex
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
+        assert lit(pg) == ["design", "product", "release", "tech"]                                          # Codex's own (design, product, release) and those that follow the default (tech, design)
+        assert bg("tech") == token(pg, "--ork-raised") and bg("tech") != before, "lit as a tab hovered is, not an outline"
+        assert tab(pg, "tech").evaluate("e => getComputedStyle(e).outlineStyle") == "none"
         pg.mouse.move(5, 300)
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
         tab(pg, "product").click()                                                                          # a party set to Claude: its tab frames Claude's potion, the default is still Codex's
         pg.wait_for_timeout(500)
         assert pg.locator('.hand-pot[data-default="1"]').get_attribute("data-provider") == "claude"
-        pot(pg, "claude").hover()                                                                           # the framed potion: its own tool's marks, and the framed marks (the tool now)
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
-        got = outlined(pg)
-        assert ["product", "claude", False] in got and ["tech", "codex", True] in got and ["design", "codex", True] in got       # the framed marks are marked, though they show Codex
-        assert ["design", "codex", False] not in got and ["release", "codex", False] not in got                                 # a bare Codex mark is not: it is not the default's
+        pot(pg, "claude").hover()                                                                           # the default's potion: Claude's own parties and those that follow the default (the open tab keeps its own look)
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
+        assert lit(pg) == ["design", "tech"]
         pg.mouse.move(5, 300)
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
-        pot(pg, "cursor").focus()                                                                           # a potion that is not the default's marks its own tool's marks only
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
+        pot(pg, "cursor").focus()                                                                           # a potion that is not the default's lights its own parties only
         pg.wait_for_timeout(300)
-        assert outlined(pg) == []                                                                           # nobody drinks from Cursor here
+        assert lit(pg) == []                                                                                # nobody drinks from Cursor here
         pot(pg, "codex").focus()
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
-        assert ["design", "codex", False] in outlined(pg) and ["tech", "codex", True] in outlined(pg)       # Codex's own marks, bare or framed
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
+        assert lit(pg) == ["design", "release", "tech"]                                                     # Codex is the tool now: the tabs that follow the default are lit too
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -484,7 +478,7 @@ def test_the_default_potion_hovered_marks_the_framed_marks_as_well_as_its_tools_
 def test_the_narrow_width_has_heads_only_and_says_the_words_on_the_tab(gui):
     pg, host, log = open_tabs(gui, width="narrow")
     try:
-        assert tab(pg, "tech").locator(".table-tab__marks").is_hidden()                                     # a row of heads: no second line
+        assert tab(pg, "design").locator(".table-tab__marks").is_hidden()                                   # a row of heads: no second line
         assert tab(pg, "product").get_attribute("title") == f"Product · Does waits for Claude Code until {WEEK_SAID} · Checks on Codex, set for this party"
         assert tab(pg, "tech").get_attribute("title") == "Tech · Does on the default (now Codex) · Checks on the default (now Codex)"
         shot(pg, "narrow-tabs")

@@ -152,33 +152,17 @@ def test_the_piles_press_opens_the_face_over_the_pane_and_a_second_press_closes_
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_nothing_done_and_nothing_ready_for_main_is_the_asleep_ring_and_the_place_at_the_wide_width_and_nothing_at_the_narrow(gui, width):
+def test_nothing_done_and_nothing_ready_for_main_lays_no_end_at_either_width_and_the_table_gains_the_width(gui, width):
     pg, host, log = open_hand(gui, host=HandHost(bare=True), width=width)
     try:
         pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
         assert pg.locator(".table-discard, .hand-done").count() == 0
-        if width == "narrow":
-            assert pg.locator(".table-end, .table-end__label, .portal-host, .ork-portal-ring, .ork-card-place").count() == 0
-        else:
-            ring, place, label = pg.locator(".table-end .ork-portal-ring"), pg.locator(".table-end .ork-card-place"), pg.locator(".table-end__label")
-            assert ring.count() == 1 and place.count() == 1 and label.text_content() == "Discard"
-            r, p, end = ring.bounding_box(), place.bounding_box(), box(pg, ".table-end")
-            assert (round(r["width"]), round(r["height"])) == (192, 192), "orkUI's ring"
-            assert (round(p["width"]), round(p["height"])) == CARD["wide"], "the place is a card's size"
-            assert r["y"] + r["height"] <= label.bounding_box()["y"] + 1 <= p["y"] + 1, "the ring, then the word, then the place"
-            assert abs((p["x"] + p["width"] / 2) - (r["x"] + r["width"] / 2)) <= 1 and p["x"] + p["width"] <= end["x"] + end["width"] + 1
-            assert "is-open" not in ring.get_attribute("class") and "is-sealed" not in ring.get_attribute("class") and ring.get_attribute("aria-hidden") == "true", "asleep"
-            assert pg.locator(".table-end .ork-portal").count() == 0 and pg.locator(".table-end button, .table-end [tabindex]").count() == 0, "nothing to press: no portal inside, the place is no button"
-            assert pg.locator(".portal-host").get_attribute("data-portal") == "asleep" and "is-asleep" in pg.locator(".portal-host").get_attribute("class")
-            assert pg.locator(".portal__label").text_content() == "Main" and pg.locator(".portal__line, .portal__hint").count() == 0
-            assert pg.locator(".ork-portal-ring__seal > *").count() == 0, "no goal's rune in the seal"
-            assert pg.evaluate("() => getComputedStyle(document.querySelector('.portal__label')).color") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-ink-faint)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }"), "*Main* in the faint ink"
-            assert p["y"] + p["height"] <= box(pg, ".hand")["y"] + 1, "nothing overlaps the hand"
-            shot(pg, "wide-asleep-and-place")
-            place.click(force=True)
-            pg.wait_for_timeout(200)
-            assert sig(pg, "frame/state.js", "over") is None, "pressed, the place does nothing"
+        assert pg.locator(".table-end, .table-end__label, .portal-host, .ork-portal-ring, .ork-card-place").count() == 0, "no ring, no frame, no word (decisions §247.1)"
+        call(pg, "frame/state.js", "openTab", "tech")
+        pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        assert pg.locator(".table-body").evaluate("e => getComputedStyle(e).paddingRight") == "0px", "the room kept for the end is given back to the party's map"
         narrow.no_sideways(pg)
     finally:
         pg.close()
@@ -232,22 +216,23 @@ def test_a_goal_ready_for_main_opens_the_ring_with_the_portal_inside_and_it_wake
     assert not log, "\n".join(log)
 
 
-def test_the_ring_wakes_when_the_first_goal_becomes_ready_and_sleeps_when_none_is_left(gui):
+def test_the_ring_is_drawn_when_the_first_goal_becomes_ready_and_goes_when_none_is_left(gui):
     host = HandHost()
     ready = host.gate_doc["ideas"]
     host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0, "same": False}
     pg, host, log = open_hand(gui, host=host)
     try:
-        pg.locator(".ork-portal-ring").wait_for(timeout=WAIT_MS)
-        assert "is-open" not in pg.locator(".ork-portal-ring").get_attribute("class") and pg.locator(".ork-portal-ring > .ork-portal").count() == 0, "asleep with nothing ready"
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(400)
+        assert pg.locator(".ork-portal-ring, .portal__label").count() == 0, "nothing ready: no ring (decisions §247.1)"
         host.gate_doc = {**host.gate_doc, "ideas": ready, "commits": 5, "files": 9, "same": False}
         host.bump({})
         pg.locator(".ork-portal-ring.is-open > .ork-portal").wait_for(timeout=WAIT_MS)
-        assert "is-waking" in pg.locator(".ork-portal-ring").get_attribute("class")
+        assert "is-waking" in pg.locator(".ork-portal-ring").get_attribute("class") and pg.locator(".portal__label").text_content() == "Main"
         host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0, "same": False}
         host.bump({})
-        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring > .ork-portal')", timeout=WAIT_MS)
-        assert "is-open" not in pg.locator(".ork-portal-ring").get_attribute("class") and pg.locator(".portal-host").get_attribute("data-portal") == "asleep"
+        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring')", timeout=WAIT_MS)
+        assert pg.locator(".portal__label").count() == 0
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -269,16 +254,18 @@ def test_pressing_the_open_portal_with_no_goal_chosen_opens_the_discards_view(gu
     assert not log, "\n".join(log)
 
 
-def test_the_place_gives_way_to_the_pile_when_a_goal_is_done(gui):
+def test_the_discard_is_drawn_from_its_first_goal_done_and_not_before(gui):
     pg, host, log = open_hand(gui, host=HandHost(bare=True))
     try:
-        pg.locator(".table-end .ork-card-place").wait_for(timeout=WAIT_MS)
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        assert pg.locator(".table-end, .ork-card-place, .table-end__label").count() == 0, "empty: nothing lies there"
         host.nodes.append(hand_node("music", "tech", "Lobby music loop", "discard", state="done", element="void", updated="2026-10-20T12:00:00"))
         host.bump({})
         pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".ork-card-place").count() == 0 and pg.locator(".table-discard").count() == 1
-        pile, ring = box(pg, ".table-discard"), box(pg, ".ork-portal-ring")
-        assert (round(pile["width"]), round(pile["height"])) == CARD["wide"] and ring["y"] + ring["height"] <= pile["y"]
+        assert pg.locator(".ork-card-place").count() == 0 and pg.locator(".table-discard").count() == 1 and pg.locator(".table-end__label").text_content() == "Discard"
+        pile = box(pg, ".table-discard")
+        assert (round(pile["width"]), round(pile["height"])) == CARD["wide"] and pg.locator(".ork-portal-ring").count() == 0, "nothing ready for main: the pile alone, no ring"
     finally:
         pg.close()
     assert not log, "\n".join(log)

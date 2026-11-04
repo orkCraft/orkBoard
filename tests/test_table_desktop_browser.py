@@ -340,7 +340,7 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     if not wide(w):
         assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
         assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen
-    assert title(pg) == "The whole project · through the Orkmaster"                                                      # the Orkmaster is named where it speaks
+    assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
     assert tab(pg, "orkmaster").bounding_box()["x"] <= tab(pg, "game").bounding_box()["x"]
     shot(pg, f"table-board-{w}.png")
 
@@ -348,7 +348,7 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
 def test_a_tab_is_the_persons_the_open_one_is_kept_and_nothing_switches_it_under_them(table):
     pg, host, w = table
     open_tab(pg, "tech")
-    assert title(pg) == "The whole project · through Tech"
+    assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
     pg.reload()
     pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     assert tab(pg, "tech").get_attribute("aria-selected") == "true"                                                      # kept for the project on this device
@@ -592,7 +592,7 @@ def test_an_edge_lifts_its_task_and_a_goals_strip_picks_the_goal(table):
         assert back.get_attribute("data-lifted") == "t:task:bar/a1" and "Draw the bar" in back.text_content()
         pg.keyboard.press("Escape")
         pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
-        assert title(pg) == "The whole project · through the Orkmaster"
+        assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
         pg.locator('.table-casc[data-goal="seat"]').locator("xpath=..").locator(".table-gstrip").click()                  # the strip of a goal picks it
         pg.wait_for_selector('.table-board--plan[data-plan="seat"]', timeout=WAIT_MS)                                       # the goal picked: the Board is its plan alone (spec 128 F.1; tests/test_plan_arrows_browser.py)
         assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
@@ -1032,13 +1032,14 @@ def test_a_tab_has_a_second_line_the_sword_and_the_tool_its_does_run_on_the_shie
         assert tab(pg, "tech").locator(".table-tab__marks").is_hidden() and tab(pg, "tech").locator(".table-tab__txt").is_hidden()      # a row of heads: no second line
         assert "Does on Claude · Checks on Codex" in tab(pg, "tech").get_attribute("title")                              # its words are still said
         return
-    assert marks_of(pg, "game") == [["sword", ""], ["tool", "claude"], ["shield", ""], ["tool", "claude"]]
-    assert marks_of(pg, "tech") == [["sword", ""], ["tool", "claude"], ["shield", ""], ["tool", "codex"]]
+    assert tab(pg, "game").locator(".table-tab__marks").count() == 0                                                      # Does and Checks on the project's default tool (Claude): no second line (decisions §247.7)
+    assert marks_of(pg, "tech") == [["shield", ""], ["tool", "codex"]]                                                    # only the side on another tool is drawn: its Checks run on Codex
     assert pg.locator('.col-head__tab .table-tab__marks').count() == 0                                                    # the Orkmaster's tab is the column's head: no sword and shield (the project's tool is the hand's potions)
-    assert marks_of(pg, "art") == [["sword", ""], ["tool", "claude"], ["off", "shield"]]                                  # Lean: the shield faint, no mark
-    assert marks_of(pg, "release") == [["sword", ""], ["tool", "codex"], ["more", ""], ["shield", ""], ["tool", "claude"]]    # a dot: one of its roles runs on another tool
+    assert marks_of(pg, "art") == [["off", "shield"]]                                                                     # Lean: the shield faint, no mark (its Does is on the default: not drawn)
+    assert marks_of(pg, "release") == [["sword", ""], ["tool", "codex"], ["more", ""]]                                    # a dot: one of its roles runs on another tool; its Checks on the default are not drawn
     assert tab(pg, "art").locator(".table-tab__off").evaluate("e => getComputedStyle(e).opacity") == "0.35"
-    assert tab(pg, "tech").get_attribute("title") == "Tech · Does on Claude · Checks on Codex"
+    assert tab(pg, "tech").get_attribute("title") == "Tech · Does on Claude · Checks on Codex"                           # the words say both sides
+    assert tab(pg, "game").get_attribute("title").endswith("Does on Claude · Checks on Claude")
     assert tab(pg, "art").get_attribute("aria-label") == "Art · Does on Claude · no separate check"
     assert tab(pg, "release").get_attribute("aria-label") == "Release · Does on Codex and others · Checks on Claude"
     line = tab(pg, "tech").locator(".table-tab__marks")
@@ -1048,37 +1049,36 @@ def test_a_tab_has_a_second_line_the_sword_and_the_tool_its_does_run_on_the_shie
     assert head["height"] >= 60 and tb["y"] >= name["y"] + name["height"] - 1 and tb["y"] + tb["height"] <= head["y"] + head["height"] and abs(tb["x"] - name["x"]) <= 1      # under the name, inside the tab (the row is as high as the open head: spec 123 §7.1)
     ink = lambda slug, i: tab(pg, slug).locator(".table-tab__marks img").nth(i).get_attribute("src")                          # noqa: E731
     gone = lambda slug: tab(pg, slug).locator(".table-tab__marks img").count() == 0                                           # noqa: E731
-    assert ink("tech", 0).endswith("/marks/harness-claude-ink.png") and ink("tech", 1).endswith("/marks/harness-codex-ink.png")      # in ink
-    assert tab(pg, "tech").locator(".table-tab__marks img").first.get_attribute("srcset").endswith("harness-claude-ink@2x.png 2x")
+    assert ink("tech", 0).endswith("/marks/harness-codex-ink.png")                                                          # in ink
+    assert tab(pg, "tech").locator(".table-tab__marks img").first.get_attribute("srcset").endswith("harness-codex-ink@2x.png 2x")
     open_tab(pg, "tech")
-    assert ink("tech", 0).endswith("/marks/harness-claude.png") and ink("tech", 1).endswith("/marks/harness-codex.png")               # Tech is open: its marks in colour
-    assert gone("orkmaster") and ink("game", 0).endswith("/marks/harness-claude-ink.png")  # and the others back in ink
+    assert ink("tech", 0).endswith("/marks/harness-codex.png")                                                              # Tech is open: its mark in colour
+    assert gone("orkmaster") and gone("game") and ink("release", 0).endswith("/marks/harness-codex-ink.png")                 # and the others back in ink
     shot(pg, "table-tabs-marks-wide.png")
 
 
-def test_a_potion_hovered_or_focused_outlines_its_tools_marks_on_the_tabs_and_says_who_drinks_from_it(table):
+def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_its_tool_and_says_who_drinks_from_it(table):
     pg, host, w = table
     if not wide(w):
         pytest.skip("the potions lie in the hand at the wide width; the narrow width's tabs are heads only")
-    outlined = lambda: pg.locator(".table-tab .is-marked").evaluate_all("els => els.map((e) => [e.closest('.table-tab').dataset.tab, e.dataset.tool])")        # noqa: E731
-    assert outlined() == []
+    lit = lambda: sorted(pg.locator(".table-tab.is-lit").evaluate_all("els => els.map((e) => e.dataset.tab)"))        # noqa: E731
+    assert lit() == [] and pg.locator(".table-tab .is-marked").count() == 0
     claude, codex = pg.locator('.hand-pot[data-provider="claude"]'), pg.locator('.hand-pot[data-provider="codex"]')
     claude.hover()
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
-    got = outlined()
-    assert sorted(got) == sorted([["game", "claude"], ["game", "claude"], ["tech", "claude"], ["art", "claude"], ["release", "claude"]])       # every mark of Claude, none of Codex
-    assert pg.locator('.table-tab[data-tab="tech"] img.is-marked').evaluate("e => [getComputedStyle(e).outlineWidth, getComputedStyle(e).outlineStyle]") == ["1px", "solid"]
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
+    assert lit() == ["art", "game", "release", "tech"]                                                                    # every party that does or checks on Claude (marks drawn or not), none of Codex's alone
+    assert pg.locator('.table-tab[data-tab="game"]').evaluate("e => [getComputedStyle(e).outlineStyle, getComputedStyle(e).backgroundColor]")[0] == "none"      # lit as a tab hovered is, not by a 1 px outline
     pg.mouse.move(5, 300)
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
-    codex.focus()                                                                                                         # the focus marks too
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
-    assert sorted(outlined()) == [["release", "codex"], ["tech", "codex"]]
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
+    codex.focus()                                                                                                         # the focus lights too
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
+    assert lit() == ["release", "tech"]
     pg.evaluate("() => document.activeElement.blur()")
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
     assert claude.get_attribute("aria-label").endswith(". 3 parties do on it, 2 parties check on it")                       # the parties that do and check on it: Lean checks on none
     assert codex.get_attribute("aria-label") == "Codex: 18% of the day left. 1 party does on it, 1 party checks on it" and codex.get_attribute("title") == codex.get_attribute("aria-label")
     claude.hover()
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
     shot(pg, "table-potion-marks-wide.png")
 
 

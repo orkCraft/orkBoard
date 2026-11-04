@@ -216,15 +216,15 @@ def test_each_party_has_its_sword_and_shield_as_the_tabs_draw_them(gui):
         opened(pg)
         row = lambda name: pg.locator(".up-prow", has_text=name)  # noqa: E731
         tech = row("Tech")
-        assert tech.locator(".table-tab__marks .ork-sign.sword").count() == 1 and tech.locator(".table-tab__marks .ork-sign.shield").count() == 1
-        assert [m.get_attribute("data-tool") for m in tech.locator(".table-tab__marks img.ork-mark").all()] == ["claude", "codex"], "Does on Claude, Checks on Codex"
+        assert tech.locator(".table-tab__marks .ork-sign.sword").count() == 0 and tech.locator(".table-tab__marks .ork-sign.shield").count() == 1      # only the side on another tool than the default (§247.7)
+        assert [m.get_attribute("data-tool") for m in tech.locator(".table-tab__marks img.ork-mark").all()] == ["codex"], "Checks on Codex; Does on the default Claude is not drawn"
         assert "-ink" in tech.locator("img.ork-mark").first.get_attribute("src"), "in ink: the open tab's alone is in colour"
         assert tech.get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex" and tech.get_attribute("title") == tech.get_attribute("aria-label")
         art = row("Art")
-        assert art.locator(".table-tab__off .ork-sign.shield").count() == 1 and art.locator(".table-tab__marks img.ork-mark").count() == 1, "a Lean party: the shield faint, no mark"
+        assert art.locator(".table-tab__off .ork-sign.shield").count() == 1 and art.locator(".table-tab__marks img.ork-mark").count() == 0, "a Lean party: the shield faint, no mark"
         assert art.get_attribute("aria-label").endswith("no separate check")
         assert row("Release").locator(".table-tab__more").count() == 1, "a column on more than one tool: the dot"
-        assert row("Game design").locator(".table-tab__marks img.ork-mark").count() == 2
+        assert row("Game design").locator(".table-tab__marks").count() == 0, "both sides on the default: no second line"
         for r in pg.locator(".up-prow").all():
             assert box(r)["height"] >= 48
         shot(pg, "phone-menu-marks")

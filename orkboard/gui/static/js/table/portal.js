@@ -3,8 +3,9 @@
 // runs a trial worktree). A card held over the portal is `is-taking`; dropped on it, or the portal pressed while a card is chosen (Enter on the focused portal too), `ideas.to_main` sends the goal alone with the goals it
 // stands on, the card goes into the portal and leaves the ready goals at the next `ideas.gate` read. While the gate holds the goal the portal is `is-sealed`, the reason under it in the danger colour; a press on it says the
 // reason again and plays nothing. Pressing works as dragging does: the press path needs no drag, so it is the phone's. The portal is orkUI's (`.ork-portal`, 0.18.0); its sheet is portal.css, layout only.
-// At the wide width (760 px and up) its place is always laid (§185.2): orkUI's ring of runes (`.ork-portal-ring`, 0.20.0), asleep (grey, nothing to press, *Main* in the faint ink) while no goal is ready for main, and open (the portal
-// inside it, a button) as long as one is, whether or not one is chosen. The first time it opens on a device it wakes (`is-waking`, the portal's `is-new`, a per-viewer convenience in localStorage; the page works without it) with a line
+// At the wide width (760 px and up) its place is laid for what it holds (decisions §247.1, spec 140 A1): orkUI's ring of runes (`.ork-portal-ring`, 0.20.0) with *Main*, open (the portal inside it, a button) only while a goal is ready for main,
+// whether or not one is chosen, or while its checks run or its rite plays; **otherwise no ring and no word**: Release's and Live's heads stand where the ring's lower-left and upper-right corners are (`is-bare`: the ring's box without its
+// drawing), asleep, pressed as today, and with neither party there is nothing at all (the table gains the width: discard.css). The first time it opens on a device it wakes (`is-waking`, the portal's `is-new`, a per-viewer convenience in localStorage; the page works without it) with a line
 // saying how. The chosen goal's element lies in the ring's seal (§186.3: its rune, in its own colour; faint while the portal is sealed). With no goal chosen the open portal, pressed, opens the discard's view where the goals ready are
 // chosen; closing the view (or Esc, or a press away) drops the choice and no longer closes the portal. At the narrow width nothing changes: the portal opens above the pile when a goal is chosen and closes with the choice.
 // **The road** (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, decisions §188): at the wide width the ring also holds Release (lower left, before main) and Live (upper right) as corners (road.js), and a goal chosen for
@@ -22,7 +23,7 @@ import { openOver, over } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
 import { readyOf } from "../hand/data.js";
 import { reduced, leans } from "../hand/motion.js";
-import { wide } from "./data.js";
+import { noGate, wide } from "./data.js";
 import { CHECKING, checksOf, forgetChecks, isRed, pending, sealedWords, skeletonsOf, startChecks, whenAsked } from "./checks.js";
 import { Corner, Gate, roadNow } from "./road.js";
 
@@ -142,6 +143,14 @@ function openedOnce() {
   writeSeen();
 }
 
+/** Whether the wide portal's place holds anything now: a goal ready for main (the ring), or a corner of the road (Release or Live, a project with a gate): else it is not laid at all (decisions §247.1). */
+export function portalHolds() {
+  if (uprightNow.value || noGate()) return false;
+  if ((readyOf()?.goals || []).length > 0 || sending.value) return true;
+  const { release, live } = roadNow();
+  return !!(release || live);
+}
+
 /** The portal's place, above the pile in the table's right column: at the wide width the ring of runes always (asleep, or open with the portal inside), at the narrow one the portal alone while a goal is chosen; none on a phone (hand/readycard.js lays it on the goal's card there). */
 export function Portal() {
   return uprightNow.value ? null : html`<${PortalDoor} />`;
@@ -177,6 +186,8 @@ function PortalDoor() {
   const owned = ring && open && p?.state === "ok" && (!p.sealed || p.conflict), list = owned ? checksOf(slug) : [], asking = owned && pending.value === slug && !list.length;
   const red = isRed(list), guard = owned && (asking || list.some((c) => c.state !== "passed")), checking = guard && !red;
   const skeletons = skeletonsOf(list), mine = owned && list.length > 0;
+  const road = roadNow(skeletons, checking), corners = !!(road.release || road.live), drawn = ready || guard || !!sending.value;      // the ring is drawn for what is ready or being checked or sent; else only the corners' heads stand where it would be
+  if (ring && !drawn && !corners) return null;
   const sealed = open && (p?.state === "fail" || (!!p?.sealed && !(p.conflict && (list.length > 0 || asking)))), shut = sealed || guard;
   const reason = sealed ? reasonOf(p) : red ? sealedWords(list) : "", said = html`<span key=${echo.value}>Sealed: ${reason}</span>`;
   const held = (e) => { if (!chosen.value) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move"; taking.value = true; };
@@ -199,12 +210,12 @@ function PortalDoor() {
       ${button}${hint}${reasoned}
     </div>`;
   }
-  const road = roadNow(skeletons, checking), passed = mine ? skeletons.filter((s) => s.state === "passed") : null, corners = !!(road.release || road.live);
-  return html`<div class=${cls("portal-host is-ring", { "is-new": first.value, "is-asleep": !ready })} data-portal=${state}>
+  const passed = mine ? skeletons.filter((s) => s.state === "passed") : null;
+  return html`<div class=${cls("portal-host is-ring", { "is-new": first.value, "is-asleep": !ready, "is-bare": !drawn })} data-portal=${state}>
     ${open && line && html`<p class="portal__line">${line}</p>`}
     ${red && !sealed && html`<p class="portal__line is-red" role="status" aria-live="polite">${said}</p>`}
-    <span class="portal__label">${label}</span>
-    <span class=${cls("ork-portal-ring", { "is-open": (ready && !shut) || !!sending.value, "is-sealed": shut, "is-waking": ready && first.value && !woke.value, "is-taking": taking.value, "is-sending": !!sending.value, [`rite-${sending.value}`]: !!sending.value })}
+    ${drawn && html`<span class="portal__label">${label}</span>`}
+    <span class=${cls("ork-portal-ring", { "is-bare": !drawn, "is-open": (ready && !shut) || !!sending.value, "is-sealed": shut, "is-waking": ready && first.value && !woke.value, "is-taking": taking.value, "is-sending": !!sending.value, [`rite-${sending.value}`]: !!sending.value })}
         aria-hidden=${ready || corners ? undefined : "true"} onAnimationEnd=${(e) => { if (e.animationName === "ork-ring-eye") woke.value = true; }}>
       ${ready && button}
       <span class="ork-portal-ring__seal" aria-hidden="true">${element && html`<${Elem} name=${element} hue=${sealHue} />`}</span>

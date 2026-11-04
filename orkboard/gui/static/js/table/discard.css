@@ -4,8 +4,8 @@
    - The project's tab: the last column is empty, so the pile is laid over its foot and takes no width (the lanes stay under their tabs).
    - A party's tab (and what is opened over the pane): the map takes the rest (`data-end` "side" and "over" leave a column's width at its right, the map scrolls as it did); the pile's column is empty above the pile.
    - Under 760 px the pile is 80 px wide at the lanes' end; a screen opened over the pane (what the narrow width makes of it) has no pile over it, except the discard's own, which keeps it to press again; a party's map ends above it.
-   - At 760 px and up the end is always laid (docs/specs/110-runes-on-the-table.md §3.2, decisions §185.2, §185.3): the column is the portal's ring wide (192 px, orkUI's `.ork-portal-ring`, portal.css) and the pile (or, with nothing done and nothing ready,
-     orkUI's `.ork-card-place`, a card's outline in dashes) lies centred under it. The column is flush with the pane's right edge when the ring is wider than the old pile's column (144 px: both are 192 px then), so a party's map keeps the width it had
+   - At 760 px and up the end is laid for what it holds (decisions §247.1, spec 140 A1; docs/specs/110 §3.2, decisions §185.2, §185.3): the column is the portal's ring wide (192 px, orkUI's `.ork-portal-ring`, portal.css) and the pile lies centred under it; with nothing
+     done, nothing ready and no corner of the road there is no end, no room kept for it, and no dashed place. The column is flush with the pane's right edge when the ring is wider than the old pile's column (144 px: both are 192 px then), so a party's map keeps the width it had
      (the loops' map switches its layout at 900 px of it) and the pile lies where it did.
    The hand (z-index 2) stands over it, so a card lifted from the hand lies above the pile where they meet. */
 
@@ -23,8 +23,8 @@
 .table-end .hand-done__moon { position: absolute; top: var(--ork-1); right: var(--ork-1); display: inline-flex; color: var(--ork-ink-muted); }
 .hand-drow__moon { display: inline-flex; flex: none; color: var(--ork-ink-muted); }
 
-.table-body:is([data-end="side"], [data-end="over"]) { padding-right: var(--table-end-w); }
-.table-body:is([data-end="side"], [data-end="over"]) > :is(.table-head, .pick-strip) { margin-right: calc(var(--table-end-w) * -1); }          /* the party's header and the pick strip keep the pane's whole width */
+.table-body:is([data-end="side"], [data-end="over"]):has(> .table-end) { padding-right: var(--table-end-w); }          /* the room is kept only while the end is laid (decisions §247.1: with nothing in it the table gains the width) */
+.table-body:is([data-end="side"], [data-end="over"]):has(> .table-end) > :is(.table-head, .pick-strip) { margin-right: calc(var(--table-end-w) * -1); }          /* the party's header and the pick strip keep the pane's whole width */
 
 @media (min-width: 760px) {
   .table-body { --table-end-w: max(var(--hc-w) + var(--ork-8) * 2, 192px); }
@@ -35,6 +35,6 @@
   .table-end { right: var(--ork-4); gap: var(--ork-2); }
   .table-body:is([data-end="side"], [data-end="over"]) { padding-right: 0; }
   .table-body:is([data-end="side"], [data-end="over"]) > :is(.table-head, .pick-strip) { margin-right: 0; }
-  .table-body[data-end="side"] { padding-bottom: var(--table-end-h); }
+  .table-body[data-end="side"]:has(> .table-end) { padding-bottom: var(--table-end-h); }
   .table-body[data-end="over"] > .table-end { display: none; }
 }

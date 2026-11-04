@@ -457,11 +457,11 @@ def with_marks(host):
         p.update(does_tool=does, checks_tool=checks, does_mixed=False, checks_mixed=False, lean=lean)
 
 
-def marked(pg):
-    return sorted(pg.locator(".table-tab .is-marked").evaluate_all("els => els.map((e) => [e.closest('.table-tab').dataset.tab, e.dataset.tool])"))
+def lit(pg):
+    return sorted(pg.locator(".table-tab.is-lit").evaluate_all("els => els.map((e) => e.dataset.tab)"))
 
 
-def test_a_potion_hovered_or_focused_marks_its_tools_marks_on_the_tabs_and_its_words_say_who_drinks_from_it(gui):
+def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_its_tool_and_its_words_say_who_drinks_from_it(gui):
     host = HandHost()
     host.limits = TWO
     with_marks(host)
@@ -469,22 +469,21 @@ def test_a_potion_hovered_or_focused_marks_its_tools_marks_on_the_tabs_and_its_w
     try:
         p = pots(pg)
         pg.locator(".table-tab__marks").first.wait_for(timeout=WAIT_MS)
-        assert marked(pg) == []
+        assert lit(pg) == []
         assert p.nth(0).get_attribute("aria-label") == "Claude Code: 62% of the week left, the default. 3 parties do on it, 2 parties check on it"     # Tech, Design and Release do (Product does on Codex), Product and Release check (Design is Lean)
         assert p.nth(1).get_attribute("aria-label") == "Codex: 18% of the week left. 1 party does on it, 1 party checks on it" and p.nth(1).get_attribute("title") == p.nth(1).get_attribute("aria-label")
         p.nth(1).hover()
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
-        assert marked(pg) == [["product", "codex"], ["tech", "codex"]]                                                         # Codex's marks only
-        assert pg.locator(".table-tab .is-marked").first.evaluate("e => getComputedStyle(e).outlineWidth") == "1px"
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
+        assert lit(pg) == ["product", "tech"]                                                                                  # the parties that run on Codex only, lit as a tab hovered is
+        assert pg.locator(".table-tab.is-lit").first.evaluate("e => getComputedStyle(e).outlineStyle") == "none" and pg.locator(".table-tab .is-marked").count() == 0
         shot(pg, "wide-potion-marks")
         pg.mouse.move(5, 300)
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
         p.nth(0).focus()
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
-        assert ["design", "claude"] in marked(pg) and all(t == "claude" for _, t in marked(pg)) and ["product", "claude"] in marked(pg)
-        assert ["design", "claude"] in marked(pg) and len([m for m in marked(pg) if m[0] == "design"]) == 1, "a Lean party's shield has no mark to outline"
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
+        assert lit(pg) == ["design", "product", "release", "tech"], "Claude: every party that does or checks on it, though a side on the default draws no mark"
         pg.evaluate("() => document.activeElement.blur()")
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)

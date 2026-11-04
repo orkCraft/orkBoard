@@ -2,10 +2,9 @@
 // on, then its `shield` and the mark of the tool its **Checks** run on (`marks/harness-<id>-ink.png`, 14 px, in ink; the open tab's in colour). A column whose roles run on more than one tool shows the most used with a small dot; a **Lean** party
 // (no separate check) shows the shield faint with no mark. The map serves what is needed on the party's node (`does_tool`, `checks_tool`, `does_mixed`, `checks_mixed`, `lean`: gui/ideas_map.py `marks_of`); the project's tab shows the machine's
 // main tool on both (`town.mana.main`). Words on hover and for a screen reader: *Does on Claude · Checks on Codex* (*no separate check* for Lean). Not pressable (it lies inside the tab's button): the tools are changed in the party's editor.
-// A tool with no mark of its own shows its initial. A potion hovered or focused marks its tool's marks on the tabs (`markedTool`, hand/mana.js): a 1 px ink outline. The narrow width's tabs are heads only: no second line (table.css).
-// Whether a side follows the default (docs/specs/114-the-mana-in-two-windows.md §3.5, decisions §192.4; the node's `does_default`, `checks_default`: gui/ideas_map.py): a side that does is drawn **in a small frame** (1 px of ink, orkUI's notch,
-// the default potion's frame) and shows the tool now (`town.mana.now`, else the Main tool), changing when the work moves on; a side set to a tool on purpose is a **bare mark**, dim with orkUI's `moon` beside it while that tool is dry (a
-// window of it at 0: hand/windows.js). A potion that is the default's, hovered or focused, outlines the framed marks too (`markedDefault`). The words: *Does on the default (now Claude Code)*, *Does on Claude Code, set for this party*,
+// A tool with no mark of its own shows its initial. **Only what differs is drawn** (decisions §247.7, spec 140 C2): a side whose tool is the project's default (`town.mana.main`, §177.1), or that follows it, has no mark; a party with nothing different has no second line; a Lean party keeps its faint shield. A potion hovered or focused lights the tabs of the parties that run on its tool (`runsOn`, `markedTool` from hand/state.js), as a tab hovered is lit (`.is-lit`, table.css), no outline on a mark. The narrow width's tabs are heads only: no second line (table.css).
+// Whether a side follows the default (docs/specs/114-the-mana-in-two-windows.md §3.5, decisions §192.4; the node's `does_default`, `checks_default`: gui/ideas_map.py): a side that does was drawn **in a small frame** (spec 114); with §247.7 it is on the default, so it is not drawn at all (its words stay); a side set to a tool on purpose is a **bare mark**, dim with orkUI's `moon` beside it while that tool is dry (a
+// window of it at 0: hand/windows.js). The default's potion, hovered or focused, lights the tabs whose sides follow it (`markedDefault`). The words: *Does on the default (now Claude Code)*, *Does on Claude Code, set for this party*,
 // *Does waits for Claude Code until Thu 09:00*, the same for Checks. A host that does not say (no `does_default`) draws bare marks and the words of before.
 import { html, cls } from "../html.js";
 import { Sign } from "../orkui.js";
@@ -60,23 +59,45 @@ export function marksWords(m) {
   return `${sideWords("Does", m.does, m.doesMode, m.doesMixed)} · ${m.lean ? "no separate check" : sideWords("Checks", m.checks, m.checksMode, m.checksMixed)}`;
 }
 
-/** One tool's mark: its ink mark (its colour on the open tab), its initial with none; outlined while its potion is hovered or focused (and, for a side that follows the default, while the default's potion is). `mode`: the side's
- *  (see `marksOf`): `"default"` draws it in a small frame, a `"set"` tool that is dry dim with the moon beside it. */
+/** Whether a side runs on another tool than the project's default (the machine's Main tool, `town.mana.main`: decisions §177.1) or on several (a dot): only such a side is drawn on the tab (decisions §247.7). A side that follows the default is on it by
+ *  definition; while the snapshot names no Main tool a side that names its tool is drawn (nothing to compare it with). */
+export function differs(tool, mode, mixed) {
+  if (mixed) return true;
+  if (!tool || mode === "default") return false;
+  const main = town.value?.mana?.main || "";
+  return !main || tool !== main;
+}
+
+/** Which sides of a party's marks are drawn: `{does, checks, faint}`; none of them, no second line. A Lean party keeps its faint shield (it has no separate check, so its Does is the only side that can differ). */
+export function shownOf(m) {
+  if (!m) return { does: false, checks: false, faint: false };
+  return { does: differs(m.does, m.doesMode, m.doesMixed), checks: !m.lean && differs(m.checks, m.checksMode, m.checksMixed), faint: !!m.lean };
+}
+
+/** Whether a party runs on the tool whose potion is hovered or focused (`markedTool`), or, for the default's potion (`markedDefault`), follows the default: its tab is lit as a tab hovered is (decisions §247.7), whether or not its marks are drawn. */
+export function runsOn(m) {
+  const tool = markedTool.value, dflt = markedDefault.value;
+  if (!m || (!tool && !dflt)) return false;
+  const side = (t, mode) => (!!tool && t === tool) || (dflt && mode === "default");
+  return side(m.does, m.doesMode) || (!m.lean && side(m.checks, m.checksMode));
+}
+
+/** One tool's mark: its ink mark (its colour on the open tab), its initial with none. `mode`: the side's (see `marksOf`): a `"set"` tool that is dry is dim with the moon beside it. A potion hovered lights the tab (`runsOn`), not the mark. */
 export function Mark({ id, on, mode = "" }) {
-  const dry = mode === "set" ? dryUntil(id) !== null : false, marked = markedTool.value === id || (mode === "default" && markedDefault.value);
+  const dry = mode === "set" ? dryUntil(id) !== null : false;
   const one = !MARKED.includes(id)
-    ? html`<span class=${cls("table-tab__initial", { "is-marked": marked })} data-tool=${id} aria-hidden="true">${toolName(id).charAt(0).toUpperCase()}</span>`
-    : html`<img class=${cls("ork-mark table-tab__mark", { "is-marked": marked })} data-tool=${id} src=${markSrc(id, false, on)} srcset=${`${markSrc(id, true, on)} 2x`} alt="" draggable="false" />`;
-  if (mode === "default") return html`<span class="table-tab__follow" data-mode="default">${one}</span>`;
+    ? html`<span class="table-tab__initial" data-tool=${id} aria-hidden="true">${toolName(id).charAt(0).toUpperCase()}</span>`
+    : html`<img class="ork-mark table-tab__mark" data-tool=${id} src=${markSrc(id, false, on)} srcset=${`${markSrc(id, true, on)} 2x`} alt="" draggable="false" />`;
   return dry ? html`<span class="table-tab__dry" data-mode="dry">${one}<${Sign} name="moon" /></span>` : one;
 }
 
-/** The second line of a tab: the sword and its tool's mark, the shield and its tool's mark (faint with none for a Lean party). `on`: the open tab, whose marks are in colour. */
+/** The second line of a tab, only for what differs from the project's default: the sword and its tool's mark, the shield and its tool's mark (faint with none for a Lean party). Nothing drawn when nothing differs. `on`: the open tab, whose marks are in colour. */
 export function Marks({ m, on = false }) {
-  if (!m) return null;
+  const s = shownOf(m);
+  if (!s.does && !s.checks && !s.faint) return null;
   return html`<span class="table-tab__marks" aria-hidden="true">
-    <${Sign} name="sword" /><${Mark} id=${m.does} on=${on} mode=${m.doesMode} />${m.doesMixed && html`<i class="table-tab__more"></i>`}
-    <i class="table-tab__gap"></i>
-    ${m.lean ? html`<span class="table-tab__off"><${Sign} name="shield" /></span>` : html`<${Sign} name="shield" /><${Mark} id=${m.checks} on=${on} mode=${m.checksMode} />${m.checksMixed && html`<i class="table-tab__more"></i>`}`}
+    ${s.does && html`<${Sign} name="sword" /><${Mark} id=${m.does} on=${on} mode=${m.doesMode} />${m.doesMixed && html`<i class="table-tab__more"></i>`}`}
+    ${s.does && (s.checks || s.faint) && html`<i class="table-tab__gap"></i>`}
+    ${s.faint ? html`<span class="table-tab__off"><${Sign} name="shield" /></span>` : s.checks && html`<${Sign} name="shield" /><${Mark} id=${m.checks} on=${on} mode=${m.checksMode} />${m.checksMixed && html`<i class="table-tab__more"></i>`}`}
   </span>`;
 }
