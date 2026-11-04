@@ -33,7 +33,7 @@ from typing import Any
 from orkboard.core.idea_decide import TITLE_CHARS
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _str
-from orkboard.realm import board_rows, event_log, hypotheses, hypotheses_bind, hypotheses_file, idea_element, ideas, journal_notes, opportunity_tree as tree
+from orkboard.realm import board_rows, event_log, findings, findings_gather, hypotheses, hypotheses_bind, hypotheses_file, idea_element, ideas, journal_notes, opportunity_tree as tree
 
 DRAFT_WORDS = 6000                          # the person's own words for the decision, at most (as the decision card's text)
 NO_PROPOSAL = "Proposing hypotheses is not in this build yet"
@@ -234,8 +234,27 @@ class HypothesesMixin:
                 raise IdeasError(str(e)) from None
         if state != "unsure":
             journal_notes.hypothesis(self.state_dir, "", item["text"], state, why, out.get("number") or 0)      # the project's journal (spec 125 B)
+        finding = self._hyp_finding(judged) if state == "refuted" else ""
         self.changed("")
-        return {"ok": True, "item": self._hyp_item(judged["id"]), **({"decision": {k: out.get(k) for k in ("number", "path", "commit", "held")}} if out else {}), **({"way": way} if state == "refuted" else {})}
+        return {"ok": True, "item": self._hyp_item(judged["id"]), **({"finding": finding} if finding else {}), **({"decision": {k: out.get(k) for k in ("number", "path", "commit", "held")}} if out else {}), **({"way": way} if state == "refuted" else {})}
+
+    def _hyp_finding(self, item: dict) -> str:
+        """A refuted hypothesis is a finding (spec 133 D; decisions §235.5): one finding of no goal naming the goals that rested on it, the outcome kept in the quality record of each goal that tested it, the
+        run that has Product's leader tell it and the Orkmaster sort it begun. Never fails the verdict: "" when nothing could be kept. → the finding's id."""
+        try:
+            party = self.keeper.tree_party() if hasattr(self.keeper, "tree_party") else ""
+            rests = self._hyp_goals(item["rests"])
+            got = findings_gather.hypothesis(self.state_dir, item, party, [(s, g["title"]) for s, g in rests.items()])
+            if not got:
+                return ""
+            hypotheses.set_finding(self.state_dir, item["id"], got["id"])
+            for slug in self._hyp_goals(item["tests"]):
+                findings.save_record(self.state_dir, slug, hypothesis={"id": item["id"], "text": item["text"], "state": "refuted", "way": item["verdict"].get("way") or "", "why": item["verdict"].get("why") or "",
+                                                                       "at": item["verdict"].get("at") or ""})
+            getattr(self.keeper, "findings_begin", lambda slug: False)("")
+            return got["id"]
+        except Exception:
+            return ""
 
     # -- a goal sent with a hypothesis as a mark ------------------------------------------------------------------------------------------------
 

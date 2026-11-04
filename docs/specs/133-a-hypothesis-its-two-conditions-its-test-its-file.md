@@ -280,7 +280,7 @@ and commits it with the Board's pages in one commit (`git log` names the file), 
 
 - **`findings_gather.hypothesis(state_dir, item, party, rests)`** (no model, a `try` that never fails what it records, as the
   other sources): for a hypothesis judged `refuted`, `findings.add(state_dir, {"source": "hypothesis", "idea": "", "party":
-  <Product's party>, "on": <the item's id>, "found": …})`; `found` (≤ `FOUND_CHARS = 400`, cut from its end): `Refuted: <text>
+  <Product's party>, "on": <the item's id>, "found": …})`; `found` (≤ `FOUND_CHARS = 400`, **each part cut on its own** so that the goals' names are never the part that goes): `Refuted: <text>
   (<the way's name: when>). Believed: <signal>. Measured: <each value against its bar, B.4, else the evidence's lines>.
   Goals that rested on it: <slug (title)>, …` — **the goals that rest on it (`rests`) are named in it**, so a decision they
   stood on reaches them by §233's cascade (a finding at the level *decision* is a proposal into the cascade: spec 132 D.3).
@@ -289,7 +289,7 @@ and commits it with the Board's pages in one commit (`git log` names the file), 
   into slices as any decision is: `slices_cut`, as today), then begins the run (`keeper.findings_begin("")`, which never
   raises). Each goal that tested it gets the outcome in its quality record (`findings.save_record(state_dir, goal,
   hypothesis={id, text, state, way, why, at})`, spec 132 D.4's *the hypothesis's outcome when it tested one*), a goal gone
-  left out. The answer gains `finding` (its id) and the verdict keeps it (`verdict.finding`).
+  left out. The answer gains `finding` (its id) and the verdict keeps it (`verdict.finding`, in the record only: `hypotheses.set_finding`; the file has no place for it, and a bound file's read keeps the record's).
 - **Told by Product's leader**: `findings_told_prompt` for a row whose `source` is `hypothesis` says *A hypothesis the project
   believed was refuted* in place of *A goal is done…*, and gives, beside what was found, **what was believed** (the item:
   text, *Holds when*, the way, the draft), **what was measured** (the values and the bars, the evidence) and **what the goals

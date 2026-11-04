@@ -101,9 +101,10 @@ class HypothesesMixin:
 
     # -- what the leaders assumed -------------------------------------------------------------------------------------------------
 
-    def assumed_text(self) -> str:
+    def assumed_text(self, only: "set[str] | None" = None) -> str:
         """The *Defaults* of the goals in line and at work (not done, not sent on, not failed), `- <goal's name> (<goal's title>, <party>): <a default>` a line, the goal's name being what a
-        hypothesis `rests` on; ten goals at most, the newest first (the page written last), a few lines each; "" with none."""
+        hypothesis `rests` on; ten goals at most, the newest first (the page written last), a few lines each; "" with none. `only` (spec 133 D: the goals that rested on a refuted hypothesis): just those
+        goals, whatever their state (a goal done rested on it too)."""
         root = self.wiki_root()
         titles = {t["slug"]: t["title"] for t in ideas.tracks(root, make=False)}
         parties = [{"slug": s, "title": t} for s, t in titles.items()]
@@ -111,7 +112,7 @@ class HypothesesMixin:
         out: list[tuple[float, str, str]] = []
         for i in found:
             slug = i["slug"]
-            if ideas.state(self.state_dir, slug)["state"] in FINISHED:
+            if (only is None and ideas.state(self.state_dir, slug)["state"] in FINISHED) or (only is not None and slug not in only):
                 continue
             lines = []
             for s in spec_sections.read(pages[slug], parties, i["track"])["sections"]:

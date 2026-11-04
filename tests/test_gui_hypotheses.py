@@ -438,3 +438,36 @@ def test_a_project_with_no_file_keeps_its_hypotheses_in_the_record(host):
     item = hold(host)
     assert item["id"] == "people-want-a-sketch-first" and host.command("ideas.hypotheses", {})["file"] == ""
     assert not (host.repo_root / "docs" / "hypotheses.md").exists()
+
+
+# -- spec 133 D: a refuted verdict is a finding --------------------------------------------------------------------------------------------------
+
+def test_a_refuted_verdict_is_a_finding_naming_the_goals_that_rested_on_it_and_begins_the_run(host, monkeypatch):
+    from orkboard.realm import findings
+    began = []
+    monkeypatch.setattr(host.ideas.keeper, "findings_begin", lambda slug: began.append(slug) or True)
+    rests = make_goal(host, "Weekly digest")
+    item_id, tested = with_test(host, refuted=WAYS, if_holds="Make it a setting.")
+    host.command("ideas.hypothesis_attach", {"id": item_id, "goal": rests})
+    got = host.command("ideas.hypothesis_judge", {"id": item_id, "state": "refuted", "way": "the hook", "why": "Only opens rose"})
+    sd = host.ideas.state_dir
+    (f,) = findings.of_goal(sd, "")
+    assert got["finding"] == f["id"] and f["source"] == "hypothesis" and f["on"] == item_id and f["idea"] == "" and f["status"] == "found"
+    assert "(the hook: opens rise, goals do not)" in f["found"] and f"Goals that rested on it: {rests} (Weekly digest)" in f["found"]
+    assert got["item"]["verdict"]["finding"] == f["id"] and hypotheses.read(sd)["items"][0]["verdict"]["finding"] == f["id"]
+    outcome = findings.record(sd, tested)["hypothesis"]
+    assert (outcome["id"], outcome["state"], outcome["way"], outcome["why"]) == (item_id, "refuted", "the hook", "Only opens rose")
+    assert findings.record(sd, rests)["hypothesis"] is None                                    # a goal that only rested on it is named in the finding, not given the outcome
+    assert began == [""] and hand(host) == []                                                  # the run is begun, and the judged hypothesis has no card of its own: the finding's is the one
+
+
+def test_a_held_verdict_adds_no_finding_and_a_gatherer_that_fails_never_fails_the_verdict(host, monkeypatch):
+    from orkboard.realm import findings, findings_gather
+    monkeypatch.setattr(host.ideas.keeper, "findings_begin", lambda slug: 1 / 0)
+    held_id, _ = with_test(host, text="Held one")
+    got = host.command("ideas.hypothesis_judge", {"id": held_id, "state": "held"})
+    assert got["ok"] is True and "finding" not in got and findings.of_goal(host.ideas.state_dir, "") == []
+    monkeypatch.setattr(findings_gather, "hypothesis", lambda *a, **k: 1 / 0)
+    other_id, _ = with_test(host, text="Refuted one")
+    got = host.command("ideas.hypothesis_judge", {"id": other_id, "state": "refuted"})
+    assert got["ok"] is True and got["item"]["state"] == "refuted" and "finding" not in got and findings.of_goal(host.ideas.state_dir, "") == []

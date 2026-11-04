@@ -229,3 +229,33 @@ def test_the_words_of_spec_132_d6_are_in_the_glossary_and_the_mines_finding_keep
     lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
     for key in ("level", "finding", "quality_record"):
         assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
+
+
+# -- spec 133 D: a refuted hypothesis is a finding of no goal, naming the goals that rested on it ----------------------------------------------------
+
+def _refuted_item(**more):
+    return {"id": "h4", "text": "A weekly push gets more goals landed, not only more opens", "signal": "people with the push land 20% more goals",
+            "refuted": [{"name": "the hook", "when": "opens rise, goals landed do not", "change": ""}], "state": "refuted",
+            "evidence": [{"text": "Opens up 30%, landed goals flat", "ref": "", "at": "2026-11-04"}], "verdict": {"state": "refuted", "why": "flat", "decision": 0, "way": "the hook", "at": "2026-11-04T10:00:00"}, **more}
+
+
+def test_a_refuted_hypothesis_is_one_finding_of_no_goal_naming_the_goals_that_rested_on_it_and_kept_once(host):
+    from orkboard.realm import findings_gather
+    sd = host.ideas.state_dir
+    got = findings_gather.hypothesis(sd, _refuted_item(), "product", [("weekly-digest", "A weekly digest"), ("push-settings", "Push settings")])
+    assert got["source"] == "hypothesis" and got["idea"] == "" and got["on"] == "h4" and got["party"] == "product" and got["status"] == "found"
+    assert got["found"].startswith("Refuted: A weekly push gets more goals landed") and "(the hook: opens rise, goals landed do not)" in got["found"]
+    assert "Believed: people with the push land 20% more goals." in got["found"] and "Found: Opens up 30%, landed goals flat." in got["found"]
+    assert "Goals that rested on it: weekly-digest (A weekly digest), push-settings (Push settings)." in got["found"] and len(got["found"]) <= findings.FOUND_CHARS
+    assert [f["id"] for f in findings.of_goal(sd, "")] == [got["id"]]
+    assert findings_gather.hypothesis(sd, _refuted_item(), "product", [("other", "Other")])["id"] == got["id"] and len(findings.of_goal(sd, "")) == 1          # kept once
+
+
+def test_the_goals_names_stay_in_the_finding_when_the_words_are_long_and_a_hypothesis_not_refuted_is_none(host):
+    from orkboard.realm import findings_gather
+    sd = host.ideas.state_dir
+    long = "word " * 80
+    got = findings_gather.hypothesis(sd, _refuted_item(text=long, signal=long, evidence=[{"text": long, "ref": "", "at": ""}]), "", [("the-goal", "The goal")])
+    assert got["party"] == "" and len(got["found"]) <= findings.FOUND_CHARS and "the-goal (The goal)" in got["found"]
+    assert findings_gather.hypothesis(sd, {**_refuted_item(id="h5"), "state": "held"}, "product") is None and findings_gather.hypothesis(sd, {"id": "x"}) is None
+    assert findings_gather.hypothesis(sd, _refuted_item(id="h6"), "", [], "one in four turned it off")["found"].count("Found: one in four turned it off.") == 1

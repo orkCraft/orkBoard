@@ -94,7 +94,7 @@ def _verdict(value: object) -> dict:
         return {}
     decision = value.get("decision")
     return {"state": value["state"], "why": _words(value.get("why"), TEXT_CHARS), "decision": decision if isinstance(decision, int) and not isinstance(decision, bool) and decision > 0 else 0,
-            "way": _words(value.get("way"), NAME_CHARS), "at": str(value.get("at") or "")}
+            "way": _words(value.get("way"), NAME_CHARS), "at": str(value.get("at") or ""), **({"finding": _words(value["finding"], 40)} if _words(value.get("finding"), 40) else {})}
 
 
 def _way(raw: object) -> dict | None:
@@ -171,6 +171,8 @@ def read(state_dir: Path) -> dict:
     for f in hypotheses_file.parse(got)["items"]:
         base = mine.get(f["id"]) or {"axis": "", "on": "", "rests": [], "tests": [], "by": "person", "party": "", "at": ""}
         out.append({**base, **{k: f[k] for k in ("id", "text", "signal", "refuted", "if_holds", "state", "evidence", "verdict")}})
+        if f["verdict"] and (base.get("verdict") or {}).get("finding"):                     # the file has no place for the finding a refuted verdict became (spec 133 D): the record's copy keeps it
+            out[-1]["verdict"] = {**f["verdict"], "finding": base["verdict"]["finding"]}
     newest = sorted((i for i in out if i["state"] == "open"), key=lambda i: -int(i["id"][1:]))[MAX_OPEN:]
     for i in newest:
         i["state"] = WAITING
@@ -445,6 +447,18 @@ def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0
             item["state"] = state
             item["verdict"] = {"state": state, "why": why, "decision": decision if isinstance(decision, int) and not isinstance(decision, bool) and decision > 0 else 0, "way": way, "at": now}
         _put(state_dir, items, f"judged {state}" if state != "unsure" else "evidence" if why else "", id=id)
+    return item
+
+
+def set_finding(state_dir: Path, id: str, finding: str) -> dict:
+    """The finding a refuted verdict became (spec 133 D: `findings.add`'s id) kept in the verdict, in the record only. ValueError for a hypothesis gone or not refuted."""
+    with ideas.LOCK:
+        items = read(state_dir)["items"]
+        item = _find(items, id)
+        if item["state"] != "refuted" or not item["verdict"]:
+            raise ValueError("Only a refuted hypothesis becomes a finding")
+        item["verdict"] = {**item["verdict"], "finding": _words(finding, 40)}
+        _save(state_dir, items)
     return item
 
 
