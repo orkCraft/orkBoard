@@ -545,7 +545,7 @@ class IdeaRunner(HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin,
                 if check_task and not changed:
                     problem, out = (None, "") if findings is not None else (NO_FINDINGS, "")
                 else:
-                    problem, out = self._check(path, start_sha, cancel, str(task.get("title") or ""))
+                    problem, out = self._check(path, start_sha, cancel, str(task.get("title") or ""), slug, tid, env)
                 self._log(slug, tid, f"== the gate, try {attempt}\n{out or problem}\n", env)
                 if self._gate_ran(slug, tid, path, rnd, attempt) or problem is None:     # it could not run: no session can mend that, the person decides (spec 107 §1.2)
                     break

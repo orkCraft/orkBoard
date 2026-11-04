@@ -66,6 +66,7 @@ TODO_DONE = "todo_done"           # idea, todo, kind, device, seconds since the 
 TASK_STATE = "task_state"         # idea, task, state (waiting · ready · held · running · testing · picking · review · merged · failed · dropped: the person's Drop), was, round, tier, role, seconds in the previous state, tokens, cost, ran_tier, effort,
 #                                    check (true: a check task's), clean (true: a check that found nothing, merged with no commit; spec 43 §1.3),
 #                                    ran_why (running only: why it ran on another tier than planned, else ""; spec 107 §2.3), error (failed, or review with one: its words, cut at 600)
+TASK_PAGES_PUT_BACK = "task_pages_put_back"   # idea, task, files: the Board's pages a task edited, restored by code at the gate (spec 143 A)
 CHECK_DONE = "check_done"         # idea, task, by (the checker's slug), found, fixed, left, round, cost: a round of a check task ended with findings read
 RESULT_READY = "result_ready"     # idea, task, round, passed, failed, files, added, removed, cost, role, exit (the gate's), verdict (green · red · could_not_run · docs · nothing: spec 107 §1.2)
 GATE_RAN = "gate_ran"             # idea, task, round, attempt, command, exit, seconds, verdict (as result_ready's), missing (what a run that could not run found missing, else ""),
@@ -255,6 +256,7 @@ EVENTS += (JOURNAL_DIGESTED,)       # spec 125 D
 QUESTION_PASSED = "question_passed"      # spec 128 D: a leader's question passed through the Orkmaster: idea, party (who asked), to (the party it was for), how ("answered" · "cannot" · "failed" · "taken" · "stopped"), seconds, step, prompt_chars, tokens, cost (never a word of the question)
 EVENTS += (QUESTION_PASSED,)       # spec 128 D
 EVENTS += (SPEC_FOLDED,)            # spec 127 C
+EVENTS += (TASK_PAGES_PUT_BACK,)       # spec 143 A
 EVENTS += (SLICES_CUT, SLICES_FOLDED)       # spec 131 A
 
 # Spec 132 D (decisions §234.3): a goal's findings told by their leaders and sorted by the Orkmaster, in the background. Never a word of a finding.

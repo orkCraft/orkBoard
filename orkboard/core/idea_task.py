@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from orkboard.core.idea_landing import COULD_NOT_RUN
-from orkboard.realm import dep_links, event_log, gate_config, gate_env, idea_checks, idea_pick, idea_secrets, idea_target, task_brief, task_steps
+from orkboard.realm import dep_links, event_log, gate_config, gate_env, idea_checks, idea_pick, idea_secrets, idea_target, library, task_brief, task_steps
 from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
@@ -21,6 +21,7 @@ FINDINGS_ASK = (
     'small and certain; leave the rest as findings with `"fixed": false`. Each finding has a `kind`: `"code"` when the code is wrong, '
     '`"env"` when it could not be done here, in the place you ran in (a command was refused, a tool is missing, there is no device or '
     'no network): a person can fix the code, not the place, so never write a finding about the place as `"code"`.')
+LEAN_DOES = "You do this task yourself. It is not to be planned: make the change it asks for, in this worktree."     # spec 143 A.2
 NO_FINDINGS = "You left no findings file and changed no file. Write your findings file, as the task asks."
 FRESH_TOKENS = 150_000            # a session that read more than this in its last call is not resumed again: a send back starts a fresh one (spec 86 §4)
 DIFF_KEEP = 20000                 # the diff so far a fresh session is given, in characters
@@ -248,17 +249,22 @@ class TaskMixin:
         self.git.commit_left(path, title)
         return idea_checks.parse_findings(text), bool(self.git.commits(path, start_sha))
 
-    def _check(self, path: Path, start_sha: str, cancel: threading.Event, title: str = "") -> tuple[str | None, str]:
+    def _check(self, path: Path, start_sha: str, cancel: threading.Event, title: str = "", slug: str = "", tid: str = "",
+               env: dict | None = None) -> tuple[str | None, str]:
         """(None, the gate's run) when the task's work passes; else (what is wrong, in words the session can act on,
         the gate's run: "" when the gate did not run). What the session left uncommitted is committed first, under
-        the task's title: its session may edit files but not run git."""
+        the task's title: its session may edit files but not run git. The Board's pages it touched are put back by code first."""
         self._gate_runs.pop(str(path), None)                 # the run of a try before is not this one's
         self.git.commit_left(path, title)
-        if not self.git.commits(path, start_sha):
+        into = str(_r().setting(self.settings, "merge_into") or "dev")
+        board = [f for f in self.git.touched(path, into) if BOARD_PAGE.search(f)]
+        if board:                          # spec 35 §13: the Board's pages are the Board's; put back by code, no session called, no try spent (spec 143 A.4)
+            put = self.git.restore_pages(path, into, board)
+            if put and slug:
+                self._log(slug, tid, f"== the Board's pages put back: {', '.join(put)}\n", env)
+                self._emit(event_log.TASK_PAGES_PUT_BACK, idea=slug, task=tid, files=put)
+        if not self.git.changed(path, start_sha):
             return "You changed no file. Make the change the task asks for in this worktree.", ""
-        board = [f for f in self.git.touched(path, str(_r().setting(self.settings, "merge_into") or "dev")) if BOARD_PAGE.search(f)]
-        if board:                          # spec 35 §13: the Board's pages are the Board's
-            return f"A task never edits the Board's pages: put back {', '.join(board[:5])} as they were.", ""
         if self.git.dirty(path):
             return ("You left uncommitted changes: `git status` shows them. Commit them (or remove what is not "
                     "work)."), ""
@@ -294,7 +300,8 @@ class TaskMixin:
         secrets = [n for n in env if n not in ("ORKCRAFT_ORC", "ORKCRAFT_IDEA", "ORKCRAFT_TASK", *files)]
         parts, role = [], self._role(task)
         if (instruction := str(role.get("instruction") or "").strip()):
-            parts.append(f"# Your role: {role['name']}\n\n{instruction}")
+            parts.append(f"# Your role: {role['name']}\n\n{instruction}"
+                         + (f"\n\n{LEAN_DOES}" if self._does_it_itself(slug, task, role) else ""))
         parts.append("# When you are done\n\nCommit your work with git if you can, with clear messages; what you "
                      f"leave changed is committed for you under the task's title. {gate_words(gate_config.read(self.repo_root))}")
         parts.append(task_steps.RULE)                                    # every tool's working prompt: its steps in a file (spec 129 H1.1)
@@ -303,6 +310,7 @@ class TaskMixin:
             f"`idea/{slug}/{task.get('id')}`, cut from `{_r().setting(self.settings, 'merge_into') or 'main'}`. "
             "Work only here.",
             "# The idea\n\n" + (f"Its spec is at `{spec}` in this worktree: " + (self._reading(spec, task) or "read it if you need it.")
+                                  + " That page is the Board's: read it, never write to it."
                                   + "".join(f" It depends on `{d}`." for d in deps) if spec else "(its spec was not found)"),
             f"# Your task: {task.get('title', '')}\n\n{task.get('brief', '')}",
         ]
@@ -320,6 +328,13 @@ class TaskMixin:
         elif is_pick(task):
             parts.append(pick_ask(task))
         return "\n\n".join(parts)
+
+    def _does_it_itself(self, slug: str, task: dict, role: dict) -> bool:
+        """A code task whose role is its Lean party's leader (spec 81 §2: at Lean the leader does every task): it is told it does it (spec 143 A.2)."""
+        if is_check(task) or str(task.get("kind") or "") != "code" or not self.size_of or self.size_of(slug) != "lean":
+            return False
+        found = library.get(str(role.get("slug") or ""))
+        return found is not None and found.band == "lead" and str(task.get("role") or "") == found.id
 
     def _reading(self, spec: str, task: dict) -> str:
         """What a task may read of its spec (spec 99 §9.3): for a page of the new format and a task planned for a party's section, the common part, that section whole and

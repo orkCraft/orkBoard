@@ -139,6 +139,28 @@ class IdeaGit:
         out = _git(path, "diff", "--name-only", f"{base}...HEAD").stdout
         return [ln for ln in out.splitlines() if ln.strip()]
 
+    def changed(self, path: Path, base: str) -> bool:
+        """Whether the branch's files differ from `base` (a commit that changes nothing, or one that undoes another, is no change)."""
+        return bool(_git(path, "diff", "--name-only", base, "HEAD").stdout.strip())
+
+    def restore_pages(self, path: Path, base: str, files: list[str]) -> list[str]:
+        """The Board's pages `files` put back as they are on the merge base with `base` (a page that was not there is removed) and committed
+        by Orkboard, as `commit_left` is: the files put back (spec 143 A.4). No session is called; a file that is not a page is never touched."""
+        fork = _ok(_git(path, "merge-base", base, "HEAD")) or base
+        done = []
+        for rel in files:
+            if not BOARD_PAGE.search(rel):
+                continue
+            if _git(path, "cat-file", "-e", f"{fork}:{rel}").returncode == 0:
+                _ok(_git(path, "checkout", fork, "--", rel))
+            else:
+                _git(path, "rm", "-q", "-f", "--", rel)
+            done.append(rel)
+        if done and _git(path, "diff", "--cached", "--quiet").returncode != 0:
+            _ok(_git(path, "-c", "user.name=Orkline", "-c", "user.email=orkline@localhost", "commit", "-q", "-m",
+                     "The Board's pages put back: a task never edits them"))
+        return done
+
     def dirty(self, path: Path) -> bool:
         return bool(_git(path, "status", "--porcelain").stdout.strip())
 

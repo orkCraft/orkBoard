@@ -153,19 +153,7 @@ def test_a_file_todos_path_is_in_the_tasks_environment_and_only_named_in_its_pro
     assert not git(town.repo, "status", "--porcelain", "--ignored", "--", "llm-wiki").count("conf.json")
 
 
-def test_the_gate_refuses_a_result_that_edits_the_boards_pages(town):
-    plan_of(town, [{"id": "k1"}])
-    r, _ = _runner(town)
-    path, _branch = r.git.prepare("demo", "k1", "main")
-    start = r.git.head(path)
-    page = path / "llm-wiki" / "general" / "pages" / "ideas" / "other.md"
-    page.parent.mkdir(parents=True)
-    page.write_text("---\nowner: board\n---\n# Other\n")
-    git(path, "add", "-A")
-    git(path, "-c", "user.name=T", "-c", "user.email=t@x", "commit", "-qm", "edit a page")
-    problem, out = r._check(path, start, threading.Event(), "t")
-    assert "never edits the Board's pages" in problem and "pages/ideas/other.md" in problem and out == ""
-    r.git.remove(path)
+#  The gate and the Board's pages (spec 143 A) are in tests/test_task_pages.py.
 
 
 def test_a_held_task_says_whose_limit_how_much_is_left_and_until_when_and_start_now_lets_it_go(town):

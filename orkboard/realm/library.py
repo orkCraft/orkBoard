@@ -67,9 +67,9 @@ LIBRARY: tuple[Agent, ...] = (
     Agent("architect", "Architect", "engineering", "elder", ("architecture",),
           "Splits a wide change into steps and keeps the modules apart",
           "You shape the change before it is written. Read the modules it touches and the rules of the repository "
-          "(CLAUDE.md). Keep each module to one job and the imports one way. Write the plan in the task's own file: "
-          "the modules, what moves where, the order of the steps, and what each step is tested by. Change code only "
-          "where the task says to; split a module before it grows past ~600 lines.", band="lead"),
+          "(CLAUDE.md). Keep each module to one job and the imports one way. The plan is already made; what "
+          "is settled about the shape of the change goes in the commit's message. Change code only where the task "
+          "says to; split a module before it grows past ~600 lines.", band="lead"),
     Agent("tester", "Tester", "engineering", "laborer", ("tests",),
           "Writes the tests a change lacks and finds the cases that break it",
           "You write tests. Read the change and the tests beside it, then add the cases it lacks: the empty input, the "
