@@ -264,7 +264,7 @@ def test_test_it_opens_the_field_addressed_to_product_with_the_type_try_an_exper
     assert kind.count() == 1 and kind.inner_text().strip() == "Try an experiment" and kind.locator(".ork-sign.flask").count() == 1
     chip = field.locator(".pick-chip")
     assert chip.count() == 1 and chip.get_attribute("data-mark") == "hyp:code-big" and chip.inner_text().strip() == "A big room code is read aloud and typed right"
-    assert "ork-picked" in card(pg, "code-big").get_attribute("class"), "Product's map is in picking: the hypothesis is marked"
+    assert "ork-taken" in card(pg, "code-big").get_attribute("class"), "Product's map is in picking: the hypothesis is marked"
     shot(pg, f"hypotheses-test-it-{w}.png")
     pg.locator(".hand-field__text").fill("Show the big code to half of the hosts")
     pg.locator(".hand-field__text").press("Enter")
@@ -290,12 +290,12 @@ def test_while_picking_a_press_on_a_hypothesis_takes_it_as_a_mark_and_again_puts
     col(pg, "play-again").get_by_role("button", name="Write a goal for this job").click()
     pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
     card(pg, "seat-kept").locator(".hy-line").first.click()
-    pg.wait_for_selector('.hy-card[data-hyp="seat-kept"].ork-picked', timeout=WAIT_MS)
+    pg.wait_for_selector('.hy-card[data-hyp="seat-kept"].ork-taken', timeout=WAIT_MS)
     chips = pg.locator(".hand-field .pick-chip")
     assert chips.count() == 2 and chips.nth(1).get_attribute("data-mark") == "hyp:seat-kept"
     assert pg.locator("[data-picking='1']").count() > 0
     card(pg, "seat-kept").locator(".hy-line").first.click()
-    pg.wait_for_selector('.hy-card[data-hyp="seat-kept"].ork-picked', state="detached", timeout=WAIT_MS)
+    pg.wait_for_selector('.hy-card[data-hyp="seat-kept"].ork-taken', state="detached", timeout=WAIT_MS)
     assert pg.locator(".hand-field .pick-chip").count() == 1
     assert sent(host, "ideas.hypothesis_keep") == [] and sent(host, "ideas.hypothesis_drop") == [], "while picking a press is not an act of the card"
 
