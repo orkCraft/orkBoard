@@ -3,12 +3,15 @@ sides its leaders argue (`realm/idea_hearing.py`), thrown to the one the person 
 
     ideas.hearing {idea}                          # the goal's open hearing, Talk's first, else its first open fork: {idea, moment, id?, title, sides, left_out, own}; null with none
     ideas.throw {idea, moment, dir | text}        # `moment`: "talk" or "fork"; `dir`: right · left · up, the side's place; `text`: the person's own words (they win over `dir`)
+    ideas.unthrow {idea, moment}                  # Undo of a Talk's throw (spec 120 §6.7): the goal as it was before it, its hearing open again: {ok: true, kind, moment}
     ideas.ripe_hold {idea}                        # *Hold* on a goal waiting to start by itself (the part that runs the wait: `keeper.ripe_hold` or `realm/idea_ripe.hold`)
     ideas.ripe_back {idea}                        # *Back to review* on a goal held at its wait: the wait begins again as the leaders' weight made it (spec 128 B.5)
 
 `ideas.throw` of a Talk's hearing is `keeper.throw` (core/idea_objection.py): `go` confirms the decision once it is worded and the sections follow, `smaller` words the goal as the side's
 `instead` and does the same, `later` waits on the goal named, `drop` drops the goal, `text` confirms with the person's words as written. A fork's throw is `fork_answer(side=)` or
 `fork_answer(text=)`. A throw of a hearing no longer open is refused in plain words: *This was decided already*. Each answers `{ok: true, moment, kind, dir, outcome, to: [name]}`.
+`ideas.unthrow` is `keeper.unthrow`: for `idea_hearing.UNDO_S` seconds a Talk's throw is taken back (a dropped goal returns, *Not now* is undone, the words of the goal and the person's own are taken back) unless something went on from it:
+then *It went on already*. A fork's throw is not taken back here (the leaders write their sections from it at once).
 
 **The wait** (spec 120 §3.5, part C): `ideas.ripe_hold` is the host's `ripe_hold_goal` (gui/ideas_route.py): the wait held, `ripe_held`, the faces told; a goal with no wait
 running is told nothing waits to start by itself.
@@ -83,6 +86,16 @@ class Hearing:
         self.i.changed(slug)
         return {"ok": True, **done}
 
+    def unthrow(self, args: dict) -> dict:
+        """Undo of a Talk's throw: `keeper.unthrow`, which says in plain words (a KeeperError, told by the table's guard) when it cannot be taken back. The goal may be gone (a drop), so it is not asked for."""
+        slug = _text(args, "idea", 100)
+        if args.get("moment") != "talk":
+            raise IdeasError(idea_hearing.WENT_ON)
+        done = self.i.keeper.unthrow(slug)
+        self.i._what.pop(slug, None)
+        self.i.changed(slug)
+        return {"ok": True, **done}
+
     def ripe_hold(self, args: dict) -> dict:
         """*Hold* on a goal waiting to start by itself: the host's `ripe_hold_goal` (gui/ideas_route.py: the wait held, `ripe_held`, the faces told)."""
         slug = self._goal(args)
@@ -107,4 +120,4 @@ class Hearing:
 def hearing_commands(ideas_: Any) -> dict:
     """The hearing's commands by name (`gui/ideas.py` adds them to its table)."""
     h = Hearing(ideas_)
-    return {"ideas.hearing": h.hearing, "ideas.throw": h.throw, "ideas.ripe_hold": h.ripe_hold, "ideas.ripe_back": h.ripe_back}
+    return {"ideas.hearing": h.hearing, "ideas.throw": h.throw, "ideas.unthrow": h.unthrow, "ideas.ripe_hold": h.ripe_hold, "ideas.ripe_back": h.ripe_back}

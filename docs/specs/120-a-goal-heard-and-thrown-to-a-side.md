@@ -335,14 +335,15 @@ the spec's author on `claude/leaders-lenses-system-55m0qp`. G (orkUI 0.28.0) is 
   `--append-system-prompt`; the voice stays first in `-p`. The keeper's call line gains `step` and `party`; `talk_floor` groups a
   goal's calls into rounds. **The owner's numbers are still to read** (`python -m orkboard.realm.call_log talk <project>`): lines
   older than this have no `step` and are not counted.
-- **F §6.7** (`js/hand/hearing.js`, `hearingstate.js`, `hearing.css`; `objectioncard.js` gone): **Undo is a drop's only** — the host
-  has no command to take a throw back, so a drop waits 6 s, its row held back, and its toast says *Dropped in 6 s*; other throws are
-  sent at once. The leader's words are in the body face, only *Do the smaller one:* and *After* in the button face. A drag never
+- **F §6.7** (`js/hand/hearing.js`, `hearingstate.js`, `hearing.css`; `objectioncard.js` gone): ~~Undo is a drop's only~~ — **the host now
+  has the command**: `ideas.unthrow {idea, moment}` (`gui/ideas_hearing.py`, `core/idea_objection.py` `unthrow`, `realm/idea_hearing.py` `snapshot`/`restore`)
+  puts a Talk's goal back as its throw found it for 8 s (a drop returns with its ledger, *Not now* is undone, the person's words and a word of the goal's are taken back) and says *It went on already* once
+  a call began from it; **every Talk throw is sent at once** and its toast says **Undo** for 6 s (a fork's has none); nothing is held back for 6 s any more. The leader's journal lines and the event of the answer stay. The leader's words are in the body face, only *Do the smaller one:* and *After* in the button face. A drag never
   starts within 20 px of the screen's edge. A drop still held when the page closes is not sent. The phone: no flight.
 - **F card life and handing** (`realm/board_back.py` gives each routed, talking or decided node its `back`; `table/backcard.js`,
   `backbody.js`, `flight.js`, `back.css`; `hand/fieldturn.js`; `hand/motion.js` `fromWhere`, `useHanded`, `useFlight`): the turn is a
   Web Animations copy over the page; the field takes the focus in the press through a throwaway textarea that hands it on. The flight
   to the lane plays when the goal first has a card in its party's lane (between, it is the Orkmaster's face-up card while the sections
   are written). Only a stack's top card flies, so *three at most* counts stacks. A held wait's ring: the host zeroes `left_s`, so a
-  page loaded while held draws it empty. On the phone a handed card flies as a copy over the row; the row's edge cue is not done.
+  page loaded while held draws it empty. On the phone a handed card flies as a copy over the row; the row's edge cue is `data-cue` on `.up-row` (`hand/uprow.js`, `upright.css`): a card that lands out of the row's view moves no scroll and a strip at that edge brightens once (1.4 s, still under reduced motion).
 - **G, drawn by orkUI 0.28.0** (§6.11's stand-ins are gone): the card turning in place is `.ork-turn` (a goal's own card in `table/backcard.js` `Turning`; the field's card turning to its back in `sendBack`), the wait's ring `.ork-sigil.is-waiting` with `--ork-sigil-share`, the give `.ork-gives` on the head of who plays the card (`motion.js` `give`), the die at rest `face-play`. The flights, and the field's growth out of the + card, stay Web Animations (orkUI has no flight with unknown end points); the phone's small die still shows the five.

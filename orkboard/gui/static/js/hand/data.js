@@ -10,7 +10,6 @@ import { partiesNow, roadSlugs, waitRuns } from "../table/data.js";
 import { groupsStops } from "./groupscard.js";
 import { hypothesisStops } from "./hypothesiscard.js";
 import { cascadeStops } from "./cascadecard.js";
-import { isHeld } from "./hearingstate.js";
 import { projectStops, questionStops } from "./questions.js";
 
 /** The parties of the map in the Board's order. */
@@ -48,7 +47,7 @@ export function readyWords(r) {
  *  its leader's head does). On a party's tab a stop of another party says its party. */
 export function stopsOfProject(map = mapData.value, rows = board.value?.needs_you || [], open = "") {
   const running = new Set((map?.nodes || []).filter(waitRuns).map((n) => n.slug));                       // a decision all the leaders agreed on, its wait running: it goes on by itself, no card in the hand (decisions §240); it lies in the column
-  const needs = rows.filter((r) => !isHeld(r) && !(r.kind === "decision" && running.has(r.idea))), out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
+  const needs = rows.filter((r) => !(r.kind === "decision" && running.has(r.idea))), out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
   for (const g of partiesOf(map)) {
     const nodes = nodesOf(map, g.slug), party = partyCard(g);
     const whole = (s) => (s.kind === "leader_change" && !s.node ? { ...s, node: (map?.nodes || []).find((n) => n.slug === s.row?.idea) || null } : s);      // a change asked of this leader about a goal that lies in another party's lane: the goal's rune is still its card's

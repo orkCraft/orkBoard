@@ -6,12 +6,12 @@
 //   `hearing`: `HearingPane`, with the goal's Spec under it for a fork); lifted on a phone it lies on the goal's top card in the middle (`HearingHere`, spec 117's middle).
 //   The card in the middle is dragged or swiped (`setPointerCapture`, `touch-action: none` on the card alone; never from the screen's edge), tilts toward the side it nears, that side grows and its outcome is stamped on the card; let go past a third of the way
 //   (or flung) it is thrown, short of it it comes back, down is no side. A press on a side throws it, → ← ↑ throw, Enter on the card (or *Or say it in your own words*) opens the field for the person's words. `ideas.throw {idea, moment, dir | text}`.
-//   The toast says *Thrown to <Leader>: <outcome>*. A drop waits six seconds with **Undo** and is sent only when the toast goes (its row is held back, hearingstate.js); the host has no command to take another throw back, so the others are sent at once and their
-//   toast has no Undo. Under reduced motion the card follows nothing and flies nowhere. Its sheet is hearing.css, linked as the hand's are.
+//   The toast says *Thrown to <Leader>: <outcome>*. Every throw of a Talk's hearing is sent at once and its toast says **Undo** for six seconds: `ideas.unthrow {idea, moment}` takes it back (a dropped goal returns, *Not now* is undone) unless it went on already,
+//   which the host says in plain words (core/idea_objection.py `unthrow`); a fork's throw has no Undo, the leaders write their sections from it at once. Under reduced motion the card follows nothing and flies nowhere. Its sheet is hearing.css, linked as the hand's are.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
-import { command, dismiss, toast, toasts } from "../link.js";
+import { command, toast } from "../link.js";
 import { board } from "../board/store.js";
 import { mapData, act } from "../shell/store.js";
 import { openOver, picked, tab } from "../frame/state.js";
@@ -19,7 +19,7 @@ import { uprightNow } from "../frame/upright.js";
 import { mapName, nameOf, partiesAll } from "../table/data.js";
 import { SpecPage, linesOf, partsOf } from "../table/specpage.js";
 import { chooseFor } from "./choose.js";
-import { holding, isHeld, momentOf } from "./hearingstate.js";
+import { momentOf } from "./hearingstate.js";
 import { way } from "./ways.js";
 
 if (typeof document !== "undefined") {                                  // the sheet, once, as the hand's are linked
@@ -32,7 +32,7 @@ if (typeof document !== "undefined") {                                  // the s
   }
 }
 
-export const FLY_MS = 360, UNDO_S = 6;               // the card's flight; a drop waits this long for Undo
+export const FLY_MS = 360, UNDO_S = 6;               // the card's flight; the toast offers Undo this long
 const LEAN = 16, EDGE = 20, MIN_WAY = 120, FLING = 0.5, HINT = "orkcraft.hearing.hint";       // px: where a side is nearer; the screen's edge a gesture never starts at; px/ms of a fling
 const DIRS = ["right", "left", "up"];
 const KEYS = { ArrowRight: "right", ArrowLeft: "left", ArrowUp: "up" };
@@ -62,26 +62,16 @@ export const askerOf = (row) => headOfParty(hearingOf(row)?.sides?.find((s) => s
 /** What the toast says of a throw: *Thrown to Sh.man: Do it* (no leader stood on the side: its outcome alone). */
 const wordsOf = (side) => (side ? `${side.names?.[0] ? `Thrown to ${side.names[0]}: ` : ""}${side.outcome}` : "Said in your own words");
 
-/** A throw: to `side`, or the person's `text`. `back()` takes the hearing up again (Undo). A drop is held for `UNDO_S` seconds and sent only then; the others are sent at once. `flight`: ms the card flies before the hearing's row is held back.
- *  Resolves true when the throw was taken (sent, or held), false when the host refused it (its words are toasted). */
-export async function throwTo(h, pick, { back = null, flight = 0 } = {}) {
+/** A throw: to `side`, or the person's `text`, sent at once. A Talk's throw is said with **Undo** for `UNDO_S` seconds (`ideas.unthrow`; `back()` takes the hearing up again when the host took it back, its refusal is toasted in its words);
+ *  a fork's has none. `flight` is the card's flight in ms (the pane waits for it). Resolves true when the throw was taken, false when the host refused it (its words are toasted). */
+export async function throwTo(h, pick, { back = null } = {}) {
   const side = pick.side || null, args = { idea: h.idea, moment: h.moment, ...(side ? { dir: side.dir } : { text: pick.text }) };
   try { localStorage.setItem(HINT, "1"); } catch { /* a convenience only */ }
-  if (side?.kind !== "drop") {
-    const got = await act("ideas.throw", args);
-    if (got) toast(wordsOf(side), "information", "", 5);
-    return !!got;
-  }
-  const entry = { key: `${h.moment}/${h.idea}`, idea: h.idea, moment: h.moment };
-  let id = 0, timer = 0;
-  const hold = setTimeout(() => { holding.value = [...holding.value.filter((x) => x.key !== entry.key), entry]; }, flight);
-  const undo = () => { clearTimeout(hold); clearTimeout(timer); holding.value = holding.value.filter((x) => x !== entry); back?.(); };
-  toast(`${wordsOf(side)}. Dropped in ${UNDO_S} s`, "information", "", UNDO_S, null, [{ label: "Undo", run: undo }]);
-  id = toasts.value[toasts.value.length - 1]?.id;
-  timer = setTimeout(async () => {                                      // the toast goes: the drop is sent
-    dismiss(id);
-    try { await act("ideas.throw", args); } finally { holding.value = holding.value.filter((x) => x !== entry); }
-  }, UNDO_S * 1000);
+  const got = await act("ideas.throw", args);
+  if (!got) return false;
+  if (h.moment !== "talk") { toast(wordsOf(side), "information", "", 5); return true; }
+  const undo = async () => { if (await act("ideas.unthrow", { idea: h.idea, moment: h.moment })) back?.(); };
+  toast(wordsOf(side), "information", "", UNDO_S, null, [{ label: "Undo", run: undo }]);
   return true;
 }
 
@@ -156,7 +146,7 @@ function Side({ side, near, busy, onThrow }) {
 
 const seenHint = () => { try { return localStorage.getItem(HINT) === "1"; } catch { return false; } };
 
-/** The hearing: its title, the sides around the goal's card, the hint once a device. `reopen`: what Undo of a drop does to bring it back; `onFly(true)`: told when the card is thrown, `onFly(false)` when it came back (the pane waits for the flight before it closes). */
+/** The hearing: its title, the sides around the goal's card, the hint once a device. `reopen`: what Undo of a throw does to bring the hearing back; `onFly(true)`: told when the card is thrown, `onFly(false)` when it came back (the pane waits for the flight before it closes). */
 export function Hearing({ row, reopen, onFly, close }) {
   const h = hearingOf(row), node = (mapData.value?.nodes || []).find((n) => n.slug === h.idea) || null, words = useGoalWords(h.idea, node);
   const root = useRef(), card = useRef(), field = useRef(), drag = useRef(null);
@@ -187,7 +177,7 @@ export function Hearing({ row, reopen, onFly, close }) {
     if (busy || away) return;
     setBusy(true);
     flyTo(pick.side?.dir || "");
-    const ok = await throwTo(h, pick, { back: reopen, flight: reduced() ? 0 : FLY_MS });
+    const ok = await throwTo(h, pick, { back: reopen });
     setBusy(false);
     if (!ok) back();
   };
@@ -259,7 +249,7 @@ export function Hearing({ row, reopen, onFly, close }) {
 
 // -- over the pane (the desktop) and on the phone's middle ----------------------------------------------------------------------------
 
-const rowOf = (idea) => (board.value?.needs_you || []).find((r) => (r.kind === "hearing" || r.kind === "fork") && r.idea === idea && !isHeld(r)) || null;
+const rowOf = (idea) => (board.value?.needs_you || []).find((r) => (r.kind === "hearing" || r.kind === "fork") && r.idea === idea) || null;
 const fromHere = () => ({ title: mapName(tab.value, partiesAll()), key: "" });
 
 /** What the pane's `choose` draws for source `hearing` (`props.idea`): the hearing, and for a fork the goal's Spec with the sections of the sides lit under it. It goes back when the goal has no hearing left (thrown, answered meanwhile, or held for Undo);

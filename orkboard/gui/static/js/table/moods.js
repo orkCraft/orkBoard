@@ -9,7 +9,6 @@ import { effect, signal } from "@preact/signals";
 import { town } from "../link.js";
 import { board } from "../board/store.js";
 import { mapData } from "../shell/store.js";
-import { isHeld } from "../hand/hearingstate.js";
 import { windowsOf } from "../hand/windows.js";
 import { groupsOf, laneOf, toolOf } from "./data.js";
 import { hasAlert, lookOf, recordOf } from "./concerns.js";
@@ -56,7 +55,7 @@ function leaderTool(g) {
 }
 
 /** Whether the party's leader says no in an open hearing: a side of kind *drop* or *smaller* that it holds. */
-const saysNo = (g) => (board.value?.needs_you || []).some((row) => row?.kind === "hearing" && !isHeld(row)
+const saysNo = (g) => (board.value?.needs_you || []).some((row) => row?.kind === "hearing"
   && (row.sides || []).some((s) => (s.kind === "drop" || s.kind === "smaller") && (s.leaders || []).includes(g.slug)));
 
 /**

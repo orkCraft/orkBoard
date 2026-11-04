@@ -4,10 +4,13 @@ mixin of `IdeaKeeper`, as `idea_talk.py` is.
 
     keeper.objection_answer(slug, party, answer)    # `answer`: drop · smaller · later · go; the leader is the party's (one no a leader)
     keeper.throw(slug, dir="", text="", tree=None)  # a hearing thrown (spec 120 §4.3): to the side at `dir` (right · left · up), or `text`, the person's own words
+    keeper.unthrow(slug)                            # the throw taken back (spec 120 §6.7, Undo): the goal as it was before it, the hearing open again
 
 A throw is each of these answers for the leaders of its side (the others' no is overruled, `go`): `go` (right, *Do it*) goes on to the decision and confirms it as soon as it is worded;
 `smaller` words the goal as the side's `instead`, then the same; `later` waits on the goal named; `drop` drops the goal; `text` confirms with the person's words kept as written.
-A hearing that is no longer open is refused in plain words (`idea_hearing.DECIDED`). The confirm after the decision's call is the record's `thrown`; `tree` (the Board's tree) is kept in
+A hearing that is no longer open is refused in plain words (`idea_hearing.DECIDED`). **A throw can be taken back** for `idea_hearing.UNDO_S` seconds: the goal is kept as the throw found it (`idea_hearing.snapshot`: its page, its
+state folder) and `unthrow` puts it back — a dropped goal returns with its ledger, a *Not now* is undone, the person's words and a word of the goal's are taken back — as long as nothing went on from it: a goal the keeper has begun
+on (the decision's call after a throw that cleared Talk) or whose state moved on is refused in plain words (`idea_hearing.WENT_ON`). The confirm after the decision's call is the record's `thrown`; `tree` (the Board's tree) is kept in
 memory for it, and without it (the host restarted meanwhile) the decision's card waits for the person's own press.
 
 - **drop**: the goal is dropped (`ideas.drop`).
@@ -48,6 +51,7 @@ class ObjectionMixin:
         was = journal_notes.title_of(root, slug)                      # the goal as the leaders knew it (spec 125 B)
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
+            snap = idea_hearing.snapshot(root, self.state_dir, slug)                  # what the throw may change, kept for an Undo
             hearing = idea_objections.open_hearing(root, self.state_dir, slug, rec, self._name) if ideas.state(self.state_dir, slug)["state"] == "talk" else None
             if hearing is None:
                 raise kw.KeeperError(idea_hearing.DECIDED)
@@ -83,13 +87,41 @@ class ObjectionMixin:
         self._ev(event_log.HEARING_THROWN, idea=slug, moment="talk", kind=kind, dir="" if text else dir, leaders=len(mine))
         if kind == "drop":
             ideas.drop(root, slug, self.state_dir)
+            if snap is not None:
+                idea_hearing.dropped(self.state_dir, snap)
         elif kind == "later":
             self._left(slug, {"leader": (who or {}).get("leader", ""), "why": side["line"]}, "later", after)
         else:
             ideas.add_turn(self.state_dir, slug, "you", f"Thrown to {', '.join(side['names'])}: {outcome}" if side else outcome, "Talk")
-            if clear:
-                self._on(slug, "decide")
+        undo = self.__dict__.setdefault("_throw_undo", {})
+        if snap is not None:
+            undo[slug] = {"at": time.monotonic(), "kind": kind, "snap": snap, "state": ideas.state(self.state_dir, slug)["state"] if kind != "drop" else ""}
+        if kind not in ("drop", "later") and clear:
+            self._on(slug, "decide")
         return {"kind": kind, "dir": "" if text else dir, "outcome": outcome, "to": list(side["names"]) if side else [], "moment": "talk"}
+
+    def unthrow(self, slug: str) -> dict:
+        """Take the goal's last throw back (Undo): the goal as the throw found it, its hearing open again; `{kind, moment: "talk"}`. KeeperError in plain words (`idea_hearing.WENT_ON`) when
+        the throw is older than `idea_hearing.UNDO_S`, was not kept (a goal's folder too large), another throw or a call went on from it, or the goal is not as the throw left it."""
+        kw = _kw()
+        root = self.wiki_root()
+        undo = self.__dict__.setdefault("_throw_undo", {})
+        with ideas.LOCK:
+            got = undo.get(slug)
+            if got is None or time.monotonic() - got["at"] > idea_hearing.UNDO_S:
+                undo.pop(slug, None)
+                raise kw.KeeperError(idea_hearing.WENT_ON)
+            if got["kind"] == "drop":
+                if ideas.idea_page(root, slug) is not None:
+                    raise kw.KeeperError(idea_hearing.WENT_ON)
+            elif self.busy(slug) or ideas.idea_page(root, slug) is None or ideas.state(self.state_dir, slug)["state"] != got["state"]:
+                raise kw.KeeperError(idea_hearing.WENT_ON)
+            idea_hearing.restore(root, self.state_dir, slug, got["snap"])
+            undo.pop(slug, None)
+            self.__dict__.setdefault("_throw_trees", {}).pop(slug, None)
+        self._ev(event_log.HEARING_UNTHROWN, idea=slug, moment="talk", kind=got["kind"], seconds=round(time.monotonic() - got["at"], 1))
+        self.publish(slug)
+        return {"kind": got["kind"], "moment": "talk"}
 
     def decision_run(self, slug: str, after: list) -> None:
         """The decision's call as `DecideMixin` has it; when the goal came here by a throw, the decision is then confirmed (`thrown_confirm`), for the throw was the person's yes."""

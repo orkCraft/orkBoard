@@ -280,3 +280,57 @@ def test_on_a_phone_a_card_handed_flies_from_the_crown_as_a_copy_over_the_row_an
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+CUE = "() => document.querySelector('.up-row').dataset.cue || ''"
+
+
+def test_on_a_phone_a_card_that_lands_out_of_the_rows_view_moves_no_scroll_and_brightens_the_rows_edge_once(gui):
+    """Spec 120 §6.9: the row's cue at its edge brightens once (`data-cue` on the row, a strip at that edge), a card that lands in view says nothing more."""
+    pg, host, log = open_life(gui, width="phone")
+    try:
+        pg.locator(".up-crown").wait_for(timeout=WAIT_MS)
+        asks_goal(host, "g0", "Goal number 0")
+        host.bump({})
+        pg.locator(".up-card").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(700)
+        assert pg.evaluate(CUE) == "", "the first card lands in view: no cue"
+        for i in range(1, 5):
+            asks_goal(host, f"g{i}", f"Goal number {i}")
+        host.bump({})
+        pg.wait_for_function("() => document.querySelectorAll('.up-card').length === 5", timeout=WAIT_MS)
+        pg.wait_for_function("() => !document.querySelector('.up-row').dataset.cue", timeout=WAIT_MS)        # the cue of the cards that came together has gone
+        pg.wait_for_function("() => !document.querySelector('body > .hand-ghost--handed')", timeout=WAIT_MS)
+        before = pg.evaluate("() => document.querySelector('.up-cards').scrollLeft")
+        asks_goal(host, "g5", "Goal number 5")
+        host.bump({})
+        pg.wait_for_function("() => document.querySelectorAll('.up-card').length === 6", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.up-row').dataset.cue === 'right'", timeout=WAIT_MS)
+        shot(pg, "edge-cue")
+        assert pg.evaluate("() => document.querySelector('.up-cards').scrollLeft") == before, "a card that lands out of view moves no scroll"
+        edge = pg.evaluate("() => { const e = getComputedStyle(document.querySelector('.up-row'), '::after'); return [e.position, e.width, e.animationName] }")
+        assert edge[0] == "absolute" and edge[1] != "auto" and edge[2] == "up-cue", edge
+        pg.wait_for_function("() => !document.querySelector('.up-row').dataset.cue", timeout=WAIT_MS)       # brightened once
+        assert pg.evaluate("() => document.querySelector('.up-cards').scrollLeft") == before
+        assert pg.evaluate("() => document.querySelector('.up-cards').dataset.more").count("right") == 1, "scrollcue's own fade says there is more to the right"
+        narrow.no_sideways(pg)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_under_reduced_motion_the_rows_edge_cue_is_still_but_there_while_the_card_lies_out_of_view(gui):
+    pg, host, log = open_life(gui, width="phone")
+    try:
+        pg.emulate_media(reduced_motion="reduce")
+        pg.locator(".up-crown").wait_for(timeout=WAIT_MS)
+        for i in range(5):
+            asks_goal(host, f"g{i}", f"Goal number {i}")
+        host.bump({})
+        pg.wait_for_function("() => document.querySelectorAll('.up-card').length === 5", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.up-row').dataset.cue === 'right'", timeout=WAIT_MS)
+        assert pg.evaluate("() => { const e = getComputedStyle(document.querySelector('.up-row'), '::after'); return [e.animationName, e.opacity] }") == ["none", "1"]
+        pg.wait_for_function("() => !document.querySelector('.up-row').dataset.cue", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

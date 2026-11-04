@@ -7,6 +7,7 @@ leaders who stand on it, thrown by the person to the one they take. Pure code, n
     is_open(rec)                 # a Talk's hearing is open: a no is unanswered, or the part that weighs the verdicts said a hearing (`rec["hearing"]` is true)
     namer(state_dir)             # leader id → the name it is called by (the person's role, else the library's)
     DIRS / DECIDED               # the three places a side stands; what a throw of a hearing no longer open is told
+    snapshot(root, state_dir, slug) / dropped(...) / restore(...)   # what a throw may change, kept as it was and put back (spec 120 §6.7: Undo of a throw, `keeper.unthrow`); UNDO_S, WENT_ON
 
 A side is `{dir, kind, leaders: [party], names: [name], also: [name], line, outcome}`, `dir` one of `right` · `left` · `up`, and for a Talk's `instead` / `after` / `after_title` / `doubts`
 (`kind` one of `go` · `drop` · `smaller` · `later`; a fork's is `side`, with `party`). `line` is the first leader's own words, `also` the other leaders named after it.
@@ -15,12 +16,16 @@ adds its words to `go`'s side (`doubts`). More kinds than fit: the last is left 
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Callable
 
-from orkboard.realm import library, roles
+from orkboard.realm import idea_spend, ideas, library, roles
 
 DIRS = ("right", "left", "up")                  # → ← ↑ : a side's place; down is no side
 DECIDED = "This was decided already"            # a throw of a hearing that is no longer open
+WENT_ON = "It went on already"                 # an Undo of a throw that cannot be taken back any more
+UNDO_S = 8                                      # how long a throw can be taken back, in seconds (the page's toast waits 6)
+SNAP_BYTES = 4_000_000                          # a goal's folder larger than this is not kept for an Undo
 GO_ALONE = "Go on anyway"                       # the `go` side when no leader said go
 KINDS = ("go", "drop", "smaller", "later")
 TITLE_CHARS = 80
@@ -120,3 +125,51 @@ def of_fork(fork: dict, name_of: Callable[[str], str] | None = None) -> dict:
     about = _s(fork.get("about"))
     title = f"{_joined(leaders)} disagree" if len(leaders) > 1 and name_of else about
     return {"moment": "fork", "id": str(fork.get("id") or ""), "about": about, "title": title, "sides": sides, "left_out": left_out, "own": True}
+
+
+# -- Undo of a throw (spec 120 §6.7) --------------------------------------------------------------------------------------------------------------
+
+def snapshot(root: Path, state_dir: Path, slug: str) -> dict | None:
+    """The goal as a throw finds it, to be put back: its page, every file of its state folder (in memory) and where `spend-gone.jsonl` ends (a drop appends the goal's ledger to it).
+    None when the goal's folder is too large to keep (`SNAP_BYTES`): such a throw cannot be taken back."""
+    page = Path(root) / ideas.IDEAS / f"{slug}.md"
+    folder = Path(state_dir) / "ideas" / slug
+    files, size = {}, 0
+    for f in sorted(folder.rglob("*")) if folder.is_dir() else []:
+        if f.is_file():
+            data = f.read_bytes()
+            size += len(data)
+            if size > SNAP_BYTES:
+                return None
+            files[str(f.relative_to(folder))] = data
+    gone = Path(state_dir) / "ideas" / idea_spend.GONE
+    return {"page": page.read_text(encoding="utf-8") if page.exists() else None, "files": files, "gone_at": gone.stat().st_size if gone.exists() else 0, "appended": b""}
+
+
+def dropped(state_dir: Path, snap: dict) -> None:
+    """The goal was dropped: what its drop appended to `spend-gone.jsonl` is noted, so that putting the goal back takes it out again."""
+    gone = Path(state_dir) / "ideas" / idea_spend.GONE
+    if gone.exists():
+        snap["appended"] = gone.read_bytes()[snap["gone_at"]:]
+
+
+def restore(root: Path, state_dir: Path, slug: str, snap: dict) -> None:
+    """Put the goal back as `snapshot` kept it: its page, its state folder as it was (the files a throw made go), the ledger lines a drop moved to `spend-gone.jsonl` taken out of it, and the pages' index."""
+    import shutil
+    with ideas.LOCK:
+        if snap["page"] is not None:
+            page = Path(root) / ideas.IDEAS / f"{slug}.md"
+            page.parent.mkdir(parents=True, exist_ok=True)
+            page.write_text(snap["page"], encoding="utf-8")
+        folder = Path(state_dir) / "ideas" / slug
+        shutil.rmtree(folder, ignore_errors=True)
+        for rel, data in snap["files"].items():
+            (folder / rel).parent.mkdir(parents=True, exist_ok=True)
+            (folder / rel).write_bytes(data)
+        if snap["appended"]:
+            gone = Path(state_dir) / "ideas" / idea_spend.GONE
+            have = gone.read_bytes() if gone.exists() else b""
+            at = have.find(snap["appended"], max(0, snap["gone_at"] - 1))
+            if at >= 0:
+                gone.write_bytes(have[:at] + have[at + len(snap["appended"]):])
+        ideas._reindex(root)

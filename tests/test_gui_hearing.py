@@ -12,7 +12,7 @@ from orkboard.realm import event_log, idea_questions, ideas, spec_sections
 from tests.test_idea_decide import git  # noqa: F401
 from tests.test_idea_talk import DECIDED, TECH_NO, _noes, _objections, _row, _state, _talk, _until_state, host, model, parties  # noqa: F401  (the fixtures)
 
-COMMANDS = {"ideas.hearing", "ideas.throw", "ideas.ripe_hold", "ideas.ripe_back"}
+COMMANDS = {"ideas.hearing", "ideas.throw", "ideas.unthrow", "ideas.ripe_hold", "ideas.ripe_back"}
 
 
 def _throw(host, slug, **args):
@@ -280,3 +280,94 @@ def test_hold_holds_a_running_wait_and_says_so_plainly_when_none_runs(host, part
     with pytest.raises(CommandError, match="That goal is gone"):
         host.command("ideas.ripe_hold", {"idea": "nobody"})
 
+
+
+# -- Undo of a throw (spec 120 §6.7, `ideas.unthrow`) -----------------------------------------------------------------------------------------------
+
+def _unthrow(host, slug, **args):
+    return host.command("ideas.unthrow", {"idea": slug, "moment": "talk", **args})
+
+
+def test_the_unthrow_command_is_the_hosts_and_a_phones(host):
+    assert "ideas.unthrow" in host.commands and BoardPhone.allowed(host, "ideas.unthrow", {})
+
+
+def test_a_drop_taken_back_returns_the_goal_with_its_state_its_ledger_and_its_hearing(host, parties, model):
+    slug = _no_goal(host, parties, model, tech={"verdict": "no", "why": "No way"})
+    state_dir, root = host.ideas.state_dir, host.ideas.root()
+    spend = state_dir / "ideas" / slug / "spend.jsonl"
+    spend.write_text('{"at": "2026-10-20T10:00:00", "usd": 0.5, "calls": 1}\n', encoding="utf-8")
+    was = (ideas.idea_page(root, slug).title, idea_questions.record(state_dir, slug), spend.read_text(encoding="utf-8"))
+    gone = state_dir / "ideas" / "spend-gone.jsonl"
+    _throw(host, slug, dir="left")
+    assert ideas.idea_page(root, slug) is None and not (state_dir / "ideas" / slug).exists() and slug in gone.read_text(encoding="utf-8")
+    assert _unthrow(host, slug) == {"ok": True, "kind": "drop", "moment": "talk"}
+    assert (ideas.idea_page(root, slug).title, idea_questions.record(state_dir, slug), spend.read_text(encoding="utf-8")) == was
+    assert not gone.exists() or slug not in gone.read_text(encoding="utf-8"), "the ledger lines the drop moved are taken out again"
+    assert len(_objections(host, slug)) == 1 and host.command("ideas.hearing", {"idea": slug})["moment"] == "talk"
+    assert slug in [i["slug"] for i in ideas.ideas(root)], "the pages' index has it again"
+    with pytest.raises(CommandError, match="It went on already"):
+        _unthrow(host, slug)                                                                                          # taken back once
+
+
+def test_not_now_taken_back_removes_the_wait_and_the_goal_is_at_talk_again(host, parties, model):
+    first = host.command("ideas.add", {"text": "add a lobby for the party game", "track": parties["product"], "hold": True})["slug"]
+    slug = _no_goal(host, parties, model, text="add a dark mode option", product={"verdict": "no", "why": "The lobby comes first", "after": first})
+    state_dir, root = host.ideas.state_dir, host.ideas.root()
+    was = ((root / ideas.IDEAS / f"{slug}.md").read_text(encoding="utf-8"), _state(host, slug)["state"], idea_questions.record(state_dir, slug))
+    _throw(host, slug, dir="left")
+    assert _state(host, slug)["state"] == "raw"
+    assert _unthrow(host, slug)["kind"] == "later"
+    assert ((root / ideas.IDEAS / f"{slug}.md").read_text(encoding="utf-8"), _state(host, slug)["state"], idea_questions.record(state_dir, slug)) == was
+    node = next(n for n in host.command("ideas.map")["nodes"] if n["slug"] == slug)
+    assert node["waits_on"] == [] and node["state"] == "talk" and len(_objections(host, slug)) == 1
+
+
+def test_a_go_taken_back_while_the_questions_still_wait_leaves_the_hearing_open_and_nothing_decided(host, parties, model, sections):
+    _noes(model, parties, per=1, tech=TECH_NO)
+    model.said[("decide", "")] = DECIDED
+    slug = _talk(host, parties, ["tech"])
+    state_dir = host.ideas.state_dir
+    was = idea_questions.record(state_dir, slug)
+    _throw(host, slug, dir="right")
+    assert idea_questions.record(state_dir, slug).get("thrown") and _objections(host, slug) == []
+    assert _unthrow(host, slug)["kind"] == "go"
+    assert idea_questions.record(state_dir, slug) == was and len(_objections(host, slug)) == 1
+    assert not any(t["text"].startswith("Thrown to ") for t in ideas.talk(state_dir, slug)), "the line the throw added to the Talk is gone"
+    assert model.steps("decide") == [] and sections == []
+    _throw(host, slug, dir="right")                                                                                   # thrown again after it was taken back, it goes on as before
+    host.command("ideas.talk_answer", {"idea": slug, "answers": [], "decide": True})
+    _until_sections(host, slug)
+    assert sections == [slug]
+
+
+def test_a_go_that_began_the_decision_cannot_be_taken_back_and_changes_nothing(host, parties, model, sections):
+    slug = _no_goal(host, parties, model, tech=TECH_NO)
+    _throw(host, slug, dir="right")
+    _until_sections(host, slug)
+    with pytest.raises(CommandError, match="It went on already"):
+        _unthrow(host, slug)
+    assert sections == [slug] and len(model.steps("decide")) == 1
+
+
+def test_an_unthrow_after_its_time_or_of_a_fork_or_of_nothing_is_refused_in_plain_words(host, parties, model, monkeypatch):
+    slug = _no_goal(host, parties, model, tech={"verdict": "no", "why": "No way"})
+    with pytest.raises(CommandError, match="It went on already"):
+        _unthrow(host, slug)                                                                                          # nothing was thrown
+    with pytest.raises(CommandError, match="It went on already"):
+        _unthrow(host, slug, moment="fork")
+    _throw(host, slug, dir="left")
+    from orkboard.realm import idea_hearing
+    monkeypatch.setattr(idea_hearing, "UNDO_S", -1)
+    with pytest.raises(CommandError, match="It went on already"):
+        _unthrow(host, slug)
+    assert ideas.idea_page(host.ideas.root(), slug) is None
+
+
+def test_a_throw_taken_back_is_logged_without_a_word_of_anyones(host, parties, model):
+    slug = _no_goal(host, parties, model, tech={"verdict": "no", "why": "No way"})
+    host.ideas.keeper.events = True
+    _throw(host, slug, dir="left")
+    _unthrow(host, slug)
+    lines = [e for e in event_log.read(host.repo_root) if e["event"] == event_log.HEARING_UNTHROWN]
+    assert len(lines) == 1 and lines[0]["idea"] == slug and lines[0]["kind"] == "drop" and "No way" not in str(lines[0]) and event_log.HEARING_UNTHROWN in event_log.EVENTS

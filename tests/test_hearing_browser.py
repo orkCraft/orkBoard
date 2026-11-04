@@ -1,8 +1,7 @@
 """The hearing's face (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.7, §7 F; decisions §198.6; the mockup docs/mockups/hearing/ 3), in a real browser against a stub host answering the Needs you rows `hearing` and `fork` (with its
 `hearing`), `ideas.page` and the command `ideas.throw {idea, moment, dir | text}`: the card in the hand (the question sign, the first leader's head, the heading at its foot, under the first lane); lifted over the pane at the wide and the narrow
 widths and in the middle of a phone-sized page, the goal's card (its rune and name, *Done when*, else its gist) and the sides around it (→ right, ← left, ↑ up), each its leaders' heads (the first at 28 px, the others at 16), its line and its outcome; a swipe
-past a third of the way throwing the side, one short of it coming back, a fling, down being no side; a press, the keys and the person's own words; the toast *Thrown to <Leader>: <outcome>*, a drop held for six seconds with **Undo** (Undo before it sends
-nothing); a refusal keeping the hearing; no sideways scroll; nothing moving under reduced motion. Screenshots to $HEARING_SHOTS when it is set."""
+past a third of the way throwing the side, one short of it coming back, a fling, down being no side; a press, the keys and the person's own words; the toast *Thrown to <Leader>: <outcome>*, every Talk throw sent at once and its toast saying **Undo** for six seconds (`ideas.unthrow` takes it back, a refusal is said in the host's words; a fork's has no Undo); a refusal keeping the hearing; no sideways scroll; nothing moving under reduced motion. Screenshots to $HEARING_SHOTS when it is set."""
 from __future__ import annotations
 
 import os
@@ -59,6 +58,8 @@ class HearingHost(HandHost):
             self.needs.append(hearing("lobby", "Lobby chat", sides=sides))
         self.page = PAGE if page is None else page
         self.refuse = False
+        self.went_on = False                                              # the host says an Undo went on already
+        self.sent = []                                                    # the needs rows a throw took out, to put back when it is taken back
 
     def handle(self, name, a):
         if name == "ideas.page":
@@ -68,8 +69,16 @@ class HearingHost(HandHost):
             self.log.append((name, a))
             if self.refuse:
                 return {"error": "The keeper is busy with this goal: a moment"}
+            self.sent += [n for n in self.needs if n["kind"] == "hearing" and n["idea"] == a["idea"]]
             self.needs = [n for n in self.needs if not (n["kind"] == "hearing" and n["idea"] == a["idea"])]
             return self.bump({"ok": True, "moment": a["moment"], "kind": "own" if a.get("text") else "go", "dir": a.get("dir", ""), "outcome": "Do it", "to": []})
+        if name == "ideas.unthrow":
+            self.log.append((name, a))
+            if self.went_on:
+                return {"error": "It went on already"}
+            self.needs += [n for n in self.sent if n["idea"] == a["idea"]]
+            self.sent = [n for n in self.sent if n["idea"] != a["idea"]]
+            return self.bump({"ok": True, "kind": "go", "moment": a["moment"]})
         return super().handle(name, a)
 
 
@@ -218,7 +227,7 @@ def test_a_swipe_past_a_third_of_the_way_throws_the_side_and_the_toast_says_wher
         drag(pg, far / 3 + 30, 0)
         thrown(pg, host, dir="right")
         assert toast_text(pg).startswith("Thrown to Product lead: Do it")
-        assert pg.locator(".gui-toast").first.get_by_role("button", name="Undo").count() == 0, "the host takes no throw back: only a drop waits"
+        assert pg.locator(".gui-toast").first.get_by_role("button", name="Undo").count() == 1, "a Talk's throw is said with Undo"
         pg.wait_for_function("() => !document.querySelector('.hr')", timeout=WAIT_MS)
         assert pg.locator('.hand-stack[data-goal="night"]').count() == 0, "the card left the hand"
         narrow.no_sideways(pg)
@@ -363,53 +372,70 @@ def test_the_words_button_opens_the_field_and_esc_closes_it_with_the_card_kept(g
     assert not log, "\n".join(log)
 
 
-def test_a_drop_is_sent_only_when_the_toast_goes_and_undo_before_that_sends_nothing(gui):
+def test_a_drop_is_sent_at_once_and_undo_takes_it_back_with_the_hosts_command(gui):
     pg, host, log = open_hearing(gui, "wide")
     try:
         lift(pg)
         pg.locator('.hr-side[data-dir="left"] .hr-side__btn').click()
+        thrown(pg, host, dir="left")
         text = toast_text(pg)
-        assert text.startswith("Thrown to Tech lead: Drop it") and "6 s" in text
-        pg.wait_for_function("() => !document.querySelector('.hand-stack[data-goal=\"night\"]')", timeout=WAIT_MS)       # the card is out of the hand meanwhile
+        assert text == "Thrown to Tech lead: Drop it", "no six seconds to wait: it is done, and Undo is offered"
+        pg.wait_for_function("() => !document.querySelector('.hand-stack[data-goal=\"night\"]')", timeout=WAIT_MS)       # the card is out of the hand
         pg.wait_for_function("() => !document.querySelector('.hr')", timeout=WAIT_MS)
-        no_throw(pg, host, 1500)
         pg.locator(".gui-toast").get_by_role("button", name="Undo").click()
+        assert _calls(pg, host, "ideas.unthrow") == [{"idea": "night", "moment": "talk"}]
         pg.wait_for_function("() => document.querySelector('.hr[data-goal=\"night\"]')", timeout=WAIT_MS)                # the hearing is back over the pane
         assert front(pg).count() == 1, "and its card in the hand"
         pg.wait_for_timeout(DROP_MS + 600)
-        assert not [a for n, a in host.log if n == "ideas.throw"], "Undo before the toast went: nothing was sent"
+        assert len([a for n, a in host.log if n == "ideas.throw"]) == 1, "nothing is sent when the toast goes"
         assert pg.locator(".hr").count() == 1
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_on_a_phone_a_drop_picks_the_next_goal_and_undo_brings_the_hearing_back_with_nothing_sent(gui):
+def test_on_a_phone_a_drop_picks_the_next_goal_and_undo_brings_the_hearing_back(gui):
     pg, host, log = open_hearing(gui, "phone", second=True)
     try:
         lift(pg, width="phone")
         pg.locator('.hr-side[data-dir="left"] .hr-side__btn').click()
-        assert "Dropped in 6 s" in toast_text(pg)
+        assert toast_text(pg) == "Thrown to Tech lead: Drop it"
         pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'lobby'", timeout=WAIT_MS)
         pg.locator(".gui-toast").get_by_role("button", name="Undo").click()
         pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'night' && document.querySelector('.hr[data-goal=\"night\"]')", timeout=WAIT_MS)
-        pg.wait_for_timeout(DROP_MS + 600)
-        assert not [a for n, a in host.log if n == "ideas.throw"], "Undo before the toast went: nothing was sent"
+        assert _calls(pg, host, "ideas.unthrow") == [{"idea": "night", "moment": "talk"}]
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_drop_not_undone_is_sent_when_its_toast_goes(gui):
+def test_an_undo_the_host_refuses_says_so_in_its_words_and_the_throw_stands(gui):
+    pg, host, log = open_hearing(gui, "wide")
+    try:
+        host.went_on = True
+        lift(pg)
+        pg.keyboard.press("ArrowRight")
+        thrown(pg, host, dir="right")
+        toast_text(pg)
+        pg.locator(".gui-toast").first.get_by_role("button", name="Undo").click()
+        assert _calls(pg, host, "ideas.unthrow") == [{"idea": "night", "moment": "talk"}]
+        pg.wait_for_function("() => [...document.querySelectorAll('.gui-toast__text')].some((e) => e.textContent.includes('It went on already'))", timeout=WAIT_MS)
+        pg.wait_for_timeout(500)
+        assert pg.locator(".hr").count() == 0 and front(pg).count() == 0, "the hearing stays thrown"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_throw_not_undone_sends_nothing_more_when_its_toast_goes(gui):
     pg, host, log = open_hearing(gui, "wide")
     try:
         lift(pg)
         pg.keyboard.press("ArrowLeft")
+        thrown(pg, host, dir="left")
         toast_text(pg)
-        no_throw(pg, host, 2500)
-        got = _calls(pg, host, "ideas.throw", ms=DROP_MS + 3000)
-        assert got == [{"idea": "night", "moment": "talk", "dir": "left"}], got
-        pg.wait_for_function("() => !document.querySelector('.gui-toast')", timeout=WAIT_MS)
+        pg.wait_for_function("() => !document.querySelector('.gui-toast')", timeout=DROP_MS + 3000)
+        assert [n for n, a in host.log if n in ("ideas.throw", "ideas.unthrow")] == ["ideas.throw"]
         assert pg.locator('.hand-stack[data-goal="night"]').count() == 0
     finally:
         pg.close()
@@ -569,6 +595,8 @@ def test_a_fork_lifted_is_a_hearing_with_its_sides_and_a_press_throws_it(gui, wi
         pg.locator('.spec-page[data-kind="spec"]').wait_for(timeout=WAIT_MS)
         hr.locator('.hr-side[data-dir="left"] .hr-side__btn').click()
         assert _calls(pg, host, "ideas.throw") == [{"idea": "rooms", "moment": "fork", "dir": "left"}]
+        toast_text(pg)
+        assert pg.locator(".gui-toast").first.get_by_role("button", name="Undo").count() == 0, "a fork's throw has no Undo: its leaders write at once"
         pg.wait_for_function("() => !document.querySelector('.hr')", timeout=WAIT_MS)
         assert toast_text(pg).startswith("Thrown to Tech lead: The server holds six players in a room")
     finally:
