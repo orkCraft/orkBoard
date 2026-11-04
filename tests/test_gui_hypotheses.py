@@ -65,7 +65,7 @@ def test_the_commands_are_in_the_table(host):
 # -- read and keep ----------------------------------------------------------------------------------------------------------------------------
 
 def test_nothing_is_kept_at_first(host):
-    assert host.command("ideas.hypotheses", {}) == {"items": [], "party": "", "proposing": False, "status": ""}
+    assert host.command("ideas.hypotheses", {}) == {"items": [], "party": "", "proposing": False, "status": "", "file": ""}
 
 
 def test_the_person_s_hypothesis_is_open_at_once_and_its_words_change_with_its_id_staying(host):
@@ -375,3 +375,66 @@ def test_with_no_draft_the_body_is_as_it_was(host):
     log = git(host.repo_root, "show", "dev:docs/decisions.md")
     assert log[log.rindex("## 1. "):].split("\n", 1)[1].strip().startswith("Signal:")
     refused(host, "ideas.hypothesis_judge", {"id": hold(host, text="Other")["id"], "state": "held", "way": "x"}, "Only a refuted")
+
+
+# -- spec 133 C: the project's own hypotheses file, written and committed with the Board's pages ---------------------------------------------
+
+OWN_FILE = """# Hypotheses
+
+## H1. People want a sketch first
+
+**Status:** open. **Raised:** the owner.
+
+### What would prove it, what would refute it
+
+- **Holds** when most ask for one within a minute
+- **Refuted, the hook**: they look and do not pick
+
+### If it holds
+
+Sketch first, always.
+"""
+
+
+@pytest.fixture
+def fhost(fake_repo) -> Orkboard:
+    (fake_repo / "docs" / "hypotheses.md").write_text(OWN_FILE, encoding="utf-8")
+    git(fake_repo, "add", "docs/hypotheses.md")
+    git(fake_repo, "commit", "-q", "-m", "A hypotheses file")
+    h = Orkboard(fake_repo)
+    (h.ideas.state_dir / "project.json").write_text('{"decisions": "docs/decisions.md"}', encoding="utf-8")
+    h.ideas.root()
+    yield h
+    sys.modules.pop("orkboard.core.idea_runner", None)
+
+
+def test_the_project_s_file_is_read_in_and_a_hypothesis_added_is_committed_in_it_with_the_boards_pages(fhost):
+    got = fhost.command("ideas.hypotheses", {})
+    assert got["file"] == "docs/hypotheses.md" and [(i["id"], i["text"], i["state"]) for i in got["items"]] == [("h1", "People want a sketch first", "open")]
+    assert got["items"][0]["refuted"][0]["name"] == "the hook" and got["items"][0]["if_holds"] == "Sketch first, always."
+    item = hold(fhost, text="Founders pay", signal="ten say so", refuted=[{"name": "the price", "when": "none would"}])
+    assert item["id"] == "h2"
+    log = git(fhost.repo_root, "show", "dev:docs/hypotheses.md")
+    assert "## H2. Founders pay" in log and "- **Refuted, the price**: none would" in log
+    assert git(fhost.repo_root, "log", "-1", "--format=%s", "dev") == "board: hypothesis h2 — added"
+    assert git(fhost.repo_root, "show", "--name-only", "--format=", "dev").split() == ["docs/hypotheses.md"]
+    assert fhost.repo_root.joinpath("docs/hypotheses.md").read_text("utf-8") == OWN_FILE                      # the person's own checkout is not touched: dev holds the Board's
+
+
+def test_a_verdict_writes_the_decision_and_the_file_each_one_commit(fhost):
+    goal = make_goal(fhost, "Interview five founders", state="done", element="ice")
+    fhost.command("ideas.hypothesis_attach", {"id": "h1", "test": goal})
+    fhost.command("ideas.hypothesis_evidence", {"id": "h1", "text": "Four of five asked", "ref": goal})
+    got = fhost.command("ideas.hypothesis_judge", {"id": "h1", "state": "held", "why": "Clear"})
+    assert got["item"]["state"] == "held" and got["decision"]["number"] == 1
+    text = git(fhost.repo_root, "show", "dev:docs/hypotheses.md")
+    assert "**Status:** held; became decision §1." in text and "- Four of five asked (" + goal + ")" in text
+    subjects = git(fhost.repo_root, "log", "-4", "--format=%s", "dev").splitlines()
+    assert subjects[:2] == ["board: hypothesis h1 — judged held", "board: decision 1 — Hypothesis held: People want a sketch first"] and subjects[2] == "board: hypothesis h1 — evidence"
+    assert [i["state"] for i in fhost.command("ideas.hypotheses", {})["items"]] == ["held"] and hand(fhost) == []
+
+
+def test_a_project_with_no_file_keeps_its_hypotheses_in_the_record(host):
+    item = hold(host)
+    assert item["id"] == "people-want-a-sketch-first" and host.command("ideas.hypotheses", {})["file"] == ""
+    assert not (host.repo_root / "docs" / "hypotheses.md").exists()

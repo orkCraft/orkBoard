@@ -15,6 +15,9 @@ them by. The record is `realm/hypotheses.py`'s; the row *Did it hold?* that asks
                                               #    refuted that was met (spec 133 A.1); unsure keeps it open, the why its evidence
     ideas.hypotheses_propose {}               # the leaders' proposal (core/idea_hypotheses.py) → {ok, asked: bool, why?}
 
+**The project's own hypotheses file** (spec 133 C): where the project keeps one (`<state>/project.json` `hypotheses`, else `docs/hypotheses.md`, read in the Board's tree as the decisions file is) it is the source:
+every command below that changes a hypothesis writes it into the file and commits it with the Board's pages (`BoardTree.edit_file`), and `ideas.hypotheses` says its path as `file` ("" with none).
+
 `hypotheses` is data only: `party` is Product's party (or ""), `proposing` true while a proposal runs, `status` the last proposal's ("" · asking · done · failed, `core/idea_hypotheses.py`) with its `error` when it has one. Every command but `hypotheses_propose`
 refuses in plain words (`IdeasError`): a hypothesis gone or judged already, no words, a bound passed (seven open, twelve waiting, forty in all), a job or a goal that is gone, a verdict on a
 hypothesis not yet kept, a decision that could not be written (then the hypothesis stays as it was). `hypotheses_propose` is never a refusal: a call that cannot be made is `asked: false` with
@@ -30,7 +33,7 @@ from typing import Any
 from orkboard.core.idea_decide import TITLE_CHARS
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _str
-from orkboard.realm import board_rows, event_log, hypotheses, idea_element, ideas, journal_notes, opportunity_tree as tree
+from orkboard.realm import board_rows, event_log, hypotheses, hypotheses_bind, hypotheses_file, idea_element, ideas, journal_notes, opportunity_tree as tree
 
 DRAFT_WORDS = 6000                          # the person's own words for the decision, at most (as the decision card's text)
 NO_PROPOSAL = "Proposing hypotheses is not in this build yet"
@@ -58,10 +61,40 @@ class HypothesesMixin:
     def _hyp_item(self, id: str) -> dict:
         return self._hyp_shown([next(i for i in hypotheses.read(self.state_dir)["items"] if i["id"] == id)])[0]
 
+    # -- the project's file ---------------------------------------------------------------------------------------------------------------------
+
+    def _hyp_ready(self) -> None:
+        """The record knows where the project's hypotheses file is and how it is written (the Board's tree: one commit with its pages): found as the decisions file is, bound the first time (the
+        record's own items are taken into it), the writer given again at every command. IdeasError in plain words when the file cannot be taken."""
+        tree_ = self._decision_tree()
+        hypotheses.set_writer(self.state_dir, self._hyp_put(tree_) if tree_ is not None else None)
+        chosen = (ideas._json(self.state_dir / "project.json") or {}).get("hypotheses")
+        rel = hypotheses_file.find(hypotheses_bind.base(self.state_dir), chosen.strip() if isinstance(chosen, str) else "")
+        if rel and hypotheses_bind.file(self.state_dir) != rel:
+            try:
+                hypotheses.bind(self.state_dir, rel)
+            except ValueError as e:
+                raise IdeasError(str(e)) from None
+
+    def _hyp_put(self, tree_):
+        def put(rel: str, edit, message) -> None:
+            began = time.monotonic()
+            out = tree_.edit_file(rel, edit, message)
+            if out.get("commit"):
+                self._ev(event_log.BOARD_COMMITTED, commit=out["commit"], pages=out.get("pages") or 0, what="hypothesis", seconds=round(time.monotonic() - began, 2))
+            if out.get("held"):
+                self._ev(event_log.BOARD_HELD, why=out["held"])
+        return put
+
     def hypotheses(self, args: dict) -> dict:
+        try:
+            self._hyp_ready()
+        except IdeasError:
+            pass                                                           # the list is still shown (from the record); the next change says why
         party = self.keeper.tree_party() if hasattr(self.keeper, "tree_party") else ""
         prop = self.keeper.hypotheses_proposal() if hasattr(self.keeper, "hypotheses_proposal") else {"status": "", "error": ""}     # core/idea_hypotheses.py: a run lost with the process reads as none
-        out = {"items": self._hyp_shown(hypotheses.read(self.state_dir)["items"]), "party": party, "proposing": prop.get("status") == "asking", "status": prop.get("status") or ""}
+        out = {"items": self._hyp_shown(hypotheses.read(self.state_dir)["items"]), "party": party, "proposing": prop.get("status") == "asking", "status": prop.get("status") or "",
+               "file": hypotheses_bind.file(self.state_dir) or ""}
         return {**out, "error": prop["error"]} if prop.get("error") else out
 
     # -- the person's ---------------------------------------------------------------------------------------------------------------------------
@@ -72,6 +105,7 @@ class HypothesesMixin:
             raise IdeasError("That job is gone")
 
     def hypothesis_set(self, args: dict) -> dict:
+        self._hyp_ready()
         id = _str(args, "id", 60).strip()
         words: dict = {k: _str(args, k, 400) for k in ("text", "signal", "axis", "on", "if_holds") if k in args}
         if "refuted" in args:
@@ -93,6 +127,7 @@ class HypothesesMixin:
         return {"ok": True, "item": self._hyp_item(item["id"])}
 
     def hypothesis_keep(self, args: dict) -> dict:
+        self._hyp_ready()
         try:
             item = hypotheses.keep(self.state_dir, _str(args, "id", 60).strip())
         except ValueError as e:
@@ -101,6 +136,7 @@ class HypothesesMixin:
         return {"ok": True, "item": self._hyp_item(item["id"])}
 
     def hypothesis_drop(self, args: dict) -> dict:
+        self._hyp_ready()
         try:
             hypotheses.drop(self.state_dir, _str(args, "id", 60).strip())
         except ValueError as e:
@@ -118,6 +154,7 @@ class HypothesesMixin:
 
     def hypothesis_attach(self, args: dict) -> dict:
         id, goal, test = (_str(args, k, 80).strip() for k in ("id", "goal", "test"))
+        self._hyp_ready()
         try:
             for slug in (goal, test) if id else ():
                 if slug:
@@ -129,6 +166,7 @@ class HypothesesMixin:
         return {"ok": True, "item": self._hyp_item(item["id"]) if item else None}
 
     def hypothesis_evidence(self, args: dict) -> dict:
+        self._hyp_ready()
         try:
             item = hypotheses.evidence(self.state_dir, _str(args, "id", 60).strip(), _str(args, "text", 400), _str(args, "ref", 80).strip())
         except ValueError as e:
@@ -160,6 +198,7 @@ class HypothesesMixin:
         id, state = _str(args, "id", 60).strip(), _str(args, "state", 20).strip()
         why = " ".join(_str(args, "why", 400).split())[:hypotheses.TEXT_CHARS]
         way, draft = _str(args, "way", 80).strip(), _str(args, "draft", DRAFT_WORDS)
+        self._hyp_ready()
         if state not in hypotheses.VERDICTS:
             raise IdeasError("A hypothesis held, was refuted or is not sure yet")
         with _JUDGING:
