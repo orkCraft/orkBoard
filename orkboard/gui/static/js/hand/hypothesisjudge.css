@@ -1,0 +1,15 @@
+/* *Did it hold?* with the values against the bars and the draft (docs/specs/146-a-hypothesis-on-the-page.md B). Layout only: every colour, face and corner is orkUI's (.ork-field, .ork-label, .ork-btn, .ork-chip). */
+
+.hj-judge { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.hj-measures .hj-line { overflow-wrap: anywhere; }
+.hj-met { margin-left: var(--ork-1); vertical-align: middle; }
+.hj-ask { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); margin-top: var(--ork-1); max-width: 100%; }
+.hj-ask__n { width: 88px; }
+.hj-ask__from { flex: 1 1 120px; min-width: 0; }
+.hj-more { align-items: flex-start; }
+.hj-draft { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-1); min-width: 0; width: 100%; }
+.hj-draft__t { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.hj-draft textarea.ork-field { width: 100%; box-sizing: border-box; }
+.hj-pick .ork-label { flex: 1 1 100%; }
+.hj-day { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--ork-2); }
+@media (pointer: coarse) { .hj-ask .ork-btn, .hj-more .ork-btn, .hj-draft .ork-btn, .hj-day .ork-btn { min-height: var(--ork-tap); } }

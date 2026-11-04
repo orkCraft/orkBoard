@@ -421,7 +421,7 @@ def test_lifted_the_card_asks_did_it_hold_and_shows_the_signal_what_was_found_an
     assert card_.locator(".hand-way > .ork-label").first.inner_text().lower() == "did it hold?"
     assert card_.locator('[data-part="text"]').inner_text() == ROW["text"]
     signal = card_.locator('[data-part="signal"]')
-    assert signal.locator(".ork-label").inner_text().lower() == "we'll know when" and signal.locator("p").inner_text() == ROW["signal"]
+    assert signal.locator(".ork-label").inner_text().lower() == "holds when" and signal.locator("p").inner_text() == ROW["signal"]
     found = card_.locator('[data-part="evidence"] li')
     assert [" ".join(li.inner_text().split()) for li in found.all()] == ["Three of the nine ran out of time", "Hosts said it felt rushed"]
     assert found.nth(0).locator(".ork-elem.ice").count() == 1 and found.nth(1).locator(".ork-elem").count() == 0, "a line from a goal wears the goal's element"
@@ -438,7 +438,12 @@ def test_each_answer_sends_the_verdict_and_the_card_leaves(due, answer, state):
     pg, host, w = due
     card_ = lifted(pg)
     card_.get_by_role("button", name=answer).click()
-    assert _calls(pg, host, "ideas.hypothesis_judge") == [{"id": "calm-answers", "state": state}], "no why was written: none is sent"
+    if state == "unsure":                                                                                  # spec 146 B: it asks a day first
+        card_.locator('input[name="look-on"]').fill("2026-12-24")
+        card_.get_by_role("button", name="Keep it open").click()
+        assert _calls(pg, host, "ideas.hypothesis_judge") == [{"id": "calm-answers", "state": "unsure", "date": "2026-12-24"}]
+    else:
+        assert _calls(pg, host, "ideas.hypothesis_judge") == [{"id": "calm-answers", "state": state}], "no why was written: none is sent"
     pg.wait_for_function("() => !document.querySelector('.hand-lifted') && !document.querySelector('.hand-card[data-kind=\"hypothesis\"]')", timeout=WAIT_MS)
 
 
