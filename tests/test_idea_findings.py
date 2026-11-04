@@ -372,13 +372,12 @@ def test_fix_it_there_at_spec_writes_the_finders_section_again_before_its_plan(h
     assert ideas.idea_page(host.ideas.root(), fix).get("fixes") == slug
 
 
-def test_fix_it_there_at_the_decision_is_a_proposal_into_the_cascade_or_a_refusal_in_words(host, tech):
+def test_fix_it_there_at_the_decision_is_a_proposal_into_the_cascade_or_a_refusal_in_words(host, tech, monkeypatch):
     sd = host.ideas.state_dir
     slug = _done_goal(host, tech)
     spec_sections.save_record(sd, slug, {"decision": {"title": "D", "text": "t", "number": 240, "confirmed": True, "changes": []}})
     f = _sorted_finding(host, slug, tech, "decision", change="word the order again")
-    if hasattr(host.ideas.keeper, "cascade_propose"):                              # spec 131 B is built: this test fakes it as it is told to be
-        del host.ideas.keeper.__class__.cascade_propose
+    monkeypatch.setattr(type(host.ideas.keeper), "cascade_propose", None, raising=False)    # no cascade to propose into: the refusal in words
     with pytest.raises(IdeasError, match="The decision's change comes with the cascade"):
         _cmd(host, "ideas.finding_fix", id=f["id"])
     assert findings.get(sd, f["id"])["status"] == "sorted"                         # nothing was answered
@@ -404,7 +403,7 @@ def test_not_now_keeps_the_finding_on_the_record_and_out_of_the_hand(host, tech)
         _cmd(host, "ideas.finding_later", id="f-nothing")
 
 
-def test_fix_all_there_answers_each_finding_of_the_card_and_says_what_it_could_not(host, tech, started):
+def test_fix_all_there_answers_each_finding_of_the_card_and_says_what_it_could_not(host, tech, started, monkeypatch):
     sd = host.ideas.state_dir
     slug = _done_goal(host, tech)
     a = _sorted_finding(host, slug, tech, "work", on="a")
@@ -412,8 +411,7 @@ def test_fix_all_there_answers_each_finding_of_the_card_and_says_what_it_could_n
     c = _sorted_finding(host, slug, tech, "decision", on="c")
     card = next(r for r in host.ideas.board()["needs_you"] if r["kind"] == "quality")
     assert [f["level"] for f in card["findings"]] == ["decision", "spec", "work"] and card["pulls"]["estimate"]["usd_high"] > 0       # its cost is on the card before
-    if hasattr(host.ideas.keeper, "cascade_propose"):
-        del host.ideas.keeper.__class__.cascade_propose
+    monkeypatch.setattr(type(host.ideas.keeper), "cascade_propose", None, raising=False)    # no cascade to propose into: the refusal in words
     got = _cmd(host, "ideas.finding_fix_all", idea=slug)
     assert [x["level"] for x in got["fixed"]] == ["spec", "work"] and [x["id"] for x in got["refused"]] == [c["id"]] and "cascade" in got["refused"][0]["why"]
     assert findings.get(sd, a["id"])["answer"] == "fix" and findings.get(sd, b["id"])["answer"] == "fix" and findings.get(sd, c["id"])["status"] == "sorted"
