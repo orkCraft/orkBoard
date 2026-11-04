@@ -9,7 +9,10 @@ import pytest
 
 from orkboard import settings
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import first_open, ideas, tool_hand
+from orkboard.realm import first_open, ideas, project_kind, tool_hand
+from tests.test_engine_godot import FIXTURES
+
+SAID = project_kind.START_LINE + "."
 
 
 @pytest.fixture
@@ -59,7 +62,7 @@ def test_a_folder_without_git_is_asked_to_start_git_then_what_it_is(empty, tmp_p
     assert got["step"] == "git" and got["line"] == "No git in skyhop yet. Start git here?" and got["name"] == "skyhop"
     empty.command("projects.start_git", {"path": str(folder)})
     got = empty.command("first_open.ask", {})
-    assert got["step"] == "kind" and got["kind"]["id"] and got["line"] == f"skyhop is {got['kind']['words']}" + (f", {got['kind']['how']}" if got["kind"]["how"] else "") + ". Right?"
+    assert got["step"] == "kind" and got["kind"]["id"] and got["line"] == f"skyhop is {got['kind']['words']}" + (f", {got['kind']['how']}" if got["kind"]["how"] else "") + f". Right? {SAID}"
     assert not got["kind"]["empty"]
 
 
@@ -86,7 +89,7 @@ def test_an_empty_folder_asks_what_it_is_for_in_one_line(empty, tmp_path):
     subprocess.run(["git", "init"], cwd=str(folder), check=True, capture_output=True)
     empty.command("projects.open", {"path": str(folder)})
     got = empty.command("first_open.ask", {})
-    assert got["step"] == "kind" and got["kind"]["empty"] and got["line"] == "What is blank for?"
+    assert got["step"] == "kind" and got["kind"]["empty"] and got["line"] == f"What is blank for? {SAID}"
     with pytest.raises(CommandError, match="in a line"):
         empty.command("first_open.kind", {"about": "  "})
     done = empty.command("first_open.kind", {"about": "a small game"})                      # no model here: code's guess, said so (`read: false`)
@@ -160,3 +163,40 @@ def test_a_project_with_parties_of_its_own_is_laid_at_once(fake_repo):
         assert b.snapshot()["laid"] is True and b.command("first_open.ask", {})["step"] == "laid"
     finally:
         sys.modules.pop("orkboard.core.idea_runner", None)
+
+
+# -- the words said at a new project's first read (spec 145 D, decisions §220.2–3) -----------------------------------------------------------------------
+
+
+def test_the_engines_line_is_said_once_with_the_kind_for_every_kind_and_not_after(board):
+    assert project_kind.START_LINE == "Orkboard sees web projects and Godot best; Unity and Flutter work, with some checks not there"
+    got = board.command("first_open.ask", {})
+    assert got["step"] == "kind" and got["line"].endswith(f" Right? {SAID}")             # the first read of a new project
+    assert board.command("first_open.ask", {})["line"] == got["line"]                      # until it is answered, the same
+    board.command("first_open.kind", {"kind": got["kind"]["id"]})
+    assert project_kind.START_LINE not in board.command("first_open.ask", {})["line"]      # the second read: said already, never again
+
+
+def _godot_project(empty, tmp_path, fixture: str):
+    import shutil
+    import subprocess
+    folder = tmp_path / fixture
+    shutil.copytree(FIXTURES / fixture, folder)
+    subprocess.run(["git", "init"], cwd=str(folder), check=True, capture_output=True)
+    empty.command("projects.open", {"path": str(folder)})
+    return empty.command("first_open.ask", {})
+
+
+def test_a_godot_csharp_project_is_told_it_has_no_play_yet_and_a_gdscript_one_is_not(empty, tmp_path):
+    said = _godot_project(empty, tmp_path, "godot_csharp")
+    assert said["step"] == "kind" and said["kind"]["id"] == "game"
+    assert said["line"].endswith(f"Right? {project_kind.START_LINE}. {project_kind.GODOT_CSHARP}.")
+    assert "has no Play until it does" in said["line"]
+    plain = _godot_project(empty, tmp_path, "godot")
+    assert plain["step"] == "kind" and project_kind.GODOT_CSHARP not in plain["line"] and plain["line"].endswith(SAID)
+
+
+def test_the_words_alone_say_the_engines_line_for_any_folder(tmp_path):
+    assert project_kind.start_words(tmp_path) == SAID
+    assert project_kind.start_words(FIXTURES / "godot") == SAID
+    assert project_kind.start_words(FIXTURES / "godot_csharp") == f"{project_kind.START_LINE}. {project_kind.GODOT_CSHARP}."

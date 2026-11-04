@@ -48,7 +48,10 @@ class FirstOpen:
             how = project_kind.in_words(list(got["signs"]))
             kind = {"id": got["kind"], "words": project_kind.words(got["kind"]), "signs": list(got["signs"]), "how": how, "empty": got["kind"] == "empty"}
             words = "" if kind["empty"] else ", ".join(x for x in (kind["words"], how) if x)
-        return {"step": at, "line": first_open.line(at, project.name, words), "name": project.name, "path": project.path, "recent": [], "kind": kind, "hand": inn, "laid": laid}
+        line = first_open.line(at, project.name, words)
+        if at == "kind":                                                  # said once, with the kind, for every kind: a new project's first read (spec 145 D)
+            line = f"{line} {project_kind.start_words(project.root)}"
+        return {"step": at, "line": line, "name": project.name, "path": project.path, "recent": [], "kind": kind, "hand": inn, "laid": laid}
 
     def kind(self, args: dict) -> dict:
         """The project's kind answered: `{kind}` is *Yes* (the one read) or another of the list, kept in `<state_dir>/project.json`; `{about}` is an empty folder's one

@@ -6,6 +6,7 @@ model, and says an empty folder, a mobile app, a web app, a backend, a game, dat
     scan(root)                    # the same with the facts the recipes ask (`facts`: {"sql": n, "files": n, "pictures": n, ...})
     WORDS["mobile"]               # "a mobile app": the kind as the interface says it
     in_words(["ios/", "android/"])  # "ios/ and android/ are here"
+    start_words(root)             # what is said at a new project's first read, beside its kind (spec 145 D): what Orkboard sees best, and a Godot C# project's lack of Play
     kept(state_dir)               # the kind the person corrected it to ("" when they did not): `<state_dir>/project.json` `kind`
     keep(state_dir, "game")       # …kept (ValueError for a kind that is none); `read` and `read_full` give it before the files from then on
 
@@ -24,13 +25,15 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from orkboard.realm import ideas
+from orkboard.realm import engine_godot, ideas
 
 LIMIT = 2_000                                # entries walked, files and folders together
 FILE = "project.json"                        # in the state folder, with the stage's (realm/project_stage.py): the key `kind` is the person's correction
 KINDS = ("empty", "mobile", "game", "web", "backend", "data", "wiki", "design", "texts", "code")
 WORDS = {"empty": "an empty folder", "mobile": "a mobile app", "web": "a web app", "backend": "a backend", "game": "a game",
          "data": "data work", "wiki": "a team's wiki", "design": "a designer's folder", "texts": "texts", "code": "code"}
+START_LINE = "Orkboard sees web projects and Godot best; Unity and Flutter work, with some checks not there"      # said for every kind, never a choice or a block
+GODOT_CSHARP = "Godot's C# does not build for the web yet: this project has no Play until it does"
 SIGNS = 4                                    # the most signs said
 SIGN_CHARS = 40
 SKIP_DIRS = {"node_modules", "__pycache__", "Pods"}
@@ -260,3 +263,12 @@ def in_words(signs: list[str]) -> str:
         return ""
     head = signs[0] if len(signs) == 1 else ", ".join(signs[:-1]) + " and " + signs[-1]
     return f"{head} {'is' if len(signs) == 1 else 'are'} here"
+
+
+def start_words(root: Path) -> str:
+    """What is said once, at a new project's first read, beside its kind (spec 145 D, decisions §220.2–3): the engines Orkboard sees best, said for every kind and
+    never a choice or a block; and, for a Godot C# project, that it has no Play yet. One line, a sentence each."""
+    said = [START_LINE]
+    if engine_godot.is_csharp(Path(root)):
+        said.append(GODOT_CSHARP)
+    return ". ".join(said) + "."
