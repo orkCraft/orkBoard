@@ -1,8 +1,9 @@
-// A stop as one card of the hand (docs/specs/101 §4.5, decisions §167.1; docs/specs/98 §4.2, §4.4, decisions §160.6): the card of a card game's anatomy, one size. Its header the goal's element at the left, bare, then its
-// name left-aligned (three lines at most); its window low, with the action's sign toned down (the alert of a failure, the question of a question, the check of a result) and the head of who asks small over the sign's lower right corner, the two one figure centred in the window (decisions §168.3); its
-// label row the party's name and, when it spends, its gem at the right; its foot the question or the line (two lines at most). The hand shows the header and the window; the rest lies under the window's edge until the card
-// rises (hand.css). Pressed, it is lifted over the pane's foot with its answers (answers.js, the same commands the old fan sent), its cost's words and *Put it back*; the cards of the table it is about rise (about.js). A kind the
-// hand does not know (a goal's route card is spec 100's) is a plain card with its text, and a press lifts it all the same.
+// A stop as one card of the hand (docs/specs/101 §4.5, decisions §167.1; docs/specs/98 §4.2, §4.4, decisions §160.6; docs/specs/142 part B, decisions §249.2): the card of a card game's anatomy, one size, **with no window**. Its
+// corner (top) holds the kind's sign at its small size at the left, in its signal's colour as the card's frame is (the alert of a question, a hearing, a sign-in and *Go on paid?*, the danger of a failure, else the muted ink), and at the right the head of
+// who asks at 16 px; under it the goal's element at the left, bare, then its name left-aligned in three whole lines, never cut mid-line; its label row the party's name and, when it spends, its gem at the right. Its foot (the question or the line)
+// is not drawn on the card: it stays in the markup (a screen reader's and a test's) and the lifted card says it. The card is about two thirds of its former height (hand.css). Pressed, it is lifted over the pane's foot with its answers
+// (answers.js, the same commands the old fan sent), its cost's words and *Put it back*; the cards of the table it is about rise (about.js). A lifted card keeps its window as it was (§249.2) and says its title once (docs/specs/140 A4,
+// decisions §247.6: sayonce.js). A kind the hand does not know (a goal's route card is spec 100's) is a plain card with its text, and a press lifts it all the same.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
@@ -19,6 +20,7 @@ import { useAbout } from "./about.js";
 import { wayOf } from "./ways.js";
 import { nightWordsOf } from "./nightwords.js";
 import { SketchLifted, isSketch } from "./sketchcard.js";
+import { Said } from "./sayonce.js";
 
 /** The action's sign of a stop and its tone: the alert of a failure and of a sign-in, the question of a question, the check (or cross) of a result, else the sign of what is asked (a plan's page, a pick's picture, a to-do's flag). */
 export function actionOf(s) {
@@ -34,10 +36,16 @@ export function actionOf(s) {
   return { sign: "flag", tone: "" };
 }
 
-/** The action's sign of a stop, at the signs' big size or the small one (`big`). */
-export function Mark({ s, big = false }) {
+/** The signal a card's corner sign is drawn in (docs/specs/142 B.2): the danger of a failure, the alert of a question, a hearing, a sign-in and *Go on paid?*, else none (the muted ink). */
+export function signalOf(s) {
   const a = actionOf(s);
-  return html`<span class=${cls("hand-mark", a.tone && `is-${a.tone}`)}><${Sign} name=${a.sign} big=${big} /></span>`;
+  return a.tone === "danger" || a.tone === "alert" ? a.tone : a.sign === "question" || a.sign === "alert" ? "alert" : "";
+}
+
+/** The action's sign of a stop, at the signs' big size or the small one (`big`); `corner`: in the card's signal colour (`signalOf`), not the action's tone. */
+export function Mark({ s, big = false, corner = false }) {
+  const a = actionOf(s), tone = corner ? signalOf(s) : a.tone;
+  return html`<span class=${cls("hand-mark", tone && `is-${tone}`)}><${Sign} name=${a.sign} big=${big} /></span>`;
 }
 
 /** The goal's element, bare; dim while it has none (a stop of no goal). */
@@ -71,13 +79,13 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
     el.style.setProperty("--ork-play-y", `${v.y}px`);
     el.classList.add("ork-play");
   }, [gone]);
-  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop${element ? ` el-${hue}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
+  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-card--face${element ? ` el-${hue}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
         "is-slot": slot, "is-gone": gone, "ork-deal": plain })}
       data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined} data-from=${from || undefined}
       style=${dealt ? `--ork-deal-i:${dealt.i}` : undefined} aria-label=${`${labelOf(s)}${from ? `, from ${from}` : ""}`} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
+    <span class="hand-card__corner"><span class="hand-card__act"><${Mark} s=${s} corner=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span>
     <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name">${s.title || s.full}</span></span>
-    <span class="hand-card__window"><span class="hand-card__fig"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span></span>
     <span class="hand-card__label"><span class="hand-card__party">${from ? `From ${from}` : s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
     <span class="hand-card__foot">${footOf(s)}</span>
     ${children}
@@ -87,11 +95,11 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
 /** A card's name upright on a phone: a question card is called by the question itself (the goal's name is in the context above it), any other by its title. */
 export const upName = (s) => (s.card ? s.full : s.title || s.full);
 
-/** The stop's own lines on a lifted card: its text, what it waits for, the goals of a collision, the pick's tiles. */
+/** The stop's own lines on a lifted card: its text and what it waits for as one sentence (a line that repeats the title is not drawn, the rest behind its **…**: sayonce.js), the goals of a collision, the pick's tiles. */
 function Body({ s }) {
+  const title = [s.title, s.full];
   return html`${s.kind === "collide" && html`<ul class="hand-goals" aria-label="The goals">${goalsOfRow(s.row).map((g) => html`<li key=${g.idea}>${goalLine(g)}</li>`)}</ul>`}
-    ${s.kind !== "pick" && s.text && html`<p class="body hand-lifted__text">${s.text}</p>`}
-    ${s.why && html`<p class="cap hand-lifted__why">${s.why}</p>`}
+    ${s.kind !== "pick" && html`<${Said} key=${s.key} title=${title} lines=${[s.text, s.why]} tag="body hand-lifted__text" />`}
     ${s.kind === "plan" && (s.row?.missing || []).length > 0 && html`<p class="cap hand-lifted__why">${missingWords(s.row.missing)}</p>`}
     ${s.kind === "plan" && !(s.row?.missing || []).length && s.node?.start_at === "night" && html`<p class="cap hand-lifted__why" data-night="waits">${nightWordsOf().waits}</p>`}
     ${s.kind === "pick" && html`<p class="body hand-lifted__text">${s.text}</p><${Tiles} row=${s.row} />`}`;

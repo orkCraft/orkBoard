@@ -130,7 +130,7 @@ def test_a_question_is_a_card_with_its_sign_its_leaders_head_and_the_question_at
         c = front(pg, "chat")
         assert c.get_attribute("data-kind") == "talk" and c.get_attribute("data-key") == "talk/talk/chat/r1-1"
         assert c.locator(".hand-card__name").inner_text().strip() == "Chat in the lobby" and c.locator(".hand-card__head .ork-elem.ice").count() == 1       # the goal's element and name in its header
-        assert c.locator(".hand-card__window .ork-sign.question").count() == 1 and c.locator(".hand-card__asker .ork-race__head").count() == 1             # the sign `question`, its leader's head over it
+        assert c.locator(".hand-card__corner .ork-sign.question").count() == 1 and c.locator(".hand-card__asker .ork-race__head").count() == 1             # the sign `question`, its leader's head over it
         assert c.locator(".hand-card__foot").text_content().strip() == "Where does the timer run?"                                                        # the question at its foot
         assert c.locator(".ork-gem").count() == 0                                                                                                           # a question costs nothing
         stack = pg.locator('.hand-stack[data-goal="chat"]')
@@ -428,7 +428,7 @@ def test_the_projects_questions_are_a_stack_under_their_leaders_party_with_the_o
         assert stack.count() == 1 and stack.get_attribute("data-n") == "1", "a stack of no goal's under its leader's party's lane"
         top = stack.locator('.hand-card[data-top="1"]')
         assert top.get_attribute("data-kind") == "project_q" and top.locator(".hand-card__foot").text_content().strip() == "Whom is it for?"
-        assert top.locator(".hand-card__window .ork-sign.question").count() == 1 and top.locator(".hand-card__asker .ork-race__head").count() == 1, "its leader's head on its face"
+        assert top.locator(".hand-card__corner .ork-sign.question").count() == 1 and top.locator(".hand-card__asker .ork-race__head").count() == 1, "its leader's head on its face"
         assert top.locator(".hand-card__party").text_content() == "Product"
         shot(pg, f"{width}-project-stack")
         top.click(position={"x": 10, "y": 24})

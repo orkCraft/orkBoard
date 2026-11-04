@@ -13,6 +13,7 @@ import { openTabOf, partiesAll, partiesNow, mapName, waitRuns } from "./data.js"
 import { askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { DropAsk, GoalMenu } from "./dropgoal.js";
 import { liftDecision } from "../hand/state.js";
+import { Said } from "../hand/sayonce.js";
 import { ACTIVE, Pile, PILES, nextWords, pilesOf, underOf } from "./piles.js";
 import { useColumnMotion } from "./colmotion.js";
 import { moodOf } from "./moods.js";
@@ -79,11 +80,12 @@ function List({ items, place, close }) {
 function Acts({ n, off, place, close }) {
   const [busy, setBusy] = useState(false);
   const run = (name) => async () => { setBusy(true); try { if (await act(name, { idea: n.slug })) close(); } finally { setBusy(false); } };
-  const cap = off === "held" ? "Held: nothing starts it until you press Start now." : off === "night" ? "Put off to the night's window." : n.back?.ripe && !n.back.ripe.by ? "Its spec is ready. It starts by itself in its turn; read it on the tabs, and ask a leader there to change it." : "Its spec is ready. It waits for your word to start.";
+  const ripe = n.back?.ripe && !n.back.ripe.by, title = n.title || n.short || "";           // a lifted card says its title once (docs/specs/140 A4, decisions §247.6): its heading is the whole title, a line that repeats it is not drawn, what it says is one sentence and the rest is behind its …
+  const cap = off === "held" ? "Held: nothing starts it until you press Start now." : off === "night" ? "Put off to the night's window."
+    : ripe ? "Its spec is ready; it starts by itself in its turn. Read it on the tabs, and ask a leader there to change it." : "Its spec is ready; it waits for your word to start.";
   return html`<div class="ork-frame col-lift col-acts" role="dialog" aria-label=${`${n.title}: when it starts`} data-lift="acts" data-goal=${n.slug} style=${place}>
-    <h3 class="col-lift__t"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} />${n.short || n.title}</h3>
-    <p class="col-lift__cap">${n.title}</p>
-    <p class="col-lift__cap">${cap}</p>
+    <h3 class="col-lift__t"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} />${title}</h3>
+    <${Said} key=${n.slug} title=${[n.title, n.short]} lines=${[cap]} tag="col-lift__cap" />
     <div class="col-lift__acts">
       <button type="button" class="ork-btn primary" data-now=${n.slug} disabled=${busy} title="Its sections are written now" onClick=${run("ideas.confirm")}>Start now</button>
       ${off ? (off === "held" && html`<button type="button" class="ork-btn" data-back=${n.slug} disabled=${busy} title="Its wait begins again" onClick=${run("ideas.ripe_back")}>Back to review</button>`)

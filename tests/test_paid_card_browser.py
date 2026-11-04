@@ -71,7 +71,7 @@ def test_the_card_is_the_orkmasters_go_on_paid_with_its_price_under_the_first_la
         c = front(pg)
         assert c.count() == 1 and c.get_attribute("data-top") == "1"
         assert c.locator(".hand-card__name").text_content().strip() == "Go on paid?"
-        assert c.locator(".hand-card__window .ork-sign.alert").count() == 1 and c.locator(".hand-card__asker .ork-race__head").count() == 1, "the alert sign (orkUI has no coins sign) and the Orkmaster's head"
+        assert c.locator(".hand-card__corner .ork-sign.alert").count() == 1 and c.locator(".hand-card__asker .ork-race__head").count() == 1, "the alert sign (orkUI has no coins sign) and the Orkmaster's head"
         assert c.locator(".hand-card__gem .ork-gem").text_content().strip() == "$0.40" and c.locator(".ork-gem.share").count() == 0, "its price in dollars, never a share of a window"
         if width == "wide":
             assert c.locator(".hand-card__foot").text_content().strip() == "Holds until the next reset"

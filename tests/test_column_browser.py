@@ -182,7 +182,14 @@ def test_a_face_up_card_picks_its_goal_and_a_card_of_to_review_lifts_start_now_a
         assert sig(pg, "frame/state.js", "picked") == "timer"
         acts = pg.locator('.col-lift[data-lift="acts"]')
         acts.wait_for(timeout=WAIT_MS)
-        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip()][:2] == ["Start now", "Later today"] and acts.locator(".table-dropper").count() == 1, "and the goal's menu: it can be dropped"
+        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")][:2] == ["Start now", "Later today"] and acts.locator(".table-dropper").count() == 1, "and the goal's menu: it can be dropped"
+        # a lifted card says its title once (spec 140 A4, decisions §247.6): the whole title is its heading, no line repeats it, what it says is one sentence and the rest is behind its …
+        assert acts.locator(".col-lift__t").inner_text().strip() == "Round timer on phones" and acts.get_by_text("Round timer on phones").count() == 1
+        said = acts.locator("[data-said]")
+        assert said.count() == 1 and said.evaluate("e => e.firstChild.textContent.trim()") == "Its spec is ready; it starts by itself in its turn." and "ask a leader" not in said.inner_text()
+        more = said.get_by_role("button", name="More")
+        more.click()
+        assert "ask a leader there to change it" in said.inner_text() and said.get_by_role("button", name="Less").count() == 1
         acts.get_by_role("button", name="Later today").click()
         assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "timer"}))
         timer.click()
@@ -205,12 +212,13 @@ def test_a_put_off_card_lifts_start_now_and_back_to_review_and_says_held_or_the_
         held.click(position={"x": 20, "y": held.bounding_box()["height"] - 8})   # its foot shows under the card above it
         acts = pg.locator('.col-lift[data-lift="acts"]')
         acts.wait_for(timeout=WAIT_MS)
-        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip()][:2] == ["Start now", "Back to review"]
+        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")][:2] == ["Start now", "Back to review"]
+        assert acts.locator("[data-said]").count() == 1 and acts.get_by_role("button", name="More").count() == 0, "one sentence: nothing behind a …"
         acts.get_by_role("button", name="Back to review").click()
         assert _sent(pg, host, ("ideas.ripe_back", {"idea": "held"}))
         late.click(position={"x": 20, "y": late.bounding_box()["height"] - 8})
         acts.wait_for(timeout=WAIT_MS)
-        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip()] == ["Start now"], "the night's own: only Start now"
+        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")] == ["Start now"], "the night's own: only Start now"
     finally:
         pg.close()
     assert not log, "\n".join(log)

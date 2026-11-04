@@ -94,6 +94,8 @@ def test_a_long_body_scrolls_inside_the_card_which_stops_at_its_most_height_and_
     pg, host, log = open_hand(gui, host=LongHost(), width=width)
     try:
         card = lift(pg, "failed")
+        if card.get_by_role("button", name="More").count():                     # one sentence shows, the rest is behind its … (spec 140 A4): opened, the long body scrolls
+            card.get_by_role("button", name="More").click()
         m = card.evaluate(MEASURE)
         assert m["height"] <= m["maxHeight"] + 1 and m["maxHeight"] < m["vh"], "the card stops at its most height"
         if width == "wide":
@@ -106,6 +108,43 @@ def test_a_long_body_scrolls_inside_the_card_which_stops_at_its_most_height_and_
         shot(pg, f"{width}-lifted-long")
         pg.locator(".hand-lifted").get_by_role("button", name="Put it back").click()
         assert pg.locator(".hand-lifted").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class SaidHost(HandHost):
+    """The hand's host with a failed task whose error is `error`."""
+
+    def __init__(self, error):
+        super().__init__()
+        for n in self.nodes:
+            if n["slug"] == "timer":
+                n["tasks"][0]["error"] = error
+
+
+def test_a_lifted_card_does_not_draw_a_line_that_repeats_its_title(gui):
+    """Spec 140 A4, decisions §247.6: a line equal to the title is not drawn."""
+    pg, host, log = open_hand(gui, host=SaidHost("Reset the clock."), width="wide")
+    try:
+        card = lift(pg, "failed")
+        assert card.locator(".hand-lifted__title").inner_text().strip() == "Reset the clock"
+        assert card.locator("[data-said]").count() == 0 and card.get_by_text("Reset the clock").count() == 1, "the line that repeats the title is not drawn"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_lifted_card_says_one_sentence_and_the_rest_behind_its_dots(gui):
+    pg, host, log = open_hand(gui, host=SaidHost("The reset test failed. Run it again after the change. Then read the log."), width="wide")
+    try:
+        card = lift(pg, "failed")
+        said = card.locator("[data-said]")
+        assert said.count() == 1 and said.evaluate("e => e.firstChild.textContent.trim()") == "The reset test failed." and "Run it again" not in said.inner_text(), "one sentence"
+        said.get_by_role("button", name="More").click()
+        assert "Run it again after the change." in said.inner_text() and "Then read the log." in said.inner_text(), "the rest behind its …"
+        said.get_by_role("button", name="Less").click()
+        assert "Run it again" not in said.inner_text()
     finally:
         pg.close()
     assert not log, "\n".join(log)

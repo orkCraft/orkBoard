@@ -7,11 +7,19 @@
 
 /* ---------- the hand: under the lanes, on the grid the tabs and the Board stand on (the frame's --cols) ---------- */
 .hand, .table-end, .table-body { --hc-w: var(--card-w, 144px); --hc-pad: var(--ork-3); --hc-gap: var(--ork-2); --hc-head: 48px; --hc-window: 70px; --hc-label: 24px; --hc-top: var(--ork-4); --hc-edge: 12px; --hc-tight: 28px;
-  --hc-h: calc(var(--hc-w) * 7 / 5);                                                                       /* a card, 5 : 7 */
+  --hc-big: calc(var(--hc-w) * 7 / 5);                                                                     /* a card as it was, 5 : 7: the lifted card's, the discard's, the portal's */
+  --hc-h: var(--hc-big);
   --hc-shown: calc(var(--hc-pad) + var(--hc-head) + var(--hc-gap) + var(--hc-window) + var(--hc-gap));      /* what shows above the window's edge: the header and the window */
   --hc-rise: calc(var(--hc-h) - var(--hc-shown));                                                          /* what a card rises to show whole */
   --hc-room: calc(var(--hc-rise) + var(--ork-4)); }                                                        /* the room above the hand a risen card lies in */
 /* the discard on the table (table/discard.js) is a card of the hand's size: it reads the same sizes */
+/* A card of the hand has no window (docs/specs/142 B, decisions §249.2): its corner (the sign, the asker's head), its title in three whole lines (two at the narrow width), its label row. The card is what these need and no more, about two thirds of
+   the 5 : 7 card it was at the wide width; the whole of it shows (a card hovered rises only a little). At the narrow width the card keeps its 80 x 112, its anatomy in the part that shows. The discard (`.table-end`) and the portal's cards keep their window and the 5 : 7. */
+.hand { --hc-corner: 20px; --hc-fgap: var(--ork-3); --hc-lh: 20px; --hc-lines: 3; --hc-title: calc(var(--hc-lines) * var(--hc-lh));
+  --hc-face: calc(var(--hc-pad) * 2 + var(--hc-corner) + var(--hc-fgap) * 2 + var(--hc-title) + var(--hc-label)); --hc-shown: var(--hc-face);
+  --hc-rise: max(calc(var(--hc-h) - var(--hc-shown)), var(--ork-3)); --hc-room: calc(var(--hc-rise) + var(--ork-4)); }
+@media (min-width: 760px) { .hand { --hc-h: var(--hc-face); } }
+@media (max-width: 1023px) { .hand { --hc-lh: 22px; } }
 /* the hand is a player's place, on orkUI's room with the table's rim over it (spec 123 §7.7, decisions §201.7) */
 .hand { position: relative; z-index: 2; min-width: 0; background: var(--ork-room); border-top: 3px solid var(--ork-table-rim); padding-bottom: env(safe-area-inset-bottom, 0px); }
 @media (max-width: 1023px) { .hand, .table-end, .table-body { --hc-head: 60px; } }                                                  /* the phone's type is a size up (tokens.css): three lines of 20 px */
@@ -38,12 +46,17 @@
 /* one size: every card of the hand (orkUI's card, its back and the + card) is the frame's card width, 5 : 7; its face the card game's anatomy (decisions §167.1) */
 .hand .hand-card, .hand .hand-back, .hand .hand-plus, .table-end .hand-card, .table-end .hand-back { box-sizing: border-box; width: 100%; height: var(--hc-h); aspect-ratio: auto; flex: none; }
 .hand .hand-card, .table-end .hand-card { position: relative; display: grid; grid-template-rows: var(--hc-head) var(--hc-window) var(--hc-label) minmax(0, 1fr); gap: var(--hc-gap); padding: var(--hc-pad); text-align: left; cursor: pointer; }
+.hand .hand-card--face { grid-template-rows: var(--hc-corner) var(--hc-title) var(--hc-label); gap: var(--hc-fgap); align-content: start; }
+.hand .hand-card--face .hand-card__foot { display: none; }
 .hand .hand-card.is-slot { border-style: dashed; border-color: var(--ork-edge); background: none; box-shadow: none; }
 .hand .hand-card.is-slot > * { visibility: hidden; }
 .hand .hand-card.is-gone { position: absolute; left: 0; top: 0; pointer-events: none; }
 .hand-card__head { display: flex; align-items: flex-start; gap: var(--ork-3); min-width: 0; overflow: hidden; }
 .hand-card__head > .ork-elem { margin-top: 1px; }
 .hand-card__name { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; letter-spacing: var(--ork-type-body-track, 0); }   /* a person's words: the body face (§167.1) */
+.hand-card__corner { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-width: 0; }
+.hand-card__corner .hand-card__asker { position: static; display: inline-flex; margin-left: auto; }
+.hand-card__corner .ork-race__head { width: auto; height: 16px; image-rendering: pixelated; }                                      /* who asks, 16 px high (docs/specs/142 B.2) */
 .hand-card__window { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; border: var(--ork-line) solid var(--ork-card-frame); }
 .hand-card__act, .hand-mark { display: inline-flex; }
 /* the sign and the asker's head are one figure, centred together in the window: the head (24 x 22) lies over the sign's lower right corner, a badge (the mockup's); --ov is how far it stands out past the sign */
@@ -63,6 +76,8 @@
 .hand .hand-card.el-dust .hand-mark { color: var(--ork-elem-dust); }
 .hand .hand-card.el-void .hand-mark { color: var(--ork-elem-void); }
 .hand .hand-card.el-lava .hand-mark { color: var(--ork-elem-lava); }
+.hand .hand-card.hand-card--face .hand-mark:not(.is-danger):not(.is-alert) { color: var(--ork-ink-muted); }                          /* the corner's sign: the kind's signal as the frame is, else the muted ink (not the element's: the rune says that) */
+.hand .hand-card.hand-card--face .hand-mark.hand-mark .ork-sign { opacity: 1; }
 .hand .hand-card .hand-mark.is-danger { color: var(--ork-danger); }
 .hand .hand-card .hand-mark.is-alert { color: var(--ork-alert); }
 .hand .hand-card .hand-mark.is-ok { color: var(--ork-success); }
@@ -177,7 +192,7 @@
 /* a card lifted over the pane's foot is a card (docs/specs/104 §5, decisions §176.4): the hand card's frame and anatomy at twice its width, in its proportions at the least, turned a degree or two as a card held up (to the side its stack
    lies on, --hc-lean is -1 or 1), its foot on the hand's line, over the cards beside it and the lanes' foot. Its body, between the window and the foot, scrolls inside at the card's most height; the card never grows wider */
 .hand .hand-card--big { --hc-head: 48px; --hc-window: 70px; --hc-label: 24px; --hc-pad: var(--ork-3); --hc-gap: var(--ork-2); --hc-tabs: 52px;
-  position: absolute; left: var(--ork-6); bottom: 100%; z-index: 60; width: calc(var(--hc-w) * 2); height: auto; min-height: calc(var(--hc-h) * 2);
+  position: absolute; left: var(--ork-6); bottom: 100%; z-index: 60; width: calc(var(--hc-w) * 2); height: auto; min-height: calc(var(--hc-big) * 2);
   max-height: calc(100dvh - var(--hc-top) - var(--hc-shown) - var(--hc-tabs) - var(--ork-4));                    /* the window's height less the hand, the tabs and a gutter */
   grid-template-rows: minmax(var(--ork-6), auto) var(--hc-window) var(--hc-label) minmax(0, 1fr) auto; cursor: default; transform-origin: 50% 100%;
   rotate: calc(var(--hc-lean, 1) * var(--ork-motion-lean) * 0.25); }
@@ -234,6 +249,7 @@
    to their left edges when they do not fit, never a sideways scroll */
 @media (max-width: 759.98px) {
   .hand, .table-end, .table-body { --hc-w: 80px; --hc-pad: var(--ork-1); --hc-gap: var(--ork-1); --hc-head: 44px; --hc-window: 32px; --hc-label: 22px; --hc-edge: 6px; --hc-tight: 20px; }
+  .hand { --hc-lines: 2; --hc-lh: 18px; --hc-corner: 16px; --hc-fgap: var(--ork-1); }                                                                                     /* the narrow card: its title in two lines of the caption face, the same anatomy */
   .hand-row { display: flex; align-items: flex-start; padding-left: var(--ork-4); padding-right: 0; }
   .hand-row::after { content: ""; order: 100; flex: 0 1 calc(var(--hc-w) - var(--hc-tight)); min-width: 0; }            /* the last card of the row lies out past its place by what the cards tighten: room for it before the die and the mana (it gives way last, a crowded row: the die then lies over the last card's edge, spec 112 §3.3) */
   .hand-lane { display: contents; }
@@ -246,6 +262,7 @@
   .hand-card__head { gap: var(--ork-2); }
   .hand-card__name { font: var(--ork-type-caption); -webkit-line-clamp: 2; line-clamp: 2; }
   .hand-card__party, .hand-card__foot { display: none; }
+  .hand-card__corner .ork-race__head { height: 16px; }
   .hand-card__label { justify-content: flex-end; }
   .hand-card__window { overflow: visible; }
   .hand .hand-card .ork-gem { height: 20px; min-width: 0; padding: 0 var(--ork-2); }

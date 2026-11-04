@@ -268,7 +268,7 @@ def stacks_in(pg, i):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_hand_lies_under_the_lanes_one_size_half_under_the_edge_and_nothing_sideways(gui, width):
+def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_sideways(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
         pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
@@ -280,12 +280,12 @@ def test_the_hand_lies_under_the_lanes_one_size_half_under_the_edge_and_nothing_
         assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == 1, "a lane under each tab (the project's first, four parties) and the mana's place"
         sizes = set(map(tuple, pg.evaluate("() => [...document.querySelectorAll('.hand .hand-card, .hand .hand-back:not(.edge), .hand .hand-plus')].map((e) => [e.offsetWidth, e.offsetHeight])")))
         assert len(sizes) == 1, f"one card size, got {sizes}"
-        assert sizes == ({(144, 202)} if width == "wide" else {(80, 112)}), sizes
-        hand, window = pg.locator(".hand").bounding_box(), pg.locator('.hand-card[data-goal="timer"] .hand-card__window').bounding_box()
+        assert sizes == ({(144, 128)} if width == "wide" else {(80, 112)}), sizes          # spec 142 B.4: about two thirds of the 202 px it was; the narrow card keeps its 80 x 112
+        hand = pg.locator(".hand").bounding_box()
         card = pg.locator('.hand-card[data-goal="timer"]').bounding_box()
-        assert abs(hand["y"] + hand["height"] - size["height"]) <= 1 and window["y"] + window["height"] <= size["height"] + 1, "the header and the window show"
-        assert card["y"] + card["height"] > size["height"] + 25, "the lower half of a card lies under the window's edge"
-        assert pg.locator('.hand-card[data-goal="timer"] .hand-card__label').bounding_box()["y"] >= size["height"] - 2, "the label row and the foot lie under it"
+        assert pg.locator(".hand .hand-card__window").count() == 0, "no window on a card of the hand (spec 142 B.1)"
+        assert abs(hand["y"] + hand["height"] - size["height"]) <= 1 and (width == "narrow" or card["y"] + card["height"] <= size["height"] + 1), "the whole card shows at the wide width"
+        assert pg.locator('.hand-card[data-goal="timer"] .hand-card__label').bounding_box()["y"] + 20 <= size["height"], "the label row shows with the title"
         assert hand["height"] <= (150 if width == "wide" else 100), "the hand is short: the table gains what it gave back"
         if width == "wide":
             cols = pg.locator(".hand-row").evaluate("e => getComputedStyle(e).gridTemplateColumns.split(' ').map(parseFloat)")
@@ -380,9 +380,9 @@ def test_two_goals_under_one_lane_fan_within_its_width_the_back_ones_edge_only_a
             pg.mouse.move(bb["x"] + 8, bb["y"] + 24)                                                  # hover on its edge: it rises whole, over the front one
             pg.wait_for_timeout(500)
             up = back.bounding_box()
-            assert up["y"] <= bb["y"] - 60 and word.evaluate("e => getComputedStyle(e).visibility") == "visible"
+            assert up["y"] <= bb["y"] - 4 and word.evaluate("e => getComputedStyle(e).visibility") == "visible"
             assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y)?.closest('.hand-slot')?.querySelector('.hand-card')?.dataset.goal", [bb["x"] + 100, up["y"] + 60]) == "export"
-            assert up["y"] + up["height"] >= pg.viewport_size["height"] - 4, "whole: its foot reaches the window's edge"
+            assert up["y"] + up["height"] >= pg.viewport_size["height"] - 12, "a little lift only: the card is whole at rest (spec 142 B.4)"
             shot(pg, "wide-fan-risen")
             _at_rest(pg)
             assert back.bounding_box()["y"] == bb["y"] and word.evaluate("e => getComputedStyle(e).visibility") == "hidden"
@@ -392,7 +392,7 @@ def test_two_goals_under_one_lane_fan_within_its_width_the_back_ones_edge_only_a
             y0 = slot.bounding_box()["y"]
             card.focus()
             pg.wait_for_timeout(500)
-            assert slot.bounding_box()["y"] <= y0 - 25, f"{goal} rises on focus"
+            assert slot.bounding_box()["y"] <= y0 - 4, f"{goal} rises on focus"
             pg.evaluate("() => document.activeElement.blur()")
             pg.wait_for_timeout(500)
             assert slot.bounding_box()["y"] == y0
@@ -418,30 +418,27 @@ def test_a_tap_on_the_discard_opens_it_over_the_pane_at_the_narrow_width(gui):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_cards_face_is_a_header_a_window_a_label_row_and_a_foot(gui, width):
+def test_a_cards_face_is_a_corner_a_title_and_a_label_row_with_no_window(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
         timer, phones = pg.locator('.hand-card[data-goal="timer"]'), pg.locator('.hand-card[data-goal="phones"]')
         timer.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(900)
         c = timer.bounding_box()
+        assert pg.locator(".hand .hand-stack .hand-card__window, .hand .hand-card__fig").count() == 0, "no window (spec 142 B.1)"
         elem, name = timer.locator(".hand-card__head .ork-elem").bounding_box(), timer.locator(".hand-card__name").bounding_box()
         assert elem["x"] - c["x"] <= 12 and elem["x"] + elem["width"] <= name["x"] + 1, "the element at the left of the header, bare, the name beside it"
         assert timer.locator(".hand-card__name").evaluate("e => getComputedStyle(e).textAlign") in ("start", "left")
         assert timer.locator(".hand-card__name").evaluate("e => getComputedStyle(e).webkitLineClamp") == ("3" if width == "wide" else "2"), "three lines at most"
-        window = timer.locator(".hand-card__window")
-        w, sign, asker = window.bounding_box(), timer.locator(".hand-card__window .ork-sign.alert").bounding_box(), timer.locator(".hand-card__asker .ork-race__head").bounding_box()
-        assert sign["width"] == 28 and sign["height"] == 28 and asker["width"] == 24 and asker["height"] == 22, "the action's sign at the signs' big size, the asker's head small"
-        # the head lies OVER the sign, on its lower right corner (a badge), and the two are one figure, centred together in the window (decisions §168.3)
-        over_x, over_y = min(sign["x"] + 28, asker["x"] + 24) - max(sign["x"], asker["x"]), min(sign["y"] + 28, asker["y"] + 22) - max(sign["y"], asker["y"])
-        assert over_x >= 6 and over_y >= 6, "the head overlaps the sign"
-        assert asker["x"] > sign["x"] + 6 and asker["y"] > sign["y"] + 6 and asker["x"] + 24 > sign["x"] + 28 and asker["y"] + 22 >= sign["y"] + 28, "on the sign's lower right corner"
-        assert timer.locator(".hand-card__window .hand-card__fig").evaluate("e => [...e.children].map((c) => c.className)") == ["hand-card__act", "hand-card__asker"]
-        assert pg.evaluate("([s, a]) => getComputedStyle(document.querySelector(a)).zIndex === 'auto' && !!(document.querySelector(s).compareDocumentPosition(document.querySelector(a)) & 4)", [".hand-card[data-goal=timer] .hand-card__act", ".hand-card[data-goal=timer] .hand-card__asker"]), "the head after the sign: over it"
-        fx0, fx1, fy0, fy1 = min(sign["x"], asker["x"]), max(sign["x"] + 28, asker["x"] + 24), min(sign["y"], asker["y"]), max(sign["y"] + 28, asker["y"] + 22)
-        assert abs((fx0 + fx1) / 2 - (w["x"] + w["width"] / 2)) <= 2 and abs((fy0 + fy1) / 2 - (w["y"] + w["height"] / 2)) <= 3, "the figure centred in the window"
-        assert w["x"] <= fx0 and fx1 <= w["x"] + w["width"] and (width == "narrow" or (w["y"] <= fy0 and fy1 <= w["y"] + w["height"])), "inside the window"
-        assert timer.locator(".hand-card__window .ork-sign.alert").evaluate("e => getComputedStyle(e).opacity") != "1" and window.evaluate("e => getComputedStyle(e).borderTopWidth") == "1px"
+        corner = timer.locator(".hand-card__corner")
+        sign, asker = timer.locator(".hand-card__corner .ork-sign.alert").bounding_box(), timer.locator(".hand-card__corner .hand-card__asker .ork-race__head").bounding_box()
+        assert sign["width"] == 14 and sign["height"] == 14 and asker["height"] == 16, "the kind's sign at its small size, the asker's head at 16 px"
+        cb = corner.bounding_box()
+        assert sign["x"] - cb["x"] <= 2 and cb["x"] + cb["width"] - (asker["x"] + asker["width"]) <= 2, "the sign top left, who asks top right"
+        assert cb["y"] - c["y"] <= 8 and cb["y"] + cb["height"] <= name["y"] + 1, "the corner is the card's top row, over the title"
+        assert corner.locator(".hand-mark").evaluate("e => e.classList.contains('is-danger')"), "a failure's sign in the danger colour as its frame is"
+        assert timer.locator(".hand-card__corner .ork-sign.alert").evaluate("e => getComputedStyle(e).opacity") == "1"
+        assert timer.locator(".hand-card__name").evaluate("e => e.scrollHeight <= e.clientHeight + 1") and name["height"] <= c["height"], "the title is not cut mid-line"
         gem = timer.locator(".hand-card__label .ork-gem")
         gb = gem.bounding_box()
         assert gem.inner_text() == "4%" and gb["x"] + gb["width"] >= c["x"] + c["width"] - 12, "the gem at the label row's right"
@@ -449,12 +446,12 @@ def test_a_cards_face_is_a_header_a_window_a_label_row_and_a_foot(gui, width):
             party = timer.locator(".hand-card__party")
             assert party.text_content() == "Tech" and party.bounding_box()["x"] < gb["x"], "the party's name in the label row"
             foot = timer.locator(".hand-card__foot")
-            assert foot.inner_text() == "The reset test failed" and foot.evaluate("e => e.scrollHeight <= 2 * parseFloat(getComputedStyle(e).lineHeight) + 4"), "the line in the foot, two lines at most"
+            assert foot.text_content() == "The reset test failed" and not foot.is_visible(), "the line stays in the markup, the card does not draw it"
         else:
             assert timer.locator(".hand-card__party").evaluate("e => getComputedStyle(e).display") == "none"       # the small card keeps the gem alone in its label row
-        q = phones.locator(".hand-card__window .ork-sign.question")                                               # a question: the question mark, toned down in its goal's element colour
-        assert q.count() == 1 and q.evaluate("e => getComputedStyle(e).opacity") == "0.6"
-        assert q.evaluate("e => getComputedStyle(e).color") == phones.locator(".hand-card__head .ork-elem").evaluate("e => getComputedStyle(e).backgroundColor")
+        q = phones.locator(".hand-card__corner .ork-sign.question")                                               # a question: the question mark in the alert colour, as its frame is
+        assert q.count() == 1 and q.evaluate("e => getComputedStyle(e).opacity") == "1"
+        assert q.evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const t = document.createElement('i'); t.style.color = 'var(--ork-alert)'; document.body.append(t); const c = getComputedStyle(t).color; t.remove(); return c; }")
         assert phones.locator(".ork-gem").count() == 0 and phones.locator(".hand-card__asker .ork-race__head").count() == 1
         assert pg.locator(".hand-card .ork-sign.target").count() == 0
         shot(pg, f"{width}-faces")
@@ -1234,7 +1231,7 @@ def test_a_card_leans_and_rises_under_the_pointer_and_nothing_moves_under_reduce
         pg.mouse.move(b["x"] + b["width"] - 6, b["y"] + 10)
         pg.wait_for_timeout(400)
         assert card.evaluate("e => getComputedStyle(e).transform") != "none" and card.evaluate("e => getComputedStyle(e).getPropertyValue('--ork-lean-x')").strip() != ""
-        assert pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])').bounding_box()["y"] <= b["y"] - 60          # and rises whole (a spring, hand.css)
+        assert pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])').bounding_box()["y"] <= b["y"] - 4          # and lifts a little (a spring, hand.css; the card is whole at rest, spec 142 B.4)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1252,7 +1249,7 @@ def test_a_card_leans_and_rises_under_the_pointer_and_nothing_moves_under_reduce
         assert card.evaluate("e => getComputedStyle(e).transform") == "none"
         assert pg.locator(".hand-card.ork-deal").count() == 0
         slot = pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])')
-        assert slot.bounding_box()["y"] <= b["y"] - 60 and slot.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"      # a card rises whole all the same (it must be read), without the spring
+        assert slot.bounding_box()["y"] <= b["y"] - 4 and slot.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"      # a card rises whole all the same (it must be read), without the spring
     finally:
         ctx.close()
 

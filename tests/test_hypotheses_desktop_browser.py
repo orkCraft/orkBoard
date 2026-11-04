@@ -405,7 +405,7 @@ def test_a_hypothesis_tested_is_a_card_with_the_flask_its_name_the_hypothesis_an
     pg, host, w = due
     c = front(pg)
     assert c.locator(".hand-card__name").text_content().strip() == ROW["text"]
-    assert c.locator(".hand-card__window .ork-sign.flask").count() == 1
+    assert c.locator(".hand-card__corner .ork-sign.flask").count() == 1
     asker = c.locator(".hand-card__asker .ork-race__head")
     assert asker.count() == 1 and "unicorn" in asker.get_attribute("src"), "Product's leader asks"
     assert c.locator(".ork-gem").count() == 0, "it spends nothing"
