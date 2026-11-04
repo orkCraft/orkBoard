@@ -19,7 +19,7 @@ import tomllib
 from pathlib import Path, PurePosixPath
 
 from orkboard.hooks.warder import is_secret
-from orkboard.realm import code_map, stacks_known
+from orkboard.realm import code_map, engines, stacks_known
 
 MANIFESTS = ("package.json", "pyproject.toml", "go.mod", "Cargo.toml")
 ALSO = ("index.html", "requirements.txt", "requirements-dev.txt")   # read beside a manifest: a page, Python's other list
@@ -65,7 +65,7 @@ _GO_REQ = re.compile(r"^[ \t]*(?:require[ \t]+)?([a-z0-9][\w.\-]{0,100}\.[a-z]{2
 def matters(path: str) -> bool:
     """Whether a file changed between two commits may change the overview: a source code_map reads, a manifest, a page or a list."""
     p = PurePosixPath(path)
-    return p.suffix in code_map.PY | code_map.JS or p.name in MANIFESTS or p.name in ALSO
+    return p.suffix in code_map.PY | code_map.JS or p.name in MANIFESTS or p.name in ALSO or engines.matters(path)
 
 
 def _text(root: Path, rel: str) -> str | None:
@@ -229,7 +229,7 @@ def _stack(deps: list[tuple[str, str]]) -> tuple[list[dict], int]:
     return [{"name": n, "role": r} for n, r in rows], len(unknown)
 
 
-def _manifest(root: Path, folder: str) -> dict:
+def _manifest(root: Path, folder: str, engine: dict | None = None) -> dict:
     deps: list[tuple[str, str]] = []
     ways: list[dict] = []
     for page in ("index.html", "public/index.html", "src/index.html"):
@@ -243,6 +243,8 @@ def _manifest(root: Path, folder: str) -> dict:
     if "pyproject.toml" not in have and any(_is(root, _rel(folder, r)) for r in ("requirements.txt", "requirements-dev.txt")):
         _py(root, folder, deps, ways)
     stack, unknown = _stack(deps)
+    if engine:                                                    # a Godot, Unity or Unreal container (realm/engines.py, spec 145): its engine first
+        return {"manifests": engine["manifests"] + have, "stack": engine["stack"] + stack, "unknown": unknown, "ways_in": engine["ways_in"] + ways}
     return {"manifests": have, "stack": stack, "unknown": unknown, "ways_in": ways}
 
 
@@ -472,7 +474,9 @@ def read(tree: Path, parts: list[dict] | None = None) -> dict:
     root = Path(tree)
     parts = code_map.parts(root) if parts is None else parts
     files = [f.relative_to(root).as_posix() for f in code_map.sources(root)]
+    eng = {c["path"]: c for c in engines.containers(root)}
     ids = _folders(root)
+    ids = ([ROOT] if ROOT in eng and ROOT not in ids else []) + ids + sorted(c for c in eng if c != ROOT and c not in ids)
     if ROOT not in ids and (any(owner(f, ids) is None for f in files) or any(owner(p["path"], ids) is None for p in parts)):
         ids.insert(0, ROOT)                                       # the root's own code, outside every container
     scans = {c: _new() for c in ids}
@@ -509,15 +513,16 @@ def read(tree: Path, parts: list[dict] | None = None) -> dict:
     containers = []
     for c in ids:
         mine = [p["path"] for p in parts if owner(p["path"], ids) == c]
-        info = _manifest(root, c)
+        info = _manifest(root, c, eng.get(c))
         ways = info["ways_in"] + [{"kind": "listen", "name": "", "path": f} for f in scans[c]["listens"]]
-        containers.append({"path": c, "name": ROOT_NAME if c == ROOT else PurePosixPath(c).name, "manifests": info["manifests"],
+        containers.append({"path": c, "name": eng[c]["name"] if c in eng else ROOT_NAME if c == ROOT else PurePosixPath(c).name, "manifests": info["manifests"],
                            "stack": info["stack"], "unknown": info["unknown"], "ways_in": ways, "layers": _layers(mine, c, uses),
-                           "parts": sorted(mine)})
+                           "parts": sorted(mine), **({"role": eng[c]["role"]} if eng.get(c, {}).get("role") else {})})
     shared = []
     for p in parts:
         by = {owner(u, ids) for u in used_by.get(p["path"], ())} - {None}
         if len(by) >= 2:
             shared.append({"path": p["path"], "container": owner(p["path"], ids), "containers": sorted(by),
                            "used_by": sorted(used_by[p["path"]])})
-    return {"containers": containers, "links": _links(ids, scans), "shared": shared}
+    more = [k for k in engines.links(root) if k["from"] in ids and k["to"] in ids]
+    return {"containers": containers, "links": _links(ids, scans) + more, "shared": shared}

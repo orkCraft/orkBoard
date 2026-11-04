@@ -1,0 +1,17 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="Skyhop"
+run/main_scene="res://scenes/main_menu.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+
+[autoload]
+
+Events="*res://autoload/events.gd"
+Save="*res://autoload/save.gd"
+
+[display]
+
+window/size/viewport_width=1280

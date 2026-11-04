@@ -19,7 +19,7 @@ import subprocess
 from pathlib import Path, PurePosixPath
 
 from orkboard.hooks.warder import is_secret
-from orkboard.realm import code_map
+from orkboard.realm import code_map, engines
 
 MAX_LIST = 60_000                      # the most files of a commit listed
 MAX_BYTES = 200_000                    # the most a file read may hold
@@ -39,7 +39,7 @@ BARE = {"Scaffold", "MaterialPageRoute", "CupertinoPageRoute", "Builder", "Cente
 
 SOURCES = {"next-app": "Next.js app/", "next-pages": "Next.js pages/", "pages": "the pages/ folder", "sveltekit": "SvelteKit routes/",
            "expo-router": "Expo Router app/", "react-router": "React Router", "vue-router": "Vue Router", "flutter": "Flutter routes",
-           "screens": "the screens/ folder", "views": "the views/ folder"}
+           "screens": "the screens/ folder", "views": "the views/ folder", "godot": "Godot scenes", "unity": "Unity scenes"}
 
 
 # -- a commit's files --------------------------------------------------------------------------------------------------------------------
@@ -72,7 +72,8 @@ class Tree:
             if len(bits) != 4 or bits[1] != b"blob" or bits[0] == b"120000":
                 continue
             path = name.decode("utf-8", "replace")
-            if _kept(path) and PurePosixPath(path).suffix in FILES + (".json",):
+            if _kept(path) and (PurePosixPath(path).suffix in FILES + engines.TREE_SUFFIXES + (".json",) or PurePosixPath(path).name in engines.TREE_NAMES
+                                or path.endswith(".cs.meta")):
                 self.sizes[path] = int(bits[3]) if bits[3].isdigit() else MAX_BYTES + 1
         self.files = sorted(self.sizes)
         self.set = set(self.files)
@@ -460,4 +461,4 @@ def routes(tree: Tree) -> tuple[str, list[dict]]:
         got = read()
         if got:
             return key, got
-    return "", []
+    return engines.screens(tree)                           # a Godot or Unity project's scenes (spec 145), when no router gave screens

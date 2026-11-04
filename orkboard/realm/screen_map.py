@@ -30,7 +30,7 @@ import subprocess
 import threading
 from pathlib import Path
 
-from orkboard.realm import commit_goal, idea_lens, ideas, screen_routes
+from orkboard.realm import commit_goal, engines, idea_lens, ideas, screen_routes
 
 REF = "dev"
 LIMIT = 3000                       # the map's text, at most
@@ -198,8 +198,9 @@ def _core(root: Path, sha: str) -> dict:
         more = max(0, len(rows) - MAX_SCREENS)
         rows = rows[:MAX_SCREENS]
         ids = _ids(rows)
-        links = _links(tree, rows, ids)
-        entry = _entry(ids, rows, links)
+        links = engines.screen_links(source, tree, rows, ids)                      # an engine's scenes (spec 145) name their links their own way
+        links = _links(tree, rows, ids) if links is None else links
+        entry = engines.screen_entry(source, tree, rows, ids) or _entry(ids, rows, links)
         steps, loose = _steps(ids, links, entry)
         _CACHE[key] = {"head": sha, "source": source, "entry": entry, "more": more, "loose": loose, "links": links, "steps": steps,
                        "screens": [{"id": sid, "name": r["name"], "path": r["path"], "file": r["file"]} for sid, r in zip(ids, rows)]}

@@ -1,7 +1,7 @@
 """The repository's parts and how they depend on one another, for the architect's lens (realm/idea_lens.py): each folder
 of source files is a part; a part uses another when one of its files imports one of the other's. Python's `import` and
 `from … import`, JavaScript's and TypeScript's `import … from "./…"`, `import("./…")` and `require("./…")` are read;
-what is imported from outside the repository is left out.
+what is imported from outside the repository is left out. A Godot, Unity or Unreal project's parts are added (realm/engines.py, spec 145).
 
     parts(root)        # [{"path": "orkboard/realm", "files": ["ideas.py", …], "count": 40, "uses": [...], "used_by": [...]}]
     parts(tree)        # the same of any tree: a task's worktree, or a detached one of dev's head (realm/project_map.py, spec 89 §1)
@@ -142,5 +142,7 @@ def parts(root: Path) -> list[dict]:
     for p, us in uses.items():
         for u in us:
             used_by.setdefault(u, set()).add(p)
-    return [{"path": p, "files": sorted(names[p])[:FILES_SHOWN], "count": len(names[p]),
+    from orkboard.realm import engines                    # a Godot, Unity or Unreal project beside the code read here (spec 145): its parts are added
+    mine = [{"path": p, "files": sorted(names[p])[:FILES_SHOWN], "count": len(names[p]),
              "uses": sorted(uses.get(p, ())), "used_by": sorted(used_by.get(p, ()))} for p in sorted(names)]
+    return engines.merge(mine, engines.parts(root, [r.as_posix() for r in rels]))
