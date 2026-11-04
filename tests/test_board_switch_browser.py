@@ -54,6 +54,31 @@ def test_a_public_repository_is_refused_in_words_then_a_private_one_is_turned_on
     assert not d.errors, d.errors
 
 
+def test_the_cloud_run_settings_write_nothing_until_the_yes_and_then_the_workflow(desk, tmp_path):
+    from orkboard.realm import cloud_run
+    root, d = project(desk, tmp_path)
+    board_branch.turn_on(root)
+    pg = d.open()
+    open_settings(pg)
+    cloud = pg.locator('[data-settings="cloud-run"]')
+    cloud.wait_for(timeout=WAIT_MS)
+    text = cloud.inner_text()
+    assert "Planned: the work starts on your computer" in text and "About a minute of Actions when it finds nothing, 12 times a day" in text
+    assert "shares this week's limits" in text and cloud.locator('[data-cloud="usd"]').count() == 0
+    cloud.locator('[data-cloud="secret"]').select_option("api_key")
+    cloud.locator('[data-line="cloud-ceiling"]').wait_for(timeout=WAIT_MS)
+    assert "At most $1 a cloud run" in cloud.inner_text() and "by the token" in cloud.inner_text()
+    cloud.locator('[data-cloud="usd"]').fill("2")
+    cloud.locator('[data-cloud="schedule"]').select_option("never")
+    assert not (root / ".github").exists() and cloud_run.read_config(root) is None, "choosing writes nothing"
+    cloud.locator('[data-cloud="write"]').click()
+    cloud.locator('[data-line="cloud-said"]').wait_for(timeout=WAIT_MS)
+    assert "Commit it to your default branch" in cloud.locator('[data-line="cloud-said"]').inner_text()
+    assert cloud_run.read_config(root) == cloud_run.CloudConfig("api_key", "never", 2.0)
+    assert "--usd 2" in (root / ".github/workflows/orkboard.yml").read_text()
+    assert not d.errors, d.errors
+
+
 def test_not_now_leaves_turn_it_on_alone(desk, tmp_path):
     root, d = project(desk, tmp_path)
     pg = d.open()

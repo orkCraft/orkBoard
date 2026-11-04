@@ -83,3 +83,59 @@ def test_it_says_who_holds_the_board_and_what_was_kept_aside(tmp_path):
 def test_the_words_are_in_the_glossary():
     assert lexicon.term("board_branch") == "the Board's branch" and lexicon.term("holds") == "holds the Board"
     assert lexicon.term("cloud_run") == "cloud run" and lexicon.term("cloud_run", many=True) == "cloud runs"
+
+
+# -- the cloud run's settings (spec 137 D) -----------------------------------------------------------------------------------
+
+def test_the_cloud_run_is_offered_once_the_board_is_kept_and_choosing_writes_nothing(tmp_path):
+    from orkboard.realm import cloud_run
+    root = repo(tmp_path / "shop")
+    sw = bsw.BoardSwitch(host(root, tmp_path / "st"))
+    assert "cloud" not in sw.switch(), "no cloud run before the Board is kept in the repository"
+    with pytest.raises(ValueError, match="Turn on"):
+        sw.cloud_write({})
+    board_branch.turn_on(root)
+    c = sw.switch()["cloud"]
+    assert (c["secret"], c["schedule"], c["usd"], c["set_up"], c["workflow"]) == ("oauth", "2h", 1.0, False, "none")
+    assert [x["id"] for x in c["secrets"]] == ["oauth", "api_key"] and [x["label"] for x in c["schedules"]] == ["Every 2 hours", "Never"]
+    assert c["ceiling"] == "At most $1 a cloud run" and c["minute"] == "About a minute of Actions when it finds nothing" and c["runs_a_day"] == 12
+    assert "Planned: the work starts on your computer" in c["line"] and "never does the work" in c["line"]
+    assert "shares this week's limits" in c["secrets"][0]["line"] and "by the token" in c["secrets"][1]["line"]
+    assert not (root / ".github").exists() and cloud_run.read_config(root) is None
+
+
+def test_the_yes_writes_the_settings_and_the_workflow_into_the_project_and_says_to_commit_it(tmp_path):
+    from orkboard.realm import cloud_run
+    root = repo(tmp_path / "shop")
+    board_branch.turn_on(root)
+    sw = bsw.BoardSwitch(host(root, tmp_path / "st"))
+    got = sw.cloud_write({"secret": "api_key", "schedule": "never", "usd": 2})
+    assert got["ok"] and got["line"] == "Written to .github/workflows/orkboard.yml. Commit it to your default branch for the cloud run to start."
+    assert cloud_run.read_config(root) == cloud_run.CloudConfig("api_key", "never", 2.0)
+    text = (root / ".github/workflows/orkboard.yml").read_text()
+    assert "secrets.ANTHROPIC_API_KEY" in text and "--usd 2" in text and "schedule:" not in text
+    assert (root / "orkcraft.toml").read_text().count("[board]") == 1
+    c = sw.switch()["cloud"]
+    assert c["set_up"] and c["workflow"] == "ours" and c["current"] and c["secret"] == "api_key" and c["ceiling"] == "At most $2 a cloud run"
+    sw.cloud_write({"secret": "oauth", "schedule": "2h"})                       # a new yes rewrites our own file
+    assert "secrets.CLAUDE_CODE_OAUTH_TOKEN" in (root / ".github/workflows/orkboard.yml").read_text()
+
+
+def test_a_workflow_of_the_persons_own_is_never_overwritten(tmp_path):
+    root = repo(tmp_path / "shop")
+    board_branch.turn_on(root)
+    mine = root / ".github/workflows/orkboard.yml"
+    mine.parent.mkdir(parents=True)
+    mine.write_text("name: mine\n")
+    sw = bsw.BoardSwitch(host(root, tmp_path / "st"))
+    assert sw.switch()["cloud"]["workflow"] == "other"
+    with pytest.raises(ValueError, match="file of your own"):
+        sw.cloud_write({})
+    assert mine.read_text() == "name: mine\n" and "[cloud_run]" not in (root / "orkcraft.toml").read_text()
+
+
+def test_the_cloud_run_words_are_in_the_glossary():
+    for key, word in (("planned", "Planned"), ("cloud_secret", "the secret that pays"), ("cloud_ceiling", "ceiling")):
+        assert lexicon.term(key) == word, key
+    rows = {key: (w, was) for key, w, was in lexicon.glossary()}
+    assert rows["cloud_ceiling"] == ("ceiling", "") and lexicon.term("cloud_ceiling", many=True) == "ceilings"
