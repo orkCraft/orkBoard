@@ -329,8 +329,7 @@ file is (`hypotheses_bind.base`); the record keeps its whole copy and the file o
 is skipped by `parse` and left untouched by `apply`; a verdict with a why or a way has a `### Verdict` line, one with only a decision has its number in the Status line. **D** as written: `verdict.finding`
 is in the record only. **B**, the code that is not a call: `realm/hypothesis_measures.py`, `hypotheses.due(.., today)`, `value`, `measure_set`, `measure_drop`, `judge(.., date)` (*look again on*), the row's
 `measures` and `met`, the commands `ideas.hypothesis_measure_set`, `ideas.hypothesis_measure_drop`, `ideas.hypothesis_value`, the values hidden until the date (`hypothesis_measures.shown`).
-**Not built yet** (for the cheaper model): B.3's leader reading (`core/idea_hypothesis_values.py`, the step `measure_read`, its events) and C.2's `- Measure:` lines of *How we test it* (read and written: a bound
-file's measures live in the record until then).
+**B.3 and C.2** built by spec 146 C: the leader's reading (`core/idea_hypothesis_values.py`, the step `measure_read`, its event) and the `- Measure:` lines of *How we test it* (`realm/hypotheses_file.py`, read and written; `hypothesis_measures.overlay` gives a bound file's measures their ids and values from the record).
 
 ## 8. Tests
 

@@ -263,6 +263,8 @@ EVENTS += (SLICES_CUT, SLICES_FOLDED)       # spec 131 A
 FINDINGS_TOLD = "findings_told"      # idea (the goal's slug, "" for findings of no goal), party, findings (how many), seconds, cost (None: unrecorded), failed (true: code's words kept)
 FINDINGS_SORTED = "findings_sorted"  # idea, findings (how many), levels ({work, spec, decision} counts), seconds, cost (None: unrecorded), failed (true: all left at work)
 EVENTS += (FINDINGS_TOLD, FINDINGS_SORTED)       # spec 132 D
+MEASURE_READ = "measure_read"        # spec 146 C.1 (spec 133 B.3): idea (the hypothesis's id), party, measures (asked), read (kept), seconds, cost (None: unrecorded); never a number
+EVENTS += (MEASURE_READ,)       # spec 146 C
 
 # Spec 131 B (decisions §233.5–§233.9): a leader's proposal to change a slice of its own, the cascade it runs in the background, the card's two answers. Never a word of a slice or of a decision.
 SLICE_PROPOSED = "slice_proposed"         # party, from_step (the call it came in: talk_round · talk_verdict · section_first · section · plan · accept · ask · finding), dropped ("" kept · open · bad · blocked · gone)

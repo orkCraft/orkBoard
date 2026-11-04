@@ -13,10 +13,13 @@ A section is `## H<n>. <title>` up to the next `## ` heading; its id is `h<n>` a
     - **Refuted, <name>**: <line>  |  - **Refuted** when <line>  |  - **Refutes:** <line>      # a way, three at most, `name` "" without one
     ### If it holds                                              # its first paragraph is `if_holds`
     ### If it is refuted, <name>                                 # that way's `change`
+    ### How we test it
+    - Measure: <what> — from <source>[ (by <party>)] — holds <op> <n>[ <unit>][, refuted <way> <op> <n>[ <unit>]] — <N> weeks | <N> days | until <YYYY-MM-DD>   # a measure (spec 133 C.2); only a line of exactly this
+                                                                 # shape names one, any other line is kept as written; its value is never written; `from -` says no source
     ### Evidence                                                 # `- <text> (<ref>) — <day>`, the newest twelve (written by Orkboard)
     ### Verdict                                                  # `<held|refuted>: <why> (decision §<n>, <way>) — <day>` (written by Orkboard)
 
-A file item is `{id, n, text, signal, refuted, if_holds, state, evidence, verdict}` with the record's shapes. Words are cut as the record cuts them; nothing is invented. `apply` changes a part only when the
+A file item is `{id, n, text, signal, refuted, if_holds, measures, raised, state, evidence, verdict}` (`raised` the Status line's day, "" with none) with the record's shapes. Words are cut as the record cuts them; nothing is invented. `apply` changes a part only when the
 item's value differs from what the section parses to (so a long line the record cut is never rewritten short), appends an item that has no section as `## H<n+1>.` (and says the id it got), and removes a
 section only when its id is in `drop`.
 """
@@ -26,7 +29,7 @@ import datetime as dt
 import re
 from pathlib import Path
 
-from orkboard.realm import hypotheses as hyp
+from orkboard.realm import hypotheses as hyp, hypothesis_measures as hm
 
 DEFAULT = "docs/hypotheses.md"
 HEAD = "# Hypotheses\n\nWhat we believe and have not yet shown.\n"
@@ -39,6 +42,13 @@ _WAY = re.compile(r"^- \*\*(?:Refuted|Refutes)(?:,[ \t]*([^*:]+?))?[ \t]*:?\*\*:
 _EVIDENCE = re.compile(r"^- (.*?)(?: \(([^()]*)\))? — (\d{4}-\d\d-\d\d)$")
 _VERDICT = re.compile(r"^(held|refuted):[ \t]*(.*?)(?:[ \t]*\(decision §(\d+)(?:,[ \t]*([^)]*))?\))?(?:[ \t]*— (\d{4}-\d\d-\d\d))?[ \t]*$")
 _DECISION = re.compile(r"§(\d+)")
+_MEASURE = re.compile(r"^- Measure:[ \t]*(.+)$")
+_FROM = re.compile(r"^from[ \t]+(.+?)(?:[ \t]+\(by ([a-z0-9-]+)\))?$")
+_BAR = re.compile(r"^(>=|<=|>|<|=|≥|≤)[ \t]*(-?\d+(?:\.\d+)?)(?:[ \t]+(.+))?$")
+_WAYBAR = re.compile(r"^(.*?)[ \t]*(>=|<=|>|<|=|≥|≤)[ \t]*(-?\d+(?:\.\d+)?)(?:[ \t]+(.+))?$")
+_SPAN = re.compile(r"^(?:(\d{1,3})[ \t]+(weeks?|days?)|until[ \t]+(\d{4}-\d\d-\d\d))$")
+_OP = {"≥": ">=", "≤": "<="}
+_RAISED = re.compile(r"\*\*Raised:\*\*[ \t]*(\d{4}-\d\d-\d\d)")
 
 
 def find(root, chosen: str = "") -> str | None:
@@ -120,6 +130,84 @@ def _find_block(lines: list[str], *needles: str, startswith: str = "") -> tuple[
     return None
 
 
+# -- a measure's line ------------------------------------------------------------------------------------------------------------------------
+
+def _num(n: float) -> str:
+    return str(int(n)) if n == int(n) else repr(n)
+
+
+def _plain(text: object) -> str:
+    """A word of a measure as its line can hold it: one line, no ` — `."""
+    return " ".join(str(text or "").replace(" — ", " - ").split())
+
+
+def _bar_of(op: str, n: str, unit: str | None) -> dict:
+    return {"op": _OP.get(op, op), "n": float(n), "unit": " ".join((unit or "").split())}
+
+
+def _parse_measure(text: str) -> tuple[dict, str] | None:
+    """One `- Measure:` line as `(a raw measure, "span" | "until")`, or None for a line of another shape."""
+    m = _MEASURE.match(text.strip())
+    parts = m.group(1).split(" — ") if m else []
+    if len(parts) != 4 or not parts[0].strip():
+        return None
+    src = _FROM.match(parts[1].strip())
+    span = _SPAN.match(parts[3].strip())
+    if not src or not span:
+        return None
+    holds, ways = None, []
+    segs = re.split(r"(?:^|,[ \t]+)(holds|refuted)[ \t]+", parts[2].strip())
+    if len(segs) < 3 or segs[0] != "":
+        return None
+    for kind, body in zip(segs[1::2], segs[2::2]):
+        if kind == "holds":
+            b = _BAR.match(body.strip())
+            if not b or holds is not None:
+                return None
+            holds = _bar_of(*b.groups())
+        else:
+            b = _WAYBAR.match(body.strip())
+            if not b:
+                return None
+            ways.append({"way": " ".join(b.group(1).split()), **_bar_of(*b.groups()[1:])})
+    days = int(span.group(1)) * (7 if span.group(2).startswith("week") else 1) if span.group(1) else 0
+    raw = {"what": parts[0].strip(), "from": "" if src.group(1).strip() == "-" else src.group(1).strip(), "by": src.group(2) or "", "bars": {"holds": holds, "refuted": ways},
+           "span_days": days or hm.SPAN_DEFAULT, "date": span.group(3) or ""}
+    return raw, "until" if span.group(3) else "span"
+
+
+def _measure_spots(lines: list[str]) -> list[tuple[int, int, dict, str]]:
+    """The measure lines of *How we test it*: `(first index, end index, raw measure, form)`, four at most."""
+    block = _find_block(lines, startswith="how we test")
+    if not block:
+        return []
+    out = []
+    for i, j, text in _bullets(lines[block[1] + 1:block[2]]):
+        if (got := _parse_measure(text)) and len(out) < hm.MAX_MEASURES:
+            out.append((block[1] + 1 + i, block[1] + 1 + j, got[0], got[1]))
+    return out
+
+
+def _key(m: dict, form: str) -> tuple:
+    bars = m["bars"]
+    h = bars.get("holds")
+    return (_plain(m["what"]), _plain(m["from"]), m.get("by") or "", (h["op"], float(h["n"]), _plain(h.get("unit"))) if h else None,
+            tuple((_plain(w["way"]), w["op"], float(w["n"]), _plain(w.get("unit"))) for w in bars.get("refuted") or []), m["date"] if form == "until" else m["span_days"])
+
+
+def _form(m: dict, started: str) -> str:
+    """How an item's measure is written: as its span when its date is that span from `started`, else as the day."""
+    return "until" if m.get("date") and not (started and m["date"] == hm.date_of(started, m["span_days"])) else "span"
+
+
+def _measure_line(m: dict, started: str) -> str:
+    def bar(b: dict) -> str:
+        return f"{b['op']} {_num(float(b['n']))}" + (f" {_plain(b['unit'])}" if _plain(b.get("unit")) else "")
+    bars = ([f"holds {bar(m['bars']['holds'])}"] if m["bars"].get("holds") else []) + [f"refuted {(_plain(w['way']) + ' ') if _plain(w['way']) else ''}{bar(w)}" for w in m["bars"].get("refuted") or []]
+    span = f"until {m['date']}" if _form(m, started) == "until" else (f"{m['span_days'] // 7} weeks" if m["span_days"] % 7 == 0 else f"{m['span_days']} days")
+    return f"- Measure: {_plain(m['what'])} — from {_plain(m['from']) or '-'}{' (by ' + m['by'] + ')' if m.get('by') else ''} — {', '.join(bars)} — {span}"
+
+
 # -- one section parsed -----------------------------------------------------------------------------------------------------------------------
 
 def _status(lines: list[str]) -> tuple[int, str, str, str]:
@@ -154,7 +242,7 @@ def _section(lines: list[str]) -> dict | None:
         if got:
             way["change"] = _paragraph(lines[got[1] + 1:got[2]], hyp.DRAFT_CHARS)
     got = _find_block(lines, startswith="if it holds")
-    _i, word, note, _raised = _status(lines)
+    _i, word, note, raised = _status(lines)
     state = word if word in hyp.JUDGED else "open"
     evidence = []
     if block := _find_block(lines, startswith="evidence"):
@@ -172,7 +260,8 @@ def _section(lines: list[str]) -> dict | None:
                 verdict = {"state": v.group(1), "why": hyp._words(v.group(2), hyp.TEXT_CHARS), "decision": int(v.group(3) or 0), "way": hyp._words(v.group(4) or "", hyp.NAME_CHARS), "at": v.group(5) or ""}
                 state = v.group(1)
     return {"id": f"h{n}", "n": n, "text": hyp._cut(" ".join(m.group(2).split()), hyp.TEXT_CHARS) or f"Hypothesis {n}", "signal": holds, "refuted": ways,
-            "if_holds": _paragraph(lines[got[1] + 1:got[2]], hyp.DRAFT_CHARS) if got else "", "state": state, "evidence": evidence[-EVIDENCE_KEPT:], "verdict": verdict}
+            "if_holds": _paragraph(lines[got[1] + 1:got[2]], hyp.DRAFT_CHARS) if got else "",
+            "measures": hm.lenient([raw for _a, _b, raw, _f in _measure_spots(lines)]), "raised": (r.group(1) if (r := _RAISED.search(raised)) else ""), "state": state, "evidence": evidence[-EVIDENCE_KEPT:], "verdict": verdict}
 
 
 def parse(text: str) -> dict:
@@ -255,6 +344,30 @@ def _update(lines: list[str], item: dict) -> None:
         if w["name"] and (have or {"change": ""})["change"] != w["change"]:
             heading = f"### If it is refuted, {w['name']}"
             _set_block(lines, _find_block(lines, startswith=f"if it is refuted, {w['name'].lower()}"), heading, [w["change"]] if w["change"] else [])
+    spots = _measure_spots(lines)
+    started = item.get("started") or ""
+    want = [_key(m, _form(m, started)) for m in item.get("measures") or []]
+    have = [_key(raw, form) for _a, _b, raw, form in spots]
+    if want != have:
+        new = [_measure_line(m, started) for m in item.get("measures") or []]
+        if len(want) == len(have):                                                    # the same count: only the lines that differ are written again
+            for k in reversed(range(len(want))):
+                if want[k] != have[k]:
+                    lines[spots[k][0]:spots[k][1]] = [new[k]]
+        elif spots:
+            at = spots[0][0]
+            for a, b, _raw, _f in reversed(spots):
+                del lines[a:b]
+            lines[at:at] = new
+        elif block := _find_block(lines, startswith="how we test"):
+            end = block[2]
+            while end > block[1] + 1 and not lines[end - 1].strip():
+                end -= 1
+            lines[end:end] = new
+            if new and end + len(new) < len(lines) and lines[end + len(new)].strip():
+                lines.insert(end + len(new), "")
+        else:
+            _set_block(lines, None, "### How we test it", new)
     if item["if_holds"] != cur["if_holds"]:
         _set_block(lines, _find_block(lines, startswith="if it holds"), "### If it holds", [item["if_holds"]] if item["if_holds"] else [])
     if [(e["text"], e["ref"]) for e in item["evidence"]] != [(e["text"], e["ref"]) for e in cur["evidence"]]:

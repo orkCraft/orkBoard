@@ -31,7 +31,7 @@ from orkboard.realm.hours import in_hours, next_edge, next_start      # noqa: F4
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
 EFFORTS = ("low", "medium", "high", "xhigh", "max")      # the Claude CLI's `--effort` levels
-STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "talk_verdict", "diagnose", "decide", "section_first", "section", "join", "project_q", "loop", "tree", "hypotheses", "ask", "concerns", "sketch", "journal", "fold", "slice", "slice_digest", "finding", "finding_level", "cascade")
+STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "talk_verdict", "diagnose", "decide", "section_first", "section", "join", "project_q", "loop", "tree", "hypotheses", "ask", "concerns", "sketch", "journal", "fold", "slice", "slice_digest", "finding", "finding_level", "cascade", "measure_read")
 PITCH_STEPS = ("pitch_view", "pitch_case", "pitch_decide")   # a pitch's three calls (spec 65 §3, core/idea_judge.py)
 SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its Target, for its goals
 SIZE_TARGET = {"lean": "thrift", "standard": "balance", "full": "quality"}
@@ -93,6 +93,8 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "finding_level": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # A leader's answer in a cascade (spec 131 §B.2, decisions §233.6): one short call of the leader whose slice rests on the change, no tools, on the cheaper tier as `slice_digest`
     "cascade": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
+    # A hypothesis's measures read by the leader whose map holds the source (spec 133 B.3, spec 146 C.1): one call a party at the measure's date, tools (it reads the repository), on the cheaper tier as `diagnose`
+    "measure_read": {"thrift": ("warrior", "low"), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # The decision and the sections (spec 99 §6, §7): the Orkmaster words the decision and joins the sections on the cheaper tier as its `route`, no tools; every leader of
     # the route writes its section at once, reading a few files as the draft did: the first step's leader on its party's tier (the draft's rows), the others on the
     # cheaper one (the diagnosis's rows)
@@ -124,13 +126,14 @@ CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan
            # `decide` by 2,500 (its part of the leaders' slices); `slice` and `slice_digest` are the cut's and the fold's own
            "slice": 9_000, "slice_digest": 8_000,
            "finding": 9_000, "finding_level": 9_000,        # spec 132 D.2: a finding told by its leader and sorted by the Orkmaster
-           "cascade": 3_000}          # spec 131 §B.2: a leader's slice and the change it answers
+           "cascade": 3_000,          # spec 131 §B.2: a leader's slice and the change it answers
+           "measure_read": 9_000}     # spec 146 C.1: the measures a leader reads, its map and the stage
 READS = {"goal": 8, "draft": 6, "plan": 6, "talk": 2, "answer": 2, "accept": 4,
          "pitch_view": 4, "pitch_case": 0, "pitch_decide": 0, "collide": 0, "kind": 0, "route": 0,
-         "talk_round": 0, "talk_verdict": 0, "diagnose": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "project_q": 0, "loop": 0, "tree": 0, "hypotheses": 0, "ask": 0, "concerns": 0, "sketch": 0, "journal": 0, "fold": 0, "slice": 0, "slice_digest": 0, "finding": 4, "finding_level": 0, "cascade": 0}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
+         "talk_round": 0, "talk_verdict": 0, "diagnose": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "project_q": 0, "loop": 0, "tree": 0, "hypotheses": 0, "ask": 0, "concerns": 0, "sketch": 0, "journal": 0, "fold": 0, "slice": 0, "slice_digest": 0, "finding": 4, "finding_level": 0, "cascade": 0, "measure_read": 4}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
 CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60, "accept": 0.60,
         "op_prepare": 0.30, "op_act": 0.10, "op_learn": 0.10, "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05, "kind": 0.03, "route": 0.03,
-        "talk_round": 0.08, "talk_verdict": 0.06, "diagnose": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "hypotheses": 0.10, "ask": 0.05, "concerns": 0.10, "sketch": 0.40, "journal": 0.05, "fold": 0.05, "slice": 0.05, "slice_digest": 0.05, "finding": 0.20, "finding_level": 0.05, "cascade": 0.05}
+        "talk_round": 0.08, "talk_verdict": 0.06, "diagnose": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "hypotheses": 0.10, "ask": 0.05, "concerns": 0.10, "sketch": 0.40, "journal": 0.05, "fold": 0.05, "slice": 0.05, "slice_digest": 0.05, "finding": 0.20, "finding_level": 0.05, "cascade": 0.05, "measure_read": 0.20}
 READS_FOR = {("concerns", "design"): 4, ("sketch", "design"): 1}                 # a step's reads for a craft that has more: Design's look at its map reads the pictures of the screens changed (spec 108 §2.3)
 BUDGET_SHARE = {"thrift": 0.5, "balance": 1.0, "quality": 2.0}
 

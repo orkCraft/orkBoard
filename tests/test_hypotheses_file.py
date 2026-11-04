@@ -278,3 +278,63 @@ def test_a_file_that_is_gone_reads_as_no_file_and_the_records_copy_is_read(proj)
     hyp.attach(state, "h1", goal="dark-mode")
     (proj / "docs" / "hypotheses.md").unlink()
     assert [i["id"] for i in kept(proj)] == ["h1"] and kept(proj)[0]["rests"] == ["dark-mode"]
+
+
+# -- spec 146 C.2: the measure lines of *How we test it* ----------------------------------------------------------------------------------------
+
+M1 = "- Measure: The cost of an install, the Camp clip — from the ads' platforms (by marketing) — holds <= 70 % of the Work clip's, refuted the look > 100 % — 4 weeks"
+M2 = "- Measure: Came back within 7 days — from the store page — holds >= 30 % — until 2026-12-01"
+WITH_MEASURES = ONE.replace("An interview.\n", f"An interview.\n\n{M1}\n- A line of another shape — not a measure.\n{M2}\n")
+
+
+def test_two_measure_lines_are_read_with_their_bars_their_party_and_their_span_or_day():
+    first, second = hf.parse(WITH_MEASURES)["items"][0]["measures"]
+    assert (first["id"], first["what"], first["from"], first["by"]) == ("m1", "The cost of an install, the Camp clip", "the ads' platforms", "marketing")
+    assert first["bars"] == {"holds": {"op": "<=", "n": 70.0, "unit": "% of the Work clip's"}, "refuted": [{"way": "the look", "op": ">", "n": 100.0, "unit": "%"}]}
+    assert (first["span_days"], first["date"], first["value"]) == (28, "", None)
+    assert (second["id"], second["by"], second["bars"]["holds"]["n"], second["date"]) == ("m2", "", 30.0, "2026-12-01")
+
+
+def test_a_line_of_another_shape_is_kept_and_read_as_no_measure():
+    odd = ["- Measure: no bars — from nowhere — 4 weeks", "- Measure: a — from b — holds <= x — 4 weeks", "- Measure: a — from b — holds <= 5 — someday", "- Measure: a — holds <= 5 — 4 weeks"]
+    text = ONE.replace("An interview.\n", "An interview.\n\n" + "\n".join(odd) + "\n")
+    item = hf.parse(text)["items"][0]
+    assert item["measures"] == [] and hf.apply(text, [item])[0] == text
+
+
+def test_one_measure_changed_is_written_back_and_the_other_lines_are_untouched():
+    item = hf.parse(WITH_MEASURES)["items"][0]
+    assert hf.apply(WITH_MEASURES, [item])[0] == WITH_MEASURES
+    first, second = item["measures"]
+    new = hf.apply(WITH_MEASURES, [{**item, "measures": [{**first, "bars": {**first["bars"], "holds": {"op": "<=", "n": 60.0, "unit": "% of the Work clip's"}}}, second]}])[0]
+    assert changed(WITH_MEASURES, new) == [f"-{M1}", f"+{M1.replace('<= 70', '<= 60')}"]
+
+
+def test_a_measure_added_dropped_or_given_a_day_changes_only_the_measure_lines_and_no_value_is_written():
+    item = hf.parse(ONE)["items"][0]
+    assert item["measures"] == []
+    m = {"id": "m1", "what": "Picked a sketch", "from": "", "by": "", "bars": {"holds": {"op": ">=", "n": 4.5, "unit": ""}, "refuted": [{"way": "", "op": "<", "n": 1.0, "unit": "a day"}]},
+         "span_days": 14, "date": "2026-11-17", "value": {"n": 9.0, "by": "person", "at": "x", "from": "y"}}
+    text = hf.apply(ONE, [{**item, "started": "2026-11-03", "measures": [m]}])[0]
+    assert [ln for ln in changed(ONE, text) if ln.startswith("+")] == ["+- Measure: Picked a sketch — from - — holds >= 4.5, refuted < 1 a day — 2 weeks"] and "9.0" not in text
+    back = hf.parse(text)["items"][0]["measures"][0]
+    assert (back["what"], back["from"], back["span_days"], back["value"], back["bars"]["refuted"][0]["way"]) == ("Picked a sketch", "", 14, None, "")
+    dayed = hf.apply(text, [{**item, "started": "2026-11-03", "measures": [{**m, "date": "2026-12-01"}]}])[0]
+    assert changed(text, dayed) == ["-- Measure: Picked a sketch — from - — holds >= 4.5, refuted < 1 a day — 2 weeks", "+- Measure: Picked a sketch — from - — holds >= 4.5, refuted < 1 a day — until 2026-12-01"]
+    assert "Measure" not in hf.apply(text, [{**item, "measures": []}])[0]
+
+
+def test_a_bound_files_measures_are_read_with_their_value_from_the_record_and_written_through(proj):
+    state = proj / ".orkcraft"
+    (proj / "docs" / "hypotheses.md").write_text(WITH_MEASURES, "utf-8")
+    hyp.bind(state, "docs/hypotheses.md")
+    (item,) = kept(proj)
+    assert [m["what"] for m in item["measures"]] == ["The cost of an install, the Camp clip", "Came back within 7 days"]
+    hyp.measure_set(state, "h1", mid="m2", bars={"holds": {"op": ">=", "n": 35, "unit": "%"}})
+    text = (proj / "docs" / "hypotheses.md").read_text("utf-8")
+    assert "holds >= 35 %" in text and M1 in text and "A line of another shape" in text
+    hyp.value(state, "h1", "m2", 41, "person")
+    assert "41" not in (proj / "docs" / "hypotheses.md").read_text("utf-8")
+    assert next(m for m in kept(proj)[0]["measures"] if m["what"] == "Came back within 7 days")["value"]["n"] == 41.0
+    hyp.measure_drop(state, "h1", "m1")
+    assert "Camp clip" not in (proj / "docs" / "hypotheses.md").read_text("utf-8") and [m["what"] for m in kept(proj)[0]["measures"]] == ["Came back within 7 days"]

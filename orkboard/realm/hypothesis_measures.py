@@ -144,3 +144,25 @@ def met(item: dict) -> dict:
 def shown(item: dict, today: str) -> dict:
     """The item with every measure's `value` hidden until its date is reached (the number is kept all the same)."""
     return {**item, "measures": [m if reached(m, today) else {**m, "value": None} for m in item.get("measures") or []]}
+
+
+def overlay(from_file: list[dict], kept: list[dict], started: str) -> list[dict]:
+    """The measures a bound file says (spec 133 C.2: `hypotheses_file.parse`), each with what the file has no place for from the record's copy of the same words: its id and its value. A measure read as a
+    span has its date `started` + the span (the record's own date where `started` is not known); one read as a day has the span that day lies from `started`. Four at most, ids unique."""
+    key = lambda m: " ".join(str(m.get("what") or "").lower().split())          # noqa: E731
+    by_what: dict[str, dict] = {}
+    for r in kept:
+        by_what.setdefault(key(r), r)
+    out: list[dict] = []
+    used: set[str] = set()
+    for f in from_file[:MAX_MEASURES]:
+        r = by_what.pop(key(f), None)
+        m = {**f, "id": r["id"] if r and r["id"] not in used else "", "value": r["value"] if r else None}
+        if m["id"]:
+            used.add(m["id"])
+        if m["date"] and started:
+            m["span_days"] = min(SPAN_MAX, max(1, (dt.date.fromisoformat(m["date"]) - dt.date.fromisoformat(started)).days))
+        elif not m["date"]:
+            m["date"] = date_of(started, m["span_days"]) if started else (r["date"] if r else "")
+        out.append(m)
+    return _ids(out)

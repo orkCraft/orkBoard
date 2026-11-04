@@ -173,7 +173,9 @@ def read(state_dir: Path) -> dict:
     out = []
     for f in hypotheses_file.parse(got)["items"]:
         base = mine.get(f["id"]) or {"axis": "", "on": "", "rests": [], "tests": [], "by": "person", "party": "", "at": "", "measures": [], "look_on": "", "started": ""}
-        out.append({**base, **{k: f[k] for k in ("id", "text", "signal", "refuted", "if_holds", "state", "evidence", "verdict")}})
+        started = base.get("started") or f.get("raised") or ""                                  # the day a file's test began: the record's, else the section's Raised
+        out.append({**base, **{k: f[k] for k in ("id", "text", "signal", "refuted", "if_holds", "state", "evidence", "verdict")}, "started": started,
+                    "measures": hm.overlay(f["measures"], base.get("measures") or [], started)})      # spec 133 C.2: the file's measure lines; the record keeps their ids and values
         if f["verdict"] and (base.get("verdict") or {}).get("finding"):                     # the file has no place for the finding a refuted verdict became (spec 133 D): the record's copy keeps it
             out[-1]["verdict"] = {**f["verdict"], "finding": base["verdict"]["finding"]}
     newest = sorted((i for i in out if i["state"] == "open"), key=lambda i: -int(i["id"][1:]))[MAX_OPEN:]
@@ -551,7 +553,7 @@ def measure_set(state_dir: Path, id: str, mid: str = "", **measure: object) -> d
         item["measures"] = hm.clean([got if old is not None and m["id"] == mid else m for m in item["measures"]] + ([] if old is not None else [got]))
         item["started"] = item["started"] or (hm.day(ideas._now()) if item["state"] == "open" else "")
         item["measures"] = _dated(item["measures"], item["started"])
-        _save(state_dir, items)
+        _put(state_dir, items, "measures" if item["state"] != "proposed" else "", id=id)
     return item
 
 
@@ -564,7 +566,7 @@ def measure_drop(state_dir: Path, id: str, mid: str) -> dict:
         if not any(m["id"] == mid for m in item["measures"]):
             raise ValueError("That measure is gone")
         item["measures"] = [m for m in item["measures"] if m["id"] != mid]
-        _save(state_dir, items)
+        _put(state_dir, items, "measures" if item["state"] != "proposed" else "", id=id)
     return item
 
 
