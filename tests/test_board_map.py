@@ -511,7 +511,8 @@ def test_a_plan_change_waiting_is_one_stop_of_kind_change_beside_the_plans_spec_
     (stop,) = stops()
     assert stop == {"idea": slug, "goal": g, "title": "Cache the table", "priority": "normal", "blocks": False, "at": "2026-10-23T11:00:00",
                     "kind": "change", "text": "The plan changes · +2 · 1 changed · −1", "why": "csv only now", "added": 2, "changed": 1,
-                    "dropped": 1, "usd_low": 0.1, "usd_high": 0.4}
+                    "dropped": 1, "usd_low": 0.1, "usd_high": 0.4, "level": "work", "pulls": stop["pulls"]}
+    assert stop["pulls"]["level"] == "work" and [t["id"] for t in stop["pulls"]["tasks"]] == ["k2", "k3", "", ""]      # spec 132 C.2: what it redoes below it (the two added tasks have no id yet)
     kinds = [(n["idea"], n["kind"]) for n in host.command("ideas.board")["needs_you"]]
     assert kinds == [(planning, "plan"), (slug, "change")]                                         # as a plan: by priority, then the oldest
     nodes = {n["slug"]: n for n in host.command("ideas.map", {})["nodes"]}

@@ -129,8 +129,9 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
     if plan and (change := idea_change.live(state_dir, slug, plan, state)) is not None:        # the leader's plan change waits (spec 62 §4.1)
         said = idea_change.summary(change, plan)
         out.append({**base, "kind": "change", "text": idea_change.text_of(said), "at": said["made_at"] or base["at"], "why": said["why"],
-                    **{k: said[k] for k in ("added", "changed", "dropped", "usd_low", "usd_high")}})
-    out += [{**base, **n} for n in leader_change.rows(state_dir, slug)]        # a change the person asked a leader for, waiting as a decision (spec 128 E)
+                    **{k: said[k] for k in ("added", "changed", "dropped", "usd_low", "usd_high")},
+                    "level": "work", "pulls": _change_pulls(root, state_dir, slug, i["track"], change, said)})
+    out += [{**base, **n} for n in leader_change.rows(state_dir, slug, root)]        # a change the person asked a leader for, waiting as a decision (spec 128 E)
     if state == "proposed":
         out.append({**base, "kind": "proposal", "text": ideas.thesis(
             (ideas.idea_page(root, slug) or ideas.Page()).section("Gist")) or "The keeper proposes this"})
@@ -155,6 +156,16 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
                             "at": str(plan.get("made_at") or base["at"]),
                             "todo": {k: td.get(k) for k in ("id", "title", "kind", "why", "choices", "steps", "accept", "done")}})
     return out
+
+
+def _change_pulls(root: Path, state_dir: Path, slug: str, party: str, change: dict, said: dict) -> dict:
+    """What a plan change redoes below it, and its price (spec 132 C.2): the tasks it changes or drops that have not started, the tasks it adds, and the goal's checks again."""
+    from orkboard.realm import way_down
+    try:
+        redone: list = [r["id"] for r in said["rows"] if r["op"] != "add"] + [dict(a) for a in change.get("add") or [] if isinstance(a, dict)]
+        return way_down.pulls(state_dir, root, "work", slug=slug, party=party, changes=redone)
+    except Exception:
+        return way_down.empty("work")
 
 
 def todo_lines(plan: dict | None, tasks: list[dict] | None = None) -> list[str]:
