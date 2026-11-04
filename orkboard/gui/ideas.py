@@ -85,6 +85,7 @@ from orkboard.gui.ideas_pass import PassMixin as PassFace, pass_commands
 from orkboard.gui.ideas_cascade import CascadeMixin as CascadeFace, cascade_commands
 from orkboard.gui.ideas_groups import GroupsMixin as GroupsFace, groups_commands
 from orkboard.gui.ideas_change import ChangeMixin, change_commands
+from orkboard.gui.ideas_look import LookMixin
 from orkboard.gui.ideas_findings import FindingsMixin as FindingsFace, findings_commands
 from orkboard.gui.ideas_chronicle import ChronicleMixin, chronicle_commands
 from orkboard.gui.ideas_refine import RefineMixin, refine_commands
@@ -141,7 +142,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, GroupsFace, FindingsFace, ChronicleMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(LookMixin, RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, GroupsFace, FindingsFace, ChronicleMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -315,6 +316,10 @@ class Ideas(RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, Gro
             self.host.toast(f"{type(e).__name__}: {e}", title="The tools", severity="error")
         self.route_tick(now)                    # a route waiting for its call, a goal put off to the reset (spec 99 §4)
         self.ripe_tick(now)                     # the wait of a goal the leaders agreed on, while a face is open (spec 120 §3.5)
+        try:
+            self.look_tick()                    # a spec's look ended: its plan is decided again, with no face open too (spec 144 A.3)
+        except Exception as e:                  # a plan that cannot be decided never stops the clock
+            self.host.toast(f"{type(e).__name__}: {e}", title="The Board", severity="error")
         if not stopped:
             self.routines_tick(now)                 # a recurring goal that was done a period ago comes back (spec 92 §2)
         self.canvas_tick(now)                   # what the AI tools drew outside the code (spec 78)

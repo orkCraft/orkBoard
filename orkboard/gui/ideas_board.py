@@ -15,7 +15,7 @@ from orkboard import settings
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
 from orkboard.realm import (board_map, board_rows, collide, event_log, findings, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas,
-                            night_order, way_down)
+                            look_wait, night_order, way_down)
 from orkboard.realm.idea_git import BoardTree
 
 NEEDS_IDEA = ("asks", "plan", "failed", "proposed")
@@ -108,6 +108,7 @@ class BoardMixin:
                 "review_notice": bool(getattr(getattr(self.host, "machine", None), "review_notice", False)),
                 "night_low": s.get("night_low") if isinstance(s.get("night_low"), bool) else None,      # None: not asked yet (spec 83)
                 "work_at_night": s.get("work_at_night") is True,                                         # spec 121 §4.1
+                "look_wait": look_wait.clean(s.get("look_wait")),                                        # spec 144 A.1: Give me time to look
                 "hours": list(s.get("hours") or [])}                                                     # spec 138 B.1: When I am at the computer
 
     def night_allow(self, args: dict) -> dict:
@@ -124,7 +125,7 @@ class BoardMixin:
         if args.get("review_notice") is False and getattr(getattr(self.host, "machine", None), "review_notice", False):      # said once (spec 84 §1)
             self.host.machine.review_notice = False
             settings.save(self.host.machine)
-        for key in ("target", "autostart", "night", "review", "work_at_night"):
+        for key in ("target", "autostart", "night", "review", "work_at_night", "look_wait"):
             if key not in args:
                 continue
             got = settings.clean_ideas({key: args[key]})[key]
@@ -133,7 +134,7 @@ class BoardMixin:
                                   "autostart": "Start plans by themselves is on or off",
                                   "night": "The night is HH:MM-HH:MM",
                                   "review": "Looking at each result is on or off",
-                                  "work_at_night": WORK_AT_NIGHT["error"]}[key])
+                                  "work_at_night": WORK_AT_NIGHT["error"], "look_wait": look_wait.REFUSED}[key])
             mine[key] = got
         if "hours" in args:                                  # spec 138 B.1: rows of days and a span; a broken row is dropped, a lifted hold ends with the hours it was for
             if not isinstance(args["hours"], list):
@@ -239,6 +240,8 @@ class BoardMixin:
         now = self._build_now_of(slug)          # *Pick and build now* on the goal's sketch: the day's case, a press (spec 121 §4.5)
         hold = now is None and self._holds_for_night(slug)
         what = idea_risk.decide(page.get("risk"), page.get("priority"), held_for_night=hold)
+        if what != "wait" and now is None and self.look_begin(slug, plan):
+            return "look"                      # a spec made waits for the person's look (spec 144 A.2); *Pick and build now* is a press and never waits
         if what == "night" and hold:
             self._hold_for_night(slug, plan)
             return "night"
@@ -337,6 +340,8 @@ class BoardMixin:
                 p.pop("start_at_by", None)
                 p.pop("held_for_night", None)
                 p.pop("stopped", None)
+                p.pop("look_until", None)          # the look's wait is over, by the clock or by a press (spec 144 A.2)
+                p.pop("look_done", None)
             ideas.edit_plan(self.state_dir, slug, passing)
             self._ev(event_log.PLAN_PASSED, args, idea=slug, tasks=len(plan.get("tasks") or []), seconds=self._since(plan.get("made_at")),
                      by=by, risk=idea_risk.level(page.get("risk")) if page else "", priority=page.get("priority") if page else "",
@@ -377,6 +382,13 @@ class BoardMixin:
         plan = ideas.plan(self.state_dir, slug)
         held = [t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict) and t.get("state") == "held"
                 and str(t.get("note") or "").startswith(("reserve", "week"))]
+        if plan and plan.get("look_until") and not plan.get("passed_at"):          # the look's wait (spec 144 A.2): a press passes the plan at once and drops the wait
+            if ideas.state(self.state_dir, slug)["state"] != "plan":
+                raise IdeasError("Its plan is not ready")
+            self._ev(event_log.PLAN_STARTED_NOW, args, idea=slug, via=_via(args), held=0)
+            self.pass_plan(slug, "person", args=args)
+            self.changed(slug)
+            return {"ok": True}
         if plan and plan.get("held_for_night") and not plan.get("passed_at"):
             if ideas.state(self.state_dir, slug)["state"] != "plan":
                 raise IdeasError("Its plan is not ready")

@@ -49,7 +49,7 @@ def place_of(row: dict, kinds: Iterable[str], *, passed: bool = False, picking: 
             return _deck(row, "held")
         return table
     if state == "plan":
-        if row.get("start_at"):                                    # a plan that starts later waits for the reset
+        if row.get("start_at") and not row.get("look_until"):      # a plan that starts later waits for the reset (the look's wait is a clock time on the table: spec 144 A.5)
             return hand if kinds - {"plan"} else _deck(row, "reset")
         return table if passed or not kinds else hand
     if state == "routed":                                          # a goal routed lies on the Orkmaster's lane at once and asks for the person's Talk (its route card is in the hand too); put off with *Later, by itself* it waits in the deck (spec 99 §4, spec 107 §5)

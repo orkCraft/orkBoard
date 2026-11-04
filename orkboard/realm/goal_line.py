@@ -24,7 +24,8 @@ def line(root: Path, state_dir: Path, limit: int = LIMIT) -> list[dict]:
         slug, st = i["slug"], states[i["slug"]]
         waits = [d for d in list_of(pages[slug].get("depends_on")) if states.get(d, {}).get("state") != "done"]
         plan = ideas.plan(state_dir, slug) if st["state"] == "plan" else None
-        row = {"state": st["state"], "queue": ideas.queue_of(st), "held_until": st["held_until"], "start_at": str((plan or {}).get("start_at") or ""), "waits_on": waits}
+        row = {"state": st["state"], "queue": ideas.queue_of(st), "held_until": st["held_until"], "start_at": str((plan or {}).get("start_at") or ""), "waits_on": waits,
+               **({"look_until": plan["look_until"]} if (plan or {}).get("look_until") and not plan.get("passed_at") else {})}
         if goal_place.place_of(row, [])["place"] == "deck":
             out.append({"slug": slug, "title": " ".join(i["title"].split())[:TITLE_CHARS], "party": i["track"], "party_title": titles.get(i["track"], i["track"])})
         if len(out) >= limit:

@@ -107,6 +107,15 @@ def isolated_layout_file(tmp_path: Path, tmp_path_factory: pytest.TempPathFactor
 
 
 @pytest.fixture(autouse=True)
+def no_wait_to_look(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    """*Give me time to look* is 2 h at first (spec 144 A.1): a spec made would wait two hours before its plan is passed. The tests of the Board's starts opt out of the wait (`do not wait`, as the
+    Board started plans before the setting); the look's own tests (tests/test_look_wait*.py) and the settings' default keep the real default."""
+    from orkboard import settings
+    if "look_wait" not in request.module.__name__ and request.module.__name__ != "tests.test_settings":
+        monkeypatch.setitem(settings.IDEAS, "look_wait", "none")
+
+
+@pytest.fixture(autouse=True)
 def fresh_spend_ledger():
     """The side 🪙 ledger is process-wide: every test starts from an empty one."""
     from orkboard.sources import telemetry

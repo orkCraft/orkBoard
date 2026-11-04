@@ -243,6 +243,7 @@ def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page:
             "depends_on": depends,
             "waits_on": [d for d in depends if states.get(d, {}).get("state") != "done"],
             "start_at": str((plan or {}).get("start_at") or ""),
+            **({"look_until": float(plan["look_until"])} if (plan or {}).get("look_until") and not (plan or {}).get("passed_at") else {}),      # the look's wait, a clock time (spec 144 A.5): `start_at` says it as local time
             "night_by": _night_by(i, st, plan),
             "in_needs_you": any(n["kind"] in ("asks", "plan", "proposal") for n in mine)}
     seen = str(st.get("seen_at") or "")
@@ -475,7 +476,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,
                     "release": release_of(releasing.get(slug)), "back": board_back.of(root, state_dir, slug, st, settings),         # the goal's card face down at the Orkmaster (spec 120 §6.3)
                     "held_until": r["held_until"], **({"held_for": r["held_for"]} if r.get("held_for") else {}),
-                    "start_at": r["start_at"], "night_by": r["night_by"],
+                    "start_at": r["start_at"], "night_by": r["night_by"], **({"look_until": r["look_until"]} if r.get("look_until") else {}),      # the look's wait: a clock time (spec 144 A.5)
                     "place": r["place"], "asks_you": r["asks_you"], "waits_as": r["waits_as"], "seen": r["seen"], "by_pace": bool((plan or {}).get("by_pace")),
                     "priority": r["priority"], "size": r["size"],
                     "risk": r["risk"], "tier": tier[slug], "depends_on": r["depends_on"], "waits_on": r["waits_on"],
