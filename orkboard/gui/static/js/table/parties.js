@@ -6,15 +6,17 @@
 // size on the screen (`ideas.goal_save`: its `preset`, `leader`, `team`, `size`); a made party that changed is saved as it is (`slug`, `team`, `leader`, `size`). At the narrow width the left is a screen and the right the next.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { command } from "../link.js";
+import { command, town } from "../link.js";
 import { Head, Icon, Sign } from "../orkui.js";
 import { ask, board } from "../board/store.js";
 import { currentProject } from "../shell/projects.js";
 import { mapData, refreshShell } from "../shell/store.js";
 import { useTools } from "../shell/toolpick.js";
 import { drawn } from "../frame/kinds.js";
-import { openOver, over, tab } from "../frame/state.js";
+import { lifted, openOver, over, tab } from "../frame/state.js";
 import { costOf } from "../hand/cost.js";
+import { setupNow } from "../hand/setupcards.js";
+import { isToolKey, stopKeyOf } from "../hand/state.js";
 import { mapName, partiesAll } from "./data.js";
 import { PartyRight, SIZES, Tick, headOf } from "./partyseats2.js";
 import { SeatPop } from "./seatpop.js";
@@ -43,12 +45,12 @@ const offered = new Set();                                                      
 /** The first start (decisions §169.4): the project read and no party but General — the empty Board — opens the one place at once, once per project per page load, as soon as the map has answered (an earlier open
  *  fires before the map is there). ← or Esc leaves it to the empty Board, which keeps *Choose the parties* to open it again. Nothing is opened over a thing already open. */
 export function useFirstStart(parties) {
-  const project = currentProject.value?.path || "", read = !!mapData.value && !!board.value;
+  const project = currentProject.value?.path || "", read = !!mapData.value && !!board.value, asks = setupNow.value?.step || "", talk = !!town.value?.tools, adding = isToolKey(stopKeyOf(lifted.value));      // the Orkmaster asks its questions first (spec 130 A.4): the parties' place comes at its step, once the adding card is put away
   useEffect(() => {
-    if (!read || parties.length || over.peek() || offered.has(project)) return;
+    if (!read || parties.length || over.peek() || offered.has(project) || (talk && asks !== "parties") || adding) return;
     offered.add(project);
     openParties({ first: true });
-  }, [read, project, parties.length]);
+  }, [read, project, parties.length, asks, adding]);
 }
 
 /** The kinds a project can be (realm/project_kind.py `KINDS`, in its order) and how the interface says each. A kind the host names that is not here is listed with the host's words. */

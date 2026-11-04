@@ -305,7 +305,7 @@ class ToolsHost:
     # -- what the page sees --------------------------------------------------------------------------------
 
     def snapshot(self) -> dict[str, Any]:
-        """The snapshot's `tools`: `{hand: [{id, title, mark, billing, main, version, check}], order, main, max, full, adding}`. Nothing secret: a key is named at most,
+        """The snapshot's `tools`: `{hand: [{id, title, mark, billing, main, version, check, lines}], order, main, max, full, looked, adding}` (`lines`: the third line of a tool's card, by how it is paid; `looked`: the look is in). Nothing secret: a key is named at most,
         in a card's line, never read out."""
         inn = tool_hand.hand(self.machine)
         main = settings.main_tool(self.machine) if inn else ""
@@ -314,7 +314,8 @@ class ToolsHost:
         for t in inn:
             h = harnesses.get(t)
             rows.append({"id": t, "title": harnesses.title(t), "mark": h.mark if h else "", "billing": self.machine.tools[t].billing, "main": t == main,
-                         "version": have[t].version if t in have else "", "check": self.checks.get(t)})
-        return {"hand": rows, "order": inn, "main": main, "max": tool_hand.HAND_MAX, "full": len(inn) >= tool_hand.HAND_MAX,
+                         "version": have[t].version if t in have else "", "check": self.checks.get(t),
+                         "lines": {b: tool_hand.third_line(t, b, have[t].logged_in if t in have else None) for b in tool_hand.BILLINGS}})
+        return {"hand": rows, "order": inn, "main": main, "max": tool_hand.HAND_MAX, "full": len(inn) >= tool_hand.HAND_MAX, "looked": self.statuses is not None,
                 "adding": {k: dict(v) for k, v in self.adding.items()}}
 

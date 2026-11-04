@@ -31,6 +31,10 @@ export function summon(element) {
   riteTimer = setTimeout(() => { rite.value = ""; }, RITE_MS);
 }
 
+export const ADD_TOOL = "add-tool";            // the lifted key of the card that adds one AI tool (addtool.js)
+export const TOOL = "tool:";                   // and of a tool's own card, `tool:<id>` (toolcard.js)
+export const isToolKey = (key) => key === ADD_TOOL || key.startsWith(TOOL);
+
 export const HAND = "hand:";
 export const liftKey = (stopKey) => `${HAND}${stopKey}`;
 export const stopKeyOf = (lifted) => (String(lifted || "").startsWith(HAND) ? lifted.slice(HAND.length) : "");

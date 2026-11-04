@@ -6,7 +6,8 @@
 // share); under the potion the now share alone (docs/specs/140 C1, decisions §247.3): *week 80%* muted under it only while the week is the window that runs out first (its share the lower), else only in the words, which say both and when each comes back;
 // at the danger's level or empty the now share's place says *back 14:00* (spec 138 A.5, decisions §245.3: the lower window's reset in the machine's local time, *back Mon 09:00* when it is not today); on a crowded narrow width the share stays (mana.css). One to three tools lie in one row at the default size; four in two rows of two and five or six in two rows of three, small (decisions §177.8); more than six: the first five and a sixth place *+n* that opens all of them over the pane. At the narrow
 // width (under 760 px, spec 94) every potion is small.
-// A potion is a button, its words the chip's (*Claude Code: 62% of the week left*, `potionOf`); a press opens what used it over the pane, as the chip did. A tool whose limits were not read is its mark, muted, with no bottle, its words *Limits not read* (spec 140 C1).
+// A potion is a button, its words the chip's (*Claude Code: 62% of the week left*, `potionOf`); a press lifts its tool's card (toolcard.js, spec 130 B.3), on a host with no `tools` (Orkline's) it opens what used it over the pane, as the chip did.
+// **The hand's tools, the empty slot** (spec 130 B.1, decisions §232.4–5): the potions are the tools in the hand in the person's order, the limits' rows and a tool with no limits read muted; dragging one changes the order (`tools.order`); the row ends with an empty slot, faint at rest, lit while the Orkmaster asks for a tool, gone at six; its press lifts the adding card (addtool.js). A tool whose limits were not read is its mark, muted, with no bottle, its words *Limits not read* (spec 140 C1).
 // A card lifted that spends (`costOf`) hatches its share off its tool's top, and the share reads `62% −4%`. The words are said on the control, the potion itself is `aria-hidden` (orkUI's potion/README.md).
 // The default (docs/specs/105-the-default-tool-moving-on-and-the-portal.md §4, decisions §177.1): the potion of the tool the open tab's work goes to carries a frame, a hotbar's chosen slot (orkUI's ink and edge, its notch, on the
 // panel), and its words add *, the default*. On the project's tab it is the tool now (`town.mana.now`, else the Main tool, else the first); on a party's tab the tool the party is set to when it has one, else the same. One frame
@@ -21,11 +22,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon, ORKUI } from "../orkui.js";
-import { town } from "../link.js";
+import { command, town } from "../link.js";
 import { untilWords } from "../arena/arenawords.js";
 import { MARKED, mapName, openTabOf, partiesAll } from "../table/data.js";
-import { ORKMASTER, openOver, tab } from "../frame/state.js";
-import { hatched, litTool, markedDefault, markedTool } from "./state.js";
+import { ORKMASTER, lift, lifted, lower, openOver, tab } from "../frame/state.js";
+import { ADD_TOOL, TOOL, hatched, liftKey, litTool, markedDefault, markedTool } from "./state.js";
+import { setupNow } from "./setupcards.js";
 import { waitTool, defaultTool } from "../table/lit.js";
 import { mapData } from "../shell/store.js";
 import { windowWords, windowsOf } from "./windows.js";
@@ -79,13 +81,49 @@ export function Who({ l }) {
     : html`<span class="hand-pot__initial" aria-hidden="true">${(l.name || l.provider || "?").charAt(0).toUpperCase()}</span>`;
 }
 
-function Pot({ l, cost, small, from, framed, parties = [] }) {
+/** The potions in the hand's order (spec 130 B.1): a tool in the hand with no limits read is a muted potion; a tool not in the hand has none. A host with no `tools` (Orkline's): the limits as they come. */
+export function potionsOf(limits, tools) {
+  if (!tools) return limits;
+  const by = new Map(limits.map((l) => [l.provider, l]));
+  return (tools.hand || []).map((t) => by.get(t.id) || { provider: t.id, name: t.title });
+}
+
+const toggleLift = (key) => { const k = liftKey(key); if (lifted.peek() === k) lower(); else lift(k); };
+
+/** Dragging a potion changes the order the work moves on in (`tools.order`): dropped on another, it takes that one's place. */
+function useDragOrder(tools) {
+  const from = useRef("");
+  if (!tools || (tools.order || []).length < 2) return () => ({});
+  return (id) => ({
+    draggable: true,
+    onDragStart: (e) => { from.current = id; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", id); },
+    onDragOver: (e) => { if (from.current && from.current !== id) e.preventDefault(); },
+    onDrop: (e) => {
+      e.preventDefault();
+      const was = from.current;
+      from.current = "";
+      if (!was || was === id) return;
+      const order = tools.order.filter((t) => t !== was);
+      order.splice(tools.order.indexOf(id), 0, was);
+      command("tools.order", { order }, true).catch(() => {});
+    },
+    onDragEnd: () => { from.current = ""; },
+  });
+}
+
+/** The empty slot: a potion's place in pixel dashes with a +. orkUI first: `.ork-potion.is-empty`. */
+function EmptySlot({ lit, small }) {
+  return html`<button type="button" class=${cls("hand-pot hand-pot--empty", { "is-lit": lit })} data-empty-slot="1" aria-label="Add an AI tool" title="Add an AI tool" onClick=${() => toggleLift(ADD_TOOL)}>
+    <span class=${cls("hand-pot__slot", { "is-small": small })}><span class="hand-pot__dashes" aria-hidden="true"><${Icon} name="plus" /></span></span></button>`;
+}
+
+function Pot({ l, cost, small, from, framed, parties = [], onPress = null, drag = null }) {
   const dflt = defaultTool(), waiting = (mapData.value?.nodes || []).some((n) => waitTool(n, dflt) === l.provider);                  // a goal waits for this tool's reset: said, never how many (spec 138 A.3, decisions §67)
   const p = potionOf(l, cost && cost.tool === l.provider ? cost : null, framed, usesWords(l.provider, parties), waiting);
   const style = `--ork-potion-left:${p.liquid}${p.took ? `;--ork-potion-spend:${cost.spend}` : ""}`;
   const mark = () => { markedTool.value = l.provider; markedDefault.value = framed; litTool.value = l.provider; }, unmark = () => { if (markedTool.value === l.provider) { markedTool.value = ""; markedDefault.value = false; } if (litTool.value === l.provider) litTool.value = ""; };
   return html`<button type="button" class=${cls("hand-pot", `is-${p.level}`, { "is-default": framed, "is-dry": p.dry })} data-provider=${l.provider} data-level=${p.level} data-size=${p.size} data-default=${framed ? "1" : undefined}
-      title=${p.words} aria-label=${p.words} onClick=${() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}
+      title=${p.words} aria-label=${p.words} onClick=${onPress || (() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`))} ...${drag || {}}
       onPointerEnter=${mark} onPointerLeave=${unmark} onFocus=${mark} onBlur=${unmark}>
     <${Who} l=${l} />
     <span class=${cls("hand-pot__slot", { "is-small": small })}>${p.read && html`<span class=${cls("ork-potion", { [`size-${p.size}`]: p.size !== "large", small, "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${style} aria-hidden="true"></span>`}</span>
@@ -147,19 +185,20 @@ function useFrame(box, frame, key, deps) {
 
 /** The potions. `lifted`: the stop now lifted in the hand, whose cost names the tool it takes from. */
 export function Mana({ lifted = null }) {
-  const narrow = useNarrow(), box = useRef(), frame = useRef(), limits = town.value?.limits || [], mana = town.value?.mana || null, paid = mana?.paid || null;
+  const narrow = useNarrow(), box = useRef(), frame = useRef(), tools = town.value?.tools || null, limits = potionsOf(town.value?.limits || [], tools), mana = town.value?.mana || null, paid = mana?.paid || null, empty = !!tools && !tools.full, drag = useDragOrder(tools);
   const parties = partiesAll(), open = openTabOf(tab.value, parties);
   const slots = PLACES - (paid ? 1 : 0), over = limits.length > slots, shown = over ? limits.slice(0, slots - 1) : limits, more = limits.length - shown.length;
-  const places = shown.length + (over ? 1 : 0) + (paid ? 1 : 0), rows = places > 3 ? 2 : 1, small = narrow || rows === 2;
+  const places = shown.length + (over ? 1 : 0) + (paid ? 1 : 0) + (empty ? 1 : 0), rows = places > 3 ? 2 : 1, small = narrow || rows === 2;
   const key = framedOf({ limits, mana, open, parties, shown });
   useFrame(box, frame, key, [narrow, places, lifted ? 1 : 0, paid?.usd_task ?? ""]);
-  if (!limits.length && !paid) return null;
+  if (!limits.length && !paid && !empty) return null;
   const cost = lifted ? costOf(lifted) : hatched.value, from = { title: mapName(tab.value, parties), key: "" };
   return html`<div class="hand-mana" ref=${box} role="group" aria-label="What is left of your AI tools" data-rows=${rows} data-n=${places} data-paid=${paid ? "1" : undefined} data-default=${key || undefined}>
     <span class="hand-mana__frame" ref=${frame} aria-hidden="true" hidden></span>
-    ${shown.map((l) => html`<${Pot} key=${l.provider} l=${l} cost=${cost} small=${small} from=${from} framed=${key === l.provider} parties=${parties} />`)}
+    ${shown.map((l) => html`<${Pot} key=${l.provider} l=${l} cost=${cost} small=${small} from=${from} framed=${key === l.provider} parties=${parties} onPress=${tools ? () => toggleLift(`${TOOL}${l.provider}`) : null} drag=${tools ? drag(l.provider) : null} />`)}
     ${over && html`<button type="button" class="hand-pot hand-pot--more" title=${`${more} more tools: what is left of them`} aria-label=${`${more} more tools: what is left of them`}
       onClick=${() => openOver("limits", {}, from, "What is left of your AI tools")}><span class="hand-pot__initial" aria-hidden="true">+${more}</span></button>`}
     ${paid && html`<${PaidPot} key="paid" paid=${paid} from=${from} framed=${key === "paid"} />`}
+    ${empty && html`<${EmptySlot} key="empty" lit=${setupNow.value?.step === "tools"} small=${small} />`}
   </div>`;
 }

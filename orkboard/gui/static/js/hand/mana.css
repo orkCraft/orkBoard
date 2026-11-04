@@ -36,6 +36,15 @@
 .hand-pot--more { align-self: center; justify-content: center; min-height: 44px; }
 .hand-pot--more .hand-pot__initial { color: var(--ork-ink-muted); font: var(--ork-type-caption); font-weight: 600; height: auto; line-height: 16px; }
 
+/* the empty slot (spec 130 B.1), a potion's place in pixel dashes with a +, faint at rest, lit in the ink while the Orkmaster asks for a tool. orkUI first: `.ork-potion.is-empty` */
+.hand-pot--empty { --dash: var(--ork-edge); color: var(--ork-ink-faint); }
+.hand-pot--empty.is-lit, .hand-pot--empty:hover, .hand-pot--empty:focus-visible { --dash: var(--ork-ink); color: var(--ork-ink); }
+.hand-pot__dashes { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; opacity: 0.7;
+  background: repeating-linear-gradient(90deg, var(--dash) 0 3px, transparent 3px 6px) left 0 top 0 / 100% 2px no-repeat, repeating-linear-gradient(90deg, var(--dash) 0 3px, transparent 3px 6px) left 0 bottom 0 / 100% 2px no-repeat,
+    repeating-linear-gradient(0deg, var(--dash) 0 3px, transparent 3px 6px) left 0 top 0 / 2px 100% no-repeat, repeating-linear-gradient(0deg, var(--dash) 0 3px, transparent 3px 6px) right 0 top 0 / 2px 100% no-repeat; }
+.hand-pot--empty.is-lit .hand-pot__dashes, .hand-pot--empty:hover .hand-pot__dashes { opacity: 1; }
+.hand-pot[draggable="true"] { cursor: grab; }
+
 /* the hand's height is the cards': two rows of potions (four tools and more) lie in it when they fit, and when they do not the hand grows by what they need and no more (spec 104 §3.4): a potion is its padding, the mark, the slot of the
    large bottle at the small size (36 px) and the line or two under it. At the wide width the now share and the week's lie on one line in two rows (the room is across, not down: the hand is no taller than with one share, so the portal ring above
    the discard keeps clear of the pane's head); at the narrow width they stand over each other (the room is down, not across: a potion is no wider than its share) and the hand grows by the second line, one row of potions too (spec 114 B). */

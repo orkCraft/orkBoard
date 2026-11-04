@@ -19,6 +19,7 @@ import { ACTIVE, Pile, PILES, nextWords, pilesOf, underOf } from "./piles.js";
 import { useColumnMotion } from "./colmotion.js";
 import { moodOf } from "./moods.js";
 import { holdWords, waitsWords } from "./holdwords.js";
+import { SetupBubble } from "../hand/setupcards.js";
 
 const CROWN = { race: "peon", tier: "crown" };                   // the Orkmaster's head
 export const columnPick = { slug: "" };                          // the goal the column picked last: the table does not move to its party's tab for it (table.js), the column is on every tab
@@ -141,6 +142,7 @@ export function Column() {
   const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: nextWords(piles.review), work: "" }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
   return html`<div class="col" ref=${root} data-col="1">
     <${Top} parties=${parties} all=${all} />
+    <${SetupBubble} />
     <div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} onPress=${press} open=${lift?.kind === "list"} />`)}</div>
     ${lift?.kind === "list" && html`<${List} items=${piles.analysis} place=${place} close=${() => setLift(null)} />`}
     ${item && !gone && html`<${Acts} n=${item} off=${lift.off} place=${place} close=${() => setLift(null)} />`}

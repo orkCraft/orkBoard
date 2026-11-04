@@ -9,6 +9,7 @@ import { ReportPanel } from "../hand/logsbtn.js";           // the bug's panel a
 import { CrashNote } from "../crashes.js";
 import { over } from "./state.js";
 import { uprightNow } from "./upright.js";
+import { SetupWatch } from "../hand/setupcards.js";     // what the Orkmaster asks now, on the first open (spec 130 B.4)
 
 const sheets = ["./frame.css", "../table/table.css", "../table/work.css", "../table/made.css", "../table/discard.css", "../table/portal.css", "../table/notice.css", "../table/ask.css", "../table/back.css", "../table/column.css", "../table/goalview.css", "../table/steps.css", "../table/presence.css", "../table/dayline.css", "../hand/hand.css", "../hand/mana.css", "../hand/upright.css", "../hand/upmenu.css", "../hand/uplook.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
@@ -31,6 +32,6 @@ export function Frame() {
     ${column && html`<aside class="frame-column" aria-label="The Orkmaster's goals"><${Column} /></aside>`}
     <div class="frame-table"><${Table} column=${column} /></div>
     <div class="frame-hand"><${Hand} /></div>
-    <${CrashNote} /><${ReportPanel} />
+    <${SetupWatch} /><${CrashNote} /><${ReportPanel} />
   </div>`;
 }

@@ -24,7 +24,11 @@ import { Lifted } from "./stopcard.js";
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
 import { Upright } from "./upright.js";
-import { fieldOpen, liftDecision, liftKey, stopKeyOf } from "./state.js";
+import { ADD_TOOL, TOOL, fieldOpen, isToolKey, liftDecision, liftKey, stopKeyOf } from "./state.js";
+import { AddTool } from "./addtool.js";
+import { ToolCard } from "./toolcard.js";
+import { SetupBubble, SetupCard, setupNow } from "./setupcards.js";
+import { columnOn } from "../table/data.js";
 import { said } from "./motion.js";
 import "./wayparts.js";                                   // the goal's way's cards (spec 100)
 
@@ -42,7 +46,7 @@ function useKeys(root) {
       const t = e.target;
       if (!root.current || aloud(t)) return;
       if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
-      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card")) lower();
+      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card, .hand-tool, .hand-pot")) lower();
     };
     const key = (e) => {
       if (e.key === "Escape" && !e.defaultPrevented && !aloud(document.activeElement)) {
@@ -69,7 +73,9 @@ export function Hand() {
   useKeys(root);
   useNight();
   const all = stopsOfProject(map, needs, open), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
-  useEffect(() => { if (key && !s && map) lower(); }, [key, !s]);                      // the stop was answered: the card goes with it
+  useEffect(() => { if (key && !s && map && !isToolKey(key)) lower(); }, [key, !s]);   // the stop was answered: the card goes with it (a tool's card is no stop: it goes by its own)
+  const asks = setupNow.value?.step;
+  useEffect(() => { if (asks === "tools") lift(liftKey(ADD_TOOL)); }, [asks]);          // the Orkmaster asks for a tool: the adding card comes up by itself (spec 130 B.4)
   const want = liftDecision.value, dealt = want ? stops.find((x) => x.kind === "decision" && x.row?.idea === want) : null;
   useEffect(() => { if (dealt) { liftDecision.value = ""; lift(liftKey(dealt.key)); } }, [dealt?.key]);        // *Change…* in the column: the decision's card, dealt now its wait is held, comes up (decisions §240.2)
   useEffect(() => { if (key) fieldOpen.value = false; }, [key]);
@@ -79,12 +85,16 @@ export function Hand() {
   if (uprightNow.value) return html`<${Upright} root=${root} stacks=${stacks} plus=${plus} />`;                  // a touch phone upright: the hand is the first screen (upright.js)
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
-    ${!middle && html`<div class="hand-places"><div class="hand-row" style=${`--hc-rest:${partiesNow().length}`}>
+    ${!middle && html`<div class="hand-places"><div class="hand-row" style=${`--hc-rest:${Math.max(1, partiesNow().length)}`}>
       <${Stacks} stacks=${stacks} plus=${html`<${PlusCard} onPress=${plus} />`} />
       <div class="hand-end"><${PlayDie} /><${Mana} lifted=${s} /></div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${s && html`<${Lifted} s=${s} anchor=${anchor} />`}
+    ${key === ADD_TOOL && html`<${AddTool} />`}
+    ${key.startsWith(TOOL) && html`<${ToolCard} tool=${key.slice(TOOL.length)} />`}
+    <${SetupCard} />
+    ${!columnOn() && html`<${SetupBubble} />`}
     ${middle && html`<div class="hand-mana-only"><${PlayDie} /><${Mana} /></div>`}
     <span class="hand-live" role="status" aria-live="polite">${said.value}</span>
     ${middle && html`<${Middle}>${fieldOpen.value ? html`<${Field} middle=${true} />` : html`<${PlusCard} large=${true} onPress=${plus} />`}<//>`}

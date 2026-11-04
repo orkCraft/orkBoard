@@ -36,7 +36,7 @@
 .hand-lane[data-lane="0"] { --hc-lead: calc(var(--hc-w) + var(--ork-4)); --span: max(0px, calc(100cqw - var(--hc-lead) - var(--hc-w) - var(--hc-edge))); }
 .hand-lane[data-lane="0"] > .hand-slot:not(.is-plus) { left: calc(var(--hc-lead) + var(--span) * var(--at) / var(--of)); }
 .hand-slot.is-plus { left: 0; }
-.hand-end { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); min-width: 0; }      /* holds the Play die and the mana (mana.css, playdie.js) */
+.hand-end { grid-column: -2 / -1; display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); min-width: 0; }      /* holds the Play die and the mana (mana.css, playdie.js) */
 
 /* a place along a lane's fan: the front at the lane's right, those behind it to the left, showing their left edge (the element); one card alone is in the lane's middle */
 .hand-slot { position: absolute; top: 0; left: calc(var(--span) * var(--at) / var(--of)); width: min(var(--hc-w), 100cqw); z-index: var(--z); pointer-events: auto;
@@ -299,3 +299,45 @@
   .hand-slot, .hand .hand-stack > .hand-back.edge { transition: none; }
   .frame-table .is-about { transform: none; transition: none; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 }
+
+/* the card that adds a tool, a tool's own card (spec 130 B.2–B.3) and the Orkmaster's setup cards (B.4; mockup docs/mockups/setup/): lifted as every hand card is, standing on the hand's line by the potions or over the hand's middle. Layout only */
+.hand .hand-tool { position: absolute; left: auto; right: var(--ork-8); bottom: calc(100% - var(--hc-shown)); z-index: 60; display: flex; flex-direction: column; gap: var(--ork-3); min-height: 0; height: auto; padding: var(--ork-4); overflow-y: auto; text-align: left; }
+.hand .fo-card { left: calc(50% - var(--hc-w)); right: auto; bottom: var(--ork-2); }
+.hand-tool:focus-visible { outline: 0; }
+.hand-tool__top { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-height: 14px; }
+.hand-tool__field { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-2); min-width: 0; }
+.hand-tool__field > .ork-select { align-self: stretch; }
+.hand-tool__row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2); min-width: 0; }
+.hand-tool__stack { display: flex; flex-direction: column; gap: var(--ork-2); }
+.hand-tool__muted { color: var(--ork-ink-muted); }
+.hand-tool__rule { padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
+.ork-btn.hand-tool__small { min-height: 28px; padding: 0 var(--ork-3); font-size: 11px; }
+.ork-btn.hand-tool__link { align-self: flex-start; }
+.hand-tool__risk { display: flex; align-items: flex-start; gap: var(--ork-2); color: var(--ork-alert); }
+.hand-tool__head { display: flex; align-items: flex-end; gap: var(--ork-4); min-width: 0; }
+.hand-tool__name { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.hand-tool__seg { display: inline-flex; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }      /* orkUI first: the small size switch */
+.hand-tool__segbtn { appearance: none; border: 0; background: none; margin: 0; padding: var(--ork-1) var(--ork-4); color: var(--ork-ink-muted); font: var(--ork-type-caption); cursor: pointer; }
+.hand-tool__segbtn + .hand-tool__segbtn { border-left: var(--ork-line) solid var(--ork-edge); }
+.hand-tool__segbtn.is-on { background: var(--ork-ink); color: var(--ork-on-ink); }
+.hand-tool__order { display: flex; align-items: center; align-self: stretch; gap: var(--ork-2); }
+.hand-tool__ordermark { display: inline-flex; padding: 2px var(--ork-1); border: 2px solid transparent; }
+.hand-tool__ordermark.is-me { border-color: var(--ork-ink); clip-path: var(--ork-notch); }
+.hand-tool__grow { flex: 1; }
+.fo-q { display: flex; align-items: flex-start; gap: var(--ork-3); }
+.fo-q > p { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.fo-choices { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.fo-choice { appearance: none; display: flex; flex-direction: column; gap: 2px; margin: 0; padding: var(--ork-2) var(--ork-3); border: var(--ork-line) solid var(--ork-frame); background: none; color: var(--ork-ink); font: var(--ork-type-caption); text-align: left; cursor: pointer; }
+.fo-choice:hover, .fo-choice:focus-visible, .fo-choice.is-pick { background: var(--ork-raised); border-color: var(--ork-ink); outline: 0; }
+.fo-choice__t { display: flex; align-items: center; gap: var(--ork-2); overflow-wrap: anywhere; }
+.fo-choice__why { color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.fo-chips { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.fo-field { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.fo-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
+.fo-muted { color: var(--ork-ink-muted); margin: 0; }
+/* the Orkmaster's bubble (decisions §201; its tail orkUI first): under its head in the column, over the table's edge; at the narrow width over the hand */
+.fo-bubble { position: absolute; z-index: 30; top: 68px; left: var(--ork-2); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-1); width: 320px; padding: var(--ork-3) var(--ork-4); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); pointer-events: none; }
+.fo-bubble::before { content: ""; position: absolute; top: -8px; left: 16px; width: 14px; height: 8px; background: var(--ork-edge); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.fo-bubble > p { margin: 0; font: var(--ork-type-body); }
+.hand > .fo-bubble { top: auto; bottom: 100%; left: var(--ork-2); max-width: calc(100% - var(--ork-4)); }
+@media (max-width: 759px) { .hand .hand-tool, .hand .fo-card { left: var(--ork-2); right: var(--ork-2); width: auto; max-height: 80dvh; } }
