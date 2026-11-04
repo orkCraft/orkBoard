@@ -10,7 +10,7 @@ import time
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import goal_route, goal_team, idea_spend, ideas, library
+from orkboard.realm import backlog_groups, goal_route, goal_team, idea_spend, ideas, library
 from orkboard.sources.limits import Limit
 
 ROUTE_COMMANDS = {"ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_hold", "ideas.route_start"}
@@ -268,6 +268,7 @@ def _put_off(host, parties, n=3):
     gone = (dt.datetime.now() - dt.timedelta(minutes=1)).isoformat(timespec="seconds")
     for s in slugs:
         ideas.save_state(host.ideas.state_dir, s, held_until=gone)
+    backlog_groups.save(host.ideas.state_dir, backlog_groups.new(gone, []))     # these tests are of the queue: the groups of this reset (spec 135 B) were asked and named none
     root = host.ideas.root()
     found = ideas.ideas(root)
     order = goal_route.context(found, {i["slug"]: ideas.state(host.ideas.state_dir, i["slug"]) for i in found})["order"]

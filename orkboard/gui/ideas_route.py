@@ -409,7 +409,9 @@ class RouteMixin:
     def _backlog_next(self, found: list[dict], states: dict, ripe: list[str], wall: float) -> None:
         """Decisions §239: of the goals put off whose reset has passed, **one** starts Talk per pass, the first in the Orkmaster's order (`goal_route.context`), and the next
         only when no goal started this way is still in Talk (its calls running or its questions waiting: its state stays `talk`). The week's pace is read again before the
-        start: *behind*, nothing starts and the queue is looked at again at the next pass. A goal the person starts by hand (`ideas.talk`) is not in this queue."""
+        start: *behind*, nothing starts and the queue is looked at again at the next pass. A goal the person starts by hand (`ideas.talk`) is not in this queue.
+        **Before the first goal starts** (spec 135 §B.3, `gui/ideas_groups.py` `groups_wait`) the Orkmaster is asked once for the reset which of the goals put off look like one: the queue waits while that call
+        runs and, once its card is in the hand, only while the card lies lifted (ten minutes at most)."""
         if any(st["from_backlog"] and st["state"] == "talk" for st in states.values()):
             return
         limits, settings = self._raw_limits(), self.settings_now()
@@ -426,6 +428,8 @@ class RouteMixin:
         if self.lay_in_hours(ripe, limits, wall):                                   # Talk asks: with no one there each waits for the hours (spec 138 B.3)
             return
         order = goal_route.context(found, states, settings, limits, wall)["order"]
+        if self.groups_wait(states, ripe, order, wall):                              # spec 135 B.3: the groups are asked once at a reset, and the queue waits for their card only while it lies lifted
+            return
         for slug in sorted(ripe, key=lambda s: order.get(s, len(order) + 1)):
             if self.fits_window(slug, states[slug], limits, settings, wall):
                 self.route_talk({"idea": slug})

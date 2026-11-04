@@ -291,6 +291,9 @@ EVENTS += (GOAL_ADDED_TO, DECISION_CHANGED)
 GOAL_MATCHED = "goal_matched"        # spec 135 A: a new goal sent from the field looks like part of a face-down goal, offered and not added: idea (the candidate), score, why, reworded, device
 GOAL_KEPT_APART = "goal_kept_apart"  # spec 135 A: *Keep apart* pressed on that offer, the goal added: with (the candidate), device
 EVENTS += (GOAL_MATCHED, GOAL_KEPT_APART)
+BACKLOG_GROUPED = "backlog_grouped"  # spec 135 B: the one call at a reset over the goals put off: goals (how many were given), groups (how many came back), seconds, cost, failed (never a title)
+GROUPS_ANSWERED = "groups_answered"  # spec 135 B: the card *These look like one goal* answered: joined (groups), apart (groups), dropped (goals joined into another), not_now, device
+EVENTS += (BACKLOG_GROUPED, GROUPS_ANSWERED)
 
 _LOCK = threading.Lock()
 

@@ -5,6 +5,7 @@ Board keeps: it writes nothing, starts nothing and words nothing. `realm/board_m
     board_rows.hypothesis(state_dir, pages)   # [{kind: "hypothesis", id, text, signal, evidence, tests: [{slug, title}], party, leader, blocks, priority, at}]
     board_rows.rows(state_dir, pages)         # every such row, in the order they are laid (`pages`: the Board's pages, where the tests' places are read; none, and no hypothesis is due)
     cascades.rows(state_dir, pages)           # a leader's proposal to change a decision, once its cascade is ready (spec 131 B.3): `kind: "cascade"`, the decision card of the hand; it is a row of no goal's
+    backlog_groups.rows(state_dir, pages, settings)   # the goals put off that look like one (spec 135 B.2): `kind: "groups"`, one row, *These look like one goal*; it is a row of no goal's
 
 `project_q`: the project's questions at the first start (core/idea_project_q.py asks them, `ideas.project_answer` answers them): the stack of its party's leader (Product's, in a
 game Game design's; with neither, the Orkmaster: `party` "" and `leader` "orkmaster"), its cards the leader's (`idea_questions.card`, `project: true`; the Orkmaster's has no choices).
@@ -23,7 +24,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import cascades, goal_team, hypotheses, hypothesis_measures, ideas, opportunity_tree, project_questions
+from orkboard.realm import backlog_groups, cascades, goal_team, hypotheses, hypothesis_measures, ideas, opportunity_tree, project_questions
 
 
 def project_q(state_dir: Path) -> list[dict]:
@@ -63,5 +64,5 @@ def hypothesis(state_dir: Path, pages: Path | None = None) -> list[dict]:
     return out
 
 
-def rows(state_dir: Path, pages: Path | None = None) -> list[dict]:
-    return [*project_q(state_dir), *hypothesis(state_dir, pages), *cascades.rows(state_dir, pages)]
+def rows(state_dir: Path, pages: Path | None = None, settings: dict | None = None) -> list[dict]:
+    return [*project_q(state_dir), *hypothesis(state_dir, pages), *cascades.rows(state_dir, pages), *backlog_groups.rows(state_dir, pages, settings)]

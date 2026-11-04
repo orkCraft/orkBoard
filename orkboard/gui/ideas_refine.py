@@ -60,12 +60,9 @@ class RefineMixin:
         self._ev(event_log.GOAL_MATCHED, args, idea=found["idea"], score=found["score"], why=found["why"], reworded=reworded)
         return found
 
-    def add_to_goal(self, args: dict) -> dict:
-        slug, text = _text(args, "idea", 100), _text(args, "text", ideas.SECTION_CHARS)
-        element, via = _opt(args, "element"), _opt(args, "via")
-        if element and element not in idea_element.ELEMENTS:
-            raise IdeasError("Pick one of the five runes")
-        self._refinable(slug)
+    def add_words(self, slug: str, text: str, element: str = "", via: str = "") -> None:
+        """The words written into the goal's Gist as a line `Added: <text>`, its turn and its row in the added-words record (spec 135 §A.3). No check of the goal (`_refinable` is the caller's), no
+        decision worded again: `add_to_goal` does that once, and so does a join of several goals (`gui/ideas_groups.py`). IdeasError in plain words when the Gist would grow too long."""
         with ideas.LOCK:
             page = ideas.idea_page(self.root(), slug)
             gist = page.section("Gist")
@@ -75,6 +72,14 @@ class RefineMixin:
             ideas.update(self.root(), slug, {"Gist": new})
         ideas.add_turn(self.state_dir, slug, "you", text, "Gist")
         goal_refine.add_record(self.state_dir, slug, text, element, via)           # spec 135 §A.3: its words, its time and the rune the person gave that idea, kept for a Split
+
+    def add_to_goal(self, args: dict) -> dict:
+        slug, text = _text(args, "idea", 100), _text(args, "text", ideas.SECTION_CHARS)
+        element, via = _opt(args, "element"), _opt(args, "via")
+        if element and element not in idea_element.ELEMENTS:
+            raise IdeasError("Pick one of the five runes")
+        self._refinable(slug)
+        self.add_words(slug, text, element, via)
         out: dict[str, Any] = {"ok": True, "idea": slug, "reworded": False}
         if self._decision_of(slug) is not None:                  # worded already: worded again with the person's words among the goal's
             try:
