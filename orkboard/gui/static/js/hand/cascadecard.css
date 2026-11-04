@@ -1,0 +1,11 @@
+/* A leader's proposal to change a decision, lifted in the hand (docs/specs/131 C; hand/cascadecard.js). Layout only: every colour, face and corner is orkUI's. */
+.hand-cascade { gap: var(--ork-3); }
+.hand-cascade__fork { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; padding: var(--ork-2) var(--ork-3); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-ink); }
+.hand-cascade__fork .ork-field { width: 100%; min-width: 0; }
+.hand-cascade__now { color: var(--ork-ink-muted); }
+.hand-cascade__more { align-self: flex-start; }
+.hand-cascade__chain { display: flex; flex-direction: column; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; min-width: 0; }
+.hand-cascade__step { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; padding: var(--ork-2) var(--ork-3); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-frame); }
+.hand-cascade__who { display: inline-flex; align-items: center; gap: var(--ork-2); }
+.hand-cascade__before { color: var(--ork-ink-muted); text-decoration: line-through; overflow-wrap: anywhere; }
+.hand-cascade__after { overflow-wrap: anywhere; }

@@ -137,7 +137,7 @@ export function Lifted({ s, anchor, inline = false }) {
       ${Way ? html`<${Way} s=${s} close=${lower} />` : html`<${Body} s=${s} />
       <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>`}
       ${s.row?.level && s.row?.pulls && !OWN_LINES.has(s.kind) ? html`<${WayLine} row=${s.row} own=${cost?.words || ""} />` : html`<${Spend} cost=${cost} />`}
-      ${!inline && html`<button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>`}
+      ${!inline && !wayOf(s.kind)?.puts && html`<button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>`}
     </div>
     <span class="hand-card__foot hand-lifted__kind">${s.label}</span>
   </aside>`;

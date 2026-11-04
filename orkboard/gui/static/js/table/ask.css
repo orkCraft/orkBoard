@@ -34,3 +34,5 @@
 .table-ask__chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-ask__unpart { display: inline-flex; align-items: center; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
 .table-ask__unpart .ork-icon { width: 14px; height: 14px; }
+.table-ask__link { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
+.table-ask__link:focus-visible { outline: var(--ork-line) solid var(--ork-ink); outline-offset: 1px; }

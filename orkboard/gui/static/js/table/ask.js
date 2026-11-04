@@ -24,6 +24,7 @@ import { openField } from "../hand/pluscard.js";
 import { WHOLE, groupsOf, mapName, toolOf, wide } from "./data.js";
 import { Since, lookOf } from "./concerns.js";
 import { SeatPop } from "./seatpop.js";
+import { Linked } from "./asklinks.js";
 import { ToolMark } from "./header.js";
 
 const Q_CHARS = 500;                                                  // as realm/board_ask.py Q_CHARS
@@ -188,8 +189,8 @@ function Bubble({ tab, party, g, parties, look }) {
         ${state === "asking" && reading && html`<p class="table-ask__reading ork-think" role="status">The ${readBy.name} is reading the map</p>`}
         ${state === "reading" && html`<p class="table-ask__q">${ask.q}</p><p class="table-ask__reading ork-think" role="status">The ${here.name} is reading the map</p>`}
         ${state === "answered" && html`<p class="table-ask__q">${ask.q}</p>
-          <p class="table-ask__text">${ask.answer}</p>
-          ${sources.length > 0 && html`<ul class="table-ask__srcs" aria-label="Where it is said">${sources.map((s) => html`<li key=${s} class="ork-chip table-ask__src">${s}</li>`)}</ul>`}
+          <p class="table-ask__text"><${Linked} text=${ask.answer} /></p>
+          ${sources.length > 0 && html`<ul class="table-ask__srcs" aria-label="Where it is said">${sources.map((s) => html`<li key=${s} class="ork-chip table-ask__src"><${Linked} text=${s} /></li>`)}</ul>`}
           <div class="table-ask__acts">${analysis && html`<button type="button" class="ork-btn primary" data-act="add" disabled=${sending} title=${`Your words are kept as written in ${analysis.short || analysis.title || "the goal"}; if its decision is worded already, the Orkmaster words it again`} onClick=${addTo}>Add to the goal</button>`}${canChange && html`<button type="button" class="ork-btn primary" disabled=${sending} title=${`${here.name} replans its part of ${aboutGoal} from your words; you decide in the hand`} onClick=${change}>Make it a change</button>`}
             ${canGoal && ask.goal && html`<button type="button" class="ork-btn primary" title=${ask.goal} onClick=${goal}>Make it a goal</button>`}<span class="table-ask__grow"></span>
             <button type="button" class="ork-btn quiet" onClick=${() => setMore(true)}>Ask more</button></div>`}

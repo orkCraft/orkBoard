@@ -10,3 +10,4 @@ import "./hearing.js";
 import "./paidcard.js";
 import "./hypothesiscard.js";
 import "./qualitycard.js";
+import "./cascadecard.js";
