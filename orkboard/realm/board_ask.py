@@ -8,7 +8,7 @@ the page's commands and shows the record in the snapshot (`town.ask`).
     board_ask.board_text(root, state_dir)  # the Orkmaster's context: the parties and the goals in line, as plain text, about 3,000 characters
     board_ask.goal_lines(root, state_dir, party)   # a party's goals as lines (the whole Board's with no party)
 
-The record is `{status: "asking"|"answered"|"failed", party: ""|<party slug>, q, answer, sources: [..], goal, at, error}`: one question at a time, no
+The record is `{status: "asking"|"answered"|"failed", party: ""|<party slug>, q, answer, sources: [..], goal, goal_in_analysis, at, error}`: one question at a time, no
 history. `party` is `ORKMASTER` ("") for a question asked on the Orkmaster's tab. A question is a read: it is no goal, has no phase and is never in the hand.
 """
 from __future__ import annotations

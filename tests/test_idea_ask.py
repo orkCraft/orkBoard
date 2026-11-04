@@ -298,7 +298,7 @@ def test_the_commands_ask_put_away_and_make_a_goal_and_the_snapshot_holds_the_re
     assert host.command("ideas.ask", {"party": product, "q": "x" * 900}) == {"ok": True}
     _wait(host)
     snap = host.snapshot()["ask"]
-    assert snap == _rec(host) and snap["status"] == "answered" and len(snap["q"]) == board_ask.Q_CHARS and set(snap) == {"status", "party", "q", "answer", "sources", "goal", "at", "error"}
+    assert snap == _rec(host) and snap["status"] == "answered" and len(snap["q"]) == board_ask.Q_CHARS and set(snap) == {"status", "party", "q", "answer", "sources", "goal", "goal_in_analysis", "at", "error"}
     json.dumps(host.snapshot())
     assert host.command("ideas.ask_goal", {}) == {"ok": True}
     (made,) = _events(host, event_log.ASK_MADE_GOAL)

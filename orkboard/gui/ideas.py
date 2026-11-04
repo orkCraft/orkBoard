@@ -86,6 +86,7 @@ from orkboard.gui.ideas_cascade import CascadeMixin as CascadeFace, cascade_comm
 from orkboard.gui.ideas_change import ChangeMixin, change_commands
 from orkboard.gui.ideas_findings import FindingsMixin as FindingsFace, findings_commands
 from orkboard.gui.ideas_chronicle import ChronicleMixin, chronicle_commands
+from orkboard.gui.ideas_refine import RefineMixin, refine_commands
 from orkboard.gui.ideas_facts import FactsMixin, facts_commands
 from orkboard.gui.ideas_loop import LoopMixin as LoopFace, loop_commands
 from orkboard.gui.ideas_hypotheses import HypothesesMixin, hypotheses_commands
@@ -139,7 +140,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, ChronicleMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, ChronicleMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -425,8 +426,11 @@ class Ideas(HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, Ch
         (the phone's, base64) are kept beside it for the Taskmaster to read (realm/idea_photos.py), and `lens`, what the
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
         leader's), its `asks` (written after the text) and `join` (who joins the party first: gui/ideas_types.py). `hold`: kept, nothing
-        drafts it till the person does. Spec 65: in Ideation it is a pitch (at most 2 000 characters), judged; `pitch`: the one it is sent from."""
-        text, files = goal_mentions.files(Path(self.host.repo_root), _text(args, "text", ideas.SECTION_CHARS))      # spec 107 K: each `@path` that exists is the path in backticks, before the route reads it
+        drafts it till the person does. Spec 65: in Ideation it is a pitch (at most 2 000 characters), judged; `pitch`: the one it is sent from.
+        Spec 135 A (decisions §242): the new-goal field sends `match: true`; a goal that looks like part of a face-down one (`realm/goal_match.py`, by code, no call) is **not added**: the answer
+        is `{slug: "", match: {idea, title, party, state, score, why, shared, adds, reworded, cost}}` for the field's line (`ideas.add_to_goal` is *Add to it*); `apart: true` (and `with`, the goal it was
+        offered) adds it as any goal."""
+        text, files =goal_mentions.files(Path(self.host.repo_root), _text(args, "text", ideas.SECTION_CHARS))      # spec 107 K: each `@path` that exists is the path in backticks, before the route reads it
         track = _opt(args, "track") or _opt(args, "party")
         goals = {t["slug"]: t for t in ideas.tracks(self.root(), make=False)}
         routed = self.route_plan(args, text, track, pitch)      # spec 99 §4 (gui/ideas_route.py): its route by code, no call; None: drafted at once as before
@@ -455,6 +459,11 @@ class Ideas(HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, Ch
         hold = args.get("hold") is True
         queue = "hold" if hold else "now"                      # a goal sent from a pitch: Now (spec 65 §5)
         text = text[:pitches.PITCH_CHARS] if pitches.is_ideation(self.root(), track) else text
+        if args.get("match") is True and args.get("apart") is not True and routed is not None and not typed["key"]:          # spec 135 A: the new-goal field asks whether it looks like part of a face-down goal; nothing is written
+            if found := self.goal_matched(args, text, routed, track, picked):
+                return {"slug": "", "match": found}
+        if args.get("apart") is True and _opt(args, "with"):
+            self._ev(event_log.GOAL_KEPT_APART, args, **{"with": _opt(args, "with")})
         with ideas.LOCK:                        # the party changes before the goal, under the same lock; never for a goal kept on hold (spec 52 §2.3)
             joined = self.join_goal(track, typed, args) if not hold else None
             slug = ideas.add_idea(self.root(), self.with_asks(text, typed), track, self.state_dir, priority, "hold" if routed else queue)
@@ -721,7 +730,7 @@ class Ideas(HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, Ch
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **pass_commands(self), **change_commands(self), **findings_commands(self), **chronicle_commands(self), **cascade_commands(self), **goalview_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **journal_commands(self), **read_in_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **pass_commands(self), **change_commands(self), **findings_commands(self), **chronicle_commands(self), **refine_commands(self), **cascade_commands(self), **goalview_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **journal_commands(self), **read_in_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self)})
         table.update(sketch_commands(self))                # spec 121 A: *Sketch it first*, *No sketch* (gui/ideas_sketch.py)
         table["ideas.night"] = self.night                  # spec 121 D: what the night did, for the morning's card (gui/ideas_recap.py)
         return {name: guarded(name, fn) for name, fn in table.items()}

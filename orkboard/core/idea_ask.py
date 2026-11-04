@@ -11,6 +11,7 @@ as `idea_project_q.py`'s `ProjectQMixin` is.
 - **Refused**, in plain words, in this order: an empty question, a party that is gone, the demo or the day's cap, a spent window, a question being answered already (one
   for the whole Board: the busy key `ask`).
 - **Kept** in `ask.json` (`board_ask.record`): `asking` at once, then `answered` or `failed` (an answer that is not the JSON asked for, twice: *No answer came: ask again*).
+  `goal_in_analysis` (spec 132 A): the slug of the goal in analysis the answer's sources name by its title (`realm/goal_refine.py`), "" for none: the bubble offers *Add to the goal* on it (data only).
   A stop (Stop all, or the person's ×) clears it. Each question is measured (`event_log.BOARD_ASKED`).
 
 `self` has the keeper's `ask`, `_start`, `_may_run`, `refuse_spent`, `role_as`, `wiki_root`, `state_dir`, `repo_root`, `publish`, `_ev`, `measure`, `_tls`, `_map`, `_log_text`.
@@ -22,7 +23,7 @@ import time
 from orkboard.core import idea_cascade
 from orkboard.core import idea_journal
 from orkboard.core import idea_slices
-from orkboard.realm import board_ask, decisions_log, event_log, goal_team, idea_target, ideas, orkmaster, project_facts
+from orkboard.realm import board_ask, decisions_log, goal_refine, event_log, goal_team, idea_target, ideas, orkmaster, project_facts
 
 KEY = "ask"                      # the busy key: one question at a time for the whole Board
 TRIES = 2                        # an answer that is not the JSON asked for is asked once more
@@ -51,7 +52,7 @@ class AskMixin:
         if self.busy(KEY):
             raise busy
         before = board_ask.record(self.state_dir)
-        board_ask.save(self.state_dir, {"status": "asking", "party": party, "q": q, "answer": "", "sources": [], "goal": "", "at": ideas._now(), "error": ""})
+        board_ask.save(self.state_dir, {"status": "asking", "party": party, "q": q, "answer": "", "sources": [], "goal": "", "goal_in_analysis": "", "at": ideas._now(), "error": ""})
         self.publish("")
         try:
             self._start(KEY, "asking", lambda: self.ask_run(party, q), key=KEY)
@@ -105,7 +106,7 @@ Answer with one JSON object and nothing else:
         """The call, on this thread: the answer kept (`answered`), or why not (`failed`); a stop keeps nothing."""
         kw = _kw()
         started = time.monotonic()
-        rec = {"status": "failed", "party": party, "q": q, "answer": "", "sources": [], "goal": "", "at": ideas._now(), "error": NO_ANSWER}
+        rec = {"status": "failed", "party": party, "q": q, "answer": "", "sources": [], "goal": "", "goal_in_analysis": "", "at": ideas._now(), "error": NO_ANSWER}
         try:
             if party:
                 self._tls.key = f"goal:{party}"                    # the party's own step: its leader, its tool and its ledger
@@ -118,7 +119,7 @@ Answer with one JSON object and nothing else:
                 raw = kw.first_json(self.ask("ask", prompt, tools=False, as_role=as_role)[0])
                 got = board_ask.clean(self.cascade_seen(raw, party, "ask") if party else raw)
                 if got is not None:
-                    rec.update(status="answered", error="", **got)
+                    rec.update(status="answered", error="", **got, goal_in_analysis=goal_refine.in_answer(self.wiki_root(), self.state_dir, got["sources"]))     # spec 132 A: the bubble offers *Add to the goal* (data only)
                     break
         except InterruptedError:
             board_ask.clear(self.state_dir)
