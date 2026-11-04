@@ -27,6 +27,7 @@ import time
 from pathlib import Path
 
 from orkboard.core import idea_journal
+from orkboard.core import idea_slices
 from orkboard.realm import commit_goal, concerns as store, event_log, goal_team, idea_target, ideas, lens_rubrics, map_parts, map_signals, map_text, project_facts
 from orkboard.realm.idea_talk_parse import total
 from orkboard.realm import journal_notes
@@ -120,6 +121,7 @@ class ConcernsMixin:
         shown = [f"- on {d['on']}: {d['what']}" for d in rec["dismissed"][-10:]]
         facts = project_facts.for_call(self.state_dir, party)
         parts_ctx = [("What is known of the project", facts)] if facts else []
+        parts_ctx += idea_slices.parts(self.state_dir, party)                                # what the leader holds of the decisions (spec 131 §A.4), after the facts
         parts_ctx += idea_journal.parts(self.state_dir, self.repo_root, party)                # its own journal and the project's (spec 125 §C), before the frame and the map
         intro, _, aspects = lens_rubrics.prompt_lines(craft).partition("\n")
         first = aspects.split(":", 1)[0].removeprefix("- ")

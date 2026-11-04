@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+from orkboard.core import idea_slices
 from orkboard.realm import goal_team, idea_target, ideas, opportunity_tree as tree, project_facts
 
 CRAFT = "product"
@@ -65,6 +66,7 @@ class TreeMixin:
         parts = []
         if facts := project_facts.for_call(self.state_dir, party):
             parts.append(("What is known of the project", facts))
+        parts += idea_slices.parts(self.state_dir, party)                           # what the leader holds of the decisions (spec 131 §A.4)
         parts += [(f"File {f['path']} (its first part)", f["text"]) for f in project_facts.start_files(self.repo_root)]
         context = idea_target.cut(parts, idea_target.CONTEXT["tree"])
         return f"""The person has no opportunity tree for this project yet. You name it: the outcome the project means to move, and under it the jobs to be done its people hire it for. \

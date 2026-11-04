@@ -28,6 +28,7 @@ from concurrent.futures import wait
 from typing import Any
 
 from orkboard.core import idea_journal
+from orkboard.core import idea_slices
 from orkboard.realm import event_log, goal_route, goal_team, harness_claude, idea_objections, idea_questions, idea_ripe, idea_target, ideas, project_facts
 from orkboard.realm.idea_talk_parse import LINE, MAX_CARDS, clean_judgement, pick_three, said_lines, total
 
@@ -104,6 +105,7 @@ class VerdictMixin:
         parts = [("The goal, in the person's words", (ideas.idea_page(root, slug) or ideas.Page()).section("Gist")), *extra]
         if facts := project_facts.for_call(self.state_dir, party, route):
             parts.append(("What is known of the project", facts))
+        parts += idea_slices.parts(self.state_dir, party)                                 # what the leader holds of the decisions (spec 131 §A.4)
         parts += idea_journal.parts(self.state_dir, self.repo_root, party, slug)          # the leader's own journal and the project's (spec 125 §C), before the map
         if line:
             parts.append(("The goals in line, in order", "\n".join(f"- {g['slug']}: {g['title']} ({g['party_title']})" for g in line)))

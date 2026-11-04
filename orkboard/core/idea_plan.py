@@ -23,6 +23,7 @@ import json
 import re
 from pathlib import Path
 
+from orkboard.core import idea_slices
 from orkboard.realm import (collide, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
                             spec_sections, task_brief, tool_errors)
 from orkboard.realm.idea_words import short_of
@@ -162,6 +163,7 @@ class PlanMixin:
         parts = self._spec_parts(root, slug, page, party, n)
         new = sectioned(page)
         parts.append(("Its goal's summary", goal["summary"] if goal else ""))
+        parts += idea_slices.parts(self.state_dir, party)                           # what the leader holds of the decisions (spec 131 §A.4): this call has no facts, so before the map
         if told := collide.told_of(self.state_dir, slug):
             parts.append(("The Orkmaster tells you (another party's goal changed what this one rests on)", told))     # spec 71 §3
         if new:

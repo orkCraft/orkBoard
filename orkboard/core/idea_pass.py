@@ -24,6 +24,7 @@ import threading
 import time
 
 from orkboard.core import idea_journal
+from orkboard.core import idea_slices
 from orkboard.realm import board_ask, event_log, goal_team, idea_pass, idea_questions, idea_target, ideas, project_facts
 from orkboard.realm.idea_pass import PASS_S
 
@@ -235,6 +236,7 @@ class PassMixin:
         parts = [("Your party's map", self._map(to) or ""), ("Your party's goals", "\n".join(board_ask.goal_lines(self.wiki_root(), self.state_dir, to)))]
         if facts := project_facts.for_call(self.state_dir, to):
             parts.append(("What is known of the project", facts))
+        parts += idea_slices.parts(self.state_dir, to)                               # what the leader holds of the decisions (spec 131 §A.4)
         parts += idea_journal.parts(self.state_dir, self.repo_root, to)
         if not parts[0][1]:
             parts.pop(0)                             # a party with no map yet is given none

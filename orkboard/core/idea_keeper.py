@@ -63,6 +63,7 @@ from orkboard.core.idea_loop import LoopMixin
 from orkboard.core.idea_tree import TreeMixin
 from orkboard.core.idea_hypotheses import HypothesesMixin
 from orkboard.core.idea_journal import JournalMixin
+from orkboard.core.idea_slices import SlicesMixin
 from orkboard.core.idea_fold import FoldMixin
 from orkboard.core.idea_plan import PlanMixin, _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
 from orkboard.realm import (call_log, commit_goal, event_log, goal_team, idea_change, idea_checks, idea_look, idea_pick, idea_spend, idea_target, ideas,
@@ -118,7 +119,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, JournalMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, JournalMixin, SlicesMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -216,6 +217,8 @@ class IdeaKeeper(LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, Sketch
         `as_role`: a role's slug the call speaks as, not the goal's leader (a pitch's views: core/idea_judge.py).
         `reads`: how many files it may read when the step's own count is not the call's (`idea_target.reads_of`). `work`: `(folder, task)`, the call makes files in that folder
         with the commands of that task (`work_call`) instead of only reading."""
+        if step not in ("slice", "slice_digest"):
+            self.slices_recut_check()                # the first leader's call after the start: a lost store of slices is cut again (spec 131 §A.1)
         got = self.pick_as(step, as_role) if as_role else self.pick(step)
         if got is None:
             raise KeeperError(f"The Target {self.target()} makes no {step} call")

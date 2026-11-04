@@ -263,7 +263,7 @@ def test_the_step_has_its_tables_and_its_word():
     assert "ask" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS) and idea_spend.STEP_STAGE["ask"] == "spec"
     for target in idea_target.TARGETS:
         assert idea_target.pick("ask", target) == idea_target.pick("talk_round", target)
-    assert idea_target.READS["ask"] == 0 and idea_target.CONTEXT["ask"] == 8_000 + 3_000 and idea_target.CAPS["ask"] == 0.05
+    assert idea_target.READS["ask"] == 0 and idea_target.CONTEXT["ask"] == 8_000 + 3_000 + 1_200 and idea_target.CAPS["ask"] == 0.05
     assert lexicon.term("ask") == "Ask"
 
 

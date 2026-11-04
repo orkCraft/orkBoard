@@ -22,6 +22,7 @@ from pathlib import Path
 
 from orkboard.core.idea_plan import _why
 from orkboard.core.idea_revise import _cut, clean_change
+from orkboard.core import idea_slices
 from orkboard.realm import event_log, goal_team, idea_change, idea_checks, idea_target, ideas, leader_change, roles
 from orkboard.realm.idea_words import short_of
 
@@ -98,7 +99,8 @@ class LeaderChangeMixin:
                  "kind": t.get("kind"), "tier": t.get("tier"), "after": t.get("after") or []} for t in open_]
         sec = leader_change.spec_lines(root, slug, party)
         cap = idea_target.CONTEXT["plan"]
-        parts = [("Your map", self._map(party) or ""),
+        parts = [*idea_slices.parts(self.state_dir, party),                          # what the leader holds of the decisions (spec 131 §A.4), before its map
+                 ("Your map", self._map(party) or ""),
                  *((n, page.section(n)) for n in idea_change.PLAN_SECTIONS),
                  ("Your lines of what the goal will change (Will be)", "\n".join(f"- {ln}" for ln in sec) or "(none yet)"),
                  ("Done and at work (these stay as they are)", "\n".join(f"{t.get('id')} {t.get('title')} [{t.get('state')}]: {_cut(t.get('brief'), BRIEF_AT_WORK)}" for t in stay)),

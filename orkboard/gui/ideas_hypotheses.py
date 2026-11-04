@@ -165,6 +165,10 @@ class HypothesesMixin:
                     self._ev(event_log.BOARD_COMMITTED, commit=out["commit"], pages=out.get("pages") or 0, what="decision", seconds=round(time.monotonic() - began, 2))
                 if out.get("held"):
                     self._ev(event_log.BOARD_HELD, why=out["held"])
+                try:                                                            # a decision with no goal is cut into the leaders' slices too (spec 131 §A.2)
+                    getattr(self.keeper, "slices_cut", lambda n: False)(out.get("number") or 0)
+                except Exception:
+                    pass
             try:
                 judged = hypotheses.judge(self.state_dir, id, state, why, out.get("number") or 0)
             except ValueError as e:

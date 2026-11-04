@@ -21,6 +21,7 @@ the brief's other half (why this and not what they use now, what it must always 
 """
 from __future__ import annotations
 
+from orkboard.core import idea_slices
 from orkboard.realm import goal_team, idea_target, ideas, project_facts, project_questions
 
 
@@ -74,6 +75,7 @@ class ProjectQMixin:
         parts = []
         if facts := project_facts.for_call(self.state_dir, party):
             parts.append(("What is known of the project", facts))
+        parts += idea_slices.parts(self.state_dir, party)                           # what the leader holds of the decisions (spec 131 §A.4)
         files = project_facts.start_files(self.repo_root)
         parts += [(f"File {f['path']} (its first part)", f["text"]) for f in files] or [("The project's files", "(no README and no document at the top of docs/)")]
         context = idea_target.cut(parts, idea_target.CONTEXT["project_q"])

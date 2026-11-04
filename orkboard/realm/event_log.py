@@ -231,6 +231,10 @@ RIPE_DONE = "ripe_done"          # idea: the wait ended and the leaders' decisio
 # Spec 125 D (decisions §203): a leader's digest of its own journal, written in the background. Never a word of the journal or of the digest.
 JOURNAL_DIGESTED = "journal_digested"   # party, entries (how many the call read), chars (of the digest kept), seconds, cost (None: unrecorded)
 
+# Spec 131 A (decisions §233): a decision cut into the leaders' slices, and a leader's fold of the slices past the bound, both in the background. Never a word of a decision or of a slice.
+SLICES_CUT = "slices_cut"        # decision (its number), parties (how many got a slice), none (how many none), replaced (slices replaced), seconds, cost (None: unrecorded), failed (true: nothing kept)
+SLICES_FOLDED = "slices_folded"  # party, slices (how many the call read), chars (of the digest kept), seconds, cost (None: unrecorded), failed (true: nothing kept)
+
 # Spec 127 C (decisions §205): a goal that reached main folded into the product's living specs, in the background. Never a word of the goal or of a spec.
 SPEC_FOLDED = "spec_folded"   # idea, capability (its slug), added, modified, removed (how many requirements), cost (None: unrecorded)
 
@@ -250,6 +254,7 @@ EVENTS += (JOURNAL_DIGESTED,)       # spec 125 D
 QUESTION_PASSED = "question_passed"      # spec 128 D: a leader's question passed through the Orkmaster: idea, party (who asked), to (the party it was for), how ("answered" · "cannot" · "failed" · "taken" · "stopped"), seconds, step, prompt_chars, tokens, cost (never a word of the question)
 EVENTS += (QUESTION_PASSED,)       # spec 128 D
 EVENTS += (SPEC_FOLDED,)            # spec 127 C
+EVENTS += (SLICES_CUT, SLICES_FOLDED)       # spec 131 A
 EVENTS += (LEADER_CHANGE_ASKED, LEADER_CHANGE_ANSWERED)      # spec 128 E
 JOURNAL_SENT = "journal_sent"      # decisions §229: the journal sent to the project's remote (or not): sent, remote, branch, files, held_back (lines held for a secret's shape), commit, why (a failure's words, "nothing changed")
 EVENTS += (JOURNAL_SENT,)
