@@ -73,7 +73,7 @@ def test_a_running_party_carries_the_recurring_goals_of_its_kind_and_team_is_no_
 
 def test_ideas_party_presets_answers_for_the_projects_kind_and_writes_nothing(host):
     got = host.command("ideas.party_presets", {})
-    assert got["kind"] == {"id": "code", "words": "code"} and got["presets"] == party_presets.listed("code")
+    assert got["kind"] == {"id": "code", "words": "code", "how": "1 .py files"} and got["presets"] == party_presets.listed("code")
     assert [r["id"] for r in got["presets"][:6]] == ["product", "design", "tech", "release", "run", "marketing"]
     assert ideas.tracks(host.root, make=False) == [] or all(t["slug"] == "general" for t in ideas.tracks(host.root, make=False))
 
