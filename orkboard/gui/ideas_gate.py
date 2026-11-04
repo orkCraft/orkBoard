@@ -21,7 +21,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import event_log, findings_gather, gate_config, goal_main, idea_flag, idea_gate, ideas, journal_notes, main_checks
+from orkboard.realm import event_log, findings_gather, gate_config, goal_main, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
@@ -55,7 +55,18 @@ class GateMixin:
             shas, files = idea_gate.waiting_by_patch(git, into, main)      # a goal sent alone is not counted again
         except Exception:                       # a repository git cannot read: nothing waits that the Board can see
             return out
-        return {**out, "commits": len(shas), "files": files, "ideas": self._gate_ideas(shas)}
+        brought = self._gate_ideas(shas)
+        if brought:
+            self._release_reads()                # a goal is ready for main: Release has something to ask about (spec 143 E.1)
+        return {**out, "commits": len(shas), "files": files, "ideas": brought}
+
+    def _release_reads(self) -> None:
+        try:
+            for t in ideas.tracks(self.root(False), make=False):
+                if party_recipes.is_release(t):
+                    self.read_release(t["slug"])
+        except Exception:                        # a reading that cannot start never breaks the gate's count
+            pass
 
     def gate_merge(self, args: dict) -> dict:
         """`{}`: merge dev into main (fast-forward, else a merge commit), pushed when the project pushes after merging.

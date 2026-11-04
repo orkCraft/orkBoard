@@ -399,3 +399,36 @@ def test_a_squad_of_seven_seats_is_kept_whole_with_a_size_and_an_eighth_is_refus
     assert goal_team.team_of(host.ideas.root(), slug) == six                                                       # six besides the leader: seven seats
     with pytest.raises(CommandError, match="at most 7 seats"):
         host.command("ideas.goal_save", {"slug": slug, "team": [*six, "editor"], "leader": "architect"})
+
+
+def test_release_reads_when_there_is_a_release_not_at_start(host, model, monkeypatch):
+    """Spec 143 E.1: a party of Release is not read at its save (Tech's is); it reads once when a goal is ready for main, or when its lens is opened."""
+    tech = host.command("ideas.goal_save", {"about": "Faster tests.", "proposal": "tech"})["slug"]
+    rel = host.command("ideas.goal_save", {"about": "A version goes out.", "proposal": "release"})["slug"]
+    _wait(host, tech, goal=True)
+    _wait(host, rel, goal=True)
+    assert len(model.seen) == 1 and "Faster tests" in model.seen[0]["prompt"], "Tech's reading is asked for, Release's is not"
+    assert ideas.goal_state(host.ideas.state_dir, rel)["state"] == "raw" and ideas.goal_state(host.ideas.state_dir, tech)["state"] != "raw"
+    host.command("ideas.goal_save", {"slug": rel, "about": "A version goes out, with notes."})
+    _wait(host, rel, goal=True)
+    assert len(model.seen) == 1, "a save of the Release party reads nothing either"
+    from orkboard.realm import idea_gate
+    monkeypatch.setattr(idea_gate, "same", lambda a, b: False)
+    monkeypatch.setattr(idea_gate, "waiting_by_patch", lambda g, a, b: (["abc"], 1))
+    monkeypatch.setattr(host.ideas, "_gate_ideas", lambda shas: [{"slug": "x", "title": "X", "goal": tech, "tasks": 1}])
+    host.command("ideas.gate", {})
+    _wait(host, rel, goal=True)
+    assert len(model.seen) == 2 and "A version goes out" in model.seen[1]["prompt"], "a goal ready for main: Release reads"
+    host.command("ideas.gate", {})
+    host.command("ideas.lens", {"track": rel})
+    _wait(host, rel, goal=True)
+    assert len(model.seen) == 2, "once: a reading kept is not read again"
+
+
+def test_the_lens_of_a_release_party_reads_it(host, model):
+    rel = host.command("ideas.goal_save", {"about": "A version goes out.", "proposal": "release"})["slug"]
+    _wait(host, rel, goal=True)
+    assert model.seen == []
+    host.command("ideas.lens", {"track": rel})
+    _wait(host, rel, goal=True)
+    assert len(model.seen) == 1

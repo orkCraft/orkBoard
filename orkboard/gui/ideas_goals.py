@@ -266,9 +266,21 @@ class GoalsMixin:
         same = one is not None and (g["leader"] or roles.TASKMASTER) == one["lead"] and sorted(g["team"]) == sorted([*one["build"], *one["check"]])
         return one["id"] if same else ""
 
-    def _read_goal(self, slug: str, said: str = "") -> None:
+    def _is_release(self, slug: str) -> bool:
+        return any(t["slug"] == slug and party_recipes.is_release(t) for t in ideas.tracks(self.root(), make=False))
+
+    def read_release(self, slug: str) -> None:
+        """A Release party reads when there is a release to ask about (spec 143 E.1, decisions §250.6): when a goal is ready for main or the
+        person opens its lens. Once: a party read, being read, or one the keeper could not read (it has its reason) is not read again."""
+        st = ideas.goal_state(self.state_dir, slug)
+        if st["state"] == "raw" and not st["error"] and self._is_release(slug):
+            self._read_goal(slug, force=True)
+
+    def _read_goal(self, slug: str, said: str = "", force: bool = False) -> None:
         """The keeper reads the goal at once, in the background; a keeper that may not run (the demo, the spend limit)
-        leaves it `raw` with the reason on it."""
+        leaves it `raw` with the reason on it. A Release party waits for its release (`read_release`) unless `said`/`force`."""
+        if not said and not force and self._is_release(slug):
+            return
         try:
             self.keeper.read_goal(slug, said)
         except idea_keeper.KeeperError as e:

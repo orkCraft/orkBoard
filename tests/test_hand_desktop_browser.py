@@ -1375,3 +1375,28 @@ def test_edit_the_party_on_a_plan_that_misses_a_member_opens_the_one_place_of_th
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+def test_a_goals_own_stack_lies_in_front_of_a_party_question_that_blocks_nothing(gui):
+    """Spec 143 E.2 (decisions §250.6): in a lane, a goal's own card (a failure, a result, a decision) lies in front of the party's own question with `blocks: false`; the front card takes the press."""
+    host = HandHost()
+    q = [{"ask": "Which version goes out first?", "choices": ["The small one", "All of it"], "pick": None, "why": "", "by": None, "look": False}]
+    shipped = node("shipped", "tech", "Round scores shown on the host's screen", "hand", state="review", element="ice", tasks=[task("s1", "Show the scores", "review")],
+                   results=[{"idea": "shipped", "idea_title": "Round scores shown on the host's screen", "task": "s1", "title": "Show the scores", "round": 1, "cost": 0.4, "conflict": "", "finished": "2026-10-20T11:00:00",
+                             "tests": {"passed": 14, "failed": 0, "failing": [], "tail": "14 passed", "green": True}, "diff": {"files": 3, "added": 146, "removed": 0}, "estimate": None, "over": False}])
+    host.nodes.append(shipped)
+    host.needs.append(need("goal", "tech", "", "Tech asks about its goals", "Which version goes out first?", asked=q, priority="high", at="2026-10-01T09:00:00"))
+    pg, host, log = open_hand(gui, host=host)
+    try:
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        keys = stacks_in(pg, 1)
+        assert "party:tech@1" in keys and "timer@1" in keys and "shipped@1" in keys, keys
+        assert keys.index("timer@1") < keys.index("party:tech@1") and keys.index("shipped@1") < keys.index("party:tech@1"), f"the goals' own stacks first (in front), a result among them: {keys}"
+        front = lane(pg, 1).locator(".hand-slot").evaluate_all("els => els.map((e) => [e.querySelector('.hand-stack')?.getAttribute('data-stack'), +getComputedStyle(e).zIndex])")
+        top = max(front, key=lambda r: r[1])[0]
+        assert top == "timer@1", f"the failure is the front of the fan: {front}"
+        pg.locator('.hand-card[data-goal="timer"][data-top="1"]').click(position={"x": 60, "y": 30})       # the press lands on the front card
+        pg.wait_for_selector(".hand-card--big", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

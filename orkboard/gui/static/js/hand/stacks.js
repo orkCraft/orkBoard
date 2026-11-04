@@ -6,7 +6,7 @@ import { html, cls } from "../html.js";
 import { lift, lower, lifted, pick, picked } from "../frame/state.js";
 import { nameOf, partiesNow } from "../table/data.js";
 import { StopCard, askerOf, handsWords, whoOf } from "./stopcard.js";
-import { goalOfStop } from "./data.js";
+import { goalOfStop, lieBehind } from "./data.js";
 import { mapData } from "../shell/store.js";
 import { Shards, fromWhere, useGone, useHanded } from "./motion.js";
 import { liftKey } from "./state.js";
@@ -65,7 +65,8 @@ export function Stacks({ stacks, plus }) {
   const lanes = Array.from({ length: count }, () => []);
   for (const it of items) lanes[Math.min(it.item.lane || 0, count - 1)].push(it);
   const last = lanes[count - 1];
-  last.sort((a, b) => Number(!!b.item.road) - Number(!!a.item.road));                 // Release's and Live's stacks (no lane of their own at the wide width) lie at the last lane's right end, in front (spec 111 §4.1)
+  for (const l of lanes) l.sort((a, b) => Number(lieBehind(a.item)) - Number(lieBehind(b.item)));         // a goal's own stack in front of a party's question that blocks nothing (spec 143 E.2); what blocks keeps its urgency's place
+  last.sort((a, b) => Number(lieBehind(a.item)) - Number(lieBehind(b.item)) || Number(!!b.item.road) - Number(!!a.item.road));                 // Release's and Live's stacks (no lane of their own at the wide width) lie at the last lane's right end, in front (spec 111 §4.1)
   return lanes.map((list, i) => {
     const m = list.length, solo = m === 1;
     const place = (k) => ({ at: solo ? 1 : m - 1 - k, of: solo ? 2 : m - 1, z: m - k, behind: !solo && k > 0 });

@@ -17,6 +17,8 @@ class LensMixin:
         track = _opt(args, "track")
         if track and not any(t["slug"] == track for t in ideas.tracks(self.root(), make=False)):
             raise IdeasError("That party is gone")
+        if track:
+            self.read_release(track)             # a Release party reads when its lens is opened (spec 143 E.1)
         return {**idea_lens.lenses(self.state_dir, self.root(), track), "segments": idea_lens.segments(self.state_dir),
                 "screens": [{"id": s["id"], "name": s["name"]} for s in idea_lens.screens(self.state_dir)]}
 

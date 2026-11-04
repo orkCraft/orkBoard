@@ -95,6 +95,9 @@ export function stacksOf(stops, parties = partiesNow()) {
   return out;
 }
 
+/** A party's own question that blocks nothing (a stack of `party:<slug>`, every card `blocks: false`): in its lane it lies behind a goal's own stack, a result, a stop, a decision (spec 143 E.2, decisions §250.6); what blocks keeps its urgency's place. */
+export const lieBehind = (st) => String(st.key).startsWith("party:") && st.cards.length > 0 && st.cards.every((c) => c.row?.blocks === false);
+
 /** The card of the hand that a lifted key names (`hand:<stop key>`), null for none. */
 export const stopByKey = (stops, key) => stops.find((s) => s.key === key) || null;
 
