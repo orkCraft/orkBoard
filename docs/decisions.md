@@ -5985,3 +5985,62 @@ two things glued into one goal, its spec written about both, a goal too big to l
    route's parties and parts; the field's line; *Add to it* through §234.5); **B. The backlog's groups** (the one call,
    the card, the queue's wait); **C. Split**. A first: it stands alone, and §234.5's *Add to the goal* is built with it.
 The owner's call.
+
+## 243. The project's own remote is the phone's way away from home: the phone drops goals into a branch of their own and reads the journal; whoever works takes a goal, the computer or a cloud session, and says so in the journal; a private repository only; the mailbox waits; the Board on a branch is the next step (4 November 2026, the owner)
+
+Changes: 219.2, 219.3, 219.8, 221.1, 229, 230.6; spec 103, spec 136.
+
+Why: the owner, after the phone was made half the product (§218): *let the phone be more on its own: tied straight to
+the repository, it reads the status from there and puts goals into it, marked as not yet read by AI; the work on the
+computer or in cloud sessions changes git now and then, and the phone shows it.* Read in the code: half of it is built.
+The journal (§229, `realm/remote_journal.py`) already sends the project's status, its events and its spend to a branch of
+its own, `orkboard/journal`, by git's plumbing and without force; what is missing is the other way (the phone to the
+repository) and the phone reading the journal. The mailbox of §219 is not built (no `mailbox/`, no `relay/`, no
+`mobile/`), and with it a goal dropped away from home waits until the person's computer wakes; through the repository it
+can be taken by whoever works: the computer at home, or a cloud session while the computer sleeps, which is the indie
+developer with a day job (§218) at work. What the repository cannot be: live (a commit every few seconds is noise, and the
+journal goes every 15 minutes, §229.4), a push to the phone, or private by itself (a public repository shows the goals to
+everyone). A token on the phone can write the whole repository, the code too: a fine-grained token is given per
+repository, never per branch. And the Board itself lives in `.orkcraft/`, which git ignores: a cloud session has no Board
+to lay a goal on. So:
+1. **The project's remote is the phone's way away from home**, for what can wait: the phone drops goals into it and reads
+   the journal from it. On the same network, or through Tailscale, the phone talks to the computer as today (spec 34),
+   and that stays the way of the live hand. **The mailbox of §219.2–3 waits**: it is built only if the repository's way
+   falls short (a project with no remote on GitHub, a person who will not give the phone a token). Push through FCM
+   (§219.4) stays, for what needs the person now.
+2. **The goals go to a branch of their own**, `orkboard/inbox`: it shares no history with the code, is never merged,
+   holds no workflow, so no CI runs for it (as §229.2). The phone writes **one file a goal**, `inbox/<device>/<id>.json`
+   (its words, its rune, its party, its type, its marks, when; its photos beside it), and **only adds**: it never edits
+   or removes a file. Nothing else writes that branch.
+3. **"Not yet read" is no mark in the file**: a goal is in the inbox and the journal has not named it. The phone shows it
+   as a face-down card with the person's own words (§222.2), *Waiting to be taken: your computer or a cloud session will
+   read it*.
+4. **Whoever works takes a goal, and says so in the journal**: the computer (and, in the next step, a cloud session)
+   reads the inbox at its rhythm, writes each goal not taken into the journal's `taken.json` (the goal's id, who took it,
+   when), and **lays it on the Board only once that push went through**, through `ideas.add` as the + card does; its slug
+   on the Board goes into the next journal. **The journal's push without force is the lock**: two that take the same goal
+   both commit, one push is refused, that one reads the journal again, finds the goal taken, and lays nothing. A goal is
+   taken once; one taken and not laid (the add refused) is said in the journal and on the phone, with the add's words.
+5. **The phone reads the journal**: `status.json` beside `status.md` (the goals by pile and phase, what waits in the hand
+   and needs the person, what failed, the taken goals, when it was written), read through GitHub's API with its ETag, so a
+   read with nothing new costs nothing; every minute while the app is open, never in the background. What it shows says
+   when it was written (*As of 14:02*), never as if it were now.
+6. **A private repository only**: GitHub's API says whether a repository is private, so here Orkboard knows it (§230.4's
+   *the person's word* is for a remote it cannot ask). On a public one the phone refuses in plain words: *This repository
+   is public: goals sent through it would be seen by everyone. Make it private, or use the phone at home.*
+7. **The token is said plainly and kept where it is safest**: a fine-grained token for that one repository, *Contents:
+   read and write*; Settings and the phone say what it can do (*This token can change any file of the repository, the
+   code too; Orkboard writes only orkboard/inbox*) and advise a rule on `main` (a pull request needed). It is kept in the
+   native frame's Keychain (spec 103), in the installed web app's storage until then, said so; removed from the phone, it
+   is gone from it. Signing in through GitHub, when the native frame is built (its device flow does not answer a web page).
+8. **The journal becomes the user's too** (this changes §230.6): it is asked for when the phone is paired with a remote,
+   in the words of §229.1, and its rhythm is the forge's for a contributor; for a user, 15 minutes, and at once when a
+   goal is taken or something needs the person.
+9. **The next step, not this one: the Board on a branch**, so a cloud session can carry a goal through Talk, the spec and
+   the work, not only take it: what of `.orkcraft/` goes, how two writers share it, what stays local (the tokens, the
+   sign-ins). A decision of its own, after the first step is used.
+10. **The words** (`TERMS`): *inbox* (the branch the phone drops goals into), *taken*, *Waiting to be taken*, *As of*.
+11. **Built** by spec 136: **A.** the journal's `status.json` and `taken.json`; **B.** the inbox read and taken on the
+    host, with the lock; **C.** the phone's way through the repository (its settings, its reads, its + card); **D.** the
+    words. Spec 103's relay stays for push; §219's mailbox is not built until (1) says so.
+The owner's call.
