@@ -1,5 +1,5 @@
 // Settings (docs/specs/33-v1-shell.md §4, §9; spec 34 §5–§6), a place over the pane (docs/specs/98-the-table-and-the-hand.md §7): Push after merging, Download
-// today's logs, Pair a phone, Keep the computer awake (spec 47 §5), the updates (js/shell/update.js). The theme follows the system. **Work at night** (docs/specs/121 §4.1, §7.3; words: hand/nightwords.js) sits with the Board's
+// today's logs, Pair a phone, Keep the computer awake (spec 47 §5), the updates (js/shell/update.js), **When I am at the computer** (js/shell/hoursfield.js, spec 138 B.1). The theme follows the system. **Work at night** (docs/specs/121 §4.1, §7.3; words: hand/nightwords.js) sits with the Board's
 // settings: what would start by itself waits for the night's window; it says plainly what still runs by day and what starts at once.
 import { useEffect, useState } from "preact/hooks";
 import { html } from "../html.js";
@@ -12,6 +12,7 @@ import { currentProject } from "./projects.js";
 import { saveLogs } from "./errors.js";
 import { UpdatesField } from "./update.js";
 import { JournalAsk } from "./journalask.js";
+import { HoursField } from "./hoursfield.js";
 import { nightWordsOf, workAtNight } from "../hand/nightwords.js";
 
 
@@ -75,6 +76,7 @@ export function SettingsPlace() {
         <span class="ok-font-status ok-tone-muted">Its tests ran and are green, nothing is left to fix, it touches no risk path and holds no pictures. Anything else waits for your look; off, every result does.</span>
         <${TargetSetting} />
       </div>`}
+      <${HoursField} />
       <${UpdatesField} />
       <div class="shell-field"><span class="ok-font-label">Your phone</span>
         <span><button type="button" class="ork-btn" onClick=${() => openPlace("pair", {}, "Pair a phone")}>Pair a phone</button></span></div>

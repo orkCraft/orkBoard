@@ -52,7 +52,7 @@ def test_the_compact_snapshot_is_small_and_names_its_content(fake_repo):
     assert set(snap) == {"v", "project", "focus", "look", "ideas_rev", "ops_rev", "ops_team", "needs_you", "idea_states",
                          "review_count", "review_results", "limits", "reserve", "rate", "hud", "version", "update", "rev",
                          "canvases_new", "canvases_rev", "sleep", "mana", "projects",
-                         "repair"}   # spec 94 B: the page's, less COMPUTER_ONLY; spec 119: Fix it is the phone's too
+                         "repair", "presence"}   # spec 139 C.1: Here or Away, the phone reads it too; spec 94 B: the page's, less COMPUTER_ONLY; spec 119: Fix it is the phone's too
     assert snap["focus"] == "board" and snap["look"] == "office"
     assert "words" not in snap and not set(snap) & set(host.COMPUTER_ONLY)
     assert host.command("mobile.snapshot", {"since": snap["rev"]}) == {"v": phones.API, "rev": snap["rev"],

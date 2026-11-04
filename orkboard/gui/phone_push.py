@@ -5,6 +5,9 @@ two things worth it — an answer that waits, and the morning's summary — and 
     pusher.tick(now)                 # at most every TICK_S: what goes, to whom, off the loop (a worker thread for a send)
     pusher.on / off / quiet / key    # the `mobile.push_*` commands of a phone (gui/board_host.py)
 
+While the person is Away (their hours, `realm/hours.py`; docs/specs/138 B.3, decisions §245.5) only **money's and safety's** cards go (`AWAY_KINDS`: *Go on paid?*, a cost grown past what was
+agreed) and the morning's summary waits for them to be Here; with no hours set they are always Here and nothing changes.
+
 Never: in the quiet hours, under Do not disturb, for a proposal, a result to check, a merge, a spend or a limit, to a device whose
 socket is open, or more than one push of a tag to a device every PUSH_GAP_S. The words are the Board's own (a kind, a short name,
 a count): never a question's text, a spec's, a mail's or a template's field.
@@ -18,7 +21,7 @@ from typing import Any, Callable
 from orkboard import schedule, settings
 from orkboard.gui import web_push
 from orkboard.gui.ideas_recap import RECAP_DAYS
-from orkboard.realm import board_recap, event_log
+from orkboard.realm import board_recap, event_log, hours
 from orkboard.realm.idea_target import when_words
 from orkboard.realm.idea_words import short_of
 from orkboard import brand
@@ -29,6 +32,9 @@ MORNING_H = 3                                   # the morning is the first tick 
 KIND_WORDS = {"goal": "A party asks", "asks": "A spec asks", "plan": "A plan waits for you", "change": "A plan change waits for you", "leader_change": "A leader proposes a change", "todo": "A to-do", "failed": "Failed",
               "op": "At your check", "op_failed": "Failed"}      # js/board/today.js KIND_WORDS, the kinds that wait for an answer
 
+
+AWAY_KINDS = ("paid", "start")        # the cards pushed while the person is Away: money's (*Go on paid?* = `paid`; a cost grown past what was agreed = `start`, goal_route.rows)
+AWAY_WORDS = {"start": "A cost grew past what was agreed"}    # the words of an AWAY_KINDS row the answers that wait have none for
 
 PAID_TITLE = "Orkmaster asks"          # the Orkmaster's *Go on paid?* (decisions §178.5; spec 105 C): a card of the hand, pushed with *Open* only, never a pick
 PAID_WORDS = "Go on paid? Every subscription is out{until}."
@@ -82,8 +88,8 @@ class Pusher:
         except Exception:
             return n
 
-    def _first_row(self) -> dict | None:
-        """The first row of the shown project's Needs you that waits for an answer."""
+    def _first_row(self, kinds: tuple = ()) -> dict | None:
+        """The first row of the shown project's Needs you that waits for an answer (of `kinds` only, when given)."""
         ideas = self.host.ideas
         rows: list[dict] = []
         try:
@@ -91,7 +97,7 @@ class Pusher:
             rows += self.host.ops.needs()
         except Exception:
             pass
-        return next((n for n in rows if n.get("kind") in KIND_WORDS or n.get("kind") in ("pick", "paid")), None)
+        return next((n for n in rows if (n.get("kind") in kinds if kinds else n.get("kind") in KIND_WORDS or n.get("kind") in ("pick", "paid"))), None)
 
     @staticmethod
     def paid_words(row: dict) -> str:
@@ -104,25 +110,33 @@ class Pusher:
             pass
         return PAID_WORDS.format(until=until)
 
-    def _first(self) -> tuple[str, str] | None:
+    def _first(self, kinds: tuple = ()) -> tuple[str, str] | None:
         """(kind's words, short name) of the first row of the shown project's Needs you that waits for an answer."""
-        row = self._first_row()
+        row = self._first_row(kinds)
         if row and row["kind"] == "paid":
             return PAID_TITLE, ""
         if row and row["kind"] == "pick":                           # said by who asks: the member the task ran as, no title
             return PICK_WORDS.format(member=str((row.get("by") or {}).get("name") or "A member")), ""
-        return (KIND_WORDS[row["kind"]], short_of(str(row.get("title") or ""))) if row else None
+        return (KIND_WORDS.get(row["kind"]) or AWAY_WORDS[row["kind"]], short_of(str(row.get("title") or ""))) if row else None
 
-    def message_needs(self, waiting: int) -> dict:
+    def _away(self, now: dt.datetime) -> bool:
+        """The person is Away now: the shown project's hours and door (`realm/hours.py` `presence`); never with no hours or no project."""
+        try:
+            board = self.host.ideas
+            return board is not None and hours.away(board.settings_now(), now)
+        except Exception:                                      # a broken setting never stops the clock
+            return False
+
+    def message_needs(self, waiting: int, kinds: tuple = ()) -> dict:
         """The push of an answer that waits. The Orkmaster's *Go on paid?* first in line says itself, with no number and no pick (`card.pick` None:
         money is spent from the card on the screen, so the notification has *Open* only)."""
-        row = self._first_row()
+        row = self._first_row(kinds)
         if row and row["kind"] == "paid":
             return {"title": PAID_TITLE, "body": self.paid_words(row), "tag": "needs", "badge": waiting, "url": "./#needs", "card": {"id": "paid", "goal": None, "pick": None}}
-        return {"title": brand.name(), "body": self.words_needs(waiting), "tag": "needs", "badge": waiting, "url": "./#needs"}
+        return {"title": brand.name(), "body": self.words_needs(waiting, kinds), "tag": "needs", "badge": waiting, "url": "./#needs"}
 
-    def words_needs(self, waiting: int) -> str:
-        first = self._first()
+    def words_needs(self, waiting: int, kinds: tuple = ()) -> str:
+        first = self._first(kinds)
         row = f"{first[0]} · {first[1]}" if first and first[1] else (first[0] if first else "")
         if waiting > 1:
             return " · ".join(x for x in (f"{waiting} wait for your answer", row) if x)
@@ -172,6 +186,7 @@ class Pusher:
             return
         opened, waiting = self.listener.open_ids(), self._waiting()
         quiet = schedule.quiet_now(machine, now.replace(tzinfo=None)) or dnd_on(machine, now)
+        away = self._away(now)
         out: dict[str, list[tuple[dict, dict]]] = {}
         for d in devices:
             did = d["id"]
@@ -182,10 +197,14 @@ class Pusher:
             self._told[did] = min(told, waiting)               # answered since: a new one is news again
             if quiet:
                 continue
-            if waiting > self._told[did] and self._free(did, "needs", now):
+            if away:                                           # Away: only money's and safety's cards (spec 138 B.3); the rest waits for the hours
+                if self._first_row(AWAY_KINDS) is not None and waiting > self._told[did] and self._free(did, "needs", now):
+                    self._told[did] = waiting
+                    out.setdefault("needs", []).append((d, self.message_needs(waiting, AWAY_KINDS)))
+            elif waiting > self._told[did] and self._free(did, "needs", now):
                 self._told[did] = waiting
                 out.setdefault("needs", []).append((d, self.message_needs(waiting)))
-            elif self._morning_due(d, machine, now):
+            elif not away and self._morning_due(d, machine, now):
                 since = max(board_recap.when(d.get("seen")) or now, now - dt.timedelta(days=RECAP_DAYS))      # as `ideas.recap` caps it
                 body = self.morning(since, now, waiting)
                 if not body:                                   # nothing to say: the day is checked, not asked again every tick

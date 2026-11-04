@@ -30,7 +30,7 @@ from orkboard.core import crashes, repair as core_repair, treasury, updates as c
 from orkboard.core.board_limits import BoardLimits
 from orkboard.core.sign_ins import SignInError, SignIns
 from orkboard.gui import board_cli, command_log
-from orkboard.realm import analytics, board_map, call_log, day_log, event_log, halt, idea_target, tool_now
+from orkboard.realm import analytics, board_map, call_log, day_log, event_log, halt, hours, idea_target, tool_now
 from orkboard.sources import telemetry, window_rate
 
 TELEMETRY_REFRESH_S = 5.0       # as Orkline's host: this run's spend read again
@@ -159,7 +159,7 @@ class BoardPhone:
     it and the phone comes back by itself; which updates install by themselves stays the computer's to say), and the
     snapshot's Board, small."""
 
-    COMMANDS = ("mobile.hello", "mobile.snapshot", "halt", "projects.list", "projects.use", "mobile.push_key", "mobile.push_on",
+    COMMANDS = ("mobile.hello", "mobile.snapshot", "halt", "presence.set", "projects.list", "projects.use", "mobile.push_key", "mobile.push_on",
                 "mobile.push_off", "mobile.push_quiet", "update.check", "update.install",
                 "repair.start", "repair.stop", "repair.update")      # Fix it (spec 119 §3.3, decisions §197.4): the computer starts Claude Code, the phone edits nothing
     MARKDOWN = (".md", ".markdown")
@@ -244,6 +244,7 @@ class Orkboard:
         self.projects = board_projects.Projects(self)
         self.commands: dict[str, Callable[[dict], Any]] = {
             "halt": self._halt,
+            "presence.set": self._presence_set,       # the door: Here or Away, held until the hours' next edge (spec 139 C.1)
             "link.open": open_link,
             "crash.window": self._crash_window,       # the page's own errors (js/crashes.js, core/crashes.py)
             "usage.share": self._share_usage,         # the one answer, asked on the first screen (js/onboarding.js)
@@ -384,7 +385,7 @@ class Orkboard:
                 "hud": {"show_gold": show_gold, "gold": gold, "lumber": lumber}, "rate": window_rate.shown(self.machine),
                 "repo": str(root) if root is not None else "", "projects": self.projects.list(),
                 "update": self.updates.snapshot(), "repair": self.repair.snapshot(), "update_policy": self.machine.updates, "version": __version__,
-                "usage_ask": self.usage.should_ask(), **self._board_status()}
+                "usage_ask": self.usage.should_ask(), "presence": self._presence(), **self._board_status()}
 
     def _board_status(self) -> dict[str, Any]:
         """`board_held` (another worker holds the Board: by, kind, until) and `board_aside`, for the shown project; nothing without `[board]` (spec 137 B.2)."""
@@ -457,9 +458,19 @@ class Orkboard:
         self.projects.tick(now)           # every open project's Board: showing another stops nothing
         self.ops.tick(now)
         self.pusher.tick()
+        self._door_tick()
         self.keep_awake.tick(now)
         self.sign_ins.tick()
         self._journal_tick()
+
+    def _door_tick(self) -> None:
+        """The door turns at the hours' edge by itself (or a hold ends): the faces are told when `presence` changes."""
+        now = self._presence()
+        first = "_door" not in self.__dict__
+        if now != self.__dict__.get("_door"):
+            self.__dict__["_door"] = now
+            if not first:
+                self.on_change()
 
     def _journal_tick(self) -> None:
         """Each open project that asked for a `[journal]` (realm/remote_journal.py, decisions §229) sends it when due, and reads the phone's
@@ -567,6 +578,24 @@ class Orkboard:
                     n += part.held_for(harness)
         ops = getattr(self, "ops", None)
         return n + (ops.runner.held_for(harness) if ops is not None else 0)
+
+    def _presence(self) -> dict:
+        """`{here, until, held}` (spec 139 C.1): the person's hours and the press on the door that holds the other state until their next edge; *Here* with no hours and no press
+        (realm/hours.py). Read from the shown project's Board settings; kept there, so the phone reads the same."""
+        board = self.ideas
+        return hours.presence(board.settings_now() if board is not None else {}, dt.datetime.now())
+
+    def _presence_set(self, args: dict) -> dict:
+        """`presence.set {here}`: the door pressed. The other state is held until the hours' next edge (with no hours, the press is the person's alone and has no end); a press that
+        agrees with the hours lifts a hold."""
+        if not isinstance(args.get("here"), bool):
+            raise CommandError("The door is Here or Away")
+        if self.ideas is None:
+            raise CommandError("Open a folder first")
+        board = self.ideas
+        board.save_settings({**board.settings_now(), "presence": hours.hold_for(board.settings_now(), args["here"], dt.datetime.now())})
+        board.changed("")
+        return self._presence()
 
     def _halt(self, args: dict) -> int:
         """🛑 Stop all: every open project's keeper and runner stop, every operation's call, every agent process is

@@ -248,3 +248,59 @@ def test_the_decision_and_the_sections_steps_the_orkmasters_on_the_cheaper_tier_
     assert idea_target.CONTEXT["section"] >= idea_target.CONTEXT["decide"] and idea_target.budget("section_first", "balance") >= idea_target.budget("section", "balance")
     from orkboard.realm import idea_spend
     assert all(idea_spend.STEP_STAGE[s] == "spec" for s in ("decide", "section_first", "section", "join"))
+
+
+# -- the person's hours (spec 138 B.1, decisions §245.5; realm/hours.py) -----------------------------------------------------
+
+MON = dt.datetime(2026, 11, 2)                                 # a Monday
+WEEKDAYS = {"hours": [{"days": [0, 1, 2, 3, 4], "from": "19:00", "to": "23:00"}]}
+WEEKEND = {"hours": [{"days": [5, 6], "from": "00:00", "to": "00:00"}]}                  # Sat–Sun, all day
+LATE = {"hours": [{"days": [4], "from": "22:00", "to": "02:00"}]}                          # Friday 22:00 to Saturday 02:00
+
+
+def test_in_hours_inside_the_span_and_not_outside_it_and_never_with_none_set():
+    assert idea_target.in_hours(WEEKDAYS, MON.replace(hour=19)) and idea_target.in_hours(WEEKDAYS, MON.replace(hour=22, minute=59))
+    assert not idea_target.in_hours(WEEKDAYS, MON.replace(hour=23)) and not idea_target.in_hours(WEEKDAYS, MON.replace(hour=18, minute=59))
+    assert not idea_target.in_hours(WEEKDAYS, MON + dt.timedelta(days=5, hours=20))                  # Saturday evening: not a weekday
+    assert not idea_target.in_hours({}, MON.replace(hour=20)) and not idea_target.in_hours({"hours": []}, MON.replace(hour=20))
+    assert idea_target.next_edge({}, MON) is None
+
+
+def test_a_span_across_midnight_runs_into_the_next_day_and_a_whole_day_has_no_edge_at_midnight():
+    fri = MON + dt.timedelta(days=4)
+    assert idea_target.in_hours(LATE, fri.replace(hour=23)) and idea_target.in_hours(LATE, fri + dt.timedelta(days=1, hours=1))
+    assert not idea_target.in_hours(LATE, fri + dt.timedelta(days=1, hours=2)) and not idea_target.in_hours(LATE, fri.replace(hour=21))
+    assert idea_target.next_edge(LATE, fri.replace(hour=23)) == fri + dt.timedelta(days=1, hours=2)
+    sat = MON + dt.timedelta(days=5)
+    assert idea_target.in_hours(WEEKEND, sat.replace(hour=12)) and idea_target.in_hours(WEEKEND, sat + dt.timedelta(days=1, hours=23, minutes=59))
+    assert not idea_target.in_hours(WEEKEND, MON + dt.timedelta(days=7, minutes=1)) and idea_target.in_hours(WEEKEND, sat)
+    assert idea_target.next_edge(WEEKEND, sat.replace(hour=12)) == MON + dt.timedelta(days=7), "Saturday and Sunday are one span: no edge at midnight between them"
+
+
+def test_the_next_edge_is_the_next_start_or_end_across_the_week():
+    assert idea_target.next_edge(WEEKDAYS, MON.replace(hour=10)) == MON.replace(hour=19)
+    assert idea_target.next_edge(WEEKDAYS, MON.replace(hour=20)) == MON.replace(hour=23)
+    assert idea_target.next_edge(WEEKDAYS, (MON + dt.timedelta(days=4)).replace(hour=23, minute=30)) == MON + dt.timedelta(days=7, hours=19), "Friday night: Monday 19:00"
+    assert idea_target.next_start(WEEKDAYS, MON.replace(hour=20)) == MON.replace(hour=20), "inside the hours the person is at the computer now"
+    assert idea_target.next_start(WEEKDAYS, MON.replace(hour=23)) == MON + dt.timedelta(days=1, hours=19)
+
+
+def test_hours_a_broken_row_is_dropped_and_the_days_are_kept_once_in_order():
+    from orkboard import settings
+    got = settings.clean_ideas({"hours": [{"days": [4, 1, 1, 9, "x"], "from": "07:00", "to": "09:30"}, {"days": [], "from": "07:00", "to": "09:00"},
+                                          {"days": [0], "from": "7am", "to": "09:00"}, "no"]})["hours"]
+    assert got == [{"days": [1, 4], "from": "07:00", "to": "09:30"}] and settings.clean_ideas({})["hours"] == []
+
+
+def test_the_first_reset_inside_the_hours_else_the_hours_start_and_none_with_no_hours():
+    now = MON.replace(hour=10).timestamp()
+
+    def at(h):
+        return MON.replace(hour=h).timestamp()
+    rows = [Limit("claude", "", "session", 0.1, dt.datetime.fromtimestamp(at(14)))]            # the five hours come back at 14:00, 19:00, 00:00…
+    assert idea_target.hours_hold(rows, WEEKDAYS, now) == at(19), "14:00 is before the hours; its next reset, 19:00, is the first inside them"
+    assert idea_target.hours_hold(rows, {}, now) is None
+    rows = [Limit("claude", "", "weekly", 0.1, dt.datetime.fromtimestamp(at(14)) + dt.timedelta(days=3))]
+    assert idea_target.hours_hold(rows, WEEKDAYS, now) == at(19), "a reset at 14:00 on Thursday is not in the hours: the hours' start, today 19:00"
+    assert idea_target.hours_hold([], WEEKDAYS, now) == at(19), "no reset read: the hours' start"
+    assert idea_target.room([Limit("claude", "", "session", 0.5, None)], {}, now) == pytest.approx(0.2) and idea_target.room([], {}, now) is None

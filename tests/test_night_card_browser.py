@@ -259,6 +259,29 @@ def test_work_at_night_is_a_setting_in_the_hosts_words_and_a_press_sets_it(gui):
     assert not log, "\n".join(log)
 
 
+def test_when_i_am_at_the_computer_is_a_setting_of_rows_added_edited_and_removed_and_each_whole_row_is_sent(gui):
+    """Spec 138 B.1: the Settings section with no hours says that nothing waits; *Add hours* offers weekday evenings and sends them; a day and a time are edited; *Remove* sends none."""
+    pg, host, log = window(gui, night=None)
+    try:
+        open_settings(pg)
+        box = pg.locator('[data-settings="hours"]')
+        assert "when i am at the computer" in box.inner_text().lower() and box.locator("[data-hours]").count() == 0
+        assert "nothing waits for you" in pg.locator('[data-settings="hours-hint"]').inner_text()
+        box.locator("[data-hours-add]").click()
+        pg.wait_for_function("() => document.querySelectorAll('[data-hours]').length === 1")
+        assert _calls(pg, host, "ideas.board_set")[-1] == {"hours": [{"days": [0, 1, 2, 3, 4], "from": "19:00", "to": "23:00"}]}
+        assert "waits for the first reset inside these hours" in pg.locator('[data-settings="hours-hint"]').inner_text()
+        box.locator('[data-hours="0"] .shell-seg__one', has_text="Sat").click()
+        assert _calls(pg, host, "ideas.board_set")[-1]["hours"][0]["days"] == [0, 1, 2, 3, 4, 5]
+        box.locator('[data-hours-to="0"]').fill("22:30")
+        assert _calls(pg, host, "ideas.board_set")[-1]["hours"][0]["to"] == "22:30"
+        box.locator('[data-hours-remove="0"]').click()
+        assert _calls(pg, host, "ideas.board_set")[-1] == {"hours": []} and box.locator("[data-hours]").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
 def test_the_hosts_own_words_are_what_the_setting_says(gui):
     pg, host, log = open_hand(gui, host=NightHost(night=None))
     host.night_words = {"label": "Work at night", "hint": "The host's own line.", "waits": "Waits", "now": "Now", "now_sketch": "Now, sketch"}

@@ -9,6 +9,9 @@
     in_night("01:00-07:00", now)                   # inside the night window (the machine's local time)
     reserve_held(limits, settings, now)            # the reserve left for the person: None, or until when
     week(limits, now), pace(limits, now)           # the Claude week's share left against the share of it still to come (spec 44 §1)
+    in_hours(settings, now), next_edge(settings, now)   # the person's hours (realm/hours.py, spec 138 B): at the computer or not, local time
+    room(limits, settings, now)                    # the share a window holds above the reserve, what a put-off goal's next step is read against (spec 138 B.4)
+    hours_hold(limits, settings, now)              # the first reset inside the person's hours, else the hours' start: what a step that asks waits for (spec 138 B.3)
 
 One Target per Board, for the whole route board → pool → gate (decisions §44.3, §47.6). A role with a model set
 (spec 34 §3) runs on it; the Target still gives the effort. No face, no model.
@@ -23,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from orkboard.realm import plans
+from orkboard.realm.hours import in_hours, next_edge, next_start      # noqa: F401  (the person's hours: spec 138 B.1; they live in realm/hours.py, read here as `idea_target.in_hours`)
 
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
@@ -402,3 +406,54 @@ def _when(at: float, now: float) -> str:
 
 
 when_words = _when                  # for the words of a reset elsewhere (realm/tool_now.py)
+
+
+# -- the person's hours and each window (spec 138 B.3–B.4, decisions §245.4–5) ----------------------------------------
+
+PERIOD_S = {"session": 5 * 3600, "weekly": WEEK_S}        # a window comes back again this long after its reset
+
+
+def next_reset(limits, now: float, provider: str = "claude") -> float | None:
+    """The soonest reset after `now` among the tool's windows (epoch seconds), None when none is read."""
+    from orkboard.realm import status
+    resets = [r for lim in limits or () if getattr(lim, "provider", "") == provider and (r := status._reset_s(lim)) is not None and r > now]
+    return min(resets) if resets else None
+
+
+def room(limits, settings: dict | None, now: float, provider: str = "claude") -> float | None:
+    """The share of its window the tool holds above the reserve (the day's, or the night's inside the night window): the smallest window's share left less the
+    reserve, never below 0; None when no limits are read for the tool (then nothing is read against it and the goal goes, as before)."""
+    left = left_of(limits, provider)
+    if left is None:
+        return None
+    night = in_night(str((settings or {}).get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(now))
+    return max(0.0, left - reserve(settings, night))
+
+
+def hours_hold(limits, settings: dict | None, now: float, provider: str = "claude") -> float | None:
+    """What a step that asks the person waits for while they are away: **the first reset inside their hours** (each window's reset and its repeats, five hours or a
+    week apart), else the hours' start when no reset falls in them or none is read (epoch seconds); None with no hours."""
+    from orkboard.realm import status
+    if not (settings or {}).get("hours"):
+        return None
+    horizon = now + 7 * 24 * 3600
+    found = []
+    for lim in limits or ():
+        reset = status._reset_s(lim) if getattr(lim, "provider", "") == provider else None
+        if reset is None:
+            continue
+        step = PERIOD_S.get(getattr(lim, "window", ""))
+        at = reset
+        if step is not None and at <= now:
+            at += math.ceil((now - at) / step + 1e-9) * step
+        while now < at <= horizon:
+            if in_hours(settings, dt.datetime.fromtimestamp(at)):
+                found.append(at)
+                break
+            if step is None:
+                break
+            at += step
+    if found:
+        return min(found)
+    start = next_start(settings, dt.datetime.fromtimestamp(now))
+    return start.timestamp() if start is not None else None

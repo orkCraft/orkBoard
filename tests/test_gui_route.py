@@ -345,3 +345,34 @@ def test_the_reserve_still_held_moves_every_goal_put_off_to_the_next_reset(host,
     assert went == []
     for s in slugs:
         assert _state(host, s)["state"] == "routed" and _state(host, s)["held_until"] > dt.datetime.now().isoformat(timespec="seconds")
+
+
+def test_a_goal_whose_next_step_does_not_fit_the_window_waits_for_the_next_reset_and_the_next_in_order_goes(host, parties, calls, went, monkeypatch):
+    """Spec 138 B.4 (decisions §245.4): the cost of the next step (the route's estimate) against what the window holds above the reserve; the order never changes."""
+    first, second, third = _put_off(host, parties)
+    host.command("ideas.route_set", {"idea": first, "route": [parties["tech"], parties["design"]]})            # the first goal's route is dearer than the others'
+    root, state, settings = host.ideas.root(), host.ideas.state_dir, host.ideas.settings_now()
+
+    def price(slug):
+        got = goal_route.cost_of(root, state, ideas.state(state, slug), settings)
+        return (got["usd_low"] + got["usd_high"]) / 2
+    small, big = price(second), price(first)
+    assert big > small > 0
+    per = small / 0.05 / 100                                                                                       # the cheaper goal is 5 % of the window, the dearer more
+    monkeypatch.setattr("orkboard.sources.window_rate.shown", lambda machine: {"usd_per_pct": per})
+    room = ((small + big) / 2) / per / 100                                                                         # what the window holds above the reserve: between the two
+    reset = dt.datetime.now() + dt.timedelta(hours=2)
+    monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", room + 0.3, reset)])
+    _pass(host, 1)
+    assert went == [second], "the first does not fit: the next in order goes"
+    held = dt.datetime.fromisoformat(_state(host, first)["held_until"])
+    assert _state(host, first)["state"] == "routed" and abs((held - reset).total_seconds()) < 2, "its hold moves to the window's next reset"
+    assert _state(host, third)["state"] == "routed" and _state(host, third)["held_until"] < dt.datetime.now().isoformat(timespec="seconds"), "the one behind is not touched"
+    ideas.save_state(state, second, state="decided")
+    _pass(host, 2)
+    assert went == [second, third], "the first still waits for its reset; the third goes"
+    ideas.save_state(state, third, state="decided")
+    ideas.save_state(state, first, held_until=(dt.datetime.now() - dt.timedelta(minutes=1)).isoformat(timespec="seconds"))      # its reset came
+    monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", 0.95, reset)])                     # a whole window
+    _pass(host, 3)
+    assert went == [second, third, first]

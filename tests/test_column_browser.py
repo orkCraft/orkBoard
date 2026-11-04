@@ -582,3 +582,35 @@ def test_a_face_up_card_has_no_window_its_whole_name_in_three_lines_and_a_foot_w
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+class PutOffHost(ColumnHost):
+    """Spec 138 B.5: goals put off in In analysis, one for this afternoon, one for another day, one whose hour has passed, one with none."""
+
+    def __init__(self):
+        super().__init__()
+        import datetime as dt
+        soon = dt.datetime.now().replace(second=0, microsecond=0) + dt.timedelta(minutes=90)
+        far = dt.datetime.now().replace(second=0, microsecond=0) + dt.timedelta(days=2)
+        self.soon, self.far = soon, far
+        self.nodes = [
+            node("soon", "tech", "Kick a player", "deck", state="routed", element="dust", held_until=soon.isoformat(timespec="seconds")),
+            node("far", "design", "Host skips a round", "deck", state="routed", element="meadow", held_until=far.isoformat(timespec="seconds")),
+            node("gone", "tech", "Mute a player", "deck", state="routed", element="ice", held_until="2020-01-01T10:00:00"),
+            node("plain", "tech", "Rename a room", "deck", state="routed", element="lava"),
+        ]
+
+
+def test_a_goal_put_off_says_not_before_its_hour_on_its_row_the_day_when_it_is_not_today_and_nothing_for_a_past_hour(gui):
+    pg, host, log = open_column(gui, host=PutOffHost())
+    try:
+        pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+        pg.locator('.col-sec[data-pile="analysis"] .col-card--down').first.click()
+        pg.wait_for_selector(".col-list", timeout=WAIT_MS)
+        said = lambda slug: pg.locator(f'.col-list__row[data-goal="{slug}"] [data-hold]').all_inner_texts()      # noqa: E731
+        assert said("soon") == [f"not before {host.soon:%H:%M}"] or said("soon") == [f"not before {host.soon:%a} {host.soon:%H:%M}"], "today's hour, or the day's name when 90 minutes ahead crossed midnight"
+        assert said("far") == [f"not before {host.far:%a} {host.far:%H:%M}"], "another day: its name and the hour"
+        assert said("gone") == [] and said("plain") == [], "a past hour or none says nothing"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

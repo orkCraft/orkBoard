@@ -43,7 +43,7 @@ from pathlib import Path
 
 from orkboard import autonomy as autonomy_
 from orkboard.env import getenv
-from orkboard.realm import harnesses
+from orkboard.realm import harnesses, hours
 from orkboard.schedule import Span
 
 TOOLS = harnesses.ids()
@@ -92,7 +92,8 @@ REVIEW_V = 2
 IDEAS = {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1, "merge_into": "dev", "push": False, "review": False,
          "review_v": REVIEW_V,
          "target": "balance", "autostart": True, "night": "01:00-07:00", "reserve_day": 0.3, "reserve_night": 0.1,
-         "risk_paths": [], "night_low": None, "work_at_night": False}   # spec 121 C: plans that would start by themselves wait for the night's window (off until the person says)
+         "risk_paths": [], "night_low": None, "work_at_night": False,   # spec 121 C: plans that would start by themselves wait for the night's window (off until the person says)
+         "hours": [], "presence": None}   # spec 138 B.1, spec 139 C.1: the person's hours (realm/hours.py) and the door's hold
 IDEA_TARGETS = ("thrift", "balance", "quality")
 NIGHT = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$")
 FOCUSES = ("", "board")
@@ -107,7 +108,7 @@ PROJECTS_OPEN = 20                       # the most projects open at once
 # The Board's settings that are the project's (spec 37 §8): read from `<repo>/.orkcraft/board.json`, the machine's
 # `ideas` being the defaults a new project starts from; `risk_paths` is the tracked `orkcraft.toml`'s `[board]`.
 BOARD = ("target", "autostart", "night", "night_low", "work_at_night", "merge_into", "push", "review", "review_v", "wiki", "max_parallel", "reserve_day",
-         "reserve_night")
+         "reserve_night", "hours", "presence")
 BOARD_FILE = Path(".orkcraft") / "board.json"
 
 
@@ -288,6 +289,8 @@ def clean_ideas(raw: object) -> dict:
         v = raw.get(k)
         if isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 0.9:
             out[k] = round(float(v), 3)
+    out["hours"] = hours.clean_hours(raw.get("hours"))        # spec 138 B.1: when the person is at the computer
+    out["presence"] = hours.clean_hold(raw.get("presence"))   # spec 139 C.1: the door's press, held until the hours' next edge
     paths = raw.get("risk_paths")
     if isinstance(paths, list):
         out["risk_paths"] = [p.strip()[:200] for p in paths if isinstance(p, str) and p.strip()][:50]

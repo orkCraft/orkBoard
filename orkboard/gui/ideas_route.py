@@ -18,6 +18,12 @@ counts it down only while a face is open and has the leaders confirm the decisio
 `state.route`, its facts in `state.route_how` (`short`, `kind`, `reproduces`: D tells a bug's diagnosis by them).
 
 A goal that is not routed (kept on `hold`, a pitch, a release, a goal sent from a pitch or by a recurring goal) is drafted at once as before.
+**The person's hours** (docs/specs/138 B.3–B.4, decisions §245.4–5, spec 139 C.1): the places where a step that **asks** the person would start by itself are laid in their hours while they are
+Away (`realm/hours.py` `presence`; with no hours set nothing changes): **(1)** the queue's Talk (`_backlog_next`), **(2)** a routed goal's Talk by itself (`route_auto`), **(3)** the
+wait of an agreed goal's decision when each result waits for the person's look (`ripe_tick`: its time is kept, as with no face open). A goal laid so gets `held_until` at **the first reset inside the hours**
+(`idea_target.hours_hold`; the hours' start when none is read) and the clock starts it then. Steps that ask nothing (a plan's tasks, the leaders' sections after Talk, Checks) are not gated here.
+**Each goal's window** (`_backlog_next`): before the next put-off goal starts, the cost of its next step (the route's estimate, `goal_route.cost_of`, as a share of the five-hour window at the learnt rate)
+is read against what the window holds above the reserve (`idea_target.room`); a goal that does not fit has its `held_until` moved to the next reset and the queue looks at the goal after it; the order never changes.
 Split from ideas.py to keep it under ~600 lines.
 """
 from __future__ import annotations
@@ -28,7 +34,8 @@ from typing import Any
 
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import board_map, event_log, goal_route, idea_ripe, idea_route, idea_target, ideas, orkmaster, pitches
+from orkboard.realm import board_map, event_log, goal_route, hours, idea_ripe, idea_route, idea_target, ideas, orkmaster, pitches, status
+from orkboard.sources import window_rate
 
 ROUTE_S = 30.0                    # how often a route waiting for its call, or put off to the reset, is looked at
 CONTEXT_S = 5.0                   # how long the Orkmaster's line is kept without a change (the limits move it)
@@ -286,6 +293,8 @@ class RouteMixin:
         which says why. True when it is at Talk now."""
         if not AUTO_TALK or self.route_stop(slug):
             return False
+        if self.lay_in_hours([slug]):                  # Talk asks the person: with no one there it waits for the hours (spec 138 B.3)
+            return False
         try:
             self.route_talk({"idea": slug})
         except IdeasError:
@@ -308,6 +317,8 @@ class RouteMixin:
             self.__dict__["_ripening"] = {i["slug"] for i in ideas.ideas(self.root(False)) if self._state(i["slug"])["state"] == "decided" and idea_ripe.running(self.state_dir, i["slug"])}
         ripening = self.__dict__.get("_ripening") or set()
         if not ripening:
+            return
+        if self.settings_now().get("review") and not self.here():       # each result will wait for the person's look: their time is kept while they are away (spec 138 B.3)
             return
         for slug in idea_ripe.tick(self.state_dir, sorted(ripening), min(max(now - last, 0.0), RIPE_MAX_DT)):
             ripening.discard(slug)
@@ -395,10 +406,51 @@ class RouteMixin:
             return
         if self.keeper.window_until():
             return
+        if self.lay_in_hours(ripe, limits, wall):                                   # Talk asks: with no one there each waits for the hours (spec 138 B.3)
+            return
         order = goal_route.context(found, states, settings, limits, wall)["order"]
-        first = min(ripe, key=lambda s: order.get(s, len(order) + 1))
-        self.route_talk({"idea": first})
-        ideas.save_state(self.state_dir, first, from_backlog=True)
+        for slug in sorted(ripe, key=lambda s: order.get(s, len(order) + 1)):
+            if self.fits_window(slug, states[slug], limits, settings, wall):
+                self.route_talk({"idea": slug})
+                ideas.save_state(self.state_dir, slug, from_backlog=True)
+                return
+            later = idea_target.next_reset(limits, wall) or wall + status.UNKNOWN_RESET_S           # its window is too small: the next one; the goals behind it are looked at
+            ideas.save_state(self.state_dir, slug, held_until=_iso(later))
+            self.changed(slug)
+
+    def here(self, wall: float | None = None) -> bool:
+        """The person is at the computer now (`realm/hours.py` `presence`; always, with no hours set)."""
+        return hours.presence(self.settings_now(), dt.datetime.fromtimestamp(wall or time.time()))["here"]
+
+    def lay_in_hours(self, slugs: list[str], limits: Any = None, wall: float | None = None) -> bool:
+        """While the person is Away, a goal about to start a step that asks (Talk) is put off to the first reset inside their hours (`held_until`; the hours' start when no
+        reset is read), and the clock starts it then. True when they were laid (the caller starts nothing); False when the person is here or sets no hours."""
+        wall = wall or time.time()
+        if self.here(wall):
+            return False
+        settings = self.settings_now()
+        at = idea_target.hours_hold(limits if limits is not None else self._raw_limits(), settings, wall)
+        if at is None:
+            return False
+        for slug in slugs:
+            if ideas.state(self.state_dir, slug)["held_until"] != _iso(at):
+                ideas.save_state(self.state_dir, slug, held_until=_iso(at), held_for="")
+                self.changed(slug)
+        return True
+
+    def fits_window(self, slug: str, st: dict, limits: Any, settings: dict, wall: float) -> bool:
+        """Decisions §245.4: the cost of the goal's next step (the route's estimate, §121.3: the middle of its range, in dollars at API prices, as a share of the five-hour
+        window by the rate learnt, `sources/window_rate.py`) against what the coming window holds above the reserve. With no limits or no rate read there is nothing to read it
+        against and the goal goes, as before; so does a goal costing more than a whole window (it would never fit)."""
+        room = idea_target.room(limits, settings, wall)
+        machine = getattr(self.host, "machine", None)
+        per = (window_rate.shown(machine) or {}).get("usd_per_pct") if machine is not None else None
+        if room is None or not per:
+            return True
+        cost = goal_route.cost_of(self.root(False), self.state_dir, st, settings)
+        share = (float(cost["usd_low"]) + float(cost["usd_high"])) / 2 / float(per) / 100
+        night = idea_target.in_night(str(settings.get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(wall))
+        return share <= room or share > 1 - idea_target.reserve(settings, night)
 
     @staticmethod
     def _passed(iso: str, now: float) -> bool:

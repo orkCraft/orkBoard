@@ -107,7 +107,8 @@ class BoardMixin:
                 "night": s.get("night", settings.IDEAS["night"]), "review": bool(s.get("review", settings.IDEAS["review"])),
                 "review_notice": bool(getattr(getattr(self.host, "machine", None), "review_notice", False)),
                 "night_low": s.get("night_low") if isinstance(s.get("night_low"), bool) else None,      # None: not asked yet (spec 83)
-                "work_at_night": s.get("work_at_night") is True}                                         # spec 121 §4.1
+                "work_at_night": s.get("work_at_night") is True,                                         # spec 121 §4.1
+                "hours": list(s.get("hours") or [])}                                                     # spec 138 B.1: When I am at the computer
 
     def night_allow(self, args: dict) -> dict:
         """`{"allow": bool}`: the answer of the phone's and Orkline's *Low work may run at night*, stored as `night_low` and read by
@@ -134,6 +135,11 @@ class BoardMixin:
                                   "review": "Looking at each result is on or off",
                                   "work_at_night": WORK_AT_NIGHT["error"]}[key])
             mine[key] = got
+        if "hours" in args:                                  # spec 138 B.1: rows of days and a span; a broken row is dropped, a lifted hold ends with the hours it was for
+            if not isinstance(args["hours"], list):
+                raise IdeasError("The hours are rows of days and a span")
+            mine["hours"] = settings.clean_ideas({"hours": args["hours"]})["hours"]
+            mine["presence"] = None
         self.save_settings(mine)
         out = self.board_settings()
         self._ev(event_log.BOARD_SET, args, **out)
