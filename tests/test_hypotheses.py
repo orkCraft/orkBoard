@@ -187,7 +187,7 @@ def test_evidence_is_a_line_with_where_from_twelve_at_most_the_newest_kept(state
 def test_held_and_refuted_end_it_with_the_decision_and_unsure_keeps_it_open_with_the_why_as_evidence(state):
     a, b, c = (hyp.add(state, w, "x") for w in ("Alpha", "Beta", "Gamma"))
     got = hyp.judge(state, a["id"], "held", "  it did \n hold", 12)
-    assert got["state"] == "held" and got["verdict"] == {"state": "held", "why": "it did hold", "decision": 12, "at": got["verdict"]["at"]} and got["verdict"]["at"]
+    assert got["state"] == "held" and got["verdict"] == {"state": "held", "why": "it did hold", "decision": 12, "way": "", "at": got["verdict"]["at"]} and got["verdict"]["at"]
     got = hyp.judge(state, b["id"], "refuted")
     assert got["state"] == "refuted" and got["verdict"]["decision"] == 0 and got["verdict"]["why"] == ""
     got = hyp.judge(state, c["id"], "unsure", "need more people")
@@ -288,7 +288,7 @@ def test_a_file_that_is_not_of_the_shape_reads_as_absent(state):
     assert [i["id"] for i in got] == ["fine", "judged"]
     assert (got[0]["axis"], got[0]["on"], got[0]["rests"], got[0]["tests"], got[0]["by"], got[0]["party"], got[0]["verdict"], got[0]["at"]) == ("", "", ["a"], [], "person", "", {}, "5")
     assert [(e["text"], e["ref"]) for e in got[0]["evidence"]] == [("e", ""), ("x", "")]
-    assert got[1]["verdict"] == {"state": "held", "why": "w", "decision": 0, "at": "t"}
+    assert got[1]["verdict"] == {"state": "held", "why": "w", "decision": 0, "way": "", "at": "t"}
     (state / "hypotheses.json").write_text("[1]")
     assert kept(state) == []
     (state / "hypotheses.json").write_text(json.dumps({"items": "no"}))
@@ -314,8 +314,8 @@ def test_writes_from_two_threads_lose_nothing(state):
 def test_the_leaders_proposal_is_taken_strictly(state):
     good = {"hypotheses": [{"text": "  People want a sketch ", "signal": "most ask", "axis": "desirable", "on": "see-a-sketch", "rests": ["dark-mode"]}, {"text": "Founders pay", "signal": "ten say so"}]}
     got = hyp.parse(good)
-    assert got == [{"text": "People want a sketch", "signal": "most ask", "axis": "desirable", "on": "see-a-sketch", "rests": ["dark-mode"]},
-                   {"text": "Founders pay", "signal": "ten say so", "axis": "", "on": "", "rests": []}]
+    assert got == [{"text": "People want a sketch", "signal": "most ask", "axis": "desirable", "on": "see-a-sketch", "rests": ["dark-mode"], "refuted": [], "if_holds": ""},
+                   {"text": "Founders pay", "signal": "ten say so", "axis": "", "on": "", "rests": [], "refuted": [], "if_holds": ""}]
     added = [hyp.add(state, h["text"], h["signal"], axis=h["axis"], on=h["on"], rests=h["rests"], by="leader", party="product") for h in got]
     assert [a["state"] for a in added] == ["proposed", "proposed"]
     four = {"hypotheses": [{"text": f"Claim {n}", "signal": "s"} for n in range(5)]}
@@ -327,3 +327,77 @@ def test_the_leaders_proposal_is_taken_strictly(state):
                              {"text": "bad rest", "signal": "s", "rests": ["A B"]}, {"text": "too many", "signal": "s", "rests": [f"g{n}" for n in range(13)]}, "no", {"signal": "s"},
                              {"text": "Fine", "signal": "s", "axis": "viable"}, {"text": "fine", "signal": "again"}, {"text": "Second", "signal": "s", "axis": ""}]}
     assert [h["text"] for h in hyp.parse(shapes)] == ["Fine", "Second"]                               # what is not of the shape dropped, the same text once
+
+
+# -- spec 133 A: when it holds, each way it is refuted, the draft ---------------------------------------------------------------------
+
+WAYS = [{"name": "the hook", "when": "opens rise, goals landed do not", "change": "The push is not built."}, {"name": "the noise", "when": "one in five turns it off"}]
+
+
+def test_an_item_kept_before_reads_with_no_ways_and_no_draft_and_its_signal_is_its_holds_when(state):
+    (state / "hypotheses.json").write_text(json.dumps({"items": [{"id": "old", "text": "Old", "signal": "people come back", "state": "open"}]}))
+    got = kept(state)[0]
+    assert (got["signal"], got["refuted"], got["if_holds"]) == ("people come back", [], "")
+
+
+def test_ways_and_the_draft_are_kept_and_edited_and_adding_asks_only_text_and_signal(state):
+    short = hyp.add(state, "Short", "s")
+    assert (short["refuted"], short["if_holds"]) == ([], "")
+    full = hyp.add(state, "Full", "f", refuted=WAYS, if_holds="  The push\n becomes a setting. ")
+    assert [w["name"] for w in full["refuted"]] == ["the hook", "the noise"] and full["refuted"][1]["change"] == "" and full["if_holds"] == "The push becomes a setting."
+    assert kept(state)[1]["refuted"] == full["refuted"]
+    got = hyp.edit(state, full["id"], refuted=[WAYS[1]], if_holds="")
+    assert [w["name"] for w in got["refuted"]] == ["the noise"] and got["if_holds"] == "" and hyp.edit(state, full["id"], refuted=[])["refuted"] == []
+
+
+@pytest.mark.parametrize("bad, why", [([{"name": "n"}], "says when"), ([{"name": "a", "when": "x"}] * 2, "same name"), ([{"when": f"w{n}"} for n in range(4)], "3 ways at most"),
+                                      ("nope", "list"), ([3], "says when")])
+def test_a_way_that_is_none_is_refused_in_plain_words_and_nothing_is_kept(state, bad, why):
+    with pytest.raises(ValueError, match=why):
+        hyp.add(state, "X", "x", refuted=bad)
+    assert kept(state) == []
+
+
+def test_two_ways_with_no_name_are_not_a_repeated_name(state):
+    assert len(hyp.add(state, "X", "x", refuted=[{"when": "a"}, {"when": "b"}])["refuted"]) == 2
+
+
+def test_a_verdict_names_the_way_it_was_refuted_and_a_way_that_does_not_fit_is_refused(state):
+    a = hyp.add(state, "Alpha", "a", refuted=WAYS)
+    with pytest.raises(ValueError, match="Pick the way it is refuted: the hook, the noise"):
+        hyp.judge(state, a["id"], "refuted", "why", 3, way="the cold")
+    with pytest.raises(ValueError, match="Pick the way"):
+        hyp.judge(state, a["id"], "refuted")
+    with pytest.raises(ValueError, match="Only a refuted"):
+        hyp.judge(state, a["id"], "held", way="the hook")
+    assert kept(state)[0]["state"] == "open"
+    got = hyp.judge(state, a["id"], "refuted", "why", 3, way="THE HOOK")
+    assert got["verdict"]["way"] == "the hook" and hyp.read(state)["items"][0]["verdict"]["way"] == "the hook"
+    one = hyp.add(state, "One way", "b", refuted=[WAYS[0]])
+    assert hyp.judge(state, one["id"], "refuted")["verdict"]["way"] == "the hook"          # the only way is taken when none is named
+    none = hyp.add(state, "No ways", "c")
+    assert hyp.judge(state, none["id"], "refuted")["verdict"]["way"] == ""
+
+
+def test_the_draft_of_the_decision_is_what_changes_if_it_holds_or_if_it_is_refuted_this_way(state):
+    item = hyp.add(state, "Alpha", "a", refuted=WAYS, if_holds="Build it.")
+    assert hyp.draft(item, "held") == "Build it."
+    assert hyp.draft(item, "refuted", "the hook") == "The push is not built." and hyp.draft(item, "refuted", "the noise") == "" and hyp.draft(item, "refuted") == ""
+    assert hyp.draft({**item, "refuted": [WAYS[0]]}, "refuted") == "The push is not built." and hyp.draft(item, "unsure") == ""
+
+
+def test_the_lines_say_the_ways_and_an_item_with_none_has_the_line_it_had(state):
+    plain = hyp.add(state, "Plain", "it shows")
+    ways = hyp.add(state, "Ways", "it holds", refuted=WAYS)
+    assert hyp._sentence(plain, "open") == "Hypothesis (open): Plain — we'll know when it shows"
+    assert hyp._sentence(ways, "open") == ("Hypothesis (open): Ways — we'll know when it holds — refuted when the hook: opens rise, goals landed do not / the noise: one in five turns it off")
+    out = hyp.text(state, {})
+    assert out.splitlines()[0] == hyp._sentence(plain, "open") and len(out) <= hyp.LIMIT and out == hyp.text(state, {})
+
+
+def test_a_proposal_is_taken_with_its_ways_and_its_draft_and_a_bad_way_is_dropped(state):
+    got = hyp.parse({"hypotheses": [{"text": "A", "signal": "s", "refuted": [{"name": "the hook", "when": "w", "change": "ignored"}, {"name": "x"}, "no", {"name": "the hook", "when": "again"}], "if_holds": " Do it. "},
+                                    {"text": "B", "signal": "s", "refuted": "nope"}]})
+    assert got[0]["refuted"] == [{"name": "the hook", "when": "w", "change": ""}] and got[0]["if_holds"] == "Do it." and got[1]["refuted"] == [] and got[1]["if_holds"] == ""
+    kept_ = hyp.add(state, got[0]["text"], got[0]["signal"], by="leader", party="product", refuted=got[0]["refuted"], if_holds=got[0]["if_holds"])
+    assert kept_["state"] == "proposed" and kept_["refuted"][0]["name"] == "the hook"

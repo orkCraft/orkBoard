@@ -468,3 +468,57 @@ def test_the_hands_rows_lie_after_the_urgent_ones_and_push_nothing(host, tech):
     mixed = sort_needs([{"kind": "quality", "blocks": False, "at": "1"}, {"kind": "failed", "blocks": True, "at": "9"}, {"kind": "asks", "blocks": False, "at": "5"}, {"kind": "finding", "blocks": False, "at": "2"}])
     assert [r["kind"] for r in mixed] == ["failed", "asks", "quality", "finding"]
     assert "quality" in phone_journal.NOT_A_CARD and "finding" in phone_journal.NOT_A_CARD
+
+
+# -- spec 133 D: a refuted hypothesis told by Product's leader and sorted by the Orkmaster ------------------------------------------------------------
+
+def _product(host):
+    return _party(host, "Product", "product-manager", ["experimenter"], "product")
+
+
+def _resting_goal(host, title, defaults):
+    root, st = host.ideas.root(), host.ideas.state_dir
+    slug = ideas.add_idea(root, title, "general", st)
+    page = ideas.idea_page(root, slug)
+    page.sections.append(("Product", "### Why\nBecause.\n\n### Defaults\n" + "\n".join(f"- {d}" for d in defaults)))
+    ideas._write(root / ideas.IDEAS / f"{slug}.md", page.text())
+    return slug
+
+
+def _refuted(host, product, rests):
+    from orkboard.realm import findings_gather, hypotheses
+    sd = host.ideas.state_dir
+    item = hypotheses.add(sd, "A weekly push gets more goals landed", "people with the push land 20% more goals", rests=rests, refuted=[{"name": "the hook", "when": "opens rise, goals landed do not"}])
+    hypotheses.evidence(sd, item["id"], "Opens up 30%, landed goals flat")
+    done = hypotheses.judge(sd, item["id"], "refuted", "Only opens rose", way="the hook")
+    return done, findings_gather.hypothesis(sd, done, product, [(s, s) for s in rests])
+
+
+def test_product_s_leader_is_told_the_hypothesis_what_was_found_and_what_the_resting_goals_assumed_and_the_orkmaster_sorts_it(host):
+    product = _product(host)
+    goal = _resting_goal(host, "Weekly digest", ["Digests go out on Mondays"])
+    other = _resting_goal(host, "Unrelated", ["Something else entirely"])
+    item, found = _refuted(host, product, [goal])
+    model = Model(host, told=tells("the belief fell"), sorted_=sorts("decision"))
+    host.ideas.keeper.findings_run("")
+    (told,) = model.steps("finding")
+    p = told["prompt"]
+    assert told["key"] == f"goal:{product}" and told["tools"] is True
+    assert "A hypothesis the project believed was refuted" in p and "Belief: A weekly push gets more goals landed" in p and "Refuted when the hook: opens rise, goals landed do not" in p
+    assert "Judged refuted (the hook): Only opens rose" in p and "Found: Opens up 30%, landed goals flat" in p
+    assert "Digests go out on Mondays" in p and "Something else entirely" not in p and other not in p                       # only what the goals that rested on it assumed
+    (sorted_,) = model.steps("finding_level")
+    assert sorted_["tools"] is False
+    (f,) = findings.of_goal(host.ideas.state_dir, "")
+    assert f["id"] == found["id"] and f["status"] == "sorted" and f["level"] == "decision" and f["what"] == f"the belief fell {f['id']}" and f["party"] == product
+    (row,) = [r for r in findings.rows(host.ideas.state_dir, host.ideas.root()) if r["kind"] == "finding"]
+    assert row["id"] == f["id"] and row["level"] == "decision" and row["blocks"] is False
+
+
+def test_with_no_product_party_the_finding_keeps_code_s_words_and_only_the_orkmaster_is_asked(host):
+    item, found = _refuted(host, "", [])
+    model = Model(host, told=tells(), sorted_=sorts("work"))
+    host.ideas.keeper.findings_run("")
+    assert model.steps("finding") == [] and len(model.steps("finding_level")) == 1
+    (f,) = findings.of_goal(host.ideas.state_dir, "")
+    assert f["party"] == "" and f["status"] == "sorted" and f["what"] == found["found"]

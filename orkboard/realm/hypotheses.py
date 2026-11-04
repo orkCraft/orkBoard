@@ -9,9 +9,20 @@ on and the goals that test it. Kept by the person and by the leaders (who propos
     hypotheses.evidence(state_dir, id, text, ref="") -> item   # a line of what was found (`ref` a goal's slug, a mark's, or none), at most 12, the newest kept
     hypotheses.judge(state_dir, id, state, why="", decision=0) -> item   # "held" | "refuted" (with the decision's number) | "unsure" (stays open; the why becomes evidence)
     hypotheses.state_of(item, places)                  # the state as shown: "testing" for an open one while a test goal is in line or at work (`places`: {slug: "line"|"work"|"done"})
-    hypotheses.due(state_dir, places)                  # the open items with a test, every test done, not judged: what the hand asks *Did it hold?* about
+    hypotheses.due(state_dir, places, today="")        # the open items with a test (a goal, a measure), every test goal done and every measure's date reached, not judged, not put off: what the hand asks *Did it hold?* about
     hypotheses.text(state_dir, places)                 # for a leader's call: the open and testing ones, a line each, ~800 characters at most; "" with none
-    hypotheses.parse(answer)                           # a leader's proposal, strictly → [{text, signal, axis, on, rests}] (three at most) or None
+    hypotheses.parse(answer)                           # a leader's proposal, strictly → [{text, signal, axis, on, rests, refuted, if_holds}] (three at most) or None
+    hypotheses.draft(item, state, way="")              # the draft of the decision a verdict writes: `if_holds` for held, the way's `change` for refuted (spec 133 A.1)
+    hypotheses.measure_set(state_dir, id, mid="", **measure) / measure_drop(state_dir, id, mid) / value(state_dir, id, mid, n, by, source="")   # the measures a hypothesis is tested by besides goals (spec 133 B; realm/hypothesis_measures.py)
+    hypotheses.bind(state_dir, rel) / hypotheses.set_writer(state_dir, put)   # the project's own hypotheses file is the source (spec 133 C; realm/hypotheses_file.py, realm/hypotheses_bind.py)
+
+Spec 133 C: **with a file bound** `read` gives the file's items (in its order), each overlaid on the record's copy of the same id for what the file has no place for (`axis`, `on`, `rests`, `tests`, `by`,
+`party`, `at`), then the record's `proposed` ones; the seven newest `open` ones of the file stay open, any other reads as state `waiting` (never kept, never dropped, never due). Every change of an item that is not
+`proposed` is written into the file first (one commit with the Board's pages, or the working copy with no writer) and into the record after; a write that fails is a ValueError and changes nothing. With no file
+bound everything is as it was.
+
+Spec 133 A: `signal` is the *Holds when* (its key stays); `refuted` is one to three ways it is refuted, `[{name, when, change}]` (`name` what the way would teach, `when` required, `change` what changes if it is
+refuted this way); `if_holds` what changes if it holds. An item kept before has neither (`[]`, ""); a verdict keeps the `way` the person picked.
 
 `<state_dir>/hypotheses.json` is `{items}`; the file is not trusted (what is not of the shape reads as absent). An item's `id` is its text's slug and stays when its words change; `text` and
 `signal` are one line of 200 characters at most (the face puts *We believe* and *We'll know when* before them); `axis` is one of desirable, viable, feasible, usable, or ""; `on` is a job's id or an
@@ -22,15 +33,17 @@ judged is judged once. The order is the order kept; nothing here depends on the 
 """
 from __future__ import annotations
 
+import datetime
 import re
 from pathlib import Path
 
-from orkboard.realm import ideas
+from orkboard.realm import hypothesis_measures as hm, ideas
 
 FILE = "hypotheses.json"
 AXES = ("desirable", "viable", "feasible", "usable")
 BY = ("person", "leader")
 STATES = ("proposed", "open", "held", "refuted")
+WAITING = "waiting"                                           # an open item of the project's file past the seven newest: read, never kept (spec 133 C.3)
 JUDGED = ("held", "refuted")
 VERDICTS = ("held", "refuted", "unsure")
 MAX_OPEN, MAX_PROPOSED, MAX_ALL = 7, 12, 40
@@ -38,7 +51,8 @@ TEXT_CHARS, GOALS, EVIDENCE = 200, 12, 12                    # a hypothesis's te
 MAX_PROPOSE = 3                                               # a leader's proposal, at most
 LIMIT = 800                                                   # the text, at most
 CAPS = (TEXT_CHARS, 90, 50, 30)                               # the text's and signal's length in `text`, tried in turn until the lines fit
-FIELDS = ("text", "signal", "axis", "on", "rests")
+FIELDS = ("text", "signal", "axis", "on", "rests", "refuted", "if_holds")
+NAME_CHARS, DRAFT_CHARS, MAX_WAYS = 40, 600, 3                # a refuted way's name, a draft of the decision (what changes if it holds / if refuted this way), the ways a hypothesis is refuted in (spec 133 A.1)
 _ID = re.compile(r"[a-z0-9][a-z0-9-]{0,39}")
 _SLUG = re.compile(r"[a-z0-9-]{1,80}")
 _WORDS = re.compile(r"[a-z0-9]+")
@@ -82,14 +96,50 @@ def _verdict(value: object) -> dict:
         return {}
     decision = value.get("decision")
     return {"state": value["state"], "why": _words(value.get("why"), TEXT_CHARS), "decision": decision if isinstance(decision, int) and not isinstance(decision, bool) and decision > 0 else 0,
-            "at": str(value.get("at") or "")}
+            "way": _words(value.get("way"), NAME_CHARS), "at": str(value.get("at") or ""), **({"finding": _words(value["finding"], 40)} if _words(value.get("finding"), 40) else {})}
+
+
+def _way(raw: object) -> dict | None:
+    """One way it is refuted, `{name, when, change}`, or None when it is none (no `when`)."""
+    if not isinstance(raw, dict):
+        return None
+    when = _words(raw.get("when"), TEXT_CHARS)
+    return {"name": _words(raw.get("name"), NAME_CHARS), "when": when, "change": _words(raw.get("change"), DRAFT_CHARS)} if when else None
+
+
+def _clean_ways(value: object) -> list[dict]:
+    """The ways of a record read, leniently: what is not a way is dropped, a name twice keeps the first, three at most."""
+    out: list[dict] = []
+    for raw in value if isinstance(value, list) else []:
+        w = _way(raw)
+        if w and (not w["name"] or w["name"].lower() not in {x["name"].lower() for x in out}):
+            out.append(w)
+    return out[:MAX_WAYS]
+
+
+def _ways(value: object) -> list[dict]:
+    """The ways a person or code gives, strictly: ValueError in plain words for more than three, one with no `when` and a name twice."""
+    if value in (None, ""):
+        return []
+    if not isinstance(value, (list, tuple)):
+        raise ValueError("A hypothesis is refuted in ways: a list of when and what it would teach")
+    if len(value) > MAX_WAYS:
+        raise ValueError(f"A hypothesis is refuted in {MAX_WAYS} ways at most")
+    out: list[dict] = []
+    for raw in value:
+        w = _way(raw)
+        if w is None:
+            raise ValueError("A way it is refuted says when")
+        if w["name"] and w["name"].lower() in {x["name"].lower() for x in out}:
+            raise ValueError("Two ways it is refuted have the same name")
+        out.append(w)
+    return out
 
 
 # -- the record kept ------------------------------------------------------------------------------------------------------------------
 
-def read(state_dir: Path) -> dict:
-    """The record kept, each item checked: whatever is not of the shape reads as absent (the file is not trusted); an item with no text or no signal, a duplicate id or a state that is none is
-    left out, forty at most."""
+def _read_record(state_dir: Path) -> list[dict]:
+    """The record's own items, each checked (`read` below: what is not of the shape reads as absent); not yet overlaid by a bound file."""
     raw = _record(state_dir).get("items")
     items: list[dict] = []
     seen: set[str] = set()
@@ -105,8 +155,31 @@ def read(state_dir: Path) -> dict:
                       "rests": [s for s in dict.fromkeys(r["rests"] if isinstance(r.get("rests"), list) else []) if isinstance(s, str) and _SLUG.fullmatch(s)][:GOALS],
                       "tests": [s for s in dict.fromkeys(r["tests"] if isinstance(r.get("tests"), list) else []) if isinstance(s, str) and _SLUG.fullmatch(s)][:GOALS],
                       "by": r["by"] if r.get("by") in BY else "person", "party": _words(r.get("party"), 80) if isinstance(r.get("party"), str) and _SLUG.fullmatch(r["party"]) else "",
-                      "state": r["state"], "evidence": _evidence(r.get("evidence")), "verdict": _verdict(r.get("verdict")), "at": str(r.get("at") or "")})
-    return {"items": items[:MAX_ALL]}
+                      "state": r["state"], "evidence": _evidence(r.get("evidence")), "verdict": _verdict(r.get("verdict")), "at": str(r.get("at") or ""),
+                      "refuted": _clean_ways(r.get("refuted")), "if_holds": _words(r.get("if_holds"), DRAFT_CHARS), "measures": hm.lenient(r.get("measures")), "look_on": hm.day(r.get("look_on")),
+                      "started": hm.day(r.get("started"))})
+    return items
+
+
+def read(state_dir: Path) -> dict:
+    """The record kept, each item checked: whatever is not of the shape reads as absent (the file is not trusted); an item with no text or no signal, a duplicate id or a state that is none is
+    left out, forty at most. With the project's hypotheses file bound (spec 133 C.3) the items are the file's, overlaid on the record's copies, and the record's `proposed` ones after them."""
+    items = _read_record(state_dir)
+    from orkboard.realm import hypotheses_bind, hypotheses_file
+    got = hypotheses_bind.text(state_dir)
+    if got is None:
+        return {"items": items[:MAX_ALL]}
+    mine = {i["id"]: i for i in items}
+    out = []
+    for f in hypotheses_file.parse(got)["items"]:
+        base = mine.get(f["id"]) or {"axis": "", "on": "", "rests": [], "tests": [], "by": "person", "party": "", "at": "", "measures": [], "look_on": "", "started": ""}
+        out.append({**base, **{k: f[k] for k in ("id", "text", "signal", "refuted", "if_holds", "state", "evidence", "verdict")}})
+        if f["verdict"] and (base.get("verdict") or {}).get("finding"):                     # the file has no place for the finding a refuted verdict became (spec 133 D): the record's copy keeps it
+            out[-1]["verdict"] = {**f["verdict"], "finding": base["verdict"]["finding"]}
+    newest = sorted((i for i in out if i["state"] == "open"), key=lambda i: -int(i["id"][1:]))[MAX_OPEN:]
+    for i in newest:
+        i["state"] = WAITING
+    return {"items": out + [i for i in items if i["state"] == "proposed" and i["id"] not in {o["id"] for o in out}]}
 
 
 def _id_of(text: str, taken: set[str]) -> str:
@@ -119,7 +192,59 @@ def _id_of(text: str, taken: set[str]) -> str:
 
 
 def _save(state_dir: Path, items: list[dict]) -> None:
-    ideas._write_json(_file(state_dir), {**_record(state_dir), "items": items})
+    ideas._write_json(_file(state_dir), {**_record(state_dir), "items": [{**i, "state": "open" if i["state"] == WAITING else i["state"]} for i in items]})
+
+
+def _put(state_dir: Path, items: list[dict], what: str = "", drop: tuple = (), id: str = "") -> None:
+    """The items kept: into the project's file first when one is bound (an item that is not `proposed` and had no section gets its `h<n>` id there), then into the record. ValueError, nothing
+    changed, when the file cannot be written (spec 133 C.3)."""
+    from orkboard.realm import hypotheses_bind
+    if hypotheses_bind.file(state_dir) and (what or drop):
+        kept = [i for i in items if i["state"] != "proposed"]
+        renames = hypotheses_bind.write(state_dir, kept, drop, lambda got: f"board: hypothesis {got.get(id, id)} — {what or 'dropped'}")
+        for i in items:
+            i["id"] = renames.get(i["id"], i["id"])
+    _save(state_dir, items)
+
+
+def set_writer(state_dir: Path, put) -> None:
+    """The host's writer of the project's file (`put(rel, edit, message)`: `BoardTree.edit_file`); None: the working copy is written, not committed."""
+    from orkboard.realm import hypotheses_bind
+    hypotheses_bind.set_writer(state_dir, put)
+
+
+def bind(state_dir: Path, rel: str) -> int:
+    """The project's hypotheses file `rel` (from the root) becomes the source (spec 133 C.1): the record's items that are not `proposed` and not in the file are appended to it (one commit), their id
+    becomes `h<n>` with their goals; then `hypotheses.json` keeps `file`. → how many were adopted; 0 and nothing changed for the file bound already. ValueError when the file cannot be written."""
+    from orkboard.realm import hypotheses_bind, hypotheses_file
+    if hypotheses_bind.file(state_dir) == rel:
+        return 0
+    with ideas.LOCK:
+        mine = _read_record(state_dir)
+        path = hypotheses_bind.base(state_dir) / rel
+        try:
+            titles = {" ".join(f["text"].lower().split()): f["id"] for f in hypotheses_file.parse(path.read_text("utf-8", errors="replace"))["items"]}
+        except OSError:
+            raise ValueError("The hypotheses file is not there") from None
+        norm = lambda i: " ".join(i["text"].lower().split())             # noqa: E731
+        adopt = [i for i in mine if i["state"] != "proposed" and norm(i) not in titles]
+        renames = {i["id"]: titles[norm(i)] for i in mine if i["state"] != "proposed" and norm(i) in titles}        # already a section: its goals come with it
+        renames.update(hypotheses_bind.write(state_dir, adopt, (), "board: hypotheses — taken into the project's file", rel=rel) if adopt else {})
+        for i in mine:
+            i["id"] = renames.get(i["id"], i["id"])
+        ideas._write_json(_file(state_dir), {**_record(state_dir), "file": rel, "items": mine})
+    return len(adopt)
+
+
+def _bound(state_dir: Path) -> bool:
+    from orkboard.realm import hypotheses_bind
+    return hypotheses_bind.file(state_dir) is not None
+
+
+def _kept_up(item: dict) -> None:
+    """ValueError in plain words for an item of the file that waits for room (spec 133 C.3): it is judged, kept or given goals when one of the seven is judged."""
+    if item["state"] == WAITING:
+        raise ValueError(f"{MAX_OPEN} hypotheses are open or being tested: this one waits")
 
 
 def _find(items: list[dict], id: object) -> dict:
@@ -184,28 +309,31 @@ def _make_room(items: list[dict]) -> list[dict]:
     return items
 
 
-def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = "", rests: object = (), by: str = "person", party: str = "") -> dict:
+def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = "", rests: object = (), by: str = "person", party: str = "", refuted: object = (), if_holds: str = "",
+        measures: object = ()) -> dict:
     """One more hypothesis → the item: a person's is `open` at once, a leader's `proposed` (by `party`, its slug). ValueError in plain words for no words, an axis or a job that is none, a `by`
     that is none, and past the bounds (seven open or testing, twelve proposed, forty in all: with every one of them kept and none judged)."""
     if by not in BY:
         raise ValueError(f"A hypothesis is kept by the person or a leader, not {by!r}")
     text = _need(text, "A hypothesis says what we believe")
     signal = _need(signal, "A hypothesis says what we'll know when")
-    axis, on, rests = _axis(axis), _on(on), _rests(rests)
+    axis, on, rests, ways = _axis(axis), _on(on), _rests(rests), _ways(refuted)
+    started = hm.day(ideas._now()) if by == "person" else ""
+    meas = _dated(hm.clean(measures), started)
     party = party.strip() if by == "leader" and isinstance(party, str) and _SLUG.fullmatch(party.strip()) else ""
     state = "open" if by == "person" else "proposed"
     with ideas.LOCK:
         items = read(state_dir)["items"]
         _room(items, state)
-        items = _make_room(items)
+        items = items if _bound(state_dir) else _make_room(items)             # a bound file's judged sections are never the ones to go
         item = {"id": _id_of(text, {i["id"] for i in items}), "text": text, "signal": signal, "axis": axis, "on": on, "rests": rests, "tests": [], "by": by, "party": party, "state": state,
-                "evidence": [], "verdict": {}, "at": ideas._now()}
-        _save(state_dir, items + [item])
+                "evidence": [], "verdict": {}, "at": ideas._now(), "refuted": ways, "if_holds": _words(if_holds, DRAFT_CHARS), "measures": meas, "look_on": "", "started": started}
+        _put(state_dir, items + [item], "added" if state == "open" else "", id=item["id"])
     return item
 
 
 def edit(state_dir: Path, id: str, **fields: object) -> dict:
-    """The words of a hypothesis changed (`text`, `signal`, `axis`, `on`, `rests`; only the ones given) → the item; its id stays. ValueError for a hypothesis gone, any other field, no words."""
+    """The words of a hypothesis changed (`text`, `signal`, `axis`, `on`, `rests`, `refuted`, `if_holds`; only the ones given) → the item; its id stays. ValueError for a hypothesis gone, any other field, no words."""
     other = sorted(set(fields) - set(FIELDS))
     if other:
         raise ValueError(f"A hypothesis's {other[0]} is not changed this way")
@@ -222,7 +350,11 @@ def edit(state_dir: Path, id: str, **fields: object) -> dict:
             item["on"] = _on(fields["on"])
         if "rests" in fields:
             item["rests"] = _rests(fields["rests"])
-        _save(state_dir, items)
+        if "refuted" in fields:
+            item["refuted"] = _ways(fields["refuted"])
+        if "if_holds" in fields:
+            item["if_holds"] = _words(fields["if_holds"], DRAFT_CHARS)
+        _put(state_dir, items, "changed" if item["state"] != "proposed" else "", id=id)
     return item
 
 
@@ -231,10 +363,13 @@ def keep(state_dir: Path, id: str) -> dict:
     with ideas.LOCK:
         items = read(state_dir)["items"]
         item = _find(items, id)
+        _kept_up(item)
         if item["state"] == "proposed":
             _room(items, "open")
             item["state"] = "open"
-            _save(state_dir, items)
+            item["started"] = item["started"] or hm.day(ideas._now())
+            item["measures"] = _dated(item["measures"], item["started"])
+            _put(state_dir, items, "kept", id=id)
     return item
 
 
@@ -242,8 +377,8 @@ def drop(state_dir: Path, id: str) -> None:
     """The hypothesis gone, whatever its state. ValueError when it is already gone."""
     with ideas.LOCK:
         items = read(state_dir)["items"]
-        _find(items, id)
-        _save(state_dir, [i for i in items if i["id"] != id])
+        gone = _find(items, id)
+        _put(state_dir, [i for i in items if i["id"] != id], "dropped" if gone["state"] != "proposed" else "", (id,) if gone["state"] != "proposed" else (), id=id)
 
 
 def _slug(value: object, what: str) -> str:
@@ -265,6 +400,8 @@ def attach(state_dir: Path, id: str, goal: str = "", test: str = "") -> dict | N
     with ideas.LOCK:
         items = read(state_dir)["items"]
         item = _find(items, id) if id else None
+        if item is not None:
+            _kept_up(item)
         for i in items:
             if goal and not id:
                 i["rests"] = [s for s in i["rests"] if s != goal]
@@ -290,32 +427,79 @@ def evidence(state_dir: Path, id: str, text: str, ref: str = "") -> dict:
         items = read(state_dir)["items"]
         item = _find(items, id)
         item["evidence"] = (item["evidence"] + [{"text": line, "ref": _words(ref, 80), "at": ideas._now()}])[-EVIDENCE:]
-        _save(state_dir, items)
+        _put(state_dir, items, "evidence" if item["state"] != "proposed" else "", id=id)
     return item
 
 
-def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0) -> dict:
+def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0, way: str = "", date: str = "") -> dict:
     """The person's answer to *Did it hold?* → the item. "held" and "refuted" end it (`verdict` {state, why, decision, at}: `decision` the number of the decision written, 0 with none); "unsure"
-    keeps it open and adds the why, if there is one, to the evidence. ValueError for a hypothesis gone, a state that is none, one still only proposed, and one judged already."""
+    keeps it open and adds the why, if there is one, to the evidence. `way` (spec 133 A.1): the name of the way it is refuted that was met, for "refuted" only: an item with ways takes one of
+    theirs ("" for an item with one way), an item with none takes "". ValueError for a hypothesis gone, a state that is none, one still only proposed, one judged already, and a way that does not fit."""
     if state not in VERDICTS:
         raise ValueError("A hypothesis held, was refuted or is not sure yet")
-    why = _words(why, TEXT_CHARS)
+    why, way = _words(why, TEXT_CHARS), _words(way, NAME_CHARS)
+    if state == "unsure" and date and (not hm.day(date) or hm.day(date) <= hm.day(ideas._now())):
+        raise ValueError("Pick a day to look again, after today")
     with ideas.LOCK:
         items = read(state_dir)["items"]
         item = _find(items, id)
+        _kept_up(item)
         if item["state"] == "proposed":
             raise ValueError("Keep the hypothesis before judging it")
         if item["state"] in JUDGED:
             raise ValueError("That hypothesis is judged already")
+        way = _pick_way(item, state, way)
         now = ideas._now()
         if state == "unsure":
+            if date:                                                        # *Not sure yet: look again on <date>* (spec 133 B.2)
+                item["look_on"] = hm.day(date)
+                item["measures"] = [{**m, "date": max(m["date"], hm.day(date)), "value": None if m["date"] < hm.day(date) else m["value"]} for m in item["measures"]]
             if why:
                 item["evidence"] = (item["evidence"] + [{"text": why, "ref": "", "at": now}])[-EVIDENCE:]
         else:
             item["state"] = state
-            item["verdict"] = {"state": state, "why": why, "decision": decision if isinstance(decision, int) and not isinstance(decision, bool) and decision > 0 else 0, "at": now}
+            item["verdict"] = {"state": state, "why": why, "decision": decision if isinstance(decision, int) and not isinstance(decision, bool) and decision > 0 else 0, "way": way, "at": now}
+        _put(state_dir, items, f"judged {state}" if state != "unsure" else "evidence" if why else "", id=id)
+    return item
+
+
+def set_finding(state_dir: Path, id: str, finding: str) -> dict:
+    """The finding a refuted verdict became (spec 133 D: `findings.add`'s id) kept in the verdict, in the record only. ValueError for a hypothesis gone or not refuted."""
+    with ideas.LOCK:
+        items = read(state_dir)["items"]
+        item = _find(items, id)
+        if item["state"] != "refuted" or not item["verdict"]:
+            raise ValueError("Only a refuted hypothesis becomes a finding")
+        item["verdict"] = {**item["verdict"], "finding": _words(finding, 40)}
         _save(state_dir, items)
     return item
+
+
+def _pick_way(item: dict, state: str, way: str) -> str:
+    """The way a verdict names, checked against the item's: "" for held and unsure with none given; ValueError in plain words otherwise (spec 133 A.1)."""
+    if state != "refuted":
+        if way:
+            raise ValueError("Only a refuted hypothesis has a way it is refuted")
+        return ""
+    ways = item["refuted"]
+    if not ways:
+        return ""
+    if not way and len(ways) == 1:
+        return ways[0]["name"]
+    if not any(w["name"].lower() == way.lower() for w in ways):
+        raise ValueError("Pick the way it is refuted: " + ", ".join(w["name"] or w["when"] for w in ways))
+    return next(w["name"] for w in ways if w["name"].lower() == way.lower())
+
+
+def draft(item: dict, state: str, way: str = "") -> str:
+    """The draft of the decision a verdict writes (spec 133 A.1): the item's `if_holds` for "held"; for "refuted" the named way's `change` (the only way's when `way` is "" and the item has one); "" with none."""
+    if state == "held":
+        return item.get("if_holds", "")
+    if state != "refuted":
+        return ""
+    ways = item.get("refuted", [])
+    got = next((w for w in ways if way and w["name"].lower() == way.lower()), ways[0] if len(ways) == 1 and not way else None)
+    return got["change"] if got else ""
 
 
 # -- as shown, and what is due ----------------------------------------------------------------------------------------------------------
@@ -328,9 +512,76 @@ def state_of(item: dict, places: dict) -> str:
     return item.get("state", "")
 
 
-def due(state_dir: Path, places: dict) -> list[dict]:
-    """The open hypotheses that have a test, every test done, and that are not judged: what the hand asks *Did it hold?* about, in the order kept."""
-    return [i for i in read(state_dir)["items"] if i["state"] == "open" and i["tests"] and all(places.get(t) == "done" for t in i["tests"])]
+def due(state_dir: Path, places: dict, today: str = "") -> list[dict]:
+    """The open hypotheses that have a test, that are not judged and not put off: what the hand asks *Did it hold?* about, in the order kept. A test is a goal or a measure (spec 133 B.2): every test
+    goal is done and every measure's date is reached (the later of the two when it has both), and its `look_on` is not in the future. `today` is `YYYY-MM-DD` (the clock's when empty)."""
+    today = hm.day(today) or hm.day(ideas._now())
+    return [i for i in read(state_dir)["items"] if i["state"] == "open" and (i["tests"] or i["measures"]) and all(places.get(t) == "done" for t in i["tests"])
+            and all(hm.reached(m, today) for m in i["measures"]) and (not i["look_on"] or i["look_on"] <= today)]
+
+
+def _dated(measures: list[dict], started: str) -> list[dict]:
+    """Each measure with its date: the `started` day (today when none) and its span, kept where it was given."""
+    return [m if m["date"] else {**m, "date": hm.date_of(started or hm.day(ideas._now()), m["span_days"])} for m in measures]
+
+
+def _changeable(item: dict) -> None:
+    if item["state"] in JUDGED:
+        raise ValueError("That hypothesis is judged already")
+    _kept_up(item)
+
+
+def measure_set(state_dir: Path, id: str, mid: str = "", **measure: object) -> dict:
+    """A measure kept on a hypothesis (spec 133 B.1): a new one, or the one with the `id` given changed (`mid`; its words, bars, span, date; the value stays unless it is given). Its date is the hypothesis's
+    `started` day and its span, unless a `date` is given (the span then follows). → the item. ValueError for a hypothesis gone or judged, a measure that is none, and more than four."""
+    with ideas.LOCK:
+        items = read(state_dir)["items"]
+        item = _find(items, id)
+        _changeable(item)
+        mid = mid.strip() if isinstance(mid, str) else ""
+        old = next((m for m in item["measures"] if m["id"] == mid), None) if mid else None
+        raw = {**(old or {}), **{k: v for k, v in measure.items() if v is not None}}
+        if old is not None and isinstance(measure.get("bars"), dict):                    # a bar given changes that bar only
+            raw["bars"] = {**old["bars"], **measure["bars"]}
+        if hm.day(measure.get("date")) and "span_days" not in measure:                # a day set by the person: the span follows
+            raw["span_days"] = max(1, (datetime.date.fromisoformat(hm.day(measure["date"])) - datetime.date.fromisoformat(hm.day(item["started"] or ideas._now()))).days)
+        elif "span_days" in measure or old is None:                                      # a span (or a new one): the date is worked out again
+            raw["date"] = hm.day(measure.get("date")) or ""
+        got = hm.clean([raw])[0]
+        item["measures"] = hm.clean([got if old is not None and m["id"] == mid else m for m in item["measures"]] + ([] if old is not None else [got]))
+        item["started"] = item["started"] or (hm.day(ideas._now()) if item["state"] == "open" else "")
+        item["measures"] = _dated(item["measures"], item["started"])
+        _save(state_dir, items)
+    return item
+
+
+def measure_drop(state_dir: Path, id: str, mid: str) -> dict:
+    """A measure taken off a hypothesis. ValueError for a hypothesis gone or judged and a measure gone."""
+    with ideas.LOCK:
+        items = read(state_dir)["items"]
+        item = _find(items, id)
+        _changeable(item)
+        if not any(m["id"] == mid for m in item["measures"]):
+            raise ValueError("That measure is gone")
+        item["measures"] = [m for m in item["measures"] if m["id"] != mid]
+        _save(state_dir, items)
+    return item
+
+
+def value(state_dir: Path, id: str, mid: str, n: object, by: str = "person", source: str = "") -> dict:
+    """The value of a measure (a leader's reading, or the person's: *the one answer here that is typed*): `{n, by, at, from}`. ValueError for a hypothesis gone, not open, a measure gone and a number that is none."""
+    if hm._num(n) is None:
+        raise ValueError("A measure's value is a number")
+    with ideas.LOCK:
+        items = read(state_dir)["items"]
+        item = _find(items, id)
+        _changeable(item)
+        got = next((m for m in item["measures"] if m["id"] == mid), None)
+        if got is None:
+            raise ValueError("That measure is gone")
+        got["value"] = {"n": hm._num(n), "by": _words(by, 40) or "person", "at": ideas._now(), "from": _words(source, hm.LINE)}
+        _save(state_dir, items)
+    return item
 
 
 def _shown(items: list[dict], places: dict, states: tuple[str, ...]) -> list[tuple[dict, str]]:
@@ -339,8 +590,12 @@ def _shown(items: list[dict], places: dict, states: tuple[str, ...]) -> list[tup
 
 
 def _sentence(item: dict, state: str, cap: int = TEXT_CHARS) -> str:
-    """`Hypothesis (open): <text> — we'll know when <signal>`, each of the two cut to `cap`."""
-    return f"Hypothesis ({state}): {_cut(item['text'], cap)} — we'll know when {_cut(item['signal'], cap)}"
+    """`Hypothesis (open): <text> — we'll know when <signal>` (then ` — refuted when <name>: <when> / …` when it has ways), each cut to `cap`."""
+    line = f"Hypothesis ({state}): {_cut(item['text'], cap)} — we'll know when {_cut(item['signal'], cap)}"
+    ways = item.get("refuted") or []
+    if ways:                                                                     # spec 133 A.2: an item with no way has the line it had
+        line += " — refuted when " + " / ".join((f"{w['name']}: " if w["name"] else "") + _cut(w["when"], cap) for w in ways)
+    return line
 
 
 def text(state_dir: Path, places: dict) -> str:
@@ -362,7 +617,7 @@ def text(state_dir: Path, places: dict) -> str:
 # -- a leader's proposal ------------------------------------------------------------------------------------------------------------------
 
 def parse(answer: object) -> list[dict] | None:
-    """A leader's proposal, strictly: `{"hypotheses": [{text, signal, axis?, on?, rests?}]}` → `[{text, signal, axis, on, rests}]`, three at most (the riskiest come first, so the first three).
+    """A leader's proposal, strictly: `{"hypotheses": [{text, signal, axis?, on?, rests?, refuted?, if_holds?}]}` → `[{text, signal, axis, on, rests, refuted, if_holds}]`, three at most (the riskiest come first, so the first three).
     What is not of the shape is dropped: an item with no text or no signal, an axis that is none, an `on` or goals' names that are none, one the same as an earlier. None for an answer that is not
     that, a list that is not one, and when nothing is left."""
     if not isinstance(answer, dict) or not isinstance(answer.get("hypotheses"), list):
@@ -376,8 +631,9 @@ def parse(answer: object) -> list[dict] | None:
             axis, on, rests = _axis(r.get("axis")), _on(r.get("on")), _rests(r.get("rests"))
         except ValueError:
             continue
+        ways = _clean_ways([{"name": w.get("name"), "when": w.get("when")} for w in r["refuted"] if isinstance(w, dict)] if isinstance(r.get("refuted"), list) else [])
         if not (text and signal) or text.lower() in seen:
             continue
         seen.add(text.lower())
-        out.append({"text": text, "signal": signal, "axis": axis, "on": on, "rests": rests})
+        out.append({"text": text, "signal": signal, "axis": axis, "on": on, "rests": rests, "refuted": ways, "if_holds": _words(r.get("if_holds"), DRAFT_CHARS)})
     return out[:MAX_PROPOSE] or None

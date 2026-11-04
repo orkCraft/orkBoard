@@ -5,11 +5,13 @@ records. No model, no face.
                                                                  # `on` the part's id, `party` its party), the verdict and the checks kept in its quality record; how many findings were added
     findings_gather.lens(state_dir, repo, party, craft, concerns, ref="dev", now=None)   # a look of the party's leader ended: each `alert` on a part that a goal which reached the discard within `LENS_DAYS`
                                                                  # touched is that goal's (`source` lens); any other `alert` no goal was made of is a finding of no goal (`source` concern)
+    findings_gather.hypothesis(state_dir, item, party="", goals=(), measured="")   # a hypothesis judged refuted (spec 133 D): one finding of no goal (`source` hypothesis, `on` its id, `party` Product's), the goals that
+                                                                 # rested on it named in it; None for one that is not refuted
     findings_gather.touched_by(touch, craft, on)                 # whether the commits a goal brought changed the part `on` (a part of Tech's System, a screen of Design's)
 
 **Checks** (D.2's `check` source): this code runs a goal's checks while the goal is at work (its check tasks, `realm/idea_checks.py`) and on the way into main (`realm/main_checks.py`), never again after the goal
 landed, so no check "goes red after landing" here and nothing is gathered from one; the record keeps the checks as they stood when the goal landed (`checks`: each check task's checker, state and findings left), and a
-later source that does run a check again calls `findings.add` with `source: "check"`. **Hypotheses and measures** (`hypothesis`, `measure`) only call `findings.add` (spec 133 D and §202 call it).
+later source that does run a check again calls `findings.add` with `source: "check"`. **Hypotheses** (`hypothesis`) are `hypothesis` below (spec 133 D); **measures** (`measure`) only call `findings.add` (§202 calls it).
 """
 from __future__ import annotations
 
@@ -64,6 +66,31 @@ def verdict(state_dir: Path, root: Path, repo: Path, slug: str, ref: str = "dev"
         return added
     except Exception:
         return 0
+
+
+def _cut(text: str, n: int) -> str:
+    text = " ".join(str(text or "").split())
+    return text if len(text) <= n else text[:n - 1].rstrip() + "…"
+
+
+def hypothesis(state_dir: Path, item: dict, party: str = "", goals=(), measured: str = "") -> dict | None:
+    """A hypothesis judged `refuted` as a finding (spec 133 D; decisions §235.5): one finding of no goal, kept once (`source` hypothesis, `on` the hypothesis's id), `party` the Product party's slug ("" with none).
+    `found` says what was believed, the way it was refuted, what was measured (`measured`, else the last lines of evidence) and **the goals that rested on it** (`goals`: `(slug, title)`), each part cut so that none
+    pushes the goals' names out of the finding's 400 characters. None, and nothing kept, for a hypothesis that is not refuted; never an error (a read that fails changes nothing)."""
+    try:
+        if not isinstance(item, dict) or item.get("state") != "refuted":
+            return None
+        way = (item.get("verdict") or {}).get("way") or ""
+        when = next((w["when"] for w in item.get("refuted") or [] if w["name"] == way), "")
+        said = f"Refuted: {_cut(item['text'], 100)}" + (f" ({_cut((way + ': ' if way else '') + when, 80)})" if way or when else "") + "."
+        held = f" Believed: {_cut(item['signal'], 60)}."
+        seen = measured or "; ".join(e["text"] for e in (item.get("evidence") or [])[-2:])
+        found = said + held + (f" Found: {_cut(seen, 80)}." if seen else "")
+        if goals:
+            found += " Goals that rested on it: " + _cut(", ".join(f"{slug} ({_cut(title, 30)})" for slug, title in goals), 110) + "."
+        return findings.add(state_dir, {"source": "hypothesis", "idea": "", "party": party, "on": item["id"], "found": found})
+    except Exception:
+        return None
 
 
 def touched_by(touch: dict | None, craft: str, on: str) -> bool:

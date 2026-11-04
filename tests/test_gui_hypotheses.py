@@ -65,7 +65,7 @@ def test_the_commands_are_in_the_table(host):
 # -- read and keep ----------------------------------------------------------------------------------------------------------------------------
 
 def test_nothing_is_kept_at_first(host):
-    assert host.command("ideas.hypotheses", {}) == {"items": [], "party": "", "proposing": False, "status": ""}
+    assert host.command("ideas.hypotheses", {}) == {"items": [], "party": "", "proposing": False, "status": "", "file": ""}
 
 
 def test_the_person_s_hypothesis_is_open_at_once_and_its_words_change_with_its_id_staying(host):
@@ -332,3 +332,180 @@ def test_the_goal_that_tests_a_hypothesis_asks_did_it_hold_once_it_is_done(host)
     assert hand(host) == []
     ideas.save_state(host.ideas.state_dir, got["slug"], state="done")
     assert [r["id"] for r in hand(host)] == [item["id"]]
+
+# -- spec 133 A: the ways it is refuted and the draft of the decision ----------------------------------------------------------------------
+
+WAYS = [{"name": "the hook", "when": "opens rise, goals do not", "change": "Do not build the push."}, {"name": "the noise", "when": "one in five turns it off"}]
+
+
+def test_a_hypothesis_is_set_with_its_ways_and_its_draft_and_a_bad_list_is_refused(host):
+    item = hold(host, refuted=WAYS, if_holds="Make it a setting.")
+    assert [w["name"] for w in item["refuted"]] == ["the hook", "the noise"] and item["if_holds"] == "Make it a setting."
+    got = host.command("ideas.hypothesis_set", {"id": item["id"], "refuted": [WAYS[1]], "if_holds": ""})["item"]
+    assert [w["name"] for w in got["refuted"]] == ["the noise"] and got["if_holds"] == "" and got["signal"] == item["signal"]
+    refused(host, "ideas.hypothesis_set", {"id": item["id"], "refuted": "no"}, "not a list of ways")
+    refused(host, "ideas.hypothesis_set", {"id": item["id"], "refuted": [{"name": "x"}]}, "says when")
+    assert host.command("ideas.hypotheses")["items"][0]["refuted"] == got["refuted"]
+
+
+def test_the_verdict_writes_the_draft_as_the_decision_with_the_way_it_was_refuted(host):
+    item_id, _goal = with_test(host, refuted=WAYS, if_holds="Make it a setting.")
+    refused(host, "ideas.hypothesis_judge", {"id": item_id, "state": "refuted", "way": "the cold"}, "Pick the way it is refuted")
+    assert hypotheses.read(host.ideas.state_dir)["items"][0]["state"] == "open"
+    got = host.command("ideas.hypothesis_judge", {"id": item_id, "state": "refuted", "way": "the hook", "why": "Only opens rose"})
+    assert got["way"] == "the hook" and got["item"]["verdict"]["way"] == "the hook"
+    log = git(host.repo_root, "show", "dev:docs/decisions.md")
+    body = log[log.rindex("## 1. "):].split("\n", 1)[1].strip()
+    assert body.startswith("Do not build the push.") and "Refuted: the hook — opens rise, goals do not" in body and body.index("Do not build") < body.index("Refuted:") < body.index("Signal:")
+
+
+def test_a_held_verdict_writes_the_saved_draft_or_the_persons_own_words_over_it(host):
+    a, _ = with_test(host, text="Alpha holds", if_holds="Saved draft.")
+    host.command("ideas.hypothesis_judge", {"id": a, "state": "held"})
+    b, _ = with_test(host, text="Beta holds", if_holds="Saved draft.")
+    host.command("ideas.hypothesis_judge", {"id": b, "state": "held", "draft": "My own words."})
+    log = git(host.repo_root, "show", "dev:docs/decisions.md")
+    first, second = log[log.index("## 1. "):log.index("## 2. ")], log[log.index("## 2. "):]
+    assert "Saved draft." in first and "Saved draft." not in second and "My own words." in second and "Signal:" in second
+
+
+def test_with_no_draft_the_body_is_as_it_was(host):
+    item_id, _ = with_test(host)
+    host.command("ideas.hypothesis_judge", {"id": item_id, "state": "held", "why": "Clear"})
+    log = git(host.repo_root, "show", "dev:docs/decisions.md")
+    assert log[log.rindex("## 1. "):].split("\n", 1)[1].strip().startswith("Signal:")
+    refused(host, "ideas.hypothesis_judge", {"id": hold(host, text="Other")["id"], "state": "held", "way": "x"}, "Only a refuted")
+
+
+# -- spec 133 C: the project's own hypotheses file, written and committed with the Board's pages ---------------------------------------------
+
+OWN_FILE = """# Hypotheses
+
+## H1. People want a sketch first
+
+**Status:** open. **Raised:** the owner.
+
+### What would prove it, what would refute it
+
+- **Holds** when most ask for one within a minute
+- **Refuted, the hook**: they look and do not pick
+
+### If it holds
+
+Sketch first, always.
+"""
+
+
+@pytest.fixture
+def fhost(fake_repo) -> Orkboard:
+    (fake_repo / "docs" / "hypotheses.md").write_text(OWN_FILE, encoding="utf-8")
+    git(fake_repo, "add", "docs/hypotheses.md")
+    git(fake_repo, "commit", "-q", "-m", "A hypotheses file")
+    h = Orkboard(fake_repo)
+    (h.ideas.state_dir / "project.json").write_text('{"decisions": "docs/decisions.md"}', encoding="utf-8")
+    h.ideas.root()
+    yield h
+    sys.modules.pop("orkboard.core.idea_runner", None)
+
+
+def test_the_project_s_file_is_read_in_and_a_hypothesis_added_is_committed_in_it_with_the_boards_pages(fhost):
+    got = fhost.command("ideas.hypotheses", {})
+    assert got["file"] == "docs/hypotheses.md" and [(i["id"], i["text"], i["state"]) for i in got["items"]] == [("h1", "People want a sketch first", "open")]
+    assert got["items"][0]["refuted"][0]["name"] == "the hook" and got["items"][0]["if_holds"] == "Sketch first, always."
+    item = hold(fhost, text="Founders pay", signal="ten say so", refuted=[{"name": "the price", "when": "none would"}])
+    assert item["id"] == "h2"
+    log = git(fhost.repo_root, "show", "dev:docs/hypotheses.md")
+    assert "## H2. Founders pay" in log and "- **Refuted, the price**: none would" in log
+    assert git(fhost.repo_root, "log", "-1", "--format=%s", "dev") == "board: hypothesis h2 — added"
+    assert git(fhost.repo_root, "show", "--name-only", "--format=", "dev").split() == ["docs/hypotheses.md"]
+    assert fhost.repo_root.joinpath("docs/hypotheses.md").read_text("utf-8") == OWN_FILE                      # the person's own checkout is not touched: dev holds the Board's
+
+
+def test_a_verdict_writes_the_decision_and_the_file_each_one_commit(fhost):
+    goal = make_goal(fhost, "Interview five founders", state="done", element="ice")
+    fhost.command("ideas.hypothesis_attach", {"id": "h1", "test": goal})
+    fhost.command("ideas.hypothesis_evidence", {"id": "h1", "text": "Four of five asked", "ref": goal})
+    got = fhost.command("ideas.hypothesis_judge", {"id": "h1", "state": "held", "why": "Clear"})
+    assert got["item"]["state"] == "held" and got["decision"]["number"] == 1
+    text = git(fhost.repo_root, "show", "dev:docs/hypotheses.md")
+    assert "**Status:** held; became decision §1." in text and "- Four of five asked (" + goal + ")" in text
+    subjects = git(fhost.repo_root, "log", "-4", "--format=%s", "dev").splitlines()
+    assert subjects[:2] == ["board: hypothesis h1 — judged held", "board: decision 1 — Hypothesis held: People want a sketch first"] and subjects[2] == "board: hypothesis h1 — evidence"
+    assert [i["state"] for i in fhost.command("ideas.hypotheses", {})["items"]] == ["held"] and hand(fhost) == []
+
+
+def test_a_project_with_no_file_keeps_its_hypotheses_in_the_record(host):
+    item = hold(host)
+    assert item["id"] == "people-want-a-sketch-first" and host.command("ideas.hypotheses", {})["file"] == ""
+    assert not (host.repo_root / "docs" / "hypotheses.md").exists()
+
+
+# -- spec 133 D: a refuted verdict is a finding --------------------------------------------------------------------------------------------------
+
+def test_a_refuted_verdict_is_a_finding_naming_the_goals_that_rested_on_it_and_begins_the_run(host, monkeypatch):
+    from orkboard.realm import findings
+    began = []
+    monkeypatch.setattr(host.ideas.keeper, "findings_begin", lambda slug: began.append(slug) or True)
+    rests = make_goal(host, "Weekly digest")
+    item_id, tested = with_test(host, refuted=WAYS, if_holds="Make it a setting.")
+    host.command("ideas.hypothesis_attach", {"id": item_id, "goal": rests})
+    got = host.command("ideas.hypothesis_judge", {"id": item_id, "state": "refuted", "way": "the hook", "why": "Only opens rose"})
+    sd = host.ideas.state_dir
+    (f,) = findings.of_goal(sd, "")
+    assert got["finding"] == f["id"] and f["source"] == "hypothesis" and f["on"] == item_id and f["idea"] == "" and f["status"] == "found"
+    assert "(the hook: opens rise, goals do not)" in f["found"] and f"Goals that rested on it: {rests} (Weekly digest)" in f["found"]
+    assert got["item"]["verdict"]["finding"] == f["id"] and hypotheses.read(sd)["items"][0]["verdict"]["finding"] == f["id"]
+    outcome = findings.record(sd, tested)["hypothesis"]
+    assert (outcome["id"], outcome["state"], outcome["way"], outcome["why"]) == (item_id, "refuted", "the hook", "Only opens rose")
+    assert findings.record(sd, rests)["hypothesis"] is None                                    # a goal that only rested on it is named in the finding, not given the outcome
+    assert began == [""] and hand(host) == []                                                  # the run is begun, and the judged hypothesis has no card of its own: the finding's is the one
+
+
+def test_a_held_verdict_adds_no_finding_and_a_gatherer_that_fails_never_fails_the_verdict(host, monkeypatch):
+    from orkboard.realm import findings, findings_gather
+    monkeypatch.setattr(host.ideas.keeper, "findings_begin", lambda slug: 1 / 0)
+    held_id, _ = with_test(host, text="Held one")
+    got = host.command("ideas.hypothesis_judge", {"id": held_id, "state": "held"})
+    assert got["ok"] is True and "finding" not in got and findings.of_goal(host.ideas.state_dir, "") == []
+    monkeypatch.setattr(findings_gather, "hypothesis", lambda *a, **k: 1 / 0)
+    other_id, _ = with_test(host, text="Refuted one")
+    got = host.command("ideas.hypothesis_judge", {"id": other_id, "state": "refuted"})
+    assert got["ok"] is True and got["item"]["state"] == "refuted" and "finding" not in got and findings.of_goal(host.ideas.state_dir, "") == []
+
+
+# -- spec 133 B: measures, the date, the values typed ------------------------------------------------------------------------------------------
+
+BAR = {"op": "<=", "n": 70, "unit": "%"}
+
+
+def test_a_measure_is_set_dropped_and_its_value_typed_and_no_number_is_shown_before_its_date(host):
+    item = hold(host, refuted=WAYS)
+    got = host.command("ideas.hypothesis_measure_set", {"id": item["id"], "what": "the cost of an install", "from": "the ads' platforms", "holds": BAR,
+                                                        "refuted": [{"way": "the noise", "op": ">", "n": 100}], "span_days": 28})["item"]
+    (m,) = got["measures"]
+    assert m["id"] == "m1" and m["date"] > item["at"][:10] and m["bars"]["holds"]["n"] == 70 and m["bars"]["refuted"][0]["way"] == "the noise"
+    typed = host.command("ideas.hypothesis_value", {"id": item["id"], "measure": "m1", "n": 64, "from": "the dashboard"})["item"]
+    assert typed["measures"][0]["value"] is None                                                       # its date is not reached: the number is kept, not shown
+    assert hypotheses.read(host.ideas.state_dir)["items"][0]["measures"][0]["value"]["n"] == 64.0
+    assert host.command("ideas.hypotheses", {})["items"][0]["measures"][0]["value"] is None
+    changed = host.command("ideas.hypothesis_measure_set", {"id": item["id"], "measure": "m1", "date": "2020-01-01"})["item"]["measures"][0]
+    assert changed["date"] == "2020-01-01" and changed["value"]["n"] == 64.0 and changed["bars"]["refuted"]                                  # a date reached: the value is shown
+    refused(host, "ideas.hypothesis_value", {"id": item["id"], "measure": "m1", "n": "lots"}, "is a number")
+    refused(host, "ideas.hypothesis_measure_set", {"id": item["id"], "what": "x"}, "its bar")
+    refused(host, "ideas.hypothesis_measure_drop", {"id": item["id"], "measure": "m9"}, "That measure is gone")
+    assert host.command("ideas.hypothesis_measure_drop", {"id": item["id"], "measure": "m1"})["item"]["measures"] == []
+
+
+def test_a_measure_alone_makes_it_due_on_its_date_and_the_row_carries_the_values_against_the_bars(host):
+    item = hold(host)
+    host.command("ideas.hypothesis_measure_set", {"id": item["id"], "what": "the cost of an install", "holds": BAR, "refuted": [{"way": "", "op": ">", "n": 100}], "date": "2999-01-01"})
+    assert hand(host) == []                                                                              # the date is not reached
+    host.command("ideas.hypothesis_measure_set", {"id": item["id"], "measure": "m1", "date": "2020-01-01"})
+    (row,) = hand(host)
+    assert row["tests"] == [] and row["met"] == {"holds": None, "refuted": []} and row["measures"][0]["value"] is None
+    host.command("ideas.hypothesis_value", {"id": item["id"], "measure": "m1", "n": 64})
+    (row,) = hand(host)
+    assert row["met"] == {"holds": True, "refuted": []} and row["measures"][0]["value"]["n"] == 64.0
+    got = host.command("ideas.hypothesis_judge", {"id": item["id"], "state": "unsure", "why": "look again", "date": "2099-01-01"})
+    assert got["item"]["state"] == "open" and hand(host) == []
+    refused(host, "ideas.hypothesis_judge", {"id": item["id"], "state": "unsure", "date": "2001-01-01"}, "Pick a day to look again")
