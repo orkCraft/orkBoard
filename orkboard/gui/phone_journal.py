@@ -12,6 +12,9 @@ phone is paired, the project's `origin` is on github.com, it has no `[journal]` 
 look, and the inbox's own taking sends the journal at once (realm/remote_inbox.py). One thread a project at a time; a journal
 that cannot be sent, or an inbox that cannot be read, troubles no work.
 
+**Applying an answer** (spec 137 C). `apply` finds the card among the hand's own (`needs_you`) and runs the hand's command for its kind with the
+answer's arguments (realm/remote_answers.py); a card gone, or answered already, is taken with its words as `error`.
+
 **Laying a goal.** `lay` is `Ideas.add` as the + card calls it, with `via = "inbox"` and the `inbox_id` it came with, which the add
 keeps in the goal's `state.json`; `find` reads the Board for a goal with that id, so one is never laid twice.
 """
@@ -26,7 +29,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import board_branch, goal_types, ideas, remote_inbox, remote_journal
+from orkboard.realm import board_branch, goal_types, ideas, remote_answers, remote_inbox, remote_journal
 
 ASKED_FILE = "journal_asked.json"
 ASK_LINE = ("Follow this project from your phone away from home? Its status goes to a branch of its own on origin, "
@@ -155,6 +158,23 @@ class PhoneJournal:
         parties = {t["slug"] for t in ideas.tracks(root, make=False)}
         return remote_inbox.Context(parties=parties, types=lambda party: {t.id for t, _ in goal_types.offered(state, root, party)})
 
+    @staticmethod
+    def apply(p: Any) -> Callable[[dict], tuple[str, str]]:
+        """An answer of the phone's (spec 137 C), applied as the hand applies it: the card is looked for among the hand's own (`needs_you`), its goal
+        and id taken from the row, and the hand's command for its kind run with the answer's arguments (`remote_answers.KINDS`). `(slug, "")` when it
+        ran (the card's goal, or its kind), `("", words)` when the card is gone, answered already, or the command refused."""
+        def apply(answer: dict) -> tuple[str, str]:
+            kind, card = str(answer.get("kind") or ""), str(answer.get("card") or "")
+            row = next((r for r in p.ideas.board(make=False)["needs_you"] if r.get("kind") == kind and remote_answers.card_key(r) == card), None)
+            if row is None:
+                return "", remote_answers.GONE
+            name, args = remote_answers.call(row, kind, answer.get("answer") or {})
+            got = p.commands[name]({**args, "device": "phone"})
+            if isinstance(got, dict) and got.get("error"):
+                return "", " ".join(str(got["error"]).split())[:300]
+            return str(row.get("idea") or row.get("goal") or kind), ""
+        return apply
+
     def holds_board(self, p: Any) -> bool:
         """Whether this computer may take the inbox's goals: with the Board's branch on (`[board]`), only its holder does (spec 137 B.2.4, decisions
         §244.4); with none, as before."""
@@ -170,7 +190,7 @@ class PhoneJournal:
             pages = p.ideas.root(False)
             if config.inbox and self.holds_board(p):
                 remote_inbox.take(p.root, state, config, self.context(p), self.lay(p), self.find(p), socket.gethostname(), now,
-                                  pages=pages, needs=needs)
+                                  pages=pages, needs=needs, apply=self.apply(p))
             if remote_journal.due(state, config, now, urgent):
                 remote_journal.send(p.root, state, config, now, pages=pages, needs=needs)
         except Exception:

@@ -22,6 +22,9 @@ journal. The journal's push without force is the lock: when it is refused (anoth
 whether the Board already holds one with that inbox id (a host that stopped between the add and its journal), and a goal
 taken here and not yet laid is laid on the next tick.
 
+**The answers** (spec 137 C, decisions §244.5) are files of the same branch, `inbox/<device>/<id>.answer.json`, read and taken the same way by
+`realm/remote_answers.py` when the host passes `apply`; `entries` never lists them.
+
 No face (the host passes `lay` and `find`), no model, no network but `git fetch` and the journal's `git push`.
 """
 from __future__ import annotations
@@ -237,10 +240,12 @@ def _said(root: Path, **fields) -> None:
 
 def take(root: Path, state_dir: Path, config: rj.JournalConfig, ctx: Context, lay: Callable[[dict, str], str],
          find: Callable[[str], str], name: str = "", now: dt.datetime | None = None, run: Callable = subprocess.run,
-         pages: Path | None = None, needs: frozenset[str] | set[str] = frozenset(), force: bool = False) -> dict:
+         pages: Path | None = None, needs: frozenset[str] | set[str] = frozenset(), force: bool = False,
+         apply: Callable[[dict], tuple[str, str]] | None = None) -> dict:
     """One tick of the inbox. `lay(goal, id)`: the goal laid on the Board, its slug (raises with the add's words when refused);
     `find(id)`: the slug of the goal the Board already has for that inbox id, else "". Returns `{read, taken, laid, errors, why}`;
-    never raises. Nothing is written to the inbox."""
+    never raises. Nothing is written to the inbox. `apply(answer)` (spec 137 C): when given, the answers of the phone (`inbox/<device>/<id>.answer.json`,
+    realm/remote_answers.py) are taken and applied after the goals, and `answered` / `answer_errors` are in the result."""
     root, state_dir = Path(root), Path(state_dir)
     now = now or dt.datetime.now()
     name = name or socket.gethostname()
@@ -271,6 +276,9 @@ def take(root: Path, state_dir: Path, config: rj.JournalConfig, ctx: Context, la
                 out["errors"] += 1
                 _said(root, ok=True, id=m["id"], by=name, slug="", error=m["error"])
         _lay_all(root, state_dir, config, ctx, goals, found, lay, find, name, now, run, pages, needs, out)
+        if apply is not None and not got["empty"]:
+            from orkboard.realm import remote_answers
+            remote_answers.take(root, state_dir, config, apply, name, now, run, pages, needs, out)
     except Exception as e:                       # the inbox troubles no work
         out["why"] = " ".join(str(e).split())[:300] or type(e).__name__
     return out
