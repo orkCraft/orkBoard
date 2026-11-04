@@ -6123,3 +6123,60 @@ up a job, so a run every few minutes that finds nothing spends a quota on nothin
     **E.** Settings and the words. Checked before it is built: Actions' quota and price on GitHub's own page; Claude Code
     signed in on a runner by both secrets.
 The owner's call.
+
+## 245. The day is read from the resets, never drawn as a schedule: the column stays its piles; a potion hovered lights the goals that wait for it; its hour under it only when it runs low; a goal put off waits for the window that fits it, its hour on its row; what asks nothing of the person takes a reset while they are away; the day as a line of time over the pane, from the potion (4 November 2026, the owner)
+
+Changes: 189.2, 192.1, 239.1, 239.4; spec 114 §3.
+
+Why: the owner: *what if the Orkmaster's column became the day's plan: the times the connected tools' limits reset, and
+the specs' writing and their work tied to those times? Only without making the window harder*, asked as a product manager
+and a designer. Read against the frame: the column is three piles by where a goal is (§206, §224), 128 px wide (§236); an
+axis of time in it gives one place two orders, and the eye loses which one the cards lie by; it would read as a list or a
+calendar's grid, which the frame refuses (CLAUDE.md; §215.1: one line of cards along time, never a grid). A schedule of
+blocks (*14:00–16:00: the work of …*) promises what cannot be known: a goal's cost is *about* (§121.3), Claude's five hours
+count from the first call, each tool keeps windows of its own; on its first day it would be wrong. An hour said as *not
+before 14:05* is honest; a schedule is not (§218: nothing promised before it is built). And time is already half on the
+Board: a spec in To review starts at a clock time (§224), the pile says *waits for the reset · <day> <time>* (§239.4), the
+potion's words say when each window comes back (§192), a goal put off waits for the reset of whichever window ran out
+(`idea_target.reserve_held`), a plan's tasks for the window's (`keeper.window_until`). What is missing is the link between
+them, and one thing no picture gives: **the person's own hours**. Whom Orkboard is for works a day job (§218): a five-hour
+window that comes back at 14:00 comes back while they are away; the work can go on without them, Talk and a review cannot.
+So:
+1. **The column stays its piles**: no axis of time in it, no hours along it, no schedule; where a card lies says where its
+   goal is (§206, §224), unchanged.
+2. **A potion hovered or focused lights the goals that wait for it** (§189.2 widened): beside the tabs' marks it lights
+   today, the column's cards whose goal waits for that tool's reset (put off, held by its spent window, a spec's start at a
+   clock time on that tool) stay as they are and the others dim (orkUI's muted ink, never hidden). **A card hovered does the
+   reverse**: its tool's potion shows the goal's next step hatched off its top, as a lifted card's (§176.2). Its words add
+   *goals wait for its reset* when some do, never how many (§67).
+3. **The hour under a potion only when it says something**: while the tool has room, under it the shares as today (§192);
+   at the danger's level or empty, the now share's place says **when it comes back** (*back 14:00*; *back Mon 09:00* when
+   it is the week that ran out), the words both as today. As colour is a signal (spec 40), so is the hour.
+4. **A goal put off waits for the window that fits it, its hour on its row**: today the goals put off start one at a time
+   after the reset, by the week's pace (§239.1–2). The Orkmaster now gives each one of the queue **its window**: the next
+   goal's step and its cost (§121.3) against what the coming window holds above the reserve; one that does not fit waits for
+   the next window, the goals behind it in the order unchanged. The pile's line says the front's hour as §239.4 has it; in
+   the pile's list (§206.3) each row says its own **not before 14:05**, and a goal at work held by a spent window says
+   *the work goes on at 14:00*. Always the earliest hour, never a span and never a countdown (§224).
+5. **The person's hours**: one setting, **When I am at the computer** (days and hours, the machine's local time; *weekdays
+   19:00–23:00*, *weekends all day*), empty by default, and empty nothing changes. With it, the queue and the windows' holds
+   are laid by what a step needs: **a step that asks nothing of the person** (a plan's tasks, the leaders' sections after
+   Talk, Checks) **takes a reset while they are away**; **a step that will ask** (Talk's rounds, a review the work waits
+   for) **is laid at the first reset within their hours**, so its questions come when someone is there to answer them, and
+   the hand does not fill while they are away. A goal the person starts by hand, or drops from the phone (§221), goes at
+   once, as today. The night (`night`, the reserve's, `idea_target.reserve`) is not this setting and stays as it is.
+6. **The day, from the potion**: a potion pressed opens over the pane what used it, as today (§175.2), now **a line of
+   time with *Now* across it** (§215.1's shape): behind *Now* what used it today; ahead, today and tomorrow, its windows'
+   resets as marks and the goals that wait for them as cards on the reset they wait for (the step they will take in words,
+   *Talk*, *spec*, *work*); the person's hours a lighter band when set. A row a tool, the one pressed on top, the other tools
+   with goals waiting under it. It reads the same state as 2–5 and decides nothing: a card pressed opens its goal.
+7. **Not now**: anchoring the window (a first call at a chosen hour, so the five hours come back when they are wanted) is a
+   decision of its own, taken when 1–6 have been used; a schedule of blocks, an axis in the column, a countdown: never.
+8. **The words** (`TERMS`): *back 14:00*, *not before 14:05*, *the work goes on at 14:00*, *goals wait for its reset*,
+   *When I am at the computer*.
+9. **Built** by spec 138: **A.** the link (2) and the hour (3), on the page, their tests the hand's and the column's;
+   **B.** each goal's window and the person's hours (4–5), on the host (`route_tick`, `idea_target`), with tests (a goal
+   that does not fit waits for the next window and the order holds; a step that asks is laid in the hours, one that asks
+   nothing is not; no hours set is today's); **C.** the day over the pane (6). **Drawn first**, `docs/mockups/day/`: the
+   column with a potion hovered, the potion's hour, the line over the pane; the owner's pick.
+The owner's call.
