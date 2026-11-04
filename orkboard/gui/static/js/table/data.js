@@ -32,6 +32,9 @@ export const columnOn = () => wide.value && !uprightNow.value;
 export const partiesAll = () => goalsOf(mapData.value, goalList().map((x) => x.slug)).filter((g) => g.slug !== GENERAL);
 
 const LIVE_CRAFTS = ["run", "liveops"];
+/** Whether a decided goal's wait runs (spec 120 §3.5: the leaders agreed, not held, not yet ended): it goes on by itself, so its decision asks nothing of the person (decisions §240). */
+export const waitRuns = (n) => n?.state === "decided" && !!n.back?.ripe && !n.back.ripe.held && !n.back.ripe.by;
+
 /** The project has no gate: dev and main are one branch, or main does not exist (the gate's own answer, `ideas.gate`'s `same`; docs/specs/113-a-project-with-no-preview-or-no-gate.md §4, decisions §191.2). Unknown before the first answer: a gate. */
 export const noGate = () => gateData.value?.same === true;
 

@@ -6,7 +6,7 @@ import { board, goalList } from "../board/store.js";
 import { gateData, mapData } from "../shell/store.js";
 import { byUrgency, gateOf, goalsOf, nodesOf, paidStopsOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
-import { partiesNow, roadSlugs } from "../table/data.js";
+import { partiesNow, roadSlugs, waitRuns } from "../table/data.js";
 import { hypothesisStops } from "./hypothesiscard.js";
 import { isHeld } from "./hearingstate.js";
 import { projectStops, questionStops } from "./questions.js";
@@ -45,7 +45,8 @@ export function readyWords(r) {
  *  (arenawords.js, as the old hand read them). `open`: the tab that is open: a party's slug, or "orkmaster" for the Board's (every party at once, so no card says its party:
  *  its leader's head does). On a party's tab a stop of another party says its party. */
 export function stopsOfProject(map = mapData.value, rows = board.value?.needs_you || [], open = "") {
-  const needs = rows.filter((r) => !isHeld(r)), out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
+  const running = new Set((map?.nodes || []).filter(waitRuns).map((n) => n.slug));                       // a decision all the leaders agreed on, its wait running: it goes on by itself, no card in the hand (decisions §240); it lies in the column
+  const needs = rows.filter((r) => !isHeld(r) && !(r.kind === "decision" && running.has(r.idea))), out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
   for (const g of partiesOf(map)) {
     const nodes = nodesOf(map, g.slug), party = partyCard(g);
     const whole = (s) => (s.kind === "leader_change" && !s.node ? { ...s, node: (map?.nodes || []).find((n) => n.slug === s.row?.idea) || null } : s);      // a change asked of this leader about a goal that lies in another party's lane: the goal's rune is still its card's

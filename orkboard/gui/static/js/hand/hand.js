@@ -10,7 +10,7 @@ import { html } from "../html.js";
 import { board } from "../board/store.js";
 import { mapData } from "../shell/store.js";
 import { drawn } from "../frame/kinds.js";
-import { lifted, lower, tab } from "../frame/state.js";
+import { lift, lifted, lower, tab } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
 import { partiesNow } from "../table/data.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
@@ -24,7 +24,7 @@ import { Lifted } from "./stopcard.js";
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
 import { Upright } from "./upright.js";
-import { fieldOpen, stopKeyOf } from "./state.js";
+import { fieldOpen, liftDecision, liftKey, stopKeyOf } from "./state.js";
 import { said } from "./motion.js";
 import "./wayparts.js";                                   // the goal's way's cards (spec 100)
 
@@ -70,6 +70,8 @@ export function Hand() {
   useNight();
   const all = stopsOfProject(map, needs, open), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map) lower(); }, [key, !s]);                      // the stop was answered: the card goes with it
+  const want = liftDecision.value, dealt = want ? stops.find((x) => x.kind === "decision" && x.row?.idea === want) : null;
+  useEffect(() => { if (dealt) { liftDecision.value = ""; lift(liftKey(dealt.key)); } }, [dealt?.key]);        // *Change…* in the column: the decision's card, dealt now its wait is held, comes up (decisions §240.2)
   useEffect(() => { if (key) fieldOpen.value = false; }, [key]);
   if (!map) return null;
   const none = !(map.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length;      // no goal at all and nothing asked: the + card lies large in the pane

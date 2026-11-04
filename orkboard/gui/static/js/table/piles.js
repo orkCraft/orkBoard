@@ -10,6 +10,7 @@ import { board } from "../board/store.js";
 import { typeTone } from "../arena/goalwords.js";
 import { everBack } from "./backcard.js";
 import { leftWords, shareOf } from "./backbody.js";
+import { waitRuns } from "./data.js";
 
 export const ANALYSIS = ["raw", "reading", "asks", "routed", "talk", "decided", "sketch", "sections"];     // the idea, Talk, the decision and the spec being written (decisions §224); `ready`, `planning` and `plan` are the spec made: To review
 const SPEC_MADE = ["ready", "planning", "plan"];                                                       // the Orkmaster's draft is `planning` (face down: it is being written); once `agreed` (a decision confirmed, the leaders wrote the spec) they are To review
@@ -46,13 +47,14 @@ export function pilesOf(nodes) {
   return out;
 }
 
-const waitsYou = (n) => !!n.asks_you || n.state === "asks";                                              // a question or the decision to confirm waits for the person (`goal_place`: `asks_you`)
+const waitsYou = (n) => !waitRuns(n) && (!!n.asks_you || n.state === "asks");                                              // a question or the decision to confirm waits for the person (`goal_place`: `asks_you`)
 
 /** The goal the pile's title says the Orkmaster is on: *writing: <short>*, *talked over: <short>* in Talk, *waits for you* while it asks; "" when none is. */
 export function underOf(analysis) {
   const f = analysis[0]?.n;
   if (!f) return "";
   if (waitsYou(f)) return "waits for you";
+  if (waitRuns(f)) return `decided: ${f.short || f.title} · starts its spec at ${clock(f.back.ripe.left_s)}`;
   if (f.state === "talk") return `talked over: ${f.short || f.title}`;
   return ACTIVE.includes(f.state) ? `writing: ${f.short || f.title}` : "";
 }
@@ -69,6 +71,7 @@ const clock = (left_s) => { const d = new Date(Date.now() + Math.max(0, Number(l
 /** What a card says of its state, for a screen reader and its title: *its spec is ready; it starts by itself in 4 min*. */
 export function sayOf(n, pile, off, first) {
   if (pile === "analysis") {
+    if (waitRuns(n)) return `its decision is agreed; its spec starts by itself at ${clock(n.back.ripe.left_s)}`;
     if (n.state === "decided") return "its decision waits for your word";
     if (waitsYou(n)) return "waits for your answer";
     if (n.state === "talk") return "its leaders are talking it over";

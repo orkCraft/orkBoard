@@ -4,6 +4,7 @@
 import { signal } from "@preact/signals";
 import { ORKMASTER } from "../frame/state.js";
 
+export const liftDecision = signal("");        // the goal whose decision card the column's *Change…* asked for: Hand lifts it once it is dealt (its wait held), then clears this
 export const fieldOpen = signal(false);        // the + card has grown into the field
 export const fieldText = signal("");           // what was written, kept when the field closes (Esc, a press away)
 export const fieldPhotos = signal([]);         // the pictures pasted, as data URLs (board/pictures.js `shrink`)

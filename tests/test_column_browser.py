@@ -8,7 +8,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, head, node, open_hand, sig, task  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, head, need, node, open_hand, sig, task  # noqa: E402
 from tests.test_shell_browser import _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -303,6 +303,94 @@ def test_the_phone_has_no_column_and_keeps_the_orkmasters_tab_and_lane(gui):
         pg.wait_for_selector(".table-tabs", timeout=WAIT_MS)
         assert pg.locator(".frame-column").count() == 0 and pg.locator(".col-card").count() == 0
         assert pg.locator('.table-tab[data-tab="orkmaster"]').count() == 1 and pg.locator(".table-lane--first").count() == 1, "the narrow table keeps the Orkmaster's tab and its first lane"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+DECISION = "Why: One clock.\n\n1. Tech counts."
+
+
+class AgreedHost(ColumnHost):
+    """Decisions §240: three decided goals with a decision row each: `agreed` (all the leaders agreed, its wait runs), `held` (its wait held) and `doubt` (no wait: a leader's no or a doubt)."""
+
+    def __init__(self):
+        super().__init__()
+        self.nodes = [
+            node("agreed", "tech", "Round timer on phones", "table", state="decided", element="ice", back=back(ripe=ripe(600))),
+            node("held", "design", "Lobby in Polish", "table", state="decided", element="void", back=back(ripe=ripe(0, held=True))),
+            node("doubt", "tech", "Tidy the scoring module", "table", state="decided", element="dust", back=back(ripe=None)),
+        ]
+        self.needs = [need("decision", g, i, t, DECISION, number=n, confirmed=False, error="")
+                      for g, i, t, n in (("tech", "agreed", "Round timer on phones", 201), ("design", "held", "Lobby in Polish", 202), ("tech", "doubt", "Tidy the scoring module", 203))]
+
+    def handle(self, name, a):
+        if name == "ideas.ripe_hold":
+            self.log.append((name, a))
+            next(n for n in self.nodes if n["slug"] == a["idea"])["back"]["ripe"] = ripe(0, held=True)
+            return self.bump({"ok": True})
+        return super().handle(name, a)
+
+
+def decisions_in_hand(pg):
+    return sorted(pg.eval_on_selector_all('.hand-places .hand-card[data-kind="decision"]', "els => els.map((e) => e.dataset.key)"))
+
+
+def test_an_agreed_decision_whose_wait_runs_is_not_in_the_hand_and_the_column_says_when_its_spec_starts(gui):
+    pg, host, log = open_column(gui, host=AgreedHost())
+    try:
+        pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.hand-places .hand-card[data-kind=decision]').length === 2", timeout=WAIT_MS)
+        keys = decisions_in_hand(pg)
+        assert keys == ["decision/doubt/", "decision/held/"], "the held one and the one with no wait are the person's move; the agreed one's wait runs"
+        assert sorted(goals(pg, "analysis")) == ["agreed", "doubt"] and goals(pg, "work") == ["held"]
+        under = pg.locator('[data-under="analysis"]').inner_text()
+        assert under.startswith("decided: Round timer on phones · starts its spec at ") and len(under.split(" at ")[-1]) == 5, under
+        card = pg.locator('.col-card[data-goal="agreed"]')
+        assert "its decision is agreed; its spec starts by itself at " in card.get_attribute("aria-label")
+        assert card.locator(".col-stopped").count() == 0, "it asks nothing: its ring is not yellow"
+        card.click()
+        rows = pg.locator(".col-list__row")
+        assert rows.count() == 2
+        agreed = pg.locator('.col-list__row[data-goal="agreed"]')
+        assert agreed.get_by_role("button", name="Change…").count() == 1 and agreed.get_by_role("button", name="Start now").count() == 1 and agreed.get_by_role("button", name="Remove").count() == 1
+        other = pg.locator('.col-list__row[data-goal="doubt"]')
+        assert other.get_by_role("button", name="Change…").count() == 0 and other.get_by_role("button", name="Start now").count() == 0, "a decision with no wait is in the hand, not agreed"
+        assert pg.locator(".hand-lifted").count() == 0 and not picked_goal(pg), "a face-down card is never picked"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def picked_goal(pg):
+    return pg.locator(".col-card.ork-picked").count() > 0
+
+
+def test_start_now_on_an_agreed_decision_confirms_it(gui):
+    pg, host, log = open_column(gui, host=AgreedHost())
+    try:
+        pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+        pg.locator('.col-card[data-goal="agreed"]').click()
+        pg.locator('.col-list__row[data-goal="agreed"]').get_by_role("button", name="Start now").click()
+        assert _sent(pg, host, ("ideas.confirm", {"idea": "agreed"}))
+        pg.wait_for_selector(".col-list", state="detached", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_change_on_an_agreed_decision_holds_its_wait_and_brings_its_card_into_the_hand_lifted(gui):
+    pg, host, log = open_column(gui, host=AgreedHost())
+    try:
+        pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+        pg.locator('.col-card[data-goal="agreed"]').click()
+        pg.locator('.col-list__row[data-goal="agreed"]').get_by_role("button", name="Change…").click()
+        assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "agreed"}))
+        pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
+        assert pg.locator(".hand-lifted .hand-way--decision").count() == 1 and pg.locator(".col-list").count() == 0
+        assert pg.locator(".hand-lifted").get_by_role("button", name="Start", exact=True).count() == 1, "held: its one button says Start"
+        assert decisions_in_hand(pg) == ["decision/agreed/", "decision/doubt/", "decision/held/"]
+        assert "agreed" in goals(pg, "work"), "held, the goal lies put off in At work · later until the person starts it"
     finally:
         pg.close()
     assert not log, "\n".join(log)

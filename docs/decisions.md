@@ -5898,9 +5898,9 @@ that asks nothing: the eye reads every step as a confirmation. The column alread
 2. **The decision all agreed on waits in the column**: while its wait runs (spec 120 §3.5: not held, not yet ended) its
    `decision` card is not dealt into the hand. Its goal lies face down in *In analysis* (§224), and the pile's line says
    it: *decided: <short> · starts its spec at <time>*. In the pile's list (§206.3, pressed) its row has **Change…** (its
-   decision card comes into the hand, lifted, the wait held while it is open, as §224.3 holds a spec being changed) and
-   **Start now** (`ideas.ripe_now`), beside *Next* and *Remove*. Held (*Later*), it is the person's move again: in the
-   hand as today.
+   decision card comes into the hand, lifted: its wait is held, `ideas.ripe_hold`, so the goal lies put off in *At work ·
+   later* until it is confirmed or sent back to review) and **Start now** (`ideas.confirm`, as To review's *Start now*),
+   beside *Next* and *Remove*. Held (*Later*), it is the person's move again: in the hand as today.
 3. **Unchanged**: a decision with a leader's no, a hearing or a doubt (no wait, spec 120 §3.5) is the person's move and
    lies in the hand; one stack a goal and a lane (§167.7); the face-down card cannot be picked (§206.3).
 4. **The words**: *decided: <short> · starts its spec at <time>*, *Change…*, *Start now*.

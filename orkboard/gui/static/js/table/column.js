@@ -9,9 +9,10 @@ import { Elem, Head, Icon } from "../orkui.js";
 import { ORKMASTER, openOver, openTab, pick, picked, tab } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { act, mapData } from "../shell/store.js";
-import { openTabOf, partiesAll, partiesNow, mapName } from "./data.js";
+import { openTabOf, partiesAll, partiesNow, mapName, waitRuns } from "./data.js";
 import { askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { DropAsk, GoalMenu } from "./dropgoal.js";
+import { liftDecision } from "../hand/state.js";
 import { ACTIVE, Pile, PILES, nextWords, pilesOf, underOf } from "./piles.js";
 import { useColumnMotion } from "./colmotion.js";
 import { moodOf } from "./moods.js";
@@ -49,6 +50,15 @@ function Remove({ n }) {
     : html`<button type="button" class="ork-btn quiet" data-remove=${n.slug} onClick=${() => setAsking(true)}>Remove</button>`;
 }
 
+/** **Change…** and **Start now** on the row of an agreed decision whose wait runs (decisions §240.2): *Start now* confirms it (`ideas.confirm`, as *Start now* of To review does); *Change…* holds the wait (`ideas.ripe_hold`), which
+ *  makes the decision the person's move again: its card is dealt into the hand (data.js `stopsOfProject`) and lifted (hand.js, `liftDecision`); the goal lies put off in At work · later while it is held. */
+function Agreed({ n, close }) {
+  const [busy, setBusy] = useState(false);
+  const run = (name, then) => async () => { setBusy(true); try { if (await act(name, { idea: n.slug })) { then?.(); close(); } } finally { setBusy(false); } };
+  return html`<button type="button" class="ork-btn quiet" data-change=${n.slug} disabled=${busy} title="Hold its wait and open its decision in the hand" onClick=${run("ideas.ripe_hold", () => { liftDecision.value = n.slug; })}>Change…</button>
+    <button type="button" class="ork-btn quiet" data-start=${n.slug} disabled=${busy} title="Confirm the decision now: its leaders write the spec" onClick=${run("ideas.confirm")}>Start now</button>`;
+}
+
 /** In analysis, read out over the pane in the Orkmaster's order: each goal's rune and whole title; the one being written says so, the others have **Next** (after the front one) and **Remove**. */
 function List({ items, place, close }) {
   const before = (i) => items.slice(0, i).find(({ n }) => n.goal === items[i].n.goal && !ACTIVE.includes(n.state))?.n.slug;           // *Next*: before the first goal of its own party still waiting its turn (the Board moves a goal among its party's, `ideas.move`)
@@ -59,7 +69,7 @@ function List({ items, place, close }) {
       const writing = i === 0 && ACTIVE.includes(n.state) && !n.asks_you;
       return html`<li key=${n.slug} class="col-list__row" data-goal=${n.slug}><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="col-list__nm">${n.title}</span>
         ${writing ? html`<span class="col-lift__cap">${n.state === "talk" ? "talked over" : "writing"}</span>`
-          : html`<span class="col-list__acts">${before(i) && html`<button type="button" class="ork-btn quiet" data-next=${n.slug} aria-label=${`Next: ${n.title}`} onClick=${() => act("ideas.move", { slug: n.slug, before: before(i) })}>Next</button>`}<${Remove} n=${n} /></span>`}</li>`;
+          : html`<span class="col-list__acts">${waitRuns(n) && html`<${Agreed} n=${n} close=${close} />`}${before(i) && html`<button type="button" class="ork-btn quiet" data-next=${n.slug} aria-label=${`Next: ${n.title}`} onClick=${() => act("ideas.move", { slug: n.slug, before: before(i) })}>Next</button>`}<${Remove} n=${n} /></span>`}</li>`;
     })}</ol>
     <div class="col-lift__acts"><button type="button" class="ork-btn quiet" onClick=${close}>Close</button></div>
   </div>`;
