@@ -9,6 +9,8 @@ import { pick, picked } from "../frame/state.js";
 import { mapData, refreshShell } from "../shell/store.js";
 import { flagDay } from "../arena/goalwords.js";
 import { mapFor } from "./maps.js";
+import { openChronicle } from "./chronicle.js";
+import { earlierWords } from "./chroniclewords.js";
 import { MapBack, MapCard, MapFrame, Sec, Win, countWords, useLifted, useRead } from "./mapkit.js";
 
 const MAP = "release", SHORT = 7;
@@ -29,6 +31,12 @@ function Back({ g, into, main }) {
     <${Sec} label="Commit"><span class="mp-code">${String(g.commit || "").slice(0, SHORT)}</span></${Sec}>
     <p class="mp-cap">${g.ticked ? `In ${into}, not in ${main} yet. It goes with the rest when you press To ${main}.` : `In ${into}, left out of the merge.`}</p>
     <div class="mp-acts"><button type="button" class="ork-btn quiet" aria-pressed=${String(on)} onClick=${() => pick(g.idea)}>${on ? "Picked: put it down" : "Pick this goal"}</button></div>`;
+}
+
+/** One line under the lens: *Earlier: v0.3 · 28 Oct ›*, from `ideas.chronicle_line`; pressed it opens the chronicle over the pane (spec 134 B, decisions §238.2). None when nothing is known of the past; no list, no count. */
+function EarlierLine() {
+  const [rd] = useRead("ideas.chronicle_line"), e = rd.data?.earlier;
+  return e ? html`<button type="button" class="ork-btn quiet mp-earlier" data-earlier=${e.kind} onClick=${() => openChronicle()}>${earlierWords(e)} ›</button>` : null;
 }
 
 export function ReleaseMap({ g, narrow }) {
@@ -69,6 +77,7 @@ export function ReleaseMap({ g, narrow }) {
         <section class="mp-since" aria-label="Since the last version">
           ${d.since ? html`<span class="ork-label">Since ${d.since.version || "the last version"}</span><span class="mp-cap">Out ${flagDay(d.since.out)}</span>`
             : html`<span class="ork-label">No version is out yet</span>`}
+          <${EarlierLine} />
         </section>
       </div>
     </div>`}

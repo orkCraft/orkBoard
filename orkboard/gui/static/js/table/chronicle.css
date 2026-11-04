@@ -1,0 +1,29 @@
+/* The chronicle over the pane (docs/specs/134 part B, decisions §238; table/chronicle.js): layout and orkUI's tokens only, no colour, face or corner of its own. A chapter a line (the version and its day), its goals and the decisions of no goal under it;
+   a goal as it was and a decision's entry as plain pages, what people wrote in the body face. */
+.table-over__chronicle { display: flex; flex-direction: column; gap: var(--ork-3); max-width: 72ch; }
+.chr, .chr-chapters, .chr-finds { display: flex; flex-direction: column; gap: var(--ork-3); }
+.chr-search { display: flex; align-items: center; gap: var(--ork-2); }
+.chr-search .ork-field { flex: 1; min-width: 0; }
+.chr-chapter { display: flex; flex-direction: column; gap: var(--ork-2); border-top: var(--ork-line) solid var(--ork-frame); padding-top: var(--ork-2); }
+.chr-chapter__hd { margin: 0; font: inherit; }
+.chr-chapter__btn { display: flex; align-items: center; gap: var(--ork-2); width: 100%; text-align: left; }
+.chr-chapter__nm { font: var(--ork-type-body); font-weight: 600; }
+.chr-chapter__day, .chr-row__day, .chr-row__in, .chr-row__num { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.chr-chapter__day { margin-left: auto; }
+.chr-rows { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0 0 0 var(--ork-4); list-style: none; }
+.chr-row { display: flex; align-items: center; gap: var(--ork-2); }
+.chr-row__btn { display: flex; align-items: center; flex: 1; min-width: 0; gap: var(--ork-2); text-align: left; }
+.chr-row__nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chr-row__dec { flex: none; font: var(--ork-type-caption); }
+.chr-back { margin: 0; }
+.chr-title { display: flex; align-items: center; gap: var(--ork-2); margin: 0; font: var(--ork-type-read); font-weight: 600; }
+.chr-changed, .chr-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); margin: 0; }
+.chr-changed__by { font: var(--ork-type-caption); font-weight: 600; color: var(--ork-ink); }
+.chr-link { font: var(--ork-type-caption); max-width: 100%; text-align: left; }
+.chr-goal, .chr-decision-page, .chr-spec, .chr-section { display: flex; flex-direction: column; gap: var(--ork-2); }
+.chr-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chr-entry { margin: 0; padding: var(--ork-3); max-height: none; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); }
+.chr-found { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; }
+.chr-found__src { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.chr-err { margin: 0; color: var(--ork-danger); }
+.mp-earlier { align-self: flex-start; }

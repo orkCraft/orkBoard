@@ -20,6 +20,7 @@ import { WeekView } from "../board/week.js";
 import { openPlace } from "../frame/place.js";
 import { Limits } from "../arena/limits.js";
 import { DayLine } from "./dayline.js";
+import "./chronicle.js";                                                           // kind `chronicle`: Release's past over the pane (spec 134 B); it registers its own face
 import { Play } from "../arena/play.js";
 import { drawn } from "../frame/kinds.js";
 import { openOver, over } from "../frame/state.js";
