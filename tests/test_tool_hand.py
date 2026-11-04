@@ -65,7 +65,9 @@ def test_a_key_is_found_by_its_name_and_its_value_is_never_read_out():
     assert tool_hand.key_found("claude", {"ANTHROPIC_API_KEY": "x"}) == "ANTHROPIC_API_KEY"
     assert tool_hand.key_found("claude", {"OPENAI_API_KEY": "x"}) == ""
     assert tool_hand.key_found("claude", {"ANTHROPIC_API_KEY": ""}) == ""                           # set but empty is not a key
-    assert tool_hand.key_found("agy", {"GOOGLE_API_KEY": "x"}) == "GOOGLE_API_KEY"
+    assert tool_hand.key_found("agy", {"GEMINI_API_KEY": "x", "GOOGLE_API_KEY": "x"}) == ""                   # Antigravity takes no key here (§250.5)
+    line = tool_hand.third_line("agy", "api", True, {"GEMINI_API_KEY": "x"})
+    assert line["state"] == "no_key" and line["line"] == "Antigravity signs in with Google; it takes no key here."
     card = tool_hand.card([status("codex", billing="api")], machine_of(), {"CODEX_API_KEY": "sk-secret"})
     assert "sk-secret" not in repr(card)
 
@@ -102,6 +104,12 @@ def test_the_card_lists_the_tools_not_in_the_hand_in_three_groups():
     assert rows["codex"]["lines"]["subscription"]["needs"] == "sign_in"
     assert set(rows["agy"]["lines"]) == {"subscription", "api"}
     assert got["first"] == ""                                                                        # the only ready tool is experimental: nothing is picked for the person
+
+
+def test_antigravity_with_a_key_set_is_still_a_sign_in_not_a_key():
+    got = tool_hand.card([status("agy", logged_in=None)], machine_of(), {"GEMINI_API_KEY": "x"})
+    row = got["tools"][0]
+    assert row["lines"]["api"]["state"] != "ok" and row["lines"]["subscription"]["warn"] == ""      # no key is promised or warned of (§250.5)
 
 
 def test_the_first_ready_tool_is_the_one_the_card_opens_on():

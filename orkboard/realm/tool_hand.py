@@ -26,9 +26,10 @@ from orkboard.realm import harnesses, tool_errors
 HAND_MAX = 6                                                     # the most tools in the hand (§232.4: "up to six")
 READY, SIGNED_OUT, NOT_INSTALLED = "ready", "signed_out", "not_installed"
 GROUPS = (READY, SIGNED_OUT, NOT_INSTALLED)                      # the adding card's groups, in the order it shows them (toolpick.js's three)
-# The variables a tool takes a key from: `tool_errors.TAKES_KEYS` (the keys that win over a sign-in) and Antigravity's pair, which `tools.detect` reads
-# as an API key too. Only the names are read here, never a value.
-KEYS: dict[str, tuple[str, ...]] = {**tool_errors.TAKES_KEYS, "agy": ("GEMINI_API_KEY", "GOOGLE_API_KEY")}
+# The variables a tool takes a key from: `tool_errors.TAKES_KEYS` alone, the keys that win over a sign-in. Antigravity is not in it: with GEMINI_API_KEY
+# set and no Google sign-in, agy 1.5.0 asked for the sign-in and ran nothing (decisions §250.5), so no key is promised for it until one is shown to work
+# (spec 143 D.5). Only the names are read here, never a value.
+KEYS: dict[str, tuple[str, ...]] = dict(tool_errors.TAKES_KEYS)
 BILLINGS = settings.BILLINGS
 TEST_COST = "about $0.001"                                       # what Test & add costs on an API key, said under the button
 
@@ -56,7 +57,9 @@ def third_line(tool_id: str, billing: str, logged_in: bool | None, env: Mapping[
             return {"state": "ok", "line": f"Uses the key in your environment: {named}", "needs": "", "var": named, "warn": "",
                     "cost": "Paid per token, by that key"}
         var = (KEYS.get(tool_id) or ("",))[0]
-        say = f"No key found: set {var} in your environment, then Test again" if var else f"No key {title} takes is known here: use its subscription"
+        say = (f"No key found: set {var} in your environment, then Test again" if var else
+               "Antigravity signs in with Google; it takes no key here." if tool_id == "agy" else
+               f"No key {title} takes is known here: use its subscription")
         return {"state": "no_key", "line": say, "needs": "key", "var": var, "warn": "", "cost": ""}
     warn = f"{named} is set in your environment: {title} uses it before your subscription and is paid per token." if named else ""
     if logged_in is False:

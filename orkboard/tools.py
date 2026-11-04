@@ -147,8 +147,7 @@ def _claude_login(env: dict, home: Path, path: str = "", run: Callable | None = 
 
 
 def _agy_login(env: dict, home: Path) -> tuple[bool | None, str]:
-    if env.get("GEMINI_API_KEY") or env.get("GOOGLE_API_KEY"):
-        return True, "api"
+    # No key is promised: agy 1.5.0 with GEMINI_API_KEY and no Google sign-in asked for the sign-in (decisions §250.5, spec 143 D).
     return None, "subscription"
 
 

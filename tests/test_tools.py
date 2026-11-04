@@ -31,7 +31,7 @@ def test_found_tools_with_versions_and_logins(tmp_path: Path):
 def test_an_api_key_means_api_billing(tmp_path: Path):
     got = {t.id: t for t in tools.detect(_which({"claude", "agy"}), _run,
                                          env={"ANTHROPIC_API_KEY": "x", "GEMINI_API_KEY": "y"}, home=tmp_path)}
-    assert got["claude"].billing == "api" and got["agy"].billing == "api"
+    assert got["claude"].billing == "api" and got["agy"].billing == "subscription"          # agy takes no key (decisions §250.5)
     assert "API key" in got["claude"].summary()
 
 
