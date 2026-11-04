@@ -272,6 +272,8 @@ class Orkboard:
         self.ops = ops.Ops(self)                  # the person's, one per host: showing a project changes nothing of it
         self.commands.update(self.ops.commands())
         self.commands.update(self.keep_awake.commands())   # awake.* (desktop only: not BoardPhone's)
+        from orkboard.gui import phone_journal
+        self.commands.update(phone_journal.commands(self))   # journal.phone_ask · turn_on · not_now: Settings' one-time question (spec 136 A.2)
         shown_board = self.commands["ideas.board"]
         self.commands["ideas.board"] = lambda a: self._with_ops(shown_board(a))
         if restore:
@@ -450,30 +452,10 @@ class Orkboard:
         self._journal_tick()
 
     def _journal_tick(self) -> None:
-        """Each open project that asked for a `[journal]` (realm/remote_journal.py, decisions §229) sends it when due, in a
-        daemon thread of its own (one at a time), never blocking the clock and never raising into it. Next step, §229.4:
-        *at once on a failure* (a goal that failed, a gate gone red, a command broken): `due(..., urgent=True)`."""
-        import datetime as dt
-        import threading
-        from orkboard.realm import remote_journal
-        try:
-            busy = getattr(self, "_journal_threads", None)
-            if busy is None:
-                busy = self._journal_threads = {}
-            now = dt.datetime.now()
-            for p in list(getattr(self.projects, "open_ones", None) or []):
-                if busy.get(p.path) is not None and busy[p.path].is_alive():
-                    continue
-                config = remote_journal.read_config(p.root)
-                state = Path(p.ideas.state_dir)
-                if config is None or not remote_journal.due(state, config, now):
-                    continue
-                pages = p.ideas.root(False)
-                busy[p.path] = t = threading.Thread(target=remote_journal.send, args=(p.root, state, config, now),
-                                                    kwargs={"pages": pages}, daemon=True, name="orkboard-journal")
-                t.start()
-        except Exception:                         # a journal that cannot be sent troubles no work
-            pass
+        """Each open project that asked for a `[journal]` (realm/remote_journal.py, decisions §229) sends it when due, and reads the phone's
+        inbox when it has one (spec 136, decisions §243): gui/phone_journal.py, in a daemon thread a project, never blocking the clock."""
+        from orkboard.gui import phone_journal
+        phone_journal.tick(self)
 
     def _mana(self) -> dict[str, Any]:
         """The tool now with no project open: the Main tool, nothing moved (a Board's own is `Ideas.mana`)."""

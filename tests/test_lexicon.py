@@ -240,3 +240,16 @@ def test_the_route_and_the_phases_are_the_words_of_spec_99_c():
     for key in keys:
         assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
     assert lexicon.words("the route, Talk, Spec, Work and Done") == "the route, Talk, Spec, Work and Done"      # nothing changes: these have no old spelling
+
+
+def test_the_inbox_and_the_taken_are_the_words_of_spec_136():
+    """Spec 136 D: each word has its key, today's word and no old spelling; each is one line of `TERMS` with its meaning."""
+    keys = {"inbox": "inbox", "taken": "taken", "waiting_to_be_taken": "Waiting to be taken", "as_of": "As of"}
+    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
+    for key, word in keys.items():
+        assert lexicon.term(key) == word and rows[key] == (word, ""), key
+    assert lexicon.term("inbox", many=True) == "inboxes"
+    from pathlib import Path
+    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    for key in keys:
+        assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
