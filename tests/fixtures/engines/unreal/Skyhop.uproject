@@ -1,0 +1,9 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.3",
+  "Modules": [
+    { "Name": "Skyhop", "Type": "Runtime", "LoadingPhase": "Default" },
+    { "Name": "SkyhopEditor", "Type": "Editor", "LoadingPhase": "PostEngineInit" }
+  ],
+  "Plugins": [ { "Name": "Tools", "Enabled": true } ]
+}

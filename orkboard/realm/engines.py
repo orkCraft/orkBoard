@@ -18,9 +18,9 @@ from __future__ import annotations
 
 from pathlib import PurePosixPath
 
-from orkboard.realm import engine_godot, engine_unity
+from orkboard.realm import engine_godot, engine_unity, engine_unreal
 
-ENGINES = {"godot": engine_godot, "unity": engine_unity}
+ENGINES = {"godot": engine_godot, "unity": engine_unity, "unreal": engine_unreal}
 CODE = {".gd", ".tscn", ".cs", ".asmdef", ".h", ".hpp", ".cpp", ".uproject", ".godot", ".csproj", ".uxml", ".unity"}
 TREE_SUFFIXES = (".gd", ".tscn", ".godot", ".cs", ".unity", ".uxml")
 TREE_NAMES = ("EditorBuildSettings.asset",)
@@ -82,7 +82,7 @@ def matters(path: str) -> bool:
 
 def screens(tree) -> tuple[str, list[dict]]:
     for e in _each():
-        source, rows = e.screens(tree)
+        source, rows = e.screens(tree) if hasattr(e, "screens") else ("", [])      # Unreal has none (spec 145 C.4)
         if rows:
             return source, rows
     return "", []
@@ -90,9 +90,9 @@ def screens(tree) -> tuple[str, list[dict]]:
 
 def screen_links(source: str, tree, rows: list[dict], ids: list[str]) -> list[dict] | None:
     e = ENGINES.get(source)
-    return e.screen_links(tree, rows, ids) if e is not None else None
+    return e.screen_links(tree, rows, ids) if e is not None and hasattr(e, "screen_links") else None
 
 
 def screen_entry(source: str, tree, rows: list[dict], ids: list[str]) -> str:
     e = ENGINES.get(source)
-    return e.entry(tree, rows, ids) if e is not None else ""
+    return e.entry(tree, rows, ids) if e is not None and hasattr(e, "entry") else ""
