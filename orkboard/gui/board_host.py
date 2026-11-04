@@ -272,6 +272,8 @@ class Orkboard:
         self.ops = ops.Ops(self)                  # the person's, one per host: showing a project changes nothing of it
         self.commands.update(self.ops.commands())
         self.commands.update(self.keep_awake.commands())   # awake.* (desktop only: not BoardPhone's)
+        from orkboard.gui import board_sync
+        self.board_sync = board_sync.BoardSync(self)      # spec 137 B: the Board's branch, held and pushed (nothing runs without `[board]`)
         from orkboard.gui import phone_journal
         self.commands.update(phone_journal.commands(self))   # journal.phone_ask · turn_on · not_now: Settings' one-time question (spec 136 A.2)
         shown_board = self.commands["ideas.board"]
@@ -382,7 +384,15 @@ class Orkboard:
                 "hud": {"show_gold": show_gold, "gold": gold, "lumber": lumber}, "rate": window_rate.shown(self.machine),
                 "repo": str(root) if root is not None else "", "projects": self.projects.list(),
                 "update": self.updates.snapshot(), "repair": self.repair.snapshot(), "update_policy": self.machine.updates, "version": __version__,
-                "usage_ask": self.usage.should_ask()}
+                "usage_ask": self.usage.should_ask(), **self._board_status()}
+
+    def _board_status(self) -> dict[str, Any]:
+        """`board_held` (another worker holds the Board: by, kind, until) and `board_aside`, for the shown project; nothing without `[board]` (spec 137 B.2)."""
+        try:
+            shown = self.projects.current()
+            return self.board_sync.status(shown) if shown is not None else {}
+        except Exception:
+            return {}
 
     # What the page reads of the snapshot and a phone has no use for: the computer's own (spec 94 §2.3).
     COMPUTER_ONLY = ("onboarding", "sign_in", "main_checks", "repo", "usage_ask", "update_policy", "ask", "passing", "preview", "play_face", "new_n")      # "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8); "passing": so is the Orkmaster's column (spec 128 D.3)
@@ -456,6 +466,8 @@ class Orkboard:
         inbox when it has one (spec 136, decisions §243): gui/phone_journal.py, in a daemon thread a project, never blocking the clock."""
         from orkboard.gui import phone_journal
         phone_journal.tick(self)
+        from orkboard.gui import board_sync
+        board_sync.tick(self)             # the Board's branch (spec 137 B): taken, renewed, pushed; nothing without `[board]`
 
     def _mana(self) -> dict[str, Any]:
         """The tool now with no project open: the Main tool, nothing moved (a Board's own is `Ideas.mana`)."""
@@ -475,6 +487,8 @@ class Orkboard:
         self.pusher.listener = listener
 
     def close(self) -> None:
+        from orkboard.gui import board_sync
+        board_sync.close(self)            # the Board's lease given back, the Board pushed (spec 137 B.2)
         self.sign_ins.close()             # quitting stops the sign-ins it opened
         self.ops.close()
         self.projects.close_all()

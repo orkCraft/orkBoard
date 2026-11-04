@@ -40,14 +40,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from orkboard.realm import event_log, ideas, spend_report
+from orkboard.realm import event_log, ideas, plumbing, spend_report
 
 FILE = "orkcraft.toml"
 LOCAL_REF = "refs/orkboard/journal"
-HELD = "[held back: it looked like a secret]"
 EVENT_DAYS, CALL_DAYS, SPEND_DAYS = 3, 3, 7
-AUTHOR = {"GIT_AUTHOR_NAME": "Orkboard", "GIT_AUTHOR_EMAIL": "orkboard@localhost",
-          "GIT_COMMITTER_NAME": "Orkboard", "GIT_COMMITTER_EMAIL": "orkboard@localhost"}
+HELD, AUTHOR, _SECRETS = plumbing.HELD, plumbing.AUTHOR, plumbing.SECRETS     # the plumbing is shared (realm/plumbing.py)
 STATE_FILE = "journal.json"
 
 _SECRETS = re.compile("|".join((
@@ -100,16 +98,7 @@ def turn_on(root: Path, inbox: str = "orkboard/inbox") -> JournalConfig:
 
 
 
-def scrub(text: str) -> tuple[str, int]:
-    """The text with every line that has a secret's shape replaced by words, and how many were."""
-    held, out = 0, []
-    for ln in text.splitlines(keepends=True):
-        if _SECRETS.search(ln):
-            held += 1
-            out.append(HELD + ("\n" if ln.endswith("\n") else ""))
-        else:
-            out.append(ln)
-    return "".join(out), held
+scrub = plumbing.scrub
 
 
 def _day(now: dt.datetime, back: int) -> str:
@@ -297,12 +286,7 @@ def _mark(state_dir: Path, now: dt.datetime, result: dict) -> None:
 # -- sending, by git's plumbing -------------------------------------------------------------------------------------
 
 def _git(root: Path, run: Callable, env: dict, *args: str, data: bytes | None = None) -> str:
-    done = run(["git", *args], cwd=str(root), env=env, input=data, capture_output=True, timeout=120)
-    if done.returncode != 0:
-        words = (done.stderr or done.stdout or b"")
-        raise RuntimeError(" ".join((words.decode("utf-8", "replace") if isinstance(words, bytes) else str(words)).split()) or f"git {args[0]} failed")
-    out = done.stdout
-    return (out.decode("utf-8", "replace") if isinstance(out, bytes) else str(out)).strip()
+    return plumbing.git(root, run, env, *args, data=data)
 
 
 def send(root: Path, state_dir: Path, config: JournalConfig, now: dt.datetime | None = None,
@@ -336,12 +320,8 @@ def _send(root: Path, state_dir: Path, config: JournalConfig, now: dt.datetime, 
     if digest == _stamp(state_dir).get("digest"):
         return {"sent": False, "why": "nothing changed"}
     index.unlink(missing_ok=True)
-    env = {**os.environ, **AUTHOR, "GIT_INDEX_FILE": str(index), "GIT_TERMINAL_PROMPT": "0"}     # never a password asked of no one
-    for name, body in files.items():
-        data = body if isinstance(body, bytes) else body.encode("utf-8")
-        sha = _git(root, run, env, "hash-object", "-w", "--stdin", data=data)
-        _git(root, run, env, "update-index", "--add", "--cacheinfo", f"100644,{sha},{name}")
-    tree = _git(root, run, env, "write-tree")
+    env = plumbing.env(index)
+    tree = plumbing.tree_of(root, run, env, {n: b if isinstance(b, bytes) else b.encode("utf-8") for n, b in files.items()})
     try:
         parent = _git(root, run, env, "rev-parse", "--verify", "-q", LOCAL_REF)
     except RuntimeError:

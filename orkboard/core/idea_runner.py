@@ -126,6 +126,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         self._limits: list = []
         self._limits_at = 0.0
         self._lock = threading.RLock()
+        self.board_held: Callable[[], str] = lambda: ""      # spec 137 B: the words when another worker holds the Board, else ""
         self._runs: dict[tuple[str, str], Run] = {}
         self._gate_runs: dict[str, object] = {}              # a worktree's last gate run, until the task reads it
         self._active: list[str] = []
@@ -213,6 +214,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
 
     def start(self, slug: str) -> None:
         """The plan was passed (or Start again): every task not merged waits anew, the idea is `working`."""
+        if why := self.board_held():
+            raise RuntimeError(why)
         with self._lock:
             plan = self.plan(slug)
             if plan is None:
@@ -267,6 +270,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
     def tick(self) -> None:
         """Move what can move: waiting → ready, a held task whose window came back, a free slot → a task starts,
         an idea whose tasks are all merged or dropped → done, one with a failed task (and none running) → failed."""
+        if self.board_held():                      # another worker holds the Board: nothing starts or moves here (spec 137 B)
+            return
         now = time.time()
         with self._lock:
             limits = self._read_limits(now)

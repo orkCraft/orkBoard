@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import goal_types, ideas, remote_inbox, remote_journal
+from orkboard.realm import board_branch, goal_types, ideas, remote_inbox, remote_journal
 
 ASKED_FILE = "journal_asked.json"
 ASK_LINE = ("Follow this project from your phone away from home? Its status goes to a branch of its own on origin, "
@@ -72,6 +72,7 @@ class PhoneJournal:
         self.host = host
         self._threads: dict[str, threading.Thread] = {}
         self._needs: dict[str, tuple[float, set[tuple[str, str]], frozenset[str]]] = {}     # path -> (looked at, the cards, the goals they are for)
+        self._came: dict[str, float] = {}                 # path -> when (monotonic) a card for the person last came to the hand
 
     # -- A.2: asked for once ---------------------------------------------------------------------------------
 
@@ -117,7 +118,19 @@ class PhoneJournal:
         cards = {(str(n.get("idea") or ""), str(n.get("kind") or "")) for n in rows if n.get("idea") and n.get("kind") not in NOT_A_CARD}
         goals = frozenset(i for i, _ in cards)
         self._needs[p.path] = (now, cards, goals)
-        return cards, goals, before is not None and bool(cards - before[1])
+        new = before is not None and bool(cards - before[1])
+        if new:
+            self._came[p.path] = now
+        return cards, goals, new
+
+    def came_at(self, p: Any) -> float:
+        """When (`time.monotonic()`) a card for the person last came to the hand of this project; 0.0 when none has since this host began. The
+        Board's branch pushes at once on it (spec 137 B.2, `urgent`)."""
+        try:
+            self._cards(p, time.monotonic())
+        except Exception:
+            pass
+        return self._came.get(p.path, 0.0)
 
     def lay(self, p: Any) -> Callable[[dict, str], str]:
         def lay(goal: dict, inbox_id: str) -> str:
@@ -142,12 +155,20 @@ class PhoneJournal:
         parties = {t["slug"] for t in ideas.tracks(root, make=False)}
         return remote_inbox.Context(parties=parties, types=lambda party: {t.id for t, _ in goal_types.offered(state, root, party)})
 
+    def holds_board(self, p: Any) -> bool:
+        """Whether this computer may take the inbox's goals: with the Board's branch on (`[board]`), only its holder does (spec 137 B.2.4, decisions
+        §244.4); with none, as before."""
+        if board_branch.read_config(p.root) is None:
+            return True
+        sync = getattr(self.host, "board_sync", None)
+        return bool(sync is not None and sync.holds(p))
+
     def run(self, p: Any, config: remote_journal.JournalConfig, now: dt.datetime, needs: frozenset[str], urgent: bool) -> None:
         """The inbox read and taken (when the project has one), then the journal sent when due (or `urgent`). Never raises."""
         try:
             state = Path(p.ideas.state_dir)
             pages = p.ideas.root(False)
-            if config.inbox:
+            if config.inbox and self.holds_board(p):
                 remote_inbox.take(p.root, state, config, self.context(p), self.lay(p), self.find(p), socket.gethostname(), now,
                                   pages=pages, needs=needs)
             if remote_journal.due(state, config, now, urgent):
