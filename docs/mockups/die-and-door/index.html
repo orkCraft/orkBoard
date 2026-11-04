@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Die and Door</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup of decisions §246: the die's two faces (Play up, the orks' work in front), rolled by the Board, never by the person; the door as the person,
+   Here or Away; the bug in the Orkmaster's menu. The die is orkUI's (`.ork-die`, CSS 3D); what is drawn here first and would go into orkUI after a yes:
+   the steeper view (`.mk-tilt`), the front face's marks (stop, resume) and the quarter turn on the table (`.mk-turn`). Every colour is orkUI's token. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); color-scheme: dark; }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+p, h1, h2 { margin: 0; }
+.mk-bar { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6); padding-block: var(--ork-4);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.mk-main { padding-block: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 100ch; margin-bottom: var(--ork-5); color: var(--ork-ink-read); }
+.mk-line b { color: var(--ork-ink); }
+.mk-row { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: flex-start; }
+.mk-fig { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); width: 190px; }
+.mk-fig.wide { width: auto; align-items: flex-start; }
+.mk-fig > h2 { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); text-align: center; }
+.mk-fig > p { color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; }
+.mk-fig.wide > p { text-align: left; max-width: 520px; }
+.mk-fig > p b { color: var(--ork-ink); font-weight: 600; }
+.mk-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ork-3) var(--ork-6); margin-top: var(--ork-5); max-width: 1120px; }
+.mk-notes p { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-notes p b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 100ch; margin-bottom: var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* ---------- the die: orkUI's, a steeper view so the front face is a face, not a strip ---------- */
+.mk-die { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
+.mk-die .ork-die { display: block; rotate: calc(var(--ork-motion-lean) * -1); }
+.mk-die.mk-tilt .ork-die { height: calc(var(--_c) * 30); }
+.mk-die.mk-tilt .ork-die__cube { top: calc(50% - var(--_c) * 2); transform: rotateX(var(--mk-x, 34deg)) rotateY(var(--mk-y, -20deg)) rotateZ(var(--mk-z, 0deg)); }
+.mk-die.mk-turn .ork-die__cube { animation: mk-turn calc(var(--ork-motion-quick) * 3) steps(3) 1 both; }
+@keyframes mk-turn { from { transform: rotateX(var(--mk-x, 34deg)) rotateY(var(--mk-y, -20deg)) rotateZ(0deg); } to { transform: rotateX(var(--mk-x, 34deg)) rotateY(var(--mk-y, -20deg)) rotateZ(90deg); } }
+@media (prefers-reduced-motion: reduce) { .mk-die.mk-turn .ork-die__cube { animation: none; } }
+.mk-die .ork-die__face.is-right::before { background-image: none; }               /* the right face blank: one mark on the orks' side, the front's */
+.mk-die { --_front: var(--ork-ink-muted); }
+.mk-die[data-orks="running"] { --_front: var(--ork-danger); }
+.mk-die[data-orks="stopped"] { --_front: var(--ork-ink); }
+.mk-die .ork-die__face.is-front::before { background-image: none; }
+/* the words under it, a potion's way: the two buttons' words */
+.mk-die .mk-words { display: flex; gap: var(--ork-2); font: var(--ork-type-caption); white-space: nowrap; }
+.mk-die .mk-words b { font-weight: 600; }
+.mk-die .mk-words .o { color: var(--_front); }
+.mk-die .mk-words .sep { color: var(--ork-ink-faint); }
+/* the two presses: buttons laid over the faces as the page measures them */
+.mk-hit { position: absolute; z-index: 2; padding: 0; border: 0; background: none; cursor: pointer; }
+.mk-hit:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 1px; }
+.mk-show .mk-hit { outline: 1px dashed var(--ork-edge); }
+.mk-show .mk-hit.front { outline-color: var(--_front); }
+.mk-size { font: var(--ork-type-caption); color: var(--ork-ink-faint); }
+
+/* ---------- the hand's end, where the die lies ---------- */
+.mk-hand { display: flex; align-items: flex-end; gap: var(--ork-4); padding: var(--ork-4) var(--ork-4) var(--ork-3); border: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); }
+.mk-pool { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 60px; font: var(--ork-type-caption); }
+.mk-pool b { font-weight: 600; }
+
+/* ---------- the top row with the door at its end ---------- */
+.mk-top { display: flex; align-items: center; gap: var(--ork-5); width: min(980px, 100%); height: 64px; padding: 0 var(--ork-4); background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
+.mk-tab { display: flex; align-items: center; gap: var(--ork-2); font-family: var(--ork-font-pixel); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ork-ink-muted); white-space: nowrap; }
+.mk-tab img { width: 32px; height: 32px; image-rendering: pixelated; }
+.mk-tab.on { color: var(--ork-ink); }
+.mk-doorbtn { margin-left: auto; display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-1) var(--ork-2); border: 0; background: none; color: var(--ork-ink); cursor: pointer; text-align: left; }
+.mk-doorbtn:hover .ork-door, .mk-doorbtn:focus-visible .ork-door { --_frame: var(--ork-edge); }
+.mk-doorbtn:focus-visible { outline: 2px solid var(--ork-ink); }
+.mk-doorbtn .w { display: flex; flex-direction: column; font: var(--ork-type-caption); }
+.mk-doorbtn .w b { font-family: var(--ork-font-pixel); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 400; }
+.mk-doorbtn .w span { color: var(--ork-ink-muted); }
+.mk-doorbtn.is-away .w b { color: var(--ork-ink-muted); }
+
+/* ---------- the day under the door: the person's hours and the resets ---------- */
+.mk-day { position: relative; width: min(980px, 100%); height: 74px; margin-top: var(--ork-3); border: var(--ork-line) solid var(--ork-frame); background: var(--ork-table); font: var(--ork-type-caption); }
+.mk-day .band { position: absolute; top: 0; bottom: 18px; background: color-mix(in srgb, var(--ork-ink) 7%, transparent); border-inline: 1px dashed var(--ork-edge); }
+.mk-day .tick { position: absolute; bottom: 2px; color: var(--ork-ink-faint); transform: translateX(-50%); }
+.mk-day .reset { position: absolute; top: 6px; bottom: 18px; width: 0; border-left: 2px solid var(--ork-mana); }
+.mk-day .reset span { position: absolute; top: -2px; left: 4px; color: var(--ork-mana); white-space: nowrap; }
+.mk-day .now { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid var(--ork-ink); }
+.mk-day .now span { position: absolute; top: 2px; left: 4px; color: var(--ork-ink); font-weight: 600; }
+.mk-day .step { position: absolute; top: 28px; display: flex; align-items: center; gap: 4px; padding: 1px 6px; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); white-space: nowrap; color: var(--ork-ink-read); }
+.mk-legend { display: flex; gap: var(--ork-5); flex-wrap: wrap; margin-top: var(--ork-2); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* ---------- the Orkmaster's menu with Report a problem ---------- */
+.mk-menu { display: flex; flex-direction: column; width: 220px; padding: var(--ork-1); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); }
+.mk-menu span { display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) var(--ork-3); font: var(--ork-type-body); }
+.mk-menu span.sep { padding: 0; margin: var(--ork-1) 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.mk-menu span.on { background: var(--ork-raised); }
+.mk-menu .ork-sign { color: var(--ork-ink-muted); }
+.mk-crash { width: 360px; padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); display: flex; flex-direction: column; gap: var(--ork-3); font: var(--ork-type-caption); }
+.mk-crash .why { color: var(--ork-danger); font-weight: 600; font-size: 13px; }
+.mk-crash .acts { display: flex; gap: var(--ork-2); }
+.mk-notice { display: flex; align-items: center; gap: var(--ork-3); width: 520px; padding: var(--ork-2) var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-body); color: var(--ork-ink-read); }
+.mk-notice img { width: 24px; height: 24px; image-rendering: pixelated; }
+.ctrls { display: flex; gap: var(--ork-3); flex-wrap: wrap; margin-bottom: var(--ork-4); }
+</style>
+</head>
+<body>
+<header class="mk-bar"><span class="ork-label">Orkboard · decisions §246: the die is what moves, the door is the person</span>
+  <nav><a class="ork-btn" href="#view">1 · The view</a><a class="ork-btn" href="#faces">2 · Its states</a><a class="ork-btn" href="#live">3 · Live</a><a class="ork-btn" href="#door">4 · The door</a><a class="ork-btn" href="#bug">5 · The bug</a></nav></header>
+<main class="mk-main">
+
+  <section class="mk-sec" id="view">
+    <h1>1 · Two faces need a steeper view</h1>
+    <p class="mk-line">Today the cube is seen at <b>18°</b> from above: its front face is a strip, about a third of a face, too thin to press and too thin to read a mark on. Tilted to
+      <b>about 34°</b>, and turned a little more, the front face is more than half a face: a mark reads on it and it can be pressed. The up face stays the larger, so Play stays the die's first word.
+      The dashed boxes are the two presses as the page would lay them; the numbers under each die are the front face's height as drawn here.</p>
+    <div class="mk-row" id="views"></div>
+  </section>
+
+  <section class="mk-sec" id="faces">
+    <h1>2 · Its states: the up face is Play, the front face the orks</h1>
+    <p class="mk-line">The up face is today's (§196, §200): the play arrow at rest, the arrow glowing while it plays, the cross when the last start failed, the spark when dev is new.
+      The front face is the orks' work: <b>■ muted while nothing runs</b>, <b>■ in the danger colour only while something runs and spends</b>, <b>↻ once stopped</b>. The right face is
+      blank, so the orks' side has one mark. Under the die the two words, as under a potion.</p>
+    <div class="mk-row" id="states"></div>
+  </section>
+
+  <section class="mk-sec" id="live">
+    <h1>3 · Live: the Board rolls it, the person presses</h1>
+    <p class="mk-line">Press the up face to play, the front face to stop and resume. Nothing is dragged or turned by the person: <b>on Stop all the die makes a quarter turn on the table</b>
+      (round its up axis, so Play stays on top) and the face with <b>↻ Resume</b> comes to the front; Resume turns it back. Under reduced motion the face just changes.
+      The orks' runs come and go by themselves here every few seconds, so the front face goes muted and red on its own.</p>
+    <div class="ctrls"><button class="ork-btn" type="button" id="show">Show the presses</button><button class="ork-btn quiet" type="button" id="runs">The orks start a run</button></div>
+    <div class="mk-hand" id="livehand"></div>
+    <p class="mk-line" id="livesay" style="margin-top:var(--ork-3)">&nbsp;</p>
+  </section>
+
+  <section class="mk-sec" id="door">
+    <h1>4 · The door is the person: Here or Away</h1>
+    <p class="mk-line">At the top row's end, where Stop all stood, alone (the bug has gone to the menu). <b>Open: Here.</b> <b>Shut: Away until 19:00.</b> The hours from Settings
+      (<i>When I am at the computer</i>, §245.5) lead; a press holds the other state until the next edge of the hours, said under the word. Press it.</p>
+    <div class="mk-top" id="top"></div>
+    <div class="mk-day" id="day"></div>
+    <div class="mk-legend"><span><b style="color:var(--ork-ink)">▮</b> your hours</span><span style="color:var(--ork-mana)">│ a reset of Claude's 5 hours</span><span>cards on the line: the steps the Board laid by the door</span></div>
+    <div class="mk-notes">
+      <p><b>Away</b>: a step that will ask you (Talk's rounds, a review) waits for the first reset in your hours; a step that asks nothing takes the resets while you are away. The hand keeps what waits and sends no push, but for money and safety.</p>
+      <p><b>Here</b>: as today, a step that asks starts in its turn and its cards come to the hand.</p>
+      <p><b>A press holds until the edge</b>: shut at 15:00 inside your hours, it says <i>Away until 19:00 · held</i>; at 19:00 the hours lead again. With no hours set the door is yours alone.</p>
+      <p><b>Not here</b>: the door opening by itself when you work at the computer; <i>Away, but ask me on the phone</i>. Both wait until the door has been used.</p>
+    </div>
+  </section>
+
+  <section class="mk-sec" id="bug">
+    <h1>5 · The bug hides: the menu, and where something broke</h1>
+    <p class="mk-line">No icon in the top row. <b>Report a problem…</b> is in the Orkmaster's <b>…</b>, beside Settings and Files; <b>where something broke it is offered there</b>, with its logs;
+      <b>while a fix runs</b> the Orkmaster's line says it under the pane's title; a fix ready is a card in the hand (the person's move, §240).</p>
+    <div class="mk-row">
+      <figure class="mk-fig wide"><h2>The Orkmaster's …</h2><div class="mk-menu"><span><i class="ork-sign tune"></i>Settings</span><span><i class="ork-sign page"></i>Files</span><span class="sep"></span><span class="on"><i class="ork-sign bug"></i>Report a problem…</span></div></figure>
+      <figure class="mk-fig wide"><h2>Where it broke</h2><div class="mk-crash"><span class="why">The map of System did not draw: an error in the page</span><span style="color:var(--ork-ink-muted)">Its logs are kept with the report.</span><span class="acts"><button class="ork-btn" type="button">Report</button><button class="ork-btn primary" type="button">Fix it</button><button class="ork-btn quiet" type="button">Close</button></span></div></figure>
+      <figure class="mk-fig wide"><h2>While a fix runs</h2><div class="mk-notice"><img src="../../../design-system/orkui/races/peon-crown.png" alt=""><span>Fixing Orkboard: the map of System did not draw · Claude Code is on it</span></div></figure>
+    </div>
+  </section>
+
+  <p class="mk-foot">Drawn for decisions §246 (spec 139). Drawn here first, for orkUI after a yes: the view at about 34° (<code>.ork-die</code>'s cube), the front face's marks (stop, resume),
+    the right face blank, the quarter turn on the table. The door is orkUI's <code>.ork-door</code> as it is; only what it means changes.</p>
+</main>
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  // the front face's marks, on the face's 16 x 16 grid in 2 x 2 blocks (8 x 8 blocks), as orkUI draws a die's marks
+  var MARKS = {                                           // [offset in cells, rows of 2 x 2 blocks]
+    stop:   [0, ["........", "........", "..####..", "..####..", "..####..", "..####..", "........", "........"]],
+    resume: [1, ["..###.#", ".#...##", "#...###", "#......", "#.....#", ".#...#.", "..###.."]]
+  };
+  var css = "";
+  Object.keys(MARKS).forEach(function (k) {
+    var img = [], pos = [];
+    var off = MARKS[k][0];
+    MARKS[k][1].forEach(function (row, y) { for (var x = 0; x < row.length; x++) if (row[x] === "#") { img.push("linear-gradient(var(--_front), var(--_front))"); pos.push("calc(var(--_c) * " + (off + 2 * x) + ") calc(var(--_c) * " + (off + 2 * y) + ")"); } });
+    css += '.mk-die[data-front="' + k + '"] .ork-die__face.is-front::before { background-image: ' + img.join(", ") + "; background-position: " + pos.join(", ") + "; }\n";
+  });
+  var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+
+  var CUBE = '<span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span>';
+  // a die: o = { up: "play"|"no"|"new", playing, orks: "idle"|"running"|"stopped", tilt, big, words }
+  function die(o) {
+    var front = o.orks === "stopped" ? "resume" : "stop";
+    var play = o.playing ? "Playing" : o.up === "no" ? "Failed" : "Play";
+    var orks = o.orks === "stopped" ? "Resume" : o.orks === "running" ? "Stop all" : "Stop all";
+    return '<span class="mk-die' + (o.tilt === false ? "" : " mk-tilt") + '" data-orks="' + (o.orks || "idle") + '" data-front="' + front + '" style="' + (o.x ? "--mk-x:" + o.x + "deg" : "") + '">'
+      + '<span class="ork-die face-' + (o.up || "play") + (o.big ? " big" : "") + (o.playing ? " is-playing" : "") + '" aria-hidden="true">' + CUBE + "</span>"
+      + (o.words === false ? "" : '<span class="mk-words"><b>' + play + '</b><span class="sep">·</span><b class="o">' + (o.orks === "stopped" ? "Stopped" : orks) + "</b></span>")
+      + '<button type="button" class="mk-hit up" aria-label="' + (o.playing ? "Close the preview" : "Play: the project's preview of dev") + '"></button>'
+      + '<button type="button" class="mk-hit front" aria-label="' + (o.orks === "stopped" ? "Resume: the orks go back to work" : "Stop all: stop every run of this project's orks") + '"></button></span>';
+  }
+  // lay the two presses over the faces the page measures (a transformed face's box is its projection)
+  function lay(root) {
+    [].slice.call(root.querySelectorAll(".mk-die")).forEach(function (d) {
+      var b = d.getBoundingClientRect(), up = d.querySelector(".is-up").getBoundingClientRect(), fr = d.querySelector(".is-front").getBoundingClientRect();
+      var cut = Math.round((up.bottom + fr.top) / 2);
+      var put = function (el, l, t, r, btm) { el.style.left = (l - b.left) + "px"; el.style.top = (t - b.top) + "px"; el.style.width = (r - l) + "px"; el.style.height = Math.max(0, btm - t) + "px"; };
+      put(d.querySelector(".mk-hit.up"), up.left, up.top, up.right, cut);
+      put(d.querySelector(".mk-hit.front"), fr.left, cut, fr.right, fr.bottom);
+      var sz = d.parentNode.querySelector(".mk-size");
+      if (sz) sz.textContent = "front face: " + Math.round(fr.bottom - cut) + " px tall";
+    });
+  }
+
+  // 1 · the view
+  var V = [["Today: 18°", { tilt: false, words: false }, "The front face is a strip under the up face."],
+           ["Tilted: 34°", { orks: "running" }, "<b>Proposed.</b> The front face reads and can be pressed with a pointer."],
+           ["Tilted, big: 34°", { orks: "running", big: true }, "The phone's die (orkUI's <code>big</code>): the front face well over 44 px."]];
+  document.getElementById("views").innerHTML = V.map(function (v) { return '<figure class="mk-fig mk-show"><h2>' + v[0] + "</h2>" + die(v[1]) + '<span class="mk-size"></span><p>' + v[2] + "</p></figure>"; }).join("");
+
+  // 2 · its states
+  var S = [["At rest", { orks: "idle" }, "Nothing runs: both faces muted. <b>Stop all</b> is seen, never red."],
+           ["The orks at work", { orks: "running" }, "Something runs and spends: the front face and its word in the danger colour."],
+           ["Playing, the orks at work", { orks: "running", playing: true }, "Both at once, each on its face: the arrow glows, the stop is red."],
+           ["Stopped", { orks: "stopped" }, "After Stop all: <b>↻ Resume</b> in front, <i>Stopped</i> under it. Nothing starts by itself."],
+           ["The last start failed", { orks: "running", up: "no" }, "Play's cross on the up face; the orks' work is another matter, on its own face."]];
+  document.getElementById("states").innerHTML = S.map(function (s) { return '<figure class="mk-fig"><h2>' + s[0] + "</h2>" + die(s[1]) + "<p>" + s[2] + "</p></figure>"; }).join("");
+
+  // 3 · live
+  var live = { orks: "idle", playing: false };
+  var pots = '<span class="mk-pool"><img class="ork-mark" src="' + B + 'marks/harness-claude.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.62"></span><b>62%</b></span>'
+    + '<span class="mk-pool"><img class="ork-mark" src="' + B + 'marks/harness-codex.png" alt=""><span class="ork-potion small size-medium" style="--ork-potion-left:.88"></span><b>88%</b></span>';
+  var say = document.getElementById("livesay"), hand = document.getElementById("livehand");
+  function draw() {
+    hand.innerHTML = '<span style="flex:1;color:var(--ork-ink-faint);font:var(--ork-type-caption)">… the hand\'s cards …</span>' + die(live) + pots;
+    lay(hand);
+    hand.querySelector(".mk-hit.up").onclick = function () { live.playing = !live.playing; say.textContent = live.playing ? "Play: the preview opens over the pane (today's throw and roll); the arrow glows." : "The preview closed."; draw(); };
+    hand.querySelector(".mk-hit.front").onclick = function () {
+      var d = hand.querySelector(".mk-die"), was = live.orks;
+      var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var done = function () { live.orks = was === "stopped" ? "idle" : "stopped"; say.textContent = was === "stopped" ? "Resume: what the halt stopped starts again; the Board's clock goes on." : "Stop all: every run killed, and nothing starts by itself until Resume."; draw(); };
+      if (reduced) return done();
+      d.classList.add("mk-turn"); d.querySelector(".ork-die__cube").addEventListener("animationend", done, { once: true });
+    };
+  }
+  document.getElementById("runs").onclick = function () { if (live.orks === "stopped") { say.textContent = "Stopped: the orks start nothing until Resume."; return; } live.orks = "running"; say.textContent = "A run started: the front face goes red while it spends."; draw(); setTimeout(function () { if (live.orks === "running") { live.orks = "idle"; draw(); } }, 4000); };
+  document.getElementById("show").onclick = function () { document.getElementById("live").classList.toggle("mk-show"); };
+  draw();
+
+  // 4 · the door
+  var HOURS = [[19, 23]], now = 15;                       // weekdays 19:00 to 23:00; it is 15:00
+  var door = { held: false };
+  function inHours(h) { return HOURS.some(function (r) { return h >= r[0] && h < r[1]; }); }
+  function here() { var base = inHours(now); return door.held ? !base : base; }
+  function drawTop() {
+    var h = here(), held = door.held;
+    var heads = [["peon-crown", "The Orkmaster", true], ["shaman-elder", "Tech"], ["dryad-elder", "Design"], ["unicorn-elder", "Product"]];
+    document.getElementById("top").innerHTML = heads.map(function (t) { return '<span class="mk-tab' + (t[2] ? " on" : "") + '"><img src="' + B + "races/" + t[0] + '.png" alt="">' + t[1] + "</span>"; }).join("")
+      + '<button type="button" class="mk-doorbtn' + (h ? "" : " is-away") + '" aria-pressed="' + h + '" title="' + (h ? "You are here: questions come as they arise. Press to be away." : "You are away: steps that ask wait for your hours. Press to be here.") + '">'
+      + '<span class="ork-door' + (h ? " is-open" : "") + '" aria-hidden="true"></span><span class="w"><b>' + (h ? "Here" : "Away") + "</b><span>"
+      + (h ? (held ? "until 19:00 · held" : "until 23:00") : (held ? "until 19:00 · held" : "until 19:00")) + "</span></span></button>";
+    document.querySelector(".mk-doorbtn").onclick = function () { door.held = !door.held; drawTop(); };
+    drawDay(h);
+  }
+  function drawDay(h) {
+    var x = function (hr) { return (hr - 8) / 16 * 100 + "%"; };      // 08:00 to 24:00
+    var out = "";
+    HOURS.forEach(function (r) { out += '<span class="band" style="left:' + x(r[0]) + ";width:calc(" + x(r[1]) + " - " + x(r[0]) + ')"></span>'; });
+    if (door.held && h) out += '<span class="band" style="left:' + x(15) + ";width:calc(" + x(19) + " - " + x(15) + ');border-style:dotted"></span>';
+    [9, 12, 15, 18, 21].forEach(function (t) { out += '<span class="tick" style="left:' + x(t) + '">' + t + ":00</span>"; });
+    [[11, "11:00"], [16, "16:00"], [21, "21:00"]].forEach(function (r) { out += '<span class="reset" style="left:' + x(r[0]) + '"><span>reset ' + r[1] + "</span></span>"; });
+    out += '<span class="now" style="left:' + x(now) + '"><span>now</span></span>';
+    var talk = h ? 16 : 21, work = 16.1;
+    out += '<span class="step" style="left:calc(' + x(work) + ' + 4px)"><i class="ork-elem lava"></i>work: <i>Music in the lobby</i></span>';
+    out += '<span class="step" style="left:calc(' + x(talk) + " + 4px);" + (h ? "top:48px" : "") + '"><i class="ork-elem ice"></i>Talk: <i>Round timer</i> · asks you</span>';
+    document.getElementById("day").innerHTML = out;
+  }
+  drawTop();
+  addEventListener("resize", function () { lay(document); });
+  requestAnimationFrame(function () { lay(document); });
+})();
+</script>
+</body>
+</html>
