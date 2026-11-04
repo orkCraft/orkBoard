@@ -248,7 +248,13 @@ TERMS: tuple[Term, ...] = (
     _t("fix_all_there", "Fix all there"),                          # every finding of a quality card answered at once, its cost said first
     _t("another_level", "Another level…"),                         # the rare answer, under a finding's …: the person moves its level
     _t("not_now", "Not now"),                                      # a finding put off: it stays on the goal's quality record and leaves the hand
-    _t("add_to_goal", "Add to the goal"),                          # the bubble's line on a goal not yet agreed (spec 132 A)
+    _t("looks_like_part_of", "Looks like part of: <title>"),       # the new-goal field's line when a goal sent looks like part of one lying face down (spec 135 A, decisions §242.1)
+    _t("add_to_it", "Add to it"),                                  # … its yes: the words join that goal through *Add to the goal* (§242.2)
+    _t("keep_apart", "Keep apart"),                                # … its no: the goal goes on its own; and a group of the backlog's card kept as it is (§242.5)
+    _t("look_like_one", "These look like one goal"),               # the one card of the backlog's groups, at the reset (spec 135 B)
+    _t("join", "Join"),                                            # a group of that card taken as one goal
+    _t("split", "Split"),                                          # a joined goal given back as the goals it was (spec 135 C)
+    _t("add_to_goal", "Add to the goal"),                        # the bubble's line on a goal not yet agreed (spec 132 A)
     _t("change_decision", "Change…"),                              # the decision's one button beside *Confirm and start* (decisions §237.3)
     _t("or_say_change", "Or say what to change"),                  # the line under the decision's field
     _t("proposes", "Proposes"),                                    # what a leader's card says of its proposal to change a slice of the decisions (spec 131 B.4, decisions §233.8)

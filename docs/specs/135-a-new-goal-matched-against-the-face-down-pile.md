@@ -104,8 +104,8 @@ one optional key and one record:
 
 - `element`: the rune the person chose in the field (one of `idea_element.ELEMENTS`, else *Pick one of the five runes*): the second
   idea's rune, which the joined goal does not wear (it keeps its own) but **remembers** for C.
-- **The record of added words** (`realm/goal_refine.py`): `<state>/ideas/<slug>/added.json`, written whole under `ideas.LOCK`:
-  `[{"at": "…", "text": "<as written>", "element": "ice" | "", "via": "match" | "bubble" | ""}]`, one row for each `add_to_goal`
+- **The record of added words** (`realm/goal_refine.py`): `<state>/ideas/<slug>/added.json`, written whole under `ideas.LOCK` (a file is an object: `ideas._json` reads none else):
+  `{"rows": [{"at": "…", "text": "<as written>", "element": "ice" | "", "via": "match" | "bubble" | "groups" | ""}]}`, one row for each `add_to_goal`
   (its words, its time, its rune). `goal_refine.add_record(state_dir, slug, text, element, via)`, `goal_refine.added_rows(state_dir, slug)`
   (a broken file reads `[]`). The goal's history keeps the turn as before (`ideas.add_turn`, who `you`).
 - A goal whose decision is worded has it worded again (`keeper.reword`) as spec 132 A says; its own refusals (the keeper busy, a spent

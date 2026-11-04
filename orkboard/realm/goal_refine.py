@@ -5,12 +5,17 @@ decision is confirmed and the sections are written. Pure code, no model, no face
     goal_refine.words(page)                              # the goal's own words: its *Asked* section when it has one, else its Gist
     goal_refine.added(text)                              # the line a person's added words are kept as: `Added: <text>`
     goal_refine.in_answer(root, state_dir, sources)      # the slug of the first goal in analysis a quick question's sources name by its title, "" for none
+    goal_refine.add_record(state_dir, slug, text, element="", via="")   # one row of the goal's added words (spec 135 §A.3): <state>/ideas/<slug>/added.json
+    goal_refine.added_rows(state_dir, slug)              # those rows, oldest first: [{at, text, element, via}]; a broken file reads [] (the file is `{"rows": [...]}`)
 """
 from __future__ import annotations
 
 from pathlib import Path
 
 from orkboard.realm import ideas, spec_sections
+
+FILE = "added.json"
+VIAS = ("match", "bubble", "groups")
 
 ANALYSIS = ("raw", "routed", "talk", "decided")       # before the sections: a goal here takes words in with one `decide` call at most
 ADDED = "Added: "
@@ -46,3 +51,19 @@ def in_answer(root: Path, state_dir: Path, sources: list[str]) -> str:
         if " ".join(str(i["title"]).split()).lower() in wanted and in_analysis(state_dir, i["slug"]):
             return i["slug"]
     return ""
+
+
+def added_rows(state_dir: Path, slug: str) -> list[dict]:
+    """The words added to a goal, oldest first: `[{at, text, element, via}]` (the text as written, the rune the person chose for that idea, "" for none, and how it came: the new-goal
+    field's match, the leader's bubble, the backlog's groups); a missing or broken file reads `[]`."""
+    got = (ideas._json(ideas.state_folder(state_dir, slug) / FILE) or {}).get("rows")
+    return [{k: str(r.get(k) or "") for k in ("at", "text", "element", "via")} for r in got if isinstance(r, dict) and str(r.get("text") or "").strip()] if isinstance(got, list) else []
+
+
+def add_record(state_dir: Path, slug: str, text: str, element: str = "", via: str = "") -> list[dict]:
+    """One row more of a goal's added words (decisions §242.2: marked as the second idea's, its time and its rune kept for a Split); the rows."""
+    with ideas.LOCK:
+        rows = added_rows(state_dir, slug)
+        rows.append({"at": ideas._now(), "text": str(text).strip(), "element": element, "via": via if via in VIAS else ""})
+        ideas._write_json(ideas.state_folder(state_dir, slug) / FILE, {"rows": rows})
+    return rows

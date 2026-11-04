@@ -1,8 +1,9 @@
 """A goal refined before Confirm (docs/specs/132-four-levels-the-way-down-and-findings.md §A; decisions §234.5, §237.3), as `gui/ideas.py`'s `Ideas` has it: the commands the
 bubble's *Add to the goal* and the decision's one *Change…* are answered by. Host only: the faces call them.
 
-    ideas.add_to_goal {idea, text}                 # words added to a goal in analysis, kept as written (a line `Added: <text>` under the goal's words); a goal whose decision is
+    ideas.add_to_goal {idea, text, element?, via?} # words added to a goal in analysis, kept as written (a line `Added: <text>` under the goal's words); a goal whose decision is
                                                    #   worded already has it worded again (`keeper.reword`, one `decide` call, in the background). {ok, idea, reworded, cost?, why?}
+                                                   #   `element`: the rune the person gave that idea in the new-goal field; `via`: "match" · "bubble" · "groups" (spec 135 §A.3: both kept in the goal's added-words record)
     ideas.decision_change {idea, text?, say?}      # the decision's *Change…*: `text` is the entry kept as written (`by: "person"`), `say` is worded again by the Orkmaster (`keeper.reword`);
                                                    #   both: the text first, then the words said on it. {ok, idea, kept, reworded, cost?}
 
@@ -17,7 +18,8 @@ from typing import Any
 from orkboard.core import idea_decide
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _str, _text
-from orkboard.realm import event_log, goal_refine, idea_ripe, idea_target, ideas, spec_sections
+from orkboard.gui.ideas_args import _opt
+from orkboard.realm import event_log, goal_match, goal_refine, idea_element, idea_ripe, idea_target, ideas, spec_sections
 
 AGREED = "This goal is agreed: ask its leader for a change"
 BUSY = "The keeper is busy with this goal: a moment"
@@ -47,8 +49,22 @@ class RefineMixin:
         target = idea_target.target_for(self.settings_now(), ideas.track_page(self.root(), party) if party else None)
         return {"calls": 1, "usd_high": idea_target.budget("decide", target)}
 
+    def goal_matched(self, args: dict, text: str, routed: dict, track: str, marks: list) -> dict | None:
+        """`ideas.add`'s `match: true` (spec 135 §A.2): the face-down goal a new goal looks like part of, as the field says it, by code and with no call: `{idea, title, party, state,
+        score, why, shared, adds, reworded, cost}`; None with no match. Nothing is written but the event; `reworded`/`cost`: the goal's decision is worded and *Add to it* words it again."""
+        found = goal_match.match(self.root(False), self.state_dir, text, routed["route"], marks, track)
+        if found is None:
+            return None
+        reworded = found["state"] == "decided"
+        found = {**found, "reworded": reworded, "cost": self._cost_of_word(found["idea"]) if reworded else None}
+        self._ev(event_log.GOAL_MATCHED, args, idea=found["idea"], score=found["score"], why=found["why"], reworded=reworded)
+        return found
+
     def add_to_goal(self, args: dict) -> dict:
         slug, text = _text(args, "idea", 100), _text(args, "text", ideas.SECTION_CHARS)
+        element, via = _opt(args, "element"), _opt(args, "via")
+        if element and element not in idea_element.ELEMENTS:
+            raise IdeasError("Pick one of the five runes")
         self._refinable(slug)
         with ideas.LOCK:
             page = ideas.idea_page(self.root(), slug)
@@ -58,6 +74,7 @@ class RefineMixin:
                 raise IdeasError(TOO_LONG)
             ideas.update(self.root(), slug, {"Gist": new})
         ideas.add_turn(self.state_dir, slug, "you", text, "Gist")
+        goal_refine.add_record(self.state_dir, slug, text, element, via)           # spec 135 §A.3: its words, its time and the rune the person gave that idea, kept for a Split
         out: dict[str, Any] = {"ok": True, "idea": slug, "reworded": False}
         if self._decision_of(slug) is not None:                  # worded already: worded again with the person's words among the goal's
             try:
@@ -65,7 +82,7 @@ class RefineMixin:
                 out.update(reworded=True, cost=self._cost_of_word(slug))
             except KeeperError as e:                             # the words are kept either way; the decision keeps its old wording, said why
                 out["why"] = str(e)
-        self._ev(event_log.GOAL_ADDED_TO, args, idea=slug, chars=len(text), reworded=out["reworded"])
+        self._ev(event_log.GOAL_ADDED_TO, args, idea=slug, chars=len(text), reworded=out["reworded"], via=via if via in goal_refine.VIAS else "", element=element)
         self.changed(slug)
         return out
 

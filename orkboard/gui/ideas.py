@@ -425,8 +425,11 @@ class Ideas(RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, Fin
         (the phone's, base64) are kept beside it for the Taskmaster to read (realm/idea_photos.py), and `lens`, what the
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
         leader's), its `asks` (written after the text) and `join` (who joins the party first: gui/ideas_types.py). `hold`: kept, nothing
-        drafts it till the person does. Spec 65: in Ideation it is a pitch (at most 2 000 characters), judged; `pitch`: the one it is sent from."""
-        text, files = goal_mentions.files(Path(self.host.repo_root), _text(args, "text", ideas.SECTION_CHARS))      # spec 107 K: each `@path` that exists is the path in backticks, before the route reads it
+        drafts it till the person does. Spec 65: in Ideation it is a pitch (at most 2 000 characters), judged; `pitch`: the one it is sent from.
+        Spec 135 A (decisions §242): the new-goal field sends `match: true`; a goal that looks like part of a face-down one (`realm/goal_match.py`, by code, no call) is **not added**: the answer
+        is `{slug: "", match: {idea, title, party, state, score, why, shared, adds, reworded, cost}}` for the field's line (`ideas.add_to_goal` is *Add to it*); `apart: true` (and `with`, the goal it was
+        offered) adds it as any goal."""
+        text, files =goal_mentions.files(Path(self.host.repo_root), _text(args, "text", ideas.SECTION_CHARS))      # spec 107 K: each `@path` that exists is the path in backticks, before the route reads it
         track = _opt(args, "track") or _opt(args, "party")
         goals = {t["slug"]: t for t in ideas.tracks(self.root(), make=False)}
         routed = self.route_plan(args, text, track, pitch)      # spec 99 §4 (gui/ideas_route.py): its route by code, no call; None: drafted at once as before
@@ -455,6 +458,11 @@ class Ideas(RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, Fin
         hold = args.get("hold") is True
         queue = "hold" if hold else "now"                      # a goal sent from a pitch: Now (spec 65 §5)
         text = text[:pitches.PITCH_CHARS] if pitches.is_ideation(self.root(), track) else text
+        if args.get("match") is True and args.get("apart") is not True and routed is not None and not typed["key"]:          # spec 135 A: the new-goal field asks whether it looks like part of a face-down goal; nothing is written
+            if found := self.goal_matched(args, text, routed, track, picked):
+                return {"slug": "", "match": found}
+        if args.get("apart") is True and _opt(args, "with"):
+            self._ev(event_log.GOAL_KEPT_APART, args, **{"with": _opt(args, "with")})
         with ideas.LOCK:                        # the party changes before the goal, under the same lock; never for a goal kept on hold (spec 52 §2.3)
             joined = self.join_goal(track, typed, args) if not hold else None
             slug = ideas.add_idea(self.root(), self.with_asks(text, typed), track, self.state_dir, priority, "hold" if routed else queue)
