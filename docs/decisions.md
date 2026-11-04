@@ -5880,3 +5880,29 @@ cannot simply put an idea by without it starting by itself one day. So:
 6. **Built**: 1–2 at once, on the host (`route_tick`), with their tests (the backlog's order, one at a time, the pace
    behind holding the queue); 3–4 with spec 130's first part.
 The owner's call.
+
+## 240. The hand is the person's move only: a goal that goes on by itself sends no card; the decision all leaders agreed on waits in the column, not in the hand, with *Change…* and *Start now* in the pile's list (4 November 2026, the owner)
+
+Changes: 206.3, 237.8; spec 120 §3.5.
+
+Why: the owner, thinking how to make an idea's way to a decision, a spec and its work simpler to see: *at each step a
+card flies into the person's hand to confirm it, right?* Read in the code, less is asked than it looks: a goal goes to
+Talk by itself (`AUTO_TALK`, spec 120 §2.1), a decision all the leaders agreed on is confirmed by itself after its wait
+(spec 120 §3.5), a plan starts by itself; the hand already holds one stack a goal and a lane, its most urgent card on top
+(`hand/stacks.js`). But **the decision all agreed on still lies in the hand** while its wait runs, a card with a clock
+that asks nothing: the eye reads every step as a confirmation. The column already shows each step by where the card lies
+(§224). So:
+1. **The hand holds only the person's move**: a question, a disagreement (a no, a hearing, a fork), a cost grown, a
+   failure, a change or a quality card to answer, a hypothesis due. A goal that goes on by itself sends **no card**: its
+   card in the column turns and moves (§224's piles), and that is how the person sees it go.
+2. **The decision all agreed on waits in the column**: while its wait runs (spec 120 §3.5: not held, not yet ended) its
+   `decision` card is not dealt into the hand. Its goal lies face down in *In analysis* (§224), and the pile's line says
+   it: *decided: <short> · starts its spec at <time>*. In the pile's list (§206.3, pressed) its row has **Change…** (its
+   decision card comes into the hand, lifted, the wait held while it is open, as §224.3 holds a spec being changed) and
+   **Start now** (`ideas.ripe_now`), beside *Next* and *Remove*. Held (*Later*), it is the person's move again: in the
+   hand as today.
+3. **Unchanged**: a decision with a leader's no, a hearing or a doubt (no wait, spec 120 §3.5) is the person's move and
+   lies in the hand; one stack a goal and a lane (§167.7); the face-down card cannot be picked (§206.3).
+4. **The words**: *decided: <short> · starts its spec at <time>*, *Change…*, *Start now*.
+5. **Built at once**, on the page (the hand's rows, the pile's line and list), its tests the hand's and the column's.
+The owner's call.
