@@ -233,11 +233,22 @@ def test_a_press_on_a_goal_picks_it_and_again_puts_it_down(tree):
     pg.locator('.tr-goal[data-id="late-catch"][aria-pressed], .tr-goal[data-id="late-catch"].is-lit').wait_for(timeout=WAIT_MS)
     assert g.locator(".mp-card__nm").get_attribute("aria-pressed") == "true" and "is-lit" in g.get_attribute("class")
     assert goal(pg, "room-code").locator(".mp-card__nm").get_attribute("aria-pressed") == "false"
-    goal(pg, "room-code").click(position={"x": 12, "y": 40})
-    pg.locator('.tr-goal[data-id="room-code"].is-lit').wait_for(timeout=WAIT_MS)
-    assert "is-lit" not in g.get_attribute("class"), "one goal is picked at a time"
-    goal(pg, "room-code").locator(".mp-card__nm").click()
+    g.locator(".mp-card__nm").click()
     pg.wait_for_selector('.tr-goal.is-lit', state="detached", timeout=WAIT_MS)
+
+
+def test_a_press_on_a_goal_at_work_picks_it_and_the_pane_shows_its_view_in_place_of_the_tree_until_it_is_put_down(tree):
+    """Spec 128 F.2: a goal agreed, at work or done has a view of its own at its leader, so the pick replaces the map with it; one goal is picked at a time."""
+    pg, host, w = tree
+    goal(pg, "late-catch").locator(".mp-card__nm").click()
+    pg.locator('.tr-goal[data-id="late-catch"].is-lit').wait_for(timeout=WAIT_MS)
+    goal(pg, "room-code").click(position={"x": 12, "y": 40})
+    pg.locator(".gv").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".tr-goal").count() == 0, "the goal's view is in the tree's place"
+    pg.locator(".table-title__unpick").click()
+    pg.locator(".tr-goal").first.wait_for(timeout=WAIT_MS)
+    assert pg.locator(".tr-goal.is-lit").count() == 0 and pg.locator('.tr-goal[aria-pressed="true"], .tr-goal [aria-pressed="true"]').count() == 0, "one goal was picked at a time: none now"
+    assert pg.locator(".gv").count() == 0
 
 
 def test_every_job_and_goal_is_pickable_with_its_map_id_and_name(tree):
