@@ -336,3 +336,6 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 .frame[data-laying] .hand-slot.is-plus { animation-delay: 1100ms; }
 @media (prefers-reduced-motion: reduce) { .frame[data-laying] * { animation: none !important; } }
 .frame[data-laid="0"] .table-tabs { min-height: 63px; box-sizing: border-box; }      /* not laid yet: the row is there, empty, the Orkmaster alone at its left (spec 130 C.6) */
+
+/* a leader answering a question passed on to it (spec 128 D.3, table/passing.js): its tab says so under its name */
+.table-tab__answering { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-faint); }

@@ -21,6 +21,7 @@ import { moodOf } from "./moods.js";
 import { holdWords, waitsWords } from "./holdwords.js";
 import { SetupBubble } from "../hand/setupcards.js";
 import { laidNow } from "./laying.js";
+import { Passing, askedWords } from "./passing.js";
 
 const CROWN = { race: "peon", tier: "crown" };                   // the Orkmaster's head
 export const columnPick = { slug: "" };                          // the goal the column picked last: the table does not move to its party's tab for it (table.js), the column is on every tab
@@ -142,11 +143,13 @@ export function Column() {
     if (picked.value !== n.slug) pick(n.slug);
   };
   const place = useBeside(root, `${lift?.kind}:${lift?.slug}`, lift?.kind === "acts" ? `.col-card[data-goal="${lift.slug}"]` : '.col-sec[data-pile="analysis"]');
+  const behind = piles.analysis.slice(1).find(({ n }) => askedWords(n.slug));                                  // a goal asked of another leader that lies under the front card: its line is the pile's
   const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: nextWords(piles.review), work: "" }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
   return html`<div class="col" ref=${root} data-col="1">
     <${Top} parties=${parties} all=${all} />
     <${SetupBubble} />
-    ${laidNow() && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} onPress=${press} open=${lift?.kind === "list"} />`)}</div>`}
+    ${laidNow() && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : ""} onPress=${press} open=${lift?.kind === "list"} />`)}</div>`}
+    <${Passing} />
     ${lift?.kind === "list" && html`<${List} items=${piles.analysis} place=${place} close=${() => setLift(null)} />`}
     ${item && !gone && html`<${Acts} n=${item} off=${lift.off} place=${place} close=${() => setLift(null)} />`}
   </div>`;

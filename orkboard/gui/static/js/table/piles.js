@@ -15,6 +15,7 @@ import { MidHeads, Play, middleOf } from "./downmid.js";
 import { litTool, hatched } from "../hand/state.js";
 import { cardCost } from "../hand/cost.js";
 import { defaultTool, movesOn, waitTool } from "./lit.js";
+import { askedWords } from "./passing.js";
 
 export const ANALYSIS = ["raw", "reading", "asks", "routed", "talk", "decided", "sketch", "sections"];     // the idea, Talk, the decision and the spec being written (decisions §224); `ready`, `planning` and `plan` are the spec made: To review
 const SPEC_MADE = ["ready", "planning", "plan"];                                                       // the Orkmaster's draft is `planning` (face down: it is being written); once `agreed` (a decision confirmed, the leaders wrote the spec) they are To review
@@ -112,11 +113,12 @@ export function tasksCount(n) {
   return all.length ? { done: all.filter((t) => t.state === "merged").length, total: all.length } : null;
 }
 
-/** The sign of a card's state on its foot: yellow `question` while it waits for the person (the faint one will be for a question passed on to another leader, part D), `alert` in danger while a task failed. */
+/** The sign of a card's state on its foot: yellow `question` while it waits for the person (the faint one, with *Asked Tech*, for a question passed on to another leader, spec 128 D.3), `alert` in danger while a task failed. */
 function Mark({ n }) {
   if (failed(n)) return html`<span class="col-mark is-failed" title="A task failed"><${Sign} name="alert" /></span>`;
   if (n.asks_you) return html`<span class="col-mark is-asks" title="Waits for you"><${Sign} name="question" /></span>`;
-  return null;
+  const asked = askedWords(n.slug);                                                                          // a question passed on to another leader (spec 128 D.3): the sign faint, not yellow
+  return asked ? html`<span class="col-mark is-asked" data-asked=${n.slug} title=${asked}><${Sign} name="question" />${asked}</span>` : null;
 }
 
 /** The leaders' heads at a card's foot: the parties whose tasks of this goal are at work, one head each. */
@@ -141,6 +143,7 @@ function DownCard({ n, i, front, onPress, open }) {
     aria-label=${front ? `${n.title}: ${sayOf(n, "analysis")}; press for the list in order` : undefined} onClick=${() => onPress(n, "analysis")}>
     <span class=${cls(`ork-sigil table-back-sigil col-sigil${el ? ` is-${hue}` : ""}`, { "col-busy": busy, "is-still": still, "col-stopped": asks, "is-waiting": share != null })} style=${share != null ? `--ork-sigil-share:${share}` : undefined} data-share=${share != null ? share : undefined} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${busy && !still} /></span>${mid && !wait && html`<${MidHeads} heads=${mid.heads} />`}</span>
     ${front && n.held_for === "hold" && html`<span class="col-when col-down-held"><${Sign} name="pause" />Held</span>`}
+    ${front && askedWords(n.slug) && html`<span class="col-when col-down-held col-asked" data-asked=${n.slug}><${Sign} name="question" />${askedWords(n.slug)}</span>`}
   </button>`;
   return wait ? html`${card}<${Play} n=${n} />` : card;
 }
@@ -163,12 +166,12 @@ function UpCard({ n, i, pile, off, first, onPress }) {
 }
 
 /** One pile: its title and, under it, what it says (*writing: Round timer*), its cards stacked by `--i` (the foot of each under the one above it), the thin edges when more lie under them. **A pile's heading appears with its first card**, never empty (spec 130 C.6). */
-export function Pile({ id, title, items, under = "", onPress, open = false }) {
+export function Pile({ id, title, items, under = "", asked = "", onPress, open = false }) {
   if (!items.length) return null;
   const shown = items.slice(0, SHOWN), down = id === "analysis", peek = down ? 4 : PEEK, tall = down ? 112 : 157, edges = items.length > SHOWN;
   const beneath = (shown.length - 1) * peek + (edges ? EDGES : 0), height = tall + beneath;      // face up the height is the cards' own: only what lies under the front is known (`--under`)
   return html`<section class="col-sec" data-pile=${id} aria-label=${title}>
-    <div class="col-plab"><span class="col-plab__t">${title}</span><span class=${cls("col-under", { "is-asks": under === "waits for you" })} data-under=${id}>${under}</span></div>
+    <div class="col-plab"><span class="col-plab__t">${title}</span><span class=${cls("col-under", { "is-asks": under === "waits for you" })} data-under=${id}>${under}</span>${asked && html`<span class="col-under col-under--asked" data-under-asked=${id}>${asked}</span>`}</div>
     ${html`<div class=${cls("col-pile", { "is-down": down, "is-up": !down })} style=${down ? `--h:${height}px;--peek:${peek}px` : `--under:${beneath}px;--peek:${peek}px`} data-count=${items.length}>
       ${shown.map(({ n, off }, i) => (down ? html`<${DownCard} key=${n.slug} n=${n} i=${i} front=${i === 0} onPress=${onPress} open=${open} />` : html`<${UpCard} key=${n.slug} n=${n} i=${i} pile=${id} off=${off} first=${i === 0} onPress=${onPress} />`))}
       ${edges && html`<span class="col-edges" style=${down ? `top:${height - (edges ? EDGES : 0)}px` : undefined} aria-hidden="true"></span>`}

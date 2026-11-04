@@ -25,6 +25,7 @@ import { EmptyChair, useOffer } from "./chairs.js";
 import { PresenceDoor } from "./presence.js";
 import { laidNow } from "./laying.js";
 import { isWorking, moodOf } from "./moods.js";
+import { answeringOn } from "./passing.js";
 
 export { isWorking };                                            // the tabs' word for it was here first (road.js)
 
@@ -65,13 +66,13 @@ function LookMarks({ slug, who }) {
 
 /** One tab in its cell. `g`: the party (null for the project's); the open tab's head is not in its button but beside it, in the cell. */
 function Tab({ slug, g = null, on, name, who = "", head, dot = false, working = false, alert = "", switcher = false, marks = null, compact, narrow, onPick, after = null, stop = false }) {
-  const press = usePressName(name), said = marks ? `${name} · ${marksWords(marks)}` : name, mood = moodOf(g), chair = !narrow;
+  const press = usePressName(name), answering = g ? answeringOn(slug) : false, said = (marks ? `${name} · ${marksWords(marks)}` : name) + (answering ? " · answering a question passed on" : ""), mood = moodOf(g), chair = !narrow;
   const size = on && !narrow ? "big" : "mid", key = slug === ORKMASTER ? "" : slug, leader = roleWord(g ? g.leader?.name : "Orkmaster");
   const looking = g ? lookOf(slug).status === "looking" : false, ask = desk() && !!head;
   const button = html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact, "has-switch": switcher, "is-open": on, "is-lit": !on && runsOn(marks) })} role="tab" id=${`tab-${slug}`} data-tab=${slug} data-working=${working ? "" : undefined} aria-selected=${String(on)} tabindex=${on || stop ? 0 : -1}
     aria-label=${said} title=${said} aria-controls="table-pane" onClick=${onPick} ...${press}>
     ${!on && head && html`<${Sit} head=${head} mood=${mood} size=${size} chair=${chair} />`}
-    <span class="table-tab__txt"><span class="table-tab__main">${name}</span>${on && who && html`<span class="table-tab__who">${who}</span>`}<${Marks} m=${marks} on=${on} /></span>
+    <span class="table-tab__txt"><span class="table-tab__main">${name}</span>${answering && html`<span class="table-tab__answering" data-answering=${slug}>answering…</span>`}${on && who && html`<span class="table-tab__who">${who}</span>`}<${Marks} m=${marks} on=${on} /></span>
     ${dot && html`<i class="table-tab__dot" role="img" aria-label="On the picked goal's route" title="On the picked goal's route"></i>`}
     ${!on && alert && html`<span class="table-tab__alert" role="img" aria-label=${alert} title=${alert}><${Sign} name="alert" /></span>`}
   </button>`;

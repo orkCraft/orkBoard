@@ -201,3 +201,8 @@ Each part adds its tests beside the files it touches and keeps the critical ones
 `tests/test_board_alone.py`, `tests/test_updates.py`). The interface says *goal*, *party*, *leader*, *the Orkmaster*,
 never *orc* (`tests/test_gui_wording.py`); Orkboard's sheets carry no colour, font or corner of their own
 (`tests/test_design_system.py`). No module past ~600 lines.
+
+**As built (D, the face).** `table/passing.js`: the snapshot's `passing` (`town.value.passing`) is a small card over the column's foot (`.col-passing`, three at most): the goal's rune, the two heads (who asked, who it is passed to), the question and
+*passing on · N s* (counted down between snapshots); pressed, **Answer it myself** (`ideas.pass_take`) and **Pass it now** (`ideas.pass_now`) open in it. Once the call begins (`answering`) the card flies to the leader's tab (`tabs.js`), which says
+*answering…*; the answer given, a copy flies back from the tab to the goal's card in the column. The goal's card says *Asked Tech* with the `question` sign faint (a face-down card's line at its foot, a face-up card's in its foot; a goal under the front
+card of In analysis is said in a line under the pile's title). Flights play once and only when seen. Tests: `tests/test_pass_on_browser.py`. **Not done:** the goal's card in a party's lane (the table) does not say *Asked Tech*; the phone has none of it (`passing` is the computer's).

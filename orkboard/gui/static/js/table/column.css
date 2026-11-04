@@ -116,3 +116,20 @@
 .col-list__acts { display: inline-flex; align-items: center; gap: var(--ork-1); margin-left: auto; }
 .col-ask { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1); }
 .col-ask__said { flex: 1 0 100%; }
+
+/* a question passed on (spec 128 D.3, table/passing.js): a small card over the column's foot, the goal's rune and the two heads at its top, the question, then *passing on · 6 s*; pressed, its two choices open in it. Never yellow: it waits for no one yet */
+.col-passing { position: absolute; z-index: 30; left: var(--ork-2); bottom: 96px; display: flex; flex-direction: column; gap: var(--ork-2); width: 112px; }
+.col-pass.ork-card { display: flex; flex-direction: column; box-sizing: border-box; width: 112px; padding: 0; }
+.col-pass__main { display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-2); border: 0; background: none; color: inherit; text-align: left; font: var(--ork-type-caption); cursor: pointer; }
+.col-pass__who { display: flex; align-items: center; gap: var(--ork-1); }
+.col-pass__who .ork-race__head { width: 18px; height: 17px; }
+.col-pass__q { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+.col-pass.is-open .col-pass__q { display: block; -webkit-line-clamp: unset; line-clamp: unset; }
+.col-pass__left { color: var(--ork-ink-faint); font-size: 11px; white-space: nowrap; }
+.col-pass__acts { display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-1); padding: 0 var(--ork-2) var(--ork-2); }
+.col-pass__acts .ork-btn { white-space: normal; }
+.col-mark.is-asked { color: var(--ork-ink-faint); gap: 1px; align-items: center; white-space: nowrap; font-size: 11px; }
+.col-mark.is-asked .ork-sign { width: 10px; height: 10px; }
+.col-asked { color: var(--ork-ink-faint); }
+.col-card--up .col-foot { overflow: hidden; }
+.col-under--asked { flex: 1 0 100%; }      /* *Asked Tech* of a goal under the front card: its own line, never cut by the pile's two */
