@@ -85,7 +85,8 @@ def test_drop_an_idea_and_read_the_board_and_its_page(host):
                       "queue", "held_until", "risk", "risk_triggers", "depends_on", "waits_on", "start_at",
                       "in_needs_you",             # spec 35 §12
                       "night_by",                 # spec 44 §4: who put it off to the night
-                      "place", "asks_you", "waits_as", "seen"}      # spec 98 §2: where it lies in the window (realm/goal_place.py)
+                      "place", "asks_you", "waits_as", "seen",      # spec 98 §2: where it lies in the window (realm/goal_place.py)
+                      "levels"}                   # spec 132 C.3: the levels that hold something open of the goal
     assert i["priority"] == "normal" and board["tracks"][0]["priority"] == "normal" and board["tracks"][0]["state"] == "raw"
     assert board["needs_you"] == [] and board["rev"] > rev      # spec 35 §10: `today` became `needs_you`, the batch went
     page = host.command("ideas.page", {"slug": slug})
@@ -1268,9 +1269,12 @@ def test_the_page_says_what_changed_since_the_plan_whether_it_is_passed_and_the_
     assert revised["changed"] == ["Gist", "Out"] and (revised["added"], revised["changed_n"], revised["dropped"]) == (1, 1, 1)
     assert revised["step"] == "plan" and revised["usd_low"] == change["usd_low"]
     stop = next(n for n in host.command("ideas.board")["needs_you"] if n["kind"] == "change")
-    assert stop == {"idea": slug, "goal": "first-goal", "title": "x", "priority": "normal", "blocks": False, "at": change["made_at"], "kind": "change",
+    assert {k: v for k, v in stop.items() if k not in ("level", "pulls")} == {"idea": slug, "goal": "first-goal", "title": "x", "priority": "normal", "blocks": False,
+                    "at": change["made_at"], "kind": "change",
                     "text": "The plan changes · +1 · 1 changed · −1", "why": "The export is csv only.", "added": 1, "changed": 1, "dropped": 1,
                     "usd_low": change["usd_low"], "usd_high": change["usd_high"]}
+    assert stop["level"] == "work" and stop["pulls"]["level"] == "work"            # spec 132 C.2: a plan change's stop says its level and what it pulls
+    assert stop["pulls"]["estimate"]["usd_high"] >= stop["pulls"]["estimate"]["usd_low"]
     assert host.snapshot()["needs_you"] == 1
 
 
