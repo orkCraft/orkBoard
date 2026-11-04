@@ -53,7 +53,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import board_ask, board_map, event_log, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, party_recipes, pitches, recurring, wiki
+from orkboard.realm import board_ask, board_map, event_log, first_open, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, party_recipes, pitches, recurring, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_halt import STARTS, HaltMixin
@@ -354,9 +354,10 @@ class Ideas(RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, Fin
                         "idea_states": [{"slug": i["slug"], "title": i["title"], "state": i["state"]} for i in b["ideas"]],
                         "review_count": len(waiting),
                         "review_results": [{k: r[k] for k in ("idea", "task", "title")} for r in waiting],
-                        "preview": self.preview_kind()}                  # whether the project has a preview to play (spec 113 §2)
+                        "preview": self.preview_kind(),                  # whether the project has a preview to play (spec 113 §2)
+                        "laid": first_open.laid(self.state_dir, self.host.repo_root)}      # whether the table is laid: false until the project's first Start (spec 130 A.5)
             except Exception:                   # a broken page never breaks the town's snapshot
-                data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": ""}
+                data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": "", "laid": True}      # a broken page never hides the table
             self._cache = (self.rev, now, data)
         return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
                 "play_face": self.play_face(),                   # what the die's up face says: Play's state changes without the Board's rev (spec 118 §3)

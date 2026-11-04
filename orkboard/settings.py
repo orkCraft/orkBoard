@@ -141,6 +141,7 @@ class MachineSettings:
     updates: str = "critical"     # which updates install by themselves when the town opens (core/updates.py)
     repair_command: list = field(default_factory=lambda: list(REPAIR_COMMAND))   # what Fix it starts on Orkboard's own code (core/repair.py, spec 119)
     main_tool: str = ""           # the tool decisions run on (realm/harnesses.py); "" the first one on
+    tool_order: list = field(default_factory=list)   # the order the work moves on in: the AI tools in the person's order (the potions', left to right; decisions §232.5); [] the registry's
     # The phones paired with this machine's towns (docs/design/mobile.md §2): id, name, the SHA-256 of the
     # device token (never the token), when paired and when last seen. The Town Scroll never holds them.
     phones: list = field(default_factory=list)
@@ -177,6 +178,7 @@ class MachineSettings:
             "updates": self.updates,
             "repair_command": list(self.repair_command),
             "main_tool": self.main_tool,
+            "tool_order": list(self.tool_order),
             "phones": [dict(p) for p in self.phones],
             "phone_port": self.phone_port,
             "look": self.look,
@@ -218,6 +220,7 @@ class MachineSettings:
         s.updates = data["updates"] if data.get("updates") in UPDATES else "critical"
         s.repair_command = clean_repair_command(data.get("repair_command"))
         s.main_tool = data["main_tool"] if data.get("main_tool") in TOOLS else ""
+        s.tool_order = clean_tool_order(data.get("tool_order"))
         s.phones = clean_phones(data.get("phones"))
         port = data.get("phone_port")
         s.phone_port = port if isinstance(port, int) and not isinstance(port, bool) and 1024 <= port <= 65535 else 0
@@ -242,6 +245,14 @@ class MachineSettings:
             ok = isinstance(install_id, str) and re.fullmatch(r"[0-9a-f]{32}", install_id)
             s.install_id = install_id if ok else uuid.uuid4().hex
         return s
+
+
+def clean_tool_order(raw: object) -> list[str]:
+    """`machine.tool_order` as stored: the known tools, each once, in the order given; the rest dropped (a tool turned on that is not in it
+    comes after them, in the registry's order: `tool_order`)."""
+    if not isinstance(raw, list):
+        return []
+    return list(dict.fromkeys(t for t in raw if isinstance(t, str) and t in TOOLS))
 
 
 def clean_repair_command(raw: object) -> list[str]:
@@ -534,14 +545,16 @@ def main_tool(machine: MachineSettings | None = None) -> str:
     """The machine's main tool (read from disk when not given: the chosen one if it is on, else the first on);
     Claude Code when none is on, as before there was a choice."""
     machine = machine or cached()
-    return harnesses.main([t for t, c in machine.tools.items() if c.enabled], machine.main_tool) or "claude"
+    return harnesses.main([t for t, c in machine.tools.items() if c.enabled], machine.main_tool, machine.tool_order) or "claude"
 
 
 def tool_order(machine: MachineSettings | None = None) -> list[str]:
-    """The AI tools turned on, in the order of `machine.tools` (the registry's): the potions' order left to right, and the order the work
-    moves on in when the Main tool is dry (docs/specs/105 §2.1, realm/tool_now.py). Read from disk when not given."""
+    """The AI tools turned on, in the person's order (`machine.tool_order`; the tools it does not name after them, in the registry's order): the
+    potions' order left to right, and the order the work moves on in when the Main tool is dry (docs/specs/105 §2.1, realm/tool_now.py;
+    decisions §232.5, spec 130 A.1). Read from disk when not given."""
     machine = machine or cached()
-    return [t for t, c in machine.tools.items() if c.enabled]
+    on = [t for t, c in machine.tools.items() if c.enabled]
+    return sorted(on, key=lambda t: machine.tool_order.index(t) if t in machine.tool_order else len(machine.tool_order))   # a stable sort: the registry's order within the rest
 
 
 def preset_role(role_id: str, file: Path | None = None, kin: str = "") -> bool:

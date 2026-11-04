@@ -277,6 +277,15 @@ TERMS: tuple[Term, ...] = (
     _t("later", "Later", "", "Later, by itself"),                  # a goal that starts by itself at an hour the Board says: after the reset, in the person's hours, tonight (`ideas.route_later`; decisions §247.2)
     _t("save", "Save"),                                            # the to-do form's button (was *Keep it*, which is now only the drop question's *do not drop it*; decisions §247.2)
     _t("limits_not_read", "Limits not read"),                      # a potion's words for an AI tool whose limits were not read (hand/mana.js; decisions §247.3)
+    # The first open is the Orkmaster's (spec 130, decisions §232.11): the AI tools set from the hand, never from a form.
+    _t("tool_order", "the order the work moves on in"),            # the AI tools in the person's order, the potions' left to right: the first is the main tool, and the work goes on with the next when it runs dry (`machine.tool_order`)
+    _t("add_ai_tool", "Add an AI tool"),                           # the card the empty slot lifts: one tool, how it is paid, a sign-in or the key found, Test & add (never *shop*, *buy*, *belt*)
+    _t("test_and_add", "Test & add"),                              # one short request to the tool's lightest model; a tool is in the hand only after it answered
+    _t("add_another", "Add another"),                              # the card turned after a tool is in the hand: the card again, without the tools in the hand
+    _t("go_on_to_the_parties", "Go on to the parties"),            # the first open's way from the AI tools to the parties' card (later *Done*)
+    _t("put_back", "Put back"),                                    # a tool taken out of the hand between tasks, with Undo in the toast; the last one asks first
+    _t("which_project", "Which project shall we work on?"),        # the Orkmaster's first question, its answers cards in the hand
+    _t("table_laid", "The table is laid"),                         # what the Orkmaster says at the project's first Start: the leaders sit down, the table is drawn once
     # A goal's way (docs/specs/99-a-goals-way.md §10; decisions §117, §118, §121.1): the words of the route, Talk, the decision and the spec, each once
     _t("route", "route", "routes"),                                # the parties that write a goal's spec and do its work, in order; the Orkmaster routes a goal, never a job title
     _t("route_card", "route card", "route cards"),                 # a goal's first card: its route, the cost said before, its place in line, and Talk (the `route` row)
