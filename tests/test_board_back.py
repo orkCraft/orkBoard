@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import board_back, goal_route, idea_questions, idea_ripe, ideas
+from orkboard.realm import board_back, goal_route, idea_questions, idea_ripe, ideas, spec_sections
 
 ROUTE = [{"party": "design", "leader": "ux", "head": {"race": "dryad", "tier": "elder"}}, {"party": "tech", "leader": "architect", "head": {"race": "shaman", "tier": "elder"}}]
 
@@ -18,9 +18,9 @@ def _seed(tmp_path: Path, monkeypatch, slug="dark"):
 
 def test_a_goal_before_its_sections_has_a_back_and_any_other_has_none(tmp_path, monkeypatch):
     state = _seed(tmp_path, monkeypatch)
-    for name in ("routed", "talk", "decided"):
+    for name in ("routed", "talk", "decided", "sketch", "sections"):
         assert board_back.of(tmp_path, state, "dark", {"state": name}) is not None, name
-    for name in ("sections", "working", "done", "raw"):
+    for name in ("working", "done", "raw"):
         assert board_back.of(tmp_path, state, "dark", {"state": name}) is None, name
 
 
@@ -49,3 +49,11 @@ def test_a_decided_goal_carries_its_wait_as_it_is_kept(tmp_path, monkeypatch):
     held = board_back.of(tmp_path, state, "dark", {"state": "decided"})["ripe"]
     assert held["held"] is True and held["by"] == "person" and held["left_s"] == 0.0
     assert board_back.of(tmp_path, state, "dark", {"state": "talk"})["ripe"] is None, "the wait is the decided goal's"
+
+
+def test_the_back_of_a_spec_being_written_says_whose_section_is_written(tmp_path, monkeypatch):
+    state = _seed(tmp_path, monkeypatch)
+    assert board_back.of(tmp_path, state, "dark", {"state": "sections"})["written"] == [], "none written yet"
+    spec_sections.save_record(state, "dark", {"texts": {"tech": {"leader": "architect", "parts": {"Why": "x"}, "risk": "low"}, "gone": {"leader": "x", "parts": {}}}})
+    assert board_back.of(tmp_path, state, "dark", {"state": "sections"})["written"] == ["tech"], "a party off the route is not counted"
+    assert board_back.of(tmp_path, state, "dark", {"state": "talk"})["written"] == [], "before the sections nothing is written"

@@ -11,6 +11,7 @@ import { typeTone } from "../arena/goalwords.js";
 import { everBack } from "./backcard.js";
 import { leftWords, shareOf } from "./backbody.js";
 import { waitRuns } from "./data.js";
+import { MidHeads, Play, middleOf } from "./downmid.js";
 
 export const ANALYSIS = ["raw", "reading", "asks", "routed", "talk", "decided", "sketch", "sections"];     // the idea, Talk, the decision and the spec being written (decisions §224); `ready`, `planning` and `plan` are the spec made: To review
 const SPEC_MADE = ["ready", "planning", "plan"];                                                       // the Orkmaster's draft is `planning` (face down: it is being written); once `agreed` (a decision confirmed, the leaders wrote the spec) they are To review
@@ -114,13 +115,15 @@ function Heads({ n }) {
 
 /** A card face down, sideways (157 x 112): the seal with its rune at the seal's top, upright; **no name** (it is on the card's other side, and in its label). The front one's ring runs while the Orkmaster or its leaders are on it; yellow and still while it waits for the person. */
 function DownCard({ n, i, front, onPress, open }) {
-  const asks = front && waitsYou(n), busy = front && !asks && ACTIVE.includes(n.state), el = n.element || "", hue = n.hue || el;
+  const asks = front && waitsYou(n), wait = front && waitRuns(n), mid = front ? middleOf(n) : null, filling = mid?.fill != null, busy = front && !asks && !wait && !filling && ACTIVE.includes(n.state), el = n.element || "", hue = n.hue || el;
+  const share = wait ? mid.wait : filling ? mid.fill : null;                                              // the ring as a share (orkUI's `.is-waiting`, in eighths): what is left of the wait, or what is written of the spec
   everBack.add(n.slug);                                                                                  // seen face down: its turn up and its flight to a lane are played once (backcard.js)
-  return html`<button type="button" class=${cls("ork-card col-card col-card--down", { asks })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="analysis" data-down="1" style=${`--i:${i}`}
+  const card = html`<button type="button" class=${cls("ork-card col-card col-card--down", { asks })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="analysis" data-down="1" style=${`--i:${i}`}
     tabindex=${front ? undefined : -1} aria-hidden=${front ? undefined : "true"} aria-haspopup=${front ? "dialog" : undefined} aria-expanded=${front ? String(open) : undefined}
     aria-label=${front ? `${n.title}: ${sayOf(n, "analysis")}; press for the list in order` : undefined} onClick=${() => onPress(n, "analysis")}>
-    <span class=${cls(`ork-sigil table-back-sigil col-sigil${el ? ` is-${hue}` : ""}`, { "col-busy": busy, "col-stopped": asks })} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${busy} /></span></span>
+    <span class=${cls(`ork-sigil table-back-sigil col-sigil${el ? ` is-${hue}` : ""}`, { "col-busy": busy, "col-stopped": asks, "is-waiting": share != null })} style=${share != null ? `--ork-sigil-share:${share}` : undefined} data-share=${share != null ? share : undefined} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${busy} /></span>${mid && !wait && html`<${MidHeads} heads=${mid.heads} />`}</span>
   </button>`;
+  return wait ? html`${card}<${Play} n=${n} />` : card;
 }
 
 /** A card face up (112 x 157): its rune and short name at its top, its type in the window, and its foot (20 px: rune, short name, then its time or its leaders' heads, the sign of its state). `first`: the front of To review shows the wait as a bar in eighths and its time left. */
