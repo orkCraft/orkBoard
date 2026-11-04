@@ -268,3 +268,11 @@ def test_the_chronicles_words_spec_134():
     assert [lexicon.term(k) for k in ("chronicle", "chronicle_earlier", "chronicle_week", "how_works_now", "changed_by")] == [
         "Chronicle", "Earlier", "The week of", "How it works now", "changed by"]
     assert lexicon.words("Chronicle") == "Chronicle" and lexicon.term("chronicles") == "History"          # the town's *Chronicles* keep their word
+
+
+def test_every_term_has_one_key():
+    """A concept gets its one word (CLAUDE.md): a key twice in TERMS is a merge kept twice, never two words."""
+    from collections import Counter
+    from orkboard.realm.lexicon import TERMS
+    twice = [k for k, n in Counter(t.key for t in TERMS).items() if n > 1]
+    assert twice == []
