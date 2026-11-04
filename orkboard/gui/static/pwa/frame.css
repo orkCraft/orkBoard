@@ -24,3 +24,26 @@ body { box-sizing: border-box; display: flex; flex-direction: column; padding-to
 .remote-line.is-bad { color: var(--ork-alert); }
 .remote-away summary { min-height: var(--ork-tap); display: flex; align-items: center; cursor: pointer; }
 .remote-away[open] summary { margin-bottom: var(--ork-2); }
+
+/* The screen the journal draws while the computer cannot be reached (pwa/shell-remote-view.js, docs/specs/136 C.4): over the page, under the frame's own cards; the muted *As of* first. */
+.remote-journal { z-index: 900; }
+.remote-page { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--ork-4); font: var(--ork-type-body); overflow-wrap: anywhere; }
+.remote-head, .remote-body { display: flex; flex-direction: column; gap: var(--ork-3); }
+.remote-head p, .remote-section h2 { margin: 0; }
+.remote-asof { font: var(--ork-type-title); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.remote-sub { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-newgoal { display: flex; flex-direction: column; gap: var(--ork-2); }
+.remote-section { display: flex; flex-direction: column; gap: var(--ork-2); }
+.remote-section h2 { font: var(--ork-type-caption); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.remote-goals { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
+.remote-goal { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ork-1) var(--ork-3); padding: var(--ork-3); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); }
+.remote-goal__title { flex: 1 1 10rem; min-width: 0; }
+.remote-goal__state { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-goal__needs { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); }
+.remote-mark { font: var(--ork-type-caption); color: var(--ork-alert); }
+.remote-goal__error { flex: 1 1 100%; font: var(--ork-type-caption); color: var(--ork-alert); }
+.remote-goal[data-needs] { border-color: var(--ork-alert); }
+.remote-down { padding: var(--ork-3); border: var(--ork-line) dashed var(--ork-frame); background: var(--ork-canvas); display: flex; flex-direction: column; gap: var(--ork-1); }
+.remote-down__words { margin: 0; white-space: pre-wrap; }
+.remote-down__note { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-down__note.is-bad { color: var(--ork-alert); }

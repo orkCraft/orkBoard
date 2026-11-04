@@ -18,6 +18,8 @@ export const status = signal("");
 export const stale = signal(false);
 /** What waits to be sent: [{key, name, label, at}], each marked SENT_WHEN where it is drawn. */
 export const waiting = signal([]);
+/** The computer could not be reached (the socket closed, or never opened) and has not answered since: the frame then reads the project's journal from its remote (docs/specs/136 C.3). False while it answers, and at the start, before the first try has failed. */
+export const unreached = signal(false);
 /** The phone was forgotten on the computer: the words to say with the pairing card, "" otherwise. */
 export const forgotten = signal("");
 
@@ -186,7 +188,7 @@ export function makePaired(page, device = store.get()) {
     const socket = new WebSocket(`wss://${location.host}/ws`, [PROTOCOL, `bearer.${device.token}`]);
     ws = socket;
     socket.onopen = () => {
-      opened = true; retry = 1; status.value = "";
+      opened = true; retry = 1; status.value = ""; unreached.value = false;
       hello(); flush();
       for (const fn of onOpen) fn(send);
     };
@@ -200,6 +202,7 @@ export function makePaired(page, device = store.get()) {
     socket.onclose = (e) => {
       if (ws === socket) ws = null;
       page.online.value = false;
+      if (e.code !== 1008 && !closed) unreached.value = true;
       for (const w of waits.values()) w(fail("The town went away"));
       waits.clear();
       if (e.code === 1008) {                       // forgotten on the computer: the token is dead
@@ -230,6 +233,6 @@ export function makePaired(page, device = store.get()) {
     /** Close the socket and stay closed (the frame forgets the pairing here). */
     close() { closed = true; clearTimeout(retryTimer); ws?.close(1000); },
     /** Forget the pairing on this phone. */
-    unpair() { this.close(); store.clear(); device = null; board = null; allowedCommands.value = null; stale.value = false; status.value = ""; },
+    unpair() { this.close(); store.clear(); device = null; board = null; allowedCommands.value = null; stale.value = false; status.value = ""; unreached.value = false; },
   };
 }

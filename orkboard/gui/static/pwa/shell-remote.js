@@ -4,6 +4,7 @@
 // (shell-remote-settings.js and shell-remote-view.js do) and imports no library, so a test runs it with a fake `fetch` and a fake storage.
 import { client, cleanRepo } from "./shell-remote-api.js";
 import { makeKeep } from "./shell-remote-keep.js";
+import { journalPart } from "./shell-remote-journal.js";
 import * as say from "./shell-remote-words.js";
 
 export const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -72,9 +73,10 @@ export function makeRemote({ fetch: fetcher = globalThis.fetch?.bind(globalThis)
     },
 
     /** *Remove*: the token is forgotten at once, and the journal read with it. What waits to be sent stays, kept without it. */
-    forget() { keep.forget(); me.refused = false; remote.stopWatching?.(); emit(); },
+    forget() { keep.forget(); me.refused = false; emit(); },
     /** Unpairing: everything of the remote is forgotten on this phone. */
-    wipe() { remote.stopWatching?.(); keep.wipe(); me.refused = false; me.limitUntil = 0; emit(); },
+    wipe() { keep.wipe(); me.refused = false; me.limitUntil = 0; emit(); },
   };
+  journalPart(remote);
   return remote;
 }

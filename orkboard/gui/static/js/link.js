@@ -2,7 +2,7 @@
 // The host sends a fresh snapshot whenever the town changes (gui/server.py); signals redraw only
 // what read the parts that changed.
 import { signal } from "@preact/signals";
-import { makePaired, allowedCommands, status as pairedStatus, stale as pairedStale, waiting as pairedWaiting, forgotten as pairedForgotten, SENT_WHEN } from "./linkpaired.js";
+import { makePaired, allowedCommands, status as pairedStatus, unreached as pairedUnreached, stale as pairedStale, waiting as pairedWaiting, forgotten as pairedForgotten, SENT_WHEN } from "./linkpaired.js";
 
 // One link, two ways (docs/specs/94 §2): on the computer the local socket below, or paired (`pairWith`, which the phone's frame
 // calls before `connect`) the phone's socket in js/linkpaired.js. Nothing else in the page knows which.
@@ -13,6 +13,8 @@ export const can = (name) => allowedCommands.value === null || allowedCommands.v
 /** Paired and with no signal: the line to say ("As of 14:02. …"), and whether the snapshot drawn is the kept one (grey it, act on none of it). */
 export const offlineLine = pairedStatus;
 export const stale = pairedStale;
+/** Paired and the computer cannot be reached: the frame reads the journal of the project's remote (spec 136 C). */
+export const unreached = pairedUnreached;
 /** Paired: what was given with no signal and waits [{key, name, label, at}]; each is marked `SENT_WHEN` where it is drawn. */
 export const waiting = pairedWaiting;
 /** Paired: why the phone must be paired again ("" while it is). */

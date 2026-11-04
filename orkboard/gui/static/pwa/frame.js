@@ -5,11 +5,12 @@
 // after the computer forgot the phone. The computer's update is the page's own (js/shell/update.js `UpdateAsk`: the snapshot carries it). The old face (old.html,
 // board-app.js) keeps its own copy of all this until spec 94 E.
 import { effect } from "@preact/signals";
-import { forgotten, offlineLine, pairWith } from "./page/js/link.js";
+import { forgotten, offlineLine, pairWith, unreached } from "./page/js/link.js";
 import { store } from "./page/js/linkpaired.js";
 import { picked } from "./page/js/frame/state.js";
 import { makeRemote } from "./shell-remote.js";
 import { settingsNode } from "./shell-remote-settings.js";
+import { journalScreen } from "./shell-remote-view.js";
 
 const PRODUCT = document.documentElement.dataset.product || "Orkboard";
 const API = 1;
@@ -142,7 +143,39 @@ async function start() {
   link.opened((send) => { renewPush(send); arrive(send); });
   effect(() => { if (forgotten.value) unpaired(forgotten.value); });     // the computer forgot this phone: the page is covered by the card
   effect(() => { const line = offlineLine.value; status.textContent = line; status.hidden = !line; });   // "As of 14:02. Connecting…": the page is the kept snapshot
+  journalFrom();
   await import("./page/board.js");
+}
+
+// -- the journal of the project's remote, while the computer cannot be reached (docs/specs/136 C.3–C.4) ------------------------------------------------------------
+
+let screen = null, seeBoard = false;             // the journal's screen (shell-remote-view.js); the person asked for the Board as last seen
+
+/** The journal screen over the page while the link to the computer has failed and a journal was read; its reads (every minute, only while the app is seen) start with the page. */
+function journalFrom() {
+  if (screen) return;
+  screen = journalScreen(remote, { seeBoard: () => { seeBoard = true; drawJournal(); }, retry: () => remote.kick() });
+  document.body.append(screen.node);
+  remote.watch({ reached: () => !unreached.value, seen: () => document.visibilityState === "visible" });
+  remote.subscribe(drawJournal);
+  let was = false;
+  effect(() => {                                  // what it reads is only the signals: the drawing runs after, so it is not what this effect depends on
+    const lost = unreached.value;
+    forgotten.value; offlineLine.value;
+    queueMicrotask(() => { if (lost && !was) remote.kick(); if (!lost) seeBoard = false; was = lost; drawJournal(); });
+  });
+  const wake = () => { if (document.visibilityState === "visible") { remote.flush?.(); remote.kick(); drawJournal(); } };
+  document.addEventListener("visibilitychange", wake);
+  addEventListener("online", wake);
+}
+
+function drawJournal() {
+  if (!screen || !started) return;
+  const on = unreached.value && !forgotten.value && Boolean(remote.journal()) && !seeBoard;
+  screen.node.hidden = !on;
+  if (!forgotten.value) app.hidden = on;
+  status.hidden = on || !offlineLine.value;      // the journal says its own *As of*
+  if (on) screen.draw();
 }
 
 /** The person came from a notification: `opened` `push` is logged once and, for a push that names a goal, that goal is picked (the hand's first card is the page's own start). */
@@ -251,6 +284,8 @@ globalThis.orkboardPhone = Object.freeze({
     link?.unpair();
     remote.wipe();
     device = null;
+    seeBoard = false;
+    if (screen) screen.node.hidden = true;
     unpaired();
   },
   /** The project's own remote (spec 136 C): what the page may ask of it. The token is never handed over. */
