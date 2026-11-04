@@ -15,7 +15,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html } from "../html.js";
 import { Elem, Head, Icon, TIER_WORDS } from "../orkui.js";
-import { command, town } from "../link.js";
+import { command, toast, town } from "../link.js";
+import { spendWords } from "../hand/costline.js";
 import { mapData } from "../shell/store.js";
 import { ORKMASTER, over, picked } from "../frame/state.js";
 import { fieldText } from "../hand/state.js";
@@ -149,6 +150,18 @@ function Bubble({ tab, party, g, parties, look }) {
     command("ideas.ask_clear", {}).catch(() => {});
     close(false);
   };
+  const analysis = state === "answered" && ask?.goal_in_analysis ? (mapData.value?.nodes || []).find((x) => x.slug === ask.goal_in_analysis) || { slug: ask.goal_in_analysis } : null;
+  const addTo = async () => {                                        // the person's words kept as written in the goal's Asked, and its decision worded again when it is worded already (ideas.add_to_goal, spec 132 A)
+    if (sending || !analysis) return;
+    setSending(true);
+    let got = null;
+    try { got = await command("ideas.add_to_goal", { idea: analysis.slug, text: ask.q, via: "bubble" }); } catch { setSending(false); return; }      // refused: the host's words are in a toast, the answer stays
+    setSending(false);
+    const price = got?.reworded && got.cost ? spendWords(got.cost.usd_high) : "";
+    toast(got?.reworded ? `Added to the goal; the Orkmaster words its decision again${price ? `: ${price}` : ""}` : "Added to the goal");
+    command("ideas.ask_clear", {}).catch(() => {});
+    close(false);
+  };
   const goal = () => {
     command("ideas.ask_goal", {}).catch(() => {});
     fieldText.value = ask.goal;
@@ -177,7 +190,7 @@ function Bubble({ tab, party, g, parties, look }) {
         ${state === "answered" && html`<p class="table-ask__q">${ask.q}</p>
           <p class="table-ask__text">${ask.answer}</p>
           ${sources.length > 0 && html`<ul class="table-ask__srcs" aria-label="Where it is said">${sources.map((s) => html`<li key=${s} class="ork-chip table-ask__src">${s}</li>`)}</ul>`}
-          <div class="table-ask__acts">${canChange && html`<button type="button" class="ork-btn primary" disabled=${sending} title=${`${here.name} replans its part of ${aboutGoal} from your words; you decide in the hand`} onClick=${change}>Make it a change</button>`}
+          <div class="table-ask__acts">${analysis && html`<button type="button" class="ork-btn primary" data-act="add" disabled=${sending} title=${`Your words are kept as written in ${analysis.short || analysis.title || "the goal"}; if its decision is worded already, the Orkmaster words it again`} onClick=${addTo}>Add to the goal</button>`}${canChange && html`<button type="button" class="ork-btn primary" disabled=${sending} title=${`${here.name} replans its part of ${aboutGoal} from your words; you decide in the hand`} onClick=${change}>Make it a change</button>`}
             ${canGoal && ask.goal && html`<button type="button" class="ork-btn primary" title=${ask.goal} onClick=${goal}>Make it a goal</button>`}<span class="table-ask__grow"></span>
             <button type="button" class="ork-btn quiet" onClick=${() => setMore(true)}>Ask more</button></div>`}
         ${state === "failed" && html`<p class="table-ask__q">${ask.q}</p><p class="table-ask__err" role="alert">${ask.error || "No answer came: ask again"}</p>

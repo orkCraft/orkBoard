@@ -79,6 +79,9 @@ class DecisionHost(HandHost):
                 return {"error": "The keeper is busy with this goal: a moment"}
             self.needs = [n for n in self.needs if n["kind"] != "decision"]
             return self.bump({"ok": True, "number": 118, "title": "Players chat in the lobby, one room each"})
+        if name == "ideas.decision_change":
+            self.log.append((name, a))
+            return {"ok": True, "idea": a["idea"], "kept": bool(a.get("text")), "reworded": bool(a.get("say")), **({"cost": {"calls": 1, "usd_high": 0.4}} if a.get("say") else {})}
         if name == "ideas.throw":
             self.log.append((name, a))
             self.forks.pop(0)
@@ -149,7 +152,7 @@ def test_lifted_the_decision_says_why_and_its_numbered_points_and_has_one_button
         assert " ".join(card.locator(".hand-lifted__kind").text_content().split()) == "Decision 118" and card.inner_text().count("Decision 118") == 1, "its number is said once, beside what the card is"
         primaries = card.locator(".hand-answers .ork-btn.primary")
         assert primaries.count() == 1 and primaries.inner_text().strip() == "Confirm and start", "one button"
-        assert [b.inner_text().strip() for b in card.locator(".hand-answers .ork-btn").all()] == ["Confirm and start", "Edit"]
+        assert [b.inner_text().strip() for b in card.locator(".hand-answers .ork-btn").all()] == ["Confirm and start", "Change…"]
         shot(pg, f"{width}-decision-lifted")
         narrow.no_sideways(pg)
         primaries.click()
@@ -163,16 +166,16 @@ def test_lifted_the_decision_says_why_and_its_numbered_points_and_has_one_button
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_edit_opens_the_entry_as_a_field_on_the_card_and_what_is_written_is_sent_as_text(gui, width):
+def test_change_opens_the_entry_as_a_field_on_the_card_and_what_is_written_is_sent_as_text(gui, width):
     pg, host, log = open_decision(gui, width)
     try:
         press(pg, "chat")
-        lifted(pg).get_by_role("button", name="Edit").click()
+        lifted(pg).get_by_role("button", name="Change…").click()
         field = lifted(pg).locator("textarea.hand-way__entry")
         field.wait_for(timeout=WAIT_MS)
         seed = field.input_value()
         assert seed.startswith("## 118. Players chat in the lobby, one room each\n\nWhy: Players talk") and "3. No private messages" in seed
-        assert lifted(pg).get_by_role("button", name="Edit").count() == 0 and lifted(pg).get_by_role("button", name="Cancel").count() == 1
+        assert lifted(pg).get_by_role("button", name="Change…").count() == 0 and lifted(pg).get_by_role("button", name="Cancel").count() == 1
         shot(pg, f"{width}-decision-editing")
         narrow.no_sideways(pg)
         field.fill("## 118. Players chat, one room\n\nWhy: It is enough.\n\n1. One room.\n2. Nothing private.")
@@ -185,12 +188,12 @@ def test_edit_opens_the_entry_as_a_field_on_the_card_and_what_is_written_is_sent
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_edit_then_cancel_and_confirm_sends_no_text_and_a_refusal_keeps_the_card(gui, width):
+def test_change_then_cancel_and_confirm_sends_no_text_and_a_refusal_keeps_the_card(gui, width):
     pg, host, log = open_decision(gui, width)
     try:
         host.refuse = True
         press(pg, "chat")
-        lifted(pg).get_by_role("button", name="Edit").click()
+        lifted(pg).get_by_role("button", name="Change…").click()
         lifted(pg).locator("textarea").fill("changed my mind")
         lifted(pg).get_by_role("button", name="Cancel").click()
         assert lifted(pg).locator("textarea").count() == 0 and lifted(pg).locator(".hand-way__points li").count() == 3, "back to the decision as worded"
@@ -204,13 +207,13 @@ def test_edit_then_cancel_and_confirm_sends_no_text_and_a_refusal_keeps_the_card
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_decision_written_already_asks_the_sections_again_and_has_no_edit(gui, width):
+def test_a_decision_written_already_asks_the_sections_again_and_has_no_change(gui, width):
     pg, host, log = open_decision(gui, width, confirmed=True)
     try:
         press(pg, "chat")
         card = lifted(pg)
         card.wait_for(timeout=WAIT_MS)
-        assert card.get_by_role("button", name="Edit").count() == 0
+        assert card.get_by_role("button", name="Change").count() == 0
         assert "written already" in card.locator('[data-note="written"]').inner_text() and "limits are spent" in card.locator('[data-note="written"]').inner_text()
         card.get_by_role("button", name="Confirm and start").click()
         assert _calls(pg, host, "ideas.confirm") == [{"idea": "chat"}]
@@ -325,6 +328,38 @@ def test_the_spec_page_alone_lights_nothing_and_reads_a_page_of_before_as_one_se
         assert secs.first.locator('.spec-col[data-part="will"]').count() == 0 and page.locator(".spec-line.is-lit").count() == 0
         shot(pg, f"{width}-spec-alone")
         narrow.no_sideways(pg)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_one_change_keeps_the_field_as_written_and_words_the_line_again(gui, width):
+    """Spec 132 A, decisions §237.3: under the field one line, *Or say what to change*; Change sends `ideas.decision_change` with the field as `text` and the line as `say`."""
+    pg, host, log = open_decision(gui, width)
+    try:
+        press(pg, "chat")
+        lifted(pg).get_by_role("button", name="Change…").click()
+        field = lifted(pg).locator("textarea.hand-way__entry")
+        field.wait_for(timeout=WAIT_MS)
+        line = lifted(pg).get_by_label("Or say what to change")
+        assert line.count() == 1 and "or say what to change" in lifted(pg).inner_text().lower()
+        change = lifted(pg).get_by_role("button", name="Change", exact=True)
+        assert change.is_disabled(), "nothing changed, nothing to send"
+        line.fill("Make it three rooms")
+        assert lifted(pg).get_by_role("button", name="Confirm and start").is_disabled(), "a line to be worded is sent by Change, not lost by Confirm"
+        shot(pg, f"{width}-decision-change")
+        narrow.no_sideways(pg)
+        change.click()
+        got = _calls(pg, host, "ideas.decision_change")
+        assert got == [{"idea": "chat", "say": "Make it three rooms"}], got
+        pg.wait_for_function("() => !document.querySelector('.hand-lifted textarea')", timeout=WAIT_MS)
+        lifted(pg).get_by_role("button", name="Change…").click()
+        lifted(pg).locator("textarea.hand-way__entry").fill("## 118. Chat\n\nWhy: x.\n\n1. One room.")
+        lifted(pg).get_by_label("Or say what to change").fill("and quieter")
+        lifted(pg).get_by_role("button", name="Change", exact=True).click()
+        got = _calls(pg, host, "ideas.decision_change")
+        assert got[-1] == {"idea": "chat", "text": "## 118. Chat\n\nWhy: x.\n\n1. One room.", "say": "and quieter"}, got
     finally:
         pg.close()
     assert not log, "\n".join(log)

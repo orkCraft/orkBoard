@@ -50,6 +50,7 @@ class AskHost(TableHost):
         super().__init__(**kw)
         self.ask = None
         self.since = None
+        self.reworded = False
 
     def snapshot(self):
         doc = super().snapshot()
@@ -74,6 +75,9 @@ class AskHost(TableHost):
         if name == "ideas.ask_goal":
             self.log.append((name, a))
             return {"ok": True}
+        if name == "ideas.add_to_goal":
+            self.log.append((name, a))
+            return {"ok": True, "idea": a["idea"], "reworded": self.reworded, **({"cost": {"calls": 1, "usd_high": 0.4}} if self.reworded else {})}
         if name == "ideas.concerns" and a.get("party") == "tech" and self.since:
             self.log.append((name, a))
             return {"at": "2026-10-29T08:00:00", "map_hash": "h1", "by": "architect", "status": "ready", "error": "", "measure": None, "concerns": [], "dismissed": [], "rubric": None, "since": self.since}
@@ -453,3 +457,35 @@ def test_a_touch_screen_at_the_wide_width_opens_none_either(gui):
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
+
+
+def test_add_to_the_goal_is_offered_on_an_answer_about_a_goal_in_analysis_and_sends_the_words_as_written(asked):
+    """Spec 132 A (decisions §234.5): the answer's `goal_in_analysis` makes **Add to the goal** (`ideas.add_to_goal {idea, text, via: "bubble"}`: the question's words), the record is put away; a goal-less answer has none."""
+    pg, host, w = asked
+    host.put(record("answered", "", goal_in_analysis="timer"))
+    opened(pg)
+    button = pg.get_by_role("button", name="Add to the goal")
+    assert button.count() == 1 and "primary" in button.get_attribute("class").split() and "Make it a goal" in bubble(pg).inner_text()
+    shot(pg, f"{w}-bubble-add.png")
+    button.click()
+    pg.wait_for_function("() => !document.querySelector('.table-ask__bubble')", timeout=WAIT_MS)
+    assert host.sent("ideas.add_to_goal") == [{"idea": "timer", "text": "Why does the timer run on the server?", "via": "bubble"}]
+    pg.wait_for_function("() => document.body.innerText.includes('Added to the goal')", timeout=WAIT_MS)
+    assert host.sent("ideas.ask_clear") == [{}]
+
+
+def test_add_to_the_goal_says_the_decision_is_worded_again_and_its_cost(asked):
+    pg, host, w = asked
+    host.reworded = True
+    host.put(record("answered", "", goal_in_analysis="timer"))
+    opened(pg)
+    pg.get_by_role("button", name="Add to the goal").click()
+    pg.wait_for_function("() => document.body.innerText.includes('words its decision again')", timeout=WAIT_MS)
+    assert "of Claude" in pg.locator("body").inner_text() or "at API prices" in pg.locator("body").inner_text()
+
+
+def test_an_answer_about_no_goal_in_analysis_has_no_add_to_the_goal(asked):
+    pg, host, w = asked
+    host.put(record("answered", "", goal_in_analysis=""))
+    opened(pg)
+    assert pg.get_by_role("button", name="Add to the goal").count() == 0
