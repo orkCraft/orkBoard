@@ -13,7 +13,7 @@ D hands a refuted hypothesis). No new pane, column, drawer or dialog (ยง104.0, ย
 |---|---|---|
 | **A. Conditions and the draft** | *Holds when* and one to three ways *Refuted when*, what changes if it holds or is refuted this way, in the record, the proposal, the tree's text, the row and the commands | `realm/hypotheses.py` (the item, `add`, `edit`, `judge`, `draft`, `parse`, `_sentence`), `core/idea_hypotheses.py` (the proposal's prompt), `realm/board_rows.py`, `gui/ideas_hypotheses.py`, `realm/lexicon.py`; `tests/test_hypotheses.py`, `tests/test_idea_hypotheses.py`, `tests/test_gui_hypotheses.py`, `tests/test_board_rows.py`, `tests/test_opportunity_tree.py`, `tests/test_lexicon.py` |
 | **B. Measures and the date** | a test that is a measure with its bars and its date; *Did it hold?* due at the later of the goals and the date; the values read by a leader or typed; the card's values against the bars | new `realm/hypothesis_measures.py` (the measure, the date, `met`), `realm/hypotheses.py` (`due`, `value`), new `core/idea_hypothesis_values.py` (a keeper mixin: the leader's reading), `realm/idea_target.py` and `realm/idea_spend.py` (step `measure_read`), `realm/event_log.py`, `gui/ideas_hypotheses.py` (`hypothesis_value`), `realm/board_rows.py`; new `tests/test_hypothesis_measures.py`, new `tests/test_idea_hypothesis_values.py` |
-| **C. The file** | the project's own hypotheses file is the source: read in, written out, committed with the Board's pages | new `realm/hypotheses_file.py` (the Markdown: `find`, `parse`, `apply`, `render`), `realm/hypotheses.py` (the read overlaid by the file, the write through it, `bind`), `gui/ideas_hypotheses.py` (the writer given to the record); new `tests/test_hypotheses_file.py`, `tests/test_hypotheses.py` |
+| **C. The file** | the project's own hypotheses file is the source: read in, written out, committed with the Board's pages | new `realm/hypotheses_file.py` (the Markdown: `find`, `parse`, `apply`), new `realm/hypotheses_bind.py` (where it is read, how it is written), `realm/hypotheses.py` (the read overlaid by the file, the write through it, `bind`, `set_writer`), `gui/ideas_hypotheses.py` (the writer given to the record); new `tests/test_hypotheses_file.py`, `tests/test_hypotheses.py` |
 | **D. Refuted as a finding** | a refuted verdict is a finding the Product leader tells and the Orkmaster sorts; the goals that rested on it named in it | `realm/findings_gather.py` (`hypothesis`), `core/idea_findings.py` (the told prompt), `core/idea_hypotheses.py` (`assumed_text(only=)`), `gui/ideas_hypotheses.py` (`hypothesis_judge`), `realm/findings.py` (the goals' record); `tests/test_findings.py`, `tests/test_idea_findings.py`, `tests/test_gui_hypotheses.py` |
 
 A first; C stands alone (it needs only A's fields to carry); D needs A's `judge(way=)` and spec 132 D. B needs A and is
@@ -201,9 +201,9 @@ stripped before the date.
 and is a file; else `docs/hypotheses.md` when it is a file; else None. Never outside the root, never a link. A project with
 no file keeps its hypotheses in `hypotheses.json` **as today**; nothing in this part changes it.
 
-**Bound** (`hypotheses.bind(state_dir, base, rel)`): the host tells the record where the file is read (`base`: the Board's tree
-`<state_dir>/board` when its `.git` is there, as dev holds the project's files, else the project's folder: `_decisions`' rule)
-and its path from the root `rel`; the record keeps `file` (the path) in `hypotheses.json` and the base in memory. A project that
+**Bound** (`hypotheses.bind(state_dir, rel)`): the file is read where the decisions file is (`hypotheses_bind.base`: the Board's tree
+`<state_dir>/board` when its `.git` is there, as dev holds the project's files, else the project's folder; `_decisions`' rule);
+the host tells the record its path from the root `rel` and the record keeps it as `file` in `hypotheses.json` (so a restart and every reader know it). A project that
 had hypotheses in the record before it had a file **adopts** them when it is bound the first time: each item not `proposed`
 and not in the file is appended to it as a section (C.3), its id becomes `h<n>` (its goals' `rests`/`tests` come with it) and the
 change is one commit. A file that is gone reads as no file: the record's own copy is read.
