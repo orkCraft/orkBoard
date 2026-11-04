@@ -6,21 +6,17 @@
 import { signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "./html.js";
-import { command, openLink, say, town, PRODUCT } from "./link.js";
-import { Dialog } from "./dialog.js";
-import { MascotHead, BIOMES, headerSprite, TypeIcon, ToolMark } from "./icons.js";
+import { command, say, town, PRODUCT } from "./link.js";
+import { MascotHead, BIOMES, headerSprite, TypeIcon } from "./icons.js";
 import { terrainUrl } from "./terrain.js";
 import { USAGE_WHAT } from "./settings.js";
 import { googleOpen, googleShown } from "./accounts.js";
-import { SignIn, SignInButton } from "./shell/signin.js";
-
-const asking = signal(false);          // the Request a tool dialog
+import { SignIn } from "./shell/signin.js";
 
 const send = (name, args = {}) => command(name, args).catch(() => {});
 
-// In focus (docs/specs/33-v1-shell.md §1) the onboarding is its first screen — trust said plainly, the AI tools found — and
-// then the shell opens: no class, no town to choose, no Mission 1. The host's own steps (gui/onboarding.py) are untouched:
-// the first screen's button is its Skip (an empty town, the tools found kept on), and the raising closes by itself.
+// In focus (docs/specs/33-v1-shell.md §1) nothing of this is drawn: the first open is the Orkmaster's (docs/specs/130 D.2, hand/setupcards.js, hand/addtool.js), its table of checkboxes gone with its Next and its Skip.
+// A step a host still names is skipped, and the raising closes by itself.
 const inFocus = () => town.value?.focus === "board";
 
 const GLYPHS = new Set(["github", "gitlab", "gmail", "discord", "jira", "confluence", "figma"]);
@@ -60,137 +56,6 @@ function Foot({ back = true, onBack, skip = true, next, nextLabel = "Next", chil
     <span class="gui-onb__spacer">${children}</span>
     ${next && html`<button class="ork-btn primary" onClick=${next}>${nextLabel}</button>`}
   </footer>`;
-}
-
-// -- 1 · Your AI tools ---------------------------------------------------------------------------------
-
-function RequestTool() {
-  const [f, setF] = useState({ name: "", link: "", note: "" });
-  const close = () => { asking.value = false; };
-  const open = () => command("onboarding.request", f).then((r) => {
-    openLink(r.url);
-    close();
-  }, () => {});
-  const field = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  return html`<${Dialog} title="Request a tool" onCancel=${close}
-      meta="Which agent should orks be able to run on? Requests decide what the town learns next."
-      actions=${html`<span class="gui-dialog__note">Opens a GitHub issue in your browser, filled in. Nothing is sent until you submit it there.</span>
-        <button class="ork-btn" onClick=${close}>Cancel</button>
-        <button class="ork-btn primary" disabled=${!f.name.trim()} onClick=${open}>Open the request</button>`}>
-    <label class="gui-field"><span class="ok-font-label">Tool name</span>
-      <input class="ork-field" value=${f.name} onInput=${field("name")} placeholder="Aider" /></label>
-    <label class="gui-field"><span class="ok-font-label">Link (optional)</span>
-      <input class="ork-field" value=${f.link} onInput=${field("link")} placeholder="https://" /></label>
-    <label class="gui-field"><span class="ok-font-label">What would orks do with it? (optional)</span>
-      <textarea class="ork-field gui-textarea" rows="3" value=${f.note} onInput=${field("note")}></textarea></label>
-  </${Dialog}>`;
-}
-
-/** Check: a short request to the tool on its lightest model; ✓ and how long it took, in seconds written out
- *  (a button's capitals made "12.3 s" read as a price), or what went wrong and what to do. */
-function CheckCell({ r }) {
-  const c = r.check;
-  const run = () => send("onboarding.check", { tool: r.id });
-  if (c && c.state === "running") return html`<span class="ok-font-status ok-tone-muted" aria-live="polite">Checking…</span>`;
-  if (c && c.state === "ok") {
-    const secs = Math.max(1, Math.round(c.ms / 1000));
-    return html`<button class="ork-btn gui-onb__check is-ok" onClick=${run} aria-live="polite"
-        title=${say(`Answered in ${secs} sec on its lightest model. Check again`)}>${`✓ ${secs} sec`}</button>`;
-  }
-  return html`<button class="ork-btn gui-onb__check" onClick=${run}
-    title=${say(`Send ${r.title} a short request to see that it answers`)}>${c ? "Check again" : "Check"}</button>`;
-}
-
-function CheckFailed({ c, harness, tool }) {
-  return html`<div class="gui-onb__checked ok-font-status" role="alert">
-    <span class="ok-tone-error">✗ ${say(c.line)}</span>
-    ${c.action && html` <span>${say(c.action)}</span>`}
-    ${c.sign_in && html` <${SignInButton} harness=${harness} tool=${tool} />`}
-    <details><summary class="ok-tone-muted">Details</summary><pre>${c.detail}</pre></details>
-  </div>`;
-}
-
-/** No AI tool here: what one is, three to install with the commands to type, Check again, and what the
- *  town does without one. */
-function NoTools({ t }) {
-  return html`<div class="gui-onb__none">
-    <p class="ok-font-body">AI tools are the coding agents you run in a terminal: Claude Code, Codex, Cursor's agent.
-      Orks run on one of yours, with your own sign-in and your own plan. ${PRODUCT} has no AI of its own, so it needs one of them.</p>
-    <div class="gui-onb__table">
-      ${t.recommended.map((h) => html`<div key=${h.id} class="gui-onb__row is-get">
-        <span class="gui-onb__tool"><${ToolMark} id=${h.id} mark=${h.mark} />${h.title}</span>
-        <span class="gui-onb__cmds ok-font-status">
-          <span><span class="ok-tone-muted">Install</span> <code>${h.install}</code></span>
-          <span><span class="ok-tone-muted">Then sign in</span> <code>${h.login}</code></span></span>
-      </div>`)}
-    </div>
-    <div class="gui-onb__line">
-      <span class="ok-font-status ok-tone-muted">Installed one? Check again finds it, no restart needed.</span>
-      <button class="ork-btn primary" onClick=${() => send("onboarding.detect")}>Check again</button>
-    </div>
-    <div class="gui-onb__without">
-      <div><span class="ok-font-label">Works without AI</span>
-        <p class="ok-font-status">External listeners, Calendar, Task board, Output, the Drop: things come in, are sorted and wait for you.</p></div>
-      <div><span class="ok-font-label">Needs an AI tool</span>
-        <p class="ok-font-status">Agent pool, Research, the Town planner: nothing an ork would do on its own runs until one is here.</p></div>
-    </div>
-  </div>`;
-}
-
-function ToolsStep({ o }) {
-  const t = o.tools;
-  const [risking, setRisking] = useState(null);       // an experimental tool to turn on: its warning first
-  const set = (id, change) => send("onboarding.tools", { tools: { [id]: { ...t.rows.find((r) => r.id === id), ...change } } });
-  const flip = (r) => (!r.enabled && r.risk ? setRisking(r) : set(r.id, { enabled: !r.enabled }));
-  const none = t.ready && t.rows.length === 0;
-  return html`<section class="gui-onb__card">
-    <${Head} o=${o} title=${none ? "No AI tool here yet" : "Your AI tools"}
-      tagline=${inFocus() ? "An idea becomes a spec and a plan; your orks do the work; nothing is merged without you."
-        : "A camp where work rides from the board through the orks to the Review gate, and nothing passes without you."}
-      lead=${none ? "Nothing was found on this computer that orks can run on. Install one, or open the town without AI."
-        : "Orks run on the ones you check. Found on this machine: nothing was run and no key was read. Check sends one short request to its lightest model."} />
-    ${!t.ready ? html`<p class="ok-font-body ok-tone-muted">Looking for your AI tools…</p>` : none ? html`<${NoTools} t=${t} />` : html`
-      <div class="gui-onb__table" role="table">
-        <div class="gui-onb__row is-head" role="row"><span></span><span class="ok-font-label">Tool</span>
-          <span class="ok-font-label">Status</span><span class="ok-font-label">Paid by</span><span></span></div>
-        ${t.rows.map((r) => html`<div key=${r.id} class=${cls("gui-onb__row", { "is-off": !r.enabled })} role="row">
-          <label class="ok-check" title=${say(`Orks run on ${r.title}`)}>
-            <input type="checkbox" class="gui-onb__hide" checked=${r.enabled} onChange=${() => flip(r)} />
-            <i>${r.enabled ? "✓" : ""}</i></label>
-          <span class="gui-onb__tool"><${ToolMark} id=${r.id} mark=${r.mark} />${r.title}
-            ${r.version && html`<span class="ok-font-status ok-tone-muted">${r.version}</span>`}</span>
-          <span class=${cls("ok-font-status", r.logged_in === false ? "ok-tone-wait" : r.logged_in ? "ok-tone-ok" : "ok-tone-muted")}>
-            ${r.logged_in === false ? say(r.check?.sign_in ? "⚠ not signed in" : `⚠ not signed in: ${r.login}`) : r.logged_in ? "✓ signed in" : "sign-in unknown: Check tells"}</span>
-          <select class="ork-field" value=${r.billing} aria-label=${say(`How ${r.title} is paid`)}
-              onChange=${(e) => set(r.id, { billing: e.target.value })}>
-            <option value="subscription">Subscription</option><option value="api">API</option></select>
-          <${CheckCell} r=${r} />
-          ${r.check && r.check.state === "failed" && html`<${CheckFailed} c=${r.check} harness=${r.id} tool=${r.title} />`}
-          ${r.risk && html`<div class="gui-onb__checked ok-font-status ok-tone-wait">⚠ ${say(r.risk)}</div>`}
-        </div>`)}
-      </div>
-      ${risking && html`<${Dialog} title=${say(`Turn on ${risking.title}?`)} text=${say(risking.risk)} warn onCancel=${() => setRisking(null)}
-        actions=${html`<button class="ork-btn" onClick=${() => setRisking(null)}>${say("Keep it off")}</button>
-          <button class="ork-btn danger" onClick=${() => { set(risking.id, { enabled: true, risk_read: true }); setRisking(null); }}>
-            ${say(`Turn on ${risking.title} at my own risk`)}</button>`} />`}
-      <div class="gui-onb__line">
-        <span class="ok-font-status ok-tone-muted">${[
-          t.others.length ? say(`Also here: ${t.others.map((x) => x.title).join(", ")}. Orks can't run on these yet.`) : "",
-          ...t.cli.map((x) => say(`${x.title}: install the CLI (${x.bin}) to run orks on it.`)),
-          none ? "" : t.missing.length ? say(`Not found: ${t.missing.join(", ")}.`) : ""].filter(Boolean).join(" ")}</span>
-        <button class="ork-btn" onClick=${() => { asking.value = true; }}>Request a tool</button>
-      </div>
-      ${!o.again && !none && !inFocus() && html`<label class="ok-check gui-onb__warder">
-        <input type="checkbox" class="gui-onb__hide" checked=${t.warder} onChange=${() => send("onboarding.tools", { warder: !t.warder })} />
-        <i>${t.warder ? "✓" : ""}</i>
-        <span><b>Guard this project with the Security reviewer</b> (recommended)<br />
-          <span class="ok-font-status ok-tone-muted">Adds hooks to .claude/settings.json that stop risky commands and secrets before an ork runs them.</span>
-          ${t.warder_agy && html`<br /><span class="ok-font-status ok-tone-wait gui-onb__warder-agy">${say(t.warder_agy)}</span>`}</span>
-      </label>`}`}
-    <${Foot} back=${false} skip=${!inFocus()} next=${t.ready ? () => send(inFocus() ? "onboarding.skip" : "onboarding.tools", inFocus() ? {} : { next: true }) : null}
-      nextLabel=${inFocus() ? (none ? "Open the board without AI" : "Open the board") : none ? "Go on without AI" : "Next"} />
-    ${asking.value && html`<${RequestTool} />`}
-  </section>`;
 }
 
 // -- 2 · Who are you ------------------------------------------------------------------------------------
@@ -536,7 +401,7 @@ export function Ghost({ g, spot, biome, bare = false }) {
 
 // -- the whole -------------------------------------------------------------------------------------------
 
-const STEPS = { tools: ToolsStep, who: WhoStep, mcp: McpStep, town: TownStep, survey: SurveyStep };
+const STEPS = { who: WhoStep, mcp: McpStep, town: TownStep, survey: SurveyStep };
 
 /** A step the shell does not offer (a setup left half-way): skip to the end. */
 function Skipping() {
@@ -558,7 +423,7 @@ export function Onboarding() {
   const t = town.value;
   const o = t && t.onboarding;
   if (!o) return null;
-  if (inFocus() && o.step !== "tools") return o.step === "raising" ? html`<${Opening} o=${o} />` : html`<${Skipping} />`;
+  if (inFocus()) return o.step === "raising" ? html`<${Opening} o=${o} />` : html`<${Skipping} />`;
   if (o.step !== "town" && o.step !== "survey") townReady.value = false;
   if (o.step === "raising") return o.raising ? html`<${Raising} o=${o} />` : null;
   const Step = STEPS[o.step];

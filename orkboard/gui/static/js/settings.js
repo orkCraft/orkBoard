@@ -16,7 +16,6 @@ import { command, say, town, PRODUCT } from "./link.js";
 import { Dialog } from "./dialog.js";
 import { PhonesField } from "./phones.js";
 import { AccountsField } from "./accounts.js";
-import { ToolMark } from "./icons.js";
 import { useScrollCue } from "./scrollcue.js";
 
 export const settingsOpen = signal(false);
@@ -141,63 +140,6 @@ function LogsField({ s, set }) {
       : html`<button class="ork-btn" disabled>${say("Download analytics (.zip)")}</button>`}</span>`;
 }
 
-/** The AI tools: which are on, and the main one decisions and `main` steps run on. */
-function ToolsField({ s, set }) {
-  const [risking, setRisking] = useState(null);       // an experimental tool to turn on: its warning first
-  if (!s.tools) return null;
-  const on = s.tools.filter((x) => x.on);
-  const now = (s.tools.find((x) => x.id === s.main_now) || {}).title || s.main_now;
-  const flip = (x) => (!x.on && x.risk ? setRisking(x) : set({ tools: { [x.id]: !x.on } }));
-  return html`<div class="gui-field"><span class="ok-font-label">${say("AI tools")}</span>
-      <span class="gui-steps" role="group" aria-label=${say("AI tools")}>
-        ${s.tools.map((x) => html`<button key=${x.id} class=${cls("gui-steps__one", { "is-on": x.on })} aria-pressed=${x.on}
-            onClick=${() => flip(x)}><${ToolMark} id=${x.id} mark=${x.mark} /> ${x.title}${x.risk ? ` · ${say("experimental")}` : ""}</button>`)}
-      </span></div>
-    ${s.tools.filter((x) => x.risk).map((x) => html`<p key=${x.id} class="ok-font-status ok-tone-wait">⚠ ${x.title}: ${say(x.risk)}</p>`)}
-    ${risking && html`<${Dialog} title=${say(`Turn on ${risking.title}?`)} text=${say(risking.risk)} warn onCancel=${() => setRisking(null)}
-      actions=${html`<button class="ork-btn" onClick=${() => setRisking(null)}>${say("Keep it off")}</button>
-        <button class="ork-btn danger" onClick=${() => { set({ tools: { [risking.id]: true }, risk_read: risking.id }); setRisking(null); }}>
-          ${say(`Turn on ${risking.title} at my own risk`)}</button>`} />`}
-    <${Steps} label=${say("Main tool")} value=${s.main_tool}
-      items=${[["", say("First one on")], ...on.map((x) => [x.id, html`<${ToolMark} id=${x.id} mark=${x.mark} /> ${x.title}`])]}
-      onPick=${(v) => set({ main_tool: v })} />
-    <p class="ok-font-status ok-tone-muted">${say(`Decisions run on ${now}: the Workchief, the planners, the Council's fast path, the stewards, and every ork step set to the main tool. An ork or a steward that names its own tool keeps it.`)}</p>
-    <${TierModelsField} s=${s} set=${set} />`;
-}
-
-const OTHER = "\u0000other";
-
-/** One tier of one tool: Latest of its family by default, the tool's other families and listed models, or
- *  one typed; Reset to latest. Its price when the price tables know it. */
-function TierModel({ tool, row, set }) {
-  const [typing, setTyping] = useState(false);
-  const [typed, setTyped] = useState(row.chosen);
-  const save = (model) => { setTyping(false); set({ tier_model: { tool: tool.id, tier: row.tier, model } }); };
-  const pick = (v) => (v === OTHER ? setTyping(true) : save(v));
-  return html`<div class="gui-field"><span class="ok-font-label"><${ToolMark} id=${tool.id} mark=${tool.mark} /> ${tool.title} · ${say(row.label)}</span>
-      <span>
-        <select class="ork-field" value=${typing ? OTHER : row.chosen} aria-label=${say(`${tool.title}: the ${row.label} model`)}
-            onChange=${(e) => pick(e.target.value)}>
-          ${row.options.map(([v, text]) => html`<option key=${v} value=${v}>${say(text)}</option>`)}
-          <option value=${OTHER}>${say("Another model…")}</option>
-        </select>
-        ${typing && html` <input class="ork-field" autofocus value=${typed} placeholder=${say("the model's name, as the tool spells it")}
-            aria-label=${say(`${tool.title}: the ${row.label} model's name`)}
-            onInput=${(e) => setTyped(e.target.value)} onKeyDown=${(e) => e.key === "Enter" && typed.trim() && save(typed.trim())} />
-          <button class="ork-btn" disabled=${!typed.trim()} onClick=${() => save(typed.trim())}>${say("Use it")}</button>`}
-        ${row.chosen && html` <button class="ork-btn" onClick=${() => save("")}>${say("Reset to latest")}</button>`}
-      </span></div>
-    <p class="ok-font-status ok-tone-muted">${say(`Runs on ${row.now}`)}${row.price ? ` · ${row.price}` : ""}</p>`;
-}
-
-/** The model each tier runs on, per tool that is on. */
-function TierModelsField({ s, set }) {
-  if (!s.tier_models || !s.tier_models.length) return null;
-  return html`<p class="ok-font-status ok-tone-muted">${say("Each tool runs a tier on the latest model of its family, read from the tool once a day. A model chosen here wins over it; a model named in a building or a task wins over this.")}</p>
-    ${s.tier_models.map((tool) => tool.tiers.map((row) => html`<${TierModel} key=${`${tool.id}-${row.tier}-${row.chosen}`}
-        tool=${tool} row=${row} set=${set} />`))}`;
-}
-
 export function SettingsDialog() {
   const [s, setS] = useState(null);
   const box = useRef(null);
@@ -224,7 +166,7 @@ export function SettingsDialog() {
           items=${s.rebuilds.map((v) => [v, `${v} h`])} onPick=${(v) => set({ rebuild: v })} />`}
       <${RoundField} s=${s} set=${set} setS=${setS} />
       <${LogsField} s=${s} set=${set} />
-      <${ToolsField} s=${s} set=${set} />
+
       <${HooksField} s=${s} set=${set} />
       <${AwakeField} s=${s} onPick=${(v) => command("awake.set", { mode: v }).then(setS, () => {})} />
       <${UsageField} s=${s} onPick=${(v) => command("usage.share", { share: v }).then(setS, () => {})} />

@@ -84,30 +84,14 @@ class Onboarding:
         self.tools_host._check_run(tid)
 
     def wanted(self) -> bool:
-        """Orkboard opens on it on a machine never set up (Orkline: on a project with no town yet)."""
-        town = self.host.town
-        return not town.machine.onboarded and not town.demo and not off()
+        """Orkboard opens on no form: the first open is the Orkmaster's (docs/specs/130 D.2; hand/setupcards.js, hand/addtool.js)."""
+        return False
 
     def _look(self) -> None:
         """The AI tools on a thread (`--version` runs for each)."""
         self.tools_host.scan()
 
     # -- what the page sees ------------------------------------------------------------------------
-
-    def detect(self, args: dict) -> dict | None:
-        """Check again: look for the AI tools once more (one was just installed). An alias of `tools.look`."""
-        self._live()
-        self.tools_host.look(args)
-        return None
-
-    def check(self, args: dict) -> dict | None:
-        """Check: a short request to one tool found. An alias of `tools.check`: the row shows ✓ and how long the answer took, or what kind of failure it was."""
-        self._live()
-        try:
-            self.tools_host.check(args)
-        except ToolsError as e:
-            raise OnboardingError(str(e)) from None
-        return self.snapshot()
 
     def _found(self, found: list[tools.ToolStatus], others: list[tools.Other]) -> None:
         """The tools found are in: what is picked, as this screen shows it (the tools' own is `tools_host`)."""
@@ -172,9 +156,7 @@ class Onboarding:
     # -- the page's commands -----------------------------------------------------------------------
 
     def commands(self) -> dict[str, Callable[[dict], Any]]:
-        return {"onboarding.tools": self.set_tools, "onboarding.request": self.tools_host.request,
-                "onboarding.check": self.check, "onboarding.detect": self.detect,
-                "onboarding.skip": self.skip, "onboarding.close": self.close, "onboarding.cancel": self.cancel}
+        return {"onboarding.skip": self.skip, "onboarding.close": self.close, "onboarding.cancel": self.cancel}
 
     def _warder_agy(self) -> str:
         """What the guard step says about agy when agy is chosen (Orkline's: the Security reviewer guards its town)."""
@@ -200,23 +182,6 @@ class Onboarding:
         self.active = False
         self.host.on_change()
         return None
-
-    def set_tools(self, args: dict) -> dict | None:
-        """Which tools the orks run on and how each is paid for; whether the Security reviewer guards the project."""
-        self._live()
-        for tid, c in (args.get("tools") or {}).items():
-            if tid in self.picked and isinstance(c, dict):
-                billing = c.get("billing") if c.get("billing") in ("subscription", "api") else self.picked[tid].billing
-                on = bool(c.get("enabled"))
-                if on and harnesses.risky(tid) and not self.picked[tid].enabled and c.get("risk_read") is not True:
-                    raise OnboardingError(f"{harnesses.title(tid)} is experimental: read its warning first")
-                self.picked[tid] = settings.ToolChoice(enabled=on, billing=billing)
-        if isinstance(args.get("warder"), bool):
-            self.warder = args["warder"]
-        if args.get("next"):
-            return self._go(TOOLS)
-        self.host.on_change()             # the page draws its rows from the state pushed, not from this reply
-        return self.snapshot()
 
     def skip(self, args: dict) -> dict | None:
         """Open the board: the tools found kept on, saved; nothing else is set up."""

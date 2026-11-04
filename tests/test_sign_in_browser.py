@@ -230,44 +230,6 @@ def test_a_cancelled_sign_in_says_nothing(gui):
 
 # -- Sign in beside every failure that a sign-in helps ---------------------------------------------------------------------------
 
-def test_the_first_screens_check_row_says_not_signed_in_with_sign_in_beside_its_line(gui):
-    row = {"id": "claude", "title": "Claude Code", "mark": "✱", "enabled": True, "billing": "subscription", "version": "2.1",
-           "logged_in": False, "login": "claude  (then /login)", "risk": "",
-           "check": {"state": "failed", "kind": "login", "line": "Claude Code is not signed in, or its sign-in has expired.",
-                     "action": "Sign in opens Claude Code's sign-in. In a terminal: claude, then /login.", "detail": "Not logged in", "sign_in": True}}
-    onboarding = {"step": "tools", "steps": ["tools"], "n": 0, "again": False, "raising": None, "classes": [], "only_kin": "",
-                  "tools": {"ready": True, "warder": True, "warder_agy": "", "cli": [], "others": [], "missing": [], "recommended": [], "rows": [row]}}
-    host = StubHost(onboarding=onboarding)
-    host.sign_in = [entry(auto=False, where="check")]
-    pg, errors = _page(gui, host, ready=".gui-onb__card")
-    try:
-        text = pg.locator(".gui-onb__table").inner_text()
-        assert "not signed in" in text and "logged in" not in text.replace("signed in", "")
-        pg.get_by_role("button", name="Sign in to Claude Code").click()
-        assert _sent(pg, host, ("tools.sign_in", {"harness": "claude"}))
-        _toast(pg, "Sign in to Claude Code")
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
-
-
-def test_the_first_screen_says_signed_in_for_a_tool_that_is_and_a_failed_check_opens_its_sign_in_at_once(gui):
-    row = {"id": "claude", "title": "Claude Code", "mark": "✱", "enabled": True, "billing": "subscription", "version": "2.1",
-           "logged_in": True, "login": "", "risk": "", "check": None}
-    onboarding = {"step": "tools", "steps": ["tools"], "n": 0, "again": False, "raising": None, "classes": [], "only_kin": "",
-                  "tools": {"ready": True, "warder": True, "warder_agy": "", "cli": [], "others": [], "missing": [], "recommended": [], "rows": [row]}}
-    host = StubHost(onboarding=onboarding)
-    pg, errors = _page(gui, host, ready=".gui-onb__card")
-    try:
-        assert "✓ signed in" in pg.locator(".gui-onb__table").inner_text()
-        host.sign_in = [entry(where="check")]                             # the person pressed Check: it failed for its sign-in
-        host.bump({})
-        assert _calls(pg, host, "tools.sign_in") == [{"harness": "claude", "auto": True}]
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
-
-
 def test_the_need_is_a_stop_of_the_hand_with_sign_in(gui):
     host = StubHost()
     host.sign_in = [entry(auto=False, waiting=2)]

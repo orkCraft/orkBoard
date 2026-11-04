@@ -28,6 +28,7 @@ import { openParties } from "./parties.js";
 import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C)
 import { openReport } from "../hand/logsbtn.js";      // the bug's panel opens from the Orkmaster's … (spec 139 A.5)
 import { laidNow } from "./laying.js";
+import { currentProject } from "../shell/projects.js";
 import { setupNow } from "../hand/setupcards.js";
 import { Notice } from "./notice.js";                    // the Orkmaster's line when the work moved to another tool (spec 105 D)
 
@@ -89,7 +90,7 @@ function Phases({ goal, from }) {
 function Title({ parties, tab, narrow }) {
   const o = over.value, where = o?.from?.title || "", code = o && (o.kind === "file" || (o.kind === "diff" && o.props?.path));
   const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" };
-  const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ["Files", () => openOver("files", {}, from, "Files"), false, "folder"],
+  const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ...(currentProject.value ? [["Files", () => openOver("files", {}, from, "Files"), false, "folder"]] : []),
     ["Report a problem…", () => openReport(), false, "sign:bug"]];     // the bug left the top row (spec 139 A.5, decisions §246.6)   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
   return html`<header class="ork-head table-title">
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}

@@ -176,3 +176,11 @@
 .shell-actions__drop, .shell-edit__leave { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); box-sizing: border-box; border: var(--ork-line) solid var(--ork-edge); }
 .shell-actions__drop p, .shell-edit__leave p { margin: 0; }
 .shell-switch { gap: var(--ork-3); padding-top: var(--ork-3); }
+
+/* Settings' two groups, and the line where the rest went (spec 130 D.1; mockup docs/mockups/setup/ #settings) */
+.shell-group { display: flex; flex-direction: column; gap: var(--ork-4); }
+.shell-group + .shell-group { margin-top: var(--ork-6); }
+.shell-group__t { margin: 0; padding-bottom: var(--ork-2); border-bottom: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.shell-moved { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3) var(--ork-4); border: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.shell-moved b { color: var(--ork-ink); font-weight: 600; }
+

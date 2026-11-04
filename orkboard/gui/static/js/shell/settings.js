@@ -1,4 +1,4 @@
-// Settings (docs/specs/33-v1-shell.md §4, §9; spec 34 §5–§6), a place over the pane (docs/specs/98-the-table-and-the-hand.md §7): Push after merging, Download
+// Settings (docs/specs/33-v1-shell.md §4, §9; spec 34 §5–§6; docs/specs/130 D.1, decisions §232.9: what is neither a tool nor a party, in two groups, *This project* and *This computer*, and one line where the rest went), a place over the pane (docs/specs/98-the-table-and-the-hand.md §7): Push after merging, Download
 // today's logs, Pair a phone, Keep the computer awake (spec 47 §5), the updates (js/shell/update.js), **When I am at the computer** (js/shell/hoursfield.js, spec 138 B.1). The theme follows the system. **Work at night** (docs/specs/121 §4.1, §7.3; words: hand/nightwords.js) sits with the Board's
 // settings: what would start by itself waits for the night's window; it says plainly what still runs by day and what starts at once.
 import { useEffect, useState } from "preact/hooks";
@@ -57,36 +57,41 @@ export function SettingsPlace() {
   const b = board.value, night = nightWordsOf(b);
   return html`<${Place} title="Settings" foot=${html`<button type="button" class="ork-btn primary" onClick=${closePlace}>Done</button>`}>
     <div class="shell-form">
-      ${currentProject.value && html`<p class="ok-font-status ok-tone-muted" data-settings="project">The Board's settings are for this project: ${currentProject.value.name}.</p>`}
-      <label class="ok-check">
-        <input type="checkbox" class="gui-onb__hide" checked=${push} onChange=${(e) => act("ideas.into", { push: e.target.checked })} />
-        <i>${push ? "✓" : ""}</i><span>Push after merging (sends your code to origin)</span></label>
-      ${b && html`<div class="shell-field" role="group" aria-label="The Board">
-        <label class="ok-check">
-          <input type="checkbox" class="gui-onb__hide" checked=${!!b.autostart} onChange=${(e) => act("ideas.board_set", { autostart: e.target.checked })} />
-          <i>${b.autostart ? "✓" : ""}</i><span>Start plans by themselves</span></label>
-        <span class="ok-font-status ok-tone-muted">Low-risk plans start alone; the rest wait for you.</span>
-        <label class="ok-check" data-settings="work-at-night">
-          <input type="checkbox" class="gui-onb__hide" checked=${workAtNight(b)} onChange=${(e) => act("ideas.board_set", { work_at_night: e.target.checked })} />
-          <i>${workAtNight(b) ? "✓" : ""}</i><span>${night.label}</span></label>
-        <span class="ok-font-status ok-tone-muted" data-settings="work-at-night-hint">${night.hint}</span>
-        <label class="ok-check" data-settings="lands">
-          <input type="checkbox" class="gui-onb__hide" checked=${!b.review} onChange=${(e) => act("ideas.board_set", { review: !e.target.checked })} />
-          <i>${!b.review ? "✓" : ""}</i><span>A result that holds lands in dev by itself</span></label>
-        <span class="ok-font-status ok-tone-muted">Its tests ran and are green, nothing is left to fix, it touches no risk path and holds no pictures. Anything else waits for your look; off, every result does.</span>
-        <${TargetSetting} />
-      </div>`}
-      <${HoursField} />
-      <${UpdatesField} />
-      <div class="shell-field"><span class="ok-font-label">Your phone</span>
-        <span><button type="button" class="ork-btn" onClick=${() => openPlace("pair", {}, "Pair a phone")}>Pair a phone</button></span></div>
-      <${JournalAsk} />
-      <${AwakeField} />
-      <div class="shell-gear__logs"><span class="ok-font-label">Download today's logs</span>
-        <button type="button" class="ork-btn" onClick=${() => saveLogs("", 1)}>Today</button>
-        <button type="button" class="ork-btn" onClick=${() => saveLogs("", 7)}>The last 7 days</button></div>
-      <p class="ok-font-status ok-tone-muted">Saved in your Downloads folder: every model call with what went in and came out, and where ${PRODUCT} runs.</p>
-      <p class="ok-font-status ok-tone-muted">What you did and what the orks did, on this machine only. Off by default. The colours follow your system's light or dark setting.</p>
+      <section class="shell-group" aria-label="This project" data-group="project"><h3 class="shell-group__t">This project</h3>
+        ${currentProject.value && html`<p class="ok-font-status ok-tone-muted" data-settings="project">The Board's settings are for this project: ${currentProject.value.name}.</p>`}
+        ${b && html`<div class="shell-field" role="group" aria-label="The Board">
+          <label class="ok-check">
+            <input type="checkbox" class="gui-onb__hide" checked=${!!b.autostart} onChange=${(e) => act("ideas.board_set", { autostart: e.target.checked })} />
+            <i>${b.autostart ? "✓" : ""}</i><span>Start plans by themselves</span></label>
+          <span class="ok-font-status ok-tone-muted">Low-risk plans start alone; the rest wait for you.</span>
+          <label class="ok-check" data-settings="work-at-night">
+            <input type="checkbox" class="gui-onb__hide" checked=${workAtNight(b)} onChange=${(e) => act("ideas.board_set", { work_at_night: e.target.checked })} />
+            <i>${workAtNight(b) ? "✓" : ""}</i><span>${night.label}</span></label>
+          <span class="ok-font-status ok-tone-muted" data-settings="work-at-night-hint">${night.hint}</span>
+          <label class="ok-check" data-settings="lands">
+            <input type="checkbox" class="gui-onb__hide" checked=${!b.review} onChange=${(e) => act("ideas.board_set", { review: !e.target.checked })} />
+            <i>${!b.review ? "✓" : ""}</i><span>A result that holds lands in dev by itself</span></label>
+          <span class="ok-font-status ok-tone-muted">Its tests ran and are green, nothing is left to fix, it touches no risk path and holds no pictures. Anything else waits for your look; off, every result does.</span>
+          <${TargetSetting} />
+        </div>`}
+        ${currentProject.value && html`<label class="ok-check">
+          <input type="checkbox" class="gui-onb__hide" checked=${push} onChange=${(e) => act("ideas.into", { push: e.target.checked })} />
+          <i>${push ? "✓" : ""}</i><span>Push after merging (sends your code to origin)</span></label>`}
+        <${JournalAsk} />
+        <div class="shell-moved" data-settings="moved"><span><b>AI tools</b> are in your hand: press a potion, or the empty slot beside them.</span><span><b>Parties</b>, their size and their AI tool: the empty chair, or a party's <i>Edit</i>.</span></div>
+      </section>
+      <section class="shell-group" aria-label="This computer" data-group="computer"><h3 class="shell-group__t">This computer</h3>
+        <${AwakeField} />
+        <div class="shell-field"><span class="ok-font-label">Your phone</span>
+          <span><button type="button" class="ork-btn" onClick=${() => openPlace("pair", {}, "Pair a phone")}>Pair a phone</button></span></div>
+        <${UpdatesField} />
+        <div class="shell-gear__logs"><span class="ok-font-label">Download today's logs</span>
+          <button type="button" class="ork-btn" onClick=${() => saveLogs("", 1)}>Today</button>
+          <button type="button" class="ork-btn" onClick=${() => saveLogs("", 7)}>The last 7 days</button></div>
+        <p class="ok-font-status ok-tone-muted">Saved in your Downloads folder: every model call with what went in and came out, and where ${PRODUCT} runs.</p>
+        <p class="ok-font-status ok-tone-muted">What you did and what the orks did, on this machine only. Off by default. The colours follow your system's light or dark setting.</p>
+        <${HoursField} />
+      </section>
     </div>
   <//>`;
 }

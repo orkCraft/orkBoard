@@ -1,7 +1,6 @@
 """The AI tools' own commands (docs/specs/130-the-first-open-is-the-orkmasters.md part A; decisions §232.4, §232.5): the tools found on this computer, a
 short request to one (Check), adding one to the hand (Test & add), the order, how each is paid, and putting one back. They were the onboarding's
-(`onboarding.check`, `.detect`, `.request`); the onboarding's names stay as aliases (gui/onboarding.py), so the page that still calls them is not broken.
-Orkline's onboarding composes this too.
+(`onboarding.check`, `.detect`, `.request`), whose form and names went with spec 130 D. Orkline's onboarding composes this too.
 
     th = ToolsHost(host)                    # `host.town`: the machine, `call` and `on_change` (Orkboard's host is its own town)
     host.commands.update(th.commands())     # tools.look · card · check · test_add · put_back · put_back_undo · order · billing · request
@@ -178,6 +177,7 @@ class ToolsHost:
             self.host.on_change()
             return
         tool_hand.add(self.machine, tid, billing)
+        self.machine.onboarded = True                               # the machine is set up: Orkline's onboarding reads the same settings
         self._saved()
         n = len(tool_hand.hand(self.machine))
         self.adding[tid] = {"state": "added", "ms": out.get("ms"), "title": harnesses.title(tid), "n": n, "full": n >= tool_hand.HAND_MAX,

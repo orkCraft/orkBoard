@@ -1,7 +1,7 @@
 """The first open's questions, answered from cards (docs/specs/130-the-first-open-is-the-orkmasters.md part A; decisions §232.3, §232.8): which question the
 Orkmaster asks now and the answers the host takes. The cards are the page's (part B); what is here is what they send and read.
 
-    first_open.ask {}                       # {step, line, name, recent, kind, hand, laid}: the question now (realm/first_open.py `step`)
+    first_open.ask {}                       # {step, line, name, path, recent, kind, hand, laid}: the question now (realm/first_open.py `step`)
     first_open.kind {kind? | about?}        # the project's kind answered: *Yes* (the kind read) or another one from the list, or an empty folder's one line
     first_open.tools_skip {}                # the adding card closed with no tool added: the Board opens, and nothing is worked on until a tool is added
     projects.new_folder {parent, name}      # *A new, empty folder…*: made inside the folder the system's dialog chose, and opened
@@ -14,6 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 
+from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError
 from orkboard.realm import first_open, project_folder, project_kind, tool_hand
 
@@ -29,13 +30,13 @@ class FirstOpen:
         return {"first_open.ask": self.ask, "first_open.kind": self.kind, "first_open.tools_skip": self.tools_skip, "projects.new_folder": self.new_folder}
 
     def ask(self, args: dict) -> dict:
-        """`{step, line, name, recent, kind, hand, laid}`: `step` one of `realm/first_open.STEPS`; `line` what the Orkmaster says in its bubble; `recent` the recent
+        """`{step, line, name, path, recent, kind, hand, laid}`: `step` one of `realm/first_open.STEPS`; `line` what the Orkmaster says in its bubble; `recent` the recent
         projects (`step: project`: the answers beside *Open a folder…* and *A new, empty folder…*); `kind` `{id, words, signs, how, empty}` while it asks what the
         project is (an empty folder asks *What is it for?* instead: `empty`); `hand` how many AI tools are in the hand; `laid` whether the table is laid."""
         project = self.host.projects.current()
         inn = len(tool_hand.hand(self.host.machine))
         if project is None:
-            return {"step": "project", "line": first_open.line("project"), "name": "", "recent": self.host.projects.list()["recent"], "kind": None,
+            return {"step": "project", "line": first_open.line("project"), "name": "", "path": "", "recent": self.host.projects.list()["recent"], "kind": None,
                     "hand": inn, "laid": False}
         state_dir = project.ideas.state_dir
         laid = first_open.laid(state_dir, project.root)
@@ -47,7 +48,7 @@ class FirstOpen:
             how = project_kind.in_words(list(got["signs"]))
             kind = {"id": got["kind"], "words": project_kind.words(got["kind"]), "signs": list(got["signs"]), "how": how, "empty": got["kind"] == "empty"}
             words = "" if kind["empty"] else ", ".join(x for x in (kind["words"], how) if x)
-        return {"step": at, "line": first_open.line(at, project.name, words), "name": project.name, "recent": [], "kind": kind, "hand": inn, "laid": laid}
+        return {"step": at, "line": first_open.line(at, project.name, words), "name": project.name, "path": project.path, "recent": [], "kind": kind, "hand": inn, "laid": laid}
 
     def kind(self, args: dict) -> dict:
         """The project's kind answered: `{kind}` is *Yes* (the one read) or another of the list, kept in `<state_dir>/project.json`; `{about}` is an empty folder's one
@@ -70,6 +71,8 @@ class FirstOpen:
 
     def tools_skip(self, args: dict) -> dict:
         self.tools_skipped = True
+        self.host.machine.onboarded = True                          # the machine is set up, with no tool: Orkline's onboarding reads the same settings
+        settings.save(self.host.machine)
         self.host.on_change()
         return {"ok": True, "line": "No AI tool: the Board opens, and nothing is worked on until you add one"}
 
@@ -93,4 +96,5 @@ class FirstOpen:
             target.rmdir()
             raise IdeasError(why)
         project = self.host.projects.open(target)
+        self.host.on_change()
         return {"ok": True, "path": project.path, "git": project_folder.has_git(project.root)}

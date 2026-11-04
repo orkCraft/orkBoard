@@ -1,5 +1,5 @@
 // The one window (docs/specs/98-the-table-and-the-hand.md §7, decisions §145.1): the table (the leaders' tabs and the pane) over the hand (the deck, the stacks, the discard), nothing else — no top bar, no left column,
-// no right column, no dialog (frame/frame.js). What was a dialog or the drawer lies over the pane (frame/state.js `openOver`). With no project the start screen is drawn in the pane. Always Office's calm look; no camp.
+// no right column, no dialog (frame/frame.js). What was a dialog or the drawer lies over the pane (frame/state.js `openOver`). With no project the window is drawn not yet laid, the Orkmaster's first card in the hand (docs/specs/130 D.3; a host with no first open, Orkline's, keeps the start screen in the pane). Always Office's calm look; no camp.
 // Keyboard: Esc lowers a lifted card, else closes what is over the pane, else picks none (the table and the hand each take their own step and mark the key `defaultPrevented`; this is the last one); Ctrl/⌘+O opens the projects.
 import { useEffect, useRef } from "preact/hooks";
 import { html } from "../html.js";
@@ -60,5 +60,6 @@ export function Shell() {
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, []);
-  return html`<div class="shell" data-frame="1" data-start=${project ? undefined : "true"}>${project ? html`<${Frame} />` : html`<${Start} />`}<${SignIn} /></div>`;
+  const talk = !!t?.tools;                             // the first open is the Orkmaster's: its cards ask for the project (spec 130 D.3)
+  return html`<div class="shell" data-frame="1" data-start=${project || talk ? undefined : "true"}>${project || talk ? html`<${Frame} />` : html`<${Start} />`}<${SignIn} /></div>`;
 }

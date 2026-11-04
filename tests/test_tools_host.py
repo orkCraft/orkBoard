@@ -1,5 +1,5 @@
 """The AI tools' own commands (docs/specs/130-the-first-open-is-the-orkmasters.md part A.2–A.3; decisions §232.4, §232.5): `tools.*` on Orkboard's host,
-the onboarding's old names kept as aliases, Test & add, the order, the billing, Put back and its Undo, and nothing of it on the phone."""
+Test & add, the order, the billing, Put back and its Undo, and nothing of it on the phone."""
 from __future__ import annotations
 
 import sys
@@ -38,40 +38,29 @@ def add(b: Orkboard, tool: str, **args) -> dict:
     return got
 
 
-# -- the commands, and the onboarding's names kept (A.3) --------------------------------------------------------
+# -- the commands (A.3), the onboarding's names gone with its form (D.2) --------------------------------------------------------
 
-def test_the_tools_have_commands_of_their_own_and_the_old_names_are_aliases(fake_repo, monkeypatch):
+def test_the_tools_have_commands_of_their_own_and_the_onboardings_names_are_gone(fake_repo, monkeypatch):
     monkeypatch.setenv("ORKCRAFT_ONBOARDING", "1")
     monkeypatch.setattr(tools, "detect", lambda *a, **k: found("claude", "codex"))
     monkeypatch.setattr(tools, "detect_others", lambda *a, **k: [])
     b = Orkboard(fake_repo)
-    b.onboarding._finder.join(5)
     assert {"tools.look", "tools.card", "tools.check", "tools.test_add", "tools.put_back_plan", "tools.put_back", "tools.put_back_undo", "tools.order", "tools.billing",
             "tools.request", "first_open.ask", "first_open.kind", "first_open.tools_skip", "projects.new_folder"} <= set(b.commands)
     assert {"tools.sign_in", "tools.sign_in_done"} <= set(b.commands)                      # spec 45's, in the same namespace, untouched
-    assert {"onboarding.tools", "onboarding.check", "onboarding.detect", "onboarding.request", "onboarding.skip"} <= set(b.commands)
-    # the alias and the command are one thing: the same look, the same Check, the same request
-    assert b.onboarding.statuses is b.tools_host.statuses and b.onboarding.checks is b.tools_host.checks
+    assert not {"onboarding.tools", "onboarding.check", "onboarding.detect", "onboarding.request"} & set(b.commands), "they went with the form (spec 130 D.2)"
+    assert b.snapshot()["onboarding"] is None, "Orkboard opens on no form, on a machine never set up too"
+    assert b.onboarding.tools_host is b.tools_host
+    b.tools_host.scan()
+    b.tools_host._finder.join(5)
     asked = []
     b.tools_host._ask = lambda tool, prompt, model=None: asked.append(tool) or "ok"
-    b.command("onboarding.check", {"tool": "claude"})
+    b.command("tools.check", {"tool": "claude"})
     b.tools_host._worker.join(5)
     assert asked == ["claude"] and b.tools_host.checks["claude"]["state"] == "ok"
-    assert b.snapshot()["onboarding"]["tools"]["rows"][0]["check"]["state"] == "ok"        # the page's old rows read the same Check
-    b.command("tools.check", {"tool": "codex"})
-    b.tools_host._worker.join(5)
-    assert asked == ["claude", "codex"] and b.onboarding.checks["codex"]["state"] == "ok"
-    old = b.command("onboarding.request", {"name": "Zed", "note": "edits"})
-    assert old == b.command("tools.request", {"name": "Zed", "note": "edits"}) and "title=Support+Zed" in old["url"]
-    with pytest.raises(CommandError, match="Name the tool"):
-        b.command("onboarding.request", {})
-    with pytest.raises(CommandError, match="not found"):
-        b.command("onboarding.check", {"tool": "cursor"})
-    b.command("onboarding.detect", {})                                                      # Check again: the look begins again, for both names
-    b.onboarding._finder.join(5)
-    assert b.onboarding.statuses is not None
-    b.command("tools.look", {})
-    b.tools_host._finder.join(5)
+    with pytest.raises(CommandError, match="not found here"):
+        b.command("tools.check", {"tool": "cursor"})
+    assert "github.com" in b.command("tools.request", {"name": "Zed", "note": "edits"})["url"]
 
 
 def test_the_phone_sets_no_tool_and_sees_none(board):

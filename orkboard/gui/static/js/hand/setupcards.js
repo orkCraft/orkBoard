@@ -8,7 +8,7 @@ import { command, town } from "../link.js";
 import { Head, Icon, Sign } from "../orkui.js";
 import { ask } from "../board/store.js";
 import { layLine } from "../table/laying.js";
-import { chooseFolder, closeProject, currentProject, openFolder, startGit } from "../shell/projects.js";
+import { chooseFolder, closeProject, currentProject, openFolder, startForm, startGit } from "../shell/projects.js";
 
 export const setupNow = signal(null);                 // what `first_open.ask` said last: {step, line, name, recent, kind, hand, laid}; null while it was not asked, or on a host with no first open
 export const reading = signal("");                    // the project being read: the bubble says so, `ork-think`
@@ -72,6 +72,7 @@ function ProjectCard({ s }) {
     setupAsk();
   };
   const choose = async () => { const path = await pickFolder(); if (path) open(path); else setTyping(true); };
+  useEffect(() => { if (startForm.value) { startForm.value = false; choose(); } }, [startForm.value]);      // Ctrl+O opens the same dialog (spec 130 D.3)
   const fresh = async () => { const path = await pickFolder(); if (path) setParent(path); };
   const make = async (e) => {
     e?.preventDefault();
@@ -99,8 +100,8 @@ function ProjectCard({ s }) {
 }
 
 /** *No git in <name> yet. Start git here?* */
-function GitCard() {
-  const [busy, setBusy] = useState(false), path = currentProject.value?.path || "";
+function GitCard({ path }) {
+  const [busy, setBusy] = useState(false);
   const start = async () => { setBusy(true); try { if (await startGit(path)) await setupAsk(); } finally { setBusy(false); } };
   const another = async () => { setBusy(true); try { await closeProject(path); await setupAsk(); } finally { setBusy(false); } };
   return html`<div class="fo-choices"><p class="cap fo-muted">Start git here makes a first commit of the folder's files as they are, and changes nothing else.</p>
@@ -141,6 +142,6 @@ export function SetupCard() {
   return html`<article class="ork-card hand-card--big hand-tool fo-card" role="dialog" aria-label="The Orkmaster's question" data-setup=${s.step}>
     <div class="hand-tool__top"><span class="ork-label">The project</span><span class="is-alert"><${Sign} name="question" /></span></div>
     <div class="fo-q"><p class="body">${question}</p><${Head} race="peon" tier="crown" size="mid" /></div>
-    ${s.step === "project" ? html`<${ProjectCard} s=${s} />` : s.step === "git" ? html`<${GitCard} key=${s.name} />` : html`<${KindCard} key=${s.name} s=${s} />`}
+    ${s.step === "project" ? html`<${ProjectCard} s=${s} />` : s.step === "git" ? html`<${GitCard} key=${s.name} path=${s.path} />` : html`<${KindCard} key=${s.name} s=${s} />`}
   </article>`;
 }

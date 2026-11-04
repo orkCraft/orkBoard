@@ -153,49 +153,6 @@ def test_a_phone_may_send_the_boards_commands_and_stop_all_only(host):
     assert host.command("mobile.snapshot", {"since": snap["rev"]}) == {"v": 1, "rev": snap["rev"], "same": True}
 
 
-def test_the_first_screen_saves_the_tools_and_raises_no_town(fake_repo, tmp_path, monkeypatch):
-    from orkboard import tools
-    monkeypatch.setenv("ORKCRAFT_ONBOARDING", "1")
-    file = Path(settings.path())
-    monkeypatch.setattr(tools, "detect", lambda *a, **k: [tools.ToolStatus(t, found=t.id == "claude", version="2")
-                                                          for t in tools.TOOLS])
-    monkeypatch.setattr(tools, "detect_others", lambda *a, **k: [])
-    board = Orkboard(fake_repo)
-    board.onboarding._finder.join(5)
-    first = board.snapshot()["onboarding"]
-    assert first["step"] == "tools" and first["steps"] == ["tools"] and first["tools"]["ready"]
-    assert [r["id"] for r in first["tools"]["rows"]] == ["claude"]
-    assert {"onboarding.tools", "onboarding.check", "onboarding.skip"} <= set(board.commands)
-    assert not {"onboarding.town", "onboarding.role", "onboarding.survey"} & set(board.commands)
-    assert board.command("onboarding.skip", {}) is None
-    assert board.snapshot()["onboarding"] is None
-    saved = settings.load(file)
-    assert saved.onboarded and saved.tools["claude"].enabled
-    assert not (fake_repo / ".orkcraft.json").exists()                 # no town was raised
-
-
-def test_a_tool_turned_on_at_the_first_screen_is_drawn_on(fake_repo, monkeypatch):
-    # the owner's 19 October: "Turn on Antigravity at my own risk" left its box empty (the page draws its rows from the
-    # state pushed, and none was), so a later click sent the stale rows back
-    from orkboard import tools
-    monkeypatch.setenv("ORKCRAFT_ONBOARDING", "1")
-    monkeypatch.setattr(tools, "detect", lambda *a, **k: [tools.ToolStatus(t, found=t.id in ("claude", "agy"), version="2")
-                                                          for t in tools.TOOLS])
-    monkeypatch.setattr(tools, "detect_others", lambda *a, **k: [])
-    board = Orkboard(fake_repo)
-    board.onboarding._finder.join(5)
-    rows = {r["id"]: r for r in board.snapshot()["onboarding"]["tools"]["rows"]}
-    assert rows["claude"]["enabled"] and not rows["agy"]["enabled"]            # experimental: off until its warning
-    pushed = []
-    monkeypatch.setattr(board.onboarding.host, "on_change", lambda *a, **k: pushed.append(1))
-    board.command("onboarding.tools", {"tools": {"agy": {**rows["agy"], "enabled": True, "risk_read": True}}})
-    assert pushed                                                              # the page is pushed its new rows
-    rows = {r["id"]: r for r in board.snapshot()["onboarding"]["tools"]["rows"]}
-    assert rows["agy"]["enabled"] and rows["claude"]["enabled"]
-    board.command("onboarding.tools", {"tools": {"claude": {**rows["claude"], "billing": "api"}}})
-    assert len(pushed) == 2 and board.snapshot()["onboarding"]["tools"]["rows"][0]["billing"] == "api"
-
-
 def test_the_page_is_board_js_in_offices_look_and_the_phones_the_same_page_in_its_frame(host):
     """Spec 117 A: the installed app loads the desktop's page (`frame.js`, then `page/board.js`); the old face is `/app/old.html`, `board-app.js`."""
     server = Server(host)
@@ -234,3 +191,13 @@ def test_outside_a_project_it_starts_on_the_start_screen_and_a_refused_folder_is
     assert board_host.main([]) == 0 and started == [None]
     assert board_host.main([str(Path.home())]) == 1 and started == [None]
     assert "home folder" in capsys.readouterr().err
+
+
+def test_a_machine_never_set_up_opens_on_no_form_and_a_tool_added_or_refused_sets_it_up(fake_repo, tmp_path, monkeypatch):
+    """Spec 130 D.2: the first open is the Orkmaster's; the machine counts as set up once a tool is added or the card is closed, as Orkline's onboarding reads it."""
+    monkeypatch.setenv("ORKCRAFT_SETTINGS_FILE", str(tmp_path / "s.json"))
+    monkeypatch.setenv("ORKCRAFT_ONBOARDING", "1")
+    board = Orkboard(fake_repo)
+    assert board.snapshot()["onboarding"] is None and board.machine.onboarded is False
+    assert board.command("first_open.tools_skip", {})["ok"] is True
+    assert settings.load().onboarded is True
