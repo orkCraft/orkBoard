@@ -26,6 +26,7 @@ No face, no model, no write: the callers (`gui/ideas_route.py`) save.
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
 import re
 import time
@@ -304,8 +305,9 @@ def context(found: list[dict], states: dict[str, dict], settings: dict | None = 
     rank = {i["slug"]: n for n, i in enumerate(found)}                    # `found` (ideas.ideas) is in the person's order already: their party's, then their own
     line = sorted((i for i in found if (states.get(i["slug"]) or {}).get("state") in LINE_STATES),
                   key=lambda i: (ideas.PRIORITIES.index(i["priority"]) if i["priority"] in ideas.PRIORITIES else 1, rank[i["slug"]]))
-    return {"order": {i["slug"]: n for n, i in enumerate(line, start=1)},
-            "low": idea_target.reserve_held(limits, settings, now or time.time()) is not None}
+    until = idea_target.reserve_held(limits, settings, now or time.time())
+    return {"order": {i["slug"]: n for n, i in enumerate(line, start=1)}, "low": until is not None,
+            "until": dt.datetime.fromtimestamp(until).isoformat(timespec="seconds") if until is not None else ""}      # …and when the limits come back (spec 144 C: a change accepted then starts after the reset)
 
 
 def _head(state_dir: Path, root: Path, party: str, leader: str, target: str) -> dict:

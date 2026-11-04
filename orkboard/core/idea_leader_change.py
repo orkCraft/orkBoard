@@ -44,7 +44,9 @@ def _key(slug: str, party: str) -> str:
 
 class LeaderChangeMixin:
     def looks_party(self, party: str) -> bool:
-        """The party answers with three looks (craft design), not a plan change."""
+        """The party answers with three looks (craft design), not a plan change. Not while the Orkmaster asks for a spec's change (core/idea_spec_change.py): every party answers one plan then."""
+        if getattr(self._tls, "no_looks", False):
+            return False
         return goal_team.craft_of(self.wiki_root(), party) == "design"
 
     def change_ask(self, slug: str, party: str, part: str, text: str) -> str:

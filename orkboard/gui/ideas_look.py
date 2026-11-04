@@ -42,12 +42,18 @@ class LookMixin:
         self._look_set(slug, look_wait.until(choice, now, str(self.settings_now().get("night") or settings.IDEAS["night"])), choice)
         return True
 
-    def look_again(self, slug: str) -> bool:
-        """The wait begins again from now (an accepted change: C.4); False with `look_wait` `none` (the plan is decided at once by the caller)."""
+    def look_again(self, slug: str, floor: float | None = None) -> bool:
+        """The wait begins again from now (an accepted change: C.4); `floor`, an epoch time before which the plan does not start (the limits' reset, C.4). False when there is no wait to set (`look_wait` is
+        `none` and no floor, or the goal has no plan yet): the caller decides the plan at once."""
         choice = self._look_choice()
-        if choice == "none" or ideas.plan(self.state_dir, slug) is None:
+        if ideas.plan(self.state_dir, slug) is None:
             return False
-        self._look_set(slug, look_wait.until(choice, self._wall(), str(self.settings_now().get("night") or settings.IDEAS["night"])), choice)
+        end = look_wait.until(choice, self._wall(), str(self.settings_now().get("night") or settings.IDEAS["night"]))
+        if floor is not None:
+            end = max(end or 0.0, floor)
+        if end is None:
+            return False
+        self._look_set(slug, end, choice)
         return True
 
     def look_drop(self, slug: str) -> None:

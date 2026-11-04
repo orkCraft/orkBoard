@@ -36,7 +36,7 @@ from typing import Any
 
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import board_map, event_log, goal_route, hours, idea_ripe, idea_route, idea_target, ideas, orkmaster, pitches, status
+from orkboard.realm import board_map, event_log, goal_route, hours, idea_ripe, idea_route, idea_target, ideas, orkmaster, pitches, spec_change, status
 from orkboard.sources import window_rate
 
 ROUTE_S = 30.0                    # how often a route waiting for its call, or put off to the reset, is looked at
@@ -120,7 +120,7 @@ class RouteMixin:
 
     def _idea_needs(self, i: dict, st: dict, plan: dict | None, asks: list[str], root) -> list[dict]:
         """BoardMixin's, with the route rows: their place in the Orkmaster's line and whether the limits run low are read once for the Board."""
-        line = self._route_ctx(root) if st["state"] in goal_route.ROUTE_STATES else None
+        line = self._route_ctx(root) if st["state"] in goal_route.ROUTE_STATES or spec_change.read(self.state_dir, i["slug"]) else None
         return board_map.idea_needs(root, self.state_dir, i, st, plan, asks, line=line, settings=self.settings_now()) + self.pick_rows(i, plan)
 
     def _route_ctx(self, root) -> dict:

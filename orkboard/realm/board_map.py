@@ -14,11 +14,11 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
 from orkboard.realm.idea_words import short_of
 
-NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
+NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change", "spec_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 SIGN_IN_TOOL = "claude"          # what the Board runs by itself runs on Claude (core/idea_runner.py `HARNESS`)
@@ -132,6 +132,7 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
                     **{k: said[k] for k in ("added", "changed", "dropped", "usd_low", "usd_high")},
                     "level": "work", "pulls": _change_pulls(root, state_dir, slug, i["track"], change, said)})
     out += [{**base, **n} for n in leader_change.rows(state_dir, slug, root)]        # a change the person asked a leader for, waiting as a decision (spec 128 E)
+    out += [{**base, **n} for n in spec_change.rows(state_dir, slug, line)]          # a change to the spec asked of the Orkmaster, the leaders' sections as one card (spec 144 C.3)
     if state == "proposed":
         out.append({**base, "kind": "proposal", "text": ideas.thesis(
             (ideas.idea_page(root, slug) or ideas.Page()).section("Gist")) or "The keeper proposes this"})
@@ -476,7 +477,9 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,
                     "release": release_of(releasing.get(slug)), "back": board_back.of(root, state_dir, slug, st, settings),         # the goal's card face down at the Orkmaster (spec 120 §6.3)
                     "held_until": r["held_until"], **({"held_for": r["held_for"]} if r.get("held_for") else {}),
-                    "start_at": r["start_at"], "night_by": r["night_by"], **({"look_until": r["look_until"]} if r.get("look_until") else {}),      # the look's wait: a clock time (spec 144 A.5)
+                    "start_at": r["start_at"], "night_by": r["night_by"],
+                    "changing": any(n["kind"] == "spec_change" and n.get("status") in spec_change.OPEN for n in needs),      # a change to its spec is open: its leaders rewrite or the person has not answered (spec 144 D.1)
+                    **({"look_until": r["look_until"]} if r.get("look_until") else {}),      # the look's wait: a clock time (spec 144 A.5)
                     "place": r["place"], "asks_you": r["asks_you"], "waits_as": r["waits_as"], "seen": r["seen"], "by_pace": bool((plan or {}).get("by_pace")),
                     "priority": r["priority"], "size": r["size"],
                     "risk": r["risk"], "tier": tier[slug], "depends_on": r["depends_on"], "waits_on": r["waits_on"],
