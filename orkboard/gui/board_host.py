@@ -159,7 +159,7 @@ class BoardPhone:
     it and the phone comes back by itself; which updates install by themselves stays the computer's to say), and the
     snapshot's Board, small."""
 
-    COMMANDS = ("mobile.hello", "mobile.snapshot", "halt", "presence.set", "projects.list", "projects.use", "mobile.push_key", "mobile.push_on",
+    COMMANDS = ("mobile.hello", "mobile.snapshot", "halt", "resume", "presence.set", "projects.list", "projects.use", "mobile.push_key", "mobile.push_on",
                 "mobile.push_off", "mobile.push_quiet", "update.check", "update.install",
                 "repair.start", "repair.stop", "repair.update")      # Fix it (spec 119 §3.3, decisions §197.4): the computer starts Claude Code, the phone edits nothing
     MARKDOWN = (".md", ".markdown")
@@ -179,7 +179,7 @@ class BoardPhone:
             args.pop("device_id", None)                 # whose subscription it is: the listener's to say (gui/phone_push.py)
             if (device or {}).get("id"):
                 args["device_id"] = device["id"]
-        if name.startswith(("ideas.", "ops.", "projects.", "files.")) or name == "halt":
+        if name.startswith(("ideas.", "ops.", "projects.", "files.")) or name in ("halt", "resume"):
             args["device"] = "phone"
             args.pop("link", None)
             if (device or {}).get("id"):
@@ -244,6 +244,7 @@ class Orkboard:
         self.projects = board_projects.Projects(self)
         self.commands: dict[str, Callable[[dict], Any]] = {
             "halt": self._halt,
+            "resume": self._resume,                   # the die's front face after a halt: the orks go back to work (spec 139 B.2)
             "presence.set": self._presence_set,       # the door: Here or Away, held until the hours' next edge (spec 139 C.1)
             "link.open": open_link,
             "crash.window": self._crash_window,       # the page's own errors (js/crashes.js, core/crashes.py)
@@ -385,7 +386,7 @@ class Orkboard:
                 "hud": {"show_gold": show_gold, "gold": gold, "lumber": lumber}, "rate": window_rate.shown(self.machine),
                 "repo": str(root) if root is not None else "", "projects": self.projects.list(),
                 "update": self.updates.snapshot(), "repair": self.repair.snapshot(), "update_policy": self.machine.updates, "version": __version__,
-                "usage_ask": self.usage.should_ask(), "presence": self._presence(), **self._board_status()}
+                "usage_ask": self.usage.should_ask(), "presence": self._presence(), "stopped": bool(self.ideas.stopped()) if self.ideas is not None else False, **self._board_status()}
 
     def _board_status(self) -> dict[str, Any]:
         """`board_held` (another worker holds the Board: by, kind, until) and `board_aside`, for the shown project; nothing without `[board]` (spec 137 B.2)."""
@@ -600,14 +601,25 @@ class Orkboard:
     def _halt(self, args: dict) -> int:
         """🛑 Stop all: every open project's keeper and runner stop, every operation's call, every agent process is
         killed."""
+        again = []
+        for p in self.projects.open_ones:       # the project is stopped before anything stops, so the clock starts nothing meanwhile; the tasks that run are kept to start again (spec 139 B.2)
+            running = p.ideas.running_tasks()
+            again += [(str(p.ideas.state_dir), s, t) for s, t in running]
+            p.ideas.mark_stopped(running)
         self.projects.stop_all(device="phone" if args.get("device") == "phone" else "desktop")
         self.ops.stop_all()
         self.sign_ins.stop_all()
-        stopped = halt.halt_all()
+        stopped = halt.halt_all(again=again)
         self.toast(f"Stopped {stopped} run{'s' if stopped != 1 else ''}" if stopped else "Nothing was running",
                    title="Stop all")
         return stopped
 
+    def _resume(self, args: dict) -> int:
+        """`resume`: every open project is no longer stopped and each task the halt killed starts again from its start (core/idea_resume.py); how many started."""
+        halt.resume()
+        started = sum(p.ideas.resume_work() for p in self.projects.open_ones)
+        self.toast("The orks are back at work", title="Resume")
+        return started
 
 
 # -- the window ------------------------------------------------------------------------------------------------

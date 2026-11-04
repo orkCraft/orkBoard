@@ -36,6 +36,7 @@ from orkboard.core.idea_holds import Held, HoldsMixin  # noqa: F401  (Held: the 
 from orkboard.core.idea_landing import LandingMixin
 from orkboard.core.idea_picking import PickMixin
 from orkboard.core.idea_session import SessionMixin
+from orkboard.core.idea_resume import STOPPED_BY, ResumeMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
@@ -105,7 +106,7 @@ class Run:
     role: str = ""                 # the role it runs as (spec 34 §3): its `max_parallel` is held
 
 
-class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
+class IdeaRunner(HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
     def __init__(self, repo_root: Path, state_dir: Path, settings: Any, bus: Any = None, *,
                  limits: Callable[[], list] | None = None, events: bool = True,
                  on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,
@@ -254,12 +255,17 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 self._set_idea(slug, "failed", why)
         self._changed(slug)
 
+    def running_tasks(self) -> list[tuple[str, str]]:
+        """The tasks that run now, `(slug, tid)`: what a halt will kill (the host keeps them to start again: `idea_resume`)."""
+        with self._lock:
+            return [(k[0], str(k[1])) for k in self._runs]
+
     def stop_all(self) -> None:
         """Stop all (`realm/halt`): every idea's tasks stop and nothing new starts."""
         with self._lock:
             slugs = list(dict.fromkeys([*self._active, *(k[0] for k in self._runs)]))
         for slug in slugs:
-            self.stop(slug, "stopped by Stop all")
+            self.stop(slug, STOPPED_BY)
 
     def busy(self) -> bool:
         with self._lock:

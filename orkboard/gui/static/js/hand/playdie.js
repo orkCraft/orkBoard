@@ -15,7 +15,7 @@
 // **The front face** (docs/specs/139-the-die-the-door-and-the-bug.md A.1–A.3, decisions §246.1–§246.3, orkUI 0.29.0): the die is no longer one button. The whole die is the Play press (`hand-die__play`), and the front face is a second `<button>` (`hand-die__stop`, *Stop all: stop every run
 // of this project's orks*) laid over its projected box (`lay`: measured, split at the middle between the up face's bottom and the front's top; laid again on a resize, on a draw and after a wobble, a landing or a turn). The die wears `front-stop`, and `is-orks-running` while `isWorking` says a task runs
 // (table/door.js `useOrks`): the mark is muted else, the danger's only then. Pressed it asks the host to stop everything (`halt`, door.js); then its word says *Stopped* (muted, `aria-disabled`) until work starts. Under the die its two words: *Play* · *Stop all* (*Playing*, *Stopped*),
-// *Stop all* in the danger colour only while running. A sleeping die sleeps on its up face alone: Stop all stays pressable. Resume (part B) is not here yet.
+// *Stop all* in the danger colour only while running. A sleeping die sleeps on its up face alone: Stop all stays pressable. **Resume** (docs/specs/139-the-die-the-door-and-the-bug.md B.3, decisions §246.3): while the snapshot says `stopped` (the host keeps it, table/door.js) the front face wears `front-resume` and `is-orks-stopped` (orkUI's circular arrow in the ink), its button says *Resume: the orks go back to work*, the word under the die *Stopped*, and pressed it sends `resume`. On each change between stop and resume the die turns: `is-turning` is put on and, at the cube's `animationend` named `ork-die-turn`, taken off and the front mark swapped; under reduced motion there is no turn and the mark swaps at once (a halt from an older host, which does not send `stopped`, keeps *Stopped* muted and nothing to press).
 // The seam with the play view (arena/play.js): three signals and the die's rectangle. `thrown`: the die is out on the pane (it flew from here and rolls), so this one is hidden (kept in its place: `visibility`) until the frame rises or the failure
 // takes its place; `playing`: the view is open and its build plays (the pips glow, the word says *Playing*); `warmed`: the view opened on a build already playing, so the die wobbles twice. `dieRect()` is where the throw starts.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -27,7 +27,7 @@ import { leaving } from "../shell/store.js";
 import { litKey } from "../table/card.js";
 import { mapName, partiesAll } from "../table/data.js";
 import { nodeOf, playable } from "../table/goalmap.js";
-import { halt, useOrks } from "../table/door.js";
+import { halt, resume, useOrks } from "../table/door.js";
 
 export const thrown = signal(false);          // the die is out on the pane: this one is hidden
 export const playing = signal(false);         // the play view is open and its build plays
@@ -37,7 +37,7 @@ export const PLAY = "Play", PLAYING = "Playing", PLAY_WORDS = "Play: the project
 export const ASLEEP = "Nothing to play yet", ASLEEP_WORDS = `${ASLEEP}: say how the project opens`;
 export const FAILED_WORDS = "Play: it did not start last time", NEW_WORDS = "Play: dev has changed since you last played";
 export const PIPS_MAX = 6;
-export const STOP = "Stop all", STOPPED = "Stopped", STOP_WORDS = "Stop all: stop every run of this project's orks";
+export const STOP = "Stop all", STOPPED = "Stopped", STOP_WORDS = "Stop all: stop every run of this project's orks", RESUME_WORDS = "Resume: the orks go back to work";
 /** *Play: 3 new goals in dev since you last played*, *Play: 1 new goal in dev …*. */
 export const newGoalsWords = (n) => `Play: ${n} new ${n === 1 ? "goal" : "goals"} in dev since you last played`;
 
@@ -90,7 +90,8 @@ function lay(box) {
 
 export function PlayDie() {
   const [wob, setWob] = useState({ key: 0, left: 0 }), [land, setLand] = useState(false), box = useRef(null);
-  const asleep = asleepNow(), open = over.value?.kind === "play", glow = open && playing.value && !asleep, gone = thrown.value, face = faceNow(), known = !!town.value, orks = useOrks();
+  const [front, setFront] = useState(false), [turning, setTurning] = useState(false);          // the front mark shown (true: Resume) and the turn between the two
+  const asleep = asleepNow(), open = over.value?.kind === "play", glow = open && playing.value && !asleep, gone = thrown.value, face = faceNow(), known = !!town.value, orks = useOrks(), toResume = orks.resumable && orks.stopped;
   const news = newCount(), goal = asleep ? null : runeGoal(), said = goal ? goalPlayWords(goal) : face === "no" ? FAILED_WORDS : news ? newGoalsWords(news) : face === "new" ? NEW_WORDS : PLAY_WORDS, words = open ? CLOSE_WORDS : said;
   useEffect(() => {
     rectOf = () => box.current?.querySelector(".ork-die")?.getBoundingClientRect() || null;
@@ -109,21 +110,32 @@ export function PlayDie() {
     was.current = known ? face : null;
     if (before && before !== face && !reduced() && !gone && !asleep && wob.left === 0) setLand(true);
   }, [face, known]);
+  const knew = useRef(false);                                                         // a snapshot was seen before: the first one turns nothing
+  useLayoutEffect(() => {
+    const was = knew.current;
+    knew.current = known;
+    if (front === toResume) { if (turning) setTurning(false); return; }
+    if (!was || reduced() || gone) { setTurning(false); setFront(toResume); return; }
+    setLand(false);
+    setWob((w) => (w.left ? { key: w.key + 1, left: 0 } : w));                        // a turn, a wobble and a landing never run together
+    setTurning(true);
+  }, [toResume, known, front]);
   const seen = useRef(warmed.peek());
   useEffect(() => { if (warmed.value !== seen.current) { seen.current = warmed.value; if (!reduced()) { setLand(false); setWob((w) => ({ key: w.key + 1, left: 2 })); } } }, [warmed.value]);
-  const hover = () => { if (!reduced() && !asleep) { setLand(false); setWob((w) => (w.left ? w : { key: w.key + 1, left: 1 })); } };
+  const hover = () => { if (!reduced() && !asleep && !turning) { setLand(false); setWob((w) => (w.left ? w : { key: w.key + 1, left: 1 })); } };
   const ended = (e) => {
     if (e.animationName === "ork-die-wobble") setWob((w) => (w.left > 1 ? { key: w.key + 1, left: w.left - 1 } : { key: w.key, left: 0 }));
     else if (e.animationName === "ork-die-land") setLand(false);
+    else if (e.animationName === "ork-die-turn") { setTurning(false); setFront(toResume); }
     requestAnimationFrame(() => lay(box.current));                                    // the class comes off at the next draw, the presses are laid again after it
   };
-  const stopWord = orks.stopped ? STOPPED : STOP;
+  const stopWord = orks.stopped ? STOPPED : STOP, press = () => { if (toResume) resume(); else if (!orks.stopped) halt(); };
   return html`<div class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep, "is-orks-running": orks.running, "is-orks-stopped": orks.stopped })} data-open=${open ? "1" : undefined} data-elem=${goal?.hue || goal?.element || undefined} data-goal=${goal?.slug || undefined}>
     <span class="hand-die__box" ref=${box}>
-      <span key=${wob.key} class=${cls(`ork-die face-${face} front-stop`, { "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep, "is-orks-running": orks.running })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
+      <span key=${wob.key} class=${cls(`ork-die face-${face} ${front ? "front-resume" : "front-stop"}`, { "is-turning": turning && !gone, "is-orks-stopped": front, "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep, "is-orks-running": orks.running })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
       <button type="button" class="hand-die__play" aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words} onClick=${() => pressPlay(goal)} onPointerEnter=${hover}></button>
-      <button type="button" class="hand-die__stop" aria-label=${STOP_WORDS} title=${STOP_WORDS} aria-disabled=${orks.stopped ? "true" : undefined} onClick=${() => { if (!orks.stopped) halt(); }}></button>
+      <button type="button" class="hand-die__stop" aria-label=${toResume ? RESUME_WORDS : STOP_WORDS} title=${toResume ? RESUME_WORDS : STOP_WORDS} aria-disabled=${orks.stopped && !toResume ? "true" : undefined} onClick=${press}></button>
     </span>
-    <span class="hand-die__words"><span class="hand-die__word" onClick=${() => pressPlay(goal)}>${glow ? PLAYING : PLAY}</span><i class="hand-die__dot" aria-hidden="true">·</i><span class="hand-die__orks" onClick=${() => { if (!orks.stopped) halt(); }}>${stopWord}</span></span>
+    <span class="hand-die__words"><span class="hand-die__word" onClick=${() => pressPlay(goal)}>${glow ? PLAYING : PLAY}</span><i class="hand-die__dot" aria-hidden="true">·</i><span class="hand-die__orks" onClick=${press}>${stopWord}</span></span>
   </div>`;
 }

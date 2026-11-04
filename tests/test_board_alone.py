@@ -82,7 +82,7 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
                          "canvases_new", "canvases_rev",                   # spec 78 §3: the Canvases row
                          "sign_in",                                        # spec 45: a tool's own sign-in
                          "mana",                                           # spec 105 §2.5: the tool now, beside the limits
-                         "presence",                                       # spec 139 C.1: Here or Away, from the hours and the door's hold
+                         "presence", "stopped",                                     # spec 139 C.1: Here or Away, from the hours and the door's hold
                          "ask",                                            # spec 106 §2: the quick question kept, None when there is none
                          "passing",                                        # spec 128 D: a leader's question being passed to another party, [] with none
                          "preview",                                        # spec 113 §2: how the project opens a preview ("command" · "static" · ""), the Play die sleeps with none

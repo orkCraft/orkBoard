@@ -56,6 +56,7 @@ from orkboard.core import idea_keeper
 from orkboard.realm import board_ask, board_map, event_log, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, party_recipes, pitches, recurring, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
+from orkboard.gui.ideas_halt import STARTS, HaltMixin
 from orkboard.gui.ideas_assets import AssetsMixin, asset_commands
 from orkboard.gui.ideas_system import SystemMixin, system_commands
 from orkboard.gui.ideas_canvases import CanvasesMixin, canvas_commands
@@ -137,7 +138,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -287,11 +288,13 @@ class Ideas(GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, SketchMixin, 
     def tick(self, now: float | None = None) -> None:
         now = time.monotonic() if now is None else now
         self.tree_flush()
+        stopped = self.stopped()                # spec 139 B.2: while stopped nothing starts by itself (gui/ideas_halt.py lists the places)
         try:
-            self.keeper.tick()
+            if not stopped:
+                self.keeper.tick()
         except Exception as e:                  # the keeper's batch never stops the clock
             self.host.toast(f"{type(e).__name__}: {e}", title="The keeper", severity="error")
-        if now - self._runner_at >= RUNNER_TICK_S:
+        if not stopped and now - self._runner_at >= RUNNER_TICK_S:
             self._runner_at = now
             runner = self.runner() if self._ever_passed() else self._runner
             if runner is not None:
@@ -309,7 +312,8 @@ class Ideas(GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, SketchMixin, 
             self.host.toast(f"{type(e).__name__}: {e}", title="The tools", severity="error")
         self.route_tick(now)                    # a route waiting for its call, a goal put off to the reset (spec 99 §4)
         self.ripe_tick(now)                     # the wait of a goal the leaders agreed on, while a face is open (spec 120 §3.5)
-        self.routines_tick(now)                 # a recurring goal that was done a period ago comes back (spec 92 §2)
+        if not stopped:
+            self.routines_tick(now)                 # a recurring goal that was done a period ago comes back (spec 92 §2)
         self.canvas_tick(now)                   # what the AI tools drew outside the code (spec 78)
         self.play_tick(now)                     # Play stops after ten minutes with no face asking (spec 88 §5)
 
@@ -684,6 +688,8 @@ class Ideas(GoalViewMixin, ChangeMixin, CascadeFace, FindingsFace, SketchMixin, 
             def run(args: dict) -> Any:
                 try:
                     self.refuse_pitch(name, args)       # the plan's commands refuse a pitch (spec 65 §2)
+                    if name in STARTS and not (name == "ideas.add" and args.get("hold") is True):
+                        self.wake()                     # a goal started by hand: the orks are back at work (spec 139 B.2)
                     return fn(args)
                 except (ValueError, idea_keeper.KeeperError) as e:
                     raise IdeasError(str(e)) from None

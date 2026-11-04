@@ -716,3 +716,73 @@ def test_an_awake_die_at_rest_shows_orkuis_play_arrow_drawn_in_its_seventeen_mar
     marks, _pip = pg.evaluate(arrow)
     assert "face-play" in face_of(pg) and marks == 17, "the arrow: orkUI's seventeen marks (decisions §200.1)"
     finish(pg, errors)
+
+
+# -- Stopped and Resume (spec 139 B.3, decisions §246.3) ------------------------------------------------------------------------------------------------
+
+class StopHost(Host):
+    """A host that keeps *stopped* as the real one does: the snapshot carries it, `halt` sets it and `resume` clears it."""
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.stopped = False
+
+    def snapshot(self):
+        snap = super().snapshot()
+        snap["state"]["stopped"] = self.stopped
+        return snap
+
+    def handle(self, name, a):
+        if name in ("halt", "resume"):
+            self.log.append((name, a))
+            self.stopped = name == "halt"
+            if name == "halt":
+                self.nodes = [n for n in self.nodes if not n.get("tasks")]
+            self.push()
+            return 0
+        return super().handle(name, a)
+
+
+def watch_turn(pg):
+    """Records the die's classes each time they change: whether `is-turning` was put on, and when it came off what the front said."""
+    pg.evaluate("""() => { window.__turn = { on: 0, off: [] }; let was = false;
+      const note = () => { const d = document.querySelector('.hand-die .ork-die'); if (!d) return; const t = d.classList.contains('is-turning');
+        if (t && !was) window.__turn.on++; if (!t && was) window.__turn.off.push([d.classList.contains('front-resume'), d.classList.contains('is-orks-stopped')]); was = t; };
+      new MutationObserver(note).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] }); note(); }""")
+
+
+def test_the_front_says_resume_while_stopped_sends_resume_and_turns_back_to_stop_all(gui):
+    host = StopHost(n=3)
+    pg, errors = window(gui, host)
+    d = die(pg)
+    watch_turn(pg)
+    assert "front-stop" in d.locator(".ork-die").get_attribute("class") and d.locator(".hand-die__stop").get_attribute("aria-label").startswith("Stop all")
+    d.locator(".hand-die__stop").click()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die')?.classList.contains('front-resume')", timeout=WAIT_MS)
+    cls = d.locator(".ork-die").get_attribute("class")
+    assert "is-orks-stopped" in cls and "front-stop" not in cls and "is-turning" not in cls
+    assert d.locator(".hand-die__stop").get_attribute("aria-label") == "Resume: the orks go back to work" and d.locator(".hand-die__stop").get_attribute("aria-disabled") is None
+    assert d.locator(".hand-die__orks").inner_text() == "Stopped"
+    assert pg.evaluate("() => window.__turn.on") == 1 and pg.evaluate("() => window.__turn.off") == [[True, True]], "the turn was put on, and taken off with the mark swapped"
+    shot(pg, "s139-die-resume.png")
+    d.locator(".hand-die__stop").click()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die')?.classList.contains('front-stop')", timeout=WAIT_MS)
+    assert [c[0] for c in host.log if c[0] in ("halt", "resume")] == ["halt", "resume"]
+    assert d.locator(".hand-die__orks").inner_text() == "Stop all" and "is-orks-stopped" not in d.locator(".ork-die").get_attribute("class")
+    assert pg.evaluate("() => window.__turn.on") == 2 and pg.evaluate("() => window.__turn.off")[1] == [False, False]
+    finish(pg, errors)
+
+
+def test_a_stopped_host_at_the_first_snapshot_shows_resume_at_once_and_reduced_motion_swaps_without_a_turn(gui):
+    host = StopHost(n=3)
+    host.stopped = True
+    pg, errors = window(gui, host)
+    assert pg.locator(".hand-die .ork-die").get_attribute("class").count("front-resume") == 1 and pg.evaluate("() => !document.querySelector('.hand-die .is-turning')"), "the first snapshot turns nothing"
+    finish(pg, errors)
+    still = StopHost(n=3)
+    pg, errors = window(gui, still, reduced_motion="reduce")
+    watch_turn(pg)
+    die(pg).locator(".hand-die__stop").click()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die')?.classList.contains('front-resume')", timeout=WAIT_MS)
+    assert pg.evaluate("() => window.__turn.on") == 0, "no turn under reduced motion"
+    finish(pg, errors)

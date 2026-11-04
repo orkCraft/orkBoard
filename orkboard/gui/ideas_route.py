@@ -10,7 +10,8 @@
     ideas.start {idea}                                          # answers the `start` row (a route that changed after Talk, or a later step held for it: decisions §169.3); the plan's start otherwise
 
 **Talk by itself** (spec 120 §2.1, decisions §198.2): `ideas.add` of a routed goal calls `route_auto`, which sends it to Talk as **Talk** would when nothing stops it (`route_stop`: the keeper may run, the
-Claude window is not spent, the week's limits are not low, nothing is paid, and it is not the short way); else its route card is dealt as before. **The wait of an agreed goal** (§3.5): `ripe_tick`
+Claude window is not spent, the week's limits are not low, nothing is paid, and it is not the short way); else its route card is dealt as before. **While the project is stopped** (spec 139 B.2, gui/ideas_halt.py) `route_auto`, `route_tick` (its queue too) and `ripe_tick` start nothing.
+**The wait of an agreed goal** (§3.5): `ripe_tick`
 counts it down only while a face is open and has the leaders confirm the decision at its end; `ripe_hold_goal` is **Hold** (D's `ideas.ripe_hold` calls it).
 
 **The seams.** Until Talk (part D) and the sections (part E) are built, `ideas.talk` and `ideas.route_start` hand the goal to today's draft, so it still moves:
@@ -291,7 +292,7 @@ class RouteMixin:
     def route_auto(self, slug: str) -> bool:
         """The goal goes to Talk by itself when nothing stops it (`route_stop`), as the route card's **Talk** would send it (`route_talk`); else its route card is dealt as before,
         which says why. True when it is at Talk now."""
-        if not AUTO_TALK or self.route_stop(slug):
+        if not AUTO_TALK or self.stopped() or self.route_stop(slug):         # stopped: nothing starts by itself (spec 139 B.2)
             return False
         if self.lay_in_hours([slug]):                  # Talk asks the person: with no one there it waits for the hours (spec 138 B.3)
             return False
@@ -310,7 +311,7 @@ class RouteMixin:
         """The host's clock: the wait of each goal the leaders all agreed on counts down, **only while a face is open** (a goal never starts unseen: with no face the time left is kept).
         A wait that runs out has the leaders confirm the decision (`confirm(by="leaders")`)."""
         last, self.__dict__["_ripe_clock"] = self.__dict__.get("_ripe_clock"), now
-        if last is None or not self.host.faces():
+        if last is None or not self.host.faces() or self.stopped():          # stopped: the wait is kept, nothing is confirmed (spec 139 B.2)
             return
         if now - self.__dict__.get("_ripe_scan", float("-inf")) >= RIPE_SCAN_S:
             self.__dict__["_ripe_scan"] = now
@@ -363,7 +364,10 @@ class RouteMixin:
 
     def route_tick(self, now: float) -> None:
         """The host's clock: a route that waits for its call (the process closed meanwhile) is made; a goal put off with *Later, by itself* talks by itself at the
-        reset, unless the reserve is spent again (then it waits for the next reset). Looked at every ROUTE_S. A goal whose route a call found goes to Talk by itself first."""
+        reset, unless the reserve is spent again (then it waits for the next reset). Looked at every ROUTE_S. A goal whose route a call found goes to Talk by itself first.
+        **Stopped** (spec 139 B.2): nothing of it runs, the §239 queue with it."""
+        if self.stopped():
+            return
         for slug in list(self._auto_set):
             if not self.keeper.busy(slug):
                 self._auto_set.discard(slug)
