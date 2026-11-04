@@ -29,6 +29,7 @@ export function testsWords(r) {
 export const changesWords = (d) => `${d.files} file${d.files === 1 ? "" : "s"}, +${d.added} −${d.removed}`;
 
 export const NO_INSTALL = "Sending it back would not help: the task cannot install anything.";
+export const NO_BROWSER = "Browser tests did not run: no Chromium here.";
 export const SAME_FAILURE = "The last fix changed nothing: the tests failed the same way.";
 /** What *Install and test again* does, for its title: each folder's command, then the tests (`tests.install`: [{dir, command}]). */
 export const installWords = (rows) => `Runs ${rows.map((x) => `\`${x.command}\` in ${x.dir === "." ? "the project's folder" : x.dir}`).join(", then ")} in your project, then the tests again`;
@@ -120,6 +121,7 @@ export function ResultActions({ r, pinned = false }) {
         <button type="button" class="ork-btn danger" onClick=${drop}>Drop it</button></div></div>`}
     ${reason && html`<p class=${cls("shell-actions__why", env ? "ok-tone-fire" : "ok-tone-error")} role="status" data-env=${env ? "true" : undefined}>${reason}</p>`}
     ${env && html`<p class="shell-actions__why ok-tone-muted" data-no-install="true" role="status">${NO_INSTALL}</p>`}
+    ${!!r.tests.no_browser && html`<p class="shell-actions__why ok-tone-muted" data-no-browser="true" role="status">${NO_BROWSER}</p>`}
     ${same && html`<p class="shell-actions__why ok-tone-muted" data-same="true" role="status">${SAME_FAILURE}</p>`}
     ${place && html`<p class="shell-actions__why ok-tone-muted" data-place="true" role="status">${PLACE_LINE}</p>`}
     ${!check && !place && line !== null && html`<form class="shell-actions__line" onSubmit=${back}>

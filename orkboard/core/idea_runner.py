@@ -39,7 +39,7 @@ from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_resume import STOPPED_BY, ResumeMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin
-from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
+from orkboard.core.idea_task import FINDINGS_ASK, NO_BROWSER, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
 from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_route, idea_target, project_map, roles, status, tool_errors, tool_now
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
@@ -577,6 +577,8 @@ class IdeaRunner(HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin,
                 tests, diff = dict(NO_RUN), dict(NO_DIFF)
             else:
                 tests = self._tests_of(path, out, problem)
+                if tests.get("no_browser"):
+                    self._log(slug, tid, f"== {NO_BROWSER}\n", env)
                 if sent_from and self._same(path, sent_from, task, tests):
                     tests["same"] = True
                 diff = self.git.stats(path, start_sha)

@@ -93,6 +93,7 @@ class GateRun(NamedTuple):
     seconds: float = 0.0
     env: str = ""
     docs: bool = False
+    browser: tuple[str, ...] = ()        # the files of `[gate] browser` that were in the run (spec 143 B.3)
 
 
 class IdeaGit:
@@ -210,6 +211,7 @@ class IdeaGit:
         gate, touched, began = gate_config.read(self.root), self.touched(path, base), time.monotonic()
         note = f"\n! {gate.error}" if gate.error else ""
         files = gate_config.gate_files(gate, touched, path)
+        in_browser = tuple(sorted({f for t in touched for f in gate_config.browser_files(gate, t, path)} & set(files)))
         if gate.derived and gate_config.docs_only(touched):
             return GateRun(True, f"no tests ran: the task changed only documents{note}", False, docs=True)
         if gate.custom:
@@ -237,7 +239,7 @@ class IdeaGit:
         reader.join(5)
         out = out_box[0] if out_box else ""
         return GateRun(proc.returncode == 0, f"$ {line}\n{out[-GATE_KEEP:]}{note}", True, line, proc.returncode, round(time.monotonic() - began, 1),
-                       gate_env.could_not_run(out, proc.returncode))
+                       gate_env.could_not_run(out, proc.returncode), browser=in_browser)
 
     def python(self) -> str:
         """The repository's own Python when it has one (`.venv`, where its test tools are), else Orkline's."""
@@ -456,6 +458,7 @@ def plain(text: str) -> str:
 
 
 _SUMMARY = re.compile(r"(\d+) (passed|failed|error|errors)\b")
+_SKIPPED = re.compile(r"(\d+) skipped\b")
 _FAILED_LINE = re.compile(r"^(?:FAILED|ERROR) (\S+)")
 
 
@@ -467,7 +470,7 @@ def has_summary(output: str) -> bool:
 def parse_tests(output: str, keep_lines: int = 40) -> dict:
     """The gate's run in the shape Review shows: pytest's summary line (`2 failed, 18 passed in 1.2s`) gives the
     counts, its `FAILED path::name` lines the names (at most 20). A run without pytest's summary counts nothing."""
-    passed = failed = 0
+    passed = failed = skipped = 0
     lines = plain(output).splitlines()
     for ln in reversed(lines):
         found = _SUMMARY.findall(ln)
@@ -477,13 +480,15 @@ def parse_tests(output: str, keep_lines: int = 40) -> dict:
                     passed = int(n)
                 else:
                     failed += int(n)
+            if m := _SKIPPED.search(ln):
+                skipped = int(m.group(1))
             break
     names: list[str] = []
     for ln in lines:
         m = _FAILED_LINE.match(ln.strip())
         if m and m.group(1) not in names:
             names.append(m.group(1))
-    return {"passed": passed, "failed": failed, "failing": names[:20], "tail": "\n".join(lines[-keep_lines:])}
+    return {"passed": passed, "failed": failed, "skipped": skipped, "failing": names[:20], "tail": "\n".join(lines[-keep_lines:])}
 
 
 # -- the Board's own tree (spec 35 §13) ----------------------------------------------------------------------------

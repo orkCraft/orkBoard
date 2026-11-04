@@ -200,6 +200,8 @@ Rules:
   needs another's result.{step_line}
 - Each task's `title` is a name, 60 characters at most, the verb first (e.g. "Spawn enemies from the wave director"):
   the detail belongs in its brief.
+- A code task changes the tests its change breaks, in the same task: the gate runs them when it ends. A later task may add
+  coverage, never repair a task before it.
 - Each task's tag (`kind`), the kind of work it is, one of: {kinds}. Ordinary work is "code".{team}
 - A task may end with two to six variants of one kind for the person to pick from instead of a change, only when the spec asks to
   choose by eye or by ear (a logo, an icon, a sound, a clip, a name or a tagline): give it `"pick": {{"n": 2 to 6, "kind": "image" |

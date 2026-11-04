@@ -57,6 +57,7 @@ class Gate:
     error: str = field(default="", compare=False)  # a bad file, in words
     none: bool = False                             # the project has no tests at all: nothing to run (`derive`)
     derived: bool = field(default=False, compare=False)   # the project's own gate (`derive`), not one its `orkcraft.toml` wrote (spec 107 §1.2)
+    browser: tuple[str, ...] = ()                  # a touched `.js`, `.css` or `.html` brings the tests these globs find (`{stem}`, `{leaf}`; spec 143 B.1)
     main: tuple[Check, ...] = ()                   # `[gate.main]` checks: the way into main (spec 111 §4.2); () = the two default checks
 
     @property
@@ -175,9 +176,34 @@ def read(repo_root: Path) -> Gate:
             raise ValueError("[gate] timeout_min must be a number of minutes above 0")
         return Gate(run=run.strip(), always=_strings(table.get("always", list(CRITICAL_TESTS)), "always"),
                     map=_strings(table.get("map", list(DEFAULT_MAP)), "map"), timeout_min=minutes,
+                    browser=_strings(table.get("browser", []), "browser"),
                     main=_main_checks(table["main"]) if "main" in table else ())
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, ValueError) as e:
         return dataclasses.replace(derive(repo_root), error=f"{FILE} is not usable ({' '.join(str(e).split())[:200]}): the gate ran as with no file")
+
+
+PAGE_SUFFIXES = (".js", ".css", ".html")
+
+
+def browser_files(gate: Gate, name: str, root: Path) -> list[str]:
+    """The files `[gate] browser` finds for a touched page file (`{stem}`: its name without the suffix, `{leaf}`: the last folder's name); globs, sorted,
+    only what exists. Nothing for any other file, and nothing with no patterns (spec 143 B.1)."""
+    p = Path(name)
+    if not gate.browser or p.suffix.lower() not in PAGE_SUFFIXES:
+        return []
+    found: set[str] = set()
+    for pattern in gate.browser:
+        if "{leaf}" in pattern and p.parent.name in ("", "."):      # a file at the root has no folder to name tests by
+            continue
+        glob = pattern.replace("{stem}", glob_escape(p.stem)).replace("{leaf}", glob_escape(p.parent.name))
+        if not glob.strip("/") or Path(glob).is_absolute() or ".." in Path(glob).parts:
+            continue
+        found.update(f.relative_to(root).as_posix() for f in Path(root).glob(glob) if f.is_file())
+    return sorted(found)
+
+
+def glob_escape(text: str) -> str:
+    return re.sub(r"([*?\[])", r"[\1]", text)
 
 
 def gate_files(gate: Gate, touched: list[str], root: Path) -> list[str]:
@@ -189,6 +215,7 @@ def gate_files(gate: Gate, touched: list[str], root: Path) -> list[str]:
         if not gate.custom and p.parts[:1] == ("tests",) and p.suffix == ".py" and p.name.startswith("test_"):
             out.append(p.as_posix())
             continue
+        out += browser_files(gate, name, root)
         if p.stem == "__init__":
             continue
         if not gate.custom and p.suffix != ".py":

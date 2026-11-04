@@ -1,3 +1,5 @@
 # How Orkboard checks a task's result before it reaches Review (docs/specs/37-board-and-line.md §5).
 [gate]
 always = ["tests/test_architecture.py", "tests/test_board_alone.py", "tests/test_updates.py"]
+# A touched page file (.js, .css, .html) brings the browser tests of its folder and of its name (spec 143 B): table/pane.js the table's, table/column.js test_column_browser.py too.
+browser = ["tests/test_{stem}*_browser.py", "tests/test_{leaf}*_browser.py"]

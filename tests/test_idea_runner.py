@@ -503,7 +503,7 @@ def test_red_after_the_one_retry_waits_at_review_with_its_counts_and_cannot_merg
 
 def test_a_gate_without_pytest_says_no_counts():
     from orkboard.realm.idea_git import parse_tests
-    assert parse_tests("no test files to run") == {"passed": 0, "failed": 0, "failing": [], "tail": "no test files to run"}
+    assert parse_tests("no test files to run") == {"passed": 0, "failed": 0, "skipped": 0, "failing": [], "tail": "no test files to run"}
     got = parse_tests("FAILED tests/a.py::t1 - assert 1\nFAILED tests/a.py::t2\n2 failed, 18 passed in 1.2s")
     assert got["passed"] == 18 and got["failed"] == 2 and got["failing"] == ["tests/a.py::t1", "tests/a.py::t2"]
     many = "\n".join(f"FAILED tests/a.py::t{i}" for i in range(30)) + "\n30 failed in 2s"

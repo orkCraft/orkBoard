@@ -21,6 +21,7 @@ FINDINGS_ASK = (
     'small and certain; leave the rest as findings with `"fixed": false`. Each finding has a `kind`: `"code"` when the code is wrong, '
     '`"env"` when it could not be done here, in the place you ran in (a command was refused, a tool is missing, there is no device or '
     'no network): a person can fix the code, not the place, so never write a finding about the place as `"code"`.')
+NO_BROWSER = "Browser tests did not run: no Chromium here."     # spec 143 B.3
 LEAN_DOES = "You do this task yourself. It is not to be planned: make the change it asks for, in this worktree."     # spec 143 A.2
 NO_FINDINGS = "You left no findings file and changed no file. Write your findings file, as the task asks."
 FRESH_TOKENS = 150_000            # a session that read more than this in its last call is not resumed again: a send back starts a fresh one (spec 86 §4)
@@ -124,6 +125,8 @@ class TaskMixin:
             tests["env"], tests["install"] = run.env, gate_env.missing(self.repo_root)
         if run and run.docs:
             tests["docs"] = True
+        if run and run.browser and tests["green"] and run.ran and (tests.get("skipped") or 0) > 0:
+            tests["no_browser"] = True                 # spec 143 B.3: a browser module skipped for want of a Chromium is not a pass; it does not hold the merge
         return tests
 
     def _gate_ran(self, slug: str, tid: str, path: Path, rnd: int, attempt: int) -> bool:
