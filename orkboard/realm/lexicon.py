@@ -155,7 +155,7 @@ TERMS: tuple[Term, ...] = (
     _t("party_proposal", "party proposal", "party proposals"),      # the night's proposal to take a checker out of a party (spec 43 §4)
     _t("own_party", "your party", "your parties"),                  # a party the person saved from one of theirs, kept in their own folder and picked in any project (spec 43 §6)
     _t("party_price", "This party"),                                # about what a goal costs with a party, before it starts (spec 43 §3)
-    _t("check_finding", "finding", "findings"),                    # one thing a check found: where, what goes wrong, fixed or left (spec 43 §0; `finding` is the Mine's)
+    _t("check_finding", "finding", "findings"),                    # one thing a check found: where, what goes wrong, fixed or left (spec 43 §0; `research_finding` is the Mine's, `finding` the quality card's)
     _t("tag", "tag", "tags"),                                      # a task's kind of work: who of the team does it (roles.TASK_KINDS)
     _t("craft.engineering", "Engineering"),                        # an ork: the Taskmaster, the Grunts, a role of code
     _t("craft.design", "Design"),                                  # an elf
@@ -231,6 +231,26 @@ TERMS: tuple[Term, ...] = (
     _t("waiting_to_be_taken", "Waiting to be taken"),              # what a goal in the inbox says on the phone until the computer or a cloud session has taken it (spec 136 C.4, decisions §243.3)
     _t("as_of", "As of"),                                          # what the phone's screens say before the journal's time (*As of 14:02*): what it shows was true then, never now (spec 136 C.4, decisions §243.5)
     _t("slice", "slice", "slices"),                                # a leader's part of a decision: the key conclusion for its craft and the points it rests on, cut once at Confirm and read into the leader's calls (spec 131, decisions §233.1); not shown yet
+    # Four levels and findings (docs/specs/132-four-levels-the-way-down-and-findings.md D.6; decisions §234.8, §237.9): the words of the levels, of a finding and of the quality card
+    _t("level", "level", "levels"),                                # where a change or a finding lies: Decision, Spec, Work or Quality, the heaviest and cheapest to change first (decisions §234.1); not a goal's tier nor a party's size
+    _t("finding", "finding", "findings"),                          # what a goal did against what was promised, found where it was found and taken up to the level that holds its cause (decisions §234.3); not a check's `check_finding`, not a concern
+    _t("quality_record", "quality record", "quality records"),     # a goal's verdict against its spec, its checks, the lenses' alarms and its findings with what became of them, kept once the goal is done (decisions §234.4)
+    _t("level.decision", "Decision"),                              # the level of what and why
+    _t("level.spec", "Spec"),                                      # the level of how, by craft
+    _t("level.work", "Work"),                                      # the level of the tasks and the code
+    _t("level.quality", "Quality"),                                # the level of what came out against what was promised
+    _t("quality_of", "Quality of"),                                # the quality card's title, before the goal's (decisions §237.1)
+    _t("found", "found"),                                          # *<Party> found: …*, a finding's line in the hand
+    _t("cause_in_code", "The cause is in the code"),               # a finding sorted to Work
+    _t("cause_in_spec", "The cause is in the spec"),               # a finding sorted to Spec
+    _t("cause_in_decision", "The cause is in the decision"),       # a finding sorted to Decision
+    _t("fix_there", "Fix it there"),                               # a finding answered at its level (decisions §237.2)
+    _t("fix_all_there", "Fix all there"),                          # every finding of a quality card answered at once, its cost said first
+    _t("another_level", "Another level…"),                         # the rare answer, under a finding's …: the person moves its level
+    _t("not_now", "Not now"),                                      # a finding put off: it stays on the goal's quality record and leaves the hand
+    _t("add_to_goal", "Add to the goal"),                          # the bubble's line on a goal not yet agreed (spec 132 A)
+    _t("change_decision", "Change…"),                              # the decision's one button beside *Confirm and start* (decisions §237.3)
+    _t("or_say_change", "Or say what to change"),                  # the line under the decision's field
     _t("aspect", "aspect", "aspects"),                             # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
     _t("play_mark", "mark", "marks"),                              # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)
@@ -330,7 +350,7 @@ TERMS: tuple[Term, ...] = (
     _t("fold", "Fold"),                                             # a hut shows its title bar only (docs/design/folded-cards.md)
     _t("map_view", "Map view"),                                     # the town from above, no cards (docs/design/map-view.md)
     # the Mine's research (docs/design/mine.md)
-    _t("finding", "Finding", "Findings"),                           # one claim of a report, with its sources
+    _t("research_finding", "Finding", "Findings"),                  # one claim of a report, with its sources (the Mine's; `finding` is the Board's, spec 132)
     _t("confirmed", "Confirmed"),                                   # two models, two sites (realm/research.py check)
     _t("disputed", "Disputed"),                                     # the tools disagree; the person decides
     _t("single", "One source"),                                     # one tool or one site said it

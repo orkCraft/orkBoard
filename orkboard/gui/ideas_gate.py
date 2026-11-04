@@ -21,7 +21,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import event_log, gate_config, goal_main, idea_flag, idea_gate, ideas, journal_notes, main_checks
+from orkboard.realm import event_log, findings_gather, gate_config, goal_main, idea_flag, idea_gate, ideas, journal_notes, main_checks
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
@@ -106,8 +106,17 @@ class GateMixin:
         self._ev(event_log.GOAL_TO_MAIN, args, idea=slug, goals=got["goals"], commits=len(got["commits"]), files=got["files"],
                  pushed=got["pushed"], into=where["into"], main=where["main"])
         self._flag_after_goal(got["goals"], got["commit"], git, where["into"], where["main"])
+        self._gather_verdict(got["goals"])
         self.changed("")
         return {"ok": True, "commit": got["commit"], "goals": got["goals"], "note": got["note"]}
+
+    def _gather_verdict(self, goals: list[str]) -> None:
+        """The goals that reached the discard: each one's verdict against its spec read once, a `differs` or `missing` line a finding (spec 132 D.2, realm/findings_gather.py). Never fails the merge."""
+        for slug in goals:
+            try:
+                findings_gather.verdict(self.state_dir, self.root(False), Path(self.host.repo_root), slug, self._ref())
+            except Exception:
+                pass
 
     # -- the checks on the way into main (spec 111 §4.2) -----------------------------------------------------
 

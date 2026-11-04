@@ -28,7 +28,7 @@ from pathlib import Path
 
 from orkboard.core import idea_journal
 from orkboard.core import idea_slices
-from orkboard.realm import commit_goal, concerns as store, event_log, goal_team, idea_target, ideas, lens_rubrics, map_parts, map_signals, map_text, project_facts
+from orkboard.realm import commit_goal, concerns as store, event_log, findings_gather, goal_team, idea_target, ideas, lens_rubrics, map_parts, map_signals, map_text, project_facts
 from orkboard.realm.idea_talk_parse import total
 from orkboard.realm import journal_notes
 
@@ -187,5 +187,6 @@ Answer with one JSON object and nothing else:
                    hints=[{"on": h["on"], "kind": h["kind"], "aspect": lens_rubrics.aspect_of(craft, h["kind"]), "words": h["words"]} for h in hints[:HINTS]])
         self._ev(event_log.CONCERNS_MADE, party=party, n=len(kept), alerts=sum(1 for c in kept if c["level"] == "alert"), notes=sum(1 for c in kept if c["level"] == "note"), signals=len(hints), seconds=round(time.monotonic() - began, 1),
                  cost=measure.get("cost"), why=why, since=since["way"] if since else "")
+        findings_gather.lens(self.state_dir, self.repo_root, party, craft, kept, self.map_ref())          # an alert on a part a goal of the last LENS_DAYS touched is that goal's finding, else one of no goal (spec 132 D.2); never fails the look
         if since:                                            # the leader's own journal (spec 125 B)
             journal_notes.since(self.state_dir, party, map_parts.MAPS.get(craft, ""), since["way"], since["line"])
