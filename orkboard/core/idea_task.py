@@ -122,7 +122,11 @@ class TaskMixin:
             if not has_summary(out):
                 tests["passed"] = tests["failed"] = None
         if run and run.env:                            # it tested nothing (spec 107 §1.1): why, and what install would make it run
-            tests["env"], tests["install"] = run.env, gate_env.missing(self.repo_root)
+            what = f"{run.env}\n{run.out}"
+            python = gate_env.kind_of(what) == "python"
+            tests["env"], tests["install"] = run.env, [] if python else gate_env.missing(self.repo_root)      # npm ci never runs for pytest (spec 143 C.1)
+            if python:
+                tests["setup"] = gate_env.python_setup(self.repo_root)        # spec 143 C.2: the command for the person to run; nothing runs it
         if run and run.docs:
             tests["docs"] = True
         if run and run.browser and tests["green"] and run.ran and (tests.get("skipped") or 0) > 0:
@@ -147,11 +151,14 @@ class TaskMixin:
         again, its `tests.env` *The install failed:* and the last line (the output is in the log)."""
         r = _r()
         self._log(slug, tid, f"== testing again · {r.now_iso()}\n", env)
+        before = task.get("tests") or {}
+        what = f"{before.get('env') or ''}\n{before.get('tail') or ''}".strip()       # what the run lacked: a Python tool is never installed by npm (spec 143 C.1)
+        rows = lambda: [] if gate_env.kind_of(what) == "python" else gate_env.missing(self.repo_root)      # noqa: E731
         if again.get("install"):
-            ok, out = gate_env.install(self.repo_root, gate_env.missing(self.repo_root), cancel, log=lambda text: self._log(slug, tid, text, env))
+            ok, out = gate_env.install(self.repo_root, rows(), cancel, log=lambda text: self._log(slug, tid, text, env))
             if not ok:
                 last = next((ln.strip() for ln in reversed(out.splitlines()) if ln.strip()), "it said nothing")
-                tests = {**(task.get("tests") or {}), "env": INSTALL_FAILED.format(last=last)[:300], "install": gate_env.missing(self.repo_root)}
+                tests = {**(task.get("tests") or {}), "env": INSTALL_FAILED.format(last=last)[:300], "install": rows()}
                 self._set_task(slug, tid, state="review", tests=tests, finished=r.now_iso(), look=COULD_NOT_RUN, error="the tests could not run")
                 self._log(slug, tid, f"== at Review · {r.now_iso()}\n", env)
                 return True

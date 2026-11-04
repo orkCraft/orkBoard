@@ -1,22 +1,27 @@
 """A gate that could not run is not red (docs/specs/107-what-the-owners-day-said.md §1.1, decisions §182.1).
 
     why = could_not_run(out, code)                 # "" or the sentence: *The tests could not run: `vitest` is not installed.*
-    rows = missing(root)                           # [{"dir": "prototypes/ar", "command": "npm ci"}]: what install would make it run
+    rows = missing(root, what)                     # [{"dir": "prototypes/ar", "command": "npm ci"}]: what install would make it run (none for a Python tool: `kind_of`)
+    kind_of(what)                                  # "python" · "node" · "": which kind of tool the run lacked (spec 143 C.1)
+    python_setup(root)                             # the command that would make Python's tests run, for the person to run (spec 143 C.2)
     ok, out = install(root, rows, cancel, 900)     # the rows' commands, one after another, in the main checkout
 
 A red run whose output says a command or a package is not there tested nothing: the code was never reached, and a session
 sent back for it can only say it may not install (a task never may: realm/task_commands.py). So the run is told apart
 (`could_not_run`), and the person decides: Orkboard installs in the main checkout by each folder's lock (`install`), where
 `realm/dep_links.py` then lays the result into the task's worktree. Python is never installed here (a `.venv` is the
-person's). No face, no model.
+person's): for a Python tool that is missing there are no rows, and the card names the command to run (`python_setup`). No face, no model.
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 import shlex
+import shutil
 import subprocess
 import threading
+import tomllib
 from pathlib import Path
 from typing import Callable
 
@@ -95,12 +100,75 @@ def _hoisted(root: Path, folder: Path) -> bool:
     return False
 
 
-def missing(root: Path) -> list[dict]:
-    """What install would make the gate run: each package folder of `root` that lists dependencies and has no `node_modules` in the main
+PYTHON_TOOLS = frozenset({"pytest", "py.test", "python", "python3", "pip", "pip3", "uv", "ruff", "mypy", "black", "flake8", "coverage", "tox", "nox", "pylint"})
+NODE_TOOLS = frozenset({"npm", "npx", "node", "pnpm", "yarn", "bun", "vitest", "jest", "tsc", "eslint", "mocha", "playwright", "vite", "webpack"})
+
+
+_PATH_PYTHON: dict[str, str] = {}        # PATH -> the Python on it that imports pytest ("" none): asked once per process
+
+
+def path_python() -> str:
+    """The first `python3`, then `python`, on the `PATH` that imports pytest; "" with none. One short run each, kept for the process (spec 143 C.4)."""
+    key = os.environ.get("PATH", "")
+    if key not in _PATH_PYTHON:
+        found = ""
+        for name in ("python3", "python"):
+            exe = shutil.which(name)
+            if not exe:
+                continue
+            try:
+                ok = subprocess.run([exe, "-c", "import pytest"], capture_output=True, timeout=20).returncode == 0
+            except (OSError, subprocess.SubprocessError):
+                ok = False
+            if ok:
+                found = exe
+                break
+        _PATH_PYTHON[key] = found
+    return _PATH_PYTHON[key]
+
+
+def kind_of(what: str) -> str:
+    """Which kind of tool a run lacked, from `could_not_run`'s sentence (with the run's output after it, when it is at hand): `python` for pytest and the
+    like and for a `No module named` of a Python run, `node` for what Node's tools and `Cannot find module` name, "" when it cannot tell."""
+    text = str(what or "")
+    name = (re.search(r"`([^`]+)`", text) or re.search(r"^\s*(\S+)\s*$", text) or [None, ""])[1].strip().lower()
+    if name in PYTHON_TOOLS:
+        return "python"
+    if name in NODE_TOOLS or name.startswith("@"):
+        return "node"
+    if re.search(r"No module named", text):
+        return "python"
+    if re.search(r"Cannot find (?:module|package)", text):
+        return "node"
+    return ""
+
+
+def _dev_extra(root: Path) -> bool:
+    try:
+        data = tomllib.loads((Path(root) / "pyproject.toml").read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return False
+    extras = (data.get("project") or {}).get("optional-dependencies") if isinstance(data, dict) else None
+    return isinstance(extras, dict) and "dev" in extras
+
+
+def python_setup(root: Path) -> str:
+    """The command that makes a project's Python tests run, read by code and never run here (decisions §182.1): `uv sync --extra dev` for a `uv.lock` and
+    a `dev` extra; a `dev` extra with no lock: a `.venv` and the project installed with it; else a `.venv` with pytest."""
+    root = Path(root)
+    if _dev_extra(root):
+        return "uv sync --extra dev" if (root / "uv.lock").is_file() else "python -m venv .venv && .venv/bin/pip install -e '.[dev]'"
+    return "python -m venv .venv && .venv/bin/pip install pytest"
+
+
+def missing(root: Path, what: str = "") -> list[dict]:
+    """What install would make the gate run (none when `what`, the sentence of `could_not_run`, names a Python tool: `npm ci` never runs for pytest): each package folder of `root` that lists dependencies and has no `node_modules` in the main
     checkout (a workspace member under an installed workspace root has them), with the command its lock names (none: `npm install`).
     `dir` is `"."` for the root."""
     root = Path(root)
     rows = []
+    if kind_of(what) == "python":
+        return rows
     for folder in gate_config.package_dirs(root):
         if (folder / "node_modules").is_dir() or not _has_deps(folder) or _hoisted(root, folder):
             continue

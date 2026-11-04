@@ -121,6 +121,7 @@ export function ResultActions({ r, pinned = false }) {
         <button type="button" class="ork-btn danger" onClick=${drop}>Drop it</button></div></div>`}
     ${reason && html`<p class=${cls("shell-actions__why", env ? "ok-tone-fire" : "ok-tone-error")} role="status" data-env=${env ? "true" : undefined}>${reason}</p>`}
     ${env && html`<p class="shell-actions__why ok-tone-muted" data-no-install="true" role="status">${NO_INSTALL}</p>`}
+    ${env && !rows.length && !!r.tests.setup && html`<p class="shell-actions__why ok-tone-muted" data-setup="true" role="status">Run this in the project's folder, then Test again: <code class="ok-font-status">${r.tests.setup}</code></p>`}
     ${!!r.tests.no_browser && html`<p class="shell-actions__why ok-tone-muted" data-no-browser="true" role="status">${NO_BROWSER}</p>`}
     ${same && html`<p class="shell-actions__why ok-tone-muted" data-same="true" role="status">${SAME_FAILURE}</p>`}
     ${place && html`<p class="shell-actions__why ok-tone-muted" data-place="true" role="status">${PLACE_LINE}</p>`}

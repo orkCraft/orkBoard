@@ -81,6 +81,23 @@ def test_with_nothing_to_install_it_is_test_again_and_several_folders_are_joined
     assert not log, "\n".join(log)
 
 
+def test_a_pytest_that_is_missing_offers_test_again_and_the_command_to_run_never_install_and_test_again(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        box = draw(pg, {**COULD_NOT, "env": "The tests could not run: `pytest` is not installed.", "install": [], "setup": "uv sync --extra dev"})
+        again = box.get_by_role("button", name="Test again", exact=True)
+        again.wait_for(timeout=WAIT_MS)
+        assert box.get_by_role("button", name="Install and test again").count() == 0
+        assert box.locator("[data-setup]").inner_text() == "Run this in the project's folder, then Test again: uv sync --extra dev"
+        assert box.locator("[data-setup] code").inner_text() == "uv sync --extra dev"
+        again.click()
+        assert _sent(pg, host, ("ideas.regate", {"slug": "sync", "task": "k1", "install": False}))
+        assert draw(pg, COULD_NOT).locator("[data-setup]").count() == 0                       # a missing vitest has its rows and no command line
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
 def test_a_red_result_is_still_red_with_fix_suggesting_its_line_and_the_line_sent_unchanged_is_told_suggested(gui):
     pg, host, log = open_hand(gui)
     try:

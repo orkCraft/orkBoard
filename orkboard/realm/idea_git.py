@@ -242,11 +242,13 @@ class IdeaGit:
                        gate_env.could_not_run(out, proc.returncode), browser=in_browser)
 
     def python(self) -> str:
-        """The repository's own Python when it has one (`.venv`, where its test tools are), else Orkline's."""
+        """The Python that runs the gate's pytest (spec 143 C.4): the repository's own `.venv` when it has one (even with no pytest in it: the card says what
+        to run), else the first `python3`, then `python`, on the `PATH` that imports pytest (asked once, by a short run, and kept for the process), else
+        Orkline's own, which under `uv tool` never has it."""
         for rel in (".venv/bin/python", ".venv/Scripts/python.exe"):
             if (self.root / rel).is_file():
                 return str(self.root / rel)
-        return sys.executable
+        return gate_env.path_python() or sys.executable
 
     # -- the branch results merge into ------------------------------------------------------------
 
