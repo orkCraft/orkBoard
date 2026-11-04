@@ -5947,3 +5947,40 @@ two a row, three a pyramid, four a square*; past four, the owner offered *+2* in
    route's leaders, who has answered in Talk, which sections are written; a field added to the node where it lacks one),
    its tests the column's browser test.
 The owner's call.
+
+## 242. A new goal is matched against the face-down pile when it is sent: one that looks like part of another is offered to it in the field, *Add to it* or *Keep apart*, by code and with no call; the backlog is grouped once at the reset; nothing is merged without the person's yes (4 November 2026, the owner)
+
+Changes: 234.5, 239.1; spec 128 A.1.
+
+Why: the owner: *when a new idea is added, let it be checked against the face-down cards and joined with another idea
+if they are related, so there are fewer runs from idea to spec.* Read in the code: the Orkmaster already judges a
+*collision* (spec 71, `core/idea_collide.py`), but later and for another end: two goals of different parties whose plans
+touch the same files, one cheap call to tell a collision from a coincidence, against conflicts at work. Nothing matches a
+new goal against the pile when it comes in, where joining costs least: before Talk, a goal takes words in with one
+`decide` call at most (§234.5), after its spec it takes them with its sections written again. Joining has its own risk:
+two things glued into one goal, its spec written about both, a goal too big to land. So:
+1. **Matched when it is sent, in the field**: at the + card's **Send** (§206.1), code compares the new goal with the
+   face-down cards (*In analysis*, §224): its words against their titles and *Asked*, and the parties and parts of the
+   map its route gives (the route is code's, no call). A match is said **in the field itself**, before it closes: *Looks
+   like part of: <title>*, with **Add to it** and **Keep apart**. No card comes to the hand, no model is called; with no
+   match the field sends as today.
+2. **Add to it is §234.5's *Add to the goal***: the new words are written into that goal's *Asked*, kept as written and
+   marked as the second idea's (its time, and its rune's place kept in the goal's history); a goal whose decision is
+   worded already has it worded again (one `decide` call, its cost said on the button).
+3. **Only before its spec**: a goal is offered for joining only while it lies face down before its sections (`raw`,
+   `routed`, `talk`, `decided`); a goal whose spec is being written or is made is never offered (joining would write its
+   sections again): the new goal goes on its own, or by *Make it a change* (§206.5).
+4. **Not too big**: no match is offered when joining would add more than one party to the goal's route, or would make its
+   *Asked* longer than a goal's words are kept (`GOAL_CHARS`): small goals land better.
+5. **The backlog grouped once at the reset**: before §239's queue starts its first goal, the Orkmaster makes **one** call
+   on the cheaper tier, no tools, over the titles of the goals put off (`collide`'s bounds), and answers groups that look
+   like one; they come as **one card** in the hand, *These look like one goal*, each group with **Join** and **Keep
+   apart**, and **Not now**. The queue waits for that card only while it lies lifted; not answered, the queue goes on.
+6. **Nothing merged without the person's yes**, and **a joined goal can be split** while it has no spec: **Split** on its
+   page gives each idea's words back to a goal of its own (its rune kept), the decision worded again where there was one.
+7. **The words** (`TERMS`): *Looks like part of: <title>*, *Add to it*, *Keep apart*, *These look like one goal*, *Join*,
+   *Split*.
+8. **Built** by a spec of its own (spec 135), its parts by the cheaper model: **A. The match** (code: the words and the
+   route's parties and parts; the field's line; *Add to it* through §234.5); **B. The backlog's groups** (the one call,
+   the card, the queue's wait); **C. Split**. A first: it stands alone, and §234.5's *Add to the goal* is built with it.
+The owner's call.
