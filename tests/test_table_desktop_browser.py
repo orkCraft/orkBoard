@@ -523,7 +523,7 @@ def test_a_goals_rune_stands_once_on_its_strip_and_a_task_at_work_shows_the_flam
         glowing = pg.locator('[data-lkey="t:task:rules/r1"]')                                                             # a lane a token wide: the token keeps its rune, glowing while its front task is at work
         assert glowing.locator(".ork-elem.meadow.is-glowing").count() == 1 and glowing.locator(".ork-elem").count() == 1
         assert pg.locator('[data-lkey="t:task:seat/s2"] .ork-elem.ice').count() == 1 and pg.locator('[data-lkey="t:task:seat/s2"] .is-glowing').count() == 0       # its front task failed: the rune is still
-        assert anim(glowing.locator(".ork-elem"))[0] == "ork-glow" and glowing.locator(".table-card__win > *").evaluate_all("els => els.map((e) => getComputedStyle(e).animationName)") == ["none"]
+        assert anim(glowing.locator(".ork-elem"))[0] == ("none" if "is-still" in glowing.locator(".ork-elem").get_attribute("class") else "ork-glow") and glowing.locator(".table-card__win > *").evaluate_all("els => els.map((e) => getComputedStyle(e).animationName)") == ["none"]
         return
     assert pg.locator(".table-lane[data-party] .table-card__head .ork-elem, .table-lane[data-party] .table-tedge > .ork-elem:not(.is-glowing)").count() == 0       # no rune on a card's header or on an edge that does not work
     for slug in ("rules", "seat", "calm", "recheck", "bar"):
@@ -532,8 +532,9 @@ def test_a_goals_rune_stands_once_on_its_strip_and_a_task_at_work_shows_the_flam
     flame = r1.locator(".table-stage .ork-elem.meadow.is-glowing")
     assert flame.count() == 1 and r1.locator(".table-stage .ork-sign").count() == 0 and r1.locator(".table-stage").inner_text().strip().lower() == "doing"      # the flame takes the stage's sign's place; the words stay
     assert flame.evaluate("e => e.offsetWidth") == 14 and flame.get_attribute("aria-hidden") == "true"
-    name, duration, timing = anim(flame)
-    assert name == "ork-glow" and duration == "2.4s" and timing.startswith("steps(6"), (name, duration, timing)           # orkUI's glow: six steps over 2.4 s
+    moving = pg.locator(f".table-lane[data-party] {FLAME}").evaluate_all("els => els.filter((e) => getComputedStyle(e).animationName === 'ork-glow').map((e) => [getComputedStyle(e).animationDuration, getComputedStyle(e).animationTimingFunction])")
+    assert len(moving) <= 1, moving                                                                                       # one place moves at a time (spec 140 C3): the others' flames stand, lit
+    assert all(d == "2.4s" and t.startswith("steps(6") for d, t in moving), moving                                        # orkUI's glow: six steps over 2.4 s
     assert pg.locator('[data-lkey="t:task:bar/a2"] .table-stage .ork-elem.void.is-glowing').count() == 1                 # a task being checked is at work too
     edge = pg.locator('[data-lkey="t:task:seat/s1"]')                                                                     # at work, behind the front one: the rune glowing before the stage's sign
     assert edge.locator(".ork-elem.ice.is-glowing").count() == 1 and edge.locator(".ork-sign.sword").count() == 1 and edge.evaluate("e => e.firstElementChild.classList.contains('ork-elem')")

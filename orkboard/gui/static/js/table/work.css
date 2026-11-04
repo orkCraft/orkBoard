@@ -61,6 +61,7 @@
 .table-win__by .ork-race__head { flex: none; }
 .table-win__who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-win__busy { flex: none; width: var(--ork-3); height: var(--ork-3); background: var(--ork-ink-muted); }
+.ork-elem.is-glowing.is-still { animation: none; opacity: 1; }   /* one place moves at a time (spec 140 C3, decisions §247.8): a task at work whose goal does not move keeps its rune lit, still */
 .table-win__busy.is-glowing { animation: ork-glow 2.4s steps(6) infinite; }
 @media (prefers-reduced-motion: reduce) { .table-win__busy.is-glowing { animation: none; opacity: 1; } }
 .table-win--fail { gap: var(--ork-2); }

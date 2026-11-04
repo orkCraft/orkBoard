@@ -27,9 +27,9 @@ export function Sign({ name, big = false, label = "" }) {
  *  yet read. Shown, never named: `aria-hidden`. A goal the host has not given one yet is drawn dim. `glowing`: the flame of a task at work (orkUI 0.21.0
  *  `.is-glowing`, decisions §187.2): its strength from about 62 % to full and back, only its opacity; it stands under reduced motion. */
 export const HUES = ["meadow", "ice", "dust", "void", "lava"];
-export function Elem({ name = "", hue = "", big = false, dim = false, glowing = false }) {
+export function Elem({ name = "", hue = "", big = false, dim = false, glowing = false, still = false }) {   // `still`: a glowing rune that stands (spec 140 C3: one place moves at a time; its glow says at work, without the pulse)
   const colour = name && HUES.includes(hue) && hue !== name ? ` k-${hue}` : "";
-  return html`<span class=${`ork-elem ${name || "dust"}${colour}${big ? " big" : ""}${dim || !name ? " dim" : ""}${glowing ? " is-glowing" : ""}`} aria-hidden="true"></span>`;
+  return html`<span class=${`ork-elem ${name || "dust"}${colour}${big ? " big" : ""}${dim || !name ? " dim" : ""}${glowing ? " is-glowing" : ""}${glowing && still ? " is-still" : ""}`} aria-hidden="true"></span>`;
 }
 
 /** orkUI's chevron: down (a menu, an open fold), up, right (a closed fold) or left. */
