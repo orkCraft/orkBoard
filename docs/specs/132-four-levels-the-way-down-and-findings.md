@@ -175,7 +175,7 @@ change (spec), a cascade's proposal (decision); *Not now* keeps it on the record
 
 ### D.6 The words
 
-`TERMS`: `level` (*level*), `finding` (*finding*), `quality_record` (*quality record*). The face's lines (A–D): *Decision*,
+`TERMS`: `level` (*level*), `quality_finding` (*finding*: `finding` is the Mine's already, which Orkline reads), `quality_record` (*quality record*). The face's lines (A–D): *Decision*,
 *Spec*, *Work*, *Quality*; *Quality of <goal>*; *<Party> found: …*; *The cause is in the code* / *the spec* / *the
 decision*; *Fix it there*, *Fix all there*, *Another level…*, *Not now*; *Add to the goal*; *Change…*, *Or say what to
 change*.

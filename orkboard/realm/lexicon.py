@@ -155,7 +155,7 @@ TERMS: tuple[Term, ...] = (
     _t("party_proposal", "party proposal", "party proposals"),      # the night's proposal to take a checker out of a party (spec 43 §4)
     _t("own_party", "your party", "your parties"),                  # a party the person saved from one of theirs, kept in their own folder and picked in any project (spec 43 §6)
     _t("party_price", "This party"),                                # about what a goal costs with a party, before it starts (spec 43 §3)
-    _t("check_finding", "finding", "findings"),                    # one thing a check found: where, what goes wrong, fixed or left (spec 43 §0; `research_finding` is the Mine's, `finding` the quality card's)
+    _t("check_finding", "finding", "findings"),                    # one thing a check found: where, what goes wrong, fixed or left (spec 43 §0; `finding` is the Mine's, `quality_finding` the quality card's)
     _t("tag", "tag", "tags"),                                      # a task's kind of work: who of the team does it (roles.TASK_KINDS)
     _t("craft.engineering", "Engineering"),                        # an ork: the Taskmaster, the Grunts, a role of code
     _t("craft.design", "Design"),                                  # an elf
@@ -233,7 +233,7 @@ TERMS: tuple[Term, ...] = (
     _t("slice", "slice", "slices"),                                # a leader's part of a decision: the key conclusion for its craft and the points it rests on, cut once at Confirm and read into the leader's calls (spec 131, decisions §233.1); not shown yet
     # Four levels and findings (docs/specs/132-four-levels-the-way-down-and-findings.md D.6; decisions §234.8, §237.9): the words of the levels, of a finding and of the quality card
     _t("level", "level", "levels"),                                # where a change or a finding lies: Decision, Spec, Work or Quality, the heaviest and cheapest to change first (decisions §234.1); not a goal's tier nor a party's size
-    _t("finding", "finding", "findings"),                          # what a goal did against what was promised, found where it was found and taken up to the level that holds its cause (decisions §234.3); not a check's `check_finding`, not a concern
+    _t("quality_finding", "finding", "findings"),                  # what a goal did against what was promised, found where it was found and taken up to the level that holds its cause (decisions §234.3); not a check's `check_finding`, not a concern
     _t("quality_record", "quality record", "quality records"),     # a goal's verdict against its spec, its checks, the lenses' alarms and its findings with what became of them, kept once the goal is done (decisions §234.4)
     _t("level.decision", "Decision"),                              # the level of what and why
     _t("level.spec", "Spec"),                                      # the level of how, by craft
@@ -350,7 +350,7 @@ TERMS: tuple[Term, ...] = (
     _t("fold", "Fold"),                                             # a hut shows its title bar only (docs/design/folded-cards.md)
     _t("map_view", "Map view"),                                     # the town from above, no cards (docs/design/map-view.md)
     # the Mine's research (docs/design/mine.md)
-    _t("research_finding", "Finding", "Findings"),                  # one claim of a report, with its sources (the Mine's; `finding` is the Board's, spec 132)
+    _t("finding", "Finding", "Findings"),                           # one claim of a report, with its sources (the Mine's; the quality card's is `quality_finding`, spec 132)
     _t("confirmed", "Confirmed"),                                   # two models, two sites (realm/research.py check)
     _t("disputed", "Disputed"),                                     # the tools disagree; the person decides
     _t("single", "One source"),                                     # one tool or one site said it

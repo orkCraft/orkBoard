@@ -219,8 +219,8 @@ def test_a_fix_pulls_what_is_below_its_level(host, tech):
 
 def test_the_words_of_spec_132_d6_are_in_the_glossary_and_the_mines_finding_keeps_its_own_key():
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert rows["level"] == ("level", "") and rows["finding"] == ("finding", "") and rows["quality_record"] == ("quality record", "")
-    assert lexicon.term("level", many=True) == "levels" and lexicon.term("finding", many=True) == "findings" and lexicon.term("research_finding") == "Finding"
+    assert rows["level"] == ("level", "") and rows["quality_finding"] == ("finding", "") and rows["finding"] == ("Finding", "") and rows["quality_record"] == ("quality record", "")
+    assert lexicon.term("level", many=True) == "levels" and lexicon.term("quality_finding", many=True) == "findings" and lexicon.term("finding") == "Finding"
     said = {"level.decision": "Decision", "level.spec": "Spec", "level.work": "Work", "level.quality": "Quality", "quality_of": "Quality of", "found": "found", "fix_there": "Fix it there",
             "fix_all_there": "Fix all there", "another_level": "Another level…", "not_now": "Not now", "add_to_goal": "Add to the goal", "change_decision": "Change…",
             "or_say_change": "Or say what to change", "cause_in_code": "The cause is in the code", "cause_in_spec": "The cause is in the spec", "cause_in_decision": "The cause is in the decision"}
