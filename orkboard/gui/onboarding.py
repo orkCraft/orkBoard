@@ -8,6 +8,7 @@ servers, your first town and the town going up while you watch.
 
     ob = Onboarding(host)                 # active on a machine never set up, unless ORKCRAFT_ONBOARDING=0
     host.commands.update(ob.commands())   # onboarding.tools · .check · .detect · .request · .skip · .close · .cancel
+                                          # (.check, .detect and .request are aliases: the tools' own commands are `tools.*`, gui/tools_host.py)
     ob.snapshot()                         # the snapshot's `onboarding`, None when there is none
     ob.tick(now)                          # from the host's clock (the town's raising, in Orkline)
 
@@ -16,20 +17,18 @@ The host is read as `host.town` (its machine, demo, call and toast: Orkline's to
 """
 from __future__ import annotations
 
-import threading
-import time
 from dataclasses import replace
 from typing import Any, Callable
-from urllib.parse import urlencode
 
-from orkboard import brand, settings, tools
+from orkboard import settings, tools
 from orkboard.env import getenv
-from orkboard.realm import harnesses, tool_errors, tool_run
+from orkboard.gui import tools_host
+from orkboard.gui.tools_host import ISSUES, ToolsError   # noqa: F401  (ISSUES: re-exported)
+from orkboard.realm import harnesses
 from orkboard.realm.sign_in import CHECK_PROMPT   # noqa: F401  (a short real request, on the tool's cheapest tier)
 
 TOOLS, WHO, MCP, TOWN, SURVEY, RAISING = "tools", "who", "mcp", "town", "survey", "raising"
 RAISE_STEP_S = 0.8          # between two raising steps of the town (gui/onboarding_town.py): each building seen going up
-ISSUES = "https://github.com/orkWorks/orkLine/issues/new"
 RECOMMENDED = ("claude", "codex", "cursor")    # what the step offers to install when no AI tool is here
 
 
@@ -48,16 +47,41 @@ class Onboarding:
         self.host = host
         self.again = False              # opened from the map's menu on a town that stands (Orkline's Set up again)
         self.step = TOOLS
-        self.statuses: list[tools.ToolStatus] | None = None
-        self.checks: dict[str, dict] = {}       # Check: a tool's answer to a short request, or why it gave none
-        self._ask = ask or (lambda tool, prompt, model=None: tool_run.ask(tool, prompt, model))
-        self.others: list[tools.Other] = []
         self.picked: dict[str, settings.ToolChoice] = {}
         self.warder = True
-        self._detectors = (detect or (lambda: tools.detect()), detect_others or (lambda: tools.detect_others()))
+        # the tools found, a Check, the look itself: the tools' own (gui/tools_host.py), which this screen reads
+        self.tools_host = tools_host.ToolsHost(host, detect, detect_others, ask, on_found=self._found)
         self.active = self.wanted()
         if self.active:
             self._look()
+
+    @property
+    def statuses(self) -> list[tools.ToolStatus] | None:
+        return self.tools_host.statuses
+
+    @property
+    def others(self) -> list[tools.Other]:
+        return self.tools_host.others
+
+    @property
+    def checks(self) -> dict[str, dict]:
+        return self.tools_host.checks
+
+    @property
+    def _finder(self):
+        return self.tools_host._finder
+
+    @property
+    def _ask(self):
+        return self.tools_host._ask
+
+    @_ask.setter
+    def _ask(self, ask) -> None:
+        self.tools_host._ask = ask
+
+    def _check_run(self, tid: str) -> None:
+        """The Check's request, run now (on its own thread in `tools.check`): the tools' own."""
+        self.tools_host._check_run(tid)
 
     def wanted(self) -> bool:
         """Orkboard opens on it on a machine never set up (Orkline: on a project with no town yet)."""
@@ -66,71 +90,32 @@ class Onboarding:
 
     def _look(self) -> None:
         """The AI tools on a thread (`--version` runs for each)."""
-        self._scan()
-
-    def _scan(self) -> None:
-        self.statuses = None
-        self.checks = {}
-        self._finder = threading.Thread(target=self._detect, args=self._detectors, daemon=True)
-        self._finder.start()
+        self.tools_host.scan()
 
     # -- what the page sees ------------------------------------------------------------------------
 
-    def _detect(self, detect, detect_others) -> None:
-        """The AI tools, on a thread: `--version` runs for each. The page shows them when they are in."""
-        try:
-            found, others = detect(), detect_others()
-        except Exception:                           # a broken tool never stops the onboarding
-            found, others = [], []
-        self.host.town.call(self._detected, found, others)
-
     def detect(self, args: dict) -> dict | None:
-        """Check again: look for the AI tools once more (one was just installed)."""
+        """Check again: look for the AI tools once more (one was just installed). An alias of `tools.look`."""
         self._live()
-        self._scan()
-        self.host.on_change()
+        self.tools_host.look(args)
+        return None
 
     def check(self, args: dict) -> dict | None:
-        """Check: a short request to one tool found (`harnesses` `ask`, on its cheapest tier), on a thread.
-        The row shows ✓ and how long the answer took, or what kind of failure it was (realm/tool_errors.py)."""
+        """Check: a short request to one tool found. An alias of `tools.check`: the row shows ✓ and how long the answer took, or what kind of failure it was."""
         self._live()
-        tid = str(args.get("tool") or "")
-        if not any(st.id == tid and st.found for st in self.statuses or []):
-            raise OnboardingError("That AI tool is not found here")
-        if (self.checks.get(tid) or {}).get("state") == "running":
-            return self.snapshot()
-        self.checks[tid] = {"state": "running"}
-        threading.Thread(target=self._check_run, args=(tid,), daemon=True).start()
-        self.host.on_change()
+        try:
+            self.tools_host.check(args)
+        except ToolsError as e:
+            raise OnboardingError(str(e)) from None
         return self.snapshot()
 
-    def _check_run(self, tid: str) -> None:
-        start = time.monotonic()
-        try:
-            with tool_errors.doing("check"):
-                self._ask(tid, CHECK_PROMPT, "laborer")
-            out = {"state": "ok", "ms": round((time.monotonic() - start) * 1000)}
-        except Exception as e:                      # a timeout or 🛑 Halt All is a failure like any other
-            err = e if isinstance(e, tool_errors.ToolError) else tool_errors.ToolError(tid, str(e))
-            title = harnesses.title(tid)
-            out = {"state": "failed", "kind": err.kind, "line": tool_errors.LINES[err.kind].format(tool=title, product=brand.name()),
-                   "action": tool_errors.what_to_do(err), "detail": err.detail or str(err),
-                   "sign_in": tool_errors.helped(err)}      # its own sign-in can help (spec 45 §7): the row says Sign in
-        self.host.town.call(self._checked, tid, out)
-
-    def _checked(self, tid: str, out: dict) -> None:
-        if tid in self.checks:                      # not when Check again began a new look meanwhile
-            self.checks[tid] = out
-            self.host.on_change()
-
-    def _detected(self, found: list[tools.ToolStatus], others: list[tools.Other]) -> None:
-        self.statuses, self.others = found, others
+    def _found(self, found: list[tools.ToolStatus], others: list[tools.Other]) -> None:
+        """The tools found are in: what is picked, as this screen shows it (the tools' own is `tools_host`)."""
         kept = self.host.town.machine.tools if self.again else {}    # set up again: what was chosen stays
         # an experimental tool (agy) is never on by default: the person turns it on after its warning
         self.picked = {st.id: kept.get(st.id) or settings.ToolChoice(
                            enabled=st.found and st.tool.available and not harnesses.risky(st.id), billing=st.billing)
                        for st in found}
-        self.host.on_change()
 
     def steps(self) -> list[str]:
         """The steps of this run, from what is known so far: the first screen alone in Orkboard."""
@@ -187,7 +172,7 @@ class Onboarding:
     # -- the page's commands -----------------------------------------------------------------------
 
     def commands(self) -> dict[str, Callable[[dict], Any]]:
-        return {"onboarding.tools": self.set_tools, "onboarding.request": self.request,
+        return {"onboarding.tools": self.set_tools, "onboarding.request": self.tools_host.request,
                 "onboarding.check": self.check, "onboarding.detect": self.detect,
                 "onboarding.skip": self.skip, "onboarding.close": self.close, "onboarding.cancel": self.cancel}
 
@@ -232,17 +217,6 @@ class Onboarding:
             return self._go(TOOLS)
         self.host.on_change()             # the page draws its rows from the state pushed, not from this reply
         return self.snapshot()
-
-    def request(self, args: dict) -> dict:
-        """A tool the orks cannot run on yet: a filled-in GitHub issue for the browser. Nothing is sent from here."""
-        name = str(args.get("name") or "").strip()[:80]
-        if not name:
-            raise OnboardingError("Name the tool")
-        link = str(args.get("link") or "").strip()[:300]
-        note = str(args.get("note") or "").strip()[:1000]
-        body = "\n\n".join(x for x in (f"Tool: {name}", f"Link: {link}" if link else "",
-                                       f"What orks would do with it: {note}" if note else "") if x)
-        return {"url": f"{ISSUES}?{urlencode({'title': f'Support {name}', 'body': body, 'labels': 'tool request'})}"}
 
     def skip(self, args: dict) -> dict | None:
         """Open the board: the tools found kept on, saved; nothing else is set up."""

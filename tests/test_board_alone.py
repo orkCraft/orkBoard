@@ -89,6 +89,8 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
                          "play_face",                                      # spec 118 §3: what the Play die's up face says ("failed" · "new" · "")
                          "new_n",                                          # decisions §200.5: how many goals landed in dev since Play last tried it, the up face's pips
                          "repair",                                         # spec 119 §3.2: Fix it, the bug's state ("idle" · "working" · "ready" · "updating" · "failed")
+                         "tools",                                          # spec 130 A: the AI tools in the hand, in the person's order, and what is being added (the computer's own)
+                         "laid",                                           # spec 130 A.5: whether the table is laid, false until the project's first Start
                          "main_checks"}                                    # spec 111 §4.2: the checks on a goal's way into main, by goal (the face follows them here)
     assert set(snap["reserve"]) == {"share", "night"}                                  # spec 49 §2.3
     assert snap["rate"] is None                                                      # no window learnt yet (decisions §82)

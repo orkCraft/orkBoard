@@ -9,7 +9,7 @@
                                              # (effort, budget, one_shot as `read`: an operation's calls, spec 38 §4)
     h.result(stdout, before)                 # (text, cost USD | None, tokens | None, session id)
     h.outcome(stdout, before, model)         # … priced from `model` when the tool prints tokens, no price
-    harnesses.main(enabled, chosen)          # the tool decisions run on: the chosen one, else the first on
+    harnesses.main(enabled, chosen, order)   # the tool decisions run on: the chosen one, else the first on in the person's order (`machine.tool_order`), else the registry's
     harnesses.for_party(installed, signed_out, main_id)   # the list a party's tool is picked from (spec 81 §1.4)
     harnesses.model_on("agy", "haiku")       # a model or tier of any tool, on this one
     h.pick("elder")                          # … the model a run of it names: the newest of the family
@@ -402,12 +402,13 @@ def title(harness_id: str) -> str:
     return h.title if h else harness_id
 
 
-def main(enabled: Iterable[str] = (), chosen: str = "") -> str | None:
-    """The tool decisions run on: `chosen` when it is on, else the first tool on; None when none is."""
+def main(enabled: Iterable[str] = (), chosen: str = "", order: Iterable[str] = ()) -> str | None:
+    """The tool decisions run on: `chosen` when it is on, else the first tool on in `order` (the person's: `machine.tool_order`, decisions §232.5),
+    else the first on in the registry's; None when none is on."""
     on = [t for t in enabled if t in REGISTRY]
     if chosen in on:
         return chosen
-    return next((t for t in REGISTRY if t in on), None)
+    return next((t for t in order if t in on), None) or next((t for t in REGISTRY if t in on), None)
 
 
 def for_party(installed: Iterable[str] = (), signed_out: Iterable[str] = (), main_id: str = "") -> dict:

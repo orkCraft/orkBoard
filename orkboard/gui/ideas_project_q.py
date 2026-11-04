@@ -16,7 +16,7 @@ from typing import Any
 
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError
-from orkboard.realm import goal_team, idea_lens, journal_notes, project_facts, project_questions, read_in
+from orkboard.realm import first_open, goal_team, idea_lens, journal_notes, project_facts, project_questions, read_in
 
 SEGMENT_CHARS, PAIN_CHARS = 120, 300                 # `idea_lens`: a segment's name, a pain
 
@@ -24,7 +24,10 @@ SEGMENT_CHARS, PAIN_CHARS = 120, 300                 # `idea_lens`: a segment's 
 class ProjectQMixin:
     def project_start(self) -> dict:
         """Begin the first start's questions, quietly: `{asked, why?}`. A keeper without them (or a call that cannot be made) asks nothing and refuses nothing. The project's
-        own decisions, specs and notes are read into the journals first, once (spec 126 B.4), before the first goal."""
+        own decisions, specs and notes are read into the journals first, once (spec 126 B.4), before the first goal. **Start lays the table** (spec 130 A.5): the project's
+        first Start, which is what calls this, keeps it laid (`realm/first_open.py`); a project laid already is as it was."""
+        if first_open.lay(self.state_dir):
+            self.changed("")                                     # the page plays the laying once (decisions §232.1)
         try:
             read_in.first_start(Path(self.host.repo_root), self.state_dir, self.root(False))
         except Exception:

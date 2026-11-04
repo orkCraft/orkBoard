@@ -216,7 +216,7 @@ class Orkboard:
     def __init__(self, repo_root: Path | None = None, demo: bool = False, restore: bool = False) -> None:
         """`repo_root`: the folder opened and shown (refused in words: `ideas.IdeasError`); `restore`: the projects
         open when Orkboard last closed are opened again too (`orkboard` does it; a test's host has only its own)."""
-        from orkboard.gui import awake, board_files, board_git, board_projects, folder_dialog, keep_awake, logs_save, onboarding, ops, phone_push, repair, updates
+        from orkboard.gui import awake, board_files, board_git, board_projects, first_open_cards, folder_dialog, keep_awake, logs_save, onboarding, ops, phone_push, repair, updates
         self.demo = demo
         self.machine = settings.load()
         self.bus = b.Bus()
@@ -266,6 +266,10 @@ class Orkboard:
         self.crashes = crashes.install(_Answer(self), face="gui", demo=demo)
         self.onboarding = onboarding.Onboarding(self)
         self.commands.update(self.onboarding.commands())
+        self.tools_host = self.onboarding.tools_host        # the AI tools' own commands, `tools.*` (spec 130 A; the onboarding's names are aliases)
+        self.commands.update(self.tools_host.commands())
+        self.first_open = first_open_cards.FirstOpen(self)  # the project's questions, answered from the Orkmaster's cards (spec 130 A.4)
+        self.commands.update(self.first_open.commands())
         self.commands.update(self.projects.commands())
         self.commands.update(board_files.Files(self.projects).commands())
         self.commands.update(board_git.Git(self.projects).commands())
@@ -372,7 +376,7 @@ class Orkboard:
         _quota, _level, show_gold = treasury.quota(self.machine, self.limits())
         board = self.ideas.snapshot() if self.ideas is not None else {
             "focus": "board", "ideas_rev": 0, "needs_you": 0, "idea_states": [], "review_count": 0,
-            "review_results": [], "preview": "", "play_face": "", "new_n": 0, "limits": [], "mana": self._mana(), "ask": None, "reserve": {"share": idea_target.reserve({}, False), "night": False}}
+            "review_results": [], "preview": "", "play_face": "", "new_n": 0, "limits": [], "mana": self._mana(), "laid": False, "ask": None, "reserve": {"share": idea_target.reserve({}, False), "night": False}}
         try:
             ops_needs = self.ops.count()
         except Exception:                      # Operations never breaks the snapshot
@@ -382,7 +386,7 @@ class Orkboard:
             self.ideas.team_heal()               # a Team party taken out of its project's Board by hand gives Operations back
         board = {**board, "needs_you": int(board.get("needs_you") or 0) + ops_needs + len(board_map.sign_in_needs(sign_in)),
                  "ops_rev": self.ops.rev, "ops_team": self.ops.team(root)}      # the Team party, if the person has one (spec 92 §3)
-        return {**board, "focus": "board", "onboarding": self.onboarding.snapshot(), "sign_in": sign_in,
+        return {**board, "focus": "board", "onboarding": self.onboarding.snapshot(), "tools": self.tools_host.snapshot(), "sign_in": sign_in,
                 "hud": {"show_gold": show_gold, "gold": gold, "lumber": lumber}, "rate": window_rate.shown(self.machine),
                 "repo": str(root) if root is not None else "", "projects": self.projects.list(),
                 "update": self.updates.snapshot(), "repair": self.repair.snapshot(), "update_policy": self.machine.updates, "version": __version__,
@@ -397,7 +401,7 @@ class Orkboard:
             return {}
 
     # What the page reads of the snapshot and a phone has no use for: the computer's own (spec 94 §2.3).
-    COMPUTER_ONLY = ("onboarding", "sign_in", "main_checks", "repo", "usage_ask", "update_policy", "ask", "passing", "preview", "play_face", "new_n")      # "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8); "passing": so is the Orkmaster's column (spec 128 D.3)
+    COMPUTER_ONLY = ("onboarding", "tools", "laid", "sign_in", "main_checks", "repo", "usage_ask", "update_policy", "ask", "passing", "preview", "play_face", "new_n")      # "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8); "passing": so is the Orkmaster's column (spec 128 D.3)
 
     def phone_snapshot(self) -> dict[str, Any]:
         """The snapshot as a phone gets it (spec 94 §2.3): the page's own (`snapshot()`: the Board's counts, the limits, the mana
@@ -532,13 +536,13 @@ class Orkboard:
 
     def command(self, name: str, args: dict | None = None) -> Any:
         from orkboard.core.op_commands import OpsError
-        from orkboard.gui import ideas, onboarding, phone_push, repair, updates
+        from orkboard.gui import ideas, onboarding, phone_push, repair, tools_host, updates
         fn = self.commands.get(name)
         if fn is None:
             raise CommandError(f"Unknown command: {name}")
         try:
             return fn(dict(args or {}))
-        except (ideas.IdeasError, onboarding.OnboardingError, updates.UpdateError, repair.RepairError, OpsError, phone_push.PushRefused,
+        except (ideas.IdeasError, onboarding.OnboardingError, tools_host.ToolsError, updates.UpdateError, repair.RepairError, OpsError, phone_push.PushRefused,
                 SignInError) as e:
             raise CommandError(str(e)) from None
 
