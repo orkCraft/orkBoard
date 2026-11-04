@@ -5924,9 +5924,10 @@ two a row, three a pyramid, four a square*; past four, the owner offered *+2* in
 (the stacks' *edges, never a number*), so the heads past four lie as a fan behind the fourth. So:
 1. **The middle holds the heads of who has the goal now** (§133.3's rule, on the column's card): the route's leaders
    while it is in Talk and while its spec is written; **empty** while the Orkmaster reads and routes it (its ring runs,
-   as today). Laid by how many: **one** large in the middle; **two** side by side; **three** a pyramid (one over two);
-   **four** a square, two by two; **more than four**, the square with the fourth place's head fanned over the rest (their
-   edges behind it, as a stack's), **no number**. A head whose call is still running steps (`.is-working`, as at the
+   as today). Laid by how many: **one** in the middle; **two** side by side; **three** a pyramid (one over two); **four**
+   a square, two by two; **more than four**, the square with the fourth place's head fanned over the rest (their edges
+   behind it, as a stack's, peeking clearly), **no number**. One and two heads are a head's size; three and more a size
+   smaller, so **the ring keeps room around them** (the owner, on the first pictures). A head whose call is still running steps (`.is-working`, as at the
    portal's corners); one that has answered or written stands still. Reduced motion: none steps.
 2. **A play in the middle while an agreed decision waits** (§240): the heads give way to orkUI's play sign, and the
    ring counts the wait down in its eight places (the eighths the ring was drawn for, §232.4); the pile's line says

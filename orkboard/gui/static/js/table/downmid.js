@@ -21,7 +21,7 @@ export function middleOf(n) {
 /** The heads, laid by how many: `data-n` is the count up to four, `more` past it (the 5th and on lie fanned behind the 4th). Each steps (`is-working`, orkUI's guard step) while its call runs. */
 export function MidHeads({ heads }) {
   if (!heads.length) return null;
-  const one = (h, extra) => html`<span key=${h.key} class=${cls("col-mid__h", { "is-working": !h.still })} data-party=${h.key} data-still=${h.still ? "1" : "0"} style=${extra}><${Head} race=${h.race} tier=${h.tier} size=${heads.length === 1 ? "mid" : ""} /></span>`;
+  const one = (h, extra) => html`<span key=${h.key} class=${cls("col-mid__h", { "is-working": !h.still })} data-party=${h.key} data-still=${h.still ? "1" : "0"} style=${extra}><${Head} race=${h.race} tier=${h.tier} /></span>`;
   const first = heads.slice(0, 3), rest = heads.slice(3);
   return html`<span class="col-mid" data-n=${Math.min(4, heads.length)} data-more=${heads.length > 4 ? "1" : undefined}>
     ${first.map((h) => one(h))}

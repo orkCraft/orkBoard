@@ -447,7 +447,7 @@ def test_the_heads_of_the_route_lie_in_the_rings_middle_by_how_many_and_no_numbe
             cx = sig_["x"] + sig_["width"] / 2
             mid = lambda b: b["x"] + b["w"] / 2  # noqa: E731
             if count == 1:
-                assert abs(mid(hs[0]) - cx) <= 1.5 and hs[0]["w"] > 30, "one larger head in the middle"
+                assert abs(mid(hs[0]) - cx) <= 1.5 and hs[0]["w"] >= 22, "one head, the full size, in the middle"
             else:
                 assert all(h["w"] < 30 for h in hs)
             if count == 2:
