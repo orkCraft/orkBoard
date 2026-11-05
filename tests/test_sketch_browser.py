@@ -103,7 +103,7 @@ def test_the_card_says_who_sketched_it_and_wears_a_page_sign_under_the_leaders_l
     try:
         c = pg.locator('.hand-card[data-kind="pick"]')
         assert c.count() == 1 and c.locator(".hand-card__name").text_content().strip() == "Party quiz"
-        assert c.locator(".hand-card__corner .ork-sign.page").count() == 1 and c.locator(".hand-card__asker .ork-race__head").count() == 1, "the page sign and the leader's head"
+        assert c.locator(".corner--top .ork-sign.page").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1, "the page sign and the leader's head"
         if width == "wide":
             assert c.locator(".hand-card__foot").text_content().strip() == f"{LEADER} sketched it"
         assert pg.locator(".hand-lane").nth(2).locator('.hand-stack[data-stack$="@2"]').count() == 1, "under Design's lane"

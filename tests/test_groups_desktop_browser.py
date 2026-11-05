@@ -70,8 +70,8 @@ def test_the_groups_are_one_card_with_the_page_sign_the_first_groups_titles_and_
     assert pg.locator('.hand-card[data-kind="groups"]').count() == 1
     c = front(pg)
     assert c.locator(".hand-card__name").text_content().strip() == "Add a dark mode option + Dark mode needs a timer"
-    assert c.locator(".hand-card__corner .ork-sign.page").count() == 1
-    asker = c.locator(".hand-card__asker .ork-race__head")
+    assert c.locator(".corner--top .ork-sign.page").count() == 1
+    asker = c.locator(".corner--foot .ork-race__head")
     assert asker.count() == 1 and "crown" in asker.get_attribute("src"), "the Orkmaster asks"
     assert c.locator(".ork-gem").count() == 0, "no worded decision: no cost"
     if w == "wide":

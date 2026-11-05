@@ -1,3 +1,6 @@
+// **Spec 147 C (decisions §251.5): the hand's card is 144 x 202, cut under its title by the hand's rim (handcard.css). Its top is the corners' (table/corners.js): the goal's rune at the left, the kind's sign at the right in its signal's colour, then the title in three whole
+// lines; under the cut why it is asked (the question or the line, up to three lines) and the foot's corners: who asks (the head) and the card's cost. Not on the face at rest: the asker's head at the top, the party's label, the gem. Hovered or focused the card rises and shows it all.
+// The lifted card (below) is part D's and keeps the former anatomy.**
 // A stop as one card of the hand (docs/specs/101 §4.5, decisions §167.1; docs/specs/98 §4.2, §4.4, decisions §160.6; docs/specs/142 part B, decisions §249.2): the card of a card game's anatomy, one size, **with no window**. Its
 // corner (top) holds the kind's sign at its small size at the left, in its signal's colour as the card's frame is (the alert of a question, a hearing, a sign-in and *Go on paid?*, the danger of a failure, else the muted ink), and at the right the head of
 // who asks at 16 px; under it the goal's element at the left, bare, then its name left-aligned in three whole lines, never cut mid-line; its label row the party's name and, when it spends, its gem at the right. Its foot (the question or the line)
@@ -7,6 +10,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
+import { CornerFoot, CornerTop, muchOf } from "../table/corners.js";               // a card is read by its four corners (spec 147, decisions §251.2)
 import { lift, lower } from "../frame/state.js";
 import { Tiles } from "../arena/picks.js";
 import { missingWords } from "../arena/arenawords.js";
@@ -85,10 +89,10 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
       data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined} data-from=${from || undefined}
       style=${dealt ? `--ork-deal-i:${dealt.i}` : undefined} aria-label=${`${labelOf(s)}${from ? `, from ${from}` : ""}`} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
-    <span class="hand-card__corner"><span class="hand-card__act"><${Mark} s=${s} corner=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span>
-    <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name">${s.title || s.full}</span></span>
-    <span class="hand-card__label"><span class="hand-card__party">${from ? `From ${from}` : s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
+    <${CornerTop} rune=${{ name: element, hue, dim: !element }} kind=${actionOf(s).sign} signal=${signalOf(s)} />
+    <span class="hand-card__name">${s.title || s.full}</span>
     <span class="hand-card__foot">${footOf(s)}</span>
+    <${CornerFoot} who=${head || from ? { heads: [head], word: from ? `From ${from}` : "" } : null} much=${cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null} />
     ${children}
   </button>`;
 }

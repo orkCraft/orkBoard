@@ -13,19 +13,16 @@
   --hc-rise: calc(var(--hc-h) - var(--hc-shown));                                                          /* what a card rises to show whole */
   --hc-room: calc(var(--hc-rise) + var(--ork-4)); }                                                        /* the room above the hand a risen card lies in */
 /* the discard on the table (table/discard.js) is a card of the hand's size: it reads the same sizes */
-/* A card of the hand has no window (docs/specs/142 B, decisions §249.2): its corner (the sign, the asker's head), its title in three whole lines (two at the narrow width), its label row. The card is what these need and no more, about two thirds of
-   the 5 : 7 card it was at the wide width; the whole of it shows (a card hovered rises only a little). At the narrow width the card keeps its 80 x 112, its anatomy in the part that shows. The discard (`.table-end`) and the portal's cards keep their window and the 5 : 7. */
-.hand { --hc-corner: 20px; --hc-fgap: var(--ork-3); --hc-lh: 20px; --hc-lines: 3; --hc-title: calc(var(--hc-lines) * var(--hc-lh));
-  --hc-face: calc(var(--hc-pad) * 2 + var(--hc-corner) + var(--hc-fgap) * 2 + var(--hc-title) + var(--hc-label)); --hc-shown: var(--hc-face);
-  --hc-rise: max(calc(var(--hc-h) - var(--hc-shown)), var(--ork-3)); --hc-room: calc(var(--hc-rise) + var(--ork-4)); }
-@media (min-width: 760px) { .hand { --hc-h: var(--hc-face); } }
-@media (max-width: 1023px) { .hand { --hc-lh: 22px; } }
+/* A card of the hand (docs/specs/147 C, decisions §251.5; handcard.css): 144 x 202, cut under its title by the hand's rim; its corners, title and why are in handcard.css. The discard (`.table-end`) and the portal's cards keep their window and the 5 : 7. */
+.hand { --hc-corner: 20px; --hc-fgap: var(--ork-3); --hc-lh: 20px; --hc-lines: 3; --hc-title: calc(var(--hc-lines) * var(--hc-lh)); --hc-shown: 100px;
+  --hc-rise: max(calc(var(--hc-h) - var(--hc-seen, var(--hc-shown))), var(--ork-3)); --hc-room: calc(var(--hc-rise) + var(--ork-4)); }
+@media (max-width: 1023px) { .hand { --hc-lh: 22px; --hc-shown: 106px; } }
 /* the hand is a player's place, on orkUI's room with the table's rim over it (spec 123 §7.7, decisions §201.7) */
 .hand { position: relative; z-index: 2; min-width: 0; background: var(--ork-room); border-top: 3px solid var(--ork-table-rim); padding-bottom: env(safe-area-inset-bottom, 0px); }
 @media (max-width: 1023px) { .hand, .table-end, .table-body { --hc-head: 60px; } }                                                  /* the phone's type is a size up (tokens.css): three lines of 20 px */
 .hand[data-empty] { border-top: 0; }
 /* the cards' lower half lies under the window's edge: the places are clipped at the hand's height, with the room above for a card to rise into (it overlies the table's foot, nothing else there takes the pointer) */
-.hand-places { box-sizing: border-box; margin-top: calc(var(--hc-room) * -1); height: calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)); clip-path: inset(-100vh -100vw 0 -100vw); pointer-events: none; }   /* only the bottom is clipped: a card handed from the table (spec 120 §6.9) flies in from above */
+.hand-places { box-sizing: border-box; margin-top: calc(var(--hc-room) * -1); height: calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)); height: calc(var(--hc-room) + var(--hc-top) + var(--hc-seen, var(--hc-shown))); clip-path: inset(-100vh -100vw 0 -100vw); pointer-events: none; }   /* only the bottom is clipped: a card handed from the table (spec 120 §6.9) flies in from above */
 .hand-row { box-sizing: border-box; display: grid; grid-template-columns: var(--hc-first, minmax(0, var(--col-w))) repeat(var(--hc-rest, 4), minmax(0, var(--col-w))) minmax(min-content, 1fr);   /* the frame's --cols: its first track the hand's to widen, its last as wide as the logs button and the mana need (the table's tabs keep 280 px) */ height: 100%; padding: calc(var(--hc-room) + var(--hc-top)) 0 0 var(--ork-4); min-width: 0; }      /* no gutter at the right: the mana lies flush against the window's edge (mana.css) */
 .hand-lane { position: relative; height: var(--hc-h); min-width: 0; container-type: inline-size; --span: max(0px, calc(100cqw - var(--hc-w) - var(--hc-edge))); }
 /* New goal lies whole at the first lane's left end (spec 107 §13.2); the first lane's stacks, when it has any, fan to its right: the lane's track grows by a card and a gap, the parties' lanes after it keep their widths */
@@ -44,22 +41,17 @@
 .hand-slot:hover, .hand-slot:focus-within, .hand-slot.is-risen { z-index: 40; transform: translateY(calc(var(--hc-rise) * -1)); }       /* a card rises whole on hover, on keyboard focus and on a tap (a tap focuses it) */
 .hand-slot:has(.is-slot):hover, .hand-slot:has(.is-slot):focus-within { transform: none; }                                                  /* a card lifted leaves a slot where it lay */
 /* a card behind another shows its edge and its element only, no words, until it rises */
-.hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card > :not(.hand-card__head):not(.ork-crumble), .hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card__name { visibility: hidden; }
+.hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card > :not(.hand-card__head):not(.corner--top):not(.ork-crumble), .hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card__name { visibility: hidden; }
 
 /* one size: every card of the hand (orkUI's card, its back and the + card) is the frame's card width, 5 : 7; its face the card game's anatomy (decisions §167.1) */
 .hand .hand-card, .hand .hand-back, .hand .hand-plus, .table-end .hand-card, .table-end .hand-back { box-sizing: border-box; width: 100%; height: var(--hc-h); aspect-ratio: auto; flex: none; }
 .hand .hand-card, .table-end .hand-card { position: relative; display: grid; grid-template-rows: var(--hc-head) var(--hc-window) var(--hc-label) minmax(0, 1fr); gap: var(--hc-gap); padding: var(--hc-pad); text-align: left; cursor: pointer; }
-.hand .hand-card--face { grid-template-rows: var(--hc-corner) var(--hc-title) var(--hc-label); gap: var(--hc-fgap); align-content: start; }
-.hand .hand-card--face .hand-card__foot { display: none; }
 .hand .hand-card.is-slot { border-style: dashed; border-color: var(--ork-edge); background: none; box-shadow: none; }
 .hand .hand-card.is-slot > * { visibility: hidden; }
 .hand .hand-card.is-gone { position: absolute; left: 0; top: 0; pointer-events: none; }
 .hand-card__head { display: flex; align-items: flex-start; gap: var(--ork-3); min-width: 0; overflow: hidden; }
 .hand-card__head > .ork-elem { margin-top: 1px; }
 .hand-card__name { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; letter-spacing: var(--ork-type-body-track, 0); }   /* a person's words: the body face (§167.1) */
-.hand-card__corner { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-width: 0; }
-.hand-card__corner .hand-card__asker { position: static; display: inline-flex; margin-left: auto; }
-.hand-card__corner .ork-race__head { width: auto; height: 16px; image-rendering: pixelated; }                                      /* who asks, 16 px high (docs/specs/142 B.2) */
 .hand-card__window { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; border: var(--ork-line) solid var(--ork-card-frame); }
 .hand-card__act, .hand-mark { display: inline-flex; }
 /* the sign and the asker's head are one figure, centred together in the window: the head (24 x 22) lies over the sign's lower right corner, a badge (the mockup's); --ov is how far it stands out past the sign */
@@ -79,8 +71,6 @@
 .hand .hand-card.el-dust .hand-mark { color: var(--ork-elem-dust); }
 .hand .hand-card.el-void .hand-mark { color: var(--ork-elem-void); }
 .hand .hand-card.el-lava .hand-mark { color: var(--ork-elem-lava); }
-.hand .hand-card.hand-card--face .hand-mark:not(.is-danger):not(.is-alert) { color: var(--ork-ink-muted); }                          /* the corner's sign: the kind's signal as the frame is, else the muted ink (not the element's: the rune says that) */
-.hand .hand-card.hand-card--face .hand-mark.hand-mark .ork-sign { opacity: 1; }
 .hand .hand-card .hand-mark.is-danger { color: var(--ork-danger); }
 .hand .hand-card .hand-mark.is-alert { color: var(--ork-alert); }
 .hand .hand-card .hand-mark.is-ok { color: var(--ork-success); }
@@ -117,7 +107,7 @@
 .hand .hand-plus { position: relative; cursor: pointer; rotate: calc(var(--ork-motion-lean) * -1); border: var(--ork-double) double var(--ork-action); color: var(--ork-action); overflow: hidden; }
 .hand .hand-plus > .ork-icon { width: 42px; height: 42px; position: relative; z-index: 1; }
 /* The + card keeps its 5 : 7 and its whole seal (decisions §249.2) where the hand's other cards are shorter: it stands up from the window's foot over the table's foot, its turned corners in the window; the column's scroll leaves room for it (table/column.css) */
-@media (min-width: 760px) { .hand .hand-plus { height: var(--hc-big); } .hand-slot.is-plus { margin: calc(var(--hc-h) - var(--hc-big) - var(--ork-4)) 0 0 var(--ork-1); } }
+@media (min-width: 760px) { .hand .hand-plus { height: var(--hc-big); } .hand-slot.is-plus { margin: calc(var(--hc-seen, var(--hc-shown)) - var(--hc-big) - var(--ork-4)) 0 0 var(--ork-1); } }
 .hand .hand-plus::after, .hand-ghost.ork-plus::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat;
   background-image: linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)),
     linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action));
@@ -198,7 +188,7 @@
    lies on, --hc-lean is -1 or 1), its foot on the hand's line, over the cards beside it and the lanes' foot. Its body, between the window and the foot, scrolls inside at the card's most height; the card never grows wider */
 .hand .hand-card--big { --hc-head: 48px; --hc-window: 70px; --hc-label: 24px; --hc-pad: var(--ork-3); --hc-gap: var(--ork-2); --hc-tabs: 52px;
   position: absolute; left: var(--ork-6); bottom: 100%; z-index: 60; width: calc(var(--hc-w) * 2); height: auto; min-height: calc(var(--hc-big) * 2);
-  max-height: calc(100dvh - var(--hc-top) - var(--hc-shown) - var(--hc-tabs) - var(--ork-4));                    /* the window's height less the hand, the tabs and a gutter */
+  max-height: calc(100dvh - var(--hc-top) - var(--hc-seen, var(--hc-shown)) - var(--hc-tabs) - var(--ork-4));                    /* the window's height less the hand, the tabs and a gutter */
   grid-template-rows: minmax(var(--ork-6), auto) var(--hc-window) var(--hc-label) minmax(0, 1fr) auto; cursor: default; transform-origin: 50% 100%;
   rotate: calc(var(--hc-lean, 1) * var(--ork-motion-lean) * 0.25); }
 .hand .hand-card--big:hover { border-color: var(--ork-card-frame); }
@@ -254,7 +244,7 @@
    to their left edges when they do not fit, never a sideways scroll */
 @media (max-width: 759.98px) {
   .hand, .table-end, .table-body { --hc-w: 80px; --hc-pad: var(--ork-1); --hc-gap: var(--ork-1); --hc-head: 44px; --hc-window: 32px; --hc-label: 22px; --hc-edge: 6px; --hc-tight: 20px; }
-  .hand { --hc-lines: 2; --hc-lh: 18px; --hc-corner: 16px; --hc-fgap: var(--ork-1); }                                                                                     /* the narrow card: its title in two lines of the caption face, the same anatomy */
+  .hand { --hc-lines: 2; --hc-lh: 18px; --hc-corner: 16px; --hc-fgap: var(--ork-2); --hc-shown: 62px; }                                                                                     /* the narrow card: its title in two lines of the caption face, the same anatomy */
   .hand-row { display: flex; align-items: flex-start; padding-left: var(--ork-4); padding-right: 0; }
   .hand-row::after { content: ""; order: 100; flex: 0 1 calc(var(--hc-w) - var(--hc-tight)); min-width: 0; }            /* the last card of the row lies out past its place by what the cards tighten: room for it before the die and the mana (it gives way last, a crowded row: the die then lies over the last card's edge, spec 112 §3.3) */
   .hand-lane { display: contents; }
@@ -266,8 +256,7 @@
   .hand-slot.is-behind .hand-card > :not(.hand-card__head), .hand-slot.is-behind .hand-card__name { visibility: visible; }
   .hand-card__head { gap: var(--ork-2); }
   .hand-card__name { font: var(--ork-type-caption); -webkit-line-clamp: 2; line-clamp: 2; }
-  .hand-card__party, .hand-card__foot { display: none; }
-  .hand-card__corner .ork-race__head { height: 16px; }
+  .hand-card__party, .hand-card:not(.hand-card--face) .hand-card__foot { display: none; }
   .hand-card__label { justify-content: flex-end; }
   .hand-card__window { overflow: visible; }
   .hand .hand-card .ork-gem { height: 20px; min-width: 0; padding: 0 var(--ork-2); }
@@ -301,7 +290,7 @@
 }
 
 /* the card that adds a tool, a tool's own card (spec 130 B.2–B.3) and the Orkmaster's setup cards (B.4; mockup docs/mockups/setup/): lifted as every hand card is, standing on the hand's line by the potions or over the hand's middle. Layout only */
-.hand .hand-tool { position: absolute; left: auto; right: var(--ork-8); bottom: calc(100% - var(--hc-shown)); z-index: 60; display: flex; flex-direction: column; gap: var(--ork-3); min-height: 0; height: auto; padding: var(--ork-4); overflow-y: auto; text-align: left; }
+.hand .hand-tool { position: absolute; left: auto; right: var(--ork-8); bottom: calc(100% - var(--hc-seen, var(--hc-shown))); z-index: 60; display: flex; flex-direction: column; gap: var(--ork-3); min-height: 0; height: auto; padding: var(--ork-4); overflow-y: auto; text-align: left; }
 .hand .fo-card { left: calc(50% - var(--hc-w)); right: auto; bottom: var(--ork-2); }
 .hand-tool:focus-visible { outline: 0; }
 .hand-tool__top { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-height: 14px; }
