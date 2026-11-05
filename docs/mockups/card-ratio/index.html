@@ -8,11 +8,11 @@
 <link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
 <link rel="stylesheet" href="../../../design-system/orkui/components.css">
 <style>
-/* The mockup of the owner's note of 2026-11-05: every card keeps one shape, 5 : 7, and a place shows a crop of it. A face-up card always stands; a card lies on
-   its side only face down, in analysis, not yet agreed (decisions §206.3, §206.11), so lying keeps its meaning. The Orkmaster's column is drawn two ways: A, its
-   card as it was before §249 (112 x 157, the column 128 px), and B, the hand's card (144 x 202, the column 160 px). The hand cuts its cards at the bottom; an
-   opened card is whole. The crop lines are part of the card's template: what lies past them is the card's secondary content, never empty, never a line cut in
-   half. Every colour, face and size is orkUI's token; the column card's lower part and the hand card's are drawn here first and would go into orkUI after a yes. */
+/* The mockup of the owner's notes of 2026-11-05: a card is 5 : 7 wherever it is held or opened (the hand, the discard, the lanes, the opened card), and a place cuts it
+   only where something covers it (the window's edges, the card in front). A face-up card always stands; a card lies on its side only face down, not yet agreed
+   (decisions §206.3, §206.11). The Orkmaster's column never scrolls on the desktop: its face-up card is the hand's width and as tall as its words, its back 5 : 7 on
+   its side, and its piles give way to the window's height (a card's foot, then a thin edge), never a scrollbar. Every colour, face and size is orkUI's token; the
+   hand card's lower part and the piles that give way are drawn here first and would go into orkUI after a yes. */
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--ork-canvas); color-scheme: dark; }
 body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body);
@@ -48,10 +48,10 @@ p, h1, h2, h3 { margin: 0; }
 .c-ask { color: var(--ork-alert); } .c-mute { color: var(--ork-ink-muted); }
 .pix { font-family: var(--ork-font-pixel); font-size: 10px; line-height: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
 
-/* ---------- the sizes: M the hand's card (144 x 202, cut at 128), L the opened card (404 x 566); the column's card per variant ---------- */
+/* ---------- the sizes: M the hand's card (144 x 202, cut at 128), L the opened card (404 x 566); the column's tile and back per variant ---------- */
 :root { --m-w: 144px; --m-h: calc(144px * 7 / 5); --m-shown: 128px; --l-w: 404px; --peek: 20px; }
-.v-t, .v-a { --cw: 112px; --ch: 157px; --tuck: 45px; }                                                           /* today and A: the upright card 112 x 157, its back 157 x 112 with 45 px under the edge */
-.v-b { --cw: 144px; --ch: calc(144px * 7 / 5); --tuck: calc(144px * 7 / 5 - 144px); }                            /* B: the hand's card, its back 202 x 144 with 58 px under the edge: both piles share one right edge */
+.v-t { --cw: 112px; --bl: 157px; --bs: 112px; --tuck: 45px; }      /* today: the face 112 wide, the back 157 x 112 with 45 px under the edge, the column 128 px */
+.v-p { --cw: 144px; --bl: 157px; --bs: 112px; --tuck: 13px; }      /* proposed: the face the hand's width, the back 157 x 112 with 13 px under the edge (one right edge, 144), the column 160 px */
 
 /* the crop line, drawn on the anatomy figures only */
 .crop { position: absolute; z-index: 5; pointer-events: none; border: 0 dashed var(--ork-alert); }
@@ -61,43 +61,55 @@ p, h1, h2, h3 { margin: 0; }
 .crop.h span { left: calc(100% + 6px); top: -8px; }
 .crop.v span { top: calc(100% + 2px); left: 0; transform: translateX(-50%); }
 
-/* ---------- the column's card, face up, standing: its rune and name; under a dashed line who has it and what it does now; its foot (what a pile shows of it) ---------- */
-.cc.ork-card { position: relative; width: var(--cw); height: var(--ch); padding: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-3); flex: none; overflow: hidden; }
+/* ---------- the column's face-up card: the rune and the name (three lines), then its foot (the wait, or the heads at work), as tall as these ---------- */
+.cc.ork-card { position: relative; width: var(--cw); padding: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-2); flex: none; overflow: hidden; }
 .cc.ork-card.asks { border-color: var(--ork-alert); }
-.cc__hd { display: flex; align-items: flex-start; gap: var(--ork-2); flex: none; }
+.cc__hd { display: flex; align-items: flex-start; gap: var(--ork-2); }
 .cc__nm { font: 600 12px/16px var(--ork-font-read); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
-.v-b .cc__nm { font: 600 13px/20px var(--ork-font-read); -webkit-line-clamp: 4; }
-.cc__more { flex: none; padding-top: var(--ork-3); border-top: var(--ork-line) dashed var(--ork-card-frame); display: flex; flex-direction: column; gap: var(--ork-2); }
-.cc__who { display: flex; align-items: center; gap: var(--ork-1); }
-.cc__now { font: var(--ork-type-caption); font-size: 11px; line-height: 14px; color: var(--ork-ink-read); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.v-b .cc__now { font-size: 12px; line-height: 16px; }
 .cc__ft { margin-top: auto; height: var(--peek); flex: none; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; }
 .cc__row { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; line-height: 14px; white-space: nowrap; }
 .cc__row .t { margin-left: auto; }
 .cc__bar { height: 3px; background: var(--ork-frame); } .cc__bar i { display: block; height: 100%; background: var(--c, var(--ork-ink-muted)); }
-.v-t .cc.ork-card { height: auto; } .v-t .cc__more { display: none; } .v-t .cc__ft { margin-top: var(--ork-1); }     /* today: as tall as its words (§249.1) */
 
-/* ---------- the column's card, face down: the same card on its side, orkUI's back, the seal in the middle of what shows ---------- */
-.cd.ork-card { position: relative; width: var(--ch); height: var(--cw); padding: 0; overflow: hidden; flex: none; }
-.cd__back { position: absolute; left: 50%; top: 50%; width: var(--cw); height: var(--ch); transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }
-.cd__seal { position: absolute; left: var(--tuck); top: 0; width: var(--cw); height: 100%; color: var(--ork-ink-faint); }
-.cd__seal .ork-sigil.small { width: calc(var(--cw) * 0.7); height: calc(var(--cw) * 0.7); }
+/* ---------- the column's face-down card: 5 : 7 on its side, orkUI's back, the seal in the middle of what shows ---------- */
+.cd.ork-card { position: relative; width: var(--bl); height: var(--bs); padding: 0; overflow: hidden; flex: none; }
+.cd__back { position: absolute; left: 50%; top: 50%; width: var(--bs); height: var(--bl); transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }
+.cd__seal { position: absolute; left: var(--tuck); top: 0; right: 0; height: 100%; color: var(--ork-ink-faint); }
+.cd__seal .ork-sigil.small { width: 78px; height: 78px; }
 .cd__seal .ork-elem { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 
-/* ---------- the column: the window's left edge cuts a face-down card; a pile shows each card's foot under the one above it ---------- */
+/* ---------- a pile: the front card whole, each card behind it showing its foot (20 px) or, when the window is short, a thin edge; the face-down pile edges only ---------- */
+.plab { padding-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); white-space: nowrap; font-size: 11px; }
+.pile { display: grid; justify-items: start; }
+.pile > * { grid-area: 1 / 1; transform: translateY(var(--y, 0px)); z-index: calc(10 - var(--i)); transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
+.pile.is-up > * { height: 100%; }                                   /* a face-up pile: every card the height of its tallest words (§249.1) */
+.pile.is-down > * { margin-left: calc(var(--tuck) * -1); }
+.pile > .cc:hover, .pile > .cc:focus-visible { z-index: 40; transform: translate(36px, var(--y, 0px)) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }
+.pile > .cd:hover, .pile > .cd:focus-visible { z-index: 40; transform: translate(var(--tuck), var(--y, 0px)); box-shadow: -4px 4px 0 var(--ork-scrim); }
+@media (prefers-reduced-motion: reduce) { .pile > * { transition: none; } }
+
+/* ---------- the column, static: today and proposed side by side ---------- */
 .deskcol { display: flex; align-items: stretch; min-width: 0; }
 .deskcol .tbl { width: 96px; background: var(--ork-table); }
 .colwin { position: relative; width: calc(var(--cw) + 16px); background: var(--ork-room); padding: var(--ork-4) 0 var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-5);
   clip-path: inset(0 -400px 0 0); border-right: var(--ork-line) solid var(--ork-frame); }
 .colwin::before { content: "the window's edge"; position: absolute; left: 2px; top: -18px; font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-faint); white-space: nowrap; }
-.plab { padding-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); white-space: nowrap; font-size: 11px; }
-.pile { display: grid; justify-items: start; }
-.pile > * { grid-area: 1 / 1; transform: translateY(calc(var(--i) * var(--peek))); z-index: calc(10 - var(--i)); transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
-.pile.is-down > * { transform: translateY(calc(var(--i) * 4px)); margin-left: calc(var(--tuck) * -1); }
-.v-t .pile.is-up > * { height: 100%; }
-.pile > .cc:hover, .pile > .cc:focus-visible { z-index: 40; transform: translate(36px, calc(var(--i) * var(--peek))) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }
-.pile > .cd:hover, .pile > .cd:focus-visible { z-index: 40; transform: translate(var(--tuck), calc(var(--i) * 4px)); box-shadow: -4px 4px 0 var(--ork-scrim); }
-@media (prefers-reduced-motion: reduce) { .pile > * { transition: none; } }
+
+/* ---------- the window at a height: the column (its head, three piles) never scrolls; the table beside it; the hand under both ---------- */
+.winctl { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-5); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.winctl input[type="range"] { width: min(320px, 100%); accent-color: var(--ork-ink); }
+.winctl output { color: var(--ork-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.winctl .presets { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.win { position: relative; width: 720px; height: var(--wh, 650px); overflow: hidden; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-table); display: grid; grid-template-columns: 160px 1fr; grid-template-rows: minmax(0, 1fr) 140px; }
+.win__col { position: relative; grid-row: 1; display: flex; flex-direction: column; min-height: 0; background: var(--ork-room); border-right: var(--ork-line) solid var(--ork-frame); clip-path: inset(0 -400px 0 0); z-index: 3; }
+.win__head { flex: none; height: 63px; display: flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-2); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-heading); text-transform: uppercase; letter-spacing: 0.04em; }
+.win__piles { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-3) 0 0; overflow: hidden; }
+.win__piles > div { flex: none; display: flex; flex-direction: column; gap: var(--ork-1); }
+.win__table { grid-row: 1; padding: var(--ork-4); display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--ork-4); align-content: start; }
+.win__table .ghost { height: 120px; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); }
+.win__table .ghost.s { height: 80px; }
+.win__hand { grid-column: 1 / -1; grid-row: 2; position: relative; display: flex; gap: var(--ork-4); padding: var(--ork-4) var(--ork-4) 0 var(--ork-4); border-top: 3px solid var(--ork-table-rim); background: var(--ork-room); overflow: hidden; }
+.win__room { position: absolute; right: var(--ork-4); top: var(--ork-4); font: var(--ork-type-caption); color: var(--ork-ink-faint); text-align: right; }
 
 /* ---------- M: the hand's card. Above the crop: the kind, who asks, the title in three whole lines, the label row. Below it: why it is asked, how long it waits, what it holds ---------- */
 .hc.ork-card { position: relative; width: var(--m-w); height: var(--m-h); padding: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-3); flex: none; overflow: hidden; }
@@ -125,7 +137,7 @@ p, h1, h2, h3 { margin: 0; }
 .handwin .edge span { position: absolute; right: var(--ork-4); bottom: 4px; font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-faint); }
 @media (prefers-reduced-motion: reduce) { .handwin .row > .hc { transition: none; } }
 
-/* ---------- the move (B): a goal comes to the hand. The same card, the same size: it slides out of its pile and down into the hand, cut at 128; its face changes on the way ---------- */
+/* ---------- the move: a goal comes to the hand. The column's card slides out of its pile, goes down and opens to the hand's 5 : 7 (cut at 128 like the others); its face changes on the way ---------- */
 .stage { position: relative; width: 640px; height: 477px; overflow: hidden; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-table); }
 .stage__col { position: absolute; left: 0; top: 0; width: calc(var(--cw) + 16px); height: 330px; background: var(--ork-room); border-right: var(--ork-line) solid var(--ork-frame); }
 .stage__col .plab { position: absolute; left: 0; top: 30px; }
@@ -133,7 +145,7 @@ p, h1, h2, h3 { margin: 0; }
 .stage__hand { position: absolute; left: 0; right: 0; top: 330px; bottom: 0; background: var(--ork-room); border-top: 3px solid var(--ork-table-rim); }
 .stage .slot { position: absolute; top: 341px; }
 .stage .slot.is-free { width: var(--m-w); height: var(--m-shown); border: var(--ork-line) dashed var(--ork-frame); }
-.mv { position: absolute; left: 0; top: 50px; width: var(--m-w); height: var(--m-h); z-index: 10; }
+.mv { position: absolute; left: 0; top: 50px; width: var(--m-w); z-index: 10; }
 .mv > .ork-card { position: absolute; left: 0; top: 0; }
 .mv > .hc { opacity: 0; }
 .stage-acts { display: flex; gap: var(--ork-3); align-items: center; }
@@ -155,7 +167,7 @@ p, h1, h2, h3 { margin: 0; }
 .lmini { width: 202px; height: calc(202px * 7 / 5); overflow: hidden; flex: none; }
 .lmini > .lc.ork-card { width: var(--l-w); max-width: none; transform: scale(0.5); transform-origin: 0 0; }
 
-/* ---------- the phone: the hand cut at its foot, the crown's piles (B) at the screen's left edge, the opened card whole until a keyboard comes ---------- */
+/* ---------- the phone: the hand cut at its foot, the crown's piles at the screen's left edge (a list of its own, it scrolls), the opened card whole until a keyboard comes ---------- */
 .phones { display: flex; flex-wrap: wrap; gap: var(--ork-8); align-items: flex-start; }
 .phone { position: relative; width: 340px; max-width: 100%; height: 700px; border: 2px solid var(--ork-edge); background: var(--ork-room); overflow: hidden; display: flex; flex-direction: column; flex: none; }
 .ph-top { flex: none; height: 44px; display: flex; align-items: center; gap: var(--ork-3); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); }
@@ -192,41 +204,51 @@ p, h1, h2, h3 { margin: 0; }
 </style>
 </head>
 <body>
-<header class="mk-bar"><span class="ork-label">Orkboard · one card, 5 : 7, standing; on its side only face down</span>
-  <nav><a class="ork-btn" href="#one">1 · One card</a><a class="ork-btn" href="#desktop">2 · Desktop</a><a class="ork-btn" href="#phone">3 · Phone</a><a class="ork-btn" href="#changes">4 · A or B</a></nav></header>
+<header class="mk-bar"><span class="ork-label">Orkboard · a card 5 : 7 where it is held or opened; the column never scrolls</span>
+  <nav><a class="ork-btn" href="#one">1 · One card</a><a class="ork-btn" href="#desktop">2 · Desktop</a><a class="ork-btn" href="#phone">3 · Phone</a><a class="ork-btn" href="#changes">4 · What changes</a></nav></header>
 <main class="mk-main">
 
   <section class="mk-sec" id="one">
-    <h1>1 · One card, 5 : 7, cut by its place</h1>
-    <p class="mk-line">Before 4 November every card was <b>5 : 7</b>: the column's 112 × 157, the hand's 144 × 202, the lifted 404 × 566, and the column's back the same card on its side.
-      §249 cut them to their words. Proposed: <b>the shape comes back and stays</b>, and a place <b>cuts</b> the card instead of changing it: the column's window edge cuts a face-down card's left,
-      the hand's window edge cuts every card's foot. <b>A face-up card always stands.</b> A card lies on its side only face down, in analysis, not yet agreed (§206.3, §206.11): lying keeps
-      that meaning. The crop lines are part of the card's template: what lies past one is the card's secondary content, never an empty half, never a line cut in two.</p>
-    <div class="mk-row" id="one-row"></div>
+    <h1>1 · One card, 5 : 7 where it is held or opened</h1>
+    <p class="mk-line">Before 4 November every card was <b>5 : 7</b>; §249 cut them to their words. Proposed: <b>a card is 5 : 7 wherever it is held or opened</b> (the hand, the discard, the lanes,
+      the opened card), and a place <b>cuts</b> it only where something covers it: the window's bottom edge cuts the hand's cards, the window's left edge a face-down card, the card in front the
+      cards behind it. <b>A face-up card always stands</b>; a card lies on its side only face down, not yet agreed (§206.3, §206.11). The Orkmaster's column says <b>where</b> a goal is and
+      must never scroll, so its face-up card stays as tall as its words, now the hand's width: when the goal comes to you, it opens to the hand's 5 : 7 on the way.</p>
+    <div class="mk-row v-p" id="one-row"></div>
   </section>
 
   <section class="mk-sec" id="desktop">
     <h1>2 · Desktop</h1>
-    <h2>2.1 · The Orkmaster's column: today, A and B</h2>
-    <p class="mk-line"><b>Today</b> a face-up card is 112 wide and as tall as its words (§249.1). <b>A</b> gives it back its 112 × 157 and fills the lower half, where the empty window was, with what
-      the column can say and the name cannot: <b>who has it</b> (the leaders' heads) and <b>what it does now</b> (the step, or when it starts). <b>B</b> makes it the hand's card, 144 × 202, with the
-      same lower half: the name gets four lines of about 19 characters, and the back, 202 × 144, lies 58 px under the edge so both piles keep one right edge (§236). Hover a card to slide it out.</p>
+    <h2>2.1 · The Orkmaster's column: the hand's width, as tall as its words</h2>
+    <p class="mk-line"><b>Today</b> a face-up card is 112 wide and a face-down card 157 × 112 with 45 px under the window's edge; the column is 128 px. <b>Proposed</b>: the face-up card is
+      <b>144 wide</b>, the hand's, so the name takes three lines of about 18 characters (about 55 in all, today about 40); it stays as tall as its words (about 86 px). The back keeps its
+      5 : 7 on its side and lies <b>13 px</b> under the edge, so both piles keep one right edge (§236). The column is 160 px; the table 32 px narrower. Hover a card to slide it out.</p>
     <div class="mk-row" id="col-vs"></div>
 
-    <h2>2.2 · The hand: 5 : 7, cut at its foot</h2>
+    <h2>2.2 · The column never scrolls: its piles give way</h2>
+    <p class="mk-line">A pile shows its front card whole. Each card behind it shows its <b>foot</b> (20 px: its wait or its heads) while the window has room; when it has not, the cards behind
+      give way to a <b>thin edge</b> (3 px), the furthest first, and never a scrollbar: the column is a glance, and what lies under a scroll is not seen. Nothing counts what waits (the edges
+      say <i>more lie here</i>). Drag the window's height: <b>650</b> is a 1366 × 768 laptop's browser, <b>790</b> a 1440 × 900.</p>
+    <div class="mk-fig">
+      <div class="winctl"><label for="wh">The window's height</label><input type="range" id="wh" min="600" max="960" step="10" value="650"><output id="wh-out">650 px</output>
+        <span class="presets"><button class="ork-btn" data-h="650">1366 × 768</button><button class="ork-btn" data-h="790">1440 × 900</button><button class="ork-btn" data-h="940">1920 × 1080</button></span></div>
+      <div class="handscroll"><div class="win v-p" id="win"></div></div>
+    </div>
+
+    <h2>2.3 · The hand: 5 : 7, cut at its foot</h2>
     <p class="mk-line">Today the card is what its anatomy needs, 144 × 128, whole (§249.2). Proposed: <b>the card is 144 × 202 and the window's edge cuts it at the same 128</b>, so the hand is
       exactly as tall as today and the table loses nothing. Hovered, the card rises by 74 px and shows its lower part: <b>why it is asked</b> (two lines, the leader's own reason), <b>how long
       it waits</b> and <b>what it holds</b> (tasks stopped behind it, or what it costs). Hover a card in each row.</p>
     <div class="mk-fig"><span class="mk-tag">Today · 144 × 128, whole</span><div class="handscroll"><div class="handwin is-today" id="hand-today"></div></div></div>
     <div class="mk-fig"><span class="mk-tag new">Proposed · 144 × 202, cut at 128 · the first card risen</span><div class="handscroll"><div class="handwin is-new" id="hand-new"></div></div></div>
 
-    <h2>2.3 · B: a goal comes to your hand</h2>
-    <p class="mk-line">In B the column's card and the hand's are one card at one size: it slides out of its pile and down into the hand, cut at 128 like the others, and its face changes on the
-      way from the column's (rune, name, who has it) to the hand's (the kind, who asks, the title). In A it grows from 112 to 144 on the way. Under reduced motion it is in the hand at once.</p>
+    <h2>2.4 · A goal comes to your hand: the card opens to 5 : 7</h2>
+    <p class="mk-line">The column's card and the hand's are one width, 144. When a goal comes to you its card slides out of its pile, goes down into the hand and <b>opens to the hand's 5 : 7</b> on
+      the way, cut at 128 like the others; its face changes from the column's (rune, name, wait) to the hand's (the kind, who asks, the title). Under reduced motion it is in the hand at once.</p>
     <div class="mk-fig"><div class="stage-acts"><button class="ork-btn primary" id="mv-go">Bring it to the hand</button><button class="ork-btn" id="mv-back">Put it back</button></div>
-      <div class="handscroll"><div class="stage v-b" id="stage"></div></div></div>
+      <div class="handscroll"><div class="stage v-p" id="stage"></div></div></div>
 
-    <h2>2.4 · The opened card: whole, and it never grows</h2>
+    <h2>2.5 · The opened card: whole, and it never grows</h2>
     <p class="mk-line">The lifted card is 404 × 566 today already. One rule is added: <b>the card keeps its shape whatever it holds</b>. A long question scrolls inside its body (the fade at its
       foot says there is more); the answer, the field and the buttons stay at its foot, always in reach. Same corner and title as the hand's card, so the card that rose is the card that opened.</p>
     <div class="mk-row" id="open-row"></div>
@@ -234,37 +256,39 @@ p, h1, h2, h3 { margin: 0; }
 
   <section class="mk-sec" id="phone">
     <h1>3 · Phone</h1>
-    <p class="mk-line">The phone's hand card is 80 × 112 already, 5 : 7, cut at 82 px. What changes there is what lies under the cut (today nothing), and that the crown's piles and the opened
-      card take the same shapes as on the desktop (the piles drawn in B). A touch has no hover: a card <b>pressed</b> rises and shows its lower part, a card <b>tapped</b> opens. The one place that
-      leaves 5 : 7 is the opened card <b>while the keyboard is up</b>: 5 : 7 at a phone's width is 316 × 442, and a keyboard takes 250 px of a 700 px screen.</p>
+    <p class="mk-line">The phone's hand card is 80 × 112 already, 5 : 7, cut at 82 px. What changes there is what lies under the cut (today nothing), and that the crown's piles take the
+      column's new cards. The crown's piles are a screen of their own on the phone, a list, and that list may scroll. A touch has no hover: a card <b>pressed</b> rises and shows its lower
+      part, a card <b>tapped</b> opens. The one place that leaves 5 : 7 is the opened card <b>while the keyboard is up</b>: 5 : 7 at a phone's width is 316 × 442, and a keyboard takes 250 px
+      of a 700 px screen.</p>
     <div class="phones" id="phones"></div>
   </section>
 
   <section class="mk-sec" id="changes">
-    <h1>4 · A or B</h1>
+    <h1>4 · What changes</h1>
     <div class="mk-table"><table>
-      <thead><tr><th></th><th>Today</th><th>A · as before §249</th><th>B · the hand's card</th></tr></thead>
+      <thead><tr><th></th><th>Today</th><th>Proposed</th></tr></thead>
       <tbody>
-        <tr><td>Face-up card</td><td>112 × its words</td><td>112 × 157</td><td>144 × 202</td></tr>
-        <tr><td>Face-down card</td><td>157 × 112, 45 px under the edge</td><td>157 × 112, 45 px under the edge</td><td>202 × 144, 58 px under the edge</td></tr>
-        <tr><td>The column</td><td>128 px</td><td>128 px</td><td>160 px (the table 32 px narrower)</td></tr>
-        <tr><td>A name</td><td>3 lines, ~14 a line</td><td>3 lines, ~14 a line (~42)</td><td>4 lines, ~19 a line (~76)</td></tr>
-        <tr><td>Who has it, what it does now</td><td>the heads in the foot</td><td>the lower half</td><td>the lower half</td></tr>
-        <tr><td>The column, three piles</td><td>~550 px tall</td><td>~630 px tall</td><td>~750 px tall: scrolls on a laptop</td></tr>
-        <tr><td>Sizes of card in all</td><td>four</td><td>three: 112 × 157, 144 × 202, 404 × 566</td><td>two: 144 × 202, 404 × 566</td></tr>
+        <tr><td>The column's face-up card</td><td>112 × its words</td><td>144 × its words (about 86 px)</td></tr>
+        <tr><td>Its name</td><td>3 lines, ~13 a line (~40)</td><td>3 lines, ~18 a line (~55)</td></tr>
+        <tr><td>The column's face-down card</td><td>157 × 112, 45 px under the edge</td><td>157 × 112, 13 px under the edge</td></tr>
+        <tr><td>The column</td><td>128 px</td><td>160 px (the table 32 px narrower)</td></tr>
+        <tr><td>When the window is short</td><td>the column scrolls</td><td>the cards behind give way to thin edges; never a scroll</td></tr>
+        <tr><td>The hand's card</td><td>144 × 128, whole</td><td>144 × 202, cut at 128; why, waits, holds below the cut</td></tr>
+        <tr><td>The opened card</td><td>404 × 566</td><td>404 × 566; its body scrolls, it never grows</td></tr>
       </tbody></table></div>
     <div class="mk-notes">
-      <p><b>Both</b>: the hand's card 5 : 7 cut at its foot (§249.2 changes); the opened card never grows; a face-up card always stands and lying means face down, not yet agreed (§206.3, §206.11
-        hold); the phone's opened card leaves 5 : 7 while typing.</p>
-      <p><b>A changes</b> §249.1 back to 112 × 157, its lower half no window but who has it and what it does now. Nothing else moves: the column, the backs and the tuck stay (§236).</p>
-      <p><b>B changes</b> §249.1 to the hand's card and §236.1, §236.3: the back 202 × 144, 58 px under the edge, the column 160 px. The hand's first lane, which follows the column's width, is
-        then as wide as a card.</p>
-      <p><b>Open</b>: at the hand, is the reason two lines, or one line and the asker's name? In the column, does a goal in <i>To review</i> say who will take it, or when it starts?</p>
+      <p><b>Decisions changed</b>: §249.1 (the column's card 144 wide, still as tall as its words); §236.1 and §236.3 (13 px under the edge, the column 160 px); §249.2 (the hand's card 5 : 7
+        cut at its foot). <b>New</b>: the column never scrolls on the desktop; its piles give way to the window (the foot, then an edge). §206.3 and §206.11 hold: lying means face down.</p>
+      <p><b>Scroll</b> on the desktop only on the table and inside an opened card. The phone's crown's piles are a list of their own and may scroll.</p>
+      <p><b>New in the card's template</b>: the hand card's lower part (why, waits, holds), read from what the Board has: the question's own words, its time asked, the tasks whose step waits on it,
+        its cost. A card with none of these keeps the line <i>waits 2 min</i>.</p>
+      <p><b>Open</b>: at the hand, is the reason two lines, or one line and the asker's name? In a very short window (under about 600 px, the slider's floor) even the edges may not fit: then a pile shows its
+        front card only. Is that the floor, or does the column's head shrink first?</p>
     </div>
   </section>
 
-  <p class="mk-foot">Drawn for the owner's note of 5 November 2026 (every card one shape, a place cuts it), before its decision. Drawn here first, for orkUI after a yes: the column card's lower
-    half, the hand card's lower part, the opened card's scrolling body.</p>
+  <p class="mk-foot">Drawn for the owner's notes of 5 November 2026 (every card one shape where it is held; the column never scrolls), before their decision. Drawn here first, for orkUI after a
+    yes: the piles that give way, the hand card's lower part, the opened card's scrolling body.</p>
 </main>
 <script>
 (function () {
@@ -275,11 +299,15 @@ p, h1, h2, h3 { margin: 0; }
 
   // ---------- the goals ----------
   var G = {
-    timer: { e: "ice", name: "Round timer on phones", asks: true, foot: "bar", wait: 70, time: "asks you", who: ["shaman-elder"], now: "Tech asks which clock to keep" },
-    who:   { e: "void", name: "Players see who answered first in the round, with the time it took", foot: "bar", wait: 30, time: "~10:02", who: ["shaman-elder", "dryad-elder"], now: "Starts by itself at 10:02" },
-    tidy:  { e: "lava", name: "Tidy the scoring module", foot: "bar", wait: 10, time: "01:00", moon: true, who: ["shaman-elder"], now: "Put off to the night" },
-    music: { e: "meadow", name: "Music in the lobby", foot: "heads", tasks: "0/1", who: ["dryad-elder", "elf-laborer"], now: "Now: an elf makes the loop" },
-    coin:  { e: "dust", name: "A coin for the round's winner", foot: "heads", tasks: "1/3", who: ["dryad-warrior"], now: "Now: the coin's second frame" }
+    timer: { e: "ice", name: "Round timer on phones", asks: true, foot: "bar", wait: 70, time: "asks you" },
+    who:   { e: "void", name: "Players see who answered first in the round, with the time it took", foot: "bar", wait: 30, time: "~10:02" },
+    tidy:  { e: "lava", name: "Tidy the scoring module", foot: "bar", wait: 10, time: "01:00" },
+    lobby: { e: "meadow", name: "Lobby in Polish", foot: "bar", wait: 5, time: "Held" },
+    rename:{ e: "ice", name: "Rename a room after it is made", foot: "bar", wait: 5, time: "02:00" },
+    music: { e: "meadow", name: "Music in the lobby", foot: "heads", tasks: "0/1", who: ["dryad-elder", "elf-laborer"] },
+    coin:  { e: "dust", name: "A coin for the round's winner", foot: "heads", tasks: "1/3", who: ["dryad-warrior"] },
+    end:   { e: "void", name: "The round's end screen", foot: "heads", tasks: "2/4", who: ["dryad-elder"] },
+    keep:  { e: "lava", name: "Keep the round's time on the server", foot: "heads", tasks: "1/2", who: ["shaman-elder", "peon-laborer"] }
   };
   function foot(g) {
     if (g.foot === "heads") return '<div class="cc__row">' + g.who.map(function (h) { return head(h); }).join("") + '<span class="t">' + g.tasks + "</span></div>";
@@ -288,13 +316,19 @@ p, h1, h2, h3 { margin: 0; }
   }
   function up(g, i) {
     return '<div class="cc ork-card' + (g.asks ? " asks" : "") + '" style="--i:' + (i || 0) + '" tabindex="0"><div class="cc__hd">' + elem(g.e) + '<span class="cc__nm">' + g.name + "</span></div>"
-      + '<div class="cc__more"><div class="cc__who">' + g.who.map(function (h) { return head(h); }).join("") + '</div><div class="cc__now">' + g.now + "</div></div>"
       + '<div class="cc__ft">' + foot(g) + "</div></div>";
   }
   function down(e, i) {
     return '<div class="cd ork-card" style="--i:' + (i || 0) + '" tabindex="0"><div class="ork-card-back cd__back"></div><div class="cd__seal"><span class="ork-sigil small"></span>' + elem(e) + "</div></div>";
   }
-  function pile(cls, n, cards) { return '<div class="pile ' + cls + '" style="padding-bottom:' + ((n - 1) * (cls === "is-down" ? 4 : 20)) + 'px">' + cards + "</div>"; }
+  // a pile laid with each card behind the front showing `step` px (a foot 20, an edge 3; the face-down pile 4)
+  function pile(cls, cards, steps) {
+    var y = 0, html = cards.map(function (c, i) { if (i > 0) y += steps[i - 1]; return c.replace('style="--i:' + i + '"', 'style="--i:' + i + ";--y:" + y + 'px"'); }).join("");
+    return '<div class="pile ' + cls + '" style="padding-bottom:' + y + 'px">' + html + "</div>";
+  }
+  var fill = function (n, v) { var a = []; for (var i = 0; i < n; i++) a.push(v); return a; };
+  var ups = function (list) { return list.map(function (g, i) { return up(g, i); }); };
+  var downs = function (list) { return list.map(function (e, i) { return down(e, i); }); };
 
   // ---------- the hand's cards ----------
   var H = [
@@ -334,37 +368,67 @@ p, h1, h2, h3 { margin: 0; }
 
   // 1 · one card
   document.getElementById("one-row").innerHTML =
-    '<figure class="mk-fig v-b"><span class="mk-tag new">Face down · on its side</span><div style="position:relative">' + down("void")
+    '<figure class="mk-fig"><span class="mk-tag new">Face down · on its side · 157 × 112</span><div style="position:relative">' + down("void")
       + '<span class="crop v" style="left:var(--tuck)"><span>the window\'s edge</span></span></div>'
-      + '<p class="mk-cap" style="margin-top:22px"><b>Not yet agreed</b>: the back, lying, its left under the window\'s edge (B: 202 × 144, 58 px; A: 157 × 112, 45 px).</p></figure>'
+      + '<p class="mk-cap" style="margin-top:22px"><b>Not yet agreed</b>: the back, 5 : 7, lying, 13 px under the window\'s edge.</p></figure>'
     + '<span class="mk-arrow">→</span>'
-    + '<figure class="mk-fig v-b"><span class="mk-tag new">Face up · in the column (B)</span>' + up(G.timer)
-      + '<p class="mk-cap"><b>Agreed</b>: it stands. The rune and the name; under the dashed line who has it and what it does now; the foot.</p></figure>'
+    + '<figure class="mk-fig"><span class="mk-tag new">Face up · in the column · 144 wide</span>' + up(G.who)
+      + '<p class="mk-cap"><b>Agreed</b>: it stands, as tall as its words (the column never scrolls). The rune, the name in three lines, its wait.</p></figure>'
     + '<span class="mk-arrow">→</span>'
     + '<figure class="mk-fig"><span class="mk-tag new">In the hand · 144 × 202</span><div style="position:relative;width:var(--m-w)">' + handCard(H[0], false)
       + '<span class="crop h" style="top:var(--m-shown)"><span>the hand\'s edge</span></span></div>'
-      + '<p class="mk-cap"><b>Yours to decide</b>: above the line the kind, who asks, the title, the party; below it why, how long it waits, what it holds.</p></figure>'
+      + '<p class="mk-cap"><b>Yours to decide</b>: 5 : 7. Above the line the kind, who asks, the title, the party; below it why, how long it waits, what it holds.</p></figure>'
     + '<span class="mk-arrow">→</span>'
     + '<figure class="mk-fig"><span class="mk-tag new">Opened · 404 × 566 (half size)</span><div class="lmini">' + opened() + "</div>"
       + '<p class="mk-cap"><b>Whole</b>: the same corner and title, the question in full, the answer at its foot.</p></figure>';
 
-  // 2.1 · the column, three ways
+  // 2.1 · the column, today and proposed
   function column(v) {
     return '<div class="deskcol ' + v + '"><div class="colwin">'
-      + '<div><div class="plab">In analysis</div>' + pile("is-down", 3, down("void", 0) + down("lava", 1) + down("meadow", 2)) + "</div>"
-      + '<div><div class="plab">To review</div>' + pile("is-up", 3, up(G.timer, 0) + up(G.who, 1) + up(G.tidy, 2)) + "</div>"
-      + '<div><div class="plab">At work</div>' + pile("is-up", 2, up(G.music, 0) + up(G.coin, 1)) + "</div>"
+      + '<div><div class="plab">In analysis</div>' + pile("is-down", downs(["void", "lava", "meadow"]), [4, 4]) + "</div>"
+      + '<div><div class="plab">To review</div>' + pile("is-up", ups([G.timer, G.who, G.tidy]), [20, 20]) + "</div>"
+      + '<div><div class="plab">At work</div>' + pile("is-up", ups([G.music, G.coin]), [20]) + "</div>"
       + '</div><div class="tbl"></div></div>';
   }
   document.getElementById("col-vs").innerHTML =
     '<figure class="mk-fig"><span class="mk-tag" style="margin-bottom:18px">Today · 128 px</span>' + column("v-t")
-      + '<p class="mk-cap">Two shapes: the backs 5 : 7 on their side, the faces 112 wide and as tall as their words.</p></figure>'
-    + '<figure class="mk-fig"><span class="mk-tag new" style="margin-bottom:18px">A · 112 × 157 · 128 px</span>' + column("v-a")
-      + '<p class="mk-cap">The card as before §249, its lower half who has it and what it does now. The column as wide as today. A long name is cut on its third line.</p></figure>'
-    + '<figure class="mk-fig"><span class="mk-tag new" style="margin-bottom:18px">B · 144 × 202 · 160 px</span>' + column("v-b")
-      + '<p class="mk-cap">The hand\'s card. The long name takes its four lines whole. The column 32 px wider and about 120 px taller than A.</p></figure>';
+      + '<p class="mk-cap">The face 112 wide; a long name (<i>Players see who answered first…</i>) is cut on its third line at about 40 characters.</p></figure>'
+    + '<figure class="mk-fig"><span class="mk-tag new" style="margin-bottom:18px">Proposed · 160 px</span>' + column("v-p")
+      + '<p class="mk-cap">The face the hand\'s width, as tall as its words; the back 13 px under the edge, one right edge for both piles. About the same height as today; a name over about 55 characters is still cut on its third line.</p></figure>';
 
-  // 2.2 · the hand
+  // 2.2 · the window at a height: the piles give way
+  var PILES = { down: ["void", "lava", "meadow", "dust"], review: [G.timer, G.who, G.tidy, G.lobby, G.rename], work: [G.music, G.coin, G.end, G.keep] };
+  var win = document.getElementById("win");
+  function layWin(steps) {
+    return '<div class="win__col"><div class="win__head">' + head("peon-crown", "hd24") + "Orkmaster</div><div class=\"win__piles\">"
+      + '<div><div class="plab">In analysis</div>' + pile("is-down", downs(PILES.down), fill(PILES.down.length - 1, 4)) + "</div>"
+      + '<div><div class="plab">To review</div>' + pile("is-up", ups(PILES.review), steps.review) + "</div>"
+      + '<div><div class="plab">At work</div>' + pile("is-up", ups(PILES.work), steps.work) + "</div></div></div>"
+      + '<div class="win__table"><div class="ghost"></div><div class="ghost s"></div><div class="ghost"></div><div class="ghost s"></div><div class="ghost"></div></div>'
+      + '<div class="win__hand">' + H.slice(0, 3).map(function (h) { return handCard(h, false); }).join("") + '<span class="win__room" id="win-room"></span></div>';
+  }
+  function fit(h) {
+    win.style.setProperty("--wh", h + "px");
+    document.getElementById("wh-out").textContent = h + " px";
+    // measure with every card behind as an edge, then give the room left to feet, the nearest the front first, To review before At work
+    var nR = PILES.review.length - 1, nW = PILES.work.length - 1;
+    var steps = { review: fill(nR, 3), work: fill(nW, 3) };
+    win.innerHTML = layWin(steps);
+    var box = win.querySelector(".win__piles"), used = 0;
+    [].forEach.call(box.children, function (c, i) { used += c.offsetHeight + (i ? 12 : 0); });
+    var room = box.clientHeight - 6 - used, feet = 0;
+    var order = []; for (var i = 0; i < Math.max(nR, nW); i++) { if (i < nR) order.push(["review", i]); if (i < nW) order.push(["work", i]); }
+    order.forEach(function (o) { if (room >= 17) { steps[o[0]][o[1]] = 20; room -= 17; feet++; } });
+    if (room < 0) { var e = Math.max(1, 3 + Math.floor(room / (nR + nW))); steps.review = steps.review.map(function (s) { return s === 3 ? e : s; }); steps.work = steps.work.map(function (s) { return s === 3 ? e : s; }); }
+    win.innerHTML = layWin(steps);
+    document.getElementById("win-room").innerHTML = "the column: " + feet + " of " + (nR + nW) + " cards behind show their foot,<br>" + (nR + nW - feet) + " an edge · no scroll";
+  }
+  var wh = document.getElementById("wh");
+  wh.addEventListener("input", function () { fit(+wh.value); });
+  [].forEach.call(document.querySelectorAll(".presets [data-h]"), function (b) { b.addEventListener("click", function () { wh.value = b.getAttribute("data-h"); fit(+wh.value); }); });
+  fit(+wh.value);
+
+  // 2.3 · the hand
   function hand(today) {
     return '<div class="tbl"><span class="ghost"></span><span class="ghost"></span><span class="ghost"></span><span>the table</span></div>'
       + '<div class="row">' + H.map(function (h, i) { return handCard(h, today, !today && i === 0 ? " is-up" : ""); }).join("") + "</div>"
@@ -373,7 +437,7 @@ p, h1, h2, h3 { margin: 0; }
   document.getElementById("hand-today").innerHTML = hand(true);
   document.getElementById("hand-new").innerHTML = hand(false);
 
-  // 2.3 · the move (B)
+  // 2.4 · the move: the column's card opens to the hand's 5 : 7 on its way down
   var stage = document.getElementById("stage");
   stage.innerHTML = '<div class="stage__col"><div class="plab">To review</div><div class="behind">' + up(G.who) + '</div></div><div class="stage__hand"></div>'
     + '<div class="slot is-free" style="left:8px"></div><div class="slot" style="left:168px">' + handCard(H[1], false) + '</div><div class="slot" style="left:320px">' + handCard(H[2], false) + "</div>"
@@ -381,16 +445,18 @@ p, h1, h2, h3 { margin: 0; }
   var mv = document.getElementById("mv"), anims = [];
   function move(back) {
     var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var o = { duration: still ? 1 : 800, easing: "cubic-bezier(.22,1,.36,1)", fill: "forwards", direction: back ? "reverse" : "normal" };
+    var o = { duration: still ? 1 : 900, easing: "cubic-bezier(.22,1,.36,1)", fill: "forwards", direction: back ? "reverse" : "normal" };
+    var tileH = mv.children[0].offsetHeight, cardH = mv.children[1].offsetHeight;
+    var cut = "inset(0 0 " + (cardH - tileH) + "px 0)";
     anims.forEach(function (a) { a.cancel(); });
     anims = [mv.animate([{ transform: "translate(0,0) rotate(0deg)" }, { transform: "translate(36px,-6px) rotate(2deg)", offset: 0.25 }, { transform: "translate(8px,291px) rotate(0deg)" }], o),
-      mv.children[0].animate([{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0, offset: 0.6 }, { opacity: 0 }], o),
-      mv.children[1].animate([{ opacity: 0 }, { opacity: 0, offset: 0.4 }, { opacity: 1, offset: 0.6 }, { opacity: 1 }], o)];
+      mv.children[0].animate([{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0, offset: 0.5 }, { opacity: 0 }], o),
+      mv.children[1].animate([{ opacity: 0, clipPath: cut }, { opacity: 0, clipPath: cut, offset: 0.3 }, { opacity: 1, clipPath: cut, offset: 0.5 }, { opacity: 1, clipPath: "inset(0 0 0 0)" }], o)];
   }
   document.getElementById("mv-go").addEventListener("click", function () { move(false); });
   document.getElementById("mv-back").addEventListener("click", function () { move(true); });
 
-  // 2.4 · the opened card
+  // 2.5 · the opened card
   document.getElementById("open-row").innerHTML = '<figure class="mk-fig"><span class="mk-tag new">404 × 566 · the body scrolls</span>' + opened() + "</figure>"
     + '<div class="mk-fig" style="max-width:320px"><p class="mk-cap"><b>Corner and title</b> as on the hand\'s card, larger: the card that rose is the card that opened.</p>'
     + '<p class="mk-cap"><b>The body</b>: the question in full, the ways as rows, what it holds and when it was asked. It scrolls; the card does not grow.</p>'
@@ -410,11 +476,11 @@ p, h1, h2, h3 { margin: 0; }
   var phones = [
     ["The table and the hand · the first card pressed", top("tech") + tableGhost + handRow(),
       "<b>80 × 112, cut at 82</b>, as today. Pressed, a card rises 30 px and shows what lay under the cut: how long it waits. Tapped, it opens."],
-    ["The crown's piles (B)", top("crown") + '<div class="ph-menu v-b">'
-      + '<div class="msec"><div class="plab">In analysis</div>' + pile("is-down", 2, down("void", 0) + down("lava", 1)) + '<div class="under">2 goals the Orkmaster reads</div></div>'
-      + '<div class="msec"><div class="plab">To review</div>' + pile("is-up", 2, up(G.timer, 0) + up(G.who, 1)) + '<div class="under"><b>Round timer on phones</b> asks you</div></div>'
-      + '<div class="msec"><div class="plab">At work</div>' + pile("is-up", 2, up(G.music, 0) + up(G.coin, 1)) + '<div class="under">2 goals at work</div></div></div>',
-      "<b>The same cards</b> as the desktop's column: the backs on their side under the screen's left edge, the faces standing. The list scrolls. A tap slides a card out; a second tap opens its goal."],
+    ["The crown's piles", top("crown") + '<div class="ph-menu v-p">'
+      + '<div class="msec"><div class="plab">In analysis</div>' + pile("is-down", downs(["void", "lava"]), [4]) + '<div class="under">2 goals the Orkmaster reads</div></div>'
+      + '<div class="msec"><div class="plab">To review</div>' + pile("is-up", ups([G.timer, G.who, G.tidy]), [20, 20]) + '<div class="under"><b>Round timer on phones</b> asks you</div></div>'
+      + '<div class="msec"><div class="plab">At work</div>' + pile("is-up", ups([G.music, G.coin]), [20]) + '<div class="under">2 goals at work</div></div></div>',
+      "<b>The column's cards</b>: the backs on their side 13 px under the screen's left edge, the faces 144 wide. A list of its own: it may scroll. A tap slides a card out; a second tap opens its goal."],
     ["The question opened", top("tech") + '<div class="ph-q">' + opened() + "</div>",
       "<b>5 : 7 at the screen's width</b> (316 × 442) over the dimmed table. The body scrolls; the answer stays at the foot."],
     ["Typing the answer", top("tech") + '<div class="ph-type"><div class="card ork-card"><div class="lc__corner">' + sign("question", "alert") + '<span class="pix c-ask">A question</span><span class="who" style="margin-left:auto">' + head("shaman-elder") + "</span></div>"
