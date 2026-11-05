@@ -98,6 +98,23 @@ def test_the_plus_cards_seal_shows_the_next_goals_shape_in_its_hue(gui):
         pg.close()
 
 
+def test_to_the_orkmaster_the_field_and_the_seal_open_with_the_rune_and_hue_the_host_will_give(gui):
+    """Spec 149 J.2: the runes are the project's, the same at every party; with no party addressed (the Orkmaster's tab) the first party's are read."""
+    pg, host, log = open_column(gui, host=HueHost())
+    try:
+        assert pg.locator('[data-tab="orkmaster"]').first.get_attribute("aria-selected") == "true"
+        in_hue = "() => { const e = document.querySelector('%s'); return !!e && e.classList.contains('dust') && e.classList.contains('k-lava'); }"
+        pg.wait_for_function(in_hue % ".hand .hand-plus .ork-sigil__seal .ork-elem", timeout=WAIT_MS)
+        pg.locator(".hand .hand-plus").click()
+        square = pg.locator('.hand-field [data-sq="rune"]')
+        square.wait_for(timeout=WAIT_MS)
+        pg.wait_for_function(in_hue % '.hand-field [data-sq="rune"] .ork-elem', timeout=WAIT_MS)
+        assert "Its rune: Rune 3, change it" in (square.get_attribute("aria-label") or square.inner_text()), "dust is the third rune"
+        assert not [m for m in log if "pageerror" in m], log
+    finally:
+        pg.close()
+
+
 @pytest.mark.parametrize("explicit", [False, True])
 def test_draft_preview_is_read_only_and_submission_allocates_its_rune(gui, fake_repo, explicit):
     """Drive the face with real snapshot predictions and submit to the real host.
