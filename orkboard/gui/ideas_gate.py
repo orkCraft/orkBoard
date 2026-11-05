@@ -21,7 +21,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import event_log, findings_gather, gate_config, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
+from orkboard.realm import commit_goal, event_log, findings_gather, gate_config, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
@@ -52,17 +52,40 @@ class GateMixin:
         if out["same"]:
             return out
         try:
-            shas, files = idea_gate.waiting_by_patch(git, into, main)      # a goal sent alone is not counted again
+            pile = self._pile(git, into, main)
         except Exception:                       # a repository git cannot read: nothing waits that the Board can see
             return out
+        if pile["ready"]:
+            self._release_reads()                # a goal is ready for main: Release has something to ask about (spec 143 E.1)
+        return {**out, "commits": len(pile["shas"]), "files": pile["files"], "ideas": pile["ready"]}
+
+    def _pile(self, git: IdeaGit, into: str, main: str) -> dict:
+        """What waits in dev for main: `{shas, files, ready, held}`. `shas` and `files` count only the commits of goals ready for main and of no goal:
+        not the Board's own, nor those of a goal a task of which is not done (spec 149 G.3, decisions §253.8); `ready` the goals ready (`ideas_in`'s rows),
+        `held` the goals with commits in dev that are not, each `{slug, title, done, of}` (the tasks merged of the tasks there are)."""
+        shas, files = idea_gate.waiting_by_patch(git, into, main)      # a goal sent alone is not counted again
         try:
-            shas, files = idea_gate.without_board_pages(git, shas, files)      # the Board's own commits are no pile: they go with the next goal (spec 143 F.4, §247.1)
+            shas, files = idea_gate.without_board_pages(git, shas, files)      # the Board's own commits are no pile: they go with the next goal (spec 143 F.4, §247.1; spec 149 G.4)
         except Exception:
             pass
-        brought = self._ready_ideas(self._gate_ideas(shas))
-        if brought:
-            self._release_reads()                # a goal is ready for main: Release has something to ask about (spec 143 E.1)
-        return {**out, "commits": len(shas), "files": files, "ideas": brought}
+        rows = self._gate_ideas(shas)
+        ready = self._ready_ideas(rows)
+        names = {r["slug"] for r in ready}
+        held = [self._held(r) for r in rows if r["slug"] not in names]
+        if held:
+            try:
+                owners = commit_goal.index(self.state_dir, git.root, into)
+                mine = {h["slug"] for h in held}
+                shas, files = idea_gate.without_commits(git, shas, files, {s for s in shas if owners.get(s, {}).get("goal") in mine})
+            except Exception:
+                pass
+        return {"shas": shas, "files": files, "ready": ready, "held": held}
+
+    def _held(self, row: dict) -> dict:
+        """A goal with work in dev that is not ready for main: `{slug, title, done, of}`, the title short."""
+        tasks = [t for t in (ideas.plan(self.state_dir, row["slug"]) or {}).get("tasks") or [] if isinstance(t, dict) and not goal_types.is_dropped(t)]
+        short = next((i["short"] or i["title"] for i in ideas.ideas(self.root(False)) if i["slug"] == row["slug"]), row["title"])
+        return {"slug": row["slug"], "title": short or row["title"], "done": sum(1 for t in tasks if t.get("state") == "merged"), "of": len(tasks)}
 
     NOT_YET = ("failed", "waiting", "ready", "running", "testing", "picking", "review")        # a task in one of these is not done: its goal is not ready for main
 
@@ -91,6 +114,13 @@ class GateMixin:
         git = IdeaGit(Path(self.host.repo_root))
         main = self._gate_main(git)
         push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
+        if not idea_gate.same(into, main):
+            try:
+                held = self._pile(git, into, main)["held"]
+            except Exception:                   # a repository git cannot read: the merge says so itself
+                held = []
+            if held:                            # nothing reaches main half made by a press that does not say so (spec 149 G.2, decisions §253.7)
+                raise IdeasError(self._half_made(held, main))
         try:
             got = idea_gate.merge(git, into, main, push)
         except RuntimeError as e:               # a refusal (GateRefused) or git's own words
@@ -101,6 +131,13 @@ class GateMixin:
         self._flag_after_gate(brought, got["commit"], git, main)
         self.changed("")
         return {"ok": True, "commit": got["commit"], "note": got["note"]}
+
+    @staticmethod
+    def _half_made(held: list[dict], main: str) -> str:
+        """*Lobby is at 2 of 4: it would reach main half made.* for the first goal held, the others counted."""
+        first = held[0]
+        more = f" Nor would {len(held) - 1} more goal{'s' if len(held) > 2 else ''}." if len(held) > 1 else ""
+        return f"{first['title']} is at {first['done']} of {first['of']}: it would reach {main} half made.{more}"
 
     # -- a goal to main on its own (spec 105 §5) ------------------------------------------------------------
 

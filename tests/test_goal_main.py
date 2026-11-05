@@ -12,7 +12,7 @@ import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
 from orkboard.realm import event_log, goal_main, idea_flag, idea_gate, ideas
-from orkboard.realm.idea_git import IdeaGit
+from orkboard.realm.idea_git import BOARD_EMAIL, BOARD_NAME, IdeaGit
 
 
 def git(cwd: Path, *args: str) -> str:
@@ -357,7 +357,7 @@ def test_a_goal_with_a_task_failed_or_still_to_do_is_not_ready_for_main(host, re
         ideas.save_plan(host.ideas.state_dir, lobby, plan)
         got = host.command("ideas.gate")
         assert [i["slug"] for i in got["ideas"]] == [chat], f"a task {state}: Lobby is not ready for main"
-        assert got["commits"] == 5, "its commits are dev's all the same"
+        assert got["commits"] == 2 and got["files"] == 2, "its commits are left out of the count: Chat's and the person's own are what is ready (spec 149 G.3)"
     plan = ideas.plan(host.ideas.state_dir, lobby)
     plan["tasks"][-1]["state"] = "dropped"
     ideas.save_plan(host.ideas.state_dir, lobby, plan)
@@ -378,3 +378,69 @@ def test_the_boards_own_commits_are_no_pile_but_a_code_commit_of_no_goal_is(host
     assert got["commits"] == 1 and got["files"] == 1, "a commit of code that belongs to no goal still counts, the Board's two do not"
     host.command("ideas.gate_merge")
     assert (repo / "wiki" / "pages" / "tracks" / "tech.md").exists(), "they go into main with the next merge"
+
+
+# -- one pile, half a goal refused, the Board's own (spec 149 G.2, G.3, G.4) --------------------------------------
+
+def test_dev_whole_is_refused_in_words_while_a_goal_with_commits_in_dev_is_not_ready(host, repo, work):
+    lobby, chat, *_ = work
+    unfinished(host, lobby)
+    with pytest.raises(CommandError) as e:
+        host.command("ideas.gate_merge")
+    assert str(e.value) == f"{short(host, lobby)} is at 2 of 3: it would reach main half made.", "the words say the goal, how far it is and why"
+    assert git(repo, "rev-parse", "main") != git(repo, "rev-parse", "dev") and events(host, "gate_merged") == [], "main is as it was"
+    plan = ideas.plan(host.ideas.state_dir, lobby)
+    plan["tasks"] = [t for t in plan["tasks"] if t["id"] != "rv"]
+    ideas.save_plan(host.ideas.state_dir, lobby, plan)
+    assert host.command("ideas.gate_merge")["ok"] is True, "ready again: the press goes"
+    assert idea_flag.flag_of(host.ideas.state_dir, chat) is not None
+
+
+def test_commits_that_belong_to_no_goal_still_go_with_dev_whole_while_a_goal_is_ready_or_has_no_commits_there(host, repo):
+    git(repo, "checkout", "-q", "dev")
+    commit_in(repo, "own.txt", "the person's own commit\n")
+    git(repo, "checkout", "-q", "main")
+    assert host.command("ideas.gate")["commits"] == 1 and host.command("ideas.gate_merge")["ok"] is True
+    assert git(repo, "rev-parse", "main") == git(repo, "rev-parse", "dev")
+
+
+def test_the_pile_counts_only_the_commits_of_goals_ready_and_of_no_goal(host, repo, work):
+    lobby, chat, l1, c1, own, l2 = work
+    got = host.command("ideas.gate")
+    assert got["commits"] == 5 and got["files"] == 5 and [i["slug"] for i in got["ideas"]] == [lobby, chat]
+    unfinished(host, lobby)
+    got = host.command("ideas.gate")
+    assert got["commits"] == 2 and got["files"] == 2 and [i["slug"] for i in got["ideas"]] == [chat], "Lobby's three commits and three files are left out"
+    unfinished(host, chat)
+    got = host.command("ideas.gate")
+    assert got["commits"] == 1 and got["files"] == 1 and got["ideas"] == [], "only the person's own commit, which belongs to no goal"
+
+
+def test_a_goal_sent_alone_when_ready_leaves_a_pile_that_says_nothing_after_the_board_folds(host, repo, work):
+    lobby, chat, *_ = work
+    host.command("ideas.to_main", {"idea": lobby})
+    host.command("ideas.to_main", {"idea": chat})
+    host.command("ideas.gate_merge")                                                         # the person's own commit goes with dev whole: nothing else is left
+    git(repo, "checkout", "-q", "dev")
+    (repo / "llm-wiki" / "wiki" / "specs").mkdir(parents=True)
+    (repo / "llm-wiki" / "wiki" / "specs" / "lobby.md").write_text("# Lobby\n")
+    git(repo, "add", "-A")
+    git(repo, "-c", f"user.name={BOARD_NAME}", "-c", f"user.email={BOARD_EMAIL}", "commit", "-q", "-m", "board: the fold", "--author", f"{BOARD_NAME} <{BOARD_EMAIL}>")
+    git(repo, "checkout", "-q", "main")
+    got = host.command("ideas.gate")
+    assert got["commits"] == 0 and got["files"] == 0 and got["ideas"] == [], "the fold's commit is the Board's: no pile"
+
+
+def test_without_board_pages_leaves_out_a_commit_authored_by_the_board_and_keeps_a_persons(repo):
+    git(repo, "checkout", "-q", "dev")
+    (repo / "llm-wiki" / "wiki" / "specs").mkdir(parents=True)
+    (repo / "llm-wiki" / "wiki" / "specs" / "lobby.md").write_text("# Lobby\n")
+    git(repo, "add", "-A")
+    git(repo, "-c", f"user.name={BOARD_NAME}", "-c", f"user.email={BOARD_EMAIL}", "commit", "-q", "-m", "board: the fold", "--author", f"{BOARD_NAME} <{BOARD_EMAIL}>")
+    fold = git(repo, "rev-parse", "HEAD")
+    mine = commit_in(repo, "llm-wiki/wiki/specs/other.md", "# Other\n", "a person edits a spec")
+    git(repo, "checkout", "-q", "main")
+    g = IdeaGit(repo)
+    shas, files = idea_gate.waiting(g, "dev", "main")
+    assert fold in shas and mine in shas
+    assert idea_gate.without_board_pages(g, shas, files) == ([mine], 1)
