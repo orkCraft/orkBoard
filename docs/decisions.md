@@ -6390,3 +6390,70 @@ Why: the owner had spec 132 B run through a local Orkboard with real calls, Code
 9. **Not decided here**, left to the owner: a failed task's *Start again* with a line from the person; a task of the `laborer` tier running on its seat's `warrior` (the trial's 448 thousand tokens for 20 lines); how long a gate may take with browser tests in it. The silently kept project kind that the trial seemed to show did not come back in three widths and is dropped.
 10. **Built** by spec 143.
 The owner's call.
+
+## 251. One card, 5 : 7, read by its four corners: a card stands while it plays and lies face down while it waits; the Orkmaster's column never scrolls and gives way to the window; the hand's card is cut under its title; a goal's start turns its card up and the Orkmaster deals it to its leaders (5 November 2026, the owner)
+
+Changes: 206.3, 206.11, 236.1, 236.3, 249.1, 249.2, 249.4, 70.1; spec 128 B.1, B.3, spec 142 A, B.
+
+Why: the owner, looking at the window: the cards came in many sizes (§249 cut each to its words) and should keep one
+shape, and every card should say the same thing in the same place, the new goal's card too. The talk ran through
+`docs/mockups/card-ratio/` in six versions; what it settled: a card laid on its side face up was too wide (and turned
+the meaning §206.3 gave lying), cutting a column card at its foot with nothing over it looked broken, whole 5 : 7 cards
+do not fit the column of a 1366 × 768 laptop, and the owner wants the column never to scroll on the desktop (*scrolling
+only on an opened card and on the table*). Card games read a card by its corners, keep a card face down while it is not
+yet in play and lay a card on its side while it does not act; a place hides part of a card only where something covers
+it. So:
+1. **Every card is 5 : 7**, at two sizes on the desktop: **144 × 202** (the column, the hand, the lanes, the discard)
+   and **404 × 566** (opened, and a new goal); the phone's hand **80 × 112**.
+2. **The four corners, the same on every card**: **top left the rune** (which goal); **top right the kind** (what card:
+   a goal's feature, bug, tidy, screen; a decision's question, fork, failure, hypothesis, cost grown; a task's; done);
+   **bottom left who** (whose work: the leaders at work, the seat doing a task, who asks); **bottom right how much**, one
+   figure by the card's state (its cost before it is agreed, its time left at work, the time it took when done,
+   *asks you* while it waits for you). Between them the title and what the place has room for. The signal colours (the
+   alert: it waits for you; the danger: it failed) are in the kind's corner and the frame only. A corner's sign and head
+   keep their size on every card (a sign 14 px, a head 16), so they read as an index. **A new goal's card** is the same
+   card with its corners empty and dashed, each saying what will stand there, filled as the goal is made (the kind when
+   it is picked, who when it is routed, how much when it is estimated, the rune when it is laid).
+3. **A card stands while it plays and lies face down while it waits** (this changes §206.3 and §206.11): at work, in
+   the hand and opened it stands face up; **In analysis** (being read) and **To review** (its spec made, waiting to
+   start) lie on their side, face down, with no corners: the seal is the rune and its ring says what it waits for.
+   *In analysis* is a **loose pile** (its cards a little askew, still being sorted), its front card's ring running, the
+   goal being read named under its title (§206.3). *To review* is a **squared deck that deals itself onto the table**:
+   each back's ring fills in eighths as its start comes (orkUI's `.is-waiting`), a goal that waits for you has a still
+   yellow ring and a yellow edge, and **the next to start is named under its title with its time**, so it can be held
+   before it starts. A back pressed opens its goal's spec. *At work · later* stands, its cards 144 × 202.
+4. **The Orkmaster's column is 160 px and never scrolls on the desktop.** A back is 157 × 112 with **13 px** under the
+   window's left edge (§236.1), so every pile keeps one right edge, 144. The two piles of backs take 112 px each,
+   whatever they hold, so only *At work* gives way to a short window, in three steps: its cards behind the front show
+   their **foot** (26 px: who, how much); then a **thin edge** (3 px), the furthest first; then **the pile sinks under
+   the hand's rim**, as the hand's cards go under the window's edge, the rim falling between two lines of the front card,
+   the cards behind a sliver at its right. Nothing counts what waits. A card hovered or focused slides out whole.
+   Scrolling on the desktop is the table's and an opened card's only; the phone's crown's piles are a screen of their
+   own and may scroll.
+5. **The hand's card is cut under its title** (this changes §249.2): 144 × 202, the hand's rim at **100 px** shows the
+   rune, the kind and the title in three lines. **Who asks is the lane** the card lies under (a party's stacks under its
+   lane, the Orkmaster's under the column), so the card's face does not repeat it; a choice is made only on the lifted
+   card, so **the cost is shown there**, at the moment of choosing, and a cost that grew is a card of its own kind. Below
+   the cut: why it is asked (up to three lines), who asks, how much; hovered, the card rises and shows them. Where the
+   die or the potions make the hand taller, the cards keep their top and show more, the cut kept between two lines. On
+   the narrow page and the phone the hand has no lanes: **it is laid by leader, a small head before each leader's cards**;
+   its card 80 × 112 is cut at 62.
+6. **The opened card never grows**: 404 × 566, its corners the hand card's, larger; its body scrolls inside; the answer
+   and the buttons stay above its foot; its bottom right is the cost of the way picked and changes as one is picked. On
+   the phone it is 5 : 7 at the screen's width; while the keyboard is up it keeps its top corners and title and is as
+   tall as the screen leaves.
+7. **A goal's start turns its card up and the Orkmaster deals it** (this extends §70.1 to a start by itself): the back
+   leaves *To review*, turns face up and stands in *At work*; from it the goal's card is dealt to the lane of each party
+   doing it (the heads in its bottom left), one motion, and each leader lays its tasks under it there (§70's deal, §167's
+   cascade). The Orkmaster says what and who, a leader how: the Orkmaster never deals tasks. §70.2's limits hold: one
+   motion that travels, six steps at most, none under reduced motion, a hidden page or into a lane under the pointer;
+   several starts at once deal the first and lay the rest. What lands in a lane is the goal's strip as today (§167), the
+   dealt card folding into it.
+8. **A goal that asks you is dealt from the deck to your hand**: its back lifts, turns up and stands, and lies in the hand
+   under the lane of the leader who asks.
+9. **Unchanged**: the lanes' windows onto the work (§249.3) between their corners; §236's tuck under the window's edge
+   (now 13 px); the + card; Play, the die and the potions.
+10. **The words** (`TERMS`): *next in <time>: <goal>* under *To review*; a new goal's empty corners *the rune: given when
+   it is laid*, *who: the Orkmaster routes it*, *how much: after its estimate*.
+11. **Built** by spec 147. The mockup is the look: `docs/mockups/card-ratio/`.
+The owner's call.
