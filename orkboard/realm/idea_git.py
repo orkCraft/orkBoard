@@ -35,6 +35,7 @@ GIT_TIMEOUT_S = 60
 PUSH_TIMEOUT_S = 120
 CRITICAL_TESTS = gate_config.CRITICAL_TESTS     # only the default `always`; a repository's orkcraft.toml names its own
 TEST_TAIL = 3000
+DID_NOT_FINISH = "The tests did not finish in {minutes} minute{s}: {n} file{f}"      # spec 149 D.1: a gate that ran out of time could not run
 GATE_KEEP = 60000
 PATCH_FILE = 60 * 1024               # a file's patch shown up to this, else "too large to show"
 PATCH_ALL = 300 * 1024               # … and all of a result's patches up to this
@@ -94,6 +95,7 @@ class GateRun(NamedTuple):
     env: str = ""
     docs: bool = False
     browser: tuple[str, ...] = ()        # the files of `[gate] browser` that were in the run (spec 143 B.3)
+    timed_out: bool = False              # the run was killed at its clock: it tested nothing it can be blamed for (spec 149 D)
 
 
 class IdeaGit:
@@ -235,9 +237,18 @@ class IdeaGit:
         reader = threading.Thread(target=lambda: out_box.append(proc.stdout.read() if proc.stdout else ""),
                                   daemon=True)
         reader.start()
-        jobs._wait(proc, cancel, timeout_s, "ideas/gate")
+        timed_out = False
+        try:
+            jobs._wait(proc, cancel, timeout_s, "ideas/gate")
+        except RuntimeError:               # the clock ran out (`InterruptedError` is a stop and stays one): a gate that did not finish (spec 149 D.1)
+            timed_out = True
         reader.join(5)
         out = out_box[0] if out_box else ""
+        if timed_out:
+            minutes = round(timeout_s / 60)
+            return GateRun(False, f"$ {line}\n{out[-GATE_KEEP:]}{note}", True, line, None, round(time.monotonic() - began, 1),
+                           env=DID_NOT_FINISH.format(minutes=minutes, s="" if minutes == 1 else "s", n=len(files), f="" if len(files) == 1 else "s"),
+                           browser=in_browser, timed_out=True)
         return GateRun(proc.returncode == 0, f"$ {line}\n{out[-GATE_KEEP:]}{note}", True, line, proc.returncode, round(time.monotonic() - began, 1),
                        gate_env.could_not_run(out, proc.returncode), browser=in_browser)
 

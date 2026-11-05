@@ -127,8 +127,8 @@ class TaskMixin:
         if run and run.env:                            # it tested nothing (spec 107 §1.1): why, and what install would make it run
             what = f"{run.env}\n{run.out}"
             python = gate_env.kind_of(what) == "python"
-            tests["env"], tests["install"] = run.env, [] if python else gate_env.missing(self.repo_root)      # npm ci never runs for pytest (spec 143 C.1)
-            if python:
+            tests["env"], tests["install"] = run.env, [] if python or run.timed_out else gate_env.missing(self.repo_root)      # npm ci never runs for pytest (spec 143 C.1)
+            if python and not run.timed_out:
                 tests["setup"] = gate_env.python_setup(self.repo_root)        # spec 143 C.2: the command for the person to run; nothing runs it
         if run and run.docs:
             tests["docs"] = True
