@@ -6417,10 +6417,12 @@ it. So:
    it is picked, who when it is routed, how much when it is estimated, the rune when it is laid).
 3. **A card stands while it plays and lies face down while it waits** (this changes §206.3 and §206.11): at work, in
    the hand and opened it stands face up; while it waits it is face down. **In analysis** is **the Orkmaster's hand**: its
-   cards 56 × 78, standing, face down, in a **fan** (about 22 px apart, turned a few degrees each way), as a player's hand
-   is seen across the table; a back's one corner is its **rune at its top left**, so the fan shows every goal's rune; the
-   goal being read is **lifted out of the fan** and named under the pile's title (§206.3); many cards tighten the fan,
-   never a count; a press on the fan reads it out in order, as today; a new goal laid from the + card flies into it.
+   cards 56 × 78, standing, face down, held back to the person in a **near-straight fan** (1.5° apart), as a player's hand
+   is seen across the table; spread while they are few (usually one to three, 44 px apart) and tighter as they grow,
+   never a count; each back has **its rune in its middle**, as a big back's seal has it; the goal being read is **lifted
+   out of the fan** and named under the pile's title (§206.3); a press on the fan reads it out in order, as today. **A
+   goal laid** from its card turns face down, its rune lights in the middle of its back, and it flies, growing small,
+   into the Orkmaster's hand, where it lies at the fan's end: one motion, none under reduced motion.
    **To review** (its spec made, waiting to start) lies on its side, face down, with no corners: its seal is the rune and
    its ring says what it waits for. It is a **squared deck that deals itself onto the table**:
    each back's ring fills in eighths as its start comes (orkUI's `.is-waiting`), a goal that waits for you has a still

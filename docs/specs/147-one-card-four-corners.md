@@ -7,7 +7,7 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
 | Part | What | Where (and its tests) |
 |---|---|---|
 | **A. The corners** | one corner row at the top and one at the foot of every card; a lane's card and the discard's wear them | a new `table/corners.js` + `corners.css`; `table/card.js`, `table/discard.js`, `table/work.css`; `tests/test_table_desktop_browser.py`, `test_cascade_card_browser.py`, `test_discard_table_browser.py`, a new `test_corners_browser.py` |
-| **B. The Orkmaster's column** | the Orkmaster's hand (a fan of 56 × 78 backs, each rune at its top left, the goal being read lifted), *To review* a squared deck of backs with its next to start named, *At work* standing at 144 × 202 with its corners; 160 px, 13 px under the edge; never scrolls, *At work* gives way | `table/piles.js`, `table/column.js`, `table/column.css`, `frame/frame.css`, `realm/lexicon.py`; `tests/test_column_browser.py`, `test_column_tuck_browser.py` |
+| **B. The Orkmaster's column** | the Orkmaster's hand (a near-straight fan of 56 × 78 backs, each rune in its middle, the goal being read lifted), *To review* a squared deck of backs with its next to start named, *At work* standing at 144 × 202 with its corners; 160 px, 13 px under the edge; never scrolls, *At work* gives way | `table/piles.js`, `table/column.js`, `table/column.css`, `frame/frame.css`, `realm/lexicon.py`; `tests/test_column_browser.py`, `test_column_tuck_browser.py` |
 | **C. The hand's card** | 144 × 202 cut at 100 under its title, its corners; why, who, how much below the cut, shown when it rises; the narrow page's hand laid by leader | `hand/stopcard.js`, `hand/stacks.js`, `hand/hand.css`, `hand/hand.js`; `tests/test_hand_desktop_browser.py`, `test_hand_context_narrow_browser.py`, `test_hand_mana_browser.py` |
 | **D. The opened card and a new goal** | 404 × 566 with its corners, the body scrolling, the cost of the way picked; a new goal's card with its corners dashed until they fill | `hand/stopcard.js` (the lifted card), `hand/answers.js`, `hand/pluscard.js` and the field's modules, `hand/hand.css`, `realm/lexicon.py`; `tests/test_lifted_card_browser.py`, `test_field_*_browser.py` |
 | **E. A goal's start and a goal that asks you** | the back turns up and stands in *At work*, the Orkmaster deals the goal's card to its parties' lanes; a back that asks you is dealt to the hand | `table/column.js`, `table/flight.js`, `table/laying.js`, `hand/hand.js`; a new `tests/test_start_deal_browser.py` |
@@ -34,14 +34,15 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
 
 1. **The sizes** (`frame/frame.css`): `--column-tuck: 13px`; `--column-w: 160px` (the card's 144 and its gutters).
 2. **In analysis, the Orkmaster's hand** (`piles.js`, a new `FanCard`; `column.css`): every goal of the pile a back
-   **56 × 78**, standing (orkUI's back at that size), its goal's `Elem` at 14 px in its top left on the card's fill (the
-   back's one corner). The cards lie in a **fan**: 22 px apart from the left, each turned `(i − (n − 1) / 2) × 4°` about a
-   point under its foot, the later card over the earlier, so every rune shows; the fan is at most 144 px wide and its
-   cards tighten (the step shrinks to fit, at least 10 px) when there are more than five, never a count. The goal being
-   read (`ACTIVE`) is **lifted** 12 px out of the fan; under the title the goal being read (`underOf`, as today: *reading:
+   **56 × 78**, standing (orkUI's back at that size), in its middle orkUI's small seal (`.ork-sigil.small`, 44 px) and its
+   goal's `Elem` at 14 px, as a big back's seal. The cards are held back to the person in a **near-straight fan**: the
+   step `min(44, 88 / (n − 1))` px (at least 10), each turned `(i − (n − 1) / 2) × 1.5°` about its foot, the later card
+   over the earlier; at most 144 px wide whatever it holds, never a count (when they crowd, the cards behind hide their
+   runes: the one being read shows it). The goal being read (`ACTIVE`) is **lifted** 12 px out of the fan, its rune
+   glowing; under the title the goal being read (`underOf`, as today: *reading:
    <goal>*). The fan is about 90 px tall whatever it holds. A card hovered or focused rises 10 px and says its goal's name
    (its `title` and an `aria-label`); a press on the fan lifts the pile's list as a press on the face-down pile does today.
-   When a goal is laid from the + card, its back flies into the fan (`flight.js`, one motion, none under reduced motion).
+   A goal laid flies into the fan as part D.2 draws it.
 3. **To review**: backs 157 × 112 on their side, 13 px under the edge, a **squared deck** (the cards behind 3 px apart,
    unturned). Each back's seal is orkUI's
    `.ork-sigil.is-waiting` with `--ork-sigil-share` its wait's share (`shareOf`), the lit runes in its goal's colour; a
@@ -93,9 +94,13 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
    dashed slots that say what will stand there (`TERMS`: *the rune: given when it is laid*, *who: the Orkmaster routes
    it*, *how much: after its estimate*); the kind's corner fills when a kind is picked (the goal types of §65, where the
    field offers them), who when the party is known, the rest when the goal is laid. The field's own controls are as
-   today, inside the body.
+   today, inside the body. **Laid**, the card turns face down (orkUI's `.ork-turn`), its rune lights in the middle of its
+   back (the big seal), and it flies, scaling to 56 × 78, into the Orkmaster's fan, where it lies at the end
+   (`flight.js`; about 1.4 s in all: the turn, the light, the flight); one motion, none under reduced motion (it is in the
+   fan at once).
 3. Tests: the opened card is 5 : 7 and its body scrolls with a long question while its foot stays in view; picking a way
-   changes the foot's cost; a new goal's card has three dashed corners and the kind's fills when one is picked.
+   changes the foot's cost; a new goal's card has three dashed corners and the kind's fills when one is picked; laying a
+   goal turns its card and ends with one more back in the fan (none flying under reduced motion).
 
 ## E. A goal's start and a goal that asks you
 

@@ -89,18 +89,34 @@ button { font: inherit; }
 .cd__ring.is-waiting::after { color: var(--rc, var(--ork-ink-muted)); }                         /* To review: the ring fills in eighths as its start comes (orkUI's .is-waiting); still and yellow while it waits for you */
 .cd__ring.is-busy::after { color: var(--rc); animation: ork-sigil-sweep 1.6s steps(8) infinite; }  /* In analysis: the ring runs on the goal being read */
 @media (prefers-reduced-motion: reduce) { .cd__ring.is-busy::after { animation: none; --_arc: 45deg; } }
-/* the Orkmaster's hand: In analysis, a fan of small backs (56 x 78), each goal's rune in its top left (the back's one corner), the goal being read lifted out of the fan */
+/* the Orkmaster's hand: In analysis, a near-straight fan of small backs (56 x 78) held back to the player, spread while they are few; each back's seal and its goal's rune in its middle, as the big back's; the goal being read lifted */
 .fan { position: relative; width: 144px; height: 92px; flex: none; margin-left: var(--ork-2); }
-.fb.ork-card { position: absolute; bottom: 2px; left: calc(var(--i) * var(--step, 22px)); width: 56px; height: 78px; padding: 0; overflow: hidden; transform-origin: 50% 140%; transform: rotate(var(--r, 0deg)); z-index: var(--z, 1);
+.fb.ork-card { position: absolute; bottom: 2px; left: calc(var(--i) * var(--step, 44px)); width: 56px; height: 78px; padding: 0; overflow: hidden; transform-origin: 50% 100%; transform: rotate(var(--r, 0deg)); z-index: var(--z, 1);
   transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .fb__back { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
-.fb__rune { position: absolute; left: 4px; top: 4px; z-index: 1; display: grid; place-items: center; width: 18px; height: 18px; background: var(--ork-card); }
+.fb__seal { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; color: var(--ork-ink-faint); }
+.fb__seal .ork-sigil.small { width: 44px; height: 44px; }
+.fb__seal .ork-elem { position: relative; z-index: 1; }
 .fb.is-reading { transform: translateY(-12px) rotate(var(--r, 0deg)); }
-.fb.is-reading .fb__rune .ork-elem { animation: ork-glow 1.6s steps(4) infinite alternate; }
+.fb.is-reading .fb__seal .ork-elem, .fb.is-new .fb__seal .ork-elem { animation: ork-glow 1.6s steps(4) infinite alternate; }
 .fb:hover, .fb:focus-visible { transform: translateY(-10px) rotate(var(--r, 0deg)); z-index: 30; outline: 0; }
 .fb.is-reading:hover, .fb.is-reading:focus-visible { transform: translateY(-14px) rotate(var(--r, 0deg)); }
 @keyframes ork-glow { from { opacity: 0.6; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .fb.ork-card { transition: none; } .fb.is-reading .fb__rune .ork-elem { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .fb.ork-card { transition: none; } .fb.is-reading .fb__seal .ork-elem, .fb.is-new .fb__seal .ork-elem { animation: none; } }
+/* a goal laid: its card turns face down, its rune lights on its back, and it flies small into the Orkmaster's hand */
+.lay { position: relative; width: 640px; height: 340px; overflow: hidden; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-table); }
+.lay__col { position: absolute; left: 0; top: 0; bottom: 0; width: 160px; background: var(--ork-room); border-right: var(--ork-line) solid var(--ork-frame); padding-top: var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-1); }
+.flip { position: absolute; left: 300px; top: 28px; width: 202px; height: calc(202px * 7 / 5); perspective: 900px; z-index: 10; transform-origin: 50% 50%; }
+.flip__in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
+.flip__f, .flip__b { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.flip__b.ork-card { padding: 0; overflow: hidden; transform: rotateY(180deg); }
+.flip__b .ork-card-back { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
+.flip__seal { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ork-ink-faint); }
+.flip__seal .ork-sigil.small { width: 150px; height: 150px; }
+.flip__rune { position: relative; z-index: 1; opacity: 0.25; }
+.flip__rune .ork-elem { width: 40px; height: 40px; }
+.half { width: 202px; height: calc(202px * 7 / 5); overflow: hidden; flex: none; }
+.half > .k.L.ork-card { width: var(--l-w); max-width: none; transform: scale(0.5); transform-origin: 0 0; }
 /* under a pile's label: the goal it is busy with (In analysis), or the next to start and when (To review) */
 .pnext { padding-left: var(--ork-2); max-width: 156px; font: var(--ork-type-caption); font-size: 11px; line-height: 14px; color: var(--ork-ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pnext b { color: var(--ork-ink); font-weight: 600; }
@@ -263,8 +279,8 @@ button { font: inherit; }
       same corner: <b>top left the rune</b> (which goal), <b>top right the kind</b> (what card this is: a feature, a bug, a question, a fork, a failure, done), <b>bottom left who</b> (whose work),
       <b>bottom right how much</b> (its cost before it is agreed, its time once at work, the time it took when done; one figure, never two). Between them the title, and what the place has room for.
       The signal colours (yellow: it waits for you; red: it failed) are in the kind's corner and the frame only. <b>A card stands while it plays</b> (at work, in your hand, opened); <b>it is
-      face down while it waits</b>: held in <b>the Orkmaster's hand</b> while it is read (<i>In analysis</i>, a fan of small backs, 56 × 78, each showing its rune at its top left, the one
-      size that is smaller, as a hand across the table is), or <b>on its side in a deck</b> waiting to start (<i>To review</i>, a deck that deals itself onto the table: its seal is its rune,
+      face down while it waits</b>: held in <b>the Orkmaster's hand</b> while it is read (<i>In analysis</i>, small backs, 56 × 78, held back to you in a near-straight fan, each with its rune
+      in the middle as a big back has it, the one size that is smaller, as a hand across the table is), or <b>on its side in a deck</b> waiting to start (<i>To review</i>, a deck that deals itself onto the table: its seal is its rune,
       its ring what it waits for).</p>
     <div class="mk-row" id="anat-row"></div>
     <div class="mk-row" id="kinds-row"></div>
@@ -273,8 +289,8 @@ button { font: inherit; }
   <section class="mk-sec" id="column">
     <h1>2 · The Orkmaster's column</h1>
     <h2>2.1 · The Orkmaster's hand, the deck, and what is at work</h2>
-    <p class="mk-line">The column is <b>160 px</b> (today 128). <b>In analysis</b> is <b>the Orkmaster's hand</b>: a fan of small backs, 56 × 78, each goal's rune in its top left, as a player's hand is
-      seen across the table; the goal being read is lifted out of the fan and named under the title (§206.3); more goals tighten the fan, never a count. <b>To review</b> is a <b>squared deck</b> that deals itself onto the table: each back's ring fills in eighths as its start comes, a goal that waits for you has a still yellow
+    <p class="mk-line">The column is <b>160 px</b> (today 128). <b>In analysis</b> is <b>the Orkmaster's hand</b>: small backs, 56 × 78, held back to you in a near-straight fan (1.5° apart), spread while
+      they are few (usually one to three) and tighter as they grow, never a count; each back's rune in its middle, as on a big back; the goal being read lifted and named under the title (§206.3). <b>To review</b> is a <b>squared deck</b> that deals itself onto the table: each back's ring fills in eighths as its start comes, a goal that waits for you has a still yellow
       ring and a yellow edge, and <b>the next to start is named under its title with its time</b>, so you can hold it before it starts. Pressed, a back opens its goal's spec. <b>At work</b>
       stands, 144 × 202: the name in up to four lines, what it does now, and its foot (who, how much), which is what the pile shows of each card behind its front one. The backs are 157 × 112,
       <b>13 px</b> under the window's edge, so the deck and <i>At work</i> keep one right edge (§236). Hover a card to slide it out.</p>
@@ -316,6 +332,11 @@ button { font: inherit; }
       <b>the cost of the way picked</b> and changes as you pick (try it). <b>A new goal's card</b> is the same card with its corners empty and dashed, each saying what will stand there; they fill as
       the goal is made (pick a kind and see the top right fill). It teaches the corners before the first goal is laid.</p>
     <div class="mk-row" id="open-row"></div>
+    <h2>4.1 · A goal laid: face down, its rune lit, into the Orkmaster's hand</h2>
+    <p class="mk-line">Pressed, <i>Lay it on the table</i> turns the new goal's card face down; its rune lights in the middle of its back, the seal the goal will keep; and the card flies, growing small,
+      into the Orkmaster's hand, where it lies at the fan's end. One motion; under reduced motion it is in the hand at once.</p>
+    <div class="mk-fig"><div class="acts-row"><button class="ork-btn primary" id="lay-go">Lay it on the table</button><button class="ork-btn" id="lay-back">Again</button></div>
+      <div class="scroll-x"><div class="lay" id="lay"></div></div></div>
   </section>
 
   <section class="mk-sec" id="phone">
@@ -333,7 +354,7 @@ button { font: inherit; }
       <tbody>
         <tr><td>The corners</td><td>each card its own</td><td>every card: rune ↖, kind ↗, who ↙, how much ↘</td></tr>
         <tr><td>Lying or standing</td><td>on its side: not yet agreed</td><td>face down while it waits (in the Orkmaster's hand, or on its side in the deck); standing face up while it plays</td></tr>
-        <tr><td>In analysis</td><td>backs, 157 × 112, 45 px under the edge</td><td>the Orkmaster's hand: a fan of 56 × 78 backs, each rune at its top left; the goal being read lifted and named</td></tr>
+        <tr><td>In analysis</td><td>backs, 157 × 112, 45 px under the edge</td><td>the Orkmaster's hand: 56 × 78 backs in a near-straight fan, each rune in its middle; the goal being read lifted and named; a goal laid flies into it face down</td></tr>
         <tr><td>To review</td><td>face up, 112 × its words</td><td>a squared deck of backs; each ring counts to its start; the next to start named with its time</td></tr>
         <tr><td>At work</td><td>face up, 112 × its words</td><td>face up, 144 × 202, standing; the name in 4 lines</td></tr>
         <tr><td>The column</td><td>128 px; scrolls</td><td>160 px; never scrolls: only <i>At work</i> gives way (feet, edges, then it sinks under the hand's rim)</td></tr>
@@ -402,17 +423,17 @@ button { font: inherit; }
       + '<div class="cd__seal"><span class="ork-sigil cd__ring' + cls + '" style="--rc:' + rc + ";--ork-sigil-share:" + share + '"><span class="ork-sigil__seal">' + elem(e) + "</span></span></div></div>";
   }
   var backs = function (list) { return list.map(function (b, i) { return back(b.e, i, b); }); };
-  var A = [{ e: "meadow", ring: "busy", name: "Lobby in Polish" }, { e: "lava", name: "A daily quest" }, { e: "dust", name: "Sounds for the coin" }, { e: "void", name: "A practice round" }];
+  var A = [{ e: "meadow", ring: "busy", name: "Lobby in Polish" }, { e: "lava", name: "A daily quest" }, { e: "dust", name: "Sounds for the coin" }];
   var RV = [{ e: "void", ring: "wait", share: 0.75, name: "Players see who answered first in the round, with the time it took" }, { e: "ice", ring: "ask", name: "Round timer on phones: asks you" },
             { e: "lava", ring: "wait", share: 0.4, name: "Tidy the scoring module" }, { e: "ice", ring: "wait", share: 0.2, name: "Rename a room after it is made" }, { e: "meadow", ring: "wait", share: 0.1, name: "Lobby music volume" }];
   var nextA = '<div class="pnext">reading: <b>Lobby in Polish</b></div>';
-  // the Orkmaster's hand: the goals in analysis as a fan of small backs; the one being read lifted
-  function fan(list) {
-    var n = list.length, step = n > 5 ? Math.max(10, Math.floor(88 / (n - 1))) : 22;
-    return '<div class="fan" style="--step:' + step + 'px" title="In analysis: press to read them in order">' + list.map(function (b, i) {
-      var rot = ((i - (n - 1) / 2) * 4).toFixed(1);
-      return '<span class="fb ork-card' + (b.ring === "busy" ? " is-reading" : "") + '" tabindex="0" aria-label="' + b.name + '" title="' + b.name + '" style="--i:' + i + ";--r:" + rot + "deg;--z:" + (i + 1) + '">'
-        + '<span class="ork-card-back fb__back"></span><span class="fb__rune">' + elem(b.e) + "</span></span>";
+  // the Orkmaster's hand: the goals in analysis as a near-straight fan of small backs, spread while they are few (44 px apart), tighter as they grow; the one being read lifted
+  function fan(list, extra) {
+    var n = list.length, step = n < 2 ? 0 : Math.max(10, Math.min(44, Math.floor(88 / (n - 1))));
+    return '<div class="fan"' + (extra || "") + ' style="--step:' + step + 'px" title="In analysis: press to read them in order">' + list.map(function (b, i) {
+      var rot = ((i - (n - 1) / 2) * 1.5).toFixed(1);
+      return '<span class="fb ork-card' + (b.ring === "busy" ? " is-reading" : "") + (b.isNew ? " is-new" : "") + '" tabindex="0" aria-label="' + b.name + '" title="' + b.name + '" style="--i:' + i + ";--r:" + rot + "deg;--z:" + (i + 1) + '">'
+        + '<span class="ork-card-back fb__back"></span><span class="fb__seal"><span class="ork-sigil small"></span>' + elem(b.e) + "</span></span>";
     }).join("") + "</div>";
   }
   var nextR = '<div class="pnext">next in 2 min: <b>Players see who answered first in the round</b></div>';
@@ -520,7 +541,7 @@ button { font: inherit; }
       + " the hand, a lane, the discard, an opened card and a new goal. The corners are the same size on every card (a head 16 px, a sign 14), so they read as an index, not as text.</p>"
       + '<p class="mk-cap" style="max-width:none"><b>A cut keeps what the place needs.</b> A pile shows the foot of the cards behind (who, how much); the hand shows the top (which goal, what it asks).</p></div>';
   document.getElementById("kinds-row").innerHTML =
-    '<figure class="mk-fig"><span class="mk-tag new">The Orkmaster\'s hand · 56 × 78</span>' + fan(A) + '<p class="mk-cap">In analysis: a fan of small backs, each rune in its top left; the goal being read lifted.</p></figure>'
+    '<figure class="mk-fig"><span class="mk-tag new">The Orkmaster\'s hand · 56 × 78</span>' + fan(A) + '<p class="mk-cap">In analysis: small backs held back to you, each rune in the middle as on a big back; the goal being read lifted.</p></figure>'
     + '<figure class="mk-fig"><span class="mk-tag new">To review · it waits</span>' + back("void", 0, { ring: "wait", share: 0.75 }) + '<p class="mk-cap">Face down, on its side: it waits. No corners: the seal is its rune, the ring counts to its start.</p></figure>'
     + '<figure class="mk-fig"><span class="mk-tag new">The column · at work</span>' + colCard(G.music) + '<p class="mk-cap">Standing: it plays. Its kind, who does it, the time left.</p></figure>'
     + '<figure class="mk-fig"><span class="mk-tag new">The hand · cut at 100</span><div style="position:relative;height:var(--m-h)">' + handCard(H.q)
@@ -556,7 +577,7 @@ button { font: inherit; }
   var handRowWin = '<div class="win__hand"><span class="plus">+</span>' + handCard(H.q) + handCard(H.fork) + handCard(H.hyp) + "</div>";
   function layWin(st) {
     return '<div class="win__col"><div class="win__head">' + head("peon-crown", "hd24") + 'Orkmaster</div><div class="win__piles">'
-      + '<div><div class="plab">In analysis</div>' + nextA + fan(A.concat([{ e: "ice", name: "Daily login reward" }, { e: "meadow", name: "A tutorial round" }])) + "</div>"
+      + '<div><div class="plab">In analysis</div>' + nextA + fan(A.concat([{ e: "void", name: "A practice round" }, { e: "ice", name: "Daily login reward" }, { e: "meadow", name: "A tutorial round" }])) + "</div>"
       + '<div><div class="plab">To review</div>' + nextR + pile("is-down", backs(RV), [3, 3, 3, 3]) + "</div>"
       + '<div><div class="plab">At work</div>' + pile("is-up", cards(colCard, P.work), st.work, st.sunk) + "</div></div></div>"
       + '<div class="win__table"><div class="ghost"></div><div class="ghost s"></div><div class="ghost"></div><div class="ghost s"></div><div class="ghost"></div></div>' + handRowWin;
@@ -626,6 +647,32 @@ button { font: inherit; }
   openRow.innerHTML = '<figure class="mk-fig"><span class="mk-tag new">Opened · 404 × 566 · pick a way</span>' + opened("op1") + "</figure>"
     + '<figure class="mk-fig"><span class="mk-tag new">A new goal · 404 × 566 · pick a kind</span>' + newGoal("ng1") + "</figure>";
   wire(openRow);
+
+  // 4.1 · a goal laid
+  var lay = document.getElementById("lay"), layAnims = [];
+  var FAN2 = [A[0], A[1]], NEWG = { e: "dust", name: "Show the round's winner a coin" };
+  function layOut() {
+    lay.innerHTML = '<div class="lay__col"><div class="plab">In analysis</div>' + nextA + fan(FAN2, ' id="lay-fan"') + "</div>"
+      + '<div class="flip" id="flip"><div class="flip__in" id="flip-in"><div class="flip__f"><div class="half">' + newGoal("ng2") + '</div></div>'
+      + '<div class="flip__b ork-card"><div class="ork-card-back"></div><span class="flip__seal"><span class="ork-sigil small"></span><span class="flip__rune" id="flip-rune">' + elem(NEWG.e) + "</span></span></div></div></div>";
+    wire(lay);
+  }
+  function layGo() {
+    var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var land = function () { document.getElementById("flip").style.display = "none"; document.getElementById("lay-fan").outerHTML = fan(FAN2.concat([{ e: NEWG.e, name: NEWG.name, isNew: true }]), ' id="lay-fan"'); };
+    if (still) { land(); return; }
+    // the fan's third place (44 px a step, 56 x 78) in the stage, and the card's middle now: the flight is a translate to it and a scale to 56 / 202
+    var o = { duration: 1400, easing: "cubic-bezier(.45,0,.2,1)", fill: "forwards" };
+    var flip = document.getElementById("flip"), fl = flip.getBoundingClientRect(), fanEl = document.getElementById("lay-fan").getBoundingClientRect();
+    var tx = fanEl.left + 2 * 44 + 28 - (fl.left + fl.width / 2), ty = fanEl.bottom - 2 - 39 - (fl.top + fl.height / 2);
+    layAnims = [document.getElementById("flip-in").animate([{ transform: "rotateY(0deg)" }, { transform: "rotateY(180deg)", offset: 0.35 }, { transform: "rotateY(180deg)" }], o),
+      document.getElementById("flip-rune").animate([{ opacity: 0.25, transform: "scale(1)" }, { opacity: 0.25, transform: "scale(1)", offset: 0.35 }, { opacity: 1, transform: "scale(1.5)", offset: 0.5 }, { opacity: 1, transform: "scale(1)", offset: 0.6 }, { opacity: 1, transform: "scale(1)" }], o),
+      flip.animate([{ transform: "translate(0,0) scale(1)" }, { transform: "translate(0,0) scale(1)", offset: 0.6 }, { transform: "translate(" + tx + "px," + ty + "px) scale(" + (56 / 202) + ")" }], o)];
+    layAnims[2].onfinish = land;
+  }
+  document.getElementById("lay-go").addEventListener("click", layGo);
+  document.getElementById("lay-back").addEventListener("click", function () { layAnims.forEach(function (a) { a.cancel(); }); layOut(); });
+  layOut();
 
   // 5 · the phone
   function nc(h, isUp) {
