@@ -35,7 +35,7 @@ const RELEASE = "release-manager";
  *  is said (the cost again at once); once the Board has the new row, the row is. */
 const edits = signal({});
 
-const sigOf = (row) => JSON.stringify([(row?.route || []).map((x) => x.party), row?.cost || null, !!row?.short, !!row?.reproduces, row?.offer || []]);
+const sigOf = (row) => JSON.stringify([(row?.route || []).map((x) => x.party), row?.cost || null, !!row?.short, !!row?.reproduces, row?.offer || [], row?.type || ""]);
 
 /** The row of a route card as it stands now: the host's row, or the answer of the last edit made on it while the Board has not yet caught up. */
 export function viewOf(s) {
@@ -198,6 +198,10 @@ export function RouteLifted({ s, close, edit = false }) {
     const base = sigOf(s.row), got = await run("ideas.route_set", { route });
     if (got?.route) edits.value = { ...edits.value, [idea]: { base, fields: { route: got.route, cost: got.cost, short: !!got.short, reproduces: !!got.reproduces, offer: got.offer || [] } } };
   };
+  const noBug = async () => {                                           // *It is no bug* (spec 149 A.4): the kind the line says without the bug's words; the way and the cost are said again, nothing is called
+    const base = sigOf(s.row), got = await run("ideas.route_kind", {});
+    if (got?.route) edits.value = { ...edits.value, [idea]: { base, fields: { route: got.route, cost: got.cost, short: !!got.short, reproduces: !!got.reproduces, offer: got.offer || [], type: got.kind } } };
+  };
   const talk = async () => { if (await run("ideas.talk", {})) close?.(); };
   const start = async () => { if (await run("ideas.route_start", {})) close?.(); };
   const hold = async () => { if (await run("ideas.route_hold", {})) { toast("Held: nothing starts it until you press Talk, in the pile's list."); close?.(); } };
@@ -217,6 +221,7 @@ export function RouteLifted({ s, close, edit = false }) {
           <button type="button" class="ork-btn quiet" disabled=${busy} title="Talk first, then the decision and the sections" onClick=${talk}>The long way</button>`
         : html`<button type="button" class="ork-btn primary" disabled=${busy} title="The leaders answer in short; nothing is made yet" onClick=${talk}>Talk</button>
           <button type="button" class="ork-btn" data-hold="1" disabled=${busy} title="Nothing starts it until you press Talk" onClick=${hold}>Hold</button>
+          ${short && isBug(v) && html`<button type="button" class="ork-btn quiet" data-nobug="1" disabled=${busy} title="The report holds no failure: it is routed as the line says without the bug's words. Nothing is called" onClick=${noBug}>It is no bug</button>`}
           ${v.low && html`<button type="button" class="ork-btn" disabled=${busy} title="The limits run low: it waits in line and talks by itself after they reset" onClick=${later}>Later</button>`}`}
     </div>`}
     ${!edit && html`<div class="hand-way__more"><${GoalMenu} slug=${idea} where="inline" /></div>`}

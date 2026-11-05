@@ -68,7 +68,7 @@ class RouteMixin:
         if addressed and pitches.is_ideation(root, track):
             return None
         marks = args.get("marks") if isinstance(args.get("marks"), list) else []
-        got = goal_route.route(self.state_dir, root, text, track if addressed else "", marks)
+        got = goal_route.route(self.state_dir, root, text, track if addressed else "", marks, chosen=_opt(args, "type"))      # a type chosen is the route's kind (spec 149 A.1)
         return {**got, "home": track if addressed else goal_route.home(root, got), "addressed": addressed}
 
     def route_save(self, slug: str, routed: dict) -> None:
@@ -178,6 +178,21 @@ class RouteMixin:
             self.keeper.talk_route(slug)              # a party taken off is dropped with its answer and its cards; one put on is heard alone
         self.changed(slug)
         return self._answer(slug, {**st, "route": route, "route_how": how})
+
+    def route_kind(self, args: dict) -> dict:
+        """`{idea}`: **It is no bug** (spec 149 A.4), on a route card of kind `bug` whose report holds no failure: the kind becomes what the line says with the bug's words left out, else
+        `feature`; the way and the cost are worked out again and answered. Nothing is called. A bug whose report holds a failure keeps *The long way*."""
+        slug, st = self._routed(args)
+        how = st["route_how"]
+        if how.get("kind") != "bug" or how.get("failure") or how.get("reproduces"):
+            raise IdeasError("Only a bug with no failure in its report can be told it is no bug")
+        root = self.root()
+        page = ideas.idea_page(root, slug)
+        how = {**how, "kind": goal_route.unbug(page.section("Gist") if page is not None else "")}
+        how.update(goal_route.shape(root, how, st["route"]))
+        ideas.save_state(self.state_dir, slug, route_how=how)
+        self.changed(slug)
+        return self._answer(slug, {**st, "route_how": how}) | {"kind": how["kind"]}
 
     def route_talk(self, args: dict) -> dict:
         """`{idea}`: **Talk**. The cost is said as the person was told it, the state is `talk`, and D's `keeper.talk(slug)` takes the goal from there (a bug's Talk
@@ -483,5 +498,5 @@ class RouteMixin:
 
 def route_commands(ideas_: Any) -> dict:
     """The route's commands by name (`gui/ideas.py` adds them to its table)."""
-    return {"ideas.route_set": ideas_.route_set, "ideas.talk": ideas_.route_talk, "ideas.route_later": ideas_.route_later,
+    return {"ideas.route_set": ideas_.route_set, "ideas.talk": ideas_.route_talk, "ideas.route_kind": ideas_.route_kind, "ideas.route_later": ideas_.route_later,
             "ideas.route_hold": ideas_.route_hold, "ideas.route_start": ideas_.route_start}

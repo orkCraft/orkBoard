@@ -196,9 +196,9 @@ def test_the_route_row_carries_the_goals_type_its_states_else_the_kind_its_line_
     st = ideas.state(state, slug)
     ctx = {"order": {slug: 1}, "low": False}
     (row,) = goal_route.rows(root, state, i, {**st, "type": "tidy", "route_how": {**st["route_how"], "kind": "bug"}}, ctx)
-    assert row["type"] == "tidy"                                                         # the goal's own type wins
+    assert row["type"] == "bug"                                                          # the kind the host will run wins (spec 149 A.3); the type the goal keeps is the route's kind from the start
     (row,) = goal_route.rows(root, state, i, {**st, "type": "", "route_how": {**st["route_how"], "kind": "balance"}}, ctx)
-    assert row["type"] == "balance"                                                      # else the kind its line was routed as
+    assert row["type"] == "balance"                                                      # the kind it was routed as
     (row,) = goal_route.rows(root, state, i, {**st, "type": "", "route_how": {**st["route_how"], "kind": ""}}, ctx)
     assert row["type"] == ""
     assert goal_route.type_id({"type": "product-designer/logo"}) == "logo" and goal_route.type_id({"type": "nonsense"}) == ""    # an old key reads, an unknown one is none
@@ -295,3 +295,39 @@ def test_the_failure_a_play_gave_stays_when_the_person_edits_the_route(project):
     assert again["reproduces"] is True
     off = {**how, **goal_route.shape(root, how, [goal_route.entry(root, p["design"])])}
     assert off["reproduces"] is False and off["failure"] is True                                       # the failure is the goal's; the short way is Tech's alone
+
+
+# -- spec 149 A: the route ----------------------------------------------------------------------------------------------------------------
+
+def test_a_type_chosen_is_the_routes_kind_and_a_bug_chosen_stays_a_bug_with_or_without_its_lines(project):
+    root, state, p = project
+    line = "Predictions fixed per shape; the host says wrong rune\nTraceback (most recent call last):\n  File \"a.py\", line 1\nValueError: x"
+    got = goal_route.route(state, root, line, p["tech"], chosen="shaped-feature")
+    assert got["kind"] == "shaped-feature" and got["failure"] is False and got["short"] is False and got["reproduces"] is False       # the person's word, not the lines'
+    assert goal_route.route(state, root, "a new look", p["tech"], chosen="bug")["kind"] == "bug"
+    assert goal_route.route(state, root, "a new look", chosen="bug")["short"] is True
+    old = goal_route.route(state, root, "Saving crashes", p["tech"])                                   # nothing chosen: the line says it, as before
+    assert old["kind"] == "bug"
+    assert goal_route.route(state, root, "Saving crashes", p["tech"], chosen="no-such-type")["kind"] == "bug"       # an unknown id is no choice
+
+
+def test_fixed_is_a_state_and_says_no_bug(project):
+    from orkboard.core import idea_kind
+    assert goal_route.kind_of("Make the square a fixed width, as the host's per-shape hue") != "bug"
+    assert "bug" not in goal_route.kinds_said("a fixed width for the rail")
+    assert goal_route.kind_of("Fix the crash") == "bug" and goal_route.kind_of("This fixes the crash") == "bug"
+    assert "fixed" not in idea_kind.WORDS["bug"]
+
+
+def test_it_is_no_bug_leaves_the_bugs_words_out_else_feature(project):
+    assert goal_route.unbug("Add a button, it is broken now") == "feature"
+    assert goal_route.unbug("Clean up the broken parser") == "tidy"
+    assert goal_route.unbug("It fails") == "feature"
+
+
+def test_the_row_says_the_kind_the_host_will_run_not_the_type_chosen(project):
+    root, state, p = project
+    st = {"state": "routed", "route": [goal_route.entry(root, p["tech"])], "type": "shaped-feature",
+          "route_how": {"kind": "bug", "short": True, "reproduces": False}}
+    (row,) = goal_route.rows(root, state, {"slug": "g"}, st)
+    assert row["type"] == "bug" and row["short"] is True

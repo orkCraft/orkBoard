@@ -377,3 +377,37 @@ def test_a_goal_whose_next_step_does_not_fit_the_window_waits_for_the_next_reset
     monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", 0.95, reset)])                     # a whole window
     _pass(host, 3)
     assert went == [second, third, first]
+
+
+# -- spec 149 A ---------------------------------------------------------------------------------------------------------------------------
+
+def test_a_type_chosen_is_what_the_goal_is_routed_as_and_the_card_and_talk_agree(host, parties, calls):
+    got = host.command("ideas.add", {"text": "The host should predict per shape, a bug of its own kind", "track": parties["tech"], "type": "shaped-feature"})
+    st = _state(host, got["slug"])
+    assert st["route_how"]["kind"] == "shaped-feature" and st["route_how"]["short"] is False
+    row = _row(host, got["slug"], "route")
+    assert row["type"] == "shaped-feature" and row["short"] is False
+    typed = host.command("ideas.add", {"text": "Saving crashes when the file is empty", "track": parties["tech"]})
+    st = _state(host, typed["slug"])
+    assert st["route_how"]["kind"] == "bug" and st["route_how"]["short"] is True and _row(host, typed["slug"], "route")["type"] == "bug"
+
+
+def test_it_is_no_bug_routes_the_goal_again_with_no_call(host, parties, calls):
+    assert "ideas.route_kind" in host.commands
+    got = host.command("ideas.add", {"text": "Saving crashes when the file is empty", "track": parties["tech"]})
+    slug = got["slug"]
+    assert _state(host, slug)["route_how"]["kind"] == "bug"
+    n = len(calls)
+    ans = host.command("ideas.route_kind", {"idea": slug})
+    assert len(calls) == n and ans["kind"] == "feature" and ans["short"] is False and ans["cost"]["calls"] >= 4
+    st = _state(host, slug)
+    assert st["state"] == "routed" and st["route_how"]["kind"] == "feature" and st["route_how"]["short"] is False
+    assert _row(host, slug, "route")["type"] == "feature"
+    with pytest.raises(CommandError):                                              # no longer a bug
+        host.command("ideas.route_kind", {"idea": slug})
+
+
+def test_a_bug_whose_report_holds_a_failure_cannot_be_told_it_is_no_bug(host, parties, calls):
+    got = host.command("ideas.add", {"text": "It breaks\nTraceback (most recent call last):\n  File \"a.py\", line 1\nValueError: x", "track": parties["tech"]})
+    with pytest.raises(CommandError):
+        host.command("ideas.route_kind", {"idea": got["slug"]})

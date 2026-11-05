@@ -67,7 +67,7 @@ def read(keeper, about: str) -> dict:
 
 # Each goal type of realm/goal_types.py with the words that point at it (a word matches from its start: "crash" takes "crashes"; a phrase is words in order).
 WORDS: dict[str, tuple[str, ...]] = {
-    "bug": ("bug", "fix", "fixes", "fixed", "broken", "crash", "error", "fails", "failing", "wrong", "regression", "does not work", "doesn't work", "not working", "freezes"),
+    "bug": ("bug", "fix", "fixes", "broken", "crash", "error", "fails", "failing", "wrong", "regression", "does not work", "doesn't work", "not working", "freezes"),
     "tidy": ("clean up", "cleanup", "tidy", "refactor", "simplify", "dead code", "rename", "duplicate"),
     "restructure": ("restructure", "split into", "split the", "move the", "modules", "reorganize", "reorganise", "layers"),
     "shaped-feature": ("across modules", "across the modules", "architecture", "shape the"),

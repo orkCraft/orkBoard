@@ -1,7 +1,8 @@
 """A goal's route (docs/specs/99-a-goals-way.md §4; decisions §117.1–§117.2, §118.2, §121.3, §133.1, §136.2, §140.2–§140.3, §147.4, §156.6): the parties
 that write its spec and do its work, in order, worked out by the Orkmaster by **code**, said with its cost and its place before any call is made.
 
-    route(state_dir, root, text, party="", marks=())    # {route: [{party, leader}], by, kind, failure, touched, short, reproduces, offer}: no model
+    route(state_dir, root, text, party="", marks=(), chosen="")    # {route: [{party, leader}], by, kind, failure, touched, short, reproduces, offer}: no model; `chosen`, the type the person picked, is the kind
+    unbug(text)                                         # the kind of a line with the bug's words left out, else `feature` (the card's *It is no bug*, spec 149 A.4)
     shape(root, how, route)                             # {short, reproduces, offer} of a route as it stands, after an edit
     parties(root)                                       # the project's parties a route may name: all but General, Team, Ideation and Release
     reproduces(text)                                    # a bug's report holds a failure's lines, a stack trace or a failing test
@@ -162,11 +163,19 @@ def with_play(root: Path, state_dir: Path, slug: str, how: dict, route_: list[di
     return {**seen, **shape(root, seen, route_)}
 
 
-def route(state_dir: Path, root: Path, text: str, party: str = "", marks: Iterable[Any] = ()) -> dict:
-    """The goal's route by code. `party`: the party it was addressed to. `{route: [{party, leader}], by, kind, failure, touched, short, reproduces, offer}`;
+def unbug(text: str) -> str:
+    """The kind of the line once the bug's words are left out (spec 149 A.4, *It is no bug*): what else it says most, else `feature`."""
+    from orkboard.core import idea_kind
+    return idea_kind.guess(text, [t for t in _ids() if t != "bug"]) or "feature"
+
+
+def route(state_dir: Path, root: Path, text: str, party: str = "", marks: Iterable[Any] = (), chosen: str = "") -> dict:
+    """The goal's route by code. `party`: the party it was addressed to. `chosen`: the goal type the person picked (the catalog's id, an old key as `goal_types.get` reads it):
+    it is the route's kind, the line's words say nothing against it (spec 149 A.1; a bug chosen stays a bug with or without its lines). `{route: [{party, leader}], by, kind, failure, touched, short, reproduces, offer}`;
     `route` is empty (`by` "none") when code finds no party and the project has several: the caller makes the one cheaper call."""
     ps = parties(root)
-    kind = "bug" if reproduces(text) else kind_of(text)       # a failure's lines are a bug's report whatever else the line says
+    picked = goal_types.get(chosen)
+    kind = picked.id if picked is not None else "bug" if reproduces(text) else kind_of(text)       # a type chosen is the kind; else a failure's lines are a bug's report whatever else the line says
     found: list[dict] = []
     by = "none"
     if party:
@@ -349,7 +358,7 @@ def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None
 
         {kind: "route", idea, route: [{party, leader, head}], cost: {calls, usd_low, usd_high}, place, short, reproduces, low, offer: [party], type, text}
 
-    `type` is the goal's type id (`bug`, `tidy`, `balance`, …: the state's `type`, else the kind its line was routed as), "" with none, so a short goal that is no bug is worded as its own.
+    `type` is the kind the host will run the goal as (`route_how.kind`: `bug`, `tidy`, `balance`, …; spec 149 A.3), else the goal's type id, "" with none, so a short goal that is no bug is worded as its own.
         {kind: "start", idea, cost, was, text}
     """
     state, how = st.get("state"), st.get("route_how") or {}
@@ -361,7 +370,7 @@ def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None
         names = [(ideas.track_page(root, s["party"]).title or s["party"]) for s in steps]
         return [{"kind": "route", "idea": i["slug"], "route": steps, "cost": cost_of(root, state_dir, st, settings),
                  "place": ctx["order"].get(i["slug"], 0), "short": bool(how.get("short")), "reproduces": bool(how.get("reproduces")),
-                 "low": bool(ctx["low"]), "offer": list(how.get("offer") or []), "type": type_id(st), "text": "Route: " + ", then ".join(names)}]
+                 "low": bool(ctx["low"]), "offer": list(how.get("offer") or []), "type": how.get("kind") or type_id(st), "text": "Route: " + ", then ".join(names)}]
     if state in ("talk", "decided", "sketch", "sections") and how.get("changed") and isinstance(how.get("said"), dict):
         return [{"kind": "start", "idea": i["slug"], "cost": cost_of(root, state_dir, st, settings), "was": how["said"],
                  "text": "A step was added to the route"}]

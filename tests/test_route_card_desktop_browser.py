@@ -278,6 +278,8 @@ def test_a_bug_alone_is_talk_to_find_the_cause_or_start_with_the_long_way_beside
         assert lifted.locator(".hand-way__words").inner_text() == "Tech alone: finding the cause"
         assert lifted.get_by_role("button", name="Talk").count() == 1 and lifted.get_by_role("button", name="Start").count() == 0 and lifted.get_by_role("button", name="The long way").count() == 0
         assert lifted.locator(".hand-way__place").inner_text() == "3rd in line"
+        nobug = lifted.get_by_role("button", name="It is no bug")
+        assert nobug.count() == 1 and "quiet" in nobug.get_attribute("class"), "beside Talk and Hold, quiet (spec 149 A.4)"
         fits(pg)
         shot(pg, f"{width}-bug-cause")
         lifted.get_by_role("button", name="Talk").click()
@@ -292,6 +294,7 @@ def test_a_bug_alone_is_talk_to_find_the_cause_or_start_with_the_long_way_beside
         lifted = lift(pg)
         assert lifted.locator(".hand-way__words").inner_text() == "Tech alone: the report has a failing test"
         assert lifted.get_by_role("button", name="Talk", exact=True).count() == 0 and lifted.get_by_role("button", name="Start", exact=True).count() == 1
+        assert lifted.get_by_role("button", name="It is no bug").count() == 0, "a report with a failure keeps The long way"
         long = lifted.get_by_role("button", name="The long way")
         assert long.count() == 1 and "quiet" in long.get_attribute("class"), "a quiet link"
         fits(pg)
