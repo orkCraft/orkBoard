@@ -317,6 +317,10 @@ TERMS: tuple[Term, ...] = (
     _t("corner_took", "took"),                                      # the time a task or a goal done took: *took 18 min*
     _t("corner_worked", "worked"),                                  # a task at work with no estimate: the time it has worked, as it did before
     _t("corner_in_main", "in main since"),                          # the discard's card: *3 tasks, in main since 11:40*
+    # the words under the Orkmaster's piles (spec 147 B, decisions §251.10; table/piles.js): *reading: <goal>* under In analysis, *next in 2 min: <goal>* (a decision's wait) or *next at 13:40: <goal>* (a spec's look) under To review
+    _t("column_reading", "reading"),                                # the goal the Orkmaster or its leaders are on, under *In analysis*
+    _t("next_in", "next in"),                                       # the next to start by itself and the time left, under *To review*
+    _t("next_at", "next at"),                                       # the same for a spec that waits for its look: the clock time it starts at
     _t("look_wait", "Give me time to look"),                     # Settings: the wait of every spec made before its plan is passed by itself, 30 min · 2 h · until tonight · do not wait (spec 144 B, decisions §225.1)
     _t("my_hours", "When I am at the computer"),                  # Settings: the person's days and hours (spec 138 B.1, decisions §245.5); empty, nothing changes
     _t("not_before", "not before"),                                # a goal put off, on its row: *not before 14:05* (spec 138 B.5, decisions §245.4)

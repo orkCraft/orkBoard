@@ -43,15 +43,15 @@ def colour(pg, selector, token=None):
 def test_two_goals_of_one_shape_and_different_hues_are_drawn_in_their_hues_in_the_column(gui):
     pg, host, log = open_column(gui, host=HueHost())
     try:
-        one = pg.locator('.col-card[data-goal="one"] .col-hd .ork-elem').first
-        two = pg.locator('.col-card[data-goal="two"] .col-hd .ork-elem').first
+        one = pg.locator('.col-card[data-goal="one"] .ork-sigil__seal .ork-elem').first
+        two = pg.locator('.col-card[data-goal="two"] .ork-sigil__seal .ork-elem').first
         one.wait_for(timeout=WAIT_MS)
         assert "ice" in one.get_attribute("class").split() and "ice" in two.get_attribute("class").split(), "the same shape"
         assert "k-lava" in two.get_attribute("class").split() and "k-lava" not in one.get_attribute("class").split()
-        a, b = colour(pg, '.col-card[data-goal="one"] .col-hd .ork-elem'), colour(pg, '.col-card[data-goal="two"] .col-hd .ork-elem')
+        a, b = colour(pg, '.col-card[data-goal="one"] .ork-sigil__seal .ork-elem'), colour(pg, '.col-card[data-goal="two"] .ork-sigil__seal .ork-elem')
         assert a[0] != b[0], "drawn in two colours"
         assert a[0] == colour(pg, "", "ice") and b[0] == colour(pg, "", "lava"), (a, b)
-        old = colour(pg, '.col-card[data-goal="old"] .col-hd .ork-elem')
+        old = colour(pg, '.col-card[data-goal="old"] .ork-sigil__seal .ork-elem')
         assert old[0] == colour(pg, "", "void"), "a goal of before has no hue: its shape's colour"
         assert not [m for m in log if "pageerror" in m], log
     finally:

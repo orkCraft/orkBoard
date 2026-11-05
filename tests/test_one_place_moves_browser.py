@@ -141,18 +141,18 @@ def test_with_two_goals_at_work_one_glows_the_one_picked_else_the_first(gui):
     assert not log, "\n".join(log)
 
 
-def test_the_face_down_cards_ring_sweeps_only_while_its_goal_is_the_one_that_moves(gui):
+def test_the_lifted_backs_rune_glows_only_while_its_goal_is_the_one_that_moves(gui):
+    """Spec 147 B.2: the Orkmaster's hand has no ring any more; the goal being read is lifted and its rune glows, and (spec 140 C3) it is still while another goal is picked."""
     pg, host, log = open_column(gui, host=DayHost())
     try:
-        pg.wait_for_selector(".col-card--down", timeout=WAIT_MS)
-        down = pg.locator(".col-card--down").first
-        assert down.locator(".col-busy").count() == 1 and down.locator(".is-still").count() == 0, "the Orkmaster is reading: it is the first goal at work in the column's order"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-sigil.col-busy'), '::after').animationName") == "ork-sigil-sweep"
+        pg.wait_for_selector(".col-card--fan", timeout=WAIT_MS)
+        down = pg.locator(".col-card--fan").first
+        assert "is-reading" in down.get_attribute("class").split() and down.locator(".ork-elem.is-glowing").count() == 1, "the Orkmaster is reading: it is the first goal at work in the column's order"
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--fan .ork-elem.is-glowing')).animationName") == "ork-glow"
         assert glowing(pg) == [], "the goals at work lie still: the reading goal is the one that moves"
         pg.locator('.col-card--up[data-goal="sound"]').dispatch_event("click")
         pg.wait_for_function("() => document.querySelector('.col-card[data-goal=sound]').classList.contains('ork-picked')", timeout=WAIT_MS)
-        assert down.locator(".col-busy.is-still").count() == 1, "its ring kept, still: another goal is picked"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-sigil.col-busy'), '::after').animationName") == "none"
+        assert down.locator(".ork-elem.is-glowing").count() == 0, "its rune rests: another goal is picked"
         assert glowing(pg) == ["sound"]
     finally:
         pg.close()

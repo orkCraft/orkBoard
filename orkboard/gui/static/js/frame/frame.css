@@ -1,8 +1,8 @@
 /* The window as two parts (docs/specs/98-the-table-and-the-hand.md §7): the table over the hand, the hand at the foot under
    everything opened (decisions §142.6). Layout only: every colour, face and corner is orkUI's. */
 .frame { --card-w: 144px; --col-w: calc(var(--card-w) * 1.25);      /* a lane a card and a quarter wide, room for a fan (decisions §167.7) */
-  --column-tuck: 45px;                                                /* how much of a face-down card lies under the window's left edge (spec 130 E.2, decisions §236.1): the owner's pick between 45 and 30 is this one line */
-  --column-w: calc(max(112px, 157px - var(--column-tuck)) + 16px);    /* the Orkmaster's column, a width of its own (spec 130 E.1, §236.3): the upright card's, or the face-down card's shown part if wider, and its gutters */
+  --column-tuck: 13px;                                                /* how much of a face-down card lies under the window's left edge (spec 130 E.2, decisions §236.1; §251.4 made it 13 px): the deck and At work keep one right edge, 144 */
+  --column-w: 160px;                                                  /* the Orkmaster's column, a width of its own (spec 130 E.1, §236.3; spec 147 B.1): the card's 144 and its gutters */
   --cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr);   /* the lanes, then the tabs' end; lanes narrow when they don't fit, never a sideways scroll */
   display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100dvh; min-width: 0; background: var(--ork-room); }
 .frame-table { min-height: 0; min-width: 0; overflow: hidden; }

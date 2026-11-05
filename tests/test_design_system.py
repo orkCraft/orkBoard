@@ -146,12 +146,10 @@ def test_orkboards_own_sheets_carry_no_colour_no_font_and_no_corner_of_their_own
                                                                    "--lanes", "--card-w", "--col-w"}            # decisions §167.7: the lanes, a card's and a lane's width
         legacy -= {"--at", "--of", "--span"} | {f"--hc-{n}" for n in ("w", "h", "pad", "gap", "head", "window", "label", "top", "edge", "tight", "shown", "rise", "room", "tabs", "lean", "cap", "pots", "pot1", "first", "rest", "lead")}   # spec 101 §4: the hand's sizes and a lane's fan; spec 104 §5: the tabs' height a lifted card stays under, its lean; §3: the mana's caption and potions
         legacy -= {"--c", "--h", "--i", "--peek"}   # spec 128 B: the Orkmaster's column's card colour, a pile's height, a card's place in it and the foot showing of each (table/column.css)
-        legacy -= {"--k"}   # decisions §241: a head's place in the fan behind the fourth head of a face-down card's ring (table/column.css `.col-mid__fan`)
-        legacy -= {"--hw", "--hh"}   # decisions §241: the size of the heads in the ring's middle, a size smaller from three heads on (table/column.css `.col-mid`)
+        legacy -= {"--r", "--step", "--x", "--y", "--behind"}   # spec 147 B: a back's turn in the Orkmaster's hand and the step between two backs; a standing card's place in its pile, below and right of the front one, and the room under it (table/column.css `.col-fan`, `.col-pile.is-up`)
         legacy -= {"--cue-v", "--cue-h"}   # spec 107 §6.2: the scroll cue's two layers, one for each axis (page.css `.gui-scrolls`)
         legacy -= {"--table-end-w", "--table-end-h"}   # spec 104 §4: the room the table keeps beside and above the discard (table/discard.css)
         legacy -= {f"--hc-{n}" for n in ("face", "big", "corner", "fgap", "lh", "title", "lines")}   # spec 142 B: the hand's card with no window, its face's height, the lifted card's, the corner, the fan's gap, the title's lines
-        legacy -= {"--under"}   # spec 142 A: the room under a face-up pile's front card, its cards' feet (table/column.css `.col-pile.is-up`)
         legacy -= {"--hf-left", "--hf-w"}   # spec 128 A.1: where the field lies, its left edge on the + card's and its width (hand/fieldturn.js `placeField`)
         legacy -= {"--column-tuck", "--column-w", "--col-shown", "--col-edge", "--col-out"}   # spec 130 E: the column's width of its own, a face-down card's tuck, what shows of it, the piles' right edge, the room a card slides out into (frame/frame.css, table/column.css)
         legacy -= {"--dash"}   # spec 130 B.1: the empty slot's dashes in the edge or the ink (hand/mana.css), until orkUI draws `.ork-potion.is-empty`
