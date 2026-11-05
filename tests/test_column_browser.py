@@ -559,3 +559,23 @@ def test_a_goal_put_off_says_not_before_its_hour_on_its_row_the_day_when_it_is_n
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+def test_a_card_laid_over_the_column_covers_it_whole_in_its_shadow_and_the_column_is_not_cut_at_its_edge(gui):
+    """Spec 150 A.2 (decisions §254.10): the field open over the column at 1280 x 800, the At work card under it keeps its full width, and the field's shadow is drawn (orkUI's notch clip once cut it at the box)."""
+    pg, host, log = open_column(gui)
+    try:
+        pg.set_viewport_size({"width": 1280, "height": 800})
+        pg.wait_for_selector(".col-sec[data-pile=work] .col-card--up", timeout=WAIT_MS)
+        pg.locator(".hand .hand-plus").click()
+        pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
+        got = pg.evaluate("""() => {
+          const f = document.querySelector('.hand-field'), c = document.querySelector('.col-sec[data-pile=work] .col-card--up'), r = c.getBoundingClientRect(), fr = f.getBoundingClientRect();
+          return {w: r.width, over: fr.left < r.right && fr.right > r.left, shadow: getComputedStyle(f).boxShadow};
+        }""")
+        assert got["over"], f"the field lies over the column: {got}"
+        assert abs(got["w"] - 144) <= 0.5, f"the At work card keeps its full width: {got}"
+        assert got["shadow"] != "none", f"the field's shadow falls on the column: {got}"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
