@@ -372,3 +372,28 @@ def test_the_piles_words_stay_inside_its_card_and_the_whole_sentence_is_its_titl
         shot(pg, "wide-discard-words")
     finally:
         pg.context.close()
+
+
+def test_at_the_narrow_width_the_piles_words_wrap_inside_its_window_not_cut(gui):
+    """Spec 149 G.5 (decisions §250.7, §253.8): at the narrow width (a pile 80 px wide) *12 commits ready for main* was cut at the card's edge (*1 commi*, *ready for*): every word lies whole inside the card, wrapped, and no line is cut."""
+    server, browser = gui
+    host = HandHost()
+    host.nodes = [n for n in host.nodes if n["place"] != "discard"]
+    host.gate_doc = {"into": "dev", "main": "main", "same": False, "commits": 12, "files": 9, "ideas": []}
+    pg = narrow.page(browser, "narrow")
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(server.url)
+    try:
+        pg.wait_for_selector(".table-discard .hand-back__ready .cap", timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        cap, card = pg.locator(".table-discard .hand-back__ready .cap"), pg.locator(".table-discard .hand-done").first
+        c, k = cap.bounding_box(), card.bounding_box()
+        shot(pg, "narrow-discard-words")
+        assert cap.text_content() == "12 commits ready for main" and cap.get_attribute("title") == "12 commits ready for main"
+        assert c["x"] >= k["x"] - 1 and c["x"] + c["width"] <= k["x"] + k["width"] + 1, f"the words lie inside the card: {c} in {k}"
+        assert cap.evaluate("e => e.scrollWidth <= e.clientWidth + 1 && e.scrollHeight <= e.clientHeight + 1"), f"no word is cut: {cap.evaluate('e => [e.scrollWidth, e.clientWidth, e.scrollHeight, e.clientHeight]')}"
+        inside = """() => { const r = document.createRange(), n = document.querySelector('.table-discard .hand-back__ready .cap'), k = document.querySelector('.table-discard .hand-done').getBoundingClientRect();
+            r.selectNodeContents(n); return [...r.getClientRects()].every((q) => q.left >= k.left + 10 && q.right <= k.right - 10 && q.top >= k.top + 8 && q.bottom <= k.bottom - 8); }"""
+        assert pg.evaluate(inside), "every line of the words is drawn inside the art's window (10 px in from the card's sides, 8 px from its top and foot)"
+    finally:
+        pg.context.close()
