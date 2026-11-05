@@ -475,7 +475,7 @@ def test_on_a_phone_the_hearing_is_the_goals_top_card_in_the_middle_and_thrown_t
     try:
         hr = lift(pg, width="phone")
         assert pg.locator(".up-look[data-look='goal'] .hr").count() == 1 and pg.locator(".table-over").count() == 0, "in the middle, not over the pane"
-        assert pg.locator(".up-look .hand-lifted > .hand-card__head").evaluate("(el) => getComputedStyle(el).display") == "none", "the hearing is the card: the lifted card's own head is not drawn twice"
+        assert pg.locator(".up-look .hand-lifted > .hand-card__head").count() == 0 and pg.locator(".up-look .hand-lifted .hand-lifted__body .hr").count() == 1, "the hearing is in the opened card's body, between its corners (spec 147 F.3)"
         says = hr.locator(".hr-says").first
         assert says.evaluate("(el) => getComputedStyle(el).webkitLineClamp") == "3", "a side's line wraps to three lines"
         shot(pg, "phone-hearing")

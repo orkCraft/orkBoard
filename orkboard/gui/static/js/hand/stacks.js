@@ -59,8 +59,9 @@ function Slot({ at, of, z, behind = false, plus = false, children }) {
 }
 
 /** The leader of a lane, for the narrow hand laid by leader (spec 147 C.4): a 22 px separator with the leader's 16 px head before the lane's cards, the Orkmaster's crowned head for the first lane (the column's). It is not drawn at the wide width, where the lane is the leader's. */
+export const laneHead = (lane, party) => (lane === 0 ? { race: "peon", tier: "crown" } : party?.leader?.head || null);      // the head before a lane's cards on the narrow page and the phone (the phone's row: uprow.js)
 function Sep({ lane, party }) {
-  const h = lane === 0 ? { race: "peon", tier: "crown" } : party?.leader?.head;
+  const h = laneHead(lane, party);
   return html`<span class="hand-sep" data-lane=${lane} aria-hidden="true">${h && html`<${Head} race=${h.race} tier=${h.tier} />`}</span>`;
 }
 

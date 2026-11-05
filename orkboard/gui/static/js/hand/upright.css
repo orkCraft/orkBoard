@@ -57,10 +57,22 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .up-ctx__wait { display: flex; align-items: center; gap: var(--ork-2); }
 .up-ctx__wait .ork-sign { flex: none; color: var(--ork-alert); }
 
-/* the picked entry's card in its place: full width, not turned, its height its content's (the middle scrolls), its answers on it */
-.hand .hand-lifted.hand-lifted--up { --hc-head: auto; --hc-window: 52px; position: relative; flex: none; top: auto; bottom: auto; left: auto !important; right: auto; width: 100%; max-width: none; height: auto; min-height: 0; max-height: none;
+/* the picked entry's card in its place (spec 147 F.3, decisions §251.6): the opened card, 5 : 7 at the screen's width (a low window: as tall as it leaves, so as wide as that makes it), not turned, its corners, its title, a body that scrolls (the window, its words, its way) and
+   its answers above the foot; the middle scrolls around it. While the keyboard is up (`is-typing`, hand/upkeys.js: stopcard.js sets `--up-h`) it gives up 5 : 7: its top corners and its title in two lines, then the field, as tall as the screen leaves. */
+.hand .hand-lifted.hand-lifted--up { --hc-head: auto; --hc-window: 52px; position: relative; flex: none; top: auto; bottom: auto; left: auto !important; right: auto; max-width: none; max-height: none;
   translate: none; rotate: none; transform-origin: 50% 50%; z-index: auto; }
-.hand-lifted--up .hand-lifted__body { padding-bottom: var(--ork-1); }
+.hand .hand-card.hand-lifted--card.hand-lifted--up { width: min(100%, calc((100dvh - 150px) * 5 / 7)); align-self: center; height: auto; min-height: 0; aspect-ratio: 5 / 7; }
+.hand-lifted--up .hand-lifted__win .card-win { height: 96px; }
+.hand-lifted--up .hand-lifted__body { padding-bottom: var(--ork-6); }
+.hand .hand-card.hand-lifted--card.hand-lifted--up.is-typing { width: 100%; aspect-ratio: auto; height: var(--up-h, auto); }
+.hand-lifted--up.is-typing > .corner--foot, .hand-lifted--up.is-typing .hand-lifted__win, .hand-lifted--up.is-typing .hand-lifted__text, .hand-lifted--up.is-typing .hand-lifted__why { display: none; }
+.hand .hand-lifted--up.is-typing .hand-lifted__title { -webkit-line-clamp: 2; line-clamp: 2; }
+.hand-lifted--up.is-typing .hand-lifted__body { flex: 1 1 0; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; }
+.hand-lifted--up.is-typing .q-here .q-card:not(.q-card--blank) { display: none; }      /* the question's other choices give way to the field */
+.hand-lifted--up.is-typing :is(textarea, .ork-field) { min-height: 120px; }
+.hand-lifted--up.is-typing .hand-lifted__acts { max-height: none; }
+.hand-up[data-typing] .up-look { padding-top: var(--ork-4); }
+.hand-up[data-typing] .up-look > :not(.hand-lifted):not(.hand-ready), .hand-up[data-typing] .up-row { display: none; }      /* only the card and its field are left of the screen the keyboard leaves */
 .hand-lifted--up .hand-answers { flex-direction: column; align-items: stretch; }
 .hand-lifted--up .hand-answers .ork-btn, .hand-lifted--up .hand-lifted__body > .ork-btn { min-height: var(--ork-tap); justify-content: center; }
 .hand-lifted--up .hand-way__acts { flex-direction: column; align-items: stretch; }
@@ -88,32 +100,36 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .q-here .q-choose__acts { justify-content: center; }
 .q-here .q-choose__acts .ork-btn { min-height: var(--ork-tap); }
 
-/* the hand's row (112 px, over the home bar's safe area): the entries' upper parts, scrolling sideways under the + card, which lies at its right end */
-.up-row { flex: none; position: relative; box-sizing: content-box; height: 112px; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
-.up-cards { position: absolute; left: 0; right: 0; top: 0; height: 112px; box-sizing: border-box; display: flex; align-items: flex-start; gap: var(--ork-2); padding: var(--ork-3) 92px 0 var(--ork-3);
-  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+/* the hand's row (spec 147 F.2): laid by leader, a 22 px separator with the leader's head before each group, the cards 80 x 112 cut at 62 by the row's foot; a card pressed rises by what is cut (50 px) and shows the rest, tapped it opens (hand/uprow.js). The row scrolls sideways under the + card,
+   which lies at its right end, over the home bar's safe area. The scroller reaches 50 px above the row so a card can rise out of it; only its cards and separators take the pointer, the middle above stays the middle's. */
+.up-row { --up-rise: 50px; flex: none; position: relative; z-index: 3; box-sizing: content-box; height: calc(var(--ork-4) + 62px); padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 3px solid var(--ork-table-rim); background: var(--ork-room); }
+.up-cards { position: absolute; left: 0; right: 0; top: calc(var(--up-rise) * -1); height: calc(var(--up-rise) + var(--ork-4) + 62px); box-sizing: border-box; display: flex; align-items: flex-start; gap: var(--ork-2); padding: calc(var(--up-rise) + var(--ork-4)) 92px 0 var(--ork-4);
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; pointer-events: none; }
+.up-cards > * { pointer-events: auto; }
 .up-cards::-webkit-scrollbar { display: none; }
+.up-sep { flex: none; box-sizing: border-box; width: 22px; align-self: stretch; display: flex; justify-content: center; padding-top: var(--ork-2); border-left: var(--ork-line) solid var(--ork-frame); }
+.up-sep .ork-race__head { width: auto; height: 16px; image-rendering: pixelated; }
 /* a card that landed out of the row's view: the cue at that edge brightens once (hand/uprow.js `data-cue`); static under reduced motion */
 .up-row::after { content: ""; position: absolute; top: 0; bottom: 0; width: var(--ork-1); background: var(--ork-ink); opacity: 0; pointer-events: none; z-index: 1; }
 .up-row[data-cue="right"]::after { right: 92px; animation: up-cue calc(var(--ork-motion-base) * 5) ease-out 1; }
 .up-row[data-cue="left"]::after { left: 0; animation: up-cue calc(var(--ork-motion-base) * 5) ease-out 1; }
 @keyframes up-cue { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .up-row[data-cue]::after { animation: none; opacity: 1; } }
-button.ork-card.up-card { position: relative; flex: none; width: 88px; height: 124px; padding: var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-1); text-align: left; }
-.up-card.is-picked { transform: translateY(-6px); border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
-.up-card__head { display: flex; gap: var(--ork-1); align-items: flex-start; min-width: 0; }
-.up-card__head .ork-elem { margin-top: 2px; }
-.up-card__name { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); font-size: 11px; line-height: 14px; font-weight: 600; }
-.up-card__window { position: relative; flex: none; margin-top: auto; height: 34px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); }
-.up-card .hand-mark { display: inline-flex; color: var(--ork-ink-muted); }
-.up-card .hand-mark .ork-sign.big { transform: scale(0.8); }
-.up-card.asks .hand-mark, .up-card .hand-mark.is-alert { color: var(--ork-alert); }
-.up-card.fails .hand-mark, .up-card .hand-mark.is-danger { color: var(--ork-danger); }
-.up-card .hand-mark.is-ok { color: var(--ork-success); }
-.up-card__asker { position: absolute; right: var(--ork-2); bottom: 2px; display: inline-flex; }
-.up-card__asker .ork-race__head { width: 16px; height: 15px; }
-.up-plus { position: absolute; right: var(--ork-4); top: var(--ork-3); z-index: 2; width: 64px; height: 90px; }
-.hand-up .up-plus .hand-plus { width: 64px; height: 90px; padding: 0; display: flex; align-items: center; justify-content: center; rotate: calc(var(--ork-motion-lean) * 0.5); }
+button.ork-card.up-card { position: relative; flex: none; box-sizing: border-box; width: 80px; height: 112px; padding: var(--ork-1) var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-1); overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
+.up-card > .corner { flex: none; height: 16px; }
+.up-card > .corner--foot { margin-top: auto; }
+.up-card__name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; height: 36px; font: var(--ork-type-caption); font-size: 11px; line-height: 18px; font-weight: 600; }
+.up-card__why { flex: none; box-sizing: border-box; padding-top: var(--ork-1); border-top: var(--ork-line) dashed var(--ork-card-frame); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
+  font: var(--ork-type-caption); font-size: 10px; line-height: 12px; color: var(--ork-ink-read); }
+.up-card__why:empty { display: none; }
+.up-card .corner__much, .up-card .corner__who { font-size: 10px; }
+.up-card .corner__much .ork-gem { height: 16px; font-size: 10px; padding: 0 var(--ork-1); }
+.up-card:is(:active, :focus-visible) { transform: translateY(calc(var(--up-rise) * -1)); z-index: 5; box-shadow: 0 var(--ork-1) 0 var(--ork-scrim); }      /* pressed: it rises by what the row cuts and shows the rest */
+.up-card.is-picked { transform: translateY(calc(var(--ork-1) * -3)); border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
+.up-card.is-picked:is(:active, :focus-visible) { transform: translateY(calc(var(--up-rise) * -1)); }
+@media (prefers-reduced-motion: reduce) { button.ork-card.up-card { transition: none; } }
+.up-plus { position: absolute; right: var(--ork-4); top: var(--ork-4); z-index: 2; width: 64px; height: 62px; }
+.hand-up .up-plus .hand-plus { width: 64px; height: 62px; padding: 0; display: flex; align-items: center; justify-content: center; rotate: calc(var(--ork-motion-lean) * 0.5); }
 .hand-up .up-plus .hand-plus > .ork-icon { width: 28px; height: 28px; }
 .hand-up .up-plus .hand-plus .ork-sigil { display: none; }
 
@@ -124,8 +140,3 @@ button.ork-card.up-card { position: relative; flex: none; width: 88px; height: 1
 .up-mic.is-on { color: var(--ork-alert); }
 .up-mid { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--ork-4); }
 .up-none { margin: 0; text-align: center; font: var(--ork-type-body); color: var(--ork-ink-muted); }
-
-/* a phone on its side (a low window): the hand's row is lower, so the middle keeps its room */
-@media (max-height: 499.98px) {
-  .up-row, .up-cards { height: 76px; }
-}

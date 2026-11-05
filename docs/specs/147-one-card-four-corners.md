@@ -125,3 +125,11 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
    its top corners and its title in two lines, then the field, as tall as the screen leaves.
 4. Tests: the crown's menu has the two piles of backs and *At work* standing; the phone's hand has a head before each
    group; the opened card is 5 : 7 without a keyboard.
+5. **As built**: the piles are the column's own (`table/piles.js` `Pile`) in the menu's sheet (`hand/uppiles.js`, which replaced the
+   Orkmaster's rows of goals; the parties' rows under them stay), the words beside each pile in the grid's second column
+   (`upmenu.css`). The row (`hand/uprow.js`, `upright.css`) groups the entries by lane (`groupsOf`) with a `.up-sep` before
+   each, its cards drawn with `CornerTop`/`CornerFoot`; pressed (`:active`) a card rises 50 px, the scroller reaching 50 px
+   above the row so it can. The opened card is `Lifted` with `inline` and the desktop's anatomy; `hand/upkeys.js`
+   `useKeyboard` says the keyboard is up (`visualViewport` 120 px or more shorter than the window, not zoomed), `Lifted`
+   then sets `--up-h` to what the screen leaves and `upright.css` drops 5 : 7, the window, the foot and the other choices.
+   Tests: `tests/test_phone_cards_browser.py` (a stand-in `visualViewport`) and the phone's existing files.

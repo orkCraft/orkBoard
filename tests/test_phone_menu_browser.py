@@ -20,7 +20,7 @@ pytestmark = pytest.mark.browser
 
 SHOTS = Path(os.environ["UPRIGHT_SHOTS"]) if os.environ.get("UPRIGHT_SHOTS") else None
 MENU = "The leaders and their goals"
-TALK, SPEC = "Daily quests: who plays them?", "Leaderboard"
+TALK, SPEC, REVIEWED = "Daily quests: who plays them?", "Leaderboard", "Players see who answered first"
 
 
 def shot(pg, name):
@@ -34,7 +34,8 @@ class MenuHost(TableHost):
 
     def __init__(self):
         super().__init__(rich=True, line=3)
-        self.nodes += [node("daily", "game", TALK, "talk", element="ice", sign="feature"), node("board", "game", SPEC, "decided", element="lava", sign="chart")]
+        self.nodes += [node("daily", "game", TALK, "talk", element="ice", sign="feature"), node("board", "game", SPEC, "decided", element="lava", sign="chart"),
+                       node("first", "game", REVIEWED, "ready", element="void", sign="feature", back={"ripe": {"left_s": 120, "seconds": 300, "by": None, "held": False}})]      # a spec made, its work to start by itself in 2 min: To review
 
 
 def start(gui, kind="phone", errors=None):
@@ -166,22 +167,77 @@ def test_its_head_is_the_crowned_head_the_project_with_its_switcher_settings_and
     assert not errors, "\n".join(errors)
 
 
-def test_the_groups_the_orkmasters_goals_then_each_party_with_its_goals_at_work(gui):
+def test_the_orkmasters_piles_are_the_columns_a_fan_a_deck_and_at_work_standing_each_with_its_words_beside_it(gui):
+    """Spec 147 F.1: the crown's piles drawn as part B draws the column, over the parties; the sheet scrolls where they are many."""
+    pg, host, errors = start(gui)
+    try:
+        m = opened(pg)
+        piles = m.locator(".up-piles")
+        assert piles.count() == 1 and box(piles)["y"] < box(m.locator(".up-group").first)["y"], "the piles first, then each party"
+        secs = piles.locator(".col-sec")
+        assert [s.get_attribute("data-pile") for s in secs.all()] == ["analysis", "review", "work"], "In analysis, To review, At work"
+        assert [s.locator(".col-plab__t").inner_text().strip().lower() for s in secs.all()] == ["in analysis", "to review", "at work · later"]
+        size = lambda loc: loc.evaluate("(e) => [e.offsetWidth, e.offsetHeight]")  # noqa: E731
+        fan = piles.locator(".col-fan .col-card--fan")
+        assert fan.count() >= 3 and all(size(b) == [56, 78] for b in fan.all()), "the Orkmaster's hand: a fan of 56 x 78 backs"
+        assert piles.locator(".col-fan").evaluate("(e) => e.offsetWidth") <= 144 and piles.locator(".col-card--fan .ork-sigil.small").count() == fan.count() and fan.first.locator(".ork-elem").count() == 1, "never wider than 144, a rune in each one's middle"
+        assert piles.locator(".col-card--fan.is-reading").count() == 1, "the goal being read lifted"
+        deck = piles.locator(".col-card--deck")
+        front = deck.first
+        assert deck.count() >= 1 and size(front) == [157, 112] and box(front)["x"] == pytest.approx(-13, abs=1), "To review: a back on its side, 13 px under the screen's edge"
+        assert front.get_attribute("aria-label").startswith(REVIEWED) and front.locator(".ork-sigil.is-waiting").count() == 1
+        work = piles.locator(".col-card--up")
+        assert work.count() >= 3 and all(size(c) == [144, 202] for c in work.all()), "At work stands: 144 x 202"
+        ys = [box(c)["y"] for c in work.all()]
+        assert [round(b - a) for a, b in zip(ys, ys[1:])] == [26] * (len(ys) - 1), "every card behind the front shows its foot"
+        assert work.first.locator(".corner--top").count() == 1 and work.first.locator(".corner--foot").count() == 1, "read by its corners"
+        for pile, words in (("analysis", "reading: "), ("review", "next in 2 min: ")):
+            under = piles.locator(f'.col-sec[data-pile="{pile}"] .col-under')
+            sec, text = box(piles.locator(f'.col-sec[data-pile="{pile}"] .col-plab')), " ".join(under.inner_text().split())
+            assert text.startswith(words), f"{pile}: its words"
+            assert box(under)["x"] > 150 and box(under)["y"] > sec["y"], "beside the cards, not under them"
+        assert text == f"next in 2 min: {REVIEWED}"
+        assert piles.locator(".col-card.asks").count() == 0 and piles.locator(".ork-sign.alert").count() == piles.locator(".col-card.fails .ork-sign.alert").count(), "nothing asks; an alert sign is on a card whose task failed (the column's own)"
+        shot(pg, "phone-menu-piles")
+        pg.locator(".up-menu").evaluate("(e) => { e.scrollTop = 0; }")
+        assert pg.locator(".up-menu").evaluate("(e) => getComputedStyle(e).overflowY") == "auto", "a screen of its own: it may scroll"
+        narrow.no_sideways(pg)
+    finally:
+        pg.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_a_card_of_the_piles_pressed_picks_its_goal_and_closes_the_menu(gui):
+    pg, host, errors = start(gui)
+    try:
+        opened(pg)
+        pg.locator(f'.up-piles .col-card--fan[aria-label^="{TALK}"]').click()
+        menu(pg).wait_for(state="detached", timeout=WAIT_MS)
+        assert sig(pg, "frame/state.js", "picked") == "daily", "a back of the Orkmaster's hand picks its goal"
+        opened(pg)
+        pg.locator(".up-piles .col-card--up", has_text="Tidy the lobby code").click()
+        menu(pg).wait_for(state="detached", timeout=WAIT_MS)
+        assert sig(pg, "frame/state.js", "picked") == "calm" and sig(pg, "frame/state.js", "tab") == "orkmaster", "a standing card of At work picks its goal"
+        opened(pg)
+        assert pg.locator(".up-piles .col-card--up.ork-picked").get_attribute("data-goal") == "calm", "the picked goal's card wears the pick"
+    finally:
+        pg.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_the_parties_each_with_its_goals_at_work(gui):
     pg, host, errors = start(gui)
     try:
         m = opened(pg)
         groups = m.locator(".up-group")
-        assert groups.count() == 5, "the Orkmaster's goals and the four parties, Release too"
-        assert groups.first.locator(".up-group__label").inner_text().strip().lower() == "orkmaster · being talked about"
-        talked = texts(groups.first.locator(".up-grow"))
-        assert talked == [f"{TALK} Talk", f"{SPEC} Spec", "Chat in the lobby In line", "Round music that fades in In line", "A banner for the lobby In line"], "Talk and Spec in the Board's order, then those in line"
-        assert [g.locator(".up-prow__name").inner_text().strip() for g in groups.all()[1:]] == ["Game design", "Tech", "Art", "Release"], "the tabs' order"
-        by = {g.locator(".up-prow__name").inner_text().strip(): texts(g.locator(".up-grow")) for g in groups.all()[1:]}
+        assert groups.count() == 4, "the four parties, Release too"
+        assert [g.locator(".up-prow__name").inner_text().strip() for g in groups.all()] == ["Game design", "Tech", "Art", "Release"], "the tabs' order"
+        by = {g.locator(".up-prow__name").inner_text().strip(): texts(g.locator(".up-grow")) for g in groups.all()}
         assert by["Game design"] == ["Write the timer's rules: seconds in each phase Work"]
         assert sorted(by["Tech"]) == sorted(["Tidy the lobby code Work", "Keep the seat when a socket reconnects Work", "Check that a rejoin keeps the round Checks"])
         assert by["Art"] == ["A timer bar that drains Checks"], "a goal whose front task is a check says Checks"
-        assert by["Release"] == [] and groups.nth(4).locator("button").count() == 1, "a party with no goal at work is its row alone"
-        for g in groups.all()[1:]:
+        assert by["Release"] == [] and groups.nth(3).locator("button").count() == 1, "a party with no goal at work is its row alone"
+        for g in groups.all():
             head = g.locator(".up-prow img.ork-race__head").first
             assert head.get_attribute("src").startswith("/ds/orkui/races/") and round(box(head)["width"]) == 24
         shot(pg, "phone-menu-groups")
@@ -190,17 +246,14 @@ def test_the_groups_the_orkmasters_goals_then_each_party_with_its_goals_at_work(
     assert not errors, "\n".join(errors)
 
 
-def test_a_goals_row_is_its_element_the_types_sign_its_name_and_its_phase_the_moon_beside_one_that_waits_for_the_reset(gui):
+def test_a_goals_row_is_its_element_the_types_sign_its_name_and_its_phase(gui):
     pg, host, errors = start(gui)
     try:
         opened(pg)
-        talk = pg.locator(".up-grow", has_text=TALK)
-        assert talk.locator(".ork-elem.ice").count() == 1 and talk.locator(".ork-sign.feature").count() == 1 and talk.locator(".up-grow__phase").inner_text().strip() == "Talk"
-        assert pg.locator(".up-grow", has_text="Leaderboard").locator(".ork-sign.chart").count() == 1
-        music = pg.locator(".up-grow", has_text="Round music that fades in")
-        assert music.locator(".ork-sign.moon").count() == 1 and music.locator(".up-grow__phase").inner_text().strip() == "In line", "the moon beside the name of the one that waits for the reset"
-        assert pg.locator(".up-grow", has_text="Chat in the lobby").locator(".ork-sign.moon").count() == 0
-        assert pg.locator(".up-grow", has_text="Keep the seat").locator(".ork-elem.ice").count() == 1
+        seat = pg.locator(".up-grow", has_text="Keep the seat")
+        assert seat.locator(".ork-elem.ice").count() == 1 and seat.locator(".up-grow__phase").inner_text().strip() == "Work", "its element, its name, its phase"
+        assert pg.locator(".up-grow", has_text="Check that a rejoin").locator(".up-grow__phase").inner_text().strip() == "Checks"
+        assert pg.locator(".up-grow .ork-sign.moon").count() == 0, "the goals in line are the piles' (To review, In analysis), not a row"
         for r in pg.locator(".up-grow").all():
             assert box(r)["height"] >= 40
         x = [box(r.locator(".ork-elem"))["x"] for r in pg.locator(".up-grow").all()]
@@ -237,7 +290,8 @@ def test_no_count_no_alert_no_waits_for_you_anywhere_in_the_menu(gui):
     pg, host, errors = start(gui)
     try:
         m = opened(pg)
-        assert m.locator(".ork-sign.alert, .ork-badge, .table-tab__dot, .table-tab__alert").count() == 0
+        assert m.locator(".ork-sign.alert, .ork-badge, .table-tab__dot, .table-tab__alert").count() == m.locator(".up-piles .ork-sign.alert").count(), "none among the leaders (a goal whose task failed carries the column's own sign on its card)"
+        assert m.locator(".up-piles .col-card.asks, .up-piles .corner__much.is-ask, .up-piles .col-under.is-asks").count() == 0, "and no card in the piles says it waits for you"
         text = " ".join(m.inner_text().split())
         assert "waits for you" not in text.lower() and "alert" not in text.lower() and "!" not in text
         for r in rows(pg).all():
@@ -266,7 +320,7 @@ def test_a_goal_pressed_is_picked_and_the_menu_closes_the_picked_row_has_the_ink
         assert on.evaluate("(e) => getComputedStyle(e).backgroundColor") == bg_of(pg, "--ork-panel")
         assert css_colour(pg, "--ork-ink").replace("rgb(", "").replace(")", "") in on.evaluate("(e) => getComputedStyle(e).boxShadow"), "the ink's bar at its left"
         shot(pg, "phone-menu-picked")
-        pg.locator(".up-grow", has_text=TALK).click()
+        pg.locator(f'.up-piles .col-card--fan[aria-label^="{TALK}"]').click()
         menu(pg).wait_for(state="detached", timeout=WAIT_MS)
         assert sig(pg, "frame/state.js", "picked") == "daily"
     finally:
