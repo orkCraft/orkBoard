@@ -15,3 +15,15 @@ def name() -> str:
         return profile.current().name
     except RuntimeError:                  # nothing bound a profile yet (a module used on its own, a test)
         return DEFAULT
+
+
+def git_identity() -> list[str]:
+    """The `-c` arguments that make the running product the author of a commit it makes itself: its name, and a local address (spec 149 F.3)."""
+    who = name()
+    return ["-c", f"user.name={who}", "-c", f"user.email={who.lower()}@localhost"]
+
+
+def board_author() -> tuple[str, str]:
+    """(name, email) of the commits of the Board's own pages: *Orkboard board* here, *Orkline board* in Orkline (spec 149 F.3)."""
+    who = name()
+    return f"{who} board", f"board@{who.lower()}.local"

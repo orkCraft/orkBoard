@@ -288,7 +288,7 @@ def test_what_the_session_left_uncommitted_is_committed_under_the_tasks_title_an
     runner.start("demo")
     assert wait_idle(runner)["state"] == "done"
     assert tasks_of(town)["k1"]["state"] == "merged"
-    assert git(town.origin, "log", "-1", "--format=%an", "main") == "Orkline"
+    assert git(town.origin, "log", "-1", "--format=%an", "main") == "Orkboard"
     assert git(town.origin, "show", "main:k1.txt") == "done by k1"
 
 

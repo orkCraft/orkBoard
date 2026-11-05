@@ -29,6 +29,7 @@ import time
 from pathlib import Path
 from typing import NamedTuple
 
+from orkboard import brand
 from orkboard.realm import dep_links, gate_config, gate_env, jobs, steps_git, worktrees
 
 GIT_TIMEOUT_S = 60
@@ -163,7 +164,7 @@ class IdeaGit:
                 _git(path, "rm", "-q", "-f", "--", rel)
             done.append(rel)
         if done and _git(path, "diff", "--cached", "--quiet").returncode != 0:
-            _ok(_git(path, "-c", "user.name=Orkline", "-c", "user.email=orkline@localhost", "commit", "-q", "-m",
+            _ok(_git(path, *brand.git_identity(), "commit", "-q", "-m",
                      "The Board's pages put back: a task never edits them"))
         return done
 
@@ -172,14 +173,16 @@ class IdeaGit:
 
     def commit_left(self, path: Path, message: str) -> bool:
         """Commit what the session left uncommitted (a session in `acceptEdits` edits files but may not run git):
-        True when it made a commit. Orkline is its author; ignored files stay out, as `git add -A` leaves them (the steps file
-        too, `steps_git.exclude`)."""
+        True when it made a commit. The running product is its author; ignored files stay out, as `git add -A` leaves them (the steps file
+        and `.ork-commit.md` too, `steps_git.exclude`). What the task left in `.ork-commit.md` goes under the title as the message's body, and
+        the file is taken away: it is never committed (spec 149 F.2)."""
         steps_git.exclude(path)
+        body = steps_git.take_commit_note(path)
         if not self.dirty(path):
             return False
         _ok(_git(path, "add", "-A"))
-        _ok(_git(path, "-c", "user.name=Orkline", "-c", "user.email=orkline@localhost", "commit", "-q", "-m",
-                 message.strip()[:200] or "Orkline: the task's work"))
+        _ok(_git(path, *brand.git_identity(), "commit", "-q", "-m", message.strip()[:200] or f"{brand.name()}: the task's work",
+                 *(["-m", body] if body else [])))
         return True
 
     def commit_file(self, path: Path, rel: str, message: str) -> None:
@@ -190,8 +193,8 @@ class IdeaGit:
         _ok(_git(path, "add", "--", rel))
         if _git(path, "diff", "--cached", "--quiet", "--", rel).returncode == 0:
             raise RuntimeError(f"{rel} already holds that file: nothing changes")
-        _ok(_git(path, "-c", "user.name=Orkline", "-c", "user.email=orkline@localhost", "commit", "-q", "-m",
-                 message.strip()[:200] or "Orkline: the picked file", "--", rel))
+        _ok(_git(path, *brand.git_identity(), "commit", "-q", "-m",
+                 message.strip()[:200] or f"{brand.name()}: the picked file", "--", rel))
 
     def restore(self, path: Path, sha: str) -> None:
         """The worktree as it was cut: `sha` checked out over everything the session did, what it added taken away (a task that
@@ -270,7 +273,7 @@ class IdeaGit:
     def python(self) -> str:
         """The Python that runs the gate's pytest (spec 143 C.4): the repository's own `.venv` when it has one (even with no pytest in it: the card says what
         to run), else the first `python3`, then `python`, on the `PATH` that imports pytest (asked once, by a short run, and kept for the process), else
-        Orkline's own, which under `uv tool` never has it."""
+        the running product's own, which under `uv tool` never has it."""
         for rel in (".venv/bin/python", ".venv/Scripts/python.exe"):
             if (self.root / rel).is_file():
                 return str(self.root / rel)
@@ -322,7 +325,7 @@ class IdeaGit:
         """Merge `into` into the task's branch to fix a conflict: the files still in conflict (the merge stays
         open for the session to resolve them), [] when it merged cleanly."""
         with self.lock:
-            done = _git(path, "-c", "user.name=Orkline", "-c", "user.email=orkline@localhost", "merge", "--no-edit",
+            done = _git(path, *brand.git_identity(), "merge", "--no-edit",
                         into, timeout=PUSH_TIMEOUT_S)
             if done.returncode == 0:
                 return []
@@ -522,7 +525,7 @@ def parse_tests(output: str, keep_lines: int = 40) -> dict:
 # -- the Board's own tree (spec 35 §13) ----------------------------------------------------------------------------
 
 BOARD_PAGE = re.compile(r"(^|/)pages/(ideas|tracks)/[^/]+\.md$")     # a Board page, wherever its Wiki is
-BOARD_NAME, BOARD_EMAIL = "Orkline board", "board@orkline.local"
+BOARD_NAME, BOARD_EMAIL = "Orkline board", "board@orkline.local"      # what older commits of the Board say; a new one is `brand.board_author()` (spec 149 F.3)
 COMMIT_AFTER_S = 10.0                # the writes within this as one commit
 
 
@@ -552,7 +555,7 @@ def spec_paths(repo_root: Path, state_dir: Path, slug: str) -> tuple[str, list[s
 class BoardTree:
     """The Board's pages in a worktree of their own, `<state_dir>/board/`, detached at the work branch's tip: it locks
     no branch, so the person can check out any. A change is a commit of the Board's pages only (the writes within 10 s
-    as one), author *Orkline board*; the work branch is then fast-forwarded to it under the repository's lock, by
+    as one), author *<the product> board* (`brand.board_author`); the work branch is then fast-forwarded to it under the repository's lock, by
     `IdeaGit._fast_forward`'s rules (in place when the person's checkout is on it, by `update-ref` when not). Refused
     when the person has uncommitted changes in those files: held, tried again at the next write. Nothing is pushed."""
 
@@ -623,8 +626,9 @@ class BoardTree:
                 _git(self.path, "add", "-A", "--", *folders, *files)
             staged = [f for f in _git(self.path, "diff", "--cached", "--name-only").stdout.splitlines() if f.strip()]
             if staged:
-                _ok(_git(self.path, "-c", f"user.name={BOARD_NAME}", "-c", f"user.email={BOARD_EMAIL}", "commit", "-q",
-                         "-m", message or f"board: {title} — {what}", "--author", f"{BOARD_NAME} <{BOARD_EMAIL}>"))
+                who, email = brand.board_author()
+                _ok(_git(self.path, "-c", f"user.name={who}", "-c", f"user.email={email}", "commit", "-q",
+                         "-m", message or f"board: {title} — {what}", "--author", f"{who} <{email}>"))
                 out.update(commit=self.git.head(self.path), pages=len(staged))
             out["held"] = self.land()
         return out

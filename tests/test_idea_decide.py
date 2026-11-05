@@ -245,7 +245,7 @@ def test_confirm_appends_the_numbered_entry_and_commits_it_to_dev_with_the_pages
     entry = git(host.repo_root, "show", "dev:docs/decisions.md")
     assert entry.startswith("# Decisions\n\n## 1. Dark mode ships as a setting (") and ", the person and Orkboard)\n\nWhy: People read at night" in entry
     assert "1. Product asks for a setting, off by default.\n2. Tech adds the theme.\n3. No scheduling.\n" in entry + "\n"
-    assert git(host.repo_root, "rev-parse", "dev") == got["commit"] and "Orkline board" in git(host.repo_root, "log", "-1", "--format=%an", "dev")
+    assert git(host.repo_root, "rev-parse", "dev") == got["commit"] and "Orkboard board" in git(host.repo_root, "log", "-1", "--format=%an", "dev")
     assert git(host.repo_root, "log", "-1", "--format=%s", "dev") == "board: decision 1 — Dark mode ships as a setting"
     files = git(host.repo_root, "show", "--name-only", "--format=", "dev").splitlines()
     assert "docs/decisions.md" in files and any(f.endswith(f"pages/ideas/{slug}.md") for f in files) and len(files) >= 2                       # the file and the Board's pages, one commit

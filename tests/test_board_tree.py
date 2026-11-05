@@ -62,7 +62,7 @@ def test_a_write_is_one_commit_of_the_pages_only_and_moves_the_branch_by_update_
     assert got["commit"] and got["pages"] == 1 and got["held"] == ""
     assert git(repo, "rev-parse", "dev") == got["commit"] and git(repo, "rev-parse", "main") != got["commit"]
     assert git(repo, "show", "--name-only", "--format=%an|%s", "dev").splitlines() == [
-        "Orkline board|board: Dark mode — drafted", "", f"{WIKI}/pages/ideas/a.md"]
+        "Orkboard board|board: Dark mode — drafted", "", f"{WIKI}/pages/ideas/a.md"]
     assert not (repo / WIKI).exists()                                    # the person's tree is not touched
 
 
@@ -181,7 +181,7 @@ def test_a_file_of_the_project_is_edited_under_the_lock_and_committed_with_the_p
     seen = []
     got = t.edit_file("docs/decisions.md", lambda old: seen.append(old) or "# Decisions\n\n## 1. One\n", lambda: "board: decision 1 — One")
     assert seen == [""] and got["commit"] and got["held"] == "" and git(repo, "rev-parse", "dev") == got["commit"]
-    assert git(repo, "show", "--name-only", "--format=%an|%s", "dev").splitlines() == ["Orkline board|board: decision 1 — One", "", "docs/decisions.md", f"{WIKI}/pages/ideas/a.md"]
+    assert git(repo, "show", "--name-only", "--format=%an|%s", "dev").splitlines() == ["Orkboard board|board: decision 1 — One", "", "docs/decisions.md", f"{WIKI}/pages/ideas/a.md"]
     assert not (repo / "docs").exists() and (t.path / "stray.txt").exists()                      # the person's tree is not touched; a stray file is not taken
     got = t.edit_file("docs/decisions.md", lambda old: old + "\n## 2. Two\n", "board: decision 2")
     assert git(repo, "show", "dev:docs/decisions.md").endswith("## 2. Two") and git(repo, "log", "-1", "--format=%s", "dev") == "board: decision 2" and got["held"] == ""

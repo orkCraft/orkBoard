@@ -21,6 +21,9 @@ FINDINGS_ASK = (
     'small and certain; leave the rest as findings with `"fixed": false`. Each finding has a `kind`: `"code"` when the code is wrong, '
     '`"env"` when it could not be done here, in the place you ran in (a command was refused, a tool is missing, there is no device or '
     'no network): a person can fix the code, not the place, so never write a finding about the place as `"code"`.')
+CANNOT_COMMIT = ("Git cannot write in this sandbox: do not commit; what you leave is committed for you under the task's title. What is settled about "
+                 "the change goes in `.ork-commit.md` at the worktree's root: it is put under that title as the commit's message, and is never committed itself.")
+NO_BROWSER_HERE = "A browser cannot start here: do not look for one; the gate runs the browser tests."       # spec 149 F.1
 NO_BROWSER = "Browser tests did not run: no Chromium here."     # spec 143 B.3
 # The reasons a browser module gives when it is skipped for want of a browser (tests/browser_kit.py, `pytest.importorskip`), which the gate's
 # `-rfEs` prints: a test's own skip (a case that does not apply at a width) is never read as *no Chromium here*.
@@ -331,8 +334,11 @@ class TaskMixin:
         if (instruction := str(role.get("instruction") or "").strip()):
             parts.append(f"# Your role: {role['name']}\n\n{instruction}"
                          + (f"\n\n{LEAN_DOES}" if self._does_it_itself(slug, task, role) else ""))
-        parts.append("# When you are done\n\nCommit your work with git if you can, with clear messages; what you "
-                     f"leave changed is committed for you under the task's title. {gate_words(gate_config.read(self.repo_root))}")
+        h = _r().harnesses.get(self.tool_of(slug, task))
+        commits, browsers = getattr(h, "commits", True), getattr(h, "browsers", True)
+        parts.append("# When you are done\n\n" + (
+            "Commit your work with git if you can, with clear messages; what you leave changed is committed for you under the task's title."
+            if commits else CANNOT_COMMIT) + f" {gate_words(gate_config.read(self.repo_root))}" + ("" if browsers else f"\n\n{NO_BROWSER_HERE}"))
         parts.append(task_steps.RULE)                                    # every tool's working prompt: its steps in a file (spec 129 H1.1)
         parts += [
             f"You do one task of the idea `{slug}` in this repository: a git worktree on branch "

@@ -154,6 +154,8 @@ class Harness:
     color: str = "bold"              # … in its colour
     deploy_args: tuple[str, ...] = ()   # what goes before a first prompt in an interactive session
     env_cmd: Callable[["Harness", str, str], dict] | None = None   # (h, ask|read|work, workdir) → variables
+    commits: bool = True             # its working agent can run git in its sandbox (Codex's `workspace-write` cannot write git's index: spec 149 F.1)
+    browsers: bool = True            # … and start a browser (Chromium aborts in Codex's sandbox)
     priced: bool = False             # its answers say what they cost
     model_priced: bool = False       # its result is priced from the model it ran on: result(stdout, before, model)
     # (h, prompt, workdir, model, allow) → argv: an agent allowed exactly the MCP tools in `allow` and
@@ -334,7 +336,7 @@ register(Harness(
     lambda h, p, w, m, web: codex_exec(h, "read-only", m, web),
     lambda h, p, w, m, r: codex_exec(h, "workspace-write", m, resume=r),
     result=codex_result, error=codex_error, resumable=True, stdin_prompt=True, deploys=True, web=True,
-    model_priced=True, mark="⌬", color="bold #10a37f",
+    model_priced=True, commits=False, browsers=False, mark="⌬", color="bold #10a37f",
     # the catalog refreshed with its login, else the one its binary ships with
     models_cmd=lambda h: [[h.bin, "debug", "models"], [h.bin, "debug", "models", "--bundled"]],
     parse_models=model_families.parse_codex,
