@@ -21,7 +21,7 @@
 
 /* the discard's card: the same corners, the name in up to four lines, its line of tasks between the name and the foot (spec 147 A.3) */
 .table-end .hand-done.hand-card--corners { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-3); text-align: left; overflow: hidden; }
-.hand-done__name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; line-height: 20px; }
-.hand-done__line { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.hand-done__name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; line-height: 20px; }
+.hand-done__line { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); color: var(--ork-ink-read); }
 .table-end .hand-done.hand-card--corners > .card-win { flex: 1 1 28px; min-height: 28px; width: 100%; height: auto; }          /* its window between the name and the foot (spec 148 B.3) */
 .table-end .hand-done.hand-card--corners .hand-done__moon { top: calc(var(--ork-3) + var(--ork-1)); right: calc(var(--ork-3) + var(--ork-6)); }          /* the moon of a goal done in the night lies left of the kind's sign */

@@ -27,7 +27,7 @@ from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
 from orkboard.realm import (collide, goal_route, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
                             spec_sections, task_brief, tool_errors)
-from orkboard.realm.idea_words import short_of
+from orkboard.realm.idea_words import CARD_RULE, short_of
 from orkboard.sources import pricing
 
 SUMMED = ("usd_low", "usd_high")
@@ -209,7 +209,7 @@ Rules:
 - At most {kw.MAX_TASKS} tasks. Each is a brief another Claude session can do alone, in a worktree of the repository:
   what to change, where, and how it is tested; it names the Done when lines it proves. `after` only where a task
   needs another's result.{step_line}
-- Each task's `title` is a name, 60 characters at most, the verb first (e.g. "Spawn enemies from the wave director"):
+- {CARD_RULE} Each task's `title` is a name, seven words at most, the verb first (e.g. "Spawn enemies from the wave director"):
   the detail belongs in its brief.
 - A code task changes the tests its change breaks, in the same task: the gate runs them when it ends. A later task may add
   coverage, never repair a task before it.

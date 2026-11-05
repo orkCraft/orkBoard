@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 
 from orkboard.realm import idea_questions, idea_target, ideas
-from orkboard.realm.idea_words import short_said
+from orkboard.realm.idea_words import CARD_RULE, short_said
 
 REPLY_CHARS, MAX_QUESTIONS = 4000, 3
 
@@ -51,9 +51,10 @@ class GoalMixin:
 (priority {g['priority']}{', deadline ' + g['deadline'] if g['deadline'] else ''}). Write the rest: it is the context
 every idea under this goal starts from. {title}. You may read the repository (read only); web links are named, never
 fetched. {self.reads(step, list(dict.fromkeys(paths)))}
+{CARD_RULE}
 
 {context}""" + """Answer with one JSON object and nothing else:
-{"title": "a title of at most 60 characters",
+{"title": "a title of at most seven words",
  "short": "its name in two or three words, 24 characters at most",
  "summary": "5 to 12 lines: what the goal means for this repository, the modules and files it touches (as repository paths), what exists already, the constraints",
  "links": ["at most 8 repository paths or Wiki pages you read and found relevant"],

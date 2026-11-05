@@ -199,15 +199,19 @@ def test_a_container_is_a_part_that_runs_on_its_own_the_word_of_spec_90():
 def test_the_table_and_the_hand_are_the_words_of_spec_98():
     """Spec 98 §2.4: each word of the frame has its key, today's word and no old spelling; each is one line of `TERMS`."""
     keys = {"table": "table", "hand": "hand", "discard": "discard", "lane": "lane", "blank_card": "blank card",
-            "lifted_card": "lifted card", "map": "map", "seat": "seat", "squad": "squad", "size": "size",
+            "lifted_card": "lifted card", "seat": "seat", "squad": "squad", "size": "size",
             "to_main": "To main"}
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
     for key, word in keys.items():
         assert lexicon.term(key) == word and rows[key] == (word, ""), key
+    assert rows["map"] == ("table", "map")                                  # spec 150 C.1: what a tab shows is its table; `map` is the old spelling
+    assert (lexicon.term("map"), lexicon.term("map", many=True)) == ("table", "tables")
+    assert lexicon.words("Open Tech's map to pick; two maps") == "Open Tech's table to pick; two tables"
+    assert lexicon.words("a lens, a view, a pitch_view") == "a lens, a view, a pitch_view"
     assert lexicon.term("lane", many=True) == "lanes"
     from pathlib import Path
     lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
-    for key in keys:
+    for key in (*keys, "map"):
         line = next(l for l in lines if l.lstrip().startswith(f'_t("{key}"'))
         assert "#" in line, key
 
@@ -233,6 +237,10 @@ def test_the_route_and_the_phases_are_the_words_of_spec_99_c():
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
     for key, word in keys.items():
         assert lexicon.term(key) == word and rows[key] == (word, ""), key
+    assert rows["map"] == ("table", "map")                                  # spec 150 C.1: what a tab shows is its table; `map` is the old spelling
+    assert (lexicon.term("map"), lexicon.term("map", many=True)) == ("table", "tables")
+    assert lexicon.words("Open Tech's map to pick; two maps") == "Open Tech's table to pick; two tables"
+    assert lexicon.words("a lens, a view, a pitch_view") == "a lens, a view, a pitch_view"
     assert lexicon.term("route", many=True) == "routes" and lexicon.term("step", many=True) == "steps" and lexicon.term("fork", many=True) == "forks"
     assert lexicon.term("stage") == "stage" and lexicon.term("project_stage") == "stage"          # a party's stage (spec 48) and the project's (spec 99 §1) are two concepts
     from pathlib import Path
@@ -248,6 +256,10 @@ def test_the_inbox_and_the_taken_are_the_words_of_spec_136():
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
     for key, word in keys.items():
         assert lexicon.term(key) == word and rows[key] == (word, ""), key
+    assert rows["map"] == ("table", "map")                                  # spec 150 C.1: what a tab shows is its table; `map` is the old spelling
+    assert (lexicon.term("map"), lexicon.term("map", many=True)) == ("table", "tables")
+    assert lexicon.words("Open Tech's map to pick; two maps") == "Open Tech's table to pick; two tables"
+    assert lexicon.words("a lens, a view, a pitch_view") == "a lens, a view, a pitch_view"
     assert lexicon.term("inbox", many=True) == "inboxes"
     from pathlib import Path
     lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()

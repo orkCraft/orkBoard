@@ -43,7 +43,7 @@ export function Header({ g, from }) {
   const squad = squadOf(g), size = sizeWord(g), name = nameOf(g);
   const edit = () => openParties({ party: g.slug }, from);
   const remove = () => openOver("party", { slug: g.slug, remove: true }, from, `Remove ${name}`);
-  const again = hasMap(g) && recordOf(g.slug) ? [["Ask again", () => askAgain(g.slug), false, "", `${theLeader(g.leader?.name)} looks at the map again`, lookOf(g.slug).status === "looking"]] : [];
+  const again = hasMap(g) && recordOf(g.slug) ? [["Ask again", () => askAgain(g.slug), false, "", `${theLeader(g.leader?.name)} looks at the table again`, lookOf(g.slug).status === "looking"]] : [];
   const items = [["Edit", edit], ...again, ...(g.slug === GENERAL ? [] : [["Remove party", remove, true]])];
   return html`<section class="table-head" aria-label=${`${name}: its squad`} data-party=${g.slug} ref=${box}>
     <div class="table-squad">${squad.map((x) => {

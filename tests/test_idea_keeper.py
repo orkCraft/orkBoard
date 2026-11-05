@@ -9,7 +9,7 @@ import pytest
 
 from orkboard.core import idea_keeper
 from orkboard.core.idea_keeper import IdeaKeeper, KeeperError
-from orkboard.realm import ideas
+from orkboard.realm import idea_words, ideas
 
 
 class Model:
@@ -251,14 +251,15 @@ def test_a_plan_says_the_kinds_no_one_of_its_party_does_and_its_prompt_says_the_
 
 
 def test_a_tasks_title_is_asked_short_kept_to_eighty_and_a_longer_one_cut_at_a_word_spec_87(keeper):
-    """Spec 87 §3: the prompt asks a title in 60 characters at most, the verb first; `make_plan` keeps one up to 80 as it is and cuts a longer one at
+    """Spec 87 §3, spec 150 C.3: the prompt asks a title in seven words at most, the verb first; `make_plan` keeps one up to 80 as it is and cuts a longer one at
     the last word under 80, with "…" (80 characters at most)."""
     slug = ideas.add_idea(keeper.root, "waves", state_dir=keeper.state)
     keeper.call = model = Model({"tasks": [{"id": "a", "title": "Spawn enemies from the wave director", "brief": "b"}]})
     keeper.plan(slug)
     _wait(keeper, slug)
     prompt = " ".join(model.asked[0]["prompt"].split())
-    assert "Each task's `title` is a name, 60 characters at most, the verb first (e.g. \"Spawn enemies from the wave director\")" in prompt
+    assert "Each task's `title` is a name, seven words at most, the verb first (e.g. \"Spawn enemies from the wave director\")" in prompt
+    assert " ".join(idea_words.CARD_RULE.split()) in prompt                                  # spec 150 C.3: the card's budget, said in the call
     exact = "Write the long title of a task that is exactly eighty characters in all, no more"[:80]
     assert len(exact) == 80
     long = "Spawn the enemies of every wave from the wave director, then count the survivors of each wave after it"

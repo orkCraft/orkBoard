@@ -34,6 +34,6 @@ export function CardWindow({ of, h }) {
   const style = h ? `height:${h}px` : undefined, lines = linesOf(h || 70);
   const inside = w.kind === "made" ? html`<${MadeInside} m=${w.made} />`
     : w.kind === "picture" ? html`<img class="card-win__img" src=${w.url} alt=${of?.name || ""} loading="lazy" decoding="async" />`
-    : html`<span class="card-win__words" style=${`-webkit-line-clamp:${lines};line-clamp:${lines}`}>${w.text}</span>`;
+    : html`<span class="card-win__words" title=${w.text} style=${`-webkit-line-clamp:${lines};line-clamp:${lines}`}>${w.text}</span>`;
   return html`<span class=${cls("table-card__win is-window card-win", `is-${w.kind}`)} data-window=${w.kind === "made" ? "made" : "card-" + w.kind} style=${style}>${inside}</span>`;
 }

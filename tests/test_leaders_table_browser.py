@@ -271,7 +271,7 @@ def test_the_marks_beside_the_open_head_step_through_the_marked_parts(desk):
     host.records["tech"]["concerns"] = copy.deepcopy(TECH)
     host.change()
     if w == "wide":
-        pg.wait_for_function("() => document.querySelector('[data-ask-head=\"tech\"]').title === 'The Architect is looking at the map'", timeout=WAIT_MS)       # while it looks, the head says so
+        pg.wait_for_function("() => document.querySelector('[data-ask-head=\"tech\"]').title === 'The Architect is looking at the table'", timeout=WAIT_MS)       # while it looks, the head says so
 
 
 # -- the faces ----------------------------------------------------------------------------------------------------------------------------------------

@@ -860,7 +860,7 @@ def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_
     seat.click()
     pg.locator(".table-seatpop").get_by_role("button", name="Open", exact=True).click()
     pg.locator('.table-over[data-kind="role"]').wait_for(timeout=WAIT_MS)                                                  # the role's text, over the pane
-    assert title(pg) == "System · Grunts" and "You are the Grunts." in pg.locator(".table-over").inner_text()
+    assert title(pg) == "Tech's table · Grunts" and "You are the Grunts." in pg.locator(".table-over").inner_text()
     pg.locator(".table-title__back").click()
     pg.locator(".table-head").wait_for(timeout=WAIT_MS)
 
@@ -931,7 +931,7 @@ def test_a_party_menu_has_edit_at_that_party_and_remove_party_over_the_pane(tabl
     assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all()] == ["Edit", "Remove party"]
     pg.get_by_role("menuitem", name="Edit").click()
     pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Art · Parties" and pg.locator('.table-over[data-kind="parties"]').get_attribute("data-owner") == "table"       # the one place of the parties, not today's form
+    assert title(pg) == "Art's table · Parties" and pg.locator('.table-over[data-kind="parties"]').get_attribute("data-owner") == "table"       # the one place of the parties, not today's form
     assert pg.get_by_role("button", name="Save party").count() == 0 and pg.locator(".place").count() == 0
     pg.get_by_role("button", name="Back").click()
     pg.locator(".table-head").wait_for(timeout=WAIT_MS)
@@ -964,7 +964,7 @@ def test_techs_tab_is_its_header_and_the_system_and_a_part_pressed_is_lifted_and
     shot(pg, f"table-system-lifted-{w}.png")
     back.get_by_role("button", name="Open").click()
     pg.locator('.table-over[data-kind="file"] .shell-code').wait_for(timeout=WAIT_MS)
-    assert title(pg) == f"System · {FILE}" and "line 3" in pg.locator(".shell-code").inner_text()                        # a file over the pane, its title says where it came from
+    assert title(pg) == f"Tech's table · {FILE}" and "line 3" in pg.locator(".shell-code").inner_text()                        # a file over the pane, its title says where it came from
     assert pg.locator(".table-sys").count() == 0 and pg.locator(".table-head").count() == 0                              # the map is under it
     shot(pg, f"table-file-{w}.png")
     pg.locator(".table-title__back").click()

@@ -22,7 +22,7 @@ if (typeof document !== "undefined") {                                  // the s
   }
 }
 
-export const COULD_NOT = "The map could not be read";
+export const COULD_NOT = "The table could not be read";
 
 /** The key of a map's card as the table lifts it (`t:` is the table's: Esc and a press away lower it, a card lifted anywhere lowers the last). */
 export const keyOf = (map, id) => `t:map:${map}:${id}`;

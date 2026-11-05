@@ -98,7 +98,7 @@ def test_the_discards_card_has_a_top_row_and_a_foot_row(gui):
         ok = pg.evaluate("() => { const d = document.createElement('i'); d.style.color = 'var(--ork-success)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; }")
         assert card.locator(".corner__kind").evaluate("e => getComputedStyle(e).color") == ok, "in the success colour"
         name = card.locator(".hand-done__name")
-        assert name.evaluate("e => getComputedStyle(e).webkitLineClamp") == "4" and name.bounding_box()["height"] <= 81, "the name in four lines at most"
+        assert name.evaluate("e => getComputedStyle(e).webkitLineClamp") == "3" and name.bounding_box()["height"] <= 61, "the name in three lines at most (spec 150 C.4)"
         assert card.locator(".corner--foot .ork-race__head").count() == 2, "the heads that did it"
         assert card.locator(".corner--foot .corner__much").inner_text().strip() == "took 18 min", "the time it took"
         assert card.locator(".hand-done__line").count() == 0, "no line of main: the snapshot has no time for it"

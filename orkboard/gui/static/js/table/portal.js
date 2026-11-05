@@ -233,8 +233,8 @@ function PortalDoor() {
         aria-hidden=${ready || corners ? undefined : "true"} onAnimationEnd=${(e) => { if (e.animationName === "ork-ring-eye") woke.value = true; }}>
       ${ready && button}
       <span class="ork-portal-ring__seal" aria-hidden="true">${element && html`<${Elem} name=${element} hue=${sealHue} />`}</span>
-      <${Corner} side="before" words="Release: open its view" c=${road.release} passed=${passed} />
-      <${Corner} side="after" words="Live: open its view" c=${road.live} />
+      <${Corner} side="before" words="Release: open the past" c=${road.release} passed=${passed} />
+      <${Corner} side="after" words="Live: open what is live" c=${road.live} />
       ${guard && html`<${Gate} skeletons=${skeletons} onPress=${play} drag=${{ onDragEnter: held, onDragOver: held, onDragLeave: left, onDrop: drop }} />`}
     </span>
     ${hint}${reasoned}

@@ -53,7 +53,7 @@ function Contract({ will }) {
 function Mini({ info, will, read }) {
   if (!info) return null;
   const lit = new Set(info.parts.filter((p) => will.some((w) => names(info, w.id, p))).map((p) => p.id)), half = new Set(read.map((p) => p.id)), made = will.filter((w) => w.kind === "new" && !partFor(info, w.id));
-  return html`<div class="gv-mini" role="img" aria-label=${`The whole map, with ${lit.size + made.length} ${lit.size + made.length === 1 ? "part" : "parts"} lit`} data-kind=${info.kind}>
+  return html`<div class="gv-mini" role="img" aria-label=${`The whole table, with ${lit.size + made.length} ${lit.size + made.length === 1 ? "part" : "parts"} lit`} data-kind=${info.kind}>
     ${info.groups.map((c, i) => html`<div key=${i} class="gv-mini__col">${c.ids.map((id) => html`<i key=${id} class=${cls("gv-mini__b", { "is-lit": lit.has(id), "is-read": half.has(id) })} data-id=${id}></i>`)}</div>`)}
     ${made.length > 0 && html`<div class="gv-mini__col">${made.map((w) => html`<i key=${w.id} class="gv-mini__b is-lit is-new" data-id=${w.id}></i>`)}</div>`}
   </div>`;
@@ -62,7 +62,7 @@ function Mini({ info, will, read }) {
 /** The side: the small map, the leader's *Done when* (checked once the goal is done and the host can say it), the goal's tasks here. */
 function Side({ g, n, info, will, read, dones, tasks, done }) {
   return html`<aside class="gv-side" aria-label="Where it lies">
-    ${info && html`<div class="gv-side__map"><span class="ork-label">Where, on the whole map</span><${Mini} info=${info} will=${will} read=${read} /></div>`}
+    ${info && html`<div class="gv-side__map"><span class="ork-label">Where, on the whole table</span><${Mini} info=${info} will=${will} read=${read} /></div>`}
     ${dones.length > 0 && html`<section class="gv-sec" aria-label="Done when"><h3 class="ork-label">${done ? "Done when, checked" : "Done when"}</h3>
       <ul class="gv-lines gv-done">${dones.map((x, i) => html`<li key=${i} class=${cls({ "is-ok": x.state === "ok" })} data-state=${x.state || undefined}>${x.state === "ok" ? "✓ " : ""}${x.text}</li>`)}</ul></section>`}
     <section class="gv-sec" aria-label="Its tasks here"><h3 class="ork-label">Its tasks here</h3>
@@ -87,9 +87,9 @@ export function GoalView({ g, n }) {
     <div class="gv-main">
       <header class="gv-title"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} big=${true} /><div><b>${n.title}</b><span>${says}</span></div></header>
       ${loading ? html`<p class="gv-empty" data-state="loading">Reading the spec…</p>`
-        : empty ? html`<p class="gv-empty" data-state="none">${n.short || n.title}: nothing of it ${done ? "was" : "is"} on ${nameOf(g)}’s map. Its work is at the other leaders.</p>`
+        : empty ? html`<p class="gv-empty" data-state="none">${n.short || n.title}: nothing of it ${done ? "was" : "is"} on ${nameOf(g)}’s table. Its work is at the other leaders.</p>`
         : html`${cards.length > 0 ? html`<div class="gv-grid">${cards.map((c) => html`<${PartCard} key=${`${c.id}:${c.verdict || c.kind}`} g=${g} part=${c} info=${info} done=${done} />`)}</div>`
-          : html`<p class="gv-empty" data-state="no-parts">${nameOf(g)}’s part of the spec does not name a part of its map.</p>`}
+          : html`<p class="gv-empty" data-state="no-parts">${nameOf(g)}’s part of the spec does not name a part of its table.</p>`}
           ${!done && leadsSystem(g) && html`<${Contract} will=${will} />`}
           ${done && html`<p class="cap gv-play">The die in your hand wears its rune: press it to play the product with this goal in it.</p>`}`}
     </div>

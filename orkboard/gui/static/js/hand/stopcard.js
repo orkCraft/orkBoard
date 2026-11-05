@@ -94,7 +94,7 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
       style=${dealt ? `--ork-deal-i:${dealt.i}` : undefined} aria-label=${`${labelOf(s)}${from ? `, from ${from}` : ""}`} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
     <${CornerTop} rune=${{ name: element, hue, dim: !element }} kind=${actionOf(s).sign} signal=${signalOf(s)} />
-    <span class="hand-card__name">${s.title || s.full}</span>
+    <span class="hand-card__name" title=${s.full || s.title}>${s.title || s.full}</span>
     ${hasWindow(s) ? html`<span class="hand-card__foot has-window" data-foot="window"><${StopWindow} s=${s} /></span>` : html`<span class="hand-card__foot">${footOf(s)}</span>`}
     <${CornerFoot} who=${head || from ? { heads: [head], word: from ? `From ${from}` : "" } : null} much=${cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null} />
     ${children}
@@ -148,7 +148,7 @@ export function Lifted({ s, anchor, inline = false, typing = false }) {
   return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--card${inline ? " hand-lifted--up" : ""}${typing ? " is-typing" : ""}${element ? ` el-${hue}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind} data-typing=${typing ? "1" : undefined} style=${!inline && at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
     <${CornerTop} large=${true} rune=${{ name: element, hue, dim: !element }} name=${s.node?.short || s.node?.title || ""} kind=${actionOf(s).sign} signal=${signalOf(s)} word=${s.label} kindClass="hand-lifted__kind" />
-    <span class="hand-card__name hand-lifted__title">${inline ? upName(s) : s.title || s.full}</span>
+    <span class="hand-card__name hand-lifted__title" title=${s.full || s.title}>${inline ? upName(s) : s.title || s.full}</span>
     <div class="hand-lifted__body">
       ${hasWindow(s) && html`<div class="hand-lifted__win"><${StopWindow} s=${s} h=${inline ? 96 : 160} /></div>`}
       ${Way ? html`<${Way} s=${s} close=${lower} />` : html`<${Body} s=${s} />`}

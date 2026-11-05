@@ -194,7 +194,7 @@ def test_an_edit_sends_route_set_and_says_the_cost_again_from_the_answer_and_the
         lifted.get_by_role("button", name="Add a party to the route").click()
         menu = lifted.locator(".hand-route__menu [role=menuitem]")
         assert [m.get_attribute("data-party") for m in menu.all()] == ["product", "design"], "the offered party first (it touches its map), Release never"
-        assert menu.first.inner_text().endswith("touches its map") and "touches" not in menu.last.inner_text()
+        assert menu.first.inner_text().endswith("touches its table") and "touches" not in menu.last.inner_text()
         fits(pg)
         shot(pg, f"{width}-route-plus")
         menu.last.click()

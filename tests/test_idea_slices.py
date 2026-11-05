@@ -17,7 +17,7 @@ from orkboard.core import idea_keeper, idea_slices
 from orkboard.core.idea_decide import clean_decision
 from orkboard.core.idea_slices import SlicesMixin, clean_cut, clean_digest, points_of
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import decisions_log, event_log, goal_team, idea_questions, idea_spend, idea_target, ideas, lexicon, library, project_facts, slices
+from orkboard.realm import decisions_log, event_log, goal_team, idea_questions, idea_spend, idea_target, idea_words, ideas, lexicon, library, project_facts, slices
 
 MAP = "THE MAP TEXT\nsecond line of the map"
 HEAD = "What you hold of the project's decisions (newest first; read the decision for the rest):\n"
@@ -589,3 +589,8 @@ def test_the_decision_run_widens_its_known_numbers_with_the_slices(host, tech, g
         time.sleep(0.01)
     from orkboard.realm import spec_sections
     assert spec_sections.record(host.ideas.state_dir, goal)["decision"]["changes"] == [3, 5]       # 5 is a heading of the file, 3 a slice's decision, 99 none
+
+
+def test_the_decisions_call_says_the_cards_budget_and_asks_its_title_in_seven_words_spec_150(host, tech, goal):
+    prompt = " ".join(host.ideas.keeper.decision_prompt(goal, _route(tech), idea_questions.record(host.ideas.state_dir, goal)).split())
+    assert " ".join(idea_words.CARD_RULE.split()) in prompt and "`title`: one line of seven words at most" in prompt

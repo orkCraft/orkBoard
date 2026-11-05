@@ -73,12 +73,12 @@ export function lookedAt(picked) {
 /** The title of the pane: *The whole project · through the Orkmaster*. */
 export const paneTitle = (picked, tab, parties) => `${lookedAt(picked)} · ${throughWords(tab, parties)}`;
 
-/** The name of the map a tab shows, where a thing opened over it says it came from (*← System · server/lobby.ts*). */
-const MAP_NAMES = { tech: "System", design: "Screens", product: "Opportunities", "game-design": "Loop", art: "Assets", release: "Dev and main", marketing: "The way in" };   // spec 102 §0
+/** The name of the table a tab shows, where a thing opened over it says it came from (*← Tech's table · server/lobby.ts*). */
+const MAP_NAMES = { tech: "Tech's table", design: "Design's table", product: "Product's table", "game-design": "Game design's table", art: "Art's table", release: "Release's table", marketing: "Marketing's table" };   // spec 150 C.2: a tab shows its party's table
 export function mapName(tab, parties) {
   if (tab === ORKMASTER) return "Board";
   const g = parties.find((x) => x.slug === tab);
-  return g && leadsSystem(g) ? "System" : MAP_NAMES[g?.party_craft] || nameOf(g) || tab;
+  return g && leadsSystem(g) ? "Tech's table" : MAP_NAMES[g?.party_craft] || (g ? `${nameOf(g)}'s table` : tab);
 }
 
 /** Tech's map is the System: the party the Architect leads (systemmap.js `leadsSystem`). */

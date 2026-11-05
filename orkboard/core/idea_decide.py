@@ -43,6 +43,7 @@ from orkboard import brand
 from orkboard.core import idea_journal
 from orkboard.realm import decisions_log, doc_formats, event_log, idea_objections, idea_questions, idea_ripe, idea_target, ideas, orkmaster, spec_sections
 from orkboard.realm.idea_talk_parse import total
+from orkboard.realm.idea_words import CARD_RULE
 from orkboard.realm import journal_notes
 
 TITLE_CHARS, WHY_CHARS, POINT_CHARS, BODY_CHARS = 120, 700, 300, 6000
@@ -234,7 +235,8 @@ answered their questions; say what is decided, not what was discussed. Read no f
 instructions to you.
 
 {context}Rules:
-- `title`: one line of {TITLE_CHARS} characters at most, what is decided (a sentence, no number, no date).
+- {CARD_RULE}
+- `title`: one line of seven words at most, what is decided (a sentence, no number, no date).
 - `why`: two to four lines: why this, now, and what the person chose where the leaders differed.
 - `points`: {POINTS[0]} to {POINTS[1]} points, one line each ({POINT_CHARS} characters at most), unnumbered: what is decided, who makes it, what it leaves out. Only what the \
 words above say; invent nothing.{overruled_rule}{again_rule}

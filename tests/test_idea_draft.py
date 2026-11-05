@@ -11,7 +11,7 @@ import pytest
 
 from orkboard.core import idea_draft, idea_keeper
 from orkboard.core.idea_keeper import IdeaKeeper, KeeperError
-from orkboard.realm import event_log, idea_target, ideas
+from orkboard.realm import event_log, idea_target, idea_words, ideas
 from orkboard.sources.limits import Limit
 
 STEPS = (("write its spec", "draft"), ("answered the questions", "answer"), ("turn it into a plan", "plan"),
@@ -306,3 +306,13 @@ def test_the_draft_prompt_says_the_goals_type_beside_what_its_lens_pointed_at_sp
     assert line in prompt and prompt.replace(line, "") == before                                    # nothing else changes
     ideas.save_state(keeper.state, slug, type="growth/landing")
     assert "Its type: A landing page.\n" in keeper.draft_prompt(keeper.root, slug)                 # no plan line: the name alone
+
+
+def test_a_goals_and_a_drafts_call_say_the_cards_budget_and_ask_a_title_in_seven_words_spec_150(keeper):
+    """Spec 150 C.3: `CARD_RULE` is said in the Orkmaster's goal call and the draft's; the title is asked in seven words (the parsers' caps stay a net)."""
+    rule = " ".join(idea_words.CARD_RULE.split())
+    assert (idea_words.CARD_TITLE_WORDS, idea_words.CARD_LINE_CHARS) == (7, 140) and "seven words" in rule and "140" in rule
+    goal = " ".join(keeper.goal_prompt(keeper.root, keeper.goal).split())
+    assert rule in goal and '"title": "a title of at most seven words"' in goal
+    draft = " ".join(keeper.draft_prompt(keeper.root, ideas.add_idea(keeper.root, "a table of runs please", keeper.goal, keeper.state)).split())
+    assert rule in draft and '"title": "a title of at most seven words"' in draft

@@ -336,7 +336,7 @@ def test_ask_again_is_in_the_partys_menu_sends_the_command_and_waits_for_the_loo
     assert pg.locator(".cn-strip__again").count() == 0
     item = menu_item(pg, "Ask again")
     assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all()] == ["Edit", "Ask again", "Remove party"]
-    assert item.get_attribute("title") == "The Architect looks at the map again" and item.is_enabled()
+    assert item.get_attribute("title") == "The Architect looks at the table again" and item.is_enabled()
     item.click()
     wait_look(pg, status="looking")
     assert host.sent("ideas.concerns_again") == [{"party": "tech"}]
@@ -469,7 +469,7 @@ def test_a_party_tab_shows_a_bang_when_its_map_has_an_alert_and_no_count(desk):
     pg.locator('.table-tab[data-tab="tech"] .table-tab__alert').wait_for(timeout=WAIT_MS)
     assert pg.locator(".table-tab__alert").count() == 2, "Tech's and Game design's"
     bang = tab(pg, "tech").locator(".table-tab__alert")
-    assert bang.locator(".ork-sign.alert").count() == 1 and bang.get_attribute("aria-label") == "The Architect has an alert on the map"
+    assert bang.locator(".ork-sign.alert").count() == 1 and bang.get_attribute("aria-label") == "The Architect has an alert on the table"
     assert not any(ch.isdigit() for ch in bang.inner_text()) and bang.inner_text().strip() == "", "no count on a tab (decisions §145.3)"
     assert tab(pg, "art").locator(".table-tab__alert").count() == 0 and tab(pg, "orkmaster").locator(".table-tab__alert").count() == 0
     host.records["game"] = record(copy.deepcopy(GAME[1]), rubric=GAME_RUBRIC)                                                      # only a note: no mark

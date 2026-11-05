@@ -152,7 +152,7 @@ def test_at_design_the_screens_a_goal_changes_are_cards_with_now_and_will_be_and
         assert texts(pg, ".gv-done li") == ["The winner shows first"] and texts(pg, ".gv-tasks li") == ["Draw the winner first · working"]
         open_tab(pg, "release")
         pg.wait_for_selector('.gv[data-party="release"] .gv-empty[data-state="none"]', timeout=WAIT_MS)
-        assert "nothing of it is on Release’s map" in pg.locator(".gv-empty").inner_text()
+        assert "nothing of it is on Release’s table" in pg.locator(".gv-empty").inner_text()
     finally:
         pg.close()
     assert not log, "\n".join(log)

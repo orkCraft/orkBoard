@@ -245,7 +245,7 @@ def test_play_stays_open_when_the_tab_changes_and_the_frame_is_never_reloaded(gu
     pg, errors = open_play(gui, rig.host)
     pg.evaluate("() => { const f = document.querySelector('.play-frame'); f.__mine = 1; window.__loads = 0; f.addEventListener('load', () => window.__loads++); }")
     assert pg.locator(".play-lens").count() == 0 and title(pg) == "Board · Play"                      # the project's tab: no strip
-    for slug, map_name in (("art", "Screens"), ("tech", "System"), ("game", "Loop"), ("orkmaster", "Board")):
+    for slug, map_name in (("art", "Design's table"), ("tech", "Tech's table"), ("game", "Game design's table"), ("orkmaster", "Board")):
         open_tab(pg, slug)
         assert pg.locator('.table-over[data-kind="play"]').count() == 1 and pg.locator(".play-frame").count() == 1
         pg.wait_for_function("(n) => document.querySelector('.table-title__pt')?.textContent.replace(/\\s+/g, ' ') === n + ' · Play'", arg=map_name, timeout=WAIT_MS)      # the pane's title follows the tab
@@ -280,13 +280,13 @@ def test_a_path_with_no_screen_says_it_is_not_on_the_map_and_a_press_of_the_page
     wait_place(pg, "on Today")
     pg.frame_locator(".play-frame").locator("#push").click()                                                       # the page pushes /nowhere: the probe says `place`, the host answers no screen
     wait_place(pg, "on /nowhere")
-    assert "Not on Screens" in strip_text(pg) and pg.locator(".play-lens .cn-aspect").count() == 0 and pg.locator(".play-lens").get_attribute("data-state") == "off"
+    assert "Not on Design's table" in strip_text(pg) and pg.locator(".play-lens .cn-aspect").count() == 0 and pg.locator(".play-lens").get_attribute("data-state") == "off"
     asked = [a for n, a in rig.host.calls if n == "ideas.play_place" and a["path"] == "/nowhere"]
     assert asked and "web/src/components/Plants.tsx" in asked[-1]["files"]                                         # the files the probe named for the elements it found go with the place
     shot(pg, "e115-strip-not-on.png")
     open_tab(pg, "tech")
     wait_place(pg, "The Architect on /nowhere")
-    assert "Not on System" in strip_text(pg)
+    assert "Not on Tech's table" in strip_text(pg)
     finish(pg, errors)
 
 

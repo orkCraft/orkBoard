@@ -90,7 +90,7 @@ function Measure({ d, m, k, set, drop, parties }) {
   return html`<fieldset class="hf-measure" data-measure=${m.id || "new"}>
     <label class="mp-sec"><span class="ork-label">What</span><input class="ork-field" name=${`${id}-what`} maxlength="120" value=${m.what} onInput=${(e) => upd({ what: e.target.value })} /></label>
     <label class="mp-sec"><span class="ork-label">From</span><input class="ork-field" name=${`${id}-from`} maxlength="120" value=${m.from} onInput=${(e) => upd({ from: e.target.value })} /></label>
-    <label class="mp-sec"><span class="ork-label">Whose map</span><span class="ork-select"><select class="ork-field" name=${`${id}-by`} value=${m.by} onChange=${(e) => upd({ by: e.target.value })}>
+    <label class="mp-sec"><span class="ork-label">Whose table</span><span class="ork-select"><select class="ork-field" name=${`${id}-by`} value=${m.by} onChange=${(e) => upd({ by: e.target.value })}>
       <option value="">You</option>${parties.map((p) => html`<option key=${p.slug} value=${p.slug}>${p.name}</option>`)}</select></span></label>
     <${Bar} id=${`${id}-holds`} label="Holds" b=${m.holds} set=${(b) => upd({ holds: b })} />
     ${d.ways.map((w, i) => html`<${Bar} key=${i} id=${`${id}-way${i}`} label=${w.name.trim() || `Way ${i + 1}`} b=${m.bars[i] || bar()} set=${(b) => upd({ bars: d.ways.map((_, j) => (j === i ? b : m.bars[j] || bar())) })} />`)}

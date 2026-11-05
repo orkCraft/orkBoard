@@ -126,7 +126,7 @@ export function PickStrip({ tab: open }) {
   if (!on) return null;
   return html`<div class="pick-strip" role="status" data-picking="1" data-here=${String(on.party === open)}>
     ${on.party === open ? html`<span class="pick-strip__say">Pick a part to point at it</span>`
-      : html`<button type="button" class="ork-btn quiet pick-strip__open" onClick=${() => openTab(on.party)}>Open ${on.name}'s map to pick</button>`}
+      : html`<button type="button" class="ork-btn quiet pick-strip__open" onClick=${() => openTab(on.party)}>Open ${on.name}'s table to pick</button>`}
     <span class="pick-strip__grow"></span>
     <button type="button" class="ork-btn pick-strip__stop" onClick=${stopPicking}>Stop picking</button>
   </div>`;

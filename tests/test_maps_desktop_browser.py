@@ -350,7 +350,7 @@ def test_a_step_lifted_shows_its_line_feeling_intensity_and_what_it_gives_or_tak
     shot(pg, f"maps-loop-lifted-{w}.png")
     back.locator(".mp-file").first.click()
     pg.locator('.table-over[data-kind="file"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Loop · config/balance.ts"                                                                       # it says where it came from
+    assert title(pg) == "Game design's table · config/balance.ts"                                                                       # it says where it came from
     pg.locator(".table-title__back").click()
     pg.locator('.mp-card[data-id="join-a-match"].is-lit').wait_for(timeout=WAIT_MS)                                      # the card it came from, lit
     card(pg, "join-a-match").click()
@@ -475,7 +475,7 @@ def test_an_asset_lifted_shows_large_with_its_file_and_the_variants_not_picked_a
     shot(pg, f"maps-art-lifted-{w}.png")
     back.locator(".mp-file").click()
     pg.locator('.table-over[data-kind="file"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Assets · sprites/hero-idle.png"
+    assert title(pg) == "Art's table · sprites/hero-idle.png"
     pg.locator(".table-title__back").click()
     pg.locator('.mp-card[data-id="sprites/hero-idle.png"].is-lit').wait_for(timeout=WAIT_MS)
     card(pg, "sounds/win-jingle.wav").locator(".mp-card__nm").click()
@@ -572,7 +572,7 @@ def test_the_way_in_is_four_steps_a_step_with_nothing_says_what_would_be_read(ma
     shot(pg, f"maps-way-lifted-{w}.png")
     back.locator(".mp-file").click()
     pg.locator('.table-over[data-kind="file"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "The way in · Dockerfile"
+    assert title(pg) == "Marketing's table · Dockerfile"
 
 
 def test_every_card_is_wrapped_in_pickable_with_its_map_id_name_and_group(maps):

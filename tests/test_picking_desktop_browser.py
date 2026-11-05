@@ -2,9 +2,9 @@
 (`tests/narrow.py`: 1280 × 800, and 390 × 844 with touch), against the table's stub host (Tech led by the Architect, so its tab is the System; Art's tab carries a stub map of this test's own, drawn with `Pickable`
 as the other maps do, to hold groups the System's parts alone would not).
 
-The strip (*Pick a part to point at it* · *Stop picking*) over the map while the + card's field is addressed to the party whose tab is open, *Open Tech's map to pick* when another tab is open (the tab kept); a press on a
+The strip (*Pick a part to point at it* · *Stop picking*) over the map while the + card's field is addressed to the party whose tab is open, *Open Tech's table to pick* when another tab is open (the tab kept); a press on a
 part marks it (orkUI's brackets, lifted) and again takes it off, a press out of picking lifts the card as before; on the desktop a drag from the empty place draws the dashed box and takes the parts it covers, Shift adds,
-a box over a whole container pins it, over the whole map pins *all of System* (sent as no mark); on a touch screen a tap marks, a long press on the empty place then a drag draws the box, a drag alone scrolls; the marks as chips
+a box over a whole container pins it, over the whole map pins *all of Tech's table* (sent as no mark); on a touch screen a tap marks, a long press on the empty place then a drag draws the box, a drag alone scrolls; the marks as chips
 on the field (a name and ×), past five the first five and *and n more*, a press showing all; picking ends with *Stop picking*, Esc, sending, or the address taken off; the marks go with `ideas.add`; no sideways scroll.
 Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
@@ -248,7 +248,7 @@ def test_a_box_that_takes_a_whole_container_pins_it_and_one_over_the_whole_map_p
     pg.get_by_role("button", name="Take server/ off").click()
     assert chips(pg) == [] and pg.locator(".ork-taken").count() == 0
     drag(pg, *around(pg, PARTS["server"] + PARTS["client"]))
-    assert chips(pg) == ["all"] and pg.locator(".pick-chip").inner_text().strip() == "all of System"
+    assert chips(pg) == ["all"] and pg.locator(".pick-chip").inner_text().strip() == "all of Tech's table"
     shot(pg, f"picking-map-{w}.png")
     pg.get_by_role("button", name="Send").click()
     pg.wait_for_selector(".hand-field", state="detached", timeout=WAIT_MS)
@@ -387,7 +387,7 @@ def test_a_party_named_with_at_is_picked_on_its_own_map_and_the_strip_on_another
     open_field(pg, "@Tech the lobby")
     strip = pg.locator(".pick-strip")
     strip.wait_for(timeout=WAIT_MS)
-    link = strip.get_by_role("button", name="Open Tech's map to pick")
+    link = strip.get_by_role("button", name="Open Tech's table to pick")
     assert pg.locator(".table-tab[aria-selected=true], .col-head__tab[aria-selected=true]").get_attribute("data-tab") == "orkmaster", "the person's tab is kept"
     shot(pg, f"picking-open-link-{w}.png")
     link.click()
@@ -401,7 +401,7 @@ def test_another_partys_tab_in_picking_has_the_link_to_the_party_addressed(picki
     pg, host, w = picking
     open_tab(pg, "game")
     open_field(pg, "@Tech the lobby")
-    assert pg.locator(".pick-strip__open").inner_text().strip() == "Open Tech's map to pick"
+    assert pg.locator(".pick-strip__open").inner_text().strip() == "Open Tech's table to pick"
     assert pg.locator(".pick-host[data-picking]").count() == 0
 
 

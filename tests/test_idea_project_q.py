@@ -15,6 +15,7 @@ import time
 import pytest
 
 from orkboard.core import idea_keeper
+from orkboard.realm import idea_words
 from orkboard.core.idea_project_q import ProjectQMixin as KeeperProjectQ
 from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.gui.ideas_project_q import ProjectQMixin as GuiProjectQ, project_q_commands
@@ -381,6 +382,7 @@ def test_what_is_answered_is_read_into_every_leaders_calls_and_never_asked_again
     entry = {"party": tech, "leader": "architect"}                                                                       # Talk's round for Tech's leader reads them
     prompt = host.ideas.keeper.round_prompt(_goal(host, product), entry, [entry], 1, "", True, project_facts.answered(state))
     assert "Whom it is for: Friends at one TV" in prompt and "What it leaves out: Accounts" in prompt
+    assert " ".join(idea_words.CARD_RULE.split()) in " ".join(prompt.split()) and "`ask` is its title, at most seven words" in prompt    # spec 150 C.3
 
 
 def _goal(host, party):

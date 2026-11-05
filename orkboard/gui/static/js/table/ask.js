@@ -215,8 +215,8 @@ function Bubble({ tab, party, g, parties, look }) {
         ${state === "asking" && specGoal && html`<div class="table-ask__spec" data-spec-change>
           ${goesWords(pre) && html`<p class="cap table-ask__goes" role="status" data-spec-goes>${goesWords(pre)}</p>`}
           <button type="button" class="ork-btn primary" data-spec-send disabled=${!q.trim() || sending || reading} title="The Orkmaster sends your words to the leaders whose sections they touch; you decide in the hand" onClick=${changeSpec}>Change the spec</button></div>`}
-        ${state === "asking" && reading && html`<p class="table-ask__reading ork-think" role="status">The ${readBy.name} is reading the map</p>`}
-        ${state === "reading" && html`<p class="table-ask__q">${ask.q}</p><p class="table-ask__reading ork-think" role="status">The ${here.name} is reading the map</p>`}
+        ${state === "asking" && reading && html`<p class="table-ask__reading ork-think" role="status">The ${readBy.name} is reading the table</p>`}
+        ${state === "reading" && html`<p class="table-ask__q">${ask.q}</p><p class="table-ask__reading ork-think" role="status">The ${here.name} is reading the table</p>`}
         ${state === "answered" && html`<p class="table-ask__q">${ask.q}</p>
           <p class="table-ask__text"><${Linked} text=${ask.answer} /></p>
           ${sources.length > 0 && html`<ul class="table-ask__srcs" aria-label="Where it is said">${sources.map((s) => html`<li key=${s} class="ork-chip table-ask__src"><${Linked} text=${s} /></li>`)}</ul>`}

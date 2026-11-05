@@ -232,12 +232,12 @@ def test_while_it_is_read_the_question_is_muted_and_a_line_says_who_reads(asked)
     host.put(record("asking", "tech"))
     reading = pg.locator(".table-ask__reading")
     reading.wait_for(timeout=WAIT_MS)
-    assert reading.inner_text() == "The Architect is reading the map" and "ork-think" in reading.get_attribute("class") and field(pg).count() == 0
+    assert reading.inner_text() == "The Architect is reading the table" and "ork-think" in reading.get_attribute("class") and field(pg).count() == 0
     assert bubble(pg).locator(".table-ask__q").inner_text() == "Why does the timer run on the server?" and bubble(pg).get_attribute("data-state") == "reading"
     shot(pg, f"{w}-bubble-reading.png")
     host.put(record("asking", ""))                                                                                               # the Orkmaster is asked: this one is only off, and says who reads
     pg.wait_for_function("() => document.querySelector('.table-ask__bubble').dataset.state === 'asking'", timeout=WAIT_MS)
-    assert field(pg).is_disabled() and reading.inner_text() == "The Orkmaster is reading the map"
+    assert field(pg).is_disabled() and reading.inner_text() == "The Orkmaster is reading the table"
     host.put(record("answered", "tech"))
     pg.locator(".table-ask__text").wait_for(timeout=WAIT_MS)
     assert pg.locator(".table-ask__reading").count() == 0

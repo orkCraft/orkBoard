@@ -79,8 +79,8 @@ function Tab({ slug, g = null, on, name, who = "", head, dot = false, working = 
   return html`<div class=${cls("table-tabcell", { "is-open": on })} role="presentation" data-cell=${slug}>
     ${on && head && html`<${Sit} head=${head} mood=${mood} size=${size} chair=${chair} on=${true} extra=${g ? html`<${LookMarks} slug=${slug} who=${theLeader(g.leader?.name)} />` : null}>${ask
       ? html`<button type="button" class="table-askhead" data-ask-head=${slug} aria-label=${`Ask the ${leader}`} aria-haspopup="dialog" aria-expanded=${String(askOpen.value === key)}
-          title=${looking ? `${theLeader(leader)} is looking at the map` : `Ask the ${leader}`} onClick=${() => (askOpen.value === key ? closeAsk() : openAsk(slug))}><${Head} race=${head.race} tier=${head.tier} size=${size} mood=${mood} /></button>`
-      : html`<span class="table-askhead is-still" title=${looking ? `${theLeader(leader)} is looking at the map` : undefined}><${Head} race=${head.race} tier=${head.tier} size=${size} mood=${mood} /></span>`}<//>`}
+          title=${looking ? `${theLeader(leader)} is looking at the table` : `Ask the ${leader}`} onClick=${() => (askOpen.value === key ? closeAsk() : openAsk(slug))}><${Head} race=${head.race} tier=${head.tier} size=${size} mood=${mood} /></button>`
+      : html`<span class="table-askhead is-still" title=${looking ? `${theLeader(leader)} is looking at the table` : undefined}><${Head} race=${head.race} tier=${head.tier} size=${size} mood=${mood} /></span>`}<//>`}
     ${button}
     ${after}
   </div>`;
@@ -112,7 +112,7 @@ export function Tabs({ parties, all = parties, current, narrow, compact, column 
     <div class="table-tabs__list" role="tablist" aria-label="Parties" onKeyDown=${keys}>
       ${!column && html`<${Tab} slug=${ORKMASTER} on=${current === ORKMASTER} name=${project} who="the Orkmaster" head=${CROWN} switcher=${true} marks=${projectMarks()} compact=${compact} narrow=${narrow} onPick=${() => openTab(ORKMASTER)} after=${switcher} />`}
       ${parties.map((g, i) => html`<${Tab} key=${g.slug} slug=${g.slug} g=${g} on=${current === g.slug} stop=${column && current === ORKMASTER && i === 0} name=${nameOf(g)} who=${g.leader?.name || ""} head=${g.leader?.head} dot=${route.has(g.slug)} working=${isWorking(g)} marks=${marksOf(g)}
-        alert=${hasAlert(g) ? `${theLeader(g.leader?.name)} has an alert on the map` : ""} compact=${compact} narrow=${narrow} onPick=${() => openTab(g.slug)} />`)}
+        alert=${hasAlert(g) ? `${theLeader(g.leader?.name)} has an alert on the table` : ""} compact=${compact} narrow=${narrow} onPick=${() => openTab(g.slug)} />`)}
     </div>
     <div class="table-tabs__end">
       ${offer && html`<${EmptyChair} from=${from} narrow=${narrow} />`}

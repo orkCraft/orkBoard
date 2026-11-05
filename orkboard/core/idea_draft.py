@@ -20,7 +20,7 @@ from pathlib import Path
 
 from orkboard.realm import (event_log, goal_team, goal_types, idea_checks, idea_lens, idea_look, idea_photos, idea_questions, idea_risk,
                             idea_target, ideas, pitches, releases, roles)
-from orkboard.realm.idea_words import short_said
+from orkboard.realm.idea_words import CARD_RULE, short_said
 
 OTHERS = 40                        # of the other goals' ideas not done, the most the draft is given
 MAX_DONE, MAX_OUT, MAX_TOUCHES, MAX_DEPENDS = 5, 3, 30, 8
@@ -156,9 +156,10 @@ class DraftMixin:
         return f"""You are the keeper of this project's Task board. A person wrote an idea under the goal
 {(g or {}).get('title', track)}: write its spec straight away. You may read the repository (read only).
 {self.reads("draft", links)}
+{CARD_RULE}
 {idea_lens.attached(self.state_dir, slug)}{goal_types.prompt_line(self.state_dir, slug)}{releases.prompt_lines(root, self.state_dir, slug)}{idea_checks.draft_lines(checks)}{pitches.sent_lines(root, self.state_dir, slug)}{look}
 {context}Answer with one JSON object and nothing else:
-{{"title": "a short title",
+{{"title": "a title of at most seven words",
  "short": "its name in two or three words, 24 characters at most",
  "gist": "the idea rewritten clearly: its first line one sentence, the thesis; then a few lines if needed",
  "why": "{why}",
