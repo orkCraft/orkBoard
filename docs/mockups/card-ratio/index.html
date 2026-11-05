@@ -84,8 +84,14 @@ button { font: inherit; }
 .cd.ork-card { position: relative; width: var(--bl); height: var(--bs); padding: 0; overflow: hidden; flex: none; }
 .cd__back { position: absolute; left: 50%; top: 50%; width: var(--bs); height: var(--bl); transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }
 .cd__seal { position: absolute; left: var(--tuck); top: 0; right: 0; height: 100%; color: var(--ork-ink-faint); }
-.cd__seal .ork-sigil.small { width: 78px; height: 78px; }
-.cd__seal .ork-elem { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.cd.ork-card.asks { border-color: var(--ork-alert); }
+.cd__seal .ork-sigil.cd__ring { transform: scale(0.72); color: var(--ork-ink-faint); }
+.cd__ring.is-waiting::after { color: var(--rc, var(--ork-ink-muted)); }                         /* To review: the ring fills in eighths as its start comes (orkUI's .is-waiting); still and yellow while it waits for you */
+.cd__ring.is-busy::after { color: var(--rc); animation: ork-sigil-sweep 1.6s steps(8) infinite; }  /* In analysis: the ring runs on the goal being read */
+@media (prefers-reduced-motion: reduce) { .cd__ring.is-busy::after { animation: none; --_arc: 45deg; } }
+/* under a pile's label: the goal it is busy with (In analysis), or the next to start and when (To review) */
+.pnext { padding-left: var(--ork-2); max-width: 156px; font: var(--ork-type-caption); font-size: 11px; line-height: 14px; color: var(--ork-ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pnext b { color: var(--ork-ink); font-weight: 600; }
 
 /* ---------- L: the opened card and the new goal's card, 404 x 566, the same four corners; the body scrolls inside, the card never grows ---------- */
 .k.L.ork-card { width: var(--l-w); max-width: 100%; height: auto; aspect-ratio: 5 / 7; padding: var(--ork-5); gap: var(--ork-4); }
@@ -125,8 +131,9 @@ button { font: inherit; }
 /* ---------- a pile: the front card whole, the cards behind it showing their foot (26 px: who, how much) or a thin edge; a sunk pile shows slivers at its right ---------- */
 .plab { padding-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); white-space: nowrap; font-size: 11px; }
 .pile { display: grid; justify-items: start; }
-.pile > * { grid-area: 1 / 1; transform: translate(var(--x, 0px), var(--y, 0px)); z-index: calc(10 - var(--i)); transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
+.pile > * { grid-area: 1 / 1; transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--r, 0deg)); z-index: calc(10 - var(--i)); transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .pile.is-down > * { margin-left: calc(var(--tuck) * -1); }
+.pile.is-loose > :nth-child(2) { --r: -2.5deg; } .pile.is-loose > :nth-child(3) { --r: 2deg; } .pile.is-loose > :nth-child(4) { --r: -1.2deg; }   /* In analysis: a loose pile, still being sorted; To review: a squared deck */
 .pile > .k:hover, .pile > .k:focus-visible { z-index: 40; transform: translate(36px, var(--y, 0px)) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }
 .pile > .cd:hover, .pile > .cd:focus-visible { z-index: 40; transform: translate(var(--tuck), var(--y, 0px)); box-shadow: -4px 4px 0 var(--ork-scrim); }
 @media (prefers-reduced-motion: reduce) { .pile > * { transition: none; } }
@@ -187,13 +194,13 @@ button { font: inherit; }
 .stage { position: relative; width: 640px; height: 449px; overflow: hidden; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-table); }
 .stage__col { position: absolute; left: 0; top: 0; width: 160px; height: 330px; background: var(--ork-room); border-right: var(--ork-line) solid var(--ork-frame); }
 .stage__col .plab { position: absolute; left: 0; top: 26px; }
-.stage__col .behind { position: absolute; left: 0; top: 76px; }
+.stage__col .behind { position: absolute; left: calc(var(--tuck) * -1); top: 92px; }
+.stage__col .pnext { position: absolute; left: 0; top: 44px; }
 .stage__hand { position: absolute; left: 0; right: 0; top: 330px; bottom: 0; background: var(--ork-room); border-top: 3px solid var(--ork-table-rim); }
 .stage .spot { position: absolute; top: 341px; }
 .stage .spot.is-free { width: var(--m-w); height: var(--m-shown); border: var(--ork-line) dashed var(--ork-frame); }
-.mv { position: absolute; left: 0; top: 50px; width: var(--m-w); height: var(--m-h); z-index: 10; }
-.mv > .ork-card { position: absolute; left: 0; top: 0; }
-.mv > .hc { opacity: 0; }
+.mvb { position: absolute; left: calc(var(--tuck) * -1); top: 84px; z-index: 10; }
+.mvh { position: absolute; left: -6.5px; top: 39px; z-index: 11; opacity: 0; transform: rotate(-90deg); }
 .acts-row { display: flex; gap: var(--ork-3); align-items: center; }
 
 /* ---------- the phone ---------- */
@@ -243,25 +250,28 @@ button { font: inherit; }
     <p class="mk-line">Every card is <b>5 : 7</b>: <b>144 × 202</b> in the column, the hand, the lanes and the discard, <b>404 × 566</b> opened and as a new goal. Every card says the same thing in the
       same corner: <b>top left the rune</b> (which goal), <b>top right the kind</b> (what card this is: a feature, a bug, a question, a fork, a failure, done), <b>bottom left who</b> (whose work),
       <b>bottom right how much</b> (its cost before it is agreed, its time once at work, the time it took when done; one figure, never two). Between them the title, and what the place has room for.
-      The signal colours (yellow: it waits for you; red: it failed) are in the kind's corner and the frame only. A face-up card always stands; a card lies on its side only face down, not
-      yet agreed (§206.3), and then it has no corners: its seal is its rune.</p>
+      The signal colours (yellow: it waits for you; red: it failed) are in the kind's corner and the frame only. <b>A card stands while it plays</b> (at work, in your hand, opened); <b>it
+      lies on its side, face down, while it waits</b>: being read (<i>In analysis</i>) or waiting to start (<i>To review</i>), a deck that deals itself onto the table. Face down it has no
+      corners: its seal is its rune, its ring what it waits for.</p>
     <div class="mk-row" id="anat-row"></div>
     <div class="mk-row" id="kinds-row"></div>
   </section>
 
   <section class="mk-sec" id="column">
     <h1>2 · The Orkmaster's column</h1>
-    <h2>2.1 · Standing cards, 144 × 202; only the backs lie</h2>
-    <p class="mk-line">The column is <b>160 px</b> (today 128). Its face-up cards stand, the hand's size: the name in up to four lines (about 70 characters), what it does now, the wait's bar, and its
-      foot, which holds the bottom corners: <b>who</b> and <b>how much</b>. That foot is what a pile shows of each card behind its front one. The backs lie on their side, 157 × 112, <b>13 px</b>
-      under the window's edge, so both piles keep one right edge (§236). Hover a card to slide it out.</p>
+    <h2>2.1 · Two piles lie face down; only what is at work stands</h2>
+    <p class="mk-line">The column is <b>160 px</b> (today 128). <b>In analysis</b> is a <b>loose pile</b> of backs, still being sorted: its front card's ring runs, and the goal being read is named under
+      its title (§206.3). <b>To review</b> is a <b>squared deck</b> that deals itself onto the table: each back's ring fills in eighths as its start comes, a goal that waits for you has a still yellow
+      ring and a yellow edge, and <b>the next to start is named under its title with its time</b>, so you can hold it before it starts. Pressed, a back opens its goal's spec. <b>At work</b>
+      stands, 144 × 202: the name in up to four lines, what it does now, and its foot (who, how much), which is what the pile shows of each card behind its front one. The backs are 157 × 112,
+      <b>13 px</b> under the window's edge, so every pile keeps one right edge (§236). Hover a card to slide it out.</p>
     <div class="mk-row" id="col-vs"></div>
 
     <h2>2.2 · It never scrolls: the piles give way to the window</h2>
-    <p class="mk-line">When the window is short the column gives way in three steps, never a scrollbar: <b>1</b>, the cards behind show their foot (26 px: who and how much); <b>2</b>, they become thin
-      edges (3 px), <i>At work</i>'s first and the furthest first, since <i>To review</i> is what waits for you; <b>3</b>, the <i>At work</i> pile sinks under the hand's rim, the way the hand's own
-      cards go under the window's edge: its front card shows its top (rune, kind, name), the cards behind it a sliver at its right. <i>To review</i>'s front card is always whole. Nothing counts
-      what waits. Drag the height: <b>650</b> is a 1366 × 768 laptop's browser, <b>790</b> a 1440 × 900, <b>940</b> a 1920 × 1080.</p>
+    <p class="mk-line">Two piles of backs take 112 px each, whatever they hold, so only <i>At work</i> gives way, in three steps, never a scrollbar: <b>1</b>, its cards behind show their foot (26 px:
+      who and how much); <b>2</b>, they become thin edges (3 px), the furthest first; <b>3</b>, the pile sinks under the hand's rim, the way the hand's own cards go under the window's edge, the rim
+      falling between two lines: its front card shows its top (rune, kind, name), the cards behind it a sliver at its right. Nothing counts what waits. Drag the height: <b>650</b> is a 1366 × 768
+      laptop's browser, <b>790</b> a 1440 × 900, <b>940</b> a 1920 × 1080.</p>
     <div class="mk-fig">
       <div class="winctl"><label for="wh">The window's height</label><input type="range" id="wh" min="600" max="1000" step="10" value="650"><output id="wh-out" for="wh">650 px</output>
         <span class="presets"><button class="ork-btn" data-h="650">1366 × 768</button><button class="ork-btn" data-h="790">1440 × 900</button><button class="ork-btn" data-h="940">1920 × 1080</button></span></div>
@@ -280,10 +290,9 @@ button { font: inherit; }
     <div class="mk-fig"><span class="mk-tag">Today · 144 × 128, whole: the kind and who asks at its top, the party and the cost at its foot</span><div class="scroll-x"><div class="handwin is-today" id="hand-today"></div></div></div>
     <div class="mk-fig"><span class="mk-tag new">Proposed · 144 × 202, cut at 100 · the Tech card risen</span><div class="scroll-x"><div class="handwin is-new" id="hand-new"></div></div></div>
 
-    <h2>3.2 · A goal comes to your hand</h2>
-    <p class="mk-line">The column's card and the hand's are one card at one size: when a goal asks you, its card slides out of <i>To review</i> and goes down into the hand, under the lane of the
-      leader who asks, where the window's edge cuts it. Its corners keep their places; the kind's corner changes from what the goal is (a feature) to what it asks (a question). Under reduced
-      motion it is in the hand at once.</p>
+    <h2>3.2 · A goal asks you: the deck deals it to your hand</h2>
+    <p class="mk-line">When a goal in <i>To review</i> asks you, its back (its ring still and yellow) is dealt to you: it lifts out of the deck, turns face up and stands on its way, and lands in the
+      hand under the lane of the leader who asks, where the window's edge cuts it. Face up it has its four corners, its kind what it asks (a question). Under reduced motion it is in the hand at once.</p>
     <div class="mk-fig"><div class="acts-row"><button class="ork-btn primary" id="mv-go">Bring it to the hand</button><button class="ork-btn" id="mv-back">Put it back</button></div>
       <div class="scroll-x"><div class="stage" id="stage"></div></div></div>
   </section>
@@ -310,9 +319,11 @@ button { font: inherit; }
       <thead><tr><th></th><th>Today</th><th>Proposed</th></tr></thead>
       <tbody>
         <tr><td>The corners</td><td>each card its own</td><td>every card: rune ↖, kind ↗, who ↙, how much ↘</td></tr>
-        <tr><td>The column's face-up card</td><td>112 × its words</td><td>144 × 202, standing; the name in 4 lines</td></tr>
-        <tr><td>The column's back</td><td>157 × 112, 45 px under the edge</td><td>157 × 112, 13 px under the edge</td></tr>
-        <tr><td>The column</td><td>128 px; scrolls</td><td>160 px; never scrolls: feet, edges, then <i>At work</i> sinks under the hand's rim</td></tr>
+        <tr><td>Lying or standing</td><td>on its side: not yet agreed</td><td>on its side, face down: it waits (being read, or to start); standing: it plays</td></tr>
+        <tr><td>In analysis</td><td>backs, 157 × 112, 45 px under the edge</td><td>a loose pile of backs, 13 px under the edge; its ring runs; the goal being read named</td></tr>
+        <tr><td>To review</td><td>face up, 112 × its words</td><td>a squared deck of backs; each ring counts to its start; the next to start named with its time</td></tr>
+        <tr><td>At work</td><td>face up, 112 × its words</td><td>face up, 144 × 202, standing; the name in 4 lines</td></tr>
+        <tr><td>The column</td><td>128 px; scrolls</td><td>160 px; never scrolls: only <i>At work</i> gives way (feet, edges, then it sinks under the hand's rim)</td></tr>
         <tr><td>The hand's card</td><td>144 × 128 whole, the asker's head, the party, the cost</td><td>144 × 202 cut at 100: rune, kind, title; who asks is the lane; the cost when lifted</td></tr>
         <tr><td>The hand</td><td>~144 px tall</td><td>~119 px tall (the table 25 px taller)</td></tr>
         <tr><td>The opened card</td><td>404 × 566</td><td>404 × 566, its corners; its body scrolls; ↘ the cost of the way picked</td></tr>
@@ -320,8 +331,9 @@ button { font: inherit; }
         <tr><td>The phone's hand</td><td>80 × 112 cut at 82, a free row</td><td>80 × 112 cut at 62, laid by leader with a head between</td></tr>
       </tbody></table></div>
     <div class="mk-notes">
-      <p><b>Decisions changed</b>: §249.1 (the column's card 144 × 202 standing), §249.2 (the hand's card: no asker's head, no party, no cost at rest; cut at 100), §236.1, §236.3 (13 px under the edge,
-        the column 160 px). <b>New</b>: the four corners on every card; the column never scrolls on the desktop and its piles give way; the phone's hand laid by leader. §206.3 and §206.11 hold.</p>
+      <p><b>Decisions changed</b>: §206.3 and §206.11 (on its side, face down, now means <i>it waits</i>, being read or to start; <i>To review</i> a deck of backs, the next to start named under its
+        title); §249.1 (<i>At work</i>'s card 144 × 202 standing), §249.2 (the hand's card: no asker's head, no party, no cost at rest; cut at 100), §236.1, §236.3 (13 px under the edge, the column
+        160 px). <b>New</b>: the four corners on every card; the column never scrolls on the desktop; the phone's hand laid by leader.</p>
       <p><b>The kind's corner</b> speaks two vocabularies: a goal's (feature, bug, tidy, screen) in the column, the lanes and the discard; a decision's (question, fork, failure, hypothesis, cost grown)
         in the hand and opened. The kind changes as the card moves, its place never.</p>
       <p><b>How much</b> is one figure, by the card's state: before it is agreed its cost (the gem), at work its time left, done the time it took, waiting for you the words <i>asks you</i>.</p>
@@ -367,9 +379,21 @@ button { font: inherit; }
       + (g.bar !== undefined ? '<div class="k__bar" style="--c:' + (g.asks ? "var(--ork-alert)" : "var(--ork-elem-" + g.e + ")") + '"><i style="width:' + g.bar + '%"></i></div>' : "")
       + '<div class="k__bot"><span class="k__who">' + heads(g.who) + "</span>" + amt(g.amt, g.asks) + "</div></div></div>";
   }
-  function back(e, i) {
-    return '<div class="cd ork-card" style="--i:' + (i || 0) + '" tabindex="0"><div class="ork-card-back cd__back"></div><div class="cd__seal"><span class="ork-sigil small"></span>' + elem(e) + "</div></div>";
+  // a back: o.ring "busy" (In analysis, being read), "wait" with o.share 0..1 (To review, its start coming), "ask" (it waits for you: still, yellow, a yellow edge)
+  function back(e, i, o) {
+    o = o || {};
+    var cls = o.ring === "busy" ? " is-busy" : o.ring ? " is-waiting" : "";
+    var rc = o.ring === "ask" ? "var(--ork-alert)" : "var(--ork-elem-" + e + ")";
+    var share = o.ring === "ask" ? 1 : (o.share || 0);
+    return '<div class="cd ork-card' + (o.ring === "ask" ? " asks" : "") + '" style="--i:' + (i || 0) + '" tabindex="0"' + (o.name ? ' title="' + o.name + '"' : "") + '><div class="ork-card-back cd__back"></div>'
+      + '<div class="cd__seal"><span class="ork-sigil cd__ring' + cls + '" style="--rc:' + rc + ";--ork-sigil-share:" + share + '"><span class="ork-sigil__seal">' + elem(e) + "</span></span></div></div>";
   }
+  var backs = function (list) { return list.map(function (b, i) { return back(b.e, i, b); }); };
+  var A = [{ e: "meadow", ring: "busy", name: "Lobby in Polish" }, { e: "lava", name: "A daily quest" }, { e: "dust", name: "Sounds for the coin" }, { e: "void", name: "A practice round" }];
+  var RV = [{ e: "void", ring: "wait", share: 0.75, name: "Players see who answered first in the round, with the time it took" }, { e: "ice", ring: "ask", name: "Round timer on phones: asks you" },
+            { e: "lava", ring: "wait", share: 0.4, name: "Tidy the scoring module" }, { e: "ice", ring: "wait", share: 0.2, name: "Rename a room after it is made" }, { e: "meadow", ring: "wait", share: 0.1, name: "Lobby music volume" }];
+  var nextA = '<div class="pnext">reading: <b>Lobby in Polish</b></div>';
+  var nextR = '<div class="pnext">next in 2 min: <b>Players see who answered first in the round</b></div>';
   function todayCard(g, i) {
     return '<div class="tc ork-card' + (g.asks ? " asks" : "") + '" style="--i:' + i + '" tabindex="0"><div class="tc__hd">' + elem(g.e) + "<span>" + g.name + "</span></div>"
       + '<div class="tc__ft">' + (g.bar !== undefined ? sign(g.asks ? "question" : "moon", g.asks ? "alert" : "") + '<span class="t">' + (g.asks ? "asks you" : "~10:02") + "</span>" : heads(g.who) + '<span class="t">0/1</span>') + "</div></div>";
@@ -474,8 +498,8 @@ button { font: inherit; }
       + " the hand, a lane, the discard, an opened card and a new goal. The corners are the same size on every card (a head 16 px, a sign 14), so they read as an index, not as text.</p>"
       + '<p class="mk-cap" style="max-width:none"><b>A cut keeps what the place needs.</b> A pile shows the foot of the cards behind (who, how much); the hand shows the top (which goal, what it asks).</p></div>';
   document.getElementById("kinds-row").innerHTML =
-    '<figure class="mk-fig"><span class="mk-tag new">The column · face down</span>' + back("void") + '<p class="mk-cap">Not yet agreed: no corners, the seal is the rune.</p></figure>'
-    + '<figure class="mk-fig"><span class="mk-tag new">The column · face up</span>' + colCard(G.who) + '<p class="mk-cap">A goal agreed: its kind, its leaders, its cost.</p></figure>'
+    '<figure class="mk-fig"><span class="mk-tag new">The column · it waits</span>' + back("void", 0, { ring: "wait", share: 0.75 }) + '<p class="mk-cap">Face down, on its side: it waits. No corners: the seal is its rune, the ring counts to its start.</p></figure>'
+    + '<figure class="mk-fig"><span class="mk-tag new">The column · at work</span>' + colCard(G.music) + '<p class="mk-cap">Standing: it plays. Its kind, who does it, the time left.</p></figure>'
     + '<figure class="mk-fig"><span class="mk-tag new">The hand · cut at 100</span><div style="position:relative;height:var(--m-h)">' + handCard(H.q)
       + '<div style="position:absolute;left:-6px;right:-6px;top:var(--m-shown);border-top:1px dashed var(--ork-alert)"></div></div><p class="mk-cap">Above the edge: which goal, what it asks. Below: why, who, the cost.</p></figure>'
     + '<figure class="mk-fig"><span class="mk-tag new">A lane · at work</span>' + laneWork() + '<p class="mk-cap">The window onto the work; who does it, the time left.</p></figure>'
@@ -492,25 +516,25 @@ button { font: inherit; }
   }
   function colNew() {
     return '<div class="deskcol"><div class="colwin is-new">'
-      + '<div><div class="plab">In analysis</div>' + pile("is-down", cards(back, ["void", "lava", "meadow"]), [4, 4]) + "</div>"
-      + '<div><div class="plab">To review</div>' + pile("is-up", cards(colCard, [G.timer, G.who, G.tidy]), [26, 26]) + "</div>"
+      + '<div><div class="plab">In analysis</div>' + nextA + pile("is-down is-loose", backs(A.slice(0, 3)), [4, 4]) + "</div>"
+      + '<div><div class="plab">To review</div>' + nextR + pile("is-down", backs(RV.slice(0, 3)), [3, 3]) + "</div>"
       + '<div><div class="plab">At work</div>' + pile("is-up", cards(colCard, [G.music, G.coin]), [26]) + "</div>"
       + '</div><div class="tbl"></div></div>';
   }
   document.getElementById("col-vs").innerHTML =
     '<figure class="mk-fig"><span class="mk-tag" style="margin-bottom:18px">Today · 128 px</span>' + colToday()
       + '<p class="mk-cap">Faces 112 wide, as tall as their words; the kind is not on the card, the cost not at all.</p></figure>'
-    + '<figure class="mk-fig"><span class="mk-tag new" style="margin-bottom:18px">Proposed · 160 px, a tall window</span>' + colNew()
-      + '<p class="mk-cap">Standing cards, the hand\'s size. The cards behind show their foot: who and how much. The long name fits its four lines.</p></figure>';
+    + '<figure class="mk-fig"><span class="mk-tag new" style="margin-bottom:18px">Proposed · 160 px</span>' + colNew()
+      + '<p class="mk-cap">Two piles of backs, loose and squared, each named under its title; <i>At work</i> standing, the hand\'s size, the cards behind showing their foot.</p></figure>';
 
   // 2.2 · the window at a height
-  var P = { down: ["void", "lava", "meadow", "dust"], review: [G.timer, G.who, G.tidy, G.lobby, G.rename], work: [G.music, G.coin, G.end, G.keep] };
+  var P = { work: [G.music, G.coin, G.end, G.keep] };
   var win = document.getElementById("win");
   var handRowWin = '<div class="win__hand"><span class="plus">+</span>' + handCard(H.q) + handCard(H.fork) + handCard(H.hyp) + "</div>";
   function layWin(st) {
     return '<div class="win__col"><div class="win__head">' + head("peon-crown", "hd24") + 'Orkmaster</div><div class="win__piles">'
-      + '<div><div class="plab">In analysis</div>' + pile("is-down", cards(back, P.down), fill(P.down.length - 1, 4)) + "</div>"
-      + '<div><div class="plab">To review</div>' + pile("is-up", cards(colCard, P.review), st.review) + "</div>"
+      + '<div><div class="plab">In analysis</div>' + nextA + pile("is-down is-loose", backs(A), [4, 4, 4]) + "</div>"
+      + '<div><div class="plab">To review</div>' + nextR + pile("is-down", backs(RV), [3, 3, 3, 3]) + "</div>"
       + '<div><div class="plab">At work</div>' + pile("is-up", cards(colCard, P.work), st.work, st.sunk) + "</div></div></div>"
       + '<div class="win__table"><div class="ghost"></div><div class="ghost s"></div><div class="ghost"></div><div class="ghost s"></div><div class="ghost"></div></div>' + handRowWin;
   }
@@ -518,11 +542,10 @@ button { font: inherit; }
   function fit(h) {
     win.style.setProperty("--wh", h + "px");
     document.getElementById("wh-out").textContent = h + " px";
-    var nR = P.review.length - 1, nW = P.work.length - 1;
-    var st = { review: fill(nR, 26), work: fill(nW, 26), sunk: false };
-    var order = [];                                         // what gives way first: At work's furthest, then To review's furthest
+    var nW = P.work.length - 1;
+    var st = { work: fill(nW, 26), sunk: false };
+    var order = [];                                         // only At work gives way: its furthest card first
     for (var i = nW - 1; i >= 0; i--) order.push(["work", i]);
-    for (var j = nR - 1; j >= 0; j--) order.push(["review", j]);
     win.innerHTML = layWin(st);
     var k = 0;
     while (overflow() > 0 && k < order.length) { st[order[k][0]][order[k][1]] = 3; k++; win.innerHTML = layWin(st); }
@@ -534,7 +557,7 @@ button { font: inherit; }
       var snapped = shown < 32 ? 0 : 32 + 20 * Math.floor((shown - 32) / 20), extra = shown - snapped;
       if (extra > 0) { win.querySelector(".win__piles > div:last-child").style.marginTop = extra + "px"; sunkBy += extra; }
     }
-    var feet = st.review.concat(st.work).filter(function (s) { return s === 26; }).length;
+    var feet = st.work.filter(function (s) { return s === 26; }).length, nR = 0;
     document.getElementById("win-note").innerHTML = st.sunk
       ? "Step 3: every card behind an edge, <i>At work</i> sunk " + sunkBy + " px under the hand's rim. No scroll."
       : (feet === nR + nW ? "Step 1: every card behind shows its foot. No scroll." : "Step 2: " + feet + " of " + (nR + nW) + " cards behind show their foot, the others an edge. No scroll.");
@@ -558,17 +581,19 @@ button { font: inherit; }
 
   // 3.2 · the move
   var stage = document.getElementById("stage");
-  stage.innerHTML = '<div class="stage__col"><div class="plab">To review</div><div class="behind">' + colCard(G.who) + '</div></div><div class="stage__hand"></div>'
+  stage.innerHTML = '<div class="stage__col"><div class="plab">To review</div>' + nextR + '<div class="behind">' + pile("is-down", [back("void", 0, RV[0]), back("lava", 1, RV[2])].map(function (c) { return c; }), [3]) + '</div></div><div class="stage__hand"></div>'
     + '<div class="spot is-free" style="left:8px"></div><div class="spot" style="left:168px">' + handCard(H.fork) + '</div><div class="spot" style="left:328px">' + handCard(H.hyp) + "</div>"
-    + '<div class="mv" id="mv">' + colCard(G.timer) + handCard(H.q) + "</div>";
-  var mv = document.getElementById("mv"), anims = [];
+    + '<div class="mvb" id="mvb">' + back("ice", 0, { ring: "ask" }) + '</div><div class="mvh" id="mvh">' + handCard(H.q) + "</div>";
+  var mvb = document.getElementById("mvb"), mvh = document.getElementById("mvh"), anims = [];
   function move(backwards) {
     var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var o = { duration: still ? 1 : 900, easing: "cubic-bezier(.45,0,.2,1)", fill: "forwards", direction: backwards ? "reverse" : "normal" };
+    var o = { duration: still ? 1 : 1000, easing: "cubic-bezier(.45,0,.2,1)", fill: "forwards", direction: backwards ? "reverse" : "normal" };
     anims.forEach(function (a) { a.cancel(); });
-    anims = [mv.animate([{ transform: "translate(0,0) rotate(0deg)" }, { transform: "translate(36px,-6px) rotate(2deg)", offset: 0.25 }, { transform: "translate(8px,291px) rotate(0deg)" }], o),
-      mv.children[0].animate([{ opacity: 1 }, { opacity: 1, offset: 0.45 }, { opacity: 0, offset: 0.65 }, { opacity: 0 }], o),
-      mv.children[1].animate([{ opacity: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1, offset: 0.65 }, { opacity: 1 }], o)];
+    // the back lifts out of the deck and turns over (it fades as the face comes); the face stands up on its way down to the hand
+    anims = [mvb.animate([{ transform: "translate(0,0) rotate(0deg)", opacity: 1 }, { transform: "translate(13px,-6px) rotate(0deg)", opacity: 1, offset: 0.2 },
+        { transform: "translate(20px,110px) rotate(45deg)", opacity: 0, offset: 0.5 }, { transform: "translate(20px,110px) rotate(45deg)", opacity: 0 }], o),
+      mvh.animate([{ transform: "translate(0,0) rotate(-90deg)", opacity: 0 }, { transform: "translate(13px,-6px) rotate(-90deg)", opacity: 0, offset: 0.2 },
+        { transform: "translate(20px,110px) rotate(-45deg)", opacity: 1, offset: 0.5 }, { transform: "translate(14.5px,302px) rotate(0deg)", opacity: 1 }], o)];
   }
   document.getElementById("mv-go").addEventListener("click", function () { move(false); });
   document.getElementById("mv-back").addEventListener("click", function () { move(true); });
@@ -592,10 +617,10 @@ button { font: inherit; }
     ["The hand, laid by leader · the Tech card pressed", top("tech") + tableGhost + '<div class="ph-hand"><span class="plus">+</span>' + sep("shaman-elder") + nc(H.q, true) + sep("dryad-elder") + nc(H.fork) + "</div>",
       "<b>80 × 112, cut at 62</b>: the rune, the kind, the title. A head between the groups says who asks. Pressed, the card rises and shows why, who and the cost; tapped, it opens."],
     ["The crown's piles", top("crown") + '<div class="ph-menu">'
-      + '<div class="msec"><div class="plab">In analysis</div>' + pile("is-down", cards(back, ["void", "lava"]), [4]) + '<div class="under">2 goals the Orkmaster reads</div></div>'
-      + '<div class="msec"><div class="plab">To review</div>' + pile("is-up", cards(colCard, [G.timer, G.who, G.tidy]), [26, 26]) + '<div class="under"><b>Round timer on phones</b> asks you</div></div>'
+      + '<div class="msec"><div class="plab">In analysis</div>' + pile("is-down is-loose", backs(A.slice(0, 3)), [4, 4]) + '<div class="under">reading: <b>Lobby in Polish</b></div></div>'
+      + '<div class="msec"><div class="plab">To review</div>' + pile("is-down", backs(RV.slice(0, 3)), [3, 3]) + '<div class="under">next in 2 min: <b>Players see who answered first in the round</b>; <b>Round timer on phones</b> asks you</div></div>'
       + '<div class="msec"><div class="plab">At work</div>' + pile("is-up", cards(colCard, [G.music, G.coin]), [26]) + '<div class="under">2 goals at work</div></div></div>',
-      "<b>The column's cards</b>, 144 × 202, the backs 13 px under the screen's edge. A screen of its own: the list may scroll."],
+      "<b>The column's piles</b>: two of backs, the goal they are busy with beside them; <i>At work</i> standing. A screen of its own: the list may scroll."],
     ["The question opened", top("tech") + '<div class="ph-q">' + opened("op2") + "</div>",
       "<b>5 : 7 at the screen's width</b> (316 × 442), its four corners. The body scrolls; the answer and the cost of the way picked stay at its foot."],
     ["Typing the answer", top("tech") + '<div class="ph-type"><div class="card ork-card"><div class="k__top">' + elem("ice") + kind("question") + "</div>"
