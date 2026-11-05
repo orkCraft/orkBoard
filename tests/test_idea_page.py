@@ -53,3 +53,13 @@ def test_an_old_section_with_words_is_never_overridden_and_the_text_is_written_b
     assert p.section("Risks") == "Risk: Low"
     again = idea_page.parse(p.text())
     assert [n for n, _t in again.sections] == [n for n, _t in p.sections] and again.section("Tech").count("### ") == 3
+
+
+def test_thesis_takes_markdowns_marks_at_a_words_edges_only_and_keeps_an_underscore_inside_a_name():
+    """Spec 149 I.2: the trial's *realm/idea_element.py* read *realm/ideaelement.py*."""
+    t = idea_page.thesis
+    assert t("**`realm/idea_element.py`** stays itself") == "realm/idea_element.py stays itself"
+    assert t("- _Only_ the __edges__ go, and ~~this~~") == "Only the edges go, and this"
+    assert t("## A `snake_case_name` and a * b") == "A snake_case_name and a * b"
+    assert t("**Quoted \"words\"** and *more*.") == "Quoted \"words\" and more."
+    assert t("") == "" and t("\n\n  plain  ") == "plain"

@@ -126,7 +126,8 @@ def thesis(text: str) -> str:
             continue
         line = re.sub(r"^(#+|[-*+]|\d+[.)]|>)\s+", "", line)
         line = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line)
-        line = re.sub(r"[*_`~]+", "", line).strip()
+        line = re.sub(r"(?<![\w*_`~])[*_`~]+(?=\S)", "", line)       # Markdown's marks go at a word's edges only: `idea_element.py` stays itself
+        line = re.sub(r"(?<=\S)[*_`~]+(?!\w)", "", line).strip()
         if line:
             return line[:200]
     return ""

@@ -929,3 +929,14 @@ def test_a_second_round_asks_nothing_of_assumes(host, parties, model, monkeypatc
     host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": c["id"], "pick": 0} for c in _row(host, slug, "talk")["questions"]]})
     _wait(host, slug)
     assert _kept(host) == []
+
+
+def test_a_line_too_long_is_cut_at_a_word_with_an_ellipsis_and_a_cause_keeps_five_hundred_characters():
+    """Spec 149 I.1: the trial's cause was cut mid-word at 300 (*the host's per-shape hu*)."""
+    from orkboard.realm import idea_talk_parse as p
+    assert p.CAUSE_CHARS == 500
+    text = ("the host's per-shape hue " * 40).strip()
+    got = p._line(text, 300)
+    assert got.endswith("…") and len(got) <= 300 and got[:-1].split(" ")[-1] in {"the", "host's", "per-shape", "hue"}
+    assert p._line("short  line") == "short line"
+    assert p._line(None) == ""

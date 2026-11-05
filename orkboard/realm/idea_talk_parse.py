@@ -25,7 +25,7 @@ LINE = 200                         # a stance, a for, an against
 PRIORITIES = ("high", "normal", "low")       # Product's word on how the goal stands against the goals in line (spec 120 §3.1)
 RISKS = ("low", "medium", "high")            # Tech's word on what the change may break
 PRODUCT, TECH = "product", "tech"            # the crafts (`goal_team.craft_of`) whose leaders give a priority and a risk
-CAUSE_CHARS = 300
+CAUSE_CHARS = 500
 WHERE = 5                          # the paths a cause names
 FAILURE_LINES, FAILURE_CHARS = 12, 1500
 FACT_ROOM = 20                     # the least of a question kept with its answer as a fact
@@ -35,7 +35,12 @@ _PATH = re.compile(r"(?<![\w.-])(/?(?:[\w.-]+/)*[\w.-]+\.[A-Za-z0-9]{1,8})(?::\d
 
 
 def _line(value: object, limit: int = LINE) -> str:
-    return " ".join(value.split())[:limit] if isinstance(value, str) else ""
+    """One line of the model's words: cut at a word with `…` when it is too long (as `idea_questions._plain` does), never mid-word."""
+    text = " ".join(value.split()) if isinstance(value, str) else ""
+    if len(text) <= limit:
+        return text
+    head = text[:limit - 1]
+    return (head.rsplit(" ", 1)[0] if " " in head else head).rstrip(",;:") + "…"
 
 
 def total(step: str, measures: list[dict]) -> dict:
