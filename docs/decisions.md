@@ -6404,7 +6404,8 @@ only on an opened card and on the table*). Card games read a card by its corners
 yet in play and lay a card on its side while it does not act; a place hides part of a card only where something covers
 it. So:
 1. **Every card is 5 : 7**, at two sizes on the desktop: **144 × 202** (the column, the hand, the lanes, the discard)
-   and **404 × 566** (opened, and a new goal); the phone's hand **80 × 112**.
+   and **404 × 566** (opened, and a new goal); the phone's hand **80 × 112**; and **the Orkmaster's hand 56 × 78**, the one
+   third size, as a hand across the table is drawn smaller in a card game.
 2. **The four corners, the same on every card**: **top left the rune** (which goal); **top right the kind** (what card:
    a goal's feature, bug, tidy, screen; a decision's question, fork, failure, hypothesis, cost grown; a task's; done);
    **bottom left who** (whose work: the leaders at work, the seat doing a task, who asks); **bottom right how much**, one
@@ -6415,16 +6416,20 @@ it. So:
    card with its corners empty and dashed, each saying what will stand there, filled as the goal is made (the kind when
    it is picked, who when it is routed, how much when it is estimated, the rune when it is laid).
 3. **A card stands while it plays and lies face down while it waits** (this changes §206.3 and §206.11): at work, in
-   the hand and opened it stands face up; **In analysis** (being read) and **To review** (its spec made, waiting to
-   start) lie on their side, face down, with no corners: the seal is the rune and its ring says what it waits for.
-   *In analysis* is a **loose pile** (its cards a little askew, still being sorted), its front card's ring running, the
-   goal being read named under its title (§206.3). *To review* is a **squared deck that deals itself onto the table**:
+   the hand and opened it stands face up; while it waits it is face down. **In analysis** is **the Orkmaster's hand**: its
+   cards 56 × 78, standing, face down, in a **fan** (about 22 px apart, turned a few degrees each way), as a player's hand
+   is seen across the table; a back's one corner is its **rune at its top left**, so the fan shows every goal's rune; the
+   goal being read is **lifted out of the fan** and named under the pile's title (§206.3); many cards tighten the fan,
+   never a count; a press on the fan reads it out in order, as today; a new goal laid from the + card flies into it.
+   **To review** (its spec made, waiting to start) lies on its side, face down, with no corners: its seal is the rune and
+   its ring says what it waits for. It is a **squared deck that deals itself onto the table**:
    each back's ring fills in eighths as its start comes (orkUI's `.is-waiting`), a goal that waits for you has a still
    yellow ring and a yellow edge, and **the next to start is named under its title with its time**, so it can be held
    before it starts. A back pressed opens its goal's spec. *At work · later* stands, its cards 144 × 202.
 4. **The Orkmaster's column is 160 px and never scrolls on the desktop.** A back is 157 × 112 with **13 px** under the
-   window's left edge (§236.1), so every pile keeps one right edge, 144. The two piles of backs take 112 px each,
-   whatever they hold, so only *At work* gives way to a short window, in three steps: its cards behind the front show
+   window's left edge (§236.1), so the deck and *At work* keep one right edge, 144. The Orkmaster's fan (about 90 px)
+   and the deck (112 px) keep their height whatever they hold, so only *At work* gives way to a short window, in three
+   steps: its cards behind the front show
    their **foot** (26 px: who, how much); then a **thin edge** (3 px), the furthest first; then **the pile sinks under
    the hand's rim**, as the hand's cards go under the window's edge, the rim falling between two lines of the front card,
    the cards behind a sliver at its right. Nothing counts what waits. A card hovered or focused slides out whole.
@@ -6453,7 +6458,7 @@ it. So:
    under the lane of the leader who asks.
 9. **Unchanged**: the lanes' windows onto the work (§249.3) between their corners; §236's tuck under the window's edge
    (now 13 px); the + card; Play, the die and the potions.
-10. **The words** (`TERMS`): *next in <time>: <goal>* under *To review*; a new goal's empty corners *the rune: given when
+10. **The words** (`TERMS`): *reading: <goal>* under *In analysis* (as today); *next in <time>: <goal>* under *To review*; a new goal's empty corners *the rune: given when
    it is laid*, *who: the Orkmaster routes it*, *how much: after its estimate*.
 11. **Built** by spec 147. The mockup is the look: `docs/mockups/card-ratio/`.
 The owner's call.

@@ -7,7 +7,7 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
 | Part | What | Where (and its tests) |
 |---|---|---|
 | **A. The corners** | one corner row at the top and one at the foot of every card; a lane's card and the discard's wear them | a new `table/corners.js` + `corners.css`; `table/card.js`, `table/discard.js`, `table/work.css`; `tests/test_table_desktop_browser.py`, `test_cascade_card_browser.py`, `test_discard_table_browser.py`, a new `test_corners_browser.py` |
-| **B. The Orkmaster's column** | two piles of backs (a loose pile, a squared deck with its next to start named), *At work* standing at 144 × 202 with its corners; 160 px, 13 px under the edge; never scrolls, *At work* gives way | `table/piles.js`, `table/column.js`, `table/column.css`, `frame/frame.css`, `realm/lexicon.py`; `tests/test_column_browser.py`, `test_column_tuck_browser.py` |
+| **B. The Orkmaster's column** | the Orkmaster's hand (a fan of 56 × 78 backs, each rune at its top left, the goal being read lifted), *To review* a squared deck of backs with its next to start named, *At work* standing at 144 × 202 with its corners; 160 px, 13 px under the edge; never scrolls, *At work* gives way | `table/piles.js`, `table/column.js`, `table/column.css`, `frame/frame.css`, `realm/lexicon.py`; `tests/test_column_browser.py`, `test_column_tuck_browser.py` |
 | **C. The hand's card** | 144 × 202 cut at 100 under its title, its corners; why, who, how much below the cut, shown when it rises; the narrow page's hand laid by leader | `hand/stopcard.js`, `hand/stacks.js`, `hand/hand.css`, `hand/hand.js`; `tests/test_hand_desktop_browser.py`, `test_hand_context_narrow_browser.py`, `test_hand_mana_browser.py` |
 | **D. The opened card and a new goal** | 404 × 566 with its corners, the body scrolling, the cost of the way picked; a new goal's card with its corners dashed until they fill | `hand/stopcard.js` (the lifted card), `hand/answers.js`, `hand/pluscard.js` and the field's modules, `hand/hand.css`, `realm/lexicon.py`; `tests/test_lifted_card_browser.py`, `test_field_*_browser.py` |
 | **E. A goal's start and a goal that asks you** | the back turns up and stands in *At work*, the Orkmaster deals the goal's card to its parties' lanes; a back that asks you is dealt to the hand | `table/column.js`, `table/flight.js`, `table/laying.js`, `hand/hand.js`; a new `tests/test_start_deal_browser.py` |
@@ -33,10 +33,17 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
 ## B. The Orkmaster's column
 
 1. **The sizes** (`frame/frame.css`): `--column-tuck: 13px`; `--column-w: 160px` (the card's 144 and its gutters).
-2. **In analysis** (`piles.js` `DownCard`, `column.css`): backs 157 × 112 on their side, 13 px under the edge; the pile
-   **loose**: the cards behind the front at −2.5°, 2°, −1.2°; the front card's ring runs (`ACTIVE`, as today); under the
-   title the goal being read (`underOf`, as today).
-3. **To review**: the same backs, a **squared deck** (the cards behind 3 px apart, unturned). Each back's seal is orkUI's
+2. **In analysis, the Orkmaster's hand** (`piles.js`, a new `FanCard`; `column.css`): every goal of the pile a back
+   **56 × 78**, standing (orkUI's back at that size), its goal's `Elem` at 14 px in its top left on the card's fill (the
+   back's one corner). The cards lie in a **fan**: 22 px apart from the left, each turned `(i − (n − 1) / 2) × 4°` about a
+   point under its foot, the later card over the earlier, so every rune shows; the fan is at most 144 px wide and its
+   cards tighten (the step shrinks to fit, at least 10 px) when there are more than five, never a count. The goal being
+   read (`ACTIVE`) is **lifted** 12 px out of the fan; under the title the goal being read (`underOf`, as today: *reading:
+   <goal>*). The fan is about 90 px tall whatever it holds. A card hovered or focused rises 10 px and says its goal's name
+   (its `title` and an `aria-label`); a press on the fan lifts the pile's list as a press on the face-down pile does today.
+   When a goal is laid from the + card, its back flies into the fan (`flight.js`, one motion, none under reduced motion).
+3. **To review**: backs 157 × 112 on their side, 13 px under the edge, a **squared deck** (the cards behind 3 px apart,
+   unturned). Each back's seal is orkUI's
    `.ork-sigil.is-waiting` with `--ork-sigil-share` its wait's share (`shareOf`), the lit runes in its goal's colour; a
    goal waiting for the person: the ring full, still, in the alert, and the card's frame in the alert. Under the title
    **`next in <time>: <goal>`** for the next to start by itself (`nextWords`, a `TERMS` entry `next_in`); a goal held or
@@ -48,9 +55,10 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
    pure `giveWay({ room, front, behind })` → `{ steps: [26 | 3 …], sunk: px }`: every card behind *At work*'s front a
    foot (26) while it fits; then edges (3), the furthest first; then the pile sinks by what is still missing, rounded up
    so the hand's rim falls between two lines of the front card (its top 32 px, then 20 px a line), the cards behind it
-   moved 3 px to the right each. *To review*'s and *In analysis*'s cards keep their places. A card hovered or focused
+   moved 3 px to the right each. The fan and the deck keep their places. A card hovered or focused
    slides out whole (as today: 36 px and 2°; a back by the tuck).
-6. Tests: the column has no scrollbar at 650, 790 and 940 px of window; at 650 *At work*'s front shows its rune row and
+6. Tests: *In analysis* is a fan of 56 × 78 cards with a rune in each top left, the goal being read lifted, no wider
+   than 144 px with eight goals; the column has no scrollbar at 650, 790 and 940 px of window; at 650 *At work*'s front shows its rune row and
    its cards behind are edges or slivers; at 940 every card behind shows its foot; *To review* names the next to start;
    a goal that asks is a back with the alert ring and frame; `giveWay` in a JS unit test or through the page.
 
@@ -104,7 +112,7 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
 
 ## F. The phone
 
-1. **The crown's piles** (`upmenu.js`): the column's cards as part B draws them, the backs 13 px under the screen's edge,
+1. **The crown's piles** (`upmenu.js`): the column's cards as part B draws them (the Orkmaster's fan, the deck 13 px under the screen's edge),
    each pile's words beside it (*reading:*, *next in*); a list that may scroll.
 2. **The hand** (`uprow.js`, `upright.css`): laid by leader, the 80 × 112 card cut at 62, a 22 px separator with the
    leader's head before each group; pressed, a card rises and shows the rest; tapped, it opens.

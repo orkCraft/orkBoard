@@ -89,6 +89,18 @@ button { font: inherit; }
 .cd__ring.is-waiting::after { color: var(--rc, var(--ork-ink-muted)); }                         /* To review: the ring fills in eighths as its start comes (orkUI's .is-waiting); still and yellow while it waits for you */
 .cd__ring.is-busy::after { color: var(--rc); animation: ork-sigil-sweep 1.6s steps(8) infinite; }  /* In analysis: the ring runs on the goal being read */
 @media (prefers-reduced-motion: reduce) { .cd__ring.is-busy::after { animation: none; --_arc: 45deg; } }
+/* the Orkmaster's hand: In analysis, a fan of small backs (56 x 78), each goal's rune in its top left (the back's one corner), the goal being read lifted out of the fan */
+.fan { position: relative; width: 144px; height: 92px; flex: none; margin-left: var(--ork-2); }
+.fb.ork-card { position: absolute; bottom: 2px; left: calc(var(--i) * var(--step, 22px)); width: 56px; height: 78px; padding: 0; overflow: hidden; transform-origin: 50% 140%; transform: rotate(var(--r, 0deg)); z-index: var(--z, 1);
+  transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
+.fb__back { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
+.fb__rune { position: absolute; left: 4px; top: 4px; z-index: 1; display: grid; place-items: center; width: 18px; height: 18px; background: var(--ork-card); }
+.fb.is-reading { transform: translateY(-12px) rotate(var(--r, 0deg)); }
+.fb.is-reading .fb__rune .ork-elem { animation: ork-glow 1.6s steps(4) infinite alternate; }
+.fb:hover, .fb:focus-visible { transform: translateY(-10px) rotate(var(--r, 0deg)); z-index: 30; outline: 0; }
+.fb.is-reading:hover, .fb.is-reading:focus-visible { transform: translateY(-14px) rotate(var(--r, 0deg)); }
+@keyframes ork-glow { from { opacity: 0.6; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fb.ork-card { transition: none; } .fb.is-reading .fb__rune .ork-elem { animation: none; } }
 /* under a pile's label: the goal it is busy with (In analysis), or the next to start and when (To review) */
 .pnext { padding-left: var(--ork-2); max-width: 156px; font: var(--ork-type-caption); font-size: 11px; line-height: 14px; color: var(--ork-ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pnext b { color: var(--ork-ink); font-weight: 600; }
@@ -250,25 +262,26 @@ button { font: inherit; }
     <p class="mk-line">Every card is <b>5 : 7</b>: <b>144 × 202</b> in the column, the hand, the lanes and the discard, <b>404 × 566</b> opened and as a new goal. Every card says the same thing in the
       same corner: <b>top left the rune</b> (which goal), <b>top right the kind</b> (what card this is: a feature, a bug, a question, a fork, a failure, done), <b>bottom left who</b> (whose work),
       <b>bottom right how much</b> (its cost before it is agreed, its time once at work, the time it took when done; one figure, never two). Between them the title, and what the place has room for.
-      The signal colours (yellow: it waits for you; red: it failed) are in the kind's corner and the frame only. <b>A card stands while it plays</b> (at work, in your hand, opened); <b>it
-      lies on its side, face down, while it waits</b>: being read (<i>In analysis</i>) or waiting to start (<i>To review</i>), a deck that deals itself onto the table. Face down it has no
-      corners: its seal is its rune, its ring what it waits for.</p>
+      The signal colours (yellow: it waits for you; red: it failed) are in the kind's corner and the frame only. <b>A card stands while it plays</b> (at work, in your hand, opened); <b>it is
+      face down while it waits</b>: held in <b>the Orkmaster's hand</b> while it is read (<i>In analysis</i>, a fan of small backs, 56 × 78, each showing its rune at its top left, the one
+      size that is smaller, as a hand across the table is), or <b>on its side in a deck</b> waiting to start (<i>To review</i>, a deck that deals itself onto the table: its seal is its rune,
+      its ring what it waits for).</p>
     <div class="mk-row" id="anat-row"></div>
     <div class="mk-row" id="kinds-row"></div>
   </section>
 
   <section class="mk-sec" id="column">
     <h1>2 · The Orkmaster's column</h1>
-    <h2>2.1 · Two piles lie face down; only what is at work stands</h2>
-    <p class="mk-line">The column is <b>160 px</b> (today 128). <b>In analysis</b> is a <b>loose pile</b> of backs, still being sorted: its front card's ring runs, and the goal being read is named under
-      its title (§206.3). <b>To review</b> is a <b>squared deck</b> that deals itself onto the table: each back's ring fills in eighths as its start comes, a goal that waits for you has a still yellow
+    <h2>2.1 · The Orkmaster's hand, the deck, and what is at work</h2>
+    <p class="mk-line">The column is <b>160 px</b> (today 128). <b>In analysis</b> is <b>the Orkmaster's hand</b>: a fan of small backs, 56 × 78, each goal's rune in its top left, as a player's hand is
+      seen across the table; the goal being read is lifted out of the fan and named under the title (§206.3); more goals tighten the fan, never a count. <b>To review</b> is a <b>squared deck</b> that deals itself onto the table: each back's ring fills in eighths as its start comes, a goal that waits for you has a still yellow
       ring and a yellow edge, and <b>the next to start is named under its title with its time</b>, so you can hold it before it starts. Pressed, a back opens its goal's spec. <b>At work</b>
       stands, 144 × 202: the name in up to four lines, what it does now, and its foot (who, how much), which is what the pile shows of each card behind its front one. The backs are 157 × 112,
-      <b>13 px</b> under the window's edge, so every pile keeps one right edge (§236). Hover a card to slide it out.</p>
+      <b>13 px</b> under the window's edge, so the deck and <i>At work</i> keep one right edge (§236). Hover a card to slide it out.</p>
     <div class="mk-row" id="col-vs"></div>
 
     <h2>2.2 · It never scrolls: the piles give way to the window</h2>
-    <p class="mk-line">Two piles of backs take 112 px each, whatever they hold, so only <i>At work</i> gives way, in three steps, never a scrollbar: <b>1</b>, its cards behind show their foot (26 px:
+    <p class="mk-line">The Orkmaster's fan (about 90 px) and the deck (112 px) keep their height whatever they hold, so only <i>At work</i> gives way, in three steps, never a scrollbar: <b>1</b>, its cards behind show their foot (26 px:
       who and how much); <b>2</b>, they become thin edges (3 px), the furthest first; <b>3</b>, the pile sinks under the hand's rim, the way the hand's own cards go under the window's edge, the rim
       falling between two lines: its front card shows its top (rune, kind, name), the cards behind it a sliver at its right. Nothing counts what waits. Drag the height: <b>650</b> is a 1366 × 768
       laptop's browser, <b>790</b> a 1440 × 900, <b>940</b> a 1920 × 1080.</p>
@@ -319,8 +332,8 @@ button { font: inherit; }
       <thead><tr><th></th><th>Today</th><th>Proposed</th></tr></thead>
       <tbody>
         <tr><td>The corners</td><td>each card its own</td><td>every card: rune ↖, kind ↗, who ↙, how much ↘</td></tr>
-        <tr><td>Lying or standing</td><td>on its side: not yet agreed</td><td>on its side, face down: it waits (being read, or to start); standing: it plays</td></tr>
-        <tr><td>In analysis</td><td>backs, 157 × 112, 45 px under the edge</td><td>a loose pile of backs, 13 px under the edge; its ring runs; the goal being read named</td></tr>
+        <tr><td>Lying or standing</td><td>on its side: not yet agreed</td><td>face down while it waits (in the Orkmaster's hand, or on its side in the deck); standing face up while it plays</td></tr>
+        <tr><td>In analysis</td><td>backs, 157 × 112, 45 px under the edge</td><td>the Orkmaster's hand: a fan of 56 × 78 backs, each rune at its top left; the goal being read lifted and named</td></tr>
         <tr><td>To review</td><td>face up, 112 × its words</td><td>a squared deck of backs; each ring counts to its start; the next to start named with its time</td></tr>
         <tr><td>At work</td><td>face up, 112 × its words</td><td>face up, 144 × 202, standing; the name in 4 lines</td></tr>
         <tr><td>The column</td><td>128 px; scrolls</td><td>160 px; never scrolls: only <i>At work</i> gives way (feet, edges, then it sinks under the hand's rim)</td></tr>
@@ -331,8 +344,8 @@ button { font: inherit; }
         <tr><td>The phone's hand</td><td>80 × 112 cut at 82, a free row</td><td>80 × 112 cut at 62, laid by leader with a head between</td></tr>
       </tbody></table></div>
     <div class="mk-notes">
-      <p><b>Decisions changed</b>: §206.3 and §206.11 (on its side, face down, now means <i>it waits</i>, being read or to start; <i>To review</i> a deck of backs, the next to start named under its
-        title); §249.1 (<i>At work</i>'s card 144 × 202 standing), §249.2 (the hand's card: no asker's head, no party, no cost at rest; cut at 100), §236.1, §236.3 (13 px under the edge, the column
+      <p><b>Decisions changed</b>: §206.3 and §206.11 (face down now means <i>it waits</i>: <i>In analysis</i> the Orkmaster's hand, a fan of small backs; <i>To review</i> a deck of backs on
+        its side, the next to start named under its title); §249.1 (<i>At work</i>'s card 144 × 202 standing), §249.2 (the hand's card: no asker's head, no party, no cost at rest; cut at 100), §236.1, §236.3 (13 px under the edge, the column
         160 px). <b>New</b>: the four corners on every card; the column never scrolls on the desktop; the phone's hand laid by leader.</p>
       <p><b>The kind's corner</b> speaks two vocabularies: a goal's (feature, bug, tidy, screen) in the column, the lanes and the discard; a decision's (question, fork, failure, hypothesis, cost grown)
         in the hand and opened. The kind changes as the card moves, its place never.</p>
@@ -393,6 +406,15 @@ button { font: inherit; }
   var RV = [{ e: "void", ring: "wait", share: 0.75, name: "Players see who answered first in the round, with the time it took" }, { e: "ice", ring: "ask", name: "Round timer on phones: asks you" },
             { e: "lava", ring: "wait", share: 0.4, name: "Tidy the scoring module" }, { e: "ice", ring: "wait", share: 0.2, name: "Rename a room after it is made" }, { e: "meadow", ring: "wait", share: 0.1, name: "Lobby music volume" }];
   var nextA = '<div class="pnext">reading: <b>Lobby in Polish</b></div>';
+  // the Orkmaster's hand: the goals in analysis as a fan of small backs; the one being read lifted
+  function fan(list) {
+    var n = list.length, step = n > 5 ? Math.max(10, Math.floor(88 / (n - 1))) : 22;
+    return '<div class="fan" style="--step:' + step + 'px" title="In analysis: press to read them in order">' + list.map(function (b, i) {
+      var rot = ((i - (n - 1) / 2) * 4).toFixed(1);
+      return '<span class="fb ork-card' + (b.ring === "busy" ? " is-reading" : "") + '" tabindex="0" aria-label="' + b.name + '" title="' + b.name + '" style="--i:' + i + ";--r:" + rot + "deg;--z:" + (i + 1) + '">'
+        + '<span class="ork-card-back fb__back"></span><span class="fb__rune">' + elem(b.e) + "</span></span>";
+    }).join("") + "</div>";
+  }
   var nextR = '<div class="pnext">next in 2 min: <b>Players see who answered first in the round</b></div>';
   function todayCard(g, i) {
     return '<div class="tc ork-card' + (g.asks ? " asks" : "") + '" style="--i:' + i + '" tabindex="0"><div class="tc__hd">' + elem(g.e) + "<span>" + g.name + "</span></div>"
@@ -498,7 +520,8 @@ button { font: inherit; }
       + " the hand, a lane, the discard, an opened card and a new goal. The corners are the same size on every card (a head 16 px, a sign 14), so they read as an index, not as text.</p>"
       + '<p class="mk-cap" style="max-width:none"><b>A cut keeps what the place needs.</b> A pile shows the foot of the cards behind (who, how much); the hand shows the top (which goal, what it asks).</p></div>';
   document.getElementById("kinds-row").innerHTML =
-    '<figure class="mk-fig"><span class="mk-tag new">The column · it waits</span>' + back("void", 0, { ring: "wait", share: 0.75 }) + '<p class="mk-cap">Face down, on its side: it waits. No corners: the seal is its rune, the ring counts to its start.</p></figure>'
+    '<figure class="mk-fig"><span class="mk-tag new">The Orkmaster\'s hand · 56 × 78</span>' + fan(A) + '<p class="mk-cap">In analysis: a fan of small backs, each rune in its top left; the goal being read lifted.</p></figure>'
+    + '<figure class="mk-fig"><span class="mk-tag new">To review · it waits</span>' + back("void", 0, { ring: "wait", share: 0.75 }) + '<p class="mk-cap">Face down, on its side: it waits. No corners: the seal is its rune, the ring counts to its start.</p></figure>'
     + '<figure class="mk-fig"><span class="mk-tag new">The column · at work</span>' + colCard(G.music) + '<p class="mk-cap">Standing: it plays. Its kind, who does it, the time left.</p></figure>'
     + '<figure class="mk-fig"><span class="mk-tag new">The hand · cut at 100</span><div style="position:relative;height:var(--m-h)">' + handCard(H.q)
       + '<div style="position:absolute;left:-6px;right:-6px;top:var(--m-shown);border-top:1px dashed var(--ork-alert)"></div></div><p class="mk-cap">Above the edge: which goal, what it asks. Below: why, who, the cost.</p></figure>'
@@ -516,7 +539,7 @@ button { font: inherit; }
   }
   function colNew() {
     return '<div class="deskcol"><div class="colwin is-new">'
-      + '<div><div class="plab">In analysis</div>' + nextA + pile("is-down is-loose", backs(A.slice(0, 3)), [4, 4]) + "</div>"
+      + '<div><div class="plab">In analysis</div>' + nextA + fan(A) + "</div>"
       + '<div><div class="plab">To review</div>' + nextR + pile("is-down", backs(RV.slice(0, 3)), [3, 3]) + "</div>"
       + '<div><div class="plab">At work</div>' + pile("is-up", cards(colCard, [G.music, G.coin]), [26]) + "</div>"
       + '</div><div class="tbl"></div></div>';
@@ -525,7 +548,7 @@ button { font: inherit; }
     '<figure class="mk-fig"><span class="mk-tag" style="margin-bottom:18px">Today · 128 px</span>' + colToday()
       + '<p class="mk-cap">Faces 112 wide, as tall as their words; the kind is not on the card, the cost not at all.</p></figure>'
     + '<figure class="mk-fig"><span class="mk-tag new" style="margin-bottom:18px">Proposed · 160 px</span>' + colNew()
-      + '<p class="mk-cap">Two piles of backs, loose and squared, each named under its title; <i>At work</i> standing, the hand\'s size, the cards behind showing their foot.</p></figure>';
+      + '<p class="mk-cap">The Orkmaster\'s fan and the deck, each named under its title; <i>At work</i> standing, the hand\'s size, the cards behind showing their foot.</p></figure>';
 
   // 2.2 · the window at a height
   var P = { work: [G.music, G.coin, G.end, G.keep] };
@@ -533,7 +556,7 @@ button { font: inherit; }
   var handRowWin = '<div class="win__hand"><span class="plus">+</span>' + handCard(H.q) + handCard(H.fork) + handCard(H.hyp) + "</div>";
   function layWin(st) {
     return '<div class="win__col"><div class="win__head">' + head("peon-crown", "hd24") + 'Orkmaster</div><div class="win__piles">'
-      + '<div><div class="plab">In analysis</div>' + nextA + pile("is-down is-loose", backs(A), [4, 4, 4]) + "</div>"
+      + '<div><div class="plab">In analysis</div>' + nextA + fan(A.concat([{ e: "ice", name: "Daily login reward" }, { e: "meadow", name: "A tutorial round" }])) + "</div>"
       + '<div><div class="plab">To review</div>' + nextR + pile("is-down", backs(RV), [3, 3, 3, 3]) + "</div>"
       + '<div><div class="plab">At work</div>' + pile("is-up", cards(colCard, P.work), st.work, st.sunk) + "</div></div></div>"
       + '<div class="win__table"><div class="ghost"></div><div class="ghost s"></div><div class="ghost"></div><div class="ghost s"></div><div class="ghost"></div></div>' + handRowWin;
@@ -617,10 +640,10 @@ button { font: inherit; }
     ["The hand, laid by leader · the Tech card pressed", top("tech") + tableGhost + '<div class="ph-hand"><span class="plus">+</span>' + sep("shaman-elder") + nc(H.q, true) + sep("dryad-elder") + nc(H.fork) + "</div>",
       "<b>80 × 112, cut at 62</b>: the rune, the kind, the title. A head between the groups says who asks. Pressed, the card rises and shows why, who and the cost; tapped, it opens."],
     ["The crown's piles", top("crown") + '<div class="ph-menu">'
-      + '<div class="msec"><div class="plab">In analysis</div>' + pile("is-down is-loose", backs(A.slice(0, 3)), [4, 4]) + '<div class="under">reading: <b>Lobby in Polish</b></div></div>'
+      + '<div class="msec"><div class="plab">In analysis</div>' + fan(A) + '<div class="under">reading: <b>Lobby in Polish</b></div></div>'
       + '<div class="msec"><div class="plab">To review</div>' + pile("is-down", backs(RV.slice(0, 3)), [3, 3]) + '<div class="under">next in 2 min: <b>Players see who answered first in the round</b>; <b>Round timer on phones</b> asks you</div></div>'
       + '<div class="msec"><div class="plab">At work</div>' + pile("is-up", cards(colCard, [G.music, G.coin]), [26]) + '<div class="under">2 goals at work</div></div></div>',
-      "<b>The column's piles</b>: two of backs, the goal they are busy with beside them; <i>At work</i> standing. A screen of its own: the list may scroll."],
+      "<b>The column's piles</b>: the Orkmaster's fan and the deck, the goal each is busy with beside it; <i>At work</i> standing. A screen of its own: the list may scroll."],
     ["The question opened", top("tech") + '<div class="ph-q">' + opened("op2") + "</div>",
       "<b>5 : 7 at the screen's width</b> (316 × 442), its four corners. The body scrolls; the answer and the cost of the way picked stay at its foot."],
     ["Typing the answer", top("tech") + '<div class="ph-type"><div class="card ork-card"><div class="k__top">' + elem("ice") + kind("question") + "</div>"
