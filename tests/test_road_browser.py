@@ -118,7 +118,7 @@ def test_asleep_each_corner_is_its_leaders_head_alone_grey_and_a_press_opens_the
         assert pg.locator(".portal-host").get_attribute("class").split().count("is-bare") == 1 and pg.locator(".ork-portal-ring").get_attribute("class").split().count("is-bare") == 1, "no goal ready, no check: the ring is not drawn (§247.1)"
         assert pg.locator(".portal__label, .ork-portal-ring > .ork-portal").count() == 0, "no *Main*, no portal"
         assert pg.locator(".ork-portal-ring").evaluate("e => [getComputedStyle(e, '::before').display, getComputedStyle(e, '::after').display]") == ["none", "none"], "no dots, no runes: only the corners' heads stand"
-        for corner, words, race in ((release(pg), "Release: open its view", "lich-elder"), (live(pg), "Live: open its view", "imp-elder")):
+        for corner, words, race in ((release(pg), "Release: open the past", "lich-elder"), (live(pg), "Live: open what is live", "imp-elder")):
             assert corner.evaluate("e => e.tagName") == "BUTTON" and corner.get_attribute("title") == words and corner.get_attribute("aria-label") == words
             assert "is-asleep" in corner.get_attribute("class") and "is-working" not in corner.get_attribute("class") and corner.get_attribute("data-awake") == "false"
             assert srcs(corner) == [race], "its leader's head alone"
