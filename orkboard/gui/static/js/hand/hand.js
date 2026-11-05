@@ -29,6 +29,7 @@ import { AddTool } from "./addtool.js";
 import { ToolCard } from "./toolcard.js";
 import { SetupBubble, SetupCard, setupNow } from "./setupcards.js";
 import { columnOn } from "../table/data.js";
+import { edgeOn } from "../frame/edge.js";                 // at the wide width the die and the potions lie in the table's edge, not here (spec 150 D.2)
 import { laidNow, layLine } from "../table/laying.js";
 import { said } from "./motion.js";
 import "./wayparts.js";                                   // the goal's way's cards (spec 100)
@@ -80,7 +81,7 @@ export function Hand() {
   const want = liftDecision.value, dealt = want ? stops.find((x) => x.kind === "decision" && x.row?.idea === want) : null;
   useEffect(() => { if (dealt) { liftDecision.value = ""; lift(liftKey(dealt.key)); } }, [dealt?.key]);        // *Change…* in the column: the decision's card, dealt now its wait is held, comes up (decisions §240.2)
   useEffect(() => { if (key) fieldOpen.value = false; }, [key]);
-  const bare = !laidNow();                                                              // not laid yet: only the Orkmaster's cards and the AI tools (spec 130 C.6)
+  const edge = edgeOn(), bare = !laidNow();                                                              // not laid yet: only the Orkmaster's cards and the AI tools (spec 130 C.6)
   useEffect(() => { if (layLine.value && (fieldOpen.value || (map?.nodes || []).length)) layLine.value = ""; }, [fieldOpen.value, (map?.nodes || []).length]);      // the laid table's line goes with the first goal
   if (!map && !bare) return null;
   const none = !(map?.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length && !bare && !layLine.value;      // no goal at all and nothing asked: the + card lies large in the pane
@@ -90,7 +91,7 @@ export function Hand() {
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${!middle && html`<div class="hand-places"><div class="hand-row" style=${`--hc-rest:${Math.max(1, partiesNow().length)}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
-      <div class="hand-end">${!bare && html`<${PlayDie} />`}<${Mana} lifted=${s} /></div>
+      ${!edge && html`<div class="hand-end">${!bare && html`<${PlayDie} />`}<${Mana} lifted=${s} /></div>`}
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${s && html`<${Lifted} s=${s} anchor=${anchor} />`}
@@ -98,7 +99,7 @@ export function Hand() {
     ${key.startsWith(TOOL) && html`<${ToolCard} tool=${key.slice(TOOL.length)} />`}
     <${SetupCard} />
     ${!columnOn() && html`<${SetupBubble} />`}
-    ${middle && html`<div class="hand-mana-only"><${PlayDie} /><${Mana} /></div>`}
+    ${middle && !edge && html`<div class="hand-mana-only"><${PlayDie} /><${Mana} /></div>`}
     <span class="hand-live" role="status" aria-live="polite">${said.value}</span>
     ${middle && html`<${Middle}>${fieldOpen.value ? html`<${Field} middle=${true} />` : html`<${PlusCard} large=${true} onPress=${plus} />`}<//>`}
   </footer>`;

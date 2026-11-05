@@ -173,7 +173,7 @@ def test_the_discard_card_has_its_window_between_the_name_and_the_foot_else_its_
     """Spec 148 B.3: the goal's picture, else the line the card said."""
     pg, host, log = open_hand(gui, host=PicHost(), width="wide")
     try:
-        card = pg.locator(".table-end .hand-done")
+        card = pg.locator(":is(.frame-edge, .table-end) .hand-done")
         card.wait_for(timeout=WAIT_MS)
         win = card.locator("> .card-win")
         assert win.get_attribute("data-window") == "card-picture" and card.locator(".hand-done__line").count() == 0
@@ -183,7 +183,7 @@ def test_the_discard_card_has_its_window_between_the_name_and_the_foot_else_its_
         pg.close()
     pg, host, log = open_hand(gui, host=HandHost(), width="wide")
     try:
-        card = pg.locator(".table-end .hand-done")
+        card = pg.locator(":is(.frame-edge, .table-end) .hand-done")
         card.wait_for(timeout=WAIT_MS)
         assert card.locator(".card-win").count() == 0 and card.locator(".hand-done__line").count() == 1, "no picture: its line"
     finally:

@@ -67,7 +67,7 @@ class PortalHost(HandHost):
 def open_view(gui, width="wide"):
     """The window against the portal's stub with the discard's view open (the pile pressed)."""
     pg, host, log = open_hand(gui, host=PortalHost(), width=width)
-    pile = pg.locator(".table-end .hand-done")
+    pile = pg.locator(":is(.frame-edge, .table-end) .hand-done")
     pile.wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(500)
     pile.click()
@@ -117,7 +117,7 @@ def test_a_goal_ready_for_main_is_a_card_and_pressing_it_opens_the_portal_above_
         assert "Lobby music loop" in card(pg, "music").inner_text() and card(pg, "music").locator(".ork-sign.check").count() == 1 and card(pg, "music").locator(".ork-elem.void").count() == 1
         open_portal(pg)
         host_box, label, pile = pg.locator(".portal-host").bounding_box(), pg.locator(".table-end__label").bounding_box(), pg.locator(".table-discard").bounding_box()
-        assert pg.locator(".table-end > .portal-host").count() == 1 and host_box["y"] + host_box["height"] <= label["y"] + 1 <= pile["y"] + 1, "above the pile, in the table's right column"
+        assert pg.locator(".frame-edge > .portal-host, .table-end > .portal-host").count() == 1 and host_box["y"] + host_box["height"] <= label["y"] + 1 <= pile["y"] + 1, "above the pile, in the table's edge (the wide width) or its right column"
         if width == "wide":
             ring = pg.locator(".portal-host > .ork-portal-ring")
             assert ring.count() == 1 and portal(pg).evaluate("e => e.parentElement.classList.contains('ork-portal-ring')"), "the portal lies in the ring"
@@ -174,7 +174,7 @@ def test_pressing_the_portal_sends_the_goal_alone_with_what_it_stands_on_and_the
         assert card(pg, "menu").count() == 1 and card(pg, "music").count() == 0 and card(pg, "codes").count() == 0
         unchosen(pg)
         assert sig(pg, "frame/state.js", "over")["kind"] == "discard", "the view stays open"
-        assert "1 goal ready for main" in pg.locator(".table-end .hand-done").get_attribute("aria-label")
+        assert "1 goal ready for main" in pg.locator(":is(.frame-edge, .table-end) .hand-done").get_attribute("aria-label")
         assert portal(pg).count() == (1 if width == "wide" else 0), "the ring stays open for Menu; at the narrow width the portal is gone"
         if width == "wide":
             assert seal(pg).count() == 0 and pg.locator(".portal-host").get_attribute("data-portal") == "ready"
@@ -263,9 +263,9 @@ def test_the_first_time_the_portal_shimmers_and_says_how_once(gui, width):
         open_portal(pg)                                                                                              # the second time: neither
         assert "is-new" not in portal(pg).get_attribute("class") and pg.locator(".portal__hint").count() == 0
         pg.reload()
-        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
+        pg.locator(":is(.frame-edge, .table-end) .hand-done").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(500)
-        pg.locator(".table-end .hand-done").click()
+        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()
         pg.locator(".portal-cards").wait_for(timeout=WAIT_MS)
         open_portal(pg)                                                                                              # nor after a reload: the device has seen it
         assert "is-new" not in portal(pg).get_attribute("class") and pg.locator(".portal__hint").count() == 0
@@ -285,9 +285,9 @@ def test_the_page_works_when_the_device_keeps_nothing(gui):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     try:
-        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
+        pg.locator(":is(.frame-edge, .table-end) .hand-done").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(500)
-        pg.locator(".table-end .hand-done").click()
+        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()
         pg.locator(".portal-cards").wait_for(timeout=WAIT_MS)
         open_portal(pg)
         assert pg.locator(".portal__hint").text_content() == FIRST_WIDE, "said, once on this page"
@@ -332,7 +332,7 @@ def test_closing_the_view_drops_the_choice_and_the_ring_stays_open_at_the_wide_w
     pg, host, log = open_view(gui, width)
     try:
         open_portal(pg)
-        pg.locator(".table-end .hand-done").click()                                                                  # the pile pressed again closes the view
+        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()                                                                  # the pile pressed again closes the view
         pg.wait_for_function("() => !document.querySelector('.hand-discardview')", timeout=WAIT_MS)
         unchosen(pg)
         assert pg.locator(".portal-host").count() == (1 if width == "wide" else 0), "the portal's place stays at the wide width; at the narrow one the portal closes with the choice"

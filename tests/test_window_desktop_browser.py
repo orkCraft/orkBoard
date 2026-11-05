@@ -174,7 +174,7 @@ def test_every_place_is_reached_over_the_pane(window):
     pg.get_by_role("button", name="Art's menu").click()
     pg.get_by_role("menuitem", name="Edit").click()
     over(pg, "parties")
-    assert title(pg) == "Art · Parties"
+    assert title(pg) == "Art's table · Parties"
     nothing_modal(pg)
     pg.get_by_role("button", name="Back").click()
     pg.locator(".table-head").wait_for(timeout=WAIT_MS)

@@ -68,7 +68,7 @@
 .col-card--up.ork-card { left: 0; top: var(--y, 0px); z-index: calc(10 - var(--i)); display: flex; flex-direction: column; gap: var(--ork-3); width: var(--col-edge); aspect-ratio: 5 / 7; padding: calc(var(--ork-3) - var(--ork-line)) var(--ork-3); transform: translateX(var(--x, 0px)); }      /* 1 px of border, 5 of padding: the foot row is 26 px from the card's bottom, the top 32 px to the name */
 .col-card--up.ork-card:is(:hover, :focus-visible) { z-index: 40; transform: translate(calc(var(--x, 0px) + 36px), 0) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* out of its pile, whole */
 .col-card--up.ork-card.is-off .col-nm { opacity: 0.6; }
-.col-nm { flex: none; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; line-height: 20px; }      /* the name in up to four lines of 20 px (giveWay's rim falls between them) */
+.col-nm { flex: none; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; line-height: 20px; }      /* the name in up to three lines of 20 px (spec 150 C, decisions §254.2) (giveWay's rim falls between them) */
 .col-foot { flex: none; margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
 .col-foot .corner--foot { margin-top: 0; }
 .col-now { display: flex; align-items: flex-start; gap: var(--ork-1); min-height: 28px; color: var(--ork-ink-read); font: var(--ork-type-caption); font-size: 11px; line-height: 14px; }

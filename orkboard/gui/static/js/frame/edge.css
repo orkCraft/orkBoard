@@ -1,0 +1,13 @@
+/* The table's edge (docs/specs/150-the-table-its-edge-and-the-past-through-the-open-tab.md D, decisions §254.3–§254.4; mockup docs/mockups/table-edge/ section 1; frame/edge.js): a strip of objects at the window's right, on orkUI's room with a frame line at its
+   left, `--edge-w` wide (frame.css), the table's and the hand's height. Top to bottom, `space-between`, nothing else and no words but each object's own: the ring (table/portal.css), the discard (table/discard.css), the die (hand/mana.css) and the potions
+   (hand/mana.css), the potions at the hand's level. In a 1366 x 768 window they all fit with no scroll; a shorter window cuts the discard from its foot (its top card shows) and the die and the potions keep their place at the foot.
+   Layout only: every colour, face and move is orkUI's. The hand (z-index 2) stands over the edge, so a card lifted from it lies above the pile where they meet. */
+.frame-edge { position: relative; z-index: 1; grid-column: -2 / -1; grid-row: 1 / -1; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden; overflow: clip; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: var(--ork-3);
+  padding: var(--ork-3) 0 var(--ork-4); background: var(--ork-room); border-left: var(--ork-line) solid var(--ork-frame); }
+.frame-edge > * { flex: none; max-width: 100%; }
+.frame-edge > .edge-discard { flex: 0 1 auto; min-height: 0; overflow: hidden; overflow: clip; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-3); }       /* the pile is cut from its foot when the window is short */
+.frame-edge > .edge-discard > .table-discard { flex: none; }
+.frame-edge > .portal-host { width: 100%; }
+.frame-edge > .hand-mana { flex: none; }
+/* the laying at the first Start (table/table.css): the die comes as it came in the hand */
+.frame[data-laying] .frame-edge > .hand-die { animation: table-lay-in var(--ork-motion-base) var(--ork-motion-ease) both; animation-delay: 950ms; }

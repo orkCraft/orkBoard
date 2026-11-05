@@ -205,11 +205,14 @@ def test_the_die_lies_in_the_hand_left_of_the_potions_with_its_word_under_it_ask
     pg, errors = window(gui, Host(), {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
     d = die(pg)
     pg.locator(".hand-mana .hand-pot").first.wait_for(timeout=WAIT_MS)
-    assert d.evaluate("e => e.closest('.hand') !== null") and d.locator(".hand-die__play").get_attribute("aria-label") == "Play: the project's preview of dev" and d.locator(".hand-die__play").get_attribute("title") == d.locator(".hand-die__play").get_attribute("aria-label")
+    assert d.evaluate("e => e.closest(%r) !== null" % (".frame-edge" if width == "wide" else ".hand")) and d.locator(".hand-die__play").get_attribute("aria-label") == "Play: the project's preview of dev" and d.locator(".hand-die__play").get_attribute("title") == d.locator(".hand-die__play").get_attribute("aria-label")
     assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator(".ork-die").get_attribute("aria-hidden") == "true"
     box, mana, word = d.locator(".ork-die").bounding_box(), pg.locator(".hand-mana").bounding_box(), d.locator(".hand-die__word").bounding_box()
     assert 70 <= box["width"] <= 86 and 86 <= box["height"] <= 100                                                     # 72 x 90 (3 px a cell; orkUI 0.29.0's steeper view, decisions §246), turned a little: it keeps its size at the narrow width too
-    assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 7 and box["x"] < mana["x"]                    # left of the potions (at the narrow width its edge lies over the first potion's empty border)
+    if width == "wide":
+        assert d.bounding_box()["y"] + d.bounding_box()["height"] <= mana["y"] + 1                                      # over the potions, in the table's edge (spec 150 D.2)
+    else:
+        assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 7 and box["x"] < mana["x"]                # left of the potions (at the narrow width its edge lies over the first potion's empty border)
     assert word["y"] >= box["y"] + 56                                                                                   # its word under it
     assert d.locator(".ork-die").evaluate("e => getComputedStyle(e).rotate") == "-6deg"                                 # the lean token the other way
     assert d.locator(".ork-die > .ork-die__cube > .ork-die__face").count() == 6                                         # orkUI's die is a cube in CSS 3D (0.24.0): its six faces

@@ -440,7 +440,7 @@ def test_the_lanes_stand_under_their_tabs_every_lane_one_width_and_the_first_is_
     widths = {round(l.bounding_box()["width"]) for l in lanes.all()[:k]}
     assert len(widths) == 1, widths                                                                                       # every lane the same width, the first too
     if wide(w):
-        assert abs(widths.pop() - 180) <= 1                                                                              # a card and a quarter (frame.css `--col-w`)
+        assert 144 <= widths.pop() <= 181                                                                                # a card and a quarter at most (frame.css `--col-w`), narrower by what the edge's column takes (spec 150 D.1): a card still fits
     else:
         assert widths.pop() <= 48                                                                                        # a token wide
     assert pg.locator(".table-board").evaluate("e => e.scrollWidth <= e.clientWidth + 1")                                # no sideways scroll
@@ -1307,14 +1307,15 @@ def test_a_form_over_the_pane_covers_the_tables_end_and_the_column_and_the_hand_
     from tests.test_discard_table_browser import open_maps
     pg, host, log = open_maps(gui, "wide")
     try:
-        pg.locator(".table-end").wait_for(timeout=WAIT_MS)
+        pg.locator(".frame-edge .edge-discard").wait_for(timeout=WAIT_MS)
         pg.get_by_role("button", name="The Orkmaster's menu").click()
         pg.get_by_role("menuitem", name="Settings").click()
         pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-end, .ork-portal-ring").count() == 0 and pg.locator('.table-body[data-end="form"]').count() == 1, "no ring and no discard beside a form"
+        assert pg.locator(".table-end, .ork-portal-ring, .edge-discard").count() == 0 and pg.locator('.table-body[data-end="form"]').count() == 1, "no ring and no discard beside a form"
+        assert pg.locator(".frame-edge > .hand-die, .frame-edge > .hand-mana").count() == 2, "the die and the potions stay: they are the hand's"
         assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
         pg.keyboard.press("Escape")
-        pg.locator(".table-end").wait_for(timeout=WAIT_MS)
+        pg.locator(".frame-edge .edge-discard").wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1359,7 +1360,7 @@ def test_start_lays_the_table_in_order_and_says_so_and_the_ring_waits_for_its_fi
     pg.locator('[data-act="start"]').wait_for(timeout=WAIT_MS)
     pg.locator('[data-act="start"]').click()
     pg.locator(".frame[data-laying] .table-tabcell").first.wait_for(timeout=WAIT_MS)
-    delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.hand-end > :not(.hand-mana)'), plus: ms('.hand-slot.is-plus') }; }""")
+    delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.frame-edge > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
     assert delays["tab"] < delays["chair"] < delays["die"] < delays["plus"], delays
     assert pg.locator(".hand-plus").evaluate("e => e.classList.contains('is-choosing')"), "its seal lit once"
     assert "The table is laid. What shall we make first? Play the + card." in pg.locator(".fo-bubble").inner_text()

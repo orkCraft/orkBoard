@@ -277,7 +277,7 @@ def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_s
         size = pg.viewport_size
         assert pg.locator(".hand-deckback, .hand-deck, .hand-end--deck").count() == 0, "no deck: the goals in line lie on the table"
         assert pg.evaluate("() => import('/static/js/frame/kinds.js').then((m) => 'deck' in m.KINDS)") is False
-        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == 1, "a lane under each tab (the project's first, four parties) and the mana's place"
+        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == (0 if width == "wide" else 1), "a lane under each tab (the project's first, four parties); the mana's place at the narrow width (at the wide one the die and the potions lie in the table's edge, spec 150 D.2)"
         sizes = set(map(tuple, pg.evaluate("() => [...document.querySelectorAll('.hand .hand-card, .hand .hand-back:not(.edge)')].map((e) => [e.offsetWidth, e.offsetHeight])")))
         assert len(sizes) == 1, f"one card size, got {sizes}"
         assert sizes == ({(144, 202)} if width == "wide" else {(80, 112)}), sizes          # spec 147 C.1, decisions §251.5: 144 x 202 cut by the hand's rim (the narrow card 80 x 112)
@@ -298,13 +298,14 @@ def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_s
         assert hand["height"] <= (150 if width == "wide" else 130), "the hand is short: the table gains what it gave back"
         if width == "wide":
             cols = pg.locator(".hand-row").evaluate("e => getComputedStyle(e).gridTemplateColumns.split(' ').map(parseFloat)")
-            assert len(cols) == 6 and cols[0] == 160 and len(set(cols[1:5])) == 1 and cols[1] == 180, f"the first under the Orkmaster's column (its own width, spec 130 E.1; 160 px, spec 147 B.1), every lane one width, a card and a quarter, then the tabs' end: {cols}"
+            assert len(cols) == 6 and cols[0] == 160 and len(set(cols[1:5])) == 1 and 144 <= cols[1] <= 180, f"the first under the Orkmaster's column (its own width, spec 130 E.1; 160 px, spec 147 B.1), every lane one width, a card and a quarter at most (less by the edge's column, spec 150 D.1), then the tabs' end: {cols}"
             boxes = [lane(pg, i).bounding_box() for i in range(5)]
             assert all(abs(boxes[i + 1]["x"] - (boxes[i]["x"] + boxes[i]["width"])) <= 1 for i in range(4)), "the lanes are side by side on the grid"
             mana = pg.locator(".hand-mana").bounding_box()
-            assert abs(mana["x"] + mana["width"] - size["width"]) <= 1 and pg.locator(".hand .hand-done, .hand .table-discard").count() == 0, "the mana flush against the edge at the hand's end, no discard in the hand (it lies on the table)"
-            done = pg.locator(".table-end .hand-done").bounding_box()
-            assert done["x"] >= boxes[4]["x"] + boxes[4]["width"] - 1 and done["y"] + done["height"] <= hand["y"] + 1, "the discard on the table, in the last column right of the lanes, above the hand"
+            edge = pg.locator(".frame-edge").bounding_box()
+            assert edge["x"] <= mana["x"] and mana["x"] + mana["width"] <= edge["x"] + edge["width"] <= size["width"] + 1 and pg.locator(".hand .hand-done, .hand .table-discard, .hand .hand-mana").count() == 0, "the mana in the table's edge, none in the hand, no discard in the hand (it lies in the edge)"
+            done, die = pg.locator(":is(.frame-edge, .table-end) .hand-done").bounding_box(), pg.locator(".frame-edge > .hand-die").bounding_box()
+            assert done["x"] >= boxes[4]["x"] - 1 and edge["x"] <= done["x"] and done["y"] + done["height"] <= die["y"] + 1, "the discard in the edge, right of the lanes, over the die"
         else:
             slots = sorted(pg.locator(".hand-slot, .hand-mana").evaluate_all("els => els.map((e) => [e.classList.contains('is-plus') ? 'plus' : e.classList.contains('hand-mana') ? 'mana' : 'stack', e.getBoundingClientRect().x])"), key=lambda t: t[1])
             assert slots[0][0] == "plus" and slots[-1][0] == "mana" and pg.locator(".hand .hand-done").count() == 0, "a free row in the lanes' order: the + card first, the mana last; the discard is not in it"
@@ -413,7 +414,7 @@ def test_two_goals_under_one_lane_fan_within_its_width_the_back_ones_edge_only_a
 def test_a_tap_on_the_discard_opens_it_over_the_pane_at_the_narrow_width(gui):
     pg, host, log = open_hand(gui, width="narrow")
     try:
-        done = pg.locator(".table-end .hand-done")
+        done = pg.locator(":is(.frame-edge, .table-end) .hand-done")
         done.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(900)
         b = done.bounding_box()

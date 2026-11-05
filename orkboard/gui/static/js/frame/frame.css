@@ -11,3 +11,12 @@
 .frame[data-column] { grid-template-columns: var(--column-w) minmax(0, 1fr); }
 .frame[data-column] > .frame-hand { grid-column: 1 / -1; }
 .frame-column { position: relative; z-index: 1; min-width: 0; min-height: 0; background: var(--ork-room); }
+/* the table's edge (spec 150 D.1, decisions §254.3; frame/edge.js, edge.css): at 760 px and up a third column, `--edge-w`, at the right of the table and the hand and as tall as both; the table keeps the first (or second, with the Orkmaster's column) and the hand lies under it and the column, never under the edge. Under 760 px nothing changes. */
+.frame { --edge-w: 212px; }
+@media (min-width: 760px) {
+  .frame[data-edge] { grid-template-columns: minmax(0, 1fr) var(--edge-w); }
+  .frame[data-edge][data-column] { grid-template-columns: var(--column-w) minmax(0, 1fr) var(--edge-w); }
+  .frame[data-edge] > .frame-table { grid-column: -3 / -2; grid-row: 1; }
+  .frame[data-edge] > .frame-hand { grid-column: 1 / -2; grid-row: 2; }
+  .frame[data-edge][data-column] > .frame-column { grid-column: 1; grid-row: 1; }
+}

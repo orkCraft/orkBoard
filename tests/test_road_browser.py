@@ -56,7 +56,7 @@ def open_page(gui, host, width="wide", reduced=False):
 def open_view(gui, host, width="wide", reduced=False):
     """The window with the discard's view open (the pile pressed)."""
     pg, log = open_page(gui, host, width, reduced)
-    pile = pg.locator(".table-end .hand-done")
+    pile = pg.locator(":is(.frame-edge, .table-end) .hand-done")
     pile.wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(500)
     pile.click()
@@ -115,9 +115,9 @@ def test_asleep_each_corner_is_its_leaders_head_alone_grey_and_a_press_opens_the
     try:
         pg.locator(".ork-portal-ring").wait_for(timeout=WAIT_MS)
         ring = pg.locator(".ork-portal-ring").bounding_box()
-        assert pg.locator(".portal-host").get_attribute("class").split().count("is-bare") == 1 and pg.locator(".ork-portal-ring").get_attribute("class").split().count("is-bare") == 1, "no goal ready, no check: the ring is not drawn (§247.1)"
+        assert pg.locator(".portal-host").get_attribute("class").split().count("is-asleep") == 1 and "is-bare" not in pg.locator(".ork-portal-ring").get_attribute("class").split(), "no goal ready, no check: the ring is drawn, asleep (spec 150 D.3)"
         assert pg.locator(".portal__label, .ork-portal-ring > .ork-portal").count() == 0, "no *Main*, no portal"
-        assert pg.locator(".ork-portal-ring").evaluate("e => [getComputedStyle(e, '::before').display, getComputedStyle(e, '::after').display]") == ["none", "none"], "no dots, no runes: only the corners' heads stand"
+        assert pg.locator(".ork-portal-ring").evaluate("e => [getComputedStyle(e, '::before').display, getComputedStyle(e, '::after').display]") == ["block", "block"], "its dots and its runes drawn, faint: the ring asleep"
         for corner, words, race in ((release(pg), "Release: open the past", "lich-elder"), (live(pg), "Live: open what is live", "imp-elder")):
             assert corner.evaluate("e => e.tagName") == "BUTTON" and corner.get_attribute("title") == words and corner.get_attribute("aria-label") == words
             assert "is-asleep" in corner.get_attribute("class") and "is-working" not in corner.get_attribute("class") and corner.get_attribute("data-awake") == "false"
@@ -125,8 +125,9 @@ def test_asleep_each_corner_is_its_leaders_head_alone_grey_and_a_press_opens_the
             assert corner.locator(".ork-race__head").evaluate("e => getComputedStyle(e).filter") == "grayscale(1)"
         assert pg.locator(".ork-portal-ring").get_attribute("aria-hidden") is None, "a ring that holds buttons is not hidden"
         r, l = release(pg).bounding_box(), live(pg).bounding_box()
-        assert r["x"] < ring["x"] + 20 and r["y"] > ring["y"] + ring["height"] - 60, "Release at the ring's lower left"
-        assert l["x"] + l["width"] > ring["x"] + ring["width"] - 20 and l["y"] < ring["y"] + 20, "Live at its upper right"
+        mid = ring["x"] + ring["width"] / 2
+        assert r["x"] < mid < r["x"] + r["width"] and r["y"] >= ring["y"] + ring["height"] - 12, "Release (the lich) at the ring's six (spec 150 D.4)"
+        assert l["x"] < mid < l["x"] + l["width"] and l["y"] + l["height"] <= ring["y"] + 8, "Live (the imp) at its twelve"
         shot(pg, "asleep")
         release(pg).click()
         assert sig(pg, "frame/state.js", "tab") == "release"
@@ -244,11 +245,11 @@ def test_with_no_gate_a_goal_done_lies_on_the_pile_with_no_ring_and_no_ready_for
     host.gate_doc = dict(NO_GATE)
     pg, log = open_page(gui, host)
     try:
-        pile = pg.locator(".table-end .hand-done")
+        pile = pg.locator(":is(.frame-edge, .table-end) .hand-done")
         pile.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
-        assert pg.locator(".ork-portal-ring, .portal-host").count() == 0 and pg.locator(".table-end .table-end__label").text_content() == "Discard"
-        assert pg.locator(".table-end .ork-card-place").count() == 0 and pg.locator(".table-end .hand-card .hand-done__line").count() == 0, "no *ready for main* on the pile (spec 147 A: the discard card's line, drawn only when it says something)"
+        assert pg.locator(".ork-portal-ring, .portal-host").count() == 0 and pg.locator(":is(.frame-edge, .table-end) .table-end__label").text_content() == "Discard"
+        assert pg.locator(":is(.frame-edge, .table-end) .ork-card-place").count() == 0 and pg.locator(":is(.frame-edge, .table-end) .hand-card .hand-done__line").count() == 0, "no *ready for main* on the pile (spec 147 A: the discard card's line, drawn only when it says something)"
         pile.click()
         pg.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-discardview").get_by_text("Ready for").count() == 0 and pg.locator(".portal-cards").count() == 0
@@ -488,12 +489,12 @@ def test_the_road_fits_over_the_hand_at_1280_and_1024_wide_in_every_state(gui, w
     pg, log = open_view(gui, host, width)
     try:
         def clear(state):
-            hand = pg.locator(".hand").bounding_box()
+            edge = pg.locator(".frame-edge").bounding_box()
             for sel in (".ork-portal-ring", ".ork-portal-ring__before .ork-race__head", ".ork-portal-ring__after .ork-race__head", ".ork-portal-ring__gate", ".portal__sealed", ".portal__line"):    # the corners' own boxes reach 6 px past the ring
                 for el in pg.locator(sel).all():
                     box = el.bounding_box()
                     if box and box["height"]:
-                        assert box["y"] + box["height"] <= hand["y"] + 1, f"{state}: {sel} overlaps the hand"
+                        assert edge["y"] - 1 <= box["y"] and box["y"] + box["height"] <= edge["y"] + edge["height"] + 1, f"{state}: {sel} leaves the table's edge"
                         assert box["x"] >= 0 and box["x"] + box["width"] <= pg.viewport_size["width"] + 1, f"{state}: {sel} leaves the window"
             narrow.no_sideways(pg)
             corners = [b for b in (el.bounding_box() for el in pg.locator(".ork-portal-ring__before, .ork-portal-ring__after").all()) if b]
@@ -501,6 +502,8 @@ def test_the_road_fits_over_the_hand_at_1280_and_1024_wide_in_every_state(gui, w
                 for el in pg.locator(sel).all():
                     box = el.bounding_box()
                     if box and box["height"] and el.inner_text().strip():
+                        if sel == ".table-end__label" and box["y"] + box["height"] > pg.locator(".edge-discard").bounding_box()["y"] + pg.locator(".edge-discard").bounding_box()["height"] + 0.5:
+                            continue                                                       # a pile squeezed out by a tall ring (the line, the reason) is cut from its foot: its word is out of sight, not over a corner
                         for c in corners:
                             apart = box["x"] + box["width"] <= c["x"] or c["x"] + c["width"] <= box["x"] or box["y"] + box["height"] <= c["y"] or c["y"] + c["height"] <= box["y"]
                             assert apart, f"{state}: {sel} overlaps a corner of the ring"

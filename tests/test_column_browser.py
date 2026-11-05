@@ -502,9 +502,9 @@ def test_an_agreed_decision_says_when_its_spec_starts_under_the_title_and_start_
     assert not log, "\n".join(log)
 
 
-def test_a_standing_card_has_its_four_corners_its_name_in_four_lines_and_a_foot_row_that_is_26_px_from_its_bottom(gui):
-    """Spec 147 B.4 (decisions §251.3): rune and kind at the top, the name in up to four lines, what it does now, the wait's bar where it waits, who and how much at the foot; no window, no name in a foot."""
-    long = "Rename every room after it is made so the whole line of the name has to be said in four lines of the card, with every word of it kept in the page"
+def test_a_standing_card_has_its_four_corners_its_name_in_three_lines_and_a_foot_row_that_is_26_px_from_its_bottom(gui):
+    """Spec 147 B.4 (decisions §251.3): rune and kind at the top, the name in up to three lines (spec 150 C), what it does now, the wait's bar where it waits, who and how much at the foot; no window, no name in a foot."""
+    long = "Rename every room after it is made so the whole line of the name has to be said in three lines of the card, with every word of it kept in the page"
     host = ColumnHost()
     host.nodes.append(node("longone", "tech", long, "table", state="working", element="ice", stage="implementation", tasks=[task("l1", "Rename them", "running", left=720)]))
     pg, host, log = open_column(gui, host=host)
@@ -517,7 +517,7 @@ def test_a_standing_card_has_its_four_corners_its_name_in_four_lines_and_a_foot_
         nm = card.locator(".col-nm")
         assert nm.inner_text().strip() == long, "the name whole in the DOM"
         lines = nm.evaluate("e => Math.round(e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight))")
-        assert lines == 4, "up to four lines, then cut"
+        assert lines == 3, "up to three lines, then cut (spec 150 C, decisions §254.2)"
         assert "Now: Rename them" in card.locator(".col-now").inner_text() and card.locator(".col-count").inner_text() == "0/1"
         box, foot = card.bounding_box(), card.locator(".corner--foot").bounding_box()
         assert abs(box["width"] - 144) <= 1 and abs(box["height"] - 202) <= 1

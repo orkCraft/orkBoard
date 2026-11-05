@@ -12,6 +12,7 @@
 // unfinished landing out.
 // **The die in a goal's rune** (spec 128 F.3, decisions §206.8): with a goal done or at work picked, the die wears its rune's colour (`data-elem`: mana.css gives the pips and the edge orkUI's element token), its `title` and `aria-label` say *Play: <goal>* (the rest of
 // the words keep their order: *Close the preview* while it is open, *Nothing to play yet* asleep), and pressed it plays dev with that goal in it (`ideas.play {idea}`).
+// **The right face** (spec 150 D.6, decisions §254.4): while the front is Stop all the die wears `right-resume` (orkUI 0.30.0 draws Resume on its right face, waiting there); after the quarter turn the front is Resume and the class is off.
 // **The front face** (docs/specs/139-the-die-the-door-and-the-bug.md A.1–A.3, decisions §246.1–§246.3, orkUI 0.29.0): the die is no longer one button. The whole die is the Play press (`hand-die__play`), and the front face is a second `<button>` (`hand-die__stop`, *Stop all: stop every run
 // of this project's orks*) laid over its projected box (`lay`: measured, split at the middle between the up face's bottom and the front's top; laid again on a resize, on a draw and after a wobble, a landing or a turn). The die wears `front-stop`, and `is-orks-running` while `isWorking` says a task runs
 // (table/door.js `useOrks`): the mark is muted else, the danger's only then. Pressed it asks the host to stop everything (`halt`, door.js); then its word says *Stopped* (muted, `aria-disabled`) until work starts. Under the die its two words: *Play* · *Stop all* (*Playing*, *Stopped*),
@@ -132,7 +133,7 @@ export function PlayDie() {
   const stopWord = orks.stopped ? STOPPED : STOP, press = () => { if (toResume) resume(); else if (!orks.stopped) halt(); };
   return html`<div class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep, "is-orks-running": orks.running, "is-orks-stopped": orks.stopped })} data-open=${open ? "1" : undefined} data-elem=${goal?.hue || goal?.element || undefined} data-goal=${goal?.slug || undefined}>
     <span class="hand-die__box" ref=${box}>
-      <span key=${wob.key} class=${cls(`ork-die face-${face} ${front ? "front-resume" : "front-stop"}`, { "is-turning": turning && !gone, "is-orks-stopped": front, "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep, "is-orks-running": orks.running })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
+      <span key=${wob.key} class=${cls(`ork-die face-${face} ${front ? "front-resume" : "front-stop right-resume"}`, { "is-turning": turning && !gone, "is-orks-stopped": front, "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep, "is-orks-running": orks.running })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
       <button type="button" class="hand-die__play" aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words} onClick=${() => pressPlay(goal)} onPointerEnter=${hover}></button>
       <button type="button" class="hand-die__stop" aria-label=${toResume ? RESUME_WORDS : STOP_WORDS} title=${toResume ? RESUME_WORDS : STOP_WORDS} aria-disabled=${orks.stopped && !toResume ? "true" : undefined} onClick=${press}></button>
     </span>

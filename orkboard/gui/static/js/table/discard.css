@@ -1,48 +1,36 @@
-/* The discard on the table (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3; mockup docs/mockups/mana/): the pile of goals done lies at the foot of the table's last column (the frame's `--cols` last track, right of
-   the lanes), aligned right, a hand card's size (`--hc-w`, the sizes hand.css gives `.table-end` too), with the pixel-face word *Discard* above it, on every tab. Layout only: every colour, face, corner and move is orkUI's (`.ork-deck`,
-   `.ork-card`, `.ork-card-back`, `.ork-leans`, `.ork-label`'s heading face); the card's anatomy is the hand's (hand.css `.hand-card__*`).
-   - The project's tab: the last column is empty, so the pile is laid over its foot and takes no width (the lanes stay under their tabs).
-   - A party's tab (and what is opened over the pane): the map takes the rest (`data-end` "side" and "over" leave a column's width at its right, the map scrolls as it did); the pile's column is empty above the pile.
-   - Under 760 px the pile is 80 px wide at the lanes' end; a screen opened over the pane (what the narrow width makes of it) has no pile over it, except the discard's own, which keeps it to press again; a party's map ends above it.
-   - At 760 px and up the end is laid for what it holds (decisions §247.1, spec 140 A1; docs/specs/110 §3.2, decisions §185.2, §185.3): the column is the portal's ring wide (192 px, orkUI's `.ork-portal-ring`, portal.css) and the pile lies centred under it; with nothing
-     done, nothing ready and no corner of the road there is no end, no room kept for it, and no dashed place. The column is flush with the pane's right edge when the ring is wider than the old pile's column (144 px: both are 192 px then), so a party's map keeps the width it had
-     (the loops' map switches its layout at 900 px of it) and the pile lies where it did.
+/* The discard on the table (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3; mockup docs/mockups/mana/): the pile of goals done, a hand card's size (`--hc-w`, the sizes hand.css gives `.table-end` and `.frame-edge` too),
+   with the pixel-face word *Discard* above it. Layout only: every colour, face, corner and move is orkUI's (`.ork-deck`, `.ork-card`, `.ork-card-back`, `.ork-leans`, `.ork-label`'s heading face); the card's anatomy is the hand's (hand.css `.hand-card__*`).
+   - At 760 px and up it lies in the table's edge (spec 150 D, decisions §254.3: frame/edge.js, edge.css), under the ring: there is no end on the table and the table keeps the whole width.
+   - Under 760 px the pile is 80 px wide at the lanes' end (`.table-end`, the table's absolutely placed corner, with the portal above it while a goal is chosen); a screen opened over the pane (what the narrow width makes of it) has no pile over it, except the discard's own, which keeps it
+     to press again; a party's map ends above it.
    The hand (z-index 2) stands over it, so a card lifted from the hand lies above the pile where they meet. */
 
-.table-body { --table-end-w: calc(var(--hc-w) + var(--ork-8) * 2); --table-end-h: calc(var(--hc-h) + var(--ork-8) + var(--ork-6)); }
+.table-body { --table-end-h: calc(var(--hc-h) + var(--ork-8) + var(--ork-6)); }
 .table-end { position: absolute; z-index: 1; right: var(--ork-8); bottom: var(--ork-4); display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); width: var(--hc-w); }
 .table-place { width: var(--hc-w); flex: none; }
 .table-end__label { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
-.table-end .table-discard { width: var(--hc-w); height: var(--hc-h); flex: none; }          /* over hand.css's 100 %: the column is wider than the pile at the wide width */
-.table-end .hand-card.hand-done { cursor: pointer; }
-.table-end .hand-card .hand-mark { color: var(--ork-ink-muted); }
-.table-end .hand-card .hand-mark.is-ok { color: var(--ork-success); }
-.table-end .hand-card .hand-mark .ork-sign { opacity: 0.85; }
-.table-end .hand-card .is-ok { color: var(--ork-success); }
+:is(.table-end, .frame-edge) .table-discard { width: var(--hc-w); height: var(--hc-h); flex: none; }          /* over hand.css's 100 %: the column is wider than the pile at the wide width */
+:is(.table-end, .frame-edge) .hand-card.hand-done { cursor: pointer; }
+:is(.table-end, .frame-edge) .hand-card .hand-mark { color: var(--ork-ink-muted); }
+:is(.table-end, .frame-edge) .hand-card .hand-mark.is-ok { color: var(--ork-success); }
+:is(.table-end, .frame-edge) .hand-card .hand-mark .ork-sign { opacity: 0.85; }
+:is(.table-end, .frame-edge) .hand-card .is-ok { color: var(--ork-success); }
 /* A goal done in the night wears a small moon until its result is seen (docs/specs/128 C.3, decisions §206.9; table/discard.js): orkUI's `moon` sign in the quiet ink, at the corner of the card's window, and at the end of its row over the pane. */
-.table-end .hand-done__moon { position: absolute; top: var(--ork-1); right: var(--ork-1); display: inline-flex; color: var(--ork-ink-muted); }
+:is(.table-end, .frame-edge) .hand-done__moon { position: absolute; top: var(--ork-1); right: var(--ork-1); display: inline-flex; color: var(--ork-ink-muted); }
 .hand-drow__moon { display: inline-flex; flex: none; color: var(--ork-ink-muted); }
 
-.table-body:is([data-end="side"], [data-end="over"]):has(> .table-end) { padding-right: var(--table-end-w); }          /* the room is kept only while the end is laid (decisions §247.1: with nothing in it the table gains the width) */
-.table-body:is([data-end="side"], [data-end="over"]):has(> .table-end) > :is(.table-head, .pick-strip) { margin-right: calc(var(--table-end-w) * -1); }          /* the party's header and the pick strip keep the pane's whole width */
 
 /* Words stay inside the card (spec 143 F.5, decisions §250.7): the back that says only what is ready for main (no goal done to show) holds its sentence inside the frame of its art, wrapped, a long branch's name broken, and cut at the
    fourth line with the whole sentence in its `title`; at the narrow width (80 px) the padding keeps them inside the art's window and they are set smaller (spec 149 G.5); the front card's foot is cut the same way at its second line (hand.css). */
-.table-end .hand-done.hand-back { grid-template-columns: minmax(0, 1fr); }
-.table-end .hand-back__ready { box-sizing: border-box; min-width: 0; max-width: 100%; padding: var(--ork-4) var(--ork-5); }
-.table-end .hand-back__ready .cap { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; max-width: 100%; overflow: hidden; overflow-wrap: anywhere; }
+:is(.table-end, .frame-edge) .hand-done.hand-back { grid-template-columns: minmax(0, 1fr); }
+:is(.table-end, .frame-edge) .hand-back__ready { box-sizing: border-box; min-width: 0; max-width: 100%; padding: var(--ork-4) var(--ork-5); }
+:is(.table-end, .frame-edge) .hand-back__ready .cap { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; max-width: 100%; overflow: hidden; overflow-wrap: anywhere; }
 
-@media (min-width: 760px) {
-  .table-body { --table-end-w: max(var(--hc-w) + var(--ork-8) * 2, 192px); }
-  .table-end { right: calc((var(--table-end-w) - max(var(--hc-w) + var(--ork-8), 192px)) / 2); width: max(var(--hc-w) + var(--ork-8), 192px); align-items: center; }
-}
 
 @media (max-width: 759.98px) {
   .table-end { right: var(--ork-4); gap: var(--ork-2); }
-  .table-end .hand-back__ready { padding: var(--ork-3) var(--ork-5); gap: var(--ork-1); }          /* the art's window is 12 px in from each side of the 80 px card: the words wrap inside it (spec 149 G.5, decisions §250.7) */
-  .table-end .hand-back__ready .cap { font-size: 10px; line-height: 12px; }
-  .table-body:is([data-end="side"], [data-end="over"]) { padding-right: 0; }
-  .table-body:is([data-end="side"], [data-end="over"]) > :is(.table-head, .pick-strip) { margin-right: 0; }
+  :is(.table-end, .frame-edge) .hand-back__ready { padding: var(--ork-3) var(--ork-5); gap: var(--ork-1); }          /* the art's window is 12 px in from each side of the 80 px card: the words wrap inside it (spec 149 G.5, decisions §250.7) */
+  :is(.table-end, .frame-edge) .hand-back__ready .cap { font-size: 10px; line-height: 12px; }
   .table-body[data-end="side"]:has(> .table-end) { padding-bottom: var(--table-end-h); }
   .table-body[data-end="over"] > .table-end { display: none; }
 }

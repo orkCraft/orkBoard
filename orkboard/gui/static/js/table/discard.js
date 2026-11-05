@@ -19,7 +19,7 @@ import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
 import { DEAL_MS, leans } from "../hand/motion.js";
 import { nightFirst, nightMoons } from "../hand/nightcard.js";
-import { Portal, ReadyCards, chosenSlug, portalHolds, toMain, useNarrow } from "./portal.js";
+import { Portal, ReadyCards, chosenSlug, toMain } from "./portal.js";
 import { noGate } from "./data.js";
 import { CornerTop, CornerFoot, muchOf, secondsBetween, IN_MAIN } from "./corners.js";             // the card is read by its four corners (spec 147 A.3, decisions §251)
 import { CardWindow, lastMade, windowOf } from "./cardwindow.js";
@@ -144,9 +144,15 @@ export function DiscardView() {
 
 /** The table's end: the portal's place, the word *Discard* and the pile (discard.css), each only when it holds something (decisions §247.1): the pile and its word from the first goal done, the portal's place while a goal is ready for main or the road has a corner; else nothing. */
 export function DiscardEnd() {
-  const narrow = useNarrow(), dealing = useNightDeal(), pile = hasDiscard(), door = !noGate() && !narrow && portalHolds();
-  if (!pile && !door) return null;
-  return html`<div class="table-end" data-end="discard">${!noGate() && html`<${Portal} />`}${pile && html`<span class="table-end__label">Discard</span><${Discard} dealing=${dealing} />`}</div>`;
+  const dealing = useNightDeal(), pile = hasDiscard();
+  if (!pile) return null;
+  return html`<div class="table-end" data-end="discard">${!noGate() && html`<${Portal} />`}<span class="table-end__label">Discard</span><${Discard} dealing=${dealing} /></div>`;
+}
+
+/** The discard in the table's edge at the wide width (spec 150 D.2, frame/edge.js): the word and the pile, the pile cut from its foot when the window is short. Nothing while nothing is done or ready. */
+export function EdgeDiscard() {
+  const dealing = useNightDeal();
+  return hasDiscard() ? html`<div class="edge-discard" data-end="discard"><span class="table-end__label">Discard</span><${Discard} dealing=${dealing} /></div>` : null;
 }
 
 drawn("discard", DiscardView);

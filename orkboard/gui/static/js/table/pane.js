@@ -25,7 +25,7 @@ import { LimitChip } from "./tabs.js";
 import { Menu } from "./menu.js";
 import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
-import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C)
+import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C), at the narrow width; at the wide one it lies in the edge (frame/edge.js, spec 150 D.2)
 import { openReport } from "../hand/logsbtn.js";      // the bug's panel opens from the Orkmaster's … (spec 139 A.5)
 import { laidNow } from "./laying.js";
 import { currentProject } from "../shell/projects.js";
@@ -119,7 +119,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
         : g && view ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${GoalView} key=${`${g.slug}:${view.slug}`} g=${g} n=${view} />`
         : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
-      ${!bare && !form && html`<${DiscardEnd} />`}
+      ${!bare && !form && narrow && html`<${DiscardEnd} />`}
     </div>
   </section>`;
 }
