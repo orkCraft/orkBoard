@@ -1,0 +1,105 @@
+"""Spec 149 E (decisions §253.5): a red from before is not the task's. The red tests run again alone, then on the base; flaky and red before are
+said, spend no try and call no session; what is left is the task's. Real pytest on a small repository, the gate's first output written by hand."""
+from __future__ import annotations
+
+import subprocess
+import sys
+import threading
+from pathlib import Path
+
+from orkboard.realm import gate_rerun
+from orkboard.realm.idea_git import GateRun, IdeaGit
+from tests.test_idea_runner import calls, events_of, plan_of, reviewing, town, wait_task  # noqa: F401  (town is a fixture)
+
+TESTS = """import pathlib
+
+
+def test_before():
+    assert False
+
+
+def test_flaky():
+    assert True
+
+
+def test_mine():
+    assert not pathlib.Path("broken.flag").exists()
+"""
+
+
+def git(cwd: Path, *args: str) -> str:
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+
+
+def red_output(*names: str) -> str:
+    lines = "\n".join(f"FAILED tests/test_red.py::{n} - assert False" for n in names)
+    return f"$ pytest\n=== short test summary info ===\n{lines}\n=== {len(names)} failed, 3 passed in 0.5s ===\n"
+
+
+def task_with(town, files: dict[str, str]):
+    (town.repo / "tests").mkdir(exist_ok=True)
+    (town.repo / "tests" / "test_red.py").write_text(TESTS)
+    git(town.repo, "add", "-A")
+    git(town.repo, "commit", "-m", "tests that are red")
+    g = IdeaGit(town.repo)
+    path, _ = g.prepare("demo", "k1", "main")
+    start = g.head(path)
+    for name, text in files.items():
+        (path / name).write_text(text)
+    g.commit_left(path, "k1")
+    return g, path, start
+
+
+def test_flaky_red_before_and_the_tasks_own_are_told_apart(town):
+    g, path, start = task_with(town, {"broken.flag": "x"})
+    run = GateRun(False, red_output("test_before", "test_flaky", "test_mine"), True, "pytest", 1, 1.0)
+    found = gate_rerun.sort_out(g, path, start, "main", run, threading.Event(), 300)
+    assert found.flaky == ("tests/test_red.py::test_flaky",)
+    assert found.red_before == ("tests/test_red.py::test_before",)
+    assert found.left == ("tests/test_red.py::test_mine",)
+    assert not list((town.repo / ".orkcraft" / "worktrees").glob("red-before-*"))           # the throwaway worktree is gone
+    assert gate_rerun.words(found) == ["== red before this task: tests/test_red.py::test_before", "== flaky: tests/test_red.py::test_flaky"]
+    told = gate_rerun.told(found, "long output")
+    assert "test_mine" in told and "test_before" not in told.split("more were red")[0] and "1 more were red before your task" in told
+
+
+def test_a_test_file_the_task_made_was_not_there_to_be_red_before(town):
+    g, path, start = task_with(town, {"tests/test_new.py": "def test_new():\n    assert False\n"})
+    out = "=== short test summary info ===\nFAILED tests/test_new.py::test_new - assert False\n=== 1 failed in 0.1s ===\n"
+    found = gate_rerun.sort_out(g, path, start, "main", GateRun(False, out, True, "pytest", 1, 1.0), threading.Event(), 300)
+    assert found.left == ("tests/test_new.py::test_new",)
+    assert found.red_before == () and found.flaky == ()
+
+
+def test_nothing_is_sorted_without_pytests_summary_with_more_failures_than_names_or_without_clock(town):
+    g, path, start = task_with(town, {"x.txt": "x"})
+    stop = threading.Event()
+    assert gate_rerun.sort_out(g, path, start, "main", GateRun(False, "boom\n", True, "make", 2, 1.0), stop, 300) is None
+    many = "FAILED tests/test_red.py::test_before - x\n=== 3 failed in 1s ===\n"
+    assert gate_rerun.sort_out(g, path, start, "main", GateRun(False, many, True, "pytest", 1, 1.0), stop, 300) is None
+    assert gate_rerun.sort_out(g, path, start, "main", GateRun(False, red_output("test_before"), True, "pytest", 1, 1.0), stop, 3) is None
+
+
+def test_an_id_cut_at_a_space_is_its_test_alone():
+    assert gate_rerun.node_key("tests/x.py::t[a") == "tests/x.py::t"
+    assert gate_rerun.node_key("tests/x.py::t[a-b]") == "tests/x.py::t[a-b]"
+
+
+def test_a_task_whose_only_red_was_there_before_it_is_green_and_no_session_is_sent_the_red(town):
+    (town.repo / "tests").mkdir(exist_ok=True)
+    (town.repo / "tests" / "test_red.py").write_text("def test_before():\n    assert False\n")
+    (town.repo / "orkcraft.toml").write_text(f'[gate]\nrun = "{sys.executable} -m pytest -q tests/test_red.py"\n', encoding="utf-8")
+    git(town.repo, "add", "-A")
+    git(town.repo, "commit", "-m", "a red from before")
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = reviewing(town)
+    runner.events = True
+    runner.start("demo")
+    task = wait_task(runner, "k1", "review")
+    assert len(calls(town)) == 1                                                       # the session worked once; none was sent the red
+    tests = task["tests"]
+    assert tests["green"] is True and tests["failed"] == 0 and tests["red_before"] == ["tests/test_red.py::test_before"] and tests["flaky"] == []
+    log = runner.log("demo", "k1")
+    assert log.count("== the gate, try") == 1 and "== red before this task: tests/test_red.py::test_before" in log
+    (ran,) = events_of(town, "gate_ran")
+    assert ran["verdict"] == "green" and ran["red_before"] == ["tests/test_red.py::test_before"] and ran["flaky"] == []

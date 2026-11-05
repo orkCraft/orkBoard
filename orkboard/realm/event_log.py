@@ -70,7 +70,7 @@ TASK_PAGES_PUT_BACK = "task_pages_put_back"   # idea, task, files: the Board's p
 CHECK_DONE = "check_done"         # idea, task, by (the checker's slug), found, fixed, left, round, cost: a round of a check task ended with findings read
 RESULT_READY = "result_ready"     # idea, task, round, passed, failed, files, added, removed, cost, role, exit (the gate's), verdict (green · red · could_not_run · docs · nothing: spec 107 §1.2)
 GATE_RAN = "gate_ran"             # idea, task, round, attempt, command, exit, seconds, verdict (as result_ready's), missing (what a run that could not run found missing, else ""),
-#                                    linked (how many dependency folders lay linked in the worktree): one per try of the gate (spec 107 §1.2)
+#                                    linked (how many dependency folders lay linked in the worktree): one per try of the gate (spec 107 §1.2); red_before, flaky (tests of the run red on the base too / green run again alone: spec 149 E)
 RESULT_DECIDED = "result_decided"  # idea, task, round, decision (merge · back · fix · drop · install · test again), why, why_kind (on a send back: "suggested" the line the face wrote · "typed", spec 107 §1.4), into, pushed, conflict, device,
 #                                    seconds from result_ready, dear (on a merge: the person said it cost too much for this, spec 36 §4)
 TASK_STOPPED = "task_stopped"     # idea, task, device

@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from orkboard.core.idea_landing import COULD_NOT_RUN
-from orkboard.realm import dep_links, event_log, gate_config, gate_env, idea_checks, idea_pick, idea_secrets, idea_target, library, task_brief, task_steps
+from orkboard.realm import dep_links, event_log, gate_config, gate_env, gate_rerun, idea_checks, jobs, idea_pick, idea_secrets, idea_target, library, task_brief, task_steps
 from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
@@ -130,6 +130,10 @@ class TaskMixin:
             tests["env"], tests["install"] = run.env, [] if python or run.timed_out else gate_env.missing(self.repo_root)      # npm ci never runs for pytest (spec 143 C.1)
             if python and not run.timed_out:
                 tests["setup"] = gate_env.python_setup(self.repo_root)        # spec 143 C.2: the command for the person to run; nothing runs it
+        if run and (run.red_before or run.flaky):          # spec 149 E: what was red but is not this task's is said, and not counted as its failures
+            tests["red_before"], tests["flaky"] = list(run.red_before), list(run.flaky)
+            if tests["green"]:
+                tests["failed"], tests["failing"] = 0, []
         if run and run.docs:
             tests["docs"] = True
         if run and run.browser and tests["green"] and run.ran and (tests.get("skipped") or 0) > 0 and NO_BROWSER_SKIP.search(out):
@@ -145,6 +149,7 @@ class TaskMixin:
         named = re.search(r"`([^`]+)`", run.env)
         self._emit(event_log.GATE_RAN, idea=slug, task=tid, round=rnd, attempt=attempt, command=run.command, exit=run.code, seconds=run.seconds,
                    verdict=verdict({"env": run.env, "docs": run.docs, "ran": run.ran, "green": run.ok}), missing=named.group(1) if named else "",
+                   red_before=list(run.red_before), flaky=list(run.flaky),
                    linked=dep_links.present(self.repo_root, path))
         return bool(run.env)
 
@@ -282,8 +287,17 @@ class TaskMixin:
             return ("You left uncommitted changes: `git status` shows them. Commit them (or remove what is not "
                     "work)."), ""
         run = self.git.gate_run(path, start_sha, cancel)
+        problem = None if run.ok else f"The tests failed:\n{run.out[-3000:]}"
+        out = run.out
+        if not run.ok and run.ran and not run.env:             # spec 149 E: a red from before is not the task's
+            clock = (gate_config.read(self.repo_root).timeout_min or 0) * 60 or jobs.TEST_TIMEOUT_S
+            found = gate_rerun.sort_out(self.git, path, start_sha, into, run, cancel, clock - run.seconds)
+            if found is not None:
+                run = run._replace(ok=not found.left, red_before=found.red_before, flaky=found.flaky)
+                out = "\n".join([run.out, *gate_rerun.words(found)])
+                problem = None if run.ok else gate_rerun.told(found, run.out)
         self._gate_runs[str(path)] = run
-        return (None if run.ok else f"The tests failed:\n{run.out[-3000:]}"), run.out
+        return problem, out
 
     def _env(self, slug: str, tid: str, plan: dict) -> dict[str, str]:
         """The task's environment: who runs (for the town's counts) and the values of its `secret` to-dos."""

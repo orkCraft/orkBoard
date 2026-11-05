@@ -95,6 +95,8 @@ class GateRun(NamedTuple):
     env: str = ""
     docs: bool = False
     browser: tuple[str, ...] = ()        # the files of `[gate] browser` that were in the run (spec 143 B.3)
+    red_before: tuple[str, ...] = ()     # tests red in the run that were red on the base too (spec 149 E, realm/gate_rerun.py)
+    flaky: tuple[str, ...] = ()          # tests red in the run and green run again alone
     timed_out: bool = False              # the run was killed at its clock: it tested nothing it can be blamed for (spec 149 D)
 
 

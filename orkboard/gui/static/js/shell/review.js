@@ -30,6 +30,11 @@ export const changesWords = (d) => `${d.files} file${d.files === 1 ? "" : "s"}, 
 
 export const NO_INSTALL = "Sending it back would not help: the task cannot install anything.";
 export const NO_BROWSER = "Browser tests did not run: no Chromium here.";
+/** A green result that had red tests which are not its own (spec 149 E): `tests.red_before` were red on the base too, `tests.flaky` green run again alone. */
+export function notYours(t) {
+  const before = t.red_before?.length || 0, flaky = t.flaky?.length || 0;
+  return [before ? `${before} test${before === 1 ? " was" : "s were"} red before this task` : "", flaky ? `${flaky} ${flaky === 1 ? "is" : "are"} flaky: green run again` : ""].filter(Boolean).join(" · ");
+}
 export const SAME_FAILURE = "The last fix changed nothing: the tests failed the same way.";
 /** What *Install and test again* does, for its title: each folder's command, then the tests (`tests.install`: [{dir, command}]). */
 export const installWords = (rows) => `Runs ${rows.map((x) => `\`${x.command}\` in ${x.dir === "." ? "the project's folder" : x.dir}`).join(", then ")} in your project, then the tests again`;
@@ -122,6 +127,7 @@ export function ResultActions({ r, pinned = false }) {
     ${reason && html`<p class=${cls("shell-actions__why", env ? "ok-tone-fire" : "ok-tone-error")} role="status" data-env=${env ? "true" : undefined}>${reason}</p>`}
     ${env && html`<p class="shell-actions__why ok-tone-muted" data-no-install="true" role="status">${NO_INSTALL}</p>`}
     ${env && !rows.length && !!r.tests.setup && html`<p class="shell-actions__why ok-tone-muted" data-setup="true" role="status">Run this in the project's folder, then Test again: <code class="ok-font-status">${r.tests.setup}</code></p>`}
+    ${!!notYours(r.tests) && html`<p class="shell-actions__why ok-tone-muted" data-not-yours="true" role="status">${notYours(r.tests)}</p>`}
     ${!!r.tests.no_browser && html`<p class="shell-actions__why ok-tone-muted" data-no-browser="true" role="status">${NO_BROWSER}</p>`}
     ${same && html`<p class="shell-actions__why ok-tone-muted" data-same="true" role="status">${SAME_FAILURE}</p>`}
     ${place && html`<p class="shell-actions__why ok-tone-muted" data-place="true" role="status">${PLACE_LINE}</p>`}
