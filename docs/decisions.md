@@ -6580,7 +6580,7 @@ call (§233.3) but only said inside the decision's text, where it is missed. The
 the whole frame at once; each card thrown where its thing will live teaches the place, not a text. The new goal's card already has
 its four corners (§251.2), but nothing in them can be chosen, and a kind or a party can only be given by typing (*@Tech*). The
 Orkmaster's column is cut at the edge of a card opened over it, where a card on a table would only cover it. The owner's answers:
-the chronicle stays over the pane, so the table under it stays in use, and then, better, the past is the lich's, opened through the open tab and laid by version; the back plain, after a tarot back: the ring of runes, the side strips, the corners' curls; the die turns a quarter; GitHub at the first open later;
+the chronicle stays over the pane, so the table under it stays in use, and then, better, the past is the lich's, opened through the open tab and laid by version; the back plain, after a tarot back: the ring of runes, a plain strip on each side, the corners' curls; the die turns a quarter; GitHub at the first open later;
 *Now* still meets the route card when it costs more than agreed. So:
 1. **What a tab shows is its table**: *Tech's table*, *the Orkmaster's table*; never *map*, *lens* or *view* in what a person
    reads (Tech's *System* is Tech's table). The frame is unchanged: the table and the hand (§145.1); the open tab says whose
@@ -6605,11 +6605,12 @@ the chronicle stays over the pane, so the table under it stays in use, and then,
    does**; the words under the die say the state (*Play · Stop all*, *Play · Stopped*). The Play mark stands upright after a turn.
    The die lies under the discard and over the potions. §246.2–3 hold: the Board turns it, never the person.
 5. **One back for every card face down**: the Orkmaster's fan, *To review*'s deck, a stack's cards behind its front, the
-   discard's under its top, the first open's four. After the owner's tarot back, kept plain: **orkUI's ring of runes in its
-   middle** with the goal's rune in it (§251.3's seal), **a thin strip down each long side with a small diamond at its middle**,
-   **a small curl in each corner**, two strokes. No colour but the rune; no moon (orkUI's sign for *waits for the reset*, §160.3,
-   is never an ornament), no stars. At 56 × 78 the ring and the strips only; lying (*To review*) it is the same back turned. Made
-   in orkUI (`backs/back.svg` redrawn, the lattice gone), then copied.
+   discard's under its top, the first open's four. After the owner's tarot back, kept plain (the owner's pick of three drawn,
+   *C*): **orkUI's ring of runes in its middle** with the goal's rune in it (§251.3's seal), **a thin plain strip along each of
+   its four sides**, no diamond on any, and **a small curl in each corner**, two strokes. No colour but the rune; no moon (orkUI's
+   sign for *waits for the reset*, §160.3, is never an ornament), no stars. At 56 × 78 the ring and the four strips only, the
+   curls left out; lying (*To review*) it is the same back turned, the same on every side. Made in orkUI (`backs/back.svg`
+   redrawn, the lattice gone), then copied.
 6. **A conflict is a card the Orkmaster throws.** When the decision's call (§233.3) finds that the goal's decision goes against
    a standing decision, the Orkmaster throws **a card of the kind *conflict*** into the hand under the first lane, **before
    Confirm and start**, so nothing of the spec is paid. Its kind a sign of its own (orkUI: two cards crossed); its window the

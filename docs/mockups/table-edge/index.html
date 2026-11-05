@@ -225,9 +225,9 @@ button { font: inherit; }
 
 <section class="mk-sec" id="back">
   <h1>3 · One back for every card face down</h1>
-  <p class="mk-line">Today's back is a pixel lattice: a texture at 157 × 112, noise at 56 × 78 in the Orkmaster's fan. <b>The one back</b>, after the owner's tarot back, kept plain: <b>orkUI's ring of runes in its middle</b> with the goal's rune in it, <b>a thin strip down each long side with a diamond at its middle</b>, <b>a small curl in each corner</b>, two strokes. No colour but the rune; no moon (orkUI's sign for <i>waits for the reset</i>), no stars. At 56 × 78 the ring and the strips only</p>
+  <p class="mk-line">Today's back is a pixel lattice: a texture at 157 × 112, noise at 56 × 78 in the Orkmaster's fan. <b>The one back</b>, after the owner's tarot back, kept plain (the owner's pick, <b>C</b>): <b>orkUI's ring of runes in its middle</b> with the goal's rune in it, <b>a thin plain strip along each of its four sides</b>, no diamond, <b>a small curl in each corner</b>, two strokes. No colour but the rune; no moon (orkUI's sign for <i>waits for the reset</i>), no stars. At 56 × 78 the ring and the four strips only</p>
   <div class="mk-row" id="backs"></div>
-  <h2>Variants: strips across the top and the foot too</h2>
+  <h2>The three drawn for the pick; C taken</h2>
   <div class="mk-row" id="backs2"></div>
 </section>
 
@@ -288,6 +288,7 @@ button { font: inherit; }
   // diamond at its middle, a small curl in each corner after the owner's tarot back, kept to two strokes. At 56 px wide: the ring and the strips.
   var CORNER = "M3 19 C3 10 10 3 19 3 M19 3 C23 3 23 8 19.5 8 C17 8 17 5.5 19 5.5 M3 19 C3 23 8 23 8 19.5 C8 17 5.5 17 5.5 19 M8 8 C10.5 8 11.5 10.5 9.5 11.5";
   function backArt(w, h, frame) {
+    if (frame === undefined) frame = "plain";                 // the owner's pick, C: four plain strips (§254.5)
     var small = w < 100, sx = small ? 5 : 9, y0 = Math.round(h * (small ? 0.18 : 0.22)), y1 = h - y0, cy = h / 2, d = small ? 3 : 4, out = "";
     [sx, w - sx].forEach(function (x) {
       out += '<line class="bk__frame" x1="' + (x + .5) + '" y1="' + y0 + '" x2="' + (x + .5) + '" y2="' + y1 + '" stroke-width="1"/>';
@@ -390,12 +391,12 @@ button { font: inherit; }
   var BK = [['<div class="ork-card-back" style="width:56px"></div>', "Today, 56 × 78", "The lattice at the fan's size: noise."],
             ['<div class="ork-card-back" style="width:144px"></div>', "Today, 144 × 202", "A texture, not a card's back."],
             [back(56, "ice"), "New, 56 × 78", "<b>The Orkmaster's fan.</b> The ring and the strips; the rune in it."],
-            [back(144, "lava"), "New, 144 × 202", "<b>A stack's cards behind, the discard's, the first open's four.</b> The corners' curls and the strips."],
+            [back(144, "lava"), "New, 144 × 202", "<b>A stack's cards behind, the discard's, the first open's four.</b> The corners' curls and the four strips."],
             [back(112, "void", { side: true }), "New, lying, 157 × 112", "<b>To review's deck.</b> The same back, turned."],
             [back(144, null), "New, no goal", "The ring empty: the back alone."]];
-  var BV = [["A · today's pick", 144, "lava", null, "Strips down the long sides, each with its diamond."],
+  var BV = [["A · strips at the long sides", 144, "lava", "", "Strips down the long sides, each with its diamond."],
             ["B · four strips", 144, "lava", "four", "<b>Strips on all four sides</b>; the long ones keep their diamonds, the short ones are plain lines."],
-            ["C · four plain strips", 144, "lava", "plain", "<b>Strips on all four sides, no diamond anywhere</b>: the quietest; the ring alone holds the eye."],
+            ["C · four plain strips: picked", 144, "lava", "plain", "<b>Strips on all four sides, no diamond anywhere</b>: the quietest; the ring alone holds the eye."],
             ["B at 56 × 78", 56, "ice", "four", "The fan's size: the ring and the four strips."],
             ["C at 56 × 78", 56, "ice", "plain", "The fan's size, plainest."],
             ["B lying, 157 × 112", 112, "void", "four", "To review's deck."]];
