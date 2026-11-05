@@ -72,8 +72,8 @@ export function ChoiceCard({ c, i, picked, element, hue = "", by, head, onPress 
 }
 
 /** *Other…*: a blank card with +; pressed, the field opened on it with the pick's words. */
-export function OtherCard({ i, seed, onOther }) {
-  const [open, setOpen] = useState(false), [text, setText] = useState(seed), box = useRef();
+export function OtherCard({ i, seed, onOther, alone = false }) {
+  const [open, setOpen] = useState(alone), [text, setText] = useState(seed), box = useRef();
   useEffect(() => { if (open) box.current?.focus({ preventScroll: true }); }, [open]);
   const send = () => { const said = text.trim(); if (said) onOther(said); };
   if (!open) {
@@ -84,13 +84,13 @@ export function OtherCard({ i, seed, onOther }) {
     </button>`;
   }
   const key = (e) => {
-    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setOpen(false); }
+    if (e.key === "Escape" && !alone) { e.preventDefault(); e.stopPropagation(); setOpen(false); }
     else if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   };
   return html`<div class="ork-card q-card q-card--blank is-open" data-choice="other" role="group" aria-label="Other…">
     <span class="q-card__head"><span class="q-card__name">Other…</span></span>
     <textarea ref=${box} class="ork-field q-card__field" aria-label="Your own answer" rows="3" value=${text} onInput=${(e) => setText(e.target.value)} onKeyDown=${key}></textarea>
-    <span class="q-card__label q-card__label--acts"><button type="button" class="ork-btn quiet" onClick=${() => setOpen(false)}>Cancel</button>
+    <span class="q-card__label q-card__label--acts">${!alone && html`<button type="button" class="ork-btn quiet" onClick=${() => setOpen(false)}>Cancel</button>`}
       <button type="button" class="ork-btn primary" disabled=${!text.trim()} onClick=${send}>Send</button></span>
   </div>`;
 }
@@ -104,7 +104,7 @@ export function Choose({ question, choices, pick = "", onChoose, onOther, decide
     ${hint && html`<p class="cap q-choose__hint">${hint}</p>`}
     <div class="q-choose__row" role="group" aria-label="Choices" key=${question}>
       ${choices.map((c, i) => html`<${ChoiceCard} key=${c.id} c=${c} i=${i} picked=${c.id === pick} element=${element} hue=${hue} by=${by} head=${head} onPress=${() => onChoose(c.id)} />`)}
-      ${onOther && html`<${OtherCard} key="other" i=${choices.length} seed=${seed} onOther=${onOther} />`}
+      ${onOther && html`<${OtherCard} key="other" i=${choices.length} seed=${seed} onOther=${onOther} alone=${!choices.length} />`}
     </div>
     <div class="q-choose__acts">
       ${decide && html`<button type="button" class="ork-btn quiet" onClick=${decide.onDecide}>${decide.label}</button>`}

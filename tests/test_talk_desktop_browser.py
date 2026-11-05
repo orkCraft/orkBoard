@@ -529,3 +529,30 @@ def test_choose_previews_at_the_narrow_width_no_sideways_scroll(gui):
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_a_question_with_no_choices_says_say_it_in_a_line_and_its_one_place_is_the_open_field(gui, width):
+    """Spec 149 I.3: no *Other...* to press first, no Cancel; the answer goes as the person's words."""
+    host = TalkHost(project=True)
+    bare = [card("project-for_whom", "product", "Product lead", "Whom is it for?", [], None, "", project=True)]
+    host.needs = [n for n in host.needs if n["kind"] == "project_q"]
+    host.needs[0]["questions"], host.needs[0]["text"] = bare, bare[0]["q"]
+    pg, host, log = open_hand(gui, host=host, width=width)
+    try:
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        pg.locator('.hand-card[data-kind="project_q"][data-top="1"]').click(position={"x": 10, "y": 24})
+        choose(pg).wait_for(timeout=WAIT_MS)
+        assert pg.locator(".q-choose__hint").inner_text().strip() == "Say it in a line: the leader keeps it for the project"
+        field = pg.locator(".q-card__field")
+        field.wait_for(timeout=WAIT_MS)
+        assert pg.locator('.q-card[data-choice="other"]').count() == 1 and pg.locator("button.q-card").count() == 0, "the field is open at once"
+        assert pg.locator('.q-card[data-choice="other"] .ork-btn', has_text="Cancel").count() == 0
+        narrow.no_sideways(pg)
+        field.fill("Friends who play at a table")
+        field.press("Enter")
+        got = answers_sent(pg, host, "ideas.project_answer")
+        assert got == [{"answers": [{"id": "project-for_whom", "text": "Friends who play at a table"}]}], got
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

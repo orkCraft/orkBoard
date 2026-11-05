@@ -17,7 +17,10 @@ import { named } from "./todoform.js";
 import { way } from "./ways.js";
 
 /** The line under the first card of a stack: what an answer becomes (once, spec 100 §0). */
-const hintOf = (s) => (s.kind === "project_q" || s.card?.project ? "Pick an answer: the leader keeps it for the project" : "Pick an answer: the leader writes it into the spec");
+const hintOf = (s) => {
+  const project = s.kind === "project_q" || s.card?.project, none = !s.card?.choices?.length;      // a question with no choices: the field is its one place (spec 149 I.3)
+  return `${none ? "Say it in a line" : "Pick an answer"}: the leader ${project ? "keeps it for the project" : "writes it into the spec"}`;
+};
 
 /** What the answers to a question do, for the pane's choices and for the card upright: `top` the first card of its stack not answered, `mine` the stack's cards, `from` where the pane came from. */
 function asking(top, mine, from) {
@@ -56,7 +59,7 @@ function QuestionHere({ s }) {
     <div class="q-choose__row" key=${a.c.q}>
       ${a.choices.map((c, i) => html`<${ChoiceCard} key=${c.id} c=${{ ...c, why: "" }} i=${i} picked=${c.id === String(a.c.pick)} element=${top.node?.element || ""} hue=${top.node?.hue || ""} by=${top.party?.name || ""} head=${top.head}
         onPress=${() => a.answer({ pick: Number(c.id) })} />`)}
-      <${OtherCard} key="other" i=${a.choices.length} seed=${seed} onOther=${(text) => a.answer({ text })} />
+      <${OtherCard} key="other" i=${a.choices.length} seed=${seed} alone=${!a.choices.length} onOther=${(text) => a.answer({ text })} />
     </div>
     <div class="q-choose__acts"><button type="button" class="ork-btn quiet" onClick=${a.decide.onDecide}>${a.decide.label}</button></div>
   </div>`;
