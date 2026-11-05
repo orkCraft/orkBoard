@@ -255,7 +255,7 @@ def test_on_a_phone_the_plus_card_turns_into_a_field_the_screens_width_less_its_
     assert not log, "\n".join(log)
 
 
-def test_on_a_phone_the_menus_row_of_a_goal_talked_over_shows_its_rune_glowing_and_a_goal_that_waits_does_not(gui):
+def test_on_a_phone_the_menus_back_of_a_goal_talked_over_is_the_one_read_its_rune_glows_where_the_page_moves_and_a_goal_that_waits_does_not(gui):
     pg, host, log = open_life(gui, width="phone")
     try:
         pg.locator(".up-crown").wait_for(timeout=WAIT_MS)
@@ -264,8 +264,15 @@ def test_on_a_phone_the_menus_row_of_a_goal_talked_over_shows_its_rune_glowing_a
         pg.locator(".up-crown").click()
         menu = pg.locator(".up-menu")
         menu.wait_for(timeout=WAIT_MS)
-        assert menu.locator('.up-grow[data-goal="dark"] .ork-elem.dust.is-glowing').count() == 1, "the back's rune glowing in the menu's row"
-        assert menu.locator('.up-grow[data-goal="timer"] .ork-elem.ice').count() == 1 and menu.locator('.up-grow[data-goal="timer"] .ork-elem.is-glowing').count() == 0
+        dark, timer = menu.locator('.up-piles .col-card--fan[data-goal="dark"]'), menu.locator('.up-piles .col-card--fan[data-goal="timer"]')
+        assert dark.count() == 1 and dark.get_attribute("class").count("is-reading") == 1 and dark.locator(".ork-elem.dust").count() == 1, "the goal talked over is the back being read, in the Orkmaster's hand (spec 147 F.1)"
+        assert timer.locator(".ork-elem.ice").count() == 1 and timer.locator(".ork-elem.is-glowing").count() == 0 and timer.get_attribute("class").count("is-reading") == 0
+        dark.click()                                                  # picked: the page's one motion is on it (lit.js `movesOn`), as on the column
+        menu.wait_for(state="detached", timeout=WAIT_MS)
+        pg.locator(".up-crown").click()
+        menu.wait_for(timeout=WAIT_MS)
+        assert menu.locator('.up-piles .col-card--fan[data-goal="dark"] .ork-elem.dust.is-glowing').count() == 1, "the back's rune glowing"
+        assert menu.locator('.up-piles .col-card--fan[data-goal="timer"] .ork-elem.is-glowing').count() == 0
         shot(pg, "phone-menu-glowing")
     finally:
         pg.close()

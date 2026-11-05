@@ -67,10 +67,10 @@ def crown(pg):
 
 
 def pick_from_menu(pg, kind, name):
-    """Opens the menu and presses a goal's row (`kind` "goal") or a party's (`kind` "party") by its name."""
+    """Opens the menu and presses a goal (`kind` "goal": its card in the Orkmaster's piles or its row under its party, whichever comes first) or a party's row (`kind` "party") by its name."""
     crown(pg).click()
     pg.locator(".up-menu .up-prow").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".up-menu .up-grow" if kind == "goal" else ".up-menu .up-prow", has_text=name).first.click()
+    (pg.locator(f'.up-menu button[data-goal][aria-label^="{name}"]') if kind == "goal" else pg.locator(".up-menu .up-prow", has_text=name)).first.click()
     pg.locator(".up-menu").wait_for(state="detached", timeout=WAIT_MS)
 
 

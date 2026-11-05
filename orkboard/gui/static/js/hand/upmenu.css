@@ -45,3 +45,13 @@
 /* *Report a problem…* (docs/specs/139 A.5, hand/logsbtn.js): one row at the foot of the leaders, above this phone's own rows */
 .up-report { flex: none; padding: var(--ork-2) 0; border-bottom: var(--ork-line) solid var(--ork-frame); }
 .up-menu__report { width: 100%; min-height: var(--ork-tap); padding: 0 var(--ork-3); display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); text-align: left; }
+
+/* the Orkmaster's piles (spec 147 F.1, uppiles.js): the column's cards (table/column.css), each pile's words beside it. The deck lies 13 px under the screen's edge (the sheet clips it), the fan and At work's cards keep their column sizes; the sheet scrolls */
+.up-piles { --col-shown: calc(157px - var(--column-tuck, 13px)); --col-edge: var(--col-shown); --col-out: 0px; flex: none; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-4) 0; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.up-piles .col-sec { display: grid; grid-template-columns: calc(var(--col-edge) + var(--ork-4)) minmax(0, 1fr); column-gap: var(--ork-3); row-gap: var(--ork-1); align-items: start; }
+.up-piles .col-plab { grid-column: 1 / -1; padding-left: var(--ork-4); }
+.up-piles .col-fan, .up-piles .col-pile, .up-piles .col-room { grid-column: 1; grid-row: 2 / span 3; }
+.up-piles .col-fan { margin-left: var(--ork-4); }
+.up-piles .col-room { flex: none; margin-right: 0; padding-right: 0; overflow: visible; }
+.up-piles .col-under { grid-column: 2; max-width: none; padding: 0 var(--ork-4) 0 0; -webkit-line-clamp: 6; line-clamp: 6; }
+.up-piles .col-card--up.ork-card:is(:hover, :focus-visible) { transform: translateX(var(--x, 0px)); box-shadow: none; }      /* a touch screen has no hover to slide out of the pile: the sheet clips it */

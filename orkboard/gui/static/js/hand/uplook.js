@@ -24,12 +24,12 @@ export function lookOf(entries, i) {
   return n ? { kind: "goal", slug: goal, node: n, entry: e } : { kind: "card", entry: e };
 }
 
-/** The middle. `entries`: the hand's entries, for a goal of a party's rows to be picked as its card. */
-export function Look({ look, entries }) {
+/** The middle. `entries`: the hand's entries, for a goal of a party's rows to be picked as its card; `typing`: the px the screen leaves above the keyboard while it is up (upkeys.js), 0 else. */
+export function Look({ look, entries, typing = 0 }) {
   if (look.kind === "none") return html`<div class="up-mid"><p class="up-none" role="status">Nothing waits for you.</p></div>`;
   if (look.kind === "party") return html`<div class="up-look" data-look="party"><${Party} key=${look.g.slug} g=${look.g} entries=${entries} /></div>`;
   const e = look.entry, stop = e ? (e.kind === "ready" ? readyStop(e) : e.stops[0]) : null;
-  const card = e && (e.kind === "ready" ? html`<${ReadyCard} key=${e.key} e=${e} />` : html`<${Lifted} key=${stop.key} s=${stop} inline=${true} />`);
+  const card = e && (e.kind === "ready" ? html`<${ReadyCard} key=${e.key} e=${e} />` : html`<${Lifted} key=${stop.key} s=${stop} inline=${true} typing=${typing} />`);
   if (look.kind === "card") return html`<div class="up-look" data-look="card" data-entry=${e.key}><${Context} s=${stop} />${card}</div>`;
   const n = look.node, line = n.place === "deck";
   return html`<div class="up-look" data-look="goal" data-goal=${n.slug} data-entry=${e ? e.key : undefined}>

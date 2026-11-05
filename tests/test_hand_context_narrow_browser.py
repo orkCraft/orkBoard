@@ -108,12 +108,15 @@ class UprightHost(HandHost):
         return super().handle(name, a)
 
 
-def open_up(gui, scenario="question", kind="phone", *, ready=".hand-up", host=None):
-    """The page against the stub: `kind` "phone" (390 × 844 with touch), "side" (844 × 390), "fine" (390 × 844 with a mouse), "wide" (1280 × 800)."""
+def open_up(gui, scenario="question", kind="phone", *, ready=".hand-up", host=None, init=None):
+    """The page against the stub: `kind` "phone" (390 × 844 with touch), "side" (844 × 390), "fine" (390 × 844 with a mouse), "wide" (1280 × 800); `init`: a script run in every page before its own (a stand-in for the keyboard's visual viewport, tests/test_phone_cards_browser.py)."""
     server, browser = gui
     host = host or UprightHost(scenario)
     ctx = {"phone": narrow.NARROW, "side": SIDE, "fine": narrow.FINE, "wide": narrow.WIDE}[kind]
-    pg = browser.new_context(**ctx).new_page()
+    context = browser.new_context(**ctx)
+    if init:
+        context.add_init_script(init)
+    pg = context.new_page()
     log: list[str] = []
     pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
     pg.on("console", lambda m: m.type == "error" and log.append(f"console: {m.text} {m.location.get('url', '')}"))
@@ -172,7 +175,7 @@ def test_the_screen_is_the_notice_the_top_row_the_middle_and_the_hand_row_from_t
         top, look, row, w, h = box(pg.locator(".up-top")), box(pg.locator(".up-look")), box(pg.locator(".up-row")), pg.viewport_size["width"], pg.viewport_size["height"]
         assert top["y"] < look["y"] < row["y"], "the top row, the middle, the hand's row"
         assert round(top["height"]) == 61 or round(top["height"]) == 60, "the top row is 60 px (and its line)"
-        assert round(row["height"]) in (112, 113) and abs(row["y"] + row["height"] - h) <= 1, "the hand's row of 112 px lies at the screen's foot"
+        assert round(row["height"]) == 73 and abs(row["y"] + row["height"] - h) <= 1, "the hand's row (its rim, a gutter and a card cut at 62) lies at the screen's foot"
         assert look["y"] >= top["y"] + top["height"] - 1 and look["y"] + look["height"] <= row["y"] + 1
         for gone in (".up-nav", ".up-edge", ".up-deck", ".up-stack", ".up-navrow"):
             assert pg.locator(gone).count() == 0, gone
@@ -344,15 +347,17 @@ def test_the_row_draws_every_entry_upper_part_the_first_picked_and_raised_with_n
         first = c.first
         assert first.get_attribute("aria-pressed") == "true" and sum(1 for b in c.all() if b.get_attribute("aria-pressed") == "true") == 1
         r0, r1 = box(first), box(c.nth(1))
-        assert round(r0["width"]) == 88 and round(r1["width"]) == 88 and round(r0["height"]) == 124, "88 x 124"
+        assert round(r0["width"]) == 80 and round(r1["width"]) == 80 and round(r0["height"]) == 112, "80 x 112 (spec 147 F.2)"
         assert r1["y"] - r0["y"] == pytest.approx(6, abs=1.5), "the picked one raised by 6 px"
         assert first.evaluate("(e) => getComputedStyle(e).borderTopColor") == css_colour(pg, "--ork-ink"), "with the ink's frame"
-        assert first.locator(".ork-elem.dust").count() == 1 and first.locator(".up-card__name").inner_text().strip() == SIGN_IN_Q, "its element and its name (the question itself)"
-        assert first.locator(".up-card__asker img").count() == 1 and first.locator(".up-card__window .ork-sign.question").count() == 1, "its window: the action's sign and the asker's head"
-        assert "/races/shaman-elder" in first.locator(".up-card__asker img").get_attribute("src") and round(box(first.locator(".up-card__asker img"))["width"]) == 16
+        assert first.locator(".corner--top .ork-elem.dust").count() == 1 and first.locator(".up-card__name").inner_text().strip() == SIGN_IN_Q, "its rune at the top left and its name (the question itself)"
+        assert first.locator(".corner--top .corner__kind .ork-sign.question").count() == 1, "the kind's sign at the top right"
+        assert first.locator(".corner--foot img").count() == 1 and "/races/shaman-elder" in first.locator(".corner--foot img").get_attribute("src") and round(box(first.locator(".corner--foot img"))["height"]) == 16, "who asks at the foot, a head of 16"
+        shown = pg.locator(".up-cards").evaluate("(e) => e.getBoundingClientRect().bottom")
+        assert box(first)["y"] + 62 + 6 <= shown + 1 < box(first)["y"] + 112, "cut at 62: the rest lies under the row's foot"
         assert c.nth(1).get_attribute("class").count("asks") == 1 and c.nth(2).get_attribute("class").count("asks") == 0
-        assert c.nth(2).locator(".up-card__name").inner_text().strip() == "Lobby is ready for main" and c.nth(2).locator(".ork-sign.check").count() == 1
-        assert SIGN_IN_Q in c.first.get_attribute("aria-label") and not any(ch.isdigit() for ch in pg.locator(".up-cards").inner_text()), "its words for a screen reader; never a number"
+        assert c.nth(2).locator(".up-card__name").inner_text().strip() == "Lobby is ready for main" and c.nth(2).locator(".corner__kind .ork-sign.check").count() == 1
+        assert SIGN_IN_Q in c.first.get_attribute("aria-label") and not any(ch.isdigit() for ch in pg.locator(".up-card__name").all_inner_texts()[0] + pg.locator(".up-sep").first.inner_text()), "its words for a screen reader; no number counts what waits"
         shot(pg, "phone-row")
         narrow.no_sideways(pg)
     finally:
@@ -387,12 +392,14 @@ def test_the_card_in_the_middle_is_full_width_less_the_gutters_not_turned_its_ch
         assert card.count() == 1 and name_of(pg) == SIGN_IN_Q, "the question itself is the card's name"
         b, vw = box(card), pg.viewport_size["width"]
         assert b["x"] == pytest.approx(8, abs=2) and b["x"] + b["width"] == pytest.approx(vw - 8, abs=2), "full width less a gutter a side"
+        assert b["height"] / b["width"] == pytest.approx(7 / 5, abs=0.02), "5 : 7 (spec 147 F.3: the opened card at the screen's width, its height never its content's)"
+        assert card.locator(".corner--top.corner--large").count() == 1 and card.locator(".corner--foot.corner--large").count() == 1 and card.locator(".hand-lifted__body").evaluate("(e) => getComputedStyle(e).overflowY") == "auto", "its corners, its body scrolling"
         assert card.evaluate("(e) => getComputedStyle(e).rotate") in ("none", "0deg") and card.evaluate("(e) => getComputedStyle(e).position") == "relative", "not turned, in its place"
         cells = [box(c) for c in card.locator(".q-card").all()]
         assert len(cells) == 4 and cells[0]["x"] == pytest.approx(cells[2]["x"], abs=2) and cells[1]["x"] > cells[0]["x"] + 40 and cells[2]["y"] > cells[0]["y"] + 40, "two by two"
         assert [c.inner_text().strip().splitlines()[0] for c in card.locator(".q-card").all()] == ["Email link", "Passkey", "Google", "Other…"]
         assert card.locator(".q-card.is-pick").inner_text().strip().startswith("Email link"), "the leader's pick raised"
-        assert card.get_by_role("button", name="Let Tech lead decide").count() == 1 and card.locator(".hand-card__party").text_content().strip() == "Tech"
+        assert card.get_by_role("button", name="Let Tech lead decide").count() == 1 and "Tech" in card.locator(".corner--foot").inner_text(), "the leader who asks at its foot"
         for c in card.locator(".q-card").all():
             assert box(c)["height"] >= 44
     finally:
@@ -479,7 +486,7 @@ def test_the_plus_card_lies_at_the_rows_right_end_the_cards_pass_under_it_and_it
     try:
         p, row, w, h = plus(pg), box(pg.locator(".up-row")), pg.viewport_size["width"], pg.viewport_size["height"]
         r = box(p)
-        assert p.count() == 1 and 60 <= r["width"] <= 70 and 86 <= r["height"] <= 96, "about 64 x 90"
+        assert p.count() == 1 and 60 <= r["width"] <= 70 and 58 <= r["height"] <= 68, "about 64 x 62: cut with the cards"
         assert r["x"] + r["width"] >= w - 20 and r["y"] >= row["y"], "at the row's right end"
         assert p.evaluate("(e) => getComputedStyle(e).borderTopColor") == css_colour(pg, "--ork-action") and p.get_attribute("aria-label") == "New goal"
         shot(pg, "phone-plus")
@@ -550,7 +557,7 @@ def test_go_on_paid_is_a_card_of_the_row_with_the_orkmasters_context_and_its_two
         assert c.locator(".up-ctx__wait").inner_text().strip() == "The work waits for your answer"
         assert c.evaluate("(e) => e.tagName") == "DIV", "nothing to open: it has no goal"
         card = pg.locator(".hand-up .hand-lifted")
-        assert card.locator(".hand-card__name").inner_text().strip() == "Go on paid?" and card.locator(".hand-card__gem .ork-gem").inner_text().strip() == "$0.40"
+        assert card.locator(".hand-card__name").inner_text().strip() == "Go on paid?" and card.locator(".corner--foot .ork-gem").inner_text().strip() == "$0.40"
         yes, wait = card.get_by_role("button", name="Go on, paid"), card.get_by_role("button", name="Wait for Thu 18:00")
         assert yes.count() == 1 and wait.count() == 1 and box(yes)["height"] >= 44
         framed = pg.locator(".hand-up .up-pot[data-default='1']")

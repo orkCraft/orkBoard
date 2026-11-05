@@ -14,13 +14,14 @@ import { fieldOpen } from "./state.js";
 import { said } from "./motion.js";
 import { DeckField } from "./updeck.js";
 import { Look, lookOf } from "./uplook.js";
+import { useKeyboard } from "./upkeys.js";
 import { Sheet } from "./upmenu.js";
 import { Row } from "./uprow.js";
 import { Top } from "./uptop.js";
 
 /** The hand on a phone. `root`: the hand's element ref (the keys), `stacks`: data.js `stacksOf`, `plus`: opens the field. */
 export function Upright({ root, stacks, plus }) {
-  const entries = entriesOf(stacks.flatMap((st) => st.cards), readyOf()?.goals || []), look = lookOf(entries, placeOf(entries)), field = fieldOpen.value, had = useRef("");
+  const entries = entriesOf(stacks.flatMap((st) => st.cards), readyOf()?.goals || []), look = lookOf(entries, placeOf(entries)), field = fieldOpen.value, had = useRef(""), keys = useKeyboard(), typing = field ? 0 : keys;      // the keyboard is up and the + card's field is not what it is for: the opened card gives up 5 : 7 (spec 147 F.3)
   const project = currentProject.value?.path || "";
   useEffect(() => { if (tab.value !== ORKMASTER) openTab(ORKMASTER); }, [project]);                      // a phone starts on the hand's goal: the party the tabs kept on this device is not looked at
   useEffect(() => {
@@ -28,10 +29,10 @@ export function Upright({ root, stacks, plus }) {
     else if (look.kind === "goal" && had.current === look.slug && picked.value === look.slug) { had.current = ""; picked.value = ""; if (tab.value !== ORKMASTER) openTab(ORKMASTER); }       // its last card was answered: the next entry comes
     else had.current = "";
   }, [look.kind, look.slug, look.entry?.key]);
-  return html`<footer ref=${root} class="hand hand-up" aria-label="The hand" data-upright="1" data-empty=${look.kind === "none" ? "1" : undefined}>
+  return html`<footer ref=${root} class="hand hand-up" aria-label="The hand" data-upright="1" data-empty=${look.kind === "none" ? "1" : undefined} data-typing=${typing ? "1" : undefined}>
     <${Notice} />
     <${Top} />
-    <${Look} look=${look} entries=${entries} />
+    <${Look} look=${look} entries=${entries} typing=${typing} />
     <${Row} entries=${entries} cur=${look.entry} plus=${plus} />
     <${Sheet} entries=${entries} look=${look} />
     ${field && html`<${DeckField} />`}
