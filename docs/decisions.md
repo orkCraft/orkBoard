@@ -6565,7 +6565,7 @@ On the owner's word, from what the run showed.
 
 ## 254. What a tab shows is its table; only the table scrolls and a card's words are written to fit it; the table's edge: the portal with the imp at twelve and the lich at six, the discard, the die and the potions; one back for every card face down; a decision that conflicts with an earlier one is a card the Orkmaster throws, the earlier one drawn out of the portal; the first open as four cards the Orkmaster throws; the new goal's card with corners to pick and Now or Later; the Orkmaster's column goes under a card laid over it (5 November 2026, the owner)
 
-Changes: 104.2, 120, 145.1, 145.4, 159, 167.7, 188.1, 188.2, 232.1, 232.3, 232.4, 238.3, 246.1, 247.1, 251.2; spec 95 §1.1, §2.3,
+Changes: 104.2, 120, 145.1, 145.4, 159, 167.7, 188.1, 188.2, 232.1, 232.3, 232.4, 238.2, 238.3, 246.1, 247.1, 251.2; spec 95 §1.1, §2.3,
 §3, §4.1, §4.3, §7.
 
 Why: the owner, as a designer and a product manager, nine points, talked through and answered the same day. *Lens* and *map* are
@@ -6580,7 +6580,7 @@ call (§233.3) but only said inside the decision's text, where it is missed. The
 the whole frame at once; each card thrown where its thing will live teaches the place, not a text. The new goal's card already has
 its four corners (§251.2), but nothing in them can be chosen, and a kind or a party can only be given by typing (*@Tech*). The
 Orkmaster's column is cut at the edge of a card opened over it, where a card on a table would only cover it. The owner's answers:
-the chronicle stays over the pane, so the table under it stays in use; the die turns a quarter; GitHub at the first open later;
+the chronicle stays over the pane, so the table under it stays in use, and then, better, the chronicle is the lich's own table, by version and by craft; the back as plain as it goes; the die turns a quarter; GitHub at the first open later;
 *Now* still meets the route card when it costs more than agreed. So:
 1. **What a tab shows is its table**: *Tech's table*, *the Orkmaster's table*; never *map*, *lens* or *view* in what a person
    reads (Tech's *System* is Tech's table). The frame is unchanged: the table and the hand (§145.1); the open tab says whose
@@ -6605,10 +6605,11 @@ the chronicle stays over the pane, so the table under it stays in use; the die t
    does**; the words under the die say the state (*Play · Stop all*, *Play · Stopped*). The Play mark stands upright after a turn.
    The die lies under the discard and over the potions. §246.2–3 hold: the Board turns it, never the person.
 5. **One back for every card face down**: the Orkmaster's fan, *To review*'s deck, a stack's cards behind its front, the
-   discard's under its top, the first open's four. **A frame, small curls at its sides, the ring of runes in its middle** with
-   the goal's rune in it (§251.3's seal); no colour but the rune. Its detail by its size: at 56 × 78 the frame and the ring only,
-   the curls from 144 wide; lying (*To review*) it is the same back turned. Made in orkUI (`backs/back.svg` redrawn, the lattice
-   gone), then copied.
+   discard's under its top, the first open's four. **As plain as it goes** (the owner's tarot back at its simplest): **one thin
+   frame**, **a small diamond at the middle of each long side**, **a plain ring with eight short rays** and the goal's rune in its
+   empty middle (§251.3's seal). No colour but the rune; no moon (orkUI's sign for *waits for the reset*, §160.3, is never an
+   ornament), no stars, no curls. At 56 × 78 the frame and the ring only; lying (*To review*) it is the same back turned. Made in
+   orkUI (`backs/back.svg` redrawn, the lattice gone), then copied.
 6. **A conflict is a card the Orkmaster throws.** When the decision's call (§233.3) finds that the goal's decision goes against
    a standing decision, the Orkmaster throws **a card of the kind *conflict*** into the hand under the first lane, **before
    Confirm and start**, so nothing of the spec is paid. Its kind a sign of its own (orkUI: two cards crossed); its window the
@@ -6616,10 +6617,16 @@ the chronicle stays over the pane, so the table under it stays in use; the die t
    the pane, both with their why, as a fork's two sides (§252.5). Its choices: **The new one replaces §N** (the decision says it
    changes §N, and its slices replace §N's, §233.2), **Keep §N** (the goal is talked again within §N), *Other…*. The conflict
    ends with the card; nothing is decided without the person's press.
-7. **The chronicle stays over the pane** (§238.3, the owner's call), **and the table under it stays in use**: it lies over the
-   pane's left, as a sheet, the table seen at its right; **a row picked lights on the table what it touched** (its goal's marks
-   and the cards and lanes of the parts it changed, as a mark pressed lights its goal's others, §120.1). The conflict card's
-   earlier decision is the chronicle's row of §N, opened.
+7. **The chronicle is the lich's table** (this changes §238.2–3: no line *Earlier* in a lens and no chronicle over the pane):
+   the lich pressed at the portal opens **Release's table**, the project's past, as every tab shows its table (1). **At its left a
+   deck a version**, *Unreleased* on top, each deck's edge its version and date (a week's for a project with no version yet,
+   §238.5); **across its top the heads of the crafts**. They are two ways into one table and cross: **a deck picked** deals its
+   version's goals and decisions face up, by time; **a head picked** deals that craft's decisions of every version, newest
+   first, the version in each card's bottom right (a decision is a craft's when that craft's leader keeps a slice of it, §233.1);
+   both picked, what they share. **A search** over the top dims the decks and heads with no find and lights the cards found. A
+   card lifted is §238.4's row: a goal as it was, a decision with its *Changes* and *changed by*; **Show on <party>'s table**
+   opens that tab with what it touched lit. The conflict's earlier decision (6) is the lich's card; *Open in the chronicle* opens
+   this table, its deck dealt and the card lit.
 8. **The first open is four cards the Orkmaster throws** (this changes how §232.1, §232.3 and §232.4 are shown, not what they
    ask): no project open and nothing set, **the room is dark**, no table and no hand; **the Orkmaster in its middle**, its bubble
    *I'm the Orkmaster. Four cards, and we start.*, holding **four backs** (5). Each card thrown flies to its place, and the place
@@ -6651,10 +6658,14 @@ the chronicle stays over the pane, so the table under it stays in use; the die t
 11. **The words** (`TERMS`): *table* (a tab's: *Tech's table*; *map*, *lens*, *view* in `was`); *Now*, *Later*; the conflict's
     kind *conflict*, its line *Goes against §N*, its choices *The new one replaces §N*, *Keep §N*; the first open's *I'm the
     Orkmaster. Four cards, and we start.*, *Use <tool>*, *Release branch*.
+12a. **Left to the owner**: whether a craft's past decisions are also drawn out of the portal onto **the table's edge**, as a
+    pile beside the work of another tab (the owner's question). The PM's answer: not there; the edge holds four objects with one
+    job each, a pile of the past would stand there all day (§238's *a pile that is always there weighs on the person*) and beside
+    the discard reads as a second discard; a craft's decisions are the lich's table with its head picked.
 12. **Not now**: at the first open's second card, **signing in with GitHub and picking a remote project with its default
     branch** (the remote is §243–244's; a decision of its own when it is built); the edge on the narrow page and the phone; a
     conflict found after Confirm (a finding, §234, as today).
 13. **Built** by spec 150, in order: **A.** 10 (a fix); **B.** 5 (orkUI, then copied); **C.** 1 and 2 (the words, the budget in
-    the calls, the scrolls); **D.** 3 and 4 (the edge, the die); **E.** 6 and 7 (the conflict, the chronicle beside the table);
+    the calls, the scrolls); **D.** 3 and 4 (the edge, the die); **E.** 6 and 7 (the conflict, the lich's table);
     **F.** 9; **G.** 8 last, since it shows the rest. **Drawn first**, `docs/mockups/table-edge/`; the owner's pick.
 The owner's call.
