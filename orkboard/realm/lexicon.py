@@ -311,6 +311,12 @@ TERMS: tuple[Term, ...] = (
     _t("fork", "fork", "forks"),                                   # two sections that disagree: the person decides, and only the sections it touches are written again
     _t("its_leader_takes_it_next", "Its leader takes it next"),     # the same on a task its party's leader does: a leader's seat never says a member's word (spec 143 F.2, decisions §250.7)
     _t("takes_it_next", "takes it next"),                          # a waiting lane card's window: *an elf takes it next* (spec 142 C, decisions §249.5)
+    # a card's four corners, the bottom right's one figure (spec 147 A, decisions §251.2; table/corners.js `muchOf`)
+    _t("corner_asks", "asks you"),                                  # a card that waits for the person: the figure in the alert
+    _t("corner_left", "left"),                                      # the time a task at work has left: *4 min left*
+    _t("corner_took", "took"),                                      # the time a task or a goal done took: *took 18 min*
+    _t("corner_worked", "worked"),                                  # a task at work with no estimate: the time it has worked, as it did before
+    _t("corner_in_main", "in main since"),                          # the discard's card: *3 tasks, in main since 11:40*
     _t("look_wait", "Give me time to look"),                     # Settings: the wait of every spec made before its plan is passed by itself, 30 min · 2 h · until tonight · do not wait (spec 144 B, decisions §225.1)
     _t("my_hours", "When I am at the computer"),                  # Settings: the person's days and hours (spec 138 B.1, decisions §245.5); empty, nothing changes
     _t("not_before", "not before"),                                # a goal put off, on its row: *not before 14:05* (spec 138 B.5, decisions §245.4)

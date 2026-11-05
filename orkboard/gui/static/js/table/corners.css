@@ -1,0 +1,26 @@
+/* A card's four corners (docs/specs/147-one-card-four-corners.md part A, decisions §251.2; table/corners.js): two rows, 20 px tall, the rune and the kind at the top, who and how much at the foot. Layout only: every colour and face is orkUI's.
+   A sign is 14 px (orkUI's own) and a head 16 px on every card, so the corners read as an index. */
+.corner { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); height: 20px; min-width: 0; flex: none; }
+.corner--foot { margin-top: auto; }
+.corner__rune, .corner__kind { display: inline-flex; align-items: center; flex: none; color: var(--ork-ink-muted); }
+.corner__kind.is-alert { color: var(--ork-alert); }
+.corner__kind.is-danger { color: var(--ork-danger); }
+.corner__kind.is-success { color: var(--ork-success); }
+.corner__who { display: flex; align-items: center; gap: var(--ork-1); min-width: 0; flex: 0 1 auto; color: var(--ork-ink-muted); font: var(--ork-type-caption); white-space: nowrap; }
+.corner__who .ork-race__head { width: auto; height: 16px; flex: none; }
+.corner__word { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.corner__much { display: inline-flex; align-items: center; flex: none; margin-left: auto; color: var(--ork-ink-muted); font: var(--ork-type-caption); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.corner__much.is-ask { color: var(--ork-alert); }
+.corner__much .ork-gem { height: 18px; min-width: 0; padding: 0 var(--ork-2); }
+
+/* a lane's card: 5 : 7 at the frame's `--card-w`, its parts in a column; the window onto the work takes what the corners and the title leave (spec 147 A.2) */
+.table-card--task.ork-card { aspect-ratio: 5 / 7; height: auto; overflow: hidden; gap: var(--ork-3); }
+.table-card--task .table-card__head { min-height: 40px; flex: none; }          /* two lines kept whatever the name, so every lane card's window is the same height */
+.table-card--task .table-card__nm { -webkit-line-clamp: 2; line-clamp: 2; line-height: 20px; }
+.table-card--task .table-card__win.is-window { flex: 1 1 0; height: auto; min-height: 0; }
+
+/* the discard's card: the same corners, the name in up to four lines, its line of tasks between the name and the foot (spec 147 A.3) */
+.table-end .hand-done.hand-card--corners { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-3); text-align: left; overflow: hidden; }
+.hand-done__name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; line-height: 20px; }
+.hand-done__line { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.table-end .hand-done.hand-card--corners .hand-done__moon { top: calc(var(--ork-3) + var(--ork-1)); right: calc(var(--ork-3) + var(--ork-6)); }          /* the moon of a goal done in the night lies left of the kind's sign */

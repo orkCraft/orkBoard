@@ -51,7 +51,7 @@ def test_planned_tasks_are_faint_done_ones_grey_and_the_one_at_work_glows(gui):
         opacity = lambda t: float(pg.evaluate(f"() => getComputedStyle(document.querySelector('.plan-slot[data-plan-task=\"{t}\"]')).opacity"))  # noqa: E731
         assert opacity("m2") == 1 and 0.5 < opacity("m3") < 0.7 and opacity("m1") < 0.5, "the planned faint, the done fainter, the one at work whole"
         assert "grayscale" in pg.evaluate("() => getComputedStyle(document.querySelector('.plan-slot[data-plan-task=\"m1\"]')).filter"), "done: grey"
-        assert pg.locator('.plan-slot[data-plan-task="m2"] .table-stage .ork-elem.is-glowing').count() == 1, "at work: the goal's rune glowing, as on the Board"
+        assert pg.locator('.plan-slot[data-plan-task="m2"] .corner--top .ork-elem.is-glowing').count() == 1, "at work: the goal's rune glowing, as on the Board"
         assert pg.locator('.plan-slot[data-plan-task="m3"] .ork-elem.is-glowing').count() == 0
     finally:
         pg.close()

@@ -1,6 +1,6 @@
 // The discard (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3, §185.3; docs/specs/101 §4.4, decisions §145.4, §159, §167.7): it lies on the table, at the foot of its last column (the one right of
 // the lanes), the hand card's size, with the word *Discard* above it, on every tab. It was the hand's (hand/discard.js); the hand imports nothing of it. Its sheet is discard.css (the card's anatomy and sizes are the hand's, hand.css).
-// The last goal done lies face up on a card's face (its element and name in the header, the check in the window, *Done* in the label row) with the backs of the others under it; while dev holds goals main lacks (the gate), its
+// The last goal done lies face up on a card's face (spec 147 A.3, decisions §251: the rune and the done sign at the top, its name in four lines, the heads that did it and the time it took at the foot; *N tasks, in main since HH:MM* where the snapshot says it) with the backs of the others under it; while dev holds goals main lacks (the gate), its
 // window carries the lich's head and its foot *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
 // its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*: each goal ready is a card (table/portal.js, spec 105 F: pressed or dragged it is chosen for the portal in the ring over the pile, which sends that goal alone to main) and **To main** (dev whole, for a person's own commits, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
 // A goal done in the night (`ideas.night`, hand/nightcard.js) wears a small moon on its card and its row until its result is seen, and on the first look after the night the night's goals are dealt into the pile one by one (docs/specs/128 C.3, decisions §206.9).
@@ -21,6 +21,7 @@ import { DEAL_MS, leans } from "../hand/motion.js";
 import { nightFirst, nightMoons } from "../hand/nightcard.js";
 import { Portal, ReadyCards, portalHolds, useNarrow } from "./portal.js";
 import { noGate } from "./data.js";
+import { CornerTop, CornerFoot, muchOf, secondsBetween, IN_MAIN } from "./corners.js";             // the card is read by its four corners (spec 147 A.3, decisions §251)
 import { columnPick } from "./column.js";                 // the goal a press in the discard picks does not move the open tab (the leaders' tabs all show it)
 
 const LICH = { race: "lich", tier: "elder" };
@@ -50,6 +51,28 @@ function useNightDeal() {
   return first && first.n > 0 && Date.now() - first.at < DEAL_MS ? first.goals[first.n - 1] : "";
 }
 
+/** The seconds a goal took: from its first task started to its last finished; NaN when the tasks carry no such times. */
+function tookOf(tasks = []) {
+  const from = Math.min(...tasks.map((t) => Date.parse(t.started || "")).filter(Number.isFinite)), to = Math.max(...tasks.map((t) => Date.parse(t.finished || "")).filter(Number.isFinite));
+  return Number.isFinite(from) && Number.isFinite(to) ? secondsBetween(new Date(from).toISOString(), new Date(to).toISOString()) : NaN;
+}
+
+/** The heads that did a goal: its tasks' seats, each race and tier once, three at most. */
+function headsOf(tasks = []) {
+  const seen = new Set(), heads = [];
+  for (const t of tasks) {
+    const h = t.head, id = h && `${h.race}/${h.tier}`;
+    if (h && !seen.has(id)) { seen.add(id); heads.push(h); }
+  }
+  return heads.slice(0, 3);
+}
+
+/** *3 tasks, in main since 11:40*: only where the snapshot says when the goal reached main (`in_main`, an ISO time of the host); "" otherwise — nothing is made up. */
+function mainLine(g) {
+  const at = String((mapData.value?.nodes || []).find((n) => n.slug === g.slug)?.in_main || "").slice(11, 16), n = g.tasks.length;
+  return at && n ? `${n} ${n === 1 ? "task" : "tasks"}, ${IN_MAIN} ${at}` : "";
+}
+
 /** The Release leader's head, the lich's (decisions §158); the lich elder with no such party. */
 export function lichOf() {
   const g = (mapData.value?.goals || []).find((x) => x.leader?.head?.race === "lich");
@@ -75,17 +98,16 @@ export function Discard({ dealing = "" }) {
   const top = done[0], moon = !!top && moons.has(top.slug), under = Math.min(EDGES, Math.max(0, done.length - 1)), words = readyWords(ready), lit = over.value?.kind === "discard";
   const press = () => { if (lit) closeOver(); else openOver("discard", {}, null, "Done"); };
   const label = `Done${top ? `: ${top.full}` : ""}${words ? `. ${words}` : ""}`;
-  const lich = lichOf();
+  const lich = lichOf(), line = top ? words || mainLine(top) : "";
   return html`<div class="ork-deck table-discard" data-n=${under} title="Done">
     ${Array.from({ length: under }, (_, k) => under - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i}`} aria-hidden="true"></i>`)}
-    ${top ? html`<button key=${dealing ? top.slug : "top"} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-done${top.element ? ` el-${top.hue || top.element}` : ""}`, { "is-on": lit, "ork-deal": !!dealing })} data-slug=${top.slug} data-moon=${moon ? "1" : undefined} data-dealt=${dealing || undefined}
+    ${top ? html`<button key=${dealing ? top.slug : "top"} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-card--corners hand-done${top.element ? ` el-${top.hue || top.element}` : ""}`, { "is-on": lit, "ork-deal": !!dealing })} data-slug=${top.slug} data-moon=${moon ? "1" : undefined} data-dealt=${dealing || undefined}
         aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press} ...${leans}>
-        <span class="hand-card__head"><${Elem} name=${top.element} hue=${top.hue} dim=${!top.element} /><span class="hand-card__name">${top.title}</span></span>
-        <span class="hand-card__window"><span class="hand-card__act"><span class="hand-mark is-ok"><${Sign} name="check" big=${true} label="Done" /></span></span>
-          ${moon && html`<span class="hand-done__moon" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
-          ${words && html`<span class="hand-card__asker"><${Head} race=${lich.race} tier=${lich.tier} /></span>`}</span>
-        <span class="hand-card__label"><span class="hand-card__party">Done</span></span>
-        <span class="hand-card__foot" title=${words || undefined}>${words}</span>
+        <${CornerTop} rune=${{ name: top.element, hue: top.hue, dim: !top.element }} kind="check" signal="success" />
+        <span class="hand-done__name" title=${top.title}>${top.title}</span>
+        ${line && html`<span class="hand-done__line" title=${line}>${line}</span>`}
+        ${moon && html`<span class="hand-done__moon" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
+        <${CornerFoot} who=${{ heads: headsOf(top.tasks) }} much=${muchOf({ done: true, took: tookOf(top.tasks) })} />
       </button>`
       : html`<button type="button" class=${cls("ork-card-back hand-back hand-done", { "is-on": lit })} aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press}>
         <span class="hand-back__ready"><${Head} race=${lich.race} tier=${lich.tier} /><span class="cap" title=${words || undefined}>${words}</span></span></button>`}

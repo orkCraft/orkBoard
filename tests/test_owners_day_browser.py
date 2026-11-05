@@ -322,21 +322,21 @@ def test_a_task_card_at_work_shows_the_flame_and_says_the_time_it_has_worked_and
         pytest.skip("a lane a token wide has no stage word: its token's rune glows, tested below")
     card = pg.locator('.table-card[data-task="r1"]')
     assert card.get_attribute("data-state") == "running"
-    flame = card.locator(".table-stage .ork-elem.is-glowing")                                                          # the goal's rune glowing, in the stage's sign's place (spec 111 §3.1, decisions §187.2)
-    assert flame.count() == 1 and card.locator(".table-stage .ork-sign").count() == 0
+    flame = card.locator(".corner--top .ork-elem.is-glowing")                                                          # the goal's rune glowing, the top corner's (spec 147 A, decisions §251.2; spec 111 §3.1)
+    assert flame.count() == 1 and card.locator(".table-stage").count() == 0
     name, duration, timing = anim(flame)
     still = "is-still" in flame.get_attribute("class")                                                                    # one place moves at a time (spec 140 C3): a goal that does not move keeps its flame lit, still
     assert name == ("none" if still else "ork-glow") and (still or (duration == "2.4s" and timing.startswith("steps(6"))), (name, duration, timing)
     assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none", "the stepping drawing and the dotted line of before are gone"
     assert card.evaluate("e => getComputedStyle(e, '::after').backgroundImage") in ("none", "")
-    words = card.locator(".table-stage").inner_text().strip()
-    assert words.lower().startswith("doing · 1 m "), words
-    ticked = card.locator(".table-stage").inner_text()
-    pg.wait_for_function("([sel, was]) => document.querySelector(sel + ' .table-stage').innerText !== was", arg=['.table-card[data-task="r1"]', ticked], timeout=3000)   # it ticks
+    words = card.locator(".corner__much").inner_text().strip()
+    assert words.lower().startswith("worked 1 m "), words                                                               # the time worked is the foot's figure (spec 147 A)
+    ticked = card.locator(".corner__much").inner_text()
+    pg.wait_for_function("([sel, was]) => document.querySelector(sel + ' .corner__much').innerText !== was", arg=['.table-card[data-task="r1"]', ticked], timeout=3000)   # it ticks
     pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")           # (a failed task's card lies as a place while its failure is in the hand, spec 128 C.2: here it is put back to be looked at)
     waiting = pg.locator('.table-card[data-state="failed"]').first
-    assert waiting.locator(".ork-elem").count() == 0 and waiting.locator(".table-stage .ork-sign").count() == 1, "what does not work shows no flame"
-    assert "·" not in waiting.locator(".table-stage").inner_text(), "and counts no time"
+    assert waiting.locator(".ork-elem.is-glowing").count() == 0 and waiting.locator(".corner--top .ork-elem").count() == 1, "what does not work shows no flame (its rune stands)"
+    assert "worked" not in waiting.locator(".corner--foot").inner_text(), "and counts no time"
 
 
 def test_a_token_at_work_has_its_rune_glow_at_the_narrow_width(day):
@@ -383,11 +383,11 @@ def test_under_reduced_motion_nothing_moves_the_flame_stands_and_the_time_still_
         pytest.skip("the card's")
     pg.emulate_media(reduced_motion="reduce")
     card = pg.locator('.table-card[data-task="r1"]')
-    flame = card.locator(".table-stage .ork-elem.is-glowing")
+    flame = card.locator(".corner--top .ork-elem.is-glowing")
     assert anim(flame)[0] == "none" and flame.evaluate("e => getComputedStyle(e).opacity") == "1", "the flame stands, at full strength"
     assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none"
-    was = card.locator(".table-stage").inner_text()
-    assert "·" in was
+    was = card.locator(".corner__much").inner_text()
+    assert "worked" in was
     for n in host.nodes:
         for t in n["tasks"]:
             if t["id"] == "r1":
@@ -396,5 +396,5 @@ def test_under_reduced_motion_nothing_moves_the_flame_stands_and_the_time_still_
     pg.locator('.table-card[data-task="r1"][data-state="testing"]').wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(300)
     assert anim(pg.locator('.table-card[data-task="r1"]'))[0] == "none", "no flash either"
-    pg.wait_for_function("([sel, was]) => document.querySelector(sel + ' .table-stage').innerText !== was", arg=['.table-card[data-task="r1"]', pg.locator('.table-card[data-task="r1"] .table-stage').inner_text()], timeout=3000)
+    pg.wait_for_function("([sel, was]) => document.querySelector(sel + ' .corner__much').innerText !== was", arg=['.table-card[data-task="r1"]', pg.locator('.table-card[data-task="r1"] .corner__much').inner_text()], timeout=3000)
     pg.emulate_media(reduced_motion="no-preference")

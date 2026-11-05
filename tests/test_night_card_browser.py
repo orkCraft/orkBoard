@@ -149,8 +149,9 @@ def test_a_goal_done_in_the_night_lies_in_the_discard_under_a_small_moon_until_i
         top(pg).wait_for(timeout=WAIT_MS)
         pg.locator('.table-end .hand-done[data-moon="1"]').wait_for(timeout=WAIT_MS)
         assert top(pg).get_attribute("data-slug") == "music" and top(pg).locator(".hand-done__moon .ork-sign.moon").count() == 1, "the newest done goal is the pile's top, a moon on it"
-        assert top(pg).locator(".hand-card__window .hand-done__moon").count() == 1, "at the corner of the card's window"
-        assert top(pg).locator(".hand-mark.is-ok").count() == 1, "still the card of a goal done"
+        moon, kind = top(pg).locator(".hand-done__moon").bounding_box(), top(pg).locator(".corner__kind").bounding_box()
+        assert moon["x"] + moon["width"] <= kind["x"] + 1 and abs((moon["y"] + moon["height"] / 2) - (kind["y"] + kind["height"] / 2)) <= 3, "in the top row, left of the kind's sign (spec 147 A.3: the card has no window now)"
+        assert top(pg).locator(".corner__kind.is-success .ork-sign.check").count() == 1, "still the card of a goal done (its done sign in the top row: spec 147 A.3)"
         shot(pg, "wide-night-moon")
         top(pg).click()
         pg.locator(".hand-discardview").wait_for(timeout=WAIT_MS)

@@ -62,6 +62,11 @@ def card(pg, goal, tid):
     return pg.locator(f'[data-lkey="t:task:{goal}/{tid}"]')
 
 
+def stage(c):
+    """The stage's word and the step of the whole a card says to a screen reader (spec 147 A: the label row is the foot's corners now, the stage lives in the card's words): *doing 2/5*."""
+    return re.search(r"\b(Planning|Doing|Checking|To look at|Done)\b( \d+/\d+)?", c.get_attribute("aria-label").split(": ", 1)[1]).group(0).lower()
+
+
 def css(el, prop):
     return el.evaluate("(e, p) => getComputedStyle(e)[p]", prop)
 
@@ -76,10 +81,10 @@ def test_the_label_row_says_the_stage_the_step_of_the_whole_the_pips_and_the_ste
     try:
         c = card(pg, "join", "a1")
         c.wait_for(timeout=WAIT_MS)
-        row = c.locator(".table-card__row")
-        assert row.locator(".table-stage").inner_text().strip().lower() == "doing 2/5", "the stage's word and done + 1 of the whole"
+        row = c.locator(".corner--foot")
+        assert stage(c) == "doing 2/5", "the stage's word and done + 1 of the whole"
         assert c.locator(".table-win__now").inner_text().strip() == "tests for join", "the step now, under the stage"
-        assert row.locator(".table-stage .ork-elem.is-glowing").count() == 1, "the flame is still the goal's rune"
+        assert c.locator(".corner--top .ork-elem.is-glowing").count() == 1, "the flame is still the goal's rune, now in the top corner (spec 147 A)"
         pips = c.locator(".table-pips > i")
         assert pips.count() == 5 and [p.get_attribute("data-state") for p in pips.all()] == ["done", "now", "next", "next", "next"]
         boxes = [p.bounding_box() for p in pips.all()]
@@ -111,10 +116,10 @@ def test_the_step_now_is_cut_to_two_lines_in_the_window_and_read_whole_by_a_scre
         assert css(now, "overflow") == "hidden" and now.evaluate("e => getComputedStyle(e).webkitLineClamp") == "2", "two lines at most"
         assert now.bounding_box()["height"] <= 31, "the step now takes two lines at most"
         win = c.locator(".table-card__win")
-        assert abs(win.bounding_box()["height"] - 92) <= 1 and win.get_attribute("data-window") == "steps", "the window is 92 px high and holds the steps"
+        assert 80 <= win.bounding_box()["height"] <= 92 and win.get_attribute("data-window") == "steps", "the window takes what the corners and the title leave of the 5 : 7 card (spec 147 A.2) and holds the steps"
         assert win.locator(".table-win__by .ork-race__head").count() == 1 and win.locator(".table-win__busy.is-glowing").count() == 1, "the worker's head with the busy mark"
         assert "Doing 2/3 · reconnect every socket after the lobby restarts" in c.get_attribute("aria-label"), "a screen reader reads it whole"
-        assert abs(card(pg, "plain", "e1").locator(".table-card__win").bounding_box()["height"] - 92) <= 1, "every lane card has the same window height"
+        assert abs(card(pg, "plain", "e1").locator(".table-card__win").bounding_box()["height"] - win.bounding_box()["height"]) <= 1, "every lane card has the same window height"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -129,7 +134,7 @@ def test_the_pip_now_glows_in_orkuis_rhythm_and_stands_still_under_reduced_motio
         assert glow.count() == 1 and glow.get_attribute("data-state") == "now", "only the one now glows"
         assert pg.locator("[data-lkey] .table-pips > i.is-glowing").count() == 2, "one a task at work that has a step now (the steps file's, the tool's list): not the check, whose steps are all done"
         name, dur, timing = glow.evaluate("e => { const s = getComputedStyle(e); return [s.animationName, s.animationDuration, s.animationTimingFunction]; }")
-        flame = c.locator(".table-stage .ork-elem.is-glowing").evaluate("e => { const s = getComputedStyle(e); return [s.animationName, s.animationDuration, s.animationTimingFunction]; }")
+        flame = c.locator(".corner--top .ork-elem.is-glowing").evaluate("e => { const s = getComputedStyle(e); return [s.animationName, s.animationDuration, s.animationTimingFunction]; }")
         assert [name, dur, timing] == flame == ["ork-glow", "2.4s", "steps(6)"], "the flame's rhythm, orkUI's keyframes"
         pg.emulate_media(reduced_motion="reduce")
         assert css(glow, "animationName") == "none" and css(glow, "opacity") == "1"
@@ -143,7 +148,7 @@ def test_a_check_with_every_step_done_says_checking_and_the_whole_and_no_pip_glo
     try:
         c = card(pg, "check", "c1")
         c.wait_for(timeout=WAIT_MS)
-        assert c.locator(".table-stage").inner_text().strip().lower() == "checking 4/4"
+        assert stage(c) == "checking 4/4"
         assert [p.get_attribute("data-state") for p in c.locator(".table-pips > i").all()] == ["done"] * 4
         assert c.locator(".table-pips > i.is-glowing").count() == 0 and c.locator(".table-win__now").count() == 0, "nothing is now: no step line"
         assert "Checking 4/4" in c.get_attribute("aria-label")
@@ -158,7 +163,7 @@ def test_an_activity_has_no_pips_and_its_line_in_the_muted_ink(gui):
         c = card(pg, "lobby", "b1")
         c.wait_for(timeout=WAIT_MS)
         assert c.locator(".table-pips").count() == 0
-        assert c.locator(".table-stage").inner_text().strip().lower() == "doing", "no count: there is no whole"
+        assert stage(c) == "doing", "no count: there is no whole"
         now = c.locator(".table-win__now")
         assert now.inner_text().strip() == "edits lobby.ts" and css(now, "color") == token(pg, "--ork-ink-muted")
         assert "Doing · edits lobby.ts" in c.get_attribute("aria-label") and "worked" in c.get_attribute("aria-label")
@@ -173,8 +178,8 @@ def test_a_task_without_steps_keeps_todays_label_with_the_time_in_it(gui):
     try:
         c = card(pg, "plain", "e1")
         c.wait_for(timeout=WAIT_MS)
-        text = c.locator(".table-stage").inner_text().strip()
-        assert re.fullmatch(r"doing · 1 m \d+ s", text.lower()), text
+        text = c.locator(".corner__much").inner_text().strip()
+        assert re.fullmatch(r"worked 1 m \d+ s", text.lower()), text                                                    # the time worked is the foot's figure (spec 147 A)
         assert c.locator(".table-pips").count() == 0 and c.locator(".table-win__now").count() == 0
         assert c.get_attribute("aria-label") == "Plain work, A plain goal: Doing" and c.get_attribute("title") == "A plain goal"
     finally:
@@ -252,7 +257,7 @@ def test_the_plans_cards_wear_the_same_label_row(gui):
         pg.locator('.col-card[data-goal="join"]').click()
         pg.wait_for_selector(".table-board--plan", timeout=WAIT_MS)
         c = pg.locator('.plan-slot[data-plan-task="a1"] .table-card')
-        assert c.locator(".table-stage").inner_text().strip().lower() == "doing 2/5" and c.locator(".table-pips > i").count() == 5
+        assert stage(c) == "doing 2/5" and c.locator(".table-pips > i").count() == 5
         assert c.locator(".table-win__now").inner_text().strip() == "tests for join"
         assert pg.locator('.plan-slot[data-plan-task="a3"] .table-pips').count() == 0, "a task still waiting has no steps"
     finally:
@@ -304,7 +309,7 @@ def test_a_waiting_task_shows_the_head_of_the_seat_that_takes_it_faint_and_says_
         assert wait.get_attribute("data-window") == "wait" and wait.locator(".table-win__line").inner_text().strip() == "an elf takes it next"
         assert wait.locator(".ork-race__head").count() == 1 and float(css(wait.locator(".table-win__faint"), "opacity")) < 0.5, "the seat's head, faint"
         assert grunt.locator(".table-win__line").inner_text().strip() == "a Grunt takes it next"
-        assert [round(w.bounding_box()["height"]) for w in (wait, grunt)] == [92, 92], "the window's height is fixed, so the cards line up"
+        assert [round(w.bounding_box()["height"]) for w in (wait, grunt)] == [round(wait.bounding_box()["height"])] * 2, "the window's height is the same on both, so the cards line up"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -346,8 +351,7 @@ def test_a_task_to_look_at_says_to_look_at_a_merged_one_done_and_a_leaders_seat_
         pg.wait_for_selector(".table-card", timeout=WAIT_MS)
         pg.locator('.col-card[data-goal="mix"]').click()
         pg.wait_for_selector(".table-board--plan", timeout=WAIT_MS)
-        stage = lambda tid: card(pg, "mix", tid).locator(".table-stage").inner_text().strip().lower()      # noqa: E731
-        assert (stage("m1"), stage("v1"), stage("l1")) == ("done", "to look at", "planning")
+        assert tuple(stage(card(pg, "mix", tid)) for tid in ("m1", "v1", "l1")) == ("done", "to look at", "planning")
         assert card(pg, "mix", "m1").get_attribute("data-stage") == "done" and card(pg, "mix", "v1").get_attribute("data-stage") == "review"
         lead, grunt = (pg.locator(f'.plan-slot[data-plan-task="{i}"] .table-card__win .table-win__line') for i in ("l1", "l2"))
         assert lead.inner_text().strip() == "Its leader takes it next", "a leader's seat never says a member's word"

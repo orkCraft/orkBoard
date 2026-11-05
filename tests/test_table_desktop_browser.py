@@ -459,29 +459,29 @@ def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label
         assert tok.bounding_box()["width"] <= 46 and pg.locator(".table-card").count() == 0
         return
     box = failed.bounding_box()
-    assert abs(box["width"] - 144) <= 1                                                                                   # 144 wide (frame.css `--card-w`)
+    assert abs(box["width"] - 144) <= 1 and abs(box["height"] - 202) <= 2                                                 # 144 wide (frame.css `--card-w`), 5 : 7 (spec 147 A.2)
     head = failed.locator(".table-card__head")
-    assert failed.locator(".ork-elem").count() == 0 and head.evaluate("e => e.firstElementChild.classList.contains('table-card__nm')")      # no rune on a task card: the goal's stands once, on its strip (spec 111 §3.1, decisions §187.1)
+    assert head.locator(".ork-elem").count() == 0 and head.evaluate("e => e.firstElementChild.classList.contains('table-card__nm')")      # no rune in the header: the goal's rune is the top corner's (spec 147 A, decisions §251.2)
     nm = head.locator(".table-card__nm")
     assert nm.inner_text().strip() == "Reset the round timer when a player rejoins"
-    assert nm.evaluate("e => getComputedStyle(e).textAlign") in ("left", "start") and nm.evaluate("e => getComputedStyle(e).webkitLineClamp") == "3"        # left-aligned, three lines at most
+    assert nm.evaluate("e => getComputedStyle(e).textAlign") in ("left", "start") and nm.evaluate("e => getComputedStyle(e).webkitLineClamp") == "2"        # left-aligned, two lines at most (spec 147 A.2)
     pixel = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').split(',')[0].trim().replace(/[\"']/g, '')")
     assert pixel and pixel not in nm.evaluate("e => getComputedStyle(e).fontFamily")                                      # a person's words: the body face, never the pixel one (CLAUDE.md, the owner)
     win = failed.locator(".table-card__win")
-    assert abs(win.bounding_box()["height"] - 92) <= 1                                                                   # 92 px high, fixed (spec 142 C), so a lane's cards line up
+    assert 80 <= win.bounding_box()["height"] <= 92                                                                      # what the corners and the title leave of the card (spec 147 A.2), so a lane's cards line up
     assert win.get_attribute("data-window") == "fail" and win.locator(".ork-sign.alert").count() == 1 and win.locator(".ork-sign").count() == 1      # a failed task: orkUI's alert sign and its reason (spec 142 C, decisions §249.3)
     danger = pg.evaluate("() => { const d = document.createElement('i'); d.style.color = 'var(--ork-danger)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; }")
     assert win.locator(".table-win__reason").inner_text().strip() and win.evaluate("e => getComputedStyle(e.querySelector('.ork-sign')).color") == danger      # its reason, the sign in the danger colour
     assert win.evaluate("e => getComputedStyle(e).borderTopWidth") == "1px"                                              # a hairline
-    assert failed.locator(".ork-race__head").count() == 0                                                                # no head on a failed card: who works is on its back
-    row = failed.locator(".table-card__row")
-    assert row.locator(".table-stage").inner_text().strip().lower() == "doing" and row.locator(".table-stage .ork-sign.sword").count() == 1      # the stage's small sign and word
-    assert abs(row.locator(".table-stage .ork-sign").bounding_box()["width"] - 14) <= 1
-    assert row.locator(".ork-gem").inner_text().strip() == "$1" and row.evaluate("e => e.lastElementChild.classList.contains('ork-gem')")                      # a retry spends: the gem at the right
+    row = failed.locator(".corner--foot")
+    assert failed.locator(".corner--top .ork-elem").count() == 1 and failed.get_attribute("data-stage") == "doing"        # the goal's rune and the stage (said in the card's words) (spec 147 A)
+    assert row.locator(".ork-race__head").count() == 1 and abs(row.locator(".ork-race__head").bounding_box()["height"] - 16) <= 1      # the seat's head in the foot, 16 px (spec 147 A.2: who works is on the card's face)
+    assert abs(failed.locator(".corner--top .ork-sign").bounding_box()["width"] - 14) <= 1
+    assert row.locator(".ork-gem").inner_text().strip() == "$1" and row.evaluate("e => e.lastElementChild.querySelector('.ork-gem') !== null")                      # a retry spends: the gem at the right
     assert "fails" in failed.get_attribute("class")                                                                      # a failure: orkUI's danger frame
     check = pg.locator('[data-lkey="t:task:recheck/c2"]')                                                                 # a failed check
-    assert "fails" in check.get_attribute("class") and check.locator(".table-stage .ork-sign.shield").count() == 1 and check.locator(".ork-gem").count() == 0     # no gem: it is not a retry
-    assert check.locator(".table-stage").inner_text().strip().lower() == "checking" and check.locator(".table-card__win .ork-sign.alert").count() == 1
+    assert "fails" in check.get_attribute("class") and check.get_attribute("data-stage") == "checking" and check.locator(".ork-gem").count() == 0     # no gem: it is not a retry
+    assert check.locator(".table-card__win .ork-sign.alert").count() == 1
     shot(pg, f"table-cards-{w}.png")
 
 
@@ -530,17 +530,17 @@ def test_a_goals_rune_stands_once_on_its_strip_and_a_task_at_work_shows_the_flam
     for slug in ("rules", "seat", "calm", "recheck", "bar"):
         assert pg.locator(f'.table-lane[data-party] .table-goal[data-goal="{slug}"] .table-gstrip .ork-elem').count() == 1, slug                  # the goal's one rune: its strip's
     r1 = pg.locator('[data-lkey="t:task:rules/r1"]')                                                                      # at work, the front card
-    flame = r1.locator(".table-stage .ork-elem.meadow.is-glowing")
-    assert flame.count() == 1 and r1.locator(".table-stage .ork-sign").count() == 0 and r1.locator(".table-stage").inner_text().strip().lower() == "doing"      # the flame takes the stage's sign's place; the words stay
+    flame = r1.locator(".corner--top .ork-elem.meadow.is-glowing")
+    assert flame.count() == 1 and r1.get_attribute("data-stage") == "doing"                                               # the flame is the top corner's rune, glowing (spec 147 A)
     assert flame.evaluate("e => e.offsetWidth") == 14 and flame.get_attribute("aria-hidden") == "true"
     moving = pg.locator(f".table-lane[data-party] {FLAME}").evaluate_all("els => els.filter((e) => getComputedStyle(e).animationName === 'ork-glow').map((e) => [getComputedStyle(e).animationDuration, getComputedStyle(e).animationTimingFunction])")
     assert len(moving) <= 1, moving                                                                                       # one place moves at a time (spec 140 C3): the others' flames stand, lit
     assert all(d == "2.4s" and t.startswith("steps(6") for d, t in moving), moving                                        # orkUI's glow: six steps over 2.4 s
-    assert pg.locator('[data-lkey="t:task:bar/a2"] .table-stage .ork-elem.void.is-glowing').count() == 1                 # a task being checked is at work too
+    assert pg.locator('[data-lkey="t:task:bar/a2"] .corner--top .ork-elem.void.is-glowing').count() == 1                 # a task being checked is at work too
     edge = pg.locator('[data-lkey="t:task:seat/s1"]')                                                                     # at work, behind the front one: the rune glowing before the stage's sign
     assert edge.locator(".ork-elem.ice.is-glowing").count() == 1 and edge.locator(".ork-sign.sword").count() == 1 and edge.evaluate("e => e.firstElementChild.classList.contains('ork-elem')")
-    for key in ("t:task:seat/s2", "t:task:recheck/c2", "t:task:bar/a3"):                                                  # failed, or asking: no flame
-        assert pg.locator(f'[data-lkey="{key}"] .ork-elem').count() == 0, key
+    for key in ("t:task:seat/s2", "t:task:recheck/c2", "t:task:bar/a3"):                                                  # failed, or asking: no flame (the rune stands, lit)
+        assert pg.locator(f'[data-lkey="{key}"] .ork-elem.is-glowing').count() == 0, key
     assert pg.locator(f".table-lane[data-party] {FLAME}").count() == len(AT_WORK)                                          # as many flames as tasks at work
     assert anim(r1.locator(".table-card__win > *").first)[0] == "none" and anim(r1, "::after")[0] == "none"              # the card's own motion of before is gone (the tab's head step stays)
     pg.emulate_media(reduced_motion="reduce")                                                                             # under reduced motion the flame stands, at full strength
@@ -553,7 +553,7 @@ def test_a_goals_rune_stands_once_on_its_strip_and_a_task_at_work_shows_the_flam
                 t["state"] = "failed"
     host.push()
     pg.locator('[data-lkey="t:task:rules/r1"][data-state="failed"]').wait_for(timeout=WAIT_MS)
-    assert r1.locator(".table-stage .ork-elem").count() == 0 and r1.locator(".table-stage .ork-sign.sword").count() == 1
+    assert r1.locator(".ork-elem.is-glowing").count() == 0 and r1.locator(".corner--top .ork-elem").count() == 1
 
 
 def test_a_goals_tasks_lie_as_a_fan_turned_one_to_three_degrees_by_their_place_and_a_hover_opens_it(table):
@@ -620,7 +620,7 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
         assert title(pg) == "A timer bar that drains · through the Orkmaster"
         assert pg.locator(".table .ork-picked").count() == 0 and pg.locator(".table-gstrip, .table-fan, .table-casc").count() == 0
         assert sorted(keys(pg, '.table-lane[data-party="art"]')) == ["t:task:bar/a1", "t:task:bar/a2", "t:task:bar/a3"]
-        assert pg.locator('[data-lkey="t:task:bar/a1"] .ork-sign.picture').count() == 1                                  # a task of a kind of its own: its kind's sign, not the goal's
+        assert pg.locator('[data-lkey="t:task:bar/a1"] .corner--top .ork-sign.picture').count() == 1                     # a task of a kind of its own: its kind's sign in the top corner, not the goal's
         assert pg.locator('[data-lkey^="t:task:seat/"]').count() == 0                                                     # the other goals' tasks are not drawn
         shot(pg, f"table-picked-{w}.png")
         pick(pg, "")
