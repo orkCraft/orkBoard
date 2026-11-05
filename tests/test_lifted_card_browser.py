@@ -10,6 +10,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
+from playwright.sync_api import expect  # noqa: E402
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import HandHost, open_hand  # noqa: E402
@@ -184,9 +185,9 @@ def test_picking_a_way_changes_the_cost_at_the_opened_cards_foot(gui):
         assert cost.get_attribute("data-cost") == first, "the foot shows the picked way's cost"
         ways.nth(1).click()
         assert ways.nth(1).get_attribute("aria-checked") == "true" and ways.nth(0).get_attribute("aria-checked") == "false"
-        assert cost.get_attribute("data-cost") == second, "another way picked: the foot's cost is its"
+        expect(cost).to_have_attribute("data-cost", second, timeout=WAIT_MS)   # another way picked: the foot's cost is its (it is drawn on the next frame)
         ways.nth(0).click()
-        assert cost.get_attribute("data-cost") == first
+        expect(cost).to_have_attribute("data-cost", first, timeout=WAIT_MS)
         ways.nth(1).click()
         shot(pg, "wide-lifted-priced")
         card.get_by_role("button", name="Answer", exact=True).click()

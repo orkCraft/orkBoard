@@ -91,7 +91,7 @@ function PricedWays({ s, q, send }) {
   useEffect(() => { pickWay(s.key, price(at)); }, [at, s.key]);
   useEffect(() => () => clearWay(s.key), [s.key]);
   return html`<div class="hand-ways" role="radiogroup" aria-label="Ways">${q.choices.map((c, i) => html`<button type="button" key=${c} role="radio" aria-checked=${String(i === at)} class=${cls("ork-btn hand-way-opt", { "is-pick": i === at })}
-      data-way=${i} data-cost=${price(i)?.gem || undefined} onClick=${() => setAt(i)}>${c}${price(i) && html` <span class="hand-way-opt__cost">${price(i).gem}</span>`}</button>`)}</div>
+      data-way=${i} data-cost=${price(i)?.gem || undefined} onClick=${() => { setAt(i); pickWay(s.key, price(i)); }}>${c}${price(i) && html` <span class="hand-way-opt__cost">${price(i).gem}</span>`}</button>`)}</div>
     <button type="button" class="ork-btn primary" data-answer="priced" onClick=${() => send([q.choices[at]])}>Answer</button>`;
 }
 
