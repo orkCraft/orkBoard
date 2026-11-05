@@ -99,7 +99,7 @@ def test_the_plus_card_turns_over_into_a_card_with_the_field_focused_in_the_pres
         assert abs(box["width"] / box["height"] - 5 / 7) < 0.02, f"a card, 5 : 7: {box}"
         rune = field.locator(".hand-field__rune")
         top = field.locator(".hand-field__top").bounding_box()
-        assert rune.count() == 1 and abs(rune.bounding_box()["x"] - box["x"]) <= 12 and abs(rune.bounding_box()["y"] - top["y"]) <= 2, "its rune large at its top left, where a card's element stands"
+        assert rune.count() == 1 and abs(rune.bounding_box()["x"] - box["x"]) <= 16 and abs(rune.bounding_box()["y"] - top["y"]) <= 2, "its rune square at the left of the body's first row, under the card's corners and window (spec 147 D.2)"
         assert rune.locator(".ork-elem.big").count() == 1 and rune.get_attribute("aria-expanded") == "false"
         assert rune.get_attribute("aria-label").startswith("Its rune: ") or rune.get_attribute("aria-label") == "Its rune: none yet, choose one"
         assert field.locator(".hand-field__runes").count() == 0, "the five stand in a row only when the rune is pressed"

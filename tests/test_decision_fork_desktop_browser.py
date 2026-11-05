@@ -149,7 +149,7 @@ def test_lifted_the_decision_says_why_and_its_numbered_points_and_has_one_button
         assert pts.count() == 3 and pts.first.inner_text().startswith("The lobby has one chat room"), "the points numbered, the Orkmaster's words"
         assert card.locator(".hand-way__points").evaluate("e => e.tagName") == "OL"
         assert card.locator(".hand-spend").count() == 0, "no gem, no cost line"
-        assert " ".join(card.locator(".hand-lifted__kind").text_content().split()) == "Decision 118" and card.inner_text().count("Decision 118") == 1, "its number is said once, beside what the card is"
+        assert " ".join(card.locator(".hand-lifted__kind").text_content().split()) == "Decision 118" and " ".join(card.text_content().split()).count("Decision 118") == 1, "its number is said once, beside what the card is"
         primaries = card.locator(".hand-answers .ork-btn.primary")
         assert primaries.count() == 1 and primaries.inner_text().strip() == "Confirm and start", "one button"
         assert [b.inner_text().strip() for b in card.locator(".hand-answers .ork-btn").all()] == ["Confirm and start", "Change…"]

@@ -75,6 +75,7 @@
 .col-now .ork-sign { flex: none; margin-top: 1px; }
 .col-now__t { min-width: 0; flex: 1 1 auto; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
 .col-now[data-asked] { color: var(--ork-ink-faint); }
+.col-card--up > .card-win { flex: 1 1 28px; min-height: 28px; width: 100%; height: auto; }          /* the window where *now* was (spec 148 B.2): the room between the name and the foot, never more than the card has */
 /* the wait as a bar in eighths along the foot (the goal's colour); its width is the share the page sets (`shareOf` rounds it to eighths) */
 .col-wbar { flex: none; height: 3px; background: var(--ork-frame); }
 .col-wbar > i { display: block; height: 100%; width: calc(var(--s, 0) * 100%); background: var(--c); }

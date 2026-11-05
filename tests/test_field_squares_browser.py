@@ -1,5 +1,5 @@
 """The + card turned where it lies, and its squares (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part A, decisions §206.1), in a real browser against the hand's stub host
-(tests/test_hand_desktop_browser.py): the field grows from the + card (its left edge on the card's, its foot under the window's edge, the card hidden while it is open, Esc turns it back); the squares *Rune*,
+(tests/test_hand_desktop_browser.py): the field grows from the + card (its left edge on the card's, the card whole at 404 x 566 over the hand, the + card hidden while it is open, Esc turns it back); the squares *Rune*,
 *To*, *Type*, *Files* open each its own row of choices (one at a time, Esc closes the row before the field); *To* addresses a leader, *Type* names one of its types, *Files* takes a file of the project; while a row is
 open *Send* stays in the window; the seal's ring is whole (three of orkUI's runes in the three places left)."""
 from __future__ import annotations
@@ -35,7 +35,7 @@ def _open_row(pg):
     return pg.locator(".hand-field__row-open").get_attribute("data-open") if pg.locator(".hand-field__row-open").count() else ""
 
 
-def test_the_field_grows_from_the_plus_card_where_it_lies_its_left_edge_on_the_cards_its_foot_under_the_edge_and_turns_back_on_esc(gui):
+def test_the_field_grows_from_the_plus_card_where_it_lies_its_left_edge_on_the_cards_whole_at_404_by_566_and_turns_back_on_esc(gui):
     pg, host, log = open_hand(gui)
     try:
         _plus(pg).wait_for(timeout=WAIT_MS)
@@ -54,9 +54,9 @@ def test_the_field_grows_from_the_plus_card_where_it_lies_its_left_edge_on_the_c
         box = field.bounding_box()
         height = pg.evaluate("() => innerHeight")
         assert abs(box["x"] - before["x"]) <= 2, f"its left edge on the + card's: {box} {before}"
-        assert abs(box["y"] - (height - 330)) <= 2, f"its top so that 330 px show above the window's edge: {box}, window {height}"
-        assert abs(box["width"] - 2.8 * before["w"]) <= 4 and abs(box["width"] / box["height"] - 5 / 7) < 0.02, f"a card, 5 : 7, 2.8 times the + card's width: {box}"
-        assert box["y"] + box["height"] > height, "its foot is under the window's edge"
+        hand_top = pg.evaluate("() => document.querySelector('.hand').getBoundingClientRect().top")
+        assert abs(box["width"] - 404) <= 1 and abs(box["height"] - 566) <= 1, f"the opened card's size, 404 x 566 (spec 147 D.2): {box}"
+        assert box["y"] >= 0 and box["y"] + box["height"] <= hand_top + 1 and box["y"] + box["height"] <= height, f"it stands whole over the hand, its foot's corners in view: {box}, hand {hand_top}"
         assert _plus(pg).evaluate("e => getComputedStyle(e).visibility") == "hidden", "the + card is hidden while the field is open"
         assert pg.locator(".hand-field__proxy").count() == 0
         shot(pg, "field-grown-where-it-lies")
@@ -191,7 +191,7 @@ def test_to_addresses_a_leader_its_types_come_by_their_signs_and_a_type_chosen_i
     assert not log, "\n".join(log)
 
 
-def test_files_takes_pictures_from_this_computer_and_files_of_the_project_as_chips_in_the_row_of_send(gui):
+def test_files_takes_pictures_from_this_computer_and_files_of_the_project_as_chips_in_the_new_goals_window(gui):
     pg, host, log = open_hand(gui, host=MentionHost())
     try:
         field, area = _open(pg)
@@ -205,10 +205,10 @@ def test_files_takes_pictures_from_this_computer_and_files_of_the_project_as_chi
         assert row.get_by_role("checkbox", name="src/", exact=True).count() == 0, "files, not folders"
         row.get_by_role("checkbox", name="src/app.py").click()
         assert row.get_by_role("checkbox", name="src/app.py").get_attribute("aria-checked") == "true"
-        assert field.locator(".hand-field__row .hand-file").inner_text().strip() == "app.py", "a chip in the row of Send"
+        assert field.locator(".hand-field__win .hand-file").inner_text().strip() == "app.py", "a chip in the card's window (spec 148 B.6)"
         assert _sq(pg, "files").locator(".hand-sq__n").inner_text() == "1", "the number of files at the square's corner"
         field.locator("input[type=file]").set_input_files({"name": "p.png", "mimeType": "image/png", "buffer": _png()})
-        field.locator(".hand-field__row .hand-pic img").wait_for(timeout=WAIT_MS)
+        field.locator(".hand-field__win .hand-pic img").wait_for(timeout=WAIT_MS)
         assert _sq(pg, "files").locator(".hand-sq__n").inner_text() == "2"
         field.get_by_role("button", name="Send").click()
         sent = _calls(pg, host, "ideas.add")[-1]
@@ -243,3 +243,61 @@ def test_the_seals_ring_is_whole_while_the_runes_are_offered_three_of_orkuis_own
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+# -- spec 147 D.2 and spec 148 B.6: the new goal's card, its corners dashed until they fill, its window the place what is attached lies and is dropped on --------------------
+
+def test_a_new_goals_card_has_three_dashed_corners_that_fill_as_the_goal_is_made(gui):
+    """Spec 147 D.2, decisions §251.2: the rune, who and how much are dashed slots saying what will stand there; who fills when the party is known, the kind's corner when a type is picked."""
+    from orkboard.realm import lexicon
+    pg, host, log = open_hand(gui, host=MentionHost())
+    try:
+        field, area = _open(pg)
+        slots = field.locator(".corner__slot")
+        assert slots.evaluate_all("els => els.map((e) => [e.dataset.slot, e.textContent.trim(), getComputedStyle(e).borderTopStyle])") == [
+            ["rune", lexicon.term("slot_rune"), "dashed"], ["who", lexicon.term("slot_who"), "dashed"], ["much", lexicon.term("slot_much"), "dashed"]], "three dashed corners saying what will stand there"
+        assert field.locator(".corner--top .corner__kind .ork-sign").count() == 0, "no kind until one is picked"
+        box = field.bounding_box()
+        assert abs(box["width"] - 404) <= 1 and abs(box["height"] - 566) <= 1 and field.locator(".corner--large").count() == 2, "the opened card's size, its corners large"
+        _sq(pg, "to").click()
+        field.get_by_role("radio", name="Game design").click()
+        assert field.locator(".corner__slot").evaluate_all("els => els.map((e) => e.dataset.slot)") == ["rune", "much"], "who fills when the party is known"
+        assert field.locator(".corner--foot .corner__who .ork-race__head").count() == 1 and field.locator(".corner--foot .corner__who .corner__word").inner_text().strip() == "Game design"
+        _sq(pg, "type").click()
+        field.get_by_role("radiogroup", name="Its type").get_by_role("radio", name="Balance pass").click()
+        assert field.locator(".corner--top .corner__kind .ork-sign").count() == 1 and field.locator(".corner--top .corner__kind .corner__word").text_content().strip() == "Balance pass", "the kind's corner fills when a type is picked"
+        assert field.locator(".corner__slot").count() == 2, "the rune and how much wait until the goal is laid"
+        shot(pg, "field-corners-filled")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_new_goals_window_shows_what_is_attached_and_is_where_a_picture_is_dropped(gui):
+    """Spec 148 B.6, decisions §252.4: the hint while nothing is attached; then the pictures as thumbnails and the files as chips; a picture dropped on the window is attached."""
+    from orkboard.realm import lexicon
+    pg, host, log = open_hand(gui, host=MentionHost())
+    try:
+        field, area = _open(pg)
+        win = field.locator(".hand-field__win")
+        assert win.get_attribute("data-window") == "hint" and win.inner_text().strip() == lexicon.term("attach_hint"), "with nothing attached, the hint words"
+        assert "is-window" in win.get_attribute("class").split(), "the lanes' window frame"
+        win.dispatch_event("drop", {"dataTransfer": pg.evaluate_handle("""([b64]) => { const dt = new DataTransfer(), bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+          dt.items.add(new File([bin], 'p.png', { type: 'image/png' })); return dt; }""", [_png_b64()])})
+        win.locator(".hand-pic img").wait_for(timeout=WAIT_MS)
+        assert win.get_attribute("data-window") == "attached" and win.locator(".hand-pic img").count() == 1 and win.locator(".hand-field__attach").count() == 0, "a picture dropped on the window lies in it as a thumbnail"
+        assert pg.evaluate("() => document.querySelector('.hand-field__win .hand-pic img').getBoundingClientRect().width") >= 48
+        _sq(pg, "files").click()
+        field.locator(".hand-field__row-open").get_by_role("checkbox", name="src/app.py").click()
+        assert win.locator(".hand-file").inner_text().strip() == "app.py" and win.locator(".hand-pic").count() == 1, "a file as a chip beside it"
+        win.get_by_role("button", name="Remove picture 1").click()
+        win.get_by_role("button", name="Take src/app.py off").click()
+        assert win.get_attribute("data-window") == "hint", "taken off, the hint is back"
+        shot(pg, "field-window-attached")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def _png_b64():
+    return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="

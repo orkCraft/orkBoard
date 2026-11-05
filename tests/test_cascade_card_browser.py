@@ -95,7 +95,7 @@ def test_lifted_with_no_fork_it_says_one_line_more_opens_the_chain_and_confirm_s
     host.needs = [cascade()]
     host.push()
     lifted = lift(pg)
-    text = lifted.inner_text()
+    text = " ".join(lifted.text_content().split())                 # the kind's word is drawn in the label face (capitals): read the text itself
     assert "Proposes" in text and TITLE in text and "the lobby test showed ten seconds is too long" in text and "Tech and Art agree" in text
     assert "Written again:" in text
     assert lifted.locator("[data-fork]").count() == 0 and lifted.locator("[data-part=chain]").count() == 0

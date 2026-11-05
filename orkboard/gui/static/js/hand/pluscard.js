@@ -7,9 +7,10 @@
 // lit with them at three quarters, so the eight places are lit; their places are layout (hand.css).
 // **The rite** (§3.3, decisions §187.4): when the goal is sent the seal plays orkUI's summoning rite in the goal's element (`is-summoning rite-<element>`, state.js `summon`), once, and nothing under reduced motion. The seal is `small` at the narrow width.
 // **The card-field** (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.1–§6.2, docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md A, decisions §198.1, §198.8, §206.1): the + card is a card's back; pressed (or a key typed with nothing focused), **the + card itself turns over and grows
-// where it lies** (fieldturn.js `growFrom`: a perspective turn of 180° and a growth from its box; it is hidden, `is-under`, while the field is open) into **a card** 5 : 7, about 2.8 times its width, its left edge on the + card's, its top so that 330 px show above the window's edge (its foot goes under it:
-// `placeField`); on a phone (under 760 px) as wide as the screen less the gutters, as before. On it, under its top, **the squares** *Rune*, *To*, *Type*, *Files* (fieldsquares.js: each opens its row of choices; one row at a time; Esc closes the row first), then *Write a goal…* its body,
-// **Send** at its foot with the files taken as chips beside it; the focus is taken inside the press itself (fieldturn.js), and Esc or a press away turns it back (`closeField`), Send turns it to its back and sends the back to the Orkmaster's lane. Its text: Enter sends, Shift+Enter is a new line, a picture pasted goes with
+// where it lies** (fieldturn.js `growFrom`: a perspective turn of 180° and a growth from its box; it is hidden, `is-under`, while the field is open) into **a card** 5 : 7, 404 x 566, its left edge on the + card's, standing whole over the hand (`placeField`); on a phone (under 760 px) as wide as the screen less the gutters, as before.
+// **Spec 147 D.2, spec 148 B.6 (decisions §251.2, §252.4): it is the opened card's twin**: its corners large, three of them empty and dashed (*the rune: given when it is laid*, *who: the Orkmaster routes it*, *how much: after its estimate*), who filled when the party is known, the kind's when a type is picked; its window under the title holds what is attached (the pictures as thumbnails, the files as chips, the hint
+// while nothing is) and is where a picture is dropped. On it, in its body, **the squares** *Rune*, *To*, *Type*, *Files* (fieldsquares.js: each opens its row of choices; one row at a time; Esc closes the row first), then *Write a goal…* its body,
+// **Send** above its foot; the focus is taken inside the press itself (fieldturn.js), and Esc or a press away turns it back (`closeField`), Send turns it to its back and sends the back to the Orkmaster's lane. Its text: Enter sends, Shift+Enter is a new line, a picture pasted goes with
 // it (`photos`, as the old New goal took them; the *Files* square takes them from the computer too), Esc or a press away closes it and keeps its text, its rune, its address and its files. No priority, no kind. On a party's tab it is addressed to that party (*→ Tech ×*,
 // one press takes it off); *@Tech* in the text addresses it too, and the *To* square chooses a leader; on the Orkmaster's tab it is general and the Orkmaster routes it by code (`ideas.add` with no party). The page has no
 // microphone, so the field has none. While there is no goal at all, the + card lies large in the pane's middle (and the field grows there, as it did). *@* in the text offers a party, a file or a folder, and a party's goal types and map parts (mention.js, spec 107 §11): a type
@@ -33,6 +34,8 @@ import { partiesOf, partyCard } from "./data.js";
 import { MarkChips, addressNow, marks, marksToSend, pickFor, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
 import { leans } from "./motion.js";
 import { MentionList, useMention } from "./mention.js";
+import { CornerFoot, CornerTop } from "../table/corners.js";                   // the new goal's card is read by its four corners, three of them empty and dashed until they fill (spec 147 D.2, decisions §251.2)
+import { ATTACH_HINT, SLOT_MUCH, SLOT_RUNE, SLOT_WHO } from "./openwords.js";
 import { mapData } from "../shell/store.js";
 import { Elem } from "../orkui.js";
 import { useNarrow } from "../table/portal.js";
@@ -164,9 +167,14 @@ export function Field({ middle = false }) {
     const pics = [...(e.clipboardData?.files || [])].filter((f) => PICTURE_TYPES.includes(f.type));
     if (pics.length) { e.preventDefault(); addPictures(pics); }
   };
-  const attached = fieldPhotos.value.length + fieldFiles.value.length > 0;
+  const attached = fieldPhotos.value.length + fieldFiles.value.length > 0, who = address.party ? parties.find((g) => g.slug === address.party) : null, chosen = fieldRune.value;
+  const drop = (e) => { e.preventDefault(); e.stopPropagation(); addPictures([...(e.dataTransfer?.files || [])]); };
   return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle, "has-row": !!fieldRow.value, "is-picking": !!pickFor.value, "has-match": !!match })} role="group" aria-label="The new goal’s card, grown into the field"
-      onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => { e.preventDefault(); addPictures([...(e.dataTransfer?.files || [])]); }}>
+      onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => e.preventDefault()}>
+    <${CornerTop} large=${true} rune=${chosen ? { name: chosen, hue: runes.hue } : null} slot=${chosen ? "" : SLOT_RUNE} kind=${taken?.sign || ""} word=${taken?.name || ""} />
+    <div class="table-card__win is-window card-win hand-field__win" data-window=${attached ? "attached" : "hint"} onDragOver=${(e) => e.preventDefault()} onDrop=${drop}>
+      ${attached ? html`<${FileChips} />` : html`<span class="card-win__words hand-field__attach">${ATTACH_HINT}</span>`}</div>
+    <div class="hand-field__body">
     <div class="hand-field__top"><${Squares} runes=${runes} address=${address} parties=${parties} taken=${taken} />
     ${(address.name || taken || marks.value.length > 0) && html`<div class="hand-field__chips">
       ${address.name && html`<span class="ork-chip hand-chip" data-by=${address.by}><${Icon} name="arrow-right" />${address.name}
@@ -180,11 +188,13 @@ export function Field({ middle = false }) {
       onInput=${(e) => { fieldText.value = e.currentTarget.value; if (match) setMatch(null); mention.look(); }} onKeyDown=${key} onKeyUp=${mention.look} onClick=${mention.look} onFocus=${mention.look} onPaste=${paste}></textarea>
     <${MentionList} ...${mention} />
     ${match && html`<${MatchLine} match=${match} busy=${busy} onAdd=${addTo} onApart=${() => send({ apart: true, with: match.idea })} />`}
+    </div>
     <div class="hand-field__row">
-      ${attached ? html`<${FileChips} />` : html`<span class="cap hand-field__hint">Enter sends · Shift+Enter a new line</span>`}
+      <span class="cap hand-field__hint">Enter sends · Shift+Enter a new line</span>
       <button type="button" class="ork-btn primary" disabled=${!fieldText.value.trim() || busy} onClick=${() => send()}>Send</button>
       <input ref=${file} type="file" accept=${PICTURE_TYPES.join(",")} multiple hidden onChange=${(e) => { addPictures([...e.currentTarget.files]); e.currentTarget.value = ""; }} />
     </div>
+    <${CornerFoot} large=${true} who=${who?.head ? { heads: [who.head], word: address.name } : null} whoSlot=${who?.head ? "" : SLOT_WHO} muchSlot=${SLOT_MUCH} />
   </div>`;
 }
 

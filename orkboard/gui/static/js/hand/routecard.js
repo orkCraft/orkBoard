@@ -136,7 +136,7 @@ function Steps({ s, v, busy, send }) {
     ${menu && html`<div class="hand-route__menu" role="menu" aria-label="Add a party to the route">${more.map(({ g, touches }) => html`<button type="button" key=${g.slug} role="menuitem" class="ork-btn hand-route__pick"
         data-party=${g.slug} data-touches=${touches ? "1" : undefined} onClick=${() => add(g.slug)}>
         ${g.leader?.head && html`<${Head} race=${g.leader.head.race} tier=${g.leader.head.tier} />`}<span class="hand-route__pick-name">${nameOf(g)}</span>${touches && html`<span class="hand-route__touches">touches its map</span>`}</button>`)}</div>`}
-    ${seat && seatOf && step && html`<div class="hand-route__pop"><${SeatPop} g=${seatOf} slug=${step.leader} from=${null} onClose=${() => setSeat("")} /></div>`}
+    ${seat && seatOf && step && html`<div class="hand-route__pop"><${SeatPop} g=${seatOf} slug=${step.leader} from=${null} keep=".table-seat, .hand-route__head" onClose=${() => setSeat("")} /></div>`}
   </div>`;
 }
 

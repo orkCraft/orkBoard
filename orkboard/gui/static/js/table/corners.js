@@ -37,19 +37,19 @@ export function muchOf({ asks = false, done = false, took = NaN, left = NaN, wor
 }
 
 /** The top row: the goal's rune at the left (`rune`: Elem's props), the kind's sign at the right (`kind`: a sign's name) in the `signal`'s colour (`alert`, `danger`, `success`, else the muted ink). */
-export function CornerTop({ rune = null, kind = "", signal = "" }) {
-  return html`<span class="corner corner--top">
-    <span class="corner__rune">${rune && html`<${Elem} ...${rune} />`}</span>
-    <span class=${cls("corner__kind", signal && `is-${signal}`)}>${kind && !kind.startsWith("tool:") && html`<${Sign} name=${kind} />`}</span>
+export function CornerTop({ rune = null, kind = "", signal = "", name = "", word = "", large = false, slot = "", kindSlot = "", kindClass = "" }) {
+  return html`<span class=${cls("corner corner--top", large && "corner--large")}>
+    <span class="corner__rune">${slot ? html`<span class="corner__slot" data-slot="rune">${slot}</span>` : rune && html`<${Elem} ...${rune} />`}${name && html`<span class="corner__name" title=${name}>${name}</span>`}</span>
+    <span class=${cls("corner__kind", signal && `is-${signal}`)}>${kindSlot ? html`<span class="corner__slot" data-slot="kind">${kindSlot}</span>` : html`${word && html`<span class=${cls("corner__word", kindClass)}>${word}</span>`}${kind && !kind.startsWith("tool:") && html`<${Sign} name=${kind} />`}`}</span>
   </span>`;
 }
 
 /** The bottom row (a gem whose `much.share` is false is a price in dollars, not a share of a window: spec 147 C): who at the left (`who`: `{ heads: [head…], word }`, one to three heads at 16 px and an optional word), how much at the right (`much`: `muchOf`'s; `ask`: it waits for you, the figure is then *asks you* in the alert). */
-export function CornerFoot({ who = null, much = null, ask = false }) {
+export function CornerFoot({ who = null, much = null, ask = false, large = false, whoSlot = "", muchSlot = "" }) {
   const figure = ask ? { kind: "ask", text: ASKS } : much, heads = (who?.heads || []).filter(Boolean).slice(0, 3);
-  return html`<span class="corner corner--foot">
-    <span class="corner__who" title=${heads.map(headWords).join(", ") || undefined}>${heads.map((h, i) => html`<${Head} key=${i} race=${h.race} tier=${h.tier} />`)}${who?.word && html`<span class="corner__word">${who.word}</span>`}</span>
-    ${figure && (figure.kind === "gem"
+  return html`<span class=${cls("corner corner--foot", large && "corner--large")}>
+    ${whoSlot ? html`<span class="corner__slot" data-slot="who">${whoSlot}</span>` : html`<span class="corner__who" title=${heads.map(headWords).join(", ") || undefined}>${heads.map((h, i) => html`<${Head} key=${i} race=${h.race} tier=${h.tier} />`)}${who?.word && html`<span class="corner__word">${who.word}</span>`}</span>`}
+    ${muchSlot ? html`<span class="corner__slot" data-slot="much">${muchSlot}</span>` : figure && (figure.kind === "gem"
       ? html`<span class="corner__much"><span class=${figure.share === false ? "ork-gem" : "ork-gem share"} data-cost=${figure.text}>${figure.text}</span></span>`
       : html`<span class=${cls("corner__much", figure.kind === "ask" && "is-ask")} data-much=${figure.kind}>${figure.text}</span>`)}
   </span>`;

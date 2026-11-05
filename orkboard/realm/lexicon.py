@@ -321,7 +321,14 @@ TERMS: tuple[Term, ...] = (
     _t("column_reading", "reading"),                                # the goal the Orkmaster or its leaders are on, under *In analysis*
     _t("next_in", "next in"),                                       # the next to start by itself and the time left, under *To review*
     _t("next_at", "next at"),                                       # the same for a spec that waits for its look: the clock time it starts at
-    _t("look_wait", "Give me time to look"),                     # Settings: the wait of every spec made before its plan is passed by itself, 30 min · 2 h · until tonight · do not wait (spec 144 B, decisions §225.1)
+    # the opened card and a new goal's card (spec 147 D, spec 148 B.6, decisions §251.2, §252.4; hand/openwords.js): the empty corners say what will stand there, the window what to drop on it, the foot who asks
+    _t("slot_rune", "the rune: given when it is laid"),            # a new goal's top left, dashed until the goal is laid
+    _t("slot_who", "who: the Orkmaster routes it"),                 # its bottom left, until the party is known
+    _t("slot_much", "how much: after its estimate"),                # its bottom right, until the goal is estimated
+    _t("attach_hint", "Drop pictures or files here, or paste a picture"),     # a new goal's window while nothing is attached
+    _t("opened_leader", "leader"),                                  # the opened card's foot: *the Tech leader asks*
+    _t("opened_asks", "asks"),                                      # the same, and *the Orkmaster asks*
+    _t("look_wait", "Give me time to look"),                    # Settings: the wait of every spec made before its plan is passed by itself, 30 min · 2 h · until tonight · do not wait (spec 144 B, decisions §225.1)
     _t("my_hours", "When I am at the computer"),                  # Settings: the person's days and hours (spec 138 B.1, decisions §245.5); empty, nothing changes
     _t("not_before", "not before"),                                # a goal put off, on its row: *not before 14:05* (spec 138 B.5, decisions §245.4)
     _t("work_goes_on", "the work goes on at"),                     # a goal at work held by a spent window, on its row: *the work goes on at 14:00* (spec 138 B.5)

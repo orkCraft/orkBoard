@@ -49,17 +49,21 @@ function place(g, b, extra = "") {
   g.style.cssText = `position:fixed;left:${b.left}px;top:${b.top}px;width:${b.width}px;height:${b.height}px;margin:0;z-index:90;pointer-events:none;transform-origin:0 0;${extra}`;
 }
 
-const GROW = 2.8, SHOWN = 330, NARROW = "(max-width: 759.98px)";   // the field is about 2.8 times the + card's width; so much of it shows above the window's edge (spec 128 A.1)
+const WHOLE = 404, NARROW = "(max-width: 759.98px)";   // the opened card's and the field's width (spec 147 D, decisions §251.1): 404 px, 5 : 7
 
-/** Where the field lies (wide width, `.hand-field` not in the pane's middle): its left edge on the + card's (its layout box, not the turned box), its width 2.8 times the card's; hand.css puts its top `SHOWN` px above the window's foot, so its foot goes under the edge.
+/** Where the field lies (wide width, `.hand-field` not in the pane's middle): its left edge on the + card's (its layout box, not the turned box), its width 404 px, 5 : 7; its top is set (`--hf-top`) so that the card stands whole on the hand, its foot's corners in view (spec 147 D.2).
  *  The phone's width keeps the field as wide as the screen (hand.css); a + card out of view leaves the field where hand.css lays it. */
 export function placeField(el) {
   if (!el) return;
-  const plus = document.querySelector(".hand .hand-plus"), box = boxIn(plus);
-  if (!box || (typeof matchMedia === "function" && matchMedia(NARROW).matches)) { el.style.removeProperty("--hf-left"); el.style.removeProperty("--hf-w"); return; }
-  const w = Math.min(plus.offsetWidth * GROW, innerWidth - 16), left = Math.max(8, Math.min(box.left + box.width / 2 - plus.offsetWidth / 2, innerWidth - w - 8));
-  el.style.setProperty("--hf-left", `${left}px`);
-  el.style.setProperty("--hf-w", `${w}px`);
+  const plus = document.querySelector(".hand .hand-plus"), box = boxIn(plus), narrow = typeof matchMedia === "function" && matchMedia(NARROW).matches;
+  if (!box || narrow) { el.style.removeProperty("--hf-left"); el.style.removeProperty("--hf-w"); }
+  else {
+    const w = Math.min(WHOLE, innerWidth - 16), left = Math.max(8, Math.min(box.left + box.width / 2 - plus.offsetWidth / 2, innerWidth - w - 8));
+    el.style.setProperty("--hf-left", `${left}px`);
+    el.style.setProperty("--hf-w", `${w}px`);
+  }
+  const hand = narrow ? null : document.querySelector(".hand"), top = hand ? Math.max(8, hand.getBoundingClientRect().top - el.offsetHeight - 8) : NaN;       // the card stands whole on the hand (spec 147 D.2): its foot's corners show, as the opened card's do
+  if (Number.isFinite(top)) el.style.setProperty("--hf-top", `${top}px`); else el.style.removeProperty("--hf-top");
 }
 
 /** A turn about the vertical line through the middle of a box `w` wide (the box grows from its corner, so the turn's own pivot is moved to its middle). */

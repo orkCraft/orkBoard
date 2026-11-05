@@ -20,6 +20,7 @@ import { ConcernsBack } from "./concerns.js";                       // a marked 
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
 import { Pips, StepsList, StepsWindow, WaitingWindow, FailedWindow, labelWords, countWords, showsSteps, stepsOf, seatWords } from "./steps.js";       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
 import { CornerTop, CornerFoot, muchOf, secondsBetween } from "./corners.js";                 // a card is read by its four corners (spec 147 A, decisions §251)
+import { CardWindow, windowOf } from "./cardwindow.js";                // a window never empty: the goal's picture, else words (spec 148)
 import { MadeWindow, madeOf } from "./made.js";                           // what a task done or at Review made, by its craft (spec 142 D)
 import { BackFace, Turning, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
 import { movesOn } from "./lit.js";                                  // a rune glows only on the goal that moves: the one picked, else the first at work (spec 140 C3)
@@ -69,6 +70,10 @@ function TaskWin({ n, t, st, alive }) {
   else if (st) { inside = html`<${StepsWindow} st=${st} head=${t.head} element=${n.hue || n.element} alive=${alive} />`; kind = "steps"; }
   else if (doing && AT_WORK.includes(stageOf(t))) { inside = html`<${StepsWindow} st=${{ items: [], now: -1, done: 0, total: 0, source: "activity", doing }} head=${t.head} alive=${alive} />`; kind = "steps"; }
   else if (t.state === "waiting" || t.state === "ready") { inside = html`<${WaitingWindow} head=${t.head} />`; kind = inside ? "wait" : "sign"; }
+  if (!inside) {                                                                      // where it would draw the type's sign alone: the goal's picture, else the task's words (spec 148 B.4, decisions §252.3)
+    const words = t.short && t.short !== t.title ? t.title : "";
+    if (windowOf({ picture: n.picture, words }).kind !== "none") return html`<${CardWindow} of=${{ picture: n.picture, words, name: n.title }} />`;
+  }
   return html`<span class=${cls("table-card__win is-window", `is-${typeTone(n)}`, { "is-danger": kind === "fail" })} data-window=${kind}>${inside || (sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`))}</span>`;
 }
 
