@@ -25,6 +25,9 @@ confirms it with one button, and it is committed, numbered, to the project's dec
   kept in `decision.changes`, written as the body's first line `Changes: 110, 183.` in the one file, as MADR's `ork-changes: [110, 183]` in a folder (a Nygard record: that line at the top of its
   Decision), and said in the project's journal's line (` (changes 110, 183)`). `decisions_log.headings` says ` (changed by 205)` of the headings a later entry changes. A project with no log at all
   gets the MADR folder `docs/decisions` (`decisions_log.path`).
+- **A conflict** (spec 150 E1.1, decisions §254.6): beside `changes` the call says `conflicts: [{number, point}]` (at most two, the point one line of `CARD_LINE_CHARS`): a standing decision from the slices it was given that this one goes
+  against. Kept on `decision.conflicts` (`realm/decision_conflicts.py`: each `{number, point, answer}`, `answer` "" while it waits). `confirm` refuses, in plain words, while one has no answer, and no wait for the leaders begins;
+  `ideas.conflict` (gui/ideas_conflict.py) answers it. A decision worded again keeps each conflict the person answered answered.
 - **The leaders' slices** (spec 131 §A, decisions §233): the decision's call is given, after the journals, *What the leaders hold that this goal touches* (`slices_touched`: the standing slices of the route's parties and of those
   whose map a mark of the goal names) and a rule to say in a point, and name in `changes`, where the goal goes against one; `clean_decision` knows the slices' decisions as well as the last ten headings. `_enter` begins the
   decision's cut once the entry is written (`slices_cut`, core/idea_slices.py), wrapped so that a failure never fails Confirm. The trigger is `_enter`'s and not `write_decision`'s: a cascade writes through the latter (spec 131 B).
@@ -41,9 +44,9 @@ from pathlib import Path
 
 from orkboard import brand
 from orkboard.core import idea_journal
-from orkboard.realm import decisions_log, doc_formats, event_log, idea_objections, idea_questions, idea_ripe, idea_target, ideas, orkmaster, spec_sections
+from orkboard.realm import decision_conflicts, decisions_log, doc_formats, event_log, idea_objections, idea_questions, idea_ripe, idea_target, ideas, lexicon, orkmaster, spec_sections
 from orkboard.realm.idea_talk_parse import total
-from orkboard.realm.idea_words import CARD_RULE
+from orkboard.realm.idea_words import CARD_LINE_CHARS, CARD_RULE
 from orkboard.realm import journal_notes
 
 TITLE_CHARS, WHY_CHARS, POINT_CHARS, BODY_CHARS = 120, 700, 300, 6000
@@ -94,7 +97,8 @@ def clean_decision(answer: object, known: object = ()) -> dict | None:
     if not title or not why or len(points) < POINTS[0]:
         return None
     changes = clean_changes(answer.get("changes"), known)
-    return {"title": title, "why": why, "points": list(dict.fromkeys(points))[:POINTS[1]], **({"changes": changes} if changes else {})}
+    conflicts = decision_conflicts.clean(answer.get("conflicts"), known)               # spec 150 E1.1: the standing decisions this one goes against, as data
+    return {"title": title, "why": why, "points": list(dict.fromkeys(points))[:POINTS[1]], **({"changes": changes} if changes else {}), **({"conflicts": conflicts} if conflicts else {})}
 
 
 def body_of(why: str, points: list[str]) -> str:
@@ -225,7 +229,8 @@ class DecideMixin:
             parts.append(("What the leaders hold that this goal touches", held))
         parts.append(("The project's decisions file", decisions_log.context(base, None, self._chosen())))
         context = idea_target.cut(parts, idea_target.CONTEXT["decide"])
-        held_rule = ("\n- Where the goal goes against a line under *What the leaders hold that this goal touches*, say so in a point and put that decision's number in `changes`.") if held else ""
+        held_rule = ("\n- Where the goal goes against a line under *What the leaders hold that this goal touches*, say so in a point and put that decision's number in `changes`."
+                     f"\n- `conflicts`: for each such decision ({decision_conflicts.CONFLICTS_MAX} at most), its `number` and the `point` in conflict in one line ({CARD_LINE_CHARS} characters at most); [] when the goal goes against none.") if held else ""
         overruled_rule = ("\n- Each line under *Leaders the person overruled, and those who doubted* is a point of its own, word for word: the person went on against that leader's no "
                           "(or the leader doubted), and the entry says so.") if over or doubts else ""
         again_rule = ("\n- This decision is worded already (*The decision as it is worded now*): answer the whole decision again, keeping what still holds and changing only what the goal's "
@@ -243,7 +248,7 @@ words above say; invent nothing.{overruled_rule}{again_rule}
 - `changes`: the numbers of the earlier decisions this one changes or replaces, from the decisions file's headings above (at most {CHANGES_MAX}); [] when none.{held_rule}
 
 Answer with one JSON object and nothing else:
-{{"title": "…", "why": "…", "points": ["…", "…"], "changes": []}}"""
+{{"title": "…", "why": "…", "points": ["…", "…"], "changes": []{', "conflicts": [{"number": 0, "point": "…"}]' if held else ''}}}"""
 
     def decision_run(self, slug: str, after: list) -> None:
         """The decision's call, on this thread. A call that cannot be had (an answer that is no decision, a tool that fails) is worded by code from what Talk kept; a stop puts
@@ -276,11 +281,12 @@ Answer with one JSON object and nothing else:
         with ideas.LOCK:
             way = spec_sections.record(self.state_dir, slug)
             way["decision"] = {"title": got["title"], "text": body_of(got["why"], got["points"]), "number": number, "confirmed": False, "by": by,
-                               "changes": got.get("changes") or [], "at": dt.datetime.now().isoformat(timespec="seconds")}
+                               "changes": got.get("changes") or [], "conflicts": decision_conflicts.carry(None, got.get("conflicts") or []),
+                               "at": dt.datetime.now().isoformat(timespec="seconds")}
             spec_sections.save_record(self.state_dir, slug, way)
             ideas.save_state(self.state_dir, slug, state="decided", error="", **({"measure": total("decide", [measure])} if measure else {}))
         ideas.add_turn(self.state_dir, slug, "keeper", f"Decision {number}: {got['title']}", "Decided")
-        self.ripe_begin(slug)                                                              # the leaders all agreed: the wait before it starts by itself (spec 120 §3.5)
+        self.ripe_begin(slug)                                                             # the leaders all agreed: the wait before it starts by itself (spec 120 §3.5)
 
     # -- worded again (spec 132 A) ----------------------------------------------------------------------------------------------------------
 
@@ -331,8 +337,11 @@ Answer with one JSON object and nothing else:
             now = way.get("decision") if isinstance(way.get("decision"), dict) else None
             if now is None or now.get("confirmed"):                                       # confirmed meanwhile: nothing is written over it
                 return
+            conflicts = decision_conflicts.carry(now, got.get("conflicts") or [])         # a conflict the person answered stays answered (spec 150 E1.3): the same one is never asked twice
+            changes = [n for n in got.get("changes") or [] if all(not (c["number"] == n and c["answer"] == "keep") for c in decision_conflicts.kept(now))]      # *Keep §N*: §N is not changed
+            changes += [c["number"] for c in decision_conflicts.kept(now) if c["answer"] == "replace" and c["number"] not in changes]     # *The new one replaces §N*: it stays
             way["decision"] = {**now, "title": got["title"], "text": body_of(got["why"], got["points"]), "number": decisions_log.next_number(self._log_text()), "by": "orkmaster",
-                               "changes": got.get("changes") or [], "at": dt.datetime.now().isoformat(timespec="seconds")}
+                               "changes": changes[:CHANGES_MAX], "conflicts": conflicts, "at": dt.datetime.now().isoformat(timespec="seconds")}
             spec_sections.save_record(self.state_dir, slug, way)
             ideas.save_state(self.state_dir, slug, error="", **({"measure": total("decide", [measure])} if measure else {}))
         ideas.add_turn(self.state_dir, slug, "keeper", f"Decision {way['decision']['number']} worded again: {got['title']}", "Decided")
@@ -354,6 +363,8 @@ Answer with one JSON object and nothing else:
         if ideas.state(self.state_dir, slug)["state"] != "decided" or d is None:
             raise kw.KeeperError("This goal has no decision to confirm now")
         if not d.get("confirmed"):
+            if left := decision_conflicts.open_of(d):        # spec 150 E1.1: a decision that goes against a standing one is not confirmed until each conflict is answered
+                raise kw.KeeperError(f"{lexicon.term('goes_against').replace('<n>', str(left[0]['number']))}: answer it first")
             if why := self._may_run():                       # the sections follow at once: nothing is written that they could not follow
                 raise kw.KeeperError(why)
             if self.busy(slug):

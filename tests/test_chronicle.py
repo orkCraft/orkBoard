@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import chronicle, chronicle_decisions, chronicle_find, chronicle_versions, idea_flag, ideas, living_specs, spec_sections
+from orkboard.realm import chronicle, chronicle_decisions, chronicle_find, chronicle_versions, idea_element, idea_flag, ideas, living_specs, spec_sections
 from tests.test_commit_goal import git, repo, state  # noqa: F401  (the fixture)
 
 
@@ -246,3 +246,45 @@ def test_unreleased_finds_are_kept_apart(repo, pages):
     late = through(pages, repo, "Late purple", "2026-10-25")
     got = chronicle_find.find(state(repo), pages, repo, LOG, "late")
     assert got["chapters"] == [] and [g["idea"] for g in got["unreleased"]["goals"]] == [late]
+
+
+# -- by party (spec 150 E1.4) ---------------------------------------------------------------------------------------------------------------
+
+def test_a_decision_is_a_partys_when_it_holds_a_slice_of_it_standing_or_replaced(repo):
+    from orkboard.realm import slices
+    st = state(repo)
+    old, _tech = slices.add_cut(st, 1, {"design": {"says": "Purple.", "points": ["1"]}, "tech": {"says": "One build.", "points": ["1"]}})
+    slices.add_cut(st, 2, {"design": {"says": "Green.", "points": ["2"], "replaces": [old["id"]]}, "art": None})
+    assert chronicle_decisions.parties(st) == {1: ["design", "tech"], 2: ["design"]}
+    assert chronicle_decisions.parties(state(repo) / "none") == {}
+
+
+def test_the_first_line_of_an_entrys_why():
+    assert chronicle_decisions.why_line("Changes: 1.\n\nWhy: People read faster than we thought.\n\n1. One") == "People read faster than we thought."
+    assert chronicle_decisions.why_line("Why:\nOn the next line.\n\n1. One") == "On the next line."
+    assert chronicle_decisions.why_line("Changes: 1.\n\nNo why here.") == "No why here."
+    assert chronicle_decisions.why_line("Why: " + "w" * 300, 20) == "w" * 19 + "…" and chronicle_decisions.why_line("") == ""
+
+
+def test_last_gives_the_newest_decisions_of_a_party_with_their_goals_element_and_version(pages, repo):
+    from orkboard.realm import slices
+    st = state(repo)
+    tag(repo, "v0.1", "2026-10-05")
+    through(pages, repo, "Two", "2026-10-11", 2)
+    slices.add_cut(st, 1, {"design": {"says": "One.", "points": ["1"]}})
+    slices.add_cut(st, 2, {"design": {"says": "Two.", "points": ["2"]}})
+    slices.add_cut(st, 4, {"tech": {"says": "Four.", "points": ["4"]}})
+    got = chronicle.last(st, pages, repo, LOG, "design", 3)
+    assert [(d["number"], d["parties"], d["version"], d["kind"]) for d in got] == [(2, ["design"], "", "decision"), (1, ["design"], "v0.1", "decision")]      # decision 2 is after v0.1: not out yet
+    assert got[0]["title"] == "Second" and got[0]["at"] == "2026-10-10" and got[0]["element"] == idea_element.of(st, "two")
+    assert [d["number"] for d in chronicle.last(st, pages, repo, LOG, "tech", 3)] == [4]
+    assert [d["number"] for d in chronicle.last(st, pages, repo, LOG, "", 2)] == [4, 3]
+    assert chronicle.last(st, pages, repo, LOG, "design", 0) == chronicle.last(st, pages, repo, LOG, "design", 3)
+
+
+def test_goals_by_party_are_those_whose_route_held_it(pages, repo):
+    a = through(pages, repo, "Routed", "2026-10-05")
+    b = through(pages, repo, "Not routed", "2026-10-06")
+    ideas.save_state(state(repo), a, route=[{"party": "design"}])
+    assert [g["idea"] for g in chronicle.goals(state(repo), pages, "design")] == [a] and {g["idea"] for g in chronicle.goals(state(repo), pages)} == {a, b}
+    assert [g["idea"] for g in chronicle.goals(state(repo), pages, "general")] == [a, b]            # the party a goal lies in held it too

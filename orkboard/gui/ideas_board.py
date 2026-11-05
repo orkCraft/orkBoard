@@ -191,7 +191,7 @@ class BoardMixin:
 
     def _idea_needs(self, i: dict, st: dict, plan: dict | None, asks: list[str], root) -> list[dict]:
         """What of one idea needs the person (§10): realm/board_map.py, which the Map reads too; and the picks that wait (spec 51)."""
-        return board_map.idea_needs(root, self.state_dir, i, st, plan, asks) + self.pick_rows(i, plan)
+        return board_map.idea_needs(root, self.state_dir, i, st, plan, asks, log=self.keeper._log_text) + self.pick_rows(i, plan)
 
     def seen(self, args: dict) -> dict:
         """`{idea}` (spec 98 §2.2): a done goal's result opened from the discard. Its `seen_at` is kept (the first time), and the goal
@@ -543,9 +543,10 @@ class BoardMixin:
 def sort_needs(needs: list[dict]) -> list[dict]:
     """What blocks work in progress first, then the priority, then the oldest; proposals last (§10), Operations' rules
     proposals with them (spec 38 §8). A plan change (spec 62 §4.2) sits as a plan does: it blocks nothing and is not last. A
-    judged pitch (spec 65 §5) comes after the goals' own, before the proposals."""
+    judged pitch (spec 65 §5) comes after the goals' own, before the proposals. A conflict (spec 150 E1.2) sits where its goal's
+    `decision` does, and before it."""
     def key(n: dict) -> tuple:
         prio = n.get("priority") if n.get("priority") in ideas.PRIORITIES else "normal"
         last = 2 if n["kind"] in ("proposal", "op_rules", "party", "project_q", "hypothesis", "quality", "finding", "cascade", "groups") else 1 if n["kind"] == "pitch" else 0
-        return last, not n.get("blocks"), ideas.PRIORITIES.index(prio), str(n.get("at") or "")
+        return last, not n.get("blocks"), ideas.PRIORITIES.index(prio), str(n.get("at") or ""), n["kind"] != "conflict"
     return sorted(needs, key=key)

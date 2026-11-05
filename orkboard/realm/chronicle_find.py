@@ -1,6 +1,6 @@
 """The chronicle's search (docs/specs/134-release-keeps-the-chronicle.md A.6, decisions §238.3): over the goals' titles, the decisions and the sections. No model, nothing written.
 
-    chronicle_find.find(state_dir, pages, repo, log, query)
+    chronicle_find.find(state_dir, pages, repo, log, query, party="")      # `party` (spec 150 E1.4): the search over that party's past only
         # {query, found, more, chapters: [{id, kind, name, day, goals: [{idea, title, in}], decisions: [{number, title, day, in}]}], unreleased: {goals, decisions} | None}
 
 The query is cut at `QUERY_MAX` and split in at most `WORDS_MAX` words (lower case); an item is found when **every** word is in its text. A goal's text is its title, its spec (every section's parts)
@@ -43,13 +43,13 @@ def _goal(want: list[str], pages: Path, g: dict, decisions: dict) -> dict | None
     return {"idea": g["idea"], "title": g["title"], "in": [k for k, v in parts.items() if any(w in v.lower() for w in want)]}
 
 
-def find(state_dir: Path, pages: Path, repo: Path, log: "str | Path", query: object) -> dict:
+def find(state_dir: Path, pages: Path, repo: Path, log: "str | Path", query: object, party: str = "") -> dict:
     """See the module."""
     want = words(query)
     out = {"query": " ".join(want), "found": 0, "more": 0, "chapters": [], "unreleased": None}
     if not want:
         return out
-    got = chronicle.read(state_dir, pages, repo, log, text=True)
+    got = chronicle.read(state_dir, pages, repo, log, text=True, party=party)
     left = FIND_MAX
     seen = 0
 

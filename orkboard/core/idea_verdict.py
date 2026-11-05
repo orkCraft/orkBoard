@@ -30,7 +30,7 @@ from typing import Any
 from orkboard.core import idea_cascade
 from orkboard.core import idea_journal
 from orkboard.core import idea_slices
-from orkboard.realm import event_log, goal_route, goal_team, harness_claude, idea_objections, idea_questions, idea_ripe, idea_target, ideas, project_facts
+from orkboard.realm import decision_conflicts, event_log, goal_route, goal_team, harness_claude, idea_objections, idea_questions, idea_ripe, idea_target, ideas, project_facts, spec_sections
 from orkboard.realm.idea_talk_parse import LINE, MAX_CARDS, clean_judgement, pick_three, said_lines, total
 
 STAGGER, STAGGER_S = False, 4.0          # spec 120 §5.2: the first leader goes alone for this long (or until it ends), then the rest; off until the numbers say the shared prefix is written again
@@ -339,6 +339,8 @@ Answer with one JSON object and nothing else:
         rec = idea_questions.record(self.state_dir, slug)
         idea_ripe.drop(self.state_dir, slug)                           # a decision worded again begins its wait again, or none
         if rec.get("mode") != "talk":
+            return
+        if decision_conflicts.open_of(spec_sections.record(self.state_dir, slug).get("decision")):      # a conflict waits for the person (spec 150 E1.1): nothing starts by itself
             return
         stances = [s for s in rec.get("stances") or [] if isinstance(s, dict)]
         if idea_ripe.outcome(rec, any(s.get("craft") == "product" for s in stances)) != "agreed":

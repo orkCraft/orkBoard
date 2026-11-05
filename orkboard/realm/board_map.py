@@ -14,11 +14,11 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (board_back, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
-from orkboard.realm.idea_words import short_of
+from orkboard.realm.idea_words import CARD_LINE_CHARS, short_of
 
-NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change", "spec_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
+NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "conflict", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change", "spec_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 SIGN_IN_TOOL = "claude"          # what the Board runs by itself runs on Claude (core/idea_runner.py `HARNESS`)
@@ -79,11 +79,31 @@ def talk_rows(state_dir: Path, slug: str) -> list[dict]:
              "questions": cards, "text": cards[0]["q"]}]
 
 
-def way_rows(state_dir: Path, slug: str, st: dict) -> list[dict]:
+def conflict_rows(decision: dict, log: Any) -> list[dict]:
+    """The `conflict` rows of a decision worded (spec 150 E1.2, decisions §254.6): one for each conflict not answered, `{kind: "conflict", number, point, title_then, why_then, text}` — the earlier
+    decision's title and the first line of its *Why*, read from the decisions log (`log`: its text, the folder of ADR files, or a function that gives either; none, and they are empty)."""
+    left = decision_conflicts.open_of(decision)
+    if not left:
+        return []
+    try:
+        text = log() if callable(log) else log
+        by = {r["number"]: r for r in chronicle_decisions.read(text or "", True)}
+    except Exception:
+        by = {}
+    out = []
+    for c in left:
+        then = by.get(c["number"]) or {}
+        out.append({"kind": "conflict", "number": c["number"], "point": c["point"], "title_then": str(then.get("title") or ""),
+                    "why_then": chronicle_decisions.why_line(then.get("text"), CARD_LINE_CHARS), "text": c["point"]})
+    return out
+
+
+def way_rows(state_dir: Path, slug: str, st: dict, log: Any = None) -> list[dict]:
     """The Needs you rows of a goal after Talk (spec 99 §6–§7; core/idea_decide.py and core/idea_sections.py keep what they show, `spec_sections.record`):
 
-        {kind: "decision", number, title, text, confirmed, error}              # the Orkmaster's wording of what was decided, for *Confirm and start*; `confirmed` with an `error`:
+        {kind: "decision", number, title, text, confirmed, error, conflicted}              # the Orkmaster's wording of what was decided, for *Confirm and start*; `confirmed` with an `error`:
                                                                               #   the entry is in the file and the sections failed (*Confirm and start* asks them again)
+        {kind: "conflict", number, point, title_then, why_then, text}         # before its decision, one for each standing decision it goes against and the person has not answered (spec 150 E1.2)
         {kind: "fork", id, about, sides: [{party, leader, says, why}], text, hearing}   # what two sections disagree on, the first fork open; answered by a side or the person's words;
                                                                                  #   `hearing`: its sides as a hearing has them (`idea_hearing.of_fork`: right, left, up)
 
@@ -91,8 +111,9 @@ def way_rows(state_dir: Path, slug: str, st: dict) -> list[dict]:
     way = spec_sections.record(state_dir, slug)
     d = way.get("decision") if isinstance(way.get("decision"), dict) else None
     if st["state"] == "decided" and d:
-        return [{"kind": "decision", "number": int(d.get("number") or 0), "title": str(d.get("title") or ""), "text": str(d.get("text") or ""),
-                 "confirmed": bool(d.get("confirmed")), "error": str(st.get("error") or "")}]
+        return [*([] if d.get("confirmed") else conflict_rows(d, log)), {"kind": "decision", "number": int(d.get("number") or 0), "title": str(d.get("title") or ""), "text": str(d.get("text") or ""),
+                 "confirmed": bool(d.get("confirmed")), "error": str(st.get("error") or ""),
+                  "conflicted": bool(decision_conflicts.open_of(d)) and not d.get("confirmed")}]
     if st["state"] == "sections":
         f = next((f for f in way.get("forks") or [] if isinstance(f, dict) and f.get("status") == "open"), None)
         if f:
@@ -102,10 +123,11 @@ def way_rows(state_dir: Path, slug: str, st: dict) -> list[dict]:
 
 
 def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str], at: str | None = None, *,
-               line: dict | None = None, settings: dict | None = None) -> list[dict]:
+               line: dict | None = None, settings: dict | None = None, log: Any = None) -> list[dict]:
     """What of one idea needs the person (spec 35 §10): its route (spec 99 §4) and the step added to it after Talk, its questions, its plan waiting, the leader's plan change waiting (spec 62),
     a to-do only when it blocks (spec 87 §4.1), a failure, a proposal; a judged pitch (spec 65 §5: low, blocking nothing, its answer). `line`: what the
-    route rows of one Board share (`goal_route.context`: the Orkmaster's line and whether the limits run low); `settings`: the Board's, for the Target of a cost."""
+    route rows of one Board share (`goal_route.context`: the Orkmaster's line and whether the limits run low); `settings`: the Board's, for the Target of a cost;
+    `log`: the decisions log (its text, the folder, or a function that gives either), read only for a `conflict` row."""
     slug, state = i["slug"], st["state"]
     base = {"idea": slug, "goal": i["track"], "title": i["title"], "priority": i["priority"], "blocks": False,
             "at": ideas.touched_at(root, state_dir, slug) if at is None else at}
@@ -116,7 +138,7 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
         out += [{**base, **n} for n in talk_rows(state_dir, slug)]
         out += [{**base, **n} for n in idea_objections.open_rows(root, state_dir, slug, idea_questions.record(state_dir, slug))]      # a goal's hearing, before the decision (spec 120 §4.4; a leader's no was a row of its own: spec 108 §4.3)
     if state in ("decided", "sections"):
-        out += [{**base, **n} for n in way_rows(state_dir, slug, st)]
+        out += [{**base, **n} for n in way_rows(state_dir, slug, st, log)]
     if state == "asks":
         looks = st.get("asks_look") if isinstance(st.get("asks_look"), int) and not isinstance(st.get("asks_look"), bool) else 0
         asked = [{**idea_questions.parse(q), "look": n < looks} for n, q in enumerate(asks[:5])]          # the first ones are of the look (spec 85 §1)

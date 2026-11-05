@@ -271,6 +271,10 @@ TERMS: tuple[Term, ...] = (
     _t("stopped_at_price", "Stopped at its price"),                # … or at the price it may spend, 2 % of the main tool's week
     _t("agree_line", "<A> and <B> agree"),                         # the card's one line when no leader disagreed: *Tech and Art agree* (decisions §237.6)
     _t("answer_the_fork_first", "Answer the fork first"),          # what Confirm says while a leader's disagreement has no answer
+    _t("goes_against", "Goes against §<n>"),                       # a conflict's line: the goal's decision goes against a standing decision, the point in conflict beside it (spec 150 E1, decisions §254.6)
+    _t("new_one_replaces", "The new one replaces §<n>"),           # … its first choice: the decision says it changes §N, and its slices replace §N's (§233.2)
+    _t("keep_decision", "Keep §<n>"),                              # … its second: the goal is talked again within §N
+    _t("conflict_other", "Other…"),                                # … its third: the person's own words, the decision worded again with them
     _t("aspect", "aspect", "aspects"),                            # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
     _t("play_mark", "mark", "marks"),                              # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)
