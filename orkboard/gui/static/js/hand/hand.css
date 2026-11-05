@@ -118,10 +118,10 @@
 
 /* the field the + card grows into */
 /* the field is a card (spec 120 §6.1, decisions §198.1): the + card turned over and grown, 5 : 7 at the wide width, its rune large at its top left where a card's element stands, the text its body, Send at its foot; the screen's width less the gutters on a phone */
-/* spec 128 A.1, decisions §206.1: at the wide width the field lies where the + card lay: its left edge on the card's and its width 2.8 times the card's (fieldturn.js `placeField` sets `--hf-left` and `--hf-w`), its top 330 px above the window's foot, so its foot goes under the edge */
-.hand .hand-field { position: fixed; left: var(--hf-left, max(var(--ork-4), calc(50% - 202px))); top: calc(100dvh - 330px); margin: 0; z-index: 50; display: flex; flex-direction: column; gap: var(--ork-3); box-sizing: border-box; width: var(--hf-w, min(404px, calc(100% - var(--ork-8)))); aspect-ratio: 5 / 7;
-  padding: var(--ork-4); background: var(--ork-raised); border-color: var(--ork-action); }
-.hand .hand-field.is-middle { position: relative; left: auto; top: auto; width: min(300px, 100%); pointer-events: auto; }
+/* spec 128 A.1, decisions §206.1, spec 147 D.2: at the wide width the field lies where the + card lay: its left edge on the card's and its width 404 px (fieldturn.js `placeField` sets `--hf-left`, `--hf-w` and `--hf-top`), whole over the hand, its foot's corners in view; its parts are in openedcard.css */
+.hand .hand-field { position: fixed; left: var(--hf-left, max(var(--ork-4), calc(50% - 202px))); top: var(--hf-top, 8px); margin: 0; z-index: 50; display: flex; flex-direction: column; gap: var(--ork-4); box-sizing: border-box; width: var(--hf-w, min(404px, calc(100% - var(--ork-8)))); aspect-ratio: 5 / 7;
+  padding: var(--ork-5); background: var(--ork-raised); border-color: var(--ork-action); }
+.hand .hand-field.is-middle { position: relative; left: auto; top: auto; width: min(404px, 100%); height: min(566px, 100%); aspect-ratio: auto; pointer-events: auto; }
 .hand-field__top { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-3); min-width: 0; }
 .hand-field__top .hand-field__chips { flex: 1 1 120px; min-width: 0; align-self: center; }
 /* the + card lies under the field while it is open (it is hidden, not gone: the field grows out of its box and turns back into it) */

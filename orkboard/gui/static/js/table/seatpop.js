@@ -76,7 +76,8 @@ export function SeatDraft({ v, slug, tools, hand, onChange, onClose, from }) {
 /** *Novice · does*: the seat's tier and its role, and no word of a race (docs/specs/100-a-goals-way-as-cards.md §0). */
 const tierWords = (m) => [TIER_WORDS[m.head?.tier], m.band === "lead" ? "leads" : m.band === "check" ? "checks" : "does"].filter(Boolean).join(" · ");
 
-export function SeatPop({ g, slug, from, onClose }) {
+/** `keep`: a selector of what a press does not close it for (the table's seats; the route card's heads, whose own press toggles it: the pointerdown that closed it first would make the click open it again). */
+export function SeatPop({ g, slug, from, onClose, keep = ".table-seat" }) {
   const m = groupsOf(g).flatMap((x) => x.seats).find((s) => s.slug === slug);
   const tools = useTools(), box = useRef();
   const lead = m?.band === "lead", now = m ? toolOf(g, m) : { id: "", name: "" };
@@ -84,7 +85,7 @@ export function SeatPop({ g, slug, from, onClose }) {
   useLayoutEffect(() => {                                                        // the focus goes in, and back to the head on the way out
     const head = document.activeElement;
     box.current?.querySelector("button, select")?.focus();
-    const away = (e) => { if (box.current && !box.current.contains(e.target) && !e.target.closest?.(".table-seat")) onClose(); };
+    const away = (e) => { if (box.current && !box.current.contains(e.target) && !e.target.closest?.(keep)) onClose(); };
     const esc = (e) => { if (e.key === "Escape" && !e.defaultPrevented) { e.preventDefault(); onClose(); } };
     document.addEventListener("pointerdown", away, true);
     window.addEventListener("keydown", esc);

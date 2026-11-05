@@ -13,6 +13,7 @@ import { everBack } from "./backcard.js";
 import { leftWords, shareOf } from "./backbody.js";
 import { waitRuns } from "./data.js";
 import { CornerFoot, CornerTop, muchOf } from "./corners.js";
+import { CardWindow, lastMade, windowOf } from "./cardwindow.js";                       // the window where *now* was: what the work made, else the goal's picture (spec 148 B.2)
 import { Fan } from "./fan.js";
 import { FOOT } from "./giveway.js";
 import { litTool, hatched } from "../hand/state.js";
@@ -168,13 +169,15 @@ function WorkCard({ n, i, off, y, x, onPress }) {
   const tasks = work ? tasksCount(n) : null, now = nowOf(n, off), lefts = liveTasks(n).map((t) => Number(t.left)).filter((s) => Number.isFinite(s));
   const much = muchOf({ left: lefts.length ? Math.max(...lefts) : NaN, cost: cardCost(n)?.gem || "" }), name = n.title || n.short || "";
   const kind = bad ? "alert" : asks || now.asked ? "question" : n.type?.sign || "", signal = bad ? "danger" : asks ? "alert" : "";
+  const made = lastMade(n.tasks), windowed = windowOf({ made, picture: n.picture }).kind !== "none";                // the window where *now* was (spec 148 B.2): what the work made, else the goal's picture, else what it does now
   const bar = off && ripe && Number(ripe.seconds) > 0 ? shareOf(ripe) : null;                                // a card put off waits: its bar in eighths where its wait is known, quiet where it is not
   return html`<button type="button" class=${cls("ork-card col-card col-card--up", { "ork-picked": on, asks, fails: bad, "is-off": !!off, "is-dim": own.dim })} ...${own.hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="work" data-off=${off || undefined} style=${`--i:${i};--y:${y}px;--x:${x}px`}
     aria-pressed=${String(on)} aria-label=${`${name}: ${sayOf(n, "work", off)}${tasks ? `, ${tasks.done} of ${tasks.total} tasks finished` : ""}`} onClick=${() => onPress(n, "work", off)}>
     <${CornerTop} rune=${{ name: el, hue, dim: !el, glowing: glow, still: false }} kind=${kind} signal=${signal} />
     <span class="col-nm" title=${name}>${name}</span>
+    ${windowed && html`<${CardWindow} of=${{ made, picture: n.picture, name }} />`}
     <span class=${cls("col-foot", `col-c-${hue || "dust"}`)}>
-      <span class="col-now" data-asked=${now.asked ? n.slug : undefined}>${now.sign && html`<${Sign} name=${now.sign} />`}<span class="col-now__t">${now.text}</span>${tasks && html`<span class="col-count" data-count=${`${tasks.done}/${tasks.total}`} title=${`${tasks.done} of ${tasks.total} tasks finished`}>${tasks.done}/${tasks.total}</span>`}</span>
+      ${!windowed && html`<span class="col-now" data-asked=${now.asked ? n.slug : undefined}>${now.sign && html`<${Sign} name=${now.sign} />`}<span class="col-now__t">${now.text}</span>${tasks && html`<span class="col-count" data-count=${`${tasks.done}/${tasks.total}`} title=${`${tasks.done} of ${tasks.total} tasks finished`}>${tasks.done}/${tasks.total}</span>`}</span>`}
       ${off && html`<span class=${cls("col-wbar", { "is-quiet": bar == null })} style=${bar != null ? `--s:${bar}` : undefined} aria-hidden="true"><i></i></span>`}
       <${CornerFoot} who=${{ heads: headsOf(n) }} much=${much} ask=${asks} />
     </span>

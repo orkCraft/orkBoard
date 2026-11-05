@@ -1,0 +1,56 @@
+/* The opened card and a new goal's card (docs/specs/147-one-card-four-corners.md part D, docs/specs/148-a-window-on-every-card.md B.5–B.6, decisions §251.6, §252; hand/stopcard.js `Lifted`, hand/pluscard.js `Field`; the look: docs/mockups/card-ratio/ sections 5 and 6). Layout only: every colour,
+   face and corner is orkUI's. Both are 404 x 566 (5 : 7) and never taller: the corners (table/corners.js, 24 px here) at the top and the foot, the title, the window, a body that scrolls inside with a fade at its foot, the answers (the opened card) or the row of *Send* (the new goal) above the foot.
+   A sign stays 14 px and a head 16 on every card (corners.css). Linked after hand.css (frame/frame.js). */
+
+.corner--large { height: 24px; }
+.corner--large .corner__name { min-width: 0; margin-left: var(--ork-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.corner--large .corner__rune { min-width: 0; flex: 0 1 auto; }
+.corner--large .corner__kind { gap: var(--ork-2); }
+.corner--large .corner__kind .corner__word { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.corner--large .corner__who { flex: 1 1 auto; overflow: hidden; }
+.corner--large .corner__word { overflow: hidden; text-overflow: ellipsis; }
+/* an empty corner of a new goal: dashed, saying what will stand there (spec 147 D.2) */
+.corner__slot { display: inline-flex; align-items: center; box-sizing: border-box; height: 22px; min-width: 0; max-width: 100%; padding: 0 var(--ork-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.corner--foot > .corner__slot:last-child { margin-left: auto; }
+
+/* -- the opened card (the hand's lifted card, on the desktop): over the hand, 404 x 566, its foot on the hand's line, turned a degree or two (hand.css) -- */
+.hand .hand-card.hand-lifted--card { display: flex; flex-direction: column; gap: var(--ork-4); width: min(404px, calc(100% - var(--ork-4))); height: auto; min-height: 0; aspect-ratio: 5 / 7; padding: var(--ork-5); grid-template-rows: none; }
+.hand .hand-lifted--card > .corner { flex: none; }
+.hand .hand-lifted--card > .corner--foot { margin-top: 0; }
+.hand .hand-lifted--card .hand-lifted__title { flex: none; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; font: var(--ork-type-body); font-weight: 600; line-height: 22px; }
+.hand-lifted__body { padding-right: var(--ork-2); }
+.hand .hand-lifted--card .hand-lifted__body { flex: 1 1 auto; padding-bottom: var(--ork-6); -webkit-mask-image: linear-gradient(#000 calc(100% - var(--ork-6)), transparent); mask-image: linear-gradient(#000 calc(100% - var(--ork-6)), transparent); }      /* the fade at its foot: what scrolls under it is not cut off mid-line */
+.hand-lifted__win { flex: none; }
+.hand-lifted__win .card-win { width: 100%; height: 160px; }
+.hand-lifted__acts { display: flex; flex: none; flex-direction: column; gap: var(--ork-3); min-height: 0; max-height: 45%; overflow-y: auto; overscroll-behavior: contain; }
+.hand-lifted__acts:empty { display: none; }
+.hand-lifted__acts > .hand-put { align-self: flex-end; }
+.hand-ways { display: flex; flex-direction: column; gap: var(--ork-2); width: 100%; }
+.hand-way-opt { display: flex; justify-content: space-between; align-items: center; gap: var(--ork-3); width: 100%; text-align: left; }
+.hand-way-opt.is-pick { border-color: var(--ork-ink); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.hand-way-opt__cost { flex: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* -- a new goal's card: the + card turned over and grown (fieldturn.js), the same card. Its window is where a picture or a file is dropped (spec 148 B.6) -- */
+.hand .hand-field > .corner { flex: none; }
+.hand .hand-field > .corner--foot { margin-top: 0; }
+.hand-field__win { flex: none; width: 100%; height: 160px; gap: var(--ork-3); flex-wrap: wrap; align-content: center; justify-content: flex-start; padding: var(--ork-3); overflow-y: auto; }
+.hand-field__win[data-window="hint"] { justify-content: center; }
+.hand-field__win .hand-field__files { flex: 0 1 auto; width: 100%; }
+.hand-field__win .hand-pic img { width: 64px; height: 64px; object-fit: contain; background: var(--ork-room); }
+.hand-field__attach { text-align: center; color: var(--ork-ink-muted); }
+.hand-field__body { flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--ork-3); min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+.hand-field__body > * { flex: none; }
+.hand .hand-field .hand-field__body .hand-field__text { flex: none; }
+.hand .hand-field.is-middle .hand-field__body .hand-field__text { flex: 1 0 auto; }
+
+/* picking on a map (spec 102 §6): the card lies low and short, its window and the rest of its height given up, so the map above it is free to press and *Send* is in view */
+@media (min-width: 760px) {
+  .hand .hand-field.is-picking { aspect-ratio: auto; height: auto; top: calc(100dvh - 250px); }
+  .hand .hand-field.is-picking .hand-field__win { display: none; }
+}
+
+@media (max-width: 759.98px) {
+  .hand .hand-card.hand-lifted--card { width: auto; aspect-ratio: auto; padding: var(--ork-4); gap: var(--ork-3); }
+  .hand-lifted__win .card-win, .hand-field__win { height: 72px; }
+  .hand .hand-field { gap: var(--ork-3); padding: var(--ork-4); }
+}

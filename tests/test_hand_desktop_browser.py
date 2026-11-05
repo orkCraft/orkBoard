@@ -1085,7 +1085,7 @@ def test_a_stack_pressed_picks_its_goal_and_lifts_its_top_card_with_its_answers_
         assert box["x"] >= 0 and box["x"] + box["width"] <= pg.viewport_size["width"] + 1 and box["y"] >= 0
         assert sig(pg, "frame/state.js", "picked") == "export" and sig(pg, "frame/state.js", "lifted") == "hand:plan/export/"
         assert lifted.get_by_role("button", name="Start the work").count() == 1 and lifted.get_by_role("button", name="Put it back").count() == 1
-        assert lifted.locator(".hand-spend__words").inner_text() == "about 2–4% of Claude's week" and lifted.locator(".hand-spend .ork-gem.share").count() == 1 and lifted.locator(".hand-card__label .ork-gem.share").count() == 1       # its cost's words, and its gem on the label row as the hand card has
+        assert lifted.locator(".hand-spend__words").inner_text() == "about 2–4% of Claude's week" and lifted.locator(".hand-spend .ork-gem.share").count() == 1 and lifted.locator(".corner--foot .corner__much .ork-gem.share").count() == 1       # its cost's words, and its gem at the foot's right (spec 147 D.1)
         assert "is-slot" in pg.locator('.hand-places .hand-card[data-kind="plan"]').get_attribute("class")                                                           # a slot where it lay
         shot(pg, f"{width}-lifted-plan")
         lifted.get_by_role("button", name="Put it back").click()                                                                                          # put back

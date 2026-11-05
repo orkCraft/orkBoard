@@ -9,3 +9,7 @@
 .hand-mention__name.is-code { font-family: var(--ork-font-code); }
 .hand-mention__note { flex: none; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 @media (pointer: coarse) { .hand-mention__row { min-height: var(--ork-tap); } }
+/* the field is a whole card over the hand (spec 147 D.2): its top is near the window's, so the list lies inside it, over its window and squares, not above it */
+@media (min-width: 760px) {
+  .hand-field .hand-mention { bottom: auto; top: calc(var(--ork-5) + 24px + var(--ork-3)); left: var(--ork-5); right: var(--ork-5); }
+}

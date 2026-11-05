@@ -17,6 +17,13 @@ export function windowOf({ made, picture, words } = {}) {
   return { kind: "none" };
 }
 
+/** What the work made last, for a goal's card: the `craft_made` of the last of its `tasks` that has something to draw (a task done or at Review, made.js `madeOf`), else null. */
+export function lastMade(tasks) {
+  const list = Array.isArray(tasks) ? tasks : [];
+  for (let i = list.length - 1; i >= 0; i--) if (madeOf(list[i])) return list[i].craft_made;
+  return null;
+}
+
 /** How many lines of words a window `h` px high holds: at least one. */
 export const linesOf = (h) => Math.max(1, Math.floor(((Number(h) || 0) - PAD) / LINE));
 

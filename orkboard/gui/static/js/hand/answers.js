@@ -3,7 +3,8 @@
 // They are the only ones (the old window's fan went with spec 98 E), written over the parts shared with the pane (TodoWays, CollideAnswers, ResultActions, SignInButton, Tiles). A press that needs more room than a card has
 // (*Open…*: the plan's tasks, a pick's variants large) opens the stop over the pane (`openOver("stop")`, face: stopface.js). Starting a plan deals no cards onto the
 // field yet (that is the table's, spec 98 C).
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
+import { clearWay, pickWay, wayCostOf } from "./waycost.js";
 import { html, cls } from "../html.js";
 import { say, toast } from "../link.js";
 import { act } from "../shell/store.js";
@@ -84,6 +85,16 @@ function ChangeAnswers({ slug }) {
     <button type="button" class="ork-btn" title="The plan stays as it is" onClick=${keep}>Keep the plan</button>`;
 }
 
+/** A question whose ways have a price (spec 147 D.1): each way is picked (the one the asker recommends first), the opened card's foot shows its cost, and *Answer* sends it. */
+function PricedWays({ s, q, send }) {
+  const [at, setAt] = useState(q.pick != null ? q.pick : 0), price = (i) => wayCostOf(q.costs?.[i]);
+  useEffect(() => { pickWay(s.key, price(at)); }, [at, s.key]);
+  useEffect(() => () => clearWay(s.key), [s.key]);
+  return html`<div class="hand-ways" role="radiogroup" aria-label="Ways">${q.choices.map((c, i) => html`<button type="button" key=${c} role="radio" aria-checked=${String(i === at)} class=${cls("ork-btn hand-way-opt", { "is-pick": i === at })}
+      data-way=${i} data-cost=${price(i)?.gem || undefined} onClick=${() => setAt(i)}>${c}${price(i) && html` <span class="hand-way-opt__cost">${price(i).gem}</span>`}</button>`)}</div>
+    <button type="button" class="ork-btn primary" data-answer="priced" onClick=${() => send([q.choices[at]])}>Answer</button>`;
+}
+
 function AskAnswers({ s, row, n, slug, here }) {
   const isGoal = s.kind === "goal", target = isGoal ? row.goal : slug, asked = askedOf(row, n);
   const send = async (answers) => { const got = await act("ideas.answer", { slug: target, answers, ...(isGoal ? { goal: true } : {}) }); if (got) toast(say(SENT)); };
@@ -91,6 +102,7 @@ function AskAnswers({ s, row, n, slug, here }) {
   const picks = asked.map((q) => (q.pick != null ? q.choices[q.pick] || "" : ""));
   const decide = html`<${Decide} s=${s} target=${target} isGoal=${isGoal} name=${isGoal ? s.party.lead : asked.find((q) => q.by?.name)?.by?.name || s.party.lead} />`;
   if (here) return decide;                                                                   // the form is under it: it answers
+  if (asked.length === 1 && asked[0].choices.length && (asked[0].costs || []).some(Boolean)) return html`<${PricedWays} s=${s} q=${asked[0]} send=${send} />${decide}`;       // ways with a price: picked, and the foot shows it
   if (asked.length === 1 && asked[0].choices.length) {
     return html`${asked[0].choices.map((c, i) => html`<button type="button" key=${c} class=${cls("ork-btn", { primary: i === asked[0].pick })}
         title=${c === PICTURES ? "Opens the form: add the pictures there" : i === asked[0].pick ? "Picked for you: one click answers" : "One click answers with this"}

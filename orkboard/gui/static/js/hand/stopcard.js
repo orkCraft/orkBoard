@@ -1,6 +1,7 @@
 // **Spec 147 C (decisions §251.5): the hand's card is 144 x 202, cut under its title by the hand's rim (handcard.css). Its top is the corners' (table/corners.js): the goal's rune at the left, the kind's sign at the right in its signal's colour, then the title in three whole
 // lines; under the cut why it is asked (the question or the line, up to three lines) and the foot's corners: who asks (the head) and the card's cost. Not on the face at rest: the asker's head at the top, the party's label, the gem. Hovered or focused the card rises and shows it all.
-// The lifted card (below) is part D's and keeps the former anatomy.**
+// **Spec 147 D.1 (decisions §251.6): the lifted card (below) is on the desktop the opened card, 404 x 566 (hand/openedcard.css): its corners large (the goal's rune and name, the kind's word and sign; the asker and the cost of the way picked at its foot, waycost.js), the title, a body that scrolls (the window of spec 148 B.5 at its top, 160 px),
+// the answers above the foot. The phone's inline card keeps the former anatomy.**
 // A stop as one card of the hand (docs/specs/101 §4.5, decisions §167.1; docs/specs/98 §4.2, §4.4, decisions §160.6; docs/specs/142 part B, decisions §249.2): the card of a card game's anatomy, one size, **with no window**. Its
 // corner (top) holds the kind's sign at its small size at the left, in its signal's colour as the card's frame is (the alert of a question, a hearing, a sign-in and *Go on paid?*, the danger of a failure, else the muted ink), and at the right the head of
 // who asks at 16 px; under it the goal's element at the left, bare, then its name left-aligned in three whole lines, never cut mid-line; its label row the party's name and, when it spends, its gem at the right. Its foot (the question or the line)
@@ -26,6 +27,9 @@ import { wayOf } from "./ways.js";
 import { nightWordsOf } from "./nightwords.js";
 import { SketchLifted, isSketch } from "./sketchcard.js";
 import { Said } from "./sayonce.js";
+import { asksWords } from "./openwords.js";
+import { footCost } from "./waycost.js";
+import { StopWindow, hasWindow } from "./handwindow.js";
 
 /** The action's sign of a stop and its tone: the alert of a failure and of a sign-in, the question of a question, the check (or cross) of a result, else the sign of what is asked (a plan's page, a pick's picture, a to-do's flag). */
 export function actionOf(s) {
@@ -91,7 +95,7 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
     <${CornerTop} rune=${{ name: element, hue, dim: !element }} kind=${actionOf(s).sign} signal=${signalOf(s)} />
     <span class="hand-card__name">${s.title || s.full}</span>
-    <span class="hand-card__foot">${footOf(s)}</span>
+    ${hasWindow(s) ? html`<span class="hand-card__foot has-window" data-foot="window"><${StopWindow} s=${s} /></span>` : html`<span class="hand-card__foot">${footOf(s)}</span>`}
     <${CornerFoot} who=${head || from ? { heads: [head], word: from ? `From ${from}` : "" } : null} much=${cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null} />
     ${children}
   </button>`;
@@ -131,7 +135,25 @@ export function Lifted({ s, anchor, inline = false }) {
   }, [s.key, anchor, inline]);
   useEffect(() => { if (!inline) box.current?.focus({ preventScroll: true }); }, [s.key]);
   const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted || (isSketch(s) ? SketchLifted : null);
-  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted${inline ? " hand-lifted--up" : ""}${element ? ` el-${hue}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
+  if (!inline) {                                                       // the opened card (spec 147 D.1): 404 x 566, its corners large, a body that scrolls, the answers above its foot
+    const shown = footCost(s.key, cost), asker = askerOf(s), party = s.party?.name || "";
+    return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--card${element ? ` el-${hue}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
+        role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind} style=${at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
+      <${CornerTop} large=${true} rune=${{ name: element, hue, dim: !element }} name=${s.node?.short || s.node?.title || ""} kind=${actionOf(s).sign} signal=${signalOf(s)} word=${s.label} kindClass="hand-lifted__kind" />
+      <span class="hand-card__name hand-lifted__title">${s.title || s.full}</span>
+      <div class="hand-lifted__body">
+        ${hasWindow(s) && html`<div class="hand-lifted__win"><${StopWindow} s=${s} h=${160} /></div>`}
+        ${Way ? html`<${Way} s=${s} close=${lower} />` : html`<${Body} s=${s} />`}
+      </div>
+      <div class="hand-lifted__acts">
+        ${!Way && html`<div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>`}
+        ${s.row?.level && s.row?.pulls && !OWN_LINES.has(s.kind) ? html`<${WayLine} row=${s.row} own=${cost?.words || ""} />` : html`<${Spend} cost=${cost} />`}
+        ${!wayOf(s.kind)?.puts && html`<button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>`}
+      </div>
+      <${CornerFoot} large=${true} who=${{ heads: [head], word: asksWords(asker, party) }} much=${shown ? { ...muchOf({ cost: shown.gem }), share: !!shown.share } : null} />
+    </aside>`;
+  }
+  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--up${element ? ` el-${hue}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
       style=${at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
     <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name hand-lifted__title">${inline ? upName(s) : s.title || s.full}</span></span>
