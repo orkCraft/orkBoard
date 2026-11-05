@@ -553,7 +553,7 @@ def _seal(pg, large=False):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_plus_card_bears_the_seal_of_summoning_with_the_next_goals_element_and_no_hatch(gui, width):
+def test_the_plus_card_bears_the_seal_of_summoning_with_the_next_goals_element_the_first_partys_when_none_is_addressed_and_no_hatch(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
         pg.locator(".hand-plus").wait_for(timeout=WAIT_MS)
@@ -569,8 +569,8 @@ def test_the_plus_card_bears_the_seal_of_summoning_with_the_next_goals_element_a
         assert plus.evaluate("e => getComputedStyle(e, '::after').content") == '""', "the corner brackets stay"
         assert "double" in plus.evaluate("e => getComputedStyle(e).borderTopStyle") and plus.evaluate("e => getComputedStyle(e).rotate") != "none", "the double frame and the lean stay"
         assert plus.evaluate("e => getComputedStyle(e).color") == plus.evaluate("e => getComputedStyle(e).borderTopColor"), "the green: the seal takes the card's colour"
-        assert _seal(pg) == "", "the Orkmaster's tab, no party named: the place is empty"
-        shot(pg, f"{width}-plus-seal-empty")
+        assert _seal(pg) == "ice", "the Orkmaster's tab, no party named: the first party's next element (the runes are the project's, §253.10)"
+        shot(pg, f"{width}-plus-seal-first-party")
         call(pg, "frame/state.js", "openTab", "tech")                                                                      # a party's tab: that party's next element
         pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
         assert _seal(pg) == "ice"
@@ -582,7 +582,7 @@ def test_the_plus_card_bears_the_seal_of_summoning_with_the_next_goals_element_a
         call(pg, "frame/state.js", "openTab", "design")
         pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.dust')", timeout=WAIT_MS)
         call(pg, "frame/state.js", "openTab", "orkmaster")
-        pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem')", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -592,7 +592,7 @@ def test_the_seals_place_follows_the_party_named_with_an_at_sign_in_the_field(gu
     pg, host, log = open_hand(gui)
     try:
         _plus(pg).wait_for(timeout=WAIT_MS)
-        assert _seal(pg) == ""
+        assert _seal(pg) == "ice", "no party addressed: the first party's"
         _plus(pg).click()
         field, area = _field(pg)
         area.fill("@Product ")
@@ -600,13 +600,13 @@ def test_the_seals_place_follows_the_party_named_with_an_at_sign_in_the_field(gu
         area.fill("@Design ")
         pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.dust')", timeout=WAIT_MS)
         area.fill("no party")
-        pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem')", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)       # no party named: the first party's again
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_the_large_plus_card_keeps_the_full_seal(gui):
+def test_the_large_plus_card_keeps_the_full_seal_and_the_first_partys_rune(gui):
     pg, host, log = open_hand(gui, host=HandHost(empty=True))
     try:
         big = pg.locator(".hand-plus.is-large")
@@ -614,7 +614,7 @@ def test_the_large_plus_card_keeps_the_full_seal(gui):
         sigil = big.locator("> .ork-sigil")
         assert sigil.count() == 1 and "small" not in sigil.get_attribute("class").split()
         assert round(sigil.bounding_box()["width"]) >= 136 and big.bounding_box()["width"] > 136
-        assert _seal(pg, large=True) == "", "no party at all: the place is empty"
+        assert _seal(pg, large=True) == "ice", "no goal, no party addressed: the first party's next element (§253.10)"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -672,11 +672,11 @@ def _checked(pg):
     return [r.get_attribute("data-rune") for r in _radios(pg).all() if r.get_attribute("aria-checked") == "true"]
 
 
-def test_the_seal_holds_the_free_runes_of_the_addressed_party_at_most_four_none_for_the_orkmaster_and_all_the_others_when_none_is_free(gui):
+def test_the_seal_holds_the_free_runes_of_the_addressed_party_at_most_four_the_first_partys_for_the_orkmaster_and_all_the_others_when_none_is_free(gui):
     pg, host, log = open_hand(gui)
     try:
         _plus(pg).wait_for(timeout=WAIT_MS)
-        assert _frees(pg) == [], "the Orkmaster's tab, no party named: none"
+        assert _frees(pg) == [["at-90", "void"], ["at-270", "lava"]], "the Orkmaster's tab, no party named: the first party's (§253.10)"
         call(pg, "frame/state.js", "openTab", "tech")                                                                      # free: ice (the default, at the top), void, lava
         pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__free')", timeout=WAIT_MS)
         assert _frees(pg) == [["at-90", "void"], ["at-270", "lava"]], "the default stays in the seal, the others in the band's places in order of use"
@@ -774,17 +774,17 @@ def test_the_field_holds_a_row_of_five_runes_the_default_checked_the_used_faint_
     assert not log, "\n".join(log)
 
 
-def test_with_no_party_addressed_no_rune_is_checked_the_arrows_begin_at_the_first_and_the_choice_is_sent(gui):
+def test_with_no_party_addressed_the_first_partys_rune_is_checked_the_arrows_move_it_and_the_choice_is_sent(gui):
     pg, host, log = open_hand(gui)
     try:
         _plus(pg).wait_for(timeout=WAIT_MS)
         _plus(pg).click()
         field, area = _field(pg)
-        assert _checked(pg) == [] and [r.get_attribute("tabindex") for r in _radios(pg).all()] == ["0", "-1", "-1", "-1", "-1"]
-        assert pg.locator(".hand-rune.is-used").count() == 0, "no party: none is used"
-        _radios(pg).first.focus()
+        assert _checked(pg) == ["ice"] and [r.get_attribute("tabindex") for r in _radios(pg).all()] == ["-1", "0", "-1", "-1", "-1"], "the first party's default is checked (§253.10)"
+        assert pg.locator(".hand-rune.is-used").count() == 2, "the first party's used runes (meadow, dust) are faint"
+        _radios(pg).nth(1).focus()
         pg.keyboard.press("ArrowRight")
-        assert _checked(pg) == ["meadow"] and _seal(pg) == "meadow"
+        assert _checked(pg) == ["dust"] and _seal(pg) == "dust"
         area.fill("A general goal in lava")
         _radios(pg).nth(4).click()
         area.press("Enter")
