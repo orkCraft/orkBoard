@@ -19,3 +19,5 @@ table, the hand, a potion's card and a new host command: what the first trial br
 **Good when** (spec 143): no log says *A task never edits the Board's pages* (`task_pages_put_back` may appear and spends nothing);
 every task ends merged or stops on a real red test; the four goals' tests are green on `dev`; the tokens of `work` are well under
 the first trial's 2.49 million for four tasks. What it shows goes into a decision, as §250 did.
+
+**Run so far:** goal 4, on 5 November 2026, local Codex: decisions §253, spec 149. Its code is `149-the-rune-square.patch`, carried by spec 149 J. Goals 1, 2 and 3 are not in `main`.

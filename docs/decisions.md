@@ -6499,3 +6499,66 @@ allows no picture for its own sake: a window shows only what the person attached
    asset its asset.
 6. **Built** by spec 148, after spec 147's B and C.
 The owner's call.
+
+## 253. What the person chose steers the route, a task's gate has a budget and says when it ran out, a red from before is not the task's, one way to main with its checks in it, and Done is said against what was promised (5 November 2026, the owner)
+
+Changes: 187.3 (the rune with no party addressed), 250.3 (how many browser tests a task's gate takes), 250.7 (what counts as ready for main), 250.9 (how long a gate may take: decided here); spec 128 G, spec 143 B.1, F.3, F.4.
+
+Why: the owner: *let's pull the latest and take a simple goal of the repository from idea to implementation in Orkboard on local
+Codex; you watch the run and its errors, a picture at each stage, then read the logs: how right the flow was and how right it is
+set*, and *from the result make a decision and a spec and push them to main*. The goal was the fourth of
+`docs/trials/143-four-goals-for-the-trial-again.md` (the field's Rune square, spec 128 G's *Not built*), pressed through the page on
+a clone with no remote, a HOME of its own with only the Codex sign-in, a Tech party at Lean. It reached main: 13 calls, 3.30
+million tokens (88% read from the cache), 15.6 minutes of the model, 14% of Codex's 5 hours and 2% of its week. No refused command,
+no error toast, no console error, no Board page touched: §250.1, §250.2, §250.6 and §250.7's words held, and the section and the
+plan were the best part of the run. What did not hold is below; spec 149 §0 has the run call by call. So:
+1. **What the person chose steers the route.** The line's words guessed *bug* from *not a fixed one*. The person dropped the goal and
+   sent it again, **To Tech, New feature**, and the route kept the guess, since `route_plan` passes the text alone: the card said *a
+   small change*, the host ran a bug's diagnosis and asked about *The cause*, with no Talk and no decision. A type chosen is the
+   route's kind; *fixed* no longer says a bug; the card says what the host will do; a goal routed as a bug with no failure in its
+   report can be told **It is no bug** on its card, where today the only act is to drop it.
+2. **A project is read by what lies at its root.** A fresh clone of Orkboard was asked *orkBoard is a game, Skyhop.uproject is here*,
+   because of `tests/fixtures/engines/unreal/` (spec 145 C). A sign of a kind counts at the root, never in a fixture.
+3. **A task's gate has a budget** (what §250.9 left open). `tests/test_{leaf}*_browser.py` took 56 modules for one line of a helper
+   nothing reads in `pwa/`: 569 tests green in 16 minutes 13 seconds at six workers, 99 minutes of CPU, where the gate runs them one by
+   one with 15 minutes. **No change to a file of the phone could ever pass.** A task's gate takes a pattern's modules only up to
+   `[gate] browser_max`, else those of the file's own name; runs them in parallel; says what it left. What it left runs at the
+   portal's check on the way to main, with a limit of its own.
+4. **A gate that did not finish says so and keeps the work.** The card said *no answer within 900 s*; the log showed the session
+   answering and nothing after it; no `gate_ran`, no output. *Start again*, the only act, reset the branch, threw the green commit away
+   and paid 326,936 tokens for the same line. It is a gate that could not run (§250.4): *The tests did not finish in 15 minutes*, its
+   output and its event kept, and **Test again** with no session called.
+5. **A red from before is not the task's.** A gate was red on four tests of another goal's file: two red on clean `main` on a Mac
+   (`Control+a`), two that pass alone. The session sent back spent 588,106 tokens, the dearest call of the run. Before a red gate calls
+   a session, the red tests run again alone and then on the base; *flaky* and *red before this task* are said, spend no try and hold
+   nothing. A session is told only what is left.
+6. **A session is told what its sandbox allows.** Codex's `workspace-write` cannot write git's index or start a browser. Five of the six
+   task calls hit `index.lock`, two went through `/Applications` after Chrome, and the check wrote both as findings, which took a press.
+   §250.1's *what is settled goes in the commit's message* cannot work there: every commit said its title alone. The prompt says what
+   the sandbox allows, a task may leave `.ork-commit.md` for the message, and a commit is authored by the running product's name.
+7. **One way to main, its checks in it.** The discard's **To main** is `ideas.gate_merge`: dev whole, no test run, in 3 seconds; the portal
+   runs its checks. The button takes the portal's way. `gate_merge` stays for commits of no goal and Release's map, and is refused
+   while a goal with work in dev is not ready: nothing reaches main half made by a press that does not say so.
+8. **Ready for main says what is so** (§250.7). The pile said *3 commits ready for main* with a goal at 2 of 4 and a task failed, and its
+   page *commits that belong to no goal*; they were that goal's. After main, the fold's Board commit said *1 commit ready for main* again,
+   as it will after every goal. The commits of a goal not ready are not counted, nor the Board's own, the living specs too.
+9. **Done is said against what was promised, and the spend in what is known.** The result said *This goal so far: —* and four titles. It
+   has the goal's **Done when** lines over what each task made (its files, lines and tests), read with no model, for the person to read
+   side by side. With no price it says the tokens and the share of the tool's window. A Codex party's *$0.28–0.83 at API prices* came
+   from Claude's table: a tool with no price known says its calls, with no dollars. `drive spend` calls work done twice what it is.
+10. **A Done when is met where the person starts.** **To the Orkmaster**, what the field opens with, the square stayed the fixed dim rune
+    the goal set out to change; only with a party addressed does it wear the host's hue. All tests were green and the review found no
+    blocker, since neither looked at that state, and this project has no Play for the person to look. The rune is shown with no party
+    addressed, since it is the project's (changes §187.3), and a section's *Done when* about a screen names the state it opens in.
+    The trial's code is carried by the patch `docs/trials/149-the-rune-square.patch`.
+11. **Small words.** A cause is cut at a word and whole in *Why* (*the host's per-shape hu*). A goal's thesis keeps a path's underscore
+    (*realm/ideaelement.py*). A question with no choices does not say *Pick an answer*. A drive is told where a task at Review is read; `drive shot` runs
+    on Python's Playwright. After `uv sync`, `playwright install chromium`: with none, every browser module skips.
+12. **How this repository is set.** `orkcraft.toml` gets `browser_max`. What was set right and stays: Codex found and tested at the first
+    open, a Lean party, a task on its own worktree and `.venv`'s Python, Release reading only when something is ready.
+13. **Not decided here**, left to the owner: a party taken under *To* starts picking at once and slides the field and its words off the
+    screen until *Stop picking*; at Lean a review cost 556,105 tokens, more than any task's first run, to say *no blockers*: whether a
+    small goal at Lean plans a check; what Play runs for this repository; §250.9's *Start again* with a line and the `laborer` tier (every
+    task here ran `warrior`); `OPENAI_PRICES`, still empty (§250.8).
+14. **Built** by spec 149, then the trial again.
+On the owner's word, from what the run showed.
