@@ -15,6 +15,10 @@ are not checked here.
   Code off** (the driving session is Claude: Orkboard must not spend the same limits), the main tool Antigravity or Codex.
   Tech's party: *Does* and *Checks* on Codex; the leaders and the Orkmaster on Antigravity's Veteran (Gemini Pro), or
   on Codex if Antigravity is not there.
+- For the pictures (`orkboard drive shot`) and the browser tests, in the clone: `uv sync --extra dev --extra browser --extra gui`, then
+  `.venv/bin/python -m playwright install chromium`. The cache on the owner's computer held Chromium 1243 and `uv.lock`'s Playwright
+  (1.64.0) asks for 1248; with none, every browser module skips (`tests/browser_kit.py`) and nobody is told that they did not run.
+  `drive shot` uses Python's Playwright, else Node's, else the project's own Python (`.venv`).
 
 ## 2. The run (the driving session)
 
@@ -26,7 +30,8 @@ orkboard drive call ideas.goal_save --args '{"preset": "tech", "title": "Tech"}'
 orkboard drive call ideas.add --args '{"text": "<the goal>"}'      # its answer's slug is the goal's id
 orkboard drive call ideas.talk --args '{"idea": "<slug>"}'
 orkboard drive call ideas.board --path 'ideas[slug=<slug>]'        # where it is, at any time
-orkboard drive call ideas.board --path needs_you                   # the hand: what waits for an answer
+orkboard drive call ideas.board --path needs_you                   # the hand's cards: a question, a proposal … but no task at Review
+orkboard drive wait state --path review_count --not 0 --timeout 600   # a task waiting at Review: the snapshot's count, not `needs_you`
 orkboard drive shot beta-run/<nn>-<stage>-phone.png --width 390
 orkboard drive shot beta-run/<nn>-<stage>-desktop.png --width 1360 --height 860
 ```

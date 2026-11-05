@@ -126,3 +126,28 @@ def test_stop_takes_folder_as_the_other_acts_do_and_keeps_its_positional(tmp_pat
     assert drive.main(["stop", "--folder", str(tmp_path)]) == 0
     assert drive.main(["stop", str(tmp_path)]) == 0
     assert [Path(r).resolve() for r in stopped] == [tmp_path.resolve()] * 2
+
+
+def test_wait_on_state_reads_the_snapshot_and_review_count_is_there_while_needs_you_holds_no_review(served):
+    """Spec 149 I.4: the trial's driver waited on `needs_you` and sat 21 minutes on a card in the hand."""
+    link = drive.Link(served.url)
+    try:
+        assert drive.wait_for(link, "state", None, "review_count", {"is": 0}, 10) == 0
+        assert "review_count" in link.state and "needs_you" in link.state
+        with pytest.raises(DriveError, match="not as expected"):
+            drive.wait_for(link, "state", None, "review_count", {"not": 0}, 0.2, every=0.1)
+    finally:
+        link.close()
+    assert "review_count" in drive.__doc__ and "no task at Review" in drive.__doc__
+
+
+def test_a_picture_asks_the_projects_python_where_neither_pythons_playwright_nor_nodes_is_here(tmp_path, monkeypatch):
+    """Spec 149 I.5: `uv sync --extra browser` installs Python's Playwright; Node's is not there."""
+    import shutil
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+    asked = []
+    monkeypatch.setattr(drive, "_shoot_with_python", lambda url, path, w, h, chromium: asked.append((url, w, h)) or True)
+    assert drive._shoot_with_node("http://x/", tmp_path / "a.png", 390, 844, None) == tmp_path / "a.png" and asked == [("http://x/", 390, 844)]
+    monkeypatch.setattr(drive, "_shoot_with_python", lambda *a: False)
+    with pytest.raises(DriveError, match="uv sync --extra browser"):
+        drive._shoot_with_node("http://x/", tmp_path / "b.png", 390, 844, None)

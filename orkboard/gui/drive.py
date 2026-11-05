@@ -19,7 +19,10 @@ The served project's address (its token inside) is kept in `<project>/.orkcraft/
 removed when it stops; `--url` names a server instead (an editor's `--serve`). **The AI tools are hidden unless asked for**:
 a drive started without `--real-tools` runs with a PATH that holds no agent CLI (Claude Code, Codex, Antigravity…) and no `gh`,
 and reads no limits or model list, so a step that would ask a model fails as a missing tool, spending nothing. The server listens on 127.0.0.1 only and
-takes the token and its own Origin, as for the page. A path in a result: keys and list places by dots (`ideas.0.slug`),
+takes the token and its own Origin, as for the page. **What waits for the person** is two numbers of the snapshot, not one list: `ideas.board`'s `needs_you`
+holds the cards the hand shows (a question, a proposal …) and **no task at Review**; the snapshot's `review_count` holds those. A driver that waits on `needs_you`
+alone sits on a card nobody answers (the trial's sat 21 minutes): `drive wait state --path review_count --is 1` (or `--not 0`) waits for a review, and
+`drive call ideas.board --path needs_you` reads the cards. A path in a result: keys and list places by dots (`ideas.0.slug`),
 and `[key=value]` for the first item of a list whose key has that value (`ideas[slug=jump].state`).
 """
 from __future__ import annotations
@@ -234,12 +237,13 @@ def meets(value: Any, expect: dict) -> bool:
 
 def wait_for(link: Link, name: str, args: dict | None, path: str, expect: dict, timeout: float,
              every: float = 2.0) -> Any:
-    """The command asked again every `every` seconds until its result at `path` meets `expect`; the value found."""
+    """The command asked again every `every` seconds until its result at `path` meets `expect`; the value found. The name `state` is no command: it
+    waits on the snapshot the server keeps sending (`review_count`, `needs_you`: what waits for the person)."""
     end = time.monotonic() + timeout
     last: Any = None
     while True:
         try:
-            last = at(link.call(name, args), path)
+            last = at(link.state if name == "state" else link.call(name, args), path)       # `state`: the snapshot the page is sent, kept up as the server sends it
             if meets(last, expect):
                 return last
         except DriveError as e:
@@ -357,17 +361,47 @@ const [url, file, w, h, exe] = process.argv.slice(1);
 
 
 def _shoot_with_node(url: str, path: Path, width: int, height: int, chromium: str | None) -> Path:
-    """The same picture through Node's Playwright, where Python's is not installed (a cloud machine has Node's)."""
+    """The same picture through Node's Playwright, where Python's is not importable here (a cloud machine has Node's). Where Node or its Playwright
+    is not there either, the project's own Python is asked (`uv sync --extra browser` installs Python's, not Node's: spec 149 I.5)."""
     import shutil
     import subprocess
     node = shutil.which("node")
-    if node is None:
-        raise DriveError("A picture needs Playwright (pip install playwright, or Node's)")
-    done = subprocess.run([node, "-e", NODE_SHOT, url, str(path), str(width), str(height), chromium or ""],
-                          capture_output=True, text=True, timeout=120)
-    if done.returncode != 0:
-        raise DriveError(f"No picture: {(done.stderr or done.stdout).strip()[:300]}")
-    return path
+    problem = "no Node"
+    if node is not None:
+        done = subprocess.run([node, "-e", NODE_SHOT, url, str(path), str(width), str(height), chromium or ""],
+                              capture_output=True, text=True, timeout=120)
+        if done.returncode == 0:
+            return path
+        problem = (done.stderr or done.stdout).strip()[:300]
+    if _shoot_with_python(url, path, width, height, chromium):
+        return path
+    raise DriveError(f"No picture ({problem}): a picture needs Playwright, Python's (uv sync --extra browser, then playwright install chromium) or Node's")
+
+
+def _pythons() -> list[str]:
+    """The Pythons that may hold Playwright, the project's own first: `.venv` of the folder the command runs in, then the PATH's."""
+    import shutil
+    found = [str(p) for p in (Path.cwd() / ".venv" / "bin" / "python", Path.cwd() / ".venv" / "Scripts" / "python.exe") if p.exists()]
+    found += [w for w in (shutil.which("python3"), shutil.which("python")) if w]
+    return list(dict.fromkeys(found))
+
+
+def _shoot_with_python(url: str, path: Path, width: int, height: int, chromium: str | None) -> bool:
+    """The picture through another Python that has Playwright (the project's, with the `browser` extra); False when none has."""
+    import subprocess
+    code = ("import sys\nfrom orkboard.gui.drive import shoot\nshoot(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))\n")
+    env = {**os.environ, **({"ORKCRAFT_CHROMIUM": chromium} if chromium else {}), "PYTHONPATH": os.pathsep.join(filter(None, [str(Path(__file__).resolve().parents[2]), os.environ.get("PYTHONPATH", "")]))}
+    for python in _pythons():
+        try:
+            probe = subprocess.run([python, "-c", "import playwright.sync_api"], capture_output=True, timeout=30)
+            if probe.returncode != 0:
+                continue
+            done = subprocess.run([python, "-c", code, url, str(path), str(width), str(height)], capture_output=True, timeout=120, env=env)
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if done.returncode == 0 and Path(path).exists():
+            return True
+    return False
 
 
 # -- serving -----------------------------------------------------------------------------------------------------------
