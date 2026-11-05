@@ -78,7 +78,7 @@ def open_life(gui, width="wide", host=None):
 
 
 def back_of(pg, slug):
-    """A goal's card face down in the Orkmaster's column (spec 128 B.3: the card of In analysis, sideways, with no name)."""
+    """A goal's card face down in the Orkmaster's column (spec 147 B.2: a back of In analysis, the Orkmaster's hand, with no name on its face)."""
     return pg.locator(f'.frame-column .col-card--down[data-goal="{slug}"]')
 
 
@@ -177,7 +177,7 @@ def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_col
         card = pg.locator('.frame-column .col-card--down[data-goal="new-goal"]')
         card.wait_for(timeout=WAIT_MS)
         pg.wait_for_function("() => !document.querySelector('.hand-ghost')", timeout=WAIT_MS)
-        assert card.locator(".ork-sigil__seal .ork-elem.ice.is-glowing").count() == 1, "its own rune lit at the seal's top, glowing while it is talked over"
+        assert card.locator(".col-fan__seal .ork-elem.ice.is-glowing").count() == 1, "its own rune lit in the middle of its back (spec 147 B.2), glowing while it is talked over"
         assert card.inner_text().strip() == "" and pg.locator(".table-back-nm").count() == 0, "no name on the face-down card"
         assert card.locator(".ork-plus, .ork-icon").count() == 0, "no +: the + card alone keeps that"
         colours = card.evaluate("e => { const c = getComputedStyle(e); const action = getComputedStyle(document.documentElement).getPropertyValue('--ork-action').trim(); const probe = document.createElement('i'); probe.style.color = action; document.body.appendChild(probe); const a = getComputedStyle(probe).color; probe.remove(); return [c.borderTopColor, c.color, c.backgroundColor, a]; }")

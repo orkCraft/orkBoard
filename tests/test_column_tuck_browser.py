@@ -1,5 +1,5 @@
-"""Spec 130 E.1–E.2 (decisions §236), in a real browser against a stub host: the Orkmaster's column has a width of its own; a face-down card lies tucked under the window's left edge with its seal whole in what shows, slides out whole on
-hover and on focus and goes back; the three piles share one right edge; a face-up card keeps its width; the hand's lanes stand under the table's at 1280 and 1920. The numbers are read from `--column-tuck`, so the owner's pick (45 or 30) is one line."""
+"""Spec 130 E.1–E.2 (decisions §236) as spec 147 B changed it (decisions §251.4: the column 160 px, the tuck 13 px), in a real browser against a stub host: the Orkmaster's column has a width of its own; a back of To review lies tucked under the window's left edge with its seal whole in what shows,
+slides out whole on hover and on focus and goes back; the deck and the standing cards of At work share one right edge, 144, and the hand's fan lies inside it; a standing card keeps its width; the hand's lanes stand under the table's at 1280 and 1920. The numbers are read from `--column-tuck`."""
 from __future__ import annotations
 
 import pytest
@@ -10,7 +10,7 @@ from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_column_browser import ColumnHost, open_column  # noqa: E402
 
 pytestmark = pytest.mark.browser
-DOWN = '.col-sec[data-pile="analysis"] .col-card--down'
+DOWN = '.col-sec[data-pile="review"] .col-card--deck'
 
 
 def px(pg, name):
@@ -32,16 +32,16 @@ def test_the_column_has_a_width_of_its_own_and_the_table_gains_what_it_gives_up(
     pg, host, log = open_column(gui)
     try:
         tuck = px(pg, "--column-tuck")
-        assert tuck == 45, "built with §236.1's own number until the owner's pick"
+        assert tuck == 13, "decisions §251.4: 13 px under the window's edge"
         c, t = pg.locator(".frame-column").bounding_box(), pg.locator(".frame-table").bounding_box()
-        assert abs(c["width"] - (max(112, 157 - tuck) + 16)) <= 1, c
+        assert abs(c["width"] - 160) <= 1 and abs(c["width"] - ((157 - tuck) + 16)) <= 1, ("the card's 144 and its gutters", c)
         assert c["x"] == 0 and abs(t["x"] - c["width"]) <= 1, "the table begins where the column ends"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_face_down_card_is_cut_by_the_windows_edge_and_its_seal_is_whole_in_what_shows(gui):
+def test_a_back_of_the_deck_is_cut_by_the_windows_edge_and_its_seal_is_whole_in_what_shows(gui):
     pg, host, log = open_column(gui)
     try:
         rest(pg)
@@ -49,7 +49,7 @@ def test_a_face_down_card_is_cut_by_the_windows_edge_and_its_seal_is_whole_in_wh
         box = settled(pg, DOWN)
         assert abs(box["x"] + tuck) <= 1 and abs(box["width"] - 157) <= 1 and abs(box["height"] - 112) <= 1, box
         shown = box["x"] + box["width"]
-        assert abs(shown - (157 - tuck)) <= 1, "what shows of it"
+        assert abs(shown - (157 - tuck)) <= 1 and abs(shown - 144) <= 1, "what shows of it: the card's 144"
         seal = pg.locator(f"{DOWN} .col-sigil").first.bounding_box()
         assert abs(seal["x"] + seal["width"] / 2 - shown / 2) <= 1.5, (seal, shown)
         assert seal["x"] >= 0 and seal["x"] + seal["width"] <= shown, "the ring is inside the window, under no edge"
@@ -60,7 +60,7 @@ def test_a_face_down_card_is_cut_by_the_windows_edge_and_its_seal_is_whole_in_wh
     assert not log, "\n".join(log)
 
 
-def test_a_face_down_card_slides_out_whole_on_hover_and_on_focus_and_goes_back(gui):
+def test_a_back_of_the_deck_slides_out_whole_on_hover_and_on_focus_and_goes_back(gui):
     pg, host, log = open_column(gui)
     try:
         rest(pg)
@@ -68,16 +68,12 @@ def test_a_face_down_card_slides_out_whole_on_hover_and_on_focus_and_goes_back(g
         pg.hover(DOWN, position={"x": 60, "y": 50})
         out = settled(pg, DOWN)
         assert abs(out["x"]) <= 1, out
-        seen = pg.evaluate("""(sel) => { const c = document.querySelector(sel).getBoundingClientRect(); const hit = document.elementFromPoint(c.right - 4, c.top + c.height / 2); return hit?.closest?.('.col-card--down') != null; }""", DOWN)
+        seen = pg.evaluate("""(sel) => { const c = document.querySelector(sel).getBoundingClientRect(); const hit = document.elementFromPoint(c.right - 4, c.top + c.height / 2); return hit?.closest?.('.col-card--deck') != null; }""", DOWN)
         assert seen, "its right end lies over the table, not clipped by the pile's box"
         rest(pg)
         assert abs(settled(pg, DOWN)["x"] + tuck) <= 1, "back when left"
-        pg.keyboard.press("Tab")
         pg.locator(DOWN).first.focus()
-        pg.evaluate("(s) => { const e = document.querySelector(s); e.blur(); }", DOWN)
-        pg.locator('.col-head__switch').focus()
-        pg.keyboard.press("Tab")
-        assert pg.evaluate("(s) => document.activeElement === document.querySelector(s)", DOWN), "the front card takes the keyboard next"
+        assert pg.evaluate("(s) => document.activeElement === document.querySelector(s)", DOWN), "the front back takes the keyboard"
         out = settled(pg, DOWN)
         assert abs(out["x"]) <= 1, out
         ring = pg.evaluate("(s) => getComputedStyle(document.querySelector(s)).boxShadow", DOWN)
@@ -104,17 +100,19 @@ def test_under_reduced_motion_nothing_animates_and_the_card_is_whole_at_once(gui
     assert not log, "\n".join(log)
 
 
-def test_the_three_piles_share_one_right_edge_and_a_face_up_card_keeps_its_width(gui):
+def test_the_deck_and_the_standing_cards_share_one_right_edge_the_hand_lies_inside_it_and_a_standing_card_keeps_its_width(gui):
     pg, host, log = open_column(gui)
     try:
         rest(pg)
         ends = {}
-        for pile, sel in (("analysis", ".col-card--down"), ("review", ".col-card--up"), ("work", ".col-card--up")):
+        for pile, sel in (("review", ".col-card--deck"), ("work", ".col-card--up")):
             box = settled(pg, f'.col-sec[data-pile="{pile}"] {sel}')
             ends[pile] = box["x"] + box["width"]
             if sel.endswith("up"):
-                assert abs(box["width"] - 112) <= 1, box
-        assert max(ends.values()) - min(ends.values()) <= 1, ends
+                assert abs(box["width"] - 144) <= 1 and abs(box["height"] - 202) <= 1, box
+        assert max(ends.values()) - min(ends.values()) <= 1 and abs(ends["review"] - 144) <= 1, ends
+        fan = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => e.offsetLeft + e.offsetWidth)")
+        assert fan and max(fan) <= 144, "the hand is never wider than 144 px"
     finally:
         pg.close()
     assert not log, "\n".join(log)

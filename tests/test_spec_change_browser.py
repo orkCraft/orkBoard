@@ -164,4 +164,4 @@ def test_while_its_leaders_rewrite_the_card_says_so_and_has_drop_it_only_and_the
     assert [b.inner_text().strip() for b in lifted.locator(".hand-answers button").all()] == ["Drop it"]
     card = pg.locator('.col-card[data-goal="results"]')
     card.wait_for(timeout=WAIT_MS)
-    assert "Held while its leaders rewrite" in card.get_attribute("aria-label") and card.locator('[data-changing]').count() == 1
+    assert "Held while its leaders rewrite" in card.get_attribute("aria-label") and card.get_attribute("data-changing") == "1"      # a back has no words on its face (spec 147 B.3): its label says it, the card marks it

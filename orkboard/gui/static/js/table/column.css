@@ -1,8 +1,8 @@
-/* The Orkmaster's column (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part B; mockup docs/mockups/goal-card/): pinned at the window's left, the table's height, on orkUI's room as the hand is (frame/frame.css gives its place). Layout only: every colour, face,
-   corner and motion is orkUI's (`.ork-tab`, `.ork-card`, `.ork-sigil`, `.ork-elem`, `.ork-frame`, `.ork-btn`, `.ork-picked`, `ork-sigil-sweep`, the tokens). Its head is the Orkmaster's tab; under it three piles of cards (112 px wide face up, its height its content's, 157 x 112 face down and sideways), the foot
-   of each under the one above it (20 px; 4 px in the pile face down), then thin edges. A card hovered or focused slides out of its pile whole; under reduced motion a face-up card stays and a face-down one is whole at once.
-   **A face-down card lies tucked under the window's left edge** (spec 130 E.2, decisions §236): `--column-tuck` of it under the edge, its seal whole in the shown part; the three piles share one right edge (`--col-edge`). */
-.col { --col-shown: calc(157px - var(--column-tuck)); --col-edge: max(112px, var(--col-shown)); --col-out: 72px;      /* what a face-down card shows, the piles' one right edge, the room over the table a card slides out into */
+/* The Orkmaster's column (docs/specs/147-one-card-four-corners.md part B, decisions §251.3–§251.4; before: docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part B; mockup docs/mockups/card-ratio/): pinned at the window's left, the table's height, on orkUI's room as the hand is (frame/frame.css gives its place, 160 px).
+   Layout only: every colour, face, corner and motion is orkUI's (`.ork-tab`, `.ork-card`, `.ork-card-back`, `.ork-sigil`, `.ork-elem`, `.ork-frame`, `.ork-btn`, `.ork-picked`, `ork-sigil-sweep`, the tokens). Its head is the Orkmaster's tab; under it three piles: In analysis the Orkmaster's hand (a near-straight fan of backs, 56 x 78),
+   To review a squared deck of backs on their side (157 x 112), At work · later standing cards (144 x 202). A card hovered or focused slides out of its pile whole; under reduced motion a standing card stays and a back is whole at once.
+   **A back on its side lies tucked under the window's left edge** (spec 130 E.2, decisions §236, §251.4): `--column-tuck` (13 px) of it under the edge, its seal whole in the shown part; the deck and the standing cards share one right edge (`--col-edge`, 144). **The column never scrolls**: At work · later gives way to the window (giveway.js, column.js). */
+.col { --col-shown: calc(157px - var(--column-tuck)); --col-edge: var(--col-shown); --col-out: 72px;      /* what a back on its side shows, the piles' one right edge, the room over the table a card slides out into */
   position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; box-sizing: border-box; background: var(--ork-room); color: var(--ork-ink); }
 
 /* -- the head: the Orkmaster's tab ------------------------------------------------------------------------------------------------- */
@@ -15,83 +15,70 @@
 @media not (pointer: coarse) { .ork-btn.table-switch.col-head__switch { top: var(--ork-1); right: 0; transform: none; width: 18px; min-width: 18px; height: 18px; min-height: 18px; } }      /* the name takes two lines in a column of its own width; the project's ▾ in the corner over the first */
 
 /* -- the piles ------------------------------------------------------------------------------------------------------------------------ */
-.col-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-3) calc(var(--column-w) - var(--col-edge)) var(--ork-5) 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }      /* no margin at its left: the window's own edge cuts a face-down card */
+.col-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-3) calc(var(--column-w) - var(--col-edge)) var(--ork-5) 0; overflow: hidden; }      /* never scrolls (spec 147 B.5); no margin at its left: the window's own edge cuts a back on its side */
 .col-scroll:has(.col-card:is(:hover, :focus-visible)) { margin-right: calc(var(--col-out) * -1); padding-right: calc(var(--column-w) - var(--col-edge) + var(--col-out)); }      /* a card slid out lies over the table, not clipped by the pile's box */
-@media (min-width: 760px) { .col-scroll { padding-bottom: 88px; } }                                 /* the column's last card scrolls clear of the + card, which stands 78 px over the table's foot (hand/hand.css) */
+@media (min-width: 760px) { .col-scroll { padding-bottom: 88px; } }                                 /* the last pile ends clear of the + card, which stands 78 px over the table's foot (hand/hand.css) */
 .col-sec { flex: none; display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.col-sec--work { flex: 1 1 0; }
 .col-plab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--ork-2); min-width: 0; padding-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
 .col-plab__t { flex: none; white-space: nowrap; }
-.col-under { min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-faint); }
+/* under a pile's title: the goal it is busy with (*reading: …*), or the next to start and when (*next in 2 min: …*), in one line of the caption (its whole words in its title): the fan and the deck keep their heights, so a short window gives the room to At work */
+.col-under { min-width: 0; max-width: 156px; padding-left: var(--ork-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); font-size: 11px; line-height: 14px; text-transform: none; letter-spacing: 0; color: var(--ork-ink-muted); }
+.col-under:empty { display: none; }
+.col-under b { color: var(--ork-ink); font-weight: 600; }
 .col-under.is-asks { color: var(--ork-alert); }
+.col-under--asked { color: var(--ork-ink-faint); }      /* *Asked Tech* of a goal passed on to another leader: its own line, never cut by the pile's two */
 .col-pile { position: relative; width: var(--col-edge); height: var(--h); }
-/* face up (decisions §249.1, spec 142 A): the cards lie in one grid cell, each `--i` x `--peek` lower than the one above it, every card the height of the pile's tallest content (no fixed 157 px); the pile is that tall and what lies under the front */
-.col-pile.is-up { display: grid; justify-items: end; height: auto; padding-bottom: var(--under); box-sizing: border-box; }
-.col-pile.is-up > .col-card.ork-card { position: relative; grid-area: 1 / 1; top: calc(var(--i) * var(--peek)); height: 100%; }
-.col-pile.is-up > .col-edges { top: auto; bottom: 0; left: auto; right: 3px; }
-.col-edges { position: absolute; left: 3px; width: 106px; height: 6px; background: repeating-linear-gradient(var(--ork-card-frame) 0 1px, transparent 1px 3px); pointer-events: none; }
-.col-pile.is-down .col-edges { left: calc(3px - var(--column-tuck)); width: 151px; }      /* cut by the window's edge, as the cards are */
-
-/* a card: stacked by `--i` (its foot under the one above it), the front on top */
-.col-card.ork-card { position: absolute; left: 0; top: calc(var(--i) * var(--peek)); z-index: calc(10 - var(--i)); box-sizing: border-box; width: 112px; height: auto; padding: 0; overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
-.col-card.ork-card:hover, .col-card.ork-card:focus-visible { z-index: 40; transform: translateX(36px) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* out of its pile, whole */
-.col-card--down.ork-card { left: calc(var(--column-tuck) * -1); width: 157px; height: 112px; }
+.col-card.ork-card { position: absolute; box-sizing: border-box; padding: 0; overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .col-card.ork-card.is-dim { opacity: 0.6; }      /* a potion hovered: the cards whose goal does not wait for its tool step back, never hidden (spec 138 A.2, lit.js) */
-.col-card--down.ork-card:hover, .col-card--down.ork-card:focus-visible { transform: translateX(var(--column-tuck)); }      /* slid out whole, over the table */
-.col-card--down.ork-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink), -4px 4px 0 var(--ork-scrim); }           /* the focus ring inside what shows */
-@media (prefers-reduced-motion: reduce) { .col-card.ork-card { transition: none; } .col-card--up.ork-card:hover, .col-card--up.ork-card:focus-visible { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .col-card.ork-card { transition: none; } }
 
-/* face down, sideways: the seal in the middle of the part that shows with its rune at the seal's top, upright; no name. The front card's ring runs (orkUI's sweep, in the goal's colour), and is still and yellow while the goal waits for the person */
-.col-card--down .table-back-sigil.ork-sigil.col-sigil { top: 50%; left: calc(var(--column-tuck) + var(--col-shown) / 2); right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.94); transform-origin: 50% 50%; }
-.col-sigil.col-busy:not(.is-still)::after { animation: ork-sigil-sweep 1.6s steps(8) infinite; }      /* one place moves at a time (spec 140 C3): the ring runs on the goal picked, else the first at work (lit.js `movesOn`); the others stand still, the ring kept */
-.col-sigil.col-stopped::after { color: var(--ork-alert); }
-.col-sigil:is(.col-busy, .is-waiting).is-meadow::after { color: var(--ork-elem-meadow); }      /* the ring in the goal's colour: running, counting a wait down, or filled as its spec is written */
-.col-sigil:is(.col-busy, .is-waiting).is-ice::after { color: var(--ork-elem-ice); }
-.col-sigil:is(.col-busy, .is-waiting).is-dust::after { color: var(--ork-elem-dust); }
-.col-sigil:is(.col-busy, .is-waiting).is-void::after { color: var(--ork-elem-void); }
-.col-sigil:is(.col-busy, .is-waiting).is-lava::after { color: var(--ork-elem-lava); }
-@media (prefers-reduced-motion: reduce) { .col-sigil.col-busy:not(.is-still)::after { animation: none; } }
+/* -- In analysis, the Orkmaster's hand: a near-straight fan of small backs held back to the person, spread while they are few, tighter as they grow (fan.js). Each back's seal and its goal's rune in its middle; the goal being read lifted ---------------------------- */
+.col-fan { position: relative; width: 144px; height: 92px; flex: none; margin-left: var(--ork-2); }
+.col-card--fan.ork-card { bottom: 2px; left: calc(var(--i) * var(--step, 44px)); width: 56px; height: 78px; transform-origin: 50% 100%; transform: rotate(var(--r, 0deg)); z-index: var(--z, 1); }
+.col-fan__back { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
+.col-fan__seal { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; color: var(--ork-ink-faint); pointer-events: none; }
+.col-fan__seal .ork-sigil.small { width: 44px; height: 44px; }
+.col-fan__seal .ork-elem { position: relative; z-index: 1; }
+.col-fan__held { position: absolute; z-index: 1; right: var(--ork-1); bottom: var(--ork-1); display: inline-flex; color: var(--ork-ink-muted); }      /* a goal the person holds: its back says so by the sign, its name is in its label */
+.col-card--fan.ork-card.is-reading { transform: translateY(-12px) rotate(var(--r, 0deg)); z-index: 20; }
+.col-card--fan.ork-card:is(:hover, :focus-visible) { transform: translateY(-10px) rotate(var(--r, 0deg)); z-index: 30; outline: 0; box-shadow: -4px 4px 0 var(--ork-scrim); }
+.col-card--fan.ork-card.is-reading:is(:hover, :focus-visible) { transform: translateY(-14px) rotate(var(--r, 0deg)); }
+.col-card--fan.ork-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink), -4px 4px 0 var(--ork-scrim); }
+.col-card--fan.ork-card.asks { border-color: var(--ork-alert); }
 
-.col-down-held { position: absolute; right: var(--ork-2); bottom: var(--ork-1); font: var(--ork-type-caption); font-size: 11px; }      /* a goal the person holds (spec 130 E.3): its card says so, its name is on its other side */
+/* -- To review, a squared deck: backs on their side (157 x 112), 13 px under the window's edge, the cards behind 3 px lower, unturned. The seal in the middle of the part that shows with its rune at the seal's top; its ring is the wait --------------------------- */
+.col-card--deck.ork-card { left: calc(var(--column-tuck) * -1); top: calc(var(--i) * var(--step)); z-index: calc(10 - var(--i)); width: 157px; height: 112px; }
+.col-card--deck.ork-card:is(:hover, :focus-visible) { z-index: 40; transform: translateX(var(--column-tuck)); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* slid out whole, over the table */
+.col-card--deck.ork-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink), -4px 4px 0 var(--ork-scrim); }           /* the focus ring inside what shows */
+.col-card--deck.ork-card.asks { border-color: var(--ork-alert); }
+.col-deck__back { position: absolute; left: 50%; top: 50%; width: 112px; height: 157px; transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }      /* orkUI's back, turned on its side */
+.col-card--deck .table-back-sigil.ork-sigil.col-sigil { top: 50%; left: calc(var(--column-tuck) + var(--col-shown) / 2); right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.72); transform-origin: 50% 50%; color: var(--ork-ink-faint); }
+.col-sigil.col-stopped::after { color: var(--ork-alert); }      /* it waits for the person: the ring full, still, in the alert */
+.col-sigil.is-waiting.is-meadow::after { color: var(--ork-elem-meadow); }      /* the ring in the goal's colour while it counts a wait down */
+.col-sigil.is-waiting.is-ice::after { color: var(--ork-elem-ice); }
+.col-sigil.is-waiting.is-dust::after { color: var(--ork-elem-dust); }
+.col-sigil.is-waiting.is-void::after { color: var(--ork-elem-void); }
+.col-sigil.is-waiting.is-lava::after { color: var(--ork-elem-lava); }
 
-/* the middle of the front card's ring (decisions §241): the heads of who has the goal, laid by how many (a 2 x 2 grid of the head's size: one large in the middle, two a row, three a pyramid, four a square, more the fourth place's head with the rest fanned behind it), or the play of an agreed decision */
-.col-mid { --hw: 24px; --hh: 22px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: grid; grid-template-columns: repeat(4, calc(var(--hw) / 2)); justify-items: center; align-items: center; gap: var(--ork-1) 2px; pointer-events: none; }
-.col-mid:is([data-n="3"], [data-n="4"]) { --hw: 18px; --hh: 17px; }      /* three heads and more are smaller, so the ring keeps room around them (the owner, §241) */
-.col-mid .ork-race__head { width: var(--hw); height: var(--hh); }
-.col-mid[data-n="1"] { grid-template-columns: auto; }
-.col-mid[data-n="2"] > .col-mid__h:nth-child(1) { grid-column: 1 / 3; }
-.col-mid[data-n="2"] > .col-mid__h:nth-child(2) { grid-column: 3 / 5; }
-.col-mid[data-n="3"] > .col-mid__h:nth-child(1) { grid-column: 2 / 4; }
-.col-mid[data-n="3"] > .col-mid__h:nth-child(2), .col-mid[data-n="4"] > .col-mid__h:nth-child(1), .col-mid[data-n="4"] > .col-mid__h:nth-child(3) { grid-column: 1 / 3; }
-.col-mid[data-n="3"] > .col-mid__h:nth-child(3), .col-mid[data-n="4"] > .col-mid__h:nth-child(2), .col-mid[data-n="4"] > .col-mid__h:nth-child(4) { grid-column: 3 / 5; }
-.col-mid__h { display: block; line-height: 0; }
-.col-mid__fan { grid-column: 3 / 5; position: relative; display: block; width: var(--hw); height: var(--hh); }
-.col-mid__fan > .col-mid__h { position: absolute; right: calc(var(--k) * -6px); bottom: calc(var(--k) * 3px); z-index: calc(4 - var(--k)); }      /* the 4th in front, the rest behind it, their edges peeking up and to the right */
-.col-mid__fan > .col-mid__h:not([style*="--k:0"]) { filter: brightness(0.75); }
-.col-mid__h.is-working { animation: ork-guard-step 1.2s steps(2) infinite; }                  /* orkUI's step of a head at work (the portal's corners) */
-@media (prefers-reduced-motion: reduce) { .col-mid__h.is-working { animation: none; } }
-.ork-btn.quiet.col-play { position: absolute; z-index: 45; left: calc(var(--col-shown) / 2); top: 56px; width: 40px; height: 40px; margin: -20px 0 0 -20px; padding: 0; }
-.col-card--down:is(:hover, :focus-visible) + .col-play { transform: translateX(var(--column-tuck)); }
-
-/* face up: its rune and short name at the top, its type in the window, its foot at the bottom */
-.col-card--up.ork-card { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3) var(--ork-3) 22px; }
-.col-hd { display: flex; align-items: flex-start; gap: var(--ork-2); font: var(--ork-type-caption); font-weight: 600; }
-.col-hd .ork-elem { flex: none; margin-top: 1px; }
-.col-nm { min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
-.col-foot { position: absolute; left: 3px; right: 3px; bottom: 2px; height: 17px; box-sizing: border-box; display: flex; align-items: center; gap: var(--ork-1); padding: 0 var(--ork-1); background: var(--ork-card); font: var(--ork-type-caption); font-size: 11px; }
-.col-foot > .col-when, .col-foot > .col-heads { margin-left: auto; }
-.col-when { flex: none; display: inline-flex; align-items: center; gap: 1px; color: var(--ork-ink-muted); white-space: nowrap; }
-.col-when .ork-sign { width: 10px; height: 10px; }
-.col-heads { flex: none; display: flex; }
-.col-heads .ork-race__head { width: 12px; height: 11px; }
-.col-mark { flex: none; display: inline-flex; margin-left: auto; }
-.col-when + .col-mark, .col-heads + .col-mark { margin-left: 0; }
-.col-mark.is-asks { color: var(--ork-alert); }
-.col-mark.is-failed { color: var(--ork-danger); }
-.col-card--up.is-off .col-hd { opacity: 0.6; }
-/* the wait as a bar in eighths along the front card's foot (the goal's colour); its width is the share the page sets (`shareOf` rounds it to eighths) */
-.col-wbar { position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: color-mix(in srgb, var(--ork-ink-faint) 30%, transparent); }
-.col-wbar > i { display: block; height: 100%; width: calc(var(--s) * 100%); background: var(--c); }
-.col-wbar.is-quiet > i { width: 100%; background: transparent; }          /* a spec waiting for its look: the bar is quiet, a clock time and no count (spec 144 B.2) */
+/* -- At work · later, standing: 144 x 202 read by its four corners (corners.css). The pile's room is whatever the fan and the deck leave, clipped at its foot: the cards behind lie `--y` lower (a foot of 26 px, an edge of 3), or when the pile sinks
+      under the hand's rim `--x` to the right, 3 px each (giveway.js, column.js) ----------------------------------------------------------------------------------------------------------------------------- */
+.col-room { flex: 1 1 0; min-height: 0; overflow: hidden; margin-right: calc(var(--col-out) * -1); padding-right: var(--col-out); }      /* clipped at its foot (and so never makes the column scroll); its right end is free for a card slid out */
+.col-pile.is-up { height: calc(var(--col-edge) * 7 / 5 + var(--behind, 0px)); }
+.col-card--up.ork-card { left: 0; top: var(--y, 0px); z-index: calc(10 - var(--i)); display: flex; flex-direction: column; gap: var(--ork-3); width: var(--col-edge); aspect-ratio: 5 / 7; padding: calc(var(--ork-3) - var(--ork-line)) var(--ork-3); transform: translateX(var(--x, 0px)); }      /* 1 px of border, 5 of padding: the foot row is 26 px from the card's bottom, the top 32 px to the name */
+.col-card--up.ork-card:is(:hover, :focus-visible) { z-index: 40; transform: translate(calc(var(--x, 0px) + 36px), 0) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* out of its pile, whole */
+.col-card--up.ork-card.is-off .col-nm { opacity: 0.6; }
+.col-nm { flex: none; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; line-height: 20px; }      /* the name in up to four lines of 20 px (giveWay's rim falls between them) */
+.col-foot { flex: none; margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.col-foot .corner--foot { margin-top: 0; }
+.col-now { display: flex; align-items: flex-start; gap: var(--ork-1); min-height: 28px; color: var(--ork-ink-read); font: var(--ork-type-caption); font-size: 11px; line-height: 14px; }
+.col-now .ork-sign { flex: none; margin-top: 1px; }
+.col-now__t { min-width: 0; flex: 1 1 auto; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.col-now[data-asked] { color: var(--ork-ink-faint); }
+/* the wait as a bar in eighths along the foot (the goal's colour); its width is the share the page sets (`shareOf` rounds it to eighths) */
+.col-wbar { flex: none; height: 3px; background: var(--ork-frame); }
+.col-wbar > i { display: block; height: 100%; width: calc(var(--s, 0) * 100%); background: var(--c); }
+.col-wbar.is-quiet > i { width: 0; }          /* a wait with no known share: the track alone, no count */
 .col-c-meadow { --c: var(--ork-elem-meadow); }
 .col-c-ice { --c: var(--ork-elem-ice); }
 .col-c-dust { --c: var(--ork-elem-dust); }
@@ -102,7 +89,9 @@
 
 /* a card of the hand lifted raises the cards of the goal it is about (hand/about.js `.is-about`): a little, and by its edge under reduced motion */
 .frame-column .col-card.is-about { transform: translateX(8px); box-shadow: -4px 4px 0 var(--ork-scrim); }
-@media (prefers-reduced-motion: reduce) { .frame-column .col-card.is-about { transform: none; box-shadow: inset 0 0 0 2px var(--ork-ink); } }
+.frame-column .col-card--fan.is-about { transform: translateY(-6px) rotate(var(--r, 0deg)); }
+.frame-column .col-card--up.is-about { transform: translateX(calc(var(--x, 0px) + 8px)); }
+@media (prefers-reduced-motion: reduce) { .frame-column .col-card.is-about { transform: none; box-shadow: inset 0 0 0 2px var(--ork-ink); } .frame-column .col-card--fan.is-about { transform: rotate(var(--r, 0deg)); } .frame-column .col-card--up.is-about { transform: translateX(var(--x, 0px)); } }
 
 /* what a press lifts over the pane: the list of In analysis in order, or a card's choices, beside the column */
 .col-lift { position: absolute; z-index: 20; display: flex; flex-direction: column; gap: var(--ork-3); width: 280px; max-height: calc(100% - var(--ork-4)); overflow-y: auto; padding: var(--ork-4); }
@@ -128,8 +117,3 @@
 .col-pass__left { color: var(--ork-ink-faint); font-size: 11px; white-space: nowrap; }
 .col-pass__acts { display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-1); padding: 0 var(--ork-2) var(--ork-2); }
 .col-pass__acts .ork-btn { white-space: normal; }
-.col-mark.is-asked { color: var(--ork-ink-faint); gap: 1px; align-items: center; white-space: nowrap; font-size: 11px; }
-.col-mark.is-asked .ork-sign { width: 10px; height: 10px; }
-.col-asked { color: var(--ork-ink-faint); }
-.col-card--up .col-foot { overflow: hidden; }
-.col-under--asked { flex: 1 0 100%; }      /* *Asked Tech* of a goal under the front card: its own line, never cut by the pile's two */

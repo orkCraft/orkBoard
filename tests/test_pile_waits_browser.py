@@ -74,8 +74,8 @@ def test_a_held_goal_is_not_named_and_its_row_says_held_with_talk(gui):
     try:
         assert pg.locator(UNDER).inner_text() == ""
         card = pg.locator('.col-card--down[data-goal="a"]')
-        assert "Held" in card.inner_text() and "held: nothing starts it until you press Talk" in card.get_attribute("aria-label")
-        card.click(position={"x": 100, "y": 50})
+        assert card.locator(".col-fan__held .ork-sign").count() == 1 and "held: nothing starts it until you press Talk" in card.get_attribute("aria-label"), "its back says Held by the pause sign (spec 147 B.2: no room for the word), its label says what holds it"
+        card.click(position={"x": 28, "y": 50})
         row = pg.locator('.col-list__row[data-goal="a"]')
         row.wait_for(timeout=WAIT_MS)
         assert "Held" in row.inner_text()

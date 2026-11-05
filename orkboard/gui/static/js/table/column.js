@@ -15,7 +15,8 @@ import { askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { DropAsk, GoalMenu } from "./dropgoal.js";
 import { liftDecision } from "../hand/state.js";
 import { Said } from "../hand/sayonce.js";
-import { ACTIVE, Pile, PILES, lookAt, nextWords, pilesOf, underOf } from "./piles.js";
+import { ACTIVE, Pile, PILES, WORK_SHOWN, lookAt, nextWords, pilesOf, underOf } from "./piles.js";
+import { giveWay } from "./giveway.js";
 import { useColumnMotion } from "./colmotion.js";
 import { moodOf } from "./moods.js";
 import { holdWords, waitsWords } from "./holdwords.js";
@@ -121,9 +122,29 @@ function useBeside(root, key, sel) {
   return at;
 }
 
+/** *At work · later* gives way to the window and the column never scrolls (spec 147 B.5, decisions §251.4): the room the pile may take is measured (its box is whatever the fan and the deck leave under their own, never what the pile holds), and `giveWay` (giveway.js) says how far each card behind
+ *  lies below the front one, or that the pile sinks under the hand's rim. Measured again whenever the box changes (a resized window, a goal moved from one pile to another). `laid`: the piles are drawn. */
+function useGiveWay(root, count, laid) {
+  const [way, setWay] = useState(null);
+  useLayoutEffect(() => {
+    const room = laid ? root.current?.querySelector(".col-room") : null;
+    if (!room) { setWay(null); return undefined; }
+    const measure = () => {
+      const next = giveWay({ room: room.clientHeight, front: room.querySelector(".col-card--up")?.offsetHeight || 202, behind: Math.max(0, Math.min(count, WORK_SHOWN) - 1) });
+      setWay((was) => (was && was.sunk === next.sunk && was.push === next.push && was.steps.join() === next.steps.join() ? was : next));
+    };
+    measure();
+    const watch = new ResizeObserver(measure);
+    watch.observe(room);
+    return () => watch.disconnect();
+  }, [count, laid]);
+  return way;
+}
+
 export function Column() {
   const root = useRef(), nodes = mapData.value?.nodes || [], piles = pilesOf(nodes), parties = partiesNow(), all = partiesAll(), [lift, setLift] = useState(null);
   useColumnMotion(root, piles.work);
+  const laid = laidNow(), way = useGiveWay(root, piles.work.length, laid);
   const gone = lift?.kind === "acts" && !nodes.some((n) => n.slug === lift.slug);
   useEffect(() => { if (gone || (lift?.kind === "list" && !piles.analysis.length)) setLift(null); });
   useEffect(() => {                                                                    // Esc or a press away puts the lifted thing away
@@ -143,12 +164,12 @@ export function Column() {
     if (picked.value !== n.slug) pick(n.slug);
   };
   const place = useBeside(root, `${lift?.kind}:${lift?.slug}`, lift?.kind === "acts" ? `.col-card[data-goal="${lift.slug}"]` : '.col-sec[data-pile="analysis"]');
-  const behind = piles.analysis.slice(1).find(({ n }) => askedWords(n.slug));                                  // a goal asked of another leader that lies under the front card: its line is the pile's
+  const behind = piles.analysis.find(({ n }) => askedWords(n.slug));                                          // a goal asked of another leader: its line is the pile's (a back of the hand has no room to say it)
   const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: nextWords(piles.review), work: "" }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
   return html`<div class="col" ref=${root} data-col="1">
     <${Top} parties=${parties} all=${all} />
     <${SetupBubble} />
-    ${laidNow() && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : ""} onPress=${press} open=${lift?.kind === "list"} />`)}</div>`}
+    ${laid && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : ""} onPress=${press} open=${lift?.kind === "list"} way=${id === "work" ? way : null} />`)}</div>`}
     <${Passing} />
     ${lift?.kind === "list" && html`<${List} items=${piles.analysis} place=${place} close=${() => setLift(null)} />`}
     ${item && !gone && html`<${Acts} n=${item} off=${lift.off} place=${place} close=${() => setLift(null)} />`}

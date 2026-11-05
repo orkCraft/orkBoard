@@ -103,19 +103,19 @@ def test_pressed_it_offers_answer_it_myself_and_pass_it_now_with_its_id(gui):
     assert not log, "\n".join(log)
 
 
-def test_the_goals_card_says_asked_tech_with_the_faint_sign_not_yellow(gui):
+def test_the_piles_line_says_asked_tech_in_the_faint_ink_and_the_goals_back_is_not_yellow(gui):
+    """Spec 147 B.2: a back of the Orkmaster's hand has no room for words, so the question passed on is the pile's line (as it was for a card under the front one), faint, never yellow."""
     pg, host, log = start(gui, [row(idea="reading", by="design", to="tech")])
     try:
         pg.wait_for_selector(".col-pass", timeout=WAIT_MS)
-        asked = pg.locator('.frame-column .col-card[data-goal="reading"] [data-asked="reading"]')
+        asked = pg.locator('[data-under-asked="analysis"]')
         asked.wait_for(timeout=WAIT_MS)
-        assert asked.inner_text().strip() == "Asked Tech" and asked.locator(".ork-sign").count() == 1
+        assert asked.inner_text().strip() == "Asked Tech" and asked.evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-ink-faint)'; document.body.append(s); const v = getComputedStyle(s).color; s.remove(); return v; }"), "faint, not yellow"
         assert "asks" not in (pg.locator('.frame-column .col-card[data-goal="reading"]').get_attribute("class") or "").split(), "not yellow: it waits for no one"
-        assert pg.locator('[data-under-asked]').count() == 0, "the front card says it; the pile's line only for a card under the front"
         shot(pg, "asked")
         host.put([row(idea="talk", by="tech", to="design")])
         pg.wait_for_function("() => (document.querySelector('[data-under-asked=analysis]')?.textContent || '') === 'Asked Design'", timeout=WAIT_MS)
-        assert pg.locator("[data-asked]").count() == 0, "a goal under the front card is read in the pile's line"
+        assert pg.locator("[data-asked]").count() == 0, "a back of the hand says nothing itself: it is read in the pile's line"
         pg.locator(".col-pass__main").click()
         pg.locator("[data-pass-take]").wait_for(timeout=WAIT_MS)
         host.put([])

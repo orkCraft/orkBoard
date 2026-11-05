@@ -1,16 +1,19 @@
-"""Spec 128 part B (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md, decisions §206.2–§206.3; mockup docs/mockups/goal-card/), in a real browser against a stub host: the Orkmaster's column pinned at the window's left, its head the Orkmaster's tab
-(open at first, underlined, the tabs at the top the leaders' alone), its three piles by the goals' states (In analysis face down with no name, To review face up with its wait, At work · later), what a press does (a face-down card lifts the pile's list with Next and
-Remove, a face-up card picks its goal, a card of To review lifts Start now and Hold, a put-off one Start now and Back to review), the foot of each card under the front one, the moves between piles, and the phone (under 760 px: no column, the Orkmaster's tab and lane as they were)."""
+"""Spec 128 part B (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md, decisions §206.2–§206.3) as spec 147 part B changed it (docs/specs/147-one-card-four-corners.md, decisions §251.3–§251.4; mockup docs/mockups/card-ratio/), in a real browser against a stub host: the
+Orkmaster's column, 160 px, pinned at the window's left, its head the Orkmaster's tab (open at first, underlined, the tabs at the top the leaders' alone), its three piles by the goals' states (In analysis the Orkmaster's hand, a near-straight fan of 56 x 78 backs with the goal being read lifted;
+To review a squared deck of backs on their side, its ring the wait, the next to start named; At work · later standing cards read by their four corners), what a press does (a back of the hand lifts the pile's list with Next and Remove, a back of the deck or a standing card picks its goal, a card of
+To review lifts Start now and Hold, a put-off one Start now and Back to review), the foot of each card behind the front one, a column that never scrolls and gives way to a short window (giveWay), the moves between piles, and the phone (under 760 px: no column, the Orkmaster's tab and lane as they were)."""
 from __future__ import annotations
 
-import os
+import re
+from pathlib import Path
 
 import pytest
 
 pytest.importorskip("playwright.sync_api")
 
+from orkboard.realm import lexicon  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, head, need, node, open_hand, sig, task  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, call, head, need, node, open_hand, sig, task  # noqa: E402
 from tests.test_shell_browser import _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -67,7 +70,7 @@ def test_the_column_lies_left_of_the_table_the_table_height_and_its_head_is_the_
         col = pg.locator(".frame-column")
         col.wait_for(timeout=WAIT_MS)
         c, t, h = col.bounding_box(), pg.locator(".frame-table").bounding_box(), pg.locator(".frame-hand").bounding_box()
-        assert c["x"] == 0 and c["x"] + c["width"] <= t["x"] + 1 and 120 <= c["width"] <= 136, (c, t)
+        assert c["x"] == 0 and c["x"] + c["width"] <= t["x"] + 1 and abs(c["width"] - 160) <= 1, ("spec 147 B.1: 160 px", c, t)
         assert abs(c["height"] - t["height"]) <= 1 and c["y"] + c["height"] <= h["y"] + 1, "the table's height, the hand under both"
         assert h["x"] == 0 and h["width"] >= c["width"] + t["width"] - 1
         tab = col.get_by_role("tab")
@@ -94,40 +97,47 @@ def test_the_three_piles_hold_the_goals_by_their_states_and_a_goal_lies_in_one(g
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
         assert [t.strip() for t in pg.eval_on_selector_all(".col-plab__t", "els => els.map((e) => e.textContent)")] == ["In analysis", "To review", "At work · later"]
-        assert goals(pg, "analysis") == ["reading", "talk", "raw1", "raw2"], "the one the Orkmaster reads first, then Talk, then the rest in its order; the fifth is an edge"
+        assert goals(pg, "analysis") == ["reading", "talk", "raw1", "raw2", "raw3"], "the one the Orkmaster reads first, then Talk, then the rest in its order: every goal of the pile is a back of the hand"
         assert goals(pg, "review") == ["timer", "scoring"], "agreed, the wait that ends first in front"
         assert goals(pg, "work") == ["music", "held", "late"], "at work, then held, then the night's"
         every = goals(pg, "analysis") + goals(pg, "review") + goals(pg, "work")
         assert len(every) == len(set(every)) and "old" not in every, "a goal in one pile; a goal done is the discard's"
-        assert pg.locator(".col-card--down").count() == 4 and pg.locator(".col-card--up").count() == 5
-        assert pg.locator(".col-sec .col-plab").all_inner_texts() and "writing: Players see who answered first" in pg.locator('[data-under="analysis"]').inner_text()
-        assert "next in 2 min" in pg.locator('[data-under="review"]').inner_text()
+        assert pg.locator(".col-card--fan").count() == 5 and pg.locator(".col-card--deck").count() == 2 and pg.locator(".col-card--up").count() == 3, "the hand, the deck and the standing cards"
+        assert pg.locator(".col-sec .col-plab").all_inner_texts() and pg.locator('[data-under="analysis"]').inner_text() == "reading: Players see who answered first"
+        assert pg.locator('[data-under="review"]').inner_text() == "next in 2 min: Round timer on phones", "the next to start, its time and its name"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_card_of_in_analysis_is_face_down_and_sideways_with_no_name_its_front_ring_runs_and_the_pile_is_tight(gui):
+def test_in_analysis_is_the_orkmasters_hand_a_fan_of_small_backs_each_rune_in_its_middle_and_the_goal_being_read_lifted(gui):
+    """Spec 147 B.2 (decisions §251.3): every goal of the pile a back 56 x 78 standing, orkUI's small seal and its goal's rune in its middle, a near-straight fan, the one being read lifted and its rune glowing, no name on the face (it is in the back's title and label)."""
     pg, host, log = open_column(gui)
     try:
-        pg.wait_for_selector(".col-card--down", timeout=WAIT_MS)
-        down = pg.locator(".col-card--down")
-        for i in range(down.count()):
-            card = down.nth(i)
-            text = card.inner_text().strip()
-            assert text == "", f"face down with no name: {text!r}"
-            assert card.locator(".ork-sigil .ork-elem").count() == 1, "its rune at the seal's top"
-        boxes = [down.nth(i).bounding_box() for i in range(down.count())]
-        assert abs(boxes[0]["width"] - 157) <= 1 and abs(boxes[0]["height"] - 112) <= 1, f"sideways, 157 x 112: {boxes[0]}"
-        assert [round(b["y"] - boxes[0]["y"]) for b in boxes] == [0, 4, 8, 12], "tight: 4 px edges"
-        assert pg.locator(".col-pile.is-down .col-edges").count() == 1, "a fifth is an edge only"
-        front = down.first
-        assert front.locator(".col-sigil.col-busy").count() == 1 and down.nth(1).locator(".col-busy").count() == 0, "the front card's ring runs"
-        assert "Players see who answered first" in front.get_attribute("aria-label")
-        assert pg.locator(".col-card--down .table-back-nm").count() == 0
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-sigil.col-busy'), '::after').animationName") == "ork-sigil-sweep"
+        pg.wait_for_selector(".col-card--fan", timeout=WAIT_MS)
         pg.emulate_media(reduced_motion="reduce")
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-sigil.col-busy'), '::after').animationName") == "none", "still under reduced motion"
+        fan = pg.locator(".col-fan")
+        cards = pg.locator(".col-card--fan")
+        assert cards.count() == 5
+        for i in range(cards.count()):
+            card = cards.nth(i)
+            assert card.inner_text().strip() == "", "face down: no name on its face"
+            assert card.locator(".ork-card-back").count() == 1 and card.locator(".ork-sigil.small").count() == 1 and card.locator(".ork-elem").count() == 1, "orkUI's back, its small seal and the goal's rune"
+            assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [56, 78], "56 x 78"
+            rune, box = card.locator(".ork-elem").bounding_box(), card.evaluate("e => { const r = e.getBoundingClientRect(); return {x: r.x, y: r.y, w: r.width, h: r.height}; }")
+            assert abs(rune["x"] + rune["width"] / 2 - (box["x"] + box["w"] / 2)) <= 4 and abs(rune["y"] + rune["height"] / 2 - (box["y"] + box["h"] / 2)) <= 8, "the rune in the back's middle"
+            assert (card.get_attribute("title") or "").startswith(["Players see", "A sound when", "Kick a player", "Host can skip", "Mute a noisy"][i]) and card.get_attribute("aria-label") == card.get_attribute("title"), "its goal's name"
+        assert fan.evaluate("e => e.offsetWidth") <= 144
+        step = cards.evaluate_all("els => els.map((e) => e.offsetLeft)")
+        assert [b - a for a, b in zip(step, step[1:])] == [22] * 4, f"five backs: 88 / 4 = 22 px apart ({step})"
+        turns = cards.evaluate_all("els => els.map((e) => e.style.getPropertyValue('--r'))")
+        assert turns == ["-3deg", "-1.5deg", "0deg", "1.5deg", "3deg"], "1.5 degrees apart about the middle one"
+        reading = pg.locator(".col-card--fan.is-reading")
+        assert reading.count() == 1 and reading.get_attribute("data-goal") == "reading", "the one the Orkmaster reads"
+        lift = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => { const m = new DOMMatrix(getComputedStyle(e).transform); return Math.round(m.f); })")
+        assert lift[0] == -12 and lift[1:] == [0, 0, 0, 0], "lifted 12 px out of the fan"
+        assert reading.locator(".ork-elem.is-glowing").count() == 1 and cards.nth(1).locator(".is-glowing").count() == 0, "its rune glows"
+        assert pg.locator(".col-card--down.col-card--fan .col-sigil").count() == 0 and pg.locator(".col-card--fan .col-mid, .col-card--fan .col-play").count() == 0
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -204,6 +214,7 @@ def test_a_face_up_card_picks_its_goal_and_a_card_of_to_review_lifts_start_now_a
 def test_a_put_off_card_lifts_start_now_and_back_to_review_and_says_held_or_the_moon(gui):
     pg, host, log = open_column(gui)
     try:
+        pg.set_viewport_size({"width": 1280, "height": 1100})                      # room for the foot of each card behind the front one
         pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
         held, late = pg.locator('.col-card[data-goal="held"]'), pg.locator('.col-card[data-goal="late"]')
         assert "Held" in held.locator(".col-foot").inner_text() and held.locator(".col-foot .ork-sign.pause, .col-foot [class*=pause]").count() >= 0
@@ -224,26 +235,34 @@ def test_a_put_off_card_lifts_start_now_and_back_to_review_and_says_held_or_the_
     assert not log, "\n".join(log)
 
 
-def test_a_pile_shows_its_front_card_whole_and_the_foot_of_each_under_it_then_edges_and_a_card_hovered_slides_out(gui):
+def test_the_deck_is_squared_three_pixels_apart_and_standing_cards_show_the_foot_of_each_behind_the_front_one_and_a_card_hovered_slides_out(gui):
     host = ColumnHost()
     for i in range(6):
         host.nodes.append(node(f"more{i}", "tech", f"Another goal {i}", "table", state="ready", agreed=True, element="ice", back=back(ripe=ripe(600 + i))))
+    for i in range(3):
+        host.nodes.append(node(f"also{i}", "tech", f"Also at work {i}", "table", state="working", element="dust", stage="implementation", tasks=[task(f"a{i}", "Do it", "running")]))
     pg, host, log = open_column(gui, host=host)
     try:
-        pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
-        cards = pg.locator('.col-sec[data-pile="review"] .col-card')
-        assert cards.count() == 4, "the front and three under it, no count"
-        boxes = [cards.nth(i).bounding_box() for i in range(4)]
-        assert abs(boxes[0]["width"] - 112) <= 1 and boxes[0]["height"] < 157 - 20, f"112 wide, no window: shorter than the old 157 px {boxes[0]}"
-        assert abs(boxes[1]["height"] - boxes[0]["height"]) <= 1, "a pile's cards are as tall as its tallest content"
-        assert [round(b["y"] - boxes[0]["y"]) for b in boxes] == [0, 20, 40, 60], "the foot of each, 20 px"
-        assert pg.locator('.col-sec[data-pile="review"] .col-edges').count() == 1, "then thin edges"
-        assert "2 min" in cards.first.locator(".col-foot").inner_text() and cards.first.locator(".col-wbar").count() == 1, "the first's wait as a bar and its time"
-        assert cards.nth(1).locator(".col-wbar").count() == 0 and "~" in cards.nth(1).locator(".col-foot").inner_text(), "the others the time they would start"
+        pg.set_viewport_size({"width": 1280, "height": 1200})
+        pg.wait_for_selector(".col-card--deck", timeout=WAIT_MS)
+        deck = pg.locator('.col-sec[data-pile="review"] .col-card')
+        assert deck.count() == 5, "the front and four behind, no count"
+        boxes = [deck.nth(i).bounding_box() for i in range(5)]
+        assert all(abs(b["width"] - 157) <= 1 and abs(b["height"] - 112) <= 1 for b in boxes), f"on their side, 157 x 112: {boxes[0]}"
+        assert [round(b["y"] - boxes[0]["y"]) for b in boxes] == [0, 3, 6, 9, 12], "a squared deck: 3 px apart"
+        assert len({round(b["x"]) for b in boxes}) == 1, "unturned, one above another"
+        assert deck.evaluate_all("els => els.map((e) => getComputedStyle(e).transform)") == ["none"] * 5
+        work = pg.locator('.col-sec[data-pile="work"] .col-card')
+        pg.wait_for_function("() => document.querySelectorAll('.col-sec[data-pile=work] .col-card').length >= 4", timeout=WAIT_MS)
+        assert work.count() == 6, "the front and five behind"
+        wb = [work.nth(i).bounding_box() for i in range(work.count())]
+        assert all(abs(b["width"] - 144) <= 1 and abs(b["height"] - 202) <= 1 for b in wb), f"standing, 144 x 202: {wb[0]}"
+        assert all(abs(b["x"] + b["width"] - 144) <= 1 for b in wb[:1]) and abs(boxes[0]["x"] + boxes[0]["width"] - 144) <= 1, "the deck and the standing cards share one right edge"
         assert pg.locator(".col-sec .col-plab").first.inner_text() and "More" not in pg.locator(".col-scroll").inner_text()
-        before = cards.nth(2).bounding_box()
-        cards.nth(2).hover(position={"x": 30, "y": boxes[2]["height"] - 6})
-        pg.wait_for_function("([x]) => { const e = document.querySelectorAll('.col-sec[data-pile=review] .col-card')[2]; return e.getBoundingClientRect().x > x + 20; }", arg=[before["x"]], timeout=WAIT_MS)
+        before = work.nth(1).bounding_box()
+        assert [round(wb[i + 1]["y"] - wb[i]["y"]) for i in range(5)] == [26] * 5, "the foot of each, 26 px"
+        work.nth(1).hover(position={"x": 30, "y": wb[1]["height"] - 6})
+        pg.wait_for_function("([x]) => { const e = document.querySelectorAll('.col-sec[data-pile=work] .col-card')[1]; return e.getBoundingClientRect().x > x + 20; }", arg=[before["x"]], timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -252,15 +271,15 @@ def test_a_pile_shows_its_front_card_whole_and_the_foot_of_each_under_it_then_ed
 def test_a_goal_agreed_moves_from_in_analysis_to_to_review_and_its_wait_over_to_at_work(gui):
     pg, host, log = open_column(gui)
     try:
-        pg.wait_for_selector(".col-card--down", timeout=WAIT_MS)
+        pg.wait_for_selector(".col-card--fan", timeout=WAIT_MS)
         host.nodes[2].update(state="ready", agreed=True, back=back(ripe=ripe(60)))
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.col-sec[data-pile=review] [data-goal=raw1]')", timeout=WAIT_MS)
-        assert "raw1" not in goals(pg, "analysis") and pg.locator('.col-card[data-goal="raw1"]').get_attribute("class").count("col-card--up") == 1, "turned up where it lay"
+        assert "raw1" not in goals(pg, "analysis") and pg.locator('.col-card[data-goal="raw1"]').get_attribute("class").count("col-card--deck") == 1, "a back of the deck now: it waits for its start, face down"
         host.nodes[2].update(state="working", stage="implementation", back=back(ripe=ripe(0, by="leaders")), tasks=[task("r1", "Kick it", "running")])
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.col-sec[data-pile=work] [data-goal=raw1]')", timeout=WAIT_MS)
-        assert "raw1" not in goals(pg, "review")
+        assert "raw1" not in goals(pg, "review") and pg.locator('.col-card[data-goal="raw1"]:not(.table-flyer)').get_attribute("class").count("col-card--up") == 1, "standing: it plays"
         pg.wait_for_selector('.table-board .table-goal[data-goal="raw1"]', timeout=WAIT_MS)
         host.nodes[2].update(state="done", tasks=[])
         host.bump({})
@@ -285,15 +304,15 @@ class SortHost(ColumnHost):
         ]
 
 
-def test_a_decision_and_a_spec_being_written_lie_face_down_and_a_spec_made_in_to_review_face_up(gui):
+def test_a_decision_and_a_spec_being_written_are_backs_of_the_hand_and_a_spec_made_a_back_of_the_deck(gui):
     pg, host, log = open_column(gui, host=SortHost())
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
         assert sorted(goals(pg, "analysis")) == ["decide", "draft", "sect", "sketch"], "decided, sections, sketch and the Orkmaster's own planning: face down"
         assert goals(pg, "review") == ["made"], "a spec made by its leaders (agreed) waits in To review, face up"
         assert goals(pg, "work") == ["heldd"], "a decided goal held stays put off"
-        assert pg.locator('.col-card[data-goal="made"]').get_attribute("class").count("col-card--up") == 1
-        assert "writing: " in pg.locator('[data-under="analysis"]').inner_text() and pg.locator(".col-card--down").first.locator(".col-sigil.col-busy").count() == 1, "the leaders writing its spec: the ring runs and the title says it"
+        assert pg.locator('.col-card[data-goal="made"]').get_attribute("class").count("col-card--deck") == 1
+        assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") and pg.locator(".col-card--fan").first.locator(".ork-elem.is-glowing").count() == 1, "the leaders writing its spec: the front back lifted with its rune glowing and the title says it"
         pg.locator('.col-sec[data-pile="analysis"] .col-card--down').first.click()
         assert len(pg.locator(".col-list__row").all_inner_texts()) == 4
         pg.keyboard.press("Escape")
@@ -303,7 +322,7 @@ def test_a_decision_and_a_spec_being_written_lie_face_down_and_a_spec_made_in_to
         pg.wait_for_function("() => document.querySelectorAll('.col-sec[data-pile=analysis] .col-card').length === 1", timeout=WAIT_MS)
         card = pg.locator('.col-card[data-goal="decide"]')
         assert "its decision waits for your word" in card.get_attribute("aria-label") and "waits for you" in pg.locator('[data-under="analysis"]').inner_text()
-        assert card.locator(".col-sigil.col-stopped").count() == 1 and card.locator(".col-busy").count() == 0, "yellow and still: it waits for the person"
+        assert "asks" in card.get_attribute("class").split() and card.locator(".is-glowing").count() == 0, "its frame in the alert and nothing glowing: it waits for the person"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -360,8 +379,8 @@ def test_an_agreed_decision_whose_wait_runs_is_not_in_the_hand_and_the_column_sa
         assert under.startswith("decided: Round timer on phones · starts its spec at ") and len(under.split(" at ")[-1]) == 5, under
         card = pg.locator('.col-card[data-goal="agreed"]')
         assert "its decision is agreed; its spec starts by itself at " in card.get_attribute("aria-label")
-        assert card.locator(".col-stopped").count() == 0, "it asks nothing: its ring is not yellow"
-        card.click(position={"x": 53, "y": 8})          # beside the play in its middle
+        assert "asks" not in card.get_attribute("class").split(), "it asks nothing: its frame is not yellow"
+        card.click(position={"x": 20, "y": 8})          # the first back of the hand: the second lies over its right end
         rows = pg.locator(".col-list__row")
         assert rows.count() == 2
         agreed = pg.locator('.col-list__row[data-goal="agreed"]')
@@ -382,7 +401,7 @@ def test_start_now_on_an_agreed_decision_confirms_it(gui):
     pg, host, log = open_column(gui, host=AgreedHost())
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
-        pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 53, "y": 8})      # beside the play in its middle
+        pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 20, "y": 8})      # the first back of the hand: the second lies over its right end
         pg.locator('.col-list__row[data-goal="agreed"]').get_by_role("button", name="Start now").click()
         assert _sent(pg, host, ("ideas.confirm", {"idea": "agreed"}))
         pg.wait_for_selector(".col-list", state="detached", timeout=WAIT_MS)
@@ -395,7 +414,7 @@ def test_change_on_an_agreed_decision_holds_its_wait_and_brings_its_card_into_th
     pg, host, log = open_column(gui, host=AgreedHost())
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
-        pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 53, "y": 8})      # beside the play in its middle
+        pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 20, "y": 8})      # the first back of the hand: the second lies over its right end
         pg.locator('.col-list__row[data-goal="agreed"]').get_by_role("button", name="Change…").click()
         assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "agreed"}))
         pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
@@ -408,7 +427,7 @@ def test_change_on_an_agreed_decision_holds_its_wait_and_brings_its_card_into_th
     assert not log, "\n".join(log)
 
 
-# -- decisions §241: the face-down front card's ring says where the goal is -------------------------------------------------------------------------------------------
+# -- the Orkmaster's hand says where each goal is by its back alone (decisions §251.3; the middle of the front card's ring of §241 is gone with the card) -------------------------------------------------------------------------------
 
 RACES = [("tech", "shaman"), ("design", "dryad"), ("product", "unicorn"), ("release", "lich"), ("live", "imp")]
 
@@ -430,155 +449,81 @@ class RingHost(ColumnHost):
 
 def ring_card(gui, **kw):
     pg, host, log = open_column(gui, host=RingHost(**kw))
-    pg.wait_for_selector('.col-card--down[data-goal="g"]', timeout=WAIT_MS)
+    pg.wait_for_selector('.col-card--fan[data-goal="g"]', timeout=WAIT_MS)
     return pg, host, log
 
 
-def boxes(pg):
-    got = pg.eval_on_selector_all('.col-card--down[data-goal="g"] .col-mid__h', "els => els.map((e) => { const r = e.getBoundingClientRect(); return {party: e.dataset.party, x: r.x, y: r.y, w: r.width, h: r.height, still: e.dataset.still, anim: getComputedStyle(e).animationName}; })")
-    return sorted(got, key=lambda b: [p for p, _ in RACES].index(b["party"]))                                           # in the route's order (the fan's front head is last in the page)
-
-
-def shoot(pg, name):
-    where = os.environ.get("RING_SHOTS")
-    if where:
-        os.makedirs(where, exist_ok=True)
-        pg.locator(".col-pile.is-down").first.screenshot(path=os.path.join(where, f"{name}.png"))
-
-
-def test_the_heads_of_the_route_lie_in_the_rings_middle_by_how_many_and_no_number_shows(gui):
-    for count in (1, 2, 3, 4, 5):
-        pg, host, log = ring_card(gui, state="talk", bk=leaders(count))
+def test_a_goal_the_orkmaster_or_its_leaders_are_on_is_lifted_with_its_rune_glowing_and_a_goal_not_yet_read_is_not(gui):
+    for state, reads in (("reading", True), ("talk", True), ("sections", True), ("routed", False), ("raw", False)):
+        pg, host, log = ring_card(gui, state=state, bk=leaders(2) if state in ("talk", "sections", "routed") else None)
         try:
-            pg.emulate_media(reduced_motion="reduce")                                                                  # laid still: a stepping head moves a pixel
-            hs = boxes(pg)
-            assert len(hs) == count, "one head each"
-            sig_ = pg.locator(".col-card--down .col-sigil").bounding_box()
-            cx = sig_["x"] + sig_["width"] / 2
-            mid = lambda b: b["x"] + b["w"] / 2  # noqa: E731
-            if count == 1:
-                assert abs(mid(hs[0]) - cx) <= 1.5 and hs[0]["w"] >= 22, "one head, the full size, in the middle"
-            else:
-                assert all(h["w"] < 30 for h in hs)
-            if count == 2:
-                assert abs(hs[0]["y"] - hs[1]["y"]) <= 1 and hs[0]["x"] + hs[0]["w"] <= hs[1]["x"], "side by side"
-            if count == 3:
-                assert abs(mid(hs[0]) - cx) <= 1.5 and hs[0]["y"] + hs[0]["h"] <= hs[1]["y"] + 1 and abs(hs[1]["y"] - hs[2]["y"]) <= 1 and hs[1]["x"] < hs[2]["x"], "one over two"
-            if count >= 4:
-                assert abs(hs[0]["y"] - hs[1]["y"]) <= 1 and abs(hs[2]["y"] - hs[3]["y"]) <= 1 and hs[2]["y"] > hs[0]["y"] + 10, "two rows"
-                assert abs(hs[0]["x"] - hs[2]["x"]) <= 1 and abs(hs[1]["x"] - hs[3]["x"]) <= 1 and hs[1]["x"] > hs[0]["x"] + 10, "two columns: a square"
-            if count == 5:
-                fourth, fifth = hs[3], hs[4]
-                over = min(fourth["x"] + fourth["w"], fifth["x"] + fifth["w"]) - max(fourth["x"], fifth["x"])
-                assert over > 10 and (fifth["x"] != fourth["x"] or fifth["y"] != fourth["y"]), "the fifth lies behind the fourth, its edge showing"
-                assert abs(fifth["x"] - fourth["x"]) + abs(fifth["y"] - fourth["y"]) < 12, "a fan, not a fifth place"
-            card = pg.locator('.col-card--down[data-goal="g"]')
-            text = (card.inner_text() + " " + (card.get_attribute("aria-label") or ""))
-            assert not [c for c in text if c.isdigit()], f"no number: {text!r}"
-            shoot(pg, f"heads-x{count}")
+            card = pg.locator('.col-card--fan[data-goal="g"]')
+            assert ("is-reading" in card.get_attribute("class").split()) == reads, state
+            assert card.locator(".ork-elem.is-glowing").count() == int(reads), state
+            assert card.locator(".col-sigil, .col-mid, .col-play").count() == 0, "no ring, no heads, no play on a back of the hand"
+            assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") == (state in ("reading", "sections")), state
         finally:
             pg.close()
         assert not log, "\n".join(log)
 
 
-def test_a_head_that_has_answered_in_talk_stands_still_and_one_whose_call_runs_steps_and_nothing_steps_under_reduced_motion(gui):
-    pg, host, log = ring_card(gui, state="talk", bk=leaders(3, heard=["design"]))
-    try:
-        hs = pg.eval_on_selector_all('.col-card--down[data-goal="g"] .col-mid__h', "els => els.map((e) => [e.dataset.party, getComputedStyle(e).animationName])")
-        assert hs == [["tech", "ork-guard-step"], ["design", "none"], ["product", "ork-guard-step"]]
-        pg.emulate_media(reduced_motion="reduce")
-        assert {a for _, a in pg.eval_on_selector_all('.col-card--down[data-goal="g"] .col-mid__h', "els => els.map((e) => [e.dataset.party, getComputedStyle(e).animationName])")} == {"none"}
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_middle_is_empty_while_the_orkmaster_reads_or_routes_and_the_ring_runs(gui):
-    for state in ("reading", "routed", "raw"):
-        pg, host, log = ring_card(gui, state=state, bk=back(route=leaders(2)["route"]) if state == "routed" else None)
-        try:
-            assert pg.locator(".col-card--down[data-goal=g] .col-mid, .col-card--down[data-goal=g] .col-play").count() == 0, state
-            if state == "reading":
-                assert pg.locator(".col-card--down[data-goal=g] .col-sigil.col-busy").count() == 1, "its ring runs as before"
-                shoot(pg, "empty-reading-ring-runs")
-        finally:
-            pg.close()
-        assert not log, "\n".join(log)
-
-
-def test_the_ring_fills_in_the_runes_colour_by_the_sections_written_and_a_written_head_stands_still(gui):
-    pg, host, log = ring_card(gui, state="sections", bk=leaders(3, written=["tech"]))
-    try:
-        sigil = pg.locator(".col-card--down[data-goal=g] .col-sigil")
-        assert "is-waiting" in sigil.get_attribute("class") and "col-busy" not in sigil.get_attribute("class"), "a fill, not a run"
-        assert float(sigil.get_attribute("data-share")) == pytest.approx(1 / 4), "1 of 3 written, the Orkmaster's join the last share"
-        arc = pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--down[data-goal=g] .col-sigil'), '::after').getPropertyValue('--_arc')")
-        assert arc.strip() == "90deg", f"two places of eight lit ({arc})"
-        colour = pg.evaluate("() => [getComputedStyle(document.querySelector('.col-card--down[data-goal=g] .col-sigil'), '::after').color, getComputedStyle(document.documentElement).getPropertyValue('--ork-elem-ice')]")
-        assert colour[0] != "rgba(0, 0, 0, 0)" and pg.evaluate("(c) => { const s = document.createElement('i'); s.style.color = c; document.body.append(s); const v = getComputedStyle(s).color; s.remove(); return v; }", colour[1].strip()) == colour[0], "the rune's own colour token"
-        assert [h["still"] for h in boxes(pg)] == ["1", "0", "0"], "the written one stands still, the two still writing step"
-        assert [h["anim"] for h in boxes(pg)] == ["none", "ork-guard-step", "ork-guard-step"]
-        shoot(pg, "fill-one-third")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_an_agreed_decision_shows_a_play_whose_ring_counts_the_wait_and_a_press_starts_it_without_the_list(gui):
-    pg, host, log = ring_card(gui, state="decided", bk=leaders(2) | {"ripe": ripe(120, seconds=240)})
-    try:
-        card = pg.locator('.col-card--down[data-goal="g"]')
-        assert card.locator(".col-mid__h").count() == 0 and pg.locator('[data-goal="g"] .col-mid').count() == 0, "the heads give way"
-        play = pg.get_by_role("button", name="Start now: Round timer on phones")
-        assert play.count() == 1 and play.locator(".ork-sign.play").count() == 1 and play.evaluate("e => e.tagName") == "BUTTON"
-        assert card.locator("button").count() == 0, "never a button inside the card's button"
-        b, c = play.bounding_box(), card.bounding_box()
-        assert abs(b["x"] + b["width"] / 2 - (c["x"] + c["width"] + max(c["x"], 0)) / 2) <= 2 and abs(b["y"] + b["height"] / 2 - (c["y"] + c["height"] / 2)) <= 2, "in the ring's middle"
-        sigil = card.locator(".col-sigil")
-        assert "is-waiting" in sigil.get_attribute("class") and "col-stopped" not in sigil.get_attribute("class")
-        arc = pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--down[data-goal=g] .col-sigil'), '::after').getPropertyValue('--_arc')")
-        assert arc.strip() == "180deg", f"half of the wait left: four places of eight ({arc})"
-        shoot(pg, "play-wait-half")
-        play.click()
-        assert _sent(pg, host, ("ideas.confirm", {"idea": "g"}))
-        assert pg.locator(".col-list").count() == 0 and pg.locator(".col-lift").count() == 0, "it does not open the pile's list"
-        card.click(position={"x": 53, "y": 8})
-        pg.locator(".col-list").wait_for(timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_decision_with_no_wait_shows_no_play_and_its_ring_is_yellow_and_still(gui):
+def test_a_goal_asking_the_person_has_the_frame_in_the_alert_and_nothing_glows_and_a_goal_held_says_so_by_a_sign(gui):
     pg, host, log = ring_card(gui, state="decided", bk=leaders(2), needs=[need("decision", "tech", "g", "Round timer on phones", DECISION, number=201, confirmed=False, error="")])
     try:
-        assert pg.locator(".col-play").count() == 0 and pg.locator(".col-card--down[data-goal=g] .col-mid").count() == 0
-        assert pg.locator(".col-card--down[data-goal=g] .col-sigil.col-stopped").count() == 1
-        shoot(pg, "decision-no-wait-yellow-still")
+        card = pg.locator('.col-card--fan[data-goal="g"]')
+        assert "asks" in card.get_attribute("class").split() and card.locator(".is-glowing").count() == 0
+        assert pg.evaluate("() => [getComputedStyle(document.querySelector('.col-card--fan')).borderTopColor, getComputedStyle(document.documentElement).getPropertyValue('--ork-alert')]")[0] != "rgba(0, 0, 0, 0)"
+        assert pg.locator('[data-under="analysis"]').inner_text() == "waits for you" and "its decision waits for your word" in card.get_attribute("aria-label")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+    pg, host, log = ring_card(gui, state="routed", bk=None)
+    try:
+        host.nodes[0]["held_for"] = "hold"
+        host.bump({})
+        pg.wait_for_selector(".col-fan__held .ork-sign", timeout=WAIT_MS)
+        assert "held: nothing starts it until you press Talk" in pg.locator('.col-card--fan[data-goal="g"]').get_attribute("aria-label")
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_face_up_card_has_no_window_its_whole_name_in_three_lines_and_a_foot_without_a_name(gui):
-    """Spec 142 A and spec 140 A2 (decisions §249.1, §247.4): rune and whole name, then the foot; the name only in the foot's title and aria-label."""
-    long = "Rename every room after it is made so the whole line of the name has to be said in three lines of the card"
+def test_an_agreed_decision_says_when_its_spec_starts_under_the_title_and_start_now_is_on_its_row(gui):
+    pg, host, log = ring_card(gui, state="decided", bk=leaders(2) | {"ripe": ripe(120, seconds=240)})
+    try:
+        under = pg.locator('[data-under="analysis"]').inner_text()
+        assert under.startswith("decided: Round timer on phones · starts its spec at "), under
+        assert pg.locator(".col-play").count() == 0, "a back of the hand has no play: its row in the list has Start now"
+        pg.locator('.col-card--fan[data-goal="g"]').click()
+        pg.locator('.col-list__row[data-goal="g"]').get_by_role("button", name="Start now").click()
+        assert _sent(pg, host, ("ideas.confirm", {"idea": "g"}))
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_standing_card_has_its_four_corners_its_name_in_four_lines_and_a_foot_row_that_is_26_px_from_its_bottom(gui):
+    """Spec 147 B.4 (decisions §251.3): rune and kind at the top, the name in up to four lines, what it does now, the wait's bar where it waits, who and how much at the foot; no window, no name in a foot."""
+    long = "Rename every room after it is made so the whole line of the name has to be said in four lines of the card, with every word of it kept in the page"
     host = ColumnHost()
-    host.nodes.append(node("longone", "tech", long, "table", state="ready", agreed=True, element="ice", back=back(ripe=ripe(700))))
+    host.nodes.append(node("longone", "tech", long, "table", state="working", element="ice", stage="implementation", tasks=[task("l1", "Rename them", "running", left=720)]))
     pg, host, log = open_column(gui, host=host)
     try:
         pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
         card = pg.locator('.col-card[data-goal="longone"]')
         assert pg.locator(".col-card--up .col-win, .col-card--up .table-card__win").count() == 0
-        assert pg.locator(".col-card--up .col-fnm").count() == 0, "no name text in a foot"
-        foot = card.locator(".col-foot")
-        assert foot.get_attribute("title") == long and foot.get_attribute("aria-label") == long
-        assert foot.locator(".ork-elem").count() == 1, "the rune stays in the foot"
+        assert card.locator(".corner--top .corner__rune .ork-elem").count() == 1 and card.locator(".corner--foot").count() == 1, "the four corners"
+        assert card.locator(".corner--foot .corner__much").inner_text().strip() == "12 min left", "its time left"
         nm = card.locator(".col-nm")
         assert nm.inner_text().strip() == long, "the name whole in the DOM"
         lines = nm.evaluate("e => Math.round(e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight))")
-        assert lines <= 3
-        assert card.bounding_box()["width"] > 0 and abs(card.bounding_box()["width"] - 112) <= 1 and card.bounding_box()["height"] < 157
+        assert lines == 4, "up to four lines, then cut"
+        assert "Now: Rename them" in card.locator(".col-now").inner_text() and card.locator(".col-count").inner_text() == "0/1"
+        box, foot = card.bounding_box(), card.locator(".corner--foot").bounding_box()
+        assert abs(box["width"] - 144) <= 1 and abs(box["height"] - 202) <= 1
+        assert abs((box["y"] + box["height"]) - foot["y"] - 26) <= 1.5, "the foot row, with the card's padding, is 26 px: what a card behind the front one shows"
+        top = card.locator(".corner--top").bounding_box()
+        assert abs(nm.bounding_box()["y"] - box["y"] - 32) <= 1.5 and top["height"] == 20, "the name begins 32 px under the card's top"
     finally:
         pg.close()
     assert not log, "\n".join(log)
