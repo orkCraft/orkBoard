@@ -4,12 +4,16 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §167, and §201.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §167, and §201 and §254.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
 
 ## 1. The frame
+0. **Since §254**: what a tab shows is called **its table** (*Tech's table*; never *map*, *lens* or *view* in what a person
+   reads; this spec keeps *map* where it names the code); only the table scrolls; the portal's ring (the imp at twelve, the
+   lich at six), the discard, the die and the potions lie at **the table's edge**, a strip of objects at the right of the table
+   and the hand, not on the table (§254.3–4); the first open is four cards the Orkmaster throws (§254.8, read over §7).
 1. **Two parts** (§145.1): **the table** (the leaders' tabs and the pane: what and why, through whose eyes) and **the
    hand** at its foot, under the table's lanes (what the person decides, §167.7). No top bar (§126.1), no left column (§145),
    no right column (§120), no drawer (§104.8), no dialog (§127.1), no temporary tab (§142).
@@ -83,7 +87,8 @@ the same commit**; where it and a decision differ, the decision is right and thi
 **Under the table's lanes** (§167.5, §167.7, §145.3–§145.4, §121.2, §159), a card under the lane it is about:
 1. **The + card under the first lane** (§160.2, §167.5): pressed (or typing with nothing focused) it grows into **the
    field** over the hand (§116.2, §124): Enter sends, Shift+Enter a new line; a picture pasted goes with it; a
-   microphone writes the words into it, never sends (§125). No priority, no kind. **Addressed to a party** by *@Tech* in
+   microphone writes the words into it, never sends (§125). No priority; its corners are picked (§254.9): the rune, the kind (by default the Orkmaster reads it),
+   who (by default the Orkmaster), and **Now** or **Later** in place of how much. **Addressed to a party** by *@Tech* in
    the text, or by the party's tab being open (*→ Tech ×*, one press takes it off); on the project's tab it is general.
    An addressed idea puts its party's map in **picking**, always seen: *Pick a part to point at it* · *Stop picking*;
    any card of that map is pinned to the field as a mark (§141, §140.4; spec 94 §1.5), one by a press or several by a
@@ -99,7 +104,7 @@ the same commit**; where it and a decision differ, the decision is right and thi
    opened with the pick's words), *Let … decide* a quiet button answering the rest with the picks; a goal's questions
    are its stack, answered one a press, the answers sent together after the last (§153.5–§153.6). **The project's
    questions** (§153.1) are a stack of no goal's under their leader's lane, holding nothing back (§157.1).
-3. **The discard under the tabs' end** (§145.4, §159, §167.7: under the limits' chips and *Stop all*): the goals done and not yet seen, the last face up; while
+3. **The discard at the table's edge** (§254.3: under the portal's ring, over the die and the potions; before it §145.4, §159, §167.7): the goals done and not yet seen, the last face up; while
    dev holds goals main lacks, its top card carries Release's leader's head and *n ready for main*. Pressed, it opens
    over the pane: the goals done and not seen (a goal's *Result* opened, the goal leaves for the history, §130.1), and
    *Ready for main* with **To main** (§137.4); no act on main lies on the pile (§160.5).
@@ -185,6 +190,9 @@ the same commit**; where it and a decision differ, the decision is right and thi
    every head wears; the crown is the Orkmaster's alone. The rest of the cast is the marketing's (§158.6).
 
 ## 7. The first start
+**Read over by §254.8**: the room dark, the Orkmaster holding four backs, each thrown to its place (the potions: the AI
+tools; the portal: the project and its release branch; the table: its kind and its parties as chairs; the hand: the first
+goal, its corners lit as they fill). What follows is what is asked, unchanged.
 §132, §145.8: the AI tools found and their *Check* (`gui/onboarding.py`); then the Orkmaster's tab alone: *Open a
 project*, *Where is the project?*, the parties ticked, one **Start**, the leaders' heads dealt onto the tabs. With no
 goal, the + card lies large in the pane's middle with two or three examples read from the project; sent, it moves

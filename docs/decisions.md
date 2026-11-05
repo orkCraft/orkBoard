@@ -6562,3 +6562,99 @@ plan were the best part of the run. What did not hold is below; spec 149 §0 has
     task here ran `warrior`); `OPENAI_PRICES`, still empty (§250.8).
 14. **Built** by spec 149, then the trial again.
 On the owner's word, from what the run showed.
+
+## 254. What a tab shows is its table; only the table scrolls and a card's words are written to fit it; the table's edge: the portal with the imp at twelve and the lich at six, the discard, the die and the potions; one back for every card face down; a decision that conflicts with an earlier one is a card the Orkmaster throws, the earlier one drawn out of the portal; the first open as four cards the Orkmaster throws; the new goal's card with corners to pick and Now or Later; the Orkmaster's column goes under a card laid over it (5 November 2026, the owner)
+
+Changes: 104.2, 120, 145.1, 145.4, 159, 167.7, 188.1, 188.2, 232.1, 232.3, 232.4, 238.3, 246.1, 247.1, 251.2; spec 95 §1.1, §2.3,
+§3, §4.1, §4.3, §7.
+
+Why: the owner, as a designer and a product manager, nine points, talked through and answered the same day. *Lens* and *map* are
+two words for one thing, and neither is the frame's: what a tab shows lies on the table (§145.1), the tabs are its far side, the
+leaders sit at it (§201), so a tab opened is the table as its leader lays it. Long words on a card are read the less the longer
+they are, and a card cut in the middle of a thought says nothing (§247.4). The portal's ring and the discard take the table's
+right side, and §247.1 hid them while empty to win that width back; laid beside the table instead, they can stay, and they make
+one road: done goals in the discard, sent up into the portal where the lich takes them in at six, out at twelve where the imp
+keeps what is live. The back's pixel lattice (`backs/back.svg`) reads as a texture at 157 × 112 and as noise at 56 × 78 in the
+Orkmaster's fan, so the backs look different wherever they lie. A conflict with an earlier decision is seen by the decision's
+call (§233.3) but only said inside the decision's text, where it is missed. The first open (§232) asks the right things but lays
+the whole frame at once; each card thrown where its thing will live teaches the place, not a text. The new goal's card already has
+its four corners (§251.2), but nothing in them can be chosen, and a kind or a party can only be given by typing (*@Tech*). The
+Orkmaster's column is cut at the edge of a card opened over it, where a card on a table would only cover it. The owner's answers:
+the chronicle stays over the pane, so the table under it stays in use; the die turns a quarter; GitHub at the first open later;
+*Now* still meets the route card when it costs more than agreed. So:
+1. **What a tab shows is its table**: *Tech's table*, *the Orkmaster's table*; never *map*, *lens* or *view* in what a person
+   reads (Tech's *System* is Tech's table). The frame is unchanged: the table and the hand (§145.1); the open tab says whose
+   table it is. `TERMS`: `map` says *table*, with *map*, *lens* and *view* in its `was`; code keeps `map`, `lens_view` and
+   `project_map` (CLAUDE.md).
+2. **Only the table scrolls on the desktop** (§251.4, made strict): it scrolls as one, its lanes together, the tabs and the hand
+   held; never sideways; every other scroll found is a bug, but an opened card's body. **A card's words are written to fit**:
+   every call that names or words a card (the route, a leader's question, a task, a result) is given the budget in its rules,
+   **a title up to seven words, a window's words up to three lines**, a lifted card one sentence (§247.6); the page clamps
+   as a net only, with an ellipsis, and the whole words are on the lifted card.
+3. **The table's edge**: the portal and the discard leave the table. At the right of the table and the hand, one strip of
+   objects, top to bottom: **the portal's ring**, Live's head (the imp) on it at **twelve**, Release's (the lich) at **six**
+   (this changes §188.1–2: the heads on the ring, not at its corners); **the discard**; **the die**; **the potions**, at the
+   hand's level. It is not a column: no list, no count, no words but each object's own (CLAUDE.md's frame holds). The ring is
+   drawn from Start always, faint and still while nothing is ready for main, its heads asleep (this changes §247.1); the
+   discard's place is drawn from its first goal done (§247.1 kept). **To main** flies the discard's cards up into the ring,
+   where they go in at the lich. The imp pressed opens Live's table, the lich Release's (with *Earlier* of §238.2). The table
+   gains the width the ring and the discard took. The narrow page and the phone keep theirs until a decision of their own.
+4. **The die turns a quarter** (§246.1, its faces made plain): the up face Play, unchanged; **Stop all on the front face**,
+   **Resume on its right face** from the start, muted and seen at the side. *Stop all* pressed, the cube turns a quarter about
+   its up axis (orkUI's `.is-turning`) and Resume is the front; *Resume* pressed, it turns back. **The face seen is what a press
+   does**; the words under the die say the state (*Play · Stop all*, *Play · Stopped*). The Play mark stands upright after a turn.
+   The die lies under the discard and over the potions. §246.2–3 hold: the Board turns it, never the person.
+5. **One back for every card face down**: the Orkmaster's fan, *To review*'s deck, a stack's cards behind its front, the
+   discard's under its top, the first open's four. **A frame, small curls at its sides, the ring of runes in its middle** with
+   the goal's rune in it (§251.3's seal); no colour but the rune. Its detail by its size: at 56 × 78 the frame and the ring only,
+   the curls from 144 wide; lying (*To review*) it is the same back turned. Made in orkUI (`backs/back.svg` redrawn, the lattice
+   gone), then copied.
+6. **A conflict is a card the Orkmaster throws.** When the decision's call (§233.3) finds that the goal's decision goes against
+   a standing decision, the Orkmaster throws **a card of the kind *conflict*** into the hand under the first lane, **before
+   Confirm and start**, so nothing of the spec is paid. Its kind a sign of its own (orkUI: two cards crossed); its window the
+   point in conflict in one line. **Lifted, the earlier decision comes out of the portal**, from the lich, and lies beside it over
+   the pane, both with their why, as a fork's two sides (§252.5). Its choices: **The new one replaces §N** (the decision says it
+   changes §N, and its slices replace §N's, §233.2), **Keep §N** (the goal is talked again within §N), *Other…*. The conflict
+   ends with the card; nothing is decided without the person's press.
+7. **The chronicle stays over the pane** (§238.3, the owner's call), **and the table under it stays in use**: it lies over the
+   pane's left, as a sheet, the table seen at its right; **a row picked lights on the table what it touched** (its goal's marks
+   and the cards and lanes of the parts it changed, as a mark pressed lights its goal's others, §120.1). The conflict card's
+   earlier decision is the chronicle's row of §N, opened.
+8. **The first open is four cards the Orkmaster throws** (this changes how §232.1, §232.3 and §232.4 are shown, not what they
+   ask): no project open and nothing set, **the room is dark**, no table and no hand; **the Orkmaster in its middle**, its bubble
+   *I'm the Orkmaster. Four cards, and we start.*, holding **four backs** (5). Each card thrown flies to its place, and the place
+   appears as it lands:
+   1. **To the potions' place: the AI tools.** §232.4's card lifted there; the tools found ready are offered first, one press
+      (*Use Claude Code*); its form only when none is ready. The first potion fills as the tool is added.
+   2. **To the portal: the project.** The ring appears; §232.3's card: a local folder (*Open a folder…*, *A new, empty
+      folder…*, the recent ones), git if it has none, and **its release branch**, the branch the portal sends into (*main*,
+      read from git, changed by a press). GitHub's sign-in and a remote project: later (12).
+   3. **The table appears: its kind and its parties on it.** *<name> is <kind>, <how>. Right?* (§232.3); then the kind's
+      parties as **empty chairs at the table's far side**; a chair pressed seats its leader, its size and its seats under its
+      head as §232's line; *Start* lays the table in §232.1's order. The Orkmaster's large card of §232 is not drawn.
+   4. **The hand appears: the first goal.** The + card comes, and its card opens (9) with **its corners lit one at a time as
+      each fills**, each saying what stands there (§251.10's words). No tour and no coach mark: the goal sent is the person's
+      first real goal.
+   A card whose thing is already set is not thrown (a tool set by Orkline, a project open), and the Orkmaster holds only the cards
+   left; a project with parties of its own is laid at once (§232.1). Under reduced motion nothing flies: each place appears.
+9. **The new goal's card has corners to pick** (404 × 566, §251.1–2; this changes spec 95 §4.1's *no kind*): **top left the
+   rune** (the next one given, another picked, §187.3); **top right the kind** (feature, bug, tidy, screen…; by default *the
+   Orkmaster reads it*; a bug takes the short way, §118.2); **bottom left who** (by default the Orkmaster's head: it routes; a
+   leader picked addresses the goal, as *@Tech* or the open tab do); **bottom right Now and Later**, in place of how much:
+   **Now** (Enter) sends it and Talk starts as soon as it is routed, when it fits the limits and costs no more than agreed, else
+   the route card asks with its cost as today (§147.4, the money rule); **Later** lays it in line to start itself at the Board's
+   hour (§247.2's word). A corner pressed opens its few choices on the card itself, no dialog; a corner left to its default is
+   dashed and says its default, a corner picked is drawn whole.
+10. **The Orkmaster's column goes under a card laid over it**: the new goal's card, an opened card and the chronicle cover the
+    column where they lie, with their shadow; the column is never cut at a card's edge (§251: a place hides part of a card only
+    where something covers it).
+11. **The words** (`TERMS`): *table* (a tab's: *Tech's table*; *map*, *lens*, *view* in `was`); *Now*, *Later*; the conflict's
+    kind *conflict*, its line *Goes against §N*, its choices *The new one replaces §N*, *Keep §N*; the first open's *I'm the
+    Orkmaster. Four cards, and we start.*, *Use <tool>*, *Release branch*.
+12. **Not now**: at the first open's second card, **signing in with GitHub and picking a remote project with its default
+    branch** (the remote is §243–244's; a decision of its own when it is built); the edge on the narrow page and the phone; a
+    conflict found after Confirm (a finding, §234, as today).
+13. **Built** by spec 150, in order: **A.** 10 (a fix); **B.** 5 (orkUI, then copied); **C.** 1 and 2 (the words, the budget in
+    the calls, the scrolls); **D.** 3 and 4 (the edge, the die); **E.** 6 and 7 (the conflict, the chronicle beside the table);
+    **F.** 9; **G.** 8 last, since it shows the rest. **Drawn first**, `docs/mockups/table-edge/`; the owner's pick.
+The owner's call.
