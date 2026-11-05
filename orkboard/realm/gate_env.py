@@ -127,6 +127,19 @@ def path_python() -> str:
     return _PATH_PYTHON[key]
 
 
+_XDIST: dict[str, bool] = {}               # a Python -> whether it imports xdist: asked once per process
+
+
+def has_xdist(python: str) -> bool:
+    """Whether `python` imports pytest-xdist (one short run, kept for the process): the gate runs browser tests in parallel only where it does (spec 149 C.2)."""
+    if python not in _XDIST:
+        try:
+            _XDIST[python] = subprocess.run([python, "-c", "import xdist"], capture_output=True, timeout=20).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            _XDIST[python] = False
+    return _XDIST[python]
+
+
 def kind_of(what: str) -> str:
     """Which kind of tool a run lacked, from `could_not_run`'s sentence (with the run's output after it, when it is at hand): `python` for pytest and the
     like and for a `No module named` of a Python run, `node` for what Node's tools and `Cannot find module` name, "" when it cannot tell."""

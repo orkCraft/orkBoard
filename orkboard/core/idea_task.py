@@ -134,6 +134,8 @@ class TaskMixin:
             tests["red_before"], tests["flaky"] = list(run.red_before), list(run.flaky)
             if tests["green"]:
                 tests["failed"], tests["failing"] = 0, []
+        if run and run.left:
+            tests["left"] = run.left                   # spec 149 C.3: the browser tests left for the way into main, "56 of pwa/"
         if run and run.docs:
             tests["docs"] = True
         if run and run.browser and tests["green"] and run.ran and (tests.get("skipped") or 0) > 0 and NO_BROWSER_SKIP.search(out):

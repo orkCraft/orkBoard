@@ -43,6 +43,7 @@ class Check:
     gate: bool = False
 
 
+MAIN_TIMEOUT_MIN = 30                              # spec 149 C.3: the way into main runs what a task's gate left, whole; `jobs.TEST_TIMEOUT_S` would kill it
 MERGE = "The merge"
 TESTS = "Tests"
 MAX_CHECKS = 20
@@ -59,6 +60,8 @@ class Gate:
     derived: bool = field(default=False, compare=False)   # the project's own gate (`derive`), not one its `orkcraft.toml` wrote (spec 107 §1.2)
     browser: tuple[str, ...] = ()                  # a touched `.js`, `.css` or `.html` brings the tests these globs find (`{stem}`, `{leaf}`; spec 143 B.1)
     main: tuple[Check, ...] = ()                   # `[gate.main]` checks: the way into main (spec 111 §4.2); () = the two default checks
+    browser_max: int = 12                          # a `browser` pattern that finds more modules than this is not taken whole (spec 149 C.1)
+    main_timeout_min: float | None = None          # `[gate.main] timeout_min`: the clock of the way into main; None = MAIN_TIMEOUT_MIN
 
     @property
     def custom(self) -> bool:
@@ -174,10 +177,17 @@ def read(repo_root: Path) -> Gate:
         minutes = table.get("timeout_min")
         if minutes is not None and (isinstance(minutes, bool) or not isinstance(minutes, (int, float)) or minutes <= 0):
             raise ValueError("[gate] timeout_min must be a number of minutes above 0")
+        most = table.get("browser_max", 12)
+        if isinstance(most, bool) or not isinstance(most, int) or most < 1:
+            raise ValueError("[gate] browser_max must be a whole number above 0")
+        main = table.get("main")
+        main_minutes = main.get("timeout_min") if isinstance(main, dict) else None
+        if main_minutes is not None and (isinstance(main_minutes, bool) or not isinstance(main_minutes, (int, float)) or main_minutes <= 0):
+            raise ValueError("[gate.main] timeout_min must be a number of minutes above 0")
         return Gate(run=run.strip(), always=_strings(table.get("always", list(CRITICAL_TESTS)), "always"),
                     map=_strings(table.get("map", list(DEFAULT_MAP)), "map"), timeout_min=minutes,
-                    browser=_strings(table.get("browser", []), "browser"),
-                    main=_main_checks(table["main"]) if "main" in table else ())
+                    browser=_strings(table.get("browser", []), "browser"), browser_max=most, main_timeout_min=main_minutes,
+                    main=_main_checks(main) if "main" in table else ())
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, ValueError) as e:
         return dataclasses.replace(derive(repo_root), error=f"{FILE} is not usable ({' '.join(str(e).split())[:200]}): the gate ran as with no file")
 
@@ -185,28 +195,56 @@ def read(repo_root: Path) -> Gate:
 PAGE_SUFFIXES = (".js", ".css", ".html")
 
 
-def browser_files(gate: Gate, name: str, root: Path) -> list[str]:
-    """The files `[gate] browser` finds for a touched page file (`{stem}`: its name without the suffix, `{leaf}`: the last folder's name); globs, sorted,
-    only what exists. Nothing for any other file, and nothing with no patterns (spec 143 B.1)."""
+def browser_split(gate: Gate, name: str, root: Path, whole: bool = False) -> tuple[list[str], list[str]]:
+    """(taken, left) of the files `[gate] browser` finds for a touched page file (`{stem}`: its name without the suffix, `{leaf}`: the last folder's name);
+    globs, sorted, only what exists. A pattern that finds more than `browser_max` modules is not taken whole: only the modules whose name holds the touched
+    file's stem (`shell-marks` and `shell_marks`) come, and the rest are left (spec 149 C.1). `whole` takes every pattern whole (the way into main).
+    Nothing for any other file, and nothing with no patterns (spec 143 B.1)."""
     p = Path(name)
     if not gate.browser or p.suffix.lower() not in PAGE_SUFFIXES:
-        return []
-    found: set[str] = set()
+        return [], []
+    taken: set[str] = set()
+    left: set[str] = set()
+    own = {p.stem.lower(), p.stem.lower().replace("-", "_")}
     for pattern in gate.browser:
         if "{leaf}" in pattern and p.parent.name in ("", "."):      # a file at the root has no folder to name tests by
             continue
         glob = pattern.replace("{stem}", glob_escape(p.stem)).replace("{leaf}", glob_escape(p.parent.name))
         if not glob.strip("/") or Path(glob).is_absolute() or ".." in Path(glob).parts:
             continue
-        found.update(f.relative_to(root).as_posix() for f in Path(root).glob(glob) if f.is_file())
-    return sorted(found)
+        found = sorted(f.relative_to(root).as_posix() for f in Path(root).glob(glob) if f.is_file())
+        if whole or len(found) <= gate.browser_max:
+            taken.update(found)
+        else:
+            mine = [f for f in found if any(o in Path(f).name.lower() for o in own)]
+            taken.update(mine)
+            left.update(f for f in found if f not in mine)
+    return sorted(taken), sorted(left - taken)
+
+
+def browser_files(gate: Gate, name: str, root: Path, whole: bool = False) -> list[str]:
+    """The files `browser_split` takes for a touched page file."""
+    return browser_split(gate, name, root, whole)[0]
+
+
+def browser_left(gate: Gate, touched: list[str], root: Path) -> dict[str, int]:
+    """What the browser patterns found for the touched files and the gate did not take, counted by the touched file's folder (`{"pwa/": 56}`): it runs
+    at the way into main (spec 149 C.3)."""
+    taken: set[str] = set()
+    left: dict[str, set[str]] = {}
+    for name in touched:
+        got, rest = browser_split(gate, name, root)
+        taken.update(got)
+        if rest:
+            left.setdefault(f"{Path(name).parent.name}/", set()).update(rest)
+    return {folder: n for folder, files in sorted(left.items()) if (n := len(files - taken))}
 
 
 def glob_escape(text: str) -> str:
     return re.sub(r"([*?\[])", r"[\1]", text)
 
 
-def gate_files(gate: Gate, touched: list[str], root: Path) -> list[str]:
+def gate_files(gate: Gate, touched: list[str], root: Path, whole: bool = False) -> list[str]:
     """`always`, then each touched file's tests by `map` (`{stem}`, `{name}`, `{dir}`); only those that exist. With no
     `run` (today's gate) a touched test file counts as its own test."""
     out = [a for a in gate.always]
@@ -215,7 +253,7 @@ def gate_files(gate: Gate, touched: list[str], root: Path) -> list[str]:
         if not gate.custom and p.parts[:1] == ("tests",) and p.suffix == ".py" and p.name.startswith("test_"):
             out.append(p.as_posix())
             continue
-        out += browser_files(gate, name, root)
+        out += browser_files(gate, name, root, whole)
         if p.stem == "__init__":
             continue
         if not gate.custom and p.suffix != ".py":

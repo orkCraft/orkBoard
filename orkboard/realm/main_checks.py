@@ -75,7 +75,7 @@ def _command(path: Path, line: str, cancel: threading.Event, timeout_s: int) -> 
 def _gate(git: IdeaGit, path: Path, old: str, cancel: threading.Event, timeout_s: int) -> tuple[bool, str]:
     """(passed, words) of the gate's own run on what the picks touched, as a task's result runs it."""
     try:
-        run = git.gate_run(path, old, cancel, timeout_s)
+        run = git.gate_run(path, old, cancel, timeout_s, whole=True)         # the browser folders whole: what a task's gate left runs here (spec 149 C.3)
     except RuntimeError:
         return False, _long(timeout_s)
     if not run.ran:
@@ -92,7 +92,7 @@ def run(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, int
     cancel = cancel or threading.Event()
     gate = gate_config.read(Path(repo))
     checks: list[Check] = gate_config.main_checks(Path(repo))
-    timeout = timeout_s or (int(gate.timeout_min * 60) if gate.timeout_min else jobs.TEST_TIMEOUT_S)
+    timeout = timeout_s or int((gate.main_timeout_min or gate_config.MAIN_TIMEOUT_MIN) * 60)       # `[gate.main] timeout_min`, 30 by default (spec 149 C.3)
     steps = [_step(c.name) for c in checks]
 
     def say(at: int, state: str, words: str = "") -> None:

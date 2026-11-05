@@ -97,6 +97,7 @@ class GateRun(NamedTuple):
     browser: tuple[str, ...] = ()        # the files of `[gate] browser` that were in the run (spec 143 B.3)
     red_before: tuple[str, ...] = ()     # tests red in the run that were red on the base too (spec 149 E, realm/gate_rerun.py)
     flaky: tuple[str, ...] = ()          # tests red in the run and green run again alone
+    left: str = ""                       # the browser tests the gate left for main, by folder: `56 of pwa/` (spec 149 C.3)
     timed_out: bool = False              # the run was killed at its clock: it tested nothing it can be blamed for (spec 149 D)
 
 
@@ -208,26 +209,32 @@ class IdeaGit:
         return run.ok and run.ran, out[-TEST_TAIL - 200:] if len(out) > TEST_TAIL + 200 else out
 
     def gate_run(self, path: Path, base: str, cancel: threading.Event,
-                 timeout_s: int = jobs.TEST_TIMEOUT_S) -> GateRun:
+                 timeout_s: int = jobs.TEST_TIMEOUT_S, whole: bool = False) -> GateRun:
         """The gate (spec 37 §5): the repository's `[gate]` in orkcraft.toml, else pytest on the critical tests and the
         touched modules'. Nothing to run is `ran=False`, never a pass; the whole run is `out` (the command, then its
-        output up to GATE_KEEP). The project's own gate is not run for a task that changed only documents (`docs`)."""
+        output up to GATE_KEEP). The project's own gate is not run for a task that changed only documents (`docs`). Browser tests are limited to
+        `[gate] browser_max` modules a pattern (what is left is said in `left`), and run in parallel where xdist is there (spec 149 C); `whole` (the way into
+        main) takes every pattern whole and keeps the caller's clock."""
         gate, touched, began = gate_config.read(self.root), self.touched(path, base), time.monotonic()
         note = f"\n! {gate.error}" if gate.error else ""
-        files = gate_config.gate_files(gate, touched, path)
-        in_browser = tuple(sorted({f for t in touched for f in gate_config.browser_files(gate, t, path)} & set(files)))
+        files = gate_config.gate_files(gate, touched, path, whole)
+        in_browser = tuple(sorted({f for t in touched for f in gate_config.browser_files(gate, t, path, whole)} & set(files)))
+        left = "" if whole else ", ".join(f"{n} of {folder}" for folder, n in gate_config.browser_left(gate, touched, path).items())
+        said = f"\n== browser tests left for main: {left}" if left else ""
         if gate.derived and gate_config.docs_only(touched):
             return GateRun(True, f"no tests ran: the task changed only documents{note}", False, docs=True)
         if gate.custom:
             line = gate_config.command(gate, files)
             argv = gate_config.test_argv(line) if line else []
         else:
-            line = f"python -m pytest -q {' '.join(files)}"
+            python = self.python()
+            workers = self.workers(python) if in_browser else []
+            line = f"python -m pytest -q {' '.join([*workers, *files])}"
             # No cache, no bytecode: the gate leaves the worktree as the session left it (land checks it is clean).
-            argv = [self.python(), "-m", "pytest", "-q", "-rfEs", "-p", "no:cacheprovider", *files] if files else []   # -rfEs: the failed and errored as by default, and why a module was skipped (spec 143 B.3)
+            argv = [python, "-m", "pytest", "-q", "-rfEs", "-p", "no:cacheprovider", *workers, *files] if files else []   # -rfEs: the failed and errored as by default, and why a module was skipped (spec 143 B.3)
         if not argv:
             return GateRun(True, f"no tests ran: no test file maps to what the task touched{note}", False, line or gate.run)
-        if gate.timeout_min:
+        if gate.timeout_min and not whole:
             timeout_s = int(gate.timeout_min * 60)
         try:
             proc = subprocess.Popen(argv, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
@@ -248,11 +255,17 @@ class IdeaGit:
         out = out_box[0] if out_box else ""
         if timed_out:
             minutes = round(timeout_s / 60)
-            return GateRun(False, f"$ {line}\n{out[-GATE_KEEP:]}{note}", True, line, None, round(time.monotonic() - began, 1),
+            return GateRun(False, f"$ {line}\n{out[-GATE_KEEP:]}{note}{said}", True, line, None, round(time.monotonic() - began, 1),
                            env=DID_NOT_FINISH.format(minutes=minutes, s="" if minutes == 1 else "s", n=len(files), f="" if len(files) == 1 else "s"),
-                           browser=in_browser, timed_out=True)
-        return GateRun(proc.returncode == 0, f"$ {line}\n{out[-GATE_KEEP:]}{note}", True, line, proc.returncode, round(time.monotonic() - began, 1),
-                       gate_env.could_not_run(out, proc.returncode), browser=in_browser)
+                           browser=in_browser, left=left, timed_out=True)
+        return GateRun(proc.returncode == 0, f"$ {line}\n{out[-GATE_KEEP:]}{note}{said}", True, line, proc.returncode, round(time.monotonic() - began, 1),
+                       gate_env.could_not_run(out, proc.returncode), browser=in_browser, left=left)
+
+    def workers(self, python: str) -> list[str]:
+        """`-n <workers>` for a run with browser tests in it, where `python` imports xdist and the machine has cores to spare: two fewer than it has, six at most
+        (the trial's 569 browser tests ran green at six; spec 149 C.2). Nothing otherwise: a run with no xdist runs as before."""
+        n = min((os.cpu_count() or 1) - 2, 6)
+        return ["-n", str(n)] if n >= 2 and gate_env.has_xdist(python) else []
 
     def python(self) -> str:
         """The Python that runs the gate's pytest (spec 143 C.4): the repository's own `.venv` when it has one (even with no pytest in it: the card says what

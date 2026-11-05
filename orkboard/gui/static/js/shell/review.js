@@ -128,6 +128,7 @@ export function ResultActions({ r, pinned = false }) {
     ${env && html`<p class="shell-actions__why ok-tone-muted" data-no-install="true" role="status">${NO_INSTALL}</p>`}
     ${env && !rows.length && !!r.tests.setup && html`<p class="shell-actions__why ok-tone-muted" data-setup="true" role="status">Run this in the project's folder, then Test again: <code class="ok-font-status">${r.tests.setup}</code></p>`}
     ${!!notYours(r.tests) && html`<p class="shell-actions__why ok-tone-muted" data-not-yours="true" role="status">${notYours(r.tests)}</p>`}
+    ${!!r.tests.left && html`<p class="shell-actions__why ok-tone-muted" data-left="true" role="status">Browser tests left for main: ${r.tests.left}</p>`}
     ${!!r.tests.no_browser && html`<p class="shell-actions__why ok-tone-muted" data-no-browser="true" role="status">${NO_BROWSER}</p>`}
     ${same && html`<p class="shell-actions__why ok-tone-muted" data-same="true" role="status">${SAME_FAILURE}</p>`}
     ${place && html`<p class="shell-actions__why ok-tone-muted" data-place="true" role="status">${PLACE_LINE}</p>`}
