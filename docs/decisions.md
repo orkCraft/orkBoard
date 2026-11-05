@@ -6464,3 +6464,33 @@ it. So:
    it is laid*, *who: the Orkmaster routes it*, *how much: after its estimate*.
 11. **Built** by spec 147. The mockup is the look: `docs/mockups/card-ratio/`.
 The owner's call.
+
+## 252. Every face-up card has a window between its corners, never empty: a picture when the goal has one, its words when not; a new goal's card shows what is attached to it (5 November 2026, the owner)
+
+Changes: 249.1, 249.2, 249.4, 251.2, 251.5, 251.6; spec 142 A, B, spec 147 B.4, C.1, D.
+
+Why: the owner: *unify the pictures in the cards (today only the table's cards have them); show the attached files'
+previews when a card is made, and maybe even force the text, on a card in the hand or at work, into the same picture*.
+§249 took the windows off the column and the hand because they were empty or held a sign; §251 gave every card its
+four corners and left its middle to each place. A card game's card keeps its picture in one place on every card; a
+window that always holds the card's own content, a picture or else its words, is never empty. The one look (CLAUDE.md)
+allows no picture for its own sake: a window shows only what the person attached or the work made. So:
+1. **Every face-up card's middle is its window**, inside one frame (the lanes' window of §249.3), between the corner rows
+   and under the title: the column's *At work* card, the hand's card, a lane's card, the discard's card, the opened card
+   and a new goal's card. A back has none (it hides what it holds).
+2. **What a window shows, in this order**: what the work made last (§249.3's `made`: Design's screen, Art's asset, Play's
+   shot); else **the goal's first picture** (the pictures attached when it was made, `realm/idea_photos.py`); else **its
+   words**: the hand's card why it is asked, *At work* what it does now, a lane's card its steps or its failure (§249.3),
+   the discard what it made, an opened card its question, a new goal what it should do. Words in a window are text in
+   the reading face, never the pixel face and never drawn into an image: selectable, read out, found by a search.
+3. **A window never makes its card taller**: it takes the middle the place already gives (the hand's below its cut, so
+   the hand keeps its height; *At work*'s where *now* was; the lanes' as today; the opened card's at the top of its
+   body, larger). A picture is shown whole inside it (`object-fit: contain` on the table's ground; pixel art at a whole
+   scale, §249.3), served by the host at about twice the window's size, never the file itself.
+4. **A new goal's card shows what is attached** in its window as the person attaches it: the pictures as thumbnails, the
+   files as chips, the window the place a picture or a file is dropped on; with nothing attached, its hint. Laid, the
+   goal keeps its first picture, which its cards show from then on.
+5. **A fork in the hand** shows its sides' pictures side by side when both have one; a failure its reason's line; an
+   asset its asset.
+6. **Built** by spec 148, after spec 147's B and C.
+The owner's call.
