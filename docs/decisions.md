@@ -6580,7 +6580,7 @@ call (§233.3) but only said inside the decision's text, where it is missed. The
 the whole frame at once; each card thrown where its thing will live teaches the place, not a text. The new goal's card already has
 its four corners (§251.2), but nothing in them can be chosen, and a kind or a party can only be given by typing (*@Tech*). The
 Orkmaster's column is cut at the edge of a card opened over it, where a card on a table would only cover it. The owner's answers:
-the chronicle stays over the pane, so the table under it stays in use, and then, better, the chronicle is the lich's own table, by version and by craft; the back as plain as it goes; the die turns a quarter; GitHub at the first open later;
+the chronicle stays over the pane, so the table under it stays in use, and then, better, the past is the lich's, opened through the open tab and laid by version; the back plain, after a tarot back: the ring of runes, the side strips, the corners' curls; the die turns a quarter; GitHub at the first open later;
 *Now* still meets the route card when it costs more than agreed. So:
 1. **What a tab shows is its table**: *Tech's table*, *the Orkmaster's table*; never *map*, *lens* or *view* in what a person
    reads (Tech's *System* is Tech's table). The frame is unchanged: the table and the hand (§145.1); the open tab says whose
@@ -6605,11 +6605,11 @@ the chronicle stays over the pane, so the table under it stays in use, and then,
    does**; the words under the die say the state (*Play · Stop all*, *Play · Stopped*). The Play mark stands upright after a turn.
    The die lies under the discard and over the potions. §246.2–3 hold: the Board turns it, never the person.
 5. **One back for every card face down**: the Orkmaster's fan, *To review*'s deck, a stack's cards behind its front, the
-   discard's under its top, the first open's four. **As plain as it goes** (the owner's tarot back at its simplest): **one thin
-   frame**, **a small diamond at the middle of each long side**, **a plain ring with eight short rays** and the goal's rune in its
-   empty middle (§251.3's seal). No colour but the rune; no moon (orkUI's sign for *waits for the reset*, §160.3, is never an
-   ornament), no stars, no curls. At 56 × 78 the frame and the ring only; lying (*To review*) it is the same back turned. Made in
-   orkUI (`backs/back.svg` redrawn, the lattice gone), then copied.
+   discard's under its top, the first open's four. After the owner's tarot back, kept plain: **orkUI's ring of runes in its
+   middle** with the goal's rune in it (§251.3's seal), **a thin strip down each long side with a small diamond at its middle**,
+   **a small curl in each corner**, two strokes. No colour but the rune; no moon (orkUI's sign for *waits for the reset*, §160.3,
+   is never an ornament), no stars. At 56 × 78 the ring and the strips only; lying (*To review*) it is the same back turned. Made
+   in orkUI (`backs/back.svg` redrawn, the lattice gone), then copied.
 6. **A conflict is a card the Orkmaster throws.** When the decision's call (§233.3) finds that the goal's decision goes against
    a standing decision, the Orkmaster throws **a card of the kind *conflict*** into the hand under the first lane, **before
    Confirm and start**, so nothing of the spec is paid. Its kind a sign of its own (orkUI: two cards crossed); its window the
@@ -6617,16 +6617,19 @@ the chronicle stays over the pane, so the table under it stays in use, and then,
    the pane, both with their why, as a fork's two sides (§252.5). Its choices: **The new one replaces §N** (the decision says it
    changes §N, and its slices replace §N's, §233.2), **Keep §N** (the goal is talked again within §N), *Other…*. The conflict
    ends with the card; nothing is decided without the person's press.
-7. **The chronicle is the lich's table** (this changes §238.2–3: no line *Earlier* in a lens and no chronicle over the pane):
-   the lich pressed at the portal opens **Release's table**, the project's past, as every tab shows its table (1). **At its left a
-   deck a version**, *Unreleased* on top, each deck's edge its version and date (a week's for a project with no version yet,
-   §238.5); **across its top the heads of the crafts**. They are two ways into one table and cross: **a deck picked** deals its
-   version's goals and decisions face up, by time; **a head picked** deals that craft's decisions of every version, newest
-   first, the version in each card's bottom right (a decision is a craft's when that craft's leader keeps a slice of it, §233.1);
-   both picked, what they share. **A search** over the top dims the decks and heads with no find and lights the cards found. A
-   card lifted is §238.4's row: a goal as it was, a decision with its *Changes* and *changed by*; **Show on <party>'s table**
-   opens that tab with what it touched lit. The conflict's earlier decision (6) is the lich's card; *Open in the chronicle* opens
-   this table, its deck dealt and the card lit.
+7. **The past through whose eyes: the lich holds it, the open tab says whose** (this changes §238.2–3: no line *Earlier* in a
+   lens, no chronicle of its own over the pane). The chronicle is read on the frame's two axes (§1.3 of spec 95: what is looked
+   at · through whom): **the lich pressed at the portal opens the past through the open tab**, over the pane: on a party's tab
+   that craft's past (its decisions, a decision being a craft's when its leader keeps a slice of it, §233.1, and the goals it
+   worked on), on the Orkmaster's tab the whole project's. **The line under the lich says whose past it holds** (*Design's past
+   ›*, *The project's past ›*) and changes with the tab. Over the pane the only choice is **a deck a version** at its left,
+   *Unreleased* on top (a week's deck for a project with no version yet, §238.5): none picked, every version, newest first, each
+   card's version in its bottom right; one picked, that version's cards. **A search** over the top dims the decks with no find
+   and lights the cards found. Its title says both axes (*The past · through Design · v0.3*); **←** goes back to the tab's
+   table. A card lifted is §238.4's row: a goal as it was, a decision with its *Changes* and *changed by*; **Show on <party>'s
+   table** opens that tab with what it touched lit. **The ring itself** stays the way into main, pressed only while something is
+   ready; the imp is Live. The conflict's earlier decision (6) comes from the lich; *Open in the past* opens this, through the
+   tab of the craft it is about, its deck dealt and the card lit.
 8. **The first open is four cards the Orkmaster throws** (this changes how §232.1, §232.3 and §232.4 are shown, not what they
    ask): no project open and nothing set, **the room is dark**, no table and no hand; **the Orkmaster in its middle**, its bubble
    *I'm the Orkmaster. Four cards, and we start.*, holding **four backs** (5). Each card thrown flies to its place, and the place
@@ -6658,14 +6661,12 @@ the chronicle stays over the pane, so the table under it stays in use, and then,
 11. **The words** (`TERMS`): *table* (a tab's: *Tech's table*; *map*, *lens*, *view* in `was`); *Now*, *Later*; the conflict's
     kind *conflict*, its line *Goes against §N*, its choices *The new one replaces §N*, *Keep §N*; the first open's *I'm the
     Orkmaster. Four cards, and we start.*, *Use <tool>*, *Release branch*.
-12a. **Left to the owner**: whether a craft's past decisions are also drawn out of the portal onto **the table's edge**, as a
-    pile beside the work of another tab (the owner's question). The PM's answer: not there; the edge holds four objects with one
-    job each, a pile of the past would stand there all day (§238's *a pile that is always there weighs on the person*) and beside
-    the discard reads as a second discard; a craft's decisions are the lich's table with its head picked.
+12a. **Not on the table's edge**: a craft's past is the lich's, opened through that craft's tab (7), never a pile at the edge;
+    the edge holds four objects with one job each, and a pile of the past would stand there all day beside the discard (§238).
 12. **Not now**: at the first open's second card, **signing in with GitHub and picking a remote project with its default
     branch** (the remote is §243–244's; a decision of its own when it is built); the edge on the narrow page and the phone; a
     conflict found after Confirm (a finding, §234, as today).
 13. **Built** by spec 150, in order: **A.** 10 (a fix); **B.** 5 (orkUI, then copied); **C.** 1 and 2 (the words, the budget in
-    the calls, the scrolls); **D.** 3 and 4 (the edge, the die); **E.** 6 and 7 (the conflict, the lich's table);
+    the calls, the scrolls); **D.** 3 and 4 (the edge, the die); **E.** 6 and 7 (the conflict, the past through the open tab);
     **F.** 9; **G.** 8 last, since it shows the rest. **Drawn first**, `docs/mockups/table-edge/`; the owner's pick.
 The owner's call.

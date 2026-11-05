@@ -125,11 +125,15 @@ button { font: inherit; }
 
 /* ---------- the lich's table: the decks of the versions, the heads of the crafts ---------- */
 .pane { position: relative; width: 1000px; height: 344px; background: var(--ork-table); border: var(--ork-line) solid var(--ork-table-rim); overflow: hidden; }
-.pane .deal { position: absolute; left: 196px; top: 96px; right: 12px; display: flex; flex-wrap: wrap; gap: var(--ork-4); }
+.pane .deal { position: absolute; left: 196px; top: 96px; right: 162px; display: flex; flex-wrap: wrap; gap: var(--ork-4); }
 .lt__title { position: absolute; left: 12px; top: 10px; display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .lt__title img { width: 24px; height: 22px; }
 .lt__search { position: absolute; left: 196px; top: 8px; width: 360px; border: var(--ork-line) solid var(--ork-edge); background: var(--ork-canvas); padding: 3px var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink-faint); }
-.lt__heads { position: absolute; left: 196px; top: 42px; display: flex; gap: var(--ork-5); }
+.lt__heads { position: absolute; left: 196px; top: 42px; display: flex; gap: var(--ork-5); align-items: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.lt__edge { position: absolute; right: 0; top: 0; bottom: 0; width: 150px; border-left: var(--ork-line) solid var(--ork-frame); background: var(--ork-room); display: flex; flex-direction: column; align-items: center; padding-top: var(--ork-3); gap: 0; }
+.lt__edge .ork-portal-ring { transform: scale(.62); margin: -36px 0; }
+.lt__edge .w { font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink); border-bottom: var(--ork-line) solid var(--ork-ink); }
+.lt__edge img.on { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .lt__heads .h { display: flex; flex-direction: column; align-items: center; gap: 1px; font-family: var(--ork-font-pixel); font-size: 9px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink-faint); opacity: .55; }
 .lt__heads .h img { width: 30px; height: 27px; }
 .lt__heads .h.on { opacity: 1; color: var(--ork-ink); }
@@ -196,7 +200,7 @@ button { font: inherit; }
 <body>
 <header class="mk-bar">
   <b>Table edge · §254</b>
-  <nav><a href="#window">1 The window</a><a href="#die">2 The die</a><a href="#back">3 The back</a><a href="#conflict">4 A conflict</a><a href="#chronicle">5 The lich's table</a><a href="#newgoal">6 A new goal</a><a href="#first">7 The first open</a><a href="#words">8 Words that fit</a></nav>
+  <nav><a href="#window">1 The window</a><a href="#die">2 The die</a><a href="#back">3 The back</a><a href="#conflict">4 A conflict</a><a href="#chronicle">5 The past</a><a href="#newgoal">6 A new goal</a><a href="#first">7 The first open</a><a href="#words">8 Words that fit</a></nav>
 </header>
 <main class="mk-main">
 
@@ -221,7 +225,7 @@ button { font: inherit; }
 
 <section class="mk-sec" id="back">
   <h1>3 · One back for every card face down</h1>
-  <p class="mk-line">Today's back is a pixel lattice: a texture at 157 × 112, noise at 56 × 78 in the Orkmaster's fan. <b>The one back</b>, made as plain as it goes (the owner's tarot back at its simplest): <b>one thin frame</b>, <b>a small diamond at the middle of each long side</b>, <b>a plain ring with eight short rays</b> and the goal's rune in its empty middle; no colour but the rune, no moons (the moon is orkUI's sign for <i>waits for the reset</i>), no stars. At 56 × 78 the frame and the ring only.</p>
+  <p class="mk-line">Today's back is a pixel lattice: a texture at 157 × 112, noise at 56 × 78 in the Orkmaster's fan. <b>The one back</b>, after the owner's tarot back, kept plain: <b>orkUI's ring of runes in its middle</b> with the goal's rune in it, <b>a thin strip down each long side with a diamond at its middle</b>, <b>a small curl in each corner</b>, two strokes. No colour but the rune; no moon (orkUI's sign for <i>waits for the reset</i>), no stars. At 56 × 78 the ring and the strips only</p>
   <div class="mk-row" id="backs"></div>
 </section>
 
@@ -232,12 +236,12 @@ button { font: inherit; }
 </section>
 
 <section class="mk-sec" id="chronicle">
-  <h1>5 · The chronicle is the lich's table</h1>
-  <p class="mk-line">The lich pressed at the portal opens <b>Release's table</b>, the project's past, as every tab shows its table. <b>At its left a deck a version</b>, <i>Unreleased</i> on top; <b>across its top the heads of the crafts</b>. They are two ways into one table and can be crossed: <b>a deck picked</b> deals its version's goals and decisions; <b>a head picked</b> deals that craft's decisions of every version, newest first, the version in each card's corner (a decision's craft is read from its slices, §233: a decision Design keeps a slice of is Design's); both picked, what they share. A search over the top dims the decks and heads with no find.</p>
-  <h2>A deck picked: v0.3</h2>
-  <div class="scroll-x"><div class="pane" id="pane"></div></div>
-  <h2>A head picked: every decision Design keeps</h2>
+  <h1>5 · The past through whose eyes: the portal holds it, the open tab says whose</h1>
+  <p class="mk-line">The chronicle is the lich's table, read on the frame's two axes (what is looked at · through whom): <b>the lich pressed opens the past through the open tab</b>. On Design's tab it deals Design's past decisions and goals; on the Orkmaster's, the whole project's. <b>The line under the lich says whose past it holds</b> (<i>Design's past</i>), so the portal is found by its place. On the lich's own table the only choice is <b>a deck a version</b>, <i>Unreleased</i> on top, and a search; no heads to pick, the tab already picked one. <b>The ring itself</b> stays the way into main (pressed only while something is ready); <b>the imp</b> is Live.</p>
+  <h2>Design's tab open, the lich pressed: Design's past, every version</h2>
   <div class="scroll-x"><div class="pane" id="pane2"></div></div>
+  <h2>The Orkmaster's tab open, the deck v0.3 picked: the whole project's v0.3</h2>
+  <div class="scroll-x"><div class="pane" id="pane"></div></div>
 </section>
 
 <section class="mk-sec" id="newgoal">
@@ -278,21 +282,25 @@ button { font: inherit; }
   }
   // the new back, made simpler (§254.5): one thin frame, a small diamond at the middle of each long side, a plain ring with eight short rays (the
   // reference's sun, at its plainest), the goal's rune in the ring's empty middle. At 56 px wide: the frame and the ring only. Lines 1 px, no colour.
+  // the back (§254.5, the owner's third look): orkUI's ring of runes in the middle with the goal's rune, a thin strip down each long side with a
+  // diamond at its middle, a small curl in each corner after the owner's tarot back, kept to two strokes. At 56 px wide: the ring and the strips.
+  var CORNER = "M3 19 C3 10 10 3 19 3 M19 3 C23 3 23 8 19.5 8 C17 8 17 5.5 19 5.5 M3 19 C3 23 8 23 8 19.5 C8 17 5.5 17 5.5 19 M8 8 C10.5 8 11.5 10.5 9.5 11.5";
   function backArt(w, h) {
-    var small = w < 100, f = small ? 4 : 7, cx = w / 2, cy = h / 2, r = Math.round(w * (small ? 0.24 : 0.2)), out = "";
-    out += '<rect class="bk__frame" x="' + (f + .5) + '" y="' + (f + .5) + '" width="' + (w - 2 * f - 1) + '" height="' + (h - 2 * f - 1) + '" stroke-width="1"/>';
-    out += '<circle class="bk__frame" cx="' + cx + '" cy="' + cy + '" r="' + r + '" stroke-width="1"/>';
-    if (!small) {
-      [f + .5, w - f - .5].forEach(function (x) { out += '<path class="bk__curl" d="M' + x + " " + (cy - 5) + " L" + (x + 3) + " " + cy + " L" + x + " " + (cy + 5) + " L" + (x - 3) + " " + cy + 'Z"/>'; });
-      for (var i = 0; i < 8; i++) { var a = i * Math.PI / 4, c = Math.cos(a), sn = Math.sin(a);
-        out += '<line class="bk__frame" x1="' + (cx + c * (r + 4)) + '" y1="' + (cy + sn * (r + 4)) + '" x2="' + (cx + c * (r + 8)) + '" y2="' + (cy + sn * (r + 8)) + '" stroke-width="1"/>'; }
-    }
+    var small = w < 100, sx = small ? 5 : 9, y0 = Math.round(h * (small ? 0.18 : 0.22)), y1 = h - y0, cy = h / 2, d = small ? 3 : 4, out = "";
+    [sx, w - sx].forEach(function (x) {
+      out += '<line class="bk__frame" x1="' + (x + .5) + '" y1="' + y0 + '" x2="' + (x + .5) + '" y2="' + y1 + '" stroke-width="1"/>';
+      out += '<path class="bk__curl" d="M' + (x + .5) + " " + (cy - d * 2) + " L" + (x + .5 + d) + " " + cy + " L" + (x + .5) + " " + (cy + d * 2) + " L" + (x + .5 - d) + " " + cy + 'Z"/>';
+    });
+    if (!small) [[0, 0, 1, 1], [w, 0, -1, 1], [0, h, 1, -1], [w, h, -1, -1]].forEach(function (c) {
+      out += '<path class="bk__frame" d="' + CORNER + '" stroke-width="1" stroke-linecap="round" fill="none" transform="translate(' + (c[0] + c[2] * 3) + " " + (c[1] + c[3] * 3) + ") scale(" + c[2] + " " + c[3] + ')"/>';
+    });
     return '<svg class="bk__art" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + out + "</svg>";
   }
   function back(w, e, opt) {
     opt = opt || {};
     var h = Math.round(w * 7 / 5), small = w < 100;
-    var inner = backArt(w, h) + '<span class="bk__seal">' + (e ? elem(e) : "") + "</span>";
+    var ring = Math.round(w * (small ? 0.66 : 0.58));
+    var inner = backArt(w, h) + '<span class="bk__seal"><span class="ork-sigil" style="position:relative;width:' + ring + "px;height:" + ring + 'px"></span>' + (e ? '<span style="position:absolute">' + elem(e) + "</span>" : "") + "</span>";
     if (opt.side) return '<div class="bk on-side' + (small ? " is-small" : "") + '" style="width:' + h + "px;height:" + w + 'px"><div class="bk__turn" style="width:' + w + "px;height:" + h + 'px">' + inner + "</div></div>";
     return '<div class="bk' + (small ? " is-small" : "") + '" style="width:' + w + "px;height:" + h + "px;" + (opt.style || "") + '">' + inner + "</div>";
   }
@@ -374,8 +382,8 @@ button { font: inherit; }
   // ---------- 3 · the backs ----------
   var BK = [['<div class="ork-card-back" style="width:56px"></div>', "Today, 56 × 78", "The lattice at the fan's size: noise."],
             ['<div class="ork-card-back" style="width:144px"></div>', "Today, 144 × 202", "A texture, not a card's back."],
-            [back(56, "ice"), "New, 56 × 78", "<b>The Orkmaster's fan.</b> The frame and the ring only; the rune in it."],
-            [back(144, "lava"), "New, 144 × 202", "<b>A stack's cards behind, the discard's, the first open's four.</b> The diamonds and the rays."],
+            [back(56, "ice"), "New, 56 × 78", "<b>The Orkmaster's fan.</b> The ring and the strips; the rune in it."],
+            [back(144, "lava"), "New, 144 × 202", "<b>A stack's cards behind, the discard's, the first open's four.</b> The corners' curls and the strips."],
             [back(112, "void", { side: true }), "New, lying, 157 × 112", "<b>To review's deck.</b> The same back, turned."],
             [back(144, null), "New, no goal", "The ring empty: the back alone."]];
   document.getElementById("backs").innerHTML = BK.map(function (b, i) { return '<figure class="mk-fig"><span class="mk-tag' + (i > 1 ? " new" : "") + '">' + b[1] + "</span>" + b[0] + '<p class="mk-cap" style="max-width:170px">' + b[2] + "</p></figure>"; }).join("");
@@ -399,31 +407,33 @@ button { font: inherit; }
     + '<figure class="mk-fig"><span class="mk-tag new">Out of the portal: the earlier decision</span><div style="position:relative">' + bigCard({ e: "dust", kind: "page", title: "§212 · The server owns every clock", win: "<b>Why:</b> a clock on the client was cheated in the first playtest (a round stretched to 3 minutes).<br><br><b>Rests on it:</b> Round timer, Kick idle players, the anti-cheat check.", who: head("lich-elder", 16, 15) + " from the chronicle · v0.3", amt: "28 Oct" }) + '<span style="position:absolute;right:-84px;top:24px;display:flex;flex-direction:column;align-items:center;gap:4px">' + head("lich-elder", 36, 33) + '<span class="ork-portal small" style="transform:scale(.5);transform-origin:50% 0"></span></span></div><p class="mk-cap">Drawn out of the ring by the lich; both sides with their why, as a fork. The choice is made on the new goal\'s side.</p></figure>';
 
   // ---------- 5 · the lich's table ----------
-  var HEADS = [["shaman-elder", "Tech"], ["dryad-elder", "Design"], ["unicorn-elder", "Product"], ["fairy-elder", "Marketing"], ["lich-elder", "Release"]];
-  var lichTable = function (deck, crafts, cards, note) {
+  // the past over the pane: the decks of the versions at its left; whose past is the open tab's, said in the title and under the lich
+  var lichTable = function (deck, tab, cards, note) {
     var decks = [["Unreleased", "2 goals in dev"], ["v0.3", "28 Oct"], ["v0.2", "14 Oct"], ["v0.1", "2 Oct"]];
-    return '<span class="lt__title">' + head("lich-elder", 24, 22) + "Release's table</span>"
-      + '<span class="lt__search">Search goals, decisions, sections…</span>'
-      + '<div class="lt__heads">' + HEADS.map(function (h) { return '<span class="h' + (crafts === h[1] ? " on" : "") + '">' + head(h[0], 30, 27) + h[1] + "</span>"; }).join("") + "</div>"
+    var whose = tab[1] === "the Orkmaster" ? "The project's past" : tab[1] + "'s past";
+    return '<span class="lt__title">' + head("lich-elder", 24, 22) + "← " + (tab[1] === "the Orkmaster" ? "Party game" : tab[1] + "'s table") + "</span>"
+      + '<span class="lt__search">Search ' + (tab[1] === "the Orkmaster" ? "the past" : tab[1] + "'s past") + "…</span>"
+      + '<div class="lt__heads">' + head(tab[0], 30, 27) + "<span>The past · through " + tab[1] + (deck ? " · " + deck : " · every version") + "</span></div>"
       + '<div class="decks">' + decks.map(function (d) { return '<div class="deck' + (deck === d[0] ? " on" : deck ? " dim" : "") + '"><b>' + d[0] + "</b><small>" + d[1] + "</small></div>"; }).join("") + "</div>"
       + '<div class="deal">' + cards.join("") + "</div>"
-      + (note ? '<span class="callout" style="left:600px;top:44px">' + note + "</span>" : "");
+      + '<div class="lt__edge">' + head("imp-elder-asleep", 30, 27) + '<span class="ork-portal-ring"><span class="ork-portal small"></span></span>' + head("lich-elder", 30, 27, "on") + '<span class="w">' + whose + " ›</span></div>"
+      + (note ? '<span class="callout" style="left:560px;top:44px">' + note + "</span>" : "");
   };
   var dec = function (n, t, w, who, v, cls) { return card({ e: "dust", kind: "page", title: "§" + n + " · " + t, win: w, who: who, amt: v, cls: cls }); };
   var goal = function (e, t, w, who, v) { return card({ e: e, kind: "check", title: t, win: w, who: who, amt: v }); };
   var H = function (n) { return head(n, 16, 15); };
-  document.getElementById("pane").innerHTML = lichTable("v0.3", null, [
+  document.getElementById("pane").innerHTML = lichTable("v0.3", ["peon-crown", "the Orkmaster"], [
     dec(212, "The server owns every clock", "A client clock was cheated in the first playtest.", H("shaman-elder") + H("unicorn-elder"), "v0.3", "lit"),
     goal("ice", "Round timer", "Ticks on the server; the client shows it.", H("shaman-elder"), "v0.3"),
     dec(209, "The lobby holds eight", "Eight fit one screen of faces.", H("dryad-elder") + H("unicorn-elder"), "v0.3"),
     goal("dust", "Lobby screen", "Eight faces, a ready mark each.", H("dryad-elder") + H("shaman-elder"), "v0.3")
   ], "§212 lit: the conflict's card opened here");
-  document.getElementById("pane2").innerHTML = lichTable(null, "Design", [
+  document.getElementById("pane2").innerHTML = lichTable(null, ["dryad-elder", "Design"], [
     dec(231, "Camp is tested in marketing", "Two looks in the clips, one in the product.", H("dryad-elder") + H("fairy-elder"), "Unreleased"),
     dec(226, "The dark look, pushed", "Brighter ink, nothing under 14 px.", H("dryad-elder"), "v0.3"),
     dec(209, "The lobby holds eight", "Eight fit one screen of faces.", H("dryad-elder") + H("unicorn-elder"), "v0.3"),
     dec(190, "One look, the office", "Dark, monochrome, colour a signal.", H("dryad-elder"), "v0.1")
-  ], "no deck picked: every version, newest first");
+  ], "every version, newest first");
 
   // ---------- 6 · a new goal ----------
   var ngBody = '<div class="field"><span class="ph">What should it do?</span><span>Players hear a short horn when the round starts.</span><div class="att"><span>+ picture</span><span>+ file</span></div></div>';
