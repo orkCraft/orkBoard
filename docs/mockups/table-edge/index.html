@@ -123,6 +123,25 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) { .mk-pose.mk-turning .ork-die__cube { animation: none; } }
 .mk-dfig { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); min-width: 150px; }
 
+/* ---------- the lich's fan at the portal: a craft's last decisions, small, coming out of the ring ---------- */
+.lx { position: relative; width: 250px; height: 470px; background: var(--ork-room); border: var(--ork-line) solid var(--ork-frame); overflow: hidden; flex: none; }
+.lx__tabs { display: flex; align-items: flex-end; gap: var(--ork-3); padding: var(--ork-2) var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); height: 52px; }
+.lx__tabs img { opacity: .5; } .lx__tabs img.on { opacity: 1; }
+.lx__ring { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); }
+.lx__imp { position: absolute; left: 50%; top: 60px; transform: translateX(-50%); }
+.lx__fan { position: absolute; left: 50%; top: 236px; width: 0; height: 0; }
+.mini.ork-card { position: absolute; left: -28px; top: 0; width: 56px; height: 78px; padding: 3px; display: flex; flex-direction: column; justify-content: space-between; transform-origin: 50% 100%; overflow: hidden; }
+.mini__top { display: flex; justify-content: space-between; align-items: center; }
+.mini__top .ork-elem, .mini__top .ork-sign { width: 10px; height: 10px; }
+.mini__n { font: 600 12px/14px var(--ork-font-read); text-align: center; color: var(--ork-ink); font-variant-numeric: tabular-nums; }
+.mini__bot { display: flex; gap: 1px; } .mini__bot img { width: 12px; height: 11px; }
+.mini.is-new { border-color: var(--ork-ink); }
+.lx__lich { position: absolute; left: 50%; top: 322px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 3; }
+.lx__lich .w { font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink); border-bottom: var(--ork-line) solid var(--ork-ink); white-space: nowrap; }
+.lx__rise { position: absolute; left: 8px; top: 64px; z-index: 4; box-shadow: 0 10px 24px rgba(0,0,0,.55); }
+.lx__disc { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-muted); white-space: nowrap; }
+.lx__disc b { color: var(--ork-ink); font-weight: 600; }
+
 /* ---------- the lich's table: the decks of the versions, the heads of the crafts ---------- */
 .pane { position: relative; width: 1000px; height: 344px; background: var(--ork-table); border: var(--ork-line) solid var(--ork-table-rim); overflow: hidden; }
 .pane .deal { position: absolute; left: 196px; top: 96px; right: 162px; display: flex; flex-wrap: wrap; gap: var(--ork-4); }
@@ -240,6 +259,9 @@ button { font: inherit; }
 <section class="mk-sec" id="chronicle">
   <h1>5 · The past through whose eyes: the portal holds it, the open tab says whose</h1>
   <p class="mk-line">The chronicle is the lich's table, read on the frame's two axes (what is looked at · through whom): <b>the lich pressed opens the past through the open tab</b>. On Design's tab it deals Design's past decisions and goals; on the Orkmaster's, the whole project's. <b>The line under the lich says whose past it holds</b> (<i>Design's past</i>), so the portal is found by its place. On the lich's own table the only choice is <b>a deck a version</b>, <i>Unreleased</i> on top, and a search; no heads to pick, the tab already picked one. <b>The ring itself</b> stays the way into main (pressed only while something is ready); <b>the imp</b> is Live.</p>
+  <h2>At the portal: the lich's fan, the open tab's last decisions</h2>
+  <p class="mk-line">The owner's way in, before any press: <b>at the lich, up to three small cards come out of the portal</b>, the last decisions of the open tab's craft (on the Orkmaster's tab, the project's). At 56 × 78 a card says its rune, its kind and its number; <b>hovered, it rises whole</b> with its title. <b>It moves only for what is new</b> since that craft's past was last looked at, else it lies still (one place moves at a time, §247.8). <b>Pressed</b> (the fan or the lich), the past opens over the pane, laid by version, as below. <b>Main comes first</b>: while something is ready for main the ring is the gate's, and the fan tucks in behind the lich.</p>
+  <div class="scroll-x"><div class="mk-row" id="lfan" style="flex-wrap:nowrap"></div></div>
   <h2>Design's tab open, the lich pressed: Design's past, every version</h2>
   <div class="scroll-x"><div class="pane" id="pane2"></div></div>
   <h2>The Orkmaster's tab open, the deck v0.3 picked: the whole project's v0.3</h2>
@@ -434,9 +456,37 @@ button { font: inherit; }
       + '<div class="lt__edge">' + head("imp-elder-asleep", 30, 27) + '<span class="ork-portal-ring"><span class="ork-portal small"></span></span>' + head("lich-elder", 30, 27, "on") + '<span class="w">' + whose + " ›</span></div>"
       + (note ? '<span class="callout" style="left:560px;top:44px">' + note + "</span>" : "");
   };
+  var H = function (n) { return head(n, 16, 15); };
+  // the lich's fan: o = { tab, cards: [[elem, number, head]], newest, rise, gate, note }
+  var TABS = [["peon-crown", "the Orkmaster"], ["shaman-elder", "Tech"], ["dryad-elder", "Design"], ["unicorn-elder", "Product"]];
+  var lfan = function (o) {
+    var whose = o.tab === "the Orkmaster" ? "The project's past" : o.tab + "'s past";
+    var n = o.cards.length, R = o.gate ? [-14, -8, -2] : [-12, 0, 12], X = o.gate ? [-46, -40, -34] : [-40, 0, 40], Y = o.gate ? [40, 42, 44] : [6, 0, 6];
+    var fan = o.cards.map(function (c, i) {
+      var lift = o.newest && i === n - 1 ? -14 : 0;
+      return '<div class="mini ork-card' + (o.newest && i === n - 1 ? " is-new" : "") + '" style="transform:translate(' + X[i] + "px," + (Y[i] + lift) + "px) rotate(" + R[i] + 'deg);z-index:' + (i + 1) + '">'
+        + '<span class="mini__top">' + elem(c[0]) + '<i class="ork-sign page"></i></span><span class="mini__n">§' + c[1] + '</span><span class="mini__bot">' + c[2].map(function (h) { return head(h, 12, 11); }).join("") + "</span></div>";
+    }).join("");
+    return '<div class="lx"><div class="lx__tabs">' + TABS.map(function (t) { return head(t[0], t[1] === o.tab ? 36 : 24, t[1] === o.tab ? 33 : 22, t[1] === o.tab ? "on" : ""); }).join("") + "</div>"
+      + '<span class="lx__imp">' + head("imp-elder-asleep", 30, 27) + "</span>"
+      + '<span class="lx__ring"><span class="ork-portal-ring' + (o.gate ? " is-open" : "") + '"><span class="ork-portal small"' + (o.gate ? "" : ' style="opacity:.35"') + "></span></span></span>"
+      + '<div class="lx__fan">' + fan + "</div>"
+      + '<span class="lx__lich">' + head("lich-elder", 36, 33) + '<span class="w">' + whose + " ›</span></span>"
+      + (o.rise || "")
+      + (o.gate ? '<span class="lx__disc">the discard: <b>2 ready for main</b></span>' : "")
+      + "</div>";
+  };
+  var D = ["dryad-elder"], DP = ["dryad-elder", "unicorn-elder"];
+  var LF = [
+    ["Design's tab, at rest", lfan({ tab: "Design", cards: [["dust", 190, D], ["meadow", 209, DP], ["void", 226, D]] }), "Design's last three decisions, the newest on top at the right. Nothing new since the last look: they lie still."],
+    ["Design's tab, a new one", lfan({ tab: "Design", cards: [["meadow", 209, DP], ["void", 226, D], ["lava", 231, ["dryad-elder", "fairy-elder"]]], newest: true }), "<b>§231 is new</b> since Design's past was last looked at: dealt out of the ring once, then lifted a little, its edge in the ink, until it is seen."],
+    ["Hovered", lfan({ tab: "Design", cards: [["meadow", 209, DP], ["void", 226, D], ["lava", 231, ["dryad-elder", "fairy-elder"]]], rise: '<div class="lx__rise">' + card({ e: "lava", kind: "page", title: "§231 · Camp is tested in marketing", win: "Two looks in the clips, one in the product.", who: H("dryad-elder") + H("fairy-elder"), amt: "Unreleased" }) + "</div>" }), "A card hovered or focused <b>rises whole</b> beside the edge: its title, its why in a line, its version. A press opens the past."],
+    ["The Orkmaster's tab", lfan({ tab: "the Orkmaster", cards: [["dust", 212, ["shaman-elder", "unicorn-elder"]], ["void", 226, D], ["lava", 231, ["dryad-elder", "fairy-elder"]]] }), "The project's last three decisions, of any craft: <b>who</b> in each card's foot says whose."],
+    ["Something ready for main", lfan({ tab: "Design", gate: true, cards: [["meadow", 209, DP], ["void", 226, D], ["lava", 231, ["dryad-elder", "fairy-elder"]]] }), "<b>Main comes first</b>: the ring is open for <i>To main</i>, the fan tucked behind the lich, its edges only. The lich still opens the past."]
+  ];
+  document.getElementById("lfan").innerHTML = LF.map(function (f) { return '<figure class="mk-fig"><span class="mk-tag new">' + f[0] + "</span>" + f[1] + '<p class="mk-cap" style="max-width:250px">' + f[2] + "</p></figure>"; }).join("");
   var dec = function (n, t, w, who, v, cls) { return card({ e: "dust", kind: "page", title: "§" + n + " · " + t, win: w, who: who, amt: v, cls: cls }); };
   var goal = function (e, t, w, who, v) { return card({ e: e, kind: "check", title: t, win: w, who: who, amt: v }); };
-  var H = function (n) { return head(n, 16, 15); };
   document.getElementById("pane").innerHTML = lichTable("v0.3", ["peon-crown", "the Orkmaster"], [
     dec(212, "The server owns every clock", "A client clock was cheated in the first playtest.", H("shaman-elder") + H("unicorn-elder"), "v0.3", "lit"),
     goal("ice", "Round timer", "Ticks on the server; the client shows it.", H("shaman-elder"), "v0.3"),
