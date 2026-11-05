@@ -1,0 +1,7 @@
+/* A card's window, never empty (docs/specs/148-a-window-on-every-card.md part A; cardwindow.js). Linked after made.css (frame/frame.js); orkUI's tokens only, layout only. The frame is the lanes' (`.table-card__win.is-window`); a
+   picture lies whole on the table's ground, the words in the reading face. */
+.card-win { align-items: stretch; justify-content: stretch; min-width: 0; overflow: hidden; color: var(--ork-ink-read); }
+.card-win.is-picture { background: var(--ork-room); }
+.card-win__img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.card-win.is-words { padding: var(--ork-2) var(--ork-3); }
+.card-win__words { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); line-height: 15px; align-self: center; }

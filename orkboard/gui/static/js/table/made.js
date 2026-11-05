@@ -69,6 +69,12 @@ const KINDS = { diff: Diff, asset: Asset, screen: Screen, checks: Checks, hypoth
 
 /** The window's inside for a task that made something, or null. */
 export function MadeWindow({ t }) {
-  const m = madeOf(t), Kind = m && KINDS[m.kind];
+  const m = madeOf(t);
+  return m ? html`<${MadeInside} m=${m} />` : null;
+}
+
+/** The inside of a made window for a `craft_made` already checked by `madeOf` (cardwindow.js draws it on any card). */
+export function MadeInside({ m }) {
+  const Kind = KINDS[m?.kind];
   return Kind ? html`<${Kind} m=${m} />` : null;
 }

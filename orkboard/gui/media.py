@@ -22,6 +22,9 @@ extension and the same headers (a commit's file never changes). A path with `..`
 asset's, a secret's name (hooks/warder.py `is_secret`), or one the commit does not hold: 404, signed or not.
 
     media.asset_url(commit, "art/hero.png")      # "/media/_asset/<commit>/art/hero.png?s=…"
+
+A goal's picture (docs/specs/148-a-window-on-every-card.md part A) is `GET /media/_photo/<goal>/<file>?s=<signature>` (`photo_url()`): the goal's first
+attached photo (realm/idea_photos.py `thumb`) from the state folder's `ideas/<goal>/photos/`, and no other file; the same headers.
 """
 from __future__ import annotations
 
@@ -35,9 +38,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
-from orkboard.realm import assets, commit_goal, idea_pick
+from orkboard.realm import assets, commit_goal, idea_photos, idea_pick
 
 PREFIX = "/media/"
+PHOTO = "/media/_photo/"                              # a goal's first photo on its card (spec 148 A): `_` is in no slug either
 ASSET = "/media/_asset/"                              # `_` is in no goal's slug: an asset's address is never a pick's
 CHUNK = 256 * 1024
 _SECRET = secrets.token_bytes(32)                      # the host's, for its life: a pick's address from an earlier run is dead
@@ -119,6 +123,36 @@ def asset_url(commit: str, path: str) -> str:
     return f"{signed}?s={sign(signed)}"
 
 
+_PHOTO_FILE = re.compile(r"[0-9]{1,3}\.(jpg|png|webp)")
+_PHOTO_MIME = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+
+
+def photo_url(goal: str, file: str) -> str:
+    """The signed address of a goal's picture (`file` is the name of its first photo)."""
+    signed = f"{PHOTO}{quote(goal, safe='')}/{quote(file, safe='')}"
+    return f"{signed}?s={sign(signed)}"
+
+
+def parse_photo(target: str) -> tuple[str, str, str] | None:
+    """(the path as the host signs it, goal, file) of a request target; None when it is not a goal's slug and a plain photo name."""
+    parts = urlsplit(target)
+    if not parts.path.startswith(PHOTO):
+        return None
+    names = [unquote(p) for p in parts.path[len(PHOTO):].split("/")]
+    if len(names) != 2 or not _GOAL.fullmatch(names[0]) or not _PHOTO_FILE.fullmatch(names[1]):
+        return None
+    return f"{PHOTO}{quote(names[0], safe='')}/{quote(names[1], safe='')}", *names
+
+
+def find_photo(dirs: list[Path], goal: str, file: str) -> tuple[Path, str] | None:
+    """(the file, its media type) of the goal's picture in the first state folder whose `thumb` it is: its first photo, nothing else."""
+    for state in dirs:
+        found = idea_photos.thumb(state, goal)
+        if found is not None and found.name == file:
+            return found, _PHOTO_MIME[found.suffix[1:]]
+    return None
+
+
 def parse_asset(target: str) -> tuple[str, str, str] | None:
     """(the path as the host signs it, the commit, the asset's path) of a request target; None when it is not a full commit and a path
     an asset may have (realm/assets.py `allowed`: no `..`, no hidden or skipped folder, a known extension, no secret's)."""
@@ -194,7 +228,12 @@ def serve(method: str, target: str, range_header: str, dirs: list[Path]) -> Repl
     if method not in ("GET", "HEAD"):
         return Reply(405, [("Allow", "GET, HEAD"), ("Content-Length", "0"), ("Cache-Control", "no-store")])
     sig = (parse_qs(urlsplit(target).query).get("s") or [""])[0]
-    if urlsplit(target).path.startswith(ASSET):
+    if urlsplit(target).path.startswith(PHOTO):
+        photo = parse_photo(target)
+        if photo is None or not check(photo[0], sig):
+            return _missing()
+        found, name = find_photo(dirs, photo[1], photo[2]), photo[2]
+    elif urlsplit(target).path.startswith(ASSET):
         asset = parse_asset(target)
         if asset is None or not check(asset[0], sig):
             return _missing()

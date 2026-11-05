@@ -2,6 +2,8 @@
 
     put(state_dir, "dark-mode", raw)        # ".orkcraft/ideas/dark-mode/photos/1.jpg", the path the keeper reads
     listed(state_dir, "dark-mode")          # those paths, in the order they came
+    first(state_dir, "dark-mode")           # the first of them ("" with none): a goal's picture on its card (spec 148 A)
+    thumb(state_dir, "dark-mode")           # the file a card's picture is served from, or None (see THUMB_BYTES)
     decode([{"data": "<base64>"}, ...])     # the bytes of each, checked: an image, at most MAX_BYTES, at most MAX_PHOTOS
 
 The phone makes each one a JPEG of at most 1600 px before it sends it; a PNG or a WebP is taken as it is. They live
@@ -18,6 +20,7 @@ from pathlib import Path
 
 MAX_PHOTOS = 4
 MAX_BYTES = 3 * 2**20
+THUMB_BYTES = 200 * 1024        # Pillow is a dev dependency only (pyproject.toml), so no thumbnail is made: a photo this small is served as it is, a larger one gives no picture
 KINDS = ((b"\xff\xd8\xff", "jpg"), (b"\x89PNG\r\n\x1a\n", "png"))      # and WebP: RIFF....WEBP
 
 
@@ -79,3 +82,25 @@ def prompt_lines(state_dir: Path, slug: str) -> str:
         return ""
     return "The person attached photos to the idea: read each one first (they are not counted in the files).\n" + \
         "\n".join(f"- {p}" for p in got) + "\n"
+
+
+def first(state_dir: Path, slug: str) -> str:
+    """The first photo of a goal, its path relative to the repository ("" with none)."""
+    got = listed(state_dir, slug)
+    return got[0] if got else ""
+
+
+def thumb(state_dir: Path, slug: str) -> Path | None:
+    """The file a goal's card shows as its picture: its first photo when it is a plain file of the photos folder of at most
+    THUMB_BYTES, else None. (Orkboard runs without Pillow, so no smaller copy is made: the phone sends 1600 px JPEGs, and
+    what is larger than the limit gives the card its words instead.)"""
+    got = first(state_dir, slug)
+    if not got:
+        return None
+    path = Path(state_dir).parent / got
+    try:
+        if path.is_symlink() or not path.is_file() or path.resolve().parent != folder(state_dir, slug).resolve():
+            return None
+        return path if path.stat().st_size <= THUMB_BYTES else None
+    except OSError:
+        return None

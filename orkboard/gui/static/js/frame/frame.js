@@ -12,7 +12,7 @@ import { uprightNow } from "./upright.js";
 import { SetupWatch } from "../hand/setupcards.js";     // what the Orkmaster asks now, on the first open (spec 130 B.4)
 import { laidNow, laying, useLaying } from "../table/laying.js";   // the window not yet laid, and the laying at Start (spec 130 C.6)
 
-const sheets = ["./frame.css", "../table/table.css", "../table/work.css", "../table/corners.css", "../table/made.css", "../table/discard.css", "../table/portal.css", "../table/notice.css", "../table/ask.css", "../table/back.css", "../table/column.css", "../table/goalview.css", "../table/steps.css", "../table/presence.css", "../table/dayline.css", "../hand/hand.css", "../hand/mana.css", "../hand/upright.css", "../hand/upmenu.css", "../hand/uplook.css"].map((p) => new URL(p, import.meta.url).href);
+const sheets = ["./frame.css", "../table/table.css", "../table/work.css", "../table/corners.css", "../table/made.css", "../table/cardwindow.css","../table/discard.css", "../table/portal.css", "../table/notice.css", "../table/ask.css", "../table/back.css", "../table/column.css", "../table/goalview.css", "../table/steps.css", "../table/presence.css", "../table/dayline.css", "../hand/hand.css", "../hand/mana.css", "../hand/upright.css", "../hand/upmenu.css", "../hand/uplook.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
   for (const href of sheets) {
     if (!document.querySelector(`link[href="${href}"]`)) {

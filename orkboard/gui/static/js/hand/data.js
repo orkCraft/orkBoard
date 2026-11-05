@@ -24,7 +24,7 @@ export function partyCard(g) {
 export function doneOf(map = mapData.value) {
   const at = (n) => String(n.updated || "");
   return [...(map?.nodes || [])].filter((n) => n.place === "discard").sort((a, b) => at(b).localeCompare(at(a))).map((n) => ({
-    slug: n.slug, title: n.short || n.title, full: n.title, element: n.element || "", hue: n.hue || "", party: n.goal, usd: n.usd, seen: n.seen || "", tasks: n.tasks || [], type: n.type || null }));
+    slug: n.slug, title: n.short || n.title, full: n.title, element: n.element || "", hue: n.hue || "", party: n.goal, usd: n.usd, seen: n.seen || "", tasks: n.tasks || [], type: n.type || null, picture: n.picture || "" }));
 }
 
 /** What dev holds that main lacks, said for the discard: `{n, into, main, goals, commits, files, off}`; null with nothing to merge. */

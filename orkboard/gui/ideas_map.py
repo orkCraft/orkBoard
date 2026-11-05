@@ -20,7 +20,7 @@ from pathlib import Path
 from orkboard import settings as machine
 from orkboard.gui import media
 from orkboard.gui.ideas_args import IdeasError, _opt
-from orkboard.realm import board_map, collide, goal_team, goal_types, hypotheses, idea_element, ideas, library, orkmaster, party_recipes, task_made
+from orkboard.realm import board_map, collide, goal_team, goal_types, hypotheses, idea_element, idea_photos, ideas, library, orkmaster, party_recipes, task_made
 
 
 class MapMixin:
@@ -53,6 +53,7 @@ class MapMixin:
                 if n["state"] != "done" or not n["seen"]:
                     used.append((n["element"], n["hue"]))
         self.made_for(got)
+        self.pictures_for(got)
         main = machine.main_tool(getattr(self.host, "machine", None))              # what a party with no tool of its own runs on
         next_element, next_hue = idea_element.pick_rune(used)                           # what a new goal would be given (`idea_element.next_rune_for`, from the runes read above)
         free_elements = idea_element.free([e for e, _h in used])                        # the shapes no goal holds (`idea_element.free_for`): [] when none is free
@@ -65,6 +66,16 @@ class MapMixin:
             g["ops"] = goal_team.recipe_of(root, g["slug"]) == party_recipes.TEAM_ID         # the Team party: its Board is the person's Operations (spec 92 §3)
         got["project"] = self.project_of(root, got, goal)
         return got
+
+    def pictures_for(self, got: dict) -> None:
+        """A goal's node carries `picture` (a signed address) when it has an attached photo the card can show (realm/idea_photos.py `thumb`, spec 148 A); the key is absent otherwise."""
+        for n in got["nodes"]:
+            try:
+                shown = idea_photos.thumb(self.state_dir, n["slug"])
+            except (OSError, ValueError):
+                shown = None
+            if shown is not None:
+                n["picture"] = media.photo_url(n["slug"], shown.name)
 
     def made_for(self, got: dict) -> None:
         """Each task done or at Review gets `craft_made` by its party's craft (realm/task_made.py, spec 142 D): Tech's files and Art's image from git (cached per tip commit), Design's shot (signed
