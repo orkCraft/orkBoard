@@ -5,7 +5,11 @@
 export const flights = { now: 0, done: 0 };                  // how many turn flights fly now, how many have landed (what a test reads)
 
 const clean = (el) => {
-  for (const a of ["id", "aria-label", "title", "aria-pressed", "aria-expanded", "aria-haspopup", "data-key", "data-hold", "data-goal", "data-pile", "data-about", "data-state", "data-stack", "data-task"]) el.removeAttribute(a);
+  for (const a of ["id", "aria-label", "title", "aria-pressed", "aria-expanded", "aria-haspopup"]) el.removeAttribute(a);
+  for (const n of [el, ...el.querySelectorAll("*")]) {                    // a copy is never found as the card it copies: no id and no data-* (data-goal, data-kind, data-key …) on it or inside it
+    n.removeAttribute("id");
+    for (const a of n.getAttributeNames()) if (a.startsWith("data-")) n.removeAttribute(a);
+  }
   el.classList.remove("ork-leans", "ork-picked", "is-lifted", "ork-deal", "is-dim");
   el.setAttribute("aria-hidden", "true");
   el.tabIndex = -1;
