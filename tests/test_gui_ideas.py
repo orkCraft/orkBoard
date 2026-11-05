@@ -1399,3 +1399,21 @@ def test_a_press_while_the_leader_works_or_a_runner_that_cannot_apply_it_leaves_
     with pytest.raises(CommandError, match="no plan yet"):
         host.command("ideas.revise_answer", {"slug": slug, "take": True})
     assert host.command("ideas.page", {"slug": slug})["change"] is not None        # it waits as it did
+
+
+def test_a_task_holds_commits_when_its_branch_is_ahead_of_where_it_started(host, fake_repo):
+    """Spec 149 D.4: the page says *Start again* throws work away only where the branch holds commits since the task's base."""
+    import subprocess
+
+    def run(*a):
+        return subprocess.run(["git", *a], cwd=str(fake_repo), check=True, capture_output=True, text=True).stdout.strip()
+    base = run("rev-parse", "HEAD")
+    run("branch", "idea/g/t1", base)
+    task = {"branch": "idea/g/t1", "base": base}
+    assert host.ideas._holds_commits(task) is False and host.ideas._holds_commits({"branch": "", "base": base}) is False
+    run("switch", "idea/g/t1")
+    (fake_repo / "work.txt").write_text("x\n", encoding="utf-8")
+    run("add", "work.txt")
+    run("commit", "-m", "work")
+    assert host.ideas._holds_commits(task) is True
+    assert host.ideas._holds_commits({"branch": "idea/g/gone", "base": base}) is False

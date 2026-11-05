@@ -1421,3 +1421,24 @@ def test_the_plus_cards_turned_corner_lies_clear_of_the_first_lanes_stacks_at_14
     finally:
         ctx.close()
     assert not log, "\n".join(log)
+
+
+def test_start_again_says_the_tasks_work_is_thrown_away_only_where_its_branch_holds_commits(gui):
+    """Spec 149 D.4: the failure card's *Start again* says in its title that the task's work is thrown away and made again, when the host says the branch holds commits."""
+    words = "The task's work is thrown away and made again"
+    pg, host, log = open_hand(gui)
+    try:
+        _press(pg, "timer")
+        btn = pg.locator(".hand-lifted").get_by_role("button", name="Start again")
+        btn.wait_for(timeout=WAIT_MS)
+        assert words not in (btn.get_attribute("title") or ""), "no commits: nothing is thrown away"
+        pg.keyboard.press("Escape")
+        next(n for n in host.nodes if n["slug"] == "timer")["tasks"][0]["holds_commits"] = True
+        host.bump({})
+        _press(pg, "timer")
+        btn = pg.locator(".hand-lifted").get_by_role("button", name="Start again")
+        btn.wait_for(timeout=WAIT_MS)
+        assert words in btn.get_attribute("title")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

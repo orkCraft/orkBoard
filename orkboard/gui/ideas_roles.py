@@ -76,7 +76,8 @@ class RolesMixin:
         target, read = self.target_of_idea(plan["idea"]) if plan.get("idea") else self._target(), roles.known(self.state_dir)
         tiers = self.tiers_of_idea(plan["idea"]) if plan.get("idea") else {}
         return {**plan, "tasks": [{**t, "head": roles.task_head(self.state_dir, t, target, read, tiers),
-                                   "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND])}
+                                   "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND]),
+                                   "holds_commits": t.get("state") == "failed" and self._holds_commits(t)}     # spec 149 D.4: *Start again* says its work is thrown away
                                   for t in plan.get("tasks") or []]}
 
     def _role_spend(self) -> dict[str, float]:

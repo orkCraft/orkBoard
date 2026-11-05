@@ -6,6 +6,7 @@ own setting: spec 37 §8). Split from ideas.py to keep it under ~600 lines.
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 from orkboard import settings
@@ -20,6 +21,18 @@ class ReviewMixin:
 
     def _into(self) -> str:
         return str(self.settings_now().get("merge_into") or settings.IDEAS["merge_into"])
+
+    def _holds_commits(self, task: dict) -> bool:
+        """Whether the task's branch holds commits since it was cut (spec 149 D.4): *Start again* throws that work away and makes it again."""
+        branch = str(task.get("branch") or "")
+        if not branch:
+            return False
+        base = str(task.get("base") or self._into())
+        try:
+            out = subprocess.run(["git", "rev-list", "--count", f"{base}..{branch}"], cwd=self.host.repo_root, capture_output=True, text=True, timeout=20)
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return out.returncode == 0 and out.stdout.strip().isdigit() and int(out.stdout.strip()) > 0
 
     def _plans(self) -> list[tuple[str, str, dict]]:
         """(slug, title, plan) of every idea that has a plan, in the board's order."""
@@ -170,7 +183,7 @@ class ReviewMixin:
         slug, tid, task, plan = self._task(args)
         page = ideas.idea_page(self.root(), slug)
         runner = self._runner
-        return {**task, "idea": slug, "idea_title": (page.title if page else "") or slug,
+        return {**task, "idea": slug, "holds_commits": task.get("state") == "failed" and self._holds_commits(task), "idea_title": (page.title if page else "") or slug,
                 "head": roles.task_head(self.state_dir, task, self.target_of_idea(slug), None, self.tiers_of_idea(slug)),
                 "log": runner.log(slug, tid) if runner is not None else "",
                 "after": task.get("after") or [], "round": int(task.get("round") or 1)}

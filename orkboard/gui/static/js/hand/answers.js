@@ -133,7 +133,7 @@ export function Answers({ s, here = false }) {
     }
     case "todo": return here ? null : html`<button type="button" class="ork-btn" onClick=${() => openStop(s)}>Open…</button>
       <${TodoWays} idea=${row.idea} todo=${row.todo} lead=${s.party.lead} agent=${row.todo?.by?.name} />`;
-    case "failed": return html`<button type="button" class="ork-btn primary" title="Its goal’s tasks that are not merged or at Review run again"
+    case "failed": return html`<button type="button" class="ork-btn primary" title=${"Its goal’s tasks that are not merged or at Review run again" + (s.task?.holds_commits ? ". The task's work is thrown away and made again" : "")}
         onClick=${() => act("ideas.start", { slug: n?.slug || row.idea, via: "hand" })}>Start again</button>
       ${!here && html`<button type="button" class="ork-btn" title="Its brief, state and log, over the pane" onClick=${() => openStop(s)}>Open…</button>`}`;
     case "pitch": return here ? null : html`<button type="button" class="ork-btn primary" title="Its views, the case against and the decision" onClick=${() => openStop(s)}>Open the pitch</button>`;

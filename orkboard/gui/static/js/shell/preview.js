@@ -16,7 +16,7 @@ function FailedActions({ t }) {
   const [sure, setSure] = useState(false);
   const drop = async () => { const got = await act("ideas.drop_task", { slug: t.idea, task: t.id }); if (got?.ok) closeOver(); };
   return html`<div class="board-row">
-    <button class="ork-btn primary" title="Its goal's tasks that are not merged or at Review run again" onClick=${() => act("ideas.start", { slug: t.idea })}>Start again</button>
+    <button class="ork-btn primary" title=${"Its goal's tasks that are not merged or at Review run again" + (t.holds_commits ? ". The task's work is thrown away and made again" : "")} onClick=${() => act("ideas.start", { slug: t.idea })}>Start again</button>
     ${sure ? html`<span>Drop this task? Its worktree goes; its branch stays.</span>
       <button class="ork-btn danger" onClick=${drop}>Drop it</button><button class="ork-btn" onClick=${() => setSure(false)}>Keep it</button>`
       : html`<button class="shell-quiet" onClick=${() => setSure(true)}>Drop…</button>`}</div>`;
