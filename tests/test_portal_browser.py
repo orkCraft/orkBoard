@@ -110,7 +110,7 @@ def test_a_goal_ready_for_main_is_a_card_and_pressing_it_opens_the_portal_above_
         assert pg.locator(".portal-cards [data-portal-card]").count() == 3
         assert portal(pg).count() == (1 if width == "wide" else 0), "the ring's portal lies there at the wide width; at the narrow one none until a goal is chosen"
         assert pg.locator(".portal__line").count() == 0 and (width == "narrow" or seal(pg).count() == 0), "no goal chosen: no line, nothing in the seal"
-        assert pg.get_by_role("region", name="Ready for main").get_by_role("button", name="To main", exact=True).count() == 1, "To main (dev whole) stays"
+        assert pg.get_by_role("region", name="Ready for main").get_by_role("button", name="To main", exact=True).count() == 1, "To main stays, and takes the portal's way (spec 149 G.1)"
         assert pg.locator("#table-pane .hand-discardview").get_by_role("region", name="Done, not yet seen").count() == 1, "Done, not yet seen stays"
         c = card(pg, "music").bounding_box()
         assert (round(c["width"]), round(c["height"])) == ((144, 202) if width == "wide" else (80, 112)), "a card at the hand card's size"
@@ -381,11 +381,39 @@ def test_an_error_from_the_host_is_shown_as_a_failed_act_and_the_goal_stays(gui)
     assert not log or all("main moved" in m for m in log), "\n".join(log)
 
 
-def test_to_main_whole_stays_for_a_persons_own_commits(gui):
-    pg, host, log = open_view(gui)
+def test_the_button_to_main_sends_the_first_goal_ready_the_portals_way_with_its_checks(gui, width="wide"):
+    """Spec 149 G.1 (decisions §253.7): **To main** with no goal chosen takes the first goal ready through `ideas.to_main_plan`, `ideas.to_main_checks` and `ideas.to_main`; dev whole is not merged."""
+    pg, host, log = open_view(gui, width)
     try:
         pg.get_by_role("button", name="To main", exact=True).click()
-        assert _sent(pg, host, ("ideas.gate_merge", {}))
+        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert [n for n, _ in host.log if n in ("ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main", "ideas.gate_merge")] == ["ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main"], "the plan, the checks, then the goal; never dev whole"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_button_to_main_sends_the_goal_chosen_not_the_first(gui):
+    pg, host, log = open_view(gui, "wide")
+    try:
+        open_portal(pg, "codes")
+        pg.get_by_role("button", name="To main", exact=True).click()                                                # a press on the button is not a press away: the choice stands
+        assert _sent(pg, host, ("ideas.to_main", {"idea": "codes"}))
+        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "codes"}] and [n for n, _ in host.log if n == "ideas.gate_merge"] == []
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_button_to_main_with_a_sealed_goal_says_its_reason_and_sends_nothing(gui):
+    pg, host, log = open_view(gui, "wide")
+    try:
+        host.gate_doc["ideas"] = [i for i in host.gate_doc["ideas"] if i["slug"] == "menu"]
+        host.bump({})
+        pg.wait_for_function("() => document.querySelectorAll('[data-portal-card]').length === 1", timeout=WAIT_MS)
+        pg.get_by_role("button", name="To main", exact=True).click()
+        pg.get_by_text(f"Sealed: {SEALED}").first.wait_for(timeout=WAIT_MS)
+        assert [n for n, _ in host.log if n in ("ideas.to_main", "ideas.gate_merge")] == []
     finally:
         pg.close()
     assert not log, "\n".join(log)

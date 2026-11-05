@@ -122,6 +122,20 @@ export async function play() {
   await refreshShell();
 }
 
+/** The goal chosen for the portal (its slug), "" when none is. */
+export const chosenSlug = () => chosen.value;
+
+/** The discard's **To main** (spec 149 G.1, decisions §253.7): the portal's way, not dev whole. The goal is chosen (as a card pressed is), its plan asked and, at the wide width, its checks run; the press waits while they run and then plays the portal:
+ *  a red check or a seal says its reason as the portal does, and nothing is sent. */
+export async function toMain(slug) {
+  if (!slug) return;
+  choose(slug);
+  await planning;
+  await whenAsked();
+  while (chosen.value === slug && (pending.value === slug || checksOf(slug).some((c) => c.state === "waiting" || c.state === "running"))) await wait(150);
+  if (chosen.value === slug) await play();
+}
+
 /** Whether the window is at the narrow width (under 760 px): the table's end is laid always above it and only as it is needed below. */
 export function useNarrow() {
   const [narrow, set] = useState(() => typeof matchMedia === "function" && matchMedia(NARROW).matches);
@@ -168,7 +182,7 @@ function PortalDoor() {
   useLayoutEffect(() => { if (slug) door.current?.focus({ preventScroll: true }); }, [slug]);   // Enter on a card moves the focus here
   useEffect(() => {
     if (!slug) return undefined;
-    const away = (e) => { if (chosen.value && !e.target?.closest?.(".portal-host, [data-portal-card]")) close(); };
+    const away = (e) => { if (chosen.value && !e.target?.closest?.(".portal-host, [data-portal-card], [data-to-main]")) close(); };
     const esc = (e) => { if (e.key === "Escape" && chosen.value && !e.defaultPrevented) { e.preventDefault(); close(); } };   // a listener that outlives its portal by a frame says nothing
     document.addEventListener("pointerdown", away, true);
     document.addEventListener("keydown", esc);

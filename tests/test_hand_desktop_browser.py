@@ -1191,9 +1191,8 @@ def test_the_discard_shows_the_last_goal_done_and_what_is_ready_for_main_and_ope
         ready = box.get_by_role("region", name="Ready for main")
         assert ready.locator("[data-portal-card]").count() == 2 and ready.get_by_role("button", name="To main").count() == 1
         shot(pg, f"{width}-discard-over-the-pane")
-        ready.get_by_role("button", name="To main").click()                                                                        # today's merge into main, by code
-        assert _sent(pg, host, ("ideas.gate_merge", {}))
-        pg.wait_for_function("() => !document.querySelector('.hand-done')?.getAttribute('aria-label')?.includes('ready for main')", timeout=WAIT_MS)
+        ready.get_by_role("button", name="To main").click()                                                                        # the portal's way (spec 149 G.1): the first goal ready is chosen, dev whole is not merged
+        assert _sent(pg, host, ("ideas.to_main_plan", {"idea": ready.locator("[data-portal-card]").first.get_attribute("data-portal-card")})) and not [n for n, _ in host.log if n == "ideas.gate_merge"]
         done.click()                                                                                                                # pressed again, it closes
         assert sig(pg, "frame/state.js", "over") is None
     finally:

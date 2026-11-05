@@ -2,7 +2,7 @@
 // the lanes), the hand card's size, with the word *Discard* above it, on every tab. It was the hand's (hand/discard.js); the hand imports nothing of it. Its sheet is discard.css (the card's anatomy and sizes are the hand's, hand.css).
 // The last goal done lies face up on a card's face (spec 147 A.3, decisions §251: the rune and the done sign at the top, its name in four lines, the heads that did it and the time it took at the foot; *N tasks, in main since HH:MM* where the snapshot says it) with the backs of the others under it; while dev holds goals main lacks (the gate), its
 // window carries the lich's head and its foot *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
-// its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*: each goal ready is a card (table/portal.js, spec 105 F: pressed or dragged it is chosen for the portal in the ring over the pile, which sends that goal alone to main) and **To main** (dev whole, for a person's own commits, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
+// its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*: each goal ready is a card (table/portal.js, spec 105 F: pressed or dragged it is chosen for the portal in the ring over the pile, which sends that goal alone to main) and **To main** (spec 149 G.1: the goal chosen, or the first ready, goes the portal's way with its checks; dev whole by code only for commits that belong to no goal). No act on main lies on the pile (§160.5): the pile only shows and opens.
 // A goal done in the night (`ideas.night`, hand/nightcard.js) wears a small moon on its card and its row until its result is seen, and on the first look after the night the night's goals are dealt into the pile one by one (docs/specs/128 C.3, decisions §206.9).
 // The ring in it also holds the road's two corners, Release and Live, and the gate of skeletons while a goal's way into main is checked (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, portal.js, road.js).
 // With no gate (dev and main one branch, or no main: `gateData.same`, docs/specs/113-a-project-with-no-preview-or-no-gate.md §4, decisions §191.2) the end is the label and the pile's place or the pile alone: no ring, no portal, no corners.
@@ -19,7 +19,7 @@ import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
 import { DEAL_MS, leans } from "../hand/motion.js";
 import { nightFirst, nightMoons } from "../hand/nightcard.js";
-import { Portal, ReadyCards, portalHolds, useNarrow } from "./portal.js";
+import { Portal, ReadyCards, chosenSlug, portalHolds, toMain, useNarrow } from "./portal.js";
 import { noGate } from "./data.js";
 import { CornerTop, CornerFoot, muchOf, secondsBetween, IN_MAIN } from "./corners.js";             // the card is read by its four corners (spec 147 A.3, decisions §251)
 import { CardWindow, lastMade, windowOf } from "./cardwindow.js";
@@ -119,7 +119,10 @@ export function Discard({ dealing = "" }) {
 /** *Done, not yet seen* and *Ready for main*, over the pane. */
 export function DiscardView() {
   const done = shownDone(), ready = readyOf(), moons = nightMoons(), [busy, setBusy] = useState(false);
-  const merge = async (e) => { setBusy(true); await mergeGate(e); setBusy(false); };
+  const merge = async (e) => {                                                          // a goal ready goes the portal's way, its checks in it (spec 149 G.1); dev whole is for commits of no goal
+    setBusy(true);
+    try { if (ready?.goals.length) await toMain(chosenSlug() || ready.goals[0].slug); else await mergeGate(e); } finally { setBusy(false); }
+  };
   return html`<div class="hand-discardview">
     ${!done.length && !ready && html`<p class="ok-tone-muted">Nothing is done and waiting, and nothing waits for main.</p>`}
     ${done.length > 0 && html`<section class="hand-part" aria-label="Done, not yet seen">
@@ -131,7 +134,8 @@ export function DiscardView() {
         <span class="cap hand-drow__place">Result<i class="ork-chev right" aria-hidden="true"></i></span></button></li>`)}</ul></section>`}
     ${ready && html`<section class="hand-part" aria-label="Ready for main">
       <div class="hand-part__head"><${Head} race=${lichOf().race} tier=${lichOf().tier} /><h2 class="ork-label hand-part__title">Ready for ${ready.main}</h2>
-        <button type="button" class="ork-btn primary" disabled=${busy} title=${`Merges ${ready.into} into ${ready.main}: nothing reaches ${ready.main} without you`} onClick=${merge}>To ${ready.main}</button></div>
+        <button type="button" class="ork-btn primary" data-to-main disabled=${busy}
+          title=${ready.goals.length > 0 ? `Sends the goal chosen, or the first one ready, through the portal to ${ready.main}: its checks run first, nothing reaches ${ready.main} without you` : `Merges ${ready.into} into ${ready.main}: nothing reaches ${ready.main} without you`} onClick=${merge}>To ${ready.main}</button></div>
       ${ready.goals.length > 0 ? html`<${ReadyCards} goals=${ready.goals} main=${ready.main} />`
         : html`<p class="cap">${readyWords(ready)}: commits that belong to no goal.</p>`}
       <p class="cap">Nothing reaches ${ready.main} without you.</p></section>`}
