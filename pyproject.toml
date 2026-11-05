@@ -27,11 +27,12 @@ dependencies = [
     "websockets>=13.0",          # the page's server (gui/server.py) and the phone's listener (gui/phones.py)
     "segno>=1.5",                # the QR code a phone pairs with (gui/phones.py): pure Python, never left out
     "pywebview>=5.0; sys_platform == 'darwin'",   # a Mac opens Orkboard in its own window, never the browser by default
+    "pillow>=10",                # a goal's picture on its cards, a small copy of its first photo (realm/idea_photos.py `thumb`, spec 148 A)
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-asyncio>=1.0", "pytest-xdist>=3", "cryptography>=41", "segno>=1.5", "websockets>=13.0",
-       "pillow>=10"]       # design/mark.py draws Orkboard's mark again (a dev tool, never imported when Orkboard runs)
+dev = ["pytest>=8", "pytest-asyncio>=1.0", "pytest-xdist>=3", "cryptography>=41", "segno>=1.5", "websockets>=13.0"]
+# (design/mark.py, which draws Orkboard's mark again, uses Pillow too: a dependency now, spec 148 A)
 browser = ["playwright>=1.45"]              # the browser tests (pytest -m browser)
 # the window of its own elsewhere than a Mac (without it Orkboard opens in the browser); a phone's TLS certificate
 # (gui/phone_tls.py)

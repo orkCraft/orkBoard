@@ -123,7 +123,7 @@ def asset_url(commit: str, path: str) -> str:
     return f"{signed}?s={sign(signed)}"
 
 
-_PHOTO_FILE = re.compile(r"[0-9]{1,3}\.(jpg|png|webp)")
+_PHOTO_FILE = re.compile(r"[0-9]{1,3}(\.thumb)?\.(jpg|png|webp)")   # a goal's first photo, or its small copy (realm/idea_photos.py `thumb`)
 _PHOTO_MIME = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
 
 

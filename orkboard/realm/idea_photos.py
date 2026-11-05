@@ -3,7 +3,7 @@
     put(state_dir, "dark-mode", raw)        # ".orkcraft/ideas/dark-mode/photos/1.jpg", the path the keeper reads
     listed(state_dir, "dark-mode")          # those paths, in the order they came
     first(state_dir, "dark-mode")           # the first of them ("" with none): a goal's picture on its card (spec 148 A)
-    thumb(state_dir, "dark-mode")           # the file a card's picture is served from, or None (see THUMB_BYTES)
+    thumb(state_dir, "dark-mode")           # the file a card's picture is served from: a copy of at most THUMB_PX made once, or None
     decode([{"data": "<base64>"}, ...])     # the bytes of each, checked: an image, at most MAX_BYTES, at most MAX_PHOTOS
 
 The phone makes each one a JPEG of at most 1600 px before it sends it; a PNG or a WebP is taken as it is. They live
@@ -20,7 +20,8 @@ from pathlib import Path
 
 MAX_PHOTOS = 4
 MAX_BYTES = 3 * 2**20
-THUMB_BYTES = 200 * 1024        # Pillow is a dev dependency only (pyproject.toml), so no thumbnail is made: a photo this small is served as it is, a larger one gives no picture
+THUMB_PX = 320                  # a card's picture: its longer side at most this (about twice the largest window, spec 148 A.2)
+THUMB_BYTES = 200 * 1024        # when no copy can be made (an image Pillow cannot read), a photo this small is served as it is, a larger one gives no picture
 KINDS = ((b"\xff\xd8\xff", "jpg"), (b"\x89PNG\r\n\x1a\n", "png"))      # and WebP: RIFF....WEBP
 
 
@@ -91,9 +92,11 @@ def first(state_dir: Path, slug: str) -> str:
 
 
 def thumb(state_dir: Path, slug: str) -> Path | None:
-    """The file a goal's card shows as its picture: its first photo when it is a plain file of the photos folder of at most
-    THUMB_BYTES, else None. (Orkboard runs without Pillow, so no smaller copy is made: the phone sends 1600 px JPEGs, and
-    what is larger than the limit gives the card its words instead.)"""
+    """The file a goal's card shows as its picture (spec 148 A.2, decisions §252.3): from its first photo, when that is a plain
+    file of its photos folder. A photo no longer than THUMB_PX on either side is shown as it is (a sprite keeps its pixels);
+    a larger one is shown as a copy of at most THUMB_PX made once beside it (`1.thumb.jpg`, or `.png` when it has
+    transparency) and made again when the photo is newer. An image Pillow cannot read is shown as it is when it is at most
+    THUMB_BYTES, else not at all (the card keeps its words)."""
     got = first(state_dir, slug)
     if not got:
         return None
@@ -101,6 +104,40 @@ def thumb(state_dir: Path, slug: str) -> Path | None:
     try:
         if path.is_symlink() or not path.is_file() or path.resolve().parent != folder(state_dir, slug).resolve():
             return None
+        small = _small_copy(path)
+        if small is not None:
+            return small
         return path if path.stat().st_size <= THUMB_BYTES else None
     except OSError:
+        return None
+
+
+def _small_copy(path: Path) -> Path | None:
+    """`path` itself when it fits THUMB_PX, else its copy of at most THUMB_PX beside it (made now if missing or older); None
+    when Pillow cannot read it."""
+    try:
+        from PIL import Image, ImageOps, UnidentifiedImageError
+    except ImportError:                                  # a dependency since spec 148 A; an old install keeps the size rule
+        return None
+    for old in path.parent.glob(f"{path.stem}.thumb.*"):
+        if old.is_symlink():
+            return None
+    try:
+        with Image.open(path) as img:
+            if max(img.size) <= THUMB_PX:
+                return path
+            clear = img.mode in ("RGBA", "LA", "PA") or (img.mode == "P" and "transparency" in img.info)
+            out = path.with_name(f"{path.stem}.thumb.{'png' if clear else 'jpg'}")
+            if out.is_file() and out.stat().st_mtime >= path.stat().st_mtime:
+                return out
+            small = ImageOps.exif_transpose(img)
+            small.thumbnail((THUMB_PX, THUMB_PX), Image.Resampling.LANCZOS)
+            tmp = out.with_name(out.name + ".part")
+            if clear:
+                small.convert("RGBA").save(tmp, "PNG", optimize=True)
+            else:
+                small.convert("RGB").save(tmp, "JPEG", quality=82, optimize=True)
+            tmp.replace(out)
+            return out
+    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
         return None
