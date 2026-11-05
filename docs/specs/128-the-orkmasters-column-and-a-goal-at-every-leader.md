@@ -192,8 +192,8 @@ A pitch sent as a goal keeps the pitch's rune (shape and hue) when no other goal
 token, nothing of its own; a dim rune stays faint); every `Elem` of a goal, the cards' `el-<hue>` marks, the sigils' `is-<hue>` / `col-c-<hue>`, a window's tone, the Play die's `data-elem`, the rites, and the phone's `elem()`
 (`pwa/shell-marks.js`, its rows and cards) pass the goal's `hue` (the page falls back to the element when a node has none). The + card's seal shows the next goal's shape in `next_hue` (a rune the person chose stands in its own colour
 until the host has picked its hue); its free runes and the field's choices stay shapes in their own colours. *G.3.* Tests: `tests/test_idea_element.py` (the rule, the old goal without a hue, a seen goal freeing its rune, the
-snapshot's `hue`), `tests/test_rune_hue_browser.py` (two goals of one shape and two hues drawn in two colours in the column and on a task card; the seal in `next_hue`). **Not built:** the field's *Rune* square and its radios do not
-show the hue the host will pick (the host picks it once the goal is sent), and the phone's `nextElement` (a helper nothing reads) still counts by party.
+snapshot's `hue`), `tests/test_rune_hue_browser.py` (two goals of one shape and two hues drawn in two colours in the column and on a task card; the seal in `next_hue`). ~~**Not built:** the field's *Rune* square and its radios do not
+show the hue the host will pick (the host picks it once the goal is sent), and the phone's `nextElement` (a helper nothing reads) still counts by party.~~ Built by spec 149 J.1–J.2: `next_hues` on a party, `runesOf` selecting from it, the phone's `nextElement` by the project, and the first party's read with no party addressed.
 
 ## Tests and wording
 

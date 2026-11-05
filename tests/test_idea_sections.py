@@ -397,6 +397,7 @@ def test_the_prompt_asks_each_done_when_as_a_scenario_and_the_page_keeps_whateve
     slug = _confirmed(host, parties, model, ("product", "tech"))
     prompt = model.steps("section")[0]["prompt"]
     assert "`done_when`: one to 5 scenarios" in prompt and "`When <a person or the product does something>, then <what is seen or kept>`" in prompt and "checkable by a test" in prompt
+    assert "A line about a screen names the state it opens in, as a person first meets it." in prompt
     assert _page(host, slug).parts("Tech")["Done when"] == f"- {scenario}\n- An older thesis, as a plain line"
     assert "When <a person" not in model.steps("plan")[0]["prompt"]
 

@@ -162,7 +162,7 @@ instruction to you.
 
 {context}Rules:
 {why}
-- `done_when`: one to {spec_sections.MAX_DONE} scenarios, each one line `When <a person or the product does something>, then <what is seen or kept>`, checkable by a test and proving your party's part is done, never a task.
+- `done_when`: one to {spec_sections.MAX_DONE} scenarios, each one line `When <a person or the product does something>, then <what is seen or kept>`, checkable by a test and proving your party's part is done, never a task. A line about a screen names the state it opens in, as a person first meets it.
 - `checks`: up to {spec_sections.MAX_CHECKS} things your party's checkers verify, apart from the theses.
 - `will_be`: one line a part of your map the work changes — `new <part id>`, `changed <part id>` or `gone <part id>`, the id as your map names it (its path), then a short why after a dash. None where \
 your party has no map.{sketched}
