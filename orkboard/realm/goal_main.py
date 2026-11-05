@@ -27,6 +27,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, NamedTuple
 
+from orkboard import brand
 from orkboard.realm import commit_goal, goal_types, idea_flag, idea_gate, ideas, worktrees
 from orkboard.realm.idea_git import PUSH_TIMEOUT_S, IdeaGit, _git, _ok
 
@@ -148,12 +149,12 @@ def _apply(git: IdeaGit, path: Path, old: str, commits: list[str]) -> tuple[str,
     path.parent.mkdir(parents=True, exist_ok=True)
     _ok(_git(git.root, "worktree", "add", "--detach", str(path), old))
     for sha in commits:
-        done = _git(path, *idea_gate.IDENTITY, "cherry-pick", sha, timeout=PUSH_TIMEOUT_S)
+        done = _git(path, *brand.git_identity(), "cherry-pick", sha, timeout=PUSH_TIMEOUT_S)
         if done.returncode == 0:
             continue
         files = _git(path, "diff", "--name-only", "--diff-filter=U").stdout.split()
         if not files and _git(path, "diff", "--cached", "--quiet").returncode == 0 and \
-                _git(path, *idea_gate.IDENTITY, "cherry-pick", "--skip").returncode == 0:
+                _git(path, *brand.git_identity(), "cherry-pick", "--skip").returncode == 0:
             continue                                       # it came out empty: main has what it brings
         _git(path, "cherry-pick", "--abort")
         return old, (sha, files)

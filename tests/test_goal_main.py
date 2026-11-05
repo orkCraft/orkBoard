@@ -444,3 +444,22 @@ def test_without_board_pages_leaves_out_a_commit_authored_by_the_board_and_keeps
     shas, files = idea_gate.waiting(g, "dev", "main")
     assert fold in shas and mine in shas
     assert idea_gate.without_board_pages(g, shas, files) == ([mine], 1)
+
+
+def test_a_commit_by_the_board_under_either_name_is_no_pile(tmp_path):
+    """The Board's commits said *Orkline board* before spec 149 F.3 and say *<the product> board* since: both are the Board's (§253.8)."""
+    import subprocess
+    from orkboard import brand
+    from orkboard.realm import idea_gate
+    from orkboard.realm.idea_git import BOARD_NAME, IdeaGit
+    run = lambda *a: subprocess.run(["git", *a], cwd=tmp_path, check=True, capture_output=True, text=True).stdout.strip()
+    run("init", "-q", "-b", "main")
+    shas = []
+    for i, (who, email) in enumerate([(BOARD_NAME, "board@orkline.local"), brand.board_author(), ("Someone", "someone@example.com")]):
+        (tmp_path / f"llm-wiki/specs/s{i}.md").parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / f"llm-wiki/specs/s{i}.md").write_text(f"{i}\n")
+        run("add", "-A")
+        run("-c", f"user.name={who}", "-c", f"user.email={email}", "commit", "-q", "-m", f"c{i}")
+        shas.append(run("rev-parse", "HEAD"))
+    kept, files = idea_gate.without_board_pages(IdeaGit(tmp_path), shas, 3)
+    assert kept == shas[2:] and files == 1

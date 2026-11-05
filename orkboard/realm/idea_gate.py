@@ -18,13 +18,13 @@ from __future__ import annotations
 import re
 from typing import Any, Iterable
 
+from orkboard import brand
 from orkboard.realm import worktrees
 from orkboard.realm.idea_git import BOARD_NAME, BOARD_PAGE, PUSH_TIMEOUT_S, IdeaGit, _git, _ok
 
 _SHA = re.compile(r"[0-9a-f]{7,64}")
 
 WORKTREE = "gate-merge"                      # the merge commit's worktree, under `.orkcraft/worktrees/`
-IDENTITY = ("-c", "user.name=Orkline", "-c", "user.email=orkline@localhost")
 
 
 class GateRefused(RuntimeError):
@@ -111,13 +111,14 @@ def without_board_pages(git: IdeaGit, shas: list[str], files: int) -> tuple[list
         return shas, files
     changed: dict[str, list[str]] = {}
     board: set[str] = set()
+    authors = {BOARD_NAME, brand.board_author()[0]}           # the Board's commits before spec 149 F.3 (*Orkline board*) and since (*<the product> board*)
     for at in range(0, len(shas), 200):
         out = _git(git.root, "-c", "core.quotePath=false", "log", "--no-walk=unsorted", "--no-renames", "--name-only", "--format=%x00%H%x01%an", *shas[at:at + 200], "--").stdout
         for chunk in out.split("\0")[1:]:
             head, _, names = chunk.partition("\n")
             sha, _, author = head.partition("\x01")
             changed[sha.strip()] = [n for n in names.splitlines() if n]
-            if author.strip() == BOARD_NAME:
+            if author.strip() in authors:
                 board.add(sha.strip())
     kept = [s for s in shas if s not in board and (not changed.get(s) or any(not BOARD_PAGE.search(n) for n in changed[s]))]
     if len(kept) == len(shas):
@@ -185,7 +186,7 @@ def _merge_commit(git: IdeaGit, into: str, main: str, old: str) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         _ok(_git(git.root, "worktree", "add", "--detach", str(path), old))
-        done = _git(path, *IDENTITY, "merge", "--no-ff", "-m", f"Merge {into} into {main}", _ref(into), timeout=PUSH_TIMEOUT_S)
+        done = _git(path, *brand.git_identity(), "merge", "--no-ff", "-m", f"Merge {into} into {main}", _ref(into), timeout=PUSH_TIMEOUT_S)
         if done.returncode != 0:
             files = _git(path, "diff", "--name-only", "--diff-filter=U").stdout.split()
             _git(path, "merge", "--abort")
