@@ -111,14 +111,14 @@ def test_a_card_that_comes_flies_from_the_goals_card_says_from_its_leader_and_is
         card = pg.locator('.hand-card[data-kind="talk"]').first.bounding_box()
         want = (origin["x"] + origin["width"] / 2 - (card["x"] + card["width"] / 2), origin["y"] + origin["height"] / 2 - (card["y"] + card["height"] / 2))
         assert abs(float(x.removesuffix("px")) - want[0]) <= 3 and abs(float(y.removesuffix("px")) - want[1]) <= 3, f"--ork-deal-x/-y are the origin less the place: {(x, y)} vs {want}"
-        label = pg.locator('.hand-card[data-kind="talk"] .hand-card__party').first
-        assert label.text_content() == "From Design lead" and pg.locator('.hand-card[data-kind="talk"]').first.get_attribute("data-from") == "Design lead", "its label row says who handed it, and keeps saying it"
+        label = pg.locator('.hand-card[data-kind="talk"] .corner__word').first
+        assert label.text_content() == "From Design lead" and pg.locator('.hand-card[data-kind="talk"]').first.get_attribute("data-from") == "Design lead", "its foot row says who handed it, and keeps saying it"
         pg.wait_for_function("() => document.querySelector('.hand-live').innerText.includes('hands you')", timeout=WAIT_MS)
         said = pg.locator(".hand-live")
         assert said.get_attribute("aria-live") == "polite" and said.inner_text() == "Design lead hands you a question: Where does the timer run?"
         shot(pg, "handed")
         pg.wait_for_timeout(700)
-        assert pg.locator('.hand-card[data-kind="talk"] .hand-card__party').first.text_content() == "From Design lead", "it keeps saying it"
+        assert pg.locator('.hand-card[data-kind="talk"] .corner__word').first.text_content() == "From Design lead", "it keeps saying it"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -131,8 +131,8 @@ def test_a_card_of_the_orkmaster_says_from_the_orkmaster_and_a_card_of_no_goal_i
         back_of(pg, "dark").wait_for(timeout=WAIT_MS)
         host.needs.append(need("decision", "design", "dark", "Players see who answered first", "Why: One clock.\n\n1. Tech counts.", number=201, confirmed=False, error=""))
         host.put("dark", "Players see who answered first", "decided", "dust")
-        pg.wait_for_function("() => document.querySelector('.hand-card[data-kind=\"decision\"] .hand-card__party')", timeout=WAIT_MS)
-        assert pg.locator('.hand-card[data-kind="decision"] .hand-card__party').text_content() == "From the Orkmaster"
+        pg.wait_for_function("() => document.querySelector('.hand-card[data-kind=\"decision\"] .corner__word')", timeout=WAIT_MS)
+        assert pg.locator('.hand-card[data-kind="decision"] .corner__word').text_content() == "From the Orkmaster"
         host.needs.append({"kind": "paid", "title": "Go on paid?", "text": "Every tool is out of room", "idea": "", "goal": "", "at": "2026-10-20T10:00:00", "priority": "normal", "blocks": True})
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.hand-card[data-kind=\"paid\"]')", timeout=WAIT_MS)
@@ -197,7 +197,7 @@ def test_none_for_what_came_while_the_page_was_hidden_the_cards_are_there_each_s
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.hand-card[data-kind=\"talk\"]')", timeout=WAIT_MS)
         pg.wait_for_timeout(300)
-        hidden = pg.evaluate("() => { const e = document.querySelector('.hand-card[data-kind=\"talk\"]'); return [e.classList.contains('ork-deal'), e.style.getPropertyValue('--ork-deal-x'), e.querySelector('.hand-card__party').textContent]; }")
+        hidden = pg.evaluate("() => { const e = document.querySelector('.hand-card[data-kind=\"talk\"]'); return [e.classList.contains('ork-deal'), e.style.getPropertyValue('--ork-deal-x'), e.querySelector('.corner__word').textContent]; }")
         assert hidden == [False, "", "From Design lead"], f"there, saying whose it is, with no flight: {hidden}"
         pg.evaluate("() => { delete document.hidden; }")
         pg.emulate_media(reduced_motion="reduce")
@@ -206,7 +206,7 @@ def test_none_for_what_came_while_the_page_was_hidden_the_cards_are_there_each_s
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.hand-card[data-goal=\"g0\"]')", timeout=WAIT_MS)
         pg.wait_for_timeout(300)
-        assert pg.evaluate("() => { const e = document.querySelector('.hand-card[data-goal=\"g0\"]'); return [e.classList.contains('ork-deal'), e.style.getPropertyValue('--ork-deal-x'), e.querySelector('.hand-card__party').textContent]; }") == [False, "", "From Design lead"]
+        assert pg.evaluate("() => { const e = document.querySelector('.hand-card[data-goal=\"g0\"]'); return [e.classList.contains('ork-deal'), e.style.getPropertyValue('--ork-deal-x'), e.querySelector('.corner__word').textContent]; }") == [False, "", "From Design lead"]
         assert pg.evaluate("() => [window.__gave.length, document.querySelectorAll('.ork-gives').length]") == [0, 0], "no give under reduced motion"
     finally:
         pg.close()

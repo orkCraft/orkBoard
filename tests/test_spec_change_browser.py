@@ -113,7 +113,7 @@ def test_the_card_has_a_tab_a_party_now_and_proposed_the_joins_line_the_cost_and
     host.push()
     card = pg.locator('.hand-card[data-kind="spec_change"]')
     card.wait_for(timeout=WAIT_MS)
-    assert card.locator(".ork-gem").get_attribute("data-cost") == "$0.20–0.60" and card.locator(".hand-card__asker img, .hand-card__asker svg, .hand-card__asker .ork-head").count() >= 1, "its asker: the Orkmaster's head"
+    assert card.locator(".ork-gem").get_attribute("data-cost") == "$0.20–0.60" and card.locator(".corner--foot img, .hand-card__asker svg, .hand-card__asker .ork-head").count() >= 1, "its asker: the Orkmaster's head"
     lifted = lifted_card(pg)
     assert f"You said: “{SAID}”" in lifted.inner_text() and "The banner and the list agree." in lifted.inner_text() and lifted.locator(".hand-spend").count() == 1
     tabs = lifted.get_by_role("tab")

@@ -85,7 +85,7 @@ def test_the_card_lies_in_its_proposers_lane_with_proposes_the_title_and_the_cos
     card.wait_for(timeout=WAIT_MS)
     assert card.get_attribute("data-party") == "tech" and card.locator(".ork-gem").get_attribute("data-cost") == "$0.20–0.60"
     assert TITLE in card.text_content() and "Tech and Art agree" in card.locator(".hand-card__foot").text_content()
-    assert card.locator(".hand-card__asker .ork-race, .hand-card__asker img, .hand-card__asker").count() >= 1, "the proposing leader's head"
+    assert card.locator(".hand-card__asker .ork-race, .corner--foot img, .hand-card__asker").count() >= 1, "the proposing leader's head"
     assert pg.locator('.hand-lane[data-lane="1"] ' + CARD).count() + pg.locator('.hand-lane[data-lane="2"] ' + CARD).count() >= 1, "under a party's lane, not the first"
     shot(pg, "cascade-card.png")
 

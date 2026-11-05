@@ -248,7 +248,7 @@ def test_with_no_gate_a_goal_done_lies_on_the_pile_with_no_ring_and_no_ready_for
         pile.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
         assert pg.locator(".ork-portal-ring, .portal-host").count() == 0 and pg.locator(".table-end .table-end__label").text_content() == "Discard"
-        assert pg.locator(".table-end .ork-card-place").count() == 0 and pg.locator(".table-end .hand-card .hand-card__foot").inner_text().strip() == "", "no *ready for main* on the pile"
+        assert pg.locator(".table-end .ork-card-place").count() == 0 and pg.locator(".table-end .hand-card .hand-done__line").count() == 0, "no *ready for main* on the pile (spec 147 A: the discard card's line, drawn only when it says something)"
         pile.click()
         pg.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-discardview").get_by_text("Ready for").count() == 0 and pg.locator(".portal-cards").count() == 0

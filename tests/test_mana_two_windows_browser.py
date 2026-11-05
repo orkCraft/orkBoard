@@ -514,7 +514,7 @@ def test_at_1280_by_800_two_rows_of_potions_leave_the_portal_ring_and_its_label_
         label, ask, ring = pg.locator(".portal__label").bounding_box(), pg.locator(".table-title").bounding_box(), pg.locator(".ork-portal-ring").bounding_box()
         assert label["y"] >= ask["y"] + ask["height"] and ring["y"] >= label["y"] + label["height"]                # the label and the ring lie under the pane's title, never over the pane's head (the question is the Orkmaster's bubble now, spec 123 E)
         hand = pg.locator(".hand").bounding_box()
-        assert hand["height"] <= (192 if paid else 172)                                                          # the week's share lies beside the now share: two rows are no taller than with one share (the hand's rim is 3 px now, spec 123 §7.7: 2 px more)
+        assert hand["height"] <= (192 if paid else 172) + 16                                                     # the week's share lies beside the now share: two rows are no taller than with one share (the hand's rim is 3 px now, spec 123 §7.7: 2 px more); + one line of the why: the cards keep their top and the cut lies between two lines (spec 147 C.2)
         assert pg.locator(".hand-pot__shares").first.evaluate("e => getComputedStyle(e).flexDirection") == "row"
         narrow.no_sideways(pg)
         shot(pg, f"fix-wide-two-rows-{tools}{'-paid' if paid else ''}")

@@ -3,6 +3,7 @@
 // width: the urgent in front at the lane's right, those behind it to the left, showing their edge and their element only, each rising whole on hover, on focus or on a tap (hand.css); the + card lies whole at the first lane's left end, not in its fan. A stack pressed picks its goal and lifts its top card (stopcard.js), answered one a press; a picked goal's stacks are lit alike (`.ork-picked`). A card that comes is dealt, from the card of the task that asks or failed (a failure is thrown from its lane's card, which leaves a place: table/flight.js `useThrown`; hand.js), a card that goes crumbles where it lay
 // (an answered one flies back into its goal's card), none of it under reduced motion (motion.js).
 import { html, cls } from "../html.js";
+import { Head } from "../orkui.js";
 import { lift, lower, lifted, pick, picked } from "../frame/state.js";
 import { nameOf, partiesNow } from "../table/data.js";
 import { StopCard, askerOf, handsWords, whoOf } from "./stopcard.js";
@@ -57,6 +58,12 @@ function Slot({ at, of, z, behind = false, plus = false, children }) {
   return html`<div class=${cls("hand-slot", { "is-behind": behind, "is-plus": plus })} style=${`--at:${at};--of:${of};--z:${z}`} data-at=${at}>${children}</div>`;
 }
 
+/** The leader of a lane, for the narrow hand laid by leader (spec 147 C.4): a 22 px separator with the leader's 16 px head before the lane's cards, the Orkmaster's crowned head for the first lane (the column's). It is not drawn at the wide width, where the lane is the leader's. */
+function Sep({ lane, party }) {
+  const h = lane === 0 ? { race: "peon", tier: "crown" } : party?.leader?.head;
+  return html`<span class="hand-sep" data-lane=${lane} aria-hidden="true">${h && html`<${Head} race=${h.race} tier=${h.tier} />`}</span>`;
+}
+
 /** The lanes of the hand, one under each tab of the Board (the first the project's), each a fan of its stacks (the most urgent in front); `plus`: the + card, which lies whole at the first lane's left end, never in its fan
  *  (spec 107 §13.2, decisions §182.4): the first lane's stacks fan to its right (hand.css gives the lane the room when it has any). */
 export function Stacks({ stacks, plus }) {
@@ -72,6 +79,7 @@ export function Stacks({ stacks, plus }) {
     const place = (k) => ({ at: solo ? 1 : m - 1 - k, of: solo ? 2 : m - 1, z: m - k, behind: !solo && k > 0 });
     return html`<div key=${i} class="hand-lane" data-lane=${i} role="group" aria-label=${i === 0 ? "The project’s lane" : `${nameOf(parties[i - 1])}’s lane`}>
       ${i === 0 && plus ? html`<${Slot} key="plus" plus=${true} at=${0} of=${1} z=${m + 2}>${plus}<//>` : null}
+      ${m ? html`<${Sep} key="sep" lane=${i} party=${parties[i - 1]} />` : null}
       ${list.map(({ item: st, gone }, k) => html`<${Slot} key=${st.key} ...${place(k)}><${Stack} stack=${st} dealt=${dealt} ghost=${gone} /><//>`)}
     </div>`;
   });

@@ -123,8 +123,8 @@ def test_the_decision_is_a_card_with_its_number_the_orkmasters_head_and_no_gem_u
     try:
         c = front(pg, "chat")
         assert c.get_attribute("data-kind") == "decision"
-        assert c.locator(".hand-card__name").text_content().strip() == "Players chat in the lobby, one room each" and c.locator(".hand-card__head .ork-elem.ice").count() == 1       # the goal's element and the decision's title
-        assert c.locator(".hand-card__corner .ork-sign.page").count() == 1 and c.locator(".hand-card__asker .ork-race__head").count() == 1
+        assert c.locator(".hand-card__name").text_content().strip() == "Players chat in the lobby, one room each" and c.locator(".corner--top .ork-elem.ice").count() == 1       # the goal's element and the decision's title
+        assert c.locator(".corner--top .ork-sign.page").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1
         if width == "wide":
             assert c.locator(".hand-card__foot").text_content().strip() == "Decision 118", "its face says its number, not the decision's text"
         assert c.locator(".ork-gem").count() == 0, "it spends nothing new"
@@ -228,7 +228,7 @@ def test_a_fork_is_a_card_saying_who_disagrees_with_a_leaders_head_under_the_fir
     try:
         c = front(pg, "rooms")
         assert c.get_attribute("data-kind") == "fork" and c.get_attribute("aria-label").startswith("A fork: "), "what the card is, in plain words"
-        assert c.locator(".hand-card__corner .ork-sign.question").count() == 1 and c.locator(".hand-card__asker .ork-race__head").count() == 1
+        assert c.locator(".corner--top .ork-sign.question").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1
         if width == "wide":
             assert c.locator(".hand-card__foot").text_content().strip() == "Design and Tech disagree"
         assert c.locator(".ork-gem").count() == 0

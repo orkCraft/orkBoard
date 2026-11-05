@@ -151,9 +151,9 @@ def test_a_hearing_is_a_card_in_the_hand_with_the_question_sign_the_first_leader
     try:
         c = front(pg)
         assert c.get_attribute("data-kind") == "hearing" and c.get_attribute("aria-label").startswith("Hearing: ")
-        assert c.locator(".hand-card__name").text_content().strip() == "Night mode for the lobby" and c.locator(".hand-card__head .ork-elem.ice").count() == 1
-        assert c.locator(".hand-card__corner .ork-sign.question").count() == 1 and c.locator(".hand-card__asker .ork-race__head").count() == 1
-        assert "unicorn" in c.locator(".hand-card__asker .ork-race__head").get_attribute("src"), "the first leader of the first side that has one: Product's"
+        assert c.locator(".hand-card__name").text_content().strip() == "Night mode for the lobby" and c.locator(".corner--top .ork-elem.ice").count() == 1
+        assert c.locator(".corner--top .ork-sign.question").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1
+        assert "unicorn" in c.locator(".corner--foot .ork-race__head").get_attribute("src"), "the first leader of the first side that has one: Product's"
         if width == "wide":
             assert c.locator(".hand-card__foot").text_content().strip() == "Product and Design disagree with Tech"
         assert c.locator(".ork-gem").count() == 0, "it spends nothing"

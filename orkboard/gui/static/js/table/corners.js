@@ -44,13 +44,13 @@ export function CornerTop({ rune = null, kind = "", signal = "" }) {
   </span>`;
 }
 
-/** The bottom row: who at the left (`who`: `{ heads: [head…], word }`, one to three heads at 16 px and an optional word), how much at the right (`much`: `muchOf`'s; `ask`: it waits for you, the figure is then *asks you* in the alert). */
+/** The bottom row (a gem whose `much.share` is false is a price in dollars, not a share of a window: spec 147 C): who at the left (`who`: `{ heads: [head…], word }`, one to three heads at 16 px and an optional word), how much at the right (`much`: `muchOf`'s; `ask`: it waits for you, the figure is then *asks you* in the alert). */
 export function CornerFoot({ who = null, much = null, ask = false }) {
   const figure = ask ? { kind: "ask", text: ASKS } : much, heads = (who?.heads || []).filter(Boolean).slice(0, 3);
   return html`<span class="corner corner--foot">
     <span class="corner__who" title=${heads.map(headWords).join(", ") || undefined}>${heads.map((h, i) => html`<${Head} key=${i} race=${h.race} tier=${h.tier} />`)}${who?.word && html`<span class="corner__word">${who.word}</span>`}</span>
     ${figure && (figure.kind === "gem"
-      ? html`<span class="corner__much"><span class="ork-gem share" data-cost=${figure.text}>${figure.text}</span></span>`
+      ? html`<span class="corner__much"><span class=${figure.share === false ? "ork-gem" : "ork-gem share"} data-cost=${figure.text}>${figure.text}</span></span>`
       : html`<span class=${cls("corner__much", figure.kind === "ask" && "is-ask")} data-much=${figure.kind}>${figure.text}</span>`)}
   </span>`;
 }

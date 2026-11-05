@@ -1,0 +1,41 @@
+/* The hand's card (docs/specs/147-one-card-four-corners.md part C, decisions §251.5; hand/stopcard.js, table/corners.js): 144 x 202, 5 : 7, cut under its title by the hand's rim. Layout only: every colour, face and corner is orkUI's.
+   Top: the corners' row (the goal's rune, the kind's sign), the title in three whole lines. Under the cut: why it is asked (up to three lines) and the foot's corners (who asks, the cost). The rim shows 100 px (`--hc-shown`); where the die and the
+   potions make the hand taller (`--hc-ends`, mana.css) the cards keep their top and show more, the cut kept between two lines of the why (`--hc-seen`). Hovered or focused a card rises by what is hidden and shows whole (hand.css `--hc-rise`);
+   under reduced motion it is whole at once (no spring). At the narrow width (under 760 px) the card is 80 x 112, cut at 62, and the hand is laid by leader: a 22 px separator with the leader's head before each lane's cards (stacks.js). */
+.hand { --hc-wlh: 16px; --hc-wpad: var(--ork-3);                                                       /* the why's line and the space over it under its dashed rule */
+  --hc-why0: calc(var(--ork-line) * 2 + var(--hc-pad) + var(--hc-corner) + var(--hc-fgap) * 2 + var(--hc-title) + 2px + var(--hc-wpad));            /* where the why's first line starts, from the card's top */
+  --hc-ends: max(var(--hc-die), var(--hc-potw));                                                      /* what the die and the potions need (mana.css), the hand's height if more than the cut */
+  --hc-seen: max(var(--hc-shown), var(--hc-ends));
+  --hc-seen: max(var(--hc-shown), var(--hc-ends), min(var(--hc-h), calc(var(--hc-why0) + round(up, calc(var(--hc-ends) - var(--hc-why0)), var(--hc-wlh))))); }       /* the cut kept between two lines of the why */
+@media (max-width: 1023px) { .hand { --hc-wlh: 18px; } }
+
+.hand .hand-card--face { display: flex; flex-direction: column; gap: var(--hc-fgap); padding: var(--hc-pad); overflow: hidden; }
+.hand .hand-card--face > .corner { height: var(--hc-corner); }
+.hand .hand-card--face > .corner--foot { margin-top: auto; }
+.hand .hand-card--face .hand-card__name { flex: none; display: -webkit-box; height: var(--hc-title); line-height: var(--hc-lh); }              /* three whole lines, the room kept whatever the title, so every card's why starts at the same place */
+.hand .hand-card--face .hand-card__foot { flex: none; box-sizing: border-box; margin-top: 2px; padding-top: var(--hc-wpad); border-top: var(--ork-line) dashed var(--ork-card-frame); max-height: calc(var(--hc-wpad) + 3 * var(--hc-wlh) + var(--ork-line));
+  -webkit-line-clamp: 3; line-clamp: 3; line-height: var(--hc-wlh); color: var(--ork-ink-read); }
+.hand .hand-card--face .hand-card__foot:empty { display: none; }
+.hand .hand-card--face .corner__much .ork-gem { height: 18px; }
+
+/* a card behind another shows its edge and its rune only, until it rises (the narrow width's cards tighten to their left edges instead, hand.css) */
+@media (min-width: 760px) {
+  .hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card--face > :not(.corner--top):not(.ork-crumble), .hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card--face .corner__kind { visibility: hidden; }
+}
+
+/* the leader's separator, drawn at the narrow width only (stacks.js) */
+.hand-sep { display: none; }
+
+@media (max-width: 759.98px) {
+  .hand { --hc-wlh: 12px; --hc-wpad: var(--ork-1); }
+  .hand .hand-card--face { padding: var(--ork-1) var(--ork-2); }
+  .hand .hand-card--face .hand-card__name { font-weight: 600; }
+  .hand .hand-card--face .hand-card__foot { font-size: 10px; -webkit-line-clamp: 2; line-clamp: 2; max-height: calc(var(--hc-wpad) + 2 * var(--hc-wlh) + var(--ork-line)); }
+  .hand .hand-card--face .corner__much, .hand .hand-card--face .corner__who { font-size: 10px; }
+  .hand .hand-card--face .corner__much .ork-gem { height: 16px; font-size: 10px; padding: 0 var(--ork-1); }
+  .hand-sep { flex: 0 1 22px; min-width: 1px; overflow: hidden; display: flex; justify-content: center; align-self: stretch; box-sizing: border-box; width: 22px; padding-top: var(--ork-2); border-left: var(--ork-line) solid var(--ork-frame); }
+  .hand-sep .ork-race__head { width: auto; height: 16px; image-rendering: pixelated; }
+}
+
+/* none of it moves under reduced motion: a card risen shows its whole face at once (hand.css) */
+@media (prefers-reduced-motion: reduce) { .hand .hand-card--face { transition: none; } }
