@@ -8,7 +8,6 @@ import { render } from "preact";
 import { html } from "../html.js";
 import { boxIn, ease, reduced, spring, token, tokenMs } from "./motion.js";
 import { Elem } from "../orkui.js";
-import { BackBody } from "../table/backbody.js";
 
 let proxy = null;
 
@@ -96,32 +95,37 @@ export function turnBack(box) {
 /** The card's width on the table (frame.css `--card-w`). */
 const cardWidth = () => parseFloat(token("--card-w", "") || getComputedStyle(document.querySelector(".frame-table") || document.body).getPropertyValue("--card-w")) || 144;
 
-/** Sent: the card turns to its back where the field lay, and the back, shrinking, travels to its place in the Orkmaster's lane (the goal's own card there, `[data-goal]`); the real card is hidden until the copy lands. With no place in view (a phone has no lanes) the back
- *  turns and is taken away. `box`: the field's box; `goal`: `{slug, element, name}`. */
+/** Sent (spec 147 D.2, decisions §251.3): the card turns face down where the field lay, its goal's rune lights in the middle of its back, and the back, scaling to 56 x 78, flies into the Orkmaster's fan (the goal's back there, `.col-card[data-goal]`) where it lies at the end:
+ *  the turn, the light, the flight, about 1.4 s in all; the real back is hidden until the copy lands. With no place in view (a phone has no column) the copy turns and is taken away. Nothing under reduced motion (the back is in the fan at once). `box`: the field's box;
+ *  `goal`: `{slug, element, hue, name}`. */
 export async function sendBack(box, goal) {
   if (reduced() || !box?.width) return;
   const w = cardWidth(), h = w * 7 / 5, g = document.createElement("div"), at = { left: box.left + box.width / 2 - w / 2, top: box.top + box.height / 2 - h / 2, width: w, height: h };
-  g.className = "ork-turn hand-ghost is-up";
+  g.className = "ork-turn table-turned hand-ghost is-up";
+  g.dataset.fly = "lay";
   g.setAttribute("aria-hidden", "true");
-  const big = Math.max(box.width / w, 0.5), play = tokenMs("--ork-motion-play", 400);
+  const big = Math.max(box.width / w, 0.5), play = tokenMs("--ork-motion-play", 400), total = Math.max(play * 3.5, 1400);
   place(g, at, `transform-origin:50% 50%;transform:scale(${big});`);
-  render(html`<div class="ork-turn__back ork-card table-card--back"><${BackBody} element=${goal.element} hue=${goal.hue} name=${goal.name} /></div>
+  render(html`<div class="ork-turn__back ork-card-back table-turned__back"><span class="col-fan__seal table-turned__seal"><span class="ork-sigil small"></span><${Elem} name=${goal.element} hue=${goal.hue} dim=${!goal.element} /></span></div>
     <div class="ork-turn__face ork-card hand-ghost__face"><${Elem} name=${goal.element} hue=${goal.hue} big=${true} dim=${!goal.element} /><span class="hand-ghost__words">${goal.name}</span></div>`, g);
   document.body.appendChild(g);
+  const rune = g.querySelector(".table-turned__seal .ork-elem");
+  let target = null;
   try {
     void g.offsetWidth;                                                                  // the card of the words lies face up first; taking `is-up` off is orkUI's turn, played once
     g.classList.remove("is-up");
+    rune?.animate([{ opacity: 0.25 }, { opacity: 0.25, offset: 0.6 }, { opacity: 1 }], { duration: play * 1.6, fill: "forwards" });
     await new Promise((r) => { const t = setTimeout(r, play + 60); g.addEventListener("transitionend", (e) => { if (e.propertyName === "transform") { clearTimeout(t); r(); } }, { once: true }); });
-    let target = null;
-    for (let tries = 0; tries < 20 && !target; tries++) {                                // the Board answers in a moment: the goal's card is drawn in the lane
-      target = [...document.querySelectorAll(`.frame-column .col-card[data-goal="${CSS.escape(goal.slug)}"], .frame-table .table-card[data-goal="${CSS.escape(goal.slug)}"]`)].find((el) => boxIn(el)) || null;      // its card in the column (spec 128 B), else in the Orkmaster's lane
+    rune?.animate([{ transform: "scale(1)" }, { transform: "scale(1.5)", offset: 0.45 }, { transform: "scale(1)" }], { duration: play * 1.1, easing: ease() });      // the rune lights in the middle of the back
+    for (let tries = 0; tries < 20 && !target; tries++) {                                // the Board answers in a moment: the goal's back is drawn in the fan
+      target = [...document.querySelectorAll(`.frame-column .col-card[data-goal="${CSS.escape(goal.slug)}"], .frame-table .table-card[data-goal="${CSS.escape(goal.slug)}"]`)].find((el) => boxIn(el)) || null;      // its back in the column (spec 128 B), else its card on the table
       if (!target) await new Promise((r) => setTimeout(r, 100));
     }
     const to = target?.getBoundingClientRect();
     if (!to) { await g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: play * 0.5, fill: "forwards" }).finished; return; }
     target.style.visibility = "hidden";
+    await new Promise((r) => setTimeout(r, play * 0.5));                                   // the light holds a moment before the back goes
     const v = { x: to.left + to.width / 2 - (at.left + w / 2), y: to.top + to.height / 2 - (at.top + h / 2) };
-    try { await g.animate([{ transform: `scale(${big})` }, { transform: `translate(${v.x}px, ${v.y}px) scale(${to.width / w})` }], { duration: play * 1.4, easing: spring(), fill: "forwards" }).finished; }
-    finally { target.style.visibility = ""; }
-  } catch { /* a page that went away meanwhile: the copy goes with it */ } finally { g.remove(); }
+    await g.animate([{ transform: `scale(${big})` }, { transform: `translate(${v.x}px, ${v.y}px) scale(${to.width / w})` }], { duration: Math.max(total - play * 1.5 - 60, play), easing: ease(), fill: "forwards" }).finished;
+  } catch { /* a page that went away meanwhile: the copy goes with it */ } finally { if (target) target.style.visibility = ""; g.remove(); }
 }

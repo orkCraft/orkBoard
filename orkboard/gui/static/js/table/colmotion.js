@@ -1,11 +1,12 @@
-// The moves of the Orkmaster's column (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part B.4, decisions §206.3): a goal agreed turns upright where it lay and goes to To review; its wait over it goes to At work and its tasks fly to their leaders' lanes
-// (the card's copy flies from the column to the goal's strip, once). A card that changes pile is moved with the Web Animations API from where it was (the page keeps no state of its own for it: each layout is measured, the next one compared); a sideways card turns
-// a quarter on its way up. Nothing is played for a page that is hidden, for a card first seen, or under reduced motion (§89.0: a motion plays once, never for what changed unseen); a goal done goes to the discard as today (discard.js).
+// The moves of the Orkmaster's column (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part B.4, docs/specs/147-one-card-four-corners.md part E, decisions §206.3, §251.7, §70): a goal agreed turns upright where it lay and goes to To review; its
+// wait over it goes to At work, and that is **the start**: its back turns face up and stands at At work, then a card of the goal flies to the strip of each party doing it and folds into it, where its tasks rise (`deal`, turnfly.js). A card that changes pile
+// otherwise is moved with the Web Animations API from where it was (the page keeps no state of its own for it: each layout is measured, the next one compared); a sideways card turns a quarter on its way up. Nothing is played for a page that is hidden, for a card first
+// seen, or under reduced motion (§89.0: a motion plays once, never for what changed unseen); several starts in one snapshot deal the first and lay the rest; a goal done goes to the discard as today (discard.js).
 import { useLayoutEffect, useRef } from "preact/hooks";
-import { boxIn, ease, reduced, spring, tokenMs } from "../hand/motion.js";
-import { everBack } from "./backcard.js";
-import { cascadeOf } from "./data.js";
+import { boxIn, ease, reduced, tokenMs } from "../hand/motion.js";
+import { foldInto, turnFly } from "./turnfly.js";
 
+const MAX_LANES = 6;                                                                       // a start is told to six parties at most (§70.1)
 const center = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
 const seen = () => !reduced() && typeof document !== "undefined" && !document.hidden;
 const box = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height }; };
@@ -19,28 +20,28 @@ function move(el, from, now) {
   el.animate(frames, { duration: tokenMs("--ork-motion-play", 400) * (up ? 1.8 : 1.2), easing: ease() });
 }
 
-/** A goal's tasks are dealt to its leaders' lanes: a copy of its card in the column flies to its strip in the lane, once, over everything. */
-function fly(card, to) {
-  const r = boxIn(card);
-  if (!r) return Promise.resolve();
-  const g = card.cloneNode(true);
-  g.classList.add("table-flyer");
-  g.setAttribute("aria-hidden", "true");
-  g.inert = true;
-  g.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;margin:0;z-index:90;pointer-events:none;transform-origin:0 0;`;
-  document.body.appendChild(g);
-  const dx = to.left - r.left, dy = to.top - r.top, sx = to.width / r.width;
-  const done = g.animate([{ transform: "none" }, { transform: "translateY(-12px) rotate(3deg)", offset: 0.35 }, { transform: `translate(${dx}px, ${dy}px) scale(${sx})` }],
-    { duration: tokenMs("--ork-motion-play", 400) * 1.4, easing: spring(), fill: "forwards" }).finished;
-  return done.catch(() => {}).finally(() => g.remove());
+/** The strips of a goal in the lanes of the Board, one a party (in view; a lane under the pointer takes none, §70.2). */
+const stripsOf = (slug) => [...document.querySelectorAll(`.table-board .table-goal[data-goal="${CSS.escape(slug)}"] .table-gstrip`)]
+  .filter((s) => boxIn(s) && !s.closest(".table-lane")?.matches(":hover")).slice(0, MAX_LANES);
+
+/** The start of a goal (spec 147 E.1): its back in To review (`was`: where it lay) turns face up and stands at At work (two steps), then a card of it flies to the strip of each party doing it and folds into it (two more, every card at once): four steps of about
+ *  0.3 s, one motion that travels. The real card is hidden until it stands. */
+async function deal(card, was) {
+  const step = tokenMs("--ork-motion-play", 400) * 0.75, to = boxIn(card);
+  if (!to) return;
+  card.style.visibility = "hidden";
+  try {
+    await turnFly({ from: was.rect, to, face: card, sideways: true, ms: step * 2, easing: ease(), kind: "start" }).finished;
+    if (!card.isConnected) return;
+    card.style.visibility = "";
+    const from = boxIn(card), strips = from ? stripsOf(card.dataset.goal) : [];                  // the lanes have been drawn meanwhile
+    await Promise.all(strips.map((strip) => foldInto(card, from, strip.getBoundingClientRect(), { ms: step * 2, easing: ease(), kind: "deal" })));
+  } finally { card.style.visibility = ""; }
 }
 
-/** The strip (or card) of a goal in a lane of the Board, once it is drawn. */
-const laneOf = (slug) => document.querySelector(`.table-board .table-goal[data-goal="${CSS.escape(slug)}"] .table-gstrip, .table-board .table-goal[data-goal="${CSS.escape(slug)}"] .table-card`);
-
-/** Plays the column's moves after each layout. `root`: the column's element; `work`: the goals of At work · later (`{n}`), whose lanes the tasks reach. */
-export function useColumnMotion(root, work) {
-  const last = useRef(null), laned = useRef(new Set()), chain = useRef(Promise.resolve());
+/** Plays the column's moves after each layout. `root`: the column's element. */
+export function useColumnMotion(root) {
+  const last = useRef(null), dealing = useRef(false);
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
@@ -48,14 +49,14 @@ export function useColumnMotion(root, work) {
     el.querySelectorAll(".col-card[data-goal]").forEach((c) => now.set(c.dataset.goal, { el: c, pile: c.dataset.pile, rect: box(c) }));
     const before = last.current;
     last.current = new Map([...now].map(([slug, v]) => [slug, { pile: v.pile, rect: v.rect }]));
-    const lanes = new Set(work.filter(({ n }) => cascadeOf(n).length > 0).map(({ n }) => n.slug)), fresh = before ? [...lanes].filter((s) => !laned.current.has(s)) : [];
-    laned.current = lanes;
     if (!before || !seen()) return;                                                          // the first layout of the page, a hidden page, reduced motion: everything is where it is
-    now.forEach((v, slug) => { const was = before.get(slug); if (was && was.pile !== v.pile) move(v.el, was, v.rect); });
-    fresh.filter((s) => everBack.has(s) && now.has(s)).forEach((s) => requestAnimationFrame(() => {      // the lane draws in the same turn: look for its strip once it has
-      const strip = laneOf(s), card = root.current?.querySelector(`.col-card[data-goal="${CSS.escape(s)}"]`);
-      const to = strip?.getBoundingClientRect();
-      if (card && to?.width) chain.current = chain.current.then(() => fly(card, to));
-    }));
+    const starts = [...now].filter(([slug, v]) => before.get(slug)?.pile === "review" && v.pile === "work" && !v.el.classList.contains("is-off"));
+    let first = !dealing.current ? starts[0]?.[0] : "";                                      // the first start is dealt, the others are laid; one deal at a time
+    now.forEach((v, slug) => {
+      const was = before.get(slug);
+      if (!was || was.pile === v.pile) return;
+      if (slug === first) { dealing.current = true; deal(v.el, was).catch(() => {}).finally(() => { dealing.current = false; }); first = ""; return; }
+      move(v.el, was, v.rect);
+    });
   });
 }

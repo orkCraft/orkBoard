@@ -7,6 +7,7 @@ import { signal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { ORKMASTER } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
+import { turnFly } from "../table/turnfly.js";
 
 export const reduced = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -118,7 +119,7 @@ export function useHanded(items) {
       came.forEach((c, i) => {
         const where = flying < FLY_MAX ? fromWhere(c) : null;
         if (where) flying++;
-        live.current[c.key] = { i, ...(where ? { el: where.el, head: headAt(where, c) } : {}), ...(hold ? { hold: true } : {}) };
+        live.current[c.key] = { i, ...(where ? { el: where.el, head: headAt(where, c), ...(where.el.matches?.(".col-card--deck") ? { back: true } : {}) } : {}), ...(hold ? { hold: true } : {}) };
       });
       const begin = (drawing = false) => {                                    // the deal begins (while this very draw, or when the pointer is up)
         if (begun) return;
@@ -147,6 +148,7 @@ export function useFlight(ref, dealt, copy = false) {
     if (!dealt.el) return undefined;
     const origin = boxIn(dealt.el);
     if (origin) give(dealt.head);                                                       // the head of who plays it gives it: one beat at the origin, as the card is let go
+    if (origin && dealt.back) return turnFromBack(el, origin);                 // a goal that asks: its back in To review lifts, turns up and stands on its way (spec 147 E.2)
     if (copy && origin) return flyCopy(el, origin, dealt.i);
     if (origin) {
       const v = between(el.getBoundingClientRect(), origin);
@@ -157,6 +159,16 @@ export function useFlight(ref, dealt, copy = false) {
     const t = setTimeout(() => el.classList.remove("ork-deal"), DEAL_MS + (dealt.i + 1) * tokenMs("--ork-motion-deal-gap", 40));
     return () => { clearTimeout(t); el.classList.remove("ork-deal"); };                 // the deal is over (the card is not handed any more) or begins again
   }, [dealt?.hold, dealt?.el]);
+}
+
+/** A goal that asks the person (spec 147 E.2, decisions §251.7): its back in To review (`origin`, lying on its side, its ring in the alert) lifts, turns to its face and stands on its way to its place in the hand; the real card is hidden until it lands. */
+function turnFromBack(el, origin) {
+  const to = el.getBoundingClientRect();
+  el.style.visibility = "hidden";
+  const fly = turnFly({ from: origin, to, face: el, sideways: true, asks: true, ms: DEAL_MS - 60, easing: ease(), kind: "hand" });
+  const done = () => { el.style.visibility = ""; };
+  fly.finished.then(done, done);
+  return () => { fly.cancel(); done(); };
 }
 
 /** A card whose row clips what flies in it (a phone's row scrolls sideways): a copy of it flies over everything from `origin` to its place while the real card is hidden, and takes the pointer when the copy has landed. */

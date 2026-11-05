@@ -2,7 +2,7 @@
 // orkUI's room as the hand is. **Its head is the Orkmaster's tab** — the crown and *The Orkmaster*, `role="tab"`, open at first, underlined when open; pressed again, the open tab's head asks (ask.js `data-ask-head`) — and under it three piles of the project's goals (piles.js):
 // *In analysis*, *To review*, *At work · later*. **What a press does**: a face-down card cannot be picked, its press lifts the pile's list over the pane in the Orkmaster's order (**Next** moves a goal before the first goal of its own party that waits its turn, with `ideas.move` as dragging does; **Remove** drops it, as the
 // goal's menu does); a face-up card picks its goal (`picked`, as a stack does); a card of To review lifts **Start now** (`ideas.confirm`) and **Hold** (`ideas.ripe_hold`: the wait held, it starts when the person presses Start now), a put-off one **Start now** and
-// **Back to review** (`ideas.ripe_back`). *Tonight* waits for a host command that puts an agreed goal off to the night (none yet). Esc or a press away puts the lifted thing away. The moves between piles are colmotion.js's.
+// **Back to review** (`ideas.ripe_back`). *Tonight* waits for a host command that puts an agreed goal off to the night (none yet). Esc or a press away puts the lifted thing away. The moves between piles (and a goal's start) are colmotion.js's.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon } from "../orkui.js";
@@ -143,7 +143,7 @@ function useGiveWay(root, count, laid) {
 
 export function Column() {
   const root = useRef(), nodes = mapData.value?.nodes || [], piles = pilesOf(nodes), parties = partiesNow(), all = partiesAll(), [lift, setLift] = useState(null);
-  useColumnMotion(root, piles.work);
+  useColumnMotion(root);
   const laid = laidNow(), way = useGiveWay(root, piles.work.length, laid);
   const gone = lift?.kind === "acts" && !nodes.some((n) => n.slug === lift.slug);
   useEffect(() => { if (gone || (lift?.kind === "list" && !piles.analysis.length)) setLift(null); });
