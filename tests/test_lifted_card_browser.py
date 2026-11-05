@@ -247,4 +247,4 @@ def test_the_opened_cards_words_are_the_glossarys():
     from orkboard.realm import lexicon
     js = (Path(__file__).resolve().parents[1] / "orkboard/gui/static/js/hand/openwords.js").read_text(encoding="utf-8")
     got = dict(re.findall(r'(\w+) = "([^"]+)"', re.search(r"export const (SLOT_RUNE = .*?);\n", js).group(1)))
-    assert got == {"SLOT_RUNE": lexicon.term("slot_rune"), "SLOT_WHO": lexicon.term("slot_who"), "SLOT_MUCH": lexicon.term("slot_much"), "ATTACH_HINT": lexicon.term("attach_hint"), "LEADER": lexicon.term("opened_leader"), "ASKS": lexicon.term("opened_asks")}
+    assert got == {"SLOT_RUNE": lexicon.term("slot_rune"), "SLOT_WHO": lexicon.term("slot_who"), "SLOT_KIND": lexicon.term("slot_kind"), "NOW": lexicon.term("now"), "LATER": lexicon.term("later"), "SLOT_MUCH": lexicon.term("slot_much"), "ATTACH_HINT": lexicon.term("attach_hint"), "LEADER": lexicon.term("opened_leader"), "ASKS": lexicon.term("opened_asks")}

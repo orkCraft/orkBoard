@@ -187,7 +187,7 @@ def test_the_marks_go_with_the_idea_and_are_gone_after_it(picking):
         b.scroll_into_view_if_needed()
         b.click()
     pg.locator(".pick-chip").nth(1).wait_for(timeout=WAIT_MS)
-    pg.get_by_role("button", name="Send").click()
+    pg.get_by_role("button", name="Now", exact=True).click()
     pg.wait_for_selector(".hand-field", state="detached", timeout=WAIT_MS)
     sent = host.sent()[-1]
     assert sent["party"] == "tech" and sent["text"] == "Players who drop out get their seat back"
@@ -250,13 +250,13 @@ def test_a_box_that_takes_a_whole_container_pins_it_and_one_over_the_whole_map_p
     drag(pg, *around(pg, PARTS["server"] + PARTS["client"]))
     assert chips(pg) == ["all"] and pg.locator(".pick-chip").inner_text().strip() == "all of Tech's table"
     shot(pg, f"picking-map-{w}.png")
-    pg.get_by_role("button", name="Send").click()
+    pg.get_by_role("button", name="Now", exact=True).click()
     pg.wait_for_selector(".hand-field", state="detached", timeout=WAIT_MS)
     sent = host.sent()[-1]
     assert sent["party"] == "tech" and "marks" not in sent, "the whole map reads as no mark"
     open_field(pg, "Another")
     drag(pg, *around(pg, PARTS["server"]))
-    pg.get_by_role("button", name="Send").click()
+    pg.get_by_role("button", name="Now", exact=True).click()
     pg.wait_for_selector(".hand-field", state="detached", timeout=WAIT_MS)
     assert host.sent()[-1]["marks"] == [{"map": "system", "group": "server", "name": "server/"}]
 
@@ -422,6 +422,6 @@ def test_a_map_drawn_with_pickable_is_picked_the_same_a_lane_a_group_the_map_all
         drag(pg, (a["x"] - 8, a["y"] - 8), (b["x"] + b["width"] + 8, b["y"] + b["height"] + 8))
         assert chips(pg) == ["sound"] and pg.locator(".pick-chip").inner_text().strip() == "sound/", "a lane's cards pin the lane"
         shot(pg, f"picking-lane-{w}.png")
-        pg.get_by_role("button", name="Send").click()
+        pg.get_by_role("button", name="Now", exact=True).click()
         pg.wait_for_selector(".hand-field", state="detached", timeout=WAIT_MS)
         assert host.sent()[-1]["marks"] == [{"map": "assets", "group": "sound", "name": "sound/"}]

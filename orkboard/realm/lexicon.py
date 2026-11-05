@@ -324,6 +324,8 @@ TERMS: tuple[Term, ...] = (
     # the opened card and a new goal's card (spec 147 D, spec 148 B.6, decisions §251.2, §252.4; hand/openwords.js): the empty corners say what will stand there, the window what to drop on it, the foot who asks
     _t("slot_rune", "the rune: given when it is laid"),            # a new goal's top left, dashed until the goal is laid
     _t("slot_who", "who: the Orkmaster routes it"),                 # its bottom left, until the party is known
+    _t("slot_kind", "the Orkmaster reads it"),                        # a new goal's top right, until a kind is picked (spec 150 F.1, decisions §254.9)
+    _t("now", "Now"),                                               # a new goal's primary: sent, and Talk starts at once when the limits allow and it costs no more than agreed (spec 150 F.2; `ideas.add` `now`)
     _t("slot_much", "how much: after its estimate"),                # its bottom right, until the goal is estimated
     _t("attach_hint", "Drop pictures or files here, or paste a picture"),     # a new goal's window while nothing is attached
     _t("opened_leader", "leader"),                                  # the opened card's foot: *the Tech leader asks*

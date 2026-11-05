@@ -81,7 +81,7 @@ def test_at_offers_the_parties_and_enter_takes_the_first_without_sending(gui):
         area.type("now")
         assert pg.locator(".hand-mention").count() == 0
         area.press("Enter")                                                          # no list: it sends, as always
-        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "Fix it now", "party": "tech"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "Fix it now", "party": "tech"}))
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -132,7 +132,7 @@ def test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written(gui):
         area.press("Enter")
         assert area.input_value() == "Look at @src/app.py "
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "Look at @src/app.py"}))                 # the host turns the path into `path` (realm/goal_mentions.py)
+        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "Look at @src/app.py"}))                 # the host turns the path into `path` (realm/goal_mentions.py)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -162,7 +162,7 @@ def test_who_then_what_then_on_what_a_type_and_a_part_of_its_map(gui):
         area.type("Add a dash")
         assert pg.locator(".hand-mention").count() == 0
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "Add a dash", "party": "game", "type": "mechanic", "marks": [{"map": "game-design", "id": "spawn", "name": "Spawn", "group": "loop"}]}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "Add a dash", "party": "game", "type": "mechanic", "marks": [{"map": "game-design", "id": "spawn", "name": "Spawn", "group": "loop"}]}))
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
         _plus(pg).click(position={"x": 8, "y": 60})
         _field(pg)
@@ -203,7 +203,7 @@ def test_a_word_that_names_a_type_offers_it_with_its_party_and_takes_both(gui):
         assert area.input_value() == "@Game design " and pg.locator(".hand-chip[data-type='mechanic']").count() == 1
         area.type("A double jump")
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "A double jump", "party": "game", "type": "mechanic"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "A double jump", "party": "game", "type": "mechanic"}))
     finally:
         pg.close()
     assert not log, "\n".join(log)

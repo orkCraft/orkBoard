@@ -328,7 +328,7 @@ def test_plus_on_an_empty_job_opens_the_field_addressed_to_product_with_the_job_
     pg.locator(".hand-field__text").press("Enter")
     pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
     got = sent(host, "ideas.add")
-    assert got == [{"text": "Play again in one press", "party": PARTY, "marks": [{"map": "product", "id": "play-again", "name": "play again with the same group"}]}]
+    assert got == [{"match": True, "now": True, "text": "Play again in one press", "party": PARTY, "marks": [{"map": "product", "id": "play-again", "name": "play again with the same group"}]}]
 
 
 def test_plus_puts_the_address_back_when_the_person_had_taken_it_off(tree):

@@ -106,9 +106,9 @@ def test_to_the_orkmaster_the_field_and_the_seal_open_with_the_rune_and_hue_the_
         in_hue = "() => { const e = document.querySelector('%s'); return !!e && e.classList.contains('dust') && e.classList.contains('k-lava'); }"
         pg.wait_for_function(in_hue % ".hand .hand-plus .ork-sigil__seal .ork-elem", timeout=WAIT_MS)
         pg.locator(".hand .hand-plus").click()
-        square = pg.locator('.hand-field [data-sq="rune"]')
+        square = pg.locator('.hand-field .hand-field__rune')
         square.wait_for(timeout=WAIT_MS)
-        pg.wait_for_function(in_hue % '.hand-field [data-sq="rune"] .ork-elem', timeout=WAIT_MS)
+        pg.wait_for_function(in_hue % '.hand-field .hand-field__rune .ork-elem', timeout=WAIT_MS)
         assert "Its rune: Rune 3, change it" in (square.get_attribute("aria-label") or square.inner_text()), "dust is the third rune"
         assert not [m for m in log if "pageerror" in m], log
     finally:
@@ -156,7 +156,7 @@ def test_draft_preview_is_read_only_and_submission_allocates_its_rune(gui, fake_
     hue = snapshot["next_hues"][shape]
     assert shape != hue
     seal = ".hand .hand-plus .ork-sigil__seal .ork-elem"
-    square = '.hand-field [data-sq="rune"] .ork-elem'
+    square = '.hand-field .hand-field__rune .ork-elem'
 
     def check(selector):
         pg.wait_for_function("([s, shape, hue]) => { const e = document.querySelector(s); return e?.classList.contains(shape) && e.classList.contains(`k-${hue}`); }", arg=[selector, shape, hue], timeout=WAIT_MS)
@@ -168,7 +168,7 @@ def test_draft_preview_is_read_only_and_submission_allocates_its_rune(gui, fake_
         area = pg.locator(".hand-field__text")
         area.fill("A fresh preview allocation")
         if explicit:
-            pg.locator('[data-sq="rune"]').click()
+            pg.locator('.hand-field__rune').click()
             for choice in idea_element.ELEMENTS:
                 assert colour(pg, f'[data-rune="{choice}"] .ork-elem')[0] == colour(pg, "", choice)
             pg.locator('[data-rune="dust"]').click()

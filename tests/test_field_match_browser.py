@@ -75,15 +75,15 @@ def test_a_match_keeps_the_field_open_with_its_words_and_says_one_line_with_two_
         field, area = written(pg)
         area.press("Enter")
         line(pg).wait_for(timeout=WAIT_MS)
-        assert _calls(pg, host, "ideas.add")[-1] == {"text": WORDS, "match": True}
+        assert _calls(pg, host, "ideas.add")[-1] == {"text": WORDS, "match": True, "now": True}
         assert " ".join(line(pg).locator("[data-part=looks]").inner_text().split()) == LINE
         assert [b.inner_text() for b in line(pg).get_by_role("button").all()] == ["Add to it", "Keep apart"]
         assert field.is_visible() and area.input_value() == WORDS, "it closes nothing: the words stay"
         assert line(pg).locator("[data-part=cost]").count() == 0, "its goal has no decision worded: no cost"
         assert pg.locator(".ork-toast, .shell-toasts .ork-toast").count() == 0, "no toast"
         shot(pg, "field-match.png")
-        send = field.get_by_role("button", name="Send", exact=True).bounding_box()
-        assert send["y"] + send["height"] <= pg.viewport_size["height"], "Send stays above the window's edge"
+        send = field.get_by_role("button", name="Now", exact=True).bounding_box()
+        assert send["y"] + send["height"] <= pg.viewport_size["height"], "Now stays above the window's edge"
         area.fill(WORDS + " and the round number")
         assert line(pg).count() == 0, "changed words: the line was of the old ones"
         area.press("Enter")

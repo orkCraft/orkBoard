@@ -236,6 +236,14 @@ class RouteMixin:
         self.changed(slug)
         return {"ok": True, "held_until": _iso(until)}
 
+    def route_laid(self, slug: str) -> str:
+        """The new goal's **Later** (spec 150 F.2, decisions §254.9), whatever the limits: the goal waits in line with `held_until` at the Board's hour, the reset when the limits run low, else the
+        next reset read, else the hour the limits are looked at again (`status.UNKNOWN_RESET_S`); `route_tick` starts its Talk then. Returns the hour (ISO)."""
+        limits, wall = self._raw_limits(), time.time()
+        until = idea_target.reserve_held(limits, self.settings_now(), wall) or idea_target.next_reset(limits, wall) or wall + status.UNKNOWN_RESET_S
+        ideas.save_state(self.state_dir, slug, held_until=_iso(until), held_for="")
+        return _iso(until)
+
     def route_hold(self, args: dict) -> dict:
         """`{idea}`: **Hold** (spec 130 E.3): the goal lies in the pile with no start of its own, until the person presses **Talk** (`route_talk` clears it). Nothing is spent: `route_stop` says it is held, so
         `route_auto` does not send it to Talk, and the queue after the reset reads `held_until`, which it has none of. Its route card leaves the hand (`goal_route.rows`), and the pile's list says *Held* with **Talk**."""
@@ -317,10 +325,13 @@ class RouteMixin:
             return "the week's limits run low"
         return "every AI tool is out or paid" if self.route_paid() else ""
 
-    def route_auto(self, slug: str) -> bool:
+    def route_auto(self, slug: str, fit: bool = False) -> bool:
         """The goal goes to Talk by itself when nothing stops it (`route_stop`), as the route card's **Talk** would send it (`route_talk`); else its route card is dealt as before,
-        which says why. True when it is at Talk now."""
-        if not AUTO_TALK or self.stopped() or self.route_stop(slug):         # stopped: nothing starts by itself (spec 139 B.2)
+        which says why. True when it is at Talk now. `fit` (the new goal's **Now**, spec 150 F.2): also only when the route's cost fits what the coming window holds above the reserve
+        (`fits_window`, the limit the route card's cost is read against), else the route card asks with its cost. **Now** is the person's own press, so it goes whatever `AUTO_TALK` says."""
+        if not (AUTO_TALK or fit) or self.stopped() or self.route_stop(slug):         # stopped: nothing starts by itself (spec 139 B.2)
+            return False
+        if fit and not self.fits_window(slug, self._state(slug), self._raw_limits(), self.settings_now(), time.time()):
             return False
         if self.lay_in_hours([slug]):                  # Talk asks the person: with no one there it waits for the hours (spec 138 B.3)
             return False

@@ -437,7 +437,8 @@ class Ideas(LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, Ch
         drafts it till the person does. Spec 65: in Ideation it is a pitch (at most 2 000 characters), judged; `pitch`: the one it is sent from.
         Spec 135 A (decisions §242): the new-goal field sends `match: true`; a goal that looks like part of a face-down one (`realm/goal_match.py`, by code, no call) is **not added**: the answer
         is `{slug: "", match: {idea, title, party, state, score, why, shared, adds, reworded, cost}}` for the field's line (`ideas.add_to_goal` is *Add to it*); `apart: true` (and `with`, the goal it was
-        offered) adds it as any goal."""
+        offered) adds it as any goal. Spec 150 F.2 (decisions §254.9): `now: true` (the new goal's **Now**) starts Talk once routed only when the limits allow and the route's cost fits the window
+        (`route_auto(fit=True)`), else its route card stays; `later: true` (**Later**) lays it in line at the Board's hour whatever the limits (`route_laid`)."""
         text, files =goal_mentions.files(Path(self.host.repo_root), _text(args, "text", ideas.SECTION_CHARS))      # spec 107 K: each `@path` that exists is the path in backticks, before the route reads it
         track = _opt(args, "track") or _opt(args, "party")
         goals = {t["slug"]: t for t in ideas.tracks(self.root(), make=False)}
@@ -479,6 +480,8 @@ class Ideas(LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, Ch
                 idea_element.give(self.root(), self.state_dir, slug, want=chosen)
             if routed:
                 self.route_save(slug, routed)         # waits as `routed`, nothing drafts it (spec 99 §4)
+                if args.get("later") is True:         # the new goal's **Later** (spec 150 F.2): laid in line at the Board's hour, whatever the limits
+                    self.route_laid(slug)
             if typed["key"] or pitch:
                 ideas.save_state(self.state_dir, slug, type=typed["key"], from_pitch=pitch)
             if args.get("via") == "inbox" and re.fullmatch(r"[A-Za-z0-9_-]{8,40}", str(args.get("inbox_id") or "")):
@@ -515,7 +518,9 @@ class Ideas(LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, Ch
             if not routed["route"]:
                 self.route_call(slug, text)     # code found no party: the one call on the cheaper tier, in the background
             else:
-                out["talk"] = self.route_auto(slug)     # nothing stops it: it goes to Talk by itself (spec 120 §2.1); else its route card, as before
+                out["talk"] = self.route_auto(slug, fit=args.get("now") is True)     # nothing stops it: it goes to Talk by itself (spec 120 §2.1); the new goal's **Now** only when its cost fits the window (spec 150 F.2); else its route card, as before
+                if args.get("later") is True:
+                    out["held_until"] = ideas.state(self.state_dir, slug)["held_until"]
         elif queue == "now":                    # drafted at once, in the background (held in a spent window)
             try:
                 self.keeper.draft(slug)

@@ -270,7 +270,7 @@ def test_test_it_opens_the_field_addressed_to_product_with_the_type_try_an_exper
     pg.locator(".hand-field__text").press("Enter")
     pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
     got = sent(host, "ideas.add")
-    assert got == [{"match": True, "text": "Show the big code to half of the hosts", "party": PARTY, "type": "experiment",
+    assert got == [{"match": True, "now": True, "text": "Show the big code to half of the hosts", "party": PARTY, "type": "experiment",
                     "marks": [{"map": "product", "id": "hyp:code-big", "name": "A big room code is read aloud and typed right"}]}]
 
 

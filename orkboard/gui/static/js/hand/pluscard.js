@@ -29,13 +29,14 @@ import { tab } from "../frame/state.js";
 import { fieldFiles, fieldOff, fieldOpen, fieldPhotos, fieldRow, fieldRune, fieldText, fieldTo, fieldType, plusDealt, rite, summon, withoutAddress } from "./state.js";
 import { focusInPress, growFrom, placeField, releaseProxy, sendBack, turnBack } from "./fieldturn.js";
 import { Choices, ELEMENTS, FileChips, Squares, closeRow } from "./fieldsquares.js";
+import { CornerList, KindCorner, RuneCorner, WhoCorner } from "./fieldcorners.js";
 import { MatchLine } from "./fieldmatch.js";
 import { partiesOf, partyCard } from "./data.js";
 import { MarkChips, addressNow, marks, marksToSend, pickFor, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
 import { leans } from "./motion.js";
 import { MentionList, useMention } from "./mention.js";
 import { CornerFoot, CornerTop } from "../table/corners.js";                   // the new goal's card is read by its four corners, three of them empty and dashed until they fill (spec 147 D.2, decisions §251.2)
-import { ATTACH_HINT, SLOT_MUCH, SLOT_RUNE, SLOT_WHO } from "./openwords.js";
+import { ATTACH_HINT, LATER, NOW } from "./openwords.js";
 import { mapData } from "../shell/store.js";
 import { Elem } from "../orkui.js";
 import { useNarrow } from "../table/portal.js";
@@ -120,7 +121,7 @@ export function Field({ middle = false }) {
   };
   const emptied = () => { fieldText.value = ""; fieldPhotos.value = []; fieldFiles.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldTo.value = ""; fieldOpen.value = false; fieldRow.value = ""; setMatch(null); };
   /** Sends the goal. It asks `match: true` (spec 135 A.5): a goal that looks like part of one lying face down is not added, the field stays open and says so (`match`); *Keep apart* sends it again with `apart` and the goal it was offered. */
-  const send = async (more = {}) => {
+  const send = async (more = {}) => {                                                  // `more`: `{now: true}` (Now: Talk starts at once when the limits allow and the cost fits), `{later: true}` (Later: laid in line), `{apart: true, with}`
     const { words, text } = wordsOf();
     if (!words || busy) return;
     setBusy(true);
@@ -139,6 +140,7 @@ export function Field({ middle = false }) {
     setTimeout(() => { plusDealt.value = false; }, 700);
     if (box && goal.slug) sendBack(box, goal);                                        // it turns to its back and goes face down to the Orkmaster's lane (§6.2)
     toast(through ? (through.kept ? "Waits for the network" : "Sent through your repository: your computer or a cloud session will take it")
+      : more.later ? "In line: it talks by itself at the hour the Board says."
       : address.party ? `Sent to ${address.name}.` : "Sent: the Orkmaster finds its party in a moment.");
   };
   /** *Add to it*: the words join the goal the field named (`ideas.add_to_goal`, via `match`), with the rune the person chose, else the one the goal would have been given. The field closes by doing it. */
@@ -161,21 +163,21 @@ export function Field({ middle = false }) {
   const key = (e) => {
     if (mention.onKey(e)) return;                                                     // the @ list took it (↑ ↓ Enter Tab Esc)
     if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); if (fieldRow.value) closeRow("text"); else closeField(); return; }          // a row of choices open: Esc closes it first, the card after
-    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send({ now: true }); }          // Enter is Now
   };
   const paste = (e) => {
     const pics = [...(e.clipboardData?.files || [])].filter((f) => PICTURE_TYPES.includes(f.type));
     if (pics.length) { e.preventDefault(); addPictures(pics); }
   };
-  const attached = fieldPhotos.value.length + fieldFiles.value.length > 0, who = address.party ? parties.find((g) => g.slug === address.party) : null, chosen = fieldRune.value;
+  const attached = fieldPhotos.value.length + fieldFiles.value.length > 0, who = address.party ? parties.find((g) => g.slug === address.party) : null;
   const drop = (e) => { e.preventDefault(); e.stopPropagation(); addPictures([...(e.dataTransfer?.files || [])]); };
-  return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle, "has-row": !!fieldRow.value, "is-picking": !!pickFor.value, "has-match": !!match })} role="group" aria-label="The new goal’s card, grown into the field"
+  return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle, "has-row": fieldRow.value === "files", "is-picking": !!pickFor.value, "has-match": !!match })} role="group" aria-label="The new goal’s card, grown into the field"
       onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => e.preventDefault()}>
-    <${CornerTop} large=${true} rune=${chosen ? { name: chosen, hue: runes.hue } : null} slot=${chosen ? "" : SLOT_RUNE} kind=${taken?.sign || ""} word=${taken?.name || ""} />
+    <${CornerTop} large=${true} runeNode=${html`<${RuneCorner} runes=${runes} />`} kindNode=${html`<${KindCorner} taken=${taken} />`} />
     <div class="table-card__win is-window card-win hand-field__win" data-window=${attached ? "attached" : "hint"} onDragOver=${(e) => e.preventDefault()} onDrop=${drop}>
       ${attached ? html`<${FileChips} />` : html`<span class="card-win__words hand-field__attach">${ATTACH_HINT}</span>`}</div>
     <div class="hand-field__body">
-    <div class="hand-field__top"><${Squares} runes=${runes} address=${address} parties=${parties} taken=${taken} />
+    <div class="hand-field__top"><${Squares} />
     ${(address.name || taken || marks.value.length > 0) && html`<div class="hand-field__chips">
       ${address.name && html`<span class="ork-chip hand-chip" data-by=${address.by}><${Icon} name="arrow-right" />${address.name}
         <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Take off ${address.name}`} title=${`Take off ${address.name}`} onClick=${off}><${Icon} name="close" /></button></span>`}
@@ -183,18 +185,19 @@ export function Field({ middle = false }) {
         <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Take ${taken.name} off`} title=${`Take ${taken.name} off`} onClick=${() => { fieldType.value = null; area.current?.focus(); }}><${Icon} name="close" /></button></span>`}
       <${MarkChips} />
     </div>`}</div>
-    <${Choices} runes=${runes} address=${address} parties=${parties} taken=${taken} pick=${() => file.current?.click()} />
+    <${Choices} pick=${() => file.current?.click()} />
     <textarea ref=${area} class="ork-field hand-field__text" aria-label="Write a goal" placeholder="Write a goal…" rows="3" value=${fieldText.value}
       onInput=${(e) => { fieldText.value = e.currentTarget.value; if (match) setMatch(null); mention.look(); }} onKeyDown=${key} onKeyUp=${mention.look} onClick=${mention.look} onFocus=${mention.look} onPaste=${paste}></textarea>
     <${MentionList} ...${mention} />
     ${match && html`<${MatchLine} match=${match} busy=${busy} onAdd=${addTo} onApart=${() => send({ apart: true, with: match.idea })} />`}
     </div>
     <div class="hand-field__row">
-      <span class="cap hand-field__hint">Enter sends · Shift+Enter a new line</span>
-      <button type="button" class="ork-btn primary" disabled=${!fieldText.value.trim() || busy} onClick=${() => send()}>Send</button>
+      <span class="cap hand-field__hint">Enter is Now · Shift+Enter a new line</span>
       <input ref=${file} type="file" accept=${PICTURE_TYPES.join(",")} multiple hidden onChange=${(e) => { addPictures([...e.currentTarget.files]); e.currentTarget.value = ""; }} />
     </div>
-    <${CornerFoot} large=${true} who=${who?.head ? { heads: [who.head], word: address.name } : null} whoSlot=${who?.head ? "" : SLOT_WHO} muchSlot=${SLOT_MUCH} />
+    <${CornerFoot} large=${true} whoNode=${html`<${WhoCorner} who=${who} address=${address} />`} muchNode=${html`<span class="hand-field__go"><button type="button" class="ork-btn primary" data-go="now" disabled=${!fieldText.value.trim() || busy} onClick=${() => send({ now: true })}>${NOW}</button>
+      <button type="button" class="ork-btn" data-go="later" disabled=${!fieldText.value.trim() || busy} onClick=${() => send({ later: true })}>${LATER}</button></span>`} />
+    ${["rune", "type", "to"].includes(fieldRow.value) && html`<${CornerList} open=${fieldRow.value} runes=${runes} address=${address} parties=${parties} taken=${taken} />`}
   </div>`;
 }
 

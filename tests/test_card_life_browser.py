@@ -98,12 +98,12 @@ def test_the_plus_card_turns_over_into_a_card_with_the_field_focused_in_the_pres
         box = field.bounding_box()
         assert abs(box["width"] / box["height"] - 5 / 7) < 0.02, f"a card, 5 : 7: {box}"
         rune = field.locator(".hand-field__rune")
-        top = field.locator(".hand-field__top").bounding_box()
-        assert rune.count() == 1 and abs(rune.bounding_box()["x"] - box["x"]) <= 16 and abs(rune.bounding_box()["y"] - top["y"]) <= 2, "its rune square at the left of the body's first row, under the card's corners and window (spec 147 D.2)"
-        assert rune.locator(".ork-elem.big").count() == 1 and rune.get_attribute("aria-expanded") == "false"
+        top = field.locator(".corner--top").bounding_box()
+        assert rune.count() == 1 and abs(rune.bounding_box()["x"] - box["x"]) <= 16 and abs(rune.bounding_box()["y"] - top["y"]) <= 8, "its rune is the card's top left corner, a button (spec 150 F.1)"
+        assert rune.locator(".ork-elem").count() == 1 and rune.get_attribute("aria-expanded") == "false"
         assert rune.get_attribute("aria-label").startswith("Its rune: ") or rune.get_attribute("aria-label") == "Its rune: none yet, choose one"
         assert field.locator(".hand-field__runes").count() == 0, "the five stand in a row only when the rune is pressed"
-        assert field.get_by_role("button", name="Send").count() == 1 and field.get_by_role("textbox", name="Write a goal").count() == 1
+        assert field.get_by_role("button", name="Now", exact=True).count() == 1 and field.get_by_role("button", name="Later", exact=True).count() == 1 and field.get_by_role("textbox", name="Write a goal").count() == 1
         assert field.evaluate("e => getComputedStyle(e.querySelector('textarea')).fontFamily").lower().find("pixel") < 0, "the person's words are never in the pixel face"
         shot(pg, "field-card")
         rune.click()
@@ -172,7 +172,7 @@ def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_col
         field.wait_for(timeout=WAIT_MS)
         field.get_by_role("textbox", name="Write a goal").fill("Players see who answered first, with a small crown over their name")
         field.get_by_role("textbox", name="Write a goal").press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "Players see who answered first, with a small crown over their name"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "Players see who answered first, with a small crown over their name"}))
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
         card = pg.locator('.frame-column .col-card--down[data-goal="new-goal"]')
         card.wait_for(timeout=WAIT_MS)

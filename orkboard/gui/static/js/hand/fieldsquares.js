@@ -1,24 +1,18 @@
-// The squares of the card-field (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part A.2, decisions §206.1, docs/mockups/goal-card/): under the card's top a row of 44 x 44 squares, each with its caption under it (the label face):
-// *Rune* (the goal's rune, large), *To* (the addressed leader's head, the Orkmaster's crown when none), *Type* (the type's sign, faint while the party chooses it) and *Files* (the file icon, the number of files attached at its corner). A square pressed
-// opens its row of choices under it, one row open at a time (`fieldRow`): a radio group each (the arrows move in it and choose, Tab leaves it), Esc closes the row first and the card after, a press on the square again closes it.
-//   Rune  the five runes (the elements are never named: *Rune 1* … *Rune 5*; the party's used ones faint but possible);
-//   To    the Orkmaster's crown and the leaders' heads, their names under them; a leader chosen is the goal's address (what *@Tech* and the open tab give too), the crown is a general goal;
-//   Type  the addressed party's goal types by their signs, their names under them; none to choose from until a party is named (*Name a party to choose its type*);
-//   Files *From this computer* (pictures, as pasting takes them) and some files of the project (`files.find`, what the *@* list offers), taken as chips in the row of *Send*.
-// While a row is open the words give it room (pluscard.js puts `has-row` on the card), so *Send* stays above the window's edge. Layout only (hand.css); every face is orkUI's.
+// The one square of the card-field that is left (docs/specs/150 F.1, decisions §254.9; before: docs/specs/128 A.2, §206.1): the rune, the kind (type) and who moved into the card's corners (fieldcorners.js), *Files* stays, in the window's row,
+// its caption under it (the label face). A square pressed opens its row of choices under it (`fieldRow`): *Files* *From this computer* (pictures, as pasting takes them) and some files of the project (`files.find`, what the *@* list offers),
+// taken as chips in the window. Esc closes the row first and the card after, a press on the square again closes it. While the row is open the words give it room (pluscard.js puts `has-row` on the card). Layout only (hand.css); every face is orkUI's.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Elem, Head, Icon, Sign } from "../orkui.js";
+import { Elem, Icon } from "../orkui.js";
 import { command } from "../link.js";
 import { MAX_PICTURES } from "../board/pictures.js";
-import { fieldFiles, fieldPhotos, fieldRow, fieldRune, fieldText, fieldTo, fieldType, withoutAddress } from "./state.js";
+import { fieldFiles, fieldPhotos, fieldRow, fieldRune } from "./state.js";
 
 export const ELEMENTS = ["meadow", "ice", "dust", "void", "lava"];                  // realm/idea_element.py `ELEMENTS`: the order of the field's radios
-const CROWN = { race: "peon", tier: "crown" };                                      // the Orkmaster's head, as the tabs draw it
 const FILES_SHOWN = 5;                                                              // the project's files offered in the row (one row of them, with *From this computer*)
 export const FILES_SAY = "Pictures from this computer, or a file of the project";
 
-const ID = { rune: "hand-field-runes", to: "hand-field-to", type: "hand-field-type", files: "hand-field-files" };
+const ID = { rune: "hand-field-runes", files: "hand-field-files" };
 const base = (path) => String(path || "").replace(/\/$/, "").split("/").pop();
 
 /** Closes the open row and gives the focus back to its square (or the words when none). */
@@ -26,7 +20,7 @@ export function closeRow(then = "square") {
   const was = fieldRow.value;
   fieldRow.value = "";
   const field = document.querySelector(".hand-field");
-  (then === "square" && was ? field?.querySelector(`[data-sq="${was}"]`) : field?.querySelector(".hand-field__text"))?.focus({ preventScroll: true });
+  (then === "square" && was ? field?.querySelector(`[data-sq="${was}"], [data-corner="${was}"]`) : field?.querySelector(".hand-field__text"))?.focus({ preventScroll: true });
 }
 
 /** One square: its button (a head, a sign, a rune or an icon) and its caption. */
@@ -36,14 +30,10 @@ function Square({ id, caption, label, faint = false, badge = 0, children }) {
     onClick=${() => { fieldRow.value = open ? "" : id; }}>${children}${badge > 0 && html`<span class="hand-sq__n">${badge}</span>`}</button><span class="hand-sq__cap">${caption}</span></div>`;
 }
 
-/** The row of squares. `runes`: pluscard.js `runesOf`; `address`: `addressNow()`; `parties`: the map's parties; `taken`: the type taken for this address, or null. */
-export function Squares({ runes, address, parties, taken }) {
-  const at = ELEMENTS.indexOf(runes.shown), who = address.party ? parties.find((g) => g.slug === address.party) : null, kinds = who?.types || [];
+/** The one square left (spec 150 F.1, decisions §254.9: the rune, the kind and who moved into the card's corners, fieldcorners.js): *Files*, in the window's row. */
+export function Squares() {
   const count = fieldPhotos.value.length + fieldFiles.value.length;
-  return html`<div class="hand-field__squares" role="group" aria-label="Its choices">
-    <${Square} id="rune" caption="Rune" label=${at >= 0 ? `Its rune: Rune ${at + 1}, change it` : "Its rune: none yet, choose one"}><${Elem} name=${runes.shown} hue=${runes.hue} big=${true} dim=${!runes.shown} /><//>
-    <${Square} id="to" caption="To" label=${`To: ${address.name || "the Orkmaster"}, change it`}>${who?.head ? html`<${Head} race=${who.head.race} tier=${who.head.tier} />` : html`<${Head} race=${CROWN.race} tier=${CROWN.tier} />`}<//>
-    <${Square} id="type" caption="Type" faint=${!taken} label=${taken ? `Its type: ${taken.name}, change it` : kinds.length ? "Its type: chosen by its party, change it" : "Its type: name a party to choose it"}><${Sign} name=${taken ? taken.sign : "feature"} big=${true} /><//>
+  return html`<div class="hand-field__squares" role="group" aria-label="Its files">
     <${Square} id="files" caption="Files" badge=${count} label=${count ? `Files: ${count} attached, change them` : "Attach files"}><${Icon} name="file" /><//>
   </div>`;
 }
@@ -71,42 +61,13 @@ function Choice({ role = "radio", checked = null, label, name = "", used = false
 }
 
 /** The five runes (decisions §187.3): the default checked until the person chooses, the used ones faint but possible. With no party addressed none is checked, and Tab enters on the first. */
-function RuneRow({ runes }) {
+export function RuneRow({ runes }) {
   const row = useRef();
   useEffect(() => { row.current?.querySelector('[role=radio][tabindex="0"]')?.focus({ preventScroll: true }); }, []);       // opened by a press on the rune: the focus is in the row
   const keys = useRowKeys((b) => { fieldRune.value = b.dataset.rune; });
   return html`<div ref=${row} id=${ID.rune} class="hand-field__runes hand-field__choices" role="radiogroup" aria-label="Its rune" onKeyDown=${keys}>
     ${ELEMENTS.map((e, i) => html`<${Choice} key=${e} checked=${runes.shown === e} label=${`Rune ${i + 1}`} used=${runes.used.includes(e)} tab=${runes.shown ? runes.shown === e : i === 0} data=${{ "data-rune": e }}
       onPick=${() => { fieldRune.value = e; fieldRow.value = ""; }}><${Elem} name=${e} big=${true} /><//>`)}
-  </div>`;
-}
-
-/** *To*: the Orkmaster's crown and the leaders' heads. A leader chosen is the address; if the text names another with *@*, the *@* goes (the choice is the person's last word). */
-function ToRow({ address, parties }) {
-  const row = useRef();
-  useEffect(() => { row.current?.querySelector('[role=radio][tabindex="0"]')?.focus({ preventScroll: true }); }, []);
-  const pick = (slug) => {
-    if (address.by === "text") fieldText.value = withoutAddress(fieldText.value, address.name);
-    fieldTo.value = slug;
-    if (fieldType.value && fieldType.value.party !== (slug === "ork" ? "" : slug)) fieldType.value = null;     // a type belongs to its party
-  };
-  const keys = useRowKeys((b) => pick(b.dataset.to));
-  return html`<div ref=${row} id=${ID.to} class="hand-field__choices" role="radiogroup" aria-label="To" onKeyDown=${keys}>
-    <${Choice} checked=${!address.party} label="Orkmaster" name="Orkmaster" tab=${!address.party} data=${{ "data-to": "ork" }} onPick=${() => pick("ork")}><${Head} race=${CROWN.race} tier=${CROWN.tier} /><//>
-    ${parties.map((g) => html`<${Choice} key=${g.slug} checked=${address.party === g.slug} label=${g.name} name=${g.name} tab=${address.party === g.slug} data=${{ "data-to": g.slug }} onPick=${() => pick(g.slug)}>${g.head && html`<${Head} race=${g.head.race} tier=${g.head.tier} />`}<//>`)}
-  </div>`;
-}
-
-/** *Type*: the addressed party's types by their signs; pressing the one taken again leaves the choice to the party. */
-function TypeRow({ address, parties, taken }) {
-  const row = useRef(), kinds = address.party ? (parties.find((g) => g.slug === address.party)?.types || []) : [];
-  useEffect(() => { row.current?.querySelector('[role=radio][tabindex="0"]')?.focus({ preventScroll: true }); }, []);
-  const pick = (t) => { fieldType.value = taken?.id === t.id ? null : { id: t.id, name: t.name, sign: t.sign, party: address.party }; };
-  const keys = useRowKeys((b) => { const t = kinds.find((x) => x.id === b.dataset.type); if (t && taken?.id !== t.id) fieldType.value = { id: t.id, name: t.name, sign: t.sign, party: address.party }; });
-  if (!address.party) return html`<div id=${ID.type} class="hand-field__choices" role="group" aria-label="Its type"><span class="hand-field__say">Name a party to choose its type</span></div>`;
-  return html`<div ref=${row} id=${ID.type} class="hand-field__choices" role="radiogroup" aria-label="Its type" onKeyDown=${keys}>
-    ${kinds.length === 0 && html`<span class="hand-field__say">${address.name} chooses the type itself</span>`}
-    ${kinds.map((t, i) => html`<${Choice} key=${t.id} checked=${taken?.id === t.id} label=${t.name} name=${t.name} tab=${taken ? taken.id === t.id : i === 0} data=${{ "data-type": t.id }} onPick=${() => pick(t)}><${Sign} name=${t.sign} big=${true} /><//>`)}
   </div>`;
 }
 
@@ -128,14 +89,11 @@ function FilesRow({ pick }) {
 }
 
 /** The open row under the squares, or nothing. `pick`: opens the box of pictures. */
-export function Choices({ runes, address, parties, taken, pick }) {
+export function Choices({ pick }) {
   const open = fieldRow.value;
   if (!open) return null;
   return html`<div class="hand-field__row-open" data-open=${open}>
     ${open === "files" && html`<span class="hand-field__say">${FILES_SAY}</span>`}
-    ${open === "rune" && html`<${RuneRow} runes=${runes} />`}
-    ${open === "to" && html`<${ToRow} address=${address} parties=${parties} />`}
-    ${open === "type" && html`<${TypeRow} address=${address} parties=${parties} taken=${taken} />`}
     ${open === "files" && html`<${FilesRow} pick=${pick} />`}
   </div>`;
 }

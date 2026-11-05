@@ -54,3 +54,27 @@
   .hand-lifted__win .card-win, .hand-field__win { height: 72px; }
   .hand .hand-field { gap: var(--ork-3); padding: var(--ork-4); }
 }
+
+/* -- a new goal's corners to pick, Now and Later (spec 150 F, decisions §254.9; docs/mockups/table-edge/ section 6; hand/fieldcorners.js). A corner left to its default is dashed and says it; a picked one is drawn whole. -- */
+.hand-field .corner { height: auto; min-height: 24px; }
+.hand-corner { display: inline-flex; align-items: center; gap: var(--ork-2); box-sizing: border-box; height: 24px; max-width: 100%; min-width: 0; padding: 0 var(--ork-2); border: var(--ork-line) dashed var(--ork-frame); background: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); white-space: nowrap; cursor: pointer; }
+.hand-corner.is-set { border-style: solid; color: var(--ork-ink); }
+.hand-corner:hover, .hand-corner.is-open { border-color: var(--ork-ink); color: var(--ork-ink); }
+.hand-corner:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+.hand-corner__say { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.hand-corner .ork-race__head { width: auto; height: 16px; flex: none; }
+.hand-corner__car { flex: none; color: var(--ork-ink-faint); }
+.hand-field .corner--foot { gap: var(--ork-3); }
+.hand-field .corner--foot > :first-child { min-width: 0; flex: 0 1 auto; }
+.hand-field__go { display: inline-flex; flex: none; gap: var(--ork-2); margin-left: auto; }
+.hand-pick { position: absolute; z-index: 5; display: flex; flex-direction: column; min-width: 180px; max-width: calc(100% - var(--ork-6)); max-height: 60%; overflow-y: auto; padding: var(--ork-1); border: var(--ork-line) solid var(--ork-ink); background: var(--ork-panel); box-shadow: 0 6px 18px var(--ork-scrim); }
+.hand-pick--rune { top: 52px; left: var(--ork-5); }
+.hand-pick--type { top: 52px; right: var(--ork-5); }
+.hand-pick--to { bottom: 52px; left: var(--ork-5); }
+.hand-pick__item { display: flex; align-items: center; gap: var(--ork-3); width: 100%; padding: var(--ork-2) var(--ork-3); border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-body); text-align: left; cursor: pointer; }
+.hand-pick__item:hover, .hand-pick__item:focus-visible { background: var(--ork-hover, var(--ork-room)); outline: 0; box-shadow: inset 2px 0 0 var(--ork-ink); }
+.hand-pick__item.is-faint .hand-pick__face { opacity: 0.45; }
+.hand-pick__face { display: inline-flex; align-items: center; justify-content: center; flex: none; min-width: 20px; }
+.hand-pick__face .ork-race__head { width: auto; height: 20px; }
+.hand-pick__word { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hand-pick__note { flex: none; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
