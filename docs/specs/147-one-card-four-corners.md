@@ -58,7 +58,7 @@ area; then D (after C) and E (after B); F last · **Review:** the critical tests
    so the hand's rim falls between two lines of the front card (its top 32 px, then 20 px a line), the cards behind it
    moved 3 px to the right each. The fan and the deck keep their places. A card hovered or focused
    slides out whole (as today: 36 px and 2°; a back by the tuck).
-6. Tests: *In analysis* is a fan of 56 × 78 cards with a rune in each top left, the goal being read lifted, no wider
+6. Tests: *In analysis* is a fan of 56 × 78 cards with a rune in each one's middle, the goal being read lifted, no wider
    than 144 px with eight goals; the column has no scrollbar at 650, 790 and 940 px of window; at 650 *At work*'s front shows its rune row and
    its cards behind are edges or slivers; at 940 every card behind shows its foot; *To review* names the next to start;
    a goal that asks is a back with the alert ring and frame; `giveWay` in a JS unit test or through the page.
