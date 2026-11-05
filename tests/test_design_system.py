@@ -155,6 +155,7 @@ def test_orkboards_own_sheets_carry_no_colour_no_font_and_no_corner_of_their_own
         legacy -= {"--hf-left", "--hf-w", "--hf-top"}   # spec 128 A.1, spec 147 D.2: where the field lies, its left edge on the + card's, its width and its top over the hand (hand/fieldturn.js `placeField`)
         legacy -= {"--column-tuck", "--column-w", "--col-shown", "--col-edge", "--col-out"}   # spec 130 E: the column's width of its own, a face-down card's tuck, what shows of it, the piles' right edge, the room a card slides out into (frame/frame.css, table/column.css)
         legacy -= {"--up-h", "--up-rise"}   # spec 147 F: the phone's opened card as tall as the screen leaves while the keyboard is up, and how far a pressed card of the hand's row rises (hand/upright.css, stopcard.js)
+        legacy -= {"--hc-lap"}   # spec 150 A: how far past its box a card laid over the column lets its shadow fall (hand/hand.css, the field and the lifted card)
         legacy -= {"--dash"}   # spec 130 B.1: the empty slot's dashes in the edge or the ink (hand/mana.css), until orkUI draws `.ork-potion.is-empty`
         assert not legacy, (path.name, legacy)
 
