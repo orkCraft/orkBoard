@@ -1,9 +1,10 @@
 """A goal looked at from a leader's tab (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md F.3; decisions §206.8), as `gui/ideas.py`'s `Ideas` has it: what a goal that is done
 changed against what its spec promised, by code (realm/goal_result.py), with no model.
 
-    ideas.goal_result {idea}      # {idea, state, parties: [{party, title, parts: [{id, kind, verdict, line, note}], done_when: [{text, state}]}], files, screens: [{screen, name, path}], made: [{task, title, files, added, removed, gate}]}
+    ideas.goal_result {idea}      # {idea, state, parties: [{party, title, parts: [{id, kind, verdict, line, note}], done_when: [{text, state}]}], files, screens: [{screen, name, path}], made: [{task, title, files, added, removed, gate}], red_before}
                                   # `verdict`: ok (As promised) · differs (Not quite) · missing (Not done) · extra (More than promised); a *Done when* line `state` "ok" or ""
                                   # `made` (spec 149 H.1): each merged task with the files and lines it changed and its gate in words (*97 passed*), for the result to set beside the *Done when* lines; no model matches them
+                                  # `red_before` (spec 149 E.4): how many tests were red before this goal, its tasks' `tests.red_before` counted once each
 """
 from __future__ import annotations
 
@@ -45,6 +46,15 @@ def made_of(plan: dict) -> list[dict]:
     return out
 
 
+def red_before_of(plan: dict) -> int:
+    """How many tests were red before this goal (spec 149 E.4): the distinct test ids its tasks' gates kept in `tests.red_before`, red on the base too."""
+    seen: set[str] = set()
+    for t in plan.get("tasks") or []:
+        tests = t.get("tests") if isinstance(t, dict) and isinstance(t.get("tests"), dict) else {}
+        seen.update(str(i) for i in tests.get("red_before") or [] if i)
+    return len(seen)
+
+
 class GoalViewMixin:
     """Needs `host`, `state_dir`, `root()`, `_ref()` (gui/ideas.py, gui/ideas_assets.py)."""
 
@@ -61,7 +71,7 @@ class GoalViewMixin:
         plan = ideas.plan(self.state_dir, slug) or {}
         crafts = {t["slug"]: goal_team.craft_of(root, t["slug"]) for t in tracks}
         touch = goal_result.touched(self.state_dir, Path(self.host.repo_root), slug, self._ref()) if state == "done" else None
-        return {"idea": slug, "state": state, **goal_result.of(sections, plan.get("tasks") or [], touch, state == "done", crafts, home), "made": made_of(plan)}
+        return {"idea": slug, "state": state, **goal_result.of(sections, plan.get("tasks") or [], touch, state == "done", crafts, home), "made": made_of(plan), "red_before": red_before_of(plan)}
 
 
 def goalview_commands(ideas_: Any) -> dict:

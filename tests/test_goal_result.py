@@ -188,3 +188,17 @@ def test_spend_gives_the_tokens_of_a_goal_and_the_share_the_reads_show(host, tec
     got = host.command("ideas.spend", {"idea": slug})
     assert got["usd"] is None and got["tokens"] == 3_000_000
     assert got["share"]["tool"] == "codex" and got["share"]["name"] == "Codex" and got["share"]["window"] == "week" and got["share"]["share"] == 2.0
+
+
+def test_a_goal_counts_the_distinct_tests_that_were_red_before_it(host, tech):
+    """Spec 149 E.4: the tasks' stored `tests.red_before` lists add up, each test once."""
+    from orkboard.gui.ideas_goalview import red_before_of
+    assert red_before_of({"tasks": [{"tests": {"red_before": ["a::x", "a::y"]}}, {"tests": {"red_before": ["a::y", "b::z"]}}, {"tests": {"passed": 3}}, {}]}) == 3
+    assert red_before_of({"tasks": [{"tests": {"red_before": []}}]}) == 0 and red_before_of({}) == 0
+    slug = _goal(host, tech, {tech: {"Why": "x", "Done when": "- one"}}, [("t1", "merged", [], tech), ("t2", "merged", [], tech)])
+    path = ideas.state_folder(host.ideas.state_dir, slug) / "plan.json"
+    plan = json.loads(path.read_text(encoding="utf-8"))
+    plan["tasks"][0]["tests"] = {"passed": 5, "failed": 0, "red_before": ["t::a"]}
+    plan["tasks"][1]["tests"] = {"passed": 5, "failed": 0, "red_before": ["t::a", "t::b"]}
+    ideas._write_json(path, plan)
+    assert host.command("ideas.goal_result", {"idea": slug})["red_before"] == 2

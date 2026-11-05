@@ -13,9 +13,9 @@ from tests.test_hand_desktop_browser import HandHost, open_hand, sig  # noqa: E4
 class ResultHost(HandHost):
     """The hand's stub, whose goal *music* (done, one merged task) is read as the host reads a Codex goal: tokens and a share, no dollars."""
 
-    def __init__(self, spend, **more):
+    def __init__(self, spend, red_before=0, **more):
         super().__init__(**more)
-        self.spend = spend
+        self.spend, self.red_before = spend, red_before
 
     def handle(self, name, a):
         if name == "ideas.spend":
@@ -25,7 +25,7 @@ class ResultHost(HandHost):
             self.log.append((name, a))
             return {"idea": a["idea"], "state": "done", "parties": [{"party": "tech", "title": "Tech", "parts": [], "done_when": [
                 {"text": "The host predicts the hue per shape", "state": ""}, {"text": "The phone says the same", "state": ""}]}],
-                    "made": [{"task": "m1", "title": "Make the loop", "files": 3, "added": 40, "removed": 2, "gate": "97 passed"}]}
+                    "made": [{"task": "m1", "title": "Make the loop", "files": 3, "added": 40, "removed": 2, "gate": "97 passed"}], "red_before": self.red_before}
         return super().handle(name, a)
 
 
@@ -92,6 +92,19 @@ def test_a_route_with_no_price_says_its_calls_and_has_no_dollar_chip(gui):
           return [costLine({ calls: 3, usd_low: null, usd_high: null }), costLine({ calls: 4, usd_low: 0.5, usd_high: 1.5 })]; }""")
         assert got[0]["words"] == "about 3 calls" and not got[0]["spend"], "calls only: no gem, no dollars"
         assert got[1]["words"].startswith("about 4 calls, about ") and got[1]["spend"], "a price is said as before"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("n, said", [(0, None), (1, "1 test was red before this goal"), (3, "3 tests were red before this goal")])
+def test_a_result_says_in_one_line_how_many_tests_were_red_before_the_goal(gui, n, said):
+    pg, host, log = open_hand(gui, host=ResultHost(PRICED, red_before=n))
+    try:
+        result = _open_result(pg)
+        pg.wait_for_function("() => document.querySelector('.hand-result__promised')", timeout=WAIT_MS)
+        lines = result.locator(".hand-result__before")
+        assert lines.all_inner_texts() == ([said] if said else [])
     finally:
         pg.close()
     assert not log, "\n".join(log)

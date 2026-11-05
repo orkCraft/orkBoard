@@ -74,6 +74,7 @@ function GoalResult({ idea }) {
     <header class="hand-result__head"><${Elem} name=${n.element || ""} hue=${n.hue || ""} dim=${!n.element} /><h2 class="hand-result__title">${n.title}</h2></header>
     <p class="cap">${party ? `${party.name} · ` : ""}Done${n.updated ? ` · ${String(n.updated).slice(0, 10)}` : ""}</p>
     ${spend && html`<p class="cap" title=${spend.usd == null ? "Tokens as the tool counted them" : "At API prices, not your bill"}>${spendWords(spend)}</p>`}
+    ${view?.red_before > 0 && html`<p class="cap hand-result__before">${view.red_before === 1 ? "1 test was" : `${view.red_before} tests were`} red before this goal</p>`}
     ${promised.length > 0 && html`<h3 class="board-sub">Done when</h3><ul class="hand-result__promised">${promised.map((text, k) => html`<li key=${k} class="body">${text}</li>`)}</ul>`}
     <h3 class="board-sub">What it made</h3>
     ${made.length ? html`<ul class="hand-result__made">${made.map((t) => html`<li key=${t.id}><span class="body">${t.made || t.title}</span>
