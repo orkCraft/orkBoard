@@ -36,6 +36,7 @@ START_LINE = "Orkboard sees web projects and Godot best; Unity and Flutter work,
 GODOT_CSHARP = "Godot's C# does not build for the web yet: this project has no Play until it does"
 SIGNS = 4                                    # the most signs said
 SIGN_CHARS = 40
+FIXTURE_DIRS = {"tests", "fixtures", "testdata"}      # a sign inside one does not count: `.xcodeproj`, `AndroidManifest.xml` (spec 149 B)
 SKIP_DIRS = {"node_modules", "__pycache__", "Pods"}
 BOARD_PAGES = ("pages/tracks", "pages/ideas")   # the Wiki's pages of the Board (realm/ideas.py): not the project's
 EMPTY_OK = {"readme", "license", "licence", "orkcraft.toml"}      # a stem: a README (any extension), a licence, the gate's file
@@ -107,6 +108,11 @@ def _walk(root: Path) -> dict[str, Any]:
     return {"top": top, "files": files, "dirs": dirs, "seen": seen}
 
 
+def _fixture(path: str) -> bool:
+    """Whether a path lies under a folder of tests or fixtures: a sign there is a test's sample, not the project's."""
+    return any(part in FIXTURE_DIRS for part in path.split("/")[:-1])
+
+
 def _suffix(name: str) -> str:
     return os.path.splitext(name)[1].lower()
 
@@ -149,9 +155,9 @@ def scan(root: Path) -> dict[str, Any]:
         sign.append("pubspec.yaml")
     if hit := [d for d in MOBILE_DEPS if d in package]:
         sign.append(f"package.json: {hit[0]}")
-    if any(p.endswith(".xcodeproj") for p in dirs):
+    if any(p.endswith(".xcodeproj") and not _fixture(p) for p in dirs):
         sign.append(".xcodeproj")
-    if "AndroidManifest.xml" in names and not sign:
+    if any(n_ == "AndroidManifest.xml" and not _fixture(p) for p, n_ in files) and not sign:
         sign.append("AndroidManifest.xml")
     if sign:
         return done("mobile", sign)
@@ -159,7 +165,7 @@ def scan(root: Path) -> dict[str, Any]:
     sign = [f for f in GAME_FILES if f in top_files]
     if "ProjectSettings" in top_dirs:
         sign.append("ProjectSettings/")
-    sign += [n_ for n_ in sorted(names) if n_.endswith(".uproject")][:1]
+    sign += [n_ for n_ in sorted(top_files) if n_.endswith(".uproject")][:1]       # at the root alone, as engine_unreal.detect reads it
     if sign:
         return done("game", sign)
     # web

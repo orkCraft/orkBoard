@@ -70,6 +70,22 @@ def test_each_kind_from_a_folder_made_for_it(tmp_path, names, files, want, sign)
     assert all(isinstance(s, str) and len(s) <= project_kind.SIGN_CHARS for s in got["signs"])
 
 
+def test_a_sign_inside_a_fixture_makes_no_game_and_no_mobile_app(tmp_path):
+    """Spec 149 B: the trial's first open asked 'a game' for a repository with tests/fixtures/engines/unreal/Skyhop.uproject."""
+    base = ("tool.py", "app.py")
+    assert kind(make(tmp_path / "a", *base, "tests/fixtures/engines/unreal/Skyhop.uproject")) == "code"
+    assert kind(make(tmp_path / "b", *base, "src/Game.uproject")) == "code"
+    assert kind(make(tmp_path / "c", *base, "tests/fixtures/App.xcodeproj/project.pbxproj")) == "code"
+    assert kind(make(tmp_path / "d", *base, "testdata/app/src/main/AndroidManifest.xml")) == "code"
+    assert kind(make(tmp_path / "e", *base, "app/src/main/AndroidManifest.xml")) == "mobile"
+    assert kind(make(tmp_path / "f", *base, "ios/App.xcodeproj/project.pbxproj")) == "mobile"
+
+
+def test_this_repository_is_no_game_and_no_mobile_app():
+    """Its fixtures hold a .uproject, an .xcodeproj and an AndroidManifest.xml; its pyproject.toml makes it a backend, as it always did."""
+    assert kind(Path(__file__).resolve().parents[1]) == "backend"
+
+
 def test_a_folder_of_nothing_known_is_code(tmp_path):
     got = project_kind.read(make(tmp_path / "p", "thing.bin", "other.dat"), fresh=True)
     assert got["kind"] == "code" and got["signs"] == []
