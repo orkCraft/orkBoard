@@ -6580,7 +6580,7 @@ call (§233.3) but only said inside the decision's text, where it is missed. The
 the whole frame at once; each card thrown where its thing will live teaches the place, not a text. The new goal's card already has
 its four corners (§251.2), but nothing in them can be chosen, and a kind or a party can only be given by typing (*@Tech*). The
 Orkmaster's column is cut at the edge of a card opened over it, where a card on a table would only cover it. The owner's answers:
-the chronicle stays over the pane, so the table under it stays in use, and then, better, the past is the lich's, opened through the open tab and laid by version; the back plain, after a tarot back: the ring of runes, a plain strip on each side, the corners' curls; the die turns a quarter; GitHub at the first open later;
+the chronicle stays over the pane, so the table under it stays in use, and then, better, the past is the lich's, opened through the open tab and laid by version, its way in a pyramid of the craft's last decisions in the portal, the depth the age; the back plain, after a tarot back: the ring of runes, a plain strip on each side, the corners' curls; the die turns a quarter; GitHub at the first open later;
 *Now* still meets the route card when it costs more than agreed. So:
 1. **What a tab shows is its table**: *Tech's table*, *the Orkmaster's table*; never *map*, *lens* or *view* in what a person
    reads (Tech's *System* is Tech's table). The frame is unchanged: the table and the hand (§145.1); the open tab says whose
@@ -6627,7 +6627,14 @@ the chronicle stays over the pane, so the table under it stays in use, and then,
    *Unreleased* on top (a week's deck for a project with no version yet, §238.5): none picked, every version, newest first, each
    card's version in its bottom right; one picked, that version's cards. **A search** over the top dims the decks with no find
    and lights the cards found. Its title says both axes (*The past · through Design · v0.3*); **←** goes back to the tab's
-   table. A card lifted is §238.4's row: a goal as it was, a decision with its *Changes* and *changed by*; **Show on <party>'s
+   table. **The way in is a pyramid in the portal** (the owner's pick of three drawn: a fan at the lich, a stack in the
+   portal's eye, a pyramid): the last three decisions of the open tab's craft (the project's on the Orkmaster's tab) stand in
+   the ring as small cards (56 × 78, face up: the rune, the kind's sign, the number, who) **stepping back into the swirl, each
+   older one smaller and darker, so the depth is the age**. A new one since that craft's past was last looked at comes out to
+   the front, its edge in the ink until seen, the others step one deeper and the oldest sinks: one motion, none under reduced
+   motion, else the pyramid lies still (§247.8). A step hovered or focused rises whole under the ring (its title, its why in a
+   line, its version); a step or the lich pressed opens the past. **While something is ready for main the pyramid sinks into
+   the portal** and the ring is the gate's alone. A card lifted is §238.4's row: a goal as it was, a decision with its *Changes* and *changed by*; **Show on <party>'s
    table** opens that tab with what it touched lit. **The ring itself** stays the way into main, pressed only while something is
    ready; the imp is Live. The conflict's earlier decision (6) comes from the lich; *Open in the past* opens this, through the
    tab of the craft it is about, its deck dealt and the card lit.
