@@ -32,8 +32,11 @@ export function glyph(g, title = "") {
   return GLYPHS[g] ? sign(GLYPHS[g], title) : g;
 }
 
-/** The element a new goal of a party will get (spec 50 §2.3, the host's `idea_element.pick`): the one used least among the party's open goals, ties by the order of ELEMENTS. */
+/** The next goal's shape from the complete project's snapshot goal-node collection across every party.
+ * Matches the host's `idea_element.holds` and `pick`: valid shapes hold unless done with a seen result;
+ * snapshot `seen` represents persisted `seen_at`. Dropped goals and legacy goals without hue still count.
+ * Ties follow ELEMENTS order. Returns only a shape; hue prediction belongs to the host. */
 export function nextElement(nodes) {
-  const used = (nodes || []).filter((n) => n.state !== "done" && n.state !== "dropped").map((n) => n.element);
+  const used = (nodes || []).filter((n) => ELEMENTS.includes(n.element) && (n.state !== "done" || !n.seen)).map((n) => n.element);
   return ELEMENTS.reduce((best, e) => (used.filter((u) => u === e).length < used.filter((u) => u === best).length ? e : best), ELEMENTS[0]);
 }

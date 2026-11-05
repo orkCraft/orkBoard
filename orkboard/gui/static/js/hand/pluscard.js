@@ -43,12 +43,12 @@ import { useNarrow } from "../table/portal.js";
 const FREE_PLACES = ["at-90", "at-270", "at-180", "at-45"];                  // the seal's band, in the order the free runes use it (orkUI 0.21.0)
 const DECO = [["at-135", "eye"], ["at-225", "key"], ["at-315", "hourglass"]];     // the three places left, held by orkUI's own runes (spec 128 A.4; hand.css gives their places)
 
-/** The runes of the goal being written (decisions §187.3), for the address `address` (`addressNow()`): `base` the one it would be given (the project's `next_element`, "" with no party), `hue` the colour of `shown` (`next_hue` while it is `base`, else its own), `shown` the one the seal holds and the field checks (the person's
+/** The runes of the goal being written (decisions §187.3), for the address `address` (`addressNow()`): `base` the one it would be given (the project's `next_element`, "" with no party), `hue` the colour of `shown` (the snapshot’s `next_hues[shown]`), `shown` the one the seal holds and the field checks (the person's
  *  choice, else `base`), `free` the party's free runes (all five when none is free), `used` the elements to show faint in the field (none when all five are used: nothing then tells them apart). */
 export function runesOf(address) {
   const g = address.party ? partiesOf(mapData.value).find((x) => x.slug === address.party) : null;
   const base = g?.next_element || "", shown = fieldRune.value || base;
-  const hue = shown === base ? g?.next_hue || base : shown;                       // the goal's own colour is picked by the host; a rune the person chose stands in its own colour until then
+  const hue = g?.next_hues?.[shown] || (shown === base ? g?.next_hue || base : shown); // select the host’s prediction; older snapshots retain their preview fallback
   const free = g ? ((g.free_elements || []).length ? g.free_elements : ELEMENTS) : [];
   return { base, shown, hue, free, used: g && (g.free_elements || []).length ? ELEMENTS.filter((e) => !g.free_elements.includes(e)) : [] };
 }

@@ -334,3 +334,53 @@ def test_ideas_add_refuses_an_element_that_is_none_of_the_five_and_adds_nothing(
     with pytest.raises(Exception, match="five runes"):
         host.command("ideas.add", {"text": "Fire", "track": p, "element": "fire"})
     assert host.command("ideas.board", {})["ideas"] == before
+
+
+@pytest.mark.parametrize("shape", idea_element.ELEMENTS)
+@pytest.mark.parametrize("filtered", [False, True])
+@pytest.mark.parametrize("legacy_assignment", [False, True])
+def test_map_predicts_every_shapes_host_hue_without_extra_writes(host, monkeypatch, filtered, legacy_assignment, shape):
+    """Predictions use all holders after the Map's existing one-time legacy assignment."""
+    root, state = host.ideas.root(), host.ideas.state_dir
+    p, q = party(host), party(host, "Other party")
+    # Cross-party, unseen done and dropped goals hold; seen done goals do not.
+    rows = [
+        (p, "Open", "working", "meadow", "meadow", ""),
+        (q, "Unseen", "done", "meadow", "ice", ""),
+        (q, "Seen", "done", "meadow", "dust", SEEN),
+        (q, "Dropped", "dropped", "ice", "meadow", ""),
+        (q, "Old shape", "working", "ice", "", ""),
+    ]
+    for track, title, status, shape, hue, seen in rows:
+        slug = raw(host, track, title, status)
+        ideas.save_state(state, slug, element=shape, hue=hue, seen_at=seen)
+    old = raw(host, p, "Needs a rune", "working") if legacy_assignment else None
+    writes = []
+    real_save = ideas.save_state
+
+    def save(where, slug, **changes):
+        writes.append((slug, changes))
+        return real_save(where, slug, **changes)
+
+    monkeypatch.setattr(ideas, "save_state", save)
+    args = {"goal": p} if filtered else {}
+    rev = host.snapshot()["ideas_rev"]
+    snapshot = host.command("ideas.map", args)
+    assert writes == ([(old, {"element": "dust", "hue": "meadow"})] if old else [])
+    expected = {"meadow": "dust", "ice": "dust", "dust": "ice" if old else "meadow",
+                "void": "meadow", "lava": "meadow"}
+    assert snapshot["goals"]
+    for g in snapshot["goals"]:
+        assert list(g["next_hues"]) == list(idea_element.ELEMENTS)
+        assert g["next_hues"] == expected
+        assert g["next_hues"][g["next_element"]] == g["next_hue"]
+        assert g["free_elements"] == (["void", "lava"] if old else ["dust", "void", "lava"])
+    writes.clear()
+    before = {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in state.rglob("state.json")}
+    assert host.command("ideas.map", args)["goals"] == snapshot["goals"]
+    assert writes == []
+    assert {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before} == before
+    assert host.snapshot()["ideas_rev"] == rev
+    # Each parametrized case submits one shape against exactly the state read above.
+    allocated = host.command("ideas.add", {"text": "Prediction probe", "track": p, "element": shape, "hold": True})
+    assert (allocated["element"], allocated["hue"]) == (shape, expected[shape])

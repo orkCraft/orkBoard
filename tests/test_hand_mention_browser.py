@@ -7,7 +7,7 @@ import copy
 
 import pytest
 
-pytest.importorskip("playwright.sync_api")
+expect = pytest.importorskip("playwright.sync_api").expect
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
@@ -103,7 +103,7 @@ def test_arrows_move_tab_takes_and_esc_closes_the_list_only(gui):
         assert pg.locator(".hand-mention").count() == 0 and pg.locator(".hand-field").count() == 1, "Esc closed the list, not the field"
         area.type("D")
         assert pg.locator(".hand-mention").count() == 0, "the list stays closed for this @"
-        area.press("Control+a")
+        area.press("ControlOrMeta+a")
         area.type("a @De")
         pg.locator(".hand-mention").wait_for(timeout=WAIT_MS)
         area.press("Tab")
@@ -124,7 +124,7 @@ def test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written(gui):
         area.type("write to me@exa")
         pg.wait_for_timeout(200)
         assert pg.locator(".hand-mention").count() == 0
-        area.press("Control+a")
+        area.press("ControlOrMeta+a")
         area.type("Look at @app")
         pg.locator(".hand-mention__row[data-kind='file']").wait_for(timeout=WAIT_MS)
         _rows_are(pg, ["src/app.py"])
@@ -216,6 +216,7 @@ def _open_report(pg):
     pg.get_by_role("menuitem", name="Report a problem…").click()
     panel = pg.locator(".table-logs__panel")
     panel.wait_for(timeout=WAIT_MS)
+    expect(panel.locator("input")).to_be_focused(timeout=WAIT_MS)
     return panel
 
 
@@ -226,7 +227,7 @@ def test_the_bug_is_no_button_of_the_top_row_its_panel_opens_from_the_orkmasters
         pg.get_by_role("button", name="The Orkmaster's menu").wait_for(timeout=WAIT_MS)
         assert pg.locator(".table-tabs .table-logs, .hand .table-logs, .hand-end .table-logs").count() == 0, "not in the top row, not in the hand (decisions §190.6, §246.6)"
         panel = _open_report(pg)
-        assert panel.get_attribute("aria-label") == "Report a problem" and "What went wrong? (optional)" in panel.inner_text() and panel.locator("input").evaluate("e => e === document.activeElement")
+        assert panel.get_attribute("aria-label") == "Report a problem" and "What went wrong? (optional)" in panel.inner_text()
         p, size = panel.bounding_box(), pg.viewport_size
         assert p["x"] >= 0 and p["x"] + p["width"] <= size["width"] + 1 and p["y"] + p["height"] <= size["height"], "inside the window"
         pg.keyboard.press("Escape")
