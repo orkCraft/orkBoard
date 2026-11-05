@@ -12,10 +12,11 @@ tier it runs at, realm/roles.py `head`; decisions §53), and each role the tool 
 from __future__ import annotations
 
 import datetime as dt
+from pathlib import Path
 
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import board_map, event_log, goal_team, harnesses, idea_spend, idea_target, ideas, library, party_work, roles
+from orkboard.realm import board_map, event_log, goal_team, harnesses, idea_spend, idea_target, ideas, library, limit_usage, party_work, roles
 from orkboard.realm.idea_words import short_of
 
 
@@ -194,7 +195,11 @@ class RolesMixin:
         if idea := _opt(args, "idea"):
             if ideas.idea_page(self.root(), idea) is None and not (self.state_dir / "ideas" / idea).is_dir():
                 raise IdeasError("That goal is gone")
-            return idea_spend.of_idea(self.state_dir, idea)
+            got = idea_spend.of_idea(self.state_dir, idea)
+            rows = idea_spend.read(self.state_dir / "ideas" / idea / idea_spend.FILE)
+            if share := limit_usage.goal_share(limit_usage.events_of(Path(self.host.repo_root)), rows):      # spec 149 H.2: with no price, the tokens and the share of the tool's window the reads show
+                share["name"] = harnesses.title(share["tool"]).split()[0]
+            return {**got, "share": share}
         goal = _text(args, "goal", 100)
         if ideas.track_page(self.root(), goal) is None:
             raise IdeasError("That party is gone")

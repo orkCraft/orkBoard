@@ -86,3 +86,32 @@ def test_drive_spend_reads_the_project_it_is_in_with_no_server(tmp_path, capsys,
     assert json.loads(capsys.readouterr().out)["total"]["calls"] == 1
     assert drive.main(["spend"]) == 0
     assert "a big cache written and none read: 1 calls" in capsys.readouterr().out
+
+
+# -- spec 149 H.4: work done twice, sent back --------------------------------------------------------------------------------------------------
+
+def _work(at, task, session, cost, tokens=100_000, idea="rune"):
+    return {"at": at, "tool": "codex", "model": "gpt-sol", "code": 0, "cost": cost, "tokens": tokens, "seconds": 100, "mode": "work", "idea": idea,
+            "task": task, "step": "task", "session": session, "usage": {"input_tokens": tokens, "output_tokens": 10}}
+
+
+def test_work_done_twice_and_work_sent_back_are_named_apart(tmp_path):
+    _log(tmp_path, "2026-11-05", "board", [
+        _work("2026-11-05T10:00:00", "k2", "s1", 0.5), _work("2026-11-05T10:05:00", "k2", "s1", 0.4),               # k2: sent back once, in the session it had
+        _work("2026-11-05T10:07:00", "k3", "s2", 0.3, 428_000), _work("2026-11-05T10:45:00", "k3", "s3", 0.2, 326_000),      # k3: the branch reset, the work made again in a new session
+        _work("2026-11-05T11:00:00", "k4", "s4", 0.1),                                                                # k4: once, nothing to say
+        dict(_work("2026-11-05T11:10:00", "", "s5", 0.1), task=None)])
+    w = spend_report.report(spend_report.lines_of(tmp_path))["waste"]
+    assert w["sent_back"] == [{"goal": "rune", "task": "k2", "calls": 1, "tokens": 100_000, "cost": 0.4}]
+    assert w["done_twice"] == [{"goal": "rune", "task": "k3", "runs": 2, "calls": 1, "tokens": 428_000, "cost": 0.3}]
+    text = spend_report.text(spend_report.report(spend_report.lines_of(tmp_path)))
+    assert "work done twice: rune · task k3, 2 runs, the first 1 calls (428,000 tokens, $0.30) thrown away" in text
+    assert "sent back: rune · task k2, 1 calls after a red gate (100,000 tokens, $0.40)" in text
+    assert "no step asked again" not in text
+
+
+def test_nothing_done_twice_nor_sent_back_says_no_step_asked_again(tmp_path):
+    _log(tmp_path, "2026-11-05", "board", [_work("2026-11-05T10:00:00", "k1", "s1", 0.5), _work("2026-11-05T10:30:00", "k2", "s2", 0.5)])
+    r = spend_report.report(spend_report.lines_of(tmp_path))
+    assert r["waste"]["done_twice"] == [] and r["waste"]["sent_back"] == []
+    assert "no step asked again" in spend_report.text(r)

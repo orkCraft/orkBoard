@@ -50,10 +50,27 @@ export function Task({ d, log = false }) {
 
 const STAGE_WORDS = [["goal", "party"], ["spec", "spec"], ["plan", "plan"], ["work", "work"], ["rework", "rework"], ["dropped", "dropped"]];
 
-/** The idea's money so far, by stage (spec 36 §5): stages at 0 left out, — when nothing is priced. */
+/** Tokens in a few words: *3.1 million tokens*, *412 thousand tokens*, *900 tokens*. */
+export function tokenWords(n) {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)} million tokens`;
+  if (n >= 1e3) return `${Math.round(n / 1e3)} thousand tokens`;
+  return `${n} token${n === 1 ? "" : "s"}`;
+}
+
+/** The share of a tool's window the goal took (`s.share`: `{name, window, share}`, the limits read at its first call and now): *about 2% of Codex's week*; "" when the host read it twice for none. */
+export function shareWords(share) {
+  if (!share || !Number.isFinite(Number(share.share))) return "";
+  const n = Number(share.share), w = String(share.window || ""), window = w.endsWith("week") ? "week" : w.endsWith("5h") ? "five-hour window" : "";
+  return window ? `${n < 1 ? "under 1%" : `about ${Math.round(n)}%`} of ${share.name || share.tool}'s ${window}` : "";
+}
+
+/** The idea's money so far, by stage (spec 36 §5): stages at 0 left out. With no price known (a tool whose prices are not in the table), what is known: the tokens and the share of the tool's window, never a dollar (spec 149 H.2); — when nothing is. */
 export function spendWords(s) {
   if (!s || !s.stages) return "";
-  if (s.usd == null) return "This goal so far: —";
+  if (s.usd == null) {
+    const share = shareWords(s.share);
+    return s.tokens > 0 ? `This goal so far: ${tokenWords(s.tokens)}${share ? ` · ${share}` : ""}` : "This goal so far: —";
+  }
   const parts = STAGE_WORDS.map(([k, w]) => [w, s.stages[k]?.usd]).filter(([, v]) => v).map(([w, v]) => `${w} ${pctShort(v) || v.toFixed(2)}`);
   const total = `≈${pctOf(s.usd) || `$${s.usd < 10 ? s.usd.toFixed(2) : Math.round(s.usd)}`}`;
   return `This goal so far: ${total}${parts.length ? ` — ${parts.join(" · ")}` : ""}`;

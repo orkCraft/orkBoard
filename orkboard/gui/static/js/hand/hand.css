@@ -232,8 +232,8 @@
 .hand-result__head, .hand-stopface__head { display: flex; align-items: center; gap: var(--ork-4); }
 .hand-result__title, .hand-stopface__title { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); overflow-wrap: anywhere; }
 .hand-stopface__titles { flex: 1; min-width: 0; }
-.hand-stopface__choices, .hand-stopface__tasks, .hand-result__made { display: flex; flex-direction: column; gap: var(--ork-2); list-style: none; margin: 0; padding: 0; }
-.hand-stopface__tasks li, .hand-result__made li { display: flex; flex-direction: column; }
+.hand-stopface__choices, .hand-stopface__tasks, .hand-result__made, .hand-result__promised { display: flex; flex-direction: column; gap: var(--ork-2); list-style: none; margin: 0; padding: 0; }
+.hand-stopface__tasks li, .hand-result__made li, .hand-result__promised li { display: flex; flex-direction: column; }
 .hand-stopface__choices .is-picked { color: var(--ork-ink); }
 .hand-result__foot { margin-top: var(--ork-4); }
 

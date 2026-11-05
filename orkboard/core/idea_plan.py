@@ -25,9 +25,10 @@ from pathlib import Path
 
 from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
-from orkboard.realm import (collide, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
+from orkboard.realm import (collide, goal_route, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
                             spec_sections, task_brief, tool_errors)
 from orkboard.realm.idea_words import short_of
+from orkboard.sources import pricing
 
 SUMMED = ("usd_low", "usd_high")
 DONE_KEEP = 12                       # of the steps done, the tasks the next step's plan is told of
@@ -41,13 +42,23 @@ def _task(tid: str, title: str, brief: str, kind: str, tier: str, after: list[st
             "error": "", "note": ""}
 
 
-def estimate(tasks: list[dict], tiers: list[str] | None = None, costs: dict[str, float] | None = None) -> dict:
+def estimate(tasks: list[dict], tiers: list[str] | None = None, costs: dict[str, float] | None = None, priced: bool = True) -> dict:
     """The price range of the tasks, counted on the tiers they will run on (`tiers`, else their planned ones), at
-    `costs` a task per tier (the board's own, `idea_spend.tier_costs`), else `plans.DEFAULT_COST`; ±50 %."""
+    `costs` a task per tier (the board's own, `idea_spend.tier_costs`), else `plans.DEFAULT_COST`; ±50 %. `priced` False (the party's tool has no price
+    known, spec 149 H.3): the tasks are counted and no dollars are said (`usd_low`, `usd_high` None): the table is Claude's, not that tool's."""
+    if not priced:
+        return {"tasks": len(tasks), "usd_low": None, "usd_high": None}
     tiers = tiers if tiers is not None else [t.get("tier", "warrior") for t in tasks]
     costs = costs or plans.DEFAULT_COST
     base = sum(costs.get(tier, plans.DEFAULT_COST.get(tier, plans.DEFAULT_COST["warrior"])) for tier in tiers)
     return {"tasks": len(tasks), "usd_low": round(base * 0.5, 2), "usd_high": round(base * 1.5, 2)}
+
+
+def _sum_usd(a: object, b: object) -> float | None:
+    """Two prices added; None when neither is known (a step on a tool with no price), else what is known."""
+    if a is None and b is None:
+        return None
+    return round(float(a or 0) + float(b or 0), 2)
 
 
 def readiness(data: dict) -> None:
@@ -249,7 +260,7 @@ Answer with one JSON object and nothing else:
             tiers = goal_team.tiers_of(root, track) if track else {}
             runs = [idea_target.tier_of(idea_target.task_pick(t["tier"], target, str((goal_team.seat_role(self.role_of(t), tiers) or {}).get("model") or ""))[0])
                     for t in data["tasks"]]
-            data["estimate"] = estimate(data["tasks"], runs, idea_spend.tier_costs(self.state_dir))   # learned (spec 36 §6)
+            data["estimate"] = estimate(data["tasks"], runs, idea_spend.tier_costs(self.state_dir), pricing.has_price(goal_route.party_tool(root, track)))   # learned (spec 36 §6); dollars only where the party's tool has a price (spec 149 H.3)
             self._stamp(slug, data, track, n, lead)
             if not later and len(legs := self._legs(slug)) > 1:
                 data["route"] = legs                     # the steps this plan was made for: the runner and the clock read them from it, so a route is not read twice
@@ -321,7 +332,7 @@ Answer with one JSON object and nothing else:
             plan["todos"] = [*(plan.get("todos") or []), *more["todos"]]
             plan["missing"] = more.get("missing") or []
             was = plan.get("estimate") if isinstance(plan.get("estimate"), dict) else {}
-            plan["estimate"] = {"tasks": len(plan["tasks"]), **{k: round(float(was.get(k) or 0) + float(more["estimate"].get(k) or 0), 2) for k in SUMMED}}
+            plan["estimate"] = {"tasks": len(plan["tasks"]), **{k: _sum_usd(was.get(k), more["estimate"].get(k)) for k in SUMMED}}
             plan["waits"] = {"step": n, "party": party, "cost": {k: more["estimate"].get(k) for k in SUMMED}}      # held until `_gate_step` has read its risk: the runner starts none of its tasks before
             readiness(plan)
             out.extend(t["id"] for t in more["tasks"])

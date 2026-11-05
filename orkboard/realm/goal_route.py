@@ -10,7 +10,8 @@ that write its spec and do its work, in order, worked out by the Orkmaster by **
     tech_party(root)                                    # the project's Tech party, "" with none
     edit(root, current, wanted)                         # the route after the person's edit (a party off, one added); ValueError for one a route cannot name
     prompt(text, parties) / read_answer(text, parties)  # the one cheaper call, made only when code finds no party (step `route`, no tools, no reads)
-    cost(state_dir, route, short, root=, settings=)      # {calls, usd_low, usd_high}: the calls counted by rule, priced from the tiers their steps run on
+    cost(state_dir, route, short, root=, settings=)      # {calls, usd_low, usd_high}: the calls counted by rule, priced from the tiers their steps run on, each at the tool of its party; no dollars (None) where no price is known
+    party_tool(root, party)                             # the AI tool a party's goals run on: its own, else the Main tool
     context(found, states, settings, limits, now)    # what the rows share: {order: {slug: n}, low: bool}
     rows(root, state_dir, i, st, ctx, settings)         # the Needs you rows of a goal on its route: `route` (routed), `start` (a step added after Talk)
     step_rows(root, i, st, plan)                        # the `start` row of a later step planned and held for the person's Start (decisions §169.3)
@@ -35,6 +36,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from orkboard.realm import goal_team, goal_types, idea_play, idea_route, idea_spend, idea_target, ideas, library, orkmaster, party_recipes, roles
+from orkboard.sources import pricing
 
 CRAFT_ORDER = ("product", "design", "engineering", "data", "marketing")      # the product's craft, the look's, the code's, the running's, the marketing's
 OFFER_SHORT = ("tidy", "balance")                                              # a small goal the short way is offered for (a bug is always short): §118.2
@@ -277,14 +279,28 @@ def _calls(n: int, short: bool, kind: str, reproduces_: bool) -> list[tuple[str,
     return [("talk_round", TALK_ROUNDS, True), ("route", 1, False), ("draft", 1, True), *([("route", 1, False)] if n > 1 else []), ("plan", 1, True)]
 
 
+def party_tool(root: Path | None, party: str) -> str:
+    """The AI tool a party's goals run on (`goal_team.tool_of`: its page's, else the Main tool of the machine, Claude with none known)."""
+    own = goal_team.tool_of(root, party) if root is not None and party else ""
+    if own:
+        return own
+    from orkboard import settings as machine
+    try:
+        return machine.main_tool()
+    except Exception:                                   # a machine file that cannot be read: Claude, as before there was a choice
+        return "claude"
+
+
 def cost(state_dir: Path, route_: list[dict], short: bool, *, root: Path | None = None, settings: dict | None = None,
          kind: str = "", reproduces: bool = False) -> dict:
     """`{calls, usd_low, usd_high}`: the calls counted by rule (`_calls`) and priced from the tier their step runs on under its party's Target
     (`idea_target.pick`, the tier's floor `idea_target.floor`), plus the tasks of each step's plan (`TASKS_PER_STEP` at `idea_spend.tier_costs`); ±50 %.
-    The decision and the join are the Orkmaster's, on the cheaper tier (step `route`). The face says the cost as a share of the week (it has the rate)."""
+    The decision and the join are the Orkmaster's, on the cheaper tier (step `route`). The face says the cost as a share of the week (it has the rate).
+    Each call is priced at the tool of its party (`idea_target.floor(tier, tool)`); a route with a party whose tool has no price known (`pricing.has_price`) says its calls and no dollars:
+    `usd_low` and `usd_high` are None (spec 149 H.3), never Claude's table under another tool's name."""
     slugs = [r["party"] for r in route_] or [""]
     costs = idea_spend.tier_costs(state_dir)
-    calls, base = 0, 0.0
+    calls, base, unpriced = 0, 0.0, False
 
     def target(slug: str) -> str:
         return idea_target.target_for(settings, ideas.track_page(root, slug) if root is not None and slug else None)
@@ -295,14 +311,23 @@ def cost(state_dir: Path, route_: list[dict], short: bool, *, root: Path | None 
             if got is None:
                 continue
             calls += times
-            base += times * idea_target.floor(idea_target.tier_of(got[0]))
+            tool = party_tool(root, slug) if per_party else party_tool(root, "")      # the Orkmaster's own steps run on the Main tool
+            if not pricing.has_price(tool):
+                unpriced = True
+                continue
+            base += times * idea_target.floor(idea_target.tier_of(got[0]), tool)
             if step == "plan":
                 tier = idea_target.tier_of(idea_target.task_pick("warrior", target(slug))[0])
                 base += TASKS_PER_STEP * costs.get(tier, costs.get("warrior", 0.0))
     if root is not None and (weigher := weigher_party(root, slugs if slugs != [""] else [], short)):      # Product weighs the goal as well (spec 120 §2.4): one more Talk round's call
         if (got := idea_target.pick("talk_round", target(weigher))) is not None:
             calls += 1
-            base += idea_target.floor(idea_target.tier_of(got[0]))
+            if pricing.has_price(tool := party_tool(root, weigher)):
+                base += idea_target.floor(idea_target.tier_of(got[0]), tool)
+            else:
+                unpriced = True
+    if unpriced:
+        return {"calls": calls, "usd_low": None, "usd_high": None}
     return {"calls": calls, "usd_low": round(base * SPREAD[0], 2), "usd_high": round(base * SPREAD[1], 2)}
 
 

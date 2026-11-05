@@ -484,6 +484,8 @@ class RouteMixin:
         if room is None or not per:
             return True
         cost = goal_route.cost_of(self.root(False), self.state_dir, st, settings)
+        if cost.get("usd_low") is None or cost.get("usd_high") is None:      # no price known for the party's tool: nothing to read it against (spec 149 H.3)
+            return True
         share = (float(cost["usd_low"]) + float(cost["usd_high"])) / 2 / float(per) / 100
         night = idea_target.in_night(str(settings.get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(wall))
         return share <= room or share > 1 - idea_target.reserve(settings, night)

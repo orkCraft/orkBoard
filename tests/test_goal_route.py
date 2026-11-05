@@ -331,3 +331,42 @@ def test_the_row_says_the_kind_the_host_will_run_not_the_type_chosen(project):
           "route_how": {"kind": "bug", "short": True, "reproduces": False}}
     (row,) = goal_route.rows(root, state, {"slug": "g"}, st)
     assert row["type"] == "bug" and row["short"] is True
+
+
+# -- spec 149 H.3: dollars only where there is a price ---------------------------------------------------------------------------------------
+
+def test_a_party_on_a_tool_with_no_price_says_its_calls_and_no_dollars(project, monkeypatch):
+    from orkboard.sources import pricing
+    root, state, p = project
+    route_ = [goal_route.entry(root, p["tech"])]
+    claude = goal_route.cost(state, route_, False, root=root)
+    assert claude["calls"] > 0 and claude["usd_low"] > 0 and claude["usd_high"] > claude["usd_low"]
+    goal_team.set_tool(root, p["tech"], "codex")
+    monkeypatch.setattr(pricing, "OPENAI_PRICES", {})
+    codex = goal_route.cost(state, route_, False, root=root)
+    assert codex["calls"] == claude["calls"] and codex["usd_low"] is None and codex["usd_high"] is None       # the table is Claude's: it is not said under Codex's name
+    assert goal_route.cost(state, route_, True, root=root, kind="bug", reproduces=True)["usd_low"] is None
+    monkeypatch.setattr(pricing, "OPENAI_PRICES", {"gpt-6-luna": pricing.OpenAIPrice(2, 0.5, 10)})            # a price is known: dollars again
+    assert goal_route.cost(state, route_, False, root=root)["usd_low"] > 0
+    goal_team.set_tool(root, p["tech"], "")
+    assert goal_route.party_tool(root, p["tech"]) in ("claude", "codex", "agy", "hermes", "pi", "cursor")
+
+
+def test_the_route_row_of_a_party_with_no_price_carries_no_dollars(project, monkeypatch):
+    from orkboard.sources import pricing
+    root, state, p = project
+    monkeypatch.setattr(pricing, "OPENAI_PRICES", {})
+    goal_team.set_tool(root, p["tech"], "codex")
+    slug = _routed(project)
+    (i,) = [x for x in ideas.ideas(root) if x["slug"] == slug]
+    st = ideas.state(state, slug)
+    (row,) = goal_route.rows(root, state, i, {**st, "route": [goal_route.entry(root, p["tech"])]}, {"order": {slug: 1}, "low": False})
+    assert row["cost"]["calls"] > 0 and row["cost"]["usd_low"] is None and row["cost"]["usd_high"] is None
+
+
+def test_a_plans_estimate_counts_the_tasks_and_says_no_dollars_for_a_tool_with_no_price():
+    from orkboard.core import idea_plan
+    tasks = [{"tier": "warrior"}, {"tier": "grunt"}]
+    assert idea_plan.estimate(tasks)["usd_low"] > 0
+    assert idea_plan.estimate(tasks, priced=False) == {"tasks": 2, "usd_low": None, "usd_high": None}
+    assert idea_plan._sum_usd(None, None) is None and idea_plan._sum_usd(None, 1.234) == 1.23 and idea_plan._sum_usd(1.0, 0.5) == 1.5

@@ -3,6 +3,7 @@
     limit_usage.split(reads, lines, start=None)      # reads and calls → {"rows", "outside", "tokens_only"}
     limit_usage.window_span("week")                  # a window's length (5h, week), None for one not known
     limit_usage.reads_of(events, provider, window)   # the `limits_read` events of one tool's window → [{"at", "left"}]
+    limit_usage.goal_share(events, rows)             # what a goal's calls took of their tool's window, from the reads at its first call and now → {tool, window, share} or None
     limit_usage.calls_of(root, state_dir, tool)      # the project's `spend.jsonl` lines of a tool → (calls, party titles)
 
 **The reads** are `limits_read` events (`realm/event_log.py`): a tool's tightest window and what was left of it, a fraction
@@ -59,6 +60,30 @@ def reads_of(events: list[dict], provider: str, window: str) -> list[dict]:
         if at is not None and isinstance(left, (int, float)) and not isinstance(left, bool):
             out.append({"at": at, "left": float(left)})
     return sorted(out, key=lambda r: r["at"])
+
+
+def goal_share(events: list[dict], rows: list[dict]) -> dict | None:
+    """What a goal took of a tool's window (spec 149 H.2): the tool its calls (`rows`: its `spend.jsonl` lines) ran on most, and the use its window shows from the last read at its first call to the
+    last read now, the drops of the left added (a rise is a reset, never use). `{tool, window, share}` with `share` in whole-percent units (a float); None when there are not two reads of one window of that tool
+    (none before the first call, or only one) or the tool names no call. A week window is looked at before any other; every share is an estimate."""
+    tokens: dict[str, int] = {}
+    first: dict[str, dt.datetime] = {}
+    for r in rows:
+        tool, at = str(r.get("tool") or ""), when(r.get("at"))
+        if tool and at is not None:
+            tokens[tool] = tokens.get(tool, 0) + idea_spend.token_count(r)
+            first[tool] = min(first.get(tool, at), at)
+    for tool in sorted(tokens, key=lambda t: -tokens[t]):
+        windows = sorted({str(e.get("window") or "") for e in events if e.get("event") == event_log.LIMITS_READ and e.get("provider") == tool} - {""},
+                         key=lambda w: (not w.endswith("week"), w))
+        for window in windows:
+            reads = reads_of(events, tool, window)
+            before = [r for r in reads if r["at"] <= first[tool]]
+            seq = ([before[-1]] if before else []) + [r for r in reads if r["at"] > first[tool]]
+            if before and len(seq) >= 2:
+                used = sum(max(0.0, a["left"] - b["left"]) for a, b in zip(seq, seq[1:]))
+                return {"tool": tool, "window": window, "share": round(used * 100, 1)}
+    return None
 
 
 def _round(parts: list[float], total: int) -> list[int]:

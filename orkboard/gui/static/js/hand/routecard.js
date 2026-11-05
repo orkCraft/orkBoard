@@ -64,7 +64,7 @@ export function orkHead() {
   return { race: ork?.race || "peon", tier: ork?.tier || "crown" };
 }
 
-const priceFrom = (c) => (c && Number.isFinite(Number(c.usd_low)) ? { low: Number(c.usd_low), high: Number(c.usd_high ?? c.usd_low) } : null);
+const priceFrom = (c) => (c && c.usd_low != null && Number.isFinite(Number(c.usd_low)) ? { low: Number(c.usd_low), high: Number(c.usd_high ?? c.usd_low) } : null);
 
 /** A cost as the face says it: `{gem, words}`, *about 6 calls, about 4% of Claude's week*; null for a cost of nothing. The gem and the share come from cost.js. */
 export function costLine(cost) {

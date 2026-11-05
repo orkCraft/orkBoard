@@ -7,7 +7,7 @@ import { act } from "../shell/store.js";
 import { CostLine, orkHead } from "./routecard.js";
 import { way } from "./ways.js";
 
-const priceFrom = (c) => (c && Number.isFinite(Number(c.usd_low)) ? { low: Number(c.usd_low), high: Number(c.usd_high ?? c.usd_low) } : null);
+const priceFrom = (c) => (c && c.usd_low != null && Number.isFinite(Number(c.usd_low)) ? { low: Number(c.usd_low), high: Number(c.usd_high ?? c.usd_low) } : null);
 
 /** The start card lifted: what was added, the new cost, the old one struck, **Start**. */
 export function StartLifted({ s, close }) {

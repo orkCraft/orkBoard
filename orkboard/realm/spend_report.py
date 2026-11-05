@@ -9,7 +9,10 @@ drive spend` prints it (gui/drive.py), and the beta's run reports it (docs/beta/
 **The waste** names what is worth a look, never a verdict: a call that **failed** (its exit code not 0) and what it cost;
 a call that **wrote a big cache and read none** (`CACHE_BIG` tokens or more written: the same prefix paid again, as when
 leaders of one round start at once, spec 120 §5.1); a **heavy read** (`HEAVY_IN` tokens or more in, under `SMALL_OUT`
-out); a step **asked again** (`AGAIN` calls or more of one step for one goal). A tool that names its tokens otherwise
+out); a step **asked again** (`AGAIN` calls or more of one step for one goal); **work done twice** (spec 149 H.4: a task whose
+work calls ran in two sessions, the second starting over, as when its branch is reset: what the first session spent is
+thrown away) and **sent back** (the calls of a task that went on in a session it already had, after a red gate or the
+person's word). A tool that names its tokens otherwise
 has them read by their names (`input`/`prompt`, `cache_read`/`cached`, `cache_creation`); a cost the tool did not give
 is counted apart, never as $0.
 """
@@ -75,6 +78,41 @@ def _add(row: dict, line: dict) -> None:
         row["unpriced"] += 1
 
 
+def again(lines: list[dict]) -> dict:
+    """`{done_twice, sent_back}` from a task's work calls (the lines that name a `task` and are its work: `mode` "work", or the step `task` or `fix`), in the order they were made (spec 149 H.4).
+    A task whose calls run in more than one session was **done twice**: the earlier sessions' calls are what was thrown away (`runs`, `calls`, `tokens`, `cost`). A call that goes on in a session the task
+    already had was **sent back**: it follows a red gate (or the person's word) and resumes the work (`calls`, `tokens`, `cost`). A call that names no session cannot be told apart and counts as sent back."""
+    by: dict[tuple[str, str], list[dict]] = {}
+    for ln in lines:
+        if ln.get("task") and (ln.get("mode") == "work" or ln.get("step") in ("task", "fix")):
+            by.setdefault((str(ln.get("idea") or ""), str(ln["task"])), []).append(ln)
+    twice, back = [], []
+    for (goal, task), calls in sorted(by.items()):
+        sessions: list[str] = []
+        for ln in calls:
+            s = str(ln.get("session") or "")
+            if s and s not in sessions:
+                sessions.append(s)
+        lost = [ln for ln in calls if len(sessions) > 1 and str(ln.get("session") or "") in sessions[:-1]]
+        if lost:
+            twice.append({"goal": goal, "task": task, "runs": len(sessions), "calls": len(lost), "tokens": sum(tokens_of(ln)["total"] for ln in lost),
+                          "cost": round(sum(float(ln.get("cost") or 0) for ln in lost), 6)})
+        seen: set[str] = set()
+        again_: list[dict] = []
+        for ln in calls:
+            s = str(ln.get("session") or "")
+            if seen and (not s or s in seen):
+                again_.append(ln)
+            if s:
+                seen.add(s)
+            elif not seen:
+                seen.add("")
+        if again_:
+            back.append({"goal": goal, "task": task, "calls": len(again_), "tokens": sum(tokens_of(ln)["total"] for ln in again_),
+                         "cost": round(sum(float(ln.get("cost") or 0) for ln in again_), 6)})
+    return {"done_twice": twice, "sent_back": back}
+
+
 def _group(lines: list[dict], key) -> list[dict]:
     rows: dict[tuple, dict] = {}
     for line in lines:
@@ -116,7 +154,7 @@ def report(lines: list[dict], goal: str = "") -> dict:
             "waste": {"failed": {"calls": len(failed), "cost": money(failed)},
                       "cache_rewritten": {"calls": len(rewritten), "tokens": sum(tokens_of(ln)["cache_write"] for ln in rewritten), "cost": money(rewritten)},
                       "heavy_reads": {"calls": len(heavy), "tokens": sum(tokens_of(ln)["total"] for ln in heavy), "cost": money(heavy)},
-                      "asked_again": [{"goal": g, "step": s, "calls": n} for (g, s), n in sorted(counts.items()) if n >= AGAIN]}}
+                      "asked_again": [{"goal": g, "step": s, "calls": n} for (g, s), n in sorted(counts.items()) if n >= AGAIN], **again(lines)}}
 
 
 def _usd(cost: float, unpriced: int, calls: int | None = None) -> str:
@@ -149,5 +187,9 @@ def text(r: dict) -> str:
                f"({_usd(w['cache_rewritten']['cost'], 0)})")
     out.append(f"  heavy reads with a short answer: {w['heavy_reads']['calls']} calls, {w['heavy_reads']['tokens']:,} tokens "
                f"({_usd(w['heavy_reads']['cost'], 0)})")
-    out += [f"  asked again: {a['goal']} · {a['step']}, {a['calls']} calls" for a in w["asked_again"]] or ["  no step asked again"]
+    out += [f"  asked again: {a['goal']} · {a['step']}, {a['calls']} calls" for a in w["asked_again"]]
+    out += [f"  work done twice: {a['goal'] or '-'} · task {a['task']}, {a['runs']} runs, the first {a['calls']} calls ({a['tokens']:,} tokens, {_usd(a['cost'], 0)}) thrown away" for a in w["done_twice"]]
+    out += [f"  sent back: {a['goal'] or '-'} · task {a['task']}, {a['calls']} calls after a red gate ({a['tokens']:,} tokens, {_usd(a['cost'], 0)})" for a in w["sent_back"]]
+    if not (w["asked_again"] or w["done_twice"] or w["sent_back"]):
+        out.append("  no step asked again")
     return "\n".join(out)

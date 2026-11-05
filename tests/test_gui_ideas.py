@@ -622,7 +622,7 @@ def test_ideas_spend_gives_an_ideas_and_a_goals_money_and_the_phone_may_call_it(
     idea_spend.append(state, idea_spend.line("draft", "taskmaster", "claude", "opus", "elder", "medium", None, 0.5), idea=slug)
     idea_spend.append(state, idea_spend.line("goal", "taskmaster", "claude", "opus", "elder", "medium", None, 0.25), goal=goal)
     got = host.command("ideas.spend", {"idea": slug})
-    assert got["usd"] == 0.5 and got["stages"]["spec"]["usd"] == 0.5 and set(got) == {"usd", "unpriced", "stages", "tasks"}
+    assert got["usd"] == 0.5 and got["stages"]["spec"]["usd"] == 0.5 and set(got) == {"usd", "unpriced", "tokens", "share", "stages", "tasks"}
     g = host.command("ideas.spend", {"goal": goal})
     assert g["usd"] == 0.75 and g["stages"]["goal"]["usd"] == 0.25 and g["merged"] == 0 and g["usd_per_merged"] is None
     for bad in ({"idea": "ghost"}, {"goal": "ghost"}, {}):

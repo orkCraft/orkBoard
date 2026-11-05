@@ -204,7 +204,7 @@ def _stages(rows: list[dict], failed: Callable[[dict], bool]) -> dict[str, dict]
 
 
 def of_idea(state_dir: Path, slug: str) -> dict:
-    """{"usd", "unpriced", "stages": {stage: {"usd", "tokens", "calls"}}, "tasks": {tid: {"usd", "work", "rework"}}}:
+    """{"usd", "unpriced", "tokens", "stages": {stage: {"usd", "tokens", "calls"}}, "tasks": {tid: {"usd", "work", "rework"}}}: `tokens`, all the goal's calls (spec 149 H.2);
     a task that ended `failed` or `dropped` counts in *dropped*, not in work or rework."""
     rows = read(Path(state_dir) / "ideas" / slug / FILE) if _SLUG.fullmatch(slug or "") else []
     tasks = _tasks(_plan(state_dir, slug))
@@ -217,7 +217,7 @@ def of_idea(state_dir: Path, slug: str) -> dict:
     for tid, rs in per.items():
         work, rework = _split(rs)
         split[tid] = {"usd": usd(rs), "work": usd(work), "rework": usd(rework)}
-    return {"usd": usd(rows), "unpriced": sum(1 for r in rows if _num(r.get("cost")) is None),
+    return {"usd": usd(rows), "unpriced": sum(1 for r in rows if _num(r.get("cost")) is None), "tokens": _tokens(rows),
             "stages": _stages(rows, lambda r: str(r.get("task") or "") in failed), "tasks": split}
 
 

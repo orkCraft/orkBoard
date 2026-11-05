@@ -50,18 +50,35 @@ function TaskResult({ idea, task }) {
   </div>`;
 }
 
-/** A goal's Result: what it made, task by task, and what it cost. */
+/** The goal's *Done when* lines, every party's, as its section wrote them (`ideas.goal_result`: read by code, no model), and what each merged task changed with its gate. */
+function useGoalRead(idea) {
+  const [got, set] = useState(null);
+  useEffect(() => {
+    let live = true;
+    ask("ideas.goal_result", { idea }).then((r) => { if (live) set(r && !r.error ? r : null); }).catch(() => {});
+    return () => { live = false; };
+  }, [idea]);
+  return got;
+}
+
+/** *3 files, +40 −2 · 97 passed*: what a task changed and its gate, in plain words (spec 149 H.1). */
+const madeWords = (m) => [m && Number.isFinite(m.files) ? changesWords({ files: m.files, added: m.added || 0, removed: m.removed || 0 }) : "", m?.gate || ""].filter(Boolean).join(" · ");
+
+/** A goal's Result: what it promised (its *Done when* lines), over what it made, task by task with its files and gate, and what it cost. The person reads the two side by side; nothing matches them. */
 function GoalResult({ idea }) {
-  const { spend } = useRead(idea, ""), n = nodeOf(idea), party = partyBy()[n?.goal];
+  const { spend } = useRead(idea, ""), view = useGoalRead(idea), n = nodeOf(idea), party = partyBy()[n?.goal];
   if (!n) return html`<p class="ok-tone-muted">This goal is gone.</p>`;
-  const made = (n.tasks || []).filter((t) => t.state === "merged");
+  const made = (n.tasks || []).filter((t) => t.state === "merged"), byTask = new Map((view?.made || []).map((m) => [m.task, m]));
+  const promised = (view?.parties || []).flatMap((p) => (p.done_when || []).map((d) => d.text)).filter(Boolean);
   return html`<div class="hand-result" data-idea=${idea}>
     <header class="hand-result__head"><${Elem} name=${n.element || ""} hue=${n.hue || ""} dim=${!n.element} /><h2 class="hand-result__title">${n.title}</h2></header>
     <p class="cap">${party ? `${party.name} · ` : ""}Done${n.updated ? ` · ${String(n.updated).slice(0, 10)}` : ""}</p>
-    ${spend && html`<p class="cap" title="At API prices, not your bill">${spendWords(spend)}</p>`}
+    ${spend && html`<p class="cap" title=${spend.usd == null ? "Tokens as the tool counted them" : "At API prices, not your bill"}>${spendWords(spend)}</p>`}
+    ${promised.length > 0 && html`<h3 class="board-sub">Done when</h3><ul class="hand-result__promised">${promised.map((text, k) => html`<li key=${k} class="body">${text}</li>`)}</ul>`}
     <h3 class="board-sub">What it made</h3>
     ${made.length ? html`<ul class="hand-result__made">${made.map((t) => html`<li key=${t.id}><span class="body">${t.made || t.title}</span>
-        <span class="cap">${t.by?.name || ""}${pctShort(t.cost) ? ` · ${pctShort(t.cost)}` : ""}</span></li>`)}</ul>`
+        <span class="cap">${t.by?.name || ""}${pctShort(t.cost) ? ` · ${pctShort(t.cost)}` : ""}</span>
+        ${madeWords(byTask.get(t.id)) && html`<span class="cap hand-result__gate">${madeWords(byTask.get(t.id))}</span>`}</li>`)}</ul>`
       : html`<p class="ok-tone-muted">Its tasks left no commit to list.</p>`}
   </div>`;
 }

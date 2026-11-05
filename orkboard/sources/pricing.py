@@ -201,6 +201,15 @@ def _openai_family(model: str) -> tuple[str, tuple[int, ...] | None] | None:
     return fam, tuple(int(p) for p in m.group("v").split("."))
 
 
+def has_price(tool: str | None) -> bool:
+    """A price is known for a tool's runs (spec 149 H.3): Claude's table, OpenAI's for Codex (empty until read first-hand); every other tool: none. A tool with none has no dollars shown, never $0."""
+    if tool == "claude":
+        return bool(PRICES)
+    if tool == "codex":
+        return bool(OPENAI_PRICES)
+    return False
+
+
 def openai_price_for(model: str | None) -> OpenAIPrice | None:
     if not model:
         return None

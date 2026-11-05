@@ -3,6 +3,7 @@ work of and the tasks they wait for (the Orkmaster's tab draws the plan with its
 each part As promised, Not quite, Not done, or More than promised, and the *Done when* lines met."""
 from __future__ import annotations
 
+import datetime as dt
 import json
 import sys
 
@@ -10,7 +11,7 @@ import pytest
 
 from orkboard.core import idea_keeper
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import goal_result, goal_team, ideas, library, spec_sections
+from orkboard.realm import goal_result, goal_team, idea_spend, ideas, library, spec_sections
 
 
 @pytest.fixture
@@ -152,3 +153,38 @@ def test_a_goal_not_done_reads_no_commits_and_a_gone_goal_is_refused(host, tech,
     assert got["state"] == "working" and [(p["id"], p["verdict"]) for p in got["parties"][0]["parts"]] == [("src/score", "missing")]
     with pytest.raises(CommandError, match="That goal is gone"):
         host.command("ideas.goal_result", {"idea": "nope"})
+
+
+# -- spec 149 H.1: what a goal made, beside what it promised -----------------------------------------------------------------------------------
+
+def test_a_gate_is_said_in_plain_words_and_a_goal_lists_what_each_merged_task_changed():
+    from orkboard.gui.ideas_goalview import gate_words, made_of
+    assert gate_words({"passed": 97, "failed": 0}) == "97 passed" and gate_words({"passed": 3, "failed": 2}) == "2 / 5 failed"
+    assert gate_words({"none": True}) == "no tests in this project" and gate_words({"env": "x"}) == "could not run" and gate_words({"passed": 0, "failed": 0}) == "no tests ran"
+    assert gate_words({"exit": 0}) == "passed (exit 0)" and gate_words({"exit": 2}) == "failed (exit 2)" and gate_words(None) == ""
+    plan = {"tasks": [{"id": "k1", "title": "Host predictions", "state": "merged", "diff": {"files": 3, "added": 40, "removed": 2}, "tests": {"passed": 97, "failed": 0}},
+                      {"id": "k2", "title": "A check", "state": "merged", "diff": {"files": 0, "added": 0, "removed": 0}, "tests": {"passed": 97, "failed": 0}},
+                      {"id": "k3", "title": "Not yet", "state": "review", "diff": {"files": 1}}, {"id": "k4", "title": "No diff kept", "state": "merged"}]}
+    assert made_of(plan) == [{"task": "k1", "title": "Host predictions", "files": 3, "added": 40, "removed": 2, "gate": "97 passed"},
+                             {"task": "k2", "title": "A check", "files": 0, "added": 0, "removed": 0, "gate": "97 passed"},
+                             {"task": "k4", "title": "No diff kept", "gate": ""}]
+
+
+def test_goal_result_carries_what_was_made(host, tech):
+    slug = _goal(host, tech, {tech: {"Why": "x", "Done when": "- The room code is four letters"}}, [("t1", "merged", [], tech)])
+    got = host.command("ideas.goal_result", {"idea": slug})
+    assert [m["task"] for m in got["made"]] == ["t1"] and [d["text"] for p in got["parties"] for d in p["done_when"]] == ["The room code is four letters"]
+
+
+def test_spend_gives_the_tokens_of_a_goal_and_the_share_the_reads_show(host, tech):
+    from orkboard.realm import event_log as ev
+    slug = _goal(host, tech, {tech: {"Why": "x", "Done when": "- one"}}, [("t1", "merged", [], tech)])
+    state = host.ideas.state_dir
+    now = dt.datetime.now().astimezone()
+    idea_spend.append(state, idea_spend.line("task", "grunt", "codex", "gpt-sol", "warrior", "", idea_spend.tokens_of(None, 3_000_000), None, "t1", 1,
+                                             (now - dt.timedelta(hours=1)).isoformat(timespec="seconds")), idea=slug)
+    for hours, left in ((-2, 0.90), (0, 0.88)):
+        ev.record(host.ideas.host.repo_root, ev.LIMITS_READ, at=now + dt.timedelta(hours=hours), provider="codex", left=left, window="week")
+    got = host.command("ideas.spend", {"idea": slug})
+    assert got["usd"] is None and got["tokens"] == 3_000_000
+    assert got["share"]["tool"] == "codex" and got["share"]["name"] == "Codex" and got["share"]["window"] == "week" and got["share"]["share"] == 2.0

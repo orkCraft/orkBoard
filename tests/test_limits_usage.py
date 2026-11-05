@@ -208,3 +208,30 @@ def test_all_projects_read_every_project_open_here(world, tmp_path):
     got = h.command("ideas.usage", {"provider": "claude", "scope": "all"})
     assert got["scope"] == "all" and [r["title"] for r in got["rows"]] == [f"Alpha · {h.ideas.host.repo_root.name}"]
     json.dumps(got)                                                                   # plain data all through
+
+
+# -- spec 149 H.2: what a goal took of a tool's window, from the reads at its first call and now -------------------------------------------------
+
+def _event(hours: float, left: float, provider: str = "codex", window: str = "week") -> dict:
+    return {"event": event_log.LIMITS_READ, "at": at(hours).isoformat(), "provider": provider, "left": left, "window": window}
+
+
+def _row(hours: float, tool: str = "codex", tokens: int = 1000) -> dict:
+    return {"at": at(hours).isoformat(), "tool": tool, "tokens": {"total": tokens}}
+
+
+def test_a_goal_took_what_the_reads_from_its_first_call_to_now_show():
+    events = [_event(-1, 0.90), _event(2, 0.89), _event(5, 0.88)]
+    got = limit_usage.goal_share(events, [_row(0.5), _row(3), _row(4)])
+    assert got == {"tool": "codex", "window": "week", "share": 2.0}                       # 0.90 at its first call (the read before it) to 0.88 now
+    assert limit_usage.goal_share(events[1:], [_row(0.5)]) is None                          # no read before its first call: nothing to say
+    assert limit_usage.goal_share(events[:1], [_row(0.5)]) is None                          # read once: left out
+    assert limit_usage.goal_share(events, [_row(0.5, tool="claude")]) is None               # the reads are another tool's
+    assert limit_usage.goal_share(events, []) is None
+
+
+def test_a_reset_between_the_reads_is_never_use_and_a_week_is_looked_at_before_a_five_hour_window():
+    events = [_event(-1, 0.50), _event(2, 0.45), _event(3, 1.0), _event(5, 0.97)]           # 5 % used, a reset, 3 % used
+    assert limit_usage.goal_share(events, [_row(0)])["share"] == 8.0
+    both = [*events, _event(-1, 0.9, window="5h"), _event(5, 0.2, window="5h")]
+    assert limit_usage.goal_share(both, [_row(0)])["window"] == "week"
