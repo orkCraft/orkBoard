@@ -6393,7 +6393,7 @@ The owner's call.
 
 ## 251. One card, 5 : 7, read by its four corners: a card stands while it plays and lies face down while it waits; the Orkmaster's column never scrolls and gives way to the window; the hand's card is cut under its title; a goal's start turns its card up and the Orkmaster deals it to its leaders (5 November 2026, the owner)
 
-Changes: 206.3, 206.11, 236.1, 236.3, 249.1, 249.2, 249.4, 70.1; spec 128 B.1, B.3, spec 142 A, B.
+Changes: 206.3, 206.11, 236.1, 236.3, 241, 249.1, 249.2, 249.4, 70.1; spec 128 B.1, B.3, spec 142 A, B.
 
 Why: the owner, looking at the window: the cards came in many sizes (§249 cut each to its words) and should keep one
 shape, and every card should say the same thing in the same place, the new goal's card too. The talk ran through
@@ -6456,6 +6456,11 @@ it. So:
    motion that travels, six steps at most, none under reduced motion, a hidden page or into a lane under the pointer;
    several starts at once deal the first and lay the rest. What lands in a lane is the goal's strip as today (§167), the
    dealt card folding into it.
+7a. **What the front card of *To review* carried moves** (this changes §241): a back has no room for the heads in its
+   ring's middle, *Start now*, the ring filled as the spec is written, *Held* or *Asked Tech*. *Start now* and *Change…*
+   stay on the pile's list; a goal held has a pause sign on its back and says so in its name; *Asked <leader>* is the
+   pile's line for the first goal asked; the ring is the wait. The lines under the piles' titles are one line, whole on
+   hover, so *At work* keeps its rune row in a 1366 × 768 window.
 8. **A goal that asks you is dealt from the deck to your hand**: its back lifts, turns up and stands, and lies in the hand
    under the lane of the leader who asks.
 9. **Unchanged**: the lanes' windows onto the work (§249.3) between their corners; §236's tuck under the window's edge
