@@ -6826,3 +6826,97 @@ was asked. So:
     public repository and a goal kept off it; **H.** Orkboard's own repository on its Board (17); **G.** the trial, on it, last.
     The MCP server is not this spec.
 The owner's call.
+
+## 256. A leader holds its slice and never does the work: a party is its leader and at least one who does; the leader accepts its step against its section, once a step, a base early; its slice one file it keeps; asked once where once is enough; code before agents; a craft's own way of work (6 November 2026, the owner)
+
+Changes: 151.2, 151.6, 157, 253.13; spec 81 §2, spec 99 §1.3, spec 143 A.2. (151.2: the sizes, who checks, *with no checker in
+the squad, the leader checks*; 151.6 and 157: Release's squad is its leader; 253.13, answered: a goal at Lean plans no check, its
+leader accepts it; spec 81 §2: Lean is one agent, the leader; spec 99 §1.3: the sizes; spec 143 A.2: a Lean leader told it does
+the task.)
+
+Why: the owner, as a product manager and an AI architect: *is a leader called three times: at the goal, to judge it; at the spec,
+to write its part; and to work the task by its own way? So a leader is a slice of the project (marketing, design and so on) and a
+way of working its own tasks?* Read in the code: the spine is so (Talk, its section, its step's plan), with more around it (a sketch
+before the spec, the findings and the fold after, and a slice's own calls: concerns, the journal's digest, a quick question, a
+question passed on, a change asked), each call a fresh one (spec 35 §0) given the leader's map, facts, journal, slices and living
+specs, so the continuity is in those files, not in the leader; its stance in Talk is not read into its section. The work's way is
+not the craft's: plan, do and check by the size for every craft, the craft giving only the seats, the tool, the checks' tags and a
+sketch's kind. And the sizes do not do what §151.2 says: at Lean `tiers_for` makes every seat Seasoned, the leader too, and
+`plan_one` gives every task to the leader (`lean_role`); the check tasks are still planned from the squad's checkers
+(`with_check_tasks` reads no size) and given to the leader too, so the leader checks its own work: §253.13's review at Lean,
+556,105 tokens to say *no blockers*. At Standard every checker that applies checks, as at Full; with no checker in the squad no
+check is planned at all, though the party's map says the leader checks. `goal_team.WAY` and `checkers` are read only by the faces.
+Then the owner's six points: 1. *a leader always holds its whole slice: its understanding of the project, its stance and its
+doubts*; 2. *we do not run the leaders one after another where their answers can be reused or the asks to one batched*; 3. *a
+leader always checks its team's work, and so keeps what it knows of its slice up to date*; 4. *leaders get tools: deterministic
+ones, made beforehand or written during the work, and a leader's new job is to find where cheap code can stand in for agents; at
+best a leader works a task by calling the tools and checking them*; 5. *a leader never steps down a level and never does the work
+itself: it holds its slice; the smallest party is a leader and one who does*; 6. *a leader means its slice's tasks may have a way
+of work of their own, not only implement and check*. Asked whether accepting once a step costs more than once a task: less, since
+the slice's part of the call (its role, its section, its map) is paid once a step and not once a task (about 11 thousand tokens in
+against 26 thousand for a step of four tasks: a reckoning, not a measure; the prompt's cache narrows it only when the tasks end
+within its minutes); what once a step costs is time, a fault in a task the others build on found late, so such a base is accepted
+early. On the three choices, as recommended: once a step, the checkers kept as specialists over it, the tools in the project's
+repository. And with §255 and spec 151 being built, nothing here may conflict with them. So:
+1. **A leader holds its slice and never does the work.** It plans its step, accepts it (3) and keeps its slice (4); it is never a
+   task's doer nor a task's checker, at any size. **Its seat's tier is its own at every size**: Veteran, Release's Seasoned (§151.6),
+   or the model the person set on it; a size no longer lowers it. What each of its calls runs on stays that call's own under the
+   Target (`idea_target`), as at every size today; acceptance (3) runs Veteran at every Target. Its words say so: a leader's
+   instruction never has it make a thing (*Draw and record nothing yourself unless the party is lean* loses its *unless*).
+2. **A party is its leader and at least one who does.** A party with no one who does is not made nor saved (*A party needs one who
+   does besides its leader*); a party made before with none keeps its seats (§109.1's way), its tasks going to the project's role
+   of their tag, else Grunt, as a tag no seat takes goes today. The size is how the work goes:
+
+   | size | a task's way | at once | who checks |
+   |---|---|---|---|
+   | **Lean** | plan → do → accept | 1 | no checker: the leader's acceptance is the check |
+   | **Standard** | plan → do → check → accept | 2 | the first checker of the squad the task concerns |
+   | **Full** | plan → do → check → accept | 3 | every checker of the squad the task concerns |
+
+   With no checker in the squad, no checker checks and the leader's acceptance is the check (*the leader checks* of §151.2 is this
+   now, at every size). The doers' tiers by size stay as §151.2 and spec 81 have them; the cost is still said on the size.
+   **Release** gets its seats (§157: *until seats are added*; §154.2 named them): the release's engineer and its notes, Novice
+   each; its leader plans and accepts; Lean and locked as before.
+3. **The leader accepts its step**, once a step, against its own section: its *Done when* and *Will be*, never the code's lines
+   (the gate holds the tests, and a checker, where there is one, the specialist's view). It is given its section whole, what code
+   read of the promise (§253.9's *Done when* over what each task made, `goal_result`'s *Will be* lines), each task's files, gate
+   record and pictures, a checker's findings left, and what it said of the goal in Talk; it may open a few of the files and
+   pictures. It answers each *Done when* met or not, and accepts or sends back at most four things, each one more task of the
+   step. **Twice at most**: what is still left after the second becomes the goal's findings (spec 132), the step goes on, and the
+   person decides on the quality card as for any finding; a call that fails says so as a finding; nothing waits or is skipped
+   in silence. The next step is planned, and the goal is done, only after its step is accepted. **A base is accepted early**: a
+   task two or more tasks of its step wait for is accepted alone as soon as it lands, and they wait for it. What the leader learned
+   goes into its journal (`accepted`, `sent_back`, a line or two learned), which §255.4 puts in the code; so acceptance is how
+   the slice is kept up to date (4).
+4. **A leader's slice is one file it keeps** (the owner's 1), its **dossier**: its understanding of the project, its stance and
+   doubts on each open goal, what its last acceptances taught it; bounded as a digest is (§203), written only by its leader at
+   known moments (after Talk, after an acceptance), read into each of its calls, so its Talk, its section, its plan and its
+   acceptance are one leader's. It is a file of **the Board in the code** (§255.2, beside the journals of §255.4), so a tool that
+   plays the leader in a pass of its own (§255.7) reads it as its role file. Never a kept session (spec 35 §0 stands: a session
+   does not cross AI tools, grows dearer with every call and cannot be read). Until it is built, an acceptance writes to the
+   leader's journal and its stance in Talk is read into its acceptance.
+5. **A leader is asked once where once is enough** (the owner's 2): first what was said is reused (the first step's section and
+   plan in one call; its stance, through the dossier, in its section), then the prompt's cache (its role, dossier and map the
+   stable head of every call of it), and a batch last, only for small judgments of one kind (the verdicts of the goals in line, the
+   findings of a step's tasks): several goals in one call mix them, and one failure holds the rest.
+6. **Code before agents** (the owner's 4). A leader's tools are deterministic code that does a part of its craft's work (a
+   version raised, notes gathered, an asset exported, a report counted); its new job is to find, in its steps and acceptances,
+   the work that comes back alike and to propose a tool for it. A tool is made as any task (by one who does, through the gate and
+   Review), lives in the project's repository with the Board (§255: any AI tool runs it too), has its test and a count of its
+   use, and one unused for long is proposed for removal. At best a step is tools run and the leader accepting them. The Board's
+   own rule already is this (the route by code first, a model only where code finds nothing: spec 99 §4.1; the map read by code).
+7. **A craft's own way of work** (the owner's 6): a way is a recipe of steps of a few kinds, given as data and run by one engine:
+   *tool*, *do*, *pick*, *look*, *ask the person*, *wait and measure*, *accept*. Plan → do → check → accept is one recipe; a pick,
+   a sketch, a bug's diagnosis, an operation (prepare, check, act, learn) and a recurring goal are read as recipes; Marketing's
+   (a hypothesis, variants, the person publishes, a wait, a measure, what was learned) and Release's (a freeze, the notes and the
+   build by tools, the person submits, a watch) become ones. Each kind of step is one card of the hand at most, so a new recipe
+   needs no new face (§104.0, §145).
+8. **With §255**: the dossier, the tools and the recipes are files of the Board in the code, so any AI tool works them as Orkboard
+   does (§255.1); the acceptance is a step of a goal's way in the rules (*Accept*, after a party's stages, before the next party's;
+   for a tool, what is still left goes in its pull request) and a part of each leader's role file, written from the same code as
+   its prompt (§255.6); a spec that changes the rules says so and moves `schema` (§255.12); and no part here touches a file of a
+   part of spec 151 not yet merged: it waits for it.
+9. **The order**, each measured on this repository against the one before it (a goal of §253's kind, spec 149's way): spec 152
+   builds 1–3 and the rules' *Accept* (8); then the dossier (4); then reuse and the cache (5); then the recipes (7), *tool* among
+   their kinds; then the tools a leader proposes (6), once the steps say what comes back alike. A spec each.
+The owner's call.
