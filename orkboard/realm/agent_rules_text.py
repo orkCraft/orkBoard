@@ -128,6 +128,7 @@ Front matter, then the title, then the sections {sections}. The person's words a
 - `asks`: `person` while a question waits for the person; none otherwise.
 - `gate`: the last gate's record (below). `by`: who laid the goal, `person` or your tool's name; Orkboard never changes it.
 - `spec`: when the goal's spec is a file of its own, its path from the repository's root. `schema`: the format's version; keep it.
+- `laid: history`: the goal was laid from the project's own documents (a spec written before the Board); its `done` carries no gate record. Never write it yourself.
 - Every key you do not know is kept. Write a key only where it has something to say.
 
 ## The phases

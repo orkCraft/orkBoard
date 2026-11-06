@@ -117,9 +117,7 @@ def test_the_pages_are_read_by_the_board_in_their_phase_and_pass_the_check(repo:
         "7-the-seven": "done", "8-no-parts": "done", "29a-the-letter": "spec", "30-not-numbered-heading": "spec"}
     assert {t["slug"] for t in ideas.tracks(repo / WIKI, make=False)} >= {"tech"}
     ours = [f for f in board_check.run(repo) if f["path"].startswith(f"{WIKI}/pages/ideas/") and not f["path"].endswith("index.md")]
-    # a goal laid as done has no gate record to show: that one finding is all `check` says of the pages (see the report of spec 151 H)
-    assert {f["what"].split(" (")[0] for f in ours} == {"the phase is done but the page has no green gate record"}
-    assert {f["path"].rsplit("/", 1)[1] for f in ours} == {"7-the-seven.md", "8-no-parts.md"}
+    assert ours == []                                                                           # a goal laid as done from the history carries `laid: history`: no gate record is asked of it
 
 
 def test_the_pages_that_are_not_done_pass_the_check_whole(repo: Path) -> None:
@@ -158,3 +156,14 @@ def test_exit_codes(repo: Path, capsys, tmp_path_factory) -> None:
     assert ob("--goals", "docs/empty") == 1                                      # refused in words
     assert "no numbered spec" in capsys.readouterr().err
     assert ob("--goals", str(tmp_path_factory.mktemp("elsewhere"))) == 1         # not inside the project
+
+
+def test_a_part_built_in_pieces_counts_as_built_unless_the_table_has_its_pieces(tmp_path):
+    folder = tmp_path / "docs" / "specs"
+    folder.mkdir(parents=True)
+    (folder / "151-pieces.md").write_text("# 151. Pieces\n\n| Part | What |\n|---|---|\n| **E. One** | e |\n| **F. Two** | f |\n")
+    (folder / "150-own.md").write_text("# 150. Own\n\n| Part | What |\n|---|---|\n| **E. Zero** | e |\n| **E1. One** | e1 |\n| **E2. Two** | e2 |\n")
+    log = ["Spec 151 E: e", "Spec 151 F1: f one", "Spec 151 F2: f two", "Spec 150 E1: one", "Spec 150 E2: two"]
+    got = {p["slug"]: p for p in specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", log=log)}
+    assert [b for _i, _n, b in got["151-pieces"]["stages"]] == [True, True] and got["151-pieces"]["phase"] == "done"
+    assert [(i, b) for i, _n, b in got["150-own"]["stages"]] == [("E", False), ("E1", True), ("E2", True)]      # E has pieces of its own in the table: its own commit is needed

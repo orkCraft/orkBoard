@@ -250,10 +250,12 @@ This project's goals, their specs and its decisions are files, so any AI tool wo
    `read_in.goals_from_specs(root, folder, done_through=None, parts=PARTS)` → the pages it would lay. Each `<folder>/<n>-<slug>.md`
    (`<n>` a number, a letter after it allowed: `29a`) is one goal: its page `<wiki>/pages/ideas/<n>-<slug>.md` (the file's own
    stem), its title the spec's `# ` heading without its number, its Gist that title in a line, `spec: <folder>/<file>` (A.2), its
-   decisions from the spec's first line (`Decisions §254.` → `decisions: 254`), `by: person`, party Tech until the owner lays it
+   decisions from the spec's first line (`Decisions §254.` → `decisions: 254`), `by: person`, `laid: history` (laid from the
+   project's own documents: a `done` from before the Board has no gate record, and `orkboard check` asks none of it), party Tech until the owner lays it
    elsewhere (H.3). **Its stages** are the spec's parts: each row of the spec's first table whose first cell is `**<id>. <name>**`
    is a line of *Stages*, `- [x] A. The phase in the page` or `- [ ]` (a part's id is its letter and its digit, if it has one:
-   `E1`). **A part is built** when a commit's subject starts `Spec <n> <id>:` (`Spec 150 E2: …`; `PARTS`, this repository's way;
+   `E1`). **A part is built** when a commit's subject starts `Spec <n> <id>:` (`Spec 150 E2: …`; a part with no digit also by its pieces', `Spec 151 F1:` and `F2:`, when the table has
+   none of them; `PARTS`, this repository's way;
    another project passes its own pattern, or none). **Its phase**: `done` for `<n>` up to `done_through`; else `done` when every part is built, `work` when some are, and
    `spec` when none are (its spec is written). A spec with no table of parts is one stage. A goal page that is there already is
    never written over (its stem is its ref), so it runs any number of times.

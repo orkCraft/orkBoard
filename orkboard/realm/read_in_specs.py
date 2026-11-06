@@ -21,6 +21,7 @@ from orkboard.realm.idea_words import short_of
 PARTS = r"^Spec {n} {id}:"                      # this repository's way: a commit `Spec 150 E2: …` built part E2 of spec 150 (`{n}` and `{id}` are filled in)
 ONE = r"^Spec {n}(?::| )"                       # a spec of no parts: a commit `Spec 7: …` or `Spec 7 …`
 PARTY = "tech"
+LAID = "history"                                # the key a page laid from the project's own documents carries: a `done` from before the Board has no gate record (board_check)
 _FILE = re.compile(r"^(\d+)([a-z]?)-(.+)\.md$")
 _HEAD = re.compile(r"^#[ \t]+(?:(\d+[a-z]?)\.[ \t]+)?(.+?)[ \t]*$")
 _ROW = re.compile(r"^\|[ \t]*\*\*([A-Z]\d?)\.[ \t]+(.+?)\*\*[ \t]*\|")
@@ -86,7 +87,16 @@ def goals_from_specs(root: Path, folder: str, wiki_rel: str, done_through: int |
 
         number = re.escape(f"{n}{letter}")
         if found:
-            stages = [(i, name, bool(parts) and built(parts.format(n=number, id=i))) for i, name in found]
+            ids = {i for i, _name in found}
+
+            def done(i: str) -> bool:
+                """A part built by a commit of its own id; a part with no digit also by its pieces' (`F1`, `F2`: a part built in pieces) when the table has none of them."""
+                if not parts:
+                    return False
+                if built(parts.format(n=number, id=re.escape(i))):
+                    return True
+                return not i[1:] and not any(j.startswith(i) and j != i for j in ids) and built(parts.format(n=number, id=re.escape(i) + r"\d"))
+            stages = [(i, name, done(i)) for i, name in found]
         else:
             stages = [("", title, bool(parts) and built(ONE.format(n=number)))]
         if done_through is not None and n <= done_through:
@@ -122,7 +132,7 @@ def lay(root: Path, wiki_rel: str, planned: list[dict], party: str = PARTY) -> l
             order = max((i["order"] for i in ideas.ideas(wiki, track)), default=0) + 1
             page = Page([("owner", ideas.OWNER), ("kind", "idea"), ("track", track), ("order", str(order)), ("size", ""),
                          ("priority", known[track]["priority"]), ("short", short_of(p["title"])), ("phase", p["phase"]), ("spec", p["spec"]),
-                         ("decisions", ", ".join(str(d) for d in p["decisions"])), ("by", goal_phase.PERSON), ("schema", goal_phase.SCHEMA)],
+                         ("decisions", ", ".join(str(d) for d in p["decisions"])), ("by", goal_phase.PERSON), ("laid", LAID), ("schema", goal_phase.SCHEMA)],
                         p["title"], "", [("Gist", p["title"]), ("Stages", "\n".join(_stage_line(s) for s in p["stages"]))])
             ideas._write(wiki / ideas.IDEAS / f"{p['slug']}.md", page.text())
             written.append(p["slug"])

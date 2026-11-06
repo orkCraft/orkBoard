@@ -158,7 +158,7 @@ def _page(root: Path, rel: str, path: Path, out: list[dict]) -> None:
         out.append(_f(rel, line, f"the phase {word!r} is not one Orkboard knows ({', '.join(goal_phase.PHASES)})"))
         return
     phase = word.lower()
-    if phase == "done" and not GREEN.match(page.get("gate").strip()):
+    if phase == "done" and not GREEN.match(page.get("gate").strip()) and page.get("laid") != "history":        # a goal laid from the project's history (spec 151 H.1) was done before the Board
         out.append(_f(rel, _line_of(text, "gate") if page.get("gate") else line, "the phase is done but the page has no green gate record (gate: <short commit> · <n> files · green)"))
     if phase in ("spec", "work", "done") and not has_done_when(page, root):
         out.append(_f(rel, line, f"the phase is {phase} but the page has no *Done when*"))
