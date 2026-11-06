@@ -9,6 +9,9 @@ lozenge at its middle**, **a moon in a circle at the top and at the bottom** of 
 
     back.svg        the back: 80 x 112 unit squares (5 : 7; a stroke about 1.8 px on a 144 px card, an engraving's line), crispEdges, the card's grey and the faint ink's
     back-small.svg  40 x 56: the long sides and their lozenges alone, for a back under about 100 px wide (56 x 78), where a scroll would be a smudge
+    plus-lines.svg       (0.33.0) a mask, the strokes alone: the back's corners, the sides' first stretch and a smaller moon, which `.ork-card.ork-plus::before`
+                         draws in the card's own colour at 42% round its seal of summoning (the stars and the bead lie under the seal, so they are left out)
+    plus-lines-small.svg the small back's sides as a mask, for a + card whose seal is `.small`
     ork.svg         orkUI's ork mark: a 7 x 7 head on the signs' grid (one path of unit squares, a mask like a sign); kept as the mark, no longer drawn by the back
 
 **Generated** (`tools/build_back.py`, `--check`): the drawing is made of strokes (arcs, spirals, lines, lozenges, stars) in the top left quarter and mirrored about

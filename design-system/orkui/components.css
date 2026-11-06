@@ -1327,6 +1327,9 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
    leaves room at its left for the + card; every card in it is that wide, five to seven. Its seal of summoning, `.ork-sigil`, is drawn with the runes ------------------------------------------- */
 .ork-card.ork-plus { position: relative; display: grid; place-items: center; aspect-ratio: 5 / 7; padding: 0; }
 .ork-card.ork-plus > .ork-icon { position: relative; z-index: 1; width: 28px; height: 28px; }
+.ork-card.ork-plus::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: color-mix(in srgb, currentColor 42%, transparent);      /* 0.32.0: the back's drawing in the card's own colour (backs/plus-lines.svg, Orkboard's decisions §264) */
+  -webkit-mask: url(backs/plus-lines.svg) center / 100% 100% no-repeat; mask: url(backs/plus-lines.svg) center / 100% 100% no-repeat; image-rendering: pixelated; }
+.ork-card.ork-plus:has(> .ork-sigil.small)::before { -webkit-mask-image: url(backs/plus-lines-small.svg); mask-image: url(backs/plus-lines-small.svg); }
 .ork-deck { display: inline-grid; position: relative; isolation: isolate; }
 .ork-deck > * { grid-area: 1 / 1; }
 .ork-deck > .ork-card-back.edge { transform: translate(calc(var(--ork-deck-i, 1) * var(--ork-3) / 2), calc(var(--ork-deck-i, 1) * var(--ork-3) / 2)); }

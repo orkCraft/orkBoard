@@ -102,18 +102,14 @@
 .hand [data-handing] { visibility: hidden; }
 .hand-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* New goal's card (spec 107 §13.1, decisions §182.4, §185.4, §186.3; docs/specs/110-runes-on-the-table.md §3.3): the green card worth looking at, drawn in orkUI's pieces and nothing of its own. A double frame in the action colour (`--ork-double`, inside
-   orkUI's notch), pixel corner brackets as `.ork-picked::after` draws them (8 x 2 px bars at 2 px, here in the action colour), its + a large pixel glyph (a multiple of the 7 x 7 grid) over the seal of summoning, orkUI's `.ork-sigil` (a circle, a band of
+   orkUI's notch), the back's drawing in its green round the seal (orkUI's `.ork-plus::before`, decisions §264: the corner brackets it had are gone), its + a large pixel glyph (a multiple of the 7 x 7 grid) over the seal of summoning, orkUI's `.ork-sigil` (a circle, a band of
    runes and a star in the card's green at about a quarter's strength; its top holds the goal's own element, in its own colour, full strength: `pluscard.js`); turned a little as a card laid down (§167.5). The hatch and the band of light that crossed
    the card on hover are gone (§185.4): on hover the seal's runes light once round the circle, orkUI's. To be offered to orkUI as `.ork-deck.is-main` at its next copy. */
 .hand .hand-plus { position: relative; cursor: pointer; rotate: calc(var(--ork-motion-lean) * -1); border: var(--ork-double) double var(--ork-action); color: var(--ork-action); overflow: hidden; }
 .hand .hand-plus > .ork-icon { width: 42px; height: 42px; position: relative; z-index: 1; }
 /* The + card keeps its 5 : 7 and its whole seal (decisions §249.2) where the hand's other cards are shorter: it stands up from the window's foot over the table's foot, its turned corners in the window; the column's scroll leaves room for it (table/column.css) */
 @media (min-width: 760px) { .hand .hand-plus { height: var(--hc-big); } .hand-slot.is-plus { margin: calc(var(--hc-seen, var(--hc-shown)) - var(--hc-big) - var(--ork-4)) 0 0 var(--ork-1); } }
-.hand .hand-plus::after, .hand-ghost.ork-plus::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat;
-  background-image: linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)),
-    linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action));
-  background-size: 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px;
-  background-position: left 2px top 2px, left 2px top 2px, right 2px top 2px, right 2px top 2px, left 2px bottom 2px, left 2px bottom 2px, right 2px bottom 2px, right 2px bottom 2px; }
+.hand .hand-plus::after, .hand-ghost.ork-plus::after { content: none; }      /* the corner brackets gave way to the back's corners, which orkUI draws on the + card (orkUI 0.33.0, decisions §264) */
 .hand .hand-plus.is-large { width: 180px; height: auto; aspect-ratio: 5 / 7; }
 .hand .hand-plus.is-large > .ork-icon { width: 56px; height: 56px; }
 

@@ -33,7 +33,7 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 - [x] B. One pick
 - [x] C. The table by the phase
 - [x] D. The Release column, no edge
-- [ ] E. The hand's right end
+- [x] E. The hand's right end
 
 ## Design
 ### Talk

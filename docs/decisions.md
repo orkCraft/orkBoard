@@ -7207,3 +7207,17 @@ nothing was picked, and *Nothing is at work* sat at the top of the last lane, no
    Orkmaster's menu (`…`) stays, alone in the pane's corner over the lanes. *Nothing is at work* stands in the middle of the
    lanes, not at the top of the last one.
 The owner's call.
+
+## 264. The + card wears the back's drawing in its own green, round its seal; its corner brackets go (6 November 2026, the owner)
+
+Changes: 185.4 (the + card's face: its corner brackets), 263.1 (the back's drawing is the + card's too).
+
+Why: the owner, on the redrawn back (§263): *the same back must be on the card that makes a goal, only green and with the +*.
+So:
+1. **The + card wears the back's drawing in its own colour** (orkUI 0.33.0, `.ork-card.ork-plus::before`,
+   `backs/plus-lines.svg`): the back's four corners, the first stretch of its sides and a moon in a circle at the top and the
+   bottom, in the card's green at 42%, round the seal of summoning, its + and its element as they were. The seal (136 px on a
+   144 px card) lies where the back has its stars, its bead and its sides' lozenges, so the + card leaves them out and its moon
+   is a little smaller. On the narrow page the + card's seal is `.small`, and it takes the small back's sides alone.
+2. **Its corner brackets go** (`hand/hand.css`): the back's corners stand there now.
+The owner's call.

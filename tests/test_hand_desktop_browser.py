@@ -565,8 +565,8 @@ def test_the_plus_card_bears_the_seal_of_summoning_with_the_next_goals_element_t
         s = sigil.bounding_box()
         assert round(s["width"]) <= (72 if width == "narrow" else 136) + 14, "the seal's size (the card is turned a little)"
         assert plus.evaluate("e => getComputedStyle(e).backgroundImage") == "none", "the hatch is gone"
-        assert plus.evaluate("e => getComputedStyle(e, '::before').content") in ("none", "normal"), "so is the band of light"
-        assert plus.evaluate("e => getComputedStyle(e, '::after').content") == '""', "the corner brackets stay"
+        assert "plus-lines" in plus.evaluate("e => getComputedStyle(e, '::before').maskImage || getComputedStyle(e, '::before').webkitMaskImage"), "so is the band of light: its ::before is the back's drawing (decisions §264)"
+        assert plus.evaluate("e => getComputedStyle(e, '::after').content") == 'none', "the corner brackets gave way to the back's corners (decisions §264)"
         assert "double" in plus.evaluate("e => getComputedStyle(e).borderTopStyle") and plus.evaluate("e => getComputedStyle(e).rotate") != "none", "the double frame and the lean stay"
         assert plus.evaluate("e => getComputedStyle(e).color") == plus.evaluate("e => getComputedStyle(e).borderTopColor"), "the green: the seal takes the card's colour"
         assert _seal(pg) == "ice", "the Orkmaster's tab, no party named: the first party's next element (the runes are the project's, §253.10)"
