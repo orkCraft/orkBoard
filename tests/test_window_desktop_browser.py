@@ -188,7 +188,8 @@ def test_every_place_is_reached_over_the_pane(window):
     open_tab(pg, "orkmaster")
     # a tool's limits and the week's work; Play
     if w == "wide":
-        pg.locator(".hand-pot").first.click()                                                                              # the limits are the hand's potions (spec 104 B)
+        narrow.unroll_drum(pg)
+        pg.locator(".hand-pot").first.click()                                                                              # the limits are the hand's potions (spec 104 B), in the row the drum unrolls into
     else:
         open_menu(pg)
         pg.locator(".table-menu__chips .table-chip").first.click()

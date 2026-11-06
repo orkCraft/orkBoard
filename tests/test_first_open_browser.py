@@ -68,7 +68,7 @@ def test_from_an_empty_folder_to_the_laid_table(desk, dialog, tmp_path):
     use.click()
     pg.locator(f'{ADD} [data-turned="1"]').wait_for(timeout=WAIT_MS)
     assert d.asked == ["claude"] and d.host.machine.main_tool == "claude"
-    pg.locator('[data-place="potions"] .hand-pot[data-provider="claude"]').wait_for(timeout=WAIT_MS)
+    pg.locator('[data-place="potions"] .hand-pot[data-provider="claude"]').wait_for(state="attached", timeout=WAIT_MS)
     pg.locator(f'{ADD} [data-done="1"]').click()
 
     # 2 · the ring: the project, its git, its release branch

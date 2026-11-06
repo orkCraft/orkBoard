@@ -29,6 +29,14 @@ def fill_hand(host, *ids):
     host.on_change()
 
 
+def unroll(pg):
+    """The wide width's tools lie in the row the drum unrolls into (spec 156 E.5): the pointer rests on the drum."""
+    pg.locator(".hand-mana__drum").wait_for(timeout=WAIT_MS)
+    b = pg.locator(".hand-mana__drum").bounding_box()
+    pg.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
+    pg.locator(".hand-mana[data-open]").wait_for(timeout=WAIT_MS)
+
+
 def order_of(host):
     return tool_hand.hand(host.machine)
 
@@ -55,7 +63,7 @@ def test_the_empty_slot_is_faint_at_rest_lit_when_the_orkmaster_asks_and_gone_at
     slot = pg.locator(SLOT)
     assert slot.get_attribute("aria-label") == "Add an AI tool" and "is-lit" not in slot.get_attribute("class")
     assert pg.locator(".hand-pot").first.get_attribute("data-provider") == "claude"
-    assert pg.locator(".hand-mana > .hand-pot").last.get_attribute("data-empty-slot") == "1", "the row ends with it"
+    assert pg.locator(".hand-mana__row > .hand-pot").last.get_attribute("data-empty-slot") == "1", "the row ends with it"
     fill_hand(d.host, *[t for t in ("codex", "agy", "cursor", "pi", "hermes")])
     pg.wait_for_function("(s) => !document.querySelector(s)", arg=SLOT, timeout=WAIT_MS)
     assert not d.errors, d.errors
@@ -73,6 +81,7 @@ def test_the_empty_slot_is_lit_and_the_card_comes_up_while_the_orkmaster_asks_fo
 
 def test_the_cards_groups_and_the_first_ready_tool_picked_and_one_not_installed_is_never_picked(desk, project):
     d, pg = open_desk(desk, project, status=lambda: found("claude", "codex", "agy", signed_out=("agy",)))
+    unroll(pg)
     pg.locator(SLOT).click()
     pg.locator(f"{ADD} select[name=tool]").wait_for(timeout=WAIT_MS)
     assert "Add an AI tool · 1 of up to 6" in pg.locator(ADD).text_content()
@@ -88,6 +97,7 @@ def test_the_third_line_follows_and_test_and_add_waits_for_a_sign_in_and_for_a_k
     monkeypatch.delenv("CODEX_API_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     d, pg = open_desk(desk, project, status=lambda: found("claude", "codex", "agy", signed_out=("agy",)))
+    unroll(pg)
     pg.locator(SLOT).click()
     tool, paid, test = pg.locator(f"{ADD} select[name=tool]"), pg.locator(f"{ADD} select[name=billing]"), pg.locator(TEST)
     tool.wait_for(timeout=WAIT_MS)
@@ -107,6 +117,7 @@ def test_the_third_line_follows_and_test_and_add_waits_for_a_sign_in_and_for_a_k
 def test_a_key_in_the_way_is_said_before_it_costs_and_its_value_nowhere(desk, project, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-the-secret-value")
     d, pg = open_desk(desk, project)
+    unroll(pg)
     pg.locator(SLOT).click()
     pg.locator(f"{ADD} [data-warn]").wait_for(timeout=WAIT_MS)
     text = pg.locator(ADD).inner_text()
@@ -124,8 +135,8 @@ def test_test_and_add_turns_the_card_and_go_on_leaves_the_first_potion_framed(de
     turned.wait_for(timeout=WAIT_MS)
     assert d.asked == ["claude"] and "Claude Code is in your hand. Add another AI tool?" in turned.inner_text()
     pot = pg.locator('.hand-pot[data-provider="claude"]')
-    pot.wait_for(timeout=WAIT_MS)
-    assert pot.get_attribute("data-default") == "1", "the first tool is the main tool"
+    pot.wait_for(state="attached", timeout=WAIT_MS)
+    assert pg.locator('.ork-drum > .ork-potion[data-provider="claude"]').count() == 1 and pg.locator(".hand-mana__label.is-front").get_attribute("data-provider") == "claude", "the first tool is the main tool: in front of the drum"
     turned.get_by_role("button", name="Add another").click()
     pg.locator(TEST).wait_for(timeout=WAIT_MS)
     pg.wait_for_function("(s) => document.querySelector(s).value === 'codex'", arg=f"{ADD} select[name=tool]", timeout=WAIT_MS)
@@ -139,6 +150,7 @@ def test_test_and_add_turns_the_card_and_go_on_leaves_the_first_potion_framed(de
 def test_a_failure_says_why_in_the_tools_words_and_adds_nothing(desk, project):
     d, pg = open_desk(desk, project)
     d.fail["claude"] = tool_errors.ToolError("claude", "401 unauthorized")
+    unroll(pg)
     pg.locator(SLOT).click()
     pg.locator(TEST).wait_for(timeout=WAIT_MS)
     pg.locator(TEST).click()
@@ -161,15 +173,17 @@ def test_closing_the_card_with_no_tool_says_what_follows_and_goes_on(desk, proje
 
 def test_a_potions_card_orders_with_the_arrows_and_by_dragging(desk, project):
     d, pg = open_desk(desk, project, "claude", "codex", "agy")
+    unroll(pg)
     pg.locator('.hand-pot[data-provider="codex"]').click()
     card = pg.locator('[data-lift="tool"][data-tool="codex"]')
     card.wait_for(timeout=WAIT_MS)
     card.locator('[data-left="1"]').click()
     pg.wait_for_function("() => document.querySelector('.hand-pot').dataset.provider === 'codex'", timeout=WAIT_MS)
     assert order_of(d.host) == ["codex", "claude", "agy"] and d.host.machine.main_tool == "codex", "the first is the main tool"
-    assert pg.locator('.hand-pot[data-provider="codex"]').get_attribute("data-default") == "1"
+    assert pg.locator(".hand-mana__label.is-front").get_attribute("data-provider") == "codex"
     pg.keyboard.press("Escape")
     card.wait_for(state="detached", timeout=WAIT_MS)
+    unroll(pg)
     pg.locator('.hand-pot[data-provider="agy"]').drag_to(pg.locator('.hand-pot[data-provider="codex"]'))
     pg.wait_for_function("() => document.querySelector('.hand-pot').dataset.provider === 'agy'", timeout=WAIT_MS)
     assert order_of(d.host) == ["agy", "codex", "claude"]
@@ -178,6 +192,7 @@ def test_a_potions_card_orders_with_the_arrows_and_by_dragging(desk, project):
 
 def test_put_back_says_what_follows_goes_at_once_and_undo_brings_it_back(desk, project):
     d, pg = open_desk(desk, project, "claude", "codex")
+    unroll(pg)
     pg.locator('.hand-pot[data-provider="claude"]').click()
     card = pg.locator('[data-lift="tool"]')
     plan = card.locator('[data-plan="1"]')
@@ -187,13 +202,14 @@ def test_put_back_says_what_follows_goes_at_once_and_undo_brings_it_back(desk, p
     pg.locator('.hand-pot[data-provider="claude"]').wait_for(state="detached", timeout=WAIT_MS)
     assert order_of(d.host) == ["codex"]
     pg.get_by_role("button", name="Undo").click()
-    pg.locator('.hand-pot[data-provider="claude"]').wait_for(timeout=WAIT_MS)
+    pg.locator('.hand-pot[data-provider="claude"]').wait_for(state="attached", timeout=WAIT_MS)
     assert order_of(d.host) == ["claude", "codex"] and d.host.machine.main_tool == "claude"
     assert not d.errors, d.errors
 
 
 def test_the_last_tool_asks_first(desk, project):
     d, pg = open_desk(desk, project, "claude")
+    unroll(pg)
     pg.locator('.hand-pot[data-provider="claude"]').click()
     card = pg.locator('[data-lift="tool"]')
     card.locator('[data-put-back="1"]').click()
@@ -209,6 +225,7 @@ def test_the_last_tool_asks_first(desk, project):
 
 def test_what_used_it_is_a_link_on_the_card(desk, project):
     d, pg = open_desk(desk, project, "claude")
+    unroll(pg)
     pg.locator('.hand-pot[data-provider="claude"]').click()
     pg.locator('[data-used="1"]').click()
     pg.locator('.table-over[data-kind="limits"]').wait_for(timeout=WAIT_MS)

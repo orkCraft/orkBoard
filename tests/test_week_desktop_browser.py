@@ -47,6 +47,7 @@ def _open(gui, host=None):
 def _spend(pg):
     """*Spend today*, in the place the limits' potion opens."""
     if not pg.locator(".table-over__limits").count():
+        narrow.unroll_drum(pg)
         pg.locator(".hand-pot").first.click()
     return pg.get_by_role("button", name="Spend today: $2.40. This week's work")
 

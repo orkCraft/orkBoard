@@ -405,10 +405,12 @@ def test_plus_opens_the_parties_in_the_pane_and_a_potion_opens_what_used_the_too
     pg.get_by_role("button", name="Back").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
     if wide(w):
+        narrow.unroll_drum(pg)
         pg.locator('.hand-pot[data-provider="codex"]').click()
         pg.locator('.table-over[data-kind="limits"] .arena-usage').wait_for(timeout=WAIT_MS)
         assert title(pg) == "Board · Codex: what used it"
         assert ("ideas.usage", {"provider": "codex", "scope": "project"}) in host.log
+    pg.mouse.move(640, 300)                                                                                                # the row the drum unrolled folds: it lay over the die
     pg.get_by_role("button", name="Stop all").click()
     for _ in range(40):
         if ("halt", {}) in host.log:
@@ -1066,19 +1068,23 @@ def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_
     lit = lambda: sorted(pg.locator(".table-tab.is-lit").evaluate_all("els => els.map((e) => e.dataset.tab)"))        # noqa: E731
     assert lit() == [] and pg.locator(".table-tab .is-marked").count() == 0
     claude, codex = pg.locator('.hand-pot[data-provider="claude"]'), pg.locator('.hand-pot[data-provider="codex"]')
+    narrow.unroll_drum(pg)
     claude.hover()
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
     assert lit() == ["art", "game", "release", "tech"]                                                                    # every party that does or checks on Claude (marks drawn or not), none of Codex's alone
     assert pg.locator('.table-tab[data-tab="game"]').evaluate("e => [getComputedStyle(e).outlineStyle, getComputedStyle(e).backgroundColor]")[0] == "none"      # lit as a tab hovered is, not by a 1 px outline
     pg.mouse.move(5, 300)
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
-    codex.focus()                                                                                                         # the focus lights too
+    pg.locator(".hand-mana__drum").focus()                                                                                   # the focus unrolls the row, and lights too
+    pg.locator(".hand-mana[data-open]").wait_for(timeout=WAIT_MS)
+    codex.focus()
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
     assert lit() == ["release", "tech"]
     pg.evaluate("() => document.activeElement.blur()")
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
     assert claude.get_attribute("aria-label").endswith(". 3 parties do on it, 2 parties check on it")                       # the parties that do and check on it: Lean checks on none
     assert codex.get_attribute("aria-label") == "Codex: 18% of the day left. 1 party does on it, 1 party checks on it" and codex.get_attribute("title") == codex.get_attribute("aria-label")
+    narrow.unroll_drum(pg)
     claude.hover()
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
     shot(pg, "table-potion-marks-wide.png")

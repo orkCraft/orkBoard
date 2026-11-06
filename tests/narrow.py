@@ -31,3 +31,13 @@ def no_sideways(pg) -> None:
     """The page does not scroll sideways (spec 94 §1.2: no fixed width a part of the window)."""
     over = pg.evaluate("() => document.documentElement.scrollWidth - document.documentElement.clientWidth")
     assert over <= 0, f"the page scrolls sideways by {over} px"
+
+
+def unroll_drum(pg, timeout: int = 10000) -> None:
+    """At the wide width the AI tools lie in a row only while the drum is unrolled (spec 156 E.5, hover or focus): the pointer goes onto the drum and stays. Under 760 px the potions always lie in their rows: nothing to do."""
+    if pg.viewport_size["width"] < 760:
+        return
+    pg.locator(".hand-mana__drum").wait_for(timeout=timeout)
+    b = pg.locator(".hand-mana__drum").bounding_box()
+    pg.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
+    pg.locator(".hand-mana[data-open]").wait_for(timeout=timeout)
