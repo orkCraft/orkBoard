@@ -363,7 +363,7 @@ def _asked(model, n):
 
 def test_the_first_steps_party_plans_its_own_step_from_its_section_whole_and_of_the_others_only_done_when_and_will_be(keeper):
     slug, (design, tech) = _routed(keeper)
-    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Draw the settings screen", "brief": "Draw it", "kind": "design"}]})
+    keeper.call = model = Model({"tasks": [{"id": "a", "proves": [1], "title": "Draw the settings screen", "brief": "Draw it", "kind": "design"}]})
     keeper.plan(slug)
     _wait(keeper, slug)
     prompt = model.asked[0]["prompt"]
@@ -382,7 +382,7 @@ def test_the_first_steps_party_plans_its_own_step_from_its_section_whole_and_of_
 def test_a_page_of_the_new_format_gets_no_flat_stages_and_no_risk_line_but_its_steps_plan_in_its_section_and_its_risk_in_its_front_matter(keeper):
     from orkboard.realm import spec_sections
     slug, _parties = _routed(keeper)
-    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design"}, {"id": "b", "title": "Wire", "brief": "Wire it", "after": ["a"]}]})
+    keeper.call = Model({"tasks": [{"id": "a", "proves": [1], "title": "Draw", "brief": "Draw it", "kind": "design"}, {"id": "b", "title": "Wire", "brief": "Wire it", "after": ["a"]}]})
     keeper.plan(slug)
     _wait(keeper, slug)
     page = ideas.idea_page(keeper.root, slug)
@@ -396,7 +396,7 @@ def test_a_page_of_the_new_format_gets_no_flat_stages_and_no_risk_line_but_its_s
 def test_a_page_of_before_plans_as_it_always_did_flat_stages_and_a_risk_line(keeper):
     slug = ideas.add_idea(keeper.root, "export csv", state_dir=keeper.state)
     ideas.update(keeper.root, slug, {"Gist": "CSV export", "Done when": "- a file", "Out": "- images"})
-    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Writer", "brief": "Write rows"}]})
+    keeper.call = model = Model({"tasks": [{"id": "a", "proves": [1], "title": "Writer", "brief": "Write rows"}]})
     keeper.plan(slug)
     _wait(keeper, slug)
     page = ideas.idea_page(keeper.root, slug)
@@ -408,7 +408,7 @@ def test_a_page_of_before_plans_as_it_always_did_flat_stages_and_a_risk_line(kee
 
 def test_a_goal_of_one_step_plans_its_section_and_goes_as_today_with_no_route_in_its_plan(keeper):
     slug, (design,) = _routed(keeper, parties=(("Design", "product-designer", ["artist"]),))
-    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design"}]})
+    keeper.call = model = Model({"tasks": [{"id": "a", "proves": [1], "title": "Draw", "brief": "Draw it", "kind": "design"}]})
     keeper.plan(slug)
     _wait(keeper, slug)
     plan = ideas.plan(keeper.state, slug)
@@ -433,8 +433,8 @@ def _merge(keeper, slug, *ids):
 def test_the_next_steps_party_plans_when_the_first_is_merged_in_dev_and_its_tasks_join_the_passed_plan(keeper):
     from orkboard.realm import idea_route
     slug, (design, tech) = _routed(keeper)
-    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Draw the screen", "brief": "Draw it", "kind": "design"}], "todos": []},
-                                {"tasks": [{"id": "a", "title": "Build the setting", "brief": "Build it", "kind": "code"}, {"id": "b", "title": "Test it", "brief": "Test", "after": ["a"]}],
+    keeper.call = model = Model({"tasks": [{"id": "a", "proves": [1], "title": "Draw the screen", "brief": "Draw it", "kind": "design"}], "todos": []},
+                                {"tasks": [{"id": "a", "proves": [1], "title": "Build the setting", "brief": "Build it", "kind": "code"}, {"id": "b", "title": "Test it", "brief": "Test", "after": ["a"]}],
                                  "todos": [{"id": "x", "title": "Confirm the theme", "kind": "confirm", "for": ["b"]}]})
     keeper.plan(slug)
     _wait(keeper, slug)
@@ -464,7 +464,7 @@ def test_the_next_steps_party_plans_when_the_first_is_merged_in_dev_and_its_task
 
 def test_a_next_step_that_cannot_be_planned_puts_the_goal_at_failed_with_why_and_the_clock_does_not_try_again(keeper):
     slug, _parties = _routed(keeper)
-    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it"}]}, "no json at all")
+    keeper.call = Model({"tasks": [{"id": "a", "proves": [1], "title": "Draw", "brief": "Draw it"}]}, "no json at all")
     keeper.plan(slug)
     _wait(keeper, slug)
     _pass(keeper, slug)
@@ -478,7 +478,7 @@ def test_a_next_step_that_cannot_be_planned_puts_the_goal_at_failed_with_why_and
 
 def test_the_clock_plans_no_next_step_while_the_keeper_is_busy_or_the_demo_runs(keeper):
     slug, _parties = _routed(keeper)
-    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it"}]})
+    keeper.call = Model({"tasks": [{"id": "a", "proves": [1], "title": "Draw", "brief": "Draw it"}]})
     keeper.plan(slug)
     _wait(keeper, slug)
     _pass(keeper, slug)
@@ -494,7 +494,7 @@ def test_the_clock_plans_no_next_step_while_the_keeper_is_busy_or_the_demo_runs(
 
 def test_a_step_whose_tasks_were_all_dropped_landed_nothing_and_no_step_follows(keeper):
     slug, _parties = _routed(keeper)
-    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it"}]})
+    keeper.call = Model({"tasks": [{"id": "a", "proves": [1], "title": "Draw", "brief": "Draw it"}]})
     keeper.plan(slug)
     _wait(keeper, slug)
     _pass(keeper, slug)
@@ -505,7 +505,7 @@ def test_a_step_whose_tasks_were_all_dropped_landed_nothing_and_no_step_follows(
 def test_the_plan_a_leader_makes_for_its_step_is_stamped_so_its_tasks_wear_its_partys_race(keeper):
     from orkboard.realm import roles
     slug, (design, tech) = _routed(keeper)
-    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design"}]}, {"tasks": [{"id": "a", "title": "Build", "brief": "Build it", "kind": "code"}]})
+    keeper.call = Model({"tasks": [{"id": "a", "proves": [1], "title": "Draw", "brief": "Draw it", "kind": "design"}]}, {"tasks": [{"id": "a", "proves": [1], "title": "Build", "brief": "Build it", "kind": "code"}]})
     keeper.plan(slug)
     _wait(keeper, slug)
     _pass(keeper, slug)
@@ -517,3 +517,125 @@ def test_the_plan_a_leader_makes_for_its_step_is_stamped_so_its_tasks_wear_its_p
     assert [h["race"] for h in heads] == ["elf", "peon"]          # Design's task is a seat's, not its leader's (spec 152 A.2): an elf, not the dryad; Tech's a Grunt's: an ork
     assert roles.task_head(keeper.state, {**second, "role": "architect"}, "balance")["race"] == "shaman"      # its leader's higher form
     assert roles.task_head(keeper.state, {k: v for k, v in second.items() if k not in ("craft", "leader")}, "balance")["race"] == "peon"
+
+
+# -- spec 153: a task is a whole session ----------------------------------------------------------------------------------------------------------
+
+def _lined(keeper, slug, lines):
+    """The first section (Design) of a routed goal given `lines` as its Done when."""
+    from orkboard.realm import spec_sections
+    page = ideas.idea_page(keeper.root, slug)
+    head, text = spec_sections.sections_of(page)[0]
+    parts = spec_sections.split(text)
+    parts["Done when"] = "\n".join(f"- {x}" for x in lines)
+    page.set_section(head, spec_sections.join(parts))
+    ideas._write(keeper.root / ideas.IDEAS / f"{slug}.md", page.text())
+
+
+def test_the_plans_prompt_says_what_one_task_has_cost_here_and_when_to_split_spec_153_a2(keeper):
+    from orkboard.realm import goal_team, idea_spend
+    slug, (design, _tech) = _routed(keeper)
+    guess = " ".join(keeper.plan_prompt(keeper.root, slug).split())
+    assert "Each task is a whole session of its own: as a first guess one costs about 400,000 tokens." in guess
+    assert "(a) for a part another seat does (another tag)" in guess and "(c) for a base two or more tasks must wait for. Else one task does it all. At most 8 tasks." in guess
+    assert "At most 8 tasks. Each is a brief" in guess and "(it runs 2 at once)" in guess            # a party with no size: 2
+    for size, at_once in (("lean", 1), ("standard", 2), ("full", 3)):
+        goal_team.set_size(keeper.root, design, size)
+        assert f"(it runs {at_once} at once)" in " ".join(keeper.plan_prompt(keeper.root, slug).split())
+    for i, tokens in enumerate((300_000, 500_000, 400_000)):
+        idea_spend.append(keeper.state, idea_spend.line("task", "grunt", "claude", "opus", "warrior", "", idea_spend.tokens_of(None, tokens), 1.5 + i, f"k{i}", 1, f"2026-11-0{i + 1}T09:00:00"), idea=slug)
+    learned = " ".join(keeper.plan_prompt(keeper.root, slug).split())
+    assert "on this project one has cost about 400,000 tokens, $2.50 (the median of the last 3)" in learned and "first guess" not in learned
+
+
+def test_a_task_keeps_the_files_that_exist_and_drops_the_rest_spec_153_b1(tmp_path):
+    from orkboard.core import idea_plan
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "a.py").write_text("x")
+    (tmp_path / "b.py").write_text("x")
+    (tmp_path / ".env").write_text("KEY=1")
+    (tmp_path / "keys").mkdir()
+    (tmp_path / "keys" / "id_rsa").write_text("x")
+    (tmp_path.parent / "outside.py").write_text("x")
+    for n in range(8):
+        (tmp_path / f"m{n}.py").write_text("x")
+    asked = ["src/a.py", "./b.py", "src/a.py", "gone.py", "src", "../outside.py", "src/../b.py", "/etc/passwd", ".env", "keys/id_rsa", 5, None, "m0.py", "m1.py", "m2.py", "m3.py", "m4.py", "m5.py"]
+    got = idea_keeper.make_plan("x", {"tasks": [{"title": "t", "brief": "b", "files": asked}, {"title": "u", "brief": "b", "files": "src/a.py"}, {"title": "v", "brief": "b"}]}, root=tmp_path)["tasks"]
+    assert got[0]["files"] == ["src/a.py", "b.py", "m0.py", "m1.py", "m2.py", "m3.py"] and len(got[0]["files"]) == 6 == idea_plan.MAX_FILES
+    assert "files" not in got[1] and "files" not in got[2]                                              # none kept is no key
+    assert "files" not in idea_keeper.make_plan("x", {"tasks": [{"title": "t", "brief": "b", "files": ["b.py"]}]})["tasks"][0]      # with no root, none
+
+
+def test_the_plans_prompt_asks_for_files_and_numbers_the_done_when_lines_spec_153_b1_c2(keeper):
+    slug, _parties = _routed(keeper)
+    _lined(keeper, slug, ["[test] It is saved", "It looks right", "[person] The person likes it"])
+    prompt = keeper.plan_prompt(keeper.root, slug)
+    assert "1. [test] It is saved\n2. It looks right\n3. [person] The person likes it" in prompt
+    assert "Each task's `files`: the files you read that it starts at, at most 6" in prompt and "Each task's `proves`: the numbers of your section's Done when lines" in prompt
+    assert '"files": ["path/to/file"], "proves": [1]' in prompt
+    page = ideas.add_idea(keeper.root, "export csv", state_dir=keeper.state)
+    ideas.update(keeper.root, page, {"Gist": "CSV export", "Done when": "- a file", "Out": "- images"})
+    old = keeper.plan_prompt(keeper.root, page)
+    assert "`proves`" not in old and "Done when lines, numbered" not in old and "`files`" in old          # a page of before: no lines to claim
+
+
+def test_proves_are_whole_numbers_one_to_five_and_a_check_task_proves_none_spec_153_c1():
+    plan = idea_keeper.make_plan("x", {"tasks": [{"title": "a", "brief": "b", "proves": [2, "1", 2, 0, 6, -1, 1.5, True, None, "x", 5]},
+                                                 {"title": "c", "brief": "b", "kind": "review", "proves": [1]}, {"title": "d", "brief": "b", "proves": "1"}]})["tasks"]
+    assert plan[0]["proves"] == [2, 1, 5] and "proves" not in plan[1] and "proves" not in plan[2]
+
+
+def test_unclaimed_names_the_done_when_lines_no_task_proves_spec_153_c2(keeper):
+    from orkboard.core.idea_plan import unclaimed
+    slug, (design, _tech) = _routed(keeper)
+    _lined(keeper, slug, ["[test] one", "two", "three"])
+    page = ideas.idea_page(keeper.root, slug)
+    assert unclaimed(page, design, [{"proves": [1, 3]}, {"proves": [2]}]) == []
+    assert unclaimed(page, design, [{"proves": [1]}, {"proves": [3]}]) == [2]
+    assert unclaimed(page, design, [{}, {"proves": []}]) == [1, 2, 3]
+    assert unclaimed(page, design, [{"proves": [1], "section": "Tech"}]) == []                      # Tech's section has one line: the section of the tasks
+    old = ideas.add_idea(keeper.root, "export csv", state_dir=keeper.state)
+    ideas.update(keeper.root, old, {"Done when": "- a file"})
+    assert unclaimed(ideas.idea_page(keeper.root, old), "general", [{}]) == [] and unclaimed(None, "x", [{}]) == []
+    _lined(keeper, slug, [])
+    assert unclaimed(ideas.idea_page(keeper.root, slug), design, [{}]) == []
+
+
+def test_lines_no_task_proves_are_asked_once_more_and_never_a_third_time_and_what_is_left_is_kept_spec_153_c3(keeper, monkeypatch):
+    from orkboard.realm import event_log
+    slug, _parties = _routed(keeper)
+    _lined(keeper, slug, ["one", "two", "three"])
+    seen = []
+    monkeypatch.setattr(event_log, "record", lambda root, event, **fields: seen.append((event, fields)))
+    keeper.events = True
+    first = {"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design", "proves": [1]}]}
+    keeper.call = model = Model(first, {"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design", "proves": [1, 3]}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    assert len(model.asked) == 2 and model.asked[1]["prompt"].startswith(model.asked[0]["prompt"][:200])
+    assert model.asked[1]["prompt"].endswith("\n\nThese Done when lines no task proves: 2. two; 3. three. Give each to a task, or a task of its own.")
+    plan = ideas.plan(keeper.state, slug)
+    assert plan["unclaimed"] == [2] and plan["tasks"][0]["proves"] == [1, 3]                         # the second answer is the plan; 2 is kept
+    assert [(e, f["idea"], f["step"], f["lines"], f["asked_again"]) for e, f in seen if e == event_log.PLAN_UNCLAIMED] == [("plan_unclaimed", slug, 1, ["2"], True)]
+    assert ideas.state(keeper.state, slug)["state"] == "plan"                                       # the plan goes on
+
+
+def test_a_plan_that_claims_every_line_is_asked_once_and_a_second_answer_that_is_no_plan_leaves_the_first_spec_153_c3(keeper, monkeypatch):
+    from orkboard.realm import event_log
+    slug, _parties = _routed(keeper)
+    _lined(keeper, slug, ["one", "two"])
+    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design", "proves": [2, 1]}]})
+    seen = []
+    monkeypatch.setattr(event_log, "record", lambda root, event, **fields: seen.append(event))
+    keeper.events = True
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    plan = ideas.plan(keeper.state, slug)
+    assert len(model.asked) == 1 and "unclaimed" not in plan and event_log.PLAN_UNCLAIMED not in seen
+    slug2, _p = _routed(keeper, text="another goal")
+    _lined(keeper, slug2, ["one", "two"])
+    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design", "proves": [1]}]}, {"nothing": "here"})
+    keeper.plan(slug2)
+    _wait(keeper, slug2)
+    plan = ideas.plan(keeper.state, slug2)
+    assert len(model.asked) == 2 and plan["unclaimed"] == [2] and plan["tasks"][0]["proves"] == [1]

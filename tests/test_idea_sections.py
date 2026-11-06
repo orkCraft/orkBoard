@@ -43,7 +43,7 @@ def section(why="Because.", done=("It works",), will=("changed src — the theme
     return {"why": why, "done_when": list(done), "checks": [], "will_be": list(will), "out": [], "risks": [], "risk": risk, **more}
 
 
-PLAN = {"tasks": [{"id": "k1", "title": "Do it", "brief": "Do the thing.", "kind": "code", "tier": "warrior", "after": []}], "todos": []}
+PLAN = {"tasks": [{"id": "k1", "title": "Do it", "brief": "Do the thing.", "kind": "code", "tier": "warrior", "after": [], "proves": [1, 2, 3, 4, 5]}], "todos": []}
 DECISION = {"title": "Dark mode ships as a setting", "why": "People read at night.", "points": ["Product asks for it.", "Tech adds it."]}
 
 

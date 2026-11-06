@@ -365,6 +365,8 @@ class TaskMixin:
             parts.append(FINDINGS_ASK)
         elif is_pick(task):
             parts.append(pick_ask(task))
+        if start := task_brief.start_at(task):                          # where its planner read: first, before the spec's part (spec 153 B.3)
+            parts.insert(0, start)
         return "\n\n".join(parts)
 
     def _does_it_itself(self, slug: str, task: dict, role: dict) -> bool:

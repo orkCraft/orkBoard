@@ -26,16 +26,19 @@ from pathlib import Path
 
 from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
-from orkboard.realm import (collide, goal_route, goal_take, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
+from orkboard.realm import (collide, event_log, goal_route, goal_take, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
                             spec_sections, task_brief, tool_errors)
 from orkboard.realm.idea_words import CARD_RULE, short_of, short_said, title_of
+from orkboard.hooks.warder import is_secret
 from orkboard.sources import pricing
 
 SUMMED = ("usd_low", "usd_high")
 TIERS = ("elder", "warrior", "laborer")
 KINDS = ("secret", "choice", "confirm", "instructions", "file")
 ENV_NAME = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
-DONE_KEEP = 12                       # of the steps done, the tasks the next step's plan is told of
+MAX_FILES = 6                        # the files a task starts at, kept (spec 153 B.1)
+GUESS_TOKENS = 400_000               # what one task's session is guessed to cost before the project's own ledger has enough (spec 153 A.2)
+DONE_KEEP = 12                      # of the steps done, the tasks the next step's plan is told of
 
 
 def _task(tid: str, title: str, brief: str, kind: str, tier: str, after: list[str]) -> dict:
@@ -110,10 +113,57 @@ def sectioned(page: ideas.Page | None) -> bool:
     return page is not None and bool(spec_sections.sections_of(page))
 
 
-def make_plan(slug: str, answer: dict | None, made_at: str = "", look: str = "") -> dict:
+def clean_files(value: object, root: Path) -> list[str]:
+    """The files a task starts at, as the plan's answer gave them (spec 153 B.1): strings, relative to `root`, no `..`, no secret's path, that exist there as files; at most `MAX_FILES`."""
+    out: list[str] = []
+    for raw in value if isinstance(value, list) else []:
+        if not isinstance(raw, str) or len(out) >= MAX_FILES:
+            continue
+        rel = raw.strip().replace("\\", "/").removeprefix("./")
+        parts = rel.split("/")
+        if not rel or rel.startswith("/") or re.match(r"^[A-Za-z]:", rel) or ".." in parts or "" in parts or is_secret(rel) or rel in out:
+            continue
+        try:
+            inside = (Path(root) / rel).resolve().is_relative_to(Path(root).resolve()) and (Path(root) / rel).resolve().is_file()
+        except (OSError, ValueError):
+            continue
+        if inside:
+            out.append(rel)
+    return out
+
+
+def clean_proves(value: object) -> list[int]:
+    """The Done when lines a task proves, by number (spec 153 C.1): whole numbers 1 to `spec_sections.MAX_DONE`, each once, in the order given."""
+    out: list[int] = []
+    for raw in value if isinstance(value, list) else []:
+        n = raw if isinstance(raw, int) and not isinstance(raw, bool) else int(raw) if isinstance(raw, str) and raw.strip().isdigit() else 0
+        if 1 <= n <= spec_sections.MAX_DONE and n not in out:
+            out.append(n)
+    return out
+
+
+def done_lines(page: ideas.Page | None, heading: str) -> list[str]:
+    """The *Done when* lines of the section `heading`, marks kept, in the order they are written (at most `MAX_DONE`); [] for a page of before (no sections) or a section with none."""
+    got = task_brief.reading(page, heading) if page is not None and heading else None
+    return spec_sections.items(spec_sections.split(got["own"][1]).get("Done when", ""))[:spec_sections.MAX_DONE] if got else []
+
+
+def unclaimed(page: ideas.Page | None, party: str, tasks: list[dict], heading: str = "") -> list[int]:
+    """The numbers of the party's *Done when* lines that no task's `proves` names (spec 153 C.2); [] for a page of before and for a section with no *Done when*. The section is `heading`,
+    else the one the tasks are stamped with, else the one headed by the party's name, else the page's first."""
+    if page is None or not (found := spec_sections.sections_of(page)):
+        return []
+    names = [h for h, _t in found]
+    heading = heading or next((str(t["section"]) for t in tasks if t.get("section")), "") or next((h for h in names if h.lower() == str(party).lower()), names[0])
+    claimed = {n for t in tasks for n in t.get("proves") or [] if isinstance(n, int)}
+    return [n for n in range(1, len(done_lines(page, heading)) + 1) if n not in claimed]
+
+
+def make_plan(slug: str, answer: dict | None, made_at: str = "", look: str = "", root: Path | None = None) -> dict:
     """plan.json from the model's answer, strictly: at most 8 tasks with their ids renamed k1…, `after` only to an
     earlier task, known tiers and kinds; the estimate from the tiers' default cost, ±50 %. `look`: the title of a screen's goal (spec 85 §2):
-    its plan begins with a pick of the screen's look, every other task after it."""
+    its plan begins with a pick of the screen's look, every other task after it. `root`: the repository the planner read: a task's `files` are kept (at most `MAX_FILES`)
+    where they exist there (spec 153 B.1; with no root, none); a task's `proves` are the whole numbers 1 to `spec_sections.MAX_DONE` of the Done when lines it proves (a check task none; C.1)."""
     kw = _kw()
     if not isinstance(answer, dict) or not isinstance(answer.get("tasks"), list):
         raise kw.KeeperError("the keeper's answer was not a plan")
@@ -131,8 +181,11 @@ def make_plan(slug: str, answer: dict | None, made_at: str = "", look: str = "")
         tier = raw.get("tier") if raw.get("tier") in TIERS else "warrior"
         kind = raw.get("kind") if raw.get("kind") in roles.TASK_KINDS else roles.DEFAULT_KIND
         pick = idea_pick.clean_ask(raw.get("pick")) if kind not in idea_checks.TAGS else None      # a plan written before has none (spec 51 §2.1)
+        files = clean_files(raw.get("files"), root) if root is not None else []
+        proves = clean_proves(raw.get("proves")) if kind not in idea_checks.TAGS else []
         tasks.append({**_task(tid, title, brief, kind, tier, list(dict.fromkeys(after))),
                       "short": short_said(raw.get("short"), title), **({"pick": pick} if pick else {}),
+                      **({"files": files} if files else {}), **({"proves": proves} if proves else {}),
                       **({"screen": screen} if (screen := idea_look.clean_screen(raw.get("screen"))) else {})})
     if not tasks:
         raise kw.KeeperError("the plan had no task")
@@ -210,6 +263,8 @@ class PlanMixin:
         common = got["common"]
         parts = [("The goal, in the person's words", common.get("Asked") or common.get("Gist", "")), ("Gist", common.get("Gist", "")), ("The route", common.get("Route", "")),
                  (f"Your section, {got['own'][0]}, whole", got["own"][1])]
+        if lines := done_lines(page, heading):
+            parts.append((f"Your section's Done when lines, numbered (a task names, in `proves`, the numbers of the lines it proves)", "\n".join(f"{i}. {x}" for i, x in enumerate(lines, 1))))
         parts += [(f"The section {h} of another party: only its Done when and Will be (the contract your work must not break)", text) for h, text in got["others"]]
         parts += [("Depends on", common.get("Depends on", "")), ("The last decisions", "\n".join(common.get("Decisions", "").splitlines()[-10:]))]
         return parts
@@ -255,15 +310,18 @@ class PlanMixin:
             step_line = (f"\n- This is step {n} of {len(legs)} of the goal's route: plan only {title}'s own step, the tasks that make your section's Done when true and its Will be "
                          f"come about. Each party after you plans its step once yours is merged in dev: never a task for another party's section." if len(legs) > 1 else
                          "\n- Your section's Will be names the parts of your map the work changes: each task serves one of them or one of your Done when lines.")
+        proves_rule = ("\n- Each task's `proves`: the numbers of your section's Done when lines (numbered above) that it proves, 1 the first. Every line is proved by a task; "
+                       "a line no task names is asked of you once more. A check task proves none." if self._lines(page, party) else "")
+        proves_json = ', "proves": [1]' if proves_rule else ""
         return f"""You are the keeper of this project's Task board. This spec goes to work: turn it into a plan. You may
 read the repository (read only) to see what the work touches. {self.reads("plan", touches)}
 {idea_lens.attached(self.state_dir, slug)}{goal_types.prompt_line(self.state_dir, slug)}{releases.prompt_lines(root, self.state_dir, slug)}{checks}
 The spec: {page.title}
 {context}
 Rules:
-- At most {kw.MAX_TASKS} tasks. Each is a brief another Claude session can do alone, in a worktree of the repository:
-  what to change, where, and how it is tested; it names the Done when lines it proves. `after` only where a task
-  needs another's result.{step_line}
+- {self._grain(root, party)} Each is a brief another Claude session can do alone, in a worktree of the repository:
+  what to change, where, and how it is tested. `after` only where a task needs another's result.{step_line}
+- Each task's `files`: the files you read that it starts at, at most {MAX_FILES}, relative paths that exist in the repository; none if you read none.{proves_rule}
 - {CARD_RULE} Each task's `title` is a name, seven words at most, the verb first (e.g. "Spawn enemies from the wave director"):
   the detail belongs in its brief.
 - A code task changes the tests its change breaks, in the same task: the gate runs them when it ends. A later task may add
@@ -283,9 +341,27 @@ Rules:
 
 Answer with one JSON object and nothing else:
 {{"tasks": [{{"id": "k1", "title": "…", "short": "two or three words, 24 characters at most", "brief": "…", "kind": "code",
-             "tier": "warrior", "after": []}}],
+             "tier": "warrior", "after": [], "files": ["path/to/file"]{proves_json}}}],
  "todos": [{{"id": "t1", "title": "…", "kind": "confirm", "why": "…", "choices": [], "steps": [], "accept": [], "for": ["k1"]}}]{prop_json}}}
 """
+
+    def _lines(self, page: ideas.Page | None, party: str) -> list[str]:
+        """The *Done when* lines of the party's section, numbered by this order in the prompt and in `proves` ([] for a page of before)."""
+        return done_lines(page, self._heading(page, party)) if sectioned(page) else []
+
+    def _grain(self, root: Path, party: str) -> str:
+        """The plan's rule of when to split (spec 153 A.2): what one task's session has cost on this project, and the three reasons to split."""
+        got = idea_spend.task_session(self.state_dir)
+        if got:
+            cost = f"on this project one has cost about {got['tokens']:,} tokens" + (f", ${got['usd']:.2f}" if got["usd"] is not None else "") + f" (the median of the last {got['n']})"
+        else:
+            cost = f"as a first guess one costs about {GUESS_TOKENS:,} tokens"
+        try:
+            at_once = goal_team.way(goal_team.size_of(root, party) if party else "")["at_once"]
+        except ValueError:
+            at_once = 2
+        return (f"Each task is a whole session of its own: {cost}. Split the work only (a) for a part another seat does (another tag), (b) for parts that run at once in this party's size "
+                f"(it runs {at_once} at once) and touch no file in common, or (c) for a base two or more tasks must wait for. Else one task does it all. At most {_kw().MAX_TASKS} tasks.")
 
     # -- the plan ------------------------------------------------------------------------------------------------------------------------
 
@@ -300,8 +376,11 @@ Answer with one JSON object and nothing else:
         back = was if was in ("raw", "asks", "ready", "plan", "failed") else "ready"
         try:
             track = self._into(slug, n)
-            text, *_rest = self.ask("plan", self.plan_prompt(root, slug, n))
-            data = kw.make_plan(slug, self.cascade_seen(self.parse(text), self._step_party(slug, n), "plan", slug), look="" if later else idea_look.screen_title(self.state_dir, root, slug))
+            prompt = self.plan_prompt(root, slug, n)
+            text, *_rest = self.ask("plan", prompt)
+            look = "" if later else idea_look.screen_title(self.state_dir, root, slug)
+            data = kw.make_plan(slug, self.cascade_seen(self.parse(text), self._step_party(slug, n), "plan", slug), look=look, root=self.repo_root)
+            data = self._claimed(slug, root, track, n, data, prompt, look)
             data["tasks"] = idea_checks.with_check_tasks(data["tasks"], self.idea_checks(root, slug), self.team_checks(root, slug), _task,
                                                          goal_team.size_of(root, track) if track else "")      # the size's checks (spec 152 A.4)
             team = goal_team.for_idea(root, slug)        # the squad: a leader leads and never does a task (spec 152 A.2)
@@ -346,6 +425,29 @@ Answer with one JSON object and nothing else:
         if not later:
             self.on_plan(slug)
 
+    def _claimed(self, slug: str, root: Path, party: str, n: int, data: dict, prompt: str, look: str) -> dict:
+        """Every Done when line of the step's section is proved by a task (spec 153 C.3): when lines are unclaimed the plan's call is made once more, with its prompt and one line naming
+        them, and never a third time; what is still unclaimed after it is kept on the plan (`unclaimed`, the acceptance is told) and the plan goes on. Event `plan_unclaimed`."""
+        kw = _kw()
+        page = ideas.idea_page(root, slug)
+        heading = self._heading(page, party) if sectioned(page) else ""
+        lines = done_lines(page, heading)
+        left = unclaimed(page, party, data["tasks"], heading)
+        if left:
+            ask = prompt + "\n\nThese Done when lines no task proves: " + "; ".join(f"{i}. {lines[i - 1]}" for i in left) + ". Give each to a task, or a task of its own."
+            text, *_rest = self.ask("plan", ask)
+            try:
+                again = kw.make_plan(slug, self.parse(text), look=look, root=self.repo_root)
+            except kw.KeeperError:                       # the second answer is no plan: the first stands
+                again = None
+            if again is not None:
+                data = again
+            left = unclaimed(page, party, data["tasks"], heading)
+            self._ev(event_log.PLAN_UNCLAIMED, idea=slug, step=n, lines=[str(i) for i in left], asked_again=True)
+        if left:
+            data["unclaimed"] = left
+        return data
+
     def _stamp(self, slug: str, data: dict, party: str, n: int, lead: str) -> None:
         """Each task of the step is stamped with its step's party (spec 99 §9.2): `step`, `party`, and its party's `craft` and `leader` (the head it wears), `section` (the heading
         of the section it reads: realm/task_brief.py) for a page of the new format."""
@@ -385,6 +487,10 @@ Answer with one JSON object and nothing else:
             plan["tasks"] = [*(plan.get("tasks") or []), *more["tasks"]]
             plan["todos"] = [*(plan.get("todos") or []), *more["todos"]]
             plan["missing"] = more.get("missing") or []
+            if more.get("unclaimed"):                    # this step's, for its acceptance (spec 153 C.3)
+                plan["unclaimed"] = more["unclaimed"]
+            else:
+                plan.pop("unclaimed", None)
             was = plan.get("estimate") if isinstance(plan.get("estimate"), dict) else {}
             plan["estimate"] = {"tasks": len(plan["tasks"]), **{k: _sum_usd(was.get(k), more["estimate"].get(k)) for k in SUMMED}}
             plan["waits"] = {"step": n, "party": party, "cost": {k: more["estimate"].get(k) for k in SUMMED}}      # held until `_gate_step` has read its risk: the runner starts none of its tasks before

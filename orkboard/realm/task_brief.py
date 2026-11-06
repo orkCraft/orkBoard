@@ -7,6 +7,7 @@ those, never the whole page. A page of before (one section of its party, nothing
     PROVE                             # the line under *Done when*: a `[test]` line is proven by a test written first
     note(page, heading)               # the sentence a task's prompt says of the spec's reading ("" for a page of before, or a task with no section)
     page_of(repo_root, state_dir, path)  # the spec's page as a task's worktree holds it (`idea_git.spec_paths` gives the path), None when it is not there
+    start_at(task)                    # the line a task's prompt starts with: the files its plan named (spec 153 B.2), "" with none
     sketch_note(state_dir, slug)         # the sketch the person picked, named by its file's path as a reference for a task to follow (spec 121 §2.6), "" with none
 """
 from __future__ import annotations
@@ -71,3 +72,9 @@ def page_of(repo_root: Path, state_dir: Path, path: str) -> idea_page.Page | Non
         except (OSError, UnicodeDecodeError):
             continue
     return None
+
+
+def start_at(task: dict) -> str:
+    """The line a task's prompt starts with when its plan named the files it starts at (spec 153 B.2): *Start at: `a`, `b` (its planner read them; read more as you need)*; "" with none."""
+    files = [f for f in task.get("files") or [] if isinstance(f, str) and f.strip()] if isinstance(task, dict) else []
+    return f"Start at: {', '.join(f'`{f}`' for f in files)} (its planner read {'it' if len(files) == 1 else 'them'}; read more as you need)" if files else ""
