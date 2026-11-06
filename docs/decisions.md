@@ -7183,3 +7183,27 @@ the pick in the address a fourth writer of the browser's history (beside `table/
 5. **C and D are built one after the other** (spec 156's own rule, *parts of a wave share no file*; answered by its reference):
    waves **1** A, B · **2** C · **3** D · **4** E.
 The owner's call.
+
+## 263. The back redrawn closer to a tarot back; To review's ring at the middle of the back; the pane says nothing when nothing is picked (6 November 2026, the owner)
+
+Changes: 254.5 (the back kept plain: four strips and four curls, no moon, no star, no lozenge); 261.6 (the pane's title when
+nothing is picked).
+
+Why: the owner, looking at the table after spec 156 D: *the ring of runes is not in the horizontal middle, and the curls are
+poor: closer to the reference* (a tarot back: filigree corners, a line with a lozenge down each side, a moon in a circle at
+the top and the bottom, stars round a sun). And, on the same screen: the pane kept an empty title row with its `…` when
+nothing was picked, and *Nothing is at work* sat at the top of the last lane, not in the table's middle. So:
+1. **The back is redrawn after the reference** (orkUI 0.32.0, `backs/back.svg`, `tools/build_back.py`): **filigree in the four
+   corners** (a scroll that curls into itself, a tendril along each side ending in a small curl, a leaf at the very corner),
+   **a thin line down each long side with a lozenge at its middle**, **a moon in a circle at the top and the bottom** of the
+   card's axis with a bead and a small lozenge before the ring, **four small stars** round the ring. On a finer grid, 80 x 112
+   (a stroke about 1.8 px on a 144 px card, an engraving's line). Still two greys, no colour (decisions §53.5): the
+   reference's gold is not taken. The ring of runes stays the CSS's, and the small back keeps the sides and their lozenges
+   alone.
+2. **To review's back lies whole in what shows**: the deck's card keeps its 13 px under the window's edge (§251.4), but the
+   back's drawing is laid on the part that shows, so its corners, its sides and its ring share one middle, the one the ring
+   of the wait already had.
+3. **The pane draws no title row while nothing is picked**: the table is the project's then, and the lanes say it; the
+   Orkmaster's menu (`…`) stays, alone in the pane's corner over the lanes. *Nothing is at work* stands in the middle of the
+   lanes, not at the top of the last one.
+The owner's call.

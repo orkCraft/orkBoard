@@ -89,7 +89,7 @@ function Title({ parties, tab, narrow }) {
   const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" };
   const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ...(currentProject.value ? [["Files", () => openOver("files", {}, from, "Files"), false, "folder"]] : []),
     ["Report a problem…", () => openReport(), false, "sign:bug"]];     // the bug left the top row (spec 139 A.5, decisions §246.6)   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
-  return html`<header class="ork-head table-title">
+  return html`<header class=${cls("ork-head table-title", { "is-bare": !o && !picked.value })}>
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
     ${picked.value && html`<${Phases} goal=${picked.value} />`}

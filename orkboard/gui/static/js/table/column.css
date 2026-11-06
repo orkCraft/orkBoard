@@ -52,7 +52,7 @@
 .col-card--deck.ork-card:is(:hover, :focus-visible) { z-index: 40; transform: translateX(var(--column-tuck)); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* slid out whole, over the table */
 .col-card--deck.ork-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink), -4px 4px 0 var(--ork-scrim); }           /* the focus ring inside what shows */
 .col-card--deck.ork-card.asks { border-color: var(--ork-alert); }
-.col-deck__back { position: absolute; left: 50%; top: 50%; width: 112px; height: 157px; transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }      /* orkUI's back, turned on its side */
+.col-deck__back { position: absolute; left: calc(var(--column-tuck) + var(--col-shown) / 2); top: 50%; width: 112px; height: var(--col-shown); transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }      /* orkUI's back, turned on its side, laid on the part that shows: its drawing and the wait's ring share one middle (decisions §263.2) */
 .col-deck__back::before { display: none; }      /* orkUI 0.30.0 draws a ring on every back: To review's own ring (the wait, filling in eighths) stands there instead */
 .col-card--deck .table-back-sigil.ork-sigil.col-sigil { top: 50%; left: calc(var(--column-tuck) + var(--col-shown) / 2); right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.72); transform-origin: 50% 50%; color: var(--ork-ink-faint); }
 .col-sigil.col-stopped::after { color: var(--ork-alert); }      /* it waits for the person: the ring full, still, in the alert */
