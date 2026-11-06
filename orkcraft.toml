@@ -9,3 +9,6 @@ browser_max = 12
 
 [gate.main]
 timeout_min = 30
+
+[board]
+in_code = true

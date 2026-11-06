@@ -251,7 +251,8 @@ This project's goals, their specs and its decisions are files, so any AI tool wo
    (`<n>` a number, a letter after it allowed: `29a`) is one goal: its page `<wiki>/pages/ideas/<n>-<slug>.md` (the file's own
    stem), its title the spec's `# ` heading without its number, its Gist that title in a line, `spec: <folder>/<file>` (A.2), its
    decisions from the spec's first line (`Decisions §254.` → `decisions: 254`), `by: person`, `laid: history` (laid from the
-   project's own documents: a `done` from before the Board has no gate record, and `orkboard check` asks none of it), party Tech until the owner lays it
+   project's own documents: a `done` from before the Board has no gate record, an older spec no *Done when*, and `orkboard check` asks
+   neither of it), party Tech until the owner lays it
    elsewhere (H.3). **Its stages** are the spec's parts: each row of the spec's first table whose first cell is `**<id>. <name>**`
    is a line of *Stages*, `- [x] A. The phase in the page` or `- [ ]` (a part's id is its letter and its digit, if it has one:
    `E1`). **A part is built** when a commit's subject starts `Spec <n> <id>:` (`Spec 150 E2: …`; a part with no digit also by its pieces', `Spec 151 F1:` and `F2:`, when the table has
@@ -269,7 +270,8 @@ This project's goals, their specs and its decisions are files, so any AI tool wo
      the owner puts it in.
    - `docs/decisions.md` stays as it is: `decisions_log.found` finds it, and the rules name it.
    - `docs/hypotheses.md` read as the Board's hypotheses (find whether `realm/hypotheses_file.py` reads its shape; if not, a reader of
-     it, never a rewrite of the file); `docs/updates.md` as Release's chronicle (find spec 134's reader); `docs/trials/` and
+     it, never a rewrite of the file); Release's chronicle reads the repository's tags (spec 134 A.1): `docs/updates.md` says how Orkboard updates itself and
+     `updates.json` lists the releases, neither a changelog, so nothing is laid for them; `docs/trials/` and
      `docs/mockups/` stay documents, named by the goals they belong to.
    - `orkboard init`: `AGENTS.md` made with the block; `CLAUDE.md` keeps every word of its own and gains the block with
      `@AGENTS.md` at its end. Its *Alpha* section wins over the block's *main is the person's* (§255.5): the block is not changed
