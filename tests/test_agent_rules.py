@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.core import idea_sections, idea_talk
+from orkboard.core import idea_accept, idea_sections, idea_talk
 from orkboard.gui import agent_rules_switch
 from orkboard.gui.board_host import Orkboard
 from orkboard.realm import agent_rules, agent_rules_text, goal_route, goal_team, ideas, library, roles, wiki_rules
@@ -45,7 +45,7 @@ def test_the_block_goes_into_a_missing_file_with_the_one_line_and_every_file_is_
     root = project(tmp_path)
     written = write(root)
     text = (root / "AGENTS.md").read_text(encoding="utf-8")
-    assert text.startswith(agent_rules_text.OWN_LINE + "\n\n<!-- orkboard:begin schema=1 hash=") and text.endswith("<!-- orkboard:end -->\n")
+    assert text.startswith(agent_rules_text.OWN_LINE + "\n\n<!-- orkboard:begin schema=2 hash=") and text.endswith("<!-- orkboard:end -->\n")
     assert f"`{WIKI}/pages/ideas/<slug>.md`" in text and f"`{DECISIONS}`" in text and f"`{WIKI}/BOARD.md`" in text
     assert written == ["AGENTS.md", "CLAUDE.md", f"{WIKI}/BOARD.md", f"{WIKI}/AGENTS.md", f"{WIKI}/CLAUDE.md",
                        *[f"{WIKI}/roles/{i}.md" for i in ("orkmaster", "tech-leader", "design-leader", "taskmaster", "grunt")],
@@ -106,8 +106,8 @@ def test_each_role_file_holds_its_prompts_fixed_text_and_its_front_matter(tmp_pa
     assert goal_route.instruction() in orkmaster and idea_sections.join_instruction() in orkmaster
     for craft in ("tech", "design", "product"):
         text = (roles_dir / f"{craft}-leader.md").read_text(encoding="utf-8")
-        assert idea_talk.instruction(craft) in text and idea_sections.instruction(craft) in text and "## What it reads" in text
-        assert f"seat: leader\ncraft: {craft}\nrace: " in text and "schema: 1\nhash: " in text
+        assert idea_talk.instruction(craft) in text and idea_sections.instruction(craft) in text and "## Accepting a step\n\n" + idea_accept.instruction(craft) in text and "## What it reads" in text
+        assert f"seat: leader\ncraft: {craft}\nrace: " in text and "schema: 2\nhash: " in text
     assert "race: elf\n" in (roles_dir / "design-leader.md").read_text(encoding="utf-8") and "race: knight\n" in (roles_dir / "product-leader.md").read_text(encoding="utf-8")
     assert "race: ork\n" in (roles_dir / "tech-leader.md").read_text(encoding="utf-8")
     for seat in ("taskmaster", "grunt"):
@@ -132,7 +132,7 @@ def test_board_md_says_the_real_format_of_part_a(tmp_path):
     root = project(tmp_path)
     write(root)
     text = (root / WIKI / "BOARD.md").read_text(encoding="utf-8")
-    assert text.startswith("<!-- orkboard:file schema=1 hash=") and "Orkboard's file" in text
+    assert text.startswith("<!-- orkboard:file schema=2 hash=") and "Orkboard's file" in text
     for key in goal_phase.MANAGED + ("spec",):
         assert f"`{key}`" in text, key
     for phase in goal_phase.PHASES:
@@ -190,6 +190,25 @@ def test_the_block_is_at_most_sixty_lines_even_with_long_places(tmp_path):
     assert block[-1] == "<!-- orkboard:end -->" and len(block) <= 60 and long in "\n".join(block)
 
 
+def test_the_way_of_a_goal_has_accept_and_the_rules_are_schema_two_spec_152_d(tmp_path):
+    """Spec 152 D.1, D.2: the block's step 4 and BOARD.md say how a party's leader accepts; the leader's role file carries the acceptance's text."""
+    assert agent_rules_text.SCHEMA == 2
+    root = project(tmp_path)
+    write(root)
+    text = (root / "AGENTS.md").read_text(encoding="utf-8")
+    block = text[text.index("<!-- orkboard:begin"):].splitlines()
+    assert len(block) <= 60 and "schema=2" in block[0]
+    body = "\n".join(block)
+    assert "Accept: after a party's stages, before" in body and "twice at most; what is" in body and "“Not accepted”" in body
+    assert body.index("Work: the stages") < body.index("Accept: after") < body.index("5. Done")
+    board = (root / WIKI / "BOARD.md").read_text(encoding="utf-8")
+    assert "## Accepting a step" in board and "twice at most" in board and "“Not accepted”" in board and "Schema 2." in board
+    leader = agent_rules_text.seat_text("leader", "tech")
+    assert leader.index("## Your section of the spec") < leader.index("## Accepting a step\n\n" + idea_accept.instruction("tech"))
+    assert "## Accepting a step" in (root / WIKI / "roles/tech-leader.md").read_text(encoding="utf-8")
+    assert "## Accepting a step" not in agent_rules_text.seat_text("grunt")
+
+
 def test_the_wiki_outside_the_project_is_refused(tmp_path):
     with pytest.raises(ValueError):
         agent_rules.write(project(tmp_path), "../elsewhere")
@@ -233,12 +252,12 @@ def test_the_yes_writes_the_rules_in_one_board_commit(host, fake_repo):
     before = git(fake_repo, "rev-list", "--count", "--all")
     got = host.command("rules.write", {})
     assert got["ok"] and "AGENTS.md" in got["written"] and ".claude/skills/orkboard/SKILL.md" in got["written"] and got["commit"]
-    assert git(host.ideas.state_dir / "board", "log", "-1", "--format=%s") == "board: the Board's rules (schema 1)"
+    assert git(host.ideas.state_dir / "board", "log", "-1", "--format=%s") == "board: the Board's rules (schema 2)"
     assert int(git(fake_repo, "rev-list", "--count", "--all")) > int(before)
     changed = git(host.ideas.state_dir / "board", "show", "--name-only", "--format=", "HEAD").splitlines()
     assert set(got["written"]) <= set(changed)
     s = host.command("rules.switch", {})
-    assert s["on"] and s["status"].startswith("The Board's rules are in this project (schema 1)")
+    assert s["on"] and s["status"].startswith("The Board's rules are in this project (schema 2)")
     assert host.command("rules.write", {})["written"] == []                                   # a second yes writes nothing more
 
 
@@ -257,7 +276,7 @@ def test_at_the_start_the_rules_are_written_again_where_the_package_differs_and_
     assert "A line by hand." not in role.read_text(encoding="utf-8") and "A newer skill" in (board / ".claude/skills/orkboard/SKILL.md").read_text(encoding="utf-8")
     assert toasts == ["roles/tech-leader.md was changed by hand: Orkboard's own is written back; a project's own role is made on Agents."]
     assert host.command("rules.switch", {})["said"] == toasts
-    assert git(board, "log", "-1", "--format=%s") == "board: the Board's rules (schema 1)"
+    assert git(board, "log", "-1", "--format=%s") == "board: the Board's rules (schema 2)"
     host.agent_rules.start()
     assert len(toasts) == 1                                                                   # said once
 
@@ -271,7 +290,7 @@ def test_the_start_of_a_project_without_the_rules_writes_nothing(host, fake_repo
 
 def test_the_commit_words_come_from_the_glossary():
     from orkboard.realm import lexicon
-    assert lexicon.term("board_rules") == "the Board's rules" and agent_rules_switch.message() == "board: the Board's rules (schema 1)"
+    assert lexicon.term("board_rules") == "the Board's rules" and agent_rules_switch.message() == "board: the Board's rules (schema 2)"
 
 
 def test_a_direct_write_is_refused_in_words_while_fs_question_is_unanswered_or_answered_no(tmp_path, monkeypatch):
