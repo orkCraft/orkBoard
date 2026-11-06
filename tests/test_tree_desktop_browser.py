@@ -245,7 +245,7 @@ def test_a_press_on_a_goal_at_work_picks_it_and_the_pane_shows_its_view_in_place
     goal(pg, "room-code").click(position={"x": 12, "y": 40})
     pg.locator(".gv").wait_for(timeout=WAIT_MS)
     assert pg.locator(".tr-goal").count() == 0, "the goal's view is in the tree's place"
-    pg.locator(".table-title__unpick").click()
+    pg.keyboard.press("Escape")                                                  # Esc puts the pick away (no cross in the title: spec 155 B.3)
     pg.locator(".tr-goal").first.wait_for(timeout=WAIT_MS)
     assert pg.locator(".tr-goal.is-lit").count() == 0 and pg.locator('.tr-goal[aria-pressed="true"], .tr-goal [aria-pressed="true"]').count() == 0, "one goal was picked at a time: none now"
     assert pg.locator(".gv").count() == 0

@@ -1,19 +1,20 @@
-// The table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; decisions §104.0, §145.1): the leaders' tabs over the pane — *what and why, through whose eyes*. `frame/frame.js` draws `Table` over the hand: the page's window. The open tab and the goal picked are `frame/state.js`'s (the person's: nothing here switches a tab under them, but a goal picked from the hand opens on its party's tab); what is
+// The table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; decisions §104.0, §145.1): the leaders' tabs over the pane — *what and why, through whose eyes*. `frame/frame.js` draws `Table` over the hand: the page's window. The open tab and the goal picked are `frame/state.js`'s (the person's: nothing here switches a tab under them; a pick whose route lacks the open tab opens the Orkmaster's, in frame/state.js); what is
 // open over the pane is its `over`. This file holds the tabs and the pane together with what they share: the width (under 760 px the tabs are heads and what opens over the pane is a screen, ← the browser's back),
-// Esc (lowers a lifted card, else goes back from what is over the pane) and the project shown (the tab kept for it). Each part is its own module: tabs.js, pane.js (title, over, lifted), boardmap.js, header.js,
+// Esc (lowers a lifted card, else goes back from what is over the pane; the pick's own Esc and its address are frame/state.js's) and the project shown (the tab kept for it). Each part is its own module: tabs.js, pane.js (title, over, lifted), boardmap.js, header.js,
 // seatpop.js, syspane.js, card.js and over.js (the kinds); the forms that were dialogs lie in frame/place.js.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
-import { ORKMASTER, closeOver, lifted, lower, openTab, over, picked, restoreTab, tab } from "../frame/state.js";
+import { closeOver, dropPick, keepGoalsBy, lifted, lower, over, restoreTab, settleAddress, tab } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { mapData } from "../shell/store.js";
 import { Tabs } from "./tabs.js";
 import { Pane, back } from "./pane.js";
 import { litKey, elOf, mineKey, useLowering } from "./card.js";
-import { openTabOf, partiesAll, partiesNow } from "./data.js";
+import { onRoute, openTabOf, partiesAll, partiesNow } from "./data.js";
 import { useFirstStart } from "./parties.js";
-import { columnPick } from "./column.js";                  // a goal the Orkmaster's column picked does not move the open tab (the column is on every tab)
 import "./wayparts.js";                                   // the goal's way's pages over the pane (spec 100)
+
+keepGoalsBy({ known: (slug) => (mapData.value?.nodes || []).some((n) => n.slug === slug), route: onRoute });   // the pick's address and its tab are frame/state.js's (spec 155 B.1)
 
 const NARROW = "(max-width: 759px)";                       // spec 94: the phone's width is the narrow one
 const FIT = 150;                                            // a tab keeps its name while its lane is at least this wide (the lanes are the frame's `--cols`)
@@ -67,12 +68,10 @@ function useBackButton(open, narrow) {
 export function Table({ column = false }) {
   const parties = partiesAll(), tabs = partiesNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(tabs.length, narrow);   // `tabs`: Release and Live are in the portal ring's corners at the wide width (spec 111 §4.1), but a press there opens their view in the pane
   const project = currentProject.value?.path || "";
-  useEffect(() => { restoreTab(); picked.value = ""; lower(); closeOver(); }, [project]);   // another project: its tab, nothing picked, nothing open
+  const was = useRef(project);
+  useEffect(() => { const from = was.current; was.current = project; if (from && from !== project) dropPick(); restoreTab(); lower(); closeOver(); }, [project]);   // another project: its tab, nothing picked, nothing open
   useFirstStart(parties);                                                                  // no party yet: the parties' place opens at once (decisions §169.4)
-  useEffect(() => {                                                                        // a goal picked in the hand opens on its party's tab (unless the Orkmaster's Board is shown: it shows its tasks alone)
-    const n = picked.value && (mapData.value?.nodes || []).find((x) => x.slug === picked.value);
-    if (n && columnPick.slug !== n.slug && tab.value !== ORKMASTER && tab.value !== n.goal && parties.some((g) => g.slug === n.goal)) openTab(n.goal);
-  }, [picked.value]);
+  useEffect(() => { settleAddress(!!mapData.value); }, [mapData.value]);                  // a goal the address asks for is picked once the snapshot has it
   useEffect(() => {                                                                        // Esc: lowers a lifted card of the table, else goes back from what is over the pane (the hand's own is its)
     const key = (e) => {
       if (e.key !== "Escape" || e.defaultPrevented || typing(e.target)) return;

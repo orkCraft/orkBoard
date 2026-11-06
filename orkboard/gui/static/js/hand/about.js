@@ -30,13 +30,13 @@ export function useAbout(s) {
       for (const el of tables.flatMap((t) => [...t.querySelectorAll("[data-about]")])) {
         const has = el.dataset.about.split(/\s+/);
         const on = tokens.some((t) => has.includes(t));
-        if (on && !marked.has(el)) { el.classList.add("is-about"); marked.add(el); }
+        if (on) { marked.add(el); if (!el.classList.contains("is-about")) el.classList.add("is-about"); }          // again when a card redrawn (picked, put away) wrote its class over it
         else if (!on && marked.has(el)) { el.classList.remove("is-about"); marked.delete(el); }
       }
     };
     mark();
     const watch = typeof MutationObserver === "function" ? new MutationObserver(mark) : null;
-    for (const table of tables) watch?.observe(table, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-about"] });
+    for (const table of tables) watch?.observe(table, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-about", "class"] });
     return () => { watch?.disconnect(); for (const el of marked) el.classList.remove("is-about"); aboutNow.value = null; };
   }, [s?.key]);
 }

@@ -2,7 +2,7 @@
 // the open tab and the picked goal (the two axes: through whom, and what is looked at), what is open over the pane (one thing,
 // nothing pinned), and the one card lifted on the table or in the hand. The seam the table (js/table/) and the hand (js/hand/)
 // share: written by the lead, changed by neither. Signals only; the open tab is kept per project on this device.
-import { signal } from "@preact/signals";
+import { effect, signal, untracked } from "@preact/signals";
 
 export const ORKMASTER = "orkmaster";
 const TAB_KEPT = "orkboard.frame.tab";
@@ -53,6 +53,74 @@ export function closeOver() {
 
 /** A goal picked (its stack, a card of it, a goal in the deck's row or the discard); the same goal again, or "", picks none. */
 export function pick(slug) { picked.value = slug && slug !== picked.value ? slug : ""; }
+
+// -- the pick in the address (docs/specs/155-one-pick-and-the-release-column.md part B.1, decisions §260.2, §261.4) --------------------------------------
+// **This file is the one writer and reader of `#goal=<slug>`, and the one handler of the pick's Esc.** The pick is whatever sets `picked` (a press, a hand's card, a result of the host); an effect writes it to the address:
+// `pushState` from none to a goal (so the browser's and the phone's back put it away), `replaceState` from a goal to another, and from a goal to none the entry is taken off again (`history.back()`) when it is ours, else the hash is cleared in place.
+// The address is read on load (a slug the snapshot does not have reads as none, once there is a snapshot to say so) and on `popstate`. The narrow page's back entry (table.js `useBackButton`) is pushed over the pick's, so a file opened over a pick closes on the first back, the pick on the second.
+const HASH = /^#goal=(.+)$/;
+let goals = { known: () => true, route: () => null };
+/** Says which goals the snapshot has and which parties a goal's route passes (table/data.js): functions, so this seam imports nothing. */
+export const keepGoalsBy = (g) => { goals = { ...goals, ...g }; };
+const hashSlug = () => { try { const m = HASH.exec(decodeURIComponent(location.hash)); return m ? m[1] : ""; } catch { return ""; } };
+let inAddress = hashSlug(), wanted = inAddress, expectPop = 0;           // `inAddress`: the goal the address says; `wanted`: read from it and not yet found in a snapshot
+
+const clearHash = () => { try { history.replaceState(history.state, "", location.pathname + location.search); } catch { /* no history */ } };
+function writeAddress(slug) {
+  try {
+    const url = `${location.pathname}${location.search}#goal=${encodeURIComponent(slug)}`;
+    if (slug && !inAddress) history.pushState({ orkboardPick: 1 }, "", url);
+    else if (slug) history.replaceState(history.state?.orkboardPick ? history.state : { orkboardPick: 1 }, "", url);
+    else if (history.state?.orkboardPick) { expectPop += 1; history.back(); }
+    else clearHash();
+  } catch { /* no history: the pick lives in the page only */ }
+  inAddress = slug;
+}
+
+/** A goal whose route leaves out the open tab's party gives way to the Orkmaster's tab (as the person's own press: §139.3 holds; decisions §260.3). */
+function followPick(slug) {
+  const route = slug ? goals.route(slug) : null, now = tab.peek();
+  if (route && now !== ORKMASTER && !route.has(now)) openTab(ORKMASTER);
+}
+
+/** The snapshot has come (or changed): a goal the address asked for is picked once it is there; one it never has reads as none. Table calls it when the snapshot changes. */
+export function settleAddress(haveSnapshot) {
+  if (!wanted || !haveSnapshot) return;
+  const slug = wanted;
+  wanted = "";
+  if (goals.known(slug)) { if (picked.peek() !== slug) picked.value = slug; }
+  else if (inAddress === slug) { inAddress = ""; clearHash(); }
+}
+
+/** A project switched: nothing is picked and the address says so, without a step in the history. */
+export function dropPick() { wanted = ""; picked.value = ""; if (inAddress) { inAddress = ""; clearHash(); } }
+
+effect(() => {
+  const slug = picked.value;
+  untracked(() => {
+    if (!slug && wanted) return;                                          // the address asks for a goal the snapshot has not come to yet
+    if (slug !== inAddress) writeAddress(slug);
+    followPick(slug);
+  });
+});
+
+if (typeof addEventListener === "function") {
+  addEventListener("popstate", () => {
+    if (expectPop > 0) { expectPop -= 1; return; }                       // the step back we took ourselves: `picked` is already none
+    const slug = hashSlug();
+    inAddress = slug;
+    if (!slug) { wanted = ""; if (picked.peek()) picked.value = ""; return; }
+    if (goals.known(slug)) { wanted = ""; if (picked.peek() !== slug) picked.value = slug; } else { wanted = slug; if (picked.peek()) picked.value = ""; }
+  });
+  // Esc, with nothing open over the pane and nothing lifted, puts the pick away. What something else took (a menu, a question, the column's choices) is theirs.
+  addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || e.defaultPrevented || !picked.peek() || over.peek() || lifted.peek()) return;
+    const el = e.target;
+    if (el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable || el.closest?.(".table-drop, [role=dialog], [role=alertdialog], [role=menu]"))) return;
+    e.preventDefault();
+    picked.value = "";
+  });
+}
 
 /** A card lifted where it lies (§120.1), one at a time on the table and in the hand. */
 export function lift(key) { lifted.value = key || ""; }

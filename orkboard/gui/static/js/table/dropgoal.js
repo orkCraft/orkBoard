@@ -4,6 +4,8 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { command } from "../link.js";
+import { act } from "../shell/store.js";
+import { ACTIVE, pilesOf } from "./piles.js";
 import { mapData, refreshShell } from "../shell/store.js";
 import { lower, picked, pick } from "../frame/state.js";
 import { Menu } from "./menu.js";
@@ -50,11 +52,17 @@ export function DropAsk({ slug, onKeep, onDone }) {
   </div>`;
 }
 
+/** The goal of In analysis that *Next* puts this one before: the first of its own party still waiting its turn (the Board moves a goal among its party's, `ideas.move`); "" when it is not in analysis or none is before it (spec 155 B.2: *Next* is in the goal's menu). */
+export function nextBefore(slug) {
+  const rows = pilesOf(mapData.value?.nodes || []).analysis, i = rows.findIndex(({ n }) => n.slug === slug);
+  return i < 0 ? "" : rows.slice(0, i).find(({ n }) => n.goal === rows[i].n.goal && !ACTIVE.includes(n.state))?.n.slug || "";
+}
+
 export function GoalMenu({ slug, where = "inline" }) {
-  const [asking, setAsking] = useState(false), box = useRef();
+  const [asking, setAsking] = useState(false), box = useRef(), before = nextBefore(slug);
   const close = () => { setAsking(false); box.current?.querySelector(".table-menu__btn")?.focus(); };
   return html`<span class=${cls("table-dropper", `is-${where}`)} ref=${box} data-dropper=${slug}>
-    <${Menu} label="This goal's menu" items=${[["Drop this goal…", () => setAsking(true), false, "trash"]]} />
+    <${Menu} label="This goal's menu" items=${[...(before ? [["Next", () => act("ideas.move", { slug, before }), false, "chevron-up", "Move it before the first goal of its party that waits its turn"]] : []), ["Drop this goal…", () => setAsking(true), false, "trash"]]} />
     ${asking && html`<${DropAsk} slug=${slug} onKeep=${close} />`}
   </span>`;
 }

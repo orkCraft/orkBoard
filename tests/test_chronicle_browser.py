@@ -163,7 +163,7 @@ def test_a_goal_lifted_is_as_it_was_and_show_on_designs_table_opens_that_table_w
     pg.locator('.chr-card-wrap[data-goal="phones"] .chr-card').click()
     pg.get_by_role("button", name="Show on Design's table").click()
     pg.wait_for_function("() => !document.querySelector('.table-over[data-kind=\"chronicle\"]')", timeout=WAIT_MS)
-    assert sig(pg, "frame/state.js", "tab") == "design" and sig(pg, "frame/state.js", "picked") == "phones"
+    assert sig(pg, "frame/state.js", "picked") == "phones" and sig(pg, "frame/state.js", "tab") == "orkmaster", "Design's route does not pass the goal (spec 155 B.5): the pick opens the Orkmaster's tab"
     finish(pg, log)
 
 

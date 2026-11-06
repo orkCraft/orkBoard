@@ -95,16 +95,11 @@
 .frame-column .col-card--up.is-about { transform: translateX(calc(var(--x, 0px) + 8px)); }
 @media (prefers-reduced-motion: reduce) { .frame-column .col-card.is-about { transform: none; box-shadow: inset 0 0 0 2px var(--ork-ink); } .frame-column .col-card--fan.is-about { transform: rotate(var(--r, 0deg)); } .frame-column .col-card--up.is-about { transform: translateX(var(--x, 0px)); } }
 
-/* what a press lifts over the pane: the list of In analysis in order, or a card's choices, beside the column */
+/* what a picked card lifts beside the column (never over the pane): its choices */
 .col-lift { position: absolute; z-index: 20; display: flex; flex-direction: column; gap: var(--ork-3); width: 280px; max-height: calc(100% - var(--ork-4)); overflow-y: auto; padding: var(--ork-4); }
 .col-lift__t { display: flex; align-items: center; gap: var(--ork-2); margin: 0; font: var(--ork-type-caption); font-weight: 600; }
 .col-lift__cap { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .col-lift__acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
-.col-list__rows { display: flex; flex-direction: column; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; }
-.col-list__row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2); font: var(--ork-type-caption); }
-.col-list__row .ork-elem { flex: none; }
-.col-list__nm { flex: 1 1 8ch; min-width: 0; overflow-wrap: anywhere; }
-.col-list__acts { display: inline-flex; align-items: center; gap: var(--ork-1); margin-left: auto; }
 .col-ask { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1); }
 .col-ask__said { flex: 1 0 100%; }
 
@@ -119,3 +114,11 @@
 .col-pass__left { color: var(--ork-ink-faint); font-size: 11px; white-space: nowrap; }
 .col-pass__acts { display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-1); padding: 0 var(--ork-2) var(--ork-2); }
 .col-pass__acts .ork-btn { white-space: normal; }
+
+/* One pick (spec 155 B.2, decisions §260.1): the picked card is risen as a hovered one is and its edge is in the ink, the frame line's width doubled; nothing else is dimmed. A pile of To review hovered or focused fans its backs so each is reached. */
+.col-card.ork-card.ork-picked { border-color: var(--ork-ink); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-ink); }
+.col-card--fan.ork-card.ork-picked { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+.col-card--deck.ork-card.ork-picked { transform: translateX(var(--column-tuck)); }
+.col-card--up.ork-card.ork-picked { transform: translate(calc(var(--x, 0px) + 36px), 0) rotate(2deg); }
+.col-pile.is-down:is(:hover, :focus-within) .col-card--deck.ork-card { top: calc(var(--i) * 36px); transition: top var(--ork-motion-base) var(--ork-motion-ease), transform var(--ork-motion-base) var(--ork-motion-ease); }
+@media (prefers-reduced-motion: reduce) { .col-pile.is-down:is(:hover, :focus-within) .col-card--deck.ork-card { transition: none; } }
