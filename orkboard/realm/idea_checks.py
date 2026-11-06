@@ -7,7 +7,8 @@ to `every` idea applies always.
     draft_lines(checks)               # for the draft prompt: each check, when it applies, its Done when line
     kept(answer.get("checks"), checks)  # what the draft said, as the page keeps it: [{"by", "applies", "why", "skipped"?}]
     skip(kept_, checks, "reviewer")   # the person skips a check: kept with `skipped`
-    plan_lines(kept_, checks)         # for the plan prompt: the checks that apply, each one task
+    held(kept_, checks, size)         # the checks that apply which the party's size holds: lean none, standard the first, full every one (spec 152 A.4)
+    plan_lines(kept_, checks, size)   # for the plan prompt: those checks, each one task
     with_check_tasks(tasks, kept_, checks, make, size)  # the plan's tasks, a check task added where the plan left one out, by the party's size
     status(kept_, checks, tasks)      # for a face: each check, whether it applies, why not, its task's state, what it found
     parse_findings(text)              # a check task's findings file (FINDINGS_FILE) as the list it holds, or None
@@ -20,6 +21,7 @@ its check the library's. No face, no model.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from orkboard.realm import library, roles
@@ -151,25 +153,38 @@ def skip(kept_: list[dict], checks: list[dict], by: str, skipped: bool = True) -
     return rows
 
 
-def plan_lines(kept_: list[dict], checks: list[dict]) -> str:
-    """The plan prompt's part: the checks this spec must pass, each one task with its tag, after the work it checks."""
+def held(kept_: list[dict], checks: list[dict], size: str = "") -> list[dict]:
+    """The checks a party's size holds of those that apply (spec 152 A.4): **lean** none, **standard** the first that applies in the squad's order, **full** every
+    one that applies; `size` "" (a party made before sizes) every one, as before."""
     go = on(kept_)
-    rows = [f'- {c["name"]}: a task tagged "{c["tag"]}", after the work it checks: {c["task"]}' for c in checks if c["by"] in go]
+    got = [c for c in checks if c["by"] in go]
+    return [] if size == "lean" else got[:1] if size == "standard" else got
+
+
+def plan_lines(kept_: list[dict], checks: list[dict], size: str = "") -> str:
+    """The plan prompt's part: the checks this spec must pass that the party's size holds (`held`), each one task with its tag, after the work it checks."""
+    rows = [f'- {c["name"]}: a task tagged "{c["tag"]}", after the work it checks: {c["task"]}' for c in held(kept_, checks, size)]
     return ("The checks this spec must pass, one task each:\n" + "\n".join(rows) + "\n") if rows else ""
 
 
+def _next_id(tasks: list[dict]) -> str:
+    return f"k{max((int(m.group(1)) for t in tasks if (m := re.fullmatch(r'k(\d+)', str(t.get('id') or '')))), default=0) + 1}"
+
+
 def with_check_tasks(tasks: list[dict], kept_: list[dict], checks: list[dict], make, size: str = "") -> list[dict]:
-    """The plan's tasks with a check task for each check the party's size holds that applies and has none of its tag yet, after every other task (spec 152 A.4):
-    **lean** none, **standard** the first check that applies in the squad's order, **full** every one that applies; `size` "" (a party made before sizes) every
-    one, as before. `make(id, title, brief, tag, tier, after)`: a task as the plan writes it (core/idea_keeper.py `_task`)."""
-    go = on(kept_)
-    out = list(tasks)
-    if size == "lean":
-        return out
-    held = [c for c in checks if c["by"] in go]
-    for c in held[:1] if size == "standard" else held:
+    """The plan's tasks with a check task for each check the party's size holds (`held`) that has none of its tag yet, after every other task (spec 152 A.4). With
+    a size, a check task the plan wrote that the size does not hold is taken out (a Lean plan keeps none: the leader's acceptance is its check), and out of the
+    others' `after`. `make(id, title, brief, tag, tier, after)`: a task as the plan writes it (core/idea_keeper.py `_task`)."""
+    keep = held(kept_, checks, size)
+    tags = {c["tag"] for c in keep}
+    out = [t for t in tasks if not size or str(t.get("kind") or "") not in TAGS or t.get("kind") in tags]
+    if gone := {t.get("id") for t in tasks} - {t.get("id") for t in out}:
+        for t in out:
+            t["after"] = [a for a in t.get("after") or [] if a not in gone]
+    work = [t["id"] for t in out]
+    for c in keep:
         if not any(t.get("kind") == c["tag"] for t in out):
-            out.append(make(f"k{len(out) + 1}", f"Check: {c['name']}", c["task"], c["tag"], c["tier"], [t["id"] for t in tasks]))
+            out.append(make(_next_id(out), f"Check: {c['name']}", c["task"], c["tag"], c["tier"], work))
     return out
 
 

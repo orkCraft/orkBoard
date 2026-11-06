@@ -127,7 +127,7 @@ def test_the_plan_tags_each_task_and_gives_it_to_the_team_member_who_does_that_k
     _wait(host, slug)
     prompt = next(p for p in seen if "turn it into" in p)
     assert '"uikit" (components and tokens of the design system)' in prompt
-    assert "The goal's team, by the tags each does: Grunt (" in prompt and "Product designer (design)" in prompt
+    assert "The goal's team, by the tags each does: Grunt (" in prompt and "Product designer (design)" not in prompt, "the leader takes no tag (spec 152 A.2)"
     assert "Accessibility reviewer (a11y)" in prompt
     tasks = host.command("ideas.page", {"slug": slug})["plan"]["tasks"]
     assert [(t["kind"], t["role"]) for t in tasks] == [("design", "grunt"), ("a11y", "accessibility-reviewer"),

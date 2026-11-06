@@ -302,3 +302,20 @@ def test_the_checks_a_plan_holds_follow_the_partys_size_spec_152_a_4(tmp_path):
     assert ids("standard", only_second) == ["security"]                                                # the first that applies, not the first of the squad
     skipped = [{"by": "reviewer", "applies": True, "why": "", "skipped": True}, {"by": "security-reviewer", "applies": True, "why": ""}]
     assert ids("standard", skipped) == ["security"] and ids("lean", skipped) == []
+
+
+def test_a_check_the_size_does_not_hold_is_neither_asked_of_the_plan_nor_kept_when_the_plan_wrote_it_spec_152_a_4(tmp_path):
+    """The plan's prompt names only the checks the size holds, and a check task the plan wrote anyway goes (and out of the others' `after`): a Lean plan keeps none."""
+    checks = idea_checks.of_team(tmp_path, ["grunt", "reviewer", "security-reviewer"], [])
+    both = idea_checks.kept(None, checks)
+    assert idea_checks.plan_lines(both, checks, "lean") == ""
+    assert '"review"' in idea_checks.plan_lines(both, checks, "standard") and '"security"' not in idea_checks.plan_lines(both, checks, "standard")
+    assert '"security"' in idea_checks.plan_lines(both, checks, "full") and idea_checks.plan_lines(both, checks) == idea_checks.plan_lines(both, checks, "full")
+    make = lambda i, title, brief, tag, tier, after: {"id": i, "kind": tag, "after": after}          # noqa: E731
+    planned = lambda: [{"id": "k1", "kind": "code", "after": []}, {"id": "k2", "kind": "security", "after": ["k1"]}, {"id": "k3", "kind": "code", "after": ["k2"]}]      # noqa: E731
+    lean = idea_checks.with_check_tasks(planned(), both, checks, make, "lean")
+    assert [(t["id"], t["kind"], t["after"]) for t in lean] == [("k1", "code", []), ("k3", "code", [])]
+    standard = idea_checks.with_check_tasks(planned(), both, checks, make, "standard")
+    assert [(t["id"], t["kind"]) for t in standard] == [("k1", "code"), ("k3", "code"), ("k4", "review")], "the first that applies; a new id never one taken"
+    assert standard[-1]["after"] == ["k1", "k3"]
+    assert [t["kind"] for t in idea_checks.with_check_tasks(planned(), both, checks, make, "")] == ["code", "security", "code", "review"], "a party of before: as before"

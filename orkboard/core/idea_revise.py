@@ -162,11 +162,9 @@ class ReviseMixin:
             ("Not started", "\n".join(json.dumps(r, ensure_ascii=False) for r in rows))], cap - len(spec))
         touches = [t for t in json.loads(page.get("touches") or "[]") if isinstance(t, str)] if page.get("touches", "").startswith("[") else []
         kinds = "; ".join(f'"{k}" ({roles.KIND_LINES[k]})' for k in roles.TASK_KINDS if k not in idea_checks.TAGS)
-        party = goal_team.team_of(root, track)
-        if party:
-            party = [*party, goal_team.leader_of(root, track)]
+        party = goal_team.team_of(root, track)       # the squad alone: a leader never takes a task (spec 152 A.2)
         team = self.team_lines([s for s in dict.fromkeys(party) if s != roles.TASKMASTER])
-        checks = idea_checks.plan_lines(self.idea_checks(root, slug), self.team_checks(root, slug))
+        checks = idea_checks.plan_lines(self.idea_checks(root, slug), self.team_checks(root, slug), goal_team.size_of(root, track) if track else "")      # the size's checks (spec 152 A.4)
         return f"""You are the keeper of this project's Task board. This goal's plan is passed and its work is under way, and its spec
 changed. Look at what is left and propose a plan change: which tasks not started change, which are dropped, which are added. You
 may read the repository (read only) to see what the work touches. {self.reads("plan", touches)}

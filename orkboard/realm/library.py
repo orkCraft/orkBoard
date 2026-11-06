@@ -69,7 +69,7 @@ LIBRARY: tuple[Agent, ...] = (
           "You shape the change before it is written. Read the modules it touches and the rules of the repository "
           "(CLAUDE.md). Keep each module to one job and the imports one way. The plan is already made; what "
           "is settled about the shape of the change goes in the commit's message (where you cannot commit, in `.ork-commit.md`). Plan each task to change code only where "
-          "it says to, and accept the step only when no module has grown past ~600 lines.", band="lead"),
+          "its brief says, and to split a module before it grows past ~600 lines.", band="lead"),
     Agent("tester", "Tester", "engineering", "laborer", ("tests",),
           "Writes the tests a change lacks and finds the cases that break it",
           "You write tests. Read the change and the tests beside it, then add the cases it lacks: the empty input, the "

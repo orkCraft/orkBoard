@@ -187,12 +187,10 @@ class PlanMixin:
         prop_rule, prop_json = idea_cascade.propose_rule(self.state_dir, party)       # a slice it holds that is wrong for its craft (spec 131 §B.1)
         touches = [t for t in json.loads(page.get("touches") or "[]") if isinstance(t, str)] if page.get("touches", "").startswith("[") else []
         kinds = "; ".join(f'"{k}" ({roles.KIND_LINES[k]})' for k in roles.TASK_KINDS)
-        team_of = goal_team.team_of(root, party)
-        if team_of:                                  # the leader does the tags it takes when no builder does
-            team_of = [*team_of, goal_team.leader_of(root, party)]
+        team_of = goal_team.team_of(root, party)     # the squad alone: a leader never takes a task (spec 152 A.2)
         team = self.team_lines([s for s in dict.fromkeys(team_of) if s != roles.TASKMASTER])
         team += idea_look.instruction(self.state_dir, root, slug) if n == 1 else ""      # a screen's look is picked first, a task may name its screen (spec 85 §2, §3)
-        checks = idea_checks.plan_lines(self.idea_checks(root, slug), self.team_checks(root, slug))
+        checks = idea_checks.plan_lines(self.idea_checks(root, slug), self.team_checks(root, slug), goal_team.size_of(root, party) if party else "")      # the size's checks (spec 152 A.4)
         legs = self._legs(slug)
         step_line = ""
         if new:
