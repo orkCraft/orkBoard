@@ -2,7 +2,7 @@
 
     goal_result.touched(state_dir, root, slug, ref)     # {"parts": {part path}, "screens": [{screen, name, path}], "files": n}: what the commits of `ref` the goal's tasks brought changed
     goal_result.judge(promised, touched, tasks)         # [{id, kind, verdict, line}] a promised part: `ok` · `differs` · `missing`, then `extra` for a part changed that no line promised
-    goal_result.of(sections, tasks, touch, done)        # one answer: {parties: [{party, parts: [...], done_when: [{text, state}]}], files, screens}
+    goal_result.of(sections, tasks, touch, done)        # one answer: {parties: [{party, parts: [...], done_when: [{text, proof, state}]}], files, screens}
 
 The promise is the party's section of the goal's spec, its *Will be* lines (`new|changed|gone <id>`, `realm/spec_sections.py`) and its *Done when*. What was done is read where the project has it:
 Tech's map is the project's parts (the folders its files are in), so a part is **touched** when a file of it was changed by the goal's commits; Design's is the screens (`realm/goal_screens.py`:
@@ -93,7 +93,7 @@ def judge(promised: list[dict], touch: dict | None, tasks: list[dict], craft: st
 
 def of(sections: list[Any], tasks: list[dict], touch: dict | None, done: bool, crafts: dict[str, str], home: str = "") -> dict:
     """One answer for a goal: `sections` are `spec_sections.read`'s (`Section(party, title, parts)`), `tasks` the plan's, `touch` as `touched()`, `done` the goal is done, `crafts` `{party: craft}`, `home` the goal's own party (a plan of before stamps no party: its tasks are the home's).
-    `{parties: [{party, title, parts, done_when: [{text, state}]}], files, screens}`; a party with no *Will be* and no *Done when* is left out."""
+    `{parties: [{party, title, parts, done_when: [{text, proof, state}]}], files, screens}` (`proof` a line's mark, `[test]` · `[look]` · `[person]`, apart from its `text`); a party with no *Will be* and no *Done when* is left out."""
     checks_left = any((idea_checks.counts(t.get("findings") if isinstance(t.get("findings"), list) else None)["left"] or 0) > 0
                       for t in tasks if t.get("kind") in idea_checks.TAGS)
     out = []
@@ -106,5 +106,5 @@ def of(sections: list[Any], tasks: list[dict], touch: dict | None, done: bool, c
         merged, total = _landed(mine)
         met = done and bool(total) and merged == total and not checks_left
         out.append({"party": s.party, "title": s.title, "parts": judge(will, touch, mine, crafts.get(s.party, "")),
-                    "done_when": [{"text": x, "state": "ok" if met else ""} for x in lines]})
+                    "done_when": [{"text": spec_sections.bare(x), "proof": spec_sections.proof_of(x), "state": "ok" if met else ""} for x in lines]})      # the mark apart (decisions §257.4)
     return {"parties": out, "files": (touch or {}).get("files", 0), "screens": (touch or {}).get("screens", [])}

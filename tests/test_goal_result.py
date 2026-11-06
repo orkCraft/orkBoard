@@ -128,7 +128,7 @@ def test_a_craft_whose_map_is_not_read_from_the_files_is_judged_by_its_tasks_alo
 # -- the command -----------------------------------------------------------------------------------------------------------------------
 
 def test_goal_result_judges_each_partys_section_and_checks_its_done_when_only_when_it_all_landed(host, tech, design, monkeypatch):
-    slug = _goal(host, tech, {tech: {"Done when": "- Rounds keep their score\n- The lobby opens", "Will be": "- new src/lobby — a lobby\n- changed src/score"},
+    slug = _goal(host, tech, {tech: {"Done when": "- [test] Rounds keep their score\n- The lobby opens", "Will be": "- new src/lobby — a lobby\n- changed src/score"},
                               design: {"Done when": "- The winner shows first", "Will be": "- changed Results — the winner first"}},
                  [("k1", "merged", [], tech), ("k2", "merged", ["k1"], tech), ("k3", "ready", ["k1"], design)], state="done")
     monkeypatch.setattr(goal_result, "touched", lambda *a, **k: {"parts": ["src/lobby", "src/other"], "screens": [], "files": 4})
@@ -138,6 +138,7 @@ def test_goal_result_judges_each_partys_section_and_checks_its_done_when_only_wh
     assert set(by) == {tech, design}
     assert {(p["id"], p["verdict"]) for p in by[tech]["parts"]} == {("src/lobby", "ok"), ("src/score", "differs"), ("src/other", "extra")}
     assert [(x["text"], x["state"]) for x in by[tech]["done_when"]] == [("Rounds keep their score", "ok"), ("The lobby opens", "ok")], "its tasks all landed and no check left a finding"
+    assert [x["proof"] for x in by[tech]["done_when"]] == ["test", ""], "a line's mark is apart from its words (decisions §257.4)"
     assert [(p["id"], p["verdict"]) for p in by[design]["parts"]] == [("Results", "missing")]
     assert [x["state"] for x in by[design]["done_when"]] == [""], "its task did not land: nothing says it is met"
     json.dumps(got)
