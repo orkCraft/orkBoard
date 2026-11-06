@@ -5,8 +5,8 @@ large (its number clear), its front face under it and its right face beside it (
 as it turns away from the light, so a die that rolls or rocks shows its depth. It is the person's to press, so it is drawn as a potion is: the thing, and its word under it
 (the caller's).
 
-    die.json   the source: the box (`size`, cells), a face's side (`face`), the perspective, the view, the shades of the up, front and right faces at rest (`tones`,
-               which make the light) and the darkest, the numbers of the five sides, the roll's turns and poses, the wobble's and the landing's poses, the quarter turn's steps (`turn`), and twelve
+    die.json   the source: the box (`size`, cells), the cell of the sizes `big` and `small` (`cells`, 0.31.0), a face's side (`face`), the perspective, the view, the shades of the up, front and right faces at rest (`tones`,
+               which make the light) and the darkest, the numbers of the five sides, the roll's turns and poses, the wobble's and the landing's poses, the quarter turn's steps (`turn`), and the sizes' cells (`cells`: `big` 6, `small` 2), and twelve
                faces' marks (ten for the up face, `faces` 1 to 6, `ok`, `no`, `new`, `play`, and, since 0.29.0, `front-stop` and `front-resume` for the front one), each a 16 x 16 grid of letters inside the face's rim with what each letter is (`legend`)
 
 A face is the card's frame in the edge's rim (a cell, its corners cut), its marks in 2 x 2 blocks of cells (pips at columns and rows 3, 7 and 11; the tick, the cross and the spark at two
@@ -19,7 +19,7 @@ Plain HTML and CSS: the die holds its cube and the cube's six faces, nothing els
 
     <span class="ork-die face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span>
 
-- **Size**: the cell is 3 px by default (a box of **72 x 90**, a face of 54), **`big`** 6 px (**144 x 180**, a face of 108); whole pixels, no size between. The cube at rest is
+- **Size**: the cell is 3 px by default (a box of **72 x 90**, a face of 54), **`big`** 6 px (**144 x 180**, a face of 108) and, since 0.31.0, **`small`** 2 px (**48 x 60**, a face of 36); whole pixels, no size between. `big` and `small` are `cells` in `die.json`, written by `tools/build_die.py` (`--check` holds them); the cube's pieces are all in cells, so a die is never scaled. The cube at rest is
   centred in its box; when it rolls or rocks it rises out of it.
 - **Face**: a class of the die, shown on its up face: **`face-1`** to **`face-6`** (the pips in `--ork-ink-muted`; `face-5` when there is none), **`face-ok`** (a tick in
   `--ork-success`), **`face-no`** (a cross in `--ork-danger`) **`face-new`** (a spark in `--ork-ink`: news, not a warning) and **`face-play`** (0.27.0: the play arrow, a right-pointing triangle in the pips' colour `--_pip`, so the muted ink at rest and, with `is-playing`, the ink and the glow; Orkboard's decision §200).

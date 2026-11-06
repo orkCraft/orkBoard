@@ -137,6 +137,11 @@ about as bright as `--ork-ink-muted` (L* 69; it is a little darker), so it does 
 used by `.ork-potion` alone, never a text colour, a fill or an element's: 5.63:1 on the panel, 4.54 on the card, 3:1 or more on every ground,
 CIE76 29.5 from `ice`, 11.9 from `void`, 67 or more from every signal.
 
+## The drum (0.31.0)
+`.ork-drum` is a row of `.ork-potion`s laid as a drum seen from the front (`drum/`, `drum/README.md`): the front one (`--ork-drum-front`, its index) at its own size, its two neighbours at `.small` (2 px a cell) half behind it at brightness 0.62,
+the others hidden; a neighbour `.is-alert` stands at full brightness beside the front with room under it for its share in words; changing `--ork-drum-front` slides each potion one place round (none under reduced motion); `.is-open`
+lays a plain row. 88 x 90 at rest, 124 x 90 with an alert neighbour. The die has a `.small` size too, 2 px a cell, **48 x 60** (`die/README.md`).
+
 ## The portal (0.18.0)
 `.ork-portal` is a round, magical pixel portal, the way a goal is sent into main (`portal/`, `portal/README.md`): a ring of stones round a dark panel,
 a three-armed swirl turning to a dark eye, twelve sparks outside, on a **26 x 28** grid, 5 px a cell (130 x 140), `.small` 4 px (104 x 112).

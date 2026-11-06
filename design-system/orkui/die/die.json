@@ -1,5 +1,6 @@
 {
  "size": [24, 30],
+  "cells": {"big": 6, "small": 2},
  "face": 18,
  "perspective": 150,
  "view": {"x": 34, "y": -20},
