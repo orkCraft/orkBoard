@@ -190,3 +190,23 @@ def test_the_ci_steps_file_runs_on_pull_requests_for_the_boards_files_only():
     assert "on:\n  pull_request:\n    paths:\n" in text and f'      - "{WIKI}/**"\n      - "AGENTS.md"\n      - "CLAUDE.md"\n' in text
     assert "push" not in text and f"{T.RUN} check" in text and "uvx orkboard check" not in text and "astral-sh/setup-uv" in text
     assert "Checks the Board on each pull request; your tests stay your CI's." in text
+
+
+def test_a_goal_laid_from_the_history_is_asked_neither_a_gate_record_nor_a_done_when(tmp_path):
+    """Spec 151 H.1: a spec written before the Board's format, laid by `import --goals`, has no *Done when* and its `done` no gate record."""
+    import subprocess
+    from orkboard.realm import agent_rules
+    repo = tmp_path / "p"
+    (repo / "docs" / "specs").mkdir(parents=True)
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    (repo / "docs" / "specs" / "33-old.md").write_text("# Spec 33 — Old\n\nNo Done when here.\n")
+    page = repo / "llm-wiki/general/pages/ideas/33-old.md"
+    page.parent.mkdir(parents=True)
+    head = "---\nowner: board\nkind: idea\ntrack: tech\nphase: done\nspec: docs/specs/33-old.md\nby: person\n{laid}schema: {schema}\n---\n# Old\n\n## Gist\nOld\n\n## Stages\n- [x] Old\n"
+    agent_rules.write(repo, "llm-wiki/general")
+    from orkboard.realm import goal_phase
+    page.write_text(head.format(laid="laid: history\n", schema=goal_phase.SCHEMA))
+    assert [f for f in board_check.run(repo) if f["path"].endswith("33-old.md")] == []
+    page.write_text(head.format(laid="", schema=goal_phase.SCHEMA))
+    assert {f["what"].split(" (")[0] for f in board_check.run(repo) if f["path"].endswith("33-old.md")} == {
+        "the phase is done but the page has no green gate record", "the phase is done but the page has no *Done when*"}
