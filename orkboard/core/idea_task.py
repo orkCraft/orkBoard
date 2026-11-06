@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from orkboard.core.idea_landing import COULD_NOT_RUN
-from orkboard.realm import board_in_code, dep_links, event_log, gate_config, gate_env, gate_rerun, idea_checks, jobs, idea_pick, idea_secrets, idea_target, library, task_brief, task_steps
+from orkboard.realm import agent_rules, board_in_code, dep_links, event_log, gate_config, gate_env, gate_rerun, idea_checks, jobs, idea_pick, idea_secrets, idea_target, library, task_brief, task_steps
 from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
@@ -28,7 +28,8 @@ NO_BROWSER = "Browser tests did not run: no Chromium here."     # spec 143 B.3
 # The reasons a browser module gives when it is skipped for want of a browser (tests/browser_kit.py, `pytest.importorskip`), which the gate's
 # `-rfEs` prints: a test's own skip (a case that does not apply at a width) is never read as *no Chromium here*.
 NO_BROWSER_SKIP = re.compile(r"no Chromium|could not import 'playwright", re.I)
-LEAN_DOES = "You do this task yourself. It is not to be planned: make the change it asks for, in this worktree."     # spec 143 A.2
+NOT_THE_BOARDS = ("You are one task of a goal Orkboard leads: the Board's rules in AGENTS.md are for a tool that leads a goal, not for you. "
+                  "Do not take a goal, move its phase or write the Board's pages, and do not read BOARD.md for this task.")     # spec 152 D.3, decisions §257.6
 NO_FINDINGS = "You left no findings file and changed no file. Write your findings file, as the task asks."
 FRESH_TOKENS = 150_000            # a session that read more than this in its last call is not resumed again: a send back starts a fresh one (spec 86 §4)
 DIFF_KEEP = 20000                 # the diff so far a fresh session is given, in characters
@@ -335,8 +336,9 @@ class TaskMixin:
         secrets = [n for n in env if n not in ("ORKCRAFT_ORC", "ORKCRAFT_IDEA", "ORKCRAFT_TASK", *files)]
         parts, role = [], self._role(task)
         if (instruction := str(role.get("instruction") or "").strip()):
-            parts.append(f"# Your role: {role['name']}\n\n{instruction}"
-                         + (f"\n\n{LEAN_DOES}" if self._does_it_itself(slug, task, role) else ""))
+            parts.append(f"# Your role: {role['name']}\n\n{instruction}")
+        if agent_rules.has_rules(self.repo_root):                        # a project with the Board's rules in its AGENTS.md: they are not a task's own (spec 152 D.3)
+            parts.append(NOT_THE_BOARDS)
         h = _r().harnesses.get(self.tool_of(slug, task))
         commits, browsers = getattr(h, "commits", True), getattr(h, "browsers", True)
         parts.append("# When you are done\n\n" + (
@@ -368,13 +370,6 @@ class TaskMixin:
         if start := task_brief.start_at(task):                          # where its planner read, just before the spec's part (spec 153 B.3): the role and the rules stay the stable head (spec 36 §6)
             parts.insert(next((i for i, p in enumerate(parts) if p.startswith("# The idea")), len(parts)), start)
         return "\n\n".join(parts)
-
-    def _does_it_itself(self, slug: str, task: dict, role: dict) -> bool:
-        """A code task whose role is its Lean party's leader (spec 81 §2: at Lean the leader does every task): it is told it does it (spec 143 A.2)."""
-        if is_check(task) or str(task.get("kind") or "") != "code" or not self.size_of or self.size_of(slug) != "lean":
-            return False
-        found = library.get(str(role.get("slug") or ""))
-        return found is not None and found.band == "lead" and str(task.get("role") or "") == found.id
 
     def _reading(self, spec: str, task: dict) -> str:
         """What a task may read of its spec (spec 99 §9.3): for a page of the new format and a task planned for a party's section, the common part, that section whole and

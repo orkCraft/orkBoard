@@ -373,7 +373,7 @@ def _prompt(repo, slug):
     from orkboard.core.idea_task import TaskMixin
     runner = SimpleNamespace(repo_root=repo, state_dir=repo / ".orkcraft", settings={}, tool_of=lambda *a: "claude", size_of=None,
                              _role=lambda t: {"name": "Grunt", "instruction": "", "slug": "grunt"}, _env=lambda *a: {}, _reading=lambda *a: "",
-                             _without=lambda *a: [], _does_it_itself=lambda *a: False)
+                             _without=lambda *a: [])
     plan = {"tasks": [{"id": "t1", "title": "Build it", "brief": "Make the screen"}]}
     return TaskMixin._prompt(runner, slug, plan, plan["tasks"][0])
 
