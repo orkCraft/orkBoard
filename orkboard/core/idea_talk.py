@@ -351,7 +351,8 @@ class TalkMixin(DiagnoseMixin):
             idea_questions.save_record(self.state_dir, slug, rec)
             ideas.save_state(self.state_dir, slug, error="", measure=self._tls.measured)
         self.pass_register(slug, passed)
-        ideas.add_turn(self.state_dir, slug, "keeper", "\n".join(f"{self._name(s['leader'])}: {s['stance']}\n  For: {s['for'] or '—'}\n  Against: {s['against'] or '—'}"
+        ideas.add_turn(self.state_dir, slug, "keeper", "\n".join(f"{self._name(s['leader'])} weighs it: {s['priority'] or 'normal'}{' — ' + s['why'] if s['why'] else ''}" if s.get("weigher")
+                                                                else f"{self._name(s['leader'])}: {s['stance']}\n  For: {s['for'] or '—'}\n  Against: {s['against'] or '—'}"
                                                                 for s in stances), "Talk")
         journal_notes.stances(self.state_dir, self.wiki_root(), slug, stances)                  # each leader's journal (spec 125 B)
         self._assumed(slug, [(e["party"], got["assumes"]) for e, got in heard])
@@ -485,7 +486,7 @@ class TalkMixin(DiagnoseMixin):
     def _held(rec: dict) -> bool:
         """Whether the decision waits for the person's throw (spec 120 §3.4): a no unanswered, or a doubt alone, which opens the hearing (`rec["hearing"]`, set here) unless
         the person has thrown it already."""
-        if not rec.get("thrown") and not idea_objections.pending(rec) and any(isinstance(s, dict) and s.get("verdict") == "doubt" and s.get("why") for s in rec.get("stances") or []):
+        if not rec.get("thrown") and not idea_objections.pending(rec) and any(isinstance(s, dict) and not s.get("weigher") and s.get("verdict") == "doubt" and s.get("why") for s in rec.get("stances") or []):
             rec["hearing"] = True
         return bool(idea_objections.pending(rec)) or rec.get("hearing") is True
 
