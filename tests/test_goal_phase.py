@@ -307,6 +307,9 @@ def test_the_journals_and_the_brief_ride_in_the_boards_commit_and_a_line_added_o
     sd, repo = host.ideas.state_dir, host.ideas.state_dir.parent
     journals.add(sd, journals.PROJECT, "decision", "Decision 1: no accounts", ref="1")
     host.ideas.tree_flush(force=True)
+    assert not (host.ideas._board_tree.root() / "journals").exists()                       # no rules written: no journal goes to the work branch
+    (host.ideas._board_tree.path / "AGENTS.md").write_text("<!-- orkboard:begin schema=1 -->\n<!-- orkboard:end -->\n")
+    host.ideas.tree_flush(force=True)
     shown = git(repo, "show", "dev:llm-wiki/general/journals/project.md")
     assert "orkboard-journal: _project" in shown and "Decision 1: no accounts" in shown
     assert "# Project brief" in git(repo, "show", "dev:llm-wiki/general/project.md")

@@ -87,8 +87,10 @@ subagents and the skill.
    said by `orkboard check` (E.2).
 3. The project's brief: `<wiki>/project.md`, `write_out`'s `projectbrief.md` (the brief's six lines and the parties), written
    again when the brief changes. Read by a tool, never back by Orkboard (the brief is the person's, changed in Orkboard).
-4. Tests: the mirror in the tree and in the commit; an outside line taken once, then never again; a bad kind left; the
-   brief's file.
+4. **Nothing of B before the rules** (C.4's yes, Orkboard's block in the root `AGENTS.md`): until then the journals and the
+   brief stay in `<state_dir>` alone, so a public repository's journals wait for F's question.
+5. Tests: the mirror in the tree and in the commit; an outside line taken once, then never again; a bad kind left; the
+   brief's file; nothing written into the tree without the rules.
 
 ## C. The rules and the roles (§255.5–6, §255.11)
 

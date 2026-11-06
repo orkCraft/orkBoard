@@ -20,6 +20,15 @@ from orkboard.gui.ideas_args import IdeasError
 from orkboard.realm import event_log, goal_phase, idea_questions, ideas, read_in, write_out, write_out_bank
 
 PHASE_READ_S = 5.0           # how often the clock looks for a page moved outside
+RULES_MARK = "<!-- orkboard:begin"     # Orkboard's block in the repository's AGENTS.md (spec 151 C.1): the rules are written
+
+
+def rules_written(repo: Path) -> bool:
+    """Whether the repository (a checkout: the Board's tree) has the Board's rules, Orkboard's block in its root `AGENTS.md`."""
+    try:
+        return RULES_MARK in (Path(repo) / "AGENTS.md").read_text(encoding="utf-8")[:200_000]
+    except (OSError, UnicodeDecodeError):
+        return False
 
 
 class PhaseMixin:
@@ -81,6 +90,8 @@ class PhaseMixin:
     def journals_sync(self, tree, due: bool) -> None:
         """The journals' Markdown in the Board's tree (`<wiki>/journals/`) and the brief (`<wiki>/project.md`): a line added outside is read in first (once, by its ref; a line of a kind the scope
         has not is left: `journal_left`), then the files are written again where the journals changed, so they ride in the Board's next commit. Looked at when a journal file changed since the last look, and at a commit."""
+        if not rules_written(tree.path):           # nothing of B before the person's yes to the Board's rules (spec 151 C.4): a public repository's journals wait for its question
+            return
         root, mine = tree.root(), Path(self.state_dir) / "journals"
 
         def stats(folder: Path, pattern: str) -> tuple:
