@@ -319,3 +319,19 @@ def test_a_check_the_size_does_not_hold_is_neither_asked_of_the_plan_nor_kept_wh
     assert [(t["id"], t["kind"]) for t in standard] == [("k1", "code"), ("k3", "code"), ("k4", "review")], "the first that applies; a new id never one taken"
     assert standard[-1]["after"] == ["k1", "k3"]
     assert [t["kind"] for t in idea_checks.with_check_tasks(planned(), both, checks, make, "")] == ["code", "security", "code", "review"], "a party of before: as before"
+
+
+def test_a_task_that_has_files_starts_its_prompt_with_where_to_start_a_check_and_a_pick_too_spec_153_b3(town):
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "kind": "review", "after": ["k1"]},
+                   {"id": "k3"}, {"id": "k4"}])
+    path = town.state / "ideas" / "demo" / "plan.json"                       # plan_of keeps no `files`, `pick`: they are put in as the plan keeps them
+    data = json.loads(path.read_text())
+    for t, more in zip(data["tasks"], ({"files": ["a.py", "b/c.py"]}, {"files": ["a.py"]}, {"files": ["d.py"], "pick": {"n": 2, "kind": "text", "ask": "A name", "target": "n.txt"}}, {})):
+        t.update(more)
+    path.write_text(json.dumps(data))
+    runner, _ = runner_of(town)
+    plan = runner.plan("demo")
+    work, check, pick, plain = (runner._prompt("demo", plan, plan["tasks"][i]) for i in range(4))
+    assert work.startswith("Start at: `a.py`, `b/c.py` (its planner read them; read more as you need)") and work.index("Start at:") < work.index("# The idea")
+    assert check.startswith("Start at: `a.py` (its planner read it") and pick.startswith("Start at: `d.py`")
+    assert "Start at:" not in plain

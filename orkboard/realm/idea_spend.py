@@ -22,6 +22,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+import statistics
 import threading
 import time
 from pathlib import Path
@@ -368,6 +369,24 @@ def tier_costs(state_dir: Path, last: int = LEARN_LAST) -> dict[str, float]:
             newest = [c for _at, c in sorted(got, reverse=True)[:last]]
             out[tier] = sum(newest) / len(newest)
     return out
+
+
+def task_session(state_dir: Path, last: int = LEARN_LAST) -> dict | None:
+    """What one task's session has cost on this project (spec 153 A.1): the median tokens (and dollars, None when none of them is priced) of the newest `last` task calls of round 1
+    (`step == "task"`: never a send back, a fix or a check task), `n` how many; None under `TOO_FEW`."""
+    from orkboard.realm import idea_checks
+    base = Path(state_dir)
+    rows: list[dict] = []
+    for path in sorted((base / "ideas").glob(f"*/{FILE}")):
+        kinds = {tid: str(t.get("kind") or "") for tid, t in _tasks(_plan(base, path.parent.name)).items()}
+        rows += [r for r in read(path) if kinds.get(str(r.get("task") or "")) not in idea_checks.TAGS]
+    rows += read(base / "ideas" / GONE)
+    mine = [r for r in rows if r.get("step") == "task" and r.get("task") and int(_num(r.get("round")) or 1) <= 1 and token_count(r) > 0]
+    mine = sorted(mine, key=lambda r: str(r.get("at") or ""), reverse=True)[:last]
+    if len(mine) < TOO_FEW:
+        return None
+    costs = [c for r in mine if (c := _num(r.get("cost"))) is not None]
+    return {"tokens": int(statistics.median(token_count(r) for r in mine)), "usd": round(float(statistics.median(costs)), 2) if costs else None, "n": len(mine)}
 
 
 def estimate_of(task: dict, costs: dict[str, float]) -> dict:

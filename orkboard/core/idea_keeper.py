@@ -71,18 +71,14 @@ from orkboard.core.idea_hypothesis_values import HypothesisValuesMixin
 from orkboard.core.idea_cascade import CascadeMixin
 from orkboard.core.idea_groups import GroupsMixin
 from orkboard.core.idea_fold import FoldMixin
-from orkboard.core.idea_plan import PlanMixin, _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
-from orkboard.realm import (call_log, commit_goal, event_log, goal_team, idea_change, idea_checks, idea_look, idea_pick, idea_spend, idea_target, ideas,
+from orkboard.core.idea_plan import ENV_NAME, KINDS, TIERS, PlanMixin, _task, _why, estimate, make_plan, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
+from orkboard.realm import (call_log, commit_goal, event_log, goal_team, idea_change, idea_checks, idea_look, idea_spend, idea_target, ideas,
                             roles, status, tool_errors)
-from orkboard.realm.idea_words import short_said, title_of
 
 CHANGED = "ideas.changed"          # the bus's topic: slug
 HARNESS = "claude"                 # the tool when a step's party has none and the machine names none (spec 81: the Main tool is the default)
 MAX_TASKS, MAX_TODOS, MAX_QUESTIONS = 8, 5, 3
 INDEX_CHARS, PAGE_CHARS, REPLY_CHARS = 6000, 30_000, 4000
-TIERS = ("elder", "warrior", "laborer")
-KINDS = ("secret", "choice", "confirm", "instructions", "file")
-ENV_NAME = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
 TICK_S = 20.0                      # how often the clock looks for what the limits held
 
 Call = Callable[[str, str, str, Any], tuple[str, Any, Any, str]]   # (tier, prompt, effort, budget) → (text, cost, tokens, session)
@@ -545,55 +541,3 @@ three lines. {self.reads("talk", [])} You may read the repository (read only).
             ideas.save_state(self.state_dir, slug, state=was)
             raise
         return True
-
-
-def make_plan(slug: str, answer: dict | None, made_at: str = "", look: str = "") -> dict:
-    """plan.json from the model's answer, strictly: at most 8 tasks with their ids renamed k1…, `after` only to an
-    earlier task, known tiers and kinds; the estimate from the tiers' default cost, ±50 %. `look`: the title of a screen's goal (spec 85 §2):
-    its plan begins with a pick of the screen's look, every other task after it."""
-    if not isinstance(answer, dict) or not isinstance(answer.get("tasks"), list):
-        raise KeeperError("the keeper's answer was not a plan")
-    names: dict[str, str] = {}
-    tasks: list[dict] = []
-    for raw in idea_look.with_pick(answer["tasks"], look, slug, MAX_TASKS) if look else answer["tasks"]:
-        if not isinstance(raw, dict) or len(tasks) >= MAX_TASKS:
-            continue
-        title, brief = title_of(raw.get("title")), _words(raw.get("brief"), 6000)
-        if not title or not brief:
-            continue
-        tid = f"k{len(tasks) + 1}"
-        after = [names[a] for a in _strings(raw.get("after"), MAX_TASKS, 20) if a in names]
-        names[_words(raw.get("id"), 20) or tid] = tid
-        tier = raw.get("tier") if raw.get("tier") in TIERS else "warrior"
-        kind = raw.get("kind") if raw.get("kind") in roles.TASK_KINDS else roles.DEFAULT_KIND
-        pick = idea_pick.clean_ask(raw.get("pick")) if kind not in idea_checks.TAGS else None      # a plan written before has none (spec 51 §2.1)
-        tasks.append({**_task(tid, title, brief, kind, tier, list(dict.fromkeys(after))),
-                      "short": short_said(raw.get("short"), title), **({"pick": pick} if pick else {}),
-                      **({"screen": screen} if (screen := idea_look.clean_screen(raw.get("screen"))) else {})})
-    if not tasks:
-        raise KeeperError("the plan had no task")
-    todos: list[dict] = []
-    for raw in answer.get("todos") if isinstance(answer.get("todos"), list) else []:
-        if not isinstance(raw, dict) or len(todos) >= MAX_TODOS or raw.get("kind") not in KINDS:
-            continue
-        title = _words(raw.get("title"), 200)
-        if raw["kind"] == "secret":
-            title = re.sub(r"[^A-Z0-9_]+", "_", title.upper()).strip("_")
-            if not ENV_NAME.match(title):
-                continue
-        if not title:
-            continue
-        for_ = [names[f] for f in _strings(raw.get("for"), MAX_TASKS, 20) if f in names]
-        todo = {"id": f"t{len(todos) + 1}", "title": title, "kind": raw["kind"],
-                "why": _words(raw.get("why"), 500),
-                "choices": _strings(raw.get("choices"), 8, 200) if raw["kind"] == "choice" else [],
-                "steps": _strings(raw.get("steps"), 12, 500),         # steps on any kind (spec 35 §9)
-                "for": list(dict.fromkeys(for_)), "done": False, "value": None}
-        if raw["kind"] == "file":
-            todo["accept"] = [re.sub(r"[^a-z0-9]", "", a.lower())[:10] for a in _strings(raw.get("accept"), 8, 20)
-                              if re.sub(r"[^a-z0-9]", "", a.lower())]
-        todos.append(todo)
-    data = {"idea": slug, "made_at": made_at or dt.datetime.now().isoformat(timespec="seconds"), "passed_at": None,
-            "estimate": estimate(tasks), "todos": todos, "tasks": tasks}
-    readiness(data)
-    return data

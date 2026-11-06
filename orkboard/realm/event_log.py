@@ -260,6 +260,8 @@ QUESTION_PASSED = "question_passed"      # spec 128 D: a leader's question passe
 EVENTS += (QUESTION_PASSED,)       # spec 128 D
 EVENTS += (SPEC_FOLDED,)            # spec 127 C
 EVENTS += (TASK_PAGES_PUT_BACK,)       # spec 143 A
+PLAN_UNCLAIMED = "plan_unclaimed"       # spec 153 C.3: idea, step, lines (the numbers, as strings, of the Done when lines no task of the plan proves, after the plan was asked once more or not), asked_again (bool). Never a word of the goal.
+EVENTS += (PLAN_UNCLAIMED,)
 EVENTS += (SLICES_CUT, SLICES_FOLDED)       # spec 131 A
 
 # Spec 132 D (decisions §234.3): a goal's findings told by their leaders and sorted by the Orkmaster, in the background. Never a word of a finding.

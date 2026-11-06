@@ -93,3 +93,9 @@ def test_a_page_is_found_in_the_boards_worktree_first_then_the_repository(tmp_pa
     assert task_brief.page_of(repo, state, "pages/ideas/x.md").title == "Repository"
     assert task_brief.page_of(repo, state, "pages/ideas/none.md") is None
     assert spec_sections.sections_of(task_brief.page_of(repo, state, "pages/ideas/x.md"))
+
+
+def test_start_at_says_the_files_a_plan_named_and_nothing_with_none_spec_153_b2():
+    assert task_brief.start_at({"files": ["a.py", "b/c.py"]}) == "Start at: `a.py`, `b/c.py` (its planner read them; read more as you need)"
+    assert task_brief.start_at({"files": ["a.py"]}) == "Start at: `a.py` (its planner read it; read more as you need)"
+    assert task_brief.start_at({}) == "" and task_brief.start_at({"files": []}) == "" and task_brief.start_at({"files": [3, ""]}) == ""

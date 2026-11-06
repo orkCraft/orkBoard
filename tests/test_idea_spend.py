@@ -178,3 +178,27 @@ def test_the_keepers_estimate_uses_the_learned_costs():
     assert idea_keeper.estimate(tasks, None, {"warrior": 2.0, "elder": 4.0, "laborer": 0.1}) == {
         "tasks": 2, "usd_low": 3.0, "usd_high": 9.0}
     assert idea_keeper.estimate(tasks)["usd_high"] == round((0.3 + 1.0) * 1.5, 2)
+
+
+def _calls(state, rows, slug="dark-mode"):
+    for row in rows:
+        assert idea_spend.append(state, row, idea=slug)
+
+
+def test_task_session_is_none_under_too_few_and_the_median_of_round_one_task_calls_spec_153_a1(tmp_path):
+    t = lambda n: idea_spend.tokens_of(None, n)       # noqa: E731
+    _calls(tmp_path, [_line("task", 1.0, "k1", 1, "grunt", "2026-11-01T09:00:00", tokens=t(100)), _line("task", 2.0, "k2", 1, "grunt", "2026-11-02T09:00:00", tokens=t(300))])
+    assert idea_spend.task_session(tmp_path) is None and idea_spend.TOO_FEW == 3
+    _calls(tmp_path, [_line("task", 3.0, "k3", 1, "grunt", "2026-11-03T09:00:00", tokens=t(200))])
+    assert idea_spend.task_session(tmp_path) == {"tokens": 200, "usd": 2.0, "n": 3}
+    # a send back (round 2), a fix, a plan call and a check task are not counted
+    _calls(tmp_path, [_line("task", 9.0, "k1", 2, "grunt", "2026-11-04T09:00:00", tokens=t(9000)), _line("fix", 9.0, "k1", 1, "grunt", "2026-11-04T09:00:00", tokens=t(9000)),
+                      _line("plan", 9.0, at="2026-11-04T09:00:00", tokens=t(9000)), _line("task", 9.0, "k9", 1, "reviewer", "2026-11-04T09:00:00", tokens=t(9000))])
+    _plan(tmp_path, "dark-mode", [_task("k1", "merged"), {**_task("k9", "merged"), "kind": "review"}])
+    assert idea_spend.task_session(tmp_path) == {"tokens": 200, "usd": 2.0, "n": 3}
+
+
+def test_task_session_takes_the_newest_twenty_and_says_no_dollars_when_none_is_priced_spec_153_a1(tmp_path):
+    rows = [_line("task", None, f"k{i}", 1, "grunt", f"2026-11-01T09:{i:02d}:00", tokens=idea_spend.tokens_of(None, 1000 if i < 5 else 50)) for i in range(25)]
+    _calls(tmp_path, rows)
+    assert idea_spend.task_session(tmp_path) == {"tokens": 50, "usd": None, "n": 20}       # the five oldest, of 1000, are left out
