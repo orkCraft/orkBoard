@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from orkboard.core.idea_landing import COULD_NOT_RUN
-from orkboard.realm import dep_links, event_log, gate_config, gate_env, gate_rerun, idea_checks, jobs, idea_pick, idea_secrets, idea_target, library, task_brief, task_steps
+from orkboard.realm import board_in_code, dep_links, event_log, gate_config, gate_env, gate_rerun, idea_checks, jobs, idea_pick, idea_secrets, idea_target, library, task_brief, task_steps
 from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
@@ -322,6 +322,9 @@ class TaskMixin:
         """Stable first (spec 36 §6): the role's instruction and the finishing rules; then the task's own: where, its
         spec's path, the task, its `after` tasks, the secrets' names. No CLAUDE.md: Claude Code reads it itself."""
         spec, deps = spec_paths(self.repo_root, self.state_dir, slug)
+        reading_of = spec                                                # the page as the Board's tree holds it, for what a task may read of it
+        if spec and board_in_code.spec_in_worktree(self.repo_root, self.state_dir, slug):       # the Board is not in the code (spec 151 F.2): the spec is in the worktree's `.orkcraft/spec/`
+            spec, deps = board_in_code.worktree_specs(self.repo_root, self.state_dir, slug)
         after = set(task.get("after") or [])
         done = [f"- {t.get('id')} · {t.get('title', '')} ({t.get('state')})"
                 + (f" — merged: {'; '.join(t.get('subjects') or [])}" if t.get("state") == "merged" and t.get("subjects") else "")
@@ -344,7 +347,7 @@ class TaskMixin:
             f"You do one task of the idea `{slug}` in this repository: a git worktree on branch "
             f"`idea/{slug}/{task.get('id')}`, cut from `{_r().setting(self.settings, 'merge_into') or 'main'}`. "
             "Work only here.",
-            "# The idea\n\n" + (f"Its spec is at `{spec}` in this worktree: " + (self._reading(spec, task) or "read it if you need it.")
+            "# The idea\n\n" + (f"Its spec is at `{spec}` in this worktree: " + (self._reading(reading_of, task) or "read it if you need it.")
                                   + " That page is the Board's: read it, never write to it."
                                   + "".join(f" It depends on `{d}`." for d in deps) if spec else "(its spec was not found)"),
             f"# Your task: {task.get('title', '')}\n\n{task.get('brief', '')}",

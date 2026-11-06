@@ -10,8 +10,10 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from typing import Callable
 
 from orkboard import brand
+from orkboard.realm import board_tree_off
 from orkboard.realm.idea_git import PUSH_TIMEOUT_S, IdeaGit, _git, _ok
 
 COMMIT_AFTER_S = 10.0                # the writes within this as one commit
@@ -45,12 +47,19 @@ class BoardTree:
     no branch, so the person can check out any. A change is a commit of the Board's pages only (the writes within 10 s
     as one), author *<the product> board* (`brand.board_author`); the work branch is then fast-forwarded to it under the repository's lock, by
     `IdeaGit._fast_forward`'s rules (in place when the person's checkout is on it, by `update-ref` when not). Refused
-    when the person has uncommitted changes in those files: held, tried again at the next write. Nothing is pushed."""
+    when the person has uncommitted changes in those files: held, tried again at the next write. Nothing is pushed.
 
-    def __init__(self, repo_root: Path, state_dir: Path, wiki_rel: str, branch) -> None:
+    `goes` (spec 151 F.2): a callable that says whether the Board may go to the work branch (None: always, as before). When it says no the tree still
+    commits and still follows the work branch's tip, but `land` moves `refs/orkboard/pages` instead of the branch (realm/board_tree_off.py: the pages the
+    branch holds leave it in one commit, the first time). `kept_off` (F.4): a callable that answers the pages (from the repository's root) of the goals
+    kept off every branch; they are put in the repository's `info/exclude`, so `git add -A` never stages them."""
+
+    def __init__(self, repo_root: Path, state_dir: Path, wiki_rel: str, branch, goes: Callable[[], bool] | None = None,
+                 kept_off: Callable[[], list[str]] | None = None) -> None:
         self.git = IdeaGit(Path(repo_root))
         self.path = Path(state_dir) / "board"
         self.wiki_rel, self.branch = wiki_rel.strip("/"), branch
+        self.goes, self.kept_off = goes, kept_off
         self._since: float | None = None
         self._notes: list[tuple[str, str]] = []
         self.held = ""
@@ -75,7 +84,11 @@ class BoardTree:
             if not self.exists():
                 _git(self.git.root, "worktree", "prune")
                 self.path.parent.mkdir(parents=True, exist_ok=True)
-                _ok(_git(self.git.root, "worktree", "add", "--detach", str(self.path), self.branch()))
+                kept = board_tree_off.has_ref(self) and not self._goes()          # the Board's own commits are there (the tree was lost): it starts from them
+                _ok(_git(self.git.root, "worktree", "add", "--detach", str(self.path), board_tree_off.REF if kept else self.branch()))
+                if kept:
+                    board_tree_off._mark(self, True)
+                    self.follow()
             else:
                 self.follow()
 
@@ -85,7 +98,10 @@ class BoardTree:
         tip, head = self._tip(), self.git.head(self.path)
         if tip == head or _git(self.path, "merge-base", "--is-ancestor", tip, head).returncode == 0:
             return
-        if _git(self.path, "merge-base", "--is-ancestor", head, tip).returncode == 0:
+        if board_tree_off.is_off(self):                         # the Board's own lineage (F.2): the branch merged in, our commits never replayed
+            if not board_tree_off.merge_tip(self, tip):
+                raise RuntimeError(f"the Board's tree could not follow {self.branch()}")
+        elif _git(self.path, "merge-base", "--is-ancestor", head, tip).returncode == 0:
             _ok(_git(self.path, "checkout", "-q", "--detach", tip))
         elif _git(self.path, "rebase", "-q", tip, timeout=PUSH_TIMEOUT_S).returncode != 0:
             _git(self.path, "rebase", "--abort")
@@ -124,6 +140,7 @@ class BoardTree:
         out = {"commit": "", "pages": 0, "what": what, "held": ""}
         with self.git.lock:
             folders = [p for p in self.pages() if (self.path / p).exists()]
+            self._keep_off()
             if folders or files:
                 _git(self.path, "add", "-A", "--", *folders, *files)
             staged = [f for f in _git(self.path, "diff", "--cached", "--name-only").stdout.splitlines() if f.strip()]
@@ -173,13 +190,39 @@ class BoardTree:
             rel = (where / name).relative_to(base).as_posix()
             return {**(self.flush(force=True, message=message() if callable(message) else message, files=(rel,)) or {}), "path": rel}
 
+    def _goes(self) -> bool:
+        if self.goes is None:
+            return True
+        try:
+            return bool(self.goes())
+        except Exception:                           # a question that cannot be answered keeps the Board off the branch
+            return False
+
+    def _keep_off(self) -> None:
+        """The pages of the goals kept off are in `info/exclude` and out of the tree's index (F.4): staged by no commit of any branch."""
+        if self.kept_off is None:
+            return
+        try:
+            paths = self.kept_off()
+        except Exception:
+            return
+        if paths:
+            _git(self.path, "rm", "-q", "-f", "--cached", "--ignore-unmatch", "--", *paths)
+
     def land(self) -> str:
-        """The work branch fast-forwarded to the tree: "" when it moved (or had nothing to take), else why it is held."""
+        """The work branch fast-forwarded to the tree: "" when it moved (or had nothing to take), else why it is held. Where the Board is not in the code
+        the branch is left alone and `refs/orkboard/pages` follows the tree (and, the first time, the branch's pages leave it in one commit); where the
+        Board goes in again, one commit puts the pages into the branch."""
         try:
             self.follow()
-            tip, head = self._tip(), self.git.head(self.path)
-            if tip != head:
-                self.git._fast_forward(self.branch(), tip, head)
+            if not self._goes():
+                (board_tree_off.keep if board_tree_off.is_off(self) else board_tree_off.leave)(self)
+            else:
+                if board_tree_off.is_off(self):
+                    board_tree_off.enter(self)
+                tip, head = self._tip(), self.git.head(self.path)
+                if tip != head:
+                    self.git._fast_forward(self.branch(), tip, head)
         except RuntimeError as e:
             self.held = str(e)[:300]
             return self.held

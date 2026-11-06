@@ -14,7 +14,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
-from orkboard.realm import (board_map, board_rows, collide, event_log, findings, goal_take, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas,
+from orkboard.realm import (board_in_code, board_map, board_rows, collide, event_log, findings, goal_take, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas,
                             look_wait, night_order, way_down)
 from orkboard.realm.idea_git import BoardTree
 
@@ -49,7 +49,9 @@ class BoardMixin:
             return None
         got = getattr(self, "_board_tree", None)
         if got is None or got.wiki_rel != rel:
-            got = self._board_tree = BoardTree(repo, self.state_dir, rel, lambda: self._into())
+            state = self.state_dir
+            got = self._board_tree = BoardTree(repo, state, rel, lambda: self._into(), goes=lambda: board_in_code.goes(repo, state),
+                                               kept_off=lambda: board_in_code.sync_kept_off(repo, state, rel))      # spec 151 F: off the branch, goals kept off
             self.phase_watch()                  # a goal's new phase asks the tree for a write (gui/ideas_phase.py)
         return got
 

@@ -224,3 +224,20 @@ def test_the_last_change_of_a_page_is_its_commit_and_its_author(repo):
     assert t.last_change(path) == ("", "")
     t.touch(5.0)
     assert t._since == 5.0 and t._notes == [] and t.due(16.0) and not t.due(14.0)
+
+
+def test_a_tree_asked_where_the_board_goes_keeps_the_work_branch_when_the_answer_is_no(repo):
+    answer = {"goes": True}
+    t = BoardTree(repo, repo / ".orkcraft", WIKI, lambda: "dev", goes=lambda: answer["goes"])
+    t.ensure()
+    _page(t, "a.md")
+    assert t.flush(force=True)["commit"] and "a.md" in git(repo, "ls-tree", "-r", "--name-only", "dev")
+    answer["goes"] = False
+    before = git(repo, "rev-parse", "dev")
+    _page(t, "b.md")
+    t.flush(force=True)
+    assert git(repo, "rev-parse", "dev") != before and "a.md" not in git(repo, "ls-tree", "-r", "--name-only", "dev")       # the one commit that takes the pages out
+    after = git(repo, "rev-parse", "dev")
+    _page(t, "c.md")
+    t.flush(force=True)
+    assert git(repo, "rev-parse", "dev") == after and "c.md" in git(repo, "ls-tree", "-r", "--name-only", "refs/orkboard/pages")
