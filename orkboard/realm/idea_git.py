@@ -344,8 +344,8 @@ class IdeaGit:
     def stats(self, path: Path, base: str) -> dict:
         """{"files", "added", "removed"} of what the branch changed since `base`."""
         files = added = removed = 0
-        for ln in _git(path, "diff", "--numstat", f"{base}...HEAD").stdout.splitlines():
-            a, _, r = ln.split("\t", 2)[:3] if ln.count("\t") >= 2 else ("0", "0", "")
+        for ln in _git(path, "diff", "--numstat", "--no-renames", f"{base}...HEAD").stdout.splitlines():
+            a, r, _ = ln.split("\t", 2)[:3] if ln.count("\t") >= 2 else ("0", "0", "")
             files += 1
             added += int(a) if a.isdigit() else 0
             removed += int(r) if r.isdigit() else 0
