@@ -336,6 +336,23 @@ def craft_of(root: Path, slug: str) -> str:
     return party_recipes.craft_of(recipe_of(root, slug), leader_of(root, slug))
 
 
+def seat_leaders(root: Path, state_dir: Path) -> list[str]:
+    """Each party page's leader that has no role on this machine yet but is in the library is installed (a Board in the repository comes with its leaders named,
+    its roles are not: spec 155 F.2). Idempotent; a leader neither installed nor in the library is left, and the party falls back to the Taskmaster. The ids installed."""
+    from orkboard.realm import library, roles
+    out: list[str] = []
+    try:
+        pages = ideas.tracks(Path(root), make=False)
+    except OSError:
+        return out
+    for t in pages:
+        lead = str(t.get("leader") or "")
+        if lead and lead not in out and lead in library.BY_ID and roles.role(state_dir, lead) is None:
+            library.install(state_dir, [lead])
+            out.append(lead)
+    return out
+
+
 def head_in(root: Path, slug: str, r: dict | None, target: str, tiers: dict[str, str] | None = None, task_tier: str = "warrior") -> dict:
     """The head a role wears as a seat of the party `slug` (spec 99 §1.4): its craft's race, its leader that race's higher form, at the tier its size gave the
     seat (`tiers`: the party's own when none is given). A party with no craft: the role's own head."""
