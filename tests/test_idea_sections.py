@@ -398,6 +398,8 @@ def test_the_prompt_asks_each_done_when_as_a_scenario_and_the_page_keeps_whateve
     prompt = model.steps("section")[0]["prompt"]
     assert "`done_when`: one to 5 scenarios" in prompt and "`When <a person or the product does something>, then <what is seen or kept>`" in prompt and "checkable by a test" in prompt
     assert "A line about a screen names the state it opens in, as a person first meets it." in prompt
+    assert '{"line": "…", "proof": "test"}' in prompt and "`test` when a test the gate runs can prove it" in prompt and "`look` when only a picture or Play shows it" in prompt     # spec 152 F.2
+    assert "`person` when only the person can judge it" in prompt and "Prefer `test`." in prompt
     assert _page(host, slug).parts("Tech")["Done when"] == f"- {scenario}\n- An older thesis, as a plain line"
     assert "When <a person" not in model.steps("plan")[0]["prompt"]
 
@@ -408,3 +410,9 @@ def test_defaults_are_seen_in_the_section_and_what_a_leader_assumed_with_them_an
     parts = _page(host, slug).parts("Tech")
     assert parts["Defaults"].splitlines() == [f"- tech question {n} — A (its leader's pick)" for n in range(3)] + ["- Assumed: the theme file is CSS"] and "Questions" not in parts
     assert "Defaults" not in _page(host, slug).parts("Product")                                                                  # each its own leader's
+
+
+def test_a_done_when_line_comes_back_with_its_proof_and_the_page_writes_the_mark(host, parties, model):
+    model.said[("section", "")] = section("Tech's why.", [{"line": "When a, then b", "proof": "test"}, {"line": "The lobby opens dark", "proof": "look"}, {"line": "c", "proof": "nonsense"}])
+    slug = _confirmed(host, parties, model, ("product", "tech"))
+    assert _page(host, slug).parts("Tech")["Done when"] == "- [test] When a, then b\n- [look] The lobby opens dark\n- c"

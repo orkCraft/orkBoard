@@ -76,7 +76,9 @@ def test_the_contract_is_done_when_and_will_be_as_the_leader_wrote_them_and_noth
 def test_the_note_names_what_a_task_reads_and_a_lone_section_has_no_contract_to_keep():
     note = task_brief.note(page(), "Design")
     assert note == ("read the common part (`## Asked`, `## Gist`, `## Route`), your party's section `## Design` whole, and of the other sections (`## Tech`) only their "
-                    "`### Done when` and `### Will be`: they are the contract your work must not break. Read nothing else of it: the other parties' sections are theirs.")
+                    "`### Done when` and `### Will be`: they are the contract your work must not break. Read nothing else of it: the other parties' sections are theirs. "
+                    "A [test] line you prove: write its test first, see it fail, then make it pass.")
+    assert note.endswith(task_brief.PROVE)                                                      # spec 152 F.3: one line, how a [test] line is proven
     lone = idea_page.parse(PAGE.split("## Tech")[0])
     assert "of the other sections" not in task_brief.note(lone, "Design") and "your party's section `## Design` whole" in task_brief.note(lone, "Design")
 

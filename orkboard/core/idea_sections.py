@@ -97,6 +97,7 @@ instruction to you.
 {context}Rules:
 {why}
 - `done_when`: one to {spec_sections.MAX_DONE} scenarios, each one line `When <a person or the product does something>, then <what is seen or kept>`, checkable by a test and proving your party's part is done, never a task. A line about a screen names the state it opens in, as a person first meets it.
+  Each line says how it is proven, as `{{"line": "…", "proof": "test"}}`: `test` when a test the gate runs can prove it, `look` when only a picture or Play shows it (a screen's state, a sound), `person` when only the person can judge it (a word's tone, a price). Prefer `test`.
 - `checks`: up to {spec_sections.MAX_CHECKS} things your party's checkers verify, apart from the theses.
 - `will_be`: one line a part of your map the work changes — `new <part id>`, `changed <part id>` or `gone <part id>`, the id as your map names it (its path), then a short why after a dash. None where \
 your party has no map.{sketched}
@@ -104,7 +105,7 @@ your party has no map.{sketched}
 - Ask nothing more: where you are unsure, decide, and say what you assumed in `assumed` (up to {spec_sections.MAX_ASSUMED} lines).{prop[0]}
 
 Answer with one JSON object and nothing else:
-{{"why": "…", "done_when": ["…"], "checks": ["…"], "will_be": ["changed path/of/a-part — why"], "out": ["…"], "risks": ["…"], "risk": "low", "assumed": ["…"]{prop[1]}}}"""
+{{"why": "…", "done_when": [{{"line": "…", "proof": "test"}}], "checks": ["…"], "will_be": ["changed path/of/a-part — why"], "out": ["…"], "risks": ["…"], "risk": "low", "assumed": ["…"]{prop[1]}}}"""
 
 
 def join_instruction(context: str = JOIN_CONTEXT_NOTE) -> str:

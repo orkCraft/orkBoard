@@ -98,3 +98,21 @@ def test_the_record_is_kept_beside_the_goals_state(tmp_path):
     assert ss.record(tmp_path, "a-goal") == {}
     ss.save_record(tmp_path, "a-goal", {"joined": True})
     assert ss.record(tmp_path, "a-goal") == {"joined": True} and (tmp_path / "ideas" / "a-goal" / "way.json").is_file()
+
+
+def test_a_done_when_line_may_say_how_it_is_proven():
+    """Spec 152 F.1: `[test]`, `[look]` or `[person]` starts a line; `proof_of` reads it, `bare` takes it off, `items` keeps it."""
+    assert ss.PROOFS == ("test", "look", "person")
+    assert ss.proof_of("[test] A goal keeps its type") == "test" and ss.proof_of("- [Look] The lobby opens dark") == "look" and ss.proof_of("[person] The tone is kind") == "person"
+    assert ss.proof_of("A goal keeps its type") == "" and ss.proof_of("[other] x") == "" and ss.proof_of("a [test] later") == "" and ss.proof_of("") == ""
+    assert ss.bare("[test] A goal keeps its type") == "A goal keeps its type" and ss.bare("- [look]   x") == "x" and ss.bare("no mark") == "no mark" and ss.bare("[other] x") == "[other] x"
+    assert ss.items("- [test] a\n- b\n* [look] c") == ["[test] a", "b", "[look] c"]
+
+
+def test_clean_section_takes_done_when_as_strings_or_as_lines_with_a_proof_and_writes_the_mark():
+    got = ss.clean_section({"why": "w", "done_when": ["plain", {"line": "  When a, then b ", "proof": "TEST"}, {"line": "c", "proof": "weird"}, {"line": "d"}, {"line": "", "proof": "test"},
+                                                      {"line": "e", "proof": "person"}, {"proof": "look"}, "[look] f"]})
+    assert got[0]["Done when"] == "- plain\n- [test] When a, then b\n- c\n- d\n- [person] e"                                  # a bad proof dropped, the line kept; five at most
+    parts = ss.clean_section({"why": "w", "done_when": ["[look] f", {"line": "[test] g", "proof": "look"}, {"line": "plain"}, {"line": "plain", "proof": "test"}]})[0]
+    assert parts["Done when"] == "- [look] f\n- [look] g\n- plain\n- [test] plain"
+    assert ss.clean_section({"why": "w", "done_when": [{"line": "", "proof": "test"}]}) is None

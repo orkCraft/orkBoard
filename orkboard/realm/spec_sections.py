@@ -9,6 +9,7 @@
     spec_sections.arrange(page, common, sections)      # the page's sections as the format has them: common, then a section a party, nothing known lost
     spec_sections.folded(page, "Done when")            # a page of the new format read as the old one (the plan of today reads Done when, Out, Risks)
     spec_sections.decided_by(page, part_id)            # who decided a change on a map: "person" · "leader" · "member" ("" for a page of before)
+    spec_sections.proof_of(line) / bare(line)          # a *Done when* line's mark `[test]` · `[look]` · `[person]` ("" with none: its leader judges it) / the line without it
     spec_sections.record(state_dir, slug)              # what the decision and the sections keep beside a goal's state (way.json)
 
 A section's parts, in the order they are written: *Why*, *Done when* (at most five theses), *Checks*, *Will be* (a line a part of the leader's map, `new <id>` ·
@@ -27,7 +28,9 @@ RESERVED = {n.lower() for n in (*COMMON, *OLD, *PARTS)}
 FOLDED = ("Why", "Done when", "Out", "Risks")                          # an old section a page of the new format answers for (its first section's, Done when all of them)
 WHY_CHARS, LINE_CHARS, MAX_DONE, MAX_CHECKS, MAX_WILL, MAX_OUT, MAX_RISKS, MAX_ASSUMED = 1200, 240, 5, 5, 12, 3, 4, 4
 ID_CHARS = 200
+PROOFS = ("test", "look", "person")                                    # how a *Done when* line is proven (decisions §257.4): a test the gate runs · a picture or Play · the person
 FILE = "way.json"
+_MARK = re.compile(r"^\[(" + "|".join(PROOFS) + r")\][ \t]*", re.I)
 _HEAD = re.compile(r"^###[ \t]+(.+?)[ \t]*#*[ \t]*$", re.M)
 _WILL = re.compile(r"^(?:[-*]\s*)?(new|changed|gone)\s+(?:part\s+)?([A-Za-z0-9_./@:\\-]+)(?:\s*[—–-]+\s*(.*))?$", re.I)
 _FORK = re.compile(r"\bFork\b.*?\[sections:\s*([^\]]*)\]", re.I)
@@ -120,9 +123,20 @@ def folded(page: Any, name: str) -> str:
 
 
 def items(text: str) -> list[str]:
-    """A part's list (`- x`), or its lines."""
+    """A part's list (`- x`), or its lines. A *Done when* line keeps its mark (`[test] …`): `proof_of` and `bare` read it."""
     lines = [ln.strip() for ln in str(text or "").split("\n") if ln.strip()]
     return [re.sub(r"^([-*+]|\d+[.)])\s+", "", ln) for ln in lines]
+
+
+def proof_of(line: str) -> str:
+    """The proof a *Done when* line starts with, `test`, `look` or `person`; "" with no mark (its leader judges it). A leading list dash is no part of the line."""
+    m = _MARK.match(re.sub(r"^([-*+]|\d+[.)])\s+", "", str(line or "").strip()))
+    return m.group(1).lower() if m else ""
+
+
+def bare(line: str) -> str:
+    """A *Done when* line without its mark (and without a list dash)."""
+    return _MARK.sub("", re.sub(r"^([-*+]|\d+[.)])\s+", "", str(line or "").strip()), count=1).strip()
 
 
 # -- *Will be* and who decided -------------------------------------------------------------------------------------------------------------
@@ -185,6 +199,24 @@ def _bullets(lines: list[str]) -> str:
     return "\n".join(f"- {s}" for s in lines)
 
 
+def clean_done(value: object) -> list[str]:
+    """The *Done when* lines of an answer: strings (no mark) or `{"line", "proof"}`; a proof that is none of `PROOFS` is dropped, the line kept; the mark is written
+    `[proof] line`. A string that starts with a mark keeps it."""
+    out: list[str] = []
+    for v in value if isinstance(value, list) else []:
+        if isinstance(v, dict):
+            text, proof = _line(v.get("line")), str(v.get("proof") or "").strip().lower()
+            proof = proof if proof in PROOFS else ""
+        else:
+            text = _line(v)
+            proof = proof_of(text)
+        text = bare(text)
+        line = f"[{proof}] {text}" if proof and text else text
+        if text and line not in out and len(out) < MAX_DONE:
+            out.append(line)
+    return out
+
+
 def clean_will(value: object) -> list[str]:
     """The *Will be* lines of an answer, strictly: `new|changed|gone <id>` (and a note after a dash), an id a path (no `..`, `ID_CHARS` at most); any other line is dropped."""
     out: list[str] = []
@@ -198,13 +230,13 @@ def clean_will(value: object) -> list[str]:
 
 
 def clean_section(answer: Any, defaults: list[str] = ()) -> tuple[dict[str, str], str] | None:
-    """A leader's answer as its section's parts, strictly: `{"why", "done_when": [≤5], "checks", "will_be", "out", "risks", "risk", "assumed"}` → `({part: text}, risk)`.
+    """A leader's answer as its section's parts, strictly: `{"why", "done_when": [≤5 strings or {"line", "proof"}], "checks", "will_be", "out", "risks", "risk", "assumed"}` → `({part: text}, risk)`.
     None when the answer has no *Why* or no thesis. *Defaults* is the Talk's defaults for this party (`defaults`, code's) and what the leader assumed; *Questions* is never
     written (a leader asks nothing more at this step: it decides, and says what it assumed)."""
     if not isinstance(answer, dict):
         return None
     why = _line(answer.get("why"), WHY_CHARS)
-    done = _list(answer.get("done_when"), MAX_DONE)
+    done = clean_done(answer.get("done_when"))
     if not why or not done:
         return None
     assumed = [f"Assumed: {x}" for x in _list(answer.get("assumed"), MAX_ASSUMED)]

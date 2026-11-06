@@ -4,6 +4,7 @@ those, never the whole page. A page of before (one section of its party, nothing
 
     reading(page, heading)            # {common: {name: text}, own: (heading, text), others: [(heading, contract)]} · None for a page with no party section
     contract(text)                    # a section's *Done when* and *Will be*, as its leader wrote them ("" when it has neither)
+    PROVE                             # the line under *Done when*: a `[test]` line is proven by a test written first
     note(page, heading)               # the sentence a task's prompt says of the spec's reading ("" for a page of before, or a task with no section)
     page_of(repo_root, state_dir, path)  # the spec's page as a task's worktree holds it (`idea_git.spec_paths` gives the path), None when it is not there
     sketch_note(state_dir, slug)         # the sketch the person picked, named by its file's path as a reference for a task to follow (spec 121 §2.6), "" with none
@@ -14,6 +15,7 @@ from pathlib import Path
 
 from orkboard.realm import idea_page, spec_sections
 
+PROVE = "A [test] line you prove: write its test first, see it fail, then make it pass."          # under a section's *Done when* (decisions §257.4)
 CONTRACT = ("Done when", "Will be")                      # of another party's section, what is read: the contract this one must not break
 
 
@@ -37,7 +39,7 @@ def reading(page: idea_page.Page, heading: str) -> dict | None:
 
 def note(page: idea_page.Page, heading: str) -> str:
     """What a task is told of the spec it may read, to follow "Its spec is at … in this worktree: ": its common part, its party's section whole (`## <heading>`), and of the others
-    only *Done when* and *Will be*."""
+    only *Done when* and *Will be*. Under its *Done when* one line: `PROVE`, how a task proves a line marked `[test]`."""
     got = reading(page, heading)
     if got is None:
         return ""
@@ -45,7 +47,7 @@ def note(page: idea_page.Page, heading: str) -> str:
     others = ", ".join(f"`## {n}`" for n, _text in got["others"])
     return (f"read the common part ({names}), your party's section `## {got['own'][0]}` whole"
             + (f", and of the other sections ({others}) only their `### Done when` and `### Will be`: they are the contract your work must not break" if others else "")
-            + ". Read nothing else of it: the other parties' sections are theirs.")
+            + ". Read nothing else of it: the other parties' sections are theirs. " + PROVE)
 
 
 def sketch_note(state_dir: Path, slug: str) -> str:
