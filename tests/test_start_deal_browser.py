@@ -183,7 +183,7 @@ def test_a_goal_laid_turns_face_down_lights_its_rune_and_flies_small_into_the_fa
         before = pg.locator(".col-card--fan").count()
         lay(pg, host)
         pg.wait_for_function("() => window.__fly.some((x) => x.fly === 'lay')", timeout=WAIT_MS)
-        assert pg.locator('body > .table-turned[data-fly="lay"] .table-turned__seal .ork-sigil.small').count() == 1, "the small seal of the hand's backs in the middle of its back"
+        assert pg.locator('body > .table-turned[data-fly="lay"] .ork-card-back').count() == 1, "orkUI's back, its ring of runes its own (orkUI 0.30.0), shrinking to the hand's size"
         assert pg.locator('body > .table-turned[data-fly="lay"] .table-turned__seal .ork-elem').count() == 1, "its rune in the middle"
         pg.wait_for_selector('.frame-column .col-card--fan[data-goal="new-goal"]', timeout=WAIT_MS)
         settled(pg)

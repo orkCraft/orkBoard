@@ -1,22 +1,32 @@
 # orkUI / office / backs
 
-**The back**: a hand card face down (orkBoard's decisions §149.3, §160.3): the deck, the cards under a stack's top, the discard's cards
-under its top. One pattern, `back.svg`, drawn on a **15 x 21** grid of unit squares (5 : 7, a card): a border in the faint ink's grey, a
-lattice of pixels and an empty ring at the middle in the card's frame grey, on the card's grey (0.15.3, decisions §163; a slate grey `#2a2e31` with `#383d41` since 0.15.4, §166). **No colour**: the three greys are the
-tokens `--ork-ink-faint`, `--ork-card-frame` and `--ork-card`, and a test holds the file to them. Since 0.15.1 the back draws no mark: the ork
-mark that stood in the ring is gone.
+**The back**: a hand card face down (orkBoard's decisions §149.3, §160.3, §254.5): the deck, the cards under a stack's top, the discard's cards
+under its top, the Orkmaster's fan. One back for them all, after a tarot card's back, kept plain (0.30.0): on the card's grey **a thin plain strip along each of its four sides** and
+**a small curl in each corner**, drawn in the faint ink's grey, and **orkUI's ring of runes in its middle**, drawn by CSS. **No colour**: the two greys are the tokens `--ork-card` (the ground)
+and `--ork-ink-faint` (the strokes), and a test holds the files to them. No lattice, no diamond, no ring in the SVG; no moon and no star as an ornament.
 
-    back.svg   the back: the pattern, three fills
-    ork.svg    orkUI's ork mark: a 7 x 7 head on the signs' grid (one path of unit squares, a mask like a sign); kept as the mark, no longer drawn by the back
+    back.svg        the back: 40 x 56 unit squares (5 : 7), crispEdges, the card's grey and the faint ink's: four strips and four curls
+    back-small.svg  the same strips, no curls, for a back under about 100 px wide (56 x 78)
+    ork.svg         orkUI's ork mark: a 7 x 7 head on the signs' grid (one path of unit squares, a mask like a sign); kept as the mark, no longer drawn by the back
+
+**The strips**: one cell wide, inset 3 cells from the edge. The long ones (left and right) run from y 12 to y 43 (x 3 and x 36), the short ones (top and bottom) from x 10 to x 29 (y 3 and
+y 52), so the four corners stay free.
+
+**The curls**: a quarter of a spiral, 6 x 6 cells, one cell thick, the same drawing mirrored into the four corners (the top left one, at cells 3 to 8, is
+`.####.` / `#....#` / `#.#..#` / `#..##.` / `#.....` / `#.....`, the others its mirror images about the card's middle lines).
+
+**The ring of runes** is CSS, not the SVG: `.ork-card-back::before` is the mask of the runes' ring `.ork-sigil` draws (`../runes/sigil-runes.svg`, the seven runes of the seal) in `--ork-ink-faint`, centred, **58% of the
+back's width**, behind the seal slot. `.ork-card-back.small` swaps the background to `back-small.svg`, draws the ring at **66%** and the seal's element at 14 px.
 
 **The seal** (0.15.1, decisions §160.3): `.ork-card-back__seal` is the slot at the back's centre, in the ring. It holds the element of the
-goal that waits next, `<span class="ork-elem dust">` (drawn 28 px, four pixels a cell), and, beside it, `<span class="ork-sign moon">` when
-that goal waits for the reset; the pair is centred. With nothing in the slot the back is the pattern alone:
+goal that waits next, `<span class="ork-elem dust">` (drawn 28 px, four pixels a cell; 14 px on `.small`), and, beside it, `<span class="ork-sign moon">` when
+that goal waits for the reset; the pair is centred. With nothing in the slot the back is the pattern and its ring alone:
 
     <div class="ork-card-back"><span class="ork-card-back__seal"><span class="ork-elem dust"></span></span></div>
+    <div class="ork-card-back small"></div>
 
 `.ork-card-back` in `components.css` draws it (`aspect-ratio: 5 / 7`, `image-rendering: pixelated`, the card's grey under it, the card's frame line
-round it). A map card's back stays its details (decisions §120.1): this back is the hand's alone.
+round it). A page that drew its own ring over a back (a `.ork-sigil` in it) drops it: the back has one. A map card's back stays its details (decisions §120.1): this back is the hand's alone.
 
 **The + card and the deck** (0.15.1, decisions §160.2): `.ork-card.ork-plus` is a face-up card whose face is orkUI's `plus` icon centred, 28 px,
 and nothing else (the new goal's card). `.ork-deck` is a pile: the backs' edges (`.ork-card-back.edge`, `--ork-deck-i` 1, 2, ... a step of 3 px

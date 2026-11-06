@@ -19,12 +19,9 @@ const clean = (el) => {
 /** A back as the Orkmaster's hand draws one: orkUI's back with its small seal and the rune of `from` (an element that holds a rune: the card it stands for) in the middle. `asks`: the ring is the alert's. */
 export function backOf(from, { asks = false, lit = true } = {}) {
   const back = document.createElement("div");
-  back.className = `ork-turn__back ork-card-back table-turned__back${asks ? " is-asking" : ""}`;
+  back.className = `ork-turn__back ork-card-back small table-turned__back${asks ? " is-asking" : ""}`;   // orkUI 0.30.0: the back draws its ring of runes itself
   const seal = document.createElement("span");
   seal.className = "col-fan__seal table-turned__seal";
-  const sigil = document.createElement("span");
-  sigil.className = "ork-sigil small";
-  seal.appendChild(sigil);
   const rune = from?.querySelector?.(".ork-elem")?.cloneNode(true);
   if (rune) { rune.classList.remove("is-glowing"); rune.classList.toggle("table-turned__rune", true); if (!lit) rune.style.opacity = "0.25"; seal.appendChild(rune); }
   back.appendChild(seal);

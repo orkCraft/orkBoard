@@ -11,6 +11,7 @@
  "land": [{"x": 60, "hop": 3}, {"x": 30, "hop": 1}, {}],
  "legend": {"p": "pip", "k": "tick", "x": "cross", "n": "new", "f": "front"},
  "turn": {"axis": "z", "steps": [30, 60, 90]},
+ "sides": {"right-resume": {"face": "front-resume", "var": "side"}},
  "faces": {
   "1": [
    "................",

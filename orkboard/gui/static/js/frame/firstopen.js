@@ -76,7 +76,7 @@ export const slotOf = (step) => (step === "tools" ? 0 : step === "project" || st
 async function fly(from, to) {
   if (!from || !to || !to.width || reduced() || document.hidden || typeof Element.prototype.animate !== "function") return;
   const g = document.createElement("span");
-  g.className = "ork-card-back fo-flyer";
+  g.className = "ork-card-back small fo-flyer";
   g.setAttribute("aria-hidden", "true");
   g.style.cssText = `position:fixed;left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px;margin:0;z-index:90;pointer-events:none;transform-origin:0 0;`;
   document.body.appendChild(g);
@@ -245,7 +245,7 @@ export function Room() {
       <div class="fo-bubble fo-room-bubble" role="status" aria-live="polite" data-step=${out ? step : "hello"}><span class="ork-label">Orkmaster</span><p class=${reading.value ? "ork-think" : undefined}>${line}</p></div>
       <${Head} race="peon" tier="crown" size="big" />
       ${held.length > 0 && html`<button type="button" class="fo-fan" data-fan=${held.length} aria-label=${`The Orkmaster holds ${COUNT[held.length].toLowerCase()}: throw the next`} disabled=${armed || r.flying}
-          onClick=${() => setArmed(true)}>${held.map((i) => html`<span key=${i} class="ork-card-back" data-back=${SLOTS[i]}></span>`)}</button>`}
+          onClick=${() => setArmed(true)}>${held.map((i) => html`<span key=${i} class="ork-card-back small" data-back=${SLOTS[i]}></span>`)}</button>`}
     </div>
     <${RoomMenu} />
     <${RoomOver} />

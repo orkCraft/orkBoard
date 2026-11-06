@@ -22,8 +22,8 @@ function Back({ n, i, count, reading, asks, held, words, dim, hatch, open, onPre
   everBack.add(n.slug);                                                                                    // seen face down: its turn up and its flight to a lane are played once (backcard.js)
   return html`<button type="button" class=${cls("ork-card col-card col-card--down col-card--fan", { "is-reading": reading, asks, "is-dim": dim })} ...${hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="analysis" data-down="1"
     style=${`--i:${i};--r:${turnOf(i, count)}deg;--z:${i + 1}`} title=${words} aria-label=${words} aria-haspopup="dialog" aria-expanded=${String(open)} onClick=${() => onPress(n, "analysis")}>
-    <span class="ork-card-back col-fan__back" aria-hidden="true"></span>
-    <span class="col-fan__seal" aria-hidden="true"><span class="ork-sigil small"></span><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${reading && movesOn(n.slug)} still=${false} /></span>
+    <span class="ork-card-back small col-fan__back" aria-hidden="true"></span>
+    <span class="col-fan__seal" aria-hidden="true"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${reading && movesOn(n.slug)} still=${false} /></span>
     ${held && html`<span class="col-fan__held" aria-hidden="true"><${Sign} name="pause" /></span>`}
   </button>`;
 }

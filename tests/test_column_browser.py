@@ -122,7 +122,7 @@ def test_in_analysis_is_the_orkmasters_hand_a_fan_of_small_backs_each_rune_in_it
         for i in range(cards.count()):
             card = cards.nth(i)
             assert card.inner_text().strip() == "", "face down: no name on its face"
-            assert card.locator(".ork-card-back").count() == 1 and card.locator(".ork-sigil.small").count() == 1 and card.locator(".ork-elem").count() == 1, "orkUI's back, its small seal and the goal's rune"
+            assert card.locator(".ork-card-back").count() == 1 and card.locator(".ork-card-back.small").count() == 1 and card.locator(".ork-elem").count() == 1, "orkUI's small back (its ring drawn by the back itself, orkUI 0.30.0) and the goal's rune"
             assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [56, 78], "56 x 78"
             rune, box = card.locator(".ork-elem").bounding_box(), card.evaluate("e => { const r = e.getBoundingClientRect(); return {x: r.x, y: r.y, w: r.width, h: r.height}; }")
             assert abs(rune["x"] + rune["width"] / 2 - (box["x"] + box["w"] / 2)) <= 4 and abs(rune["y"] + rune["height"] / 2 - (box["y"] + box["h"] / 2)) <= 8, "the rune in the back's middle"
@@ -598,6 +598,8 @@ def test_a_card_laid_over_the_column_covers_it_whole_in_its_shadow_and_the_colum
         pg.wait_for_selector(".col-sec[data-pile=work] .col-card--up", timeout=WAIT_MS)
         pg.locator(".hand .hand-plus").click()
         pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => !document.querySelector('.hand-field.is-turning, .hand-field.is-growing')", timeout=WAIT_MS)
+        pg.wait_for_timeout(700)                                                                        # the field's turn and growth played (fieldturn.js)
         got = pg.evaluate("""() => {
           const f = document.querySelector('.hand-field'), c = document.querySelector('.col-sec[data-pile=work] .col-card--up'), r = c.getBoundingClientRect(), fr = f.getBoundingClientRect();
           return {w: r.width, over: fr.left < r.right && fr.right > r.left, shadow: getComputedStyle(f).boxShadow};

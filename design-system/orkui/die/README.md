@@ -28,6 +28,7 @@ Plain HTML and CSS: the die holds its cube and the cube's six faces, nothing els
 - **The front face's mark** (0.29.0, Orkboard's decisions §246), a class of the die: **`front-stop`** (a square of 8 x 8 cells at the face's middle) or **`front-resume`** (a circular arrow, 14 x 14 cells), in
   **`--_front`**: the muted ink by default, **`.is-orks-running`** the danger's (something runs: Stop all can be pressed), **`.is-orks-stopped`** the ink (the orks are stopped: Resume). With neither class the
   front face keeps its 1. **With a front mark set the right face is blank** (one mark, on the orks' side).
+- **The right face's Resume** (0.30.0, Orkboard's decisions §254.4): **`.right-resume`** with **`.front-stop`** draws the resume mark on the right face (the same 14 x 14 cells as `front-resume`, `sides` in `die.json`) in **`--_side`**, the faint ink (`--ork-ink-faint`) by default, so Resume is seen at the side before the quarter turn that brings it to the front. Without `.front-stop` it draws nothing.
 - **The turn** (0.29.0): **`.is-turning`** turns the cube a quarter round its up axis (`rotateZ` to 90 degrees, three poses of 30 degrees, `--ork-motion-quick` x 3 = 360 ms), once, the faces' shades turning with it. It
   ends at the `animationend` named `ork-die-turn`; the page takes the class off and swaps the front mark then (the right face, blank, has come to the front). Under reduced motion there is no turn and no `animationend`:
   the page swaps the mark at once.

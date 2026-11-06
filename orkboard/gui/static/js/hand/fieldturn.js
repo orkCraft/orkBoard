@@ -110,7 +110,7 @@ export async function sendBack(box, goal) {
   g.setAttribute("aria-hidden", "true");
   const big = Math.max(box.width / w, 0.5), play = tokenMs("--ork-motion-play", 400), total = Math.max(play * 3.5, 1400);
   place(g, at, `transform-origin:50% 50%;transform:scale(${big});`);
-  render(html`<div class="ork-turn__back ork-card-back table-turned__back"><span class="col-fan__seal table-turned__seal"><span class="ork-sigil small"></span><${Elem} name=${goal.element} hue=${goal.hue} dim=${!goal.element} /></span></div>
+  render(html`<div class="ork-turn__back ork-card-back table-turned__back"><span class="col-fan__seal table-turned__seal"><${Elem} name=${goal.element} hue=${goal.hue} dim=${!goal.element} /></span></div>
     <div class="ork-turn__face ork-card hand-ghost__face"><${Elem} name=${goal.element} hue=${goal.hue} big=${true} dim=${!goal.element} /><span class="hand-ghost__words">${goal.name}</span></div>`, g);
   document.body.appendChild(g);
   const rune = g.querySelector(".table-turned__seal .ork-elem");

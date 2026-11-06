@@ -99,10 +99,10 @@ No size between 14 and 28: whole pixels. The element is shown on a card, never n
 words and never named.
 
 ## The signs
-`signs/` holds the forty-two signs of orkBoard's window (spec 50 §1.6, spec 51 §1, spec 52 §1, spec 56, spec 59): check (done), cross (failed), work (at work), **moon**
+`signs/` holds the forty-three signs of orkBoard's window (spec 50 §1.6, spec 51 §1, spec 52 §1, spec 56, spec 59): check (done), cross (failed), work (at work), **moon**
 (starts by itself later, a crescent alone: it was `night`, a crescent and a star, before 0.15.0; the one moon of the window), alert (a stop that asks), flag (a goal in main),
 before (what a task waits for), after (what waits for it), and the media signs play and pause (a sound's or a clip's control), sound (a sound's tile), film (a clip's tile) and text
-(a text's tile), **sword** and **shield** (0.15.0: a squad's *Does* and *Checks* columns, never a state's sign), **question** (0.15.5: a question the person answers, drawn beside `alert` and `target`), **bug-squashed** (0.26.0: a bug fixed, the beetle squashed flat, drawn where the bug stood; it has a 14 x 14 of its own at 28 px and is no goal type's), and a goal type's mark, each type its own: feature, bug, tidy,
+(a text's tile), **sword** and **shield** (0.15.0: a squad's *Does* and *Checks* columns, never a state's sign), **question** (0.15.5: a question the person answers, drawn beside `alert` and `target`), **bug-squashed** (0.26.0: a bug fixed, the beetle squashed flat, drawn where the bug stood; it has a 14 x 14 of its own at 28 px and is no goal type's), **conflict** (0.30.0: a decision that goes against an earlier one, two cards crossed; no goal type's), and a goal type's mark, each type its own: feature, bug, tidy,
 restructure, screen, picture, logo, target, flask, horn, chart, page, abtest, landing, post, tagline, mechanic, level, balance, character, release, store, tune, compass, steps,
 each a 7 x 7 grid of unit squares (`signs/README.md`, which says which the window as decided draws and that the goal types' signs stay for Orkline). `<span class="ork-sign check" aria-hidden="true"></span>` draws one at 14 x 14, `.ork-sign.big`
 at 28 x 28, as a mask in `currentColor`: the colour of the text it stands in (ink, muted, success, danger or alert; a sign adds no colour
@@ -175,7 +175,7 @@ face under it and its right face beside it, lit from above (a face darkens as it
 … `<i class="ork-die__face is-down"></i></span></span>`. The view, the shades, the marks and every pose are generated from `die/die.json` by `tools/build_die.py`. The up face
 shows `.face-1` to `.face-6` (pips in the muted ink), `.face-ok` (a tick in `--ork-success`), `.face-no` (a cross in `--ork-danger`) `.face-new` (a spark in `--ork-ink`: news, not a warning) or `.face-play` (0.27.0: the play arrow, a right-pointing triangle in the pips' colour, so the muted ink at rest and the ink and the glow while `.is-playing`). `.is-playing` turns the pips and the edges to the ink
 and makes the up face glow (six steps, 2.4 s); `.is-rolling` tumbles the cube, a quarter turn each 120 ms in three poses, until the class is taken off (the page then sets the face it
-stops on); `.is-wobbling` rocks it once on its edges, 300 ms in three poses; `.is-landing` rolls the up face in from the back and drops the cube, 300 ms in three poses. `.front-stop` and `.front-resume` (0.29.0) put the orks' mark on the front face, in `--_front` (the muted ink; `.is-orks-running` the danger's, `.is-orks-stopped` the ink), and the right face is then blank;
+stops on); `.is-wobbling` rocks it once on its edges, 300 ms in three poses; `.is-landing` rolls the up face in from the back and drops the cube, 300 ms in three poses. `.front-stop` and `.front-resume` (0.29.0) put the orks' mark on the front face, in `--_front` (the muted ink; `.is-orks-running` the danger's, `.is-orks-stopped` the ink), and the right face is then blank, except with `.right-resume` (0.30.0), which draws Resume on it with `.front-stop`, in `--_side` (the faint ink);
 `.is-turning` turns the cube a quarter round its up axis, once. On the table
 the page turns it with the lean token. Nothing moves under reduced motion.
 
@@ -222,9 +222,9 @@ rotates: the two sides swap at once. **`.ork-gives`** is a head's one beat as it
 class on when it happens and takes it off at the `animationend` named `ork-give` (put it on again after a reflow to play it again). Nothing plays under reduced motion.
 
 ## The back
-`backs/back.svg` is the one back of a hand card face down (the deck, the cards under a stack's top, the discard's), 15 x 21 pixels (5 : 7) in the card's frame grey and the faint ink's grey on
-the card's grey: **no colour** (`backs/README.md`). Since 0.15.1 it carries no mark: at its middle lies the **seal slot**, `.ork-card-back__seal`, which holds the element of the goal that waits
-next (`<span class="ork-elem dust">`, drawn 28 px) and, beside it, the sign `moon` when that goal waits for the reset, the pair centred; with nothing in it the back is the pattern alone.
+`backs/back.svg` is the one back of a hand card face down (the deck, the cards under a stack's top, the discard's), 40 x 56 pixels (5 : 7): a thin plain strip along each side and a small curl in each corner in the faint ink's grey on
+the card's grey: **no colour** (`backs/README.md`; 0.30.0, after a tarot back); `backs/back-small.svg` is the strips alone for a back under about 100 px wide (`.ork-card-back.small`); orkUI's ring of runes lies in its middle, drawn by CSS (`.ork-card-back::before`, 58% of the width, 66% on `.small`). It carries no mark: at its middle lies the **seal slot**, `.ork-card-back__seal`, which holds the element of the goal that waits
+next (`<span class="ork-elem dust">`, drawn 28 px) and, beside it, the sign `moon` when that goal waits for the reset, the pair centred; with nothing in it the back is the pattern and its ring alone.
 `<div class="ork-card-back"><span class="ork-card-back__seal"><span class="ork-elem dust"></span></span></div>` draws it; at 120 x 168 a pixel is 8 px, whole. A map card's back stays its details.
 `.ork-card.ork-plus` is the new goal's card, face up, its face the `plus` icon centred at 28 px and nothing else; `.ork-deck` is a pile (the backs' edges, `--ork-deck-i`, the top back) with the
 + card lying off its top, to the left, a little up and turned by the lean token: a transform, still at rest and under reduced motion. The page gives the deck its width and room at its left.

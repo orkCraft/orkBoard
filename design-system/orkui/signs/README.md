@@ -1,6 +1,6 @@
 # orkUI / office / signs
 
-The forty-two signs: **every symbol a face draws is orkUI's** (orkBoard's spec 50 §1.6, spec 51 §1 and spec 52 §1 and spec 56 §6 and spec 59 §1, decisions §63.10, §69 and §72). A sign stands beside the
+The forty-three signs: **every symbol a face draws is orkUI's** (orkBoard's spec 50 §1.6, spec 51 §1 and spec 52 §1 and spec 56 §6 and spec 59 §1, decisions §63.10, §69 and §72). A sign stands beside the
 words it explains (a state, a stop, an order), in the colour of that text; it is never the only thing that says it, so the words
 (or a `title`) stay and the sign is `aria-hidden`.
 
@@ -53,9 +53,13 @@ A bug's state (0.26.0, Orkboard's decision §197 and spec 119 part A), drawn bes
 
     bug-squashed   a bug fixed (the beetle squashed flat: Orkboard's *Fix it* shows the bug with the `hammer` icon (`../icons/`) over its lower right, the hammer striking while Claude fixes, and then this)
 
+A decision's state (0.30.0, Orkboard's decision §254.6): the mark of the card the Orkmaster throws when a decision goes against a standing one, no goal type's:
+
+    conflict   a decision that goes against an earlier one (two cards crossed)
+
 **The window as decided draws** (0.15.0): the states of the closed set, `check`, `cross`, `work`, `moon`, `alert`, `flag`;
 `before` and `after`; `play` and `pause`; a map card's kinds, `screen`, `picture`, `sound`, `film`, `text`, `page`, `logo`;
-`sword` and `shield`; since 0.15.5, `question`; and, since 0.26.0, `bug-squashed`. The goal types' signs stay in this folder for Orkline, which still draws them; orkBoard's copy
+`sword` and `shield`; since 0.15.5, `question`; since 0.26.0, `bug-squashed`; and, since 0.30.0, `conflict`. The goal types' signs stay in this folder for Orkline, which still draws them; orkBoard's copy
 leaves them out.
 
 The twenty-five pictures are also in `../emblems/` (the library), with fourteen more that no face draws (seven of them the goal types' pictures before 0.16.0).
