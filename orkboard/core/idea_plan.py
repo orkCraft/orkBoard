@@ -19,18 +19,22 @@ step's tasks are in dev. Each step is recorded as history (`idea_route.begin`). 
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
 import re
 from pathlib import Path
 
 from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
-from orkboard.realm import (collide, goal_route, goal_take, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
+from orkboard.realm import (collide, goal_route, goal_take, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
                             spec_sections, task_brief, tool_errors)
-from orkboard.realm.idea_words import CARD_RULE, short_of
+from orkboard.realm.idea_words import CARD_RULE, short_of, short_said, title_of
 from orkboard.sources import pricing
 
 SUMMED = ("usd_low", "usd_high")
+TIERS = ("elder", "warrior", "laborer")
+KINDS = ("secret", "choice", "confirm", "instructions", "file")
+ENV_NAME = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
 DONE_KEEP = 12                       # of the steps done, the tasks the next step's plan is told of
 
 
@@ -104,6 +108,59 @@ def shifted(data: dict, tasks: int, todos: int) -> dict:
 def sectioned(page: ideas.Page | None) -> bool:
     """The page is of the new format: it holds a section of a party (realm/spec_sections.py)."""
     return page is not None and bool(spec_sections.sections_of(page))
+
+
+def make_plan(slug: str, answer: dict | None, made_at: str = "", look: str = "") -> dict:
+    """plan.json from the model's answer, strictly: at most 8 tasks with their ids renamed k1…, `after` only to an
+    earlier task, known tiers and kinds; the estimate from the tiers' default cost, ±50 %. `look`: the title of a screen's goal (spec 85 §2):
+    its plan begins with a pick of the screen's look, every other task after it."""
+    kw = _kw()
+    if not isinstance(answer, dict) or not isinstance(answer.get("tasks"), list):
+        raise kw.KeeperError("the keeper's answer was not a plan")
+    names: dict[str, str] = {}
+    tasks: list[dict] = []
+    for raw in idea_look.with_pick(answer["tasks"], look, slug, kw.MAX_TASKS) if look else answer["tasks"]:
+        if not isinstance(raw, dict) or len(tasks) >= kw.MAX_TASKS:
+            continue
+        title, brief = title_of(raw.get("title")), kw._words(raw.get("brief"), 6000)
+        if not title or not brief:
+            continue
+        tid = f"k{len(tasks) + 1}"
+        after = [names[a] for a in kw._strings(raw.get("after"), kw.MAX_TASKS, 20) if a in names]
+        names[kw._words(raw.get("id"), 20) or tid] = tid
+        tier = raw.get("tier") if raw.get("tier") in TIERS else "warrior"
+        kind = raw.get("kind") if raw.get("kind") in roles.TASK_KINDS else roles.DEFAULT_KIND
+        pick = idea_pick.clean_ask(raw.get("pick")) if kind not in idea_checks.TAGS else None      # a plan written before has none (spec 51 §2.1)
+        tasks.append({**_task(tid, title, brief, kind, tier, list(dict.fromkeys(after))),
+                      "short": short_said(raw.get("short"), title), **({"pick": pick} if pick else {}),
+                      **({"screen": screen} if (screen := idea_look.clean_screen(raw.get("screen"))) else {})})
+    if not tasks:
+        raise kw.KeeperError("the plan had no task")
+    todos: list[dict] = []
+    for raw in answer.get("todos") if isinstance(answer.get("todos"), list) else []:
+        if not isinstance(raw, dict) or len(todos) >= kw.MAX_TODOS or raw.get("kind") not in KINDS:
+            continue
+        title = kw._words(raw.get("title"), 200)
+        if raw["kind"] == "secret":
+            title = re.sub(r"[^A-Z0-9_]+", "_", title.upper()).strip("_")
+            if not ENV_NAME.match(title):
+                continue
+        if not title:
+            continue
+        for_ = [names[f] for f in kw._strings(raw.get("for"), kw.MAX_TASKS, 20) if f in names]
+        todo = {"id": f"t{len(todos) + 1}", "title": title, "kind": raw["kind"],
+                "why": kw._words(raw.get("why"), 500),
+                "choices": kw._strings(raw.get("choices"), 8, 200) if raw["kind"] == "choice" else [],
+                "steps": kw._strings(raw.get("steps"), 12, 500),         # steps on any kind (spec 35 §9)
+                "for": list(dict.fromkeys(for_)), "done": False, "value": None}
+        if raw["kind"] == "file":
+            todo["accept"] = [re.sub(r"[^a-z0-9]", "", a.lower())[:10] for a in kw._strings(raw.get("accept"), 8, 20)
+                              if re.sub(r"[^a-z0-9]", "", a.lower())]
+        todos.append(todo)
+    data = {"idea": slug, "made_at": made_at or dt.datetime.now().isoformat(timespec="seconds"), "passed_at": None,
+            "estimate": estimate(tasks), "todos": todos, "tasks": tasks}
+    readiness(data)
+    return data
 
 
 class PlanMixin:
