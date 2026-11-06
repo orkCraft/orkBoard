@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from orkboard.core.idea_landing import COULD_NOT_RUN
-from orkboard.realm import agent_rules, board_in_code, dep_links, event_log, gate_config, gate_env, gate_rerun, idea_checks, jobs, idea_pick, idea_secrets, idea_target, library, task_brief, task_steps
+from orkboard.realm import agent_rules, board_in_code, dep_links, event_log, gate_config, gate_env, gate_rerun, idea_checks, jobs, idea_pick, idea_secrets, idea_target, task_brief, task_steps
 from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 

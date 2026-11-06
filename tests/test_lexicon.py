@@ -282,6 +282,15 @@ def test_the_chronicles_words_spec_134():
     assert lexicon.words("Chronicle") == "Chronicle" and lexicon.term("chronicles") == "History"          # the town's *Chronicles* keep their word
 
 
+def test_the_acceptance_is_a_leaders_check_of_its_step_and_the_pages_say_it_in_that_word_spec_152_d():
+    """Spec 152 D.4: `acceptance` (*acceptance*, *acceptances*); where the page says it in words it keeps them: *is accepting*, *the leader accepts*; the person's at Review is Merge."""
+    from pathlib import Path
+    assert lexicon.term("acceptance") == "acceptance" and lexicon.term("acceptance", many=True) == "acceptances"
+    static = Path(__file__).parent.parent / "orkboard" / "gui" / "static" / "js"
+    for rel, words in (("arena/arenawords.js", "is accepting"), ("table/partyseats2.js", "the leader accepts it"), ("frame/firstopen.js", "the leader accepts")):
+        assert words in (static / rel).read_text(encoding="utf-8")
+
+
 def test_every_term_has_one_key():
     """A concept gets its one word (CLAUDE.md): a key twice in TERMS is a merge kept twice, never two words."""
     from collections import Counter
