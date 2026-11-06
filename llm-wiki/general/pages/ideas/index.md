@@ -110,6 +110,7 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [A leader leads and accepts](152-a-leader-leads-and-accepts.md) — A leader leads and accepts
 - [A task is a whole session](153-a-task-is-a-whole-session.md) — A task is a whole session
 - [A leader is a skill in Claude Code](154-a-leader-is-a-skill-in-claude-code.md) — A leader is a skill in Claude Code
+- [Cut the import cycle between realm and core: realm/seat_frames.py and…](cut-the-import-cycle-between-realm-and-core.md) — Cut the import cycle between realm and core: realm/seat_frames.py and realm/agent_rules_text.py import core/idea_talk, idea_sections and idea_accept, which import realm, a cycle hidden by lazy imports
 - [Orkboard in orkUI](40-design-system.md) — Orkboard in orkUI
 - [OrkUI 0.15.x copied](96-orkui-0.15.0-copied.md) — OrkUI 0.15.x copied
 - [A goal's party, measured](43-party-measured.md) — A goal's party, measured

@@ -104,18 +104,19 @@ def test_each_role_file_holds_its_prompts_fixed_text_and_its_front_matter(tmp_pa
     roles_dir = root / WIKI / "roles"
     assert sorted(p.stem for p in roles_dir.glob("*.md")) == sorted(["orkmaster", "tech-leader", "design-leader", "product-leader", "taskmaster", "grunt"])
     orkmaster = (roles_dir / "orkmaster.md").read_text(encoding="utf-8")
-    assert goal_route.instruction() in orkmaster and idea_sections.join_instruction() in orkmaster
+    assert goal_route.rules() in orkmaster and idea_sections.join_rules() in orkmaster and "Read no file" not in orkmaster and "JSON" not in orkmaster
     for craft in ("tech", "design", "product"):
         text = (roles_dir / f"{craft}-leader.md").read_text(encoding="utf-8")
-        assert idea_talk.instruction(craft) in text and idea_sections.instruction(craft) in text and "## Accepting a step\n\n" + idea_accept.instruction(craft) in text and "## What it reads" in text
+        assert idea_talk.rules(craft) in text and idea_sections.rules() in text and "## Accepting a step\n\n" + idea_accept.rules() in text and "## What it reads" in text
+        assert "Read no file" not in text and "one JSON object" not in text and "(The context follows" not in text        # a call's frame is the call's (§258.7)
         assert f"seat: leader\ncraft: {craft}\nrace: " in text and f"schema: {agent_rules_text.SCHEMA}\nhash: " in text
     assert "race: elf\n" in (roles_dir / "design-leader.md").read_text(encoding="utf-8") and "race: knight\n" in (roles_dir / "product-leader.md").read_text(encoding="utf-8")
     assert "race: ork\n" in (roles_dir / "tech-leader.md").read_text(encoding="utf-8")
     for seat in ("taskmaster", "grunt"):
-        assert roles.instruction(seat) in (roles_dir / f"{seat}.md").read_text(encoding="utf-8")
+        assert roles.rules(seat) in (roles_dir / f"{seat}.md").read_text(encoding="utf-8")
     assert f"`{WIKI}/journals/tech.md`" not in (roles_dir / "grunt.md").read_text(encoding="utf-8")
     agent = (root / ".claude/agents/ork-tech-leader.md").read_text(encoding="utf-8")
-    assert agent.startswith("---\nname: ork-tech-leader\ndescription: \"") and idea_talk.instruction("tech") in agent and f"Read `{WIKI}/BOARD.md` first" in agent
+    assert agent.startswith("---\nname: ork-tech-leader\ndescription: \"") and idea_talk.rules("tech") in agent and "Read no file" not in agent and "one JSON object" not in agent and f"Read `{WIKI}/BOARD.md` first" in agent
     skill = (root / ".claude/skills/orkboard/SKILL.md").read_text(encoding="utf-8")
     assert skill.startswith("---\nname: orkboard\ndescription: \"" + agent_rules_text.SKILL_DESCRIPTION + "\"\n") and f"{WIKI}/BOARD.md" in skill
 
@@ -205,7 +206,7 @@ def test_the_way_of_a_goal_has_accept_and_the_rules_are_schema_two_spec_152_d(tm
     board = (root / WIKI / "BOARD.md").read_text(encoding="utf-8")
     assert "## Accepting a step" in board and "twice at most" in board and "“Not accepted”" in board and f"Schema {agent_rules_text.SCHEMA}." in board
     leader = agent_rules_text.seat_text("leader", "tech")
-    assert leader.index("## Your section of the spec") < leader.index("## Accepting a step\n\n" + idea_accept.instruction("tech"))
+    assert leader.index("## Your section of the spec") < leader.index("## Accepting a step\n\n" + idea_accept.rules())
     assert "## Accepting a step" in (root / WIKI / "roles/tech-leader.md").read_text(encoding="utf-8")
     assert "## Accepting a step" not in agent_rules_text.seat_text("grunt")
 

@@ -224,16 +224,17 @@ PHASE_WORDS = {"new": "the goal as the person wrote it; nobody has routed it.",
 # -- the seats ---------------------------------------------------------------------------------------------------------------------------------------
 
 def seat_text(seat: str, craft: str = "") -> str:
-    """A seat's fixed instruction, from the code its prompt is built from (decisions §255.6): the Orkmaster's route and its join, a leader's say in Talk and its section, the Taskmaster's and a
-    Grunt's built-in text. A test holds each role file to this text and each prompt to the function it is built from."""
+    """A seat's rules, from the code its prompt is built from (decisions §255.6, §258.7): the Orkmaster's route and its join, a leader's say in Talk, its section and its acceptance, the
+    Taskmaster's and a Grunt's built-in text. Its rules only, never a call's frame (*Read no file*, *one JSON object*): that is the call's, and an agent's step has its own (`seat_frames`).
+    A test holds each role file to this text and each prompt to the rules it is built from."""
     from orkboard.core import idea_accept, idea_sections, idea_talk
     from orkboard.realm import goal_route, roles
     if seat == "orkmaster":
-        return ("## Route a goal\n\n" + goal_route.instruction() + "\n\n## Join the sections of a goal's spec\n\n" + idea_sections.join_instruction())
+        return ("## Route a goal\n\n" + goal_route.rules() + "\n\n## Join the sections of a goal's spec\n\n" + idea_sections.join_rules())
     if seat == "leader":
-        return ("## Talk: what you say about a goal\n\n" + idea_talk.instruction(craft) + "\n\n## Your section of the spec\n\n" + idea_sections.instruction(craft)
-                + "\n\n## Accepting a step\n\n" + idea_accept.instruction(craft))
-    return roles.instruction(seat)
+        return ("## Talk: what you say about a goal\n\n" + idea_talk.rules(craft) + "\n\n## Your section of the spec\n\n" + idea_sections.rules()
+                + "\n\n## Accepting a step\n\n" + idea_accept.rules())
+    return roles.rules(seat)
 
 
 READS = {"orkmaster": ("the goal's page `{wiki}/pages/ideas/<slug>.md`, its *Gist* (the person's words)",
