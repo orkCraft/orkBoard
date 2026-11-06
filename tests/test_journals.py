@@ -101,3 +101,24 @@ def test_each_journal_has_its_markdown_mirror_written_again_after_each_change(sd
     got = read_in.parse_export((sd / "journals" / "_project.md").read_text())
     assert got["scope"] == journals.PROJECT and [e["text"] for e in got["entries"]] == ["Decision 3: Postgres"]
     assert "digest:" in (sd / "journals" / "_project.md").read_text()
+
+
+# -- the Markdown in any folder (spec 151 B.1) ---------------------------------------------------------------------------------------------
+
+def test_a_journal_is_written_into_a_folder_only_when_it_changed_and_never_over_a_file_of_another(sd, tmp_path):
+    out = tmp_path / "wiki" / "journals"
+    journals.add(sd, journals.PROJECT, "decision", "Decision 3: Postgres", ref="3")
+    journals.add(sd, "tech", "stance", "Keep the cache", idea="lobby")
+    assert journals.mirror_into(sd, journals.PROJECT, out) and journals.mirror_into(sd, "tech", out, "Tech", "Archie")
+    assert sorted(p.name for p in out.iterdir()) == ["project.md", "tech.md"]                  # the project's journal is `project.md`
+    text = (out / "tech.md").read_text()
+    assert text.startswith("---\norkboard-journal: tech\nparty: Tech\nleader: Archie\n") and "Keep the cache" in text and "idea=lobby" in text
+    assert not journals.mirror_into(sd, "tech", out, "Tech", "Archie")                         # the day it was exported alone is no change
+    journals.add(sd, "tech", "heeded", "Heeded the cache")
+    assert journals.mirror_into(sd, "tech", out, "Tech", "Archie") and "Heeded the cache" in (out / "tech.md").read_text()
+    (out / "mine.md").write_text("my own notes\n")
+    journals.add(sd, "mine", "stance", "Not yours")
+    assert not journals.mirror_into(sd, "mine", out) and (out / "mine.md").read_text() == "my own notes\n"      # a file Orkboard did not write stays
+    with pytest.raises(ValueError):
+        journals.mirror_into(sd, "No Such", out)
+    assert journals.file_name("project") == "party-project.md" and journals.file_name(journals.PROJECT) == "project.md"

@@ -297,3 +297,36 @@ def test_a_talks_card_answered_in_the_hand_is_written_to_the_page_beside_talks_r
     text = _page(root, slug).section("Open questions")
     assert idea_questions.questions_of(text) == ["Which store first?"] and idea_questions.answers(text) == ["Google Play"]
     assert ideas.items(text) == []                                                              # answered: nothing open in the page
+
+
+# -- the journals and the brief in the Board's commit (spec 151 B) ----------------------------------------------------------------------------
+
+def test_the_journals_and_the_brief_ride_in_the_boards_commit_and_a_line_added_outside_is_taken_once(host):
+    from orkboard.realm import journals
+    _goal(host)
+    sd, repo = host.ideas.state_dir, host.ideas.state_dir.parent
+    journals.add(sd, journals.PROJECT, "decision", "Decision 1: no accounts", ref="1")
+    host.ideas.tree_flush(force=True)
+    shown = git(repo, "show", "dev:llm-wiki/general/journals/project.md")
+    assert "orkboard-journal: _project" in shown and "Decision 1: no accounts" in shown
+    assert "# Project brief" in git(repo, "show", "dev:llm-wiki/general/project.md")
+    tip = git(repo, "rev-parse", "dev")
+    host.ideas.tree_flush(force=True)
+    assert git(repo, "rev-parse", "dev") == tip                                                # nothing changed: no new commit
+    journals.add(sd, "tech", "stance", "Keep it small")
+    host.ideas.tree_flush(force=True)
+    assert "Keep it small" in git(repo, "show", "dev:llm-wiki/general/journals/tech.md")
+    # a tool adds two lines to the file in the work branch; the host reads them in once
+    tree = host.ideas._board_tree
+    file = tree.root() / "journals" / "project.md"
+    file.write_text(file.read_text() + "- 2026-11-05 · decision · Decision 2: from a tool <!-- id=feedfeed0001 -->\n- 2026-11-05 · bogus · Bad kind <!-- id=feedfeed0002 -->\n")
+    git(tree.path, "add", "-A")
+    git(tree.path, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "a tool's line")
+    tree.land()
+    host.ideas.phase_sync(tree, True)
+    texts = [e["text"] for e in journals.read(sd, journals.PROJECT)]
+    assert texts == ["Decision 1: no accounts", "Decision 2: from a tool"] and [x["kind"] for x in host.ideas.journal_left] == ["bogus"]
+    host.ideas.phase_sync(tree, True)
+    host.ideas.tree_flush(force=True)
+    assert [e["text"] for e in journals.read(sd, journals.PROJECT)] == texts                   # never again
+    assert "Decision 2: from a tool" in git(repo, "show", "dev:llm-wiki/general/journals/project.md")

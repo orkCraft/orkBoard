@@ -463,3 +463,37 @@ def test_the_architecture_keeps_orkboards_rule():
     src = Path(read_in.__file__).read_text(encoding="utf-8")
     mods = {n.module for n in ast.walk(ast.parse(src)) if isinstance(n, ast.ImportFrom) and n.module}
     assert not any(m.startswith(("orkcraft", "textual", "rich", "orkboard.gui")) for m in mods)
+
+
+# -- a line added outside, in the Board's tree (spec 151 B.2) ------------------------------------------------------------------------------
+
+def _wiki_journal(wiki, scope, rows):
+    w(wiki, f"journals/{'project' if scope == journals.PROJECT else scope}.md",
+      f"---\norkboard-journal: {scope}\nparty: x\nexported: 2026-11-01T12:00:00\n---\n\n# x's journal\n\n" + "\n".join(rows) + "\n")
+
+
+def test_a_line_added_outside_is_taken_once_and_never_again_and_the_boards_own_lines_are_not_taken(root, sd, tmp_path):
+    wiki = tmp_path / "wiki"
+    journals.add(sd, journals.PROJECT, "decision", "Decision 1: ours", ref="1")
+    assert journals.mirror_into(sd, journals.PROJECT, wiki / "journals") and read_in.outside(wiki, sd) == ([], [])      # the mirror of the journal itself adds nothing
+    path = wiki / "journals" / "project.md"
+    path.write_text(path.read_text() + "- 2026-11-02 · decision · Decision 2: from a tool <!-- id=feedfeed0001 idea=lobby -->\n- 2026-11-03 · done · No id at all\n")
+    rows, left = read_in.outside(wiki, sd)
+    assert [(r["kind"], r["text"], r["idea"]) for r in rows] == [("decision", "Decision 2: from a tool", "lobby"), ("done", "No id at all", "")] and left == []
+    assert read_in.take_outside(wiki, sd) == {"journals": 2, "left": []}
+    assert [(k, t, at) for k, t, at, _r in lines(sd)][1:] == [("decision", "Decision 2: from a tool", "2026-11-02"), ("done", "No id at all", "2026-11-03")]
+    assert read_in.take_outside(wiki, sd) == {"journals": 0, "left": []}                          # once
+    journals.mirror_into(sd, journals.PROJECT, wiki / "journals")                                 # Orkboard writes the file again, the lines with ids of its own
+    assert read_in.take_outside(wiki, sd)["journals"] == 0 and len(journals.read(sd, journals.PROJECT)) == 3
+
+
+def test_a_line_of_a_kind_the_scope_has_not_is_left_and_listed(root, sd, tmp_path):
+    wiki = tmp_path / "wiki"
+    _wiki_journal(wiki, "tech", ["- 2026-11-02 · stance · A good line <!-- id=aaaa00000001 -->", "- 2026-11-02 · decision_ish · A bad kind <!-- id=aaaa00000002 -->"])
+    _wiki_journal(wiki, journals.PROJECT, ["- 2026-11-02 · stance · A leader's kind in the project's journal"])
+    got = read_in.take_outside(wiki, sd)
+    assert got["journals"] == 1 and [(e["kind"], e["text"]) for e in journals.read(sd, "tech")] == [("stance", "A good line")]
+    assert journals.read(sd, journals.PROJECT) == []
+    assert sorted((x["scope"], x["kind"], x["text"], x["path"]) for x in got["left"]) == sorted([
+        ("tech", "decision_ish", "A bad kind", "journals/tech.md"), (journals.PROJECT, "stance", "A leader's kind in the project's journal", "journals/project.md")])
+    assert read_in.outside(wiki, sd)[1] == got["left"]                                            # still listed, still not read in

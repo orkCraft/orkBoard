@@ -17,7 +17,7 @@ import weakref
 from pathlib import Path
 
 from orkboard.gui.ideas_args import IdeasError
-from orkboard.realm import event_log, goal_phase, idea_questions, ideas
+from orkboard.realm import event_log, goal_phase, idea_questions, ideas, read_in, write_out, write_out_bank
 
 PHASE_READ_S = 5.0           # how often the clock looks for a page moved outside
 
@@ -64,6 +64,7 @@ class PhaseMixin:
             pass
         try:
             self.phase_moved(tree)
+            self.journals_sync(tree, due)
             if due:
                 root = tree.root()
                 goal_phase.mirror(root, self.state_dir, lambda i, st, plan, asks: self._idea_needs(i, st, plan, asks, root))
@@ -74,6 +75,26 @@ class PhaseMixin:
                 self.host.toast(said, title="The Board", severity="warning")
             return
         self._phase_error = ""
+
+    # -- the journals and the brief in the tree (spec 151 B) ----------------------------------------------------
+
+    def journals_sync(self, tree, due: bool) -> None:
+        """The journals' Markdown in the Board's tree (`<wiki>/journals/`) and the brief (`<wiki>/project.md`): a line added outside is read in first (once, by its ref; a line of a kind the scope
+        has not is left: `journal_left`), then the files are written again where the journals changed, so they ride in the Board's next commit. Looked at when a journal file changed since the last look, and at a commit."""
+        root, mine = tree.root(), Path(self.state_dir) / "journals"
+
+        def stats(folder: Path, pattern: str) -> tuple:
+            return tuple((p.name, s.st_mtime_ns, s.st_size) for p in sorted(folder.glob(pattern)) for s in [p.stat()]) if folder.is_dir() else ()
+        sig = (stats(mine, "*.jsonl"), stats(mine, "*.digest.json"), stats(root / "journals", "*.md"), stats(Path(self.state_dir), "project.json"))
+        if sig == getattr(self, "_journals_sig", None) and not due:
+            return
+        got = read_in.take_outside(root, self.state_dir)
+        self.journal_left = got["left"]
+        wrote = write_out.journals_into(self.state_dir, write_out_bank.parties(root), root / "journals")
+        wrote += write_out.brief_into(Path(self.host.repo_root), self.state_dir, root, root)
+        if wrote:
+            tree.touch(time.time())
+        self._journals_sig = (stats(mine, "*.jsonl"), stats(mine, "*.digest.json"), stats(root / "journals", "*.md"), sig[3])
 
     # -- moved outside (A.4) --------------------------------------------------------------------------------
 

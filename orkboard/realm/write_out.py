@@ -72,6 +72,11 @@ def _ours(file: Path) -> bool:
     return any(m in head for m in _OURS)
 
 
+def ours(text: str) -> bool:
+    """Whether a file's first part says Orkboard wrote it."""
+    return any(m in text[:1200] for m in _OURS)
+
+
 def _put(file: Path, text: str, out: dict) -> bool:
     """One file written whole (a file Orkboard did not write is left as it is, and named in `skipped`); whether it was written."""
     if file.exists() and not _ours(file):
@@ -216,11 +221,40 @@ def _journals(state_dir: Path, parties: list[dict], to: Path, out: dict) -> int:
     for scope, title, leader in _scopes(state_dir, parties):
         if scope != journals.PROJECT and not journals.read(state_dir, scope) and not journals.digest(state_dir, scope):
             continue                                                         # a party with nothing in its journal has no file
-        name = "project.md" if scope == journals.PROJECT else f"party-{scope}.md" if scope == "project" else f"{scope}.md"
+        name = journals.file_name(scope)
         names.add(name)
         n += _put(folder / name, journal_file(state_dir, scope, title, leader, now), out)
     _tidy(folder, names, "*.md")
     return n
+
+
+def journals_into(state_dir: Path, parties: list[dict], folder: Path) -> int:
+    """Every journal's Markdown written into `folder` for the Board's tree (`<wiki>/journals/`: spec 151 B.1), the files that changed counted. A party with nothing in its journal has no file;
+    the `.jsonl` stays the truth. `parties`: `write_out_bank.parties(wiki)`."""
+    n = 0
+    for scope, title, leader in _scopes(state_dir, parties):
+        if scope != journals.PROJECT and not journals.read(state_dir, scope) and not journals.digest(state_dir, scope):
+            continue
+        n += journals.mirror_into(state_dir, scope, folder, title, leader)
+    return n
+
+
+def brief_into(root: Path, state_dir: Path, board: Path, folder: Path) -> bool:
+    """`projectbrief.md`'s text written as `<folder>/project.md` when it differs (spec 151 B.3: read by a tool, never back by Orkboard); whether it was written."""
+    text = write_out_bank.pages(root, state_dir, board)["projectbrief.md"]
+    f = Path(folder) / "project.md"
+    try:
+        if f.is_file():
+            old = f.read_text("utf-8")
+            if old == text or not ours(old):
+                return False
+        f.parent.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_name(".project.md.tmp")
+        tmp.write_text(text, "utf-8")
+        tmp.replace(f)
+    except OSError:
+        return False
+    return True
 
 
 # -- the whole ---------------------------------------------------------------------------------------------------------------------------

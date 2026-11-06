@@ -275,6 +275,35 @@ def _exports(root: Path) -> list[dict]:
     return out
 
 
+def outside(folder: Path, state_dir: Path) -> tuple[list[dict], list[dict]]:
+    """The journals of the Board's tree (`<wiki>/journals/*.md`, spec 151 B.2) read, nothing written: `(rows, left)`. `rows` are the lines no journal holds yet (an `id` Orkboard does not know,
+    or no `id` at all: the plan's rows, once by `ref`); `left` the lines whose `kind` is not one of their scope's (or whose scope is none), `[{scope, path, at, kind, text}]`, for `orkboard check`."""
+    folder = Path(folder)
+    exports = [got for name in _names(folder, "journals", dirs=False) if name.endswith(".md")
+               for got in [parse_export(_text(folder, f"journals/{name}") or "", f"journals/{name}")] if got is not None]
+    left = []
+    for exp in exports:
+        scope = journals.PROJECT if exp["scope"] in ("_project", "project") else exp["scope"]
+        try:
+            kinds = journals.KINDS[journals.kind_of(scope)]
+        except ValueError:
+            kinds = ()
+        left += [{"scope": scope, "path": exp["path"], "at": e["at"], "kind": e["kind"], "text": e["text"]} for e in exp["entries"] if e["kind"] not in kinds]
+    return plan(folder, Path(state_dir), {"journals": exports}, board=folder), left
+
+
+def take_outside(folder: Path, state_dir: Path) -> dict:
+    """The lines added outside taken into the journals, each once (its `ref` is kept): `{journals: n, left: [...]}` (`outside`'s `left`)."""
+    rows, left = outside(folder, state_dir)
+    n = 0
+    for r in rows:
+        try:
+            n += journals.add(state_dir, r["scope"], r["kind"], r["text"], idea=r["idea"], on=r["on"], ref=r["ref"], at=r["at"]) is not None
+        except ValueError:
+            continue
+    return {"journals": n, "left": left}
+
+
 # -- scan ----------------------------------------------------------------------------------------------------------------------------------
 
 def _where(paths: list[str]) -> str:

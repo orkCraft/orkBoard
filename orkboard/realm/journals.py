@@ -13,6 +13,7 @@ journal is `core/idea_journal.py`'s; the host's commands `gui/ideas_journal.py`'
     journals.since_digest(state_dir, "tech")          # the entries after the digest's last one
     journals.text(state_dir, "tech", idea=, on=, chars=)  # what a call is given: the digest, then this goal's and these parts' entries, then the latest
     journals.mirror(state_dir, "tech")                # the Markdown mirror beside it, written again after each change (spec 127 D)
+    journals.mirror_into(state_dir, "tech", folder)   # the same Markdown written into any folder (the Board's tree: `<wiki>/journals/`, spec 151 B.1), only when it changed
 
 **A scope** is `PROJECT` or a party's slug (`[a-z0-9-]`, as the Board's). **An entry** is `{id, at, kind, text, idea, on, ref}`: `kind` one of
 `KINDS[scope]` (a project's or a leader's), `text` one line in the product's words (at most `TEXT_CHARS`), `idea` the goal's slug or "", `on` the parts
@@ -113,6 +114,40 @@ def mirror(state_dir: Path, scope: str) -> Path | None:
         return f
     except Exception:
         return None
+
+
+def file_name(scope: str) -> str:
+    """The Markdown file of a scope in an export or in the Board's tree: `project.md` for the project's, `party-project.md` for a party called "project"."""
+    return "project.md" if scope == PROJECT else f"party-{scope}.md" if scope == "project" else f"{scope}.md"
+
+
+def mirror_into(state_dir: Path, scope: str, folder: Path, title: str = "", leader: str = "") -> bool:
+    """The journal's Markdown (`write_out.journal_file`) written into `folder` as `file_name(scope)`, for the Board's tree (spec 151 B.1): pure of the tree, a folder is all it knows.
+    Written only when the entries or the digest differ from the file (the `exported:` day alone never makes a change); a file there that Orkboard did not write is left. Whether it was
+    written; a disk that refuses is False. ValueError for a scope that is none."""
+    from orkboard.realm import write_out                        # here, not at the top: write_out reads the journals
+    kind_of(scope)
+    title = title or ("The project" if scope == PROJECT else scope)
+    leader = leader or ("the Orkmaster" if scope == PROJECT else "")
+    f = Path(folder) / file_name(scope)
+    text = write_out.journal_file(state_dir, scope, title, leader, _now())
+    try:
+        old = f.read_text(encoding="utf-8") if f.is_file() else None
+        if old is not None and (not write_out.ours(old) or _same(old, text)):
+            return False
+        f.parent.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_name(f".{f.name}.tmp")
+        tmp.write_text(text, encoding="utf-8")
+        tmp.replace(f)
+    except OSError:
+        return False
+    return True
+
+
+def _same(a: str, b: str) -> bool:
+    def bare(t: str) -> list[str]:
+        return [x for x in t.splitlines() if not x.startswith("exported:")]
+    return bare(a) == bare(b)
 
 
 def _lines(state_dir: Path, scope: str) -> list[dict]:

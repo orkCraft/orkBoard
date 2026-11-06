@@ -62,7 +62,8 @@ class BoardTree:
         return self.path / self.wiki_rel
 
     def pages(self) -> list[str]:
-        return [f"{self.wiki_rel}/pages/tracks", f"{self.wiki_rel}/pages/ideas", f"{self.wiki_rel}/specs"]     # and the living specs (spec 127 C.1: `realm/living_specs.py`)
+        return [f"{self.wiki_rel}/pages/tracks", f"{self.wiki_rel}/pages/ideas", f"{self.wiki_rel}/specs",
+                f"{self.wiki_rel}/journals", f"{self.wiki_rel}/project.md"]     # the living specs (spec 127 C.1), the journals' Markdown and the brief (spec 151 B)
 
     def _tip(self) -> str:
         return _ok(_git(self.git.root, "rev-parse", f"refs/heads/{self.branch()}"))
@@ -122,7 +123,7 @@ class BoardTree:
         self._since, self._notes = None, []
         out = {"commit": "", "pages": 0, "what": what, "held": ""}
         with self.git.lock:
-            folders = [p for p in self.pages() if (self.path / p).is_dir()]
+            folders = [p for p in self.pages() if (self.path / p).exists()]
             if folders or files:
                 _git(self.path, "add", "-A", "--", *folders, *files)
             staged = [f for f in _git(self.path, "diff", "--cached", "--name-only").stdout.splitlines() if f.strip()]

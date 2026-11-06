@@ -262,3 +262,30 @@ def test_orkboard_export_prints_it_and_a_bad_folder_or_format_is_exit_2(project,
     assert board_cli.run(["export", str(tmp_path / "none")]) == 2 and "no folder" in capsys.readouterr().err
     with pytest.raises(SystemExit):
         board_cli.run(["export", str(project), "--as", "docbook"])
+
+
+# -- the journals and the brief in a folder, for the Board's tree (spec 151 B.1, B.3) -------------------------------------------------------
+
+def test_the_journals_go_into_a_folder_one_file_each_and_a_party_with_nothing_has_none(project, state):
+    slug = _party(project, "Tech", "archie")
+    _party(project, "Design", "dryad")
+    journals.add(state, journals.PROJECT, "decision", "Decision 1: no accounts", ref="1")
+    journals.add(state, slug, "stance", "Keep it small")
+    out = project / "wiki" / "journals"
+    parties = write_out_bank.parties(_board(project))
+    assert write_out.journals_into(state, parties, out) == 2
+    assert sorted(p.name for p in out.iterdir()) == ["project.md", f"{slug}.md"]
+    assert "orkboard-journal: _project" in (out / "project.md").read_text() and "Keep it small" in (out / f"{slug}.md").read_text()
+    assert write_out.journals_into(state, parties, out) == 0                                    # nothing changed: nothing written
+
+
+def test_the_brief_is_the_memory_banks_projectbrief_written_again_when_it_changes_and_a_file_of_the_persons_is_left(project, state, tmp_path):
+    _party(project, "Tech", "archie")
+    board, out = _board(project), tmp_path / "wiki"
+    want = lambda: write_out_bank.pages(project, state, board)["projectbrief.md"]
+    assert write_out.brief_into(project, state, board, out) and (out / "project.md").read_text() == want() and "Tech" in want()
+    assert not write_out.brief_into(project, state, board, out)
+    _party(project, "Design", "dryad")
+    assert write_out.brief_into(project, state, board, out) and "Design" in (out / "project.md").read_text()
+    (out / "project.md").write_text("# my own brief\n")
+    assert not write_out.brief_into(project, state, board, out) and (out / "project.md").read_text() == "# my own brief\n"
