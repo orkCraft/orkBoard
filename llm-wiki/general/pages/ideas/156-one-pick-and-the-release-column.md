@@ -31,7 +31,7 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 ## Stages
 - [x] A. orkUI 0.31.0
 - [x] B. One pick
-- [ ] C. The table by the phase
+- [x] C. The table by the phase
 - [ ] D. The Release column, no edge
 - [ ] E. The hand's right end
 
