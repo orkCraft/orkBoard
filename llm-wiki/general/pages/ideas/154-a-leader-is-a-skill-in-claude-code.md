@@ -6,11 +6,12 @@ order: 108
 size:
 priority: normal
 short: A leader is a skill
-phase: work
+phase: done
 spec: docs/specs/154-a-leader-is-a-skill-in-claude-code.md
 decisions: 258
 by: person
 schema: 3
+gate: d079206 · 142 files · green
 ---
 # A leader is a skill in Claude Code
 
@@ -25,12 +26,11 @@ A leader is a skill in Claude Code
 
 ## Tech
 ### Talk
-- verdict: doubt — this fork was offered Bash and the session's connectors despite ork-tech-leader's tools, and its body says Read no file: go once both are fixed and shown
-- stance: Tech built A to C in small parts (none near 600 lines); the say lies on the model, but the fork's walls are not yet what §258.3 promises
-- for: a fork is §255.7's pass of its own: a leader sees only its role and the page; one rules text, hash-stamped, keeps the prompts and the skills from drifting apart
-- against: realm/seat_frames.py and agent_rules_text.py import core/idea_talk, idea_sections, idea_accept, which import realm: a cycle hidden by lazy imports
-- instead: before D, the subagent's body its rules only and a fork shown refusing Bash; the trial's arm after
-- assumes: Claude Code applies a subagent's tools when a skill forks into it (context: fork, agent:) — shown by: a /tech-leader fork, in a cloud session and on the desktop, refused a Bash call
+- verdict: go — this fork ran with Read, Grep, Glob, Edit, Write only and its body is its rules: the last Talk's two conditions are met in a cloud session
+- stance: Tech built A to D in small parts; the realm–core cycle (seat_frames, agent_rules_text → core/idea_*) stays, owned by goal cut-the-import-cycle-between-realm-and-core
+- for: a fork is §255.7's pass of its own: a leader sees its rules and the page, no conversation; one rules text, hash-stamped, keeps prompts and skills from drifting
+- against: the session's connectors' instructions (GitHub, Gmail, Figma, Docs) still reach a leader's fork, though none of their tools was offered; a desktop fork is not yet shown
+- assumes: a desktop session forks /tech-leader with the same five tools, as this cloud one did — shown by: trial 151's run, a desktop /tech-leader refusing a Bash call
 
 ## Open questions
 - What does a seat's subagent hold? (**its rules only** / its role file whole, as now / its role file, call frames marked) — this fork was told *Read no file* and *one JSON object* against its skill
