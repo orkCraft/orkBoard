@@ -6671,6 +6671,14 @@ the chronicle stays over the pane, so the table under it stays in use, and then,
     Orkmaster. Four cards, and we start.*, *Use <tool>*, *Release branch*.
 12a. **Not on the table's edge**: a craft's past is the lich's, opened through that craft's tab (7), never a pile at the edge;
     the edge holds four objects with one job each, and a pile of the past would stand there all day beside the discard (§238).
+12b. **Release's view at the wide width is the past and the discard** (the owner, 6 November, on what the build found: the lich
+    opens the past, so nothing opened Release's view of *dev against main* there): it is not opened at the wide width any more.
+    What it showed lies where it belongs: what dev holds and main lacks is the discard's *Ready for main* (§145.4), what main
+    holds and no version has yet is the past's deck *Unreleased* (§238.2), and the checks on the way are the gate's skeletons in
+    front of the portal (§188.3). The narrow page keeps Release's tab as today.
+12c. **Start git here names the first branch `main`** (the owner: *the more popular one*), whatever git's own default is
+    (`git init -b main`, or `init` and `symbolic-ref` before git 2.28), so a project started from the first open's card shows
+    *main* as its release branch.
 12. **Not now**: at the first open's second card, **signing in with GitHub and picking a remote project with its default
     branch** (the remote is §243–244's; a decision of its own when it is built); the edge on the narrow page and the phone; a
     conflict found after Confirm (a finding, §234, as today).

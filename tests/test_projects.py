@@ -214,6 +214,8 @@ def test_open_folder_refuses_in_words_and_offers_git(tmp_path):
     assert got["ok"] is True and "first commit" in got["said"]
     tracked = subprocess.run(["git", "ls-files"], cwd=plain, capture_output=True, text=True, check=True).stdout.split()
     assert "todo.md" in tracked and ".env" not in tracked                     # a secret left out of the first commit
+    branch = subprocess.run(["git", "branch", "--show-current"], cwd=plain, capture_output=True, text=True, check=True).stdout.strip()
+    assert branch == "main", "the first branch is main, whatever git's own default (decisions §254.8)"
     assert host.command("projects.start_git", {"path": str(plain)}) == {"ok": True, "said": "Git was already here"}
     assert row()["git"] is True
     assert "home folder" in host.command("projects.start_git", {"path": str(Path.home())})["error"]

@@ -383,7 +383,9 @@ def ensure_repo(repo_root: Path) -> str:
         raise RuntimeError(f"git is not installed or did not answer: {e}") from e
     done = []
     if inside.returncode != 0 or inside.stdout.strip() != "true":
-        _ok(_git(repo_root, "init"))
+        if _git(repo_root, "init", "-b", "main").returncode != 0:              # the most used name for the first branch (decisions §254.8); git before 2.28 has no -b
+            _ok(_git(repo_root, "init"))
+            _ok(_git(repo_root, "symbolic-ref", "HEAD", "refs/heads/main"))
         done.append("started git here")
     if _git(repo_root, "rev-parse", "--verify", "HEAD").returncode != 0:      # no commit yet: a worktree needs one
         ignore = repo_root / ".gitignore"
