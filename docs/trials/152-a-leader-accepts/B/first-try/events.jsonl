@@ -1,0 +1,35 @@
+{"at": "2026-11-06T10:12:08+01:00", "event": "project_opened", "new": true, "git": true, "device": "desktop"}
+{"at": "2026-11-06T10:12:10+01:00", "event": "error_shown", "title": "The keeper", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:10+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:11+01:00", "event": "error_shown", "title": "The Board", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:11+01:00", "event": "limits_read", "provider": "codex", "left": 0.8, "window": "week"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "command_refused", "command": "ideas.board", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "command_refused", "command": "ideas.review_list", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "command_refused", "command": "ideas.agents", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "command_refused", "command": "ideas.roles", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "command_refused", "command": "ideas.map", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "command_refused", "command": "ideas.chronicle_last", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "command_refused", "command": "ideas.night", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:12+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:16+01:00", "event": "command_refused", "command": "ideas.board", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:16+01:00", "event": "error_shown", "title": "The Board", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:17+01:00", "event": "command_refused", "command": "ideas.board", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:18+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:22+01:00", "event": "board_committed", "commit": "c5a01be028876f2c9c77a2f65f951a17c2c95d34", "pages": 111, "what": "edited", "seconds": 0.55}
+{"at": "2026-11-06T10:12:22+01:00", "event": "error_shown", "title": "The Board", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:23+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:24+01:00", "event": "command_refused", "command": "ideas.board", "error": "No goal '96-orkui-0.15.0-copied'", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T10:12:27+01:00", "event": "error_shown", "title": "The Board", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:28+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:31+01:00", "event": "error_shown", "title": "The keeper", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:32+01:00", "event": "error_shown", "title": "The Board", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:33+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:37+01:00", "event": "error_shown", "title": "The Board", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:38+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:41+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:43+01:00", "event": "error_shown", "title": "The Board", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:44+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:48+01:00", "event": "error_shown", "title": "The Board", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:49+01:00", "event": "error_shown", "title": "Town clock", "text": "ValueError: No goal '96-orkui-0.15.0-copied'"}
+{"at": "2026-11-06T10:12:52+01:00", "event": "stop_all", "count": 0, "device": "desktop"}

@@ -1,0 +1,322 @@
+{"at": "2026-11-06T10:12:55+01:00", "event": "project_opened", "new": false, "git": true, "device": "desktop"}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "33-v1-shell", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "33-v1-shell", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "34-v1-round-2", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "34-v1-round-2", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "35-goals-window", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "35-goals-window", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "36-agents-spend", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "36-agents-spend", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "37-board-and-line", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "37-board-and-line", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "38-operations", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "38-operations", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "39-map", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "39-map", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "41-phone-round-3", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "41-phone-round-3", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "42-coming-back", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "42-coming-back", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "44-week-pace", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "44-week-pace", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "45-sign-in", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "45-sign-in", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "46-goal-trail", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "46-goal-trail", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "47-keep-awake", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "47-keep-awake", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "48-map-ideas", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "48-map-ideas", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "49-one-window", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "49-one-window", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "50-parties-and-goals", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "50-parties-and-goals", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "51-pick-one", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "51-pick-one", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "52-goal-types", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "52-goal-types", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "53-phone-simpler", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "53-phone-simpler", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "54-one-hand", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "54-one-hand", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:57+01:00", "event": "goal_moved_outside", "slug": "55-type-top-right", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:57+01:00", "event": "keeper_state", "idea": "55-type-top-right", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "56-fantasy-signs", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "56-fantasy-signs", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "57-deal-on-start", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "57-deal-on-start", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "58-stop-and-its-task", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "58-stop-and-its-task", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "59-mixed-parties", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "59-mixed-parties", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "60-phone-member-marks", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "60-phone-member-marks", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "61-your-own-goal", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "61-your-own-goal", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "62-spec-after-start", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "62-spec-after-start", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "63-party-gathered", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "63-party-gathered", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "64-flags-raised", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "64-flags-raised", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "65-ideation", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "65-ideation", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "66-team-briefs", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "66-team-briefs", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "67-hand-first", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "67-hand-first", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "68-release-and-route", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "68-release-and-route", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "69-parties-in-the-column", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "69-parties-in-the-column", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "70-orkmaster-and-the-project", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "70-orkmaster-and-the-project", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "71-orkmaster-keeps-parties-apart", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "71-orkmaster-keeps-parties-apart", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "72-at-work-under-a-closed-party", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "72-at-work-under-a-closed-party", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "73-a-lighter-column", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "73-a-lighter-column", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "74-moments-of-magic", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "74-moments-of-magic", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "75-parties-fitted-to-the-project", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "75-parties-fitted-to-the-project", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "76-the-orkmaster-crowned", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "76-the-orkmaster-crowned", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "77-the-field-a-table", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "77-the-field-a-table", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "78-canvases", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "78-canvases", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "79-the-project-on-the-table", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "79-the-project-on-the-table", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "80-a-party-removed", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "80-a-party-removed", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "81-a-party-its-tool-and-size", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "81-a-party-its-tool-and-size", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:58+01:00", "event": "goal_moved_outside", "slug": "82-the-field-at-a-glance", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:58+01:00", "event": "keeper_state", "idea": "82-the-field-at-a-glance", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "83-one-field-and-the-night-asked", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "83-one-field-and-the-night-asked", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "84-the-next-task-goes-on", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "84-the-next-task-goes-on", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "85-the-elf-asks-and-shows", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "85-the-elf-asks-and-shows", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "86-what-the-logs-said", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "86-what-the-logs-said", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "87-quieter-work-longer-names", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "87-quieter-work-longer-names", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "88-assets-and-play", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "88-assets-and-play", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "89-the-tech-lens-system", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "89-the-tech-lens-system", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "92-running-and-the-team", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "92-running-and-the-team", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "94-one-page-fitted-to-the-width", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "94-one-page-fitted-to-the-width", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "95-the-window-as-decided", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "95-the-window-as-decided", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "97-what-a-leaders-call-reads", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "97-what-a-leaders-call-reads", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "98-the-table-and-the-hand", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "98-the-table-and-the-hand", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "99-a-goals-way", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "99-a-goals-way", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "100-a-goals-way-as-cards", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "100-a-goals-way-as-cards", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "101-the-cards-the-cascade-and-the-hand-under-the-lanes", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "101-the-cards-the-cascade-and-the-hand-under-the-lanes", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "102-the-other-maps-and-picking-on-them", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "102-the-other-maps-and-picking-on-them", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "103-the-phones-app-a-native-frame", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "103-the-phones-app-a-native-frame", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "104-the-mana-the-discard-on-the-table-a-lifted-card", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "104-the-mana-the-discard-on-the-table-a-lifted-card", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "105-the-default-tool-moving-on-and-the-portal", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "105-the-default-tool-moving-on-and-the-portal", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "106-a-quick-question", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "106-a-quick-question", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "108-a-leader-says-no-and-shows-where-it-hurts", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "108-a-leader-says-no-and-shows-where-it-hurts", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "109-each-leader-looks-as-a-senior-of-its-craft", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "109-each-leader-looks-as-a-senior-of-its-craft", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "110-runes-on-the-table", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "110-runes-on-the-table", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "111-a-goals-rune-release-and-live-at-the-portal", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "111-a-goals-rune-release-and-live-at-the-portal", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "112-the-bars-marks-and-the-play-die", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "112-the-bars-marks-and-the-play-die", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:12:59+01:00", "event": "goal_moved_outside", "slug": "113-a-project-with-no-preview-or-no-gate", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:12:59+01:00", "event": "keeper_state", "idea": "113-a-project-with-no-preview-or-no-gate", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "114-the-mana-in-two-windows", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "114-the-mana-in-two-windows", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "115-the-live-product-under-each-leaders-eyes", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "115-the-live-product-under-each-leaders-eyes", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "117-the-phone-a-menu-of-the-leaders", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "117-the-phone-a-menu-of-the-leaders", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "118-the-dies-up-face", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "118-the-dies-up-face", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "119-the-hammer-and-the-bug", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "119-the-hammer-and-the-bug", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "120-a-goal-heard-and-thrown-to-a-side", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "120-a-goal-heard-and-thrown-to-a-side", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "121-the-day-the-morning-and-the-night", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "121-the-day-the-morning-and-the-night", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "123-the-leaders-at-the-table", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "123-the-leaders-at-the-table", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "125-the-journals", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "125-the-journals", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "126-read-in-and-write-out", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "126-read-in-and-write-out", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "127-the-fields-best-in-our-formats", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "127-the-fields-best-in-our-formats", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "128-the-orkmasters-column-and-a-goal-at-every-leader", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "128-the-orkmasters-column-and-a-goal-at-every-leader", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "129-a-tasks-steps", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "129-a-tasks-steps", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "130-the-first-open-is-the-orkmasters", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "130-the-first-open-is-the-orkmasters", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "131-a-leaders-slices-and-the-cascade", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "131-a-leaders-slices-and-the-cascade", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "132-four-levels-the-way-down-and-findings", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "132-four-levels-the-way-down-and-findings", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "135-a-new-goal-matched-against-the-face-down-pile", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "135-a-new-goal-matched-against-the-face-down-pile", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "136-the-phone-through-the-projects-remote", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "136-the-phone-through-the-projects-remote", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "137-the-board-on-its-own-branch", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "137-the-board-on-its-own-branch", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "138-the-day-read-from-the-resets", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "138-the-day-read-from-the-resets", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "139-the-die-the-door-and-the-bug", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "139-the-die-the-door-and-the-bug", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "140-the-window-made-lighter", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "140-the-window-made-lighter", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "141-a-card-picked-by-its-rune", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "141-a-card-picked-by-its-rune", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "142-a-cards-window-where-it-has-something-to-show", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "142-a-cards-window-where-it-has-something-to-show", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "144-a-specs-wait-and-a-change-through-the-orkmaster", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "144-a-specs-wait-and-a-change-through-the-orkmaster", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "145-the-engines-read", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "145-the-engines-read", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:00+01:00", "event": "goal_moved_outside", "slug": "147-one-card-four-corners", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:00+01:00", "event": "keeper_state", "idea": "147-one-card-four-corners", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "148-a-window-on-every-card", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "148-a-window-on-every-card", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "149-what-a-goal-on-local-codex-found", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "149-what-a-goal-on-local-codex-found", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "150-the-table-its-edge-and-the-past-through-the-open-tab", "to": "work", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "150-the-table-its-edge-and-the-past-through-the-open-tab", "state": "ready", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "151-the-board-in-the-repository-for-any-ai-tool", "to": "work", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "151-the-board-in-the-repository-for-any-ai-tool", "state": "ready", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "152-a-leader-leads-and-accepts", "to": "work", "commit": "36a734ed", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "152-a-leader-leads-and-accepts", "state": "ready", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "153-a-task-is-a-whole-session", "to": "work", "commit": "36a734ed", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "153-a-task-is-a-whole-session", "state": "ready", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "154-a-leader-is-a-skill-in-claude-code", "to": "work", "commit": "0d7244f5", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "154-a-leader-is-a-skill-in-claude-code", "state": "ready", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "cut-the-import-cycle-between-realm-and-core", "to": "new", "commit": "0d7244f5", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "cut-the-import-cycle-between-realm-and-core", "state": "raw", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "40-design-system", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "40-design-system", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "96-orkui-0-15-0-copied", "to": "done", "commit": "12af463b", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "96-orkui-0-15-0-copied", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "43-party-measured", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "43-party-measured", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "90-what-the-first-look-said", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "90-what-the-first-look-said", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "91-the-owners-list", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "91-the-owners-list", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "107-what-the-owners-day-said", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "107-what-the-owners-day-said", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "116-hypotheses-on-products-tree", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "116-hypotheses-on-products-tree", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "124-the-brief-the-measures-and-the-trial", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "124-the-brief-the-measures-and-the-trial", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "133-a-hypothesis-its-two-conditions-its-test-its-file", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "133-a-hypothesis-its-two-conditions-its-test-its-file", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "143-what-a-trial-with-real-tools-found", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "143-what-a-trial-with-real-tools-found", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "146-a-hypothesis-on-the-page", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "146-a-hypothesis-on-the-page", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:01+01:00", "event": "goal_moved_outside", "slug": "134-release-keeps-the-chronicle", "to": "done", "commit": "c0fb59ea", "from": ""}
+{"at": "2026-11-06T10:13:01+01:00", "event": "keeper_state", "idea": "134-release-keeps-the-chronicle", "state": "done", "was": "", "seconds": null}
+{"at": "2026-11-06T10:13:02+01:00", "event": "limits_read", "provider": "codex", "left": 0.8, "window": "week"}
+{"at": "2026-11-06T10:13:02+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:13:08+01:00", "event": "board_committed", "commit": "bee125431c44e2831a5378063afba2a8e0bdbb50", "pages": 121, "what": "moved", "seconds": 0.44}
+{"at": "2026-11-06T10:13:22+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:14:00+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:14:27+01:00", "event": "party_resized", "party": "tech", "joins": [], "leaves": [], "from": "", "to": "lean", "device": "desktop"}
+{"at": "2026-11-06T10:14:27+01:00", "event": "goal_saved", "goal": "tech", "new": false, "preset": "", "metrics": [], "links": [], "priority": "normal", "craft": "engineering", "team": ["grunt", "tester", "reviewer"], "every": [], "leader": "architect", "party": "", "tool": "", "tools": [], "device": "desktop", "joined": "", "out": "", "via": "", "stages": "5/2"}
+{"at": "2026-11-06T10:14:35+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:14:38+01:00", "event": "board_committed", "commit": "e0bfd85df83b24738f9346d4c1ac82717a6d662a", "pages": 5, "what": "edited", "seconds": 0.41}
+{"at": "2026-11-06T10:15:21+01:00", "event": "idea_added", "idea": "a-potion-s-card-names-the-models-of-its", "track": "tech", "chars": 372, "now": true, "priority": "normal", "queue": "now", "photos": 0, "files": 0, "lens": [], "type": "feature", "asks": 0, "refs": 0, "joined": "", "out": "", "device": "desktop", "offered": 3, "near": 0}
+{"at": "2026-11-06T10:15:21+01:00", "event": "keeper_state", "idea": "a-potion-s-card-names-the-models-of-its", "state": "talk", "was": "", "seconds": null}
+{"at": "2026-11-06T10:15:26+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:15:26+01:00", "event": "talk_heard", "idea": "a-potion-s-card-names-the-models-of-its", "party": "product", "weigher": true}
+{"at": "2026-11-06T10:15:31+01:00", "event": "board_committed", "commit": "4073bcc0575839127b42b0f762b616c849e8c963", "pages": 2, "what": "edited", "seconds": 0.38}
+{"at": "2026-11-06T10:15:36+01:00", "event": "talk_heard", "idea": "a-potion-s-card-names-the-models-of-its", "party": "tech", "weigher": false}
+{"at": "2026-11-06T10:15:36+01:00", "event": "leader_objected", "idea": "a-potion-s-card-names-the-models-of-its", "party": "tech", "verdict": "doubt", "has_instead": false}
+{"at": "2026-11-06T10:15:36+01:00", "event": "leader_objected", "idea": "a-potion-s-card-names-the-models-of-its", "party": "product", "verdict": "doubt", "has_instead": false}
+{"at": "2026-11-06T10:15:47+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:15:48+01:00", "event": "board_committed", "commit": "d2fd58276672a929e8d00566533f3d17fda60419", "pages": 3, "what": "edited", "seconds": 0.37}
+{"at": "2026-11-06T10:16:02+01:00", "event": "goal_taken", "slug": "a-potion-s-card-names-the-models-of-its", "by": "Orkboard on MacBook-Pro-23.local", "kind": "orkboard", "until": "2026-11-06T10:16:02+00:00"}
+{"at": "2026-11-06T10:16:16+01:00", "event": "idea_answered", "idea": "a-potion-s-card-names-the-models-of-its", "answers": 2, "decided": false, "talk": true, "round": 1, "recommended": 0, "picked": 2, "typed": 0}
+{"at": "2026-11-06T10:16:23+01:00", "event": "talk_verdict", "idea": "a-potion-s-card-names-the-models-of-its", "party": "tech", "before": "doubt", "after": "go"}
+{"at": "2026-11-06T10:16:23+01:00", "event": "talk_verdict", "idea": "a-potion-s-card-names-the-models-of-its", "party": "product", "before": "doubt", "after": "doubt"}
+{"at": "2026-11-06T10:16:27+01:00", "event": "board_committed", "commit": "9e216aac9306b632cf497ad876bfe82b89ffb863", "pages": 1, "what": "answered", "seconds": 0.37}
+{"at": "2026-11-06T10:16:34+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:16:52+01:00", "event": "hearing_thrown", "idea": "a-potion-s-card-names-the-models-of-its", "moment": "talk", "kind": "go", "dir": "right", "leaders": 1}
+{"at": "2026-11-06T10:17:00+01:00", "event": "keeper_state", "idea": "a-potion-s-card-names-the-models-of-its", "state": "decided", "was": "talk", "seconds": 98.9}
+{"at": "2026-11-06T10:17:01+01:00", "event": "board_committed", "commit": "a2dac3466d69f29b4767909b44c72a12d32617f8", "pages": 1, "what": "decision", "seconds": 0.86}
+{"at": "2026-11-06T10:17:01+01:00", "event": "keeper_state", "idea": "a-potion-s-card-names-the-models-of-its", "state": "sections", "was": "decided", "seconds": 1.1}
+{"at": "2026-11-06T10:17:03+01:00", "event": "goal_given_back", "slug": "a-potion-s-card-names-the-models-of-its", "by": "Orkboard on MacBook-Pro-23.local"}
+{"at": "2026-11-06T10:17:06+01:00", "event": "slices_cut", "decision": 260, "parties": 3, "none": 1, "replaced": 0, "seconds": 6.0, "cost": null, "failed": false}
+{"at": "2026-11-06T10:17:06+01:00", "event": "keeper_state", "idea": "slices", "state": "raw", "was": "", "seconds": null}
+{"at": "2026-11-06T10:17:12+01:00", "event": "board_committed", "commit": "f41e0357ea9e3a7131ae54e3a07a16e3d21c61ab", "pages": 2, "what": "edited", "seconds": 0.42}
+{"at": "2026-11-06T10:17:41+01:00", "event": "keeper_state", "idea": "a-potion-s-card-names-the-models-of-its", "state": "ready", "was": "sections", "seconds": 40.2}
+{"at": "2026-11-06T10:17:41+01:00", "event": "keeper_state", "idea": "a-potion-s-card-names-the-models-of-its", "state": "planning", "was": "ready", "seconds": 0.0}
+{"at": "2026-11-06T10:17:51+01:00", "event": "board_committed", "commit": "9bf2301d224a0ab745c37502e91c2ef60be17623", "pages": 1, "what": "edited", "seconds": 0.38}
+{"at": "2026-11-06T10:18:03+01:00", "event": "goal_taken", "slug": "a-potion-s-card-names-the-models-of-its", "by": "Orkboard on MacBook-Pro-23.local", "kind": "orkboard", "until": "2026-11-06T10:18:03+00:00"}
+{"at": "2026-11-06T10:18:28+01:00", "event": "keeper_state", "idea": "a-potion-s-card-names-the-models-of-its", "state": "plan", "was": "planning", "seconds": 46.5}
+{"at": "2026-11-06T10:18:28+01:00", "event": "plan_made", "idea": "a-potion-s-card-names-the-models-of-its", "tasks": 1, "todos": 0, "usd_low": null, "usd_high": null, "step": "plan", "prompt_chars": 12987, "tokens": {"total": 143110}, "cost": null}
+{"at": "2026-11-06T10:18:37+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:18:38+01:00", "event": "board_committed", "commit": "46dd2e78557327e5be0ad223cabc0752d7d220aa", "pages": 1, "what": "planned", "seconds": 0.38}
+{"at": "2026-11-06T10:18:56+01:00", "event": "plan_passed", "idea": "a-potion-s-card-names-the-models-of-its", "tasks": 1, "seconds": 29.0, "by": "person", "risk": "high", "priority": "normal", "via": "hand", "device": "desktop", "joined": "", "missing": 0}
+{"at": "2026-11-06T10:18:56+01:00", "event": "task_state", "idea": "a-potion-s-card-names-the-models-of-its", "task": "k1", "state": "waiting", "was": "ready", "round": 1, "tier": "warrior", "role": "grunt", "seconds": null, "tokens": null, "cost": null, "ran_tier": "", "effort": "", "tool": "", "model": ""}
+{"at": "2026-11-06T10:18:57+01:00", "event": "task_state", "idea": "a-potion-s-card-names-the-models-of-its", "task": "k1", "state": "running", "was": "waiting", "round": 1, "tier": "warrior", "role": "grunt", "seconds": 0.0, "tokens": null, "cost": null, "ran_tier": "warrior", "effort": "low", "tool": "codex", "model": "gpt-6.1-sol", "ran_why": ""}
+{"at": "2026-11-06T10:18:57+01:00", "event": "keeper_state", "idea": "a-potion-s-card-names-the-models-of-its", "state": "working", "was": "plan", "seconds": 29.0}
+{"at": "2026-11-06T10:18:59+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:19:08+01:00", "event": "board_committed", "commit": "53e84ca75635be9249dea99dff96937095c71fb0", "pages": 1, "what": "edited", "seconds": 0.4}
+{"at": "2026-11-06T10:22:17+01:00", "event": "task_state", "idea": "a-potion-s-card-names-the-models-of-its", "task": "k1", "state": "testing", "was": "running", "round": 1, "tier": "warrior", "role": "grunt", "seconds": 200.9, "tokens": 589488, "cost": null, "ran_tier": "warrior", "effort": "low", "tool": "codex", "model": "gpt-6.1-sol"}
+{"at": "2026-11-06T10:23:10+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:23:35+01:00", "event": "gate_ran", "idea": "a-potion-s-card-names-the-models-of-its", "task": "k1", "round": 1, "attempt": 1, "command": "python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_hand_card_cut_browser.py tests/test_hand_context_narrow_browser.py tests/test_hand_desktop_browser.py tests/test_hand_mana_browser.py tests/test_hand_mention_browser.py tests/test_handed_browser.py tests/test_tools_host.py tests/test_add_tool_browser.py", "exit": 0, "seconds": 77.0, "verdict": "green", "missing": "", "red_before": [], "flaky": [], "linked": 1}
+{"at": "2026-11-06T10:23:35+01:00", "event": "shot_taken", "idea": "a-potion-s-card-names-the-models-of-its", "task": "k1", "ok": false, "why": "no preview", "seconds": 0.0, "round": 1}
+{"at": "2026-11-06T10:23:35+01:00", "event": "task_state", "idea": "a-potion-s-card-names-the-models-of-its", "task": "k1", "state": "merged", "was": "testing", "round": 1, "tier": "warrior", "role": "grunt", "seconds": 77.6, "tokens": 589488, "cost": null, "ran_tier": "warrior", "effort": "low", "tool": "codex", "model": "gpt-6.1-sol"}
+{"at": "2026-11-06T10:23:40+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T10:23:46+01:00", "event": "board_committed", "commit": "2c23cceb77217e48b0e1a6998b2cf1efae0d1abd", "pages": 1, "what": "edited", "seconds": 0.4}
+{"at": "2026-11-06T10:24:05+01:00", "event": "goal_read", "goal": "release", "state": "ready", "seconds": 26.6, "tier": "elder", "effort": "high", "step": "goal", "prompt_chars": 1520, "tokens": {"total": 85593}, "cost": null}
+{"at": "2026-11-06T10:24:11+01:00", "event": "step_accepted", "idea": "a-potion-s-card-names-the-models-of-its", "step": 1, "party": "tech", "verdict": "accepted", "round": 1, "back": 0, "seconds": 30.0, "cost": null, "failed": false}
+{"at": "2026-11-06T10:24:14+01:00", "event": "keeper_state", "idea": "a-potion-s-card-names-the-models-of-its", "state": "done", "was": "working", "seconds": 317.5}
+{"at": "2026-11-06T10:24:15+01:00", "event": "board_committed", "commit": "73eeedde5eb85bb5e14f124eea231c70c2f432f2", "pages": 3, "what": "edited", "seconds": 0.39}
+{"at": "2026-11-06T10:25:07+01:00", "event": "goal_given_back", "slug": "a-potion-s-card-names-the-models-of-its", "by": "Orkboard on MacBook-Pro-23.local"}
+{"at": "2026-11-06T10:27:21+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:27:22+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T10:28:04+01:00", "event": "result_seen", "idea": "50-parties-and-goals", "device": "desktop"}
+{"at": "2026-11-06T10:28:16+01:00", "event": "result_seen", "idea": "59-mixed-parties", "device": "desktop"}
+{"at": "2026-11-06T10:31:25+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:31:26+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T10:35:30+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:35:31+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T10:39:34+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:39:35+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T10:39:59+01:00", "event": "result_seen", "idea": "a-potion-s-card-names-the-models-of-its", "device": "desktop"}
+{"at": "2026-11-06T10:41:37+01:00", "event": "goal_to_main", "idea": "a-potion-s-card-names-the-models-of-its", "goals": ["a-potion-s-card-names-the-models-of-its"], "commits": 1, "files": 4, "pushed": false, "into": "dev", "main": "main", "device": "desktop"}
+{"at": "2026-11-06T10:41:37+01:00", "event": "idea_flagged", "idea": "a-potion-s-card-names-the-models-of-its", "goal": "tech", "by": "gate", "tasks": 1, "first_time": 1, "usd": null, "days": 1}
+{"at": "2026-11-06T10:41:48+01:00", "event": "board_committed", "commit": "ff767704b17dfe00e7c6cbe436cc60534e2d49a9", "pages": 1, "what": "edited", "seconds": 0.4}
+{"at": "2026-11-06T10:41:49+01:00", "event": "spec_folded", "idea": "a-potion-s-card-names-the-models-of-its", "capability": "tier-model-selection", "added": 4, "modified": 0, "removed": 0, "cost": null}
+{"at": "2026-11-06T10:42:00+01:00", "event": "board_committed", "commit": "59a16cda200e44e88341105be873ba1e463d4798", "pages": 1, "what": "edited", "seconds": 0.4}
+{"at": "2026-11-06T10:42:02+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:42:03+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T10:42:07+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:42:08+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}

@@ -1,0 +1,23 @@
+09:49:21 goals=[('the-field-s-rune-square-', 'talk', '', '{"done": 0, "total": 0}', [])] needs=[] calls=2
+09:49:45 goals=[('the-field-s-rune-square-', 'talk', '', '{"done": 0, "total": 0}', [])] needs=[('cause', 'the-field-s-rune-square-', 'The phone’s nextElement in shell-marks.js counts only the supplied party’s open goals and ')] calls=3
+09:49:45 -- the hand changed
+09:50:43 goals=[('the-field-s-rune-square-', 'sections', '', '{"done": 0, "total": 0}', [])] needs=[] calls=3
+09:51:25 goals=[('the-field-s-rune-square-', 'planning', '', '{"done": 0, "total": 0}', [])] needs=[] calls=4
+09:52:14 goals=[('the-field-s-rune-square-', 'plan', '', '{"done": 0, "total": 4}', [])] needs=[('plan', 'the-field-s-rune-square-', 'Plan ready · 4 tasks')] calls=5
+09:52:14 -- the hand changed
+09:53:06 goal=[('working', '{"done": 0, "total": 4}', None)] needs=[] tasks=[('k1', 'running', None, None, None), ('k2', 'waiting', None, None, None), ('k3', 'ready', None, None, None), ('k4', 'waiting', None, None, None)] calls=5
+09:55:09 goal=[('working', '{"done": 0, "total": 4}', None)] needs=[] tasks=[('k1', 'testing', None, None, None), ('k2', 'waiting', None, None, None), ('k3', 'ready', None, None, None), ('k4', 'waiting', None, None, None)] calls=6
+09:55:30 goal=[('working', '{"done": 1, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'waiting', None, None, None), ('k3', 'ready', None, None, None), ('k4', 'waiting', None, None, None)] calls=6
+09:55:40 goal=[('working', '{"done": 1, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'running', None, None, None), ('k3', 'ready', None, None, None), ('k4', 'waiting', None, None, None)] calls=6
+09:58:34 goal=[('working', '{"done": 1, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'testing', None, None, None), ('k3', 'ready', None, None, None), ('k4', 'waiting', None, None, None)] calls=7
+10:02:30 goal=[('working', '{"done": 1, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'running', None, None, None), ('k3', 'ready', None, None, None), ('k4', 'waiting', None, None, None)] calls=7
+10:03:52 goal=[('working', '{"done": 1, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'testing', None, None, None), ('k3', 'ready', None, None, None), ('k4', 'waiting', None, None, None)] calls=8
+10:07:48 goal=[('working', '{"done": 2, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'merged', None, None, None), ('k3', 'running', None, None, None), ('k4', 'waiting', None, None, None)] calls=8
+10:09:51 goal=[('working', '{"done": 2, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'merged', None, None, None), ('k3', 'testing', None, None, None), ('k4', 'waiting', None, None, None)] calls=9
+10:24:52 goal=[('failed', '{"done": 2, "total": 4}', None)] needs=[('failed', 'Match phone element prediction to project holders: no answer within 900 s')] tasks=[('k1', 'merged', None, None, None), ('k2', 'merged', None, None, None), ('k3', 'failed', None, None, None), ('k4', 'waiting', None, None, None)] calls=9
+10:24:52 -- the hand changed
+10:45:06 goal=[('working', '{"done": 2, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'merged', None, None, None), ('k3', 'running', None, None, None), ('k4', 'waiting', None, None, None)] calls=9
+10:47:09 goal=[('working', '{"done": 2, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'merged', None, None, None), ('k3', 'testing', None, None, None), ('k4', 'waiting', None, None, None)] calls=10
+10:47:20 goal=[('working', '{"done": 3, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'merged', None, None, None), ('k3', 'merged', None, None, None), ('k4', 'running', None, None, None)] calls=10
+10:49:43 goal=[('working', '{"done": 3, "total": 4}', None)] needs=[] tasks=[('k1', 'merged', None, None, None), ('k2', 'merged', None, None, None), ('k3', 'merged', None, None, None), ('k4', 'review', None, None, None)] calls=11
+11:09:51 -- idle

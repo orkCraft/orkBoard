@@ -1,0 +1,67 @@
+bringing up nodes...
+bringing up nodes...
+
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+___________ test_arrows_move_tab_takes_and_esc_closes_the_list_only ____________
+[gw0] darwin -- Python 3.12.2 /private/tmp/claude-501/-Users-etb-orkBoard/c8bce183-30e6-495e-9b69-9d49bf7ce46b/scratchpad/A/orkBoard/.venv/bin/python
+
+gui = (<orkboard.gui.server.Server object at 0x107572270>, <Browser type=<BrowserType name=chromium executable_path=/private...um-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing> version=156.0.8078.4>)
+
+    def test_arrows_move_tab_takes_and_esc_closes_the_list_only(gui):
+        pg, host, log = open_hand(gui, host=MentionHost())
+        try:
+            field, area = _open_field(pg)
+            area.type("@")
+            pg.locator(".hand-mention").wait_for(timeout=WAIT_MS)
+            _rows_are(pg, ["@Tech", "@Design", "@Product", "@Release", "@Game design", "src/", "src/app.py", "README.md"])
+            area.press("ArrowDown")
+            area.press("ArrowDown")
+            assert pg.locator(".hand-mention__row.is-on").inner_text().strip() == "@Product"
+            area.press("ArrowUp")
+            assert pg.locator(".hand-mention__row.is-on").inner_text().strip() == "@Design"
+            area.press("Escape")
+            assert pg.locator(".hand-mention").count() == 0 and pg.locator(".hand-field").count() == 1, "Esc closed the list, not the field"
+            area.type("D")
+            assert pg.locator(".hand-mention").count() == 0, "the list stays closed for this @"
+            area.press("Control+a")
+            area.type("a @De")
+            pg.locator(".hand-mention").wait_for(timeout=WAIT_MS)
+            area.press("Tab")
+>           assert area.input_value() == "a @Design "
+E           AssertionError: assert 'a @Design @D' == 'a @Design '
+E             
+E             - a @Design 
+E             + a @Design @D
+E             ?           ++
+
+tests/test_hand_mention_browser.py:110: AssertionError
+_____ test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written _____
+[gw1] darwin -- Python 3.12.2 /private/tmp/claude-501/-Users-etb-orkBoard/c8bce183-30e6-495e-9b69-9d49bf7ce46b/scratchpad/A/orkBoard/.venv/bin/python
+
+gui = (<orkboard.gui.server.Server object at 0x1080d8530>, <Browser type=<BrowserType name=chromium executable_path=/private...um-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing> version=156.0.8078.4>)
+
+    def test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written(gui):
+        pg, host, log = open_hand(gui, host=MentionHost())
+        try:
+            field, area = _open_field(pg)
+            area.type("write to me@exa")
+            pg.wait_for_timeout(200)
+            assert pg.locator(".hand-mention").count() == 0
+            area.press("Control+a")
+            area.type("Look at @app")
+            pg.locator(".hand-mention__row[data-kind='file']").wait_for(timeout=WAIT_MS)
+            _rows_are(pg, ["src/app.py"])
+            assert _calls(pg, host, "files.find")[-1] == {"q": "app", "limit": 20}
+            area.press("Enter")
+>           assert area.input_value() == "Look at @src/app.py "
+E           AssertionError: assert 'Look at @src...ite to me@exa' == 'Look at @src/app.py '
+E             
+E             - Look at @src/app.py 
+E             + Look at @src/app.py write to me@exa
+
+tests/test_hand_mention_browser.py:133: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hand_mention_browser.py::test_arrows_move_tab_takes_and_esc_closes_the_list_only
+FAILED tests/test_hand_mention_browser.py::test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written
+2 failed, 1 passed in 15.68s

@@ -1,0 +1,27 @@
+9 calls for a-potion-s-card-names-the-models-of-its: 974,679 tokens, no price known for these models, 352.7 s
+  in 208,859 · out 9,084 · cache read 756,736 · cache written 0 · read from the cache: 78%
+By tool and model
+  codex gpt-6.1-sol                   2 calls     652,460 tokens  no price known for these models
+  codex gpt-6-astra                   2 calls     251,015 tokens  no price known for these models
+  codex gpt-6-luna                    5 calls      71,204 tokens  no price known for these models
+By step
+  work                                1 calls     589,488 tokens  no price known for these models
+  plan                                1 calls     143,110 tokens  no price known for these models
+  accept_step                         1 calls     107,905 tokens  no price known for these models
+  section_first                       1 calls      62,972 tokens  no price known for these models
+  talk_round                          2 calls      28,754 tokens  no price known for these models
+  talk_verdict                        2 calls      28,191 tokens  no price known for these models
+  decide                              1 calls      14,259 tokens  no price known for these models
+By goal
+  a-potion-s-card-names-the-models-of-its    9 calls     974,679 tokens  no price known for these models
+The dearest calls
+  2026-11-06T10:22:17  a-potion-s-card-names-the-models-of-its · work · codex gpt-6.1-sol: 589,488 tokens, no price known for these models
+  2026-11-06T10:18:28  a-potion-s-card-names-the-models-of-its · plan · codex gpt-6-astra: 143,110 tokens, no price known for these models
+  2026-11-06T10:24:11  a-potion-s-card-names-the-models-of-its · accept_step · codex gpt-6-astra: 107,905 tokens, no price known for these models
+  2026-11-06T10:17:41  a-potion-s-card-names-the-models-of-its · section_first · codex gpt-6.1-sol: 62,972 tokens, no price known for these models
+  2026-11-06T10:15:36  a-potion-s-card-names-the-models-of-its · talk_round · codex gpt-6-luna: 14,931 tokens, no price known for these models
+Worth a look
+  failed calls: 0 ($0.00)
+  a big cache written and none read: 0 calls, 0 tokens ($0.00)
+  heavy reads with a short answer: 0 calls, 0 tokens ($0.00)
+  no step asked again

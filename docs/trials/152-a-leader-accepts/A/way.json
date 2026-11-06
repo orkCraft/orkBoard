@@ -1,0 +1,36 @@
+{
+  "decision": {
+    "title": "The Rune follows the host's hue",
+    "text": "Why: The field’s Rune shows the hue the host will give a goal on the + card; the phone counts by project. The person chose this despite the Architect’s doubt about unverified module boundaries and dependencies.\n\n1. The Rune square shows the host’s hue while a goal is written on the + card.\n2. The phone’s `nextElement` counts by project.\n3. The Architect doubted the change until module boundaries confirmed it stayed within existing parts and added no dependency cycle.\n4. Doubt from Architect: The touched modules are missing from the map; go once their boundaries confirm this stays within existing parts and adds no dependency cycle.",
+    "number": 253,
+    "confirmed": true,
+    "by": "orkmaster",
+    "changes": [],
+    "conflicts": [],
+    "at": "2026-11-06T09:38:54",
+    "path": "docs/decisions.md",
+    "commit": "a67a16a008382a04383bae724433e98cae3f7d14",
+    "held": "",
+    "pages": 1,
+    "confirmed_at": "2026-11-06T09:38:54",
+    "confirmed_by": "person"
+  },
+  "texts": {
+    "tech": {
+      "parts": {
+        "Why": "The Rune preview must follow the same project-wide allocation rule as the host, so the field predicts the goal’s assigned hue. Keep allocation in realm and presentation in gui, with no reverse imports or new dependency cycle.",
+        "Done when": "- [test] When the + card is open for writing with the default Rune, then its Rune square shows the hue realm/idea_element.py would assign against the same project state.\n- [test] When a person selects another Rune shape in the opened + card, then its square shows the host’s predicted hue for that shape, including legacy goals whose hue falls back to their element.\n- [test] When the project snapshot changes while the + card is open, then its Rune preview updates without assigning or storing a Rune.\n- [test] When the phone computes nextElement from a project’s goals across parties, then it matches the host’s shape selection, counting done goals whose results are unseen and freeing seen done goals, with ties in ELEMENTS order.",
+        "Checks": "- Compare default and explicitly chosen shape predictions with realm’s pick_rune, including repeated shapes and hue ties.\n- Keep host allocation authoritative; previewing must not persist a hue or send a predicted hue as an override.\n- Keep fieldsquares.js a renderer of supplied Rune data; never import pluscard.js back into it.\n- Run the critical gate tests, affected allocation and phone helper tests, and a browser test of the opened field’s Rune square.\n- Keep each touched module below approximately 600 lines; record settled boundaries in the implementation commit message or .ork-commit.md.",
+        "Will be": "- changed orkboard/gui — expose host-derived per-shape hue predictions through the existing project snapshot boundary.\n- changed orkboard/gui/static/js/hand — consume the predictions in runesOf and render the selected shape’s predicted hue.\n- changed orkboard/gui/static/pwa — make nextElement use project-wide host holding and tie-breaking rules.\n- changed tests — prove preview and phone parity with host allocation and preserve import boundaries.",
+        "Out": "- Changing the host’s Rune allocation or stored Rune migration rules.\n- Redesigning the Rune picker or the + card.\n- Adding a caller or new phone screen for the currently unused nextElement helper.",
+        "Risks": "- A concurrent goal change can alter allocation between the displayed snapshot and submission; the host remains authoritative.\n- Phone snapshots must retain enough state to distinguish unseen done goals from seen ones.\n- Duplicating hue allocation in the browser could drift from realm; supply host-derived predictions instead.",
+        "Defaults": "- Assumed: The existing snapshot can carry per-shape predicted hues without introducing a service or dependency.\n- Assumed: Rune choices and the seal’s free runes retain their existing presentation; this change concerns the selected Rune’s hue.\n- Assumed: nextElement receives all goal nodes for one project, rather than a party-filtered subset.\n- Assumed: This read-only pass supplies the spec only; implementation records the settled architecture in its commit message or .ork-commit.md."
+      },
+      "risk": "low",
+      "leader": "architect"
+    }
+  },
+  "joined": true,
+  "forks": [],
+  "wait": false
+}

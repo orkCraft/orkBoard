@@ -1,0 +1,11 @@
+09:31:53 town           None                       codex  gpt-6-luna       tok 11611 sec 4.7 exit None
+09:33:18 board          goal                       codex  gpt-6-astra      tok 89052 sec 34.7 exit None
+09:34:03 board          talk_round                 codex  gpt-6-luna       tok 15035 sec 7.1 exit None
+09:38:54 board          decide                     codex  gpt-6-luna       tok 14223 sec 5.9 exit None
+09:39:00 board          slice                      codex  gpt-6-luna       tok 13141 sec 5.1 exit None
+09:39:37 board          section_first              codex  gpt-6.1-sol      tok 122389 sec 41.6 exit None
+09:40:45 board          plan                       codex  gpt-6-astra      tok 106438 sec 68.3 exit None
+09:46:27 board          concerns                   codex  gpt-6-luna       tok 15814 sec 13.1 exit None
+09:46:46 ideas          None                       codex  gpt-6.1-sol      tok 1384853 sec 311.6 exit None
+09:49:17 board          goal                       codex  gpt-6.1-sol      tok 94218 sec 45.9 exit None
+09:49:26 board          accept_step                codex  gpt-6-astra      tok 102333 sec 43.0 exit None

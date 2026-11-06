@@ -1,0 +1,177 @@
+{
+  "goal": "a-potion-s-card-names-the-models-of-its",
+  "total": {
+    "calls": 9,
+    "tokens": 974679,
+    "cost": 0.0,
+    "unpriced": 9,
+    "seconds": 352.7,
+    "in": 208859,
+    "out": 9084,
+    "cache_read": 756736,
+    "cache_write": 0,
+    "cache_share": 0.784
+  },
+  "by_tool": [
+    {
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "calls": 2,
+      "tokens": 652460,
+      "cost": 0.0,
+      "unpriced": 2
+    },
+    {
+      "tool": "codex",
+      "model": "gpt-6-astra",
+      "calls": 2,
+      "tokens": 251015,
+      "cost": 0.0,
+      "unpriced": 2
+    },
+    {
+      "tool": "codex",
+      "model": "gpt-6-luna",
+      "calls": 5,
+      "tokens": 71204,
+      "cost": 0.0,
+      "unpriced": 5
+    }
+  ],
+  "by_step": [
+    {
+      "step": "work",
+      "calls": 1,
+      "tokens": 589488,
+      "cost": 0.0,
+      "unpriced": 1
+    },
+    {
+      "step": "plan",
+      "calls": 1,
+      "tokens": 143110,
+      "cost": 0.0,
+      "unpriced": 1
+    },
+    {
+      "step": "accept_step",
+      "calls": 1,
+      "tokens": 107905,
+      "cost": 0.0,
+      "unpriced": 1
+    },
+    {
+      "step": "section_first",
+      "calls": 1,
+      "tokens": 62972,
+      "cost": 0.0,
+      "unpriced": 1
+    },
+    {
+      "step": "talk_round",
+      "calls": 2,
+      "tokens": 28754,
+      "cost": 0.0,
+      "unpriced": 2
+    },
+    {
+      "step": "talk_verdict",
+      "calls": 2,
+      "tokens": 28191,
+      "cost": 0.0,
+      "unpriced": 2
+    },
+    {
+      "step": "decide",
+      "calls": 1,
+      "tokens": 14259,
+      "cost": 0.0,
+      "unpriced": 1
+    }
+  ],
+  "by_goal": [
+    {
+      "goal": "a-potion-s-card-names-the-models-of-its",
+      "calls": 9,
+      "tokens": 974679,
+      "cost": 0.0,
+      "unpriced": 9
+    }
+  ],
+  "dearest": [
+    {
+      "at": "2026-11-06T10:22:17",
+      "idea": "a-potion-s-card-names-the-models-of-its",
+      "step": null,
+      "purpose": "work",
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "cost": null,
+      "seconds": 200.1,
+      "tokens": 589488
+    },
+    {
+      "at": "2026-11-06T10:18:28",
+      "idea": "a-potion-s-card-names-the-models-of-its",
+      "step": "plan",
+      "purpose": "plan",
+      "tool": "codex",
+      "model": "gpt-6-astra",
+      "cost": null,
+      "seconds": 46.3,
+      "tokens": 143110
+    },
+    {
+      "at": "2026-11-06T10:24:11",
+      "idea": "a-potion-s-card-names-the-models-of-its",
+      "step": "accept_step",
+      "purpose": "plan",
+      "tool": "codex",
+      "model": "gpt-6-astra",
+      "cost": null,
+      "seconds": 29.8,
+      "tokens": 107905
+    },
+    {
+      "at": "2026-11-06T10:17:41",
+      "idea": "a-potion-s-card-names-the-models-of-its",
+      "step": "section_first",
+      "purpose": "plan",
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "cost": null,
+      "seconds": 40.4,
+      "tokens": 62972
+    },
+    {
+      "at": "2026-11-06T10:15:36",
+      "idea": "a-potion-s-card-names-the-models-of-its",
+      "step": "talk_round",
+      "purpose": "sort",
+      "tool": "codex",
+      "model": "gpt-6-luna",
+      "cost": null,
+      "seconds": 11.0,
+      "tokens": 14931
+    }
+  ],
+  "waste": {
+    "failed": {
+      "calls": 0,
+      "cost": 0
+    },
+    "cache_rewritten": {
+      "calls": 0,
+      "tokens": 0,
+      "cost": 0
+    },
+    "heavy_reads": {
+      "calls": 0,
+      "tokens": 0,
+      "cost": 0
+    },
+    "asked_again": [],
+    "done_twice": [],
+    "sent_back": []
+  }
+}

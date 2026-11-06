@@ -1,0 +1,121 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  9%]
+...............................................................F....F... [ 19%]
+........................................................................ [ 28%]
+........................................................................ [ 38%]
+........................................................................ [ 48%]
+........................................................................ [ 57%]
+........................................................................ [ 67%]
+..........................................................F............. [ 77%]
+........................................................................ [ 86%]
+........................................................................ [ 96%]
+...........................                                              [100%]
+=================================== FAILURES ===================================
+___________ test_arrows_move_tab_takes_and_esc_closes_the_list_only ____________
+[gw5] darwin -- Python 3.12.2 /private/tmp/claude-501/-Users-etb-orkBoard/c8bce183-30e6-495e-9b69-9d49bf7ce46b/scratchpad/A/orkBoard/.venv/bin/python
+
+gui = (<orkboard.gui.server.Server object at 0x103de1370>, <Browser type=<BrowserType name=chromium executable_path=/private...um-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing> version=156.0.8078.4>)
+
+    def test_arrows_move_tab_takes_and_esc_closes_the_list_only(gui):
+        pg, host, log = open_hand(gui, host=MentionHost())
+        try:
+            field, area = _open_field(pg)
+            area.type("@")
+            pg.locator(".hand-mention").wait_for(timeout=WAIT_MS)
+            _rows_are(pg, ["@Tech", "@Design", "@Product", "@Release", "@Game design", "src/", "src/app.py", "README.md"])
+            area.press("ArrowDown")
+            area.press("ArrowDown")
+            assert pg.locator(".hand-mention__row.is-on").inner_text().strip() == "@Product"
+            area.press("ArrowUp")
+            assert pg.locator(".hand-mention__row.is-on").inner_text().strip() == "@Design"
+            area.press("Escape")
+            assert pg.locator(".hand-mention").count() == 0 and pg.locator(".hand-field").count() == 1, "Esc closed the list, not the field"
+            area.type("D")
+            assert pg.locator(".hand-mention").count() == 0, "the list stays closed for this @"
+            area.press("Control+a")
+            area.type("a @De")
+            pg.locator(".hand-mention").wait_for(timeout=WAIT_MS)
+            area.press("Tab")
+>           assert area.input_value() == "a @Design "
+E           AssertionError: assert 'a @Design @D' == 'a @Design '
+E             
+E             - a @Design 
+E             + a @Design @D
+E             ?           ++
+
+tests/test_hand_mention_browser.py:110: AssertionError
+_____ test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written _____
+[gw5] darwin -- Python 3.12.2 /private/tmp/claude-501/-Users-etb-orkBoard/c8bce183-30e6-495e-9b69-9d49bf7ce46b/scratchpad/A/orkBoard/.venv/bin/python
+
+gui = (<orkboard.gui.server.Server object at 0x103de1370>, <Browser type=<BrowserType name=chromium executable_path=/private...um-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing> version=156.0.8078.4>)
+
+    def test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written(gui):
+        pg, host, log = open_hand(gui, host=MentionHost())
+        try:
+            field, area = _open_field(pg)
+            area.type("write to me@exa")
+            pg.wait_for_timeout(200)
+            assert pg.locator(".hand-mention").count() == 0
+            area.press("Control+a")
+            area.type("Look at @app")
+            pg.locator(".hand-mention__row[data-kind='file']").wait_for(timeout=WAIT_MS)
+            _rows_are(pg, ["src/app.py"])
+            assert _calls(pg, host, "files.find")[-1] == {"q": "app", "limit": 20}
+            area.press("Enter")
+>           assert area.input_value() == "Look at @src/app.py "
+E           AssertionError: assert 'Look at @src...ite to me@exa' == 'Look at @src/app.py '
+E             
+E             - Look at @src/app.py 
+E             + Look at @src/app.py write to me@exa
+
+tests/test_hand_mention_browser.py:133: AssertionError
+__ test_the_gather_waits_six_seconds_for_the_deck_to_show_the_party[1.0-True] __
+[gw5] darwin -- Python 3.12.2 /private/tmp/claude-501/-Users-etb-orkBoard/c8bce183-30e6-495e-9b69-9d49bf7ce46b/scratchpad/A/orkBoard/.venv/bin/python
+
+fake_repo = PosixPath('/private/var/folders/sk/0d16bw_542q821b2p5ktnzp00000gn/T/pytest-of-etb/pytest-798/popen-gw5/test_the_gather_waits_six_seco0/project')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x105e17950>
+after = 1.0, plays = True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("after,plays", [(1.0, True), (6.4, False)])
+    async def test_the_gather_waits_six_seconds_for_the_deck_to_show_the_party(fake_repo, monkeypatch, after, plays):
+        """The host answers the slug but the Board has no such party yet, so the deck shows another one; the person picks the new party `after` seconds later: a gather that waited 6 s is dropped."""
+        hosted(monkeypatch)
+        real = Stub.commands
+    
+        def commands(self):
+            got = real(self)
+    
+            def board_map(a):                                                                  # the party is saved, the Board's Map does not have it yet
+                out = got["ideas.map"](a)
+                return {**out, "goals": [g for g in out["goals"] if g["slug"] != "a-late-party" or getattr(self, "late", False)]}
+            return {**got, "ideas.map": board_map}
+        monkeypatch.setattr(Stub, "commands", commands)
+        async with _phone(fake_repo, monkeypatch, init=RECORD) as (stub, page):
+            sheet = await _ready(page, about="A late party.")
+            await sheet.get_by_role("button", name="Save party").click()
+            assert await _called(stub, "ideas.goal_save")
+            await page.locator(".screen").wait_for(timeout=WAIT_MS)
+            assert await page.evaluate(GATHER) == [] and await page.locator(".partydeck").get_attribute("data-goal") != "a-late-party"          # the deck shows another party: nothing yet
+            await page.wait_for_timeout(int(after * 1000))
+            stub.late = True
+            stub.bump({})
+            await page.locator(".screen-head").get_by_role("button", name="Back").click()
+            await _pick_goal(page, "a-late-party")                                              # the first draw that shows it
+            await page.wait_for_timeout(1200)
+            rec = await page.evaluate(GATHER)
+            flies = [g for g in rec if g["kind"] == "fly"]
+            if plays:
+>               assert len(flies) == len(GAME) and [g["goal"] for g in rec if g["kind"] == "lit"] == ["a-late-party"]
+E               AssertionError: assert (0 == 6)
+E                +  where 0 = len([])
+E                +  and   6 = len(['game-designer', 'grunt', 'artist', 'level-designer', 'sound-designer', 'playtester'])
+
+tests/test_pwa_party_gather_browser.py:276: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hand_mention_browser.py::test_arrows_move_tab_takes_and_esc_closes_the_list_only
+FAILED tests/test_hand_mention_browser.py::test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written
+FAILED tests/test_pwa_party_gather_browser.py::test_the_gather_waits_six_seconds_for_the_deck_to_show_the_party[1.0-True]
+3 failed, 744 passed in 1062.20s (0:17:42)

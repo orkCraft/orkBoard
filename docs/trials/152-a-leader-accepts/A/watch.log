@@ -1,0 +1,13 @@
+09:34:10 goals=[('the-field-s-rune-square-', 'talk', '', '{"done": 0, "total": 0}', [])] needs=[('hearing', 'the-field-s-rune-square-', 'Architect has a doubt'), ('project_q', '', 'What is this project for?')] calls=3
+09:38:17 -- idle
+09:38:52 goals=[('the-field-s-rune-square-', 'talk', '', '{"done": 0, "total": 0}', [])] needs=[('project_q', '', 'What is this project for?')] calls=3
+09:39:00 goals=[('the-field-s-rune-square-', 'sections', '', '{"done": 0, "total": 0}', [])] needs=[('project_q', '', 'What is this project for?')] calls=5
+09:39:43 goals=[('the-field-s-rune-square-', 'planning', '', '{"done": 0, "total": 0}', [])] needs=[('project_q', '', 'What is this project for?')] calls=6
+09:40:51 goals=[('the-field-s-rune-square-', 'plan', '', '{"done": 0, "total": 1}', [])] needs=[('plan', 'the-field-s-rune-square-', 'Plan ready · 1 tasks'), ('project_q', '', 'What is this project for?')] calls=7
+09:40:51 -- the hand changed
+09:41:44 goal=[('working', '{"done": 0, "total": 1}', None)] needs=[('project_q', 'What is this project for?')] tasks=[('k1', 'running', None, None, None)] calls=7
+09:46:29 goal=[('working', '{"done": 0, "total": 1}', None)] needs=[('project_q', 'What is this project for?')] tasks=[('k1', 'running', None, None, None)] calls=8
+09:46:52 goal=[('working', '{"done": 0, "total": 1}', None)] needs=[('project_q', 'What is this project for?')] tasks=[('k1', 'testing', None, None, None)] calls=9
+09:48:33 goal=[('working', '{"done": 1, "total": 1}', None)] needs=[('project_q', 'What is this project for?')] tasks=[('k1', 'merged', None, None, None)] calls=9
+09:49:28 goal=[('done', '{"done": 1, "total": 1}', None)] needs=[('goal', 'Which goals go into this release? Supply their titles, Done when lines and flags, or their repository paths.'), ('project_q', 'What is this project for?')] tasks=[('k1', 'merged', None, None, None)] calls=11
+09:49:28 -- the hand changed

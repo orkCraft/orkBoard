@@ -1,0 +1,126 @@
+{
+  "idea": "a-potion-s-card-names-the-models-of-its",
+  "made_at": "2026-11-06T10:18:28",
+  "passed_at": "2026-11-06T10:18:56",
+  "estimate": {
+    "tasks": 1,
+    "usd_low": null,
+    "usd_high": null
+  },
+  "todos": [],
+  "tasks": [
+    {
+      "id": "k1",
+      "title": "Restore tier models on potion cards",
+      "short": "Tier models",
+      "brief": "Implement the lifted potion card's tier editor end to end under Decision 260. In orkboard/gui/tools_host.py, expose supported tiers, saved overrides, inherited defaults and available models through the host, using the selected harness's existing discovery. Keep loading read-only. Register a host command accepting tool, tier and model; reject unknown tools, unsupported tiers and models absent from that tool's discovery before changing settings. When discovery cannot enumerate models, disable editing with an explanation. Merge valid edits into current machine-scoped tier_models, preserving other tools, tiers and unrelated settings; serialize updates against current state so overlapping card edits cannot lose changes. Publish confirmed state after successful persistence and report failures without retaining an unsaved choice as saved.\n\nIn orkboard/gui/static/js/hand/toolcard.js, add labeled tier controls showing saved models or inherited defaults. Preserve and identify saved models that are no longer available, without silently replacing them on open. Show loading, pending and failure states, and omit the editor for tools without tier tables. Keep Settings, billing, ordering, removal, phone configuration and routing policy unchanged; add no reset control or project settings copy. Preserve Harness.pick family resolution and explicit-model behavior.\n\nExtend tests/test_tools_host.py and tests/test_add_tool_browser.py with deterministic model discovery fixtures. Prove first-open defaults and overrides without settings writes; successful edits surviving page reload and host/settings reload; rejection of unknown tools, unsupported tiers and unavailable models with saved state unchanged; disabled editing when discovery is unavailable; preservation of stale saved models; visible command failures; and preservation of unrelated settings during successive and overlapping edits. Verify a subsequent harness invocation consumes the persisted override through Harness.pick, retaining family and explicit-model regression coverage. Update any tests affected by the implementation in this task. Run the repository gate's always checks and relevant host, browser, settings and harness tests, ensuring the browser coverage actually runs, and record the results.",
+      "kind": "code",
+      "tier": "warrior",
+      "after": [],
+      "state": "merged",
+      "branch": "idea/a-potion-s-card-names-the-models-of-its/k1",
+      "commit": "1627167464c1c6dd2db094b55e939157077bb2ad",
+      "session": "01a1b027-7331-7ba2-81e9-d686639982b2",
+      "cost": null,
+      "tokens": 589488,
+      "started": "2026-11-06T10:18:57",
+      "finished": "2026-11-06T10:23:35",
+      "error": "",
+      "note": "",
+      "files": [
+        "orkboard/gui/static/js/hand/toolcard.js",
+        "orkboard/gui/tools_host.py",
+        "orkboard/realm/harnesses.py",
+        "tests/test_tools_host.py",
+        "tests/test_tool_hand.py",
+        "tests/test_add_tool_browser.py"
+      ],
+      "proves": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "role": "grunt",
+      "step": 1,
+      "party": "tech",
+      "craft": "tech",
+      "leader": "architect",
+      "section": "Tech",
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "session_total": null,
+      "last_tokens": 589488,
+      "look": "",
+      "same_as_before": false,
+      "tests": {
+        "passed": 237,
+        "failed": 0,
+        "skipped": 0,
+        "failing": [],
+        "tail": "$ python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_hand_card_cut_browser.py tests/test_hand_context_narrow_browser.py tests/test_hand_desktop_browser.py tests/test_hand_mana_browser.py tests/test_hand_mention_browser.py tests/test_handed_browser.py tests/test_tools_host.py tests/test_add_tool_browser.py\nbringing up nodes...\nbringing up nodes...\n\n........................................................................ [ 30%]\n........................................................................ [ 60%]\n........................................................................ [ 91%]\n.....................                                                    [100%]\n237 passed in 76.13s (0:01:16)",
+        "green": true,
+        "ran": true,
+        "command": "python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_hand_card_cut_browser.py tests/test_hand_context_narrow_browser.py tests/test_hand_desktop_browser.py tests/test_hand_mana_browser.py tests/test_hand_mention_browser.py tests/test_handed_browser.py tests/test_tools_host.py tests/test_add_tool_browser.py",
+        "exit": 0
+      },
+      "diff": {
+        "files": 4,
+        "added": 222,
+        "removed": 0
+      },
+      "shot": {
+        "none": true
+      },
+      "round": 1,
+      "conflict": "",
+      "why": "",
+      "base": "46dd2e78557327e5be0ad223cabc0752d7d220aa",
+      "ran_tier": "warrior",
+      "effort": "low",
+      "subjects": [
+        "Restore tier models on potion cards"
+      ]
+    }
+  ],
+  "missing": [],
+  "passed_by": "person",
+  "start_at": null,
+  "accepts": {
+    "1": {
+      "round": 1,
+      "verdict": "accepted",
+      "at": "2026-11-06T10:24:11",
+      "done_when": [
+        {
+          "n": 1,
+          "met": true,
+          "why": "Dev renders every harness tier with its saved model or inherited default; browser and host tests verify opening leaves settings unchanged."
+        },
+        {
+          "n": 2,
+          "met": true,
+          "why": "The card sends tools.tier_model; host persistence and browser reload tests verify the saved machine choice returns."
+        },
+        {
+          "n": 3,
+          "met": true,
+          "why": "Host validation rejects unknown tools, unsupported tiers and unavailable models; tests assert saved settings remain unchanged."
+        },
+        {
+          "n": 4,
+          "met": true,
+          "why": "The host test verifies both Harness.pick and a subsequent harness ask use the saved elder model."
+        },
+        {
+          "n": 5,
+          "met": true,
+          "why": "Edits merge current disk settings; tests verify preservation of other tools, tiers and all unrelated settings."
+        }
+      ],
+      "back": [],
+      "cost": null
+    }
+  }
+}

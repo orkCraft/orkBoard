@@ -1,0 +1,126 @@
+{
+  "idea": "the-field-s-rune-square-shows-the-hue-the",
+  "made_at": "2026-11-06T09:40:45",
+  "passed_at": "2026-11-06T09:41:33",
+  "estimate": {
+    "tasks": 1,
+    "usd_low": null,
+    "usd_high": null
+  },
+  "todos": [],
+  "tasks": [
+    {
+      "id": "k1",
+      "title": "Match Rune previews to host allocation",
+      "short": "Predict Rune hues",
+      "brief": "Implement §253 and spec 128 G in one session, including its regression tests. Allowed production files: orkboard/gui/ideas_map.py, orkboard/gui/static/js/hand/pluscard.js, and orkboard/gui/static/pwa/shell-marks.js. Allowed test files: tests/test_rune_hue_browser.py and new focused tests/test_rune_preview.py and tests/test_phone_next_element_js.py. Allow .ork-commit.md only for the architecture record if no commit is possible. Read realm/idea_element.py during implementation to confirm its public allocation API and holding rules; do not change realm allocation or migration.\n\n1. Snapshot boundary: in MapMixin.map, derive a shape-to-predicted-hue mapping by calling realm's pick_rune for each explicit shape against the same project-wide used runes that supply next_element and next_hue. Expose it through got.project as rune_hues, including party-filtered snapshots. Compute predictions without reserving or persisting runes, after the existing legacy migration handling; preserve that migration unchanged. Normalize legacy missing hues through the host's existing semantics. Keep existing next_element, next_hue and free_elements fields compatible. Test each prediction against pick_rune with empty projects, repeated shapes, hue ties, legacy element-only goals, multiple parties and filtered snapshots. Verify prediction calculation introduces no state writes.\n\n2. Presentation: update runesOf in pluscard.js to obtain the selected shape's hue from the project snapshot mapping, retaining the existing default and explicit-shape fallback behavior for older snapshots. Reading mapData must keep the open field reactive to snapshot replacement. Preserve addressing, shape selection, free-rune presentation and submission behavior; never send the predicted hue as an override. fieldsquares.js already passes runes.hue to Elem: leave it a renderer with no import from pluscard.js and no allocation logic. Preserve the current unaddressed default presentation; an explicitly selected shape can use the project-wide predictions regardless of address.\n\n3. Phone helper: update nextElement in shell-marks.js to count valid held shapes across all supplied goals for one project, using precisely the host's holding rules, including unseen done goals and excluding seen done goals. Verify other states against realm rather than retaining the current dropped-state exclusion by assumption. Resolve ties in ELEMENTS order. Document the all-project-nodes input contract; add no caller or phone screen. Execute the actual JavaScript helper against fixtures whose expected shape comes from realm, covering cross-party counts, empty input, invalid or missing elements, repeated shapes, ties, and done results transitioning from unseen to seen.\n\n4. Browser coverage: extend test_rune_hue_browser.py to open the + card and assert the Rune square's shape and computed hue for the default and a user-selected shape. Use host-derived fixture predictions including legacy hue fallback. Replace the snapshot while the field stays open and verify the preview updates while draft text and explicit selection remain intact. Assert preview interactions do not submit or persist a Rune, and submission contains no hue override. Preserve existing seal and card tests and add an import-boundary regression in the focused tests.\n\n5. Validation and boundaries: run tests/test_architecture.py, tests/test_board_alone.py, tests/test_updates.py, tests/test_idea_element.py, the new focused tests, the affected GUI and phone tests, and the opened-field browser coverage. Repair any tests broken by this change within this task. The inspected production modules are comfortably below approximately 600 lines; no initial split is needed. Keep added tests in their focused modules rather than expanding large shared suites. If any touched module would cross that limit, extract its single-purpose preview or test-fixture responsibility within the same allowed directory before adding behavior, documenting the resulting file boundary. Do not expand board_host.py. Record the settled architecture in the implementation commit message or .ork-commit.md: realm owns allocation, GUI snapshots expose predictions, pluscard consumes them, fieldsquares renders supplied data, and the phone helper mirrors only shape selection. Note that submission remains authoritative if project state changes after the preview.",
+      "kind": "code",
+      "tier": "warrior",
+      "after": [],
+      "state": "merged",
+      "branch": "idea/the-field-s-rune-square-shows-the-hue-the/k1",
+      "commit": "c6ca7001e07dbbaa19e29659c2c1ce5c2327fda7",
+      "session": "01a1b005-3846-7993-a946-a9a6e17a9772",
+      "cost": null,
+      "tokens": 1384853,
+      "started": "2026-11-06T09:41:33",
+      "finished": "2026-11-06T09:48:26",
+      "error": "",
+      "note": "",
+      "files": [
+        "CLAUDE.md",
+        "orkboard/gui/ideas_map.py",
+        "orkboard/gui/static/js/hand/pluscard.js",
+        "orkboard/gui/static/js/hand/fieldsquares.js",
+        "orkboard/gui/static/pwa/shell-marks.js",
+        "tests/test_rune_hue_browser.py"
+      ],
+      "proves": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "role": "grunt",
+      "step": 1,
+      "party": "tech",
+      "craft": "tech",
+      "leader": "architect",
+      "section": "Tech",
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "session_total": null,
+      "last_tokens": 1384853,
+      "look": "",
+      "same_as_before": false,
+      "tests": {
+        "passed": 231,
+        "failed": 0,
+        "skipped": 0,
+        "failing": [],
+        "tail": ">           assert area.input_value() == \"a @Design \"\nE           AssertionError: assert 'a @Design @D' == 'a @Design '\nE             \nE             - a @Design \nE             + a @Design @D\nE             ?           ++\n\ntests/test_hand_mention_browser.py:110: AssertionError\n_____ test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written _____\n[gw4] darwin -- Python 3.12.2 /private/tmp/claude-501/-Users-etb-orkBoard/c8bce183-30e6-495e-9b69-9d49bf7ce46b/scratchpad/A/orkBoard/.venv/bin/python\n\ngui = (<orkboard.gui.server.Server object at 0x11be621b0>, <Browser type=<BrowserType name=chromium executable_path=/private...um-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing> version=156.0.8078.4>)\n\n    def test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written(gui):\n        pg, host, log = open_hand(gui, host=MentionHost())\n        try:\n            field, area = _open_field(pg)\n            area.type(\"write to me@exa\")\n            pg.wait_for_timeout(200)\n            assert pg.locator(\".hand-mention\").count() == 0\n            area.press(\"Control+a\")\n            area.type(\"Look at @app\")\n            pg.locator(\".hand-mention__row[data-kind='file']\").wait_for(timeout=WAIT_MS)\n            _rows_are(pg, [\"src/app.py\"])\n            assert _calls(pg, host, \"files.find\")[-1] == {\"q\": \"app\", \"limit\": 20}\n            area.press(\"Enter\")\n>           assert area.input_value() == \"Look at @src/app.py \"\nE           AssertionError: assert 'Look at @src...ite to me@exa' == 'Look at @src/app.py '\nE             \nE             - Look at @src/app.py \nE             + Look at @src/app.py write to me@exa\n\ntests/test_hand_mention_browser.py:133: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_hand_mention_browser.py::test_arrows_move_tab_takes_and_esc_closes_the_list_only\nFAILED tests/test_hand_mention_browser.py::test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written\n2 failed, 231 passed in 87.45s (0:01:27)\n\n== browser tests left for main: 56 of pwa/\n== red before this task: tests/test_hand_mention_browser.py::test_arrows_move_tab_takes_and_esc_closes_the_list_only, tests/test_hand_mention_browser.py::test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written",
+        "green": true,
+        "ran": true,
+        "command": "python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_hand_card_cut_browser.py tests/test_hand_context_narrow_browser.py tests/test_hand_desktop_browser.py tests/test_hand_mana_browser.py tests/test_hand_mention_browser.py tests/test_handed_browser.py tests/test_phone_next_element_js.py tests/test_rune_hue_browser.py tests/test_rune_preview.py",
+        "exit": 1,
+        "red_before": [
+          "tests/test_hand_mention_browser.py::test_arrows_move_tab_takes_and_esc_closes_the_list_only",
+          "tests/test_hand_mention_browser.py::test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written"
+        ],
+        "flaky": [],
+        "left": "56 of pwa/"
+      },
+      "diff": {
+        "files": 6,
+        "added": 170,
+        "removed": 0
+      },
+      "shot": {
+        "none": true
+      },
+      "round": 1,
+      "conflict": "",
+      "why": "",
+      "base": "31107400538e9cd5b0e98543bc3953cabdd38189",
+      "ran_tier": "warrior",
+      "effort": "low",
+      "subjects": [
+        "Match Rune previews to host allocation"
+      ]
+    }
+  ],
+  "missing": [],
+  "start_at": null,
+  "passed_by": "person",
+  "accepts": {
+    "1": {
+      "round": 1,
+      "verdict": "accepted",
+      "at": "2026-11-06T09:49:26",
+      "done_when": [
+        {
+          "n": 1,
+          "met": true,
+          "why": "Dev supplies pick_rune predictions from the project’s held runes; runesOf passes the default shape’s predicted hue to Squares, supported by the reported browser gate."
+        },
+        {
+          "n": 2,
+          "met": true,
+          "why": "Selected shapes use project.rune_hues computed by pick_rune(want=e); hue_in handles legacy hue fallback."
+        },
+        {
+          "n": 3,
+          "met": true,
+          "why": "runesOf reads each replacement snapshot during rendering; prediction adds no allocation write or hue override to submission. The reported browser test covers refresh."
+        },
+        {
+          "n": 4,
+          "met": true,
+          "why": "nextElement counts valid shapes across supplied project nodes, retains unseen done goals, frees seen done goals, and preserves ELEMENTS tie order; its test compares against realm."
+        }
+      ],
+      "back": [],
+      "cost": null
+    }
+  }
+}

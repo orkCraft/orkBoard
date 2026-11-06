@@ -1,0 +1,109 @@
+{"at": "2026-11-06T09:31:18+01:00", "event": "project_opened", "new": true, "git": true, "device": "desktop"}
+{"at": "2026-11-06T09:31:24+01:00", "event": "limits_read", "provider": "codex", "left": 0.83, "window": "week"}
+{"at": "2026-11-06T09:31:28+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:31:31+01:00", "event": "board_committed", "commit": "3905d708dbb2b2652ccb8f9b12d6aa115d0083cd", "pages": 2, "what": "edited", "seconds": 0.6}
+{"at": "2026-11-06T09:31:36+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:32:13+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:32:43+01:00", "event": "proposal_taken", "kind": "backend", "recipe": "tech", "size": "lean", "device": "desktop"}
+{"at": "2026-11-06T09:32:43+01:00", "event": "goal_saved", "goal": "tech", "new": true, "preset": "", "metrics": [], "links": [], "priority": "normal", "craft": "engineering", "team": ["grunt", "tester", "reviewer"], "every": [], "leader": "architect", "party": "", "tool": "", "tools": [], "device": "desktop", "joined": "", "out": "", "via": "", "stages": "5/2"}
+{"at": "2026-11-06T09:32:43+01:00", "event": "proposal_taken", "kind": "backend", "recipe": "release", "size": "lean", "device": "desktop"}
+{"at": "2026-11-06T09:32:43+01:00", "event": "goal_saved", "goal": "release", "new": true, "preset": "", "metrics": [], "links": [], "priority": "normal", "craft": "engineering", "team": ["release-engineer", "release-notes"], "every": [], "leader": "release-manager", "party": "", "tool": "", "tools": [], "device": "desktop", "joined": "", "out": "", "via": "", "stages": "5/2"}
+{"at": "2026-11-06T09:32:50+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:32:54+01:00", "event": "board_committed", "commit": "175d1ae9b21b99f75f39d8f2f6aafc0f0475aa60", "pages": 6, "what": "edited", "seconds": 0.32}
+{"at": "2026-11-06T09:33:18+01:00", "event": "goal_read", "goal": "tech", "state": "ready", "seconds": 34.7, "tier": "elder", "effort": "medium", "step": "goal", "prompt_chars": 2069, "tokens": {"total": 89052}, "cost": null}
+{"at": "2026-11-06T09:33:28+01:00", "event": "board_committed", "commit": "09412b67f48d7b318c212270bddcf48c3c23998f", "pages": 1, "what": "edited", "seconds": 0.28}
+{"at": "2026-11-06T09:33:53+01:00", "event": "idea_added", "idea": "the-field-s-rune-square-shows-the-hue-the", "track": "tech", "chars": 271, "now": true, "priority": "normal", "queue": "now", "photos": 0, "files": 0, "lens": [], "type": "shaped-feature", "asks": 0, "refs": 0, "joined": "", "out": "", "device": "desktop", "offered": 4, "near": 0}
+{"at": "2026-11-06T09:33:53+01:00", "event": "keeper_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "state": "talk", "was": "", "seconds": null}
+{"at": "2026-11-06T09:33:58+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:34:03+01:00", "event": "talk_heard", "idea": "the-field-s-rune-square-shows-the-hue-the", "party": "tech", "weigher": false}
+{"at": "2026-11-06T09:34:03+01:00", "event": "leader_objected", "idea": "the-field-s-rune-square-shows-the-hue-the", "party": "tech", "verdict": "doubt", "has_instead": false}
+{"at": "2026-11-06T09:34:04+01:00", "event": "board_committed", "commit": "1a3faf5a76b47325c264a8cdcdc0b46c8b487227", "pages": 3, "what": "edited", "seconds": 0.29}
+{"at": "2026-11-06T09:34:21+01:00", "event": "goal_taken", "slug": "the-field-s-rune-square-shows-the-hue-the", "by": "Orkboard on MacBook-Pro-23.local", "kind": "orkboard", "until": "2026-11-06T09:34:21+00:00"}
+{"at": "2026-11-06T09:38:25+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:38:48+01:00", "event": "hearing_thrown", "idea": "the-field-s-rune-square-shows-the-hue-the", "moment": "talk", "kind": "go", "dir": "right", "leaders": 0}
+{"at": "2026-11-06T09:38:54+01:00", "event": "keeper_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "state": "decided", "was": "talk", "seconds": 300.9}
+{"at": "2026-11-06T09:38:55+01:00", "event": "board_committed", "commit": "a67a16a008382a04383bae724433e98cae3f7d14", "pages": 1, "what": "decision", "seconds": 0.96}
+{"at": "2026-11-06T09:38:55+01:00", "event": "keeper_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "state": "sections", "was": "decided", "seconds": 1.0}
+{"at": "2026-11-06T09:39:00+01:00", "event": "slices_cut", "decision": 253, "parties": 1, "none": 1, "replaced": 0, "seconds": 5.3, "cost": null, "failed": false}
+{"at": "2026-11-06T09:39:00+01:00", "event": "keeper_state", "idea": "slices", "state": "raw", "was": "", "seconds": null}
+{"at": "2026-11-06T09:39:06+01:00", "event": "board_committed", "commit": "a261e295cb9a3f5852ef91e2d45ad52ec716c1e2", "pages": 2, "what": "edited", "seconds": 0.32}
+{"at": "2026-11-06T09:39:25+01:00", "event": "goal_given_back", "slug": "the-field-s-rune-square-shows-the-hue-the", "by": "Orkboard on MacBook-Pro-23.local"}
+{"at": "2026-11-06T09:39:37+01:00", "event": "keeper_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "state": "ready", "was": "sections", "seconds": 41.6}
+{"at": "2026-11-06T09:39:37+01:00", "event": "keeper_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "state": "planning", "was": "ready", "seconds": 0.0}
+{"at": "2026-11-06T09:39:47+01:00", "event": "board_committed", "commit": "bd4df9ceb7e4c7e9d26f4eb5cf074e7cddf48dfe", "pages": 1, "what": "edited", "seconds": 0.28}
+{"at": "2026-11-06T09:40:26+01:00", "event": "goal_taken", "slug": "the-field-s-rune-square-shows-the-hue-the", "by": "Orkboard on MacBook-Pro-23.local", "kind": "orkboard", "until": "2026-11-06T09:40:26+00:00"}
+{"at": "2026-11-06T09:40:30+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": null, "device": "desktop"}
+{"at": "2026-11-06T09:40:45+01:00", "event": "keeper_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "state": "plan", "was": "planning", "seconds": 68.4}
+{"at": "2026-11-06T09:40:45+01:00", "event": "plan_made", "idea": "the-field-s-rune-square-shows-the-hue-the", "tasks": 1, "todos": 0, "usd_low": null, "usd_high": null, "step": "plan", "prompt_chars": 14807, "tokens": {"total": 106438}, "cost": null}
+{"at": "2026-11-06T09:40:45+01:00", "event": "look_waits", "idea": "the-field-s-rune-square-shows-the-hue-the", "until": 1793961645.452, "choice": "2h"}
+{"at": "2026-11-06T09:40:56+01:00", "event": "board_committed", "commit": "31107400538e9cd5b0e98543bc3953cabdd38189", "pages": 1, "what": "planned", "seconds": 0.31}
+{"at": "2026-11-06T09:40:58+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:41:26+01:00", "event": "goal_given_back", "slug": "the-field-s-rune-square-shows-the-hue-the", "by": "Orkboard on MacBook-Pro-23.local"}
+{"at": "2026-11-06T09:41:33+01:00", "event": "plan_passed", "idea": "the-field-s-rune-square-shows-the-hue-the", "tasks": 1, "seconds": 48.8, "by": "person", "risk": "low", "priority": "normal", "via": "hand", "device": "desktop", "joined": "", "missing": 0}
+{"at": "2026-11-06T09:41:33+01:00", "event": "task_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "task": "k1", "state": "waiting", "was": "ready", "round": 1, "tier": "warrior", "role": "grunt", "seconds": null, "tokens": null, "cost": null, "ran_tier": "", "effort": "", "tool": "", "model": ""}
+{"at": "2026-11-06T09:41:33+01:00", "event": "task_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "task": "k1", "state": "running", "was": "waiting", "round": 1, "tier": "warrior", "role": "grunt", "seconds": 0.0, "tokens": null, "cost": null, "ran_tier": "warrior", "effort": "low", "tool": "codex", "model": "gpt-6.1-sol", "ran_why": ""}
+{"at": "2026-11-06T09:41:33+01:00", "event": "keeper_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "state": "working", "was": "plan", "seconds": 48.3}
+{"at": "2026-11-06T09:41:34+01:00", "event": "command_refused", "command": "state", "error": "Unknown command: state", "device": "desktop", "kind": "refused"}
+{"at": "2026-11-06T09:41:35+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:41:44+01:00", "event": "board_committed", "commit": "a4383ca07f1eac09bf99ad48d1e30b22b1b46374", "pages": 1, "what": "edited", "seconds": 0.3}
+{"at": "2026-11-06T09:42:27+01:00", "event": "goal_taken", "slug": "the-field-s-rune-square-shows-the-hue-the", "by": "Orkboard on MacBook-Pro-23.local", "kind": "orkboard", "until": "2026-11-06T09:42:27+00:00"}
+{"at": "2026-11-06T09:45:40+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:46:13+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": null, "device": "desktop"}
+{"at": "2026-11-06T09:46:15+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": null, "device": "desktop"}
+{"at": "2026-11-06T09:46:17+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": null, "device": "desktop"}
+{"at": "2026-11-06T09:46:22+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:46:23+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": null, "device": "desktop"}
+{"at": "2026-11-06T09:46:27+01:00", "event": "concerns_made", "party": "tech", "n": 7, "alerts": 0, "notes": 7, "signals": 15, "seconds": 14.0, "cost": null, "why": "open", "since": ""}
+{"at": "2026-11-06T09:46:33+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": null, "device": "desktop"}
+{"at": "2026-11-06T09:46:36+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:46:36+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:46:42+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:46:46+01:00", "event": "task_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "task": "k1", "state": "testing", "was": "running", "round": 1, "tier": "warrior", "role": "grunt", "seconds": 312.4, "tokens": 1384853, "cost": null, "ran_tier": "warrior", "effort": "low", "tool": "codex", "model": "gpt-6.1-sol"}
+{"at": "2026-11-06T09:46:46+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:46:58+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:46:58+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:47:13+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:47:14+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:47:19+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:47:19+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:48:25+01:00", "event": "gate_ran", "idea": "the-field-s-rune-square-shows-the-hue-the", "task": "k1", "round": 1, "attempt": 1, "command": "python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_hand_card_cut_browser.py tests/test_hand_context_narrow_browser.py tests/test_hand_desktop_browser.py tests/test_hand_mana_browser.py tests/test_hand_mention_browser.py tests/test_handed_browser.py tests/test_phone_next_element_js.py tests/test_rune_hue_browser.py tests/test_rune_preview.py", "exit": 1, "seconds": 88.4, "verdict": "green", "missing": "", "red_before": ["tests/test_hand_mention_browser.py::test_arrows_move_tab_takes_and_esc_closes_the_list_only", "tests/test_hand_mention_browser.py::test_an_at_in_a_word_is_no_mention_and_a_file_is_offered_and_written"], "flaky": [], "linked": 1}
+{"at": "2026-11-06T09:48:25+01:00", "event": "shot_taken", "idea": "the-field-s-rune-square-shows-the-hue-the", "task": "k1", "ok": false, "why": "no preview", "seconds": 0.0, "round": 1}
+{"at": "2026-11-06T09:48:26+01:00", "event": "task_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "task": "k1", "state": "merged", "was": "testing", "round": 1, "tier": "warrior", "role": "grunt", "seconds": 99.9, "tokens": 1384853, "cost": null, "ran_tier": "warrior", "effort": "low", "tool": "codex", "model": "gpt-6.1-sol"}
+{"at": "2026-11-06T09:48:31+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:48:31+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T09:48:31+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:48:32+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 4, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:48:32+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:48:36+01:00", "event": "board_committed", "commit": "56712bbe54349a2882353d30ecd1ae2b909e83c6", "pages": 1, "what": "edited", "seconds": 0.31}
+{"at": "2026-11-06T09:49:17+01:00", "event": "goal_read", "goal": "release", "state": "asks", "seconds": 45.8, "tier": "warrior", "effort": "medium", "step": "goal", "prompt_chars": 1946, "tokens": {"total": 94218}, "cost": null}
+{"at": "2026-11-06T09:49:17+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:49:26+01:00", "event": "step_accepted", "idea": "the-field-s-rune-square-shows-the-hue-the", "step": 1, "party": "tech", "verdict": "accepted", "round": 1, "back": 0, "seconds": 43.4, "cost": null, "failed": false}
+{"at": "2026-11-06T09:49:27+01:00", "event": "keeper_state", "idea": "the-field-s-rune-square-shows-the-hue-the", "state": "done", "was": "working", "seconds": 473.4}
+{"at": "2026-11-06T09:49:27+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:49:28+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 4, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:49:28+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:49:28+01:00", "event": "board_committed", "commit": "ce313e4ee78e8753122b582cdb5c494b2d2a11e7", "pages": 3, "what": "edited", "seconds": 0.29}
+{"at": "2026-11-06T09:49:32+01:00", "event": "goal_given_back", "slug": "the-field-s-rune-square-shows-the-hue-the", "by": "Orkboard on MacBook-Pro-23.local"}
+{"at": "2026-11-06T09:49:44+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T09:49:45+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T09:50:14+01:00", "event": "result_seen", "idea": "the-field-s-rune-square-shows-the-hue-the", "device": "desktop"}
+{"at": "2026-11-06T09:52:41+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": null, "device": "desktop"}
+{"at": "2026-11-06T09:52:53+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:52:54+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:52:59+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:52:59+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T09:54:48+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.1, "device": "desktop"}
+{"at": "2026-11-06T09:54:48+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T10:01:10+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.2, "device": "desktop"}
+{"at": "2026-11-06T10:01:10+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T10:01:16+01:00", "event": "map_part_pressed", "lens": "system", "party": "tech", "changed": "", "goals": 0, "device": "desktop"}
+{"at": "2026-11-06T10:01:16+01:00", "event": "map_part_pressed", "lens": "system", "party": "tech", "changed": "", "goals": 0, "device": "desktop"}
+{"at": "2026-11-06T10:01:18+01:00", "event": "map_part_pressed", "lens": "system", "party": "tech", "changed": "", "goals": 0, "device": "desktop"}
+{"at": "2026-11-06T10:01:18+01:00", "event": "map_part_pressed", "lens": "system", "party": "tech", "changed": "", "goals": 0, "device": "desktop"}
+{"at": "2026-11-06T10:01:22+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T10:10:06+01:00", "event": "map_opened", "lens": "system", "party": "tech", "parts": 24, "changed": 0, "hours": 0.3, "device": "desktop"}
+{"at": "2026-11-06T10:10:06+01:00", "event": "concern_opened", "party": "tech", "level": "note", "device": "desktop"}
+{"at": "2026-11-06T10:11:32+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:11:35+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
+{"at": "2026-11-06T10:11:40+01:00", "event": "opened", "what": "map", "ref": "", "via": "", "device": "desktop"}
+{"at": "2026-11-06T10:11:41+01:00", "event": "night_card_opened", "goals": 1, "device": "desktop"}
