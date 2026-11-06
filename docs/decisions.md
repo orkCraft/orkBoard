@@ -6720,7 +6720,8 @@ was asked. So:
    `by` (who laid it: `person`, or the tool) and `schema`. The page is the truth; `state.json` keeps what runs (the keeper's
    session, Talk's round, the finer state Orkboard moves through) and follows the page: a phase moved outside Orkboard moves its
    state to that phase's first, said in a line (*<goal> was moved to <phase> in <tool>*). The code's own keys keep their names
-   (`track`, `order`). Orkline reads the same, built the same day (CLAUDE.md).
+   (`track`, `order`). Orkline's frozen copy keeps every key it does not know, so it reads the same Board safely; it gains
+   the phase when it depends on the `orkboard` package (spec 37 §9).
 4. **The journals and the brief in the code**: each journal's Markdown (spec 127 D) is written into the Board's folder as
    Orkboard's export writes it (spec 126 C), and read back as an export is (spec 126 B: by its refs, never twice), so a tool
    outside Orkboard adds a line in that format and Orkboard takes it in; the project's brief beside them (the memory bank's
@@ -6821,8 +6822,7 @@ was asked. So:
       documentation.
     Done when a cloud session with nothing of Orkboard installed, in a clone of this repository, takes one of its goals by the
     rules and Orkboard then reads what it did. It is H1's test in the open (`docs/hypotheses.md`: specs handed to any agent).
-18. **Built** by spec 151: **A.** the phase in the page (and Orkline the same day); **B.** the journals and the brief in the
-    code; **C.** the rules and the roles; **D.** taking a goal; **E.** `orkboard` from a terminal and `orkboard check`; **F.** a
+18. **Built** by spec 151: **A.** the phase in the page; **B.** the journals and the brief in the code; **C.** the rules and the roles; **D.** taking a goal; **E.** `orkboard` from a terminal and `orkboard check`; **F.** a
     public repository and a goal kept off it; **H.** Orkboard's own repository on its Board (17); **G.** the trial, on it, last.
     The MCP server is not this spec.
 The owner's call.
