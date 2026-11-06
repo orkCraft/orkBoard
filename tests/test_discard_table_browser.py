@@ -324,6 +324,22 @@ def test_the_pile_leans_and_rises_on_hover_like_a_card(gui):
     assert not log, "\n".join(log)
 
 
+def test_ready_for_main_and_its_to_main_lie_above_done_not_yet_seen(gui):
+    """Spec 155 G.4: with goals done and goals ready, the discard's face shows *Ready for main* with its **To main** first, *Done, not yet seen* under it."""
+    pg, host, log = open_hand(gui)
+    try:
+        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()
+        pane = pg.locator("#table-pane")
+        ready, done = pane.get_by_role("region", name="Ready for main"), pane.get_by_role("region", name="Done, not yet seen")
+        ready.wait_for(timeout=WAIT_MS)
+        done.wait_for(timeout=WAIT_MS)
+        assert ready.locator("[data-to-main]").bounding_box()["y"] < done.bounding_box()["y"]
+        assert ready.bounding_box()["y"] < done.bounding_box()["y"]
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
 def test_the_discard_is_seen_through_the_result_and_leaves_the_pile(gui):
     pg, host, log = open_hand(gui)
     try:

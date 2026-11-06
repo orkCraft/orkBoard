@@ -3,6 +3,7 @@ outside followed (the state moved, a run stopped, the line said, the event logge
 No model is ever called: the tools are fakes."""
 from __future__ import annotations
 
+import re
 import json
 import subprocess
 from pathlib import Path
@@ -348,3 +349,36 @@ def test_the_schema_is_3_and_a_page_of_schema_1_or_2_is_read_as_it_is_and_writte
         assert old.get("schema") == older and goal_phase.phase_of_page(old) == "new" and spec_sections.proof_of("a line of a v1 page") == ""
     goal_phase.mirror(root, host.ideas.state_dir)
     assert ideas.idea_page(root, slug).get("schema") == "3"
+
+
+def test_a_page_of_schema_1_whose_phase_is_unchanged_is_not_written_only_to_move_its_schema(host):
+    """Spec 155 G.1 (decisions §260.8): the Board writes a page when a key other than `schema` changes; the page it does write gets today's schema."""
+    root, slug = _goal(host)
+    sd = host.ideas.state_dir
+    assert goal_phase.mirror(root, sd) == [slug]
+    page = ideas.idea_page(root, slug)
+    page.set("schema", "1")
+    ideas._write(root / ideas.IDEAS / f"{slug}.md", page.text())
+    assert goal_phase.mirror(root, sd) == [] and ideas.idea_page(root, slug).get("schema") == "1"
+    ideas.save_state(sd, slug, state="talk")
+    assert goal_phase.mirror(root, sd) == [slug] and ideas.idea_page(root, slug).get("schema") == "3"
+
+
+def test_a_done_page_new_to_this_machine_is_seen_in_history_and_makes_no_commit_note(host):
+    """Spec 155 G.2: a goal done before this machine read it has `seen_at` at once, so it is not in the discard; another phase is moved as before."""
+    root, slug = _goal(host)
+    sd = host.ideas.state_dir
+    host.ideas.tree_flush(force=True)
+    _commit_outside(host, "done-before", lambda t: "---\nowner: board\nkind: idea\ntrack: general\norder: 8\nphase: done\nby: Cursor\n---\n# Done before\n\n## Gist\nOld.\n")
+    _commit_outside(host, "spec-before", lambda t: "---\nowner: board\nkind: idea\ntrack: general\norder: 9\nphase: spec\nby: Cursor\n---\n# Spec before\n\n## Gist\nNew.\n")
+    tree = host.ideas._board_tree
+    notes = []
+    real = tree.note
+    tree.note = lambda title, what, at: (notes.append((title, what)), real(title, what, at))[1]
+    with tree.git.lock:
+        tree.follow()
+    host.ideas.phase_moved(tree)
+    st = ideas.state(sd, "done-before")
+    assert st["state"] == "done" and st["phase_written"] == "done" and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d", st["seen_at"])
+    assert notes == [("Spec before", "moved")]                                                  # the goal done before makes no note for a commit
+    assert ideas.state(sd, "spec-before")["seen_at"] == ""

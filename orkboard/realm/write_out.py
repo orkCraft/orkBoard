@@ -240,9 +240,11 @@ def journals_into(state_dir: Path, parties: list[dict], folder: Path) -> int:
 
 
 def brief_into(root: Path, state_dir: Path, board: Path, folder: Path) -> bool:
-    """`projectbrief.md`'s text written as `<folder>/project.md` when it differs (spec 151 B.3: read by a tool, never back by Orkboard); whether it was written."""
-    text = write_out_bank.pages(root, state_dir, board)["projectbrief.md"]
+    """`projectbrief.md`'s text written as `<folder>/project.md` when it differs (spec 151 B.3: read by a tool, never back by Orkboard), and not at all while every part of the brief is empty (spec 155 G.3); whether it was written."""
     f = Path(folder) / "project.md"
+    if not f.is_file() and write_out_bank.brief_is_empty(state_dir, board):     # nothing to say: no file (spec 155 G.3)
+        return False
+    text = write_out_bank.pages(root, state_dir, board)["projectbrief.md"]
     try:
         if f.is_file():
             old = f.read_text("utf-8")
