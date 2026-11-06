@@ -27,31 +27,33 @@ export const stageWord = (core, leader, band) => (core.st.roles?.stages?.[leader
 /** The builders and checkers of a team, in its order: the candidates a size seats from. */
 export const recOf = (core, team) => ({ build: team.filter((s) => bandOf(core, s) === "build"), check: team.filter((s) => bandOf(core, s) === "check") });
 
-/** The team a size gives a recipe's candidates (`rec`: {build, check}, the most needed first): Lean the leader alone, Standard the first builder, Full the first builder and the first checker (a seat a
- *  stage: `seats`); no size ("") the whole party. */
+/** The team a size gives a recipe's candidates (`rec`: {build, check}, the most needed first): Lean the first who does (a party holds one who does besides its
+ *  leader, spec 152 A.3), Standard the first builder, Full the first builder and the first checker (a seat a stage: `seats`); no size ("") the whole party. */
 export function sizedTeam(rec, size, seats = { build: 1, check: 1 }) {
   const build = (rec.build || []).slice(0, seats.build), check = (rec.check || []).slice(0, seats.check);
-  return size === "lean" ? [] : size === "standard" ? build : [...build, ...check];
+  return size === "lean" ? (rec.build || []).slice(0, 1) : size === "standard" ? build : [...build, ...check];
 }
 
-/** `{agent: tier}` a size gives a party's seats (realm/party_recipes.py `tiers_for`): Lean every seat Seasoned; Standard the leader Veteran and the first builder Seasoned; Full the leader and the
- *  checkers Veteran, the builders Seasoned. The Taskmaster is no seat. No size: none (the library's tiers stand). */
+/** `{agent: tier}` a size gives a party's seats (realm/party_recipes.py `tiers_for`, spec 152 A.1): the leader's tier is its own at every size, Veteran (the
+ *  Release manager Seasoned); Lean those who do Seasoned; Standard the first builder Seasoned; Full the checkers Veteran, the builders Seasoned. The Taskmaster is no
+ *  seat. No size: none (the library's tiers stand). */
 export function tiersFor(core, leader, team, size) {
   if (!SIZE_IDS.includes(size)) return {};
   const lead = leader && leader !== TASKMASTER ? [leader] : [], build = team.filter((s) => bandOf(core, s) === "build"), check = team.filter((s) => bandOf(core, s) === "check");
-  const put = (ids, tier) => ids.map((s) => [s, tier]);
-  if (size === "lean") return Object.fromEntries(put([...lead, ...team], "warrior"));
-  if (size === "standard") return Object.fromEntries([...put(lead, "elder"), ...put(build.slice(0, 1), "warrior")]);
-  return Object.fromEntries([...put(lead, "elder"), ...put(build, "warrior"), ...put(check, "elder")]);
+  const put = (ids, tier) => ids.map((s) => [s, tier]), leads = put(lead, leader === "release-manager" ? "warrior" : "elder");
+  if (size === "lean") return Object.fromEntries([...leads, ...put(team, "warrior")]);
+  if (size === "standard") return Object.fromEntries([...leads, ...put(build.slice(0, 1), "warrior")]);
+  return Object.fromEntries([...leads, ...put(build, "warrior"), ...put(check, "elder")]);
 }
 
 /** The tier a seat wears: the size's, else the library's. */
 export const tierOf = (core, id, tiers) => tiers[id] || agentOf(core, id)?.tier || "warrior";
 
-/** The size's line under the switch (spec 81 §0): *One agent, Seasoned* · *3 agents: the leader Veteran, the rest Seasoned* · *4 agents, Seasoned and up*. */
+/** The size's line under the switch (spec 81 §0, spec 152 A.1): *2 agents: the leader Veteran, the one who does Seasoned* · *3 agents: the leader Veteran, the rest
+ *  Seasoned* · *4 agents, Seasoned and up*. */
 export function sizeWords(size, agents) {
   const n = agents === 1 ? "One agent" : `${agents} agents`;
-  return size === "lean" ? `${n}, Seasoned` : size === "standard" ? `${n}: the leader Veteran, the rest Seasoned` : size === "full" ? `${n}, Seasoned and up` : "";
+  return size === "lean" ? `${n}: the leader Veteran, the one who does Seasoned` : size === "standard" ? `${n}: the leader Veteran, the rest Seasoned` : size === "full" ? `${n}, Seasoned and up` : "";
 }
 
 /** The presets of an older host, from `ideas.roles`: Ideation and Release for the stages, the crafts, the Taskmaster alone. */

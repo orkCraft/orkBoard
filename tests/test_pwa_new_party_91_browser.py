@@ -130,8 +130,8 @@ async def test_a_stage_preset_fills_the_bands_a_size_changes_seats_and_tiers_at_
         assert (await tier(sheet, "architect"), await tier(sheet, "grunt"), await tier(sheet, "reviewer")) == ("elder", "warrior", "elder")
         assert norm(await sheet.locator(".size-says").inner_text()).startswith("5 agents, Seasoned and up") and norm(await sheet.locator('[data-foot="agents"]').inner_text()).startswith("5 agents ·")
         await size(sheet, "Lean")
-        assert (await seats(sheet, "build"), await seats(sheet, "check")) == ([], []) and await tier(sheet, "architect") == "warrior"
-        assert norm(await sheet.locator(".size-says").inner_text()).startswith("One agent, Seasoned")
+        assert (await seats(sheet, "build"), await seats(sheet, "check")) == (["grunt"], []) and await tier(sheet, "architect") == "elder"      # one who does; the leader's tier its own (spec 152 A)
+        assert norm(await sheet.locator(".size-says").inner_text()).startswith("2 agents: the leader Veteran, the one who does Seasoned")
         await size(sheet, "Standard")
         assert await seats(sheet, "build") == ["grunt", "tester"] and await tier(sheet, "architect") == "elder" and await tier(sheet, "grunt") == "warrior"
         # take Grunt out, put another in from the band's sheet
