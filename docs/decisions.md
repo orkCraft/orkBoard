@@ -7042,3 +7042,80 @@ through. So:
 5. **Built** with this decision: `realm/agent_rules_text.py` (the block, BOARD.md, the conductor), `gui/board_cli_goals.py`
    (`--decided-by`), `realm/board_check.py` (`reference_exists`, the finding); this repository's files written again.
 The owner's call.
+
+## 260. One card picked, on either side; the table follows its phase; the edge goes: the discard is the Release column at the window's right, Live and Release tabs again, the die and a drum of potions in the hand under it, Stop all said in words (6 November 2026, the owner)
+
+Changes: 126.4 (a phase gone by opened by its mark), 176.2 and 177.8 (the potions' rows), 177.1 (the default's frame),
+188.1–2 (Release and Live not tabs at the wide width), 206.4 and spec 128 B (a face-down card not picked, the pile's list),
+232.4 (the empty slot's place), 238.2–3 as 254.7 changed them, 246.1 and 254.4 (Stop all and Resume on the die's faces),
+254.3 (the table's edge), 254.7 (the past held by the lich, the pyramid); spec 150 D and E2.2–E2.3.
+
+Why: the owner, as designer and product manager: *the table's interface is too hard: the goal's phase switches, a cross for
+the clean table, a card picked in the discard shows another table altogether, a back button*. Read in the page: three states
+of their own (`frame/state.js` `picked`, `over`, `lifted`) and the tab, mixed freely, so neither ← nor × says where it goes;
+the phases in the pane's title are four marks of which three open a page over the pane and one opens nothing; the discard
+pressed opens a view of its own over the table; a face-down card in the column cannot be picked and lifts its pile's list. In
+the edge (spec 150 D) eight objects ask three questions twice or thrice: *ready for main* at the discard's foot, the open ring
+and the discard's view; *the past* at the lich, its line, the pyramid and the discard; the lich opens the past, not Release's
+table; the die holds Play, Stop all and Resume, two of them on faces to be read in 3D, a safety control among them; the ring,
+the largest object, sleeps most of the time. The owner's proposal: **one card picked at most, from the left or the right**, in
+any phase, drawn plainly; the table the whole project's with none, the picked card's through a leader that works on it, else
+that leader grey. Then, from the audit, the owner's yes on each: the portal and the discard one object, the past deeper in it,
+Release and Live tabs again, Stop all off the die, the potions kept but their keeping hidden; then the potions as a drum, the
+die left of it, both the discard's width and the hand's height, and the discard always there, through the open tab's eyes.
+So:
+1. **One card picked, or none.** A goal's card in the Orkmaster's column (any pile, face down too) or in the discard (a goal
+   done, ready for main, or of the past) is picked by a press; one at a time across both sides. **Picked, it is drawn plainly**:
+   risen, its edge in the ink, its rune and title said again in the pane's title. The other cards are not dimmed.
+2. **The pick is put away by the same card pressed again, Esc, or a press on an empty place of the column or the discard.** No
+   × for it; no ← for it. The pick is kept in the page's address, so the browser's and the phone's back put it away too. *Back*
+   (←) is left only for a step down from the table into a file or a diff, and back from it.
+3. **The tabs while a card is picked**: the Orkmaster's always, and the tabs of the leaders on its route; **the others grey**.
+   A grey tab hovered says *<Leader's party> is not on this goal. Press to leave it and look at <party>'s table.*; pressed, it
+   puts the pick away and opens that tab: no dead press. A card picked while the open tab is not on its route opens the
+   Orkmaster's tab. A goal not routed yet greys every leader: it is the Orkmaster's alone.
+4. **The table follows the picked card's phase** (this changes §126.4): through the Orkmaster, its route and what it costs while
+   new, its plan once at work; through a leader, its say while in Talk, its section while in Spec, what it will change while at
+   work (§206.4, kept), what it changed against what was promised once done (§206.8, kept). **The phases in the pane's title
+   are a mark, not buttons**: *Talk · Spec · Work · Done*, the one now marked; what an earlier phase said lies folded at the
+   table's foot, *Earlier: Talk · Spec*, opened where it lies.
+5. **A face-down card is picked as any card** (this changes §206.4's and spec 128 B's press): a pile hovered fans its backs
+   (one back, §254.5), any of them pressed is picked; the pile's list over the pane goes; the order is changed by dragging, as
+   today. §236's tuck stays.
+6. **The hand is not picked from**: a hand's card lifted (to answer it) picks its goal as well, so the table shows what the
+   answer is about; the picked goal's cards in the hand are marked. One pick still.
+7. **The discard is the Release column, at the window's right, on every tab** (this changes §254.3; §176.3's *on every tab, a
+   party's its own* comes back): the frame's last column, a lane wide, under **Release's tab, the row's last; Live's tab before
+   it** (this changes §188.1–2: at the wide width Release and Live are tabs and their heads leave the ring). **It shows the done
+   through the open tab's eyes**: on the Orkmaster's tab the project's, on a party's tab that party's (a goal is a party's when
+   its route held it), on Release's tab what is ready for main and the versions; its label *Discard*, *Tech's discard*. The
+   pick's rule 3 keeps it whole: a tab open while a card is picked is on its route, so its discard holds the card.
+8. **The portal is drawn round the card ready for main**, at the top of the discard, only while one is ready, checked or going
+   in; **To main is the picked card's act**; picked, Release's table shows its checks (the skeletons, now on the table with
+   their words) and the rite plays at the discard's top. Nothing ready, there is no ring.
+9. **The past lies deeper in the discard**: under the goals done and not yet seen, the earlier ones by version (*Unreleased*,
+   then a deck a version), newest first, through the open tab's eyes (the chronicle's `party`, spec 150 E1, kept). **The
+   pyramid, the lich's line and the past over the pane go.** A decision newer than a party's last look is a mark on its tab.
+10. **No edge**: `frame-edge` goes; the table gains its width less the Release column's.
+11. **The hand's right end, under the discard and as wide as it**: **the die**, then **the drum of potions**, both within the
+    hand's shown height (100 px at the wide width). The die is drawn at 2 px a cell (48 × 60, orkUI's new `.small`), its word
+    under it.
+12. **Stop all is said in words** (this changes §246.1 and §254.4): where the die's word is, while the orks work, the button
+    *Stop all*; after it, *Resume*; else the word *Play*. The die's front face is a die's face again. §246.2 holds: the Board turns
+    the die, never the person.
+13. **The potions are a drum** (this changes §176.2, §177.1's frame and §177.8): **in front the active tool's potion** (the
+    one the open tab's work, or the picked card's, goes to), at its size of §192 (kept); **beside it its two neighbours**, at 2 px
+    a cell, darker and half behind it; the rest behind, unseen. **The drum turns by itself** when the active tool changes (one
+    motion, none under reduced motion), **never by the person**: what is in front is never a choice made by a slip. A tool at
+    the warn or the danger level takes a neighbour's place, in its colour. **Hovered or focused, the drum unrolls** into a row
+    over the hand: every potion with its shares and its *back 14:00*, and at its end the empty slot (this moves §232.4's slot).
+    A potion pressed lifts its tool's card as today; the tool a party works on is chosen there. The default's frame goes: the
+    front is the default.
+14. **Unchanged**: the narrow page and the phone keep their layout (they follow 1–6 through the same state); the runes, the
+    rite, the moon of a night's goal, §192's sizes and windows, §236's tuck, the conflict card (§254.6), the first open's
+    four cards (§254.8, its potions' and portal's places read again from 10 to 13).
+15. **The words** (`TERMS`): *<party> is not on this goal. Press to leave it and look at <party>'s table.*; *Earlier*;
+    *<party>'s discard*; *Stop all*, *Resume*, *Play* as today.
+16. **Built** by spec 155: **A.** orkUI 0.31.0 (the small die, the drum), then copied; **B.** one pick; **C.** the table by the
+    phase; **D.** the Release column and no edge; **E.** the hand's right end.
+The owner's call.
