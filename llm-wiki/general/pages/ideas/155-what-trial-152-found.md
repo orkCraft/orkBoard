@@ -6,8 +6,9 @@ order: 110
 size:
 priority: normal
 short: What trial 152 found
-phase: work
+phase: done
 route: tech
+gate: f033f63 · 67 files · green
 spec: docs/specs/155-what-trial-152-found.md
 decisions: 260
 by: person
