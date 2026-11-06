@@ -2,8 +2,8 @@
 seat: orkmaster
 craft: none
 race: ork
-schema: 1
-hash: 17a65001ef78
+schema: 2
+hash: 0b297b20c200
 ---
 # The Orkmaster
 

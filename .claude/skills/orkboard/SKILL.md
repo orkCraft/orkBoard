@@ -1,8 +1,8 @@
 ---
 name: orkboard
 description: "Work a goal of this project's Board: take it, route it, hold Talk, write its spec, do it, run the gate, and stop at what the person decides"
-schema: 1
-hash: 91ce3d4fe72c
+schema: 2
+hash: 7016be9394bb
 ---
 # Work a goal of this project's Board
 

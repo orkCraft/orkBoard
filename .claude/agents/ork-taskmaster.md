@@ -1,8 +1,8 @@
 ---
 name: ork-taskmaster
 description: "Plans a goal's work on this project's Board in stages and keeps it. Use it for a goal in phase work."
-schema: 1
-hash: 1e435e0bc8e9
+schema: 2
+hash: 7326b6ca3d2b
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/taskmaster.md`, which is who you are on this project's Board. What follows is the same text.
 

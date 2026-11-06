@@ -21,7 +21,7 @@ A leader leads and accepts
 ## Stages
 - [x] A. The leader leads, one does
 - [x] B. A step accepted by its leader
-- [ ] C. A base accepted early
-- [ ] D. The rules, the roles and the words
+- [x] C. A base accepted early
+- [x] D. The rules, the roles and the words
 - [ ] E. Measured
 - [x] F. A Done when line says how it is proven

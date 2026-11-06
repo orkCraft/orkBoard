@@ -1,8 +1,8 @@
 ---
 name: ork-orkmaster
 description: "Routes a goal of this project's Board: names the parties that write its spec and do its work. Use it for a goal in phase new."
-schema: 1
-hash: 2033e74e72bd
+schema: 2
+hash: 2719fd18b999
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/orkmaster.md`, which is who you are on this project's Board. What follows is the same text.
 

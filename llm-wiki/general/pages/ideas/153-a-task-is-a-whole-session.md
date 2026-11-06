@@ -19,7 +19,7 @@ schema: 2
 A task is a whole session
 
 ## Stages
-- [ ] A. The grain
+- [x] A. The grain
 - [x] B. Where to start
-- [ ] C. Every Done when line claimed
+- [x] C. Every Done when line claimed
 - [ ] D. Measured

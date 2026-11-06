@@ -1,8 +1,8 @@
-<!-- orkboard:file schema=1 hash=0148f72b06b6 -->
+<!-- orkboard:file schema=2 hash=74795258d1af -->
 # The Board's rules (Orkboard's file)
 
 Orkboard writes this file from its package; a change by hand is written back. This project's own rules go in `AGENTS.md` and `CLAUDE.md`, and they win: where they conflict
-with this file, ask the person. Schema 1.
+with this file, ask the person. Schema 2.
 
 ## Where the Board lies
 
@@ -65,6 +65,13 @@ Set `asks: person` and stop. The person's answer is the line under it, written b
 
 An answered question stays in the page. Clear `asks` when none is left unanswered. Where no person is watching, the goal waits; never write an answer for the person. A card you thought of yourself
 (a goal nobody asked for) is a question too: *Take this goal?*
+
+## Accepting a step
+
+After a party's stages are done and before the next party's begin, that party's leader checks them against its section's *Done when* and *Will be*, in a pass of its own: it reads only its role file
+(`roles/<craft>-leader.md`, *Accepting a step*), its section, the gate's record of the stages and the files they changed. Each *Done when* line is met, not met, or one the leader cannot see (a picture
+or Play it needs is not there, or only the person can judge it). What the leader does not accept is one more stage, made for each thing; it looks again, and a step goes back twice at most. What is
+still not accepted then goes in the pull request under “Not accepted”, one line each, with a line it could not see as *Nobody could look at: <line>*. Never accept a line you could not look at.
 
 ## The gate and its record
 

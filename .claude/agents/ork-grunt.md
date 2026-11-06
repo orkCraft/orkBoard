@@ -1,8 +1,8 @@
 ---
 name: ork-grunt
 description: "Does one task of a goal's work on this project's Board, in a branch of its own. Use it for a task of a goal in phase work."
-schema: 1
-hash: 58050a7dc812
+schema: 2
+hash: 7dfc6d503e67
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/grunt.md`, which is who you are on this project's Board. What follows is the same text.
 

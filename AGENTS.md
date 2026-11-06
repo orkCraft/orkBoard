@@ -1,6 +1,6 @@
 This project's own rules go above or below Orkboard's block.
 
-<!-- orkboard:begin schema=1 hash=420c444a1198 -->
+<!-- orkboard:begin schema=2 hash=c3796fd20460 -->
 ## The Board (Orkboard)
 
 This project's goals, their specs and its decisions are files, so any AI tool works them as Orkboard does.
@@ -13,7 +13,10 @@ This project's goals, their specs and its decisions are files, so any AI tool wo
   1. Take it first (`uvx --from git+https://github.com/orkCraft/orkBoard orkboard goal take <slug>`, or BOARD.md's way). A goal another has taken, or on Hold, is not yours.
   2. Route it as the Orkmaster does (`llm-wiki/general/roles/orkmaster.md`): the parties that write its spec and do its work, in `route`.
   3. Talk: each leader of the route says its view, in a pass of its own with only its role file and the page.
-  4. Spec: the leaders write their sections. Work: the stages, in a branch of your own.
+  4. Spec: the leaders write their sections. Work: the stages, in a branch of your own. Accept: after a party's stages, before
+     the next party's, its leader checks them against its section's Done when and Will be, in a pass of its own (its role file,
+     its section, the gate's record, the files they changed). What it does not accept is one more stage, twice at most; what is
+     still left goes in the pull request under “Not accepted”.
   5. Done: only with the gate green (`[gate]` in `orkcraft.toml`: `always`, then the tests of what you touched).
      Write its record in `gate`, open a pull request. Main is the person's.
 - **The person decides; you stop and ask**: a question no leader can settle, a choice between ways, a cost above what was
