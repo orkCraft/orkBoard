@@ -1,14 +1,14 @@
 # 155. One card picked, on either side; the table by the phase; the Release column at the right; the die and the drum in the hand
 
-Decision §260. **Builds:** the cheaper model, a part a session, each in its own worktree, reviewed by the spec's author and
+Decisions §260, §261. **Builds:** the cheaper model, a part a session, each in its own worktree, reviewed by the spec's author and
 merged into `main` on the critical tests and the part's own (CLAUDE.md, alpha). **Waves** (parts of a wave share no file):
-**1** A, B · **2** C, D · **3** E. The page's paths are under `orkboard/gui/static/js/`. No mockup: the owner took the idea
+**1** A, B · **2** C · **3** D · **4** E (§261.5: C and D share `table/pane.js`). The page's paths are under `orkboard/gui/static/js/`. No mockup: the owner took the idea
 from its words (§260's *Why*).
 
 | Part | What | Where (and its tests) |
 |---|---|---|
 | **A. orkUI 0.31.0** | the die at 2 px a cell (`.small`); the drum of potions (`.ork-drum`) | orkUI (`office/die/`, a new `office/drum/`), then `python -m orkboard.design.orkui <orkUI>`; `tests/test_design_system.py` |
-| **B. One pick** | one card picked from the column (face down too) or the hand's lifted card's goal; put away by itself, Esc, an empty press or the address; the tabs grey off the route; no × | `frame/state.js`, `table/column.js`, `table/piles.js`, `table/fan.js`, `table/tabs.js`, `table/pane.js` (`Title`), `hand/stacks.js`, `realm/lexicon.py`; `test_column_browser.py`, `test_column_fan_browser.py`, `test_pile_waits_browser.py`, a new `test_one_pick_browser.py`, `test_gui_wording.py` |
+| **B. One pick** | one card picked from the column (face down too) or the hand's lifted card's goal; put away by itself, Esc, an empty press or the address; the tabs grey off the route; no × | `frame/state.js`, `table/table.js`, `table/column.js`, `table/piles.js`, `table/fan.js`, `table/tabs.js`, `table/pane.js` (`Title`), `hand/stacks.js`, `realm/lexicon.py`; `test_column_browser.py`, `test_column_fan_browser.py`, `test_pile_waits_browser.py`, a new `test_one_pick_browser.py`, `test_gui_wording.py` |
 | **C. The table by the phase** | the table shows the picked card's phase at each tab; the phases a mark; *Earlier* folded | `table/pane.js` (`Phases`), `table/goalview.js`, `table/talkpage.js`, `table/specpage.js`, `table/qualitypage.js`, `table/boardmap.js`, `hand/routecard.js` (read only); `test_goal_phase.py`, a new `test_table_by_phase_browser.py` |
 | **D. The Release column, no edge** | Live and Release tabs at the row's end; the discard a lane under Release's tab, on every tab, through its eyes; the portal round the ready card; the past deeper in it; the edge, the pyramid and the lich's line gone | `frame/frame.css`, `frame/frame.js`, `frame/edge.js` + `edge.css` (gone), `table/tabs.js`, `table/data.js` (`roadParties`), `table/road.js`, `table/discard.js` + `discard.css`, `table/portal.js` + `portal.css`, `table/checks.js`, `table/pyramid.js` + `pyramid.css` (gone), `table/chronicle.js` and its parts, `table/pastseen.js`, `table/tabmarks.js`; `test_discard_table_browser.py`, `test_portal_browser.py`, `test_road_browser.py`, `test_chronicle_browser.py`, `test_table_edge_browser.py` (made the Release column's), `test_pyramid_browser.py` (gone) |
 | **E. The hand's right end** | the small die and the drum under the discard, the hand's height; Stop all and Resume in words under the die; the drum turned by the Board, unrolled on hover | `hand/playdie.js`, `hand/mana.js`, `hand/mana.css`, `hand/windows.js`, `hand/addtool.js`, `hand/hand.css`; `test_play_die_browser.py`, `test_hand_mana_browser.py`, `test_mana_two_windows_browser.py`, `test_mana_notice_browser.py`, `test_hand_desktop_browser.py` |
@@ -22,10 +22,12 @@ Made in orkUI (`github.com/orkCraft/orkUI`), then copied:
    Orkboard stops using them (E.3).
 2. **The drum** (`office/drum/`, `.ork-drum`): a row of `.ork-potion`s laid as a drum seen from the front: **the front one at its
    own size** (3 px a cell, one of the four bottles of 0.23.0); **its two neighbours at `.small`** (2 px a cell), each half behind
-   it, at brightness 0.62; the others hidden. `--ork-drum-front` names the front's index; changed, the drum turns: each potion
+   it, at brightness 0.62; the others hidden. **A neighbour `.is-alert`** (§261.1) is at full brightness, not behind the front,
+   with room under it for its share in words. `--ork-drum-front` names the front's index; changed, the drum turns: each potion
    slides one place round (a transform on `--ork-motion-base`; none under `prefers-reduced-motion`). **`.is-open`** lays the drum
    as a row, every potion at its own size, nothing dimmed. The box at rest is at most **88 × 90** (the front's 42 and two halves
-   of 28, its mark above, its share under).
+   of 28, its mark above, its share under), and at most **124 × 90** with an alert neighbour (the die's 48 and a gap beside it
+   stay within the Release column's 180).
 3. Tests: `test_design_system.py` holds the copy (the version, the die's `.small` box, the drum's sheet with no colour of its own).
 
 ## B. One pick (§260.1–3, §260.5–6)
@@ -34,6 +36,10 @@ Made in orkUI (`github.com/orkCraft/orkUI`), then copied:
    with nothing open over the pane, puts it away; a press on an empty place of the column puts it away. **The address**: the pick
    is written as `#goal=<slug>` (`history.replaceState` when it changes from a pick to another, `pushState` from none to one), read
    on load and on `popstate`; a slug the snapshot does not have reads as none. `lifted` stays for a hand's card only (B.4).
+   **One writer** (§261.4): only `frame/state.js` writes or reads `#goal=` and handles the pick's Esc; `table/table.js` drops its
+   own Esc for the pick and its effect that opens the picked goal's party's tab (today about its line 72) and calls state.js's
+   instead. Its narrow back entry (`useBackButton`) keeps its order with the pick's: a file opened over a pick closes on the
+   first back, the pick on the second.
 2. **The column** (`table/column.js`, `table/piles.js`, `table/fan.js`): **a face-down card is picked by a press**, as a face-up
    one; the pile's list over the pane goes (its *Next* and *Remove* stay in the goal's menu; the order by dragging as today).
    **A pile hovered or focused fans its backs** (fan.js's fan, the one back), so each is reached; §236's tuck and slide stay for
@@ -54,6 +60,7 @@ Made in orkUI (`github.com/orkCraft/orkUI`), then copied:
    address holds `#goal=`); the same card pressed again, Esc, an empty press of the column and the browser's back each put it
    away; no `[data-unpick]` in the title; a goal routed to Tech and Design greys Product's tab, whose press leaves the pick and
    opens Product; a pick from Design's tab to a goal without Design opens the Orkmaster's tab; a hand's card lifted picks its goal.
+   At 390 px: a pick, then a file opened over it, then the browser's back twice closes the file, then the pick (§261.4).
    `test_column_browser.py` and `test_column_fan_browser.py` made to the press and the fan; `test_pile_waits_browser.py` without
    the pile's list.
 
@@ -122,8 +129,9 @@ Made in orkUI (`github.com/orkCraft/orkUI`), then copied:
    button *Resume***. The front face's marks and the quarter turn (`is-turning`, `right-resume`) go.
 4. **The drum** (`hand/mana.js`, `mana.css`): orkUI's `.ork-drum`. **The front** is the active tool: the picked goal's work's tool
    while a goal at work is picked, else the open tab's (§177.1's rule, its frame gone); **the neighbours** by the person's order
-   (`tools.order`) round it, **except that a tool at the warn or the danger level** (`levelOf`) takes the nearer neighbour's place.
-   The front's share under it as today (*62%*, *back 14:00*, *week 80%* by §192's rules); the neighbours have no words. The drum
+   (`tools.order`) round it, **except that a tool at the warn or the danger level** (`levelOf`) takes the nearer neighbour's place,
+   **at full brightness (`.is-alert`) with its share in words under it** in its level's colour (§261.1: *8%*, *back 14:00*).
+   The front's share under it as today (*62%*, *back 14:00*, *week 80%* by §192's rules); a neighbour at rest has no words. The drum
    turns when the front changes; nothing the person does turns it.
 5. **Unrolled** (`.is-open`, hover or focus, Esc or the pointer leaving folds it): a row over the hand, right-aligned to the
    window, every potion with its mark and shares (a lifted card's cost hatched off its tool's top as today), and at
@@ -133,15 +141,15 @@ Made in orkUI (`github.com/orkCraft/orkUI`), then copied:
 6. **More than six tools**: the row unrolled shows them all, two rows when they do not fit; the drum keeps three in sight.
 7. Tests: `test_play_die_browser.py` (the die's box 48 × 60; *Stop all* a button under it only while a run is on; *Resume* after
    it; no `.front-stop`); `test_hand_mana_browser.py` (three potions drawn at rest whatever the count; the front the open tab's
-   tool, then the picked goal's; a tool in danger beside the front; hover unrolls every potion and the empty slot); the die and
+   tool, then the picked goal's; a tool in danger beside the front, not dimmed, its share in its words; hover unrolls every potion and the empty slot); the die and
    the drum inside `--hc-shown` and inside the Release column's width at 1280 × 800.
 
 ## Order of building, and what each part must not do
 
 - **A** first in orkUI; nothing here draws a die at 2 px or a drum before it is copied.
-- **B** and **A** together (no shared file). **C** after B (the title's ×, the pick). **D** after B (the discard's cards are
-  picked) and beside C (they share no file: C does not touch `discard.js`, D does not touch `Phases`). **E** after A and D (the
-  hand's last track is the Release column).
+- **B** and **A** together (no shared file). **C** after B (the title's ×, the pick). **D** after C (both change
+  `table/pane.js`: C its `Phases`, D the `discard` view it draws; §261.5). **E** after A and D (the hand's last track is the
+  Release column).
 - No part changes the narrow page's or the phone's layout; each runs the 390 px test of its modules.
 - No part adds a list column, a drawer or a count of what waits (CLAUDE.md's frame); the discard is cards, the past decks.
 - The host is not touched but for `ideas.seen` on a pick (D.3), which it already has.

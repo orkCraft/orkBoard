@@ -6,11 +6,10 @@ order: 3
 size:
 priority: normal
 short: One card picked
-phase: talk
+phase: work
 spec: docs/specs/155-one-pick-and-the-release-column.md
-decisions: 260
+decisions: 260, 261
 route: design, product, tech
-asks: person
 by: person
 schema: 3
 ---
@@ -64,7 +63,10 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 
 ## Open questions
 - How is a tool in danger shown? (**at full brightness, its share in words** / dimmed, its colour only, as §260.13) — a tool running out is money: said plainly, not by colour alone (WCAG 1.4.1)
+  - Answered: at full brightness, its share in words (the person, 2026-11-06)
 - Split the Release column off this goal? (**B and C now, D and E after a week's use** / all five parts in spec 155's waves) — D and E undo §254's edge built a day ago; the pick alone may make the table plain
+  - Answered: all five parts in spec 155's waves (the person, 2026-11-06)
 - How is the simpler table shown? (**the owner's week, a line in the project's journal** / one Orkline tester watched in the testers' week / not measured) — the frame changed twice in two days; a third needs a signal
+  - Answered: the owner's week, a line in the project's journal; no testers (the person, 2026-11-06)
 - Build C and D one after another? (**C, then D** / C and D side by side, as spec 155's wave 2) — both must change table/pane.js: C its Phases, D the `discard` view it draws (l.114); a wave's parts share no file
   - Answered: C, then D (decided by spec 155, 2026-11-06)
