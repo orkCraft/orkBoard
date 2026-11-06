@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route and Stall</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* An experiment, not a goal (the owner, 6 November 2026): game mechanics that take words and settings away rather than add them.
+   (1) A goal's route drawn on the Orkmaster's table as a path that climbs from the hand to the portal: rows are the phases, columns
+   the parties' lanes, done in ink, ahead dotted, where it stands now circled, a choice between ways a fork the person presses.
+   (2) The same three marks on a leader's table (Design's): the trail, the circle, the fog of what nobody has seen.
+   (3) Standing answers: what answers by itself, laid as goods on a stall over the table, each with its rung of trust; the night
+   offers new ones from how the person answered; a card laid on the fire is forgotten. Every colour, face and size is orkUI's token;
+   the satchel, the hand-drawn circle and the ladder are drawn here first. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); color-scheme: dark; }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+p, h1, h2, h3 { margin: 0; }
+button { font: inherit; }
+.mk-bar { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6); padding-block: var(--ork-4);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar b { font-family: var(--ork-font-pixel); font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 400; }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-2) var(--ork-4); font: var(--ork-type-caption); }
+.mk-bar a { color: var(--ork-ink-muted); }
+.mk-main { padding-block: var(--ork-6); display: flex; flex-direction: column; gap: 56px; }
+.mk-sec { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; scroll-margin-top: 64px; }
+.mk-sec > h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); }
+.mk-line { max-width: 100ch; color: var(--ork-ink-read); }
+.mk-line b { color: var(--ork-ink); }
+.mk-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ork-4) var(--ork-8); max-width: 1120px; }
+.mk-notes p { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-notes p b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 100ch; margin-bottom: var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.scroll-x { overflow-x: auto; max-width: 100%; padding-bottom: var(--ork-2); }
+.pix { font-family: var(--ork-font-pixel); font-size: 10px; line-height: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.hd { image-rendering: pixelated; flex: none; display: block; }
+
+/* ---------- the window: the tabs, the table, the hand, the table's edge ---------- */
+.win { --gut: 56px; --lane: 160px; --gap: 12px; position: relative; width: 930px; background: var(--ork-room); padding: var(--ork-5) var(--ork-5) var(--ork-6); }
+.win__grid { display: grid; grid-template-columns: 748px 150px; column-gap: var(--ork-6); }
+.lanes { display: grid; grid-template-columns: var(--gut) repeat(4, var(--lane)); column-gap: var(--gap); }
+.lanes > :first-child { grid-column: 2; }
+.tab { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: var(--ork-1); height: 82px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.tab__seat { position: relative; display: grid; place-items: end center; }
+.tab__seat .ork-chair { position: absolute; bottom: 2px; }
+.tab__seat img { position: relative; z-index: 1; }
+.tab.open { color: var(--ork-ink); font-weight: 600; }
+.tab small { color: var(--ork-ink-faint); font-weight: 400; }
+.table.ork-table { position: relative; height: 600px; overflow: visible; }
+.table__title { position: absolute; left: 14px; top: 10px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.table__title b { color: var(--ork-ink); font-weight: 600; }
+.route { position: absolute; inset: 0; width: 930px; height: 600px; pointer-events: none; overflow: visible; }
+.route .band { fill: color-mix(in srgb, var(--ork-ink) 3%, transparent); }
+.route .ln { fill: none; stroke-width: 2.5; stroke-linecap: round; transition: opacity var(--ork-motion-base) var(--ork-motion-ease), stroke var(--ork-motion-base); }
+.route .past { stroke: var(--ork-ink-muted); }
+.route .new { stroke: var(--ork-ink); stroke-dasharray: 180; stroke-dashoffset: 180; animation: ink 1.4s var(--ork-motion-ease) .4s forwards; }
+@keyframes ink { to { stroke-dashoffset: 0; } }
+.route .ahead { stroke: var(--ork-ink-faint); stroke-dasharray: 0.1 7; }
+.route .way.is-hover { stroke: var(--ork-ink); }
+.route .way.is-chosen { stroke: var(--ork-ink); stroke-dasharray: 0.1 7; }
+.route .way.is-left { opacity: 0.18; }
+.route .ring { fill: none; stroke: var(--ork-ink); stroke-width: 2.2; stroke-linecap: round; }
+.route .exit { stroke: color-mix(in srgb, var(--ork-portal) 70%, transparent); }
+.rowlab { position: absolute; left: 10px; color: var(--ork-ink-faint); transform: translateY(-50%); }
+
+.nd { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; display: grid; place-items: center; padding: 0; z-index: 2;
+  background: var(--ork-table); border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); color: var(--ork-ink-faint); cursor: default; }
+.nd .ork-sign { width: 20px; height: 20px; }
+.nd.past { background: var(--ork-card); border-color: var(--ork-card-frame); color: var(--ork-ink-muted); }
+.nd.now { background: var(--ork-card); border-color: var(--ork-alert); color: var(--ork-alert); }
+.nd.way { cursor: pointer; }
+.nd.way.is-hover, .nd.way.is-chosen { color: var(--ork-ink); border-color: var(--ork-edge); }
+.nd.way.is-left { opacity: 0.25; }
+.tip { position: absolute; z-index: 5; max-width: 220px; padding: var(--ork-2) var(--ork-3); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-frame);
+  font: var(--ork-type-caption); color: var(--ork-ink-read); pointer-events: none; opacity: 0; transition: opacity var(--ork-motion-quick); }
+.tip.is-on { opacity: 1; }
+.way-lab { position: absolute; z-index: 3; width: 132px; padding: var(--ork-2) var(--ork-3); background: var(--ork-table); border: var(--ork-line) dashed var(--ork-frame);
+  font: var(--ork-type-caption); font-size: 11px; line-height: 14px; color: var(--ork-ink-muted); text-align: left; cursor: pointer; }
+.way-lab b { display: block; color: var(--ork-ink); font-weight: 600; }
+.way-lab.is-hover { border-color: var(--ork-edge); }
+.way-lab.is-chosen { border-style: solid; border-color: var(--ork-ink); }
+.way-lab.is-left { opacity: 0.25; }
+
+/* the first lane's cards in line, and the picked goal the path starts from */
+.mini { position: absolute; width: 64px; height: 90px; padding: var(--ork-2); display: flex; flex-direction: column; justify-content: space-between; z-index: 2;
+  background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch); font: 600 10px/12px var(--ork-font-read); color: var(--ork-ink-read); }
+.mini .ork-elem { align-self: flex-end; }
+.mini.lit { border-color: var(--ork-ink); color: var(--ork-ink); }
+
+/* the hand under the lanes */
+.hand { margin-top: var(--ork-5); height: 196px; align-items: start; }
+.hand > * { justify-self: center; }
+.k.ork-card { position: relative; width: 128px; height: 180px; padding: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-2); flex: none; overflow: hidden; text-align: left;
+  transition: transform var(--ork-motion-base) var(--ork-motion-ease), opacity var(--ork-motion-base) var(--ork-motion-ease); }
+.k.asks { border-color: var(--ork-alert); }
+.k.lit { transform: translateY(-8px); border-color: var(--ork-ink); }
+.k.gone { transform: translate(40px, -60px) rotate(8deg); opacity: 0; }
+.k__top, .k__bot { height: 18px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-width: 0; }
+.k__bot { margin-top: auto; }
+.k__who { display: flex; align-items: center; gap: 3px; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; white-space: nowrap; }
+.k__who img { width: 16px; height: 15px; }
+.k__amt { color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; white-space: nowrap; }
+.k__amt.ask { color: var(--ork-alert); }
+.k__ti { flex: none; font: 600 13px/17px var(--ork-font-read); overflow-wrap: anywhere; }
+.k__win { flex: 1; min-height: 0; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-table); padding: var(--ork-2) var(--ork-3);
+  font: var(--ork-type-caption); font-size: 11px; line-height: 14px; color: var(--ork-ink-read); overflow: hidden; }
+.blank { width: 128px; height: 180px; display: grid; place-items: center; color: var(--ork-ink-faint); font-size: 28px; }
+.after-line { margin-top: var(--ork-3); min-height: 20px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.after-line b { color: var(--ork-ink); font-weight: 600; }
+
+/* the table's edge: the ring, the discard, the die, the satchel, the potions */
+.edge { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--ork-8); padding-top: 120px; }
+.edge__ring { position: relative; width: 125px; height: 125px; }
+.edge__ring .ork-portal-ring { transform: scale(0.651); transform-origin: 0 0; }
+.edge__ring .imp, .edge__ring .lich { position: absolute; left: 50%; transform: translateX(-50%); z-index: 3; }
+.edge__ring .imp { top: -12px; } .edge__ring .lich { bottom: -12px; }
+.pile { position: relative; width: 56px; height: 78px; margin-top: 12px; }
+.pile .ork-card-back { position: absolute; width: 56px; }
+.pile .ork-card-back:nth-child(1) { transform: translate(-3px, 3px) rotate(-4deg); } .pile .ork-card-back:nth-child(2) { transform: rotate(3deg); }
+.die { width: 40px; height: 40px; background: var(--ork-card); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); position: relative; transform: rotate(-8deg); }
+.die i { position: absolute; width: 6px; height: 6px; background: var(--ork-ink); }
+.satchel { display: grid; justify-items: center; gap: var(--ork-1); padding: var(--ork-2); background: none; border: var(--ork-line) solid transparent; color: var(--ork-ink-muted); cursor: pointer; font: var(--ork-type-caption); font-size: 11px; }
+.satchel:hover, .satchel.is-hover { border-color: var(--ork-frame); color: var(--ork-ink); }
+.satchel svg { display: block; shape-rendering: crispEdges; }
+.potions { position: absolute; bottom: 40px; display: flex; gap: var(--ork-4); align-items: flex-end; }
+
+/* ---------- Design's table: the trail through the screens ---------- */
+.trail.ork-table { position: relative; width: 760px; height: 300px; }
+.scr { position: absolute; width: 92px; height: 120px; margin: -60px 0 0 -46px; padding: var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-2); z-index: 2;
+  background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch); font: 600 11px/14px var(--ork-font-read); color: var(--ork-ink-read); }
+.scr__pic { flex: 1; border: var(--ork-line) solid var(--ork-card-frame);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--ork-elem-meadow) 22%, var(--ork-table)), var(--ork-table) 70%); }
+.scr__pic.b { background: linear-gradient(200deg, color-mix(in srgb, var(--ork-elem-ice) 22%, var(--ork-table)), var(--ork-table) 70%); }
+.scr__pic.c { background: linear-gradient(130deg, color-mix(in srgb, var(--ork-elem-dust) 22%, var(--ork-table)), var(--ork-table) 70%); }
+.scr .pin { position: absolute; right: 4px; top: 4px; color: var(--ork-danger); }
+.scr.fog { background: var(--ork-table); border-style: dashed; border-color: var(--ork-edge); color: var(--ork-ink-muted); }
+.scr.fog .scr__pic { border-style: dashed; border-color: var(--ork-frame);
+  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--ork-ink) 5%, transparent) 0 2px, transparent 2px 6px); }
+.fogcloud { position: absolute; inset: 0 0 0 auto; width: 210px; z-index: 3; pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ork-table) 72%, transparent) 45%); }
+
+/* ---------- the stall: Standing answers, over the Orkmaster's table ---------- */
+.stall.ork-table { position: relative; width: 930px; padding: var(--ork-6) var(--ork-8) var(--ork-8); display: flex; flex-direction: column; gap: var(--ork-6); }
+.stall__head { display: flex; align-items: center; gap: var(--ork-4); }
+.stall__head h2 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.stall__head span { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.stall__say { color: var(--ork-ink-read); font: var(--ork-type-caption); max-width: 80ch; margin-top: calc(-1 * var(--ork-3)); }
+.stall__body { display: grid; grid-template-columns: 1fr 176px; gap: var(--ork-8); }
+.shelf { display: flex; flex-direction: column; gap: var(--ork-4); }
+.shelf__lab { font: var(--ork-type-label); color: var(--ork-ink-muted); }
+.shelf__row { display: flex; flex-wrap: wrap; gap: var(--ork-5); align-items: flex-end; min-height: 196px; padding-bottom: var(--ork-3);
+  border-bottom: 3px solid var(--ork-table-rim); }
+.good { display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); }
+.good .k { cursor: pointer; }
+.good .k__ti { font-size: 12px; line-height: 16px; }
+.good small { color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 11px; max-width: 128px; text-align: center; }
+.good__btns { display: flex; gap: var(--ork-2); }
+.good.away { opacity: 0; transform: translateY(12px); transition: opacity var(--ork-motion-base), transform var(--ork-motion-base); }
+.good.burn .k { transform: scale(0.6) rotate(-6deg); opacity: 0; filter: brightness(1.8); transition: all .5s var(--ork-motion-ease); }
+.ladder { display: inline-grid; grid-template-rows: repeat(3, 2px); gap: 3px; width: 12px; height: 16px; padding: 2px 1px; background: none; cursor: pointer;
+  border: 0; border-left: 2px solid var(--ork-edge); border-right: 2px solid var(--ork-edge); }
+.ladder i { display: block; height: 2px; background: var(--ork-frame); }
+.ladder[data-step="1"] i:nth-child(3), .ladder[data-step="2"] i:nth-child(n+2), .ladder[data-step="3"] i { background: var(--ork-ink); }
+.k.by-self { border-color: var(--ork-edge); }
+.side { display: flex; flex-direction: column; gap: var(--ork-6); }
+.fire { width: 128px; height: 180px; margin-inline: auto; display: grid; place-items: center; text-align: center; padding: var(--ork-4);
+  border: 2px dashed color-mix(in srgb, var(--ork-danger) 45%, transparent); color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; cursor: pointer; }
+.fire svg { display: block; margin: 0 auto var(--ork-3); shape-rendering: crispEdges; }
+.fire.is-ready { border-color: var(--ork-danger); color: var(--ork-ink); }
+.cap { display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); text-align: center; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.cap__btns { display: flex; gap: var(--ork-2); }
+.verbs { display: flex; gap: var(--ork-4); flex-wrap: wrap; }
+.verb { width: 108px; height: 64px; padding: var(--ork-3); display: flex; flex-direction: column; justify-content: space-between;
+  background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch); font: 600 12px/16px var(--ork-font-read); color: var(--ork-ink); }
+.verb .ork-sign { color: var(--ork-ink-muted); }
+.verb.place { background: none; border: 2px dashed var(--ork-frame); color: var(--ork-ink-faint); justify-content: center; align-items: center; font-weight: 400; }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <b>Route and stall</b>
+  <nav><a href="#route">1 · The route on the table</a><a href="#trail">2 · A leader's table</a><a href="#stall">3 · Standing answers</a><a href="#notes">What goes away</a></nav>
+</header>
+
+<main class="mk-main">
+
+<!-- ================================================================ 1 -->
+<section class="mk-sec" id="route">
+  <h1>1 · The route on the table</h1>
+  <p class="mk-line">The picked goal's route is <b>a path that climbs from the hand to the portal</b>: the rows are its phases, the columns the
+    parties' lanes it crosses. Done in ink, ahead dotted, where it stands circled; the newest stretch draws itself in, as the reveal plays
+    what landed. Where a leader sees two ways, the path forks and <b>the person presses the way</b>: the hand's card only points at it.
+    Hover a node for its one line; press a way to pick it.</p>
+
+  <div class="scroll-x">
+  <div class="win" id="win">
+    <div class="win__grid">
+      <div>
+        <div class="lanes">
+          <div class="tab open"><span class="tab__seat"><span class="ork-chair big"></span><img class="hd" src="../../../design-system/orkui/races/peon-crown@2x.png" width="48" height="44" alt=""></span>Party game</div>
+          <div class="tab"><span class="tab__seat"><span class="ork-chair"></span><img class="hd" src="../../../design-system/orkui/races/dryad-elder@2x.png" width="36" height="33" alt=""></span>Design</div>
+          <div class="tab"><span class="tab__seat"><span class="ork-chair"></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder@2x.png" width="36" height="33" alt=""></span>Tech</div>
+          <div class="tab"><span class="tab__seat"><span class="ork-chair"></span><img class="hd" src="../../../design-system/orkui/races/unicorn-elder@2x.png" width="36" height="33" alt=""></span>Product</div>
+        </div>
+
+        <div class="table ork-table" id="table">
+          <p class="table__title"><b>Waves</b> · through the Orkmaster</p>
+          <span class="rowlab pix" style="top:100px">Done</span>
+          <span class="rowlab pix" style="top:235px">Work</span>
+          <span class="rowlab pix" style="top:370px">Spec</span>
+          <span class="rowlab pix" style="top:460px">Talk</span>
+
+          <svg class="route" viewBox="0 0 930 600" aria-hidden="true">
+            <rect class="band" x="56" y="0" width="160" height="600"/>
+            <rect class="band" x="228" y="0" width="160" height="600"/>
+            <rect class="band" x="400" y="0" width="160" height="600"/>
+            <rect class="band" x="572" y="0" width="160" height="600"/>
+            <!-- done -->
+            <path class="ln past" d="M136 500 L308 460"/>
+            <path class="ln past" d="M136 500 L480 460"/>
+            <path class="ln past" d="M308 460 L308 370"/>
+            <path class="ln past" d="M480 460 L480 370"/>
+            <path class="ln new"  d="M308 370 L480 370"/>
+            <!-- way A: through Design -->
+            <path class="ln ahead way" data-way="a" d="M480 370 L308 280"/>
+            <path class="ln ahead way" data-way="a" d="M308 280 L480 190"/>
+            <path class="ln ahead way" data-way="a" d="M480 190 L652 100"/>
+            <!-- way B: Tech alone, tonight -->
+            <path class="ln ahead way" data-way="b" d="M480 370 L480 280"/>
+            <path class="ln ahead way" data-way="b" d="M480 280 L652 100"/>
+            <!-- out to the portal, in at the lich -->
+            <path class="ln ahead exit" d="M670 100 C 730 100, 760 130, 800 100"/>
+            <!-- where it stands: circled by hand -->
+            <path class="ring" d="M506 364 C506 349 493 342 479 343 C463 344 453 357 454 371 C455 386 467 396 482 396 C497 396 507 385 505 372 C504 365 500 359 494 355"/>
+          </svg>
+
+          <div class="mini" style="left:68px;top:40px">Lobby chat<span class="ork-elem ice"></span></div>
+          <div class="mini" style="left:140px;top:40px">Daily quest<span class="ork-elem dust"></span></div>
+          <div class="mini lit" style="left:104px;top:500px">Waves<span class="ork-elem meadow"></span></div>
+
+          <span class="nd past" style="left:308px;top:460px" data-tip="Design said its view: the waves need a screen of their own."><span class="ork-sign check"></span></span>
+          <span class="nd past" style="left:480px;top:460px" data-tip="Tech said its view: the spawner exists, the timing does not."><span class="ork-sign check"></span></span>
+          <span class="nd past" style="left:308px;top:370px" data-tip="Design wrote its section: a wave counter over the match."><span class="ork-sign check"></span></span>
+          <span class="nd now"  style="left:480px;top:370px" data-tip="Tech asks: build it through Design's screen first, or alone tonight?"><span class="ork-sign question"></span></span>
+
+          <span class="nd way" data-way="a" style="left:308px;top:280px" data-tip="Design draws the wave counter."><span class="ork-sign steps"></span></span>
+          <span class="nd way" data-way="a" style="left:480px;top:190px" data-tip="Tech builds it to the drawing."><span class="ork-sign sword"></span></span>
+          <span class="nd way" data-way="b" style="left:480px;top:280px" data-tip="Tech builds it alone, tonight, from the spec's words."><span class="ork-sign moon"></span></span>
+          <span class="nd" style="left:652px;top:100px" data-tip="Product checks it against the pain: players lose track of the wave."><span class="ork-sign shield"></span></span>
+
+          <button class="way-lab" data-way="a" style="left:152px;top:262px"><b>Through Design</b>about 3% of Claude's week</button>
+          <button class="way-lab" data-way="b" style="left:504px;top:268px"><b>Tech alone, tonight</b>about 2% of Claude's week</button>
+
+          <div class="tip" id="tip"></div>
+        </div>
+
+        <div class="lanes hand" id="hand">
+          <div class="blank ork-card-place" style="display:grid;pointer-events:auto" title="A new goal">+</div>
+          <div></div>
+          <div class="k ork-card asks" id="askcard">
+            <div class="k__top"><span class="k__who"><img class="hd" src="../../../design-system/orkui/races/shaman-elder.png" alt="">Tech</span><span class="ork-sign question" style="color:var(--ork-alert)"></span></div>
+            <p class="k__ti">Waves: which way?</p>
+            <p class="k__win">Pick it on the table: through Design's screen, or Tech alone tonight.</p>
+            <div class="k__bot"><span class="k__amt ask">Asks</span><span class="ork-elem meadow"></span></div>
+          </div>
+          <div></div>
+        </div>
+        <p class="after-line" id="after">&nbsp;</p>
+      </div>
+
+      <div class="edge">
+        <div class="edge__ring">
+          <span class="ork-portal-ring"></span>
+          <img class="hd imp" src="../../../design-system/orkui/races/imp-elder.png" width="24" height="22" alt="">
+          <img class="hd lich" src="../../../design-system/orkui/races/lich-elder.png" width="24" height="22" alt="">
+        </div>
+        <div class="pile"><span class="ork-card-back small"></span><span class="ork-card-back small"></span></div>
+        <div class="die"><i style="left:8px;top:8px"></i><i style="left:16px;top:16px"></i><i style="left:24px;top:24px"></i></div>
+        <button class="satchel" id="satchel" title="Standing answers"><svg id="satchel-art" width="48" height="48" viewBox="0 0 16 16"></svg>Answers</button>
+        <div class="potions">
+          <span class="ork-potion" style="--ork-potion-left:.62" title="Claude: 62% of the week left"></span>
+          <span class="ork-potion is-warn" style="--ork-potion-left:.18" title="Codex: 18% of the week left"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ================================================================ 2 -->
+<section class="mk-sec" id="trail">
+  <h1>2 · A leader's table: the same three marks</h1>
+  <p class="mk-line">Every leader's table already is a graph (Tech's containers, Design's screens, Marketing's way people come). It takes
+    the same three marks and no legend: <b>the trail</b> (ink where work went, dotted ahead), <b>the circle</b> (where the picked goal is now)
+    and <b>the fog</b> (what nobody has drawn or measured yet: a screen known by its route only). Here Design's table, the screens along their flow.</p>
+  <div class="scroll-x">
+    <div class="trail ork-table">
+      <p class="table__title"><b>The whole project</b> · through Design</p>
+      <svg class="route" viewBox="0 0 760 300" style="width:760px;height:300px" aria-hidden="true">
+        <path class="ln past" d="M80 190 L220 190"/>
+        <path class="ln past" d="M220 190 C 250 120, 300 70, 343 64" style="opacity:.6"/>
+        <path class="ln past" d="M220 190 L370 190"/>
+        <path class="ln ahead" d="M370 190 L520 190"/>
+        <path class="ln ahead" d="M520 190 L670 190"/>
+      </svg>
+      <svg class="route" viewBox="0 0 760 300" style="width:760px;height:300px;z-index:4" aria-hidden="true">
+        <path class="ring" d="M427 173 C427 130 399 110 368 113 C333 116 311 153 313 193 C315 236 341 264 374 264 C407 264 429 233 425 196 C423 176 414 159 401 147"/>
+      </svg>
+      <div class="scr" style="left:80px;top:190px"><span class="scr__pic"></span>Title</div>
+      <div class="scr" style="left:220px;top:190px"><span class="scr__pic b"></span>Lobby</div>
+      <div class="scr" style="left:376px;top:62px;transform:scale(.72)"><span class="scr__pic c"></span>Settings</div>
+      <div class="scr" style="left:370px;top:190px"><span class="scr__pic"></span>Match</div>
+      <div class="scr" style="left:520px;top:190px"><span class="scr__pic c"></span><span class="pin ork-sign target" title="Product's pain: players lose track of the wave"></span>Results</div>
+      <div class="scr fog" style="left:670px;top:190px"><span class="scr__pic"></span>Shop</div>
+      <div class="fogcloud"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 3 -->
+<section class="mk-sec" id="stall">
+  <h1>3 · Standing answers</h1>
+  <p class="mk-line">The satchel at the table's edge opens <b>Standing answers</b> over the Orkmaster's table, as <i>Open</i> opens a thing
+    (← goes back): what answers by itself, laid as goods. Each card is a question a leader asks and the answer it gets, with its
+    <b>rung of trust</b>: <i>Asks first</i>, <i>Tells after</i>, <i>By itself</i>. The night climbs a rung when a check passed with no
+    correction; the person can step one down any time (press the ladder). New goods come only from how the person answered this week.
+    A card laid on the fire is forgotten, and its question asks again. Press a card, then the fire; or drag it there.</p>
+
+  <div class="scroll-x">
+  <div class="stall ork-table" id="stallbox">
+    <div class="stall__head">
+      <button class="ork-btn quiet" title="Back to the table">←</button>
+      <h2>Standing answers</h2><span>· through the Orkmaster</span>
+    </div>
+    <p class="stall__say">What answers by itself, and how far you trust it.</p>
+
+    <div class="stall__body">
+      <div class="shelf">
+        <p class="shelf__lab">Yours</p>
+        <div class="shelf__row" id="mine"></div>
+        <p class="shelf__lab">Offered from this week</p>
+        <div class="shelf__row" id="offered"></div>
+        <p class="shelf__lab">On every card in the hand</p>
+        <div class="verbs">
+          <div class="verb"><span class="ork-sign moon"></span>Tonight</div>
+          <div class="verb"><span class="ork-sign check"></span>As the leader says</div>
+          <div class="verb"><span class="ork-sign pause"></span>Hold</div>
+          <div class="verb place">+ a fourth</div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="fire" id="fire"><div><svg id="fire-art" width="40" height="40" viewBox="0 0 10 10"></svg>Lay a card here to forget it: its question asks you again.</div></div>
+        <div class="cap">
+          <span class="ork-potion small" id="cap-potion" style="--ork-potion-left:.62;--ork-potion-spend:.05"></span>
+          <p id="cap-words">Answers spend at most about <b>5%</b> of Claude's week a day; past it, they ask.</p>
+          <div class="cap__btns"><button class="ork-btn" id="less">Less</button><button class="ork-btn" id="more">More</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ================================================================ notes -->
+<section class="mk-sec" id="notes">
+  <h1>What goes away, what stays</h1>
+  <div class="mk-notes">
+    <p><b>Goes: the route written out.</b> The route card's list of parties and the phase written on every card: the way is drawn, read at a glance, and what lies ahead (a question, a night, a costly step) is seen before it comes.</p>
+    <p><b>Goes: a choice between ways as words.</b> The fork is pressed on the table; the hand's card only points at it, and leaves once the way is picked (Undo on the line under the hand).</p>
+    <p><b>Goes: rows of settings.</b> The tier, the night, a retry, an icon's source: one stall, each rule a card, its trust a ladder the night climbs. The day's cap is the one number, said in the week's words.</p>
+    <p><b>Goes: a legend.</b> The closed set of signs, each with its line on hover; the circle and the fog need no word.</p>
+    <p><b>Stays as decided.</b> It is a table, never a map, in what a person reads; no dialog or drawer (the stall opens over the table, ← back); no count; colour a signal only; the pixel face for headings and buttons.</p>
+    <p><b>Open for the owner.</b> The satchel as a fifth thing of the edge, or the stall behind the crowned head's <i>…</i>? Does the person climb a rung, or only the night? Do Talk and Spec stay rows, or does the path start at Work?</p>
+  </div>
+  <p class="mk-foot">An experiment of 6 November 2026, not a goal and not a spec. Every colour, face and size is orkUI's token; the satchel, the fire,
+    the hand-drawn circle and the ladder are drawn here first and would go into orkUI after a yes.</p>
+</section>
+</main>
+
+<script>
+const ORK = "../../../design-system/orkui/";
+/* ---- pixel art: the satchel and the fire, drawn from rows ---- */
+function pix(svg, rows, colours) {
+  const ns = "http://www.w3.org/2000/svg";
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (!colours[ch]) return;
+    const r = document.createElementNS(ns, "rect");
+    r.setAttribute("x", x); r.setAttribute("y", y); r.setAttribute("width", 1); r.setAttribute("height", 1);
+    r.setAttribute("fill", colours[ch]); svg.appendChild(r);
+  }));
+}
+pix(document.getElementById("satchel-art"), [
+  "................",
+  "......XXXX......",
+  ".....X....X.....",
+  "......XXXX......",
+  ".....XXXXXX.....",
+  "......X..X......",
+  "....XX....XX....",
+  "...X........X...",
+  "..X..........X..",
+  ".X......o.....X.",
+  ".X.....o.o....X.",
+  ".X......o.....X.",
+  ".X............X.",
+  "..X..........X..",
+  "...XXXXXXXXXX...",
+  "................"].map((r, y) => y >= 6 && y <= 13 ? r.replace(/X(\.+)X/, (m, d) => "X" + d.replace(/\./g, "#") + "X") : r),
+  { X: "var(--ork-edge)", "#": "var(--ork-panel)", o: "var(--ork-mana)" });
+pix(document.getElementById("fire-art"), [
+  "....r.....",
+  "...rr..r..",
+  "...rrr.rr.",
+  "..rryrrrr.",
+  "..ryyyrrr.",
+  ".rryyyyrr.",
+  ".rryyyyrr.",
+  "..rryyrr..",
+  ".wwwwwwww.",
+  "..w.ww.w.."], { r: "var(--ork-danger)", y: "var(--ork-alert)", w: "var(--ork-edge)" });
+
+/* ---- 1: the fork, hover and pick ---- */
+const table = document.getElementById("table"), tip = document.getElementById("tip");
+const parts = way => table.querySelectorAll(`[data-way="${way}"]`);
+let chosen = null;
+["a", "b"].forEach(w => parts(w).forEach(el => {
+  el.addEventListener("mouseenter", () => { if (!chosen) parts(w).forEach(p => p.classList.add("is-hover")); });
+  el.addEventListener("mouseleave", () => parts(w).forEach(p => p.classList.remove("is-hover")));
+  el.addEventListener("click", () => pick(w));
+}));
+function pick(w) {
+  chosen = w;
+  ["a", "b"].forEach(x => parts(x).forEach(p => { p.classList.remove("is-hover", "is-chosen", "is-left"); p.classList.add(x === w ? "is-chosen" : "is-left"); }));
+  document.getElementById("askcard").classList.add("gone");
+  document.getElementById("after").innerHTML = (w === "a" ? "<b>Waves</b> goes through Design first." : "<b>Waves</b> goes to Tech alone, tonight.")
+    + ' <button class="ork-btn quiet" id="undo">Undo</button>';
+  document.getElementById("undo").onclick = undo;
+}
+function undo() {
+  chosen = null;
+  ["a", "b"].forEach(x => parts(x).forEach(p => p.classList.remove("is-chosen", "is-left")));
+  document.getElementById("askcard").classList.remove("gone");
+  document.getElementById("after").innerHTML = "&nbsp;";
+}
+table.querySelectorAll(".nd[data-tip]").forEach(n => {
+  n.addEventListener("mouseenter", () => {
+    tip.textContent = n.dataset.tip; tip.classList.add("is-on");
+    tip.style.left = (parseFloat(n.style.left) + 24) + "px"; tip.style.top = (parseFloat(n.style.top) - 14) + "px";
+  });
+  n.addEventListener("mouseleave", () => tip.classList.remove("is-on"));
+});
+document.getElementById("satchel").onclick = () => document.getElementById("stall").scrollIntoView({ behavior: "smooth" });
+
+/* ---- 3: the stall ---- */
+const STEPS = ["", "Asks first", "Tells after", "By itself"];
+const MINE = [
+  { who: "shaman-elder", party: "Tech", q: "A small task: which tier?", a: "The cheaper one.", step: 3, cost: "" },
+  { who: "dryad-elder", party: "Design", q: "A new icon?", a: "From orkUI's set first; ask me if none fits.", step: 2, cost: "" },
+  { who: "shaman-elder", party: "Tech", q: "A test fails twice?", a: "One more try, then ask me.", step: 2, cost: "about 1%" },
+  { who: "peon-crown", party: "Orkmaster", q: "A Low goal is ready?", a: "Start it tonight.", step: 1, cost: "about 2%" },
+];
+const OFFERED = [
+  { who: "unicorn-elder", party: "Product", q: "A pain with no measure?", a: "Keep it in line until it has one.", step: 1, cost: "", why: "You answered so all week." },
+  { who: "shaman-elder", party: "Tech", q: "Tidy what a task touched?", a: "Yes, in the same branch.", step: 1, cost: "about 1%", why: "You answered so each time." },
+];
+let lit = null;
+function card(d) {
+  const g = document.createElement("div"); g.className = "good";
+  g.innerHTML = `<div class="k ork-card${d.step === 3 ? " by-self" : ""}" draggable="true">
+      <div class="k__top"><span class="k__who"><img class="hd" src="${ORK}races/${d.who}.png" alt="">${d.party}</span>
+        <button class="ladder" data-step="${d.step}" title="${STEPS[d.step]}: press to step down"><i></i><i></i><i></i></button></div>
+      <p class="k__ti">${d.q}</p>
+      <p class="k__win">${d.a}</p>
+      <div class="k__bot"><span class="k__amt step">${STEPS[d.step]}</span><span class="k__amt">${d.cost}</span></div>
+    </div>`;
+  const k = g.querySelector(".k"), lad = g.querySelector(".ladder");
+  lad.onclick = e => {
+    e.stopPropagation();
+    d.step = d.step > 1 ? d.step - 1 : 3;
+    lad.dataset.step = d.step; lad.title = STEPS[d.step] + ": press to step down";
+    g.querySelector(".step").textContent = STEPS[d.step];
+    k.classList.toggle("by-self", d.step === 3);
+  };
+  k.onclick = () => { if (lit && lit !== g) lit.querySelector(".k").classList.remove("lit"); k.classList.toggle("lit"); lit = k.classList.contains("lit") ? g : null; fireReady(); };
+  k.addEventListener("dragstart", () => { lit = g; fireReady(); });
+  return g;
+}
+const mine = document.getElementById("mine"), offered = document.getElementById("offered"), fire = document.getElementById("fire");
+MINE.forEach(d => mine.appendChild(card(d)));
+OFFERED.forEach(d => {
+  const g = card(d);
+  g.insertAdjacentHTML("beforeend", `<small>${d.why}</small><div class="good__btns"><button class="ork-btn primary take">Take</button><button class="ork-btn quiet not">Not now</button></div>`);
+  g.querySelector(".take").onclick = () => { g.querySelector("small").remove(); g.querySelector(".good__btns").remove(); mine.appendChild(g); };
+  g.querySelector(".not").onclick = () => { g.classList.add("away"); setTimeout(() => g.remove(), 260); };
+  offered.appendChild(g);
+});
+function fireReady() { fire.classList.toggle("is-ready", !!lit); }
+function burn() { if (!lit) return; const g = lit; lit = null; fireReady(); g.classList.add("burn"); setTimeout(() => g.remove(), 520); }
+fire.onclick = burn;
+fire.addEventListener("dragover", e => { e.preventDefault(); fire.classList.add("is-ready"); });
+fire.addEventListener("dragleave", fireReady);
+fire.addEventListener("drop", e => { e.preventDefault(); burn(); });
+
+let cap = 5;
+function capDraw() {
+  document.getElementById("cap-words").innerHTML = `Answers spend at most about <b>${cap}%</b> of Claude's week a day; past it, they ask.`;
+  document.getElementById("cap-potion").style.setProperty("--ork-potion-spend", cap / 100);
+}
+document.getElementById("less").onclick = () => { cap = Math.max(1, cap - 1); capDraw(); };
+document.getElementById("more").onclick = () => { cap = Math.min(10, cap + 1); capDraw(); };
+</script>
+</body>
+</html>
