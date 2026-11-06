@@ -45,11 +45,14 @@ def card(ask, pick=0, blocks=False, choices=("A", "B"), **more):
     return {"ask": ask, "choices": list(choices), "pick": pick, "why": "because", "blocks": blocks, **more}
 
 
+LOOKS = ('ground', 'settle')
+
+
 class Model:
     """The keeper's call stubbed: `said[(step, party)]` the JSON a leader answers (a callable of the round), `calls` every call made."""
 
     def __init__(self, host):
-        self.host, self.calls, self.said, self.lock = host, [], {}, threading.Lock()
+        self.host, self.calls, self.looked, self.said, self.lock = host, [], [], {}, threading.Lock()
         self.gate = None                                         # a Barrier: every call waits here until all of a round's are in (no clock needed to see them overlap)
         host.ideas.keeper.call = self
 
@@ -57,8 +60,9 @@ class Model:
         k = self.host.ideas.keeper
         row = {"tier": tier, "prompt": prompt, "effort": effort, "budget": budget, "tools": getattr(k._tls, "tools", True), "step": k.measure()["step"],
                "party": getattr(k._tls, "party", ""), "thread": threading.current_thread().name, "at": time.monotonic()}
+        looks = row["step"] in LOOKS                             # spec 155 D: the read-only calls `ground` and `settle` are kept apart, so a Talk's count of its leaders' calls stays what it was
         with self.lock:
-            self.calls.append(row)
+            (self.looked if looks else self.calls).append(row)
         if self.gate is not None:
             try:
                 self.gate.wait(10)                               # returns only once every call of the round has begun; a round that calls one leader after another times out
@@ -71,8 +75,8 @@ class Model:
         if callable(answer):
             answer = answer(row)
         if isinstance(answer, str):
-            return answer, 0.01, 10, ""
-        return json.dumps(answer if answer is not None else {"title": "A goal", "questions": []}), 0.01, 10, ""
+            return answer, 0.0 if looks else 0.01, 0 if looks else 10, ""
+        return json.dumps(answer if answer is not None else {"title": "A goal", "questions": []}), 0.0 if looks else 0.01, 0 if looks else 10, ""
 
     def steps(self, step):
         return [c for c in self.calls if c["step"] == step]
@@ -260,7 +264,7 @@ def test_the_row_is_the_stances_and_the_cards(host, parties, model):
     row = _row(host, slug, "talk")
     assert row["round"] == 1 and [s["party"] for s in row["stances"]] == [parties["product"], parties["tech"]]
     assert row["stances"][0] == {"party": parties["product"], "leader": "product-manager", "stance": "product stance", "for": "product for", "against": "product against",
-                                 "verdict": "go", "why": "", "instead": "", "after": "", "craft": "product", "weigher": False, "priority": "", "risk": ""}      # no verdict in the answer reads as go (spec 108 §4.1)
+                                 "verdict": "go", "why": "", "instead": "", "after": "", "craft": "product", "weigher": False, "priority": "", "risk": "", "check": ""}      # no verdict in the answer reads as go (spec 108 §4.1)
     first = row["questions"][0]
     assert first == {"id": f"r1-{parties['product']}-1", "by": parties["product"], "leader": "product-manager", "q": "product question 0", "choices": ["A", "B"], "pick": 0,
                      "why": "because", "project": False}
@@ -876,7 +880,7 @@ def test_each_assumes_is_kept_as_a_proposed_hypothesis_of_the_leader_that_rests_
         "Founders want a sketch first", "five of five ask for it", "proposed", "leader", parties["product"], [slug], [])
     assert (second["text"], second["state"], second["by"], second["party"], second["rests"]) == ("The canvas holds a thousand shapes", "proposed", "leader", parties["tech"], [slug])
     row = _row(host, slug, "talk")
-    assert [set(s) for s in row["stances"]] == [{"party", "leader", "craft", "weigher", "stance", "for", "against", "verdict", "why", "instead", "after", "priority", "risk"}] * 3         # Talk's row is as it was, and says whose weight a stance has
+    assert [set(s) for s in row["stances"]] == [{"party", "leader", "craft", "weigher", "stance", "for", "against", "verdict", "why", "instead", "after", "priority", "risk", "check"}] * 3         # Talk's row is as it was, and says whose weight a stance has
 
 
 def test_a_bare_line_is_kept_with_a_signal_of_its_own_words_for_when_none_was_given(host, parties, model):

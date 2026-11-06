@@ -26,6 +26,7 @@ PRIORITIES = ("high", "normal", "low")       # Product's word on how the goal st
 RISKS = ("low", "medium", "high")            # Tech's word on what the change may break
 PRODUCT, TECH = "product", "tech"            # the crafts (`goal_team.craft_of`) whose leaders give a priority and a risk
 CAUSE_CHARS = 500
+CHECK_CHARS = 200                  # what a doubt says to look up (spec 155 D.2)
 WHERE = 5                          # the paths a cause names
 FAILURE_LINES, FAILURE_CHARS = 12, 1500
 FACT_ROOM = 20                     # the least of a question kept with its answer as a fact
@@ -79,13 +80,15 @@ def _cards(raw: object, party: str, leader: str, prefix: str, limit: int, projec
 def clean_verdict(answer: dict, line: Iterable[str] = ()) -> dict:
     """A leader's verdict on the goal (spec 108 §4.1), strictly: `{verdict: go|doubt|no, why, instead, after}`. A `doubt` or a `no` needs its `why` (one line): without it the
     leader said nothing against the goal and the verdict reads as `go`. `instead` (a smaller or other goal that would serve) is kept with a doubt or a no; `after`, the goal in `line`
-    (the slugs the leader was given) a `no` says should come first, with a `no` only and only one of those."""
+    (the slugs the leader was given) a `no` says should come first, with a `no` only and only one of those. `check` (spec 155 D.2): what reading the code would look up to settle a
+    `doubt` (at most `CHECK_CHARS` characters), kept with a doubt only."""
     verdict = str(answer.get("verdict") or "").strip().lower() if isinstance(answer.get("verdict"), str) else ""
     why = _line(answer.get("why"))
     if verdict not in ("doubt", "no") or not why:
-        return {"verdict": "go", "why": "", "instead": "", "after": ""}
+        return {"verdict": "go", "why": "", "instead": "", "after": "", "check": ""}
     after = answer.get("after").strip() if isinstance(answer.get("after"), str) else ""
-    return {"verdict": verdict, "why": why, "instead": _line(answer.get("instead")), "after": after if verdict == "no" and after in set(line) else ""}
+    return {"verdict": verdict, "why": why, "instead": _line(answer.get("instead")), "after": after if verdict == "no" and after in set(line) else "",
+            "check": _line(answer.get("check"), CHECK_CHARS) if verdict == "doubt" else ""}
 
 
 def clean_weight(answer: dict, craft: str) -> dict:
@@ -103,7 +106,7 @@ def clean_judgement(answer: object, craft: str = "", line: Iterable[str] = ()) -
     does. None when the answer is no object. A leader that doubted and says nothing against the goal now reads as `go`."""
     if not isinstance(answer, dict):
         return None
-    return {**clean_verdict(answer, line), **clean_weight(answer, craft)}
+    return {**{k: v for k, v in clean_verdict(answer, line).items() if k != "check"}, **clean_weight(answer, craft)}      # a verdict heard again looks nothing up
 
 
 def clean_weigh(answer: object, craft: str = "", line: Iterable[str] = ()) -> dict | None:
@@ -223,6 +226,6 @@ def fact_text(q: str, answer: str) -> str:
 def said_lines(rec: dict) -> str:
     """The round's questions with their answers (and the picks that closed the rest), for the second round's prompt: the round's own answers, nothing more."""
     rows = [f"- {a['q']} — {a['answer']}" for a in rec.get("answers") or []]
-    rows += [f"- {d['q']} — {d['answer']} (left to {d.get('by') or 'its leader'}'s pick)" for d in rec.get("defaults") or []]
+    rows += [f"- {d['q']} — {d['answer']} ({'answered by ' + d['by'] if str(d.get('by')).startswith(('§', 'spec ')) else 'left to ' + (d.get('by') or 'its leader') + chr(39) + 's pick'})" for d in rec.get("defaults") or []]
     return "\n".join(rows)
 
