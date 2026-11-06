@@ -14,6 +14,8 @@
 
 A section's parts, in the order they are written: *Why*, *Done when* (at most five theses), *Checks*, *Will be* (a line a part of the leader's map, `new <id>` ·
 `changed <id>` · `gone <id>`, the id as the map names it), *Out*, *Risks*, *Defaults* (the questions closed by a default, seen), *Questions* (open), *Plan* (after *Start*).
+After them a section may hold *Talk* and *Accepted* (`SAYS`, realm/page_talk.py): a leader's say and its acceptance. They are no spec part: `folded` and *Done when*'s count never see them, `join` writes
+them after the spec's parts, and `arrange` keeps them when a section is written again.
 """
 from __future__ import annotations
 
@@ -23,8 +25,9 @@ from typing import Any, NamedTuple
 
 COMMON = ("Asked", "Gist", "Route", "Depends on", "Decisions")
 PARTS = ("Why", "Done when", "Checks", "Will be", "Out", "Risks", "Defaults", "Questions", "Plan")
+SAYS = ("Talk", "Accepted")                                            # a leader's say and its acceptance (realm/page_talk.py; decisions §258.6): parts the section knows, no spec part
 OLD = ("Gist", "Why", "Done when", "Out", "Risks", "Depends on", "Stages", "Open questions", "Decisions")          # realm/idea_page.py `SECTIONS`
-RESERVED = {n.lower() for n in (*COMMON, *OLD, *PARTS)}
+RESERVED = {n.lower() for n in (*COMMON, *OLD, *PARTS, *SAYS)}
 FOLDED = ("Why", "Done when", "Out", "Risks")                          # an old section a page of the new format answers for (its first section's, Done when all of them)
 WHY_CHARS, LINE_CHARS, MAX_DONE, MAX_CHECKS, MAX_WILL, MAX_OUT, MAX_RISKS, MAX_ASSUMED = 1200, 240, 5, 5, 12, 3, 4, 4
 ID_CHARS = 200
@@ -63,7 +66,7 @@ def split(text: str) -> dict[str, str]:
 
 def join(parts: dict[str, str]) -> str:
     """A section's text: the parts that have words, the known ones in `PARTS` order, the others after them, each under a `###` heading."""
-    names = [n for n in PARTS if str(parts.get(n) or "").strip()] + [n for n in parts if n and n not in PARTS and str(parts[n]).strip()]
+    names = [n for n in (*PARTS, *SAYS) if str(parts.get(n) or "").strip()] + [n for n in parts if n and n not in PARTS and n not in SAYS and str(parts[n]).strip()]
     body = "\n\n".join(f"### {n}\n{str(parts[n]).strip()}" for n in names)
     head = str(parts.get("") or "").strip()
     return f"{head}\n\n{body}" if head and body else (head or body)
@@ -262,7 +265,10 @@ def arrange(page: Any, common: dict[str, str], sections: list[tuple[str, str]]) 
             out.append((name, str(text or "").strip()))
             used.add(name.lower())
     for heading, text in sections:
-        out.append((heading, str(text or "").strip()))
+        text = str(text or "").strip()
+        old = split(next((t for n, t in page.sections if n.lower() == heading.lower()), ""))
+        kept = {k: v for k, v in old.items() if k in SAYS and v and k not in split(text)}          # a leader's Talk and Accepted are its own: a rewrite of the spec's parts keeps them
+        out.append((heading, join({**split(text), **kept}) if kept else text))
         used.add(heading.lower())
     for n, t in page.sections:
         if n.lower() not in used and not (n.lower() in {o.lower() for o in OLD} and not t.strip()):

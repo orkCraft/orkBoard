@@ -116,3 +116,21 @@ def test_clean_section_takes_done_when_as_strings_or_as_lines_with_a_proof_and_w
     parts = ss.clean_section({"why": "w", "done_when": ["[look] f", {"line": "[test] g", "proof": "look"}, {"line": "plain"}, {"line": "plain", "proof": "test"}]})[0]
     assert parts["Done when"] == "- [look] f\n- [look] g\n- plain\n- [test] plain"
     assert ss.clean_section({"why": "w", "done_when": [{"line": "", "proof": "test"}]}) is None
+
+
+def test_talk_and_accepted_are_parts_the_section_knows_but_no_spec_part():
+    """Spec 154 B.2: never folded, never counted as Done when, never lost by the sections' writer, and no `##` of that name is a party."""
+    said = TECH + "\n\n### Talk\n- verdict: go\n\n### Accepted\n- met: It works"
+    p = page(("Gist", "G"), ("Tech", said), ("Art", "### Why\nLook.\n\n### Done when\n- Pretty"))
+    assert ss.split(said)["Talk"] == "- verdict: go" and ss.split(said)["Accepted"] == "- met: It works"
+    assert ss.items(ss.split(said)["Done when"]) == ["It works", "It is fast"] and ss.folded(p, "Done when") == "- It works\n- It is fast\nArt: Pretty"
+    assert ss.folded(p, "Talk") == "" and ss.folded(p, "Accepted") == ""
+    assert ss.is_party("Tech", said) and not ss.is_party("Tech", "### Talk\n- verdict: go") and not ss.is_party("Talk", TECH) and not ss.is_party("accepted", TECH)
+    assert ss.section_name("Talk") == "Talk (party)"
+    assert ss.join(ss.split(said)).endswith("### Talk\n- verdict: go\n\n### Accepted\n- met: It works") and ss.join({"Accepted": "- met: x", "Talk": "- verdict: go", "Why": "w"}) == "### Why\nw\n\n### Talk\n- verdict: go\n\n### Accepted\n- met: x"
+    # the writer: a section written again with the spec's parts only keeps the leader's Talk and Accepted; a writer that gives its own keeps its own
+    ss.arrange(p, {}, [("Tech", "### Why\nNew.\n\n### Done when\n- It works")])
+    assert ss.split(p.section("Tech")) == {"Why": "New.", "Done when": "- It works", "Talk": "- verdict: go", "Accepted": "- met: It works"}
+    ss.arrange(p, {}, [("Tech", "### Why\nNewer.\n\n### Talk\n- verdict: no — x")])
+    assert ss.split(p.section("Tech")) == {"Why": "Newer.", "Talk": "- verdict: no — x", "Accepted": "- met: It works"}
+    assert ss.read(p, PARTIES)["sections"][0].parts["Talk"] == "- verdict: no — x"

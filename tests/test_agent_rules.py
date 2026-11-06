@@ -306,3 +306,20 @@ def test_a_direct_write_is_refused_in_words_while_fs_question_is_unanswered_or_a
     with pytest.raises(ValueError) as off:
         rules.write()
     assert str(off.value) == "The Board is kept off this repository: the rules would find no Board" and not (tmp_path / "AGENTS.md").exists()
+
+
+def test_board_md_says_a_leaders_talk_and_accepted_with_an_example_each_and_who_writes_them(tmp_path):
+    """Spec 154 B.4: both parts, their lines, where they go, that each leader writes its own and the conductor none, and that questions stay in Open questions."""
+    from orkboard.realm import page_talk
+    root = project(tmp_path)
+    write(root)
+    text = (root / WIKI / "BOARD.md").read_text(encoding="utf-8")
+    assert "### Talk" in text and "### Accepted" in text and "`go`, `doubt` or `no`" in text and "`cannot see`" in text and "`## <Party title>`" in text
+    for line in ("- verdict: doubt — the cache adds a second caller to the store", "- assumes: players reload less than once a minute — shown by: the reload events of a week",
+                 "- met: the board shows the best three players", "- not met: a tie is ordered by the earlier score — the order is by name", "- cannot see: the board loads in under a second"):
+        assert line in text, line
+    assert "Each leader writes only its own" in text and "the conductor" in text and "writes nothing of a leader's" in text and "stays under *Open questions*" in text
+    # the examples are read by the code that reads the parts
+    found = {name: [ln.removeprefix("    ") for ln in text.split(f"    ### {name}\n", 1)[1].split("\n\n", 1)[0].split("\n")] for name in ("Talk", "Accepted")}
+    assert page_talk.talk_problems(found["Talk"]) == []
+    assert page_talk.accepted_problems(found["Accepted"], ["the board shows the best three players", "a tie is ordered by the earlier score", "the board loads in under a second"]) == []

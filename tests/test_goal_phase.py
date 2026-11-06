@@ -40,8 +40,8 @@ def test_board_asks_words_are_read_from_the_one_table_and_did_not_change():
 def test_the_keys_say_only_what_there_is_to_say():
     st = {**ideas.STATE_DEFAULT, "state": "plan", "route": [{"party": "tech", "leader": "a"}, {"party": "design", "leader": "b"}], "queue": "night"}
     assert goal_phase.keys(st, "abc1234 · 3 files · green", True, "person") == {
-        "phase": "work", "route": "tech, design", "queue": "night", "asks": "person", "gate": "abc1234 · 3 files · green", "by": "person", "schema": "2"}
-    assert goal_phase.keys({**ideas.STATE_DEFAULT, "queue": "now"}) == {"phase": "new", "schema": "2"}
+        "phase": "work", "route": "tech, design", "queue": "night", "asks": "person", "gate": "abc1234 · 3 files · green", "by": "person", "schema": "3"}
+    assert goal_phase.keys({**ideas.STATE_DEFAULT, "queue": "now"}) == {"phase": "new", "schema": "3"}
 
 
 def test_the_gate_is_the_last_one_that_ran():
@@ -125,7 +125,7 @@ def test_a_flush_writes_the_keys_and_what_it_wrote(host):
     got = host.ideas.tree_flush(force=True)
     page = _page(root, slug)
     assert [(k, page.get(k)) for k in ("phase", "route", "queue", "asks", "gate", "by", "schema")] == [
-        ("phase", "work"), ("route", "tech"), ("queue", "hold"), ("asks", "person"), ("gate", "abcdef0 · 2 files · green"), ("by", "person"), ("schema", "2")]    # the plan waits for the person
+        ("phase", "work"), ("route", "tech"), ("queue", "hold"), ("asks", "person"), ("gate", "abcdef0 · 2 files · green"), ("by", "person"), ("schema", "3")]    # the plan waits for the person
     assert ideas.state(sd, slug)["phase_written"] == "work"
     assert got["commit"] and "phase: work" in git(host.ideas.state_dir.parent, "show", f"dev:llm-wiki/general/{IDEAS}/{slug}.md")
     assert "owner" in dict(page.meta) and page.section("Gist") == "a dark mode"                # what the page had is kept
@@ -335,13 +335,16 @@ def test_the_journals_and_the_brief_ride_in_the_boards_commit_and_a_line_added_o
     assert "Decision 2: from a tool" in git(repo, "show", "dev:llm-wiki/general/journals/project.md")
 
 
-def test_the_schema_is_2_and_a_page_of_schema_1_is_read_as_it_is_and_written_2_when_the_board_writes_it(host):
-    """Spec 152 F.5: a v1 page has no marks on its Done when lines and is read the same; the Board writes `schema: 2` when it next writes the page."""
-    assert goal_phase.SCHEMA == "2" and goal_phase.keys({**ideas.STATE_DEFAULT})["schema"] == "2"
+def test_the_schema_is_3_and_a_page_of_schema_1_or_2_is_read_as_it_is_and_written_3_when_the_board_writes_it(host):
+    """Spec 152 F.5, spec 154 B.3: a v1 page has no marks on its Done when lines and is read the same; a v2 page has no Talk or Accepted and is read the same; the Board writes `schema: 3` when it next writes the page."""
+    assert goal_phase.SCHEMA == "3" and goal_phase.keys({**ideas.STATE_DEFAULT})["schema"] == "3"
     root, slug = _goal(host)
     goal_phase.mirror(root, host.ideas.state_dir)
     page = ideas.idea_page(root, slug)
-    assert page.get("schema") == "2"
-    page.set("schema", "1")
-    old = idea_page.parse(page.text())
-    assert old.get("schema") == "1" and goal_phase.phase_of_page(old) == "new" and spec_sections.proof_of("a line of a v1 page") == ""
+    assert page.get("schema") == "3"
+    for older in ("1", "2"):
+        page.set("schema", older)
+        old = idea_page.parse(page.text())
+        assert old.get("schema") == older and goal_phase.phase_of_page(old) == "new" and spec_sections.proof_of("a line of a v1 page") == ""
+    goal_phase.mirror(root, host.ideas.state_dir)
+    assert ideas.idea_page(root, slug).get("schema") == "3"

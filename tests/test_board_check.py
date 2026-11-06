@@ -229,3 +229,44 @@ def test_a_goal_laid_from_the_history_is_asked_neither_a_gate_record_nor_a_done_
     page.write_text(head.format(laid="", schema=goal_phase.SCHEMA))
     assert {f["what"].split(" (")[0] for f in board_check.run(repo) if f["path"].endswith("33-old.md")} == {
         "the phase is done but the page has no green gate record", "the phase is done but the page has no *Done when*"}
+
+
+TECH = "### Why\nBecause.\n\n### Done when\n- the board shows the best three players\n- [test] a tie is ordered by the earlier score\n- the board loads in under a second\n"
+
+
+def with_section(repo: Path, extra: str, slug: str = "a-goal") -> Path:
+    path = goal(repo, slug)
+    path.write_text(path.read_text(encoding="utf-8").rstrip("\n") + "\n\n## Tech\n" + TECH + extra, encoding="utf-8")
+    return path
+
+
+def test_a_talk_and_an_accepted_it_can_read_are_clean_and_a_page_of_schema_2_is_no_fault(repo):
+    """Spec 154 B.5, B.3: the spec's own examples are clean; a page of the older schema 2 is read as before."""
+    path = with_section(repo, "\n### Talk\n- verdict: doubt — a second caller\n- stance: one writer\n- assumes: reloads are rare — shown by: the reload events\n\n### Accepted\n- met: the board shows the best three players\n"
+                              "- not met: a tie is ordered by the earlier score — the order is by name\n- cannot see: the board loads in under a second\n")
+    assert found(repo) == []
+    path.write_text(path.read_text(encoding="utf-8").replace(f"schema: {goal_phase.SCHEMA}", "schema: 2"), encoding="utf-8")
+    assert found(repo) == []
+
+
+def test_a_talk_it_cannot_read_a_verdict_it_does_not_know_and_a_free_line_are_found_with_their_line(repo):
+    path = with_section(repo, "\n### Talk\n- verdict: maybe — unsure\n- stance: ok\nI think it is fine\n- assumes: it is quick\n")
+    text = path.read_text(encoding="utf-8").split("\n")
+    n = next(i for i, ln in enumerate(text, 1) if ln.startswith("- verdict: maybe"))
+    got = {f["line"]: f["what"] for f in board_check.run(repo)}
+    assert "verdict 'maybe' is not one Orkboard knows (go, doubt, no)" in got[n]
+    assert "'I think it is fine'" in got[n + 2] and "none Orkboard can read" in got[n + 2]
+    assert "no `— shown by: <signal>`" in got[n + 3] and len(got) == 3
+
+
+def test_a_talk_with_no_verdict_is_found_at_its_heading(repo):
+    path = with_section(repo, "\n### Talk\n- stance: ok\n")
+    f = only(repo, "no `- verdict:` line")
+    assert path.read_text(encoding="utf-8").split("\n")[f["line"] - 1] == "### Talk"
+
+
+def test_an_accepted_line_that_names_no_done_when_line_or_is_free_is_found(repo):
+    with_section(repo, "\n### Accepted\n- met: the board shows the best three players\n- met: something nobody asked\n- fine: the board loads in under a second\n- met: a tie is ordered by the earlier score\n")
+    got = [f["what"] for f in board_check.run(repo)]
+    assert len(got) == 2 and any("names no line of the section's Done when: 'something nobody asked'" in w for w in got) and any("none Orkboard can read" in w and "fine:" in w for w in got)
+    assert not any("earlier score" in w for w in got)                                    # a line with a proof mark in Done when is named without it

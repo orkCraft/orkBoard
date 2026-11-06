@@ -1,4 +1,4 @@
-<!-- orkboard:file schema=2 hash=74795258d1af -->
+<!-- orkboard:file schema=2 hash=87c8d9f91caf -->
 # The Board's rules (Orkboard's file)
 
 Orkboard writes this file from its package; a change by hand is written back. This project's own rules go in `AGENTS.md` and `CLAUDE.md`, and they win: where they conflict
@@ -30,7 +30,7 @@ Front matter, then the title, then the sections *Gist*, *Why*, *Done when*, *Out
     asks: person
     gate: 3fa91c2 · 4 files · green
     by: person
-    schema: 2
+    schema: 3
     ---
 
 - `owner`, `kind`, `track` (the party's slug), `order`, `size`, `priority` (`high`, `normal` or `low`), `short`: Orkboard's. Leave them as they are.
@@ -72,6 +72,31 @@ After a party's stages are done and before the next party's begin, that party's 
 (`roles/<craft>-leader.md`, *Accepting a step*), its section, the gate's record of the stages and the files they changed. Each *Done when* line is met, not met, or one the leader cannot see (a picture
 or Play it needs is not there, or only the person can judge it). What the leader does not accept is one more stage, made for each thing; it looks again, and a step goes back twice at most. What is
 still not accepted then goes in the pull request under “Not accepted”, one line each, with a line it could not see as *Nobody could look at: <line>*. Never accept a line you could not look at.
+
+## A leader's say and its acceptance in the page
+
+Two parts of a leader's own section (`## <Party title>`, the party's title as the page has it) hold what the leader says and what it accepts. Each leader writes only its own; the conductor (you, leading
+the goal) writes nothing of a leader's. They are no part of the spec: a *Done when* count never sees them. A question for the person stays under *Open questions*, never here.
+
+`### Talk` is the leader's say in Talk: a verdict of `go`, `doubt` or `no` (a `doubt` or `no` gives its why after a dash, or it reads as `go`), then the lines it has to say. Each line is at most 200 characters;
+`instead` and `assumes` only when said.
+
+    ### Talk
+    - verdict: doubt — the cache adds a second caller to the store
+    - stance: Tech can build it in a step if the store keeps one writer
+    - for: one screen, no new service
+    - against: a second writer to the store
+    - instead: show the cached board only
+    - assumes: players reload less than once a minute — shown by: the reload events of a week
+
+`### Accepted` is the leader's acceptance of its step (above): one line for each line of its section's *Done when*, `met`, `not met` (and why after a dash) or `cannot see`, the *Done when* line as written.
+
+    ### Accepted
+    - met: the board shows the best three players
+    - not met: a tie is ordered by the earlier score — the order is by name
+    - cannot see: the board loads in under a second
+
+Make the section when the page has none. Leave every other part and section as it is. `uvx --from git+https://github.com/orkCraft/orkBoard orkboard check` finds a part it cannot read, a verdict it does not know and an *Accepted* line that names no *Done when* line.
 
 ## The gate and its record
 

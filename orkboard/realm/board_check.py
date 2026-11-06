@@ -16,7 +16,7 @@ import json
 import re
 from pathlib import Path
 
-from orkboard.realm import agent_rules, agent_rules_text as T, goal_phase, idea_page, plumbing, read_in, spec_sections
+from orkboard.realm import agent_rules, agent_rules_text as T, goal_phase, idea_page, page_talk, plumbing, read_in, spec_sections
 
 DEFAULT_WIKI = "llm-wiki/general"
 WORKFLOW = ".github/workflows/orkboard-check.yml"
@@ -149,8 +149,9 @@ def _page(root: Path, rel: str, path: Path, out: list[dict]) -> None:
     page = idea_page.parse(text)
     word = page.get("phase").strip()
     schema = page.get("schema").strip()
-    if schema.isdigit() and int(schema) < int(goal_phase.SCHEMA):
+    if schema.isdigit() and int(schema) < int(goal_phase.SCHEMA_FLOOR):
         out.append(_f(rel, _line_of(text, "schema"), f"this page is schema {schema}, this Orkboard writes {goal_phase.SCHEMA}: open the Board once with this Orkboard"))
+    _talk(rel, text, page, out)
     if not word:
         return                                           # a page of before this spec: it has no phase to be wrong
     line = _line_of(text, "phase")
@@ -165,6 +166,33 @@ def _page(root: Path, rel: str, path: Path, out: list[dict]) -> None:
         out.append(_f(rel, line, f"the phase is {phase} but the page has no *Done when*"))
     if phase in ("work", "done") and not has_stages(page, root):
         out.append(_f(rel, line, f"the phase is {phase} but the page has no stages (*Stages*, or *Plan* in a party's section)"))
+
+
+_H2 = re.compile(r"^##[ \t]+(.*?)[ \t]*#*[ \t]*$")
+_H3 = re.compile(r"^###[ \t]+(.+?)[ \t]*#*[ \t]*$")
+
+
+def _talk(rel: str, text: str, page: idea_page.Page, out: list[dict]) -> None:
+    """A `### Talk` or `### Accepted` Orkboard cannot read, a verdict it does not know, an `Accepted` line that names no line of the section's *Done when* (spec 154 B.5)."""
+    lines = text.replace("\r\n", "\n").split("\n")
+    heading, part, first = "", "", 0
+    for n, ln in enumerate([*lines, "## "]):
+        m2, m3 = _H2.match(ln), _H3.match(ln)
+        if not (m2 or m3):
+            continue
+        if part:
+            body = lines[first + 1:n]
+            if part == page_talk.TALK.lower():
+                found = page_talk.talk_problems(body)
+            else:
+                section = next((t for h, t in page.sections if h == heading), "")
+                found = page_talk.accepted_problems(body, spec_sections.items(spec_sections.split(section).get("Done when", "")))
+            out.extend(_f(rel, first + 2 + i if i >= 0 else first + 1, what) for i, what in found)
+        part = ""
+        if m2:
+            heading = m2.group(1).strip()
+        elif m3.group(1).strip().lower() in (page_talk.TALK.lower(), page_talk.ACCEPTED.lower()):
+            part, first = m3.group(1).strip().lower(), n
 
 
 def _secrets(root: Path, wiki: str, out: list[dict]) -> None:

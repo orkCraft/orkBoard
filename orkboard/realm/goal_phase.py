@@ -22,7 +22,8 @@ from orkboard.realm import idea_questions, ideas
 from orkboard.realm.idea_page import Page
 
 PHASES = ("new", "talk", "spec", "work", "done")
-SCHEMA = "2"                                       # the Board's schema as pages carry it (decisions §255.12; 2: a *Done when* line may carry its proof, §257.4). A page of 1 is read as it is; the Board writes 2 when it next writes it
+SCHEMA = "3"                                       # the Board's schema as pages carry it (decisions §255.12; 2: a *Done when* line may carry its proof, §257.4; 3: a party's section may hold *Talk* and *Accepted*, §258.6). A page of 1 or 2 is read as it is; the Board writes 3 when it next writes it
+SCHEMA_FLOOR = "2"                                 # `orkboard check` finds a page of an older schema than this; 3 only adds two parts, so a page of 2 asks for no rewrite
 STATE_PHASE = {"raw": "new", "reading": "new", "asks": "new", "proposed": "new", "judging": "new", "judged": "new", "sent": "new", "passed": "new",
                "routed": "talk", "talk": "talk",
                "decided": "spec", "sketch": "spec", "sections": "spec",

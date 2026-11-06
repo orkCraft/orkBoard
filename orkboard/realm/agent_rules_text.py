@@ -161,6 +161,31 @@ After a party's stages are done and before the next party's begin, that party's 
 or Play it needs is not there, or only the person can judge it). What the leader does not accept is one more stage, made for each thing; it looks again, and a step goes back twice at most. What is
 still not accepted then goes in the pull request under “Not accepted”, one line each, with a line it could not see as *Nobody could look at: <line>*. Never accept a line you could not look at.
 
+## A leader's say and its acceptance in the page
+
+Two parts of a leader's own section (`## <Party title>`, the party's title as the page has it) hold what the leader says and what it accepts. Each leader writes only its own; the conductor (you, leading
+the goal) writes nothing of a leader's. They are no part of the spec: a *Done when* count never sees them. A question for the person stays under *Open questions*, never here.
+
+`### Talk` is the leader's say in Talk: a verdict of `go`, `doubt` or `no` (a `doubt` or `no` gives its why after a dash, or it reads as `go`), then the lines it has to say. Each line is at most 200 characters;
+`instead` and `assumes` only when said.
+
+    ### Talk
+    - verdict: doubt — the cache adds a second caller to the store
+    - stance: Tech can build it in a step if the store keeps one writer
+    - for: one screen, no new service
+    - against: a second writer to the store
+    - instead: show the cached board only
+    - assumes: players reload less than once a minute — shown by: the reload events of a week
+
+`### Accepted` is the leader's acceptance of its step (above): one line for each line of its section's *Done when*, `met`, `not met` (and why after a dash) or `cannot see`, the *Done when* line as written.
+
+    ### Accepted
+    - met: the board shows the best three players
+    - not met: a tie is ordered by the earlier score — the order is by name
+    - cannot see: the board loads in under a second
+
+Make the section when the page has none. Leave every other part and section as it is. `{RUN} check` finds a part it cannot read, a verdict it does not know and an *Accepted* line that names no *Done when* line.
+
 ## The gate and its record
 
 The gate is the project's `[gate]` in `orkcraft.toml`: the tests it lists under `always`, then the tests of the files you touched. It is green when they all pass on the pull request's last commit.
