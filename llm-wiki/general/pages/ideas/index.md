@@ -109,6 +109,7 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [The Board in the repository for any AI tool](151-the-board-in-the-repository-for-any-ai-tool.md) — The Board in the repository for any AI tool
 - [A leader leads and accepts](152-a-leader-leads-and-accepts.md) — A leader leads and accepts
 - [A task is a whole session](153-a-task-is-a-whole-session.md) — A task is a whole session
+- [A leader is a skill in Claude Code](154-a-leader-is-a-skill-in-claude-code.md) — A leader is a skill in Claude Code
 - [Orkboard in orkUI](40-design-system.md) — Orkboard in orkUI
 - [OrkUI 0.15.x copied](96-orkui-0.15.0-copied.md) — OrkUI 0.15.x copied
 - [A goal's party, measured](43-party-measured.md) — A goal's party, measured

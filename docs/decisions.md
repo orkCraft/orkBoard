@@ -6970,3 +6970,49 @@ to ask the person; a task's prompt does not say that it is not for it. The owner
    notes' words. In the tools' spec.
 8. **Built** by spec 152 (5, 6 and 4: its parts B, D and F) and spec 153 (1–3).
 The owner's yes.
+
+## 258. A leader is a skill in Claude Code, run in a context of its own: each seat a subagent (who it is) and a skill (its step), forked; the `orkboard` skill conducts; a leader's say in Talk and its acceptance written in the goal's page; the role's text one with the prompt's, in an agent's frame (6 November 2026, the owner)
+
+Changes: 255.6, 255.7; spec 151 C.1 (the subagents and the skill).
+
+Why: the owner: *can the leaders be made skills in Claude now? Does it lie on our model?*, and then *yes, write the decision and
+the spec and start*. Read in Claude Code's documentation (code.claude.com/docs/en/skills.md, sub-agents.md, 6 November): a skill
+with `context: fork` and `agent: <subagent>` runs as that subagent, sees none of the conversation, and gives back what it found;
+a subagent may preload skills (`skills:`) and call them; a subagent may start subagents of its own, three layers below the
+conversation; `disable-model-invocation` and `user-invocable` say who may call a skill; skills follow the Agent Skills open
+standard, of which Claude Code's `context`, `agent` and invocation fields are its own (elsewhere six fields are taken). Read in
+this repository: spec 151 C wrote each seat a subagent (`.claude/agents/ork-<id>.md`) and one skill, `orkboard`; their texts are
+the prompts' texts *for a call* (*Read no file*, *Answer with one JSON object*, *(The context follows here in the prompt…)*): an
+agent in a tool reads nothing by them and answers into nothing; the subagents have every tool; a leader's say in Talk lives in
+`talk.jsonl`, Orkboard's working state, so a tool outside Orkboard has nowhere to write it. And in the session that asked it,
+Claude Code offered the six `ork-*` subagents and the `orkboard` skill from this repository's files at once. So:
+1. **It lies on the model**: a fork is §255.7's *pass of its own* (a leader sees only its role and the page, so one voice does
+   not agree with itself), and the layers are the frame's (*the Orkmaster says what and who, a leader how and why, a member
+   does and asks only its leader*): the conversation is the person, the hand and the conducting; a leader runs below it; a
+   member below its leader, whose work it accepts.
+2. **Each seat is two files, written by Orkboard**: the subagent, *who* (its role's text, the tools its step needs, the model
+   its tier names), and the skill, *its step* (`context: fork`, `agent: ork-<id>`): the Orkmaster's *route*, a leader's *talk*,
+   *section* and *accept* (§256), the Taskmaster's *plan*. A Grunt is a subagent only, in a worktree of its own
+   (`isolation: worktree`), started by the conductor for a task and accepted by its leader. A person calls a step too
+   (`/tech-leader talk 151`).
+3. **The tools a step needs, no more**: a leader, the Orkmaster and the Taskmaster read and write the goal's page and read the
+   project (no shell, no web): a page's words cannot make them run a command (§255.11); a Grunt has the tools of the work.
+4. **The model its tier names**: the party's tier for the seat, through Orkboard's own table for Claude Code; a seat with none
+   inherits the conversation's.
+5. **The `orkboard` skill conducts**: it takes the goal, calls the Orkmaster's *route*, the route's leaders' *talk* side by side,
+   waits for them all, asks the person what is the person's and stops; then the *sections*, the Taskmaster's *plan*, a Grunt a
+   task, its leader's *accept*, the gate, the pull request.
+6. **A leader's say in Talk is written in the goal's page**, under its party's section, `### Talk`: its verdict (`go`, `doubt`,
+   `no`) and why, its stance, for, against, what instead, what it assumes and what would show it; its questions are the page's
+   *Open questions* as today (§255.7). Its acceptance under `### Accepted`, a line of its *Done when* each, *met*, *not met* or
+   *cannot see* (§257.5). BOARD.md says both; the page's schema moves (§255.12). Orkboard reading them into Talk's record is a
+   spec of its own.
+7. **One text, two frames**: each seat's rules (what it judges and how) are one text, the one its prompt is built from (spec
+   151 C.3); a call's frame (the context pasted, one JSON object back) stays the call's, unchanged by a character; an agent's
+   frame says what to read (the paths), what to write (the page's part) and what to give back (a line to the conductor).
+8. **Elsewhere**: a tool that reads Agent Skills without Claude Code's fork runs a step in its own conversation, the one voice
+   of before; `AGENTS.md` stays what every tool reads. The trial (§255.15) measures Talk three ways: Orkboard's, forked skills in
+   Claude Code, one voice.
+9. **Built** by spec 154: **A.** the agent's frame of each seat; **B.** Talk and Accepted in the page; **C.** the seats as Claude
+   Code's subagents and skills, and the conductor; **D.** this repository's files written again, and the trial's arm.
+The owner's call.

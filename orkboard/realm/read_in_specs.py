@@ -21,7 +21,7 @@ from orkboard.realm.idea_words import short_of
 PARTS = r"^Spec {n} {id}:"                      # this repository's way: a commit `Spec 150 E2: …` built part E2 of spec 150 (`{n}` and `{id}` are filled in)
 ONE = r"^Spec {n}(?::| )"                       # a spec of no parts: a commit `Spec 7: …` or `Spec 7 …`
 PARTY = "tech"
-LAID = "history"                                # the key a page laid from the project's own documents carries: a `done` from before the Board has no gate record (board_check)
+LAID = "history"                                # the key a page laid `done` from the project's own documents carries: done before the Board, it has no gate record (board_check); a spec still to build is laid without it
 _FILE = re.compile(r"^(\d+)([a-z]?)-(.+)\.md$")
 _HEAD = re.compile(r"^#[ \t]+(?:Spec[ \t]+)?(?:(\d+[a-z]?)(?:\.|[ \t]+[—–-])[ \t]+)?(.+?)[ \t]*$")     # `# 151. Title` and the older `# Spec 33 — Title`
 _ROW = re.compile(r"^\|[ \t]*\*\*([A-Z]\d?)\.[ \t]+(.+?)\*\*[ \t]*\|")
@@ -134,7 +134,7 @@ def lay(root: Path, wiki_rel: str, planned: list[dict], party: str = PARTY) -> l
             order = max((i["order"] for i in ideas.ideas(wiki, track)), default=0) + 1
             page = Page([("owner", ideas.OWNER), ("kind", "idea"), ("track", track), ("order", str(order)), ("size", ""),
                          ("priority", known[track]["priority"]), ("short", short_of(p["title"])), ("phase", p["phase"]), ("spec", p["spec"]),
-                         ("decisions", ", ".join(str(d) for d in p["decisions"])), ("by", goal_phase.PERSON), ("laid", LAID), ("schema", goal_phase.SCHEMA)],
+                         ("decisions", ", ".join(str(d) for d in p["decisions"])), ("by", goal_phase.PERSON), *([("laid", LAID)] if p["phase"] == "done" else []), ("schema", goal_phase.SCHEMA)],
                         p["title"], "", [("Gist", p["title"]), ("Stages", "\n".join(_stage_line(s) for s in p["stages"]))])
             ideas._write(wiki / ideas.IDEAS / f"{p['slug']}.md", page.text())
             written.append(p["slug"])

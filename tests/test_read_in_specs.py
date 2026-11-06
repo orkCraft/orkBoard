@@ -176,3 +176,14 @@ def test_an_older_heading_spec_nn_dash_loses_its_number(tmp_path):
     (folder / "33-v1.md").write_text("# Spec 33 — v1: three windows, Board · Agents · Review\n")
     got = {p["slug"]: p["title"] for p in specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", log=[])}
     assert got == {"33-v1": "v1: three windows, Board · Agents · Review", "40-design": "Orkboard in orkUI"}
+
+
+def test_only_a_goal_laid_done_says_it_was_laid_from_the_history(tmp_path):
+    """A spec still to build is checked as any goal is: its `done` will need a gate record."""
+    folder = tmp_path / "docs" / "specs"
+    folder.mkdir(parents=True)
+    (folder / "1-old.md").write_text("# 1. Old\n")
+    (folder / "2-new.md").write_text("# 2. New\n\n| Part | What |\n|---|---|\n| **A. One** | a |\n")
+    specs.lay(tmp_path, "llm-wiki/general", specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", done_through=1, log=[]))
+    pages = tmp_path / "llm-wiki/general/pages/ideas"
+    assert "laid: history" in (pages / "1-old.md").read_text() and "laid:" not in (pages / "2-new.md").read_text()
