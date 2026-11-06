@@ -5,7 +5,7 @@
 import { html, cls } from "../html.js";
 import { Head } from "../orkui.js";
 import { lift, lower, lifted, pick, picked } from "../frame/state.js";
-import { nameOf, partiesNow } from "../table/data.js";
+import { isLive, nameOf, partiesNow, wide } from "../table/data.js";
 import { StopCard, askerOf, handsWords, whoOf } from "./stopcard.js";
 import { goalOfStop, lieBehind } from "./data.js";
 import { mapData } from "../shell/store.js";
@@ -78,7 +78,7 @@ export function Stacks({ stacks, plus }) {
   return lanes.map((list, i) => {
     const m = list.length, solo = m === 1;
     const place = (k) => ({ at: solo ? 1 : m - 1 - k, of: solo ? 2 : m - 1, z: m - k, behind: !solo && k > 0 });
-    return html`<div key=${i} class="hand-lane" data-lane=${i} role="group" aria-label=${i === 0 ? "The project’s lane" : `${nameOf(parties[i - 1])}’s lane`}>
+    return html`<div key=${i} class="hand-lane" data-lane=${i} style=${wide.value && i > 0 && isLive(parties[i - 1]) ? "grid-column: -3 / -2" : undefined} role="group" aria-label=${i === 0 ? "The project’s lane" : `${nameOf(parties[i - 1])}’s lane`}>
       ${i === 0 && plus ? html`<${Slot} key="plus" plus=${true} at=${0} of=${1} z=${m + 2}>${plus}<//>` : null}
       ${m ? html`<${Sep} key="sep" lane=${i} party=${parties[i - 1]} />` : null}
       ${list.map(({ item: st, gone }, k) => html`<${Slot} key=${st.key} ...${place(k)}><${Stack} stack=${st} dealt=${dealt} ghost=${gone} /><//>`)}

@@ -22,7 +22,7 @@ import { faceOf } from "./kinds.js";
 
 import { Menu } from "../table/menu.js";
 import { openReport } from "../hand/logsbtn.js";
-import { edgeOn } from "./edge.js";
+import { columnOn } from "../table/data.js";
 import { laidNow, layLine, laying } from "../table/laying.js";
 import { Mana } from "../hand/mana.js";
 import { AddTool } from "../hand/addtool.js";
@@ -42,7 +42,7 @@ export const starting = signal(false);                           // Start was pr
 export const firstGoal = signal(false);                          // the first goal's card is open from the room: its corners are lit one at a time (`FirstGoal`)
 
 /** The room is drawn: the wide frame (the edge's width, not a phone), a host with a first open (`tools` in its snapshot), the table not laid yet, or being laid by the room's Start. */
-export const roomOn = () => edgeOn() && !!town.value?.tools && (!laidNow() || starting.value);
+export const roomOn = () => columnOn() && !!town.value?.tools && (!laidNow() || starting.value);
 
 /** A place opened from the Orkmaster's menu (Settings, Files) lies over the room as it lies over the pane (frame/place.js), its title and ← at its top; closed, the room is as it was. */
 function RoomOver() {
@@ -236,7 +236,7 @@ export function Room() {
     <div class=${cls("fo-table ork-table", { "is-landed": at(2) })} data-place="table" aria-hidden=${at(2) ? undefined : "true"}>
       ${at(2) && html`<${Chairs} presets=${presets} seated=${seated} onSeat=${seat} busy=${busy || step !== "parties"} />`}
     </div>
-    <aside class=${cls("frame-edge fo-edge", { "is-landed": at(0) || at(1) })} aria-label="The table's edge">
+    <aside class=${cls("fo-edge", { "is-landed": at(0) || at(1) })} aria-label="The table's edge">
       <div class=${cls("fo-place", { "is-landed": at(1) })} data-place="ring">${at(1) && html`<${RingAsleep} />`}</div>
       <div class=${cls("fo-place fo-place--potions", { "is-landed": at(0) })} data-place="potions">${at(0) && html`<${Mana} lifted=${null} />`}</div>
     </aside>

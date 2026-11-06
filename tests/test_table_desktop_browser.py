@@ -1300,15 +1300,15 @@ def test_a_form_over_the_pane_covers_the_tables_end_and_the_column_and_the_hand_
     from tests.test_discard_table_browser import open_maps
     pg, host, log = open_maps(gui, "wide")
     try:
-        pg.locator(".frame-edge .edge-discard").wait_for(timeout=WAIT_MS)
+        pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
         pg.get_by_role("button", name="The Orkmaster's menu").click()
         pg.get_by_role("menuitem", name="Settings").click()
         pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-end, .ork-portal-ring, .edge-discard").count() == 0 and pg.locator('.table-body[data-end="form"]').count() == 1, "no ring and no discard beside a form"
-        assert pg.locator(".frame-edge > .hand-die, .frame-edge > .hand-mana").count() == 2, "the die and the potions stay: they are the hand's"
+        assert pg.locator(".table-end, .ork-portal-ring, .release-lane").count() == 0 and pg.locator('.table-body[data-end="form"]').count() == 1, "no ring and no discard lane beside a form"
+        assert pg.locator(".hand-end > .hand-die, .hand-end > .hand-mana").count() == 2, "the die and the potions stay: they are the hand's"
         assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
         pg.keyboard.press("Escape")
-        pg.locator(".frame-edge .edge-discard").wait_for(timeout=WAIT_MS)
+        pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1351,10 +1351,10 @@ def test_start_lays_the_table_in_order_and_says_so_and_the_ring_waits_for_its_fi
     pg.locator('[data-place="table"] .fo-chair').first.click()                                    # a chair pressed seats its leader (spec 150 G.2.3)
     pg.locator('[data-act="start"]:not([disabled])').click()
     pg.locator(".frame[data-laying] .table-tabcell").first.wait_for(timeout=WAIT_MS)
-    delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.frame-edge > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
+    delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.hand-end > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
     assert delays["tab"] < delays["chair"] < delays["die"] < delays["plus"], delays
     pg.locator(".hand-field [data-first-lit]").wait_for(timeout=WAIT_MS)                       # the + card's card is open, its first corner lit (spec 150 G.2.4): no tour
-    assert pg.locator(".table-end__label, .ork-card-place").count() == 0, "§247.1: the discard's place comes with its first content"
+    assert pg.locator(".table-end, .ork-card-place, .release-lane .hand-done").count() == 0, "§247.1: no pile and no dashed place before the first content (Release's lane is there, empty)"
     pg.locator('.frame:not([data-laying])').wait_for(timeout=WAIT_MS)
     pg.locator(".fo-bubble").wait_for(state="detached", timeout=WAIT_MS)
     assert not d.errors, d.errors

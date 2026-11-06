@@ -1,9 +1,7 @@
 /* The portal to main (docs/specs/105-the-default-tool-moving-on-and-the-portal.md §6, decisions §177.4; mockup docs/mockups/portals/): layout only. The portal itself is orkUI's `.ork-portal` (its drawing, its states `is-taking`, `is-sealed`,
-   `is-new`, its size `small`); every colour, face and move is orkUI's. It opens above the pile in the table's right column (`.table-end`) at the narrow width and in the table's edge (frame/edge.js) at the wide one, the line over it and the pixel-face label *Main*; the sealed reason lies under it in the danger
+   `is-new`, its size `small`); every colour, face and move is orkUI's. It opens above the pile in the table's right column (`.table-end`) at the narrow width, the line over it and the pixel-face label *Main*; the sealed reason lies under it in the danger
    colour. The goals ready for main are cards in the discard's view, the hand card's anatomy at the hand's size on each width (80 px wide at the narrow one, as the pile is): the card's own rules are the hand's (hand.css),
-   copied here for the view (they are scoped to the hand and the table's end there).
-   At 760 px and up (docs/specs/110-runes-on-the-table.md §3.2, decisions §185.2; docs/specs/150 D.3-D.4, decisions §254.3) the host is the ring's column at the top of the table's edge, the edge's whole width, always laid from Start: the line over orkUI's `.ork-portal-ring` (asleep, open or sealed) with the portal inside it and
-   the goal's element in its seal, Live's imp on it at twelve and Release's lich at six (36 x 33, their word beside), *Main* at its upper left only while something is ready or checked, the first-time line and the sealed reason under it. */
+   copied here for the view (they are scoped to the hand and the table's end there). */
 
 .portal-host { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); align-self: flex-end; width: calc(var(--hc-w) + var(--ork-8)); margin-bottom: var(--ork-3); text-align: center; }
 .portal__line { margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); overflow-wrap: anywhere; }
@@ -37,22 +35,8 @@
   .table-body:has(.portal-host) .hand-discardview { padding-right: calc(136px + var(--ork-3)); }
 }
 
+/* the wide width (spec 156 D.4, decisions §261.8): the ring is a picture behind the top card of Release's lane (ring.js, lane.css), 1.3 times orkUI's 192 px so that it circles the card (144 x 202); no door, no corners, no gate, no pyramid */
 @media (min-width: 760px) {
   .portal-host { width: 100%; }
-  .portal-host.is-ring { gap: var(--ork-2); margin-bottom: 0; }
-  .portal-host.is-ring .ork-portal-ring { flex: none; margin: 42px 0; }   /* the imp stands at twelve and the lich at six, each 33 px high and clear of the ring's runes: their room is the ring's margin (spec 150 D.4) */
-  .portal-host.is-ring .ork-portal-ring + .portal__hint, .portal-host.is-ring .ork-portal-ring ~ .portal__sealed { margin-top: 0; }
-  .portal-host.is-asleep .portal__label { color: var(--ork-ink-faint); opacity: 0.6; }
-  .portal__label { position: absolute; left: var(--ork-2); top: -30px; z-index: 4; }                  /* *Main*, only while something is ready or checked: at the ring's upper left, in the imp's row */
-  /* the road's two heads on the ring (spec 150 D.4): Live's at twelve, Release's at six, each 36 x 33 with its word beside it in the caption's face; the members' heads (or the checks that passed) lie at the leader's other side */
-  .portal-host.is-ring :is(.ork-portal-ring__before, .ork-portal-ring__after) { left: calc(50% - 19px); right: auto; flex-direction: row; align-items: center; gap: var(--ork-2); padding: 0; }
-  .portal-host.is-ring .ork-portal-ring__after { top: -40px; }
-  .portal-host.is-ring .ork-portal-ring__before { bottom: -42px; top: auto; }
-  .portal-host.is-ring :is(.ork-portal-ring__before, .ork-portal-ring__after) > .ork-portal-ring__guard > .ork-race__head { width: 36px; height: 33px; }
-  .portal__corner-word { color: var(--ork-ink-muted); font: var(--ork-type-caption); white-space: nowrap; }
-  .portal-host.is-ring .is-asleep .portal__corner-word { color: var(--ork-ink-faint); }
-  .portal__crew { position: absolute; right: 100%; top: 6px; display: flex; flex-direction: row-reverse; gap: var(--ork-1); margin-right: var(--ork-2); }
-  .portal__crew:empty { display: none; }
-  .portal-host.is-ring .portal__crew .ork-race__head { width: 24px; height: 22px; }
-  body:has(.hand-mana[data-rows="2"][data-paid]) .portal-host .portal__hint { display: none; }   /* two rows of potions and the paid slot make the edge crowded: the first-time line gives way so the ring keeps clear of the discard (spec 114 B) */
+  .portal-host.is-ring { gap: 0; margin-bottom: 0; }
 }

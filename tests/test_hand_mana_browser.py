@@ -69,13 +69,8 @@ def test_two_tools_are_two_potions_in_one_row_in_the_chips_order_flush_against_t
         assert mark.get_attribute("srcset").endswith("harness-claude@2x.png 2x")
         assert mark.bounding_box()["y"] < p.nth(0).locator(".ork-potion").bounding_box()["y"] < p.nth(0).locator(".hand-pot__share").bounding_box()["y"]       # the mark above, the share under
         m = pg.locator(".hand-mana").bounding_box()
-        if width == "wide":
-            e = pg.locator(".frame-edge").bounding_box()
-            assert m["x"] + m["width"] / 2 == pytest.approx(e["x"] + e["width"] / 2, abs=2) and m["x"] + m["width"] <= pg.viewport_size["width"]        # in the table's edge (spec 150 D.2), centred in it, at the window's foot
-            assert m["y"] + m["height"] <= e["y"] + e["height"] + 1 and m["y"] + m["height"] >= e["y"] + e["height"] - 40
-        else:
-            assert m["x"] + m["width"] == pytest.approx(pg.viewport_size["width"], abs=1)        # flush against the window's edge
-        assert pg.locator(".hand-mana").evaluate("e => e.closest(%r) !== null" % (".frame-edge" if width == "wide" else ".hand")) and pg.locator(".table-tabs__end .table-chip, .table-tabs .limit-chip").count() == 0    # in the hand, none at the tabs' end
+        assert m["x"] + m["width"] == pytest.approx(pg.viewport_size["width"], abs=1)        # flush against the window's edge, at the hand's right end on both widths (spec 156 D: no edge)
+        assert pg.locator(".hand-mana").evaluate("e => e.closest('.hand') !== null") and pg.locator(".table-tabs__end .table-chip, .table-tabs .limit-chip").count() == 0    # in the hand, none at the tabs' end
         narrow.no_sideways(pg)
         shot(pg, f"{width}-two")
     finally:
@@ -241,8 +236,7 @@ def test_with_no_goal_at_all_the_potions_still_lie_at_the_hands_right_end(gui):
         pg.locator(".hand-plus.is-large").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(300)
         box = pg.locator(".hand-mana").bounding_box()
-        edge = pg.locator(".frame-edge").bounding_box()
-        assert p.count() == 2 and box["x"] >= edge["x"] and box["x"] + box["width"] <= edge["x"] + edge["width"] and box["y"] + box["height"] <= pg.viewport_size["height"] + 1, "the potions lie in the edge (spec 150 D.2)"
+        assert p.count() == 2 and box["x"] + box["width"] <= pg.viewport_size["width"] + 1 and box["y"] + box["height"] <= pg.viewport_size["height"] + 1, "the potions lie at the hand's right end, inside the window"
         shot(pg, "wide-empty")
     finally:
         pg.close()

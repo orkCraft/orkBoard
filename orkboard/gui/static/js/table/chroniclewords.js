@@ -1,4 +1,4 @@
-// The chronicle's words (docs/specs/134 §D, docs/specs/150 E2.2; realm/lexicon.py `TERMS`: chronicle, chronicle_week, how_works_now, changed_by, past, past_through, past_search, past_line, show_on_table). A chapter's name is the version's own, never a word of ours; a week is *The week of 3 Nov*.
+// The chronicle's words (docs/specs/134 §D, docs/specs/156 D; realm/lexicon.py `TERMS`: chronicle, chronicle_week, how_works_now, changed_by, unreleased, party_discard). A chapter's name is the version's own, never a word of ours; a week is *The week of 3 Nov*.
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** "28 Oct" from a day "2026-10-28" (read as written: no time zone moves it); "" when it does not read. */
@@ -12,17 +12,11 @@ export const chapterName = (c) => (c.kind === "week" ? `The week of ${dayWord(c.
 
 export const UNRELEASED = "Unreleased";
 
-/** The past's title, both axes (spec 150 E2.2): *The past · through Design · every version*, *· v0.3*; `through` is the open tab's name (*the Orkmaster* on the Orkmaster's). */
-export const pastTitle = (through, deck = "") => `The past · through ${through} · ${deck || "every version"}`;
+/** The title of a decision's entry or a goal as it was, opened over the pane from the past (chronicle.js): *Decision §238*, *The goal as it was*; the tab's own name leads (*through Design*) on a party's tab. */
+export const entryTitle = (through, props = {}) => `${props.goal ? "The goal as it was" : `Decision §${props.decision || props.lit || ""}`}${through ? ` · through ${through}` : ""}`;
 
-/** The search's words: *Search Design's past…*; on the Orkmaster's tab, the whole project's. */
-export const pastSearch = (party = "") => (party ? `Search ${party}'s past…` : "Search the past…");
-
-/** The lich's line in the table's edge: *Design's past ›*, *The project's past ›*. */
-export const pastLine = (party = "") => (party ? `${party}'s past ›` : "The project's past ›");
-
-/** A card lifted in the past, to the tab's table. */
-export const showOn = (party) => `Show on ${party}'s table`;
+/** The discard's label (spec 156 D.3): *Discard* on the Orkmaster's tab and in a project with no Release party, *Design's discard* on a party's. */
+export const discardLabel = (party = "") => (party ? `${party}'s discard` : "Discard");
 
 /** *changed by §238* or *changed by §238, §240*. */
 export const changedBy = (list) => `changed by ${list.map((c) => `§${c.number}`).join(", ")}`;

@@ -72,12 +72,12 @@ const WHOLE = new Set(["route", "talk", "hearing", "decision", "fork", "conflict
 
 /** The party a row belongs to ("" for a row of no party of its own). */
 const partyOfRow = (row) => row?.g?.slug || row?.row?.goal || row?.goal || "";
-/** Whether a row is one of a road party at a width where that party has no lane (Release and Live in the ring's corners, docs/specs/111 §4.1): it lies in the hand's last lane. */
+/** Whether a row is one of a road party at a width where that party has no lane (Release at the wide width: its lane is the discard, docs/specs/156 D.1): it lies in the hand's last lane. */
 const onRoad = (row, parties) => !WHOLE.has(row?.kind || row?.row?.kind || "") && !parties.some((g) => g.slug === partyOfRow(row)) && roadSlugs().has(partyOfRow(row));
 
 /** The lane a row lies under (docs/specs/101 §4.3): 0 the first (the project's), else 1 + the place of its party among the tabs' parties (table/data.js `partiesNow`, the order of the lanes after the first).
  *  A failure lies under its task's party, a party's question under its party, the project's questions (no goal of their own) under their leader's party; what is the whole goal's, a sign-in and a row
- *  of a party the tabs do not have lie under the first. The exception is a road party's row at the wide width (Release, Live: no lane of their own): it lies in the last lane (spec 111 §4.1).
+ *  of a party the tabs do not have lie under the first. The exception is Release's row at the wide width (no lane of its own: its lane is the discard): it lies in the last lane (spec 156 D.1).
  *  `row`: a stop (`stopsOfProject`) or a Needs you row (`{kind, goal}`). */
 export function laneOf(row, parties = partiesNow()) {
   if (WHOLE.has(row?.kind || row?.row?.kind || "")) return 0;

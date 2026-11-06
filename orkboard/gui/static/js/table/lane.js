@@ -1,0 +1,56 @@
+// Release's lane: the discard as the frame's last column (docs/specs/156-one-pick-and-the-release-column.md D.3–D.6, decisions §261.7–§261.10; before it the table's edge, spec 150 D). At 760 px and up, beside the pane under the tabs and on every tab, as wide as a lane
+// (`--col-w`) and flush with the window's right edge: its label *Discard* (the Orkmaster's tab), *<party>'s discard* (a party's, Live's and Release's), **through the open tab's eyes** — on a party's tab the goals whose route held that party (`routeParties`), on the
+// Orkmaster's, Live's and Release's the project's —, its cards whole at the hand's size, **top to bottom**: the goal ready for main (with the portal's ring round the top one, ring.js, only while one is ready, checked or going in), the goals done and not yet seen
+// (newest first; the moon of a night's goal as before), then the past (pastlane.js: *Unreleased* and a deck a version). **Each card is picked** (part B, frame/state.js `pick`); a goal done and not seen is told to the host as seen when it is picked (`ideas.seen`) and then lies
+// with its version in the past. To main is the picked ready card's act on the table (tomain.js). The lane scrolls with the table (only the table scrolls: §254.2). A project with no Release party has a lane with no head over it and the word *Discard* on every tab; with no gate
+// (`noGate`) there is no portal and no goal ready for main. A form over the whole table leaves the lane out, as it left the end. Layout only: lane.css, discard.css (the card's anatomy is the hand's).
+import { useEffect, useRef } from "preact/hooks";
+import { html, cls } from "../html.js";
+import { act } from "../shell/store.js";
+import { mergeGate } from "../arena/gate.js";
+import { ORKMASTER, over, pick, picked } from "../frame/state.js";
+import { readyOf, readyWords } from "../hand/data.js";
+import { nightMoons } from "../hand/nightcard.js";
+import { DoneFace, mainLine, shownDone, useNightDeal } from "./discard.js";
+import { isLive, isRelease, nameOf, noGate, roadParties, routeParties } from "./data.js";
+import { laidNow } from "./laying.js";
+import { isForm } from "./over.js";
+import { PastDecks } from "./pastlane.js";
+import { discardLabel } from "./chroniclewords.js";
+import { ReadyCards, choose, chosenSlug, close, sending } from "./portal.js";
+import { RingAround } from "./ring.js";
+
+/** Whether the lane is drawn: the table is laid and no form covers it. */
+export const laneShown = () => laidNow() && !isForm(over.value);
+
+/** The party whose eyes the lane looks through: a leader's slug on its own tab, "" on the Orkmaster's, Live's and Release's (the project's). */
+const eyesOf = (g) => (g && !isRelease(g) && !isLive(g) ? g.slug : "");
+
+export function ReleaseLane({ tab, parties }) {
+  const g = parties.find((x) => x.slug === tab) || null, party = eyesOf(g), scroll = useRef(), dealing = useNightDeal(), moons = nightMoons();
+  const headless = !roadParties().release, label = headless || tab === ORKMASTER || !g ? discardLabel() : discardLabel(nameOf(g));
+  const held = (slug) => !party || routeParties(slug).has(party);                                    // a goal is a party's when its route held it
+  const ready = noGate() ? null : readyOf(), goals = (ready?.goals || []).filter((x) => held(x.slug)), top = goals[0] || null, own = !!ready && !ready.goals.length && !party && ready.commits > 0;
+  const inReady = new Set(goals.map((x) => x.slug)), done = shownDone().filter((x) => held(x.slug) && !inReady.has(x.slug)), now = picked.value;
+  useEffect(() => {                                                                                 // the ready card picked is the goal chosen for the portal (its plan and its checks); any other pick, or none, drops the choice
+    if (now && inReady.has(now)) choose(now);
+    else if (chosenSlug()) close();
+  }, [now, [...inReady].join(",")]);
+  const press = (slug) => {                                                                          // a card pressed is picked (again: put away); a goal not yet seen is told so
+    const again = picked.peek() === slug;
+    pick(slug);
+    if (!again && shownDone().some((x) => x.slug === slug)) act("ideas.seen", { idea: slug });
+  };
+  const merge = (e) => mergeGate(e);
+  return html`<aside class=${cls("release-lane", { "is-headless": headless })} aria-label=${label} data-lane="release" data-through=${party || undefined}>
+    <span class="table-end__label release-lane__label">${label}</span>
+    <div class="release-lane__scroll" ref=${scroll}>
+      ${(top || sending.value) && html`<${RingAround} slug=${top?.slug || null}>${top && html`<${ReadyCards} goals=${[top]} main=${ready.main} on=${now} onPress=${press} />`}<//>`}
+      ${goals.length > 1 && html`<${ReadyCards} goals=${goals.slice(1)} main=${ready.main} on=${now} onPress=${press} />`}
+      ${own && html`<p class="release-lane__own cap">${readyWords(ready)}: commits that belong to no goal.<button type="button" class="ork-btn" data-to-main onClick=${merge}>To ${ready.main}</button></p>`}
+      ${done.length > 0 && html`<ul class="release-lane__done" aria-label="Done, not yet seen">${done.map((x) => html`<li key=${x.slug}><${DoneFace} g=${x} picked=${now === x.slug} dealing=${dealing === x.slug ? dealing : ""} moon=${moons.has(x.slug)}
+        line=${mainLine(x)} label=${`${x.full}, done`} onPress=${() => press(x.slug)} /></li>`)}</ul>`}
+      <${PastDecks} party=${party} seeing=${scroll} />
+    </div>
+  </aside>`;
+}
