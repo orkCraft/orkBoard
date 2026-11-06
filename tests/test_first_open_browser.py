@@ -176,8 +176,8 @@ def test_reduced_motion_lays_each_place_at_once(desk, tmp_path):
 def test_a_project_with_parties_of_its_own_is_laid_at_once(desk, tmp_path):
     from orkboard.realm import ideas
     root = git_repo(tmp_path / "made")
-    ideas.add_track(root, "Tech")
     d = desk(root)
+    ideas.add_track(d.host.ideas.root(False), "Tech")           # the parties are under the Board's root (the Wiki; spec 155 F.1), not the repository's
     fill_hand(d.host, "claude")
     pg = d.open()
     pg.locator('.frame[data-laid="1"] .frame-table').wait_for(timeout=WAIT_MS)

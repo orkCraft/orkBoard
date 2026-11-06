@@ -512,3 +512,65 @@ def test_a_plan_with_no_base_makes_no_extra_call(work):
     work.runner.tick()
     work.tick()
     assert len(work.model.steps("accept_step")) == 1 and set(work.plan()["accepts"]) == {"1"}
+
+
+# -- a step nobody looked at; a screen's line (spec 155 B) ---------------------------------------------------------------------------------
+
+def _seen(w, files, shot=False):
+    if shot:
+        folder = w.host.ideas.state_dir / "ideas" / w.slug / "picks" / "k1-shot-r1"
+        folder.mkdir(parents=True)
+        (folder / "shot.png").write_bytes(b"\x89PNG")
+    w.merge("k1")
+    w.runner._set_task(w.slug, "k1", tests={"passed": 5, "failed": 0, "skipped": 0}, sees=files, **({"shot": {"id": "k1-shot-r1", "file": "shot.png"}} if shot else {}))
+    w.runner.tick()
+    w.tick()
+    return w.model.steps("accept_step")[0]["prompt"]
+
+
+def _only_test(host, parties, model, monkeypatch, lines):                        # noqa: F811
+    model.said[("section_first", "")] = section("Product's why.", lines, ["changed src/ui — the settings screen"])
+    monkeypatch.setattr(task_made, "_git", lambda repo, *a: (b"3\t0\tsrc/theme.py\n" if "--numstat" in a else DIFF) if a and a[0] == "diff" else None)
+    w = _work(host, parties, model)
+    model.said[("accept_step", "")] = {**ALL, "done_when": [{"n": i, "met": True, "why": "yes"} for i in range(1, len(lines) + 1)]}
+    return w
+
+
+def _unlooked(w):
+    return [r for r in findings.of_goal(w.host.ideas.state_dir, w.slug) if r["what"].startswith("Nobody looked")]
+
+
+def test_a_task_keeps_the_files_people_see_at_most_six():
+    from orkboard.core import idea_shot
+    assert idea_shot.seen_files(["a.css", "b.py", "tests/c.css"]) == ["a.css"] and idea_shot.seen_files(["b.py"]) == []
+    assert len(idea_shot.seen_files([f"s{i}.css" for i in range(9)])) == 6
+
+
+def test_a_step_that_changed_a_screen_with_only_test_lines_raises_nobody_looked_once(host, parties, model, monkeypatch):    # noqa: F811
+    proofed = _only_test(host, parties, model, monkeypatch, ["[test] A theme is saved", "The theme loads"])
+    prompt = _seen(proofed, ["web/a.css", "web/b.html"])
+    rows = _unlooked(proofed)
+    assert len(rows) == 1 and rows[0]["what"] == "Nobody looked at what this step changed: web/a.css, web/b.html" and rows[0]["status"] == "told" and rows[0]["source"] == "accept"
+    assert proofed.plan()["accepts"]["1"]["verdict"] == "accepted"                       # the verdict is not changed by it
+    assert idea_accept.SEES_RULE in prompt
+
+
+def test_a_look_line_raises_only_the_existing_finding(proofed):
+    _seen(proofed, ["web/a.css"])
+    what = [r["what"] for r in findings.of_goal(proofed.host.ideas.state_dir, proofed.slug)]
+    assert "Nobody could look at: The settings screen is dark" in what and not _unlooked(proofed)
+
+
+def test_no_sees_raises_nothing_and_the_rule_is_only_with_sees(work):
+    prompt = _seen(work, [])
+    assert not _unlooked(work) and idea_accept.SEES_RULE not in prompt and "How each Done when line is proven" not in prompt
+
+
+def test_a_picture_means_the_step_was_looked_at(host, parties, model, monkeypatch):    # noqa: F811
+    proofed = _only_test(host, parties, model, monkeypatch, ["[test] A theme is saved"])
+    _seen(proofed, ["web/a.css"], shot=True)
+    assert not _unlooked(proofed)
+
+
+def test_the_rule_comes_with_sees_even_when_no_line_has_a_mark(work):
+    assert idea_accept.SEES_RULE in _seen(work, ["web/a.css"])

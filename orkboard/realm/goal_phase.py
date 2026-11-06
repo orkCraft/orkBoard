@@ -104,6 +104,20 @@ def _needs_of(root: Path, state_dir: Path) -> Callable:
     return lambda i, st, plan, asks: board_map.idea_needs(root, state_dir, i, st, plan, asks)
 
 
+def _more_than_schema(page: Page, before: str, schema: str | None) -> bool:
+    """Whether the page, as the Board would write it, differs from `before` in a key other than `schema` (spec 155 G.1: a page is not written only to move its schema).
+    `schema`: what the page said (None for no such line)."""
+    meta = list(page.meta)
+    try:
+        if schema is None:
+            page.meta = [(k, v) for k, v in meta if k != "schema"]
+        else:
+            page.set("schema", schema)
+        return page.text() != before
+    finally:
+        page.meta = meta
+
+
 def mirror(root: Path, state_dir: Path, needs: Callable | None = None, only: str = "") -> list[str]:
     """The keys of each goal's page written where they differ from its state (A.3), and `state.json`'s `phase_written` set to the phase written: the slugs of the pages written. A page is
     written only when its text would change. `needs(i, st, plan, asks)` answers the rows of the hand for a goal (the host's, which has more than the Board's own); `asks: person` is there
@@ -127,12 +141,13 @@ def mirror(root: Path, state_dir: Path, needs: Callable | None = None, only: str
                 asking = page.get("asks") == PERSON
             want = keys(st, gate_of(plan), asking, by)
             before = page.text()
+            schema = page.get("schema") if any(k == "schema" for k, _v in page.meta) else None
             for k in MANAGED:
                 if k in want:
                     page.set(k, want[k])
                 elif k != "by":
                     page.meta = [(mk, mv) for mk, mv in page.meta if mk != k]
-            if page.text() != before:
+            if page.text() != before and _more_than_schema(page, before, schema):
                 ideas._write(Path(root) / ideas.IDEAS / f"{slug}.md", page.text())
                 written.append(slug)
             if changing:

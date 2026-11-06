@@ -548,6 +548,19 @@ def test_the_plans_prompt_says_what_one_task_has_cost_here_and_when_to_split_spe
     assert "on this project one has cost about 400,000 tokens, $2.50 (the median of the last 3)" in learned and "first guess" not in learned
 
 
+def test_the_plan_asks_no_browser_test_of_a_tool_that_cannot_start_one_spec_155_c1(keeper):
+    from orkboard.realm import goal_team
+    rule = ("The tasks' tool cannot start a browser or serve a page: never ask a task to run a browser test or a test that opens a local port; "
+            "the gate runs them.")
+    slug, (design, _tech) = _routed(keeper)
+    goal_team.set_tool(keeper.root, design, "claude")                  # a tool that starts a browser: no rule
+    assert rule not in " ".join(keeper.plan_prompt(keeper.root, slug).split())
+    goal_team.set_tool(keeper.root, design, "codex")                   # browsers=False (realm/harnesses.py): the rule, after the tests rule
+    prompt = " ".join(keeper.plan_prompt(keeper.root, slug).split())
+    assert f"A code task changes the tests its change breaks, in the same task: the gate runs them when it ends. A later task may add coverage, never repair a task before it. - {rule}" in prompt
+    assert prompt.count(rule) == 1
+
+
 def test_a_task_keeps_the_files_that_exist_and_drops_the_rest_spec_153_b1(tmp_path):
     from orkboard.core import idea_plan
     (tmp_path / "src").mkdir()

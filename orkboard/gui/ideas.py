@@ -53,7 +53,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import board_ask, board_in_code, board_map, event_log, first_open, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, party_recipes, pitches, recurring, wiki
+from orkboard.realm import board_ask, board_in_code, board_map, event_log, first_open, goal_team, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, party_recipes, pitches, recurring, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_halt import STARTS, HaltMixin
@@ -193,7 +193,15 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
     def root(self, make: bool = True) -> Path:
         """Where the Board's pages are: its own tree on the work branch (spec 35 §13, gui/ideas_board.py), else the Wiki
         joined to the board. `make`: the tree is made (and the pages moved into it) when missing; the snapshot only reads."""
-        return self.tree_root(self.wiki(), make)
+        root = self.tree_root(self.wiki(), make)
+        seated = self.__dict__.setdefault("_seated", set())
+        if root not in seated:                               # a Board in the code names its leaders; their roles are made here, once a root (spec 155 F.2)
+            seated.add(root)
+            try:
+                goal_team.seat_leaders(root, self.state_dir)
+            except (OSError, ValueError):
+                pass
+        return root
 
     def keeper_root(self) -> Path:
         """The keeper's (its clock): the Board's tree is made only for a Board that has pages already."""
@@ -366,7 +374,7 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
                         "review_count": len(waiting),
                         "review_results": [{k: r[k] for k in ("idea", "task", "title")} for r in waiting],
                         "preview": self.preview_kind(),                  # whether the project has a preview to play (spec 113 §2)
-                        "laid": first_open.laid(self.state_dir, self.host.repo_root),
+                        "laid": first_open.laid(self.state_dir, self.root(False)),
                         "keep_off_offered": board_in_code.keepable(self.host.repo_root, self.state_dir)}      # whether the new goal's card offers *Keep off the repository*: a public or unreadable repository with the yes (spec 151 F.4)
             except Exception:                   # a broken page never breaks the town's snapshot
                 data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": "", "laid": True, "keep_off_offered": False}      # a broken page never hides the table

@@ -289,3 +289,11 @@ def test_the_brief_is_the_memory_banks_projectbrief_written_again_when_it_change
     assert write_out.brief_into(project, state, board, out) and "Design" in (out / "project.md").read_text()
     (out / "project.md").write_text("# my own brief\n")
     assert not write_out.brief_into(project, state, board, out) and (out / "project.md").read_text() == "# my own brief\n"
+
+
+def test_an_empty_brief_writes_no_file_and_one_with_a_party_does(project, state, tmp_path):
+    """Spec 155 G.3: no `project.md` while every part of the brief is empty (no facts, no parties)."""
+    board, out = _board(project), tmp_path / "wiki"
+    assert not write_out.brief_into(project, state, board, out) and not (out / "project.md").exists()
+    _party(project, "Tech", "archie")
+    assert write_out.brief_into(project, state, board, out) and (out / "project.md").is_file()

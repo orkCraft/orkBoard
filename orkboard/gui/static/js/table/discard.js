@@ -123,13 +123,6 @@ export function DiscardView() {
   };
   return html`<div class="hand-discardview">
     ${!done.length && !ready && html`<p class="ok-tone-muted">Nothing is done and waiting, and nothing waits for main.</p>`}
-    ${done.length > 0 && html`<section class="hand-part" aria-label="Done, not yet seen">
-      <h2 class="ork-label">Done, not yet seen</h2>
-      <ul class="hand-rows">${done.map((g) => html`<li key=${g.slug}><button type="button" class="ork-row hand-drow" data-slug=${g.slug} onClick=${() => seeResult(g)}>
-        <${Elem} name=${g.element} hue=${g.hue} dim=${!g.element} /><span class="hand-drow__text"><span class="body">${g.full}</span></span>
-        ${moons.has(g.slug) && html`<span class="hand-drow__moon" data-moon="1" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
-        ${g.type?.sign && html`<span class="hand-drow__type" title=${g.type.name}><${Sign} name=${g.type.sign} /></span>`}
-        <span class="cap hand-drow__place">Result<i class="ork-chev right" aria-hidden="true"></i></span></button></li>`)}</ul></section>`}
     ${ready && html`<section class="hand-part" aria-label="Ready for main">
       <div class="hand-part__head"><${Head} race=${lichOf().race} tier=${lichOf().tier} /><h2 class="ork-label hand-part__title">Ready for ${ready.main}</h2>
         <button type="button" class="ork-btn primary" data-to-main disabled=${busy}
@@ -137,6 +130,13 @@ export function DiscardView() {
       ${ready.goals.length > 0 ? html`<${ReadyCards} goals=${ready.goals} main=${ready.main} />`
         : html`<p class="cap">${readyWords(ready)}: commits that belong to no goal.</p>`}
       <p class="cap">Nothing reaches ${ready.main} without you.</p></section>`}
+    ${done.length > 0 && html`<section class="hand-part" aria-label="Done, not yet seen">
+      <h2 class="ork-label">Done, not yet seen</h2>
+      <ul class="hand-rows">${done.map((g) => html`<li key=${g.slug}><button type="button" class="ork-row hand-drow" data-slug=${g.slug} onClick=${() => seeResult(g)}>
+        <${Elem} name=${g.element} hue=${g.hue} dim=${!g.element} /><span class="hand-drow__text"><span class="body">${g.full}</span></span>
+        ${moons.has(g.slug) && html`<span class="hand-drow__moon" data-moon="1" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
+        ${g.type?.sign && html`<span class="hand-drow__type" title=${g.type.name}><${Sign} name=${g.type.sign} /></span>`}
+        <span class="cap hand-drow__place">Result<i class="ork-chev right" aria-hidden="true"></i></span></button></li>`)}</ul></section>`}
   </div>`;
 }
 

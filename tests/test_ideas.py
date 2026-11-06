@@ -216,3 +216,10 @@ def test_a_page_keeps_the_keys_it_does_not_know_and_an_answered_question_is_not_
     page = ideas.idea_page(root, slug)
     assert [page.get(k) for k in ("phase", "by", "spec")] == ["work", "Codex", "docs/specs/9-x.md"]
     assert ideas.items(page.section("Open questions")) == ["Two?"]
+
+
+def test_a_page_not_named_by_a_slug_is_left_out_of_the_list(root, tmp_path):
+    good = ideas.add_idea(root, "A good goal", state_dir=tmp_path / ".orkcraft")
+    page = root / "pages/ideas" / f"{good}.md"
+    (root / "pages/ideas/96-orkui-0.15.0-copied.md").write_text(page.read_text(encoding="utf-8"), encoding="utf-8")
+    assert [i["slug"] for i in ideas.ideas(root)] == [good]

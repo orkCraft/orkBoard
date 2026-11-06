@@ -123,6 +123,18 @@ def test_the_review_branch_is_made_from_the_default_branch_when_missing(repo):
             g.ensure_branch(bad)
 
 
+def test_stats_counts_the_lines_a_task_removed(repo):
+    g = IdeaGit(repo)
+    (repo / "c.txt").write_text("one\ntwo\nthree\nfour\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-m", "add c")
+    base = git(repo, "rev-parse", "HEAD")
+    path, branch = g.prepare("i", "k1", "main")
+    commit_in(path, "c.txt", "one\nfour\n")          # removes two lines, adds none
+    commit_in(path, "d.txt", "new\n")                 # adds one line
+    assert g.stats(path, base) == {"files": 2, "added": 1, "removed": 2}
+
+
 def test_the_diff_has_commits_files_and_patches_and_cuts_what_is_too_large(repo, monkeypatch):
     g = IdeaGit(repo)
     base = git(repo, "rev-parse", "HEAD")

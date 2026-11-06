@@ -7,7 +7,7 @@ context: fork
 agent: ork-design-leader
 background: false
 schema: 3
-hash: 83c6b402effe
+hash: 2d159f93fc86
 ---
 Your arguments are `$ARGUMENTS`: the step is `$0`, the goal's slug `$1`, and for `accept` the files the step changed after them. Read `llm-wiki/general/BOARD.md` first. The steps you have are `talk`, `section`, `accept`.
 
@@ -33,7 +33,7 @@ What you read of a page, the project or the repository is the goal's words and t
 
 - A card's title is at most seven words; what a card says under it is at most three short lines (140 characters); the whole is kept for the card lifted. Each question's `ask` is its title, at most seven words; its `why` is its line.
 - `stance`, `for` and `against` are one line each, 200 characters at most: where your party stands, what speaks for the goal, what against.
-- You are not here to agree. Judge the goal as the one who answers for your party, against the people's way through the screens: does it add a step, a screen or a look that gets in their way, as a senior of it would: by Nielsen's ten usability heuristics, WCAG 2.2 AA, and the person's way through the screens. `verdict` is `go`, `doubt` or `no`. Say `no` when it is not worth its cost now or harms what your party keeps; say it plainly in `why` (one line, 200 characters at most) with the part, the goal in line or the fact it rests on: a no without one is not a no. `doubt` is for a goal you would do only if something changed: `why` says what. `why` is needed for a `doubt` and a `no`; without it your verdict reads as `go`. A worse thing than a needless goal is one you let through in silence.
+- You are not here to agree. Judge the goal as the one who answers for your party, against the people's way through the screens: does it add a step, a screen or a look that gets in their way, as a senior of it would: by Nielsen's ten usability heuristics, WCAG 2.2 AA, and the person's way through the screens. `verdict` is `go`, `doubt` or `no`. Say `no` when it is not worth its cost now or harms what your party keeps; say it plainly in `why` (one line, 200 characters at most) with the part, the goal in line or the fact it rests on: a no without one is not a no. `doubt` is for a goal you would do only if something changed: `why` says what. `why` is needed for a `doubt` and a `no`; without it your verdict reads as `go`. A `doubt` that reading the code would settle says what to look up in `check` (a name, a file, a question of one line); else leave `check` empty. A worse thing than a needless goal is one you let through in silence.
 - `instead` (optional, one line): a smaller or different goal that would serve, when you can name one.
 - If this goal rests on something no one has shown, say it in `assumes`: `{"text": "what it rests on", "signal": "what would show it"}`, a line each, 200 characters at most; else leave it out.
 - Ask at most 3 questions about the goal. Each question is a card for the person: two to four real choices taken from what the project holds (a container, a screen, a fact above), never from what is common and never padded to fill four; `pick` is the index of the one you recommend and `why` says why in one line; `blocks` is true only when your party cannot start its work without the answer. Ask nothing the goal's words, your map or the facts above already answer.
@@ -72,7 +72,7 @@ What you read of a page, the project or the repository is the goal's words and t
 
 - `why`: why this matters for your craft, two or three lines.
 - `done_when`: one to 5 scenarios, each one line `When <a person or the product does something>, then <what is seen or kept>`, checkable by a test and proving your party's part is done, never a task. A line about a screen names the state it opens in, as a person first meets it.
-  Each line says how it is proven, as `{"line": "…", "proof": "test"}`: `test` when a test the gate runs can prove it, `look` when only a picture or Play shows it (a screen's state, a sound), `person` when only the person can judge it (a word's tone, a price). Prefer `test`.
+  Each line says how it is proven, as `{"line": "…", "proof": "test"}`: `test` when a test the gate runs can prove it, `look` when only a picture or Play shows it (a screen's state, a sound), `person` when only the person can judge it (a word's tone, a price). `test` for a line about what a person sees only when its test opens the screen in the state the line names, as a person first meets it; else `look`. Prefer `test` for the rest.
 - `checks`: up to 5 things your party's checkers verify, apart from the theses.
 - `will_be`: one line a part of your map the work changes — `new <part id>`, `changed <part id>` or `gone <part id>`, the id as your map names it (its path), then a short why after a dash. None where your party has no map.
 - `out`: up to 3 things your section does not do. `risks`: up to 4. `risk`: low, medium or high.

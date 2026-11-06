@@ -187,3 +187,16 @@ def test_only_a_goal_laid_done_says_it_was_laid_from_the_history(tmp_path):
     specs.lay(tmp_path, "llm-wiki/general", specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", done_through=1, log=[]))
     pages = tmp_path / "llm-wiki/general/pages/ideas"
     assert "laid: history" in (pages / "1-old.md").read_text() and "laid:" not in (pages / "2-new.md").read_text()
+
+
+def test_a_spec_named_with_dots_is_a_goal_of_a_slug_laid_once(repo: Path) -> None:
+    spec(repo, "96-orkui-0.15.0-copied.md", "# 96. OrkUI copied\n\n## Done when\n\nIt works.\n")
+    got = planned(repo)
+    assert "96-orkui-0-15-0-copied" in got and "96-orkui-0.15.0-copied" not in got
+    p = got["96-orkui-0-15-0-copied"]
+    assert p["spec"] == "docs/specs/96-orkui-0.15.0-copied.md" and not p["exists"]
+    assert specs.line(p).startswith("96 · OrkUI copied")
+    assert "96-orkui-0-15-0-copied" in specs.lay(repo, WIKI, [p])
+    assert (repo / WIKI / "pages/ideas/96-orkui-0-15-0-copied.md").exists()
+    assert planned(repo)["96-orkui-0-15-0-copied"]["exists"]
+    assert specs.lay(repo, WIKI, [planned(repo)["96-orkui-0-15-0-copied"]]) == []

@@ -304,3 +304,13 @@ def test_an_answer_decided_by_a_reference_the_project_does_not_hold_is_found(tmp
     assert [f["what"] for f in board_check.run(repo) if f["path"].endswith("/g.md")] == [
         "the answer is decided by §40, which this project's decisions and specs do not hold"]
     assert board_check.reference_exists(repo, "§3.2") and board_check.reference_exists(repo, "spec 5") and not board_check.reference_exists(repo, "spec 6")
+
+
+def test_a_page_not_named_by_its_slug_is_found_with_the_name_it_should_have(repo):
+    path = goal(repo)
+    bad = path.with_name("96-orkui-0.15.0-copied.md")
+    bad.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
+    assert "`96-orkui-0.15.0-copied.md`: a goal's file name is its slug: rename it `96-orkui-0-15-0-copied.md`" in found(repo)[0] + "".join(found(repo))
+    tracks = repo / WIKI / "pages/tracks"
+    (tracks / "Bad.Party.md").write_text("---\nkind: track\n---\n# Bad\n", encoding="utf-8")
+    assert any("a party's file name is its slug: rename it `bad-party.md`" in f for f in found(repo))

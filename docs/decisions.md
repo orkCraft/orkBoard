@@ -7043,6 +7043,47 @@ through. So:
    (`--decided-by`), `realm/board_check.py` (`reference_exists`, the finding); this repository's files written again.
 The owner's call.
 
+## 260. What trial 152 found: a bad page never stops the Board; a step that changed what people see is looked at or said unlooked; a doubt the code settles is checked, a question a reference settles answered, and the weigher weighs only; the Board in the code opens as it is (6 November 2026, the owner)
+
+Changes: 257.4 (a screen's line), 257.5 (a step nobody looked at), 259.1 (the app answers by reference too); keeps 156.8, 198.4
+and 255.12, which the code had not followed.
+
+Why: `docs/trials/152-a-leader-accepts.md`, two goals on local Codex against §253's run, at `452c44c0`. The flow cost 40% less
+and split no task, but: Orkboard at `main` did not open on this repository (F1: a dot in goal 96's slug); every *Done when* line
+was `[test]`, five of them about a screen, so nothing asked for a look and the base's miss was accepted as met (F2, F3); a brief
+asked a Codex task for browser tests its sandbox refuses (F5); Talk asked the person what one search of the code answers, asked
+what a spec had settled, and Product, weighing a goal not routed to it, made the person swipe past it (F6); the Board in the code
+opened as a new project, its leaders as the Taskmaster, and committed 121 pages on the first open, its history as news (F8); a
+diff's minus was always 0 (F9). The owner, given the ways and their costs: *let's go by your recommendations*. So:
+1. **One bad page never stops the Board.** A goal's slug is `[a-z0-9-]+`: `orkboard import --goals` makes it so from a spec's
+   file name (a dot is a dash); a page whose file name is not a slug is left out of the Board's list and `orkboard check` names it
+   with the name it should have. This repository's goal 96 is renamed.
+2. **A step that changed what people see is looked at, or said to be unlooked** (changes 257.5): when a task of the step changed
+   what people see (code's own test, `core/idea_shot.py` `sees`), the step has no picture, and no line of the step's *Done when*
+   is `[look]` or `[person]`, the acceptance raises, by code, *Nobody looked at what this step changed: <the files>*. It is
+   told to the person as a line it cannot see is (§257.5).
+3. **A screen's line is `[test]` only at the state a person first meets** (changes 257.4, spec 149 J.3): the section's rule says
+   a line about what a person sees is `[look]` unless its test opens the screen in the state the line names, as a person first
+   meets it; the acceptance of a step that changed what people see is told that a `[test]` line of a screen is met only so.
+4. **A plan never asks a task for what its tool cannot do**: when the task's tool cannot start a browser (Codex), the planner is
+   told to ask for no browser test and no test that serves a page; the gate runs them.
+5. **A doubt the code settles is checked, not asked** (keeps 156.8): Talk's leaders still read no file; a doubt that reading the
+   code would settle says what to look up, and one read-only call (`ground`, four files at most) looks it up before the hearing:
+   settled, the doubt is a go with what was found; not, the doubt stands with it.
+6. **The app answers by reference too** (changes 259.1, which was a tool's): before Talk's questions reach the hand, one call
+   (`settle`) looks for a decision or spec that settles each; one it settles, by a reference that exists (`reference_exists`)
+   and a choice of the question's own, is closed with its answer and its reference, kept in Talk's record and said in the goal's
+   Talk; the rest reach the hand as today. What it cannot settle stays the person's.
+7. **The weigher weighs only** (keeps 198.4): Product weighing a goal not routed to it gives a priority and the goals to wait for;
+   its `doubt` or `no` opens no hearing and makes no objection; Talk's record says its priority and why, not an empty *For* and
+   *Against*.
+8. **The Board in the code opens as it is** (keeps 232.1, 255.12): a project whose Board has parties is laid at once, read where
+   the Board's pages are; a party's leader named by the page and not yet on this machine is installed from the library; a leader
+   wears its party's race; opening writes no page only to move its schema, writes no empty brief, and a goal already done when
+   this machine first reads it is seen. **To main** stands above the goals not yet seen.
+9. **The words**: a diff says what it removed.
+10. **Built** by spec 155; F4 (what the checks into main do with a red from before) is a goal of its own.
+
 ## 261. One card picked, on either side; the table follows its phase; the edge goes: the discard is the Release column at the window's right, Live and Release tabs again, the die and a drum of potions in the hand under it, Stop all said in words (6 November 2026, the owner)
 
 Changes: 126.4 (a phase gone by opened by its mark), 176.2 and 177.8 (the potions' rows), 177.1 (the default's frame),

@@ -86,6 +86,8 @@ def _pages(folder: Path) -> list[tuple[str, Page]]:
         for path in sorted(folder.glob("*.md")):
             if path.name in ("index.md", "CLAUDE.md") or path.name.startswith("."):
                 continue
+            if not re.fullmatch(r"[a-z0-9-]+", path.stem):      # a page not named by a slug is left out; `orkboard check` names it (spec 155 A)
+                continue
             page = _read(path)
             if page is not None:
                 out.append((path.stem, page))

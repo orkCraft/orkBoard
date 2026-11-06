@@ -40,6 +40,8 @@ LEARNED_MAX = 2                   # lines a leader keeps of what it learned
 TASK_CHARS = 1500                 # one task's part of the call
 FILES_SHOWN = 8                   # the files of a task the call names, at most
 SECTION_PARTS = ("Why", "Done when", "Checks", "Will be", "Out")
+SEES_RULE = ("This step changed what people see. A `[test]` line about a screen is met only if its test opens the screen in the state the line names, as a person first meets it: "
+             "else it is not met.")
 TESTS_SHOWN = 12                  # the tests a step added the call names, at most
 _TEST_DEF = re.compile(r"\s*(?:async\s+)?def\s+(test_\w*)\s*\(")
 _TEST_FILE = re.compile(r"(^|/)(test_[^/]*\.py|[^/]*_test\.py|[^/]*\.(test|spec)\.[jt]sx?)$")
@@ -245,8 +247,10 @@ class AcceptMixin:
 
     def _proofs_text(self, slug: str, lines: list[str], mine: list[dict], only: set[int] | None = None) -> str:
         """How each *Done when* line is proven (spec 152 F.4): `[test]` with the gate's record and the tests the step's tasks added; `[look]` with the step's pictures; a line code has decided is
-        said so and not the leader's to judge; no mark: the leader judges it. "" when no line has a mark."""
-        if not any(spec_sections.proof_of(x) for x in lines):
+        said so and not the leader's to judge; no mark: the leader judges it. "" when no line has a mark and no task changed what people see. After the lines, when a task of the step
+        changed what people see, the rule for a `[test]` line of a screen (spec 155 B.3)."""
+        saw = any(t.get("sees") for t in mine)
+        if not saw and not any(spec_sections.proof_of(x) for x in lines):
             return ""
         decided = self._decided(slug, lines, mine, only)
         ran = [t["tests"] for t in mine if isinstance(t.get("tests"), dict)]
@@ -268,7 +272,17 @@ class AcceptMixin:
                 out.append(f"- Done when {i} [look]: proven by a picture. pictures: " + ", ".join(pics))
             else:
                 out.append(f"- Done when {i}: no mark, you judge it.")
+        if saw:
+            out.append(SEES_RULE)
         return "\n".join(out)
+
+    def _unlooked(self, slug: str, lines: list[str], mine: list[dict]) -> list[str]:
+        """The files a step changed that people see when nobody looked (spec 155 B.2): some task of the step has `sees`, none has a picture, and no line of the step's *Done when* (all of them)
+        is `[look]` or `[person]`. [] otherwise."""
+        files = [f for t in mine if isinstance(t.get("sees"), list) for f in t["sees"] if isinstance(f, str)]
+        if not files or any(self._picture(slug, t) for t in mine) or any(spec_sections.proof_of(x) in ("look", "person") for x in lines):
+            return []
+        return list(dict.fromkeys(files))
 
     def _decided(self, slug: str, lines: list[str], mine: list[dict], only: set[int] | None = None) -> dict[int, tuple[str, str]]:
         """The *Done when* lines code has decided are `unseen` (spec 152 F.4), without the leader's word: `{n: (why, the finding's words)}`. A `[person]` line (only the person can judge it); a
@@ -406,6 +420,8 @@ class AcceptMixin:
             if d["met"] == "unseen":
                 found = decided[d["n"]][1] if d["n"] in decided else f"Nobody could look at: {spec_sections.bare(lines[d['n'] - 1])}"
                 self._raise(slug, party, f"{party}: look at Done when {d['n']}", found, f"Done when {d['n']}", spec_sections.bare(lines[d["n"] - 1]))
+        if rnd == 1 and not base and (files := self._unlooked(slug, lines, self._mine(plan, n, base))):        # a step nobody looked at: said once, the verdict unchanged (spec 155 B.2)
+            self._raise(slug, party, f"{party}: nobody looked at step {n}", f"Nobody looked at what this step changed: {', '.join(files)}", "", "")
         met = sum(1 for d in got["done_when"] if d["met"] is True)
         verdict = "accepted"
         if got["verdict"] == "back":

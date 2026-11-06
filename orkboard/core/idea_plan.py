@@ -26,7 +26,7 @@ from pathlib import Path
 
 from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
-from orkboard.realm import (collide, event_log, goal_route, goal_take, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
+from orkboard.realm import (collide, event_log, goal_route, goal_take, goal_team, goal_types, harnesses, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
                             spec_sections, task_brief, tool_errors)
 from orkboard.realm.idea_words import CARD_RULE, short_of, short_said, title_of
 from orkboard.hooks.warder import is_secret
@@ -39,6 +39,13 @@ ENV_NAME = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
 MAX_FILES = 6                        # the files a task starts at, kept (spec 153 B.1)
 GUESS_TOKENS = 400_000               # what one task's session is guessed to cost before the project's own ledger has enough (spec 153 A.2)
 DONE_KEEP = 12                      # of the steps done, the tasks the next step's plan is told of
+NO_BROWSER_RULE = ("The tasks' tool cannot start a browser or serve a page: never ask a task to run a browser test or a test that opens a local port; "
+                   "the gate runs them.")       # spec 155 C.1: the plan's rule, of a tool with browsers=False (realm/harnesses.py)
+
+
+def _can_browse(root: Path, party: str) -> bool:
+    """Whether the tool the party's tasks run on can start a browser (`browsers` of its harness; True for none known)."""
+    return getattr(harnesses.get(goal_route.party_tool(root, party)), "browsers", True)
 
 
 def _task(tid: str, title: str, brief: str, kind: str, tier: str, after: list[str]) -> dict:
@@ -314,6 +321,7 @@ class PlanMixin:
         proves_rule = ("\n- Each task's `proves`: the numbers of your section's Done when lines (numbered above) that it proves, 1 the first. Every line is proved by a task; "
                        "a line no task names is asked of you once more. A check task proves none." if self._lines(page, party) else "")
         proves_json = ', "proves": [1]' if proves_rule else ""
+        no_browser = "" if _can_browse(root, party) else f"\n- {NO_BROWSER_RULE}"
         return f"""You are the keeper of this project's Task board. This spec goes to work: turn it into a plan. You may
 read the repository (read only) to see what the work touches. {self.reads("plan", touches)}
 {idea_lens.attached(self.state_dir, slug)}{goal_types.prompt_line(self.state_dir, slug)}{releases.prompt_lines(root, self.state_dir, slug)}{checks}
@@ -326,7 +334,7 @@ Rules:
 - {CARD_RULE} Each task's `title` is a name, seven words at most, the verb first (e.g. "Spawn enemies from the wave director"):
   the detail belongs in its brief.
 - A code task changes the tests its change breaks, in the same task: the gate runs them when it ends. A later task may add
-  coverage, never repair a task before it.
+  coverage, never repair a task before it.{no_browser}
 - Each task's tag (`kind`), the kind of work it is, one of: {kinds}. Ordinary work is "code".{team}
 - A task may end with two to six variants of one kind for the person to pick from instead of a change, only when the spec asks to
   choose by eye or by ear (a logo, an icon, a sound, a clip, a name or a tagline): give it `"pick": {{"n": 2 to 6, "kind": "image" |
