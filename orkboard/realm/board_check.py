@@ -197,7 +197,7 @@ def _schema_of(path: Path) -> int | None:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return None
-    m = T.BEGIN_RE.search(text) or agent_rules.FILE_RE.search(text) or agent_rules.SCHEMA_LINE.search(text)
+    m = T.BEGIN_RE.search(text) or T.FILE_RE.search(text) or agent_rules.SCHEMA_LINE.search(text)
     return int(m.group(1)) if m else None
 
 

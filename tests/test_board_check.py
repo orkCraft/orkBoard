@@ -147,6 +147,17 @@ def test_a_block_of_schema_one_is_said_to_be_older_than_this_orkboards(repo):
     assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v1, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init" and T.SCHEMA == 2
 
 
+
+def test_rules_written_by_an_orkboard_of_schema_one_are_each_said_to_be_older_files_too_not_only_the_block(repo, monkeypatch):
+    """The rules as an Orkboard of schema 1 wrote them: the block and each of Orkboard's files (BOARD.md, a role file) are read by their own mark (`agent_rules_text.FILE_RE`),
+    and each is told to run init again, never a crash (found on this repository when the rules moved to 2, spec 152 D.2)."""
+    with monkeypatch.context() as m:
+        m.setattr(T, "SCHEMA", 1)
+        agent_rules.write(repo, WIKI)
+    got = {f["path"]: f["what"] for f in board_check.run(repo)}
+    told = f"The Board's rules are v1, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init"
+    assert got["AGENTS.md"] == told and got[f"{WIKI}/BOARD.md"] == told and got[f"{WIKI}/roles/orkmaster.md"] == told
+
 def test_a_project_with_no_rules_at_all_is_told_once(repo):
     for rel in ("AGENTS.md", "CLAUDE.md", ".claude", WIKI):
         p = repo / rel
