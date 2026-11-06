@@ -98,7 +98,7 @@ function Will({ w }) {
   return html`<li class="spec-line spec-will" data-will=${w.kind || undefined}>${w.id ? html`<span class="ork-label spec-will__kind">${w.kind}</span> <code class="spec-will__id">${w.id}</code>${w.note ? html` <span class="spec-will__note">${w.note}</span>` : ""}` : w.note}</li>`;
 }
 
-function Section({ sec, lit, says }) {
+export function Section({ sec, lit, says }) {
   const g = sec.party, head = g?.leader?.head, match = (l) => lit && says.some((t) => sharesWords(l, t));
   return html`<li class=${cls("spec-section", { "is-lit": lit })} data-party=${g?.slug || ""} data-lit=${lit ? "1" : undefined}>
     <div class="spec-section__head">${head && html`<${Head} race=${head.race} tier=${head.tier} size="mid" />`}<span class="spec-section__nm">${nameOf(g) || sec.name}</span>
@@ -128,5 +128,15 @@ export function SpecPage({ props }) {
         })}</ol>`
       : html`<p class="table-over__muted">No section is written yet.</p>`}
   </article>`;
+}
+
+/** One party's section of a goal's spec, drawn as the table's own body (spec 156 C.1). Props: `{idea, party}`. */
+export function PartySection({ idea, party }) {
+  const page = usePage(idea), parties = partiesAll(), node = (mapData.value?.nodes || []).find((n) => n.slug === idea) || null;
+  if (page === undefined) return html`<p class="table-over__muted" data-kind="spec">Reading the spec…</p>`;
+  if (!page) return html`<p class="table-over__muted" data-kind="spec">The spec could not be read now.</p>`;
+  const sec = readSpec(page, parties, parties.find((g) => g.slug === node?.goal) || null).sections.find((x) => x.party?.slug === party);
+  return sec ? html`<ol class="spec-sections spec-sections--one" aria-label="Its section" data-kind="spec"><${Section} sec=${sec} lit=${false} says=${[]} /></ol>`
+    : html`<p class="table-over__muted" data-kind="spec">Its section is not written yet.</p>`;
 }
 drawn("spec", SpecPage);

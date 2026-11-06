@@ -224,13 +224,13 @@ def test_the_done_mark_opens_the_quality_page_with_the_verdict_the_checks_and_ea
     host = QualityHost([later, fixed])
     pg, errors = start(gui, "wide", host)
     try:
+        pg.locator('.table-tab[data-tab="tech"]').click()                       # through Tech: the result, and under it the quality record on the table (spec 156 C.1)
         pick(pg, "seat")
         pg.locator(".table-phases").wait_for(timeout=WAIT_MS)
-        pg.locator('.table-phase[data-phase="done"]').click()
-        page = pg.locator('.table-over[data-kind="quality"] .quality-page')
+        page = pg.locator('.phase-quality .quality-page')
         page.wait_for(timeout=WAIT_MS)
         page.locator(".quality-finding").first.wait_for(timeout=WAIT_MS)
-        assert title(pg) == "Board · Quality"
+        assert pg.locator(".table-over").count() == 0 and pg.locator("button[data-phase]").count() == 0
         verdict = page.locator('[data-part="verdict"]')
         assert [r.get_attribute("data-verdict") for r in verdict.locator("li[data-verdict]").all()] == ["differs", "ok", "missing"]
         assert "≠" in verdict.inner_text() and "✗" in verdict.inner_text() and "A seventh player is refused" in verdict.inner_text()

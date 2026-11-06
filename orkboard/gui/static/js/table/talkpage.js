@@ -15,7 +15,7 @@ import { named } from "../hand/todoform.js";
 import { nameOf, partiesAll } from "./data.js";
 
 /** The Talk as the host kept it (`ideas.talk_read {idea}`): `{stances: [{party, leader, stance, for, against, questions}], cause}`; undefined while it is asked, null when the host has none. Asked again when the row's questions change. */
-function useKept(idea, sig) {
+export function useKept(idea, sig) {
   const [kept, setKept] = useState(undefined);
   useEffect(() => {
     let live = true;
@@ -29,7 +29,7 @@ function useKept(idea, sig) {
 const standing = (q) => (q.state === "answered" ? `${q.how === "text" ? "You wrote" : q.how === "decide" ? "Left to its pick" : "You said"}: ${q.answer}` : q.state === "closed" ? `Its pick stands: ${q.answer}` : "Waits for you");
 
 /** One leader's stance: its head and its party's name, the line, *For* and *Against*; *More* the Talk as kept, in place: its questions, how each stands. */
-function Stance({ st, g, asked }) {
+export function Stance({ st, g, asked }) {
   const [more, setMore] = useState(false);
   return html`<li class="talk-stance" data-party=${st.party}>
     <div class="talk-stance__who">${g?.leader?.head && html`<${Head} race=${g.leader.head.race} tier=${g.leader.head.tier} size="mid" />`}<span class="talk-stance__nm">${nameOf(g) || st.party}</span></div>
@@ -94,5 +94,17 @@ export function TalkPage({ props, close }) {
     ${left.length > 0 && !together && html`<p class="talk-page__acts"><button type="button" class="ork-btn" onClick=${() => setTogether(true)}>All the questions</button></p>`}
     ${together && html`<${Together} row=${row} g=${g(first?.party) || g(row.goal)} close=${close} />`}
   </article>`;
+}
+
+/** One party's say in a goal's Talk, drawn as the table's own body (spec 156 C.1): its stance, for, against, *More* its questions. From the row that waits, else the Talk as the host kept it. Props: `{idea, party}`. */
+export function PartyTalk({ idea, party }) {
+  const row = (board.value?.needs_you || []).find((r) => r.kind === "talk" && r.idea === idea) || null;
+  const kept = useKept(idea, row ? row.questions.map((c) => c.id).join("|") : "");
+  const g = partiesAll().find((x) => x.slug === party) || null, k = (kept?.stances || []).find((x) => x.party === party);
+  const st = (row?.stances || []).find((x) => x.party === party) || k;
+  const asked = k?.questions?.length ? k.questions : (row?.questions || []).filter((c) => c.by === party);
+  if (!st && kept === undefined) return html`<p class="table-over__muted" data-kind="talk">Reading the Talk…</p>`;
+  if (!st) return html`<p class="table-over__muted" data-kind="talk">${nameOf(g) || party} has not said anything in this Talk yet.</p>`;
+  return html`<ul class="talk-page__row talk-page__row--one" aria-label=${`${nameOf(g) || party}’s say`} data-kind="talk"><${Stance} st=${st} g=${g} asked=${asked} /></ul>`;
 }
 drawn("talk", TalkPage);

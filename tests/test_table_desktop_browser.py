@@ -1170,33 +1170,23 @@ def onway(gui, request):
     assert not errors, "\n".join(errors)
 
 
-def test_a_goal_picked_has_its_phase_marks_in_the_title_the_current_one_marked_and_a_past_one_opens_its_page(onway):
+def test_a_goal_picked_has_its_phase_marks_in_the_title_spans_the_current_one_marked_and_nothing_opens_over_the_pane(onway):
     pg, host, w = onway
     assert pg.locator(".table-phases").count() == 0                                                                      # nothing picked: no marks
     pick(pg, "seat")
     pg.locator(".table-phases").wait_for(timeout=WAIT_MS)
     assert [m.text_content().strip() for m in pg.locator(".table-phase").all()] == ["Talk", "Spec", "Work", "Done"]
-    assert marks(pg) == [("talk", True, False), ("spec", True, False), ("work", False, True), ("done", False, False)]    # Work is now; Talk and Spec are gone by and pressed
+    assert marks(pg) == [("talk", False, False), ("spec", False, False), ("work", False, True), ("done", False, False)]  # Work is now; spans all (spec 156 C.2), no button
+    assert pg.locator("button[data-phase]").count() == 0 and pg.locator(".table-phase.is-past").count() == 2
     assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"                                  # the title still says what and through whom
     shot(pg, f"table-phases-{w}.png")
-    pg.get_by_role("button", name="Talk, done").click()
-    pg.locator('.table-over[data-kind="talk"] .talk-stance').first.wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · Talk"
-    assert [e.text_content().strip() for e in pg.locator(".talk-stance__nm").all()] == ["Game design", "Tech"]            # the Talk as kept
-    assert pg.locator(".table-phase.is-open").get_attribute("data-phase") == "talk"
-    pg.get_by_role("button", name="Spec, done").click()
-    pg.locator('.table-over[data-kind="spec"] .spec-section').first.wait_for(timeout=WAIT_MS)
-    assert [e.get_attribute("data-party") for e in pg.locator(".spec-section").all()] == ["game", "tech"]
-    assert ("ideas.page", {"slug": "seat"}) in host.log
-    pg.get_by_role("button", name="Back").click()
-    pg.locator(".table-over").wait_for(state="detached", timeout=WAIT_MS)
-    assert pg.locator(".table-phases").count() == 1                                                                      # the goal is still picked
+    pg.locator('.table-phase[data-phase="talk"]').click(force=True)
+    assert pg.locator(".table-over").count() == 0 and pg.locator(".table-phases").count() == 1
     pick(pg, "")
     pg.wait_for_function("() => document.querySelectorAll('.table-phases').length === 0", timeout=WAIT_MS)
 
 
-@pytest.mark.parametrize("state,now,pages", [("routed", "talk", ["talk"]), ("talk", "talk", ["talk"]), ("decided", "spec", ["talk", "spec"]), ("sections", "spec", ["talk", "spec"]),
-                                              ("plan", "work", ["talk", "spec"]), ("done", "done", ["talk", "spec", "done"])])
+@pytest.mark.parametrize("state,now,pages", [("routed", "talk", []), ("talk", "talk", []), ("decided", "spec", []), ("sections", "spec", []), ("plan", "work", []), ("done", "done", [])])
 def test_the_current_phase_follows_the_goals_state(gui, state, now, pages):
     errors: list[str] = []
     pg, host = way(gui, "wide", errors, state=state)
