@@ -16,6 +16,7 @@ export function hourOf(iso, now = new Date()) {
 
 /** What a goal's row says of the hour it is held until: *not before 14:05* for a goal put off, *the work goes on at 14:00* for one at work; *Held* for one the person holds (no hour: spec 130 E.3); "" with none. */
 export function holdWords(n, now = new Date()) {
+  if (n?.taken) return n.taken;                                 // another tool holds the goal (spec 151 D.1; the map's `taken`): *Taken by codex until 14:05*, its hour in this computer's clock
   if (n?.held_for === "hold") return "Held";
   const until = n?.held_until || "";
   if (!until || new Date(until).getTime() <= now.getTime()) return "";
@@ -23,6 +24,9 @@ export function holdWords(n, now = new Date()) {
   if (!when) return "";
   return n.state === "working" ? `the work goes on at ${when}` : `not before ${when}`;
 }
+
+/** What a goal kept off the repository says on its row (spec 151 F.4; the map's `kept_off`): *Kept off the repository: on this computer only*; "" for a goal that goes with the rest. */
+export const offWords = (n) => n?.kept_off || "";
 
 /** The line under In analysis while goals put off wait for the reset (spec 130 E.4, decisions §239.4): *waits for the reset · Mon 09:00*, the earliest of them, a state and never a count; "" with none. A held goal has no reset to wait for, and a reset passed says nothing. */
 export function waitsWords(nodes, now = new Date()) {

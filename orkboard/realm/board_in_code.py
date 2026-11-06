@@ -6,6 +6,9 @@
     board_in_code.pending_question(root)                  # {"public": bool, "pages_in_history": n, "visibility": …} while the answer is wanted, else None
     board_in_code.check(root, state_dir, get=...)         # the once-a-day look (the host's tick): {"visibility", "was", "found_public": bool}
     board_in_code.push_hold(root)                         # the words a push waits with, "" when it may go
+    board_in_code.question_text(pages)                    # the question's words (lexicon): the sentence, and how many pages are in the history already
+    board_in_code.peek(root, state_dir)                   # the last visibility word the day's look kept for this remote ("" before the first look): no network, no wait
+    board_in_code.keepable(root, state_dir)               # whether a goal may be kept off now (a public or unreadable repository with the yes), by the last look
     board_in_code.keep_off(state_dir, slug, True)         # the person keeps a goal off the repository (its `kept_off` in the goal's state)
     board_in_code.kept_off(root, state_dir, slug)         # whether that goal is kept off now (a public repository with the yes: F.4)
     board_in_code.sync_kept_off(root, state_dir, wiki_rel)  # their pages put in `info/exclude`, so no `git add -A` stages them; the paths from the root
@@ -146,16 +149,36 @@ def pages_in_history(root: Path, branch: str) -> int:
     return len({ln for ln in got.stdout.splitlines() if ln.strip()}) if got.returncode == 0 else 0
 
 
-def pending_question(root: Path, branch: str = "", get: Callable[[str], int] | None = None) -> dict | None:
+def peek(root: Path, state_dir: Path) -> str:
+    """The visibility word the last look kept for this remote, however old; "" before the first look or when the remote is another. Asks nothing: a face that builds often reads this and leaves the day's look to the host's tick."""
+    url = _remote_url(Path(root), (board_branch.read_config(root) or board_branch.BoardConfig()).remote)
+    if not url:
+        return "none"
+    cache = _cache(state_dir)
+    return str(cache["visibility"]) if cache.get("url") == url and cache.get("visibility") in ("private", "public", "unknown") else ""
+
+
+def pending_question(root: Path, branch: str = "", get: Callable[[str], int] | None = None, ask: bool = True) -> dict | None:
     """The question F.1 asks while it is wanted (a public or unreadable remote, `in_code` not said): `{"public": bool, "pages_in_history": n, "visibility"}`;
-    None otherwise. Asks nothing of the network beyond the day's look. `branch`: the work branch (settings' `merge_into`; `dev` when not given)."""
+    None otherwise. Asks nothing of the network beyond the day's look (`ask=False`: not even that, the last look's word stands, and none before a first look).
+    `branch`: the work branch (settings' `merge_into`; `dev` when not given)."""
     root = Path(root)
     if read(root) is not None:
         return None
-    vis = visibility(root, root / ".orkcraft", get)
+    vis = visibility(root, root / ".orkcraft", get) if ask else peek(root, root / ".orkcraft")
     if vis not in ("public", "unknown"):
         return None
     return {"public": vis == "public", "visibility": vis, "pages_in_history": pages_in_history(root, branch or "dev")}
+
+
+def question_text(pages: int = 0) -> str:
+    """The publish question in words: the sentence and, when the history holds some, how many pages of the Board are in it already."""
+    from orkboard.realm import lexicon
+    said = lexicon.term("in_code_public")
+    if pages <= 0:
+        return said
+    more = lexicon.term("in_code_pages").replace("<n>", str(pages))
+    return f"{said} {more[:1].upper() + more[1:]}." if pages != 1 else f"{said} 1 page of the Board is already in its history."
 
 
 # -- a goal kept off (F.4) --------------------------------------------------------------------------------------------
@@ -195,6 +218,11 @@ def _active(root: Path, state_dir: Path) -> bool:
     if read(root) is not True:
         return False
     return str(_cache(state_dir).get("visibility") or "unknown") in ("public", "unknown")
+
+
+def keepable(root: Path, state_dir: Path) -> bool:
+    """Whether a goal may be kept off now: the yes is said and the repository is public or unreadable (by the last look). The new goal's card offers its line only then."""
+    return _active(Path(root), Path(state_dir)) and peek(Path(root), Path(state_dir)) != "none"      # a repository with no remote sends nothing anywhere
 
 
 def kept_off_slugs(state_dir: Path) -> list[str]:

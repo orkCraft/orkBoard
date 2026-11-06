@@ -238,6 +238,19 @@ TERMS: tuple[Term, ...] = (
     _t("cloud_secret", "the secret that pays"),                    # which of the two secrets GitHub gives a cloud run pays for the model's calls: the subscription's (`CLAUDE_CODE_OAUTH_TOKEN`, sharing the week's limits) or an API key's (`ANTHROPIC_API_KEY`, by the token) (decisions §244.8)
     _t("cloud_ceiling", "ceiling", "ceilings"),                    # the most dollars one cloud run may spend of an API key's calls (*At most $1 a cloud run*), a number the person sets; not a week's limit, not the day's spend limit (decisions §244.8)
     _t("board_rules", "the Board's rules"),                        # the block in AGENTS.md and CLAUDE.md, BOARD.md and the roles that let any AI tool work the Board as Orkboard does (spec 151 C, decisions §255.5): written on the person's yes, written again when Orkboard's change; not the project's own rules, which win over them
+    # The Board in the code, or off it (docs/specs/151 F; decisions §255.10): the person's yes or no, asked first in a public repository
+    _t("in_code", "the Board in the code"),                       # whether the Board's pages go to the work branch of the project's repository (`[board] in_code`): a yes is public in a public repository, in its history, and a later no does not take it back
+    _t("in_code_public", "Your goals, their specs, the leaders' words and the decisions will be public, in the repository's history: a later No does not take them back."),   # the question's words (the Orkmaster's card, Settings' line, `orkboard init`)
+    _t("in_code_pages", "<n> pages of the Board are already in its history"),     # … and, when there are some, how many are
+    _t("publish_board", "Publish the Board"),                      # … its yes: `in_code = true`
+    _t("keep_board_off", "Keep the Board off the repository"),     # … its no: `in_code = false`; the Board stays on this computer, and no rules are written
+    _t("is_private", "Is this repository private?"),               # asked first when the remote is one Orkboard cannot read (not on GitHub, or no answer)
+    _t("repo_private", "Private"),                                      # … its yes: `in_code = true`, nothing is public
+    _t("repo_public", "Public"),                                        # … its no: the publish question follows
+    _t("rules_find_no_board", "The Board is kept off this repository: the rules would find no Board"),     # Settings' line for the Board's rules while `in_code` is false
+    _t("keep_goal_off", "Keep off the repository"),                # the new goal's card: this goal's page and files stay on this computer, in a public repository with the yes (F.4)
+    _t("goal_kept_off", "Kept off the repository: on this computer only"),     # … what the goal's row says of a goal so kept
+    _t("taken_by", "Taken by <by> until <time>"),                  # a goal another tool holds, on its row (spec 151 D.1: realm/goal_take.py `line_of`); `taken` is the inbox's word
     _t("slice", "slice", "slices"),                              # a leader's part of a decision: the key conclusion for its craft and the points it rests on, cut once at Confirm and read into the leader's calls (spec 131, decisions §233.1); not shown yet
     # Four levels and findings (docs/specs/132-four-levels-the-way-down-and-findings.md D.6; decisions §234.8, §237.9): the words of the levels, of a finding and of the quality card
     _t("level", "level", "levels"),                                # where a change or a finding lies: Decision, Spec, Work or Quality, the heaviest and cheapest to change first (decisions §234.1); not a goal's tier nor a party's size

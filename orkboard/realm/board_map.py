@@ -14,8 +14,8 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (board_back, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_phase, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
-                            idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
+from orkboard.realm import (board_back, board_in_code, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_phase, goal_place, goal_route, goal_take, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
+                            idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, lexicon, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
 from orkboard.realm.idea_words import CARD_LINE_CHARS, short_of
 
 NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "conflict", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change", "spec_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
@@ -437,6 +437,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                 todo.append(d)
 
     goals, nodes, edges = [], [], []
+    off = set(board_in_code.kept_off_slugs(state_dir))                          # the goals kept off the repository now (spec 151 F.4), read once
     week = _week_of(settings, limits, now)
     line = goal_route.context(found, states, settings, limits, now)           # the Orkmaster's line, once: the route rows' place and whether the limits run low (spec 99 §4)
     read = roles.known(state_dir)                                                  # a task's head: who does it, at what tier
@@ -533,6 +534,10 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "folded": slug not in kept or r["state"] == "passed", "updated": r["updated"], "pitch": pitch}
             if r["state"] != "done":
                 node["waits"] = _waits(node, tasks, titles, r["waits_on"], week)
+            if hold := goal_take.blocked(state_dir.parent, slug):            # another tool holds it (spec 151 D.1: the host's cache only): its row says by whom and until when
+                node["taken"] = goal_take.line_of(hold)
+            if slug in off:                                       # a goal kept off the repository (spec 151 F.4): its row says so
+                node["kept_off"] = lexicon.term("goal_kept_off")
             nodes.append(node)
             mine_nodes.append(node)
             today_tasks += [t for t in tasks if t.get("state") == "merged" and str(t.get("finished") or "").startswith(today)]

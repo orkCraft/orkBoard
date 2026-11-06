@@ -10,6 +10,7 @@ import "./changecard.js";
 import "./specchangecard.js";
 import "./hearing.js";
 import "./paidcard.js";
+import "./incodecard.js";
 import "./hypothesiscard.js";
 import "./qualitycard.js";
 import "./cascadecard.js";

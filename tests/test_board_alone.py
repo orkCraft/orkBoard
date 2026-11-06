@@ -91,7 +91,8 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
                          "repair",                                         # spec 119 §3.2: Fix it, the bug's state ("idle" · "working" · "ready" · "updating" · "failed")
                          "tools",                                          # spec 130 A: the AI tools in the hand, in the person's order, and what is being added (the computer's own)
                          "laid",                                           # spec 130 A.5: whether the table is laid, false until the project's first Start
-                         "main_checks"}                                    # spec 111 §4.2: the checks on a goal's way into main, by goal (the face follows them here)
+                         "main_checks",                                    # spec 111 §4.2: the checks on a goal's way into main, by goal (the face follows them here)
+                         "keep_off_offered"}                               # spec 151 F.4: whether the new goal's card offers *Keep off the repository* (a public or unreadable repository with the yes)
     assert set(snap["reserve"]) == {"share", "night"}                                  # spec 49 §2.3
     assert snap["rate"] is None                                                      # no window learnt yet (decisions §82)
     assert snap["projects"] == host.command("projects.list")                         # the switcher (spec 37 §8)

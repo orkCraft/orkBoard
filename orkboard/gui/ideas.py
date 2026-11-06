@@ -53,10 +53,11 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import board_ask, board_map, event_log, first_open, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, party_recipes, pitches, recurring, wiki
+from orkboard.realm import board_ask, board_in_code, board_map, event_log, first_open, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, party_recipes, pitches, recurring, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_halt import STARTS, HaltMixin
+from orkboard.gui.ideas_in_code import InCodeMixin, in_code_commands
 from orkboard.gui.ideas_assets import AssetsMixin, asset_commands
 from orkboard.gui.ideas_system import SystemMixin, system_commands
 from orkboard.gui.ideas_canvases import CanvasesMixin, canvas_commands
@@ -145,7 +146,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, GroupsFace, FindingsFace, ChronicleMixin, ConflictMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, GroupsFace, FindingsFace, ChronicleMixin, ConflictMixin, InCodeMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -364,9 +365,10 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
                         "review_count": len(waiting),
                         "review_results": [{k: r[k] for k in ("idea", "task", "title")} for r in waiting],
                         "preview": self.preview_kind(),                  # whether the project has a preview to play (spec 113 §2)
-                        "laid": first_open.laid(self.state_dir, self.host.repo_root)}      # whether the table is laid: false until the project's first Start (spec 130 A.5)
+                        "laid": first_open.laid(self.state_dir, self.host.repo_root),
+                        "keep_off_offered": board_in_code.keepable(self.host.repo_root, self.state_dir)}      # whether the new goal's card offers *Keep off the repository*: a public or unreadable repository with the yes (spec 151 F.4)
             except Exception:                   # a broken page never breaks the town's snapshot
-                data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": "", "laid": True}      # a broken page never hides the table
+                data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": "", "laid": True, "keep_off_offered": False}      # a broken page never hides the table
             self._cache = (self.rev, now, data)
         return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
                 "play_face": self.play_face(),                   # what the die's up face says: Play's state changes without the Board's rev (spec 118 §3)
@@ -440,7 +442,8 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
         Spec 135 A (decisions §242): the new-goal field sends `match: true`; a goal that looks like part of a face-down one (`realm/goal_match.py`, by code, no call) is **not added**: the answer
         is `{slug: "", match: {idea, title, party, state, score, why, shared, adds, reworded, cost}}` for the field's line (`ideas.add_to_goal` is *Add to it*); `apart: true` (and `with`, the goal it was
         offered) adds it as any goal. Spec 150 F.2 (decisions §254.9): `now: true` (the new goal's **Now**) starts Talk once routed only when the limits allow and the route's cost fits the window
-        (`route_auto(fit=True)`), else its route card stays; `later: true` (**Later**) lays it in line at the Board's hour whatever the limits (`route_laid`)."""
+        (`route_auto(fit=True)`), else its route card stays; `later: true` (**Later**) lays it in line at the Board's hour whatever the limits (`route_laid`).
+        Spec 151 F.4: `keep_off: true` (the card's **Keep off the repository**) keeps the goal off the repository (`board_in_code.keep_off`): stored whatever the repository, in force in a public or unreadable one with the yes."""
         text, files =goal_mentions.files(Path(self.host.repo_root), _text(args, "text", ideas.SECTION_CHARS))      # spec 107 K: each `@path` that exists is the path in backticks, before the route reads it
         track = _opt(args, "track") or _opt(args, "party")
         goals = {t["slug"]: t for t in ideas.tracks(self.root(), make=False)}
@@ -486,6 +489,8 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
                     self.route_laid(slug)
             if typed["key"] or pitch:
                 ideas.save_state(self.state_dir, slug, type=typed["key"], from_pitch=pitch)
+            if args.get("keep_off") is True:        # spec 151 F.4: the person keeps this goal off the repository (its card's line, offered where the Board is public with the yes); its page enters `info/exclude` at the next flush
+                board_in_code.keep_off(self.state_dir, slug, True)
             if args.get("via") == "inbox" and re.fullmatch(r"[A-Za-z0-9_-]{8,40}", str(args.get("inbox_id") or "")):
                 ideas.save_state(self.state_dir, slug, via="inbox", inbox_id=str(args["inbox_id"]))     # laid from the phone's inbox: once (spec 136 B.4)
             if rel is not None:
@@ -745,7 +750,7 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **pass_commands(self), **change_commands(self), **spec_change_commands(self), **findings_commands(self), **chronicle_commands(self), **conflict_commands(self), **refine_commands(self), **cascade_commands(self), **groups_commands(self), **goalview_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **journal_commands(self), **read_in_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **pass_commands(self), **change_commands(self), **spec_change_commands(self), **findings_commands(self), **chronicle_commands(self), **conflict_commands(self), **in_code_commands(self), **refine_commands(self), **cascade_commands(self), **groups_commands(self), **goalview_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **journal_commands(self), **read_in_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self)})
         table.update(sketch_commands(self))                # spec 121 A: *Sketch it first*, *No sketch* (gui/ideas_sketch.py)
         table["ideas.night"] = self.night                  # spec 121 D: what the night did, for the morning's card (gui/ideas_recap.py)
         return {name: guarded(name, fn) for name, fn in table.items()}

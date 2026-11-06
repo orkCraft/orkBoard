@@ -1,6 +1,6 @@
 """`orkboard init | goal … | gate | check` (docs/specs/151-the-board-in-the-repository-for-any-ai-tool.md part E.1; decisions §255.9): the Board worked from a terminal, on the checkout the word is run in.
 
-    run(["init", "--ci"])                         # the rules (part C) and the CI step written into the working tree; refused in a public GitHub repository
+    run(["init", "--ci"])                         # the rules (part C) and the CI step written into the working tree; in a public one first `--publish` or `--keep-off` (F: the Board in the code, or off it)
     run(["goal", "list", "--phase", "work"])      # slug, phase, asks, taken, title
     run(["goal", "add", "Add a score board", "--party", "tech", "--by", "codex"])     # a page in `new`, `by: codex`
     run(["goal", "take", "add-a-score-board", "--by", "codex"])                       # one taker at a time (realm/goal_take.py)
@@ -20,10 +20,11 @@ import datetime as dt
 import re
 import subprocess
 import sys
+import tempfile
 import threading
 from pathlib import Path
 
-from orkboard.realm import agent_rules, agent_rules_text, board_check, goal_phase, goal_take, idea_questions, ideas
+from orkboard.realm import agent_rules, agent_rules_text, board_branch, board_check, board_in_code, goal_phase, goal_take, idea_questions, ideas
 from orkboard.realm.idea_page import Page
 
 PHASE_WORDS = ", ".join(goal_phase.PHASES)
@@ -95,11 +96,40 @@ def _unset(wiki: Path, slug: str, key: str) -> None:
 
 # -- init, check ---------------------------------------------------------------------------------------------------------------------
 
-def _init(args: argparse.Namespace) -> int:
+def _in_code(args: argparse.Namespace, root: Path) -> bool:
+    """F's question from a terminal (spec 151 F.1, C.4): `--publish` writes `in_code = true` first, `--keep-off` writes `in_code = false` and the rules are not written. In a public or unreadable repository
+    with no answer, `init` refuses in words naming both. Answers whether the rules are to be written."""
     from orkboard.gui import agent_rules_switch as switch
+    from orkboard.realm import lexicon
+    if args.publish and args.keep_off:
+        raise BadCall("--publish and --keep-off are two answers: give one")
+    low = lambda key: lexicon.term(key)[:1].lower() + lexicon.term(key)[1:]          # noqa: E731  (the term in a sentence)
+    if args.keep_off:
+        board_in_code.write(root, False)
+        print(f"wrote {board_branch.FILE}: in_code = false. {lexicon.term('rules_find_no_board')}, so none are written.")
+        print(COMMIT_YOURSELF)
+        return False
+    with tempfile.TemporaryDirectory() as scratch:           # the visibility is asked of GitHub once here: nothing is kept in the checkout (the app keeps its own look in `.orkcraft/`)
+        state = Path(scratch)
+        if args.publish:
+            board_in_code.write(root, True)
+            public = board_in_code.status(root, state)["visibility"] in ("public", "unknown")
+            print(f"wrote {board_branch.FILE}: in_code = true. {lexicon.term('in_code_public') if public else 'The Board goes into this repository.'}")
+            return True
+        where, seen = switch.standing(root, state), board_in_code.peek(root, state)
+    if where == "off":
+        raise Refused(f"{lexicon.term('rules_find_no_board')} (in_code = false in {board_branch.FILE}); run `{agent_rules_text.RUN} init --publish` to put the Board in it")
+    if where == "ask":
+        who = "This repository is public." if seen == "public" else "Orkboard cannot read whether this repository is private."
+        raise Refused(f"{who} {board_in_code.question_text(board_in_code.pages_in_history(root, 'dev'))} "
+                      f"Run `{agent_rules_text.RUN} init --publish` to {low('publish_board')} and write the rules, or `{agent_rules_text.RUN} init --keep-off` to {low('keep_board_off')}.")
+    return True
+
+
+def _init(args: argparse.Namespace) -> int:
     root = checkout()
-    if switch._public(root):
-        raise Refused(switch.PUBLIC_WAIT)
+    if not _in_code(args, root):
+        return 0
     rel, _wiki_path = _wiki(root)
     try:
         written = agent_rules.write(root, rel, decisions=agent_rules.decisions_of(root))
@@ -310,6 +340,8 @@ def add_parsers(sub) -> None:
     """The words of this file, added to `orkboard`'s sub-commands."""
     p = sub.add_parser("init", help="Write the Board's rules for any AI tool into this project (not committed)")
     p.add_argument("--ci", action="store_true", help="Also write .github/workflows/orkboard-check.yml: checks the Board on each pull request")
+    p.add_argument("--publish", action="store_true", help="Publish the Board: your goals, their specs, the leaders' words and the decisions go into the repository's history, public in a public one (in_code = true in orkcraft.toml)")
+    p.add_argument("--keep-off", action="store_true", help="Keep the Board off the repository (in_code = false in orkcraft.toml): it stays on this computer, and no rules are written")
     g = sub.add_parser("goal", help="Work the Board's goals from this checkout: list, add, take, phase, ask, answer (nothing is committed)")
     w = g.add_subparsers(dest="goal_word", required=True)
     s = w.add_parser("list", help="The goals: slug, phase, asks, taken, title")

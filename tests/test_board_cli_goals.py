@@ -14,7 +14,6 @@ from orkboard.realm import agent_rules, board_branch, goal_phase, goal_take, ide
 from orkboard.realm.idea_git import GateRun, IdeaGit
 from tests.test_board_branch import git, make_clone, make_origin
 
-REAL_CHECK = board_branch.private_check
 WIKI = "llm-wiki/general"
 STAGES = "- [ ] the code\n- [ ] its tests"
 
@@ -277,18 +276,32 @@ def test_init_leaves_a_workflow_that_is_the_persons_own(repo, capsys):
     assert mine.read_text(encoding="utf-8") == "name: mine\n"
 
 
-def test_init_refuses_a_public_repository_in_the_words_of_the_window(repo, capsys, monkeypatch):
-    from orkboard.gui import agent_rules_switch as switch
-    monkeypatch.setattr(board_branch, "private_check", lambda *a, **k: (False, board_branch.PUBLIC))
-    assert ob("init", "--ci") == 1
-    assert switch.PUBLIC_WAIT in capsys.readouterr().err
-    assert not (repo / "AGENTS.md").exists() and not (repo / ".github").exists()
-
-
-def test_init_asks_a_public_repository_through_the_http_check(repo, capsys, monkeypatch):
+def public(repo, monkeypatch):
+    """The repository's remote is on GitHub, and GitHub's anonymous check answers 200: public."""
     git(repo, "remote", "set-url", "origin", "https://github.com/acme/public.git")
-    monkeypatch.setattr(board_branch, "private_check", lambda root, config, **k: REAL_CHECK(root, config, get=lambda url: 200))      # the real check, on a fake answer of GitHub
-    assert ob("init") == 1 and "This repository is public" in capsys.readouterr().err
+    monkeypatch.setattr(board_branch, "http_status", lambda url: 200)
+
+
+def test_init_refuses_a_public_repository_in_words_naming_both_answers(repo, capsys, monkeypatch):
+    public(repo, monkeypatch)
+    assert ob("init", "--ci") == 1
+    err = capsys.readouterr().err
+    assert "This repository is public." in err and "init --publish" in err and "init --keep-off" in err and "a later No does not take them back" in err
+    assert not (repo / "AGENTS.md").exists() and not (repo / ".github").exists() and not (repo / "orkcraft.toml").exists()
+
+
+def test_init_publish_answers_f_first_and_then_writes_the_rules(repo, capsys, monkeypatch):
+    public(repo, monkeypatch)
+    assert ob("init", "--publish") == 0
+    assert "in_code = true" in capsys.readouterr().out and agent_rules.has_rules(repo)
+    assert ob("init") == 0
+    assert not (repo / ".orkcraft").exists(), "the look at GitHub leaves nothing in the checkout"
+
+
+def test_init_keep_off_answers_f_and_writes_no_rules(repo, capsys, monkeypatch):
+    public(repo, monkeypatch)
+    assert ob("init", "--keep-off") == 0
+    assert "in_code = false" in capsys.readouterr().out and not (repo / "AGENTS.md").exists()
 
 
 # -- no word commits -----------------------------------------------------------------------------------------------------------------

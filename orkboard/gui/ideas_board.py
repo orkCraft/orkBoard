@@ -177,7 +177,7 @@ class BoardMixin:
             needs += mine
             rows.append({**board_map.row(root, self.state_dir, i, st, plan, page, asks, states, mine + by_idea.get(slug, [])), "levels": self._levels(slug),
                          **({"sketching": sk} if (sk := self.sketching(slug)) else {})})      # …on its goal's place too (spec 98 §2.1); a goal being sketched says by whom (spec 121 §2.2)
-        needs += asked + board_rows.rows(self.state_dir, root, self.settings_now()) + self.paid_rows() + self._quality_rows(root)         # the stacks of no goal's: the project's questions (spec 99 §8.2), the hypotheses to judge (spec 116 §4.1), the Orkmaster's *Go on paid?* (spec 105 §3)
+        needs += asked + board_rows.rows(self.state_dir, root, self.settings_now()) + self.paid_rows() + self.in_code_rows() + self._quality_rows(root)         # the stacks of no goal's: the project's questions (spec 99 §8.2), the hypotheses to judge (spec 116 §4.1), the Orkmaster's *Go on paid?* (spec 105 §3)
         settings_now = self.board_settings()
         return {"tracks": goals, "ideas": rows, "needs_you": sort_needs(needs), **settings_now, "night_words": night_words(str(settings_now["night"])),      # Work at night's words, the night's hour said (spec 121 §1)
                 "rev": self.rev, "demo": bool(self.host.demo)}

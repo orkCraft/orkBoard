@@ -62,6 +62,7 @@ class BoardInCodeHost:
                 except Exception:
                     pass
             if got["found_public"] or got["visibility"] != got["was"]:
+                p.ideas.in_code_forget()                                  # the Orkmaster's card (gui/ideas_in_code.py) is read afresh: thrown again when found public since
                 p.ideas._publish("")
             return got
         except Exception:
