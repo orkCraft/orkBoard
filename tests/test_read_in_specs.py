@@ -167,3 +167,12 @@ def test_a_part_built_in_pieces_counts_as_built_unless_the_table_has_its_pieces(
     got = {p["slug"]: p for p in specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", log=log)}
     assert [b for _i, _n, b in got["151-pieces"]["stages"]] == [True, True] and got["151-pieces"]["phase"] == "done"
     assert [(i, b) for i, _n, b in got["150-own"]["stages"]] == [("E", False), ("E1", True), ("E2", True)]      # E has pieces of its own in the table: its own commit is needed
+
+
+def test_an_older_heading_spec_nn_dash_loses_its_number(tmp_path):
+    folder = tmp_path / "docs" / "specs"
+    folder.mkdir(parents=True)
+    (folder / "40-design.md").write_text("# Spec 40 — Orkboard in orkUI: the office look\n")
+    (folder / "33-v1.md").write_text("# Spec 33 — v1: three windows, Board · Agents · Review\n")
+    got = {p["slug"]: p["title"] for p in specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", log=[])}
+    assert got == {"33-v1": "v1: three windows, Board · Agents · Review", "40-design": "Orkboard in orkUI"}
