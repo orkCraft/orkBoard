@@ -66,7 +66,7 @@ def read_config(root: Path) -> BoardConfig | None:
         table = tomllib.loads((Path(root) / FILE).read_text(encoding="utf-8")).get("board")
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
         return None
-    if not isinstance(table, dict):
+    if not isinstance(table, dict) or set(table) == {"in_code"}:          # `in_code` alone (realm/board_in_code.py) is no yes to the Board's branch
         return None
     d = BoardConfig()
     ok = lambda s: isinstance(s, str) and re.fullmatch(r"[A-Za-z0-9._/-]{1,100}", s) and not s.startswith("-") and ".." not in s
@@ -110,6 +110,42 @@ def private_check(root: Path, config: BoardConfig, get: Callable[[str], int] = h
     return True, ""
 
 
+def visibility(root: Path, config: BoardConfig | None = None, get: Callable[[str], int] = http_status,
+               run: Callable = subprocess.run) -> str:
+    """The remote's visibility as a word (spec 151 F.1): `none` (no such remote: nothing leaves the machine), `public` (GitHub answers 200 to an
+    anonymous GET), `private` (404), `unknown` (a remote not on GitHub, or an answer that says nothing: no network, a limit). `private_check`'s
+    own asking, said in a word."""
+    config = config or BoardConfig()
+    try:
+        url = plumbing.git(root, run, plumbing.env(), "remote", "get-url", config.remote)
+    except Exception:
+        return "none"
+    url = url.strip()
+    m = _GITHUB.search(url)
+    if not m:
+        return "private" if re.match(r"(?:file:|/|\./|\.\./|[A-Za-z]:[\\/])", url) else "unknown"       # a folder on this computer or the network is nobody's public repository
+    got = get(f"https://api.github.com/repos/{m.group(1)}/{m.group(2)}")
+    return "public" if got == 200 else "private" if got == 404 else "unknown"
+
+
+def put_key(text: str, key: str, literal: str) -> str:
+    """`text` (an `orkcraft.toml`) with `key = literal` set in its `[board]` table: a line of that key replaced, else put under the header, the table made
+    when missing; every other line kept."""
+    lines = text.splitlines(keepends=True)
+    head = next((i for i, ln in enumerate(lines) if re.fullmatch(r"\[board\]\s*", ln.rstrip("\r\n"))), None)
+    if head is None:
+        return text + ("\n" if text and not text.endswith("\n") else "") + ("\n" if text else "") + f"[board]\n{key} = {literal}\n"
+    end = next((i for i in range(head + 1, len(lines)) if lines[i].lstrip().startswith("[")), len(lines))
+    for i in range(head + 1, end):
+        if re.match(rf"\s*{re.escape(key)}\s*=", lines[i]):
+            lines[i] = f"{key} = {literal}\n"
+            return "".join(lines)
+    if not lines[head].endswith("\n"):
+        lines[head] += "\n"
+    lines.insert(head + 1, f"{key} = {literal}\n")
+    return "".join(lines)
+
+
 def turn_on(root: Path, config: BoardConfig | None = None) -> BoardConfig:
     """Write `[board]` into `orkcraft.toml` (spec 137 E; the person said yes, and `private_check` let it): the table made when missing, every other
     line kept, a `[board]` already there left as it is. Raises OSError when the file cannot be written."""
@@ -123,6 +159,8 @@ def turn_on(root: Path, config: BoardConfig | None = None) -> BoardConfig:
         text += ("\n" if text and not text.endswith("\n") else "") + ("\n" if text else "") + \
             f'[board]\nremote = "{config.remote}"\nbranch = "{config.branch}"\n'
         path.write_text(text, encoding="utf-8")
+    elif read_config(root) is None:                         # a `[board]` with `in_code` alone: the branch's keys go in beside it
+        path.write_text(put_key(put_key(text, "branch", f'"{config.branch}"'), "remote", f'"{config.remote}"'), encoding="utf-8")
     return read_config(root) or config
 
 
@@ -176,7 +214,12 @@ def pack(state_dir: Path, wiki_rel: str = "") -> tuple[dict[str, bytes], list[st
     `lease.json` is not read (realm/board_lease.py adds it)."""
     files: dict[str, bytes] = {}
     held: list[str] = []
+    from orkboard.realm import board_in_code
+    off = board_in_code.kept_off_slugs(Path(state_dir))                # goals kept off every branch (spec 151 F.4): their page and their folder stay home
+    skip = tuple(p for slug in off for p in (f"ideas/{slug}/", *(r + f"ideas/{slug}.md" for r in _page_roots(wiki_rel)[:1])))
     for rel, f in _walk(Path(state_dir), wiki_rel):
+        if skip and rel.startswith(skip):
+            continue
         try:
             if _is_photo(rel) and f.stat().st_size > PHOTO_MAX:
                 held.append(rel)
@@ -248,7 +291,10 @@ def fetch(root: Path, config: BoardConfig, run: Callable = subprocess.run) -> di
 
 def push(root: Path, config: BoardConfig, commit: str, run: Callable = subprocess.run) -> dict:
     """`git push <remote> <commit>:refs/heads/<branch>`, never `--force`. `{ok, refused, why}`: `refused` for a non-fast-forward (another
-    pushed first). Never raises."""
+    pushed first). A public repository whose `in_code` is not said waits (spec 151 F.3). Never raises."""
+    from orkboard.realm import board_in_code
+    if (held := board_in_code.push_hold(Path(root))):
+        return {"ok": False, "refused": False, "why": held}
     try:
         plumbing.git(root, run, plumbing.env(), "push", "--quiet", config.remote, f"{commit}:refs/heads/{config.branch}")
         return {"ok": True, "refused": False, "why": ""}

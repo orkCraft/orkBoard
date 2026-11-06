@@ -355,3 +355,43 @@ def test_a_remote_not_on_github_goes_on_with_a_line_and_asks_nothing(tmp_path):
         raise AssertionError("no network")
     ok, line = bb.private_check(root, bb.BoardConfig(), never)
     assert ok and "must be private" in line
+
+
+# -- spec 151 F: the visibility as a word, `in_code` beside the table, a push that waits ------------------------------------
+
+def test_the_visibility_is_a_word_and_in_code_alone_is_no_yes_to_the_branch(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    git(root, "init", "-q", "-b", "main")
+    assert bb.visibility(root, None, lambda url: 200) == "none"
+    git(root, "remote", "add", "origin", "https://github.com/acme/app.git")
+    assert [bb.visibility(root, None, lambda url, c=c: c) for c in (200, 404, 0, 403)] == ["public", "private", "unknown", "unknown"]
+    git(root, "remote", "set-url", "origin", "git@example.org:acme/app.git")
+    assert bb.visibility(root, None, lambda url: 200) == "unknown"
+    git(root, "remote", "set-url", "origin", str(tmp_path / "origin.git"))
+    assert bb.visibility(root, None, lambda url: 200) == "private"                       # a folder on this computer is nobody's public repository
+    (root / "orkcraft.toml").write_text("[board]\nin_code = false\n")
+    assert bb.read_config(root) is None
+    bb.turn_on(root)
+    assert bb.read_config(root) == bb.BoardConfig("origin", "orkboard/board") and "in_code = false" in (root / "orkcraft.toml").read_text()
+
+
+def test_put_key_keeps_every_other_line():
+    text = '[gate]\nalways = ["x"]\n\n[board]\nremote = "up"\n\n[journal]\ninbox = "i"\n'
+    out = bb.put_key(text, "in_code", "true")
+    assert out == '[gate]\nalways = ["x"]\n\n[board]\nin_code = true\nremote = "up"\n\n[journal]\ninbox = "i"\n'
+    assert bb.put_key(out, "in_code", "false").count("in_code") == 1 and "in_code = false" in bb.put_key(out, "in_code", "false")
+
+
+def test_pack_leaves_a_goal_kept_off_at_home_only_in_a_public_repository_with_the_yes(tmp_path):
+    state = tmp_path / ".orkcraft"
+    for slug in ("a", "b"):
+        (state / "ideas" / slug).mkdir(parents=True)
+        (state / "ideas" / slug / "state.json").write_text(json.dumps({"state": "raw", "kept_off": slug == "b"}))
+        (state / "board" / WIKI / "pages" / "ideas").mkdir(parents=True, exist_ok=True)
+        (state / "board" / WIKI / "pages" / "ideas" / f"{slug}.md").write_text(f"# {slug}\n")
+    assert f"board/{WIKI}/pages/ideas/b.md" in bb.pack(state, WIKI)[0]                  # no `in_code`: the repository is not said to be public
+    (tmp_path / "orkcraft.toml").write_text("[board]\nin_code = true\n")
+    files, _held = bb.pack(state, WIKI)
+    assert f"board/{WIKI}/pages/ideas/a.md" in files and "ideas/a/state.json" in files
+    assert f"board/{WIKI}/pages/ideas/b.md" not in files and "ideas/b/state.json" not in files
