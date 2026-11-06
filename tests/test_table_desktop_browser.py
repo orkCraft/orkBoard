@@ -1334,20 +1334,18 @@ def unlaid(desk, tmp_path, hand=("claude",), **more):
 def test_the_window_not_yet_laid_holds_the_orkmaster_alone(desk, tmp_path):
     d = unlaid(desk, tmp_path)
     pg = d.open()
-    pg.locator('.frame[data-laid="0"]').wait_for(timeout=WAIT_MS)
+    pg.locator('.frame[data-laid="0"][data-room="1"]').wait_for(timeout=WAIT_MS)                # the first open's room (spec 150 G): the Orkmaster alone, the places its cards have laid
     pg.locator(".fo-bubble").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".col-head__tab").count() == 1 and pg.locator(".table-tabcell").count() == 0, "no tabs"
-    assert pg.locator(".table-chair, .table-door, .hand-die, .ork-die, .hand-plus, .col-scroll, .col-sec, .table-end, .ork-portal-ring").count() == 0, "no empty chair, door, die, ring, + card or piles"
-    assert pg.locator(".hand-pot").count() >= 1 and pg.locator("[data-empty-slot]").count() == 1, "the AI tools at the hand's right"
+    assert pg.locator(".col-head__tab, .table-tabcell, .frame-table, .frame-hand").count() == 0, "no tabs, no table's pane, no hand"
+    assert pg.locator(".table-chair, .table-door, .hand-die, .ork-die, .hand-plus, .col-scroll, .col-sec, .table-end").count() == 0, "no empty chair, door, die, + card or piles"
+    assert pg.locator('[data-place="potions"] .hand-pot').count() >= 1 and pg.locator("[data-empty-slot]").count() == 1, "the AI tools at the edge's foot"
     assert not d.errors, d.errors
 
 
 def test_settings_stays_reachable_before_start_over_the_whole_table(desk, tmp_path):
     d = unlaid(desk, tmp_path)
     pg = d.open()
-    pg.locator(".parties.ork-card").wait_for(timeout=WAIT_MS)
-    pg.keyboard.press("Escape")
-    pg.locator(".parties.ork-card").wait_for(state="detached", timeout=WAIT_MS)
+    pg.locator('[data-setup="parties"]').wait_for(timeout=WAIT_MS)                              # the room's table (spec 150 G)
     pg.get_by_role("button", name="The Orkmaster's menu").click()
     pg.get_by_role("menuitem", name="Settings").click()
     pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
@@ -1357,17 +1355,14 @@ def test_settings_stays_reachable_before_start_over_the_whole_table(desk, tmp_pa
 def test_start_lays_the_table_in_order_and_says_so_and_the_ring_waits_for_its_first_content(desk, tmp_path):
     d = unlaid(desk, tmp_path)
     pg = d.open()
-    pg.locator('[data-act="start"]').wait_for(timeout=WAIT_MS)
-    pg.locator('[data-act="start"]').click()
+    pg.locator('[data-place="table"] .fo-chair').first.click()                                    # a chair pressed seats its leader (spec 150 G.2.3)
+    pg.locator('[data-act="start"]:not([disabled])').click()
     pg.locator(".frame[data-laying] .table-tabcell").first.wait_for(timeout=WAIT_MS)
     delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.frame-edge > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
     assert delays["tab"] < delays["chair"] < delays["die"] < delays["plus"], delays
-    assert pg.locator(".hand-plus").evaluate("e => e.classList.contains('is-choosing')"), "its seal lit once"
-    assert "The table is laid. What shall we make first? Play the + card." in pg.locator(".fo-bubble").inner_text()
+    pg.locator(".hand-field [data-first-lit]").wait_for(timeout=WAIT_MS)                       # the + card's card is open, its first corner lit (spec 150 G.2.4): no tour
     assert pg.locator(".table-end__label, .ork-card-place").count() == 0, "§247.1: the discard's place comes with its first content"
     pg.locator('.frame:not([data-laying])').wait_for(timeout=WAIT_MS)
-    assert pg.locator(".hand-plus").evaluate("e => !e.classList.contains('is-choosing')")
-    pg.locator(".hand-plus").click()
     pg.locator(".fo-bubble").wait_for(state="detached", timeout=WAIT_MS)
     assert not d.errors, d.errors
 
@@ -1377,12 +1372,11 @@ def test_under_reduced_motion_the_table_is_laid_all_at_once(desk, tmp_path):
     pg = d.pg
     pg.emulate_media(reduced_motion="reduce")
     d.open()
-    pg.locator('[data-act="start"]').wait_for(timeout=WAIT_MS)
-    pg.locator('[data-act="start"]').click()
+    pg.locator('[data-place="table"] .fo-chair').first.click()
+    pg.locator('[data-act="start"]:not([disabled])').click()
     pg.locator(".table-tabcell").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".hand-plus").wait_for(timeout=WAIT_MS)
+    pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
     assert pg.locator(".frame[data-laying]").count() == 0
-    assert "The table is laid." in pg.locator(".fo-bubble").inner_text()
     assert not d.errors, d.errors
 
 

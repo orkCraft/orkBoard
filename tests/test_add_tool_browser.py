@@ -132,7 +132,7 @@ def test_test_and_add_turns_the_card_and_go_on_leaves_the_first_potion_framed(de
     assert pg.locator(f'{ADD} option[value="claude"]').count() == 0, "without the tools in the hand"
     pg.locator(TEST).click()
     pg.locator(f'{ADD} [data-done="1"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator(f'{ADD} [data-done="1"]').inner_text().upper() == "GO ON TO THE PARTIES"
+    assert pg.locator(f'{ADD} [data-done="1"]').inner_text().upper() == "GO ON"
     assert not d.errors, d.errors
 
 
@@ -221,16 +221,18 @@ def test_the_setup_cards_answers_move_the_question_on(desk, tmp_path):
     (folder / "project.godot").write_text("[application]\n", encoding="utf-8")
     d = desk(folder)
     pg = d.open()
+    pg.locator(f'{ADD} [data-close="1"]').click()                       # the tools' card comes first (spec 150 G): closed with none added, the project's step
     card = pg.locator('[data-setup="git"]')
     card.wait_for(timeout=WAIT_MS)
     assert "Start git here?" in pg.locator(".fo-bubble").inner_text()
     card.locator('[data-start-git="1"]').click()
+    pg.locator('[data-setup="ring"] [data-ring-go="1"]').click()            # its release branch said, the table comes
     kind = pg.locator('[data-setup="kind"]')
     kind.wait_for(timeout=WAIT_MS)
     assert "Right?" in kind.inner_text() and kind.locator(".ork-chip").count() >= 1, "the signs read as chips"
     kind.locator('[data-else="1"]').click()
     kind.locator('[data-kind="game"]').click()
-    pg.locator(ADD).wait_for(timeout=WAIT_MS)
+    pg.locator('[data-setup="parties"]').wait_for(timeout=WAIT_MS)
     assert project_kind.kept(d.host.ideas.state_dir) == "game"
     assert not d.errors, d.errors
 
@@ -239,12 +241,13 @@ def test_an_empty_folder_asks_what_it_is_for(desk, tmp_path):
     folder = git_repo(tmp_path / "blank", ".gitkeep", "")
     d = desk(folder)
     pg = d.open()
+    pg.locator(f'{ADD} [data-close="1"]').click()                       # the tools' card first, closed
     kind = pg.locator('[data-setup="kind"]')
     kind.wait_for(timeout=WAIT_MS)
     assert "The folder is empty. What is it for?" in kind.inner_text()
     assert kind.locator('[data-read="1"]').is_disabled()
     kind.locator('[data-kinds="1"]').click()
     kind.locator('[data-kind="web"]').click()
-    pg.locator(ADD).wait_for(timeout=WAIT_MS)
+    pg.locator('[data-setup="parties"]').wait_for(timeout=WAIT_MS)
     assert project_kind.kept(d.host.ideas.state_dir) == "web"
     assert not d.errors, d.errors

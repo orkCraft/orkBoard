@@ -1,0 +1,79 @@
+/* The first open as four cards (docs/specs/150-the-table-its-edge-and-the-past-through-the-open-tab.md G, decisions §254.8; mockup docs/mockups/table-edge/ section 7; frame/firstopen.js): the room dark on orkUI's room, the Orkmaster in its middle with its fan of
+   backs, then each place as its card lands: the potions at the edge's foot, the ring at its top, the table to the edge's left with its chairs at the far side, the hand's place at the foot. The cards stand where they landed. Layout only: every colour, face,
+   corner and move is orkUI's (`.ork-card-back`, `.ork-chair`, `.ork-portal-ring`, `.ork-card`, `.ork-btn`, `.ork-chip`, the motion tokens); nothing moves under reduced motion. Linked by frame/frame.js after edge.css. */
+.frame.fo-room { display: block; position: relative; overflow: hidden; }
+.fo-stage { position: absolute; inset: 0; }
+
+/* the Orkmaster in the room's middle, its bubble above it and its backs fanned under it; once a card is out it stands at the room's top left, the table's end */
+.fo-om { position: absolute; left: 50%; top: 50%; z-index: 20; display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); transform: translate(-50%, -50%); }
+.fo-om > .ork-race__head { width: 48px; height: 44px; }
+.fo-stage.is-out .fo-om { left: var(--ork-4); top: var(--ork-4); align-items: flex-start; transform: none; }
+@media (prefers-reduced-motion: no-preference) { .fo-om { transition: left var(--ork-motion-base) var(--ork-motion-ease), top var(--ork-motion-base) var(--ork-motion-ease), transform var(--ork-motion-base) var(--ork-motion-ease); } }
+.fo-om > .fo-room-bubble { position: relative; top: auto; left: auto; width: max-content; max-width: 320px; order: -1; }
+.fo-om > .fo-room-bubble::before { top: auto; bottom: -8px; left: calc(50% - 7px); transform: rotate(180deg); }
+.fo-stage.is-out .fo-om > .fo-room-bubble { order: 2; max-width: 300px; }
+.fo-stage.is-out .fo-om > .fo-room-bubble::before { top: -8px; bottom: auto; left: 16px; transform: none; }
+.fo-fan { appearance: none; display: flex; margin: 0; padding: 0 0 0 var(--ork-3); border: 0; background: none; cursor: pointer; }
+.fo-fan:disabled { cursor: default; }
+.fo-fan:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+.fo-fan > .ork-card-back { width: 40px; margin-left: calc(var(--ork-3) * -1); }
+.fo-fan > .ork-card-back:nth-child(1) { transform: rotate(-6deg); }
+.fo-fan > .ork-card-back:nth-child(2) { transform: rotate(-2deg) translateY(-2px); }
+.fo-fan > .ork-card-back:nth-child(3) { transform: rotate(2deg) translateY(-2px); }
+.fo-fan > .ork-card-back:nth-child(4) { transform: rotate(6deg); }
+.fo-stage.is-out .fo-om > .fo-fan { position: absolute; left: 56px; top: 6px; }
+.fo-stage.is-out .fo-fan > .ork-card-back { width: 28px; }
+
+/* a place, unseen until its card lands; then it appears (no motion under reduced motion) */
+.fo-place:not(.is-landed), .fo-table:not(.is-landed) { visibility: hidden; }
+@media (prefers-reduced-motion: no-preference) { .fo-place.is-landed, .fo-table.is-landed, .fo-edge.is-landed { animation: table-lay-in var(--ork-motion-base) var(--ork-motion-ease) both; } }
+
+/* the edge's places: the ring at its top, the potions at its foot (edge.css); the strip itself appears with its first place */
+.frame.fo-room .fo-edge { position: absolute; top: 0; right: 0; bottom: 0; width: var(--edge-w); }
+.fo-edge:not(.is-landed) { background: none; border-color: transparent; }
+.fo-edge > [data-place="ring"] { width: 100%; min-height: 192px; display: flex; justify-content: center; }
+.fo-edge > .fo-place--potions { min-width: 120px; min-height: 96px; display: flex; justify-content: center; align-items: flex-end; }
+.fo-ring { width: 100%; }
+
+/* the table, to the edge's left: orkUI's table with its rim, its chairs at the far side */
+.fo-table { position: absolute; left: var(--ork-4); right: calc(var(--edge-w) + var(--ork-4)); top: 132px; bottom: 96px; border: var(--ork-line) solid var(--ork-table-rim); }
+.fo-chairs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--ork-5); margin: 0; padding: var(--ork-4) var(--ork-5); list-style: none; }
+.fo-chair { appearance: none; position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); min-width: 72px; margin: 0; padding: var(--ork-2); border: 0; background: none; color: var(--ork-ink-muted); cursor: pointer; }
+.fo-chair:disabled { cursor: default; }
+.fo-chair:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+.fo-chair:hover:not(:disabled) .ork-chair.is-empty { --_post: var(--ork-edge); --_panel: var(--ork-table-rim); }
+.fo-chair > .ork-race__head { position: relative; z-index: 1; margin-bottom: -10px; }
+.fo-chair__name { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.fo-chair.is-seated .fo-chair__name { color: var(--ork-ink); }
+.fo-chair__line { max-width: 120px; color: var(--ork-ink-muted); text-align: center; }
+
+/* the hand's place at the foot, where the last back lands at Start */
+.fo-place--hand { position: absolute; left: 30%; right: calc(var(--edge-w) + 30%); bottom: var(--ork-4); height: 64px; border: var(--ork-line) dashed var(--ork-frame); }
+
+/* the Orkmaster's menu at the room's top right, by the edge */
+.fo-menu { position: absolute; z-index: 40; top: var(--ork-3); right: calc(var(--edge-w) + var(--ork-3)); }
+
+/* a place opened from the menu, over the room (frame/place.js's way) */
+.fo-over { position: absolute; z-index: 50; left: var(--ork-4); right: calc(var(--edge-w) + var(--ork-4)); top: var(--ork-4); bottom: var(--ork-4); display: flex; flex-direction: column; min-height: 0; border: var(--ork-line) solid var(--ork-table-rim); }
+
+/* the cards: the hand's own (hand.css), standing where they landed */
+.frame.fo-room > .fo-stage > .fo-hand { position: absolute; inset: 0; z-index: 30; background: none; border: 0; pointer-events: none; }
+.fo-hand > * { pointer-events: auto; }
+.frame.fo-room .hand .hand-tool--add { right: calc(var(--edge-w) + var(--ork-4)); bottom: var(--ork-4); max-height: calc(100% - var(--ork-8)); }
+.frame.fo-room .hand .fo-card.fo-at-ring { left: auto; right: calc(var(--edge-w) + var(--ork-4)); top: calc(var(--ork-8) + var(--ork-4)); bottom: auto; max-height: calc(100% - 120px); }
+.fo-card .fo-muted { overflow-wrap: anywhere; }
+.frame.fo-room .hand .fo-card.fo-at-table { left: var(--ork-6); right: auto; top: auto; bottom: calc(96px + var(--ork-4)); max-height: calc(100% - 260px); }
+
+/* the release branch on the project's card: its chip, the local branches listed under it */
+.fo-branch { position: relative; display: flex; flex-direction: column; gap: var(--ork-2); }
+.fo-branch__row { display: flex; align-items: center; gap: var(--ork-3); }
+.fo-branch__btn { display: inline-flex; align-items: center; gap: var(--ork-1); cursor: pointer; }
+.fo-branch__list { top: 28px; left: 0; max-height: 200px; }
+
+/* the card flying from the fan to its place (frame/firstopen.js `fly`) */
+.fo-flyer { display: block; }
+
+/* the first goal's card: the corner to fill next is lit (frame/firstopen.js `FirstGoal`) */
+.hand-field [data-first-lit] { border-style: solid; border-color: var(--ork-ink); color: var(--ork-ink); box-shadow: 0 0 0 2px var(--ork-action); }
+@media (prefers-reduced-motion: no-preference) { .hand-field [data-first-lit] { animation: fo-lit 1.6s var(--ork-motion-ease) infinite alternate; } }
+@keyframes fo-lit { from { box-shadow: 0 0 0 1px var(--ork-action); } to { box-shadow: 0 0 0 3px var(--ork-action); } }

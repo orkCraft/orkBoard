@@ -30,6 +30,8 @@ def open_first(desk, root, width=1280, stage="idea"):
     project_stage.keep(d.host.ideas.state_dir, stage)
     fill_hand(d.host, "claude", "codex")
     pg = d.open()
+    if width >= 760:                                                         # the first open's room (spec 150 G): the parties are chairs, their large card a press away
+        pg.locator('[data-setup="parties"] [data-act="parties"]').click()
     pg.wait_for_selector(f"{CARD} .pc-row", timeout=WAIT_MS)
     return d, pg
 

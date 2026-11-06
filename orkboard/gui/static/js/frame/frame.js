@@ -12,8 +12,9 @@ import { uprightNow } from "./upright.js";
 import { SetupWatch } from "../hand/setupcards.js";     // what the Orkmaster asks now, on the first open (spec 130 B.4)
 import { laidNow, laying, useLaying } from "../table/laying.js";   // the window not yet laid, and the laying at Start (spec 130 C.6)
 import { Edge, edgeOn } from "./edge.js";                 // the table's edge at the wide width: the ring, the discard, the die, the potions (spec 150 D)
+import { FirstGoal, Room, roomOn } from "./firstopen.js";   // the first open as four cards in the dark room (spec 150 G)
 
-const sheets = ["./frame.css", "../table/table.css", "../table/work.css", "../table/corners.css", "../table/made.css", "../table/cardwindow.css","../table/discard.css", "../table/portal.css", "../table/notice.css", "../table/ask.css", "../table/back.css", "../table/column.css", "../table/goalview.css", "../table/steps.css", "../table/presence.css", "../table/dayline.css", "../hand/hand.css", "../hand/mana.css", "../hand/handcard.css", "../hand/openedcard.css", "../hand/upright.css", "../hand/upmenu.css", "../hand/uplook.css", "./edge.css"].map((p) => new URL(p, import.meta.url).href);
+const sheets = ["./frame.css", "../table/table.css", "../table/work.css", "../table/corners.css", "../table/made.css", "../table/cardwindow.css","../table/discard.css", "../table/portal.css", "../table/notice.css", "../table/ask.css", "../table/back.css", "../table/column.css", "../table/goalview.css", "../table/steps.css", "../table/presence.css", "../table/dayline.css", "../hand/hand.css", "../hand/mana.css", "../hand/handcard.css", "../hand/openedcard.css", "../hand/upright.css", "../hand/upmenu.css", "../hand/uplook.css", "./edge.css", "./firstopen.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
   for (const href of sheets) {
     if (!document.querySelector(`link[href="${href}"]`)) {
@@ -31,11 +32,16 @@ if (typeof document !== "undefined") {
 export function Frame() {
   const column = columnOn(), edge = edgeOn();
   useLaying();
+  if (roomOn()) {                                                                    // the first open at the wide width: the dark room, nothing of the table, the hand or the edge but what its cards have laid (frame/firstopen.js)
+    return html`<div class="frame fo-room" data-frame="1" data-laid="0" data-room="1" data-laying=${laying.value ? "1" : undefined}>
+      <${Room} /><${SetupWatch} /><${CrashNote} /><${ReportPanel} />
+    </div>`;
+  }
   return html`<div class="frame" data-frame="1" data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-edge=${edge ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && over.value ? "1" : undefined} style=${`--lanes:${partiesNow().length + (column ? 0 : 1)}`}>
     ${column && html`<aside class="frame-column" aria-label="The Orkmaster's goals"><${Column} /></aside>`}
     <div class="frame-table"><${Table} column=${column} /></div>
     <div class="frame-hand"><${Hand} /></div>
     ${edge && html`<${Edge} />`}
-    <${SetupWatch} /><${CrashNote} /><${ReportPanel} />
+    <${SetupWatch} /><${FirstGoal} /><${CrashNote} /><${ReportPanel} />
   </div>`;
 }

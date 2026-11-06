@@ -1,6 +1,6 @@
 // The card that adds one AI tool (docs/specs/130-the-first-open-is-the-orkmasters.md B.2, decisions §232.4, §232.10; mockup docs/mockups/setup/ #shelf): lifted from the potions' empty slot, as every hand card is (§176.4). *Add an AI tool · n of up to 6*; **AI tool**: the tools found in three groups
 // (*Ready*, *Not signed in*, *Not installed*: toolpick.js's words), a tool not installed with how to install it and never picked, the first ready one picked; **Paid by**; a third line that follows them (`lines[billing]`: signed in, **Sign in**, or the key named, never a field to type one in). **Test & add** sends one short request and
-// waits for its answer: then the tool is in the hand and the card turns (*<Tool> is in your hand. Add another AI tool?*, **Add another** and, at the first open, **Go on to the parties**, later **Done**); at the sixth tool it goes on by itself. A failure says why on the card, in the tool's words, and nothing is added. An experimental tool asks its warning first;
+// waits for its answer: then the tool is in the hand and the card turns (*<Tool> is in your hand. Add another AI tool?*, **Add another** and, at the first open, **Go on**, later **Done**; at the first open a ready tool is one press, *Use <tool>* (spec 150 G.2.1)); at the sixth tool it goes on by itself. A failure says why on the card, in the tool's words, and nothing is added. An experimental tool asks its warning first;
 // closed with no tool added at the first open it says what follows (`first_open.tools_skip`). Nothing here reads a key or runs a tool but Test & add.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -14,7 +14,7 @@ const GROUPS = [["ready", "Ready"], ["signed_out", "Not signed in"], ["not_insta
 const FOUND = "Found on this computer. Nothing else was run, and no key was read.";
 
 /** The first open: the Orkmaster asked for a tool, or the first one was just added and the parties come next: the card goes on to them when it is done. */
-const firstOpen = () => ["tools", "parties"].includes(setupNow.value?.step);
+const firstOpen = () => !!setupNow.value && setupNow.value.step !== "laid";
 
 /** `tools.card`, asked when the card opens, when the tools were still being looked for and the page was pushed, when a sign-in moved and when the hand changed. */
 function useCard(tick) {
@@ -58,7 +58,7 @@ function Added({ out, onAnother, onDone }) {
     <p class="body">${out.line}</p>
     <p class="cap hand-tool__muted">The work moves on to the next one when ${out.title} runs dry.</p>
     <div class="hand-tool__stack">${!full && html`<button type="button" class="ork-btn" data-another="1" onClick=${onAnother}>Add another</button>`}
-      <button type="button" class="ork-btn primary" data-done="1" onClick=${onDone}>${first ? "Go on to the parties" : "Done"}</button></div>
+      <button type="button" class="ork-btn primary" data-done="1" onClick=${onDone}>${first ? "Go on" : "Done"}</button></div>
   </div>`;
 }
 
@@ -100,7 +100,7 @@ export function AddTool({ style }) {
         ${row?.risk && html`<label class="hand-tool__risk cap"><input type="checkbox" checked=${risk} onChange=${(e) => setRisk(e.target.checked)} /><span>${`Turn on ${row.title} at my own risk: it is experimental, and its tasks may do what the others would not.`}</span></label>`}
         ${failed && html`<div class="hand-tool__field" data-failed="1" role="alert"><span class="cap is-danger">${out.line}</span>${out.action && html`<span class="cap hand-tool__muted">${out.action}</span>`}
           ${out.sign_in && html`<button type="button" class="ork-btn hand-tool__small" onClick=${() => signIn(sent)}>Sign in</button>`}</div>`}
-        <div class="hand-tool__field"><button type="button" class="ork-btn primary" data-test-add="1" disabled=${waits} onClick=${test}>${running ? "Testing…" : "Test & add"}</button>
+        <div class="hand-tool__field"><button type="button" class="ork-btn primary" data-test-add="1" disabled=${waits} onClick=${test}>${running ? "Testing…" : firstOpen() && row && !row.risk ? `Use ${row.title}` : "Test & add"}</button>
           <span class="cap hand-tool__muted">Sends one short request to its lightest model${paid === "api" ? ": about $0.001" : ""}.</span></div>
         <p class="cap hand-tool__muted">${FOUND}</p>
         <${Request} />`}

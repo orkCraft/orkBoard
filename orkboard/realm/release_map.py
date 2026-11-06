@@ -14,15 +14,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import goal_types, idea_element, idea_gate, ideas, releases, worktrees
+from orkboard.realm import first_open, goal_types, idea_element, idea_gate, ideas, releases, worktrees
 from orkboard.realm.idea_git import IdeaGit
 
 SHORT = 7
 
 
-def _main(git: IdeaGit) -> str:
+def _main(git: IdeaGit, state_dir: Path | None = None) -> str:
     try:
-        return git.default_branch()
+        default = git.default_branch()
+        return first_open.release_branch(state_dir, git.branches(), default) if state_dir is not None else default
     except Exception:                               # not a git folder yet
         return ""
 
@@ -66,7 +67,7 @@ def _since(state_dir: Path, pages: Path | None) -> dict | None:
 def read(state_dir: Path, root: Path, pages: Path | None = None, into: str = "dev") -> dict:
     """The map (see the module). A repository git cannot read has nothing waiting that the Board can see."""
     git = IdeaGit(Path(root))
-    main = _main(git)
+    main = _main(git, state_dir)
     out: dict = {"into": into, "main": main, "same": idea_gate.same(into, main), "commits": 0, "files": 0, "goals": [], "since": _since(state_dir, pages)}
     if out["same"]:
         return out

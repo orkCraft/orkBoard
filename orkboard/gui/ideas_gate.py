@@ -21,15 +21,16 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import commit_goal, event_log, findings_gather, gate_config, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
+from orkboard.realm import commit_goal, event_log, findings_gather, first_open, gate_config, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
 class GateMixin:
     def _gate_main(self, git: IdeaGit) -> str:
-        """The repository's default branch; "" where there is no git yet (the gate is then off, as with no main)."""
+        """The repository's main: the release branch kept at the first open (realm/first_open.py) while it is still there, else the default branch;
+        "" where there is no git yet (the gate is then off, as with no main)."""
         try:
-            return git.default_branch()
+            return first_open.release_branch(self.state_dir, git.branches(), git.default_branch())
         except Exception:                       # not a git folder yet
             return ""
 

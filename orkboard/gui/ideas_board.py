@@ -152,7 +152,10 @@ class BoardMixin:
     # -- the board ------------------------------------------------------------------------------------------
 
     def board(self, make: bool = True) -> dict[str, Any]:
-        """`make`: General (and the Wiki) written when missing; the snapshot only reads."""
+        """`make`: General (and the Wiki) written when missing; the snapshot only reads. A folder with no git yet (the first open's *Start git here*, spec 130 A.4) only reads
+        too: the Board's pages go into its own tree once git is started, never into the folder, where they would be read as the project's own (a team's wiki)."""
+        if make and not (Path(self.host.repo_root) / ".git").exists() and self._tree(self.wiki()) is not None:
+            make = False
         root = self.root(make)
         goals = [self._goal_row(g) for g in ideas.tracks(root, make=make)]
         rows, needs = [], self.goal_needs(goals)

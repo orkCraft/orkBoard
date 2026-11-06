@@ -134,14 +134,15 @@ function KindCard({ s }) {
     <${Choice} word="It is something else…" busy=${busy} data-else="1" onPress=${() => setOther(true)} /></div>`;
 }
 
-/** The question as a card lifted in the hand, the Orkmaster's head at its corner; it goes when it is answered. */
-export function SetupCard() {
+/** The question as a card lifted in the hand, the Orkmaster's head at its corner; it goes when it is answered. `at`: the place it landed in the first open's room (frame/firstopen.js: `ring`, `table`), `foot`: what the room adds under it (the release branch). */
+export function SetupCard({ at = "", foot = null } = {}) {
   const s = setupNow.value;
   if (!s || !CARD_STEPS.includes(s.step)) return null;
   const question = s.step === "kind" && s.kind?.empty ? `The folder is empty. What is it for?` : s.line;
-  return html`<article class="ork-card hand-card--big hand-tool fo-card" role="dialog" aria-label="The Orkmaster's question" data-setup=${s.step}>
+  return html`<article class=${`ork-card hand-card--big hand-tool fo-card${at ? ` fo-at-${at}` : ""}`} role="dialog" aria-label="The Orkmaster's question" data-setup=${s.step}>
     <div class="hand-tool__top"><span class="ork-label">The project</span><span class="is-alert"><${Sign} name="question" /></span></div>
     <div class="fo-q"><p class="body">${question}</p><${Head} race="peon" tier="crown" size="mid" /></div>
     ${s.step === "project" ? html`<${ProjectCard} s=${s} />` : s.step === "git" ? html`<${GitCard} key=${s.name} path=${s.path} />` : html`<${KindCard} key=${s.name} s=${s} />`}
+    ${foot}
   </article>`;
 }

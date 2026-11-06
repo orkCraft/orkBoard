@@ -36,8 +36,10 @@ def test_the_questions_come_in_the_orkmasters_order():
     assert at(open=False) == "project" and at(open=False, laid=True) == "project"
     assert at(git=False) == "git"
     assert at(kind_kept=False) == "kind"
-    assert at(hand=0) == "tools"                                                         # only when the hand is empty: the tools are this computer's
+    assert at(hand=0) == "tools" and at(open=False, hand=0) == "tools"                   # the tools come first (spec 150 G), only when the hand is empty: they are this computer's and need no project
+    assert at(hand=0, git=False, kind_kept=False) == "tools"
     assert at(hand=0, tools_skipped=True) == "parties"                                   # the card closed with none added: the Board goes on
+    assert at(open=False, hand=0, tools_skipped=True) == "project"
     assert at() == "parties"
     assert at(laid=True, git=False, kind_kept=False, hand=0) == "laid"                   # laid: nothing is asked, however the rest stands
     assert [first_open.line(s, "skyhop", "a web app") for s in ("project", "git", "kind", "tools")] == [
@@ -45,7 +47,10 @@ def test_the_questions_come_in_the_orkmasters_order():
     assert first_open.line("kind", "skyhop") == "What is skyhop for?" and first_open.line("laid") == ""
 
 
-def test_with_no_project_open_the_orkmaster_asks_which(empty):
+def test_with_no_project_open_the_orkmaster_asks_for_a_tool_and_then_which(empty):
+    got = empty.command("first_open.ask", {})
+    assert got["step"] == "tools" and got["line"] == "Which AI tool shall the orks think with?" and got["hand"] == 0 and not got["laid"]
+    empty.command("first_open.tools_skip", {})
     got = empty.command("first_open.ask", {})
     assert got["step"] == "project" and got["line"] == "Which project shall we work on?" and got["recent"] == [] and not got["laid"]
     empty.machine.projects_recent = [str(Path.cwd())]
@@ -57,6 +62,7 @@ def test_a_folder_without_git_is_asked_to_start_git_then_what_it_is(empty, tmp_p
     folder = tmp_path / "skyhop"
     folder.mkdir()
     (folder / "package.json").write_text('{"name": "skyhop", "dependencies": {"react": "1"}}', encoding="utf-8")
+    empty.command("first_open.tools_skip", {})
     assert empty.command("projects.open", {"path": str(folder)})["git"] is False
     got = empty.command("first_open.ask", {})
     assert got["step"] == "git" and got["line"] == "No git in skyhop yet. Start git here?" and got["name"] == "skyhop"
@@ -66,7 +72,10 @@ def test_a_folder_without_git_is_asked_to_start_git_then_what_it_is(empty, tmp_p
     assert not got["kind"]["empty"]
 
 
-def test_the_kind_is_answered_yes_or_another_and_then_the_tools_are_asked(board):
+def test_the_tools_are_asked_first_then_the_kind_is_answered_yes_or_another(board):
+    assert board.command("first_open.ask", {})["step"] == "tools" and board.command("first_open.ask", {})["hand"] == 0      # a machine with no tool in its hand
+    said = board.command("first_open.tools_skip", {})
+    assert said["line"] == "No AI tool: the Board opens, and nothing is worked on until you add one"
     got = board.command("first_open.ask", {})
     assert got["step"] == "kind"
     with pytest.raises(CommandError, match="A kind is one of"):
@@ -74,9 +83,6 @@ def test_the_kind_is_answered_yes_or_another_and_then_the_tools_are_asked(board)
     assert board.command("first_open.ask", {})["step"] == "kind"                          # a refused answer changes nothing
     kept = board.command("first_open.kind", {"kind": got["kind"]["id"]})
     assert kept["ok"] and kept["kind"] == got["kind"]["id"]
-    assert board.command("first_open.ask", {})["step"] == "tools" and board.command("first_open.ask", {})["hand"] == 0      # a machine with no tool in its hand
-    said = board.command("first_open.tools_skip", {})
-    assert said["line"] == "No AI tool: the Board opens, and nothing is worked on until you add one"
     assert board.command("first_open.ask", {})["step"] == "parties"
     tool_hand.add(board.machine, "claude", "subscription")
     assert board.command("first_open.ask", {})["hand"] == 1
@@ -87,6 +93,7 @@ def test_an_empty_folder_asks_what_it_is_for_in_one_line(empty, tmp_path):
     folder = tmp_path / "blank"
     folder.mkdir()
     subprocess.run(["git", "init"], cwd=str(folder), check=True, capture_output=True)
+    empty.command("first_open.tools_skip", {})
     empty.command("projects.open", {"path": str(folder)})
     got = empty.command("first_open.ask", {})
     assert got["step"] == "kind" and got["kind"]["empty"] and got["line"] == f"What is blank for? {SAID}"
@@ -94,12 +101,13 @@ def test_an_empty_folder_asks_what_it_is_for_in_one_line(empty, tmp_path):
         empty.command("first_open.kind", {"about": "  "})
     done = empty.command("first_open.kind", {"about": "a small game"})                      # no model here: code's guess, said so (`read: false`)
     assert done["ok"] and done["kind"] == "code" and done["read"] is False
-    assert empty.command("first_open.ask", {})["step"] == "tools"
+    assert empty.command("first_open.ask", {})["step"] == "parties"
 
 
 # -- a new, empty folder (A.4) ----------------------------------------------------------------------------------------
 
 def test_a_new_empty_folder_is_made_and_opened(empty, tmp_path):
+    empty.command("first_open.tools_skip", {})
     got = empty.command("projects.new_folder", {"parent": str(tmp_path), "name": "  my   game "})
     assert got["ok"] and got["git"] is False and Path(got["path"]).name == "my game"
     assert (tmp_path / "my game").is_dir() and empty.command("projects.list", {})["current"] == got["path"]
@@ -170,6 +178,7 @@ def test_a_project_with_parties_of_its_own_is_laid_at_once(fake_repo):
 
 def test_the_engines_line_is_said_once_with_the_kind_for_every_kind_and_not_after(board):
     assert project_kind.START_LINE == "Orkboard sees web projects and Godot best; Unity and Flutter work, with some checks not there"
+    board.command("first_open.tools_skip", {})
     got = board.command("first_open.ask", {})
     assert got["step"] == "kind" and got["line"].endswith(f" Right? {SAID}")             # the first read of a new project
     assert board.command("first_open.ask", {})["line"] == got["line"]                      # until it is answered, the same
@@ -183,6 +192,7 @@ def _godot_project(empty, tmp_path, fixture: str):
     folder = tmp_path / fixture
     shutil.copytree(FIXTURES / fixture, folder)
     subprocess.run(["git", "init"], cwd=str(folder), check=True, capture_output=True)
+    empty.command("first_open.tools_skip", {})
     empty.command("projects.open", {"path": str(folder)})
     return empty.command("first_open.ask", {})
 
@@ -200,3 +210,57 @@ def test_the_words_alone_say_the_engines_line_for_any_folder(tmp_path):
     assert project_kind.start_words(tmp_path) == SAID
     assert project_kind.start_words(FIXTURES / "godot") == SAID
     assert project_kind.start_words(FIXTURES / "godot_csharp") == f"{project_kind.START_LINE}. {project_kind.GODOT_CSHARP}."
+
+
+# -- the project's release branch (spec 150 G.2.2, decisions §254.8) -------------------------------------------------
+
+def _branch(repo: Path, *args: str) -> None:
+    import subprocess
+    subprocess.run(["git", *args], cwd=str(repo), check=True, capture_output=True)
+
+
+def test_the_release_branch_is_read_from_git_main_by_default_and_a_press_lists_the_local_branches(empty, fake_repo):
+    _branch(fake_repo, "branch", "-M", "main")
+    _branch(fake_repo, "branch", "develop")
+    _branch(fake_repo, "branch", "idea/x-1")                                              # a task's branch is no release branch
+    empty.command("projects.open", {"path": str(fake_repo)})
+    got = empty.command("first_open.branch", {})
+    assert got["branch"] == "main" and got["branches"] == ["develop", "main"]
+
+
+def test_a_branch_kept_is_the_main_the_gate_and_the_portal_read(empty, fake_repo):
+    _branch(fake_repo, "branch", "-M", "main")
+    _branch(fake_repo, "branch", "release")
+    empty.command("projects.open", {"path": str(fake_repo)})
+    state_dir = empty.projects.current().ideas.state_dir
+    assert empty.command("ideas.gate", {})["main"] == "main"
+    assert empty.command("first_open.branch", {"branch": "release"}) == {"ok": True, "branch": "release", "branches": ["main", "release"]}
+    assert first_open.kept_branch(state_dir) == "release" and empty.command("first_open.branch", {})["branch"] == "release"
+    assert empty.command("ideas.gate", {})["main"] == "release"
+    _branch(fake_repo, "branch", "-D", "release")                                           # a branch that is gone is no main: git's default again
+    assert empty.command("first_open.branch", {})["branch"] == "main" and empty.command("ideas.gate", {})["main"] == "main"
+
+
+def test_a_release_branch_that_is_not_a_branch_is_refused_and_keeps_the_files_other_keys(empty, fake_repo):
+    empty.command("projects.open", {"path": str(fake_repo)})
+    state_dir = empty.projects.current().ideas.state_dir
+    first_open.lay(state_dir)
+    with pytest.raises(CommandError, match="not a branch of this project"):
+        empty.command("first_open.branch", {"branch": "nowhere"})
+    assert first_open.kept_branch(state_dir) == ""
+    now = empty.command("first_open.branch", {})["branch"]
+    empty.command("first_open.branch", {"branch": now})
+    assert first_open.kept_branch(state_dir) == now and first_open.kept(state_dir) is True
+    assert first_open.keep_release_branch(state_dir, "") == "" and first_open.kept_branch(state_dir) == "" and first_open.kept(state_dir) is True
+
+
+def test_a_folder_with_no_git_yet_gets_no_pages_of_the_boards_written_into_it(empty, tmp_path):
+    folder = tmp_path / "skyhop"
+    folder.mkdir()
+    empty.command("first_open.tools_skip", {})
+    empty.command("projects.open", {"path": str(folder)})
+    empty.command("ideas.board", {})                                                       # the page reads the Board as the folder opens, before *Start git here*
+    assert not (folder / "llm-wiki").exists(), "General's pages would be read as the project's own (a team's wiki)"
+    empty.command("projects.start_git", {"path": str(folder)})
+    got = empty.command("first_open.ask", {})
+    assert got["step"] == "kind" and got["kind"]["empty"]

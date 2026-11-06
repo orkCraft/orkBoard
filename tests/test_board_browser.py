@@ -69,17 +69,21 @@ def test_orkboard_on_the_desktop_the_four_panes_a_goal_saved_and_needs_you_no_ca
             ctx.on("request", lambda r: urls.append(r.url))
             pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.goto(server.url)
-            pg.locator('.parties[data-first="true"]').wait_for(timeout=WAIT_MS)                    # the first start: the parties' place opens by itself, no party yet (decisions §169.4)
-            assert pg.locator(".shell-top, .shell-drawer, .arena-left, .shell-backdrop, [aria-modal]").count() == 0 and pg.locator(".table .table-tabs").count() == 1
+            more = pg.locator('[data-setup="parties"] [data-act="parties"]')                        # the first start in the room (spec 150 G): the parties as chairs, their large card a press away (decisions §169.4, §254.8)
+            more.click()
+            pg.locator('.parties[data-first="true"]').wait_for(timeout=WAIT_MS)
+            assert pg.locator(".shell-top, .shell-drawer, .arena-left, .shell-backdrop, [aria-modal]").count() == 0 and pg.locator(".frame.fo-room").count() == 1
             assert pg.evaluate("document.documentElement.dataset.look") == "office"
             assert pg.locator(".gui-hud, .gui-camp, .gui-town, .gui-foot").count() == 0
-            pg.keyboard.press("Escape")                                                             # Esc leaves it to the empty Board (the window: the table and the hand, no party yet: spec 98 E) ...
-            pg.locator(".table-empty").get_by_role("button", name="Choose the parties", exact=True).click()       # ... whose note opens the one place of the parties over the pane again
+            pg.keyboard.press("Escape")                                                             # Esc leaves it to the room ...
+            pg.locator('.parties[data-first="true"]').wait_for(state="detached", timeout=WAIT_MS)
+            more.click()                                                                            # ... whose card opens the one place of the parties again
             pg.locator('.parties[data-first="true"]').wait_for(timeout=WAIT_MS)
             assert pg.locator(".place, .shell-craft-tile").count() == 0 and pg.get_by_role("button", name="Start", exact=True).is_visible()
             pg.locator('.pc-later__one[data-party="marketing"] [role="checkbox"]').click()          # a party of a stage not reached yet: ticked by the person
             pg.get_by_role("button", name="Start", exact=True).click()                              # makes the ticked parties, each with its leader, builders and checkers
             pg.locator(".parties").wait_for(state="detached", timeout=WAIT_MS)
+            pg.locator('.frame[data-laid="1"] .table-tabs').wait_for(timeout=WAIT_MS)              # the room gives way to the laid table
             for pane in (".table-tabs", ".table-pane"):                # the window's two parts, on the real host's data
                 assert pg.locator(pane).is_visible(), pane
             g = next(t for t in board.command("ideas.board")["tracks"] if t["leader"]["slug"] == "growth")

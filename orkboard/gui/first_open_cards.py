@@ -5,6 +5,7 @@ Orkmaster asks now and the answers the host takes. The cards are the page's (par
     first_open.kind {kind? | about?}        # the project's kind answered: *Yes* (the kind read) or another one from the list, or an empty folder's one line
     first_open.tools_skip {}                # the adding card closed with no tool added: the Board opens, and nothing is worked on until a tool is added
     projects.new_folder {parent, name}      # *A new, empty folder…*: made inside the folder the system's dialog chose, and opened
+    first_open.branch {branch?}             # the project's card's *Release branch* (spec 150 G.2.2): {branch, branches} read from git (`main` by default); with `branch` it is kept
 
 `projects.open` and `projects.start_git` (gui/board_projects.py) answer *Open a folder…*, the recent projects and *Start git here*; the kind is read by
 `ideas.proposals` (gui/ideas_project.py); nothing here asks a model but an empty folder's one line, which is that same call. Desktop only.
@@ -17,6 +18,7 @@ from typing import Any, Callable
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError
 from orkboard.realm import first_open, project_folder, project_kind, tool_hand
+from orkboard.realm.idea_git import IdeaGit
 
 NAME_CHARS = 100
 
@@ -27,7 +29,8 @@ class FirstOpen:
         self.tools_skipped = False       # this run: the adding card was closed with no tool added (the next project asks again)
 
     def commands(self) -> dict[str, Callable[[dict], Any]]:
-        return {"first_open.ask": self.ask, "first_open.kind": self.kind, "first_open.tools_skip": self.tools_skip, "projects.new_folder": self.new_folder}
+        return {"first_open.ask": self.ask, "first_open.kind": self.kind, "first_open.tools_skip": self.tools_skip, "projects.new_folder": self.new_folder,
+                "first_open.branch": self.branch}
 
     def ask(self, args: dict) -> dict:
         """`{step, line, name, path, recent, kind, hand, laid}`: `step` one of `realm/first_open.STEPS`; `line` what the Orkmaster says in its bubble; `recent` the recent
@@ -36,7 +39,8 @@ class FirstOpen:
         project = self.host.projects.current()
         inn = len(tool_hand.hand(self.host.machine))
         if project is None:
-            return {"step": "project", "line": first_open.line("project"), "name": "", "path": "", "recent": self.host.projects.list()["recent"], "kind": None,
+            at = first_open.step(open=False, git=False, kind_kept=False, hand=inn, tools_skipped=self.tools_skipped, laid=False)
+            return {"step": at, "line": first_open.line(at), "name": "", "path": "", "recent": self.host.projects.list()["recent"] if at == "project" else [], "kind": None,
                     "hand": inn, "laid": False}
         state_dir = project.ideas.state_dir
         laid = first_open.laid(state_dir, project.root)
@@ -52,6 +56,29 @@ class FirstOpen:
         if at == "kind":                                                  # said once, with the kind, for every kind: a new project's first read (spec 145 D)
             line = f"{line} {project_kind.start_words(project.root)}"
         return {"step": at, "line": line, "name": project.name, "path": project.path, "recent": [], "kind": kind, "hand": inn, "laid": laid}
+
+    def _branches(self, project: Any) -> tuple[str, list[str]]:
+        """`(the release branch now, the local branches)`: the one kept while it is there, else git's default (`main` by default); `("", [])` with no commit to read."""
+        git = IdeaGit(Path(project.root))
+        try:
+            rows = git.branches()
+            return first_open.release_branch(project.ideas.state_dir, rows, git.default_branch()), rows
+        except Exception:                                                 # not a git folder yet
+            return "", []
+
+    def branch(self, args: dict) -> dict:
+        """`{}`: `{branch, branches}`, the card's *Release branch* and the local branches a press lists. `{branch}`: that local branch is kept as the project's main, the one the
+        portal sends into and the gate reads (`realm/first_open.py` `keep_release_branch`). Refused: *That is not a branch of this project*."""
+        project = self.host.projects.current(need=True)
+        now, rows = self._branches(project)
+        want = args.get("branch")
+        if want is None:
+            return {"branch": now, "branches": rows}
+        if not isinstance(want, str) or want not in rows:
+            raise IdeasError("That is not a branch of this project")
+        first_open.keep_release_branch(project.ideas.state_dir, want)
+        self.host.on_change()
+        return {"ok": True, "branch": want, "branches": rows}
 
     def kind(self, args: dict) -> dict:
         """The project's kind answered: `{kind}` is *Yes* (the one read) or another of the list, kept in `<state_dir>/project.json`; `{about}` is an empty folder's one
