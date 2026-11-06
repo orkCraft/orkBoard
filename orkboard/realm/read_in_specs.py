@@ -23,7 +23,7 @@ ONE = r"^Spec {n}(?::| )"                       # a spec of no parts: a commit `
 PARTY = "tech"
 LAID = "history"                                # the key a page laid from the project's own documents carries: a `done` from before the Board has no gate record (board_check)
 _FILE = re.compile(r"^(\d+)([a-z]?)-(.+)\.md$")
-_HEAD = re.compile(r"^#[ \t]+(?:(\d+[a-z]?)\.[ \t]+)?(.+?)[ \t]*$")
+_HEAD = re.compile(r"^#[ \t]+(?:Spec[ \t]+)?(?:(\d+[a-z]?)(?:\.|[ \t]+[—–-])[ \t]+)?(.+?)[ \t]*$")     # `# 151. Title` and the older `# Spec 33 — Title`
 _ROW = re.compile(r"^\|[ \t]*\*\*([A-Z]\d?)\.[ \t]+(.+?)\*\*[ \t]*\|")
 _DECISION = re.compile(r"§(\d+)")
 TITLE_CHARS = 120
@@ -39,6 +39,7 @@ def _title(heading: str) -> str:
     """The heading without its number, cut where its subtitle starts (`Title: what it builds`, `Title; and more`)."""
     head = re.split(r": |; ", heading, maxsplit=1)[0]
     title = head if len(head) >= 3 else heading
+    title = title[:1].upper() + title[1:]                     # a goal's title starts as a sentence does (`# Spec 35 — the Board` → *The Board*)
     return title if len(title) <= TITLE_CHARS else title[:TITLE_CHARS - 1].rsplit(" ", 1)[0]
 
 
