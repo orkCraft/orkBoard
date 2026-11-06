@@ -16,7 +16,7 @@ import json
 import re
 from pathlib import Path
 
-from orkboard.realm import agent_rules, agent_rules_text as T, goal_phase, idea_page, page_talk, plumbing, read_in, spec_sections
+from orkboard.realm import agent_rules, agent_rules_text as T, goal_phase, idea_page, living_specs, page_talk, plumbing, read_in, spec_sections
 
 DEFAULT_WIKI = "llm-wiki/general"
 WORKFLOW = ".github/workflows/orkboard-check.yml"
@@ -297,7 +297,11 @@ def run(root: Path) -> list[dict]:
         for path in sorted(folder.glob("*.md")) if folder.is_dir() else []:
             if path.name in _SKIP or path.name.startswith("."):
                 continue
-            _page(root, path.relative_to(root).as_posix(), path, out)
+            rel = path.relative_to(root).as_posix()
+            if not re.fullmatch(r"[a-z0-9-]+", path.stem):
+                what = "a goal's" if sub == "ideas" else "a party's"
+                out.append(_f(rel, 0, f"`{path.name}`: {what} file name is its slug: rename it `{living_specs.slug(path.stem) or 'a-slug'}.md`"))
+            _page(root, rel, path, out)
     _secrets(root, wiki, out)
     _rules(root, wiki, out)
     _journals(root, wiki, out)

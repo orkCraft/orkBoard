@@ -4,7 +4,7 @@
     lay(root, wiki_rel, planned, party="tech")                                             # the pages that are not there yet, written; the slugs written
     line(planned_page), counts(planned)                                                    # the dry run's words
 
-Each `<folder>/<n>-<slug>.md` (`<n>` a number, a letter after it allowed: `29a`) is one goal whose page is `<wiki>/pages/ideas/<the file's stem>.md`. Its stages are the rows of the spec's first table
+Each `<folder>/<n>-<slug>.md` (`<n>` a number, a letter after it allowed: `29a`) is one goal whose page is `<wiki>/pages/ideas/<the file's stem as a slug>.md` (`living_specs.slug`: a dot is a dash, `96-orkui-0.15.0-x` → `96-orkui-0-15-0-x`). Its stages are the rows of the spec's first table
 that has any, whose first cell is `**<id>. <name>**` (`E1`); a part is built when a commit's subject starts `Spec <n> <id>:`. A spec with no such table is one stage. Reading is files and
 `git log`; `lay` never writes over a page that is there and never commits. No face, no model.
 """
@@ -14,7 +14,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from orkboard.realm import goal_phase, ideas
+from orkboard.realm import goal_phase, ideas, living_specs
 from orkboard.realm.idea_page import Page
 from orkboard.realm.idea_words import short_of
 
@@ -106,9 +106,10 @@ def goals_from_specs(root: Path, folder: str, wiki_rel: str, done_through: int |
         else:
             nb = sum(1 for _i, _n, b in stages if b)
             phase = "done" if nb == len(stages) else "work" if nb else "spec"
-        out.append({"slug": path.stem, "title": title, "phase": phase, "stages": stages, "decisions": decisions,
+        slug = living_specs.slug(path.stem) or path.stem
+        out.append({"slug": slug, "title": title, "phase": phase, "stages": stages, "decisions": decisions,
                     "spec": f"{folder}/{path.name}" if folder not in ("", ".") else path.name, "party": party,
-                    "exists": (root / wiki_rel / ideas.IDEAS / f"{path.stem}.md").exists()})
+                    "exists": (root / wiki_rel / ideas.IDEAS / f"{slug}.md").exists()})
     return out
 
 
