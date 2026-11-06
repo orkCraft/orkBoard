@@ -1,4 +1,4 @@
-<!-- orkboard:file schema=3 hash=14b2cae23257 -->
+<!-- orkboard:file schema=3 hash=91783766eb98 -->
 # The Board's rules (Orkboard's file)
 
 Orkboard writes this file from its package; a change by hand is written back. This project's own rules go in `AGENTS.md` and `CLAUDE.md`, and they win: where they conflict
@@ -63,7 +63,13 @@ Set `asks: person` and stop. The person's answer is the line under it, written b
 
       - Answered: App Store (the person, 2026-11-06)
 
-An answered question stays in the page. Clear `asks` when none is left unanswered. Where no person is watching, the goal waits; never write an answer for the person. A card you thought of yourself
+A question a written decision or spec already settles is answered by its reference instead, and said in the chat:
+
+      - Answered: its rules only (decided by spec 154 C.1, 2026-11-06)
+
+The reference is a decision of the project's log (`§258`, `§258.7`) or a spec (`spec 154`, `spec 154 C.1`); `orkboard check` finds one that does not exist. Never cite one that
+does not say it; what nothing written settles is the person's. An answered question stays in the page. Clear `asks` when none is left unanswered. Where no person is watching, the goal
+waits; never write an answer for the person. A card you thought of yourself
 (a goal nobody asked for) is a question too: *Take this goal?*
 
 ## Accepting a step

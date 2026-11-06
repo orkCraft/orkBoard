@@ -282,9 +282,14 @@ def _answer(args: argparse.Namespace) -> int:
     said = " ".join(args.answer.split())
     if not said:
         raise BadCall("An answer needs its words")
+    ref = " ".join((getattr(args, "decided_by", "") or "").split())
+    if ref and not board_check.REFERENCE.match(ref):
+        raise BadCall(f"{ref!r} is no reference: a decision (§258, §258.7) or a spec (spec 154, spec 154 C.1)")
+    if ref and not board_check.reference_exists(root, ref):
+        raise Refused(f"{ref} is not in this project's decisions or specs: answer by a reference only when it settles the question, else ask the person")
     old = page.section("Open questions")
     try:
-        text = idea_questions.with_answer(old, args.n - 1, said, dt.date.today().isoformat()) if args.n >= 1 else ""
+        text = idea_questions.with_answer(old, args.n - 1, said, dt.date.today().isoformat(), f"decided by {ref}" if ref else "the person") if args.n >= 1 else ""
     except ValueError:
         text = ""
     if not text:
@@ -292,7 +297,7 @@ def _answer(args: argparse.Namespace) -> int:
     ideas.set_section(wiki, args.slug, "Open questions", text)
     if not idea_questions.open_of(text):
         _unset(wiki, args.slug, "asks")
-    print(f"question {args.n} of {args.slug} answered" + ("" if idea_questions.open_of(text) else "; none is left, asks is cleared"))
+    print(f"question {args.n} of {args.slug} answered" + (f" by {ref}" if ref else "") + ("" if idea_questions.open_of(text) else "; none is left, asks is cleared"))
     return 0
 
 
@@ -362,10 +367,11 @@ def add_parsers(sub) -> None:
     s.add_argument("--choices", default="", metavar="A/B", help="Two to four answers, written a/b/c")
     s.add_argument("--pick", default="", help="The choice you recommend")
     s.add_argument("--why", default="", help="Why, in a few words")
-    s = w.add_parser("answer", help="Write the person's answer under a question")
+    s = w.add_parser("answer", help="Write the person's answer under a question, or one a written decision or spec already gives")
     s.add_argument("slug")
     s.add_argument("n", type=int, help="The question's number (the first is 1)")
     s.add_argument("answer", metavar="ANSWER")
+    s.add_argument("--decided-by", default="", metavar="REF", help="The decision or spec that already settles it (§258.7, spec 154 C.1): written as its answer's who (decisions §259)")
     p = sub.add_parser("gate", help="Run the project's gate on this checkout and say the result")
     p.add_argument("--base", default="", metavar="REF", help="The ref the touched files are counted from (default: the repository's main branch)")
     p.add_argument("--record", default="", metavar="GOAL", help="Write the result into this goal's page (the gate key)")

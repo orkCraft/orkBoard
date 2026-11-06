@@ -338,3 +338,24 @@ def test_init_writes_a_subagent_and_a_forked_skill_for_each_seat_the_project_has
     assert not (repo / ".claude/skills/grunt").exists() and not list((repo / ".claude/skills").glob("*-leader"))      # a project with no party has no leader's files
     assert "isolation: worktree" in (repo / ".claude/agents/ork-grunt.md").read_text(encoding="utf-8")
     assert agent_rules.check(repo, WIKI, decisions=agent_rules.decisions_of(repo)) == []
+
+
+def test_a_question_a_written_decision_settles_is_answered_by_its_reference_and_a_made_up_one_is_refused(repo, capsys):
+    """Decisions §259: `--decided-by` writes the reference as the answer's who; a reference the project does not hold is refused, a malformed one is a bad call."""
+    (repo / "docs").mkdir(exist_ok=True)
+    (repo / "docs" / "decisions.md").write_text("# Decisions\n\n## 7. The score board shows three players (1 November 2026, the owner)\n\nThree.\n")
+    (repo / "docs" / "specs").mkdir(exist_ok=True)
+    (repo / "docs" / "specs" / "12-the-board.md").write_text("# 12. The board\n")
+    slug = a_goal(repo, capsys)
+    for q in ("How many players?", "Which order?", "What colour?"):
+        assert ob("goal", "ask", slug, q) == 0
+    capsys.readouterr()
+    assert ob("goal", "answer", slug, "1", "three", "--decided-by", "§7") == 0 and "answered by §7" in capsys.readouterr().out
+    assert ob("goal", "answer", slug, "2", "by score", "--decided-by", "spec 12 B.2") == 0
+    capsys.readouterr()
+    assert ob("goal", "answer", slug, "3", "green", "--decided-by", "§99") == 1 and "not in this project" in capsys.readouterr().err
+    assert ob("goal", "answer", slug, "3", "green", "--decided-by", "the owner said so") == 2
+    today = dt.date.today().isoformat()
+    text = page(repo, slug).section("Open questions")
+    assert f"  - Answered: three (decided by §7, {today})" in text and f"  - Answered: by score (decided by spec 12 B.2, {today})" in text
+    assert idea_questions.answers(text) == ["three", "by score", ""] and page(repo, slug).get("asks") == "person"     # the third is still the person's

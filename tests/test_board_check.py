@@ -283,3 +283,24 @@ def test_a_seats_skill_or_subagent_that_is_missing_or_changed_by_hand_is_found_s
     assert only(repo, "is missing")["path"] == ".claude/agents/ork-grunt.md"
     agent_rules.write(repo, WIKI)
     assert board_check.run(repo) == []
+
+
+def test_an_answer_decided_by_a_reference_the_project_does_not_hold_is_found(tmp_path):
+    """Decisions §259: `(decided by §N, day)` must name a decision of the log or a spec; one that does not exist is a finding, one that does is none."""
+    from orkboard.realm import agent_rules, goal_phase
+    repo = tmp_path / "p"
+    (repo / "docs" / "specs").mkdir(parents=True)
+    (repo / "docs" / "decisions.md").write_text("# Decisions\n\n## 3. Three (1 November 2026, the owner)\n")
+    (repo / "docs" / "specs" / "5-five.md").write_text("# 5. Five\n")
+    agent_rules.write(repo, "llm-wiki/general")
+    pg = repo / "llm-wiki/general/pages/ideas/g.md"
+    pg.parent.mkdir(parents=True, exist_ok=True)
+    body = ("---\nowner: board\nkind: idea\ntrack: tech\nphase: new\nby: person\nschema: {s}\n---\n# G\n\n## Gist\nG\n\n## Open questions\n"
+            "- A?\n  - Answered: x (decided by §3, 2026-11-06)\n- B?\n  - Answered: y (decided by spec 5 A.1, 2026-11-06)\n"
+            "- C?\n  - Answered: z (the person, 2026-11-06)\n{bad}")
+    pg.write_text(body.format(s=goal_phase.SCHEMA, bad=""))
+    assert [f for f in board_check.run(repo) if f["path"].endswith("/g.md")] == []
+    pg.write_text(body.format(s=goal_phase.SCHEMA, bad="- D?\n  - Answered: w (decided by §40, 2026-11-06)\n"))
+    assert [f["what"] for f in board_check.run(repo) if f["path"].endswith("/g.md")] == [
+        "the answer is decided by §40, which this project's decisions and specs do not hold"]
+    assert board_check.reference_exists(repo, "§3.2") and board_check.reference_exists(repo, "spec 5") and not board_check.reference_exists(repo, "spec 6")

@@ -7016,3 +7016,29 @@ Claude Code offered the six `ork-*` subagents and the `orkboard` skill from this
 9. **Built** by spec 154: **A.** the agent's frame of each seat; **B.** Talk and Accepted in the page; **C.** the seats as Claude
    Code's subagents and skills, and the conductor; **D.** this repository's files written again, and the trial's arm.
 The owner's call.
+
+## 259. A question a written decision or spec already settles is answered by its reference, never asked of the person; what nothing written settles stays the person's (6 November 2026, the owner)
+
+Changes: 255.7 (the person decides), spec 151 A.6 (an answer's line), spec 154 C.3 (the conductor's step).
+
+Why: goal 154's Talk, held by `/tech-leader talk` in a context of its own, asked the person three things, and the session
+conducting it passed them on as the Board's rules say (*never answer for the person*). The first, *what does a seat's
+subagent hold?*, was settled already: spec 154 C.1 says *its role's text, A's rules*; the code had missed it. The owner,
+asked why the questions came: and then *yes, write it as a decision and an amendment to the block*. A rule that cannot tell a
+question still open from one already decided asks the person again what they decided, and teaches them to wave questions
+through. So:
+1. **A question a written decision or spec settles is not the person's**: the conductor (or any tool working the Board)
+   answers it by its reference, under the question's line, `  - Answered: its rules only (decided by spec 154 C.1, 2026-11-06)`,
+   and says so in the chat, in a line: which, and why it settles it. The person sees it in the page and in the chat, and
+   overrules it by answering again.
+2. **A reference is one the project holds**: a decision of its log (`§258`, `§258.7`: its `## 258.` heading, or an ADR file
+   numbered so) or a spec (`spec 154`, `spec 154 C.1`: a file `154-*.md` of its specs). `orkboard goal answer … --decided-by`
+   refuses one that is not there; `orkboard check` finds one in a page.
+3. **What nothing written settles stays the person's**, as §255.7 says: a choice between ways, a cost, a decision against an
+   earlier one, a goal of one's own, going into main. Citing a reference that does not say what the answer says is answering
+   for the person; the rules say so.
+4. **The words**: the block's *The person decides* gains the line; BOARD.md shows the answer's line and its references; the
+   conductor's step 4 answers the settled ones first and stops for the rest.
+5. **Built** with this decision: `realm/agent_rules_text.py` (the block, BOARD.md, the conductor), `gui/board_cli_goals.py`
+   (`--decided-by`), `realm/board_check.py` (`reference_exists`, the finding); this repository's files written again.
+The owner's call.

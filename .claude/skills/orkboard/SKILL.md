@@ -3,7 +3,7 @@ name: orkboard
 description: "Work a goal of this project's Board: take it, route it, hold Talk, write its spec, do it, run the gate, and stop at what the person decides"
 # `name` and `description` are the Agent Skills standard's; this skill runs in the conversation and uses no field of Claude Code's own.
 schema: 3
-hash: ed28b7d46b45
+hash: 72f44a4d9bf6
 ---
 # Work a goal of this project's Board
 
@@ -12,7 +12,7 @@ You conduct. Each seat of the Board is a skill that runs in a context of its own
 1. **Take the goal.** Pick a goal whose `phase` is not `done` and that is not on Hold (`queue: hold`); take it (`uvx --from git+https://github.com/orkCraft/orkBoard orkboard goal take <slug>`, or BOARD.md's way). Another's goal is not yours.
 2. **Route it:** call `/orkmaster route <slug>`. It writes `route` in the page and moves `phase` to `talk`; read `route` back.
 3. **Talk:** call `/<craft>-leader talk <slug>` for every leader of the route **in one turn, side by side**, then wait until all of them are back. Each writes its own `### Talk` in its section and gives you its verdict.
-4. **The person's questions:** a question only the person can settle is under `## Open questions` with `asks: person`. Say each in the chat and **end your turn**; go on when it is answered (`uvx --from git+https://github.com/orkCraft/orkBoard orkboard goal answer`). Never answer for the person.
+4. **The person's questions:** a question only the person can settle is under `## Open questions` with `asks: person`. First, a question a written decision or spec already settles: answer it by its reference (`uvx --from git+https://github.com/orkCraft/orkBoard orkboard goal answer <slug> <n> "<answer>" --decided-by "§N"`) and tell the person in one line which, and why it settles it. Say each other in the chat and **end your turn**; go on when it is answered (`uvx --from git+https://github.com/orkCraft/orkBoard orkboard goal answer`). Never answer for the person what nothing written settles.
 5. **Sections:** call `/<craft>-leader section <slug>` for each leader of the route, in the route's order. Then move `phase` to `spec` (`uvx --from git+https://github.com/orkCraft/orkBoard orkboard goal phase <slug> spec`).
 6. **Plan:** call `/taskmaster plan <slug>`; it writes `## Stages`. Move `phase` to `work`.
 7. **Do the tasks:** work in a branch of your own. Give each task of the stages, in order, to a Grunt (the `ork-grunt` subagent: the task, the goal's page and the gate), one at a time. A Grunt works in a worktree of its own and never asks the person.

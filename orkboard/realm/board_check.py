@@ -137,6 +137,44 @@ def _spec_file(page: idea_page.Page, root: Path) -> str:
         return ""
 
 
+# -- an answer by a reference (decisions §259) ---------------------------------------------------------------------------------------------
+
+REFERENCE = re.compile(r"^(?:§(\d+)(?:\.\d+[a-z]?)*|spec (\d+[a-z]?)(?: [A-Z]\d?(?:\.\d+)?)?)$")
+_DECIDED = re.compile(r"\(decided by ([^(),]+),\s*\d{4}-\d{2}-\d{2}\)\s*$")
+
+
+def reference_exists(root: Path, ref: str) -> bool:
+    """Whether `ref` names a decision of the project's log (`§258`, `§258.7`: its `## 258.` heading, or an ADR file numbered 258) or one of its specs (`spec 154`,
+    `spec 154 C.1`: a file `<n>-*.md` in `docs/specs/` or a `specs/` folder at the top). A part's letter or a point's number is not looked up: the decision or the spec is."""
+    m = REFERENCE.match(" ".join(str(ref or "").split()))
+    if not m:
+        return False
+    root = Path(root)
+    if m.group(1):
+        try:
+            place = root / agent_rules.decisions_of(root)
+        except (OSError, ValueError):
+            return False
+        n = int(m.group(1))
+        if place.is_dir():
+            return any(re.match(rf"0*{n}-", p.name) for p in place.glob("*.md"))
+        try:
+            return re.search(rf"^## {n}\.", place.read_text(encoding="utf-8"), re.M) is not None
+        except (OSError, UnicodeDecodeError):
+            return False
+    n = m.group(2)
+    return any(any(base.glob(f"{n}-*.md")) for base in (root / "docs" / "specs", root / "specs", *root.glob("*/specs")) if base.is_dir())
+
+
+def _decided(root: Path, rel: str, text: str, page: idea_page.Page, out: list[dict]) -> None:
+    """An answer under *Open questions* said decided by a reference (`(decided by §258.7, 2026-11-06)`) must name one the project holds."""
+    for ln in page.section("Open questions").splitlines():
+        m = idea_page.ANSWERED.match(ln)
+        d = _DECIDED.search(m.group(1)) if m else None
+        if d and not reference_exists(root, d.group(1).strip()):
+            out.append(_f(rel, _line_of(text, ln.strip()), f"the answer is decided by {d.group(1).strip()}, which this project's decisions and specs do not hold"))
+
+
 def _page(root: Path, rel: str, path: Path, out: list[dict]) -> None:
     try:
         text = path.read_text(encoding="utf-8")
@@ -152,6 +190,7 @@ def _page(root: Path, rel: str, path: Path, out: list[dict]) -> None:
     if schema.isdigit() and int(schema) < int(goal_phase.SCHEMA_FLOOR):
         out.append(_f(rel, _line_of(text, "schema"), f"this page is schema {schema}, this Orkboard writes {goal_phase.SCHEMA}: open the Board once with this Orkboard"))
     _talk(rel, text, page, out)
+    _decided(root, rel, text, page, out)
     if not word:
         return                                           # a page of before this spec: it has no phase to be wrong
     line = _line_of(text, "phase")
