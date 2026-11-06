@@ -13,7 +13,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, node, need, open_hand  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, node, need, open_hand, sig  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -149,14 +149,14 @@ def test_keep_and_other_send_their_choice_other_with_the_persons_words_and_under
     assert not log, "\n".join(log)
 
 
-def test_open_in_the_past_opens_the_chronicle_with_the_earlier_decision_lit(gui):
+def test_open_in_the_past_opens_the_earlier_decisions_entry_over_the_pane(gui):
     pg, host, log = open_conflict(gui)
     try:
         lift(pg)
         pg.locator(".hand-earlier").get_by_role("button", name="Open in the past").click()
         pg.locator('.table-over[data-kind="chronicle"]').wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-earlier").count() == 0, "the lifted card is put down, the earlier one with it"
-        assert pg.locator(".chr").get_attribute("data-lit") == "212"
+        assert pg.locator(".table-over__chronicle").get_attribute("data-view") == "decision" and sig(pg, "frame/state.js", "over")["props"] == {"decision": 212}, "the decision's entry (spec 156 D.5: the past itself lies in Release's lane)"
     finally:
         pg.close()
     assert not log, "\n".join(log)

@@ -38,21 +38,34 @@ export const waitRuns = (n) => n?.state === "decided" && !!n.back?.ripe && !n.ba
 /** The project has no gate: dev and main are one branch, or main does not exist (the gate's own answer, `ideas.gate`'s `same`; docs/specs/113-a-project-with-no-preview-or-no-gate.md §4, decisions §191.2). Unknown before the first answer: a gate. */
 export const noGate = () => gateData.value?.same === true;
 
-/** The road's two parties: Release (the party whose craft is `release`, before main) and Live (the first whose craft is `run` or `liveops`, past it); null for one the project does not have. With no gate there is no ring to hold them: none, so both stay tabs. */
+/** The road's two parties: Release (the party whose craft is `release`, before main) and Live (the first whose craft is `run` or `liveops`, past it); null for one the project does not have. At the wide width they are the row's last two tabs
+ *  (Live, then Release: spec 156 D.2, decisions §261.7), in a project with no gate too. */
 export function roadParties(all = partiesAll()) {
-  if (noGate()) return { release: null, live: null };
   return { release: all.find((g) => g.party_craft === "release") || null, live: all.find((g) => LIVE_CRAFTS.includes(g.party_craft)) || null };
 }
 /** The slugs of the road's parties. */
 export const roadSlugs = (all = partiesAll()) => new Set(Object.values(roadParties(all)).filter(Boolean).map((g) => g.slug));
 
-/** The parties of the tabs and of the lanes: every party, but at the wide width not Release and Live, which have neither (they are in the ring's corners). */
+/** Whether a party is Release's (its lane is the discard, outside the Board's lanes at the wide width), or Live's (the last of the Board's lanes, after the tabs' end). */
+export const isRelease = (g) => !!g && g.party_craft === "release";
+export const isLive = (g) => !!g && LIVE_CRAFTS.includes(g.party_craft) && roadParties().live?.slug === g.slug;
+
+/** The parties of the Board's lanes: every party, but at the wide width not Release (its lane is the discard: table/lane.js) and Live after the others (its tab and its lane stand after the tabs' end). */
 export function partiesNow() {
   const all = partiesAll();
   if (!wide.value) return all;
-  const road = roadSlugs(all);
-  return road.size ? all.filter((g) => !road.has(g.slug)) : all;
+  const { release, live } = roadParties(all), rest = all.filter((g) => g !== release && g !== live);
+  return live ? [...rest, live] : rest;
 }
+
+/** The parties of the tabs: the lanes' and, at the wide width, Release last (spec 156 D.2). */
+export function tabsNow() {
+  const lanes = partiesNow(), release = wide.value ? roadParties().release : null;
+  return release ? [...lanes, release] : lanes;
+}
+
+/** How many of the lanes stand before the tabs' end (`--lanes`): all but Live's at the wide width, where Live's lane follows the end. */
+export const lanesBeforeEnd = () => partiesNow().length - (wide.value && roadParties().live ? 1 : 0);
 
 export const nameOf = (g) => g?.short || g?.title || "";
 export const nodesFor = (g) => nodesOf(mapData.value, g.slug);

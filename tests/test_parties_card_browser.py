@@ -170,6 +170,7 @@ def test_later_the_same_card_saves_only_what_changed_from_the_next_task(desk, ga
     d, pg = open_first(desk, game)
     pg.locator('[data-act="start"]').click()
     pg.locator(CARD).wait_for(state="detached", timeout=WAIT_MS)
+    pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value === null)", timeout=WAIT_MS)      # the start has finished (its last step closes the card it came from): the chair is pressed after it
     pg.locator(".table-chair").click()
     pg.locator(f"{CARD} .pc-row").first.wait_for(timeout=WAIT_MS)
     save = pg.locator('[data-act="save"]')
@@ -186,6 +187,7 @@ def test_the_leaders_seat_of_a_made_party_says_what_it_keeps_of_the_project(desk
     d, pg = open_first(desk, game)
     pg.locator('[data-act="start"]').click()
     pg.locator(CARD).wait_for(state="detached", timeout=WAIT_MS)
+    pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value === null)", timeout=WAIT_MS)      # the start has finished (its last step closes the card it came from): the chair is pressed after it
     pg.locator(".table-chair").click()
     row(pg, "art").locator(".pc-lead").click()
     facts = pg.locator(".pc-seat [data-facts]")

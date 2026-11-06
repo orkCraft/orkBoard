@@ -237,8 +237,8 @@ def test_the_now_share_stands_under_the_potion_bold_and_the_weeks_muted_only_whi
         assert [x.locator(".hand-pot__share").inner_text() for x in pg.locator(".hand-pot").all()] == ["30%", "100%", "70%"]
         assert [x.locator(".hand-pot__week").inner_text().replace("week ", "") if x.locator(".hand-pot__week").count() else "" for x in pg.locator(".hand-pot").all()] == ["", "45%", "18%"]
         if width == "wide":
-            e, m = pg.locator(".frame-edge").bounding_box(), pg.locator(".hand-mana").bounding_box()
-            assert e["x"] <= m["x"] and m["x"] + m["width"] <= e["x"] + e["width"] and m["x"] + m["width"] <= pg.viewport_size["width"], "the potions lie in the table's edge (spec 150 D.2)"
+            m = pg.locator(".hand-mana").bounding_box()
+            assert m["x"] + m["width"] <= pg.viewport_size["width"] + 1 and pg.locator(".hand-mana").evaluate("e => e.closest('.hand-end') !== null"), "the potions lie at the hand's right end (spec 156 D: no edge)"
         narrow.no_sideways(pg)
         shot(pg, f"{width}-shares")
     finally:
@@ -511,10 +511,10 @@ PAID = {"tool": "agy", "name": "Antigravity", "until": "2026-10-29T18:00", "usd_
 def test_at_1280_by_800_two_rows_of_potions_leave_the_portal_ring_and_its_label_clear_of_the_panes_head(gui, tools, paid):
     pg, host, log = open_mana(gui, (TOOLS + MORE)[:tools], "wide", mana_of("claude", "claude", paid=PAID if paid else None))
     try:
-        pg.locator(".portal__label").wait_for(timeout=WAIT_MS)
-        label, edge, host, die = pg.locator(".portal__label").bounding_box(), pg.locator(".frame-edge").bounding_box(), pg.locator(".frame-edge > .portal-host").bounding_box(), pg.locator(".frame-edge > .hand-die").bounding_box()
-        assert label["y"] >= edge["y"] and host["y"] + host["height"] <= die["y"] + 1, "the label lies inside the edge and the ring over the die, however many rows of potions (spec 150 D.7)"
-        assert pg.evaluate("() => { const e = document.querySelector('.frame-edge'); return e.scrollHeight <= e.clientHeight; }"), "the edge does not scroll"
+        pg.locator(".hand-end .hand-die").wait_for(timeout=WAIT_MS)
+        die, mana = pg.locator(".hand-end .hand-die").bounding_box(), pg.locator(".hand-mana").bounding_box()
+        assert die["x"] + die["width"] <= mana["x"] + 7 and mana["x"] + mana["width"] <= pg.viewport_size["width"] + 1 and mana["y"] + mana["height"] <= pg.viewport_size["height"] + 1, "the die and the potions lie at the hand's right end, inside the window, however many rows of potions (spec 156 D: no edge)"
+        assert pg.evaluate("() => { const e = document.querySelector('.release-lane__scroll'); return !e || e.scrollWidth <= e.clientWidth; }"), "the Release column does not scroll sideways"
         hand = pg.locator(".hand").bounding_box()
         assert hand["height"] <= (192 if paid else 172) + 16                                                     # the week's share lies beside the now share: two rows are no taller than with one share (the hand's rim is 3 px now, spec 123 §7.7: 2 px more); + one line of the why: the cards keep their top and the cut lies between two lines (spec 147 C.2)
         assert pg.locator(".hand-pot__shares").first.evaluate("e => getComputedStyle(e).flexDirection") == "row"

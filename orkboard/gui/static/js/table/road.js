@@ -1,61 +1,20 @@
-// The road after the work (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.1, §4.3, decisions §188.1–§188.4; docs/specs/150-the-table-its-edge-and-the-past-through-the-open-tab.md D.3–D.4, decisions §254.3): at the wide width Release and Live are no tabs and have no lanes; they wait on the portal ring
-// in the table's edge (portal.js lays them; the ring is always drawn from Start while the project has a gate, asleep while nothing is ready), **Live's leader (the imp) on the ring at twelve and Release's (the lich) at six**, each 36 x 33 with its word beside it (*Live*, *Release*).
-// **Asleep** a corner is its leader's head alone, grey and still (orkUI's `.is-asleep`); **awake**, in colour and with up to two of the
-// party's members' heads at the head's other side, its leader stepping while one of its tasks runs (`.is-working`, the tabs' `isWorking`), an alert sign on it when the party has one (`hasAlert`). Each corner is a button that opens that party's view in the
-// pane as a tab does (`openTab`), with no tab lit in the row; the lich opens the past through the open tab instead (spec 150 E2.2, table/chronicle.js). Release wakes when a goal is ready for main, a task of its runs, it asks (a card of its in the hand) or has an alert, or while the checks of the goal chosen for main run;
-// Live when a task of its runs, it asks or it has an alert. The skeletons that have passed their checks stand in Release's corner beside its leader, each with a tick, in place of its members; the ones still checking, and a red
-// one, stand in the gate in front of the portal (`Gate`). A party the project does not have has no corner, and a project with no gate (table/data.js `noGate`) has no ring: `roadParties` says none, so Release and Live are tabs there (docs/specs/113-a-project-with-no-preview-or-no-gate.md §4).
-import { html, cls } from "../html.js";
-import { Head } from "../orkui.js";
-import { closeOver, openTab } from "../frame/state.js";
-import { partyOf } from "../arena/arenawords.js";
-import { readyOf, stopsOfProject } from "../hand/data.js";
-import { nodesFor, roadParties } from "./data.js";
+// The road after the work (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, decisions §188.2; docs/specs/156-one-pick-and-the-release-column.md D.2, decisions §261.7): Release and Live are the row's last two tabs at the wide
+// width (Live, then Release last), and the corners' waking rules are on the tabs' faces. **Asleep**, a tab's head is its leader's, grey and still (mood asleep); **awake**, in colour, its leader stepping while one of its tasks runs (moods.js
+// `isWorking`), an alert sign on it when the party has one (`hasAlert`). Release wakes when a goal is ready for main, a task of its runs, it asks (a card of its in the hand) or has an alert, or while the checks of the goal chosen for main run;
+// Live when a task of its runs, it asks or it has an alert.
+import { stopsOfProject, readyOf } from "../hand/data.js";
+import { isRelease, isLive } from "./data.js";
 import { hasAlert } from "./concerns.js";
-import { isWorking } from "./tabs.js";
+import { isWorking } from "./moods.js";
 
 /** A party asks: a card of it lies in the hand (a question, a plan to look at, a failure, a result). */
 const asks = (g) => !!g && stopsOfProject().some((s) => (s.g?.slug || s.row?.goal || "") === g.slug);
 
-/** Up to two of a party's members' heads (its leader is the corner's first). */
-const membersOf = (g) => partyOf(g, nodesFor(g)).members.filter((m) => m.head).slice(0, 2).map((m) => m.head);
+/** Whether the party is one of the road's two (Release, Live): its tab's face wakes and sleeps by `roadAwake`. */
+export const onRoad = (g) => isRelease(g) || isLive(g);
 
-const GuardHead = ({ head, tick = false, alert = false, title = "", size = "" }) => html`<span class="ork-portal-ring__guard" title=${title || undefined}>
-  <${Head} race=${head.race} tier=${head.tier} size=${size} />${tick && html`<span class="ork-portal-ring__tick" aria-hidden="true"></span>`}${alert && html`<span class="ork-portal-ring__alert" aria-hidden="true"></span>`}</span>`;
-
-/** What each corner shows now: `{release, live}`, each null (no such party) or `{g, awake, working, alert, members}`. `checks`: the skeletons of the goal chosen for main, `{state}` each; `running`: its checks are not over. */
-export function roadNow(skeletons = [], running = false) {
-  const { release, live } = roadParties();
-  const corner = (g, awake, working) => g && { g, awake, working, alert: hasAlert(g), members: awake ? membersOf(g) : [] };
-  const r = release && (() => {
-    const working = isWorking(release) || running, awake = (readyOf()?.goals || []).length > 0 || working || asks(release) || hasAlert(release) || skeletons.length > 0;
-    return corner(release, awake, working);
-  })();
-  const l = live && (() => {
-    const working = isWorking(live), awake = working || asks(live) || hasAlert(live);
-    return corner(live, awake, working);
-  })();
-  return { release: r || null, live: l || null };
-}
-
-/** One corner of the ring: a button that opens the party's view (`onPress`: what it opens instead; the lich opens the past through the open tab, spec 150 E2.2). `passed`: while the goal chosen for main has checks, the skeletons that have passed beside Release's leader with their ticks (none yet: its leader alone), in place of its members; null otherwise. */
-export function Corner({ side, word = "", words, c, passed = null, onPress = null }) {
-  if (!c) return null;
-  const head = c.g.leader?.head, ticks = side === "before" ? passed : null;
-  return html`<button type="button" class=${cls(`ork-portal-ring__${side}`, { "is-asleep": !c.awake, "is-working": c.working })} title=${words} aria-label=${words} data-road=${side === "before" ? "release" : "live"}
-      data-awake=${String(c.awake)} onClick=${() => { if (onPress) { onPress(); return; } closeOver(); openTab(c.g.slug); }}>
-    ${head && html`<${GuardHead} head=${head} alert=${c.alert} size="mid" />`}
-    ${word && html`<span class="portal__corner-word" aria-hidden="true">${word}</span>`}
-    <span class="portal__crew">${ticks ? ticks.map((s) => html`<${GuardHead} key=${s.at} head=${{ race: "skeleton", tier: s.tier }} tick=${true} title=${s.label} />`)
-      : c.members.map((h, i) => html`<${GuardHead} key=${i} head=${h} />`)}</span>
-  </button>`;
-}
-
-/** The gate: the skeletons whose checks have not passed, in front of the portal's lower part (orkUI `.ork-portal-ring__gate`, three at most), the one running stepping, a red one with its alert sign. It lies over the portal, so a press on it is a press on the portal (`onPress`: the sealed portal says its reason again; `drag`: a card dropped on it is dropped on the portal, which says it is checking). */
-export function Gate({ skeletons, onPress, drag = {} }) {
-  const standing = skeletons.filter((s) => s.state !== "passed");
-  if (!standing.length) return null;
-  const running = standing.find((s) => s.state === "running")?.at;
-  return html`<span class="ork-portal-ring__gate" data-gate=${standing.map((s) => s.state).join(" ")} onClick=${onPress} ...${drag}>${standing.map((s) => html`<span key=${s.at} class=${cls("ork-portal-ring__guard", { "is-working": s.at === running, "is-red": s.state === "failed" })}
-      role="img" aria-label=${s.label} title=${s.label} data-check=${s.state}><${Head} race="skeleton" tier=${s.tier} size="big" />${s.state === "failed" && html`<span class="ork-portal-ring__alert" aria-hidden="true"></span>`}</span>`)}</span>`;
+/** Whether a road party's tab is awake now. `checking`: the checks of the goal chosen for main are not over (checks.js); only Release's tab wakes for them. */
+export function roadAwake(g, checking = false) {
+  if (isRelease(g)) return (readyOf()?.goals || []).length > 0 || isWorking(g) || checking || asks(g) || hasAlert(g);
+  return isWorking(g) || asks(g) || hasAlert(g);
 }

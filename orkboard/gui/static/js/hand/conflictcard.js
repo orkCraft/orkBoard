@@ -48,7 +48,7 @@ function Earlier({ row, anchor }) {
   useLayoutEffect(() => {
     const el = box.current;
     if (!el || !anchor?.isConnected || reduced()) return;
-    const ring = document.querySelector(".frame-edge .ork-portal-ring, .portal-host .ork-portal-ring");
+    const ring = document.querySelector(".portal-host .ork-portal-ring, .release-lane .release-lane__label");
     if (!ring) return;
     const a = el.getBoundingClientRect(), r = ring.getBoundingClientRect();
     el.style.setProperty("--dx", `${Math.round(r.left + r.width / 2 - (a.left + a.width / 2))}px`);
@@ -63,7 +63,7 @@ function Earlier({ row, anchor }) {
     <div class="hand-lifted__body">
       ${row.why_then && html`<div class="hand-way__why"><span class="ork-label">Why</span><p class="body">${row.why_then}</p></div>`}
     </div>
-    <div class="hand-lifted__acts"><button type="button" class="ork-btn quiet" data-answer="past" onClick=${() => openChronicle({ lit: row.number })}>Open in the past</button></div>
+    <div class="hand-lifted__acts"><button type="button" class="ork-btn quiet" data-answer="past" onClick=${() => openChronicle({ decision: row.number })}>Open in the past</button></div>
     <${CornerFoot} large=${true} who=${{ heads: [], word: `§${row.number}` }} />
   </aside>`;
 }

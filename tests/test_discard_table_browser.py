@@ -1,4 +1,6 @@
-"""The discard on the table (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, §7; decisions §176.3), in a real browser at the two widths of `tests/narrow.py`: the pile lies in the table's last column (right of the
+"""**At 760 px and up the discard is Release's lane** (docs/specs/156-one-pick-and-the-release-column.md D.3, decisions §261.7): beside the pane on every tab, its label *Discard* or *<party>'s discard*, the goals done through the open tab's eyes (Tech's
+tab holds Tech's goals only), each card whole and **picked** (no `discard` view over the pane; `ideas.seen` sent when a card not yet seen is picked), the goal ready for main on top. The tests of the lane are at the end of this file; the pile before them is the narrow width's.
+The discard on the table (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, §7; decisions §176.3), in a real browser at the two widths of `tests/narrow.py`: the pile lies in the table's last column (right of the
 lanes) at its foot, the hand card's size, with the word *Discard* above it, on the project's tab and on a party's tab (where the party's map ends beside it and scrolls as it did), and not in the hand; its press opens the `discard` face over the pane and
 a second press closes it; at the narrow width it lies at the lanes' end (80 px wide), none with nothing done and nothing ready for main, and a card lifted from the hand stands over it.
 The table's end at the wide width (docs/specs/110-runes-on-the-table.md §3.2, §3.4, decisions §185): always laid, the portal's ring (asleep with no goal ready for main, open with the portal inside while one is, waking the first time on a device) over the
@@ -53,37 +55,31 @@ def open_maps(gui, width, done=True):
     return pg, host, log
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+NARROW = ("narrow",)
+
+
+@pytest.mark.parametrize("width", NARROW)
 def test_the_discard_lies_at_the_foot_of_the_projects_last_column_not_in_the_hand(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
-        done = pg.locator(":is(.frame-edge, .table-end) .hand-done")
+        done = pg.locator(".table-end .hand-done")
         done.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(600)
         assert pg.locator(".hand .hand-done, .hand .table-discard, .hand .table-end").count() == 0, "none in the hand"
         assert pg.locator(".hand-end > :not(.hand-mana):not(.hand-die)").count() == 0, "`.hand-end` holds the Play die and the mana alone (spec 112 §3.3, decisions §190.6)"
-        if width == "wide":
-            assert pg.locator(".hand-end").count() == 0 and pg.locator(".frame-edge > .edge-discard .table-discard").count() == 1, "at the wide width the pile lies in the table's edge, the hand has no end (spec 150 D.2)"
         pile, label = box(pg, ".table-discard"), box(pg, ".table-end__label")
         assert pg.locator(".table-end__label").text_content() == "Discard" and label["y"] + label["height"] <= pile["y"] + 1, "the word above the pile"
         assert (round(pile["width"]), round(pile["height"])) == CARD[width], "the hand card's size"
         hand_card = pg.locator(".hand .hand-card").first.bounding_box()
         assert round(hand_card["width"]) == round(pile["width"]), "the same width as a card of the hand"
         body, hand = box(pg, ".table-body"), box(pg, ".hand")
-        if width == "wide":
-            edge, ring, die = box(pg, ".frame-edge"), box(pg, ".ork-portal-ring"), box(pg, ".frame-edge > .hand-die")
-            assert edge["x"] <= pile["x"] and pile["x"] + pile["width"] <= edge["x"] + edge["width"] and pile["y"] >= edge["y"] and pile["y"] + pile["height"] <= edge["y"] + edge["height"], "in the table's edge"
-            assert abs((pile["x"] + pile["width"] / 2) - (ring["x"] + ring["width"] / 2)) <= 1, "centred under the portal's ring (spec 110 §3.2)"
-            assert ring["y"] + ring["height"] <= label["y"] + 1 and pile["y"] + pile["height"] <= die["y"] + 1, "under the ring, over the die"
-            assert pile["x"] >= body["x"] + body["width"] - 1, "none of the table lies under it: the table ends where the edge begins"
-        else:
-            assert pile["y"] + pile["height"] <= body["y"] + body["height"] and body["y"] + body["height"] - (pile["y"] + pile["height"]) <= 40, "at the column's foot, above the hand"
-            assert pile["y"] + pile["height"] <= hand["y"] + 1
-            last = box(pg, ".table-lane--free")
-            assert pile["x"] >= last["x"] - 1 and pile["x"] + pile["width"] <= last["x"] + last["width"] + 1, "in the last column, right of the lanes"
-            assert pile["x"] + pile["width"] >= last["x"] + last["width"] - 40, "aligned right"
-            lanes = pg.locator(".table-board .table-lane:not(.table-lane--free)").evaluate_all("els => els.map((e) => e.getBoundingClientRect().right)")
-            assert pile["x"] >= max(lanes) - 1, "none of the lanes lies under it"
+        assert pile["y"] + pile["height"] <= body["y"] + body["height"] and body["y"] + body["height"] - (pile["y"] + pile["height"]) <= 40, "at the column's foot, above the hand"
+        assert pile["y"] + pile["height"] <= hand["y"] + 1
+        last = box(pg, ".table-lane--free")
+        assert pile["x"] >= last["x"] - 1 and pile["x"] + pile["width"] <= last["x"] + last["width"] + 1, "in the last column, right of the lanes"
+        assert pile["x"] + pile["width"] >= last["x"] + last["width"] - 40, "aligned right"
+        lanes = pg.locator(".table-board .table-lane:not(.table-lane--free)").evaluate_all("els => els.map((e) => e.getBoundingClientRect().right)")
+        assert pile["x"] >= max(lanes) - 1, "none of the lanes lies under it"
         narrow.no_sideways(pg)
         shot(pg, f"{width}-project")
     finally:
@@ -91,56 +87,35 @@ def test_the_discard_lies_at_the_foot_of_the_projects_last_column_not_in_the_han
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", NARROW)
 def test_on_a_partys_tab_the_map_ends_beside_the_pile_and_still_scrolls(gui, width):
     pg, host, log = open_maps(gui, width)
     try:
         call(pg, "frame/state.js", "openTab", "art")
         pg.locator(".mp").first.wait_for(timeout=WAIT_MS)
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").wait_for(timeout=WAIT_MS)
+        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(600)
         pile, pane, head = box(pg, ".table-discard"), box(pg, ".table-body"), box(pg, ".table-head")
-        mp = pg.locator(".mp").first
-        m = mp.bounding_box()
+        m = pg.locator(".mp").first.bounding_box()
         assert abs((head["x"] + head["width"]) - (pane["x"] + pane["width"])) <= 2, "the party's header keeps the pane's whole width"
-        if width == "wide":
-            assert pile["x"] >= pane["x"] + pane["width"] - 1 and m["x"] + m["width"] <= pile["x"] + 1, "the map ends before the pile's column: the edge's"
-        else:
-            assert pile["y"] + pile["height"] <= pane["y"] + pane["height"] and pane["y"] + pane["height"] - (pile["y"] + pile["height"]) <= 40, "the pile at the foot"
-            assert m["y"] + m["height"] <= pile["y"] - 10, "the map ends above the pile"
+        assert pile["y"] + pile["height"] <= pane["y"] + pane["height"] and pane["y"] + pane["height"] - (pile["y"] + pile["height"]) <= 40, "the pile at the foot"
+        assert m["y"] + m["height"] <= pile["y"] - 10, "the map ends above the pile"
         assert pg.locator(".mp-scroll").first.evaluate("e => getComputedStyle(e).overflowY") == "auto", "the map scrolls as it did"
-        assert pg.locator(".frame-edge" if width == "wide" else ".table-end").count() == 1
         narrow.no_sideways(pg)
         shot(pg, f"{width}-party-map")
         call(pg, "frame/state.js", "openTab", "orkmaster")                                                                 # the project's tab again: the pile is still there
         pg.wait_for_selector(".table-board", timeout=WAIT_MS)
-        assert pg.locator(":is(.frame-edge, .table-end) .hand-done").count() == 1
+        assert pg.locator(".table-end .hand-done").count() == 1
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_on_the_system_map_of_tech_the_pile_lies_at_the_foot_too(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").wait_for(timeout=WAIT_MS)
-        call(pg, "frame/state.js", "openTab", "tech")
-        pg.wait_for_selector(".table-head", timeout=WAIT_MS)
-        pg.wait_for_timeout(400)
-        pile, pane = box(pg, ".table-discard"), box(pg, ".table-body")
-        edge = box(pg, ".frame-edge")
-        assert pg.locator(":is(.frame-edge, .table-end) .hand-done").count() == 1 and pile["x"] >= pane["x"] + pane["width"] - 1 and pile["x"] + pile["width"] <= edge["x"] + edge["width"] and pile["y"] + pile["height"] <= edge["y"] + edge["height"], "the pile lies in the edge, at the table's right"
-        shot(pg, "wide-tech")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", NARROW)
 def test_the_piles_press_opens_the_face_over_the_pane_and_a_second_press_closes_it(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
-        done = pg.locator(":is(.frame-edge, .table-end) .hand-done")
+        done = pg.locator(".table-end .hand-done")
         done.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(500)
         assert done.get_attribute("aria-expanded") == "false"
@@ -156,153 +131,55 @@ def test_the_piles_press_opens_the_face_over_the_pane_and_a_second_press_closes_
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_nothing_done_and_nothing_ready_for_main_lays_no_end_at_either_width_and_the_table_gains_the_width(gui, width):
-    pg, host, log = open_hand(gui, host=HandHost(bare=True), width=width)
+def test_nothing_done_and_nothing_ready_for_main_lays_no_end_at_the_narrow_width_and_the_wide_lane_is_empty_with_no_ring(gui):
+    pg, host, log = open_hand(gui, host=HandHost(bare=True), width="narrow")
     try:
         pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
-        assert pg.locator(".table-discard, .hand-done").count() == 0
-        assert pg.locator(".table-end, .table-end__label, .edge-discard, .ork-card-place").count() == 0, "no pile, no frame, no word (decisions §247.1)"
-        assert pg.locator(".portal-host, .ork-portal-ring").count() == (2 if width == "wide" else 0), "the ring (and its host) is always drawn from Start at the wide width (spec 150 D.3), asleep; the narrow width has none"
-        assert pg.locator(".portal__label, .ork-portal-ring.is-open").count() == 0, "asleep: no word, not open"
-        call(pg, "frame/state.js", "openTab", "tech")
-        pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert pg.locator(".table-body").evaluate("e => getComputedStyle(e).paddingRight") == "0px", "the room kept for the end is given back to the party's map"
+        assert pg.locator(".table-discard, .hand-done, .table-end, .table-end__label, .ork-card-place, .portal-host, .ork-portal-ring").count() == 0, "no pile, no frame, no word (decisions §247.1)"
+        narrow.no_sideways(pg)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+    pg, host, log = open_hand(gui, host=HandHost(bare=True), width="wide")
+    try:
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(400)
+        assert pg.locator(".release-lane").count() == 1 and pg.locator(".release-lane .hand-done, .release-lane .ork-portal-ring, .release-lane [data-portal-card]").count() == 0, "the lane is there and holds no card and no ring"
+        assert pg.locator(".table-end, .frame-edge").count() == 0
         narrow.no_sideways(pg)
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_ready_for_main_alone_is_a_back_and_at_the_wide_width_the_ring_is_open(gui, width):
+def test_ready_for_main_alone_is_a_back_at_the_narrow_width(gui):
     host = HandHost()                                                                                                       # two goals ready for main, none done to see: that line alone on a back
     host.nodes = [n for n in host.nodes if n["place"] != "discard"]
-    pg, host, log = open_hand(gui, host=host, width=width)
+    pg, host, log = open_hand(gui, host=host, width="narrow")
     try:
-        back = pg.locator(":is(.frame-edge, .table-end) .hand-done.ork-card-back")
+        back = pg.locator(".table-end .hand-done.ork-card-back")
         back.wait_for(timeout=WAIT_MS)
         assert back.get_attribute("aria-label") == "Done. 2 goals ready for main" and pg.locator(".table-end__label").text_content() == "Discard"
         assert pg.locator(".ork-card-place").count() == 0, "a pile is there: no place"
-        if width == "wide":
-            assert "is-open" in pg.locator(".ork-portal-ring").get_attribute("class")
-        else:
-            assert pg.locator(".ork-portal-ring, .portal-host").count() == 0, "the narrow width opens the portal when a goal is chosen"
+        assert pg.locator(".ork-portal-ring, .portal-host").count() == 0, "the narrow width opens the portal when a goal is chosen"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_goal_ready_for_main_opens_the_ring_with_the_portal_inside_and_it_wakes_the_first_time_on_a_device_only(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        ring, door = pg.locator(".ork-portal-ring"), pg.locator(".ork-portal-ring > .ork-portal")
-        door.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        klass = ring.get_attribute("class").split()
-        assert "is-open" in klass and "is-waking" in klass and "is-sealed" not in klass, "open, and waking: the first time on this device"
-        assert door.evaluate("e => e.tagName") == "BUTTON" and "is-new" in door.get_attribute("class") and "small" not in door.get_attribute("class")
-        assert door.get_attribute("aria-label") == "Choose a goal done to send it to main"
-        assert pg.locator(".portal-host").get_attribute("data-portal") == "ready" and pg.locator(".portal__line").count() == 0, "no goal chosen: no line"
-        assert pg.locator(".ork-portal-ring__seal > *").count() == 0, "no goal chosen: nothing in the seal"
-        r, d = ring.bounding_box(), door.bounding_box()
-        assert r["x"] <= d["x"] and d["x"] + d["width"] <= r["x"] + r["width"] and r["y"] <= d["y"] and d["y"] + d["height"] <= r["y"] + r["height"], "the portal lies inside the ring"
-        assert pg.locator(".portal__hint").text_content() == "Drag a goal done into the portal to send it to main"
-        assert pg.evaluate("() => localStorage.getItem('orkboard.portal.seen')") == "1", "the device has seen it"
-        pg.wait_for_timeout(1600)                                                                                           # the runes and the eye have opened
-        shot(pg, "wide-ring-open")
-        pg.reload()                                                                                                          # the second time on this device: open, not waking
-        pg.locator(".ork-portal-ring > .ork-portal").wait_for(timeout=WAIT_MS)
-        klass = ring.get_attribute("class").split()
-        assert "is-open" in klass and "is-waking" not in klass and "is-new" not in pg.locator(".ork-portal-ring > .ork-portal").get_attribute("class")
-        assert pg.locator(".portal__hint").count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_ring_is_drawn_when_the_first_goal_becomes_ready_and_goes_when_none_is_left(gui):
-    host = HandHost()
-    ready = host.gate_doc["ideas"]
-    host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0, "same": False}
-    pg, host, log = open_hand(gui, host=host)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(400)
-        assert pg.locator(".ork-portal-ring").count() == 1 and pg.locator(".portal__label, .ork-portal-ring.is-open").count() == 0 and "is-asleep" in pg.locator(".portal-host").get_attribute("class"), "nothing ready: the ring asleep, no word (spec 150 D.3)"
-        host.gate_doc = {**host.gate_doc, "ideas": ready, "commits": 5, "files": 9, "same": False}
-        host.bump({})
-        pg.locator(".ork-portal-ring.is-open > .ork-portal").wait_for(timeout=WAIT_MS)
-        assert "is-waking" in pg.locator(".ork-portal-ring").get_attribute("class") and pg.locator(".portal__label").text_content() == "Main"
-        host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0, "same": False}
-        host.bump({})
-        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring.is-open')", timeout=WAIT_MS)
-        assert pg.locator(".portal__label").count() == 0 and pg.locator(".ork-portal-ring").count() == 1 and "is-asleep" in pg.locator(".portal-host").get_attribute("class"), "none left: the ring goes back to sleep and stays"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_pressing_the_open_portal_with_no_goal_chosen_opens_the_discards_view(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        door = pg.locator(".ork-portal-ring > .ork-portal")
-        door.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert sig(pg, "frame/state.js", "over") is None
-        door.click()
-        pg.locator("#table-pane .hand-discardview").wait_for(timeout=WAIT_MS)
-        assert sig(pg, "frame/state.js", "over")["kind"] == "discard" and pg.locator(".portal-cards [data-portal-card]").count() == 2
-        assert [n for n, _ in host.log if n == "ideas.to_main"] == [], "nothing was sent: no goal was chosen"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_discard_is_drawn_from_its_first_goal_done_and_not_before(gui):
-    pg, host, log = open_hand(gui, host=HandHost(bare=True))
+def test_the_discard_is_drawn_from_its_first_goal_done_and_not_before_at_the_narrow_width(gui):
+    pg, host, log = open_hand(gui, host=HandHost(bare=True), width="narrow")
     try:
         pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(300)
-        assert pg.locator(".table-end, .edge-discard, .ork-card-place, .table-end__label").count() == 0, "empty: nothing lies there"
+        assert pg.locator(".table-end, .ork-card-place, .table-end__label").count() == 0, "empty: nothing lies there"
         host.nodes.append(hand_node("music", "tech", "Lobby music loop", "discard", state="done", element="void", updated="2026-10-20T12:00:00"))
         host.bump({})
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").wait_for(timeout=WAIT_MS)
+        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
         assert pg.locator(".ork-card-place").count() == 0 and pg.locator(".table-discard").count() == 1 and pg.locator(".table-end__label").text_content() == "Discard"
         pile = box(pg, ".table-discard")
-        assert (round(pile["width"]), round(pile["height"])) == CARD["wide"] and pg.locator(".ork-portal-ring.is-open").count() == 0, "nothing ready for main: the pile, the ring asleep"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("size", [(1280, 800), (1024, 768)])
-def test_nothing_of_the_end_overlaps_the_hand_or_leaves_the_table_with_a_goal_chosen_and_a_card_lifted(gui, size):
-    server, browser = gui
-    host = PortalHost()
-    pg = browser.new_context(viewport={"width": size[0], "height": size[1]}).new_page()
-    log: list[str] = []
-    pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    try:
-        door = pg.locator(".ork-portal-ring > .ork-portal")
-        door.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(400)
-        door.click()                                                                                                        # no goal chosen: the discard's view, where one is
-        pg.locator(".portal-cards").wait_for(timeout=WAIT_MS)
-        pg.locator('[data-portal-card="menu"]').click()                                                                     # the sealed one: the line, the ring sealed, the reason under it
-        pg.wait_for_function("() => document.querySelector('.portal-host')?.dataset.portal === 'sealed'", timeout=WAIT_MS)
-        pg.locator(".hand .hand-slot").last.hover()                                                                         # a card of the hand risen
-        pg.wait_for_timeout(500)
-        end, hand, body, ring = box(pg, ".frame-edge"), box(pg, ".hand"), box(pg, ".table-body"), box(pg, ".frame-edge > .portal-host")
-        assert end["x"] >= hand["x"] + hand["width"] - 1, "the edge lies beside the hand, not over it"
-        assert ring["y"] >= end["y"] - 1 and ring["y"] + ring["height"] <= end["y"] + end["height"] + 1, "the line and the reason lie inside the edge"
-        assert end["x"] >= body["x"] + body["width"] - 1 and end["x"] + end["width"] <= size[0] + 1
-        assert pg.evaluate("() => { const e = document.querySelector('.frame-edge'); return e.scrollHeight <= e.clientHeight; }"), "nothing of the edge scrolls"
-        shot(pg, f"{size[0]}x{size[1]}-end-sealed")
+        assert (round(pile["width"]), round(pile["height"])) == CARD["narrow"]
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -311,7 +188,7 @@ def test_nothing_of_the_end_overlaps_the_hand_or_leaves_the_table_with_a_goal_ch
 def test_the_pile_leans_and_rises_on_hover_like_a_card(gui):
     pg, host, log = open_hand(gui)
     try:
-        done = pg.locator(":is(.frame-edge, .table-end) .hand-done")
+        done = pg.locator(".release-lane .ork-leans").first
         done.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(500)
         assert "ork-leans" in done.get_attribute("class")
@@ -324,78 +201,27 @@ def test_the_pile_leans_and_rises_on_hover_like_a_card(gui):
     assert not log, "\n".join(log)
 
 
-def test_ready_for_main_and_its_to_main_lie_above_done_not_yet_seen(gui):
-    """Spec 155 G.4: with goals done and goals ready, the discard's face shows *Ready for main* with its **To main** first, *Done, not yet seen* under it."""
-    pg, host, log = open_hand(gui)
+def test_a_card_lifted_from_the_hand_stands_over_the_pile(gui):
+    pg, host, log = open_hand(gui, width="narrow")
     try:
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()
-        pane = pg.locator("#table-pane")
-        ready, done = pane.get_by_role("region", name="Ready for main"), pane.get_by_role("region", name="Done, not yet seen")
-        ready.wait_for(timeout=WAIT_MS)
-        done.wait_for(timeout=WAIT_MS)
-        assert ready.locator("[data-to-main]").bounding_box()["y"] < done.bounding_box()["y"]
-        assert ready.bounding_box()["y"] < done.bounding_box()["y"]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_discard_is_seen_through_the_result_and_leaves_the_pile(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()
-        pane = pg.locator("#table-pane")
-        pane.get_by_role("region", name="Done, not yet seen").locator('.hand-drow[data-slug="codes"]').click()
-        assert sig(pg, "frame/state.js", "over")["kind"] == "result"
-        assert host.seen_log == ["codes"]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_card_lifted_from_the_hand_stands_over_the_pile(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").wait_for(timeout=WAIT_MS)
+        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
         pg.locator('.hand-card[data-kind="failed"]').first.click(position={"x": 10, "y": 20})
         lifted = pg.locator(".hand-lifted")
         lifted.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(300)
-        z = pg.evaluate("() => [getComputedStyle(document.querySelector('.hand')).zIndex, getComputedStyle(document.querySelector('.frame-edge, .table-end')).zIndex].map(Number)")
+        z = pg.evaluate("() => [getComputedStyle(document.querySelector('.hand')).zIndex, getComputedStyle(document.querySelector('.table-end')).zIndex].map(Number)")
         assert z[0] > z[1], "the hand's layer is above the pile's"
         l, p = lifted.bounding_box(), pg.locator(".table-discard").bounding_box()
         x0, x1 = max(l["x"], p["x"]), min(l["x"] + l["width"], p["x"] + p["width"])
         y0, y1 = max(l["y"], p["y"]), min(l["y"] + l["height"], p["y"] + p["height"])
         if x1 > x0 and y1 > y0:                                                                                              # where they meet, the card is on top
             assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y)?.closest('.hand-lifted') !== null", [(x0 + x1) / 2, (y0 + y1) / 2])
-        elif width == "narrow":
+        else:
             pytest.fail("at the narrow width the lifted card spans the screen and meets the pile")
-        shot(pg, f"{width}-lifted-over-the-pile")
+        shot(pg, "narrow-lifted-over-the-pile")
     finally:
         pg.close()
     assert not log, "\n".join(log)
-
-
-def test_the_piles_words_stay_inside_its_card_and_the_whole_sentence_is_its_title(gui):
-    """Spec 143 F.5 (decisions §250.7): what is ready for main, said on the back of the pile (no goal done to show), wraps inside the card's art and is cut with its whole sentence in `title`, however long the branch's name."""
-    server, browser = gui
-    host = HandHost()
-    host.nodes = [n for n in host.nodes if n["place"] != "discard"]
-    host.gate_doc = {"into": "dev", "main": "release-candidate-2026", "same": False, "commits": 12, "files": 9, "ideas": []}
-    pg = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    try:
-        pg.wait_for_selector(".table-discard .hand-back__ready .cap", timeout=WAIT_MS)
-        cap, card = pg.locator(".table-discard .hand-back__ready .cap"), pg.locator(".table-discard .hand-done").first
-        c, k = cap.bounding_box(), card.bounding_box()
-        assert c["x"] >= k["x"] + 12 and c["x"] + c["width"] <= k["x"] + k["width"] - 12, f"the words lie inside the frame of the art: {c} in {k}"
-        assert cap.evaluate("e => e.scrollWidth <= e.clientWidth + 1"), "no word runs past its line"
-        assert cap.get_attribute("title") == "12 commits ready for release-candidate-2026", "the whole sentence is its title"
-        shot(pg, "wide-discard-words")
-    finally:
-        pg.context.close()
 
 
 def test_at_the_narrow_width_the_piles_words_wrap_inside_its_window_not_cut(gui):
@@ -421,3 +247,87 @@ def test_at_the_narrow_width_the_piles_words_wrap_inside_its_window_not_cut(gui)
         assert pg.evaluate(inside), "every line of the words is drawn inside the art's window (10 px in from the card's sides, 8 px from its top and foot)"
     finally:
         pg.context.close()
+
+
+# -- Release's lane at the wide width (spec 156 D.3) ------------------------------------------------------------------------------------------
+
+
+class LaneHost(HandHost):
+    """HandHost with Release a party of the release craft and one goal ready for main (Lobby music loop, Tech's): Room codes (Design's) is done and not yet seen."""
+
+    def __init__(self, **more):
+        super().__init__(**more)
+        for p in self.parties:
+            if p["slug"] == "release":
+                p["party_craft"] = "release"
+        self.gate_doc["ideas"] = [g for g in self.gate_doc["ideas"] if g["slug"] == "music"]
+
+
+def open_lane(gui, host=None):
+    pg, host, log = open_hand(gui, host=host or LaneHost(), width="wide")
+    pg.locator(".release-lane .hand-done, .release-lane [data-portal-card]").first.wait_for(timeout=WAIT_MS)
+    pg.wait_for_timeout(400)
+    return pg, host, log
+
+
+def picked(pg, slug):
+    pg.wait_for_function("(s) => import('/static/js/frame/state.js').then((m) => m.picked.value === s)", arg=slug, timeout=WAIT_MS)
+
+
+def test_on_techs_tab_the_lane_holds_techs_goals_only_its_label_is_techs_discard_and_a_card_pressed_is_picked_with_no_discard_over(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        call(pg, "frame/state.js", "openTab", "tech")
+        pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator(".release-lane__label").text_content() == "Tech's discard"
+        assert pg.locator(".release-lane [data-portal-card], .release-lane [data-slug]").evaluate_all("els => els.map((e) => e.dataset.portalCard || e.dataset.slug)") == ["music"], "Tech's goal only (Design's Room codes is not here)"
+        pg.locator('.release-lane [data-portal-card="music"]').click()
+        picked(pg, "music")
+        assert sig(pg, "frame/state.js", "over") is None and pg.locator('[data-kind="discard"], .hand-discardview').count() == 0, "no discard view over the pane"
+        assert "ork-picked" in pg.locator('.release-lane [data-portal-card="music"]').get_attribute("class")
+        assert sig(pg, "frame/state.js", "tab") == "tech", "Tech's tab is on the goal's route"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_goal_done_and_not_seen_pressed_is_picked_and_told_to_the_host_as_seen_and_put_away_by_esc(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        pg.locator('.release-lane__done [data-slug="codes"]').click()
+        picked(pg, "codes")
+        pg.wait_for_function("() => true")
+        assert host.seen_log == ["codes"], "`ideas.seen` is sent when the card is picked"
+        assert sig(pg, "frame/state.js", "over") is None and pg.locator(".hand-discardview").count() == 0
+        pg.wait_for_selector('.release-lane__done [data-slug="codes"]', state="detached", timeout=WAIT_MS)       # a goal seen leaves *not yet seen*
+        pg.keyboard.press("Escape")
+        picked(pg, "")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_goal_ready_for_main_lies_on_top_of_the_goals_not_seen_in_the_hands_card_size(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        ready, seen = box(pg, '.release-lane [data-portal-card="music"]'), box(pg, '.release-lane__done [data-slug="codes"]')
+        assert ready["y"] < seen["y"] and (round(ready["width"]), round(ready["height"])) == CARD["wide"] == (round(seen["width"]), round(seen["height"])), "top to bottom, whole cards at the hand's size"
+        assert pg.locator(".release-lane .portal-host.is-ring .ork-portal-ring").count() == 1 and pg.locator(".release-lane__done .ork-portal-ring").count() == 0, "the ring lies round the top card alone"
+        r = box(pg, ".release-lane .ork-portal-ring")
+        assert r["y"] <= ready["y"] and ready["y"] + ready["height"] <= r["y"] + r["height"], "the ring round the card"
+        shot(pg, "wide-lane")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_lane_ends_over_the_hand_and_the_pane_ends_where_the_lane_begins(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        lane, hand, pane = box(pg, ".release-lane"), box(pg, ".hand"), box(pg, "#table-pane")
+        assert lane["y"] + lane["height"] <= hand["y"] + 1, "the lane ends over the hand"
+        assert round(pane["x"] + pane["width"]) == round(lane["x"])
+        assert pg.evaluate("() => { const e = document.querySelector('.release-lane__scroll'); return e.scrollWidth <= e.clientWidth; }"), "nothing of the lane scrolls sideways"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

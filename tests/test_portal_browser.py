@@ -64,10 +64,10 @@ class PortalHost(HandHost):
         return super().handle(name, a)
 
 
-def open_view(gui, width="wide"):
+def open_view(gui, width="narrow"):
     """The window against the portal's stub with the discard's view open (the pile pressed)."""
     pg, host, log = open_hand(gui, host=PortalHost(), width=width)
-    pile = pg.locator(":is(.frame-edge, .table-end) .hand-done")
+    pile = pg.locator(".table-end .hand-done")
     pile.wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(500)
     pile.click()
@@ -103,7 +103,7 @@ def open_portal(pg, slug="music"):
     pg.wait_for_function("() => !['wait', 'ready', 'asleep', undefined].includes(document.querySelector('.portal-host')?.dataset.portal)", timeout=WAIT_MS)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])
 def test_a_goal_ready_for_main_is_a_card_and_pressing_it_opens_the_portal_above_the_pile(gui, width):
     pg, host, log = open_view(gui, width)
     try:
@@ -162,7 +162,7 @@ def test_the_line_names_the_goals_in_plain_english(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])
 def test_pressing_the_portal_sends_the_goal_alone_with_what_it_stands_on_and_the_cards_leave(gui, width):
     pg, host, log = open_view(gui, width)
     try:
@@ -174,7 +174,7 @@ def test_pressing_the_portal_sends_the_goal_alone_with_what_it_stands_on_and_the
         assert card(pg, "menu").count() == 1 and card(pg, "music").count() == 0 and card(pg, "codes").count() == 0
         unchosen(pg)
         assert sig(pg, "frame/state.js", "over")["kind"] == "discard", "the view stays open"
-        assert "1 goal ready for main" in pg.locator(":is(.frame-edge, .table-end) .hand-done").get_attribute("aria-label")
+        assert "1 goal ready for main" in pg.locator(".table-end .hand-done").get_attribute("aria-label")
         assert portal(pg).count() == (1 if width == "wide" else 0), "the ring stays open for Menu; at the narrow width the portal is gone"
         if width == "wide":
             assert seal(pg).count() == 0 and pg.locator(".portal-host").get_attribute("data-portal") == "ready"
@@ -227,7 +227,7 @@ def test_a_card_dragged_over_the_portal_takes_it_and_dropped_on_it_is_sent(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])
 def test_a_sealed_portal_says_its_reason_again_when_pressed_and_plays_nothing(gui, width):
     pg, host, log = open_view(gui, width)
     try:
@@ -250,7 +250,7 @@ def test_a_sealed_portal_says_its_reason_again_when_pressed_and_plays_nothing(gu
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])
 def test_the_first_time_the_portal_shimmers_and_says_how_once(gui, width):
     pg, host, log = open_view(gui, width)
     try:
@@ -263,9 +263,9 @@ def test_the_first_time_the_portal_shimmers_and_says_how_once(gui, width):
         open_portal(pg)                                                                                              # the second time: neither
         assert "is-new" not in portal(pg).get_attribute("class") and pg.locator(".portal__hint").count() == 0
         pg.reload()
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").wait_for(timeout=WAIT_MS)
+        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(500)
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()
+        pg.locator(".table-end .hand-done").click()
         pg.locator(".portal-cards").wait_for(timeout=WAIT_MS)
         open_portal(pg)                                                                                              # nor after a reload: the device has seen it
         assert "is-new" not in portal(pg).get_attribute("class") and pg.locator(".portal__hint").count() == 0
@@ -276,7 +276,7 @@ def test_the_first_time_the_portal_shimmers_and_says_how_once(gui, width):
 
 def test_the_page_works_when_the_device_keeps_nothing(gui):
     server, browser = gui
-    ctx = narrow.context(browser, "wide")
+    ctx = narrow.context(browser, "narrow")
     ctx.add_init_script("Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });")
     pg = ctx.new_page()
     host = PortalHost()
@@ -285,12 +285,12 @@ def test_the_page_works_when_the_device_keeps_nothing(gui):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     try:
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").wait_for(timeout=WAIT_MS)
+        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(500)
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()
+        pg.locator(".table-end .hand-done").click()
         pg.locator(".portal-cards").wait_for(timeout=WAIT_MS)
         open_portal(pg)
-        assert pg.locator(".portal__hint").text_content() == FIRST_WIDE, "said, once on this page"
+        assert pg.locator(".portal__hint").text_content() == FIRST_NARROW, "said, once on this page"
         pg.keyboard.press("Escape")
         unchosen(pg)
         open_portal(pg)
@@ -300,7 +300,7 @@ def test_the_page_works_when_the_device_keeps_nothing(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])
 def test_esc_and_a_press_away_close_the_portal_and_drop_the_choice(gui, width):
     pg, host, log = open_view(gui, width)
     try:
@@ -327,12 +327,12 @@ def test_esc_and_a_press_away_close_the_portal_and_drop_the_choice(gui, width):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])
 def test_closing_the_view_drops_the_choice_and_the_ring_stays_open_at_the_wide_width(gui, width):
     pg, host, log = open_view(gui, width)
     try:
         open_portal(pg)
-        pg.locator(":is(.frame-edge, .table-end) .hand-done").click()                                                                  # the pile pressed again closes the view
+        pg.locator(".table-end .hand-done").click()                                                                  # the pile pressed again closes the view
         pg.wait_for_function("() => !document.querySelector('.hand-discardview')", timeout=WAIT_MS)
         unchosen(pg)
         assert pg.locator(".portal-host").count() == (1 if width == "wide" else 0), "the portal's place stays at the wide width; at the narrow one the portal closes with the choice"
@@ -342,24 +342,6 @@ def test_closing_the_view_drops_the_choice_and_the_ring_stays_open_at_the_wide_w
             portal(pg).click()                                                                                       # pressed with none chosen: the view again
             pg.locator(".portal-cards").wait_for(timeout=WAIT_MS)
             assert sig(pg, "frame/state.js", "over")["kind"] == "discard"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_sealed_goal_chosen_shows_the_ring_sealed_and_its_element_faint(gui):
-    pg, host, log = open_view(gui)
-    try:
-        open_portal(pg, "menu")
-        ring = pg.locator(".ork-portal-ring")
-        assert "is-sealed" in ring.get_attribute("class") and "is-open" not in ring.get_attribute("class")
-        assert seal(pg).count() == 1 and "ice" in seal(pg).get_attribute("class")
-        faint = pg.evaluate("() => { const s = document.createElement('i'); s.style.backgroundColor = 'var(--ork-ink-faint)'; document.body.append(s); const c = getComputedStyle(s).backgroundColor; s.remove(); return c; }")
-        assert seal(pg).evaluate("e => getComputedStyle(e).backgroundColor") == faint, "sealed: the faint ink"
-        shot(pg, "wide-ring-sealed")
-        card(pg, "music").click()                                                                                    # another goal: open again, its own rune in its own colour
-        pg.wait_for_function("() => document.querySelector('.ork-portal-ring')?.classList.contains('is-open')", timeout=WAIT_MS)
-        assert "void" in seal(pg).get_attribute("class") and seal(pg).evaluate("e => getComputedStyle(e).backgroundColor") != faint
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -381,23 +363,104 @@ def test_an_error_from_the_host_is_shown_as_a_failed_act_and_the_goal_stays(gui)
     assert not log or all("main moved" in m for m in log), "\n".join(log)
 
 
-def test_the_button_to_main_sends_the_first_goal_ready_the_portals_way_with_its_checks(gui, width="wide"):
-    """Spec 149 G.1 (decisions §253.7): **To main** with no goal chosen takes the first goal ready through `ideas.to_main_plan`, `ideas.to_main_checks` and `ideas.to_main`; dev whole is not merged."""
-    pg, host, log = open_view(gui, width)
+def test_the_button_to_main_with_no_goal_chosen_takes_the_first_goal_ready_the_portals_way_at_the_narrow_width(gui):
+    """Spec 149 G.1 (decisions §253.7): **To main** in the discard's view with no goal chosen takes the first goal ready through `ideas.to_main_plan` and `ideas.to_main` (no checks at the narrow width); dev whole is not merged."""
+    pg, host, log = open_view(gui, "narrow")
     try:
         pg.get_by_role("button", name="To main", exact=True).click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
-        assert [n for n, _ in host.log if n in ("ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main", "ideas.gate_merge")] == ["ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main"], "the plan, the checks, then the goal; never dev whole"
+        assert [n for n, _ in host.log if n in ("ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main", "ideas.gate_merge")] == ["ideas.to_main_plan", "ideas.to_main"]
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_the_button_to_main_sends_the_goal_chosen_not_the_first(gui):
-    pg, host, log = open_view(gui, "wide")
+# -- the wide width: the ready card picked in Release's lane (spec 156 D.4) ------------------------------------------------------------------------------
+
+
+def open_lane(gui, host=None):
+    """The window at the wide width against the portal's stub, the lane laid with its ready cards."""
+    pg, host, log = open_hand(gui, host=host or PortalHost(), width="wide")
+    pg.locator('.release-lane [data-portal-card="music"]').wait_for(timeout=WAIT_MS)
+    pg.wait_for_timeout(300)
+    return pg, host, log
+
+
+def lane_card(pg, slug):
+    return pg.locator(f'.release-lane [data-portal-card="{slug}"]')
+
+
+def picked_is(pg, slug):
+    pg.wait_for_function("(s) => import('/static/js/frame/state.js').then((m) => m.picked.value === s)", arg=slug, timeout=WAIT_MS)
+
+
+def tomain(pg):
+    return pg.locator("[data-tomain]")
+
+
+def test_the_ring_is_round_the_top_ready_card_only_and_there_is_none_while_nothing_is_ready(gui):
+    pg, host, log = open_lane(gui)
     try:
-        open_portal(pg, "codes")
-        pg.get_by_role("button", name="To main", exact=True).click()                                                # a press on the button is not a press away: the choice stands
+        assert pg.locator(".ork-portal-ring").count() == 1 and pg.locator(".portal-host.is-ring [data-portal-card]").count() == 1, "one ring, round the top card"
+        assert pg.locator(".portal-host.is-ring [data-portal-card]").get_attribute("data-portal-card") == "music"
+        assert pg.locator(".ork-portal").count() == 0 and pg.locator(".portal__label, .ork-portal-ring__before, .ork-portal-ring__after, .pyramid").count() == 0, "no door, no corners, no pyramid"
+        assert "is-open" in pg.locator(".ork-portal-ring").get_attribute("class")
+        shot(pg, "wide-ring-round-the-card")
+        host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0}                            # nothing is ready any more
+        host.bump({})
+        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring')", timeout=WAIT_MS)
+        assert pg.locator("[data-portal-card]").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_ring_wakes_the_first_time_on_a_device_only(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        klass = pg.locator(".ork-portal-ring").get_attribute("class").split()
+        assert "is-open" in klass and "is-waking" in klass, "open, and waking: the first time on this device"
+        assert pg.evaluate("() => localStorage.getItem('orkboard.portal.seen')") == "1", "the device has seen it"
+        pg.reload()
+        pg.locator(".release-lane .ork-portal-ring").wait_for(timeout=WAIT_MS)
+        klass = pg.locator(".ork-portal-ring").get_attribute("class").split()
+        assert "is-open" in klass and "is-waking" not in klass, "the second time: open, not waking"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_ready_card_pressed_is_picked_and_chosen_and_its_to_main_on_the_table_sends_it_with_what_it_stands_on(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        assert tomain(pg).count() == 0, "nothing picked: no To main"
+        lane_card(pg, "music").click()
+        picked_is(pg, "music")
+        tomain(pg).wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('[data-tomain]').dataset.portal === 'open'", timeout=WAIT_MS)
+        assert pg.locator(".table-tomain__line").text_content() == "Into main: Lobby, and Reconnect it stands on"
+        assert pg.locator("#table-pane [data-to-main]").count() == 1 and sig(pg, "frame/state.js", "over") is None
+        assert "ork-picked" in lane_card(pg, "music").get_attribute("class")
+        shot(pg, "wide-to-main")
+        pg.locator("[data-tomain] [data-to-main]").click()
+        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert [n for n, _ in host.log if n in ("ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main")] == ["ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main"], "the plan, the checks, then the goal"
+        pg.wait_for_function("() => document.querySelectorAll('[data-portal-card]').length === 1", timeout=WAIT_MS)             # Lobby and Reconnect went in; Menu stays
+        assert pg.locator("[data-portal-card]").get_attribute("data-portal-card") == "menu"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_picked_ready_cards_to_main_is_on_every_tab_of_its_route_and_the_ready_goals_other_cards_send_their_own(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        lane_card(pg, "codes").click()
+        picked_is(pg, "codes")
+        pg.locator('.table-tab[data-tab="design"]').click()                                   # Design's tab is on Room codes' route (its party)
+        pg.locator('.table-tab[data-tab="design"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+        tomain(pg).wait_for(timeout=WAIT_MS)
+        pg.locator("[data-tomain] [data-to-main]").click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "codes"}))
         assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "codes"}] and [n for n, _ in host.log if n == "ideas.gate_merge"] == []
     finally:
@@ -405,15 +468,79 @@ def test_the_button_to_main_sends_the_goal_chosen_not_the_first(gui):
     assert not log, "\n".join(log)
 
 
-def test_the_button_to_main_with_a_sealed_goal_says_its_reason_and_sends_nothing(gui):
-    pg, host, log = open_view(gui, "wide")
+def test_a_sealed_goal_picked_says_its_reason_on_the_table_the_ring_is_sealed_and_to_main_sends_nothing(gui):
+    host = PortalHost()
+    host.gate_doc["ideas"] = [i for i in host.gate_doc["ideas"] if i["slug"] == "menu"]
+    pg, host, log = open_hand(gui, host=host, width="wide")
     try:
-        host.gate_doc["ideas"] = [i for i in host.gate_doc["ideas"] if i["slug"] == "menu"]
-        host.bump({})
-        pg.wait_for_function("() => document.querySelectorAll('[data-portal-card]').length === 1", timeout=WAIT_MS)
-        pg.get_by_role("button", name="To main", exact=True).click()
-        pg.get_by_text(f"Sealed: {SEALED}").first.wait_for(timeout=WAIT_MS)
+        pg.locator('.release-lane [data-portal-card="menu"]').wait_for(timeout=WAIT_MS)
+        lane_card(pg, "menu").click()
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'sealed'", timeout=WAIT_MS)
+        assert pg.locator(".table-tomain__sealed").text_content() == f"Sealed: {SEALED}"
+        ring = pg.locator(".ork-portal-ring")
+        assert "is-sealed" in ring.get_attribute("class") and "is-open" not in ring.get_attribute("class")
+        seal = pg.locator(".ork-portal-ring__seal > .ork-elem")
+        assert seal.count() == 1 and "ice" in seal.get_attribute("class")
+        faint = pg.evaluate("() => { const s = document.createElement('i'); s.style.backgroundColor = 'var(--ork-ink-faint)'; document.body.append(s); const c = getComputedStyle(s).backgroundColor; s.remove(); return c; }")
+        assert seal.evaluate("e => getComputedStyle(e).backgroundColor") == faint, "sealed: the element in the faint ink"
+        pg.locator("[data-tomain] [data-to-main]").click()
+        pg.wait_for_timeout(400)
         assert [n for n, _ in host.log if n in ("ideas.to_main", "ideas.gate_merge")] == []
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_esc_puts_the_pick_away_and_drops_the_choice_and_another_card_picked_is_chosen_instead(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        lane_card(pg, "music").click()
+        tomain(pg).wait_for(timeout=WAIT_MS)
+        pg.keyboard.press("Escape")
+        picked_is(pg, "")
+        pg.wait_for_function("() => !document.querySelector('[data-tomain]')", timeout=WAIT_MS)
+        assert [n for n, _ in host.log if n == "ideas.to_main"] == []
+        lane_card(pg, "codes").click()
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.tomain === 'codes'", timeout=WAIT_MS)
+        lane_card(pg, "menu").click()
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.tomain === 'menu'", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_an_error_from_the_host_is_shown_and_the_ready_goal_stays_at_the_wide_width(gui):
+    pg, host, log = open_lane(gui)
+    try:
+        host.refuse = "main moved while it was merging: look again"
+        lane_card(pg, "music").click()
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'open'", timeout=WAIT_MS)
+        pg.locator("[data-tomain] [data-to-main]").click()
+        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        pg.get_by_text("main moved while it was merging: look again").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(400)
+        assert pg.locator("[data-portal-card]").count() == 3 and tomain(pg).count() == 1, "nothing left, To main is there for another try"
+    finally:
+        pg.close()
+    assert not log or all("main moved" in m for m in log), "\n".join(log)
+
+
+def test_the_page_works_at_the_wide_width_when_the_device_keeps_nothing(gui):
+    server, browser = gui
+    ctx = narrow.context(browser, "wide")
+    ctx.add_init_script("Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });")
+    pg = ctx.new_page()
+    host = PortalHost()
+    log: list[str] = []
+    pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(server.url)
+    try:
+        pg.locator('.release-lane [data-portal-card="music"]').wait_for(timeout=WAIT_MS)
+        lane_card(pg, "music").click()
+        tomain(pg).wait_for(timeout=WAIT_MS)
+        pg.keyboard.press("Escape")
+        pg.wait_for_function("() => !document.querySelector('[data-tomain]')", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)

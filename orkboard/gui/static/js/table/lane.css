@@ -1,0 +1,56 @@
+/* Release's lane (docs/specs/156-one-pick-and-the-release-column.md D, decisions §261.7–§261.10; table/lane.js, ring.js, pastlane.js, tomain.js, checksview.js): layout and orkUI's tokens only, no colour, face or corner of its own.
+   At 760 px and up the table is the tabs over `.table-under`: the pane and, at its right, the lane, as wide as a lane (`--col-w`) and the gutter, as tall as the pane, flush with the window's right edge. The Board's grid reads `--board-cols` (frame.css): the lanes, the tabs'
+   end and Live's lane, the same tracks as the tabs less Release's, which is the lane itself. Under 760 px there is no lane (the pile is `.table-end`: discard.css). */
+
+.table-under { flex: 1; min-height: 0; min-width: 0; display: flex; }
+.table-under > .table-pane { flex: 1 1 0; min-width: 0; }
+
+@media (min-width: 760px) {
+  .table-board { grid-template-columns: var(--board-cols, var(--cols)); }
+  .table[data-lane] .table-board { padding-right: 0; }                                              /* the lane's frame line is the Board's right edge */
+  .table-lane--free { order: 1; }
+  .table-lane[data-live] { order: 2; }                                                              /* Live's lane stands after the tabs' end, under Live's tab */
+  .table-tabcell, .table-tabs__end { grid-row: 1; }
+  .table-tabs__end { grid-column: calc(var(--lanes, 5) + 1); }                                      /* the tabs' end stands in its own track of the one row, whatever the order the cells of Live and Release were placed in */
+}
+
+.release-lane { flex: none; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); width: calc(var(--col-w) + var(--ork-4)); min-height: 0; padding: var(--ork-4) var(--ork-4) 0 0;
+  background: var(--ork-room); border-left: var(--ork-line) solid var(--ork-frame); }
+.release-lane__label { flex: none; align-self: center; }
+.release-lane.is-headless .release-lane__label { text-align: center; }
+/* the lane scrolls with the table: only the table scrolls (spec 150 B.2, decisions §254.2); a hand card rises over its foot */
+.release-lane__scroll { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); padding: var(--ork-3) 0 var(--ork-6); overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
+.release-lane__scroll > * { flex: none; }
+.release-lane__done { display: flex; flex-direction: column; gap: var(--ork-4); margin: 0; padding: 0; list-style: none; }
+.release-lane__done > li { width: var(--hc-w); height: var(--hc-h); flex: none; }
+.release-lane__own { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); margin: 0; text-align: center; }
+/* the portal's ring round the top ready card (ring.js): 1.3 times orkUI's 192 px circles the card (144 x 202) at its corners; the card lies over it, the ring takes no press */
+.release-lane .portal-host.is-ring { position: relative; overflow: clip; display: flex; justify-content: center; align-self: stretch; width: auto; margin: 0; padding: 26px 0; }
+.release-lane .portal-host.is-ring .ork-portal-ring { position: absolute; left: 50%; top: 50%; margin: 0; z-index: 0; pointer-events: none; transform: translate(-50%, -50%) scale(1.3); }
+.release-lane .portal-host.is-ring .portal-cards { position: relative; z-index: 1; padding: 0; }
+.release-lane .portal-cards { justify-content: center; flex-direction: column; flex-wrap: nowrap; }
+/* the past: Unreleased, then a deck a version (chronicleparts.js `Deck`, chronicle.css), a deck pressed deals its cards in place */
+.release-lane__past { display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); width: 100%; padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); }
+.release-lane__deck { display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); width: 100%; }
+.release-lane .chr-deck { width: var(--hc-w); }
+.release-lane .chr-deck.is-on { transform: none; border-color: var(--ork-ink); }
+.release-lane__deal { display: flex; flex-direction: column; gap: var(--ork-4); margin: 0; padding: 0; list-style: none; }
+
+/* a decision newer than the party's last look: a muted dot on its tab (pastdot.js) */
+.table-tab__new { position: absolute; right: var(--ork-2); bottom: var(--ork-3); width: 6px; height: 6px; background: var(--ork-ink-muted); pointer-events: none; }
+.table-tab.is-asleep .table-tab__main { color: var(--ork-ink-muted); }
+
+/* To main, the picked ready card's act on the table (tomain.js), and Release's checks (checksview.js) */
+.table-tomain { flex: none; display: flex; align-items: center; gap: var(--ork-4); padding: var(--ork-2) var(--ork-4); min-width: 0; }
+.table-tomain__line { min-width: 0; font: var(--ork-type-caption); color: var(--ork-ink); overflow-wrap: anywhere; }
+.table-tomain__sealed, .table-tomain.is-sealed .table-tomain__line { color: var(--ork-danger); }
+.table-checks { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
+.table-checks__title { margin: 0; }
+.table-checks__list { display: flex; flex-wrap: wrap; gap: var(--ork-5); margin: 0; padding: 0; list-style: none; }
+.table-check { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.table-check__head { display: inline-flex; flex: none; }
+.table-check__txt { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.table-check__name { font: var(--ork-type-body); font-weight: 600; }
+.table-check__state { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.table-check.is-passed .table-check__state { color: var(--ork-success); }
+.table-check.is-red .table-check__state, .table-check__why { color: var(--ork-danger); font: var(--ork-type-caption); overflow-wrap: anywhere; }
