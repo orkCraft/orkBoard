@@ -7,7 +7,7 @@ import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { town } from "../link.js";
-import { ORKMASTER, closeOver, lifted, openOver, over, pick, picked } from "../frame/state.js";
+import { ORKMASTER, closeOver, lifted, openOver, over, picked } from "../frame/state.js";
 import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
 import { PHASES, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
@@ -96,7 +96,6 @@ function Title({ parties, tab, narrow }) {
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
     ${picked.value && html`<${Phases} goal=${picked.value} from=${from} />`}
-    ${picked.value && !o && html`<button type="button" class="ork-btn quiet table-title__unpick" data-unpick="1" aria-label="Look at the whole project" title="Look at the whole project (Esc)" onClick=${() => pick("")}><${Icon} name="close" /></button>`}
     <span class="table-grow"></span>
     ${!o && tab === ORKMASTER && html`<${Menu} label="The Orkmaster's menu" items=${items}
       top=${narrow && limits.length > 0 ? html`<div class="table-menu__limits"><span class="ork-label">Limits</span><div class="table-menu__chips">${limits.map((l) => html`<${LimitChip} key=${l.provider} l=${l} from=${from} />`)}</div></div>` : null} />`}

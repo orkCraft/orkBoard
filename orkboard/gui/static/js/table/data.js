@@ -98,6 +98,17 @@ export function routeParties(picked) {
   return out;
 }
 
+/** The parties a picked goal is on, for the tabs that are not grey (spec 155 B.5, decisions §260.3): those of its route as the Board has it (`routeParties`), without its own party's default when it is not routed yet (every leader is grey then:
+ *  the Orkmaster's alone). null for a goal the snapshot does not have. */
+export function onRoute(picked) {
+  const n = picked && (mapData.value?.nodes || []).find((x) => x.slug === picked);
+  if (!n) return null;
+  const all = routeParties(picked), routed = (n.route || []).some((s) => s.party || s.from) || (board.value?.needs_you || []).some((r) => r.idea === picked && [...(r.route || []), ...(r.stances || []), ...(r.sides || [])].some((x) => x?.party));
+  const out = new Set(!routed && !PHASE_OF[n.state] ? [] : all);
+  for (const slug of roadSlugs()) out.add(slug);                      // Release's and Live's tabs look at the whole project: they are never grey
+  return out;
+}
+
 // -- a goal's phases (docs/specs/95-the-window-as-decided.md §3.6, §5.2; decisions §126.4, §147.2) -----------------------------------------------------
 
 /** The phases as the person reads them, in order; the engine's states are its own (`realm/ideas.py` STATES). */

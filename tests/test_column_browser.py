@@ -1,6 +1,6 @@
 """Spec 128 part B (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md, decisions §206.2–§206.3) as spec 147 part B changed it (docs/specs/147-one-card-four-corners.md, decisions §251.3–§251.4; mockup docs/mockups/card-ratio/), in a real browser against a stub host: the
 Orkmaster's column, 160 px, pinned at the window's left, its head the Orkmaster's tab (open at first, underlined, the tabs at the top the leaders' alone), its three piles by the goals' states (In analysis the Orkmaster's hand, a near-straight fan of 56 x 78 backs with the goal being read lifted;
-To review a squared deck of backs on their side, its ring the wait, the next to start named; At work · later standing cards read by their four corners), what a press does (a back of the hand lifts the pile's list with Next and Remove, a back of the deck or a standing card picks its goal, a card of
+To review a squared deck of backs on their side, its ring the wait, the next to start named; At work · later standing cards read by their four corners), what a press does (any card, a back too, picks its goal and the same card again puts the pick away; Next and Remove are in the goal's menu; a card of
 To review lifts Start now and Hold, a put-off one Start now and Back to review), the foot of each card behind the front one, a column that never scrolls and gives way to a short window (giveWay), the moves between piles, and the phone (under 760 px: no column, the Orkmaster's tab and lane as they were)."""
 from __future__ import annotations
 
@@ -143,34 +143,34 @@ def test_in_analysis_is_the_orkmasters_hand_a_fan_of_small_backs_each_rune_in_it
     assert not log, "\n".join(log)
 
 
-def test_a_press_on_a_face_down_card_lifts_the_list_in_order_and_cannot_pick_next_moves_a_goal_after_the_front_one(gui):
+def test_a_press_on_a_face_down_card_picks_its_goal_with_no_list_and_next_and_remove_are_in_the_goals_menu(gui):
+    """Spec 155 B.2 (decisions §260.5): a face-down card is picked as any card; the pile's list over the pane is gone, *Next* and *Remove* are in the goal's menu."""
     pg, host, log = open_column(gui)
     try:
         pg.wait_for_selector(".col-card--down", timeout=WAIT_MS)
-        pg.locator(".col-card--down").first.click()
-        lift = pg.locator('.col-lift[data-lift="list"]')
-        lift.wait_for(timeout=WAIT_MS)
-        assert sig(pg, "frame/state.js", "picked") == "", "a face-down card cannot be picked"
-        rows = lift.locator(".col-list__row")
-        assert rows.count() == 5 and rows.first.inner_text().startswith("Players see who answered first"), "each goal's whole title, in the Orkmaster's order"
-        assert rows.first.locator("button").count() == 0, "the one being written has no choices yet"
-        assert lift.locator("[data-next]").count() == 1, "Next on a goal with a goal of its party before it that waits its turn"
-        lift.locator('[data-next="raw3"]').click()
-        assert _sent(pg, host, ("ideas.move", {"slug": "raw3", "before": "raw1"}))
-        pg.wait_for_function("() => [...document.querySelectorAll('.col-list__row')].map((e) => e.dataset.goal).join() === 'reading,talk,raw3,raw1,raw2'", timeout=WAIT_MS)
-        lift.locator('[data-remove="raw1"]').click()
-        ask = lift.get_by_role("alertdialog", name="Drop this goal?")
+        raw3 = pg.locator('.col-card[data-goal="raw3"]')
+        raw3.click()
+        assert sig(pg, "frame/state.js", "picked") == "raw3" and raw3.get_attribute("aria-pressed") == "true" and "ork-picked" in raw3.get_attribute("class").split()
+        assert pg.locator(".col-lift[data-lift=list], .col-list, .col-list__row").count() == 0, "the pile's list is gone"
+        acts = pg.locator('.col-lift[data-lift="acts"]')
+        acts.wait_for(timeout=WAIT_MS)
+        assert acts.locator("[data-next], [data-remove]").count() == 0
+        acts.locator(".table-menu__btn").click()
+        acts.get_by_role("menuitem", name="Next").click()
+        assert _sent(pg, host, ("ideas.move", {"slug": "raw3", "before": "raw1"})), "Next: before the first goal of its party that waits its turn"
+        acts.locator(".table-menu__btn").click()
+        acts.get_by_role("menuitem", name="Drop this goal…").click()
+        ask = acts.get_by_role("alertdialog", name="Drop this goal?")
         ask.wait_for(timeout=WAIT_MS)
         assert ask.get_by_role("button", name="Drop it").count() == 1, "Remove asks first"
-        pg.wait_for_function("() => document.activeElement && document.activeElement.textContent.trim() === 'Keep it'", timeout=WAIT_MS)      # the safe answer focused (set once it is drawn)
+        pg.wait_for_function("() => document.activeElement && document.activeElement.textContent.trim() === 'Keep it'", timeout=WAIT_MS)
         pg.keyboard.press("Escape")
         ask.wait_for(state="detached", timeout=WAIT_MS)
-        assert lift.count() == 1 and not any(c[0] == "ideas.drop" for c in host.log), "the first Esc keeps the goal"
-        lift.locator('[data-remove="raw1"]').click()
-        lift.get_by_role("button", name="Drop it").click()
-        assert _sent(pg, host, ("ideas.drop", {"slug": "raw1"}))
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.col-lift')", timeout=WAIT_MS)
+        assert not any(c[0] == "ideas.drop" for c in host.log), "the first Esc keeps the goal"
+        acts.locator(".table-menu__btn").click()
+        acts.get_by_role("menuitem", name="Drop this goal…").click()
+        acts.get_by_role("button", name="Drop it").click()
+        assert _sent(pg, host, ("ideas.drop", {"slug": "raw3"}))
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -202,6 +202,8 @@ def test_a_face_up_card_picks_its_goal_and_a_card_of_to_review_lifts_start_now_a
         assert "ask a leader there to change it" in said.inner_text() and said.get_by_role("button", name="Less").count() == 1
         acts.get_by_role("button", name="Hold").click()
         assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "timer"}))
+        timer.click()
+        assert sig(pg, "frame/state.js", "picked") == "", "the same card again puts the pick away"
         timer.click()
         acts.wait_for(timeout=WAIT_MS)
         acts.get_by_role("button", name="Start now").click()
@@ -314,8 +316,11 @@ def test_a_decision_and_a_spec_being_written_are_backs_of_the_hand_and_a_spec_ma
         assert pg.locator('.col-card[data-goal="made"]').get_attribute("class").count("col-card--deck") == 1
         assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") and pg.locator(".col-card--fan").first.locator(".ork-elem.is-glowing").count() == 1, "the leaders writing its spec: the front back lifted with its rune glowing and the title says it"
         pg.locator('.col-sec[data-pile="analysis"] .col-card--down').first.click()
-        assert len(pg.locator(".col-list__row").all_inner_texts()) == 4
+        assert sig(pg, "frame/state.js", "picked") != "" and pg.locator(".col-list").count() == 0, "a face-down card is picked, with no list"
+        pg.keyboard.press("Escape")                                   # the card's choices beside the column go first, then the pick
+        pg.wait_for_selector(".col-lift", state="detached", timeout=WAIT_MS)
         pg.keyboard.press("Escape")
+        pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.picked.value === '')", timeout=WAIT_MS)
         for n in host.nodes[1:4]:
             n.update(state="done", folded=True)
         host.bump({})
@@ -381,13 +386,14 @@ def test_an_agreed_decision_whose_wait_runs_is_not_in_the_hand_and_the_column_sa
         assert "its decision is agreed; its spec starts by itself at " in card.get_attribute("aria-label")
         assert "asks" not in card.get_attribute("class").split(), "it asks nothing: its frame is not yellow"
         card.click(position={"x": 20, "y": 8})          # the first back of the hand: the second lies over its right end
-        rows = pg.locator(".col-list__row")
-        assert rows.count() == 2
-        agreed = pg.locator('.col-list__row[data-goal="agreed"]')
-        assert agreed.get_by_role("button", name="Change…").count() == 1 and agreed.get_by_role("button", name="Start now").count() == 1 and agreed.get_by_role("button", name="Remove").count() == 1
-        other = pg.locator('.col-list__row[data-goal="doubt"]')
+        agreed = pg.locator('.col-lift[data-lift="acts"][data-goal="agreed"]')
+        agreed.wait_for(timeout=WAIT_MS)
+        assert agreed.get_by_role("button", name="Change…").count() == 1 and agreed.get_by_role("button", name="Start now").count() == 1 and agreed.locator(".table-dropper").count() == 1
+        pg.locator('.col-card[data-goal="doubt"]').click()
+        other = pg.locator('.col-lift[data-lift="acts"][data-goal="doubt"]')
+        other.wait_for(timeout=WAIT_MS)
         assert other.get_by_role("button", name="Change…").count() == 0 and other.get_by_role("button", name="Start now").count() == 0, "a decision with no wait is in the hand, not agreed"
-        assert pg.locator(".hand-lifted").count() == 0 and not picked_goal(pg), "a face-down card is never picked"
+        assert pg.locator(".hand-lifted").count() == 0 and picked_goal(pg), "a face-down card is picked as any card"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -402,9 +408,9 @@ def test_start_now_on_an_agreed_decision_confirms_it(gui):
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
         pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 20, "y": 8})      # the first back of the hand: the second lies over its right end
-        pg.locator('.col-list__row[data-goal="agreed"]').get_by_role("button", name="Start now").click()
+        pg.locator('.col-lift[data-goal="agreed"]').get_by_role("button", name="Start now").click()
         assert _sent(pg, host, ("ideas.confirm", {"idea": "agreed"}))
-        pg.wait_for_selector(".col-list", state="detached", timeout=WAIT_MS)
+        pg.wait_for_selector(".col-lift", state="detached", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -415,10 +421,10 @@ def test_change_on_an_agreed_decision_holds_its_wait_and_brings_its_card_into_th
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
         pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 20, "y": 8})      # the first back of the hand: the second lies over its right end
-        pg.locator('.col-list__row[data-goal="agreed"]').get_by_role("button", name="Change…").click()
+        pg.locator('.col-lift[data-goal="agreed"]').get_by_role("button", name="Change…").click()
         assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "agreed"}))
         pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-lifted .hand-way--decision").count() == 1 and pg.locator(".col-list").count() == 0
+        assert pg.locator(".hand-lifted .hand-way--decision").count() == 1 and pg.locator(".col-lift").count() == 0
         assert pg.locator(".hand-lifted").get_by_role("button", name="Start", exact=True).count() == 1, "held: its one button says Start"
         assert decisions_in_hand(pg) == ["decision/agreed/", "decision/doubt/", "decision/held/"]
         assert "agreed" in goals(pg, "work"), "held, the goal lies put off in At work · later until the person starts it"
@@ -493,9 +499,9 @@ def test_an_agreed_decision_says_when_its_spec_starts_under_the_title_and_start_
     try:
         under = pg.locator('[data-under="analysis"]').inner_text()
         assert under.startswith("decided: Round timer on phones · starts its spec at "), under
-        assert pg.locator(".col-play").count() == 0, "a back of the hand has no play: its row in the list has Start now"
+        assert pg.locator(".col-play").count() == 0, "a back of the hand has no play: its choices beside the column have Start now"
         pg.locator('.col-card--fan[data-goal="g"]').click()
-        pg.locator('.col-list__row[data-goal="g"]').get_by_role("button", name="Start now").click()
+        pg.locator('.col-lift[data-goal="g"]').get_by_role("button", name="Start now").click()
         assert _sent(pg, host, ("ideas.confirm", {"idea": "g"}))
     finally:
         pg.close()
@@ -550,9 +556,11 @@ def test_a_goal_put_off_says_not_before_its_hour_on_its_row_the_day_when_it_is_n
     pg, host, log = open_column(gui, host=PutOffHost())
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
-        pg.locator('.col-sec[data-pile="analysis"] .col-card--down').first.click()
-        pg.wait_for_selector(".col-list", timeout=WAIT_MS)
-        said = lambda slug: pg.locator(f'.col-list__row[data-goal="{slug}"] [data-hold]').all_inner_texts()      # noqa: E731
+        def said(slug):
+            pg.mouse.move(700, 400)                                      # off the card hovered (it rises over its neighbours)
+            pg.locator(f'.col-card[data-goal="{slug}"]').click(position={"x": 8, "y": 40})
+            pg.wait_for_selector(f'.col-lift[data-goal="{slug}"]', timeout=WAIT_MS)
+            return pg.locator(f'.col-lift[data-goal="{slug}"] [data-hold]').all_inner_texts()
         assert said("soon") == [f"not before {host.soon:%H:%M}"] or said("soon") == [f"not before {host.soon:%a} {host.soon:%H:%M}"], "today's hour, or the day's name when 90 minutes ahead crossed midnight"
         assert said("far") == [f"not before {host.far:%a} {host.far:%H:%M}"], "another day: its name and the hour"
         assert said("gone") == [] and said("plain") == [], "a past hour or none says nothing"
@@ -578,13 +586,16 @@ def test_a_goal_another_tool_holds_says_taken_by_and_a_goal_kept_off_says_so_on_
     pg, host, log = open_column(gui, host=HeldByAnotherHost())
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
-        pg.locator('.col-sec[data-pile="analysis"] .col-card--down').first.click()
-        pg.wait_for_selector(".col-list", timeout=WAIT_MS)
-        row = lambda slug, attr: pg.locator(f'.col-list__row[data-goal="{slug}"] [{attr}]').all_inner_texts()      # noqa: E731
-        assert row("held", "data-hold") == ["Taken by codex until 14:05"] and row("held", "data-off") == []
-        assert row("off", "data-off") == ["Kept off the repository: on this computer only"] and row("off", "data-hold") == []
-        assert row("both", "data-hold") == ["Taken by Orkboard on a laptop until 09:30"] and row("both", "data-off") == ["Kept off the repository: on this computer only"]
-        assert row("plain", "data-hold") == [] and row("plain", "data-off") == []
+        def row(slug):
+            pg.mouse.move(700, 400)                                      # off the card hovered (it rises over its neighbours)
+            pg.locator(f'.col-card[data-goal="{slug}"]').click(position={"x": 8, "y": 40})
+            pg.wait_for_selector(f'.col-lift[data-goal="{slug}"]', timeout=WAIT_MS)
+            lift = pg.locator(f'.col-lift[data-goal="{slug}"]')
+            return lift.locator("[data-hold]").all_inner_texts(), lift.locator("[data-off]").all_inner_texts()
+        assert row("held") == (["Taken by codex until 14:05"], [])
+        assert row("off") == ([], ["Kept off the repository: on this computer only"])
+        assert row("both") == (["Taken by Orkboard on a laptop until 09:30"], ["Kept off the repository: on this computer only"])
+        assert row("plain") == ([], [])
     finally:
         pg.close()
     assert not log, "\n".join(log)

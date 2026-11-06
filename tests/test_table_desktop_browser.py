@@ -598,7 +598,7 @@ def test_an_edge_lifts_its_task_and_a_goals_strip_picks_the_goal(table):
         pg.locator('.table-casc[data-goal="seat"]').locator("xpath=..").locator(".table-gstrip").click()                  # the strip of a goal picks it
         pg.wait_for_selector('.table-board--plan[data-plan="seat"]', timeout=WAIT_MS)                                       # the goal picked: the Board is its plan alone (spec 128 F.1; tests/test_plan_arrows_browser.py)
         assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
-        pg.locator(".table-title__unpick").click()                                                                        # and the title's cross puts it down
+        pg.keyboard.press("Escape")                                                                                       # and Esc puts it down (no cross in the title: spec 155 B.3)
         pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
     else:
         pg.locator('[data-lkey="t:task:bar/a2"]').click()                                                                 # a token lifts its front task: a screen over the pane, its tasks listed
@@ -1086,19 +1086,22 @@ def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_
 
 # -- a goal picked, the project, the keys, the motion, the presses ------------------------------------------------------------------------------------
 
-def test_a_goal_picked_puts_a_dot_on_the_tabs_of_its_route_and_opens_on_its_partys_tab(table):
+def on_route_tabs(pg):
+    """The party tabs that are not grey (spec 155 B.5): the ones the picked goal's route passes."""
+    return sorted(t.get_attribute("data-tab") for t in pg.locator(".table-tab:not(.is-off)").all() if t.get_attribute("data-tab") not in ("orkmaster", "release", "live"))
+
+
+def test_a_goal_picked_greys_the_tabs_its_route_does_not_pass_and_opens_the_orkmasters_tab_when_the_open_one_is_grey(table):
     pg, host, w = table
-    assert pg.locator(".table-tab__dot").count() == 0                                                                    # nothing picked: no dot
+    assert pg.locator(".table-tab.is-off, .table-tab__dot").count() == 0                                                 # nothing picked: no tab is grey
     pick(pg, "seat")
-    pg.locator(".table-tab__dot").first.wait_for(timeout=WAIT_MS)
-    assert [t.get_attribute("data-tab") for t in pg.locator(".table-tab:has(.table-tab__dot)").all()] == ["tech", "art"]   # its party's and the party the route passed
+    pg.locator(".table-tab.is-off").first.wait_for(timeout=WAIT_MS)
+    assert on_route_tabs(pg) == ["art", "tech"]                                                                          # its party's and the party the route passed
     pick(pg, "")
     open_tab(pg, "game")
-    pick(pg, "seat")                                                                                                     # picked in the hand, a party's tab open: it opens on its own party's tab
-    pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Keep the seat when a socket reconnects · through Tech"
+    pick(pg, "seat")                                                                                                     # picked in the hand, a grey party's tab open: the Orkmaster's tab opens
+    assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"
     pick(pg, "")
-    open_tab(pg, "orkmaster")
     pick(pg, "seat")
     assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"                                                 # the Orkmaster's tab stays: its Board shows the tasks alone
 
@@ -1216,16 +1219,16 @@ def test_a_goal_not_routed_yet_has_no_marks(gui):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_route_of_a_goal_picked_puts_a_dot_on_the_tab_of_each_party_it_passes(gui, width):
+def test_the_route_of_a_goal_picked_leaves_the_tab_of_each_party_it_passes_not_grey(gui, width):
     errors: list[str] = []
     for state, needs, route, dots in (("routed", [ROUTE_ROW], [], ["game", "tech"]),                                     # the route row's steps (its own party always)
                                       ("talk", [TALK_ROW], [], ["tech", "art"]),                                         # the stances of the Talk
                                       ("working", [], [{"step": "party", "party": "game", "goal": "seat"}, {"step": "party", "party": "tech", "goal": "seat"}], ["game", "tech"])):   # the route as planned
         pg, host = way(gui, width, errors, state=state, needs=needs, route=route)
-        assert pg.locator(".table-tab__dot").count() == 0
+        assert pg.locator(".table-tab.is-off").count() == 0
         pick(pg, "seat")
-        pg.locator(".table-tab__dot").first.wait_for(timeout=WAIT_MS)
-        assert sorted(t.get_attribute("data-tab") for t in pg.locator(".table-tab:has(.table-tab__dot)").all()) == sorted(dots), state
+        pg.locator(".table-tab.is-off").first.wait_for(timeout=WAIT_MS)
+        assert on_route_tabs(pg) == sorted(dots), state                                                                  # the tabs not grey are the route's
         if state == "routed":
             shot(pg, f"table-route-dots-{width}.png")
         narrow.no_sideways(pg)

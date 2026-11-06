@@ -340,6 +340,9 @@ TERMS: tuple[Term, ...] = (
     _t("column_reading", "reading"),                                # the goal the Orkmaster or its leaders are on, under *In analysis*
     _t("next_in", "next in"),                                       # the next to start by itself and the time left, under *To review*
     _t("next_at", "next at"),                                       # the same for a spec that waits for its look: the clock time it starts at
+    # a party's tab greyed while a goal is picked that its route does not pass (spec 155 B.5, decisions §260.3, §260.15; table/tabs.js): *Product is not on this goal. Press to leave it and look at Product's table.*
+    _t("tab_off_is", "is not on this goal"),
+    _t("tab_off_press", "Press to leave it and look at"),
     # the opened card and a new goal's card (spec 147 D, spec 148 B.6, decisions §251.2, §252.4; hand/openwords.js): the empty corners say what will stand there, the window what to drop on it, the foot who asks
     _t("slot_rune", "the rune: given when it is laid"),            # a new goal's top left, dashed until the goal is laid
     _t("slot_who", "who: the Orkmaster routes it"),                 # its bottom left, until the party is known

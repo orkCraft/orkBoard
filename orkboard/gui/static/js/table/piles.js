@@ -186,13 +186,13 @@ function WorkCard({ n, i, off, y, x, onPress }) {
 
 /** One pile: its title and, under it, what it says (*reading: Round timer*, *next in 2 min: Round timer*), then its cards — the fan of In analysis (every goal a back), the deck of To review (the front and four behind, 3 px apart), the standing cards of At work (the front and five behind; `way`: giveway.js, how far each
  *  lies below the front one, or sunk). **A pile's heading appears with its first card**, never empty (spec 130 C.6). */
-export function Pile({ id, title, items, under = "", asked = "", onPress, open = false, way = null }) {
+export function Pile({ id, title, items, under = "", asked = "", onPress, way = null }) {
   if (!items.length) return null;
   const head = html`<div class="col-plab"><span class="col-plab__t">${title}</span></div>
     <${Under} id=${id} text=${under} asks=${under === "waits for you"} />${asked && html`<${Under} id=${id} text=${asked} extra=${true} />`}`;
   if (id === "analysis") {
     const reads = ACTIVE.includes(items[0].n.state), said = (n) => `${n.title}: ${sayOf(n, "analysis")}`;
-    return html`<section class="col-sec" data-pile=${id} aria-label=${title}>${head}<${Fan} items=${items} reads=${reads} said=${said} own=${lit} waits=${waitsYou} open=${open} onPress=${onPress} /></section>`;
+    return html`<section class="col-sec" data-pile=${id} aria-label=${title}>${head}<${Fan} items=${items} reads=${reads} said=${said} own=${lit} waits=${waitsYou} picked=${picked.value} onPress=${onPress} /></section>`;
   }
   if (id === "review") {
     const shown = items.slice(0, DECK_SHOWN);

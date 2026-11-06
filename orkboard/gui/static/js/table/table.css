@@ -51,7 +51,8 @@
 .table-tab__dry { display: inline-flex; align-items: center; gap: 2px; }
 .table-tab__dry .table-tab__mark, .table-tab__dry .table-tab__initial { opacity: 0.35; }
 .table-tab__dry .ork-sign { color: var(--ork-ink-muted); }
-.table-tab__dot { position: absolute; top: var(--ork-2); right: var(--ork-2); width: 6px; height: 6px; background: var(--ork-ink); }
+.table-tab.is-off .table-tab__main, .table-tab.is-off .table-tab__txt { color: var(--ork-ink-faint); }      /* a party the picked goal's route does not pass: grey, its head asleep (tabs.js) */
+.table-tab.is-off .table-seatbox { opacity: 0.6; }
 /* a party whose map has an alert (concerns.js `hasAlert`): orkUI's alert sign in the alert tone at the tab's foot, no count (decisions §145.3) */
 .table-tab__alert { position: absolute; right: var(--ork-2); top: var(--ork-2); display: inline-flex; color: var(--ork-alert); pointer-events: none; }
 .table[data-compact="true"] .table-tab { justify-content: center; padding: var(--ork-2) 0 0; }

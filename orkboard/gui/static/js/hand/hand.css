@@ -336,3 +336,6 @@
 .col > .fo-bubble:is([data-step="parties"], [data-step="laid"]) > p { font: var(--ork-type-caption); }
 .hand > .fo-bubble { top: auto; bottom: 100%; left: var(--ork-2); max-width: calc(100% - var(--ork-4)); }
 @media (max-width: 759px) { .hand .hand-tool, .hand .fo-card { left: var(--ork-2); right: var(--ork-2); width: auto; max-height: 80dvh; } }
+
+/* One pick (spec 155 B.4): the cards of the picked goal wear the ink edge, the frame line's width doubled, at the hand's size */
+.hand-stack .hand-card.ork-picked { border-color: var(--ork-ink); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-ink); }

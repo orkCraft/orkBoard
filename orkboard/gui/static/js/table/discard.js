@@ -23,7 +23,6 @@ import { Portal, ReadyCards, chosenSlug, toMain } from "./portal.js";
 import { noGate } from "./data.js";
 import { CornerTop, CornerFoot, muchOf, secondsBetween, IN_MAIN } from "./corners.js";             // the card is read by its four corners (spec 147 A.3, decisions §251)
 import { CardWindow, lastMade, windowOf } from "./cardwindow.js";
-import { columnPick } from "./column.js";                 // the goal a press in the discard picks does not move the open tab (the leaders' tabs all show it)
 
 const LICH = { race: "lich", tier: "elder" };
 const EDGES = 3;
@@ -83,7 +82,6 @@ export function lichOf() {
 /** A goal done and not yet seen is opened as its Result, then it is seen and leaves the discard. **It is also the goal picked** (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md F.3): when the Result is put away, each leader's tab shows
  *  what the goal changed against what its spec promised (goalview.js), and the Play die wears its rune. */
 export async function seeResult(g) {
-  columnPick.slug = g.slug;
   picked.value = g.slug;
   openOver("result", { idea: g.slug }, null, g.full || g.title);
   await act("ideas.seen", { idea: g.slug });

@@ -45,7 +45,8 @@ class GoalHost(HandHost):
                  task("m2", "Draw the winner first", "running", party="design", step=2, after=["m1"], head=head("dryad", "design")),
                  task("m3", "Keep the rounds", "waiting", party="tech", step=1, after=["m1", "m2"]),
                  task("m4", "Name the theme", "waiting", party="product", step=3, after=["m3"])]
-        music = node("music", "tech", "Music in the lobby", "table", state="working", element="meadow", stage="implementation", tasks=tasks)
+        music = node("music", "tech", "Music in the lobby", "table", state="working", element="meadow", stage="implementation", tasks=tasks,
+                     route=[{"party": "tech", "leader": "tech-lead", "head": {"race": "orc", "tier": "elder"}}, {"party": "design", "leader": "design-lead", "head": {"race": "dryad", "tier": "elder"}}, {"party": "release", "leader": "release-lead", "head": {"race": "lich", "tier": "elder"}}])
         timer = node("timer", "tech", "The clock after a reconnect", "table", state="working", element="dust", stage="implementation", tasks=[task("t1", "Reset the clock", "running", party="tech", step=1)])
         fresh = node("fresh", "design", "Host can skip a round", "table", state="ready", agreed=True, element="void", back={"route": [], "cost": None, "offer": [], "short": False, "heard": [], "stances": [], "round": 1,
                                                                                                                   "ripe": {"left_s": 120, "seconds": 240, "risk": "low", "priority": "high", "held": False, "by": "", "why": ""}})
@@ -170,7 +171,7 @@ def test_esc_and_the_titles_cross_pick_nothing_and_the_leaders_map_is_back(gui):
         pick_music(pg)
         pg.locator(".gv").wait_for(timeout=WAIT_MS)
         assert "music in the lobby" in pg.locator(".table-title__pt").inner_text().lower()
-        pg.locator(".table-title__unpick").click()
+        pg.keyboard.press("Escape")
         pg.wait_for_selector(".table-sys", timeout=WAIT_MS)
         assert sig(pg, "frame/state.js", "picked") == ""
     finally:
