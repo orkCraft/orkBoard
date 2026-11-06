@@ -215,7 +215,7 @@ function DrumRest({ drum, byId, words, press }) {
     ${seq.map((l, i) => {
       const at = i - front, p = byId.get(l.provider), who = Math.abs(at) === 1 && alerts.includes(l.provider);
       if (at !== 0 && !who) return null;
-      return html`<span key=${l.provider} class=${cls("hand-mana__label", { "is-front": at === 0, "is-alert": who, [`is-${p.level}`]: true })} data-at=${at} data-provider=${l.provider} aria-hidden="true"><span class="hand-mana__mark"><${Who} l=${l} /></span>
+      return html`<span key=${l.provider} class=${cls("hand-mana__label", { "is-front": at === 0, "is-alert": who, [`is-${p.level}`]: true })} data-at=${at} data-size=${p.paid ? undefined : p.size} data-provider=${l.provider} aria-hidden="true"><span class="hand-mana__mark"><${Who} l=${l} /></span>
         ${p.paid && html`<span class="hand-pot__coins hand-mana__coins"><${Icon} name="coins" /></span>`}
         ${at === 0 ? html`<${Shares} p=${alerts.length ? { ...p, week: null } : p} line=${true} />` : html`<span class="hand-pot__shares"><span class="hand-pot__share">${p.back ? `back ${p.back}` : p.share}</span></span>`}</span>`;
     })}

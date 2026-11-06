@@ -77,7 +77,13 @@
   .hand-mana__label { position: absolute; top: 0; bottom: 0; left: calc(var(--hc-cx) + var(--at, 0) * var(--hc-far)); z-index: 2; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: space-between; pointer-events: none; }
   .hand-mana__label[data-at="-1"] { --at: -1; }
   .hand-mana__label[data-at="1"] { --at: 1; }
-  .hand-mana__label.is-alert .hand-mana__mark { margin-top: 18px; }
+  .hand-mana__label { --hc-ph: 18; --hc-pc: 3px; }                                                 /* the bottle's height in cells and the cell: the front at 3 px, an alert neighbour at orkUI's .small 2 px */
+  .hand-mana__label.is-alert { --hc-pc: 2px; }
+  .hand-mana__label[data-size="medium"] { --hc-ph: 14; }
+  .hand-mana__label[data-size="small"] { --hc-ph: 10; }
+  .hand-mana__label[data-size="vial"] { --hc-ph: 9; }
+  .hand-mana__label[data-size] .hand-mana__mark { margin-top: max(0px, calc(72px - var(--hc-ph) * var(--hc-pc) - 18px)); }      /* the mark stands 2 px over its own bottle, whatever its size (the bottles stand on the drum's floor, 18 px over its foot) */
+  .hand-mana__label.is-alert:not([data-size]) .hand-mana__mark { margin-top: 18px; }
   .hand-mana__label .ork-mark { display: block; }
   .hand-mana__label .hand-pot__shares { line-height: 16px; }
   .hand-pot__shares.is-line { flex-direction: row; align-items: baseline; gap: var(--ork-1); white-space: nowrap; }                    /* the drum leaves 18 px under the bottles: the share and, when the week runs out first, the week's, on one line */

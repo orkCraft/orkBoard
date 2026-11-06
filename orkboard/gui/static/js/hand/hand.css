@@ -108,7 +108,8 @@
 .hand .hand-plus { position: relative; cursor: pointer; rotate: calc(var(--ork-motion-lean) * -1); border: var(--ork-double) double var(--ork-action); color: var(--ork-action); overflow: hidden; }
 .hand .hand-plus > .ork-icon { width: 42px; height: 42px; position: relative; z-index: 1; }
 /* The + card keeps its 5 : 7 and its whole seal (decisions §249.2) where the hand's other cards are shorter: it stands up from the window's foot over the table's foot, its turned corners in the window; the column's scroll leaves room for it (table/column.css) */
-@media (min-width: 760px) { .hand .hand-plus { height: var(--hc-big); } .hand-slot.is-plus { margin: calc(var(--hc-seen, var(--hc-shown)) - var(--hc-big) - var(--ork-4)) 0 0 var(--ork-1); } }
+@media (min-width: 760px) { .hand { --hc-cut: 32px; }      /* the + card sits 32 px lower, its foot (the lower moon) under the window's edge, its seal whole: the column's last pile has that much more room (decisions §265) */
+  .hand .hand-plus { height: var(--hc-big); } .hand-slot.is-plus { margin: calc(var(--hc-seen, var(--hc-shown)) - var(--hc-big) - var(--ork-4) + var(--hc-cut)) 0 0 var(--ork-1); } }
 .hand .hand-plus::after, .hand-ghost.ork-plus::after { content: none; }      /* the corner brackets gave way to the back's corners, which orkUI draws on the + card (orkUI 0.33.0, decisions §264) */
 .hand .hand-plus.is-large { width: 180px; height: auto; aspect-ratio: 5 / 7; }
 .hand .hand-plus.is-large > .ork-icon { width: 56px; height: 56px; }

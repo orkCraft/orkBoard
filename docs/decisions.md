@@ -7221,3 +7221,19 @@ So:
    is a little smaller. On the narrow page the + card's seal is `.small`, and it takes the small back's sides alone.
 2. **Its corner brackets go** (`hand/hand.css`): the back's corners stand there now.
 The owner's call.
+
+## 265. The drum shows three round its front; an alert neighbour's mark stands on its own bottle; the + card sits 32 px lower (6 November 2026, the owner)
+
+Changes: 261.13 and orkUI's drum note *no wrap-around* (the places beside the front), 249.2 (the + card lies whole in the
+window).
+
+Why: the owner, on spec 156 E's hand: *fix the drum*: a tool in danger beside the front had its mark far over its small
+bottle, and with the first tool in front the place before it stood empty. And: *lower the card that makes a goal a little,
+so the goals at work have more room*. So:
+1. **The drum shows three round its front whenever there are three tools**: with the first in the person's order in front,
+   the last stands before it, and with the last in front, the first stands after it. A tool at the warn or the danger level
+   still takes the nearer neighbour's place (§262.1). Nothing the person does turns the drum (§261.13).
+2. **A mark over the drum stands 2 px over its own bottle**, whatever the bottle's size, the front's and an alert neighbour's.
+3. **The + card sits 32 px lower** at the wide width: its foot, the lower moon of the back's drawing (§264), lies under the
+   window's edge, its seal whole; the Orkmaster's column ends 32 px lower, so the goals at work have that room.
+The owner's call.

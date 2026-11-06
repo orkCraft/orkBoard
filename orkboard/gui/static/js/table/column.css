@@ -17,7 +17,7 @@
 /* -- the piles ------------------------------------------------------------------------------------------------------------------------ */
 .col-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-3) calc(var(--column-w) - var(--col-edge)) var(--ork-5) 0; overflow: hidden; }      /* never scrolls (spec 147 B.5); no margin at its left: the window's own edge cuts a back on its side */
 .col-scroll:has(.col-card:is(:hover, :focus-visible)) { margin-right: calc(var(--col-out) * -1); padding-right: calc(var(--column-w) - var(--col-edge) + var(--col-out)); }      /* a card slid out lies over the table, not clipped by the pile's box */
-@media (min-width: 760px) { .col-scroll { padding-bottom: 88px; } }                                 /* the last pile ends clear of the + card, which stands 78 px over the table's foot (hand/hand.css) */
+@media (min-width: 760px) { .col-scroll { padding-bottom: 56px; } }                                 /* the last pile ends clear of the + card, which stands 46 px over the table's foot since it sits 32 px lower (hand/hand.css, decisions §265) */
 .col-sec { flex: none; display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
 .col-sec--work { flex: 1 1 0; }
 .col-plab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--ork-2); min-width: 0; padding-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
