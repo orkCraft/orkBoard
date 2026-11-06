@@ -269,8 +269,8 @@ def test_new_goal_is_framed_and_lies_under_no_other_card(gui, width):
             pg.wait_for_timeout(700)
             plus = _plus(pg)
             box = plus.bounding_box()
-            style = plus.evaluate("e => { const s = getComputedStyle(e); return [s.borderTopStyle, s.borderTopWidth, s.backgroundImage.includes('repeating-linear-gradient'), getComputedStyle(e, '::after').backgroundImage.includes('linear-gradient')] }")
-            assert style[0] == "double" and style[1] == "3px" and not style[2] and style[3], style                        # the double frame and the corner brackets; the hatch is gone (spec 110, decisions §185.4)
+            style = plus.evaluate("e => { const s = getComputedStyle(e); return [s.borderTopStyle, s.borderTopWidth, s.backgroundImage.includes('repeating-linear-gradient'), (getComputedStyle(e, '::before').maskImage || getComputedStyle(e, '::before').webkitMaskImage).includes('plus-lines')] }")
+            assert style[0] == "double" and style[1] == "3px" and not style[2] and style[3], style                        # the double frame and the back's drawing in its green (decisions §264); the hatch is gone (spec 110, decisions §185.4)
             others = pg.locator(".hand .hand-card, .hand .hand-back:not(.edge), .hand .hand-stack > .hand-back.edge").evaluate_all(
                 "els => els.map((e) => { const r = e.getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })")
             slack = 6                                                        # turned a little (§167.5): a corner reaches a few pixels

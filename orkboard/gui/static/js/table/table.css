@@ -79,7 +79,9 @@ button.table-chip { appearance: none; font: inherit; }
 /* -- the pane ------------------------------------------------------------------------------------------------------------------- */
 .table-pane { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: var(--ork-1); box-sizing: border-box; }
 .table-title { flex: none; min-width: 0; padding-right: var(--ork-2); }
-.table-title.is-bare { position: absolute; top: var(--ork-1); right: var(--ork-1); z-index: 3; min-height: 0; padding: 0; background: none; border: 0; box-shadow: none; }      /* nothing picked: no title row, its menu alone in the pane's corner over the lanes (decisions §263.3) */
+@media (min-width: 760px) { .table-title.is-bare { position: absolute; top: var(--ork-1); right: var(--ork-1); z-index: 3; min-height: 0; padding: 0; background: none; border: 0; box-shadow: none; }      /* nothing picked: no title row, its menu alone in the pane's corner over the lanes (decisions §263.3); the narrow page keeps its row */
+  .table-title.is-bare > :is(.table-title__pt, .table-grow) { display: none; }      /* the menu alone: no empty title, no room between */
+  .table-title.is-bare ~ .table-notice { margin-right: var(--ork-bar); } }      /* a notice in the title's place leaves the menu its corner */
 .table-title__pt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-pathcase { text-transform: none; font-family: var(--ork-font-code); }
 /* the picked goal's phases in the title: Talk · Spec · Work · Done, the current one underlined, the ones gone by a step lighter; Talk and Spec are pressed to open their page */
