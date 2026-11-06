@@ -64,6 +64,9 @@ def run(argv: list[str]) -> int:
     i_p = sub.add_parser("import", help="Read a project's own decisions, specs and notes (ADRs, Spec Kit, Kiro, OpenSpec, BMAD, a memory bank…) into its journals")
     i_p.add_argument("folder", nargs="?", default=".", help="The project's folder (default: this one)")
     i_p.add_argument("--dry-run", action="store_true", help="Only say what would be read in")
+    i_p.add_argument("--goals", default=None, metavar="FOLDER", help="Lay a folder of numbered specs (docs/specs) as goals in the Board, one page a spec; nothing is committed")
+    i_p.add_argument("--done-through", type=int, default=None, metavar="N", help="With --goals: the specs up to N are done")
+    i_p.add_argument("--party", default="tech", help="With --goals: the party the goals are laid in (default: tech)")
     e_p = sub.add_parser("export", help="Write the project's decisions, brief and journals out in common formats (MADR, a memory bank, Markdown)")
     e_p.add_argument("folder", nargs="?", default=".", help="The project's folder (default: this one)")
     e_p.add_argument("--to", default="", metavar="DIR", help="Where to write (default: <folder>/.orkcraft/export)")
@@ -95,6 +98,11 @@ def _read_or_write(args) -> int:
     if not root.is_dir():
         print(f"orkboard {args.word}: no folder {args.folder}", file=sys.stderr)
         return 2
+    if args.word == "import" and args.goals is not None:
+        return _goals(root, args)
+    if args.word == "import" and (args.done_through is not None or args.party != "tech"):
+        print("orkboard import: --done-through and --party go with --goals <folder>", file=sys.stderr)
+        return 2
     try:
         if args.word == "import":
             from orkboard.realm import read_in
@@ -107,6 +115,46 @@ def _read_or_write(args) -> int:
         return 2
     print(text, file=sys.stdout if code == 0 else sys.stderr)
     return code
+
+
+def _goals(root: Path, args) -> int:
+    """`orkboard import --goals <folder>` (realm/read_in_specs.py, spec 151 H.2): one goal a numbered spec; `--dry-run` says them, otherwise the pages are written into the working tree, never committed.
+    Exit 0 done, 1 refused in words, 2 a bad call."""
+    import re
+    from orkboard.realm import board_check, read_in_specs as specs
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", args.party or ""):
+        print("orkboard import: --party names the party's slug, e.g. --party tech", file=sys.stderr)
+        return 2
+    base = Path(args.goals).expanduser()
+    base = base if base.is_absolute() or base.is_dir() else root / base
+    if not base.is_dir():
+        print(f"orkboard import: no folder {args.goals}", file=sys.stderr)
+        return 2
+    try:
+        folder = base.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        print(f"orkboard import: {args.goals} is not inside {root}", file=sys.stderr)
+        return 1
+    try:
+        wiki = board_check.wiki_of(root)
+    except ValueError as e:
+        print(f"orkboard import: {e}", file=sys.stderr)
+        return 1
+    planned = specs.goals_from_specs(root, folder, wiki, args.done_through, party=args.party)
+    if not planned:
+        print(f"orkboard import: no numbered spec (<n>-<name>.md) in {args.goals}", file=sys.stderr)
+        return 1
+    for p in planned:
+        print(specs.line(p))
+    print(specs.counts(planned))
+    if not args.dry_run:
+        try:
+            wrote = specs.lay(root, wiki, planned, args.party)
+        except OSError as e:
+            print(f"orkboard import: {e}", file=sys.stderr)
+            return 1
+        print(f"{len(wrote)} goal pages written into {wiki or '.'}/pages/ideas; nothing is committed: commit them as you commit your work.")
+    return 0
 
 
 def _measures(folder: str, since: str, until: str, as_json: bool) -> int:
