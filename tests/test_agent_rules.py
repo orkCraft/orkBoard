@@ -274,12 +274,16 @@ def test_the_commit_words_come_from_the_glossary():
     assert lexicon.term("board_rules") == "the Board's rules" and agent_rules_switch.message() == "board: the Board's rules (schema 1)"
 
 
-def test_a_public_repository_is_refused_until_its_question_is_asked(tmp_path, monkeypatch):
-    """Spec 151 F is not built: the rules would let the journals go to a public repository's work branch, so the yes is refused in words."""
+def test_a_direct_write_is_refused_in_words_while_fs_question_is_unanswered_or_answered_no(tmp_path, monkeypatch):
+    """Spec 151 C.4, F: the switch shows F's question first (tests/test_board_in_code_card.py); a `rules.write` sent anyway is refused in words and writes nothing."""
     from types import SimpleNamespace
     from orkboard.gui import agent_rules_switch as sw
-    monkeypatch.setattr(sw, "_public", lambda root: True)
     rules = sw.AgentRules(SimpleNamespace(project=SimpleNamespace(root=tmp_path, ideas=SimpleNamespace(state_dir=tmp_path / ".orkcraft"))))
+    monkeypatch.setattr(sw, "standing", lambda root, state_dir: "ask")
     with pytest.raises(ValueError) as got:
         rules.write()
-    assert str(got.value) == sw.PUBLIC_WAIT and not (tmp_path / "AGENTS.md").exists()
+    assert str(got.value) == sw.ANSWER_FIRST and not (tmp_path / "AGENTS.md").exists()
+    monkeypatch.setattr(sw, "standing", lambda root, state_dir: "off")
+    with pytest.raises(ValueError) as off:
+        rules.write()
+    assert str(off.value) == "The Board is kept off this repository: the rules would find no Board" and not (tmp_path / "AGENTS.md").exists()

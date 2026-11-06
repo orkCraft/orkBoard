@@ -313,6 +313,8 @@ GOAL_TAKEN = "goal_taken"            # spec 151 D.1: a goal taken on `orkboard/t
 GOAL_TAKE_REFUSED = "goal_take_refused"      # …held by another and not taken: slug, by (the holder), until
 GOAL_GIVEN_BACK = "goal_given_back"  # …given back (it waits for the person, or ended): slug, by
 EVENTS += (GOAL_TAKEN, GOAL_TAKE_REFUSED, GOAL_GIVEN_BACK)
+BOARD_IN_CODE_ANSWERED = "board_in_code_answered"   # spec 151 F.1: the Board in the code answered: answer ("publish" · "off" · "private"), visibility ("public" · "unknown" · "private" …), device
+EVENTS += (BOARD_IN_CODE_ANSWERED,)
 
 _LOCK = threading.Lock()
 

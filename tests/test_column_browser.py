@@ -561,6 +561,35 @@ def test_a_goal_put_off_says_not_before_its_hour_on_its_row_the_day_when_it_is_n
     assert not log, "\n".join(log)
 
 
+class HeldByAnotherHost(ColumnHost):
+    """Spec 151 D.1, F.4: a goal another tool holds (`taken`, the map's line) and a goal kept off the repository (`kept_off`), in In analysis beside two that are neither."""
+
+    def __init__(self):
+        super().__init__()
+        self.nodes = [
+            node("held", "tech", "Kick a player", "deck", state="routed", element="dust", taken="Taken by codex until 14:05"),
+            node("off", "design", "Rotate the signing key", "deck", state="routed", element="meadow", kept_off="Kept off the repository: on this computer only"),
+            node("both", "tech", "Mute a player", "deck", state="routed", element="ice", taken="Taken by Orkboard on a laptop until 09:30", kept_off="Kept off the repository: on this computer only"),
+            node("plain", "tech", "Rename a room", "deck", state="routed", element="lava"),
+        ]
+
+
+def test_a_goal_another_tool_holds_says_taken_by_and_a_goal_kept_off_says_so_on_their_rows(gui):
+    pg, host, log = open_column(gui, host=HeldByAnotherHost())
+    try:
+        pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+        pg.locator('.col-sec[data-pile="analysis"] .col-card--down').first.click()
+        pg.wait_for_selector(".col-list", timeout=WAIT_MS)
+        row = lambda slug, attr: pg.locator(f'.col-list__row[data-goal="{slug}"] [{attr}]').all_inner_texts()      # noqa: E731
+        assert row("held", "data-hold") == ["Taken by codex until 14:05"] and row("held", "data-off") == []
+        assert row("off", "data-off") == ["Kept off the repository: on this computer only"] and row("off", "data-hold") == []
+        assert row("both", "data-hold") == ["Taken by Orkboard on a laptop until 09:30"] and row("both", "data-off") == ["Kept off the repository: on this computer only"]
+        assert row("plain", "data-hold") == [] and row("plain", "data-off") == []
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
 def test_a_card_laid_over_the_column_covers_it_whole_in_its_shadow_and_the_column_is_not_cut_at_its_edge(gui):
     """Spec 150 A.2 (decisions §254.10): the field open over the column at 1280 x 800, the At work card under it keeps its full width, and the field's shadow is drawn (orkUI's notch clip once cut it at the box)."""
     pg, host, log = open_column(gui)

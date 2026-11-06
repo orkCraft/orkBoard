@@ -8,8 +8,10 @@
 `<state_dir>/rules_asked.json` and the line stays, with *Write the rules* alone. Once written the line says so. At the host's start, a project that has the rules and whose package text differs gets
 only Orkboard's blocks and files written again; one changed by hand is written back and said once (a toast, and this line for the run).
 
-**A public repository is refused** until spec 151 F asks its question (decisions §255.10): the rules would let the journals and the brief go to the work
-branch (part B), and nothing of the Board goes into a public repository's code without the person's yes to that.
+**F's question comes first** (spec 151 C.4, F; decisions §255.10): the rules would let the journals and the brief go to the work branch (part B), and nothing of the Board goes into a public
+repository's code without the person's yes to that. In a public or unreadable repository whose `[board] in_code` is not said, the line shows the question (`state: "ask"`: its words and its two answers,
+`ideas.in_code`, the same the Orkmaster's card sends) instead of *Write the rules*; with `in_code` false it says *The Board is kept off this repository: the rules would find no Board* and offers
+nothing (`state: "off"`); with it true, or in a private repository with nothing said, *Write the rules* as before (`state: "ready"`). A direct `rules.write` in the first two states is refused in words.
 """
 from __future__ import annotations
 
@@ -18,7 +20,8 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import agent_rules, agent_rules_text, board_branch, event_log, lexicon
+from orkboard.gui import ideas_in_code
+from orkboard.realm import agent_rules, agent_rules_text, board_in_code, event_log, lexicon
 
 ASKED_FILE = "rules_asked.json"
 LABEL = "Let any AI tool work the Board"
@@ -28,8 +31,7 @@ WRITE = "Write the rules"
 NOT_NOW = "Not now"
 ON_LINE = "{rules} are in this project (schema {schema}): AGENTS.md, CLAUDE.md, the Board's folder, and Claude Code's roles and skill. Your own rules in those files win over them."
 NO_TREE = "The Board's rules go into a project with git history; this one has none."
-PUBLIC_WAIT = ("This repository is public: your goals, their specs and the leaders' words would be public too. "
-               "Orkboard asks you about that first, in a later version.")
+ANSWER_FIRST = "Answer first whether the Board goes into this repository: the rules would put it there."
 HELD_LINE = "The Board's rules are written in the Board's tree; your work branch takes them when its files are clean: {why}"
 
 
@@ -38,10 +40,13 @@ def message() -> str:
     return f"board: {lexicon.term('board_rules')} (schema {agent_rules_text.SCHEMA})"
 
 
-def _public(root: Path) -> bool:
-    """Whether GitHub says the project's remote is public (an anonymous check, as the Board's branch makes it: spec 137 A.1)."""
-    ok, _line = board_branch.private_check(Path(root), board_branch.read_config(Path(root)) or board_branch.BoardConfig())
-    return not ok
+def standing(root: Path, state_dir: Path) -> str:
+    """Where F's question stands for the rules: `ask` (a public or unreadable remote, `in_code` not said), `off` (`in_code` is false: the rules would find no Board), else `ready`.
+    The visibility is the day's look (`realm/board_in_code.py`), asked of GitHub only when it is a day old."""
+    got = board_in_code.status(Path(root), Path(state_dir))
+    if got["in_code"] is False:
+        return "off"
+    return "ask" if got["in_code"] is None and got["visibility"] in ("public", "unknown") else "ready"
 
 
 def _sentence(text: str) -> str:
@@ -100,19 +105,36 @@ class AgentRules:
     def switch(self) -> dict:
         """`{show, on, asked, label, line, write, not_now, status, said}` for the shown project. Shown for a project with git history; nothing is written by reading it."""
         p = self.host.project
-        out: dict = {"show": False, "on": False, "asked": False, "label": LABEL, "line": LINE, "write": WRITE, "not_now": NOT_NOW, "status": "", "said": []}
+        out: dict = {"show": False, "on": False, "asked": False, "label": LABEL, "line": LINE, "write": WRITE, "not_now": NOT_NOW, "status": "", "said": [], "state": "ready", "question": None}
         if p is None or getattr(self.host, "demo", False) or not (Path(p.root) / ".git").exists():
             return out
         out.update(show=True, asked=_asked(Path(p.ideas.state_dir)), said=list(self.said.get(str(p.root), [])))
         if _has(p):
             out.update(on=True, status=ON_LINE.format(rules=_sentence(lexicon.term("board_rules")), schema=agent_rules_text.SCHEMA))
+            return out
+        out["state"] = standing(p.root, p.ideas.state_dir)
+        if out["state"] == "off":
+            out["status"] = lexicon.term("rules_find_no_board")
+        elif out["state"] == "ask":
+            out["question"] = self._question(p)
         return out
+
+    def _question(self, p) -> dict | None:
+        """F's question as the Orkmaster's card words it (gui/ideas_in_code.py): `{step, text, ask, words}`; None when the day's look cannot say it now."""
+        q = board_in_code.pending_question(Path(p.root), p.ideas._in_code_branch())
+        if q is None:
+            return None
+        return {"step": "private" if q["visibility"] == "unknown" else "publish", "text": board_in_code.question_text(q["pages_in_history"]), "ask": lexicon.term("is_private"),
+                "words": ideas_in_code.words()}
 
     def write(self) -> dict:
         """The person's yes: the files written into the Board's tree and committed in one Board commit. ValueError in plain words where it cannot be."""
         p = self._project()
-        if _public(p.root):
-            raise ValueError(PUBLIC_WAIT)
+        where = standing(p.root, p.ideas.state_dir)
+        if where == "off":
+            raise ValueError(lexicon.term("rules_find_no_board"))
+        if where == "ask":
+            raise ValueError(ANSWER_FIRST)
         tree = self._tree(p)
         if tree is None:
             raise ValueError(NO_TREE)

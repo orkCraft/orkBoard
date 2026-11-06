@@ -14,6 +14,7 @@ export const fieldRow = signal("");            // the square of the card-field w
 export const fieldTo = signal("");             // the leader the person chose with the *To* square: a party's slug, "ork" the Orkmaster (a general goal), "" none chosen (the text's *@Tech*, else the open tab's, addresses it)
 export const fieldFiles = signal([]);          // the project's files taken with the *Files* square: [{path, dir}], written as *@path* after the words when the goal is sent (what *@* gives today; realm/goal_mentions.py)
 export const fieldRune = signal("");           // the rune the person chose in the field (pluscard.js, decisions §187.3): an element, "" the one the addressed party's goal would be given
+export const fieldKeepOff = signal(false);     // *Keep off the repository* on the new goal's card (docs/specs/151 F.4): sent as `keep_off` of `ideas.add`; offered only where the snapshot says `keep_off_offered`
 export const rite = signal("");                // the element of the goal just sent: the + card's seal plays the summoning rite in it for a moment (`summon`, decisions §187.4)
 export const plusDealt = signal(false);        // a new + card is dealt at the lane's end for a moment: the goal was sent (pluscard.js, spec 120 §6.2)
 export const markedTool = signal("");          // the AI tool whose potion is hovered or focused: the tabs outline its marks (mana.js, tabmarks.js; decisions §189.2)

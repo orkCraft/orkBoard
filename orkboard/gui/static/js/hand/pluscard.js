@@ -21,12 +21,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { laying } from "../table/laying.js";
 import { html, cls } from "../html.js";
 import { Icon, Sign } from "../orkui.js";
-import { toast } from "../link.js";
+import { toast, town } from "../link.js";
 import { goalThrough } from "../remoteway.js";
 import { act } from "../shell/store.js";
 import { MAX_PICTURES, PICTURE_TYPES, shrink } from "../board/pictures.js";
 import { tab } from "../frame/state.js";
-import { fieldFiles, fieldOff, fieldOpen, fieldPhotos, fieldRow, fieldRune, fieldText, fieldTo, fieldType, plusDealt, rite, summon, withoutAddress } from "./state.js";
+import { fieldFiles, fieldKeepOff, fieldOff, fieldOpen, fieldPhotos, fieldRow, fieldRune, fieldText, fieldTo, fieldType, plusDealt, rite, summon, withoutAddress } from "./state.js";
 import { focusInPress, growFrom, placeField, releaseProxy, sendBack, turnBack } from "./fieldturn.js";
 import { Choices, ELEMENTS, FileChips, Squares, closeRow } from "./fieldsquares.js";
 import { CornerList, KindCorner, RuneCorner, WhoCorner } from "./fieldcorners.js";
@@ -119,15 +119,15 @@ export function Field({ middle = false }) {
     const words = withoutAddress(fieldText.value, address.by === "text" ? address.name : "");
     return { words, text: fieldFiles.value.length ? `${words} ${fieldFiles.value.map((f) => `@${f.path}`).join(" ")}` : words };     // a file of the project is written as the @ list writes it (the host turns it into the path)
   };
-  const emptied = () => { fieldText.value = ""; fieldPhotos.value = []; fieldFiles.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldTo.value = ""; fieldOpen.value = false; fieldRow.value = ""; setMatch(null); };
+  const emptied = () => { fieldText.value = ""; fieldPhotos.value = []; fieldFiles.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldTo.value = ""; fieldKeepOff.value = false; fieldOpen.value = false; fieldRow.value = ""; setMatch(null); };
   /** Sends the goal. It asks `match: true` (spec 135 A.5): a goal that looks like part of one lying face down is not added, the field stays open and says so (`match`); *Keep apart* sends it again with `apart` and the goal it was offered. */
   const send = async (more = {}) => {                                                  // `more`: `{now: true}` (Now: Talk starts at once when the limits allow and the cost fits), `{later: true}` (Later: laid in line), `{apart: true, with}`
     const { words, text } = wordsOf();
     if (!words || busy) return;
     setBusy(true);
-    const sent = marksToSend();
+    const sent = marksToSend(), keepOff = !!town.value?.keep_off_offered && fieldKeepOff.value;
     const chosen = fieldRune.value && fieldRune.value !== runes.base ? fieldRune.value : "";            // the rune goes only when it is not the one the goal would be given anyway
-    const payload = { text, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(chosen ? { element: chosen } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) };
+    const payload = { text, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(chosen ? { element: chosen } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}), ...(keepOff ? { keep_off: true } : {}) };
     const through = await goalThrough(payload);                                          // the computer cannot be reached and the project's repository is set: the goal goes into its inbox (spec 136 C.5)
     const got = through ? (through.ok ? {} : null) : await act("ideas.add", { match: true, ...more, ...payload });
     setBusy(false);
@@ -193,6 +193,8 @@ export function Field({ middle = false }) {
     </div>
     <div class="hand-field__row">
       <span class="cap hand-field__hint">Enter is Now · Shift+Enter a new line</span>
+      ${town.value?.keep_off_offered && html`<button type="button" role="switch" class=${cls("ork-btn quiet hand-field__off", { "is-on": fieldKeepOff.value })} aria-checked=${String(fieldKeepOff.value)} data-keep-off=${fieldKeepOff.value ? "1" : "0"}
+        title="This goal's page and files stay on this computer: they are not committed or pushed to the repository" onClick=${() => { fieldKeepOff.value = !fieldKeepOff.value; }}>${fieldKeepOff.value && html`<${Sign} name="check" />`}Keep off the repository</button>`}
       <input ref=${file} type="file" accept=${PICTURE_TYPES.join(",")} multiple hidden onChange=${(e) => { addPictures([...e.currentTarget.files]); e.currentTarget.value = ""; }} />
     </div>
     <${CornerFoot} large=${true} whoNode=${html`<${WhoCorner} who=${who} address=${address} />`} muchNode=${html`<span class="hand-field__go"><button type="button" class="ork-btn primary" data-go="now" disabled=${!fieldText.value.trim() || busy} onClick=${() => send({ now: true })}>${NOW}</button>

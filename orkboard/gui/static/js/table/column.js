@@ -19,7 +19,7 @@ import { ACTIVE, Pile, PILES, WORK_SHOWN, lookAt, nextWords, pilesOf, underOf } 
 import { giveWay } from "./giveway.js";
 import { useColumnMotion } from "./colmotion.js";
 import { moodOf } from "./moods.js";
-import { holdWords, waitsWords } from "./holdwords.js";
+import { holdWords, offWords, waitsWords } from "./holdwords.js";
 import { SetupBubble } from "../hand/setupcards.js";
 import { laidNow } from "./laying.js";
 import { Passing, askedWords } from "./passing.js";
@@ -83,7 +83,7 @@ function List({ items, place, close }) {
       const writing = i === 0 && ACTIVE.includes(n.state) && !n.asks_you;
       return html`<li key=${n.slug} class="col-list__row" data-goal=${n.slug}><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="col-list__nm">${n.title}</span>
         ${writing ? html`<span class="col-lift__cap">${n.state === "talk" ? "talked over" : "writing"}</span>`
-          : html`${holdWords(n) && html`<span class="col-lift__cap col-list__hold" data-hold=${n.slug}>${holdWords(n)}</span>`}<span class="col-list__acts">${waitRuns(n) && html`<${Agreed} n=${n} close=${close} />`}${n.held_for === "hold" && html`<${Talk} n=${n} close=${close} />`}${before(i) && html`<button type="button" class="ork-btn quiet" data-next=${n.slug} aria-label=${`Next: ${n.title}`} onClick=${() => act("ideas.move", { slug: n.slug, before: before(i) })}>Next</button>`}<${Remove} n=${n} /></span>`}</li>`;
+          : html`${holdWords(n) && html`<span class="col-lift__cap col-list__hold" data-hold=${n.slug}>${holdWords(n)}</span>`}${offWords(n) && html`<span class="col-lift__cap col-list__hold" data-off=${n.slug}>${offWords(n)}</span>`}<span class="col-list__acts">${waitRuns(n) && html`<${Agreed} n=${n} close=${close} />`}${n.held_for === "hold" && html`<${Talk} n=${n} close=${close} />`}${before(i) && html`<button type="button" class="ork-btn quiet" data-next=${n.slug} aria-label=${`Next: ${n.title}`} onClick=${() => act("ideas.move", { slug: n.slug, before: before(i) })}>Next</button>`}<${Remove} n=${n} /></span>`}</li>`;
     })}</ol>
     <div class="col-lift__acts"><button type="button" class="ork-btn quiet" onClick=${close}>Close</button></div>
   </div>`;

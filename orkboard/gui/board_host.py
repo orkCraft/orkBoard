@@ -280,6 +280,8 @@ class Orkboard:
         self.commands.update(self.keep_awake.commands())   # awake.* (desktop only: not BoardPhone's)
         from orkboard.gui import board_sync
         self.board_sync = board_sync.BoardSync(self)      # spec 137 B: the Board's branch, held and pushed (nothing runs without `[board]`)
+        from orkboard.gui import board_in_code_host
+        self.board_in_code = board_in_code_host.BoardInCodeHost(self)      # spec 151 F.3: public or private looked at once a day (nothing without a git history)
         from orkboard.gui import goal_take_host
         self.goal_take = goal_take_host.GoalTakeHost(self)      # spec 151 D: the goals Orkboard runs, taken on `orkboard/taken` (nothing runs before the rules are written)
         from orkboard.gui import phone_journal
@@ -408,7 +410,7 @@ class Orkboard:
             return {}
 
     # What the page reads of the snapshot and a phone has no use for: the computer's own (spec 94 §2.3).
-    COMPUTER_ONLY = ("onboarding", "tools", "laid", "sign_in", "main_checks", "repo", "usage_ask", "update_policy", "ask", "passing", "preview", "play_face", "new_n")      # "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8); "passing": so is the Orkmaster's column (spec 128 D.3)
+    COMPUTER_ONLY = ("onboarding", "tools", "laid", "sign_in", "main_checks", "repo", "usage_ask", "update_policy", "ask", "passing", "preview", "play_face", "new_n", "keep_off_offered")      # "keep_off_offered": the new goal's card is the computer's (spec 151 F.4); "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8); "passing": so is the Orkmaster's column (spec 128 D.3)
 
     def phone_snapshot(self) -> dict[str, Any]:
         """The snapshot as a phone gets it (spec 94 §2.3): the page's own (`snapshot()`: the Board's counts, the limits, the mana
@@ -491,6 +493,8 @@ class Orkboard:
         phone_journal.tick(self)
         from orkboard.gui import board_sync
         board_sync.tick(self)             # the Board's branch (spec 137 B): taken, renewed, pushed; nothing without `[board]`
+        from orkboard.gui import board_in_code_host
+        board_in_code_host.tick(self)     # public or private asked once a day; the Board off the branch when it must be (spec 151 F.3)
         from orkboard.gui import goal_take_host
         goal_take_host.tick(self)         # the goals Orkboard runs, taken and given back (spec 151 D); nothing before the rules are written
 

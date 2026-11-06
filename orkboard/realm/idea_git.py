@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from orkboard import brand
-from orkboard.realm import dep_links, gate_config, gate_env, jobs, steps_git, worktrees
+from orkboard.realm import board_in_code, dep_links, gate_config, gate_env, jobs, steps_git, worktrees
 
 GIT_TIMEOUT_S = 60
 PUSH_TIMEOUT_S = 120
@@ -123,6 +123,7 @@ class IdeaGit:
             _ok(_git(self.root, "worktree", "add", "-B", branch, str(path), base))
             steps_git.exclude(path)
             dep_links.link(self.root, path)          # the main checkout's node_modules and .venv, linked (spec 86 §2)
+            board_in_code.put_specs(self.root, path, slug)          # the Board is not in the code: the spec in `.orkcraft/spec/`, left out of git (spec 151 F.2)
         return path, branch
 
     def remove(self, path: Path) -> None:
@@ -422,9 +423,12 @@ class IdeaGit:
             _ok(_git(self.root, "update-ref", f"refs/heads/{into}", new, old))
 
     def push(self, branch: str) -> str:
-        """`git push origin <branch>` when there is an origin: a note ("" when pushed or no origin)."""
+        """`git push origin <branch>` when there is an origin: a note ("" when pushed or no origin). A repository found public with no answer to the
+        Board's question waits (spec 151 F.3)."""
         if "origin" not in _git(self.root, "remote").stdout.split():
             return ""
+        if (held := board_in_code.push_hold(self.root)):
+            return held
         done = _git(self.root, "push", "origin", branch, timeout=PUSH_TIMEOUT_S)
         if done.returncode != 0:
             return f"push failed: {(done.stderr or done.stdout).strip()[:200]}"

@@ -42,14 +42,14 @@ export function whyOf(s) {
 export function waitsOf(s) {
   const blocks = s.row?.blocks === true || s.card?.blocks === true || s.kind === "failed";
   if (!blocks) return "";
-  if (s.kind === "paid" || s.kind === "sign_in") return WAITS;
+  if (s.kind === "paid" || s.kind === "sign_in" || s.kind === "in_code") return WAITS;
   const member = s.task?.by?.name || s.row?.todo?.by?.name || askedOf(s.row, s.node)[0]?.by?.name || s.party?.lead || "";
   return member && member !== "Taskmaster" ? `${member} waits for your answer` : WAITS;
 }
 
 /** What the context says of `s`, as data: `{head, who, goal: {name, element, sign} | null, project, why, pick, waits, idea}`. */
 export function contextOf(s) {
-  const party = s.party || {}, ork = s.kind === "paid" || s.kind === "sign_in" || !party.name, project = currentProject.value?.name || "", node = s.node || null;
+  const party = s.party || {}, ork = s.kind === "paid" || s.kind === "sign_in" || s.kind === "in_code" || !party.name, project = currentProject.value?.name || "", node = s.node || null;
   const goal = node ? { name: node.short || node.title || s.title || "", element: node.element || "", hue: node.hue || "", sign: node.type?.sign || "" } : null;
   return { head: ork ? orkHeadOf() : party.head || null, who: ork ? (project ? `Orkmaster · ${project}` : "Orkmaster") : party.name, goal, project: !goal && !ork ? project : "",
     why: whyOf(s), pick: pickOf(s), waits: waitsOf(s), idea: goalOfStop(s) };
