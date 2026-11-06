@@ -12,6 +12,8 @@ from its own event log, and hypothesis H1's head-to-head tallied. `main` in gui/
     run(["import", "~/game", "--dry-run"])       # what of the project's own documents would be read in (realm/read_in.py, spec 126 B)
     run(["export", "~/game", "--to", "out"])     # the decisions, the brief and the journals written out in common formats (realm/write_out.py, spec 126 C)
     run(["steps-check", "--tool", "codex"])      # one small real task on that tool: which steps its card would show, from where (realm/steps_check.py, spec 129 H1.6)
+    run(["init", "--ci"])                        # the Board's rules for any AI tool, written into the checkout, never committed (gui/board_cli_goals.py, spec 151 E)
+    run(["goal", "add", "Add a score board", "--by", "codex"])    # …and `goal list|take|phase|ask|answer`, `gate [--record <goal>]`, `check`
     run(["drive", "call", "ideas.board"])        # the page's own commands from a terminal or an agent (gui/drive.py, decisions §227)
 """
 from __future__ import annotations
@@ -23,9 +25,10 @@ from pathlib import Path
 
 from orkboard import __version__, settings
 from orkboard.core import updates, usage
+from orkboard.gui import board_cli_goals
 from orkboard.realm import measures, trial
 
-WORDS = ("usage", "update", "measures", "trial", "import", "export", "steps-check", "drive")
+WORDS = ("usage", "update", "measures", "trial", "import", "export", "steps-check", "drive", "init", "goal", "gate", "check")
 
 POLICY_WHAT = {
     "auto": "every update installs when Orkboard opens",
@@ -68,7 +71,10 @@ def run(argv: list[str]) -> int:
     s_p = sub.add_parser("steps-check", help="Run one small real task on an AI tool in a scratch folder and say which steps a card would show, from where")
     s_p.add_argument("--tool", required=True, choices=("claude", "codex", "agy"), help="The tool to check (it must be installed and signed in)")
     s_p.add_argument("--yes", action="store_true", help="Do not ask before spending a little of the tool's limit")
+    board_cli_goals.add_parsers(sub)
     args = parser.parse_args(argv)
+    if args.word in ("init", "goal", "gate", "check"):
+        return board_cli_goals.run(args)
     if args.word == "steps-check":
         from orkboard.realm import steps_check
         return steps_check.run(args.tool, args.yes)
