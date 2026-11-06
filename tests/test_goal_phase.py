@@ -198,10 +198,10 @@ def test_a_page_moved_outside_moves_the_state_says_it_and_logs_it(host):
     host.ideas.tree_flush()
     assert len(toasts) == 1                                                                     # said once
     host.ideas.tree_flush(force=True)
-    assert _page(host.ideas.root(), slug).get("phase") == "work" and _page(host.ideas.root(), slug).get("by") == "Claude Code"
+    assert _page(host.ideas.root(), slug).get("phase") == "work" and _page(host.ideas.root(), slug).get("by") == "person"     # who laid it, not who moved it
 
 
-def test_the_pages_by_is_who_moved_it(host):
+def test_a_tools_by_is_kept_and_names_it_in_the_line(host):
     root, slug = _goal(host)
     host.ideas.tree_flush(force=True)
     toasts = []
@@ -211,7 +211,7 @@ def test_the_pages_by_is_who_moved_it(host):
     assert toasts[0].endswith("was moved to done in Codex") or "in Codex" in toasts[0]
     assert ideas.state(host.ideas.state_dir, slug)["state"] == "done"
     host.ideas.tree_flush(force=True)
-    assert _page(host.ideas.root(), slug).get("by") == "Codex"                                  # the phase is the tool's: so is the `by`
+    assert _page(host.ideas.root(), slug).get("by") == "Codex"                                  # what the page says is kept
 
 
 def test_a_run_on_a_goal_moved_outside_is_stopped_as_stop_stops_it(host):

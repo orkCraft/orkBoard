@@ -67,8 +67,13 @@ class PhaseMixin:
             if due:
                 root = tree.root()
                 goal_phase.mirror(root, self.state_dir, lambda i, st, plan, asks: self._idea_needs(i, st, plan, asks, root))
-        except Exception as e:                  # a page that cannot be read never stops the commit
-            self.host.toast(f"{type(e).__name__}: {' '.join(str(e).split())[:200]}", title="The Board", severity="warning")
+        except Exception as e:                  # a page that cannot be read never stops the commit; said once, not at every look
+            said = f"{type(e).__name__}: {' '.join(str(e).split())[:200]}"
+            if said != getattr(self, "_phase_error", ""):
+                self._phase_error = said
+                self.host.toast(said, title="The Board", severity="warning")
+            return
+        self._phase_error = ""
 
     # -- moved outside (A.4) --------------------------------------------------------------------------------
 
@@ -82,15 +87,13 @@ class PhaseMixin:
         self._phase_sig = sig
         for m in goal_phase.moved(root, self.state_dir):
             commit, author = tree.last_change(folder / f"{m['slug']}.md")
-            by = m["by"] if m["by"] not in ("", goal_phase.PERSON) else author or m["by"] or "someone"     # the page's own `by` is a tool's; the Board's `person` is stale once someone else moved it
+            by = m["by"] if m["by"] not in ("", goal_phase.PERSON) else author or ""       # who moved it, as far as the Board can tell: the tool that laid it, else the commit's author; the page's `by` (who laid it) is never changed
             if not m["new"]:
                 self.phase_stop(m["slug"], m["to"])
             goal_phase.move_to(self.state_dir, m["slug"], m["to"])
-            if by not in ("someone", m["by"]):
-                ideas.set_meta(root, m["slug"], by=by)               # the phase is the tool's: so is the `by`
             self._ev(event_log.GOAL_MOVED_OUTSIDE, slug=m["slug"], to=m["to"], commit=commit, **{"from": m["was"]})
             if not m["new"]:
-                self.host.toast(f"{m['title']} was moved to {m['to']} in {by}", title="The Board")
+                self.host.toast(f"{m['title']} was moved to {m['to']} " + (f"in {by}" if by else "outside Orkboard"), title="The Board")
             self._what[m["slug"]] = "moved"
             self.changed(m["slug"])
 

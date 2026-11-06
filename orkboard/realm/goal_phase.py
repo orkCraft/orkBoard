@@ -106,7 +106,7 @@ def _needs_of(root: Path, state_dir: Path) -> Callable:
 def mirror(root: Path, state_dir: Path, needs: Callable | None = None, only: str = "") -> list[str]:
     """The keys of each goal's page written where they differ from its state (A.3), and `state.json`'s `phase_written` set to the phase written: the slugs of the pages written. A page is
     written only when its text would change. `needs(i, st, plan, asks)` answers the rows of the hand for a goal (the host's, which has more than the Board's own); `asks: person` is there
-    while it answers any. `by` is the person's for a phase the Board changed, the page's own while it is the phase someone laid there. `only`: one goal's slug."""
+    while it answers any. `by` says who laid the goal (decisions §255.3): the page's own, else the person's; the Board never changes one a page has. `only`: one goal's slug."""
     needs = needs or _needs_of(root, state_dir)
     written = []
     found, pages = ideas.ideas_and_pages(root)
@@ -118,7 +118,7 @@ def mirror(root: Path, state_dir: Path, needs: Callable | None = None, only: str
             st = ideas.state(state_dir, slug)
             phase = of(st)
             changing = st.get("phase_written") != phase
-            by = page.get("by") if page.get("by") and phase_of_page(page) == phase else PERSON
+            by = page.get("by") or PERSON                # who laid it: kept as the page says, never who moved it last
             plan = ideas.plan(state_dir, slug)
             try:
                 asking = bool(needs(i, st, plan, ideas.items(page.section("Open questions"))))
