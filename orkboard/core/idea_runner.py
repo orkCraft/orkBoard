@@ -32,6 +32,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
+from orkboard.core.idea_handover import HandoverMixin
 from orkboard.core.idea_holds import Held, HoldsMixin  # noqa: F401  (Held: the runner's, raised by its session)
 from orkboard.core.idea_landing import LandingMixin
 from orkboard.core.idea_picking import PickMixin
@@ -106,7 +107,7 @@ class Run:
     role: str = ""                 # the role it runs as (spec 34 §3): its `max_parallel` is held
 
 
-class IdeaRunner(HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
+class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
     def __init__(self, repo_root: Path, state_dir: Path, settings: Any, bus: Any = None, *,
                  limits: Callable[[], list] | None = None, events: bool = True,
                  on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,
@@ -291,18 +292,7 @@ class IdeaRunner(HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin,
                 running = [t for t in tasks if (slug, t.get("id")) in self._runs]
                 failed = next((t for t in tasks if t.get("state") == "failed"), None)
                 if failed is not None or all(t.get("state") in goal_types.GONE for t in tasks):
-                    if changed:
-                        self._save_tasks(slug, tasks)
-                    if not running and failed is None and idea_route.steps_left(plan):
-                        if self._state_of(slug) != "working":        # the keeper could not plan the next step (it put the goal at `failed`): Start goes on from here
-                            self._active.remove(slug)
-                            self._changed(slug)
-                        elif changed:
-                            self._changed(slug)
-                    elif not running:
-                        self._finish(slug, failed)
-                    elif changed:
-                        self._changed(slug)
+                    self._hand_over(slug, plan, tasks, running, failed, changed)
                     continue
                 board = self.board()
                 gates: dict[str, float | None] = {}      # per tool: the reserve is the tool's own
