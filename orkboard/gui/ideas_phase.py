@@ -115,9 +115,15 @@ class PhaseMixin:
             if not m["new"]:
                 self.phase_stop(m["slug"], m["to"])
             goal_phase.move_to(self.state_dir, m["slug"], m["to"])
+            history = m["new"] and m["to"] == "done"             # done before this machine read it: seen at once, history and not news (spec 155 G.2)
+            if history:
+                ideas.save_state(self.state_dir, m["slug"], seen_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
             self._ev(event_log.GOAL_MOVED_OUTSIDE, slug=m["slug"], to=m["to"], commit=commit, **{"from": m["was"]})
             if not m["new"]:
                 self.host.toast(f"{m['title']} was moved to {m['to']} " + (f"in {by}" if by else "outside Orkboard"), title="The Board")
+            if history:
+                self.rev += 1                                    # the page is read again; no change is published, so no note rides in a Board commit
+                continue
             self._what[m["slug"]] = "moved"
             self.changed(m["slug"])
 

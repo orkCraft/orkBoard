@@ -66,10 +66,20 @@ def _digests(state_dir: Path, slugs: list[str]) -> list[str]:
     return [d["text"] for s in slugs for d in [journals.digest(state_dir, s)] if d]
 
 
-def _brief(state_dir: Path, board: Path) -> str:
+def _brief_parts(state_dir: Path, board: Path) -> tuple[list[str], list[str]]:
     got = project_facts._read(state_dir)["common"]
     brief = [f"{project_facts.LABELS[k]}: {got[k]}" for k in project_facts.COMMON_KEYS if k in got]
     team = [f"{t['title']}, led by {leader_name(state_dir, t['leader'] or 'taskmaster')}" for t in parties(board)]
+    return brief, team
+
+
+def brief_is_empty(state_dir: Path, board: Path) -> bool:
+    """Whether every part of the brief (what is known of the project, the parties) is empty (spec 155 G.3)."""
+    return not any(_brief_parts(state_dir, board))
+
+
+def _brief(state_dir: Path, board: Path) -> str:
+    brief, team = _brief_parts(state_dir, board)
     return f"# Project brief\n\n<!-- {MARK} -->\n\n## The brief\n\n{_bullets(brief)}\n\n## The parties\n\n{_bullets(team)}\n"
 
 
