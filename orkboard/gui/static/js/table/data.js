@@ -102,7 +102,7 @@ export function routeParties(picked) {
 
 /** The phases as the person reads them, in order; the engine's states are its own (`realm/ideas.py` STATES). */
 export const PHASES = [["talk", "Talk"], ["spec", "Spec"], ["work", "Work"], ["done", "Done"]];
-const PHASE_OF = { routed: "talk", talk: "talk", decided: "spec", sections: "spec", ready: "work", planning: "work", plan: "work", working: "work", failed: "work", done: "done" };
+const PHASE_OF = { routed: "talk", talk: "talk", decided: "spec", sections: "spec", ready: "work", planning: "work", accepting: "work", plan: "work", working: "work", failed: "work", done: "done" };
 
 /** The phase a goal is in (`talk`, `spec`, `work`, `done`); "" for one with none (not routed yet, or a pitch). */
 export const phaseOf = (picked) => PHASE_OF[(mapData.value?.nodes || []).find((x) => x.slug === picked)?.state] || "";

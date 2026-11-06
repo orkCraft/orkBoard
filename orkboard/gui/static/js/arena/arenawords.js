@@ -76,12 +76,13 @@ export function planningOf(g, nodes, leader) {
     if (n.needs_you === "proposal") return "proposed";
     if (n.state === "reading") return `${lead} is reading`;
     if (n.state === "planning") return `${lead} is planning`;
+    if (n.state === "accepting") return `${lead} is accepting`;
     if (n.waits?.kind === "week" || n.waits?.kind === "sign_in") return waitsWords(n.waits);
     if (n.state === "ready") return `ready · ${lead} plans it next`;
     return n.state;
   };
   const row = (n) => {
-    const stop = STOP_KINDS.includes(n.needs_you), busy = n.state === "reading" || n.state === "planning";
+    const stop = STOP_KINDS.includes(n.needs_you), busy = n.state === "reading" || n.state === "planning" || n.state === "accepting";
     return { slug: n.slug, title: n.short || n.title, full: n.title, stop, busy, mark: stop ? "alert" : busy ? "work" : "", words: words(n),
       cost: n.needs_you === "plan" ? rangeWords(n.plan_estimate || n.estimate) : "", kind: n.needs_you === "plan" ? "plan" : "idea", node: n };
   };

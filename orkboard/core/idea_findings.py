@@ -49,7 +49,7 @@ class FindingsMixin:
             if self._may_run() or self.window_until() is not None or self.signed_out():
                 return 0
             begun = 0
-            for slug in findings.pending(self.state_dir):
+            for slug in findings.waiting(self.state_dir):
                 if slug and ideas.idea_page(self.wiki_root(), slug) is None:
                     continue
                 if findings.ripe(self.state_dir, slug):
@@ -61,7 +61,7 @@ class FindingsMixin:
     def findings_begin(self, slug: str) -> bool:
         """The run for the goal's findings, in the background. False, never an error, when no finding waits, a call cannot be made now or the keeper is busy with them."""
         kw = _kw()
-        if not any(f["status"] == "found" for f in findings.of_goal(self.state_dir, slug)) or self._may_run():
+        if not any(f["status"] in ("found", "told") for f in findings.of_goal(self.state_dir, slug)) or self._may_run():
             return False
         try:
             self._start(slug, "finding", lambda: self.findings_run(slug), key=f"quality:{slug or 'project'}")

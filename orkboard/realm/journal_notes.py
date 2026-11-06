@@ -6,6 +6,7 @@ fails what it records**: every function here swallows what goes wrong (a scope t
     journal_notes.stances(state_dir, root, slug, stances)                     # each leader's party · stance, after Talk's first round
     journal_notes.answered(state_dir, root, slug, party, answer, why)         # that party · heeded | overruled, after the person's answer to its no
     journal_notes.at_review(state_dir, root, slug, decision, why)             # the parties that doubted or said no · came_back | went_through, once a goal
+    journal_notes.accepted(...) / sent_back(...)                              # a leader accepted its step, or sent it back (spec 152 B.3)
     journal_notes.concern_goal(...) / concern_dismissed(...) / since(...)     # a leader's concerns and its evening line
     journal_notes.done(...) / dropped(...) / hypothesis(...) / pitch_passed(...) / brief(...)   # the project's own
 
@@ -184,5 +185,33 @@ def since(state_dir: Path, party: str, map_name: str, way: str, line: str) -> No
         else:
             text = f"Since your last look the {map_name} map changed; it is unclear which way: {line}"
         note(state_dir, party, "since", text)
+    except Exception:
+        pass
+
+
+def _step_of(root: Path, slug: str, party: str) -> str:
+    """`<party>'s step of “<goal>”` as a leader's journal says it."""
+    try:
+        name = next((t["title"] for t in ideas.tracks(root, make=False) if t["slug"] == party), "") or party
+    except Exception:
+        name = party
+    return f"{name}'s step of “{title_of(root, slug)}”"
+
+
+def accepted(state_dir: Path, root: Path, slug: str, party: str, met: int, total: int, learned: list[str] = ()) -> None:
+    """A leader accepted its step (spec 152 B.3): `You accepted <party>'s step of “<goal>”: 3 of 3 Done when met` and each line it learned, as `learned`."""
+    try:
+        note(state_dir, party, "accepted", f"You accepted {_step_of(root, slug, party)}: {met} of {total} Done when met" if total else f"You accepted {_step_of(root, slug, party)}",
+             idea=slug, on=marks_of(state_dir, slug))
+        for line in list(learned)[:2]:
+            note(state_dir, party, "learned", str(line), idea=slug, on=marks_of(state_dir, slug))
+    except Exception:
+        pass
+
+
+def sent_back(state_dir: Path, root: Path, slug: str, party: str, n: int) -> None:
+    """A leader sent its step back (spec 152 B.3): `You sent back 2 things of <party>'s step of “<goal>”`."""
+    try:
+        note(state_dir, party, "sent_back", f"You sent back {n} thing{'' if n == 1 else 's'} of {_step_of(root, slug, party)}", idea=slug, on=marks_of(state_dir, slug))
     except Exception:
         pass

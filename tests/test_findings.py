@@ -11,7 +11,7 @@ import pytest
 
 from orkboard.core import idea_keeper
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import findings, goal_team, ideas, lexicon, library, spec_sections, way_down
+from orkboard.realm import findings, goal_team, idea_route, ideas, lexicon, library, spec_sections, way_down
 
 
 @pytest.fixture
@@ -259,3 +259,22 @@ def test_the_goals_names_stay_in_the_finding_when_the_words_are_long_and_a_hypot
     assert got["party"] == "" and len(got["found"]) <= findings.FOUND_CHARS and "the-goal (The goal)" in got["found"]
     assert findings_gather.hypothesis(sd, {**_refuted_item(id="h5"), "state": "held"}, "product") is None and findings_gather.hypothesis(sd, {"id": "x"}) is None
     assert findings_gather.hypothesis(sd, _refuted_item(id="h6"), "", [], "one in four turned it off")["found"].count("Found: one in four turned it off.") == 1
+
+
+@pytest.mark.accepts
+def test_a_finding_of_the_acceptance_is_a_source_of_its_own_told_at_once_and_a_goals_findings_are_ripe_only_when_its_last_step_is_accepted_spec_152_b3(host, tech):
+    state = host.ideas.state_dir
+    assert "accept" in findings.SOURCES
+    f = findings.add(state, {"source": "accept", "on": "tech: Done when 1", "idea": tech, "party": tech, "found": "Nobody could look at: The screen shows the winner"})
+    assert f is not None and f["source"] == "accept" and findings.add(state, {"source": "accept", "on": "tech: Done when 1", "idea": tech, "party": tech, "found": "again"})["id"] == f["id"]
+    told = findings.told(state, tech, f["id"], {"what": "Nobody could look at: The screen shows the winner", "shows": "Done when 1", "promised": "The screen shows the winner"})
+    assert told["status"] == "told" and findings.pending(state) == [] and findings.waiting(state) == [tech]      # told at once, not sorted yet: the Orkmaster still sorts it
+    findings.sorted_(state, tech, f["id"], "work", "fix the screen")
+    assert findings.waiting(state) == []
+    ideas.save_plan(state, tech, {"idea": tech, "passed_at": "x", "todos": [], "tasks": [{"id": "k1", "state": "merged", "step": 1}]})
+    findings.save_record(state, tech, at=dt.datetime.now().isoformat(timespec="seconds"))
+    assert idea_route.due(ideas.plan(state, tech)) and findings.ripe(state, tech) is False      # the last step landed, its leader has not accepted it
+    findings.save_record(state, tech, at=(dt.datetime.now() - dt.timedelta(hours=findings.QUIET_H + 1)).isoformat(timespec="seconds"))
+    assert findings.ripe(state, tech) is False                                                  # not even the quiet day lets it ripen before
+    ideas.edit_plan(state, tech, lambda p: p.update(accepts={"1": {"round": 1, "verdict": "gone_on"}}))
+    assert findings.ripe(state, tech) is True

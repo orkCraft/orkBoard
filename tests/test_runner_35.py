@@ -265,3 +265,46 @@ def test_a_task_names_what_it_reads_of_its_spec_never_the_whole_page(town):
     assert "Read nothing else of it" in prompt and "Tech's why." not in prompt and "Because." not in prompt          # named, never pasted
     older = r._prompt("demo", plan, plan["tasks"][1])                                           # a task of a page of before (no section): as it was
     assert "in this worktree: read it if you need it." in older and "your party's section" not in older
+
+
+# -- spec 152 B.1: the goal waits for its step's acceptance; the handover moved out of the runner (core/idea_handover.py) unchanged --------------------------------
+
+@pytest.mark.accepts
+def test_a_goal_whose_step_landed_waits_working_for_its_leaders_acceptance_and_ends_only_once_the_last_step_is_accepted(town):
+    from orkboard.core import idea_handover
+    assert idea_handover.HandoverMixin in IdeaRunner.__mro__ and not {"_hand_over", "_finish", "_state_of"} & set(IdeaRunner.__dict__)      # the handover lives in its own module
+    _by_steps(town, [("k1", 1, "merged"), ("k2", 2, "merged")])
+    r, launched = _runner(town)
+    r.start("demo")
+    r.tick()
+    assert _state(town) == "working" and r._active == ["demo"] and launched == []                 # the last step landed and is not accepted: the goal stays at work
+    path = town.state / "ideas" / "demo" / "plan.json"
+    data = json.loads(path.read_text())
+    data["accepts"] = {"2": {"round": 1, "verdict": "back"}}                                       # sent back: still held (the fix tasks are the runner's to run)
+    path.write_text(json.dumps(data))
+    r.tick()
+    assert _state(town) == "working" and r._active == ["demo"]
+    data["accepts"] = {"2": {"round": 2, "verdict": "accepted"}}
+    path.write_text(json.dumps(data))
+    r.tick()
+    assert _state(town) == "done" and r._active == []                                              # the last step is accepted: the goal ends
+    _by_steps(town, [("k1", 1, "merged")], route=("design",), accepts={"1": {"round": 1, "verdict": "gone_on"}})        # …or went on with findings
+    r, _ = _runner(town)
+    r.start("demo")
+    assert _state(town) == "done"
+
+
+@pytest.mark.accepts
+def test_a_step_not_accepted_yet_holds_the_goal_between_steps_as_a_step_left_does_and_a_dropped_step_is_not_due(town):
+    _by_steps(town, [("k1", 1, "merged")])
+    r, _ = _runner(town)
+    r.start("demo")
+    r.tick()
+    assert _state(town) == "working" and r._active == ["demo"]
+    (town.state / "ideas" / "demo" / "state.json").write_text(json.dumps({"state": "failed", "error": "stopped", "route": [{"party": "design"}, {"party": "tech"}]}))
+    r.tick()
+    assert r._active == [] and _state(town) == "failed"                                            # the goal left the runner as one the keeper could not plan the next step of
+    _by_steps(town, [("k1", 1, "dropped")], route=("design",))                                      # nothing landed: nothing to accept
+    r, _ = _runner(town)
+    r.start("demo")
+    assert _state(town) == "plan" and r._active == []

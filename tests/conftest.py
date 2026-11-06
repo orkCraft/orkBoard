@@ -155,6 +155,15 @@ def route_card_first(monkeypatch, request):
         monkeypatch.setattr("orkboard.realm.goal_route.weigher_party", lambda root, route, short=False: "")
 
 
+@pytest.fixture(autouse=True)
+def steps_accepted_at_once(monkeypatch, request):
+    """A step that landed waits for its leader's acceptance before the next step is planned and before the goal ends (spec 152 B.1, `idea_route.due`). The tests written before run goals through
+    their steps to `done` without a leader's look: there, every step reads as accepted, as if the leader's call had answered `accepted`; a test about the acceptance asks for the real one with
+    the mark `accepts` (tests/test_idea_accept.py, and the route's, the runner's, the findings' that test it)."""
+    if request.node.get_closest_marker("accepts") is None:
+        monkeypatch.setattr("orkboard.realm.idea_route.accepted", lambda plan, n: True)
+
+
 @pytest.fixture
 def codex_limits(monkeypatch):
     """`codex_limits(billing=...)`: the real `fetch_limits`, with claude and agy answering a sample and

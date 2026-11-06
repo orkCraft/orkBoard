@@ -78,6 +78,21 @@ def pitch_price(root: Path, state_dir: Path, settings: dict, size: str | None = 
             "learned": learned, "ideas": len(judged), "checks": [], "pitch": True}
 
 
+def accept_usd(state_dir: Path, rows: list[tuple[str, dict]], target: str) -> float:
+    """What the leader's acceptance of its step costs a goal (spec 152 B.4): one call at the floor of `accept_step`'s tier under the Target until `idea_spend.TOO_FEW` of the
+    project's goals have priced theirs, then what those spent on it, the mean a goal."""
+    spent = []
+    for slug, _plan in rows:
+        path = idea_spend.ledger(state_dir, idea=slug)
+        lines = [r for r in idea_spend.read(path) if r.get("step") == "accept_step"] if path is not None else []
+        if lines and (usd := idea_spend.usd(lines)) is not None:
+            spent.append(usd)
+    if len(spent) >= idea_spend.TOO_FEW:
+        return sum(spent) / len(spent)
+    got = idea_target.pick("accept_step", target)
+    return idea_target.floor(idea_target.tier_of(got[0])) if got is not None else 0.0
+
+
 def price(root: Path, state_dir: Path, settings: dict, leader: str, team: list[str], every: list[str], size: str | None = None,
           tiers: dict[str, str] | None = None) -> dict[str, Any]:
     """§3.1's object: {low, high, learned, ideas, checks: [{by, name, usd, share, every}]}; a party the Investor leads, a pitch's
@@ -100,6 +115,7 @@ def price(root: Path, state_dir: Path, settings: dict, leader: str, team: list[s
     else:
         tier = roles.head_tier(str(lead.get("model") or ""), target, str(lead.get("tier") or "elder"))
         steps_usd = plans.DEFAULT_COST[tier] * 2
+    steps_usd += accept_usd(state_dir, rows, target)           # its acceptance of its step (spec 152 B.4)
 
     # the work: the tasks that are not checks, at what a task of the party's builders costs
     week, costs = idea_spend.by_role(state_dir), idea_spend.tier_costs(state_dir)

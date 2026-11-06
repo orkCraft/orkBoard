@@ -12,6 +12,9 @@ from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
 from orkboard.realm import goal_types, idea_spend, ideas, library, party_price, plans, roles
 
 
+ACCEPT = 0.25                       # the leader's acceptance of its step: one call at the floor of accept_step's tier (elder) until goals have priced it (spec 152 B.4)
+
+
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     return Orkboard(fake_repo)
@@ -43,7 +46,7 @@ def price(host, leader="architect", team=("grunt", "tester", "reviewer"), every=
 def test_a_first_guess_with_no_basis_takes_the_defaults_at_the_tiers_the_target_gives(host):
     got = price(host)
     # architect (a leader of the library: elder) 1.00 × 2; 3 tasks at the Grunt's warrior 0.30 and the Tester's laborer 0.05; the Reviewer's elder 1.00 × ½
-    base = 2.0 + 3 * (0.30 + 0.05) / 2 + 1.0 * 0.5
+    base = 2.0 + ACCEPT + 3 * (0.30 + 0.05) / 2 + 1.0 * 0.5
     assert got["learned"] is False and got["ideas"] == 0
     assert got["low"] == pytest.approx(base * 0.5, abs=0.006) and got["high"] == pytest.approx(base * 1.5, abs=0.006)
     assert got["checks"] == [{"by": "reviewer", "name": "Reviewer", "usd": 1.0, "share": 0.5, "every": False}]
@@ -58,10 +61,10 @@ def test_every_idea_gives_a_share_of_one_and_a_party_with_no_builder_takes_the_g
     assert every["high"] - price(host)["high"] == pytest.approx(1.0 * 0.5 * 1.5, abs=0.011)           # the other half of the Reviewer's task
     no_builder = price(host, leader="product-manager", team=["reviewer"])
     assert no_builder["checks"][0]["by"] == "reviewer"
-    base = 2.0 + 3 * 0.30 + 0.5                                                                       # the Grunt's warrior task
+    base = 2.0 + ACCEPT + 3 * 0.30 + 0.5                                                                       # the Grunt's warrior task
     assert no_builder["low"] == pytest.approx(base * 0.5, abs=0.006)
     alone = price(host, leader="taskmaster", team=[])
-    assert alone["checks"] == [] and alone["low"] == pytest.approx((2.0 + 3 * 0.30) * 0.5, abs=0.006)
+    assert alone["checks"] == [] and alone["low"] == pytest.approx((2.0 + ACCEPT + 3 * 0.30) * 0.5, abs=0.006)
 
 
 def test_learned_from_three_priced_ideas_the_steps_the_tasks_and_a_check_s_share(host):
@@ -76,10 +79,10 @@ def test_learned_from_three_priced_ideas_the_steps_the_tasks_and_a_check_s_share
     got = price(host, team=("grunt", "reviewer"))
     assert got["learned"] is True and got["ideas"] == 3
     assert got["checks"] == [{"by": "reviewer", "name": "Reviewer", "usd": 0.2, "share": 0.67, "every": False}]        # 2 of 3 applied, one skipped
-    base = 1.0 + 3 * 0.5 + 0.2 * (2 / 3)
+    base = 1.0 + ACCEPT + 3 * 0.5 + 0.2 * (2 / 3)
     assert got["low"] == pytest.approx(base * 0.5, abs=0.006) and got["high"] == pytest.approx(base * 1.5, abs=0.006)
     every = price(host, team=("grunt", "reviewer"), every=["reviewer"])
-    assert every["checks"][0]["share"] == 1.0 and every["high"] == pytest.approx((1.0 + 1.5 + 0.2) * 1.5, abs=0.006)
+    assert every["checks"][0]["share"] == 1.0 and every["high"] == pytest.approx((1.0 + ACCEPT + 1.5 + 0.2) * 1.5, abs=0.006)
 
 
 def test_fewer_than_three_priced_ideas_is_a_first_guess_and_an_unpriced_idea_does_not_count(host):
@@ -212,3 +215,26 @@ def test_a_size_prices_the_party_at_its_target_and_its_tiers_and_none_at_the_set
     assert lean["pitch"] is True and lean["high"] < host.command("ideas.party_price", {"leader": "investor", "team": views, "size": "full"})["high"]
 
 
+
+
+def test_the_price_adds_the_leaders_acceptance_one_call_at_the_floor_until_goals_have_priced_it_then_what_they_spent_spec_152_b4(host, monkeypatch):
+    from orkboard.realm import idea_target
+    monkeypatch.setattr(idea_target, "floor", lambda tier, tool="claude": 0.7)
+    state = host.ideas.state_dir
+    assert party_price.accept_usd(state, [], "balance") == 0.7                                      # one call at the floor of accept_step's tier
+    first = price(host)
+    monkeypatch.setattr(idea_target, "floor", lambda tier, tool="claude": 0.0)
+    zero = price(host)
+    monkeypatch.setattr(idea_target, "floor", lambda tier, tool="claude": 0.7)
+    assert first["low"] - zero["low"] == pytest.approx(0.35, abs=0.011) and first["high"] - zero["high"] == pytest.approx(1.05, abs=0.011)      # the price counts the acceptance
+    goals = [add(host, f"goal {n}", [task("k1", "code", "grunt")], [], made=n) for n in range(4)]
+    line(host, goals[0], "accept_step", "architect", 0.2)
+    line(host, goals[1], "accept_step", "architect", 0.4)
+    rows = party_price.basis(host.ideas.root(), state)
+    assert party_price.accept_usd(state, rows, "balance") == 0.7                                    # two have priced it: still the floor
+    line(host, goals[2], "accept_step", "architect", 0.6)
+    line(host, goals[2], "accept_step", "architect", 0.2)                                           # a goal's lines are summed: 0.8
+    assert party_price.accept_usd(state, rows, "balance") == pytest.approx((0.2 + 0.4 + 0.8) / 3)  # from TOO_FEW goals: what they spent, the mean a goal
+    unpriced = add(host, "no price", [task("k1", "code", "grunt")], [], made=9)
+    idea_spend.append(state, idea_spend.line("accept_step", "architect", "claude", "m", "elder", "", None, None), idea=unpriced)
+    assert party_price.accept_usd(state, party_price.basis(host.ideas.root(), state), "balance") == pytest.approx((0.2 + 0.4 + 0.8) / 3)      # a line with no price says nothing

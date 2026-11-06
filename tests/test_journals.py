@@ -122,3 +122,18 @@ def test_a_journal_is_written_into_a_folder_only_when_it_changed_and_never_over_
     with pytest.raises(ValueError):
         journals.mirror_into(sd, "No Such", out)
     assert journals.file_name("project") == "party-project.md" and journals.file_name(journals.PROJECT) == "project.md"
+
+
+def test_a_leaders_journal_keeps_what_it_accepted_sent_back_and_learned_of_a_step_spec_152_b(tmp_path):
+    from orkboard.realm import journal_notes
+    sd, root = tmp_path / "state", tmp_path / "wiki"
+    assert {"accepted", "sent_back", "learned"} <= set(journals.LEADER_KINDS) and not {"accepted", "sent_back", "learned"} & set(journals.PROJECT_KINDS)
+    journal_notes.accepted(sd, root, "lobby", "tech", 3, 3, ["The cache is one file", "Tests live beside it", "a third"])
+    journal_notes.sent_back(sd, root, "lobby", "tech", 2)
+    journal_notes.sent_back(sd, root, "lobby", "tech", 1)
+    got = [(e["kind"], e["text"]) for e in journals.of_goal(sd, "tech", "lobby")]
+    assert got[0][0] == "accepted" and got[0][1].startswith("You accepted tech's step of “lobby”: 3 of 3 Done when met")
+    assert [k for k, _t in got] == ["accepted", "learned", "learned", "sent_back", "sent_back"] and got[1][1] == "The cache is one file"      # two lines learned at most
+    assert got[3][1].startswith("You sent back 2 things of tech's step of") and got[4][1].startswith("You sent back 1 thing of tech's step of")
+    journal_notes.accepted(sd, root, "lobby", "No Such Party", 1, 1)                                  # a journal never fails what it records
+    assert journals.read(sd, "tech")[0]["kind"] == "accepted"

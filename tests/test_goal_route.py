@@ -121,27 +121,34 @@ def test_the_cheaper_call_names_parties_of_the_project_only_and_reads_its_answer
     assert idea_target.READS["route"] == 0 and "route" in idea_target.STEPS and idea_target.CONTEXT["route"] <= 3_000
 
 
+def test_the_route_cards_cost_counts_one_acceptance_a_step_on_the_long_way_and_the_short_one_spec_152_b4():
+    for short in (False, True):
+        for n in (1, 3):
+            calls = goal_route._calls(n, short, "feature", False)
+            assert ("accept_step", 1, True) in calls and calls[-1] == ("accept_step", 1, True)      # per party: one a step, after its plan
+
+
 def test_the_cost_counts_calls_by_rule_and_prices_them_from_the_tiers_they_run_on(project, monkeypatch):
     root, state, p = project
     monkeypatch.setattr(idea_target, "floor", lambda tier, tool="claude": {"elder": 1.0, "warrior": 0.5, "laborer": 0.1}[tier])
     one = [goal_route.entry(root, p["tech"])]
     two = [*one, goal_route.entry(root, p["design"])]
     long_one = goal_route.cost(state, one, False, root=root)
-    # balance: Talk (the cheaper tier's talk_round), the decision (the Orkmaster, warrior 0.5), the section (elder 1.0), the plan (elder 1.0), two tasks of a Grunt at its learned cost
+    # balance: Talk (the cheaper tier's talk_round), the decision (the Orkmaster, warrior 0.5), the section (elder 1.0), the plan (elder 1.0), the leader's acceptance of its step (elder 1.0, spec 152 B.4), two tasks of a Grunt at its learned cost
     from orkboard.realm import idea_spend
     task = idea_spend.tier_costs(state)[idea_target.tier_of(idea_target.task_pick("warrior", "balance")[0])]
     talk = {"elder": 1.0, "warrior": 0.5, "laborer": 0.1}[idea_target.tier_of(idea_target.keeper_pick("talk_round", "balance", idea_target.TIER_ROLE)[0])]
-    base = talk + 0.5 + 1.0 + 1.0 + goal_route.TASKS_PER_STEP * task
-    assert long_one == {"calls": 4, "usd_low": round(base * 0.5, 2), "usd_high": round(base * 1.5, 2)}
+    base = talk + 0.5 + 1.0 + 1.0 + 1.0 + goal_route.TASKS_PER_STEP * task
+    assert long_one == {"calls": 5, "usd_low": round(base * 0.5, 2), "usd_high": round(base * 1.5, 2)}
     long_two = goal_route.cost(state, two, False, root=root)
-    assert long_two["calls"] == 8 and long_two["usd_low"] > long_one["usd_low"] * 1.8             # a call a leader a round, a section each, the join, a plan each
+    assert long_two["calls"] == 10 and long_two["usd_low"] > long_one["usd_low"] * 1.8             # a call a leader a round, a section each, the join, a plan and an acceptance each
     short = goal_route.cost(state, one, True, root=root, kind="bug")
-    assert short["calls"] == 3 and short["usd_high"] < long_one["usd_high"]                       # the bug's diagnosis, the section, the plan: no decision
-    assert goal_route.cost(state, one, True, root=root, kind="bug", reproduces=True)["calls"] == 2    # the report holds the failure: no Talk
+    assert short["calls"] == 4 and short["usd_high"] < long_one["usd_high"]                       # the bug's diagnosis, the section, the plan, the acceptance: no decision
+    assert goal_route.cost(state, one, True, root=root, kind="bug", reproduces=True)["calls"] == 3    # the report holds the failure: no Talk
     quality = goal_route.cost(state, one, False, root=root, settings={"target": "quality"})
     goal_team.set_size(root, p["tech"], "lean")                                                    # a party's size is its Target (thrift)
     assert goal_route.cost(state, one, False, root=root, settings={"target": "quality"})["usd_high"] < quality["usd_high"]
-    assert goal_route.cost(state, [], False)["calls"] == 4                                         # a route not found yet is counted as one party's
+    assert goal_route.cost(state, [], False)["calls"] == 5                                         # a route not found yet is counted as one party's
 
 
 def test_the_place_is_the_orkmasters_order_among_the_goals_not_started_and_low_is_the_limits(project):
@@ -183,7 +190,7 @@ def test_the_route_row_is_data_with_its_cost_place_and_flags(project):
     assert row["kind"] == "route" and row["idea"] == slug and row["place"] == 3 and row["low"] is True and row["short"] is False and row["offer"] == []
     (step,) = row["route"]
     assert step["party"] == p["tech"] and step["leader"] == "architect" and set(step["head"]) == {"craft", "race", "tier"}
-    assert set(row["cost"]) == {"calls", "usd_low", "usd_high"} and row["cost"]["calls"] == 4
+    assert set(row["cost"]) == {"calls", "usd_low", "usd_high"} and row["cost"]["calls"] == 5
     assert goal_route.rows(root, state, i, {**st, "held_until": "2026-10-28T14:00:00"}, ctx) == []         # put off with Later, by itself: nothing to decide
     assert goal_route.rows(root, state, i, {**st, "route": []}, ctx) == []                                   # still waiting for the call
     assert goal_route.rows(root, state, i, {**st, "state": "working"}, ctx) == []

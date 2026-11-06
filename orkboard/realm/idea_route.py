@@ -10,7 +10,8 @@ own step when the one before is merged in dev; `way` is that route, `begin` reco
     goal_state(root, state_dir, "pitch")       # a sent pitch's goal: its party, state, tasks, flag and release (`dropped` when it is gone)
     way(root, state_dir, "dark-mode")          # the steps of its work: [{party, leader}], [] for a goal routed to nothing (an older one)
     at_step(plan) / step_done(plan, n)         # the step a plan is at (the highest a task is stamped with); whether step n's tasks are all merged or dropped, one merged at least
-    next_step(plan) / steps_left(plan)         # {n, party, leader} when the plan's step is done and the route it was made for (`plan.route`) has another, else None
+    next_step(plan) / steps_left(plan)         # {n, party, leader} when the plan's step is done and accepted and the route it was made for (`plan.route`) has another, else None
+    accepted(plan, n) / due(plan)              # step n was accepted by its leader (`plan.accepts`, spec 152 B.1); whether the plan's step landed and waits for it (the goal does not go on nor end)
     begin(state_dir, "dark-mode", 2, "web", "architect", ["k3"])   # step 2 planned: recorded (`route.json` `steps`), the steps after a re-planned one forgotten
     waits(plan) / holds(plan, task)            # a later step planned and held for the person's Start (`plan.waits`, decisions §169.3): {step, party, cost}; whether a task is of it
 
@@ -118,9 +119,27 @@ def steps_left(plan: dict | None) -> bool:
     return bool(plan and plan.get("passed_at")) and n < len(legs_of(plan)) and step_done(plan, n)
 
 
+def accept_of(plan: dict | None, n: int) -> dict:
+    """What the plan keeps of step `n`'s acceptance (`plan.accepts[str(n)]`: `{round, verdict, at, done_when, back, cost}`); {} for a step not yet looked at."""
+    kept = (plan or {}).get("accepts")
+    got = kept.get(str(n)) if isinstance(kept, dict) else None
+    return got if isinstance(got, dict) else {}
+
+
+def accepted(plan: dict | None, n: int) -> bool:
+    """Step `n` was accepted by its leader, or went on with what was left as findings (`verdict` `accepted` · `gone_on`)."""
+    return accept_of(plan, n).get("verdict") in ("accepted", "gone_on")
+
+
+def due(plan: dict | None) -> bool:
+    """The plan's step landed (`step_done`) and its leader has not accepted it: the goal waits (spec 152 B.1). A step whose tasks were all dropped landed nothing and is not due."""
+    n = at_step(plan)
+    return bool(plan) and step_done(plan, n) and not accepted(plan, n)
+
+
 def next_step(plan: dict | None) -> dict | None:
-    """The step to plan next, `{n, party, leader}`; None when the goal has none (`steps_left`)."""
-    return {"n": at_step(plan) + 1, **legs_of(plan)[at_step(plan)]} if steps_left(plan) else None
+    """The step to plan next, `{n, party, leader}`; None when the goal has none (`steps_left`) or the step before it is not accepted yet (`accepted`)."""
+    return {"n": at_step(plan) + 1, **legs_of(plan)[at_step(plan)]} if steps_left(plan) and accepted(plan, at_step(plan)) else None
 
 
 def waits(plan: dict | None) -> dict | None:

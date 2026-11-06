@@ -31,7 +31,7 @@ from orkboard.realm.hours import in_hours, next_edge, next_start      # noqa: F4
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
 EFFORTS = ("low", "medium", "high", "xhigh", "max")      # the Claude CLI's `--effort` levels
-STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "talk_verdict", "diagnose", "decide", "section_first", "section", "join", "project_q", "loop", "tree", "hypotheses", "ask", "concerns", "sketch", "journal", "fold", "slice", "slice_digest", "finding", "finding_level", "cascade", "measure_read", "groups")
+STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "talk_verdict", "diagnose", "decide", "section_first", "section", "join", "project_q", "loop", "tree", "hypotheses", "ask", "concerns", "sketch", "journal", "fold", "slice", "slice_digest", "finding", "finding_level", "cascade", "measure_read", "groups", "accept_step")
 PITCH_STEPS = ("pitch_view", "pitch_case", "pitch_decide")   # a pitch's three calls (spec 65 §3, core/idea_judge.py)
 SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its Target, for its goals
 SIZE_TARGET = {"lean": "thrift", "standard": "balance", "full": "quality"}
@@ -49,6 +49,8 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "plan": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     # a party's leader accepts it against its metrics when the person asks, for a party with metrics of before (core/idea_lead.py; spec 50 §2.2)
     "accept": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
+    # a step accepted by its leader against its section (spec 152 B.2, decisions §256.3): one call of the step's party's leader, tools (it may open the files the step changed), the Veteran tier at every Target
+    "accept_step": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "task": {"thrift": (-1, "low"), "balance": (0, "medium"), "quality": (1, "high")},
     # a pitch's views, the case against and the Investor's decision (spec 65 §3): no effort on the laborer tier
     "pitch_view": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
@@ -130,13 +132,14 @@ CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan
            "finding": 9_000, "finding_level": 9_000,        # spec 132 D.2: a finding told by its leader and sorted by the Orkmaster
            "cascade": 3_000,          # spec 131 §B.2: a leader's slice and the change it answers
            "measure_read": 9_000,     # spec 146 C.1: the measures a leader reads, its map and the stage
-           "groups": 3_000}           # spec 135 §B.1: the titles of the goals put off, as `collide`
+           "groups": 3_000,           # spec 135 §B.1: the titles of the goals put off, as `collide`
+           "accept_step": 14_000}     # spec 152 B.2: the section, the promise read by code, each task of the step, the stance in Talk, the slices and the journal
 READS = {"goal": 8, "draft": 6, "plan": 6, "talk": 2, "answer": 2, "accept": 4,
          "pitch_view": 4, "pitch_case": 0, "pitch_decide": 0, "collide": 0, "kind": 0, "route": 0,
-         "talk_round": 0, "talk_verdict": 0, "diagnose": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "project_q": 0, "loop": 0, "tree": 0, "hypotheses": 0, "ask": 0, "concerns": 0, "sketch": 0, "journal": 0, "fold": 0, "slice": 0, "slice_digest": 0, "finding": 4, "finding_level": 0, "cascade": 0, "measure_read": 4, "groups": 0}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
+         "talk_round": 0, "talk_verdict": 0, "diagnose": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "project_q": 0, "loop": 0, "tree": 0, "hypotheses": 0, "ask": 0, "concerns": 0, "sketch": 0, "journal": 0, "fold": 0, "slice": 0, "slice_digest": 0, "finding": 4, "finding_level": 0, "cascade": 0, "measure_read": 4, "groups": 0, "accept_step": 4}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
 CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60, "accept": 0.60,
         "op_prepare": 0.30, "op_act": 0.10, "op_learn": 0.10, "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05, "kind": 0.03, "route": 0.03,
-        "talk_round": 0.08, "talk_verdict": 0.06, "diagnose": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "hypotheses": 0.10, "ask": 0.05, "concerns": 0.10, "sketch": 0.40, "journal": 0.05, "fold": 0.05, "slice": 0.05, "slice_digest": 0.05, "finding": 0.20, "finding_level": 0.05, "cascade": 0.05, "measure_read": 0.20, "groups": 0.05}
+        "talk_round": 0.08, "talk_verdict": 0.06, "diagnose": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "hypotheses": 0.10, "ask": 0.05, "concerns": 0.10, "sketch": 0.40, "journal": 0.05, "fold": 0.05, "slice": 0.05, "slice_digest": 0.05, "finding": 0.20, "finding_level": 0.05, "cascade": 0.05, "measure_read": 0.20, "groups": 0.05, "accept_step": 0.30}
 READS_FOR = {("concerns", "design"): 4, ("sketch", "design"): 1}                 # a step's reads for a craft that has more: Design's look at its map reads the pictures of the screens changed (spec 108 §2.3)
 BUDGET_SHARE = {"thrift": 0.5, "balance": 1.0, "quality": 2.0}
 

@@ -446,19 +446,6 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
                 t["state"], changed = "waiting", True
         return changed
 
-    def _state_of(self, slug: str) -> str:
-        return str((self._read(self._dir(slug) / "state.json") or {}).get("state") or "")
-
-    def _finish(self, slug: str, failed: dict | None) -> None:
-        self._active.remove(slug)
-        if failed is None:
-            tasks = (self.plan(slug) or {}).get("tasks") or []
-            self._set_idea(slug, "plan" if tasks and not any(t.get("state") == "merged" for t in tasks) else "done")       # all dropped: nothing landed, nothing to run
-        else:
-            why = failed.get("error") or "it failed"
-            self._set_idea(slug, "failed", f"{failed.get('title') or failed.get('id')}: {why}")
-        self._changed(slug)
-
     # -- one task --------------------------------------------------------------------------------
 
     def _launch(self, slug: str, task: dict) -> None:

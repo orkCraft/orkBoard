@@ -341,3 +341,32 @@ def test_a_route_of_two_steps_or_more_has_a_party_step_for_each_the_ones_done_th
     solo = goal(h, h.app, "One step", state="working", tasks=("merged", "running"))
     ideas.save_state(h.state, solo, route=[{"party": h.app, "leader": ""}])
     assert idea_route.route(h.root, h.state, solo) == [] and idea_route.steps(h.root, h.state, solo)[0].get("n") is None                  # a route of one step is today's
+
+
+# -- spec 152 B.1: a step is accepted by its leader before the goal goes on or ends -------------------------------------------------------------
+
+def _stepped_plan(*tasks, accepts=None, route=2):
+    plan = {"passed_at": "x", "tasks": [{"id": f"k{i}", "step": step, "state": state} for i, (step, state) in enumerate(tasks, start=1)],
+            "route": [{"party": f"p{n}", "leader": ""} for n in range(route)] if route > 1 else None}
+    if accepts is not None:
+        plan["accepts"] = accepts
+    return {k: v for k, v in plan.items() if v is not None}
+
+
+@pytest.mark.accepts
+def test_a_step_is_due_when_its_tasks_are_in_and_it_is_not_accepted_and_only_an_accepted_step_has_a_next_one():
+    landed = _stepped_plan((1, "merged"), (1, "dropped"))
+    assert idea_route.step_done(landed, 1) and idea_route.due(landed) and not idea_route.accepted(landed, 1)
+    assert idea_route.steps_left(landed) and idea_route.next_step(landed) is None                   # the route has another step, and it waits for the acceptance
+    for verdict in ("accepted", "gone_on"):
+        done = _stepped_plan((1, "merged"), accepts={"1": {"round": 1, "verdict": verdict}})
+        assert idea_route.accepted(done, 1) and not idea_route.due(done) and idea_route.next_step(done)["n"] == 2
+    sent = _stepped_plan((1, "merged"), accepts={"1": {"round": 1, "verdict": "back"}})
+    assert idea_route.due(sent) and not idea_route.accepted(sent, 1) and idea_route.accept_of(sent, 1)["round"] == 1       # sent back and landed again: due again
+    assert not idea_route.due(_stepped_plan((1, "merged"), (1, "running"))) and not idea_route.due(_stepped_plan((1, "dropped"))) and not idea_route.due(None)
+    last = _stepped_plan((1, "merged"), (2, "merged"), accepts={"1": {"verdict": "accepted"}})
+    assert idea_route.due(last) and not idea_route.steps_left(last)                                   # the last step: the goal's end waits for it
+    assert not idea_route.due({**last, "accepts": {"1": {"verdict": "accepted"}, "2": {"verdict": "gone_on"}}})
+    before = {"passed_at": "x", "tasks": [{"id": "k1", "state": "merged"}]}                           # a goal of before: one step, no route
+    assert idea_route.due(before) and idea_route.next_step(before) is None
+    assert not idea_route.due({**before, "accepts": {"1": {"verdict": "accepted"}}}) and idea_route.accept_of({"accepts": "junk"}, 1) == {}
