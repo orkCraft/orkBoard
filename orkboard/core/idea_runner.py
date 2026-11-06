@@ -39,7 +39,7 @@ from orkboard.core.idea_picking import PickMixin
 from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_resume import STOPPED_BY, ResumeMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
-from orkboard.core.idea_shot import ShotMixin
+from orkboard.core.idea_shot import ShotMixin, seen_files
 from orkboard.core.idea_task import FINDINGS_ASK, NO_BROWSER, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
 from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_route, idea_target, project_map, roles, status, tool_errors, tool_now
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
@@ -559,6 +559,10 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
                 if sent_from and self._same(path, sent_from, task, tests):
                     tests["same"] = True
                 diff = self.git.stats(path, start_sha)
+                try:                                                         # what people see that it changed, shots on or not (spec 155 B.1)
+                    self._set_task(slug, tid, sees=seen_files(self.git.touched(path, start_sha)))
+                except Exception:
+                    self._set_task(slug, tid, sees=[])
                 self.shoot(slug, tid, path, start_sha, rnd)                  # a picture of what changed, when people see it (spec 85 §3)
             look = self.look_reason(slug, tests, left, [] if check_task and not changed else self.git.touched(path, start_sha),
                                     problem is not None, not (check_task and not changed),        # spec 84 §1: it lands by itself only when it holds

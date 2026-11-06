@@ -399,7 +399,8 @@ def test_the_prompt_asks_each_done_when_as_a_scenario_and_the_page_keeps_whateve
     assert "`done_when`: one to 5 scenarios" in prompt and "`When <a person or the product does something>, then <what is seen or kept>`" in prompt and "checkable by a test" in prompt
     assert "A line about a screen names the state it opens in, as a person first meets it." in prompt
     assert '{"line": "…", "proof": "test"}' in prompt and "`test` when a test the gate runs can prove it" in prompt and "`look` when only a picture or Play shows it" in prompt     # spec 152 F.2
-    assert "`person` when only the person can judge it" in prompt and "Prefer `test`." in prompt
+    assert "`person` when only the person can judge it" in prompt and "Prefer `test` for the rest." in prompt
+    assert "opens the screen in the state the line names, as a person first meets it; else `look`." in prompt            # spec 155 B.4
     assert _page(host, slug).parts("Tech")["Done when"] == f"- {scenario}\n- An older thesis, as a plain line"
     assert "When <a person" not in model.steps("plan")[0]["prompt"]
 

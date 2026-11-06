@@ -69,6 +69,11 @@ def sees(touched: list[str]) -> bool:
     return False
 
 
+def seen_files(touched: list[str], most: int = 6) -> list[str]:
+    """The touched files that people see (`sees` of each), at most `most`; [] for none (spec 155 B.1)."""
+    return [f for f in touched if sees([f])][:most]
+
+
 def _config(state_dir: Path) -> dict:
     try:
         data = tomllib.loads((Path(state_dir) / "checks.toml").read_text(encoding="utf-8"))
