@@ -73,7 +73,7 @@ def test_a_public_repository_throws_the_publish_question_with_its_two_answers(ho
     (row,) = cards(host)
     assert row["step"] == "publish" and row["public"] is True and row["blocks"] is True
     assert row["text"] == ASK and row["words"]["publish"] == "Publish the Board" and row["words"]["off"] == "Keep the Board off the repository"
-    assert row["held"] == "This repository is public now: the Board waits for your answer before anything is pushed."
+    assert row["held"] == "This repository is public: the Board waits for your answer before anything is pushed."
 
 
 def test_the_pages_already_in_the_history_are_counted_in_the_question(host, code):

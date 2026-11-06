@@ -40,7 +40,7 @@ from orkboard.realm.jobs import _git
 CACHE = "board_in_code.json"
 TTL_S = 24 * 3600                           # the visibility is asked once a day (F.3)
 RETRY_S = 3600                              # a look that said nothing is asked again in an hour
-HELD = "This repository is public now: the Board waits for your answer before anything is pushed."
+HELD = "This repository is public: the Board waits for your answer before anything is pushed."
 BLOCK = ("# orkboard: kept off the repository (spec 151 F.4)", "# orkboard: end")
 SPEC_DIR = ".orkcraft/spec"                 # a task's spec in its worktree
 SECRET_TODOS = ("secret", "file")

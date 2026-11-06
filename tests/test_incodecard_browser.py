@@ -20,7 +20,7 @@ pytestmark = pytest.mark.browser
 
 SHOTS = Path(os.environ["INCODE_SHOTS"]) if os.environ.get("INCODE_SHOTS") else None
 SAY = "Your goals, their specs, the leaders' words and the decisions will be public, in the repository's history: a later No does not take them back."
-HELD = "This repository is public now: the Board waits for your answer before anything is pushed."
+HELD = "This repository is public: the Board waits for your answer before anything is pushed."
 WORDS = {"private": "Private", "public": "Public", "publish": "Publish the Board", "off": "Keep the Board off the repository"}
 
 

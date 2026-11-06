@@ -290,7 +290,7 @@ def test_found_public_since_puts_the_board_off_at_once_holds_the_pushes_and_asks
     assert board_in_code.pending_question(repo, "dev") == {"public": True, "visibility": "public", "pages_in_history": 1}
     t.flush(force=True)                                       # the host's forced write: the Board is off at once
     assert not in_branch(repo, "dev", f"{WIKI}/pages/ideas/a.md") and in_branch(repo, board_tree_off.REF, f"{WIKI}/pages/ideas/a.md")
-    words = "This repository is public now: the Board waits for your answer before anything is pushed."
+    words = "This repository is public: the Board waits for your answer before anything is pushed."
     assert board_in_code.push_hold(repo) == words and IdeaGit(repo).push("dev") == words
     assert board_branch.push(repo, board_branch.BoardConfig(), "0" * 40) == {"ok": False, "refused": False, "why": words}
     board_in_code.write(repo, False)                          # the answer: the pushes may go

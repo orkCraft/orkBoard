@@ -229,7 +229,7 @@ This project's goals, their specs and its decisions are files, so any AI tool wo
    branch in one commit (`board: the Board goes into the code`).
 3. **Found public since**: `private_check` once a day at the host's tick and before Orkboard pushes (`ideas.push`, the Board's
    branch); a repository public now with no `in_code`: the Board's writes go the way of F.2 at once, the push waits, and F.1's
-   card is thrown again: *This repository is public now: the Board waits for your answer before anything is pushed.*
+   card is thrown again: *This repository is public: the Board waits for your answer before anything is pushed.*
 4. **A goal kept off**, in a public repository with `in_code = true`: a goal of the kind *security* (the kind's corner of the
    new goal's card, spec 150 §9, offers it in a public repository), a goal with secrets of its own (`idea_secrets`), or one the
    person keeps off: the new goal's card's line **Keep off the repository** (only in a public repository with the yes). Its
