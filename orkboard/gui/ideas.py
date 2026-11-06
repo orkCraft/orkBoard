@@ -194,10 +194,13 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
         """Where the Board's pages are: its own tree on the work branch (spec 35 §13, gui/ideas_board.py), else the Wiki
         joined to the board. `make`: the tree is made (and the pages moved into it) when missing; the snapshot only reads."""
         root = self.tree_root(self.wiki(), make)
-        try:
-            goal_team.seat_leaders(root, self.state_dir)     # a Board in the code names its leaders; their roles are made here (spec 155 F.2)
-        except (OSError, ValueError):
-            pass
+        seated = self.__dict__.setdefault("_seated", set())
+        if root not in seated:                               # a Board in the code names its leaders; their roles are made here, once a root (spec 155 F.2)
+            seated.add(root)
+            try:
+                goal_team.seat_leaders(root, self.state_dir)
+            except (OSError, ValueError):
+                pass
         return root
 
     def keeper_root(self) -> Path:
