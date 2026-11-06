@@ -62,6 +62,16 @@ def _section(page: idea_page.Page, party: str) -> int | None:
     return None
 
 
+def _title(party: str) -> str:
+    """The heading a section is made with: the party's title as given, or a slug said as a title (`tech` → *Tech*, `game-design` → *Game design*), so a
+    section made from a slug is the one an agent is told to write (`## <Party title>`, spec 154 A's frames)."""
+    party = " ".join(str(party or "").split())
+    if party and party == idea_page.slugify(party):
+        words = party.replace("-", " ")
+        return words[:1].upper() + words[1:]
+    return party
+
+
 def _parts(text: str) -> list[tuple[str, int, int]]:
     """A section's `###` parts as `(name, start of its heading, end of its text)` in the raw text."""
     found = list(spec_sections._HEAD.finditer(text))
@@ -94,7 +104,7 @@ def _put(section: str, name: str, body: str) -> str:
 def _write(page: idea_page.Page, party: str, name: str, body: str) -> None:
     at = _section(page, party)
     if at is None:
-        heading = spec_sections.section_name(party, {h for h, _t in page.sections})
+        heading = spec_sections.section_name(_title(party), {h for h, _t in page.sections})
         last = max((i for i, (h, t) in enumerate(page.sections) if spec_sections.is_party(h, t)), default=len(page.sections) - 1)
         page.sections.insert(last + 1, (heading, _put("", name, body)))
         return

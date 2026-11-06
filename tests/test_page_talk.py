@@ -108,3 +108,13 @@ def test_talk_and_accepted_are_no_spec_part_the_page_still_folds_and_counts_as_b
     assert spec_sections.folded(p, "Done when") == spec_sections.folded(page(), "Done when") and p.section("Why") == "Because."
     assert len(spec_sections.items(spec_sections.split(p.section("Tech"))["Done when"])) == 3
     assert [s.party for s in spec_sections.read(p, [{"slug": "tech", "title": "Tech"}])["sections"]] == ["tech", ""]
+
+
+def test_a_section_made_from_a_slug_is_headed_by_the_partys_title():
+    """Spec 154 A tells an agent to write under `## Tech`: a section Orkboard makes from the slug `tech` is that one, and both read it."""
+    page = idea_page.parse("---\nowner: board\n---\n# G\n\n## Gist\nG\n")
+    pt.write_talk(page, "tech", {"verdict": "go", "why": "", "stance": "s", "for": "f", "against": "a"})
+    pt.write_talk(page, "game-design", {"verdict": "go", "why": "", "stance": "s", "for": "f", "against": "a"})
+    text = page.text()
+    assert "## Tech\n" in text and "## Game design\n" in text and "## tech\n" not in text
+    assert pt.read_talk(page, "Tech")["stance"] == "s" and pt.read_talk(page, "tech")["stance"] == "s"
