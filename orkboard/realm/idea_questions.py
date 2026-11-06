@@ -9,6 +9,8 @@ the one it recommends and why — taken strictly from the model's answer, kept i
     idea_questions.picks(lines)  # each question's recommended choice ("" where it has none): Let the Taskmaster decide
     idea_questions.tally(lines, answers)   # how the person answered: picked, recommended, typed
     idea_questions.card(raw, id=, by=, leader=, project=)   # a leader's question as a hand's card (spec 99 §5.2): {id, by, leader, q, choices, pick, why, project[, for]}; `for` (spec 128 D) only when it names a party
+    idea_questions.answer_line(answer, day)   # "  - Answered: <answer> (the person, YYYY-MM-DD)": the line under a question of a page (spec 151 A.6)
+    idea_questions.answers(lines)             # each question's answer in those lines, "" where it has none
     idea_questions.for_of(raw)   # whom a question is for: a party's slug, else "person"
     idea_questions.record(state_dir, slug) / save_record(…)  # what a goal's Talk keeps beside its state (talk.json: the cards waiting, the answers, the defaults, the cause)
     idea_questions.talk_of(state_dir, slug)                  # …read as data for the stances' *More*: {mode, round, done, heard, stances: [{…, questions: [..]}], cause}
@@ -18,6 +20,8 @@ The page is the memory: the line says the pick too (in bold), so the person read
 from __future__ import annotations
 
 import re
+
+from orkboard.realm.idea_page import ANSWERED
 
 ASK_CHARS = 300
 CHOICES = (2, 4)                 # a question's choices: at least, at most
@@ -118,6 +122,66 @@ def tally(lines: list[str], answers: list[str]) -> dict[str, int]:
         out["picked"] += 1
         out["recommended"] += hit == q["pick"]
     return out
+
+
+# -- an answer's line under its question in a page (docs/specs/151 A.6) -------------------------------------------------------------------
+
+ANSWER_CHARS = 2000
+_ANSWER_TAIL = re.compile(r"^(.*)\s\([^()]*,\s*\d{4}-\d{2}-\d{2}\)$")
+
+
+def answer_line(answer: str, day: str, who: str = "the person") -> str:
+    """The line under a question that was answered: `  - Answered: <answer> (the person, 2026-11-06)`, the answer on one line."""
+    said = " ".join(str(answer or "").split())[:ANSWER_CHARS]
+    return f"  - Answered: {said} ({who}, {day})"
+
+
+def _rows(lines: object) -> list[list]:
+    """A section's lines as `[question line, its answer line or None]`, in order (a blank line is none; a second answer line is not kept)."""
+    text = lines if isinstance(lines, str) else "\n".join(str(x) for x in lines or [])
+    rows: list[list] = []
+    for ln in text.split("\n"):
+        if not ln.strip():
+            continue
+        if rows and ANSWERED.match(ln):
+            rows[-1][1] = rows[-1][1] or ln
+            continue
+        rows.append([ln, None])
+    return rows
+
+
+def questions_of(lines: object) -> list[str]:
+    """The questions of a section's lines (the list marker taken off), answered ones too, in order: the index of one is its `page-<n>` card's."""
+    return [re.sub(r"^\s*([-*+]|\d+[.)])\s+", "", q).strip() for q, _a in _rows(lines)]
+
+
+def answers(lines: object) -> list[str]:
+    """Each question's answer in a section's lines (a text, or its lines), "" where it has none; one for each question of `questions_of`."""
+    out = []
+    for _q, a in _rows(lines):
+        said = ANSWERED.match(a).group(1) if a else ""
+        tail = _ANSWER_TAIL.match(said)
+        out.append((tail.group(1) if tail else said).strip())
+    return out
+
+
+def with_answer(lines: object, ask: str | int, answer: str, day: str, who: str = "the person") -> str:
+    """The section's text with the answer written under its question: `ask` is the question's index (`questions_of`), or its text (a question the page lacks is added as a list
+    line at the end). An answer there already is replaced."""
+    rows = _rows(lines)
+    n = ask if isinstance(ask, int) else next((i for i, q in enumerate(questions_of(lines)) if parse(q)["ask"] == parse(str(ask))["ask"]), None)
+    if n is None:
+        rows.append([f"- {' '.join(str(ask).split())}", None])
+        n = len(rows) - 1
+    if not 0 <= n < len(rows):
+        raise ValueError("That question is not in the page")
+    rows[n][1] = answer_line(answer, day, who)
+    return "\n".join(ln for row in rows for ln in row if ln)
+
+
+def open_of(lines: object) -> list[tuple[int, str]]:
+    """The questions with no answer yet, `(index, question)`."""
+    return [(n, q) for n, (q, (_l, a)) in enumerate(zip(questions_of(lines), _rows(lines))) if not a]
 
 
 # -- a question as a card (docs/specs/99-a-goals-way.md §5.2; decisions §153.5) -------------------------------------------------------

@@ -50,6 +50,7 @@ class BoardMixin:
         got = getattr(self, "_board_tree", None)
         if got is None or got.wiki_rel != rel:
             got = self._board_tree = BoardTree(repo, self.state_dir, rel, lambda: self._into())
+            self.phase_watch()                  # a goal's new phase asks the tree for a write (gui/ideas_phase.py)
         return got
 
     def tree_root(self, wiki: Path, make: bool = True) -> Path:
@@ -89,6 +90,7 @@ class BoardMixin:
             return None
         began = time.monotonic()
         try:
+            self.phase_sync(tree, force)        # pages moved outside followed, a goal's phase and its keys written (spec 151 A.3, A.4)
             got = tree.flush(time.time(), force)
         except Exception as e:                  # a commit that cannot be made never stops the board
             got = {"commit": "", "pages": 0, "what": "", "held": str(e)[:300]}

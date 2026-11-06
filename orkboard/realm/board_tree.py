@@ -90,11 +90,24 @@ class BoardTree:
             _git(self.path, "rebase", "--abort")
             raise RuntimeError(f"the Board's tree could not follow {self.branch()}")
 
+    def last_change(self, path: Path) -> tuple[str, str]:
+        """The commit that last changed a file of the tree and its author, `(short hash, name)`; ("", "") when no commit has (or it has uncommitted changes: the change is not in one yet)."""
+        rel = Path(path).resolve().relative_to(self.path.resolve()).as_posix()
+        if _git(self.path, "status", "--porcelain", "--", rel).stdout.strip():
+            return "", ""
+        got = _git(self.path, "log", "-1", "--format=%h%x09%an", "--", rel).stdout.strip().split("\t")
+        return (got[0], got[1]) if len(got) == 2 else ("", "")
+
     def note(self, title: str, what: str, now: float) -> None:
         """A write of the Board's: committed with the others within COMMIT_AFTER_S."""
         if self._since is None:
             self._since = now
         self._notes.append((" ".join(str(title or "the Board").split())[:80], what))
+
+    def touch(self, now: float) -> None:
+        """A change with nothing to say yet (a goal's phase, which the keys written at the commit say): the writes' clock starts, as a note's would."""
+        if self._since is None:
+            self._since = now
 
     def due(self, now: float) -> bool:
         return self._since is not None and now - self._since >= COMMIT_AFTER_S

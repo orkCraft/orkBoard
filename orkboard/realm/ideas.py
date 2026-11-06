@@ -547,6 +547,7 @@ STATE_DEFAULT = {"state": "raw", "session": "", "session_at": "", "context": 0, 
                  "route_how": {},                     # how it was routed and what the person was told of it: by, kind, short, reproduces, offer, said, said_route, changed
                  "via": "",                           # how it came: "inbox" for a goal the phone dropped into the project's inbox and the host laid (spec 136 B, decisions §243.4)
                  "inbox_id": "",                      # the inbox file's id it was laid from, so one is never laid twice (spec 136 B.4)
+                 "phase_written": "",                 # the phase its page says, as the Board wrote it (realm/goal_phase.py `mirror`, spec 151 A.3): a page that says another was moved from outside
                  "from_pitch": ""}                    # the pitch it was sent from (spec 65 §5): its views and decision go to its draft
 
 
@@ -588,12 +589,17 @@ def state(state_dir: Path, slug: str) -> dict:
     return out
 
 
+OBSERVERS: list = []     # called `(state_dir, slug, state)` once a goal's `state` was saved: the host's, so a new phase rides in the Board's next commit (gui/ideas_phase.py, spec 151 A.3)
+
+
 def save_state(state_dir: Path, slug: str, **changes: object) -> dict:
     """Only the keys given change; the rest of the file (the runner's keys too) is kept."""
     with LOCK:
         path = state_folder(state_dir, slug) / "state.json"
         data = {**STATE_DEFAULT, **(_json(path) or {}), **changes}
         _write_json(path, data)
+    for watch in list(OBSERVERS) if "state" in changes else ():
+        watch(state_dir, slug, data["state"])
     return data
 
 

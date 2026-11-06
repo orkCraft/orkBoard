@@ -305,6 +305,8 @@ EVENTS += (GOAL_MATCHED, GOAL_KEPT_APART)
 BACKLOG_GROUPED = "backlog_grouped"  # spec 135 B: the one call at a reset over the goals put off: goals (how many were given), groups (how many came back), seconds, cost, failed (never a title)
 GROUPS_ANSWERED = "groups_answered"  # spec 135 B: the card *These look like one goal* answered: joined (groups), apart (groups), dropped (goals joined into another), not_now, device
 EVENTS += (BACKLOG_GROUPED, GROUPS_ANSWERED)
+GOAL_MOVED_OUTSIDE = "goal_moved_outside"      # spec 151 A.4: a goal's page was moved to another phase by someone else (an AI tool, a hand): slug, from (its phase before), to, commit ("" when not committed)
+EVENTS += (GOAL_MOVED_OUTSIDE,)
 
 _LOCK = threading.Lock()
 

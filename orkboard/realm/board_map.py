@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (board_back, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (board_back, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_phase, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
 from orkboard.realm.idea_words import CARD_LINE_CHARS, short_of
 
@@ -137,6 +137,8 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
     if state == "talk":
         out += [{**base, **n} for n in talk_rows(state_dir, slug)]
         out += [{**base, **n} for n in idea_objections.open_rows(root, state_dir, slug, idea_questions.record(state_dir, slug))]      # a goal's hearing, before the decision (spec 120 §4.4; a leader's no was a row of its own: spec 108 §4.3)
+    if asks and state not in ("asks", "talk"):                  # a question laid in the page by an AI tool, for the person (spec 151 A.5)
+        out += [{**base, **n} for n in goal_phase.outside_rows(ideas.idea_page(root, slug))]
     if state in ("decided", "sections"):
         out += [{**base, **n} for n in way_rows(state_dir, slug, st, log)]
     if state == "asks":

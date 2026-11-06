@@ -210,3 +210,17 @@ def test_the_clock_alone_makes_no_tree_and_no_branch(fake_repo):
     host.ideas.tick()
     assert not (fake_repo / ".orkcraft" / "board").exists()
     assert "dev" not in git(fake_repo, "branch", "--list", "dev")
+
+
+def test_the_last_change_of_a_page_is_its_commit_and_its_author(repo):
+    """Spec 151 A.4: who moved a page, read from the tree: the commit and its author; none while the change is not committed."""
+    t = _tree(repo)
+    path = _page(t, "a.md")
+    assert t.last_change(path) == ("", "")
+    t.note("A", "added", 0.0)
+    got = t.flush(force=True)
+    assert t.last_change(path) == (git(repo, "rev-parse", "--short", got["commit"]), "Orkboard board")
+    path.write_text("# Page\n\nmore\n")
+    assert t.last_change(path) == ("", "")
+    t.touch(5.0)
+    assert t._since == 5.0 and t._notes == [] and t.due(16.0) and not t.due(14.0)

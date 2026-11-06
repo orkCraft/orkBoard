@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import goal_team, ideas, map_text, roles
+from orkboard.realm import goal_phase, goal_team, ideas, map_text, roles
 
 FILE = "ask.json"
 ORKMASTER = ""                    # the `party` of a question asked on the Orkmaster's tab
@@ -27,8 +27,7 @@ GOAL_CHARS = 200                  # the goal the answer suggests
 BOARD_CHARS = 3000                # the Board as text, at most
 PARTIES_CHARS = 1000              # of BOARD_CHARS, the parties' lines at most
 TITLE_CHARS = 60
-PHASES = {"routed": "Talk", "talk": "Talk", "decided": "Spec", "sketch": "Spec", "sections": "Spec", "ready": "Work", "planning": "Work", "plan": "Work", "working": "Work",
-          "failed": "Work, failed", "done": "Done"}
+PHASES = goal_phase.words()          # a fine state in the word of its phase (realm/goal_phase.py: the one table)
 
 
 def record(state_dir: Path) -> dict | None:

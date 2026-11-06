@@ -20,6 +20,7 @@ SECTION_CHARS = 20_000           # of a section, the most a write keeps
 _FENCE = re.compile(r"\A---\n(.*?)\n---\n?", re.S)
 _HEADING = re.compile(r"^(#{1,2})[ \t]+(.+?)[ \t]*#*[ \t]*$", re.M)
 _KEY = re.compile(r"^([A-Za-z_][\w-]*):[ \t]*(.*)$")
+ANSWERED = re.compile(r"^[ \t]+[-*+][ \t]+Answered:[ \t]*(.*?)\s*$")     # a question's answer, the line under it (spec 151 A.6: realm/idea_questions.py)
 
 
 # -- a page: front matter, a title, sections --------------------------------------------------------
@@ -134,8 +135,20 @@ def thesis(text: str) -> str:
 
 
 def items(text: str) -> list[str]:
-    """A section's list (`- x`), or its lines when it has no list."""
-    lines = [ln.strip() for ln in (text or "").split("\n") if ln.strip()]
+    """A section's list (`- x`), or its lines when it has no list. A question with an answer under it (`  - Answered: …`) is answered, not open: it and its line are left out."""
+    raw: list[str] = []
+    last = False                                       # the last line kept is a question not yet answered
+    for ln in (text or "").split("\n"):
+        if not ln.strip():
+            continue
+        if ANSWERED.match(ln) and (last or raw):
+            if last:
+                raw.pop()                              # the question it answers
+            last = False
+            continue
+        raw.append(ln)
+        last = True
+    lines = [ln.strip() for ln in raw]
     marked = [re.sub(r"^([-*+]|\d+[.)])\s+", "", ln) for ln in lines if re.match(r"^([-*+]|\d+[.)])\s+", ln)]
     return marked or lines
 

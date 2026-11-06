@@ -191,3 +191,28 @@ def test_a_goal_has_a_short_name_from_its_words_then_the_reading_unless_the_pers
     assert next(t for t in ideas.tracks(root) if t["slug"] == slug)["short"] == "Pay by card"     # the person's title
     idea = ideas.add_idea(root, "Let's export the runs to CSV please", slug)
     assert next(i for i in ideas.ideas(root) if i["slug"] == idea)["short"] == "Export the runs to CSV"
+
+
+def test_a_state_saved_with_a_new_state_tells_its_observers_and_keeps_phase_written(tmp_path):
+    """Spec 151 A.3: `phase_written` is a key of the state; an observer hears of each saved `state` (and of no other save)."""
+    heard = []
+    watch = lambda sd, slug, state: heard.append((slug, state))
+    ideas.OBSERVERS.append(watch)
+    try:
+        ideas.save_state(tmp_path, "a-goal", state="talk")
+        ideas.save_state(tmp_path, "a-goal", queue="hold")
+        ideas.save_state(tmp_path, "a-goal", phase_written="talk")
+    finally:
+        ideas.OBSERVERS.remove(watch)
+    assert heard == [("a-goal", "talk")]
+    assert ideas.state(tmp_path, "a-goal")["phase_written"] == "talk" and ideas.STATE_DEFAULT["phase_written"] == ""
+
+
+def test_a_page_keeps_the_keys_it_does_not_know_and_an_answered_question_is_not_open(tmp_path):
+    root = tmp_path / "wiki"
+    slug = ideas.add_idea(root, "a goal")
+    ideas.set_meta(root, slug, phase="work", by="Codex", spec="docs/specs/9-x.md")
+    ideas.set_section(root, slug, "Open questions", "- One? (a / b)\n  - Answered: a (the person, 2026-11-06)\n- Two?")
+    page = ideas.idea_page(root, slug)
+    assert [page.get(k) for k in ("phase", "by", "spec")] == ["work", "Codex", "docs/specs/9-x.md"]
+    assert ideas.items(page.section("Open questions")) == ["Two?"]

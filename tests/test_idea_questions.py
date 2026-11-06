@@ -60,3 +60,12 @@ def test_a_talks_record_is_kept_beside_the_goals_state(tmp_path):
     iq.save_record(tmp_path, "a-goal", {"mode": "talk", "waiting": [{"id": "x"}]})
     assert iq.record(tmp_path, "a-goal") == {"mode": "talk", "waiting": [{"id": "x"}]} and iq.record(tmp_path, "other") == {}
     assert (tmp_path / "ideas" / "a-goal" / iq.TALK_FILE).is_file()
+
+
+def test_an_answers_line_is_written_under_its_question_and_read_back():
+    """Spec 151 A.6: `  - Answered: <answer> (the person, YYYY-MM-DD)` under the question's line."""
+    assert iq.answer_line("Google Play", "2026-11-06") == "  - Answered: Google Play (the person, 2026-11-06)"
+    text = iq.with_answer("- Which store first? (**App Store** / Google Play)\n- Which week?", 0, "Google Play", "2026-11-06")
+    assert text.splitlines()[1] == "  - Answered: Google Play (the person, 2026-11-06)"
+    assert iq.answers(text) == ["Google Play", ""] and iq.answers(text.splitlines()) == ["Google Play", ""]
+    assert iq.answers("") == [] and iq.open_of(text) == [(1, "Which week?")]

@@ -86,6 +86,7 @@ from orkboard.gui.ideas_cascade import CascadeMixin as CascadeFace, cascade_comm
 from orkboard.gui.ideas_groups import GroupsMixin as GroupsFace, groups_commands
 from orkboard.gui.ideas_change import ChangeMixin, change_commands
 from orkboard.gui.ideas_look import LookMixin
+from orkboard.gui.ideas_phase import PhaseMixin
 from orkboard.gui.ideas_spec_change import SpecChangeFace, spec_change_commands
 from orkboard.gui.ideas_findings import FindingsMixin as FindingsFace, findings_commands
 from orkboard.gui.ideas_chronicle import ChronicleMixin, chronicle_commands
@@ -144,7 +145,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, GroupsFace, FindingsFace, ChronicleMixin, ConflictMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, GroupsFace, FindingsFace, ChronicleMixin, ConflictMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
