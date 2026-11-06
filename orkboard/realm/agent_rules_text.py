@@ -296,7 +296,8 @@ def seat_skill_body(role_id: str, wiki: str, decisions: str) -> str:
     craft = role_id[:-len("-leader")] if role_id.endswith("-leader") else ""
     steps = seat_frames.steps(role_id)
     listed = ", ".join(f"`{s}`" for s in steps)
-    parts = [f"Your arguments are `$ARGUMENTS`: the step is `$0`, the goal's slug `$1`. Read `{wiki}/BOARD.md` first. The steps you have are {listed}.\n\n"
+    files = ", and for `accept` the files the step changed after them" if "accept" in steps else ""
+    parts = [f"Your arguments are `$ARGUMENTS`: the step is `$0`, the goal's slug `$1`{files}. Read `{wiki}/BOARD.md` first. The steps you have are {listed}.\n\n"
              f"If `$0` is none of them, say which steps you have ({listed}) and stop: write nothing."]
     for step in steps:
         parts.append(f"# The step `{step}`\n\nWhen `$0` is `{step}`:\n\n" + seat_frames.agent(role_id, step, craft, wiki, decisions).strip("\n"))
@@ -316,7 +317,7 @@ You conduct. Each seat of the Board is a skill that runs in a context of its own
 5. **Sections:** call `/<craft>-leader section <slug>` for each leader of the route, in the route's order. Then move `phase` to `spec` (`{RUN} goal phase <slug> spec`).
 6. **Plan:** call `/taskmaster plan <slug>`; it writes `## Stages`. Move `phase` to `work`.
 7. **Do the tasks:** work in a branch of your own. Give each task of the stages, in order, to a Grunt (the `ork-grunt` subagent: the task, the goal's page and the gate), one at a time. A Grunt works in a worktree of its own and never asks the person.
-8. **Accept:** at the end of a party's stages, before the next party's, call `/<craft>-leader accept <slug>` for that party. What it does not accept is one more task for each thing, then accept again; twice at most. What is still not accepted goes in the pull request under “Not accepted”.
+8. **Accept:** at the end of a party's stages, before the next party's, call `/<craft>-leader accept <slug> <the files the step changed>` for that party (you list them, `git diff --name-only <base>...<the step's branch>`: a leader runs no command). What it does not accept is one more task for each thing, then accept again; twice at most. What is still not accepted goes in the pull request under “Not accepted”.
 9. **Run the gate** (`[gate]` in `orkcraft.toml`), write its record in `gate`, open a pull request, set `phase: done` only with the gate green.
 10. **Stop at what the person decides**: a choice between ways, a cost above what was agreed, a decision against an earlier one, dropping or holding a goal, going into main.
 

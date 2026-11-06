@@ -108,7 +108,7 @@ def agent(seat: str, step: str, craft: str = "", wiki: str = WIKI, decisions: st
                 "One line to the conductor: the section written, with the number of *Done when* lines and its risk.")
         return _frame(
             who, "Your step is **accept**: the tasks of your step have all landed in dev; accept the step against your section, or send back what is wrong, in a pass of its own.",
-            [*base, f"your own section in {mine}: its *Done when*, *Will be* and *Out*", f"the gate's record of the step in the goal's page (`gate`) and the files the step changed: `git diff` of the step's branch against its base",
+            [*base, f"your own section in {mine}: its *Done when*, *Will be* and *Out*", f"the gate's record of the step in the goal's page (`gate`) and the files the step changed, which the conductor names after the goal in your arguments: read each one (you run no command)",
              "the pictures the step made, where there are any"],
             idea_accept.rules(),
             [f"under {mine} in the goal's page, a part `### Accepted`: one line a line of your section's *Done when*, in its order, `- met: <the line>`, `- not met: <the line> — <why>` or `- cannot see: <the line>` "

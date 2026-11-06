@@ -42,7 +42,7 @@ def test_a_frame_names_what_to_read_what_to_write_and_what_to_give_back():
         assert path in talk
     assert "## Tech" in talk and "### Talk" in talk and "## Give back" in talk and "asks: person" in talk
     accept = seat_frames.agent("tech-leader", "accept", "engineering")
-    assert "### Accepted" in accept and "met:" in accept and "not met:" in accept and "cannot see:" in accept and "git diff" in accept and "gate" in accept
+    assert "### Accepted" in accept and "met:" in accept and "not met:" in accept and "cannot see:" in accept and "the files the step changed" in accept and "you run no command" in accept and "git diff" not in accept and "gate" in accept
     assert "`route`" in seat_frames.agent("orkmaster", "route") and f"{WIKI}/pages/tracks/*.md" in seat_frames.agent("orkmaster", "route")
     assert "Stages" in seat_frames.agent("taskmaster", "plan")
     grunt = seat_frames.agent("grunt", "task")
