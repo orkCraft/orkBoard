@@ -323,8 +323,10 @@ def test_the_talk_of_a_goal_past_it_is_opened_from_its_mark_in_the_title_and_rea
         call(pg, "frame/state.js", "pick", "chat")
         pg.locator(".table-phases").wait_for(timeout=WAIT_MS)
         assert pg.locator('.table-phase[data-phase="work"]').get_attribute("aria-current") == "step"
-        pg.get_by_role("button", name="Talk, done").click()
-        page = pg.locator('.table-over[data-kind="talk"]')
+        pg.locator('.table-phase[data-phase="work"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator("button[data-phase]").count() == 0 and pg.locator(".table-over").count() == 0
+        pg.locator('[data-earlier="talk"]').click()                                                                # the Orkmaster's Earlier: the Talk as kept, in place (spec 156 C.3)
+        page = pg.locator('.phase-earlier__body[data-earlier-body="talk"] .talk-page')
         page.locator(".talk-stance").first.wait_for(timeout=WAIT_MS)
         assert [s.locator(".talk-stance__nm").text_content().strip() for s in page.locator(".talk-stance").all()] == ["Design", "Tech"]
         assert page.get_by_role("button", name="All the questions").count() == 0, "nothing waits: the Talk is read, not answered"

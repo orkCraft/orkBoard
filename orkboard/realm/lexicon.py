@@ -324,6 +324,7 @@ TERMS: tuple[Term, ...] = (
     _t("phase.spec", "Spec"),                                      # the decision is made; each leader writes its section, the Orkmaster joins them
     _t("phase.work", "Work"),                                      # the steps' tasks run
     _t("phase.done", "Done"),                                      # the goal is in dev, its result to be seen
+    _t("phase_earlier", "Earlier"),                                # the table's one folded line under a picked goal past Talk: *Earlier: Talk · Spec*, each phase unfolding what it said at this tab (spec 156 C.3, decisions §261.4)
     _t("section", "section", "sections"),                          # one party's part of a goal's spec, written by its leader
     _t("project_stage", "stage", "stages"),                        # how far the project is: idea, being made, live (realm/project_stage.py); a party's `stage` is the other word above
     _t("will_be", "Will be"),                                      # the change a section promises, on the maps it touches

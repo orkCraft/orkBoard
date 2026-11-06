@@ -18,8 +18,8 @@ import { PickHost, PickStrip } from "./picking.js";         // picking on a part
 import { Concerns } from "./concerns.js";               // the leader's concerns on its map: the marks (spec 108 B, spec 123 C)
 import { Header } from "./header.js";
 import { SystemPane, PartBack, LinkBack } from "./syspane.js";
-import { GoalView } from "./goalview.js";             // a goal picked, at a leader: what it will change, or what it changed against its spec (spec 128 F.2–F.3)
-import { nodeOf, viewable } from "./goalmap.js";
+import { Earlier, PhaseView, RouteView, phaseKind } from "./phaseview.js";   // a goal picked: the table by its phase (spec 156 C)
+import { nodeOf } from "./goalmap.js";
 import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
 import { LimitChip } from "./tabs.js";
 import { Menu } from "./menu.js";
@@ -70,19 +70,13 @@ function Over() {
   </div>`;
 }
 
-/** The picked goal's phases in the pane's title, *Talk · Spec · Work · Done*: the current one marked, the ones gone by lit; *Talk* and *Spec* are pages (the stances, the sections), opened by a press once the goal is at them or past them
- *  (decisions §126.4). Work is a mark alone: its pane is the Board's; *Done*, once the goal is done, opens its quality record (qualitypage.js, spec 132 D.4: it replaces the result). `from`: where the pane was (the page opened says it came from there). */
-function Phases({ goal, from }) {
-  const now = phaseOf(goal), at = PHASES.findIndex(([id]) => id === now), shown = over.value?.kind === "quality" ? "done" : over.value?.kind;     // the Done mark opens the `quality` page
+/** The picked goal's phases in the pane's title, *Talk · Spec · Work · Done*: spans, no button (spec 156 C.2, decisions §261.4): the current one `aria-current="step"`, the ones gone by lit. What a phase says lies on the table (phaseview.js). */
+function Phases({ goal }) {
+  const now = phaseOf(goal), at = PHASES.findIndex(([id]) => id === now);
   if (at < 0) return null;
   return html`<nav class="table-phases" aria-label="The goal's phases" data-phase=${now}>${PHASES.map(([id, word], i) => {
-    const state = i < at ? "past" : i === at ? "now" : "next", page = id === "talk" || id === "spec" || id === "done";
-    const cls_ = cls("table-phase", { "is-past": state === "past", "is-now": state === "now", "is-open": shown === id });
-    const said = `${word}${state === "now" ? ", now" : state === "past" ? ", done" : ""}`;
-    return page && state !== "next"
-      ? html`<button type="button" key=${id} class=${cls("ork-btn quiet", cls_)} data-phase=${id} aria-current=${state === "now" ? "step" : undefined} aria-pressed=${String(shown === id)} aria-label=${said}
-          title=${`${word}: open it`} onClick=${() => { if (shown !== id) openOver(id === "done" ? "quality" : id, { idea: goal }, over.peek()?.from || from, id === "done" ? "Quality" : word); }}>${word}</button>`
-      : html`<span key=${id} class=${cls_} data-phase=${id} aria-current=${state === "now" ? "step" : undefined} aria-label=${said}>${word}</span>`;
+    const state = i < at ? "past" : i === at ? "now" : "next", said = `${word}${state === "now" ? ", now" : state === "past" ? ", done" : ""}`;
+    return html`<span key=${id} class=${cls("table-phase", { "is-past": state === "past", "is-now": state === "now" })} data-phase=${id} aria-current=${state === "now" ? "step" : undefined} aria-label=${said}>${word}</span>`;
   })}</nav>`;
 }
 
@@ -95,7 +89,7 @@ function Title({ parties, tab, narrow }) {
   return html`<header class="ork-head table-title">
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
-    ${picked.value && html`<${Phases} goal=${picked.value} from=${from} />`}
+    ${picked.value && html`<${Phases} goal=${picked.value} />`}
     <span class="table-grow"></span>
     ${!o && tab === ORKMASTER && html`<${Menu} label="The Orkmaster's menu" items=${items}
       top=${narrow && limits.length > 0 ? html`<div class="table-menu__limits"><span class="ork-label">Limits</span><div class="table-menu__chips">${limits.map((l) => html`<${LimitChip} key=${l.provider} l=${l} from=${from} />`)}</div></div>` : null} />`}
@@ -106,17 +100,18 @@ export function Pane({ parties, tab, narrow, column = false }) {
   const body = useRef(), o = over.value, g = parties.find((x) => x.slug === tab);
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
   const bare = !laidNow(), form = isForm(o);                // not laid yet: the table is bare (spec 130 C.6); a form covers the whole table, its end included (C.5)
-  const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), view = picks && viewable(picks) ? picks : null;     // a goal picked that is agreed, at work or done has a view of its own at each leader
+  const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), kind = !o && !bare && picks ? phaseKind(tab === ORKMASTER ? null : g, picks) : "";     // a goal picked: what the table shows by its phase at this tab (phaseview.js)
   return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
     ${!o && !bare && html`<${Notice} />`}
     <div class="table-body" ref=${body} data-end=${form ? "form" : o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
-      ${o ? html`<${Over} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} column=${column} />
+      ${o ? html`<${Over} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${kind === "route" ? html`<${RouteView} n=${picks} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`}
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
-        : g && view ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${GoalView} key=${`${g.slug}:${view.slug}`} g=${g} n=${view} />`
+        : g && kind ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PhaseView} g=${g} n=${picks} kind=${kind} />`
         : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
+      ${!o && !bare && picks && (tab === ORKMASTER || g) && html`<${Earlier} key=${`${tab}:${picks.slug}`} g=${tab === ORKMASTER ? null : g} n=${picks} />`}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
       ${!bare && !form && narrow && html`<${DiscardEnd} />`}
     </div>
