@@ -345,7 +345,15 @@ TERMS: tuple[Term, ...] = (
     _t("chronicle", "Chronicle"),                                  # Release's past: a chapter a version, the goals that went through the portal in it and the decisions written in its span (spec 134, decisions §238)
     _t("chronicle_earlier", "Earlier"),                            # the lens's one line: *Earlier: v0.3 · 28 Oct ›* (spec 134 B)
     _t("chronicle_week", "The week of"),                           # a chapter of a project with no version yet: *The week of 3 Nov* (spec 134 A.4)
-    _t("how_works_now", "How it works now"),                       # a goal's row in the chronicle opens the living spec of its part (spec 127, spec 134 A.5)
+    _t("past", "The past"),                                        # the chronicle read through the open tab, the lich's (spec 150 E2.2, decisions §254.7): its title *The past · through Design · v0.3*
+    _t("every_version", "every version"),                          # … no deck picked: every version dealt, newest first
+    _t("unreleased", "Unreleased"),                                # … the deck on top: what went through the portal after the last version
+    _t("past_search", "Search <party>'s past…"),                   # … its search (*Search the past…* on the Orkmaster's tab)
+    _t("past_line", "<party>'s past"),                             # the lich's line in the table's edge, *Design's past ›*
+    _t("project_past", "The project's past"),                      # … on the Orkmaster's tab
+    _t("show_on_table", "Show on <party>'s table"),                # a card lifted in the past: that tab, what it touched lit
+    _t("open_in_past", "Open in the past"),                        # the conflict's earlier decision: the past, its deck dealt and its card lit (spec 150 E2.1)
+    _t("how_works_now", "How it works now"),                      # a goal's row in the chronicle opens the living spec of its part (spec 127, spec 134 A.5)
     _t("changed_by", "changed by"),                                # a spec or a decision a later decision changed: *changed by §238* (spec 134 A.5)
     _t("other_choice", "Other…"),                                  # a question card's last choice: the person's own words
     _t("to_main", "To main"),                                     # merge what is ready in dev into main, by code (the discard's button)

@@ -1,0 +1,10 @@
+/* The conflict's card, lifted (docs/specs/150 E2.1, decisions §254.6; hand/conflictcard.js): the new goal's side is the hand's opened card (openedcard.css); the earlier decision is a second one beside it, in a box of the hand's own
+   (`.hand-earlier-host`, its top on the hand's line as the lifted card's foot is), the card turned the other way. It comes out of the portal's ring once: from the ring's middle, small and faint, to its place (`conflict-out`; nothing under reduced motion). */
+.hand-way--conflict { display: flex; flex-direction: column; gap: var(--ork-3); }
+.hand-way__goes { margin: 0; overflow-wrap: anywhere; }
+.hand-earlier-host { position: absolute; top: 0; height: 0; z-index: 59; pointer-events: none; }
+.hand-earlier-host > .hand-earlier { pointer-events: auto; }
+.hand .hand-earlier-host .hand-card.hand-lifted--card { left: 0; width: 100%; rotate: calc(var(--hc-lean, 1) * var(--ork-motion-lean) * -0.25); }
+.hand-earlier.is-out { animation: conflict-out 420ms var(--ork-motion-ease, ease-out) both; }
+@keyframes conflict-out { from { transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.12); opacity: 0; } 60% { opacity: 1; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hand-earlier.is-out { animation: none; } }

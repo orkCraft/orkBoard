@@ -129,10 +129,10 @@ def test_asleep_each_corner_is_its_leaders_head_alone_grey_and_a_press_opens_the
         assert r["x"] < mid < r["x"] + r["width"] and r["y"] >= ring["y"] + ring["height"] - 12, "Release (the lich) at the ring's six (spec 150 D.4)"
         assert l["x"] < mid < l["x"] + l["width"] and l["y"] + l["height"] <= ring["y"] + 8, "Live (the imp) at its twelve"
         shot(pg, "asleep")
-        release(pg).click()
-        assert sig(pg, "frame/state.js", "tab") == "release"
-        assert pg.locator(".table-title__pt").text_content().strip() == ""    # no goal picked: the pane's title says nothing (§247.5); the open tab is Release
-        assert pg.locator('.table-tab[aria-selected="true"]').count() == 0, "no tab is lit"
+        release(pg).click()                                                    # the lich opens the past through the open tab (spec 150 E2.2), the tab stays
+        pg.locator('.table-over[data-kind="chronicle"]').wait_for(timeout=WAIT_MS)
+        assert sig(pg, "frame/state.js", "tab") == "orkmaster"
+        assert pg.locator(".table-title__pt").text_content().strip().endswith("The past · through the Orkmaster · every version")
         live(pg).click()
         assert sig(pg, "frame/state.js", "tab") == "live" and pg.locator('.table-tab[aria-selected="true"]').count() == 0
         shot(pg, "live-view")

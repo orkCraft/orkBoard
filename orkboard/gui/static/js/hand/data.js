@@ -67,7 +67,7 @@ export function stackKey(s) {
 }
 
 /** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, the Orkmaster's collision (docs/specs/101 §4.2) and its *Go on paid?* (docs/specs/105 §3): they lie under the first lane. */
-const WHOLE = new Set(["route", "talk", "hearing", "decision", "fork", "collide", "paid", "groups", "spec_change"]);
+const WHOLE = new Set(["route", "talk", "hearing", "decision", "fork", "conflict", "collide", "paid", "groups", "spec_change"]);
 
 /** The party a row belongs to ("" for a row of no party of its own). */
 const partyOfRow = (row) => row?.g?.slug || row?.row?.goal || row?.goal || "";

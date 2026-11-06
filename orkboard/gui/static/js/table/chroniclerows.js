@@ -47,7 +47,8 @@ function Quality({ q }) {
     <ul class="chr-found">${rows.map((f) => html`<li key=${f.id} data-source=${f.source}><span class="chr-found__src">${LEVELS[f.source] || f.source}</span> ${f.what || f.found}</li>`)}</ul></section>`;
 }
 
-export function GoalAsItWas({ idea, onDecision }) {
+/** `show(goal)`: the tab's *Show on <party>'s table* (spec 150 E2.2), none on the Orkmaster's tab. */
+export function GoalAsItWas({ idea, onDecision, show = null }) {
   const [g, err] = useAsk("ideas.chronicle_goal", { idea }, idea);
   if (err) return html`<p class="chr-err" role="alert">${err}</p>`;
   if (!g) return html`<p class="table-over__muted">Reading the goal…</p>`;
@@ -55,6 +56,7 @@ export function GoalAsItWas({ idea, onDecision }) {
   return html`<article class="chr-goal" data-goal=${g.idea}>
     <h3 class="chr-title"><${Elem} name=${g.element || ""} hue=${g.hue || ""} dim=${!g.element} /> ${g.title}</h3>
     <p class="table-over__muted">Through the portal ${dayWord(g.day)}</p>
+    ${show?.(g.idea)}
     ${g.changed_by.length > 0 && html`<p class="chr-changed" data-changed="1"><span class="chr-changed__by">${changedBy(g.changed_by)}</span>
       ${g.changed_by.map((c) => html`<button type="button" key=${c.number} class="ork-btn quiet chr-link" data-decision=${c.number} title=${c.title} onClick=${() => onDecision(c.number)}>§${c.number} ${c.title}</button>`)}</p>`}
     <${Spec} spec=${g.spec} />
@@ -67,13 +69,14 @@ export function GoalAsItWas({ idea, onDecision }) {
   </article>`;
 }
 
-export function Decision({ number, onDecision, onGoal }) {
+export function Decision({ number, onDecision, onGoal, show = null }) {
   const [d, err] = useAsk("ideas.chronicle_decision", { number }, number);
   if (err) return html`<p class="chr-err" role="alert">${err}</p>`;
   if (!d) return html`<p class="table-over__muted">Reading the decision…</p>`;
   return html`<article class="chr-decision-page" data-decision=${d.number}>
     <h3 class="chr-title">§${d.number} ${d.title}</h3>
     <p class="table-over__muted">${dayWord(d.day)}</p>
+    ${show?.(d.goal)}
     ${d.goal && html`<p><button type="button" class="ork-btn quiet" data-goal=${d.goal} onClick=${() => onGoal(d.goal)}>The goal it came from</button></p>`}
     <${Links} label="Changes" list=${d.changes} onDecision=${onDecision} point=${true} />
     <${Links} label=${"Changed by"} list=${d.changed_by} onDecision=${onDecision} />

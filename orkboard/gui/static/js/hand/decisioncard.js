@@ -1,3 +1,4 @@
+// (Spec 150 E2.1: while the row says `conflicted`, a conflict card of the hand is open and **Confirm and start** is not shown.)
 // The decision's card (docs/specs/100-a-goals-way-as-cards.md §3.1; docs/specs/99-a-goals-way.md §6; decisions §118.1, §134.5, §147.3): what the Orkmaster worded after Talk, for the person to read and confirm. The row is
 // `{kind: "decision", idea, number, title, text, confirmed, error}` (`text`: *Why: …* and the points numbered, as the project's decisions file words them). Its face is the hand's card (stopcard.js): the sign `page`, the
 // Orkmaster's crowned head as its asker, *Decision <n>* at its foot, no gem (it spends nothing new), under the first lane. Lifted: its title (the card's own header), *Why* and its numbered points, **Change…** (spec 132 A, decisions §237.3), which opens the whole
@@ -60,11 +61,12 @@ export function DecisionLifted({ s, close }) {
           ${body.points.length > 0 && html`<ol class="hand-way__points" aria-label="The points">${body.points.map((p, i) => html`<li key=${i} class="body">${p}</li>`)}</ol>`}
           ${body.rest && html`<p class="body hand-way__words">${body.rest}</p>`}`
         : html`<p class="body hand-way__words">${String(row.text || "").trim()}</p>`}
+    ${row.conflicted && html`<p class="cap hand-way__place" data-note="conflicted">It goes against an earlier decision: answer that card first.</p>`}
     ${held && !row.confirmed && html`<p class="cap hand-way__place" data-note="held">Held: start it when you are ready</p>`}
     ${row.confirmed && html`<p class="cap hand-way__place" data-note="written">${row.error ? `${row.error}. ` : ""}The decision is written already: Confirm and start asks the sections again.</p>`}
     <div class="hand-answers hand-way__acts" role="group" aria-label="Answers">
-      <button type="button" class="ork-btn primary" disabled=${busy || (edit && (!text.trim() || !!say.trim()))}
-        title="The decision is written into the project’s decisions file and committed, then the leaders write their sections" onClick=${confirm}>${held ? "Start" : "Confirm and start"}</button>
+      ${!row.conflicted && html`<button type="button" class="ork-btn primary" disabled=${busy || (edit && (!text.trim() || !!say.trim()))}
+        title="The decision is written into the project’s decisions file and committed, then the leaders write their sections" onClick=${confirm}>${held ? "Start" : "Confirm and start"}</button>`}
       ${!row.confirmed && (edit ? html`<button type="button" class="ork-btn" data-answer="change" disabled=${busy || (text === seed && !say.trim())}
           title=${say.trim() ? "The field is kept as written; what you say is worded again by the Orkmaster: one call" : "Keep the decision as written"} onClick=${change}>Change</button>
         <button type="button" class="ork-btn quiet" disabled=${busy} onClick=${() => { setEdit(false); setText(seed); setSay(""); }}>Cancel</button>`

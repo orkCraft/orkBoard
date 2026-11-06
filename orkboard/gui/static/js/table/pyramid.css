@@ -1,0 +1,29 @@
+/* The pyramid in the portal's eye (docs/specs/150 E2.3, decisions §254.7; table/pyramid.js; mockup docs/mockups/table-edge/ section 5, the pyramid): layout and orkUI's tokens only. Three small cards (56 x 78) at the ring's middle, the newest in front
+   and whole, each older one smaller and darker and higher (their transform and brightness set by pyramid.js), going into the swirl. A new one's edge is in the ink. A step moves once (`is-moving`: a transition) and nothing moves under reduced motion; a step hovered
+   rises whole under the ring (144 x 202); ready for main, the pyramid sinks into the eye (`is-sinking`, once). */
+.pyramid { position: absolute; left: 50%; top: 50%; z-index: 3; width: 0; height: 0; }
+.pyramid .pyramid__step { position: absolute; left: -28px; top: -39px; box-sizing: border-box; width: 56px; max-width: none; height: 78px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer;
+  transform-origin: 50% 50%; }
+.pyramid__step.is-moving { transition: transform 420ms var(--ork-motion-ease, ease-out), filter 420ms var(--ork-motion-ease, ease-out); }
+.pyramid__step.is-new { border-color: var(--ork-ink); }
+.pyramid__step:hover, .pyramid__step:focus-visible { outline: 0; border-color: var(--ork-ink); }
+.pyramid__top, .pyramid__bot { display: flex; align-items: center; justify-content: space-between; gap: 2px; height: 14px; }
+.pyramid__bot { justify-content: flex-start; }
+.pyramid__bot .ork-race__head { width: auto; height: 11px; }
+.pyramid__n { color: var(--ork-ink); font-family: var(--ork-font-pixel); font-size: 11px; text-align: center; }
+.pyramid__rise { position: absolute; left: -72px; top: 168px; z-index: 6; box-sizing: border-box; width: 144px; max-width: none; height: 202px; padding: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-2);
+  pointer-events: none; box-shadow: 0 10px 24px var(--ork-scrim); }
+.pyramid__rise .corner { flex: none; }
+.pyramid__rise .corner--foot { margin-top: auto; }
+.pyramid__ti { overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; }
+.pyramid__why { overflow: hidden; color: var(--ork-ink-muted); font: var(--ork-type-caption); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }
+.pyramid.is-sinking .pyramid__step { animation: pyramid-sink 360ms var(--ork-motion-ease, ease-in) both; }
+@keyframes pyramid-sink { to { transform: translateY(16px) scale(0.1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pyramid__step.is-moving { transition: none; } .pyramid.is-sinking .pyramid__step { animation: none; opacity: 0; } }
+/* the lich's line under it in the edge (E2.2): whose past it holds */
+.portal__past { position: absolute; left: 50%; bottom: -66px; z-index: 4; transform: translateX(-50%); padding: 0 var(--ork-1); white-space: nowrap; color: var(--ork-ink); font: var(--ork-type-caption); background: none;
+  border: 0; border-bottom: var(--ork-line) solid var(--ork-ink); cursor: pointer; }
+.portal__past:hover, .portal__past:focus-visible { outline: 0; color: var(--ork-ink); border-bottom-width: 2px; }
+.portal-host.is-ring .ork-portal-ring { margin-bottom: 64px; }
+/* a step risen lies over what stands under the ring in the edge (the discard, the die) */
+.frame-edge > .portal-host:has(.pyramid__rise) { position: relative; z-index: 5; }

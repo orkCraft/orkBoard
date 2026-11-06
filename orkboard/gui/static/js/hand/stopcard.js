@@ -66,7 +66,7 @@ export const footOf = (s) => wayOf(s.kind)?.foot?.(s) ?? (s.text || s.why || "")
 export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.party.name}` : ""}: ${s.full}`;
 
 /** Who hands a card (spec 120 §6.9): the Orkmaster for what the Orkmaster plays (a route, a decision, a hearing, a fork, a collision, *Go on paid?*), else the leader of the party that asks (its name). */
-const ORK_KINDS = ["route", "start", "decision", "fork", "collide", "paid", "hearing", "objection", "groups", "spec_change"];
+const ORK_KINDS = ["route", "start", "decision", "fork", "conflict", "collide", "paid", "hearing", "objection", "groups", "spec_change"];
 export const askerOf = (s) => (ORK_KINDS.includes(s.kind) ? "the Orkmaster" : s.party?.lead || s.party?.name || "the Orkmaster");
 
 /** Who plays a stop, for where it comes from (motion.js `fromWhere`): its goal, its party, and whether the Orkmaster plays it (a card of a goal: the Orkmaster's tab is its origin when its goal's card is not in view; *Go on paid?* has no goal and no party: dealt from under its place). */
@@ -88,7 +88,7 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
     el.style.setProperty("--ork-play-y", `${v.y}px`);
     el.classList.add("ork-play");
   }, [gone]);
-  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-card--face${element ? ` el-${hue}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
+  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-card--face${element ? ` el-${hue}` : ""}`, { asks: ["asks", "goal", "pick", "collide", "conflict"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
         "is-slot": slot, "is-gone": gone, "ork-deal": plain })}
       data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined} data-from=${from || undefined}
       style=${dealt ? `--ork-deal-i:${dealt.i}` : undefined} aria-label=${`${labelOf(s)}${from ? `, from ${from}` : ""}`} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
@@ -145,7 +145,7 @@ export function Lifted({ s, anchor, inline = false, typing = false }) {
   }, [typing, inline, s.key]);
   const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted || (isSketch(s) ? SketchLifted : null);
   const shown = footCost(s.key, cost), asker = askerOf(s), party = s.party?.name || "";                  // the opened card (spec 147 D.1; on the phone F.3): its corners large, the title, a body that scrolls, the answers above its foot
-  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--card${inline ? " hand-lifted--up" : ""}${typing ? " is-typing" : ""}${element ? ` el-${hue}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
+  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--card${inline ? " hand-lifted--up" : ""}${typing ? " is-typing" : ""}${element ? ` el-${hue}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide", "conflict"].includes(s.kind), fails: s.kind === "failed" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind} data-typing=${typing ? "1" : undefined} style=${!inline && at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
     <${CornerTop} large=${true} rune=${{ name: element, hue, dim: !element }} name=${s.node?.short || s.node?.title || ""} kind=${actionOf(s).sign} signal=${signalOf(s)} word=${s.label} kindClass="hand-lifted__kind" />
     <span class="hand-card__name hand-lifted__title" title=${s.full || s.title}>${inline ? upName(s) : s.title || s.full}</span>

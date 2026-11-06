@@ -1,29 +1,41 @@
-/* The chronicle over the pane (docs/specs/134 part B, decisions §238; table/chronicle.js): layout and orkUI's tokens only, no colour, face or corner of its own. A chapter a line (the version and its day), its goals and the decisions of no goal under it;
-   a goal as it was and a decision's entry as plain pages, what people wrote in the body face. */
-.table-over__chronicle { display: flex; flex-direction: column; gap: var(--ork-3); max-width: 72ch; }
-.chr, .chr-chapters, .chr-finds { display: flex; flex-direction: column; gap: var(--ork-3); }
-.chr-search { display: flex; align-items: center; gap: var(--ork-2); }
+/* The past over the pane (docs/specs/150 E2.2, decisions §254.7; docs/specs/134 part B, decisions §238; table/chronicle.js; mockup docs/mockups/table-edge/ section 5): layout and orkUI's tokens only, no colour, face or corner of its own. The search over the top,
+   at its left a deck a version (a stack of cards: the card's frame and two edges behind it), at its right the cards dealt (the hand card's size, 144 x 202, with its four corners); a goal as it was and a decision's entry as plain pages, what people wrote in the body face. */
+.table-over__chronicle { display: flex; flex-direction: column; gap: var(--ork-3); }
+.chr, .chr-goal, .chr-decision-page, .chr-spec, .chr-section { display: flex; flex-direction: column; gap: var(--ork-3); }
+.chr-deal-host[hidden] { display: none; }
+.chr-search { display: flex; align-items: center; gap: var(--ork-2); max-width: 72ch; }
 .chr-search .ork-field { flex: 1; min-width: 0; }
-.chr-chapter { display: flex; flex-direction: column; gap: var(--ork-2); border-top: var(--ork-line) solid var(--ork-frame); padding-top: var(--ork-2); }
-.chr-chapter__hd { margin: 0; font: inherit; }
-.chr-chapter__btn { display: flex; align-items: center; gap: var(--ork-2); width: 100%; text-align: left; }
-.chr-chapter__nm { font: var(--ork-type-body); font-weight: 600; }
-.chr-chapter__day, .chr-row__day, .chr-row__in, .chr-row__num { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
-.chr-chapter__day { margin-left: auto; }
-.chr-rows { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0 0 0 var(--ork-4); list-style: none; }
-.chr-row { display: flex; align-items: center; gap: var(--ork-2); }
-.chr-row__btn { display: flex; align-items: center; flex: 1; min-width: 0; gap: var(--ork-2); text-align: left; }
-.chr-row__nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chr-row__dec { flex: none; font: var(--ork-type-caption); }
-.chr-back { margin: 0; }
+.chr-table { display: flex; align-items: flex-start; gap: var(--ork-5); }
+.chr-decks { display: flex; flex: none; flex-direction: column; gap: var(--ork-4); width: 168px; padding: 0 var(--ork-3) var(--ork-3) 0; }
+.chr-deck { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: var(--ork-1); box-sizing: border-box; width: 160px; min-height: 52px; padding: var(--ork-2) var(--ork-3); text-align: left; cursor: pointer;
+  color: var(--ork-ink); background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame);
+  box-shadow: 3px 3px 0 -1px var(--ork-card), 3px 3px 0 0 var(--ork-card-frame), 6px 6px 0 -1px var(--ork-card), 6px 6px 0 0 var(--ork-card-frame); }
+.chr-deck__nm { font-family: var(--ork-font-pixel); font-size: 11px; font-weight: 400; text-transform: uppercase; }
+.chr-deck__day { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.chr-deck:hover, .chr-deck:focus-visible { border-color: var(--ork-ink); outline: 0; }
+.chr-deck.is-on { border-color: var(--ork-ink); transform: translateX(8px); }
+.chr-deck.is-dim { opacity: 0.45; }
+.chr-deal { display: flex; flex: 1; flex-wrap: wrap; gap: var(--ork-4); min-width: 0; margin: 0; padding: 0; list-style: none; }
+.chr-card-wrap { position: relative; width: 144px; height: 202px; flex: none; }
+.chr-card { display: flex; flex-direction: column; justify-content: space-between; gap: var(--ork-2); box-sizing: border-box; width: 100%; height: 100%; padding: var(--ork-3); text-align: left; cursor: pointer; }
+.chr-card .corner { flex: none; }
+.chr-card__nm { flex: 1; min-height: 0; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5; }
+.chr-card__num { color: var(--ork-ink-muted); }
+.chr-card__day, .chr-row__day { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.chr-card-wrap.is-lit .chr-card { border-color: var(--ork-ink); box-shadow: 0 0 0 var(--ork-line) var(--ork-ink); }
+.chr-card__dec { position: absolute; left: var(--ork-2); bottom: var(--ork-2); font: var(--ork-type-caption); }
+.chr-back, .chr-show { margin: 0; }
 .chr-title { display: flex; align-items: center; gap: var(--ork-2); margin: 0; font: var(--ork-type-read); font-weight: 600; }
 .chr-changed, .chr-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); margin: 0; }
 .chr-changed__by { font: var(--ork-type-caption); font-weight: 600; color: var(--ork-ink); }
 .chr-link { font: var(--ork-type-caption); max-width: 100%; text-align: left; }
-.chr-goal, .chr-decision-page, .chr-spec, .chr-section { display: flex; flex-direction: column; gap: var(--ork-2); }
+.chr-goal, .chr-decision-page { max-width: 72ch; }
 .chr-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .chr-entry { margin: 0; padding: var(--ork-3); max-height: none; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); }
 .chr-found { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; }
 .chr-found__src { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .chr-err { margin: 0; color: var(--ork-danger); }
-.mp-earlier { align-self: flex-start; }
+@media (max-width: 759.98px) {
+  .chr-table { flex-direction: column; }
+  .chr-decks { flex-direction: row; flex-wrap: wrap; width: auto; }
+}

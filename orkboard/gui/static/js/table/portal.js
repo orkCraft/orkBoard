@@ -11,6 +11,8 @@
 // main has its checks run (`ideas.to_main_checks`, checks.js): each check is a skeleton in the gate in front of the portal (`is-sealed is-guarded`, the line *Checking the way into main*) until it passes and goes to Release's corner with a
 // tick; a red one stays, the sealed line says *Sealed: <check> is red: <why>*; with every check passed the portal opens. A seal no check owns (a goal not done, main behind its origin) keeps the sealed portal with its X. When a goal goes
 // in, the ring plays the rite in the goal's colour (`is-sending rite-<element>`, once, 1.2 s).
+// **The past** (spec 150 E2.2–E2.3, decisions §254.7): the lich pressed, or its line under it (*Design's past ›*, *The project's past ›*, changing with the tab), opens the past through the open tab (chronicle.js); the pyramid of the tab's last three
+// decisions stands in the ring's eye (pyramid.js) while nothing is ready, checked or sent, and sinks into it when something is.
 import { signal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -25,6 +27,10 @@ import { reduced, leans } from "../hand/motion.js";
 import { wide } from "./data.js";
 import { CHECKING, checksOf, forgetChecks, isRed, pending, sealedWords, skeletonsOf, startChecks, whenAsked } from "./checks.js";
 import { Corner, Gate, roadNow } from "./road.js";
+import { Pyramid } from "./pyramid.js";                    // the past's way in, in the ring's eye (spec 150 E2.3)
+import { openChronicle } from "./chronicle.js";
+import { whose } from "./chronicleparts.js";
+import { pastLine } from "./chroniclewords.js";
 
 const SEEN_KEY = "orkboard.portal.seen";
 const NARROW = "(max-width: 759.98px)";
@@ -219,11 +225,13 @@ function PortalDoor() {
     ${open && line && html`<p class="portal__line">${line}</p>`}
     ${red && !sealed && html`<p class="portal__line is-red" role="status" aria-live="polite">${said}</p>`}
     <span class=${cls("ork-portal-ring", { "is-open": (ready && !shut) || !!sending.value, "is-sealed": shut, "is-waking": ready && first.value && !woke.value, "is-taking": taking.value, "is-sending": !!sending.value, [`rite-${sending.value}`]: !!sending.value })}
-        aria-hidden=${ready || corners ? undefined : "true"} onAnimationEnd=${(e) => { if (e.animationName === "ork-ring-eye") woke.value = true; }}>
+        aria-hidden=${ready || corners || !drawn ? undefined : "true"} onAnimationEnd=${(e) => { if (e.animationName === "ork-ring-eye") woke.value = true; }}>
       ${drawn && html`<span class="portal__label">${label}</span>`}
       ${ready && button}
       <span class="ork-portal-ring__seal" aria-hidden="true">${element && html`<${Elem} name=${element} hue=${sealHue} />`}</span>
-      <${Corner} side="before" word="Release" words="Release: open the past" c=${road.release} passed=${passed} />
+      <${Pyramid} sunk=${drawn} />
+      <${Corner} side="before" word="Release" words="Release: open the past" c=${road.release} passed=${passed} onPress=${() => openChronicle()} />
+      ${road.release && html`<button type="button" class="portal__past" data-past=${whose().party || "orkmaster"} onClick=${() => openChronicle()}>${pastLine(whose().name)}</button>`}
       <${Corner} side="after" word="Live" words="Live: open what is live" c=${road.live} />
       ${guard && html`<${Gate} skeletons=${skeletons} onPress=${play} drag=${{ onDragEnter: held, onDragOver: held, onDragLeave: left, onDrop: drop }} />`}
     </span>

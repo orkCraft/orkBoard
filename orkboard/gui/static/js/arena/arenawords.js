@@ -352,7 +352,7 @@ export function limitLine(l, reserve, resetOf) {
 
 export const KIND_WORD = { plan: "Plan ready", change: "Plan change", leader_change: "A change", spec_change: "A change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
   pick: "Pick one", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main",
-  route: "Route", start: "Start", talk: "Talk", cause: "The cause", decision: "Decision", hearing: "Hearing", fork: "A fork", project_q: "About the project", paid: "Orkmaster asks" };       // a goal's way (spec 100): what the card is, in plain words (a question's own label is "Question")
+  route: "Route", start: "Start", talk: "Talk", cause: "The cause", decision: "Decision", hearing: "Hearing", fork: "A fork", conflict: "Goes against", project_q: "About the project", paid: "Orkmaster asks" };       // a goal's way (spec 100): what the card is, in plain words (a question's own label is "Question")
 KIND_WORD.quality = "Quality"; KIND_WORD.finding = "Finding";        // a goal's quality card and a finding of no goal's (spec 132 D.3: hand/qualitycard.js)
 const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", pitch: "", collide: "", sign_in: { sign: "alert" }, paid: "" };
 
@@ -402,9 +402,10 @@ export function stopsOf(needs, g, nodes, ork = null) {
       for (const t of failedTasks(n)) if (!done.has(`${n.slug}/${t.id}`)) { done.add(`${n.slug}/${t.id}`); out.push(taskItem(n, t)); }
       continue;
     }
-    const base = { key: `${row.kind}/${row.idea || row.goal}/${row.todo?.id || row.task || (row.kind === "finding" ? row.id : "")}`, kind: row.kind, row, node: n, task: null, label: KIND_WORD[row.kind] || row.kind,
+    const base = { key: `${row.kind}/${row.idea || row.goal}/${row.todo?.id || row.task || (row.kind === "finding" ? row.id : row.kind === "conflict" ? row.number : "")}`, kind: row.kind, row, node: n, task: null, label: KIND_WORD[row.kind] || row.kind,
       gem: GEM[row.kind] ?? "·", tone: row.kind === "failed" ? "danger" : "alert", gemTip: "", title: row.title, full: row.title, text: row.text, head: lead, small: false, whoTip: "" };
     if (row.kind === "decision" && Number(row.number) > 0) base.label = `${KIND_WORD.decision} ${row.number}`;        // its number is said once, where the card's kind is: the lifted card does not say it again
+    if (row.kind === "conflict" && Number(row.number) > 0) base.label = `${KIND_WORD.conflict} §${row.number}`;        // a conflict is said by its number at the card's foot (spec 150 E2.1)
     if (row.kind === "quality") base.label = row.text || KIND_WORD.quality;        // *Quality of <goal>* at the lifted card's foot (spec 132 D.3)
     if (row.kind === "plan") {
       const tasks = n?.tasks || [], checks = tasks.filter((t) => t.band === "check").length, builds = tasks.length - checks;

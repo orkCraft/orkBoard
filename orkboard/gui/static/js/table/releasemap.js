@@ -1,6 +1,6 @@
 // Release's map: dev and main (docs/specs/102-the-other-maps-and-picking-on-them.md §3.2, §5.5; decisions §137.3, §171.1; mockup docs/mockups/s3/ state 5). A card is a goal that is in dev and not in main — its element, its name, its sign,
 // its commit in the label row and, at its right, the tick of the goal being in the merge —; under them, **To main** at the map's foot with the gate's words (what the merge takes, and a refusal in the gate's own words); *Since <version>*
-// faint under that. **To main** is today's merge (`ideas.gate_merge`, as the discard's does it): it takes dev whole, so the tick is the data's (`ticked`), not a choice made here. Registered with maps.js for the craft `release`.
+// faint under that. (The past is no line of this lens any more: the lich in the table's edge opens it through the open tab, spec 150 E2.2.) **To main** is today's merge (`ideas.gate_merge`, as the discard's does it): it takes dev whole, so the tick is the data's (`ticked`), not a choice made here. Registered with maps.js for the craft `release`.
 import { useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Sign } from "../orkui.js";
@@ -9,8 +9,6 @@ import { pick, picked } from "../frame/state.js";
 import { mapData, refreshShell } from "../shell/store.js";
 import { flagDay } from "../arena/goalwords.js";
 import { mapFor } from "./maps.js";
-import { openChronicle } from "./chronicle.js";
-import { earlierWords } from "./chroniclewords.js";
 import { MapBack, MapCard, MapFrame, Sec, Win, countWords, useLifted, useRead } from "./mapkit.js";
 
 const MAP = "release", SHORT = 7;
@@ -31,12 +29,6 @@ function Back({ g, into, main }) {
     <${Sec} label="Commit"><span class="mp-code">${String(g.commit || "").slice(0, SHORT)}</span></${Sec}>
     <p class="mp-cap">${g.ticked ? `In ${into}, not in ${main} yet. It goes with the rest when you press To ${main}.` : `In ${into}, left out of the merge.`}</p>
     <div class="mp-acts"><button type="button" class="ork-btn quiet" aria-pressed=${String(on)} onClick=${() => pick(g.idea)}>${on ? "Picked: put it down" : "Pick this goal"}</button></div>`;
-}
-
-/** One line under the lens: *Earlier: v0.3 · 28 Oct ›*, from `ideas.chronicle_line`; pressed it opens the chronicle over the pane (spec 134 B, decisions §238.2). None when nothing is known of the past; no list, no count. */
-function EarlierLine() {
-  const [rd] = useRead("ideas.chronicle_line"), e = rd.data?.earlier;
-  return e ? html`<button type="button" class="ork-btn quiet mp-earlier" data-earlier=${e.kind} onClick=${() => openChronicle()}>${earlierWords(e)} ›</button>` : null;
 }
 
 export function ReleaseMap({ g, narrow }) {
@@ -77,7 +69,6 @@ export function ReleaseMap({ g, narrow }) {
         <section class="mp-since" aria-label="Since the last version">
           ${d.since ? html`<span class="ork-label">Since ${d.since.version || "the last version"}</span><span class="mp-cap">Out ${flagDay(d.since.out)}</span>`
             : html`<span class="ork-label">No version is out yet</span>`}
-          <${EarlierLine} />
         </section>
       </div>
     </div>`}
