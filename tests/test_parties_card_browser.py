@@ -161,6 +161,7 @@ def test_its_foot_says_what_they_cost_and_start_makes_the_parties_and_lays_the_t
     pg.locator('[data-act="start"]').click()
     pg.locator(CARD).wait_for(state="detached", timeout=WAIT_MS)
     pg.locator('.frame[data-laid="1"]').wait_for(timeout=WAIT_MS)
+    until(pg, lambda: first_open.kept(d.host.ideas.state_dir))                  # the table is laid as the parties are made; Start's last step (the project's questions) keeps it a moment after
     assert first_open.kept(d.host.ideas.state_dir) is True
     assert set(p["recipe"] for p in parties_of(d.host).values()) >= {"game-design", "art", "release"}
     assert not d.errors, d.errors
