@@ -102,10 +102,17 @@ _FIXED = {
 }
 
 
+def rules(seat: str) -> str:
+    """The rules of a built-in seat (spec 154 A.1): what Orkboard tells the Taskmaster (its plan) or a Grunt (its task) apart from each call's frame, which other modules build around it (the step's
+    context, the task, the gate). An agent's frame (`seat_frames.agent("taskmaster", "plan")`, `("grunt", "task")`) holds this text. "" for any other slug."""
+    return _FIXED.get(seat, "")
+
+
 def instruction(seat: str) -> str:
     """The fixed text of a built-in seat (spec 151 C.3): what Orkboard tells the Taskmaster or a Grunt before the person's own instruction. The page shows it beside the field
-    (`TOLD`) and `roles/<seat>.md` of the Board's folder holds it. "" for any other slug: a role of the project's own has no fixed text."""
-    return _FIXED.get(seat, "")
+    (`TOLD`) and `roles/<seat>.md` of the Board's folder holds it. "" for any other slug: a role of the project's own has no fixed text. Its rules are `rules(seat)`: these seats have no
+    other fixed text of their own."""
+    return rules(seat)
 
 
 TOLD = {seat: instruction(seat) for seat in BUILTIN}
