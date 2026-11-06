@@ -365,8 +365,8 @@ class TaskMixin:
             parts.append(FINDINGS_ASK)
         elif is_pick(task):
             parts.append(pick_ask(task))
-        if start := task_brief.start_at(task):                          # where its planner read: first, before the spec's part (spec 153 B.3)
-            parts.insert(0, start)
+        if start := task_brief.start_at(task):                          # where its planner read, just before the spec's part (spec 153 B.3): the role and the rules stay the stable head (spec 36 §6)
+            parts.insert(next((i for i, p in enumerate(parts) if p.startswith("# The idea")), len(parts)), start)
         return "\n\n".join(parts)
 
     def _does_it_itself(self, slug: str, task: dict, role: dict) -> bool:

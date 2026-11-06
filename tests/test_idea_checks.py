@@ -332,6 +332,7 @@ def test_a_task_that_has_files_starts_its_prompt_with_where_to_start_a_check_and
     runner, _ = runner_of(town)
     plan = runner.plan("demo")
     work, check, pick, plain = (runner._prompt("demo", plan, plan["tasks"][i]) for i in range(4))
-    assert work.startswith("Start at: `a.py`, `b/c.py` (its planner read them; read more as you need)") and work.index("Start at:") < work.index("# The idea")
-    assert check.startswith("Start at: `a.py` (its planner read it") and pick.startswith("Start at: `d.py`")
+    assert "\n\nStart at: `a.py`, `b/c.py` (its planner read them; read more as you need)\n\n# The idea" in work, "just before the spec's part"
+    assert not work.startswith("Start at:"), "the role and the rules stay the prompt's stable head (spec 36 §6)"
+    assert "Start at: `a.py` (its planner read it" in check and "Start at: `d.py`" in pick
     assert "Start at:" not in plain

@@ -23,10 +23,11 @@ BACK = {"verdict": "back", "done_when": [{"n": 1, "met": False, "why": "not save
 
 
 def _plan(row):
+    """The plan's answer: its one task proves every Done when line of its section (spec 153 C), so no line is left unclaimed but where a test says so."""
     text = " ".join(row["prompt"].split())
     if "step 2 of 2" in text:
-        return {"tasks": [{"id": "a", "title": "Build the setting", "brief": "Build it", "kind": "code", "tier": "warrior"}]}
-    return {"tasks": [{"id": "a", "title": "Make the settings screen", "brief": "Make it", "kind": "design", "tier": "elder"}]}
+        return {"tasks": [{"id": "a", "title": "Build the setting", "brief": "Build it", "kind": "code", "tier": "warrior", "proves": [1, 2, 3, 4, 5]}]}
+    return {"tasks": [{"id": "a", "title": "Make the settings screen", "brief": "Make it", "kind": "design", "tier": "elder", "proves": [1, 2, 3, 4, 5]}]}
 
 
 @pytest.fixture
