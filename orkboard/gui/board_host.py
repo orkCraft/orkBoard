@@ -286,12 +286,15 @@ class Orkboard:
         self.commands.update(phone_journal.commands(self))   # journal.phone_ask · turn_on · not_now: Settings' one-time question (spec 136 A.2)
         from orkboard.gui import board_switch
         self.commands.update(board_switch.commands(self))    # board.switch · turn_on · not_now: Settings' Keep the Board in the repository (spec 137 E)
+        from orkboard.gui import agent_rules_switch
+        self.commands.update(agent_rules_switch.commands(self))    # rules.switch · write · not_now: Settings' Let any AI tool work the Board (spec 151 C)
         shown_board = self.commands["ideas.board"]
         self.commands["ideas.board"] = lambda a: self._with_ops(shown_board(a))
         if restore:
             self.projects.restore()
         if repo_root is not None:
             self.projects.open(repo_root)
+        self.agent_rules.start()                  # a project with the Board's rules gets the package's text where it differs (spec 151 C.5)
 
     # -- the shown project -----------------------------------------------------------------------------------
 

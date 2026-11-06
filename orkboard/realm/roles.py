@@ -91,7 +91,7 @@ NO_PARTY_RACE = ("taskmaster", "orkmaster")             # roles that are orks wh
 # orkUI's copy of the races' heads (design/orkui.py): a role's own race (spec 68 §1.3) is worn only once its file is here.
 RACE_FILES = Path(__file__).resolve().parents[1] / "design" / "system" / "orkui" / "races"
 # What the built-in two are told already, beside the field that adds to it (spec 41 §8): their prompts are Orkboard's own.
-TOLD = {
+_FIXED = {
     TASKMASTER: "Each of its steps (reading a party, drafting a goal's spec, taking your answers, planning, the night's "
                 "proposals) has its own prompt in Orkboard, with only what that step needs. What you write here goes "
                 "before each step it runs; a party's leader, where it has one, runs that party's steps in its place.",
@@ -100,6 +100,15 @@ TOLD = {
            "tests and those of what it touched. Claude Code reads the project's CLAUDE.md itself. What you write here "
            "goes first.",
 }
+
+
+def instruction(seat: str) -> str:
+    """The fixed text of a built-in seat (spec 151 C.3): what Orkboard tells the Taskmaster or a Grunt before the person's own instruction. The page shows it beside the field
+    (`TOLD`) and `roles/<seat>.md` of the Board's folder holds it. "" for any other slug: a role of the project's own has no fixed text."""
+    return _FIXED.get(seat, "")
+
+
+TOLD = {seat: instruction(seat) for seat in BUILTIN}
 DEFAULT_CRAFT = "engineering"                    # the orks': Taskmaster's, Grunt's and every role's written before crafts
 _DEFAULTS = {
     TASKMASTER: {"name": "Taskmaster", "model": "elder", "max_parallel": 1, "instruction": "", "craft": DEFAULT_CRAFT},

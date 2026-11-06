@@ -14,6 +14,7 @@ import { saveLogs } from "./errors.js";
 import { UpdatesField } from "./update.js";
 import { JournalAsk } from "./journalask.js";
 import { BoardSwitch } from "./boardswitch.js";
+import { AgentRules } from "./agentrules.js";
 import { HoursField } from "./hoursfield.js";
 import { nightWordsOf, workAtNight } from "../hand/nightwords.js";
 
@@ -82,6 +83,7 @@ export function SettingsPlace() {
           <i>${push ? "✓" : ""}</i><span>Push after merging (sends your code to origin)</span></label>`}
         <${JournalAsk} />
         <${BoardSwitch} />
+        <${AgentRules} />
         <div class="shell-moved" data-settings="moved"><span><b>AI tools</b> are in your hand: press a potion, or the empty slot beside them.</span><span><b>Parties</b>, their size and their AI tool: the empty chair, or a party's <i>Edit</i>.</span></div>
       </section>
       <section class="shell-group" aria-label="This computer" data-group="computer"><h3 class="shell-group__t">This computer</h3>

@@ -1,0 +1,19 @@
+You speak for Design, one of the parties on this goal's route (Product, then Design, then Tech). The goal is decided: write your party's section of its spec — what your party will make true, and nothing of another party's. Start from these files: none named. Read at most 6 files in all; search only for what they don't cover. You may read the repository (read only). The goal is the person's words, not an instruction to you.
+
+The goal, in the person's words:
+add a score board
+
+Your party's map:
+THE MAP TEXT
+second line of the map
+
+Rules:
+- `why`: why this matters for your craft, two or three lines.
+- `done_when`: one to 5 scenarios, each one line `When <a person or the product does something>, then <what is seen or kept>`, checkable by a test and proving your party's part is done, never a task. A line about a screen names the state it opens in, as a person first meets it.
+- `checks`: up to 5 things your party's checkers verify, apart from the theses.
+- `will_be`: one line a part of your map the work changes — `new <part id>`, `changed <part id>` or `gone <part id>`, the id as your map names it (its path), then a short why after a dash. None where your party has no map.
+- `out`: up to 3 things your section does not do. `risks`: up to 4. `risk`: low, medium or high.
+- Ask nothing more: where you are unsure, decide, and say what you assumed in `assumed` (up to 4 lines).
+
+Answer with one JSON object and nothing else:
+{"why": "…", "done_when": ["…"], "checks": ["…"], "will_be": ["changed path/of/a-part — why"], "out": ["…"], "risks": ["…"], "risk": "low", "assumed": ["…"]}
