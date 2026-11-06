@@ -418,40 +418,36 @@ def test_under_reduced_motion_the_empty_chair_is_lit_and_not_pulled_out(gui):
     assert not errors, "\n".join(errors)
 
 
-# -- Stop all: the die's front face (it was a door of the top row: spec 139 A.4, decisions §246.1) --------------------------------------------------------
+# -- Stop all: a button under the die (it was the die's front face, spec 139 A.4, decisions §246.1; spec 156 E.3, decisions §261.12) ------------------------------------
 
-def test_the_dies_front_halts_says_stopped_refuses_a_second_press_and_goes_back_when_a_task_runs(desk):
+def test_stop_all_halts_says_stopped_has_no_button_to_press_again_and_comes_back_when_a_task_runs(desk):
     pg, host, w = desk
-    stop, word = pg.locator(".hand-die__stop"), pg.locator(".hand-die__orks")
-    assert stop.get_attribute("aria-label") == "Stop all: stop every run of this project's orks" and stop.get_attribute("aria-disabled") is None and word.inner_text() == "Stop all"
-    assert word.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-danger"), "in the danger colour while a task runs"
+    stop = pg.locator(".hand-die__stop")
+    assert stop.get_attribute("aria-label") == "Stop all: stop every run of this project's orks" and stop.get_attribute("aria-disabled") is None and stop.inner_text() == "Stop all"
+    assert stop.evaluate("e => e.tagName") == "BUTTON" and stop.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-danger"), "in the danger colour while a task runs"
     shot(pg, f"leaders-die-running-{w}.png")
     stop.click()
-    pg.wait_for_function("() => document.querySelector('.hand-die__orks').textContent === 'Stopped'", timeout=WAIT_MS)
-    assert host.halted == 1 and stop.get_attribute("aria-disabled") == "true"
+    pg.wait_for_function("() => document.querySelector('.hand-die__stopped')?.textContent === 'Stopped'", timeout=WAIT_MS)
+    word = pg.locator(".hand-die__stopped")
+    assert host.halted == 1 and pg.locator(".hand-die__stop").count() == 0, "nothing to press: a host that does not keep *stopped* has no Resume"
     assert word.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted"), "Stopped is muted"
     shot(pg, f"leaders-die-stopped-{w}.png")
-    stop.click(force=True)
-    stop.focus()
-    pg.keyboard.press("Enter")
-    pg.wait_for_timeout(300)
-    assert host.halted == 1, "a second press does nothing"
     pg.wait_for_function("() => !document.querySelector('.table-lane [data-state=running]')", timeout=WAIT_MS)
     pg.wait_for_timeout(300)
-    assert stop.get_attribute("aria-disabled") == "true", "nothing runs: it stays stopped"
+    assert host.halted == 1 and pg.locator(".hand-die__stopped").count() == 1, "nothing runs: it stays stopped"
     seat = next(n for n in host.nodes if n["slug"] == "rules")
     seat["tasks"][0]["state"] = "running"                                                                                # a task runs again
     host.change()
-    pg.wait_for_function("() => document.querySelector('.hand-die__orks').textContent === 'Stop all'", timeout=WAIT_MS)
-    assert stop.get_attribute("aria-disabled") is None
+    pg.wait_for_function("() => document.querySelector('.hand-die__stop')?.textContent === 'Stop all'", timeout=WAIT_MS)
+    assert pg.locator(".hand-die__stopped").count() == 0
 
 
-def test_the_dies_stopped_goes_back_when_a_goal_is_started_from_the_page(wide):
+def test_stopped_goes_back_when_a_goal_is_started_from_the_page(wide):
     pg, host = wide
     pg.locator(".hand-die__stop").click()
-    pg.wait_for_function("() => document.querySelector('.hand-die__orks').textContent === 'Stopped'", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.hand-die__stopped')?.textContent === 'Stopped'", timeout=WAIT_MS)
     pg.evaluate("() => import('/static/js/board/store.js').then((m) => m.ask('ideas.add', { text: 'A new goal' }))")
-    pg.wait_for_function("() => document.querySelector('.hand-die__orks').textContent === 'Stop all'", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.hand-die__stopped')", timeout=WAIT_MS)
 
 
 # -- the dark edges -------------------------------------------------------------------------------------------------------------------------------------

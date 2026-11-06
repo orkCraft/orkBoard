@@ -102,17 +102,17 @@ def test_the_empty_chair_is_pulled_out_on_hover_and_not_under_reduced_motion(gui
     assert not errors, "\n".join(errors)
 
 
-# -- the die's front face: Stop all (spec 139 A.1-A.4, decisions §246.1-§246.3) -----------------------------------------------------------------------
+# -- Stop all in words, under the die (spec 156 E.2–E.3, decisions §261.12; it was the die's front face, spec 139 A, decisions §246) ------------------------------------------------
 
 STOP_WORDS = "Stop all: stop every run of this project's orks"
 
 
-def front_colour(pg):
-    return pg.locator(".hand-die .ork-die").evaluate("e => getComputedStyle(e).getPropertyValue('--_front').trim()")
-
-
 def token(pg, name):
     return pg.evaluate("(n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim()", name)
+
+
+def paint(pg, c):
+    return pg.evaluate("(c) => { const i = document.createElement('i'); i.style.color = c; document.body.append(i); const v = getComputedStyle(i).color; i.remove(); return v; }", c)
 
 
 def nothing_runs(host):
@@ -121,79 +121,72 @@ def nothing_runs(host):
     host.ws.send(__import__("json").dumps(host.snapshot()))
 
 
+def test_the_die_is_orkuis_small_die_whole_and_wears_no_stop_marks(gui):
+    host = Host(n=3)
+    pg, errors = window(gui, host)
+    d = die(pg)
+    pg.wait_for_function("() => document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
+    cube = d.locator(".ork-die")
+    assert "small" in cube.get_attribute("class").split() and cube.get_attribute("aria-hidden") == "true"
+    assert cube.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [48, 60]                                                 # orkUI's .small: 2 px a cell
+    cls = cube.get_attribute("class")
+    assert "front-stop" not in cls and "front-resume" not in cls and "right-resume" not in cls and "is-turning" not in cls
+    assert d.locator(".hand-die__play").get_attribute("aria-label") == "Play: the project's preview of dev"
+    play = d.locator(".hand-die__play").bounding_box()
+    assert play["width"] == pytest.approx(48, abs=1) and play["height"] == pytest.approx(60, abs=1)                          # one press over the whole die
+    finish(pg, errors)
+
+
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_die_has_two_buttons_the_front_one_over_the_front_face_and_two_words_under_it(gui, width):
+def test_stop_all_is_a_button_under_the_word_play_in_the_dangers_colour_only_while_a_task_runs(gui, width):
     host = Host(n=3)
     pg, errors = window(gui, host, {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
     d = die(pg)
-    play, stop = d.locator(".hand-die__play"), d.locator(".hand-die__stop")
-    assert play.get_attribute("aria-label") == "Play: the project's preview of dev"
-    assert stop.get_attribute("aria-label") == STOP_WORDS and stop.get_attribute("title") == STOP_WORDS
-    assert d.locator("button").count() == 2 and d.locator(".ork-die").get_attribute("aria-hidden") == "true"
-    assert "front-stop" in d.locator(".ork-die").get_attribute("class")
-    front, up, hit = d.locator(".ork-die__face.is-front").bounding_box(), d.locator(".ork-die__face.is-up").bounding_box(), stop.bounding_box()
-    assert abs(hit["x"] - front["x"]) <= 1 and abs(hit["width"] - front["width"]) <= 1, "laid over the front face's projected box"
-    assert up["y"] + up["height"] / 2 < hit["y"] < front["y"] + front["height"] and abs(hit["y"] + hit["height"] - (front["y"] + front["height"])) <= 1, "from between the faces to the front's foot"
-    assert hit["height"] >= 20
-    words = d.locator(".hand-die__words")
-    assert " ".join(words.inner_text().split()) == ("Play · Stop all" if width == "wide" else "Play Stop all")        # the narrow width drops the dot: the die keeps its own width
-    assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator(".hand-die__orks").inner_text() == "Stop all"
-    w, box = words.bounding_box(), d.locator(".ork-die").bounding_box()
-    assert w["y"] >= box["y"] + 56, "under the die"
-    pg.set_viewport_size({"width": 1000, "height": 700} if width == "wide" else {"width": 360, "height": 800})                          # laid again on a resize
-    pg.wait_for_timeout(150)
-    front, hit = d.locator(".ork-die__face.is-front").bounding_box(), stop.bounding_box()
-    assert abs(hit["x"] - front["x"]) <= 1 and abs(hit["width"] - front["width"]) <= 1
-    finish(pg, errors)
-
-
-def test_the_fronts_mark_and_word_are_the_dangers_only_while_a_task_runs(gui):
-    host = Host(n=3)
-    pg, errors = window(gui, host)
-    d = die(pg)
-    danger, muted = token(pg, "--ork-danger"), token(pg, "--ork-ink-muted")
-    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die.is-orks-running')", timeout=WAIT_MS)                    # tech and game have a task at work
-    assert front_colour(pg) == danger
-    assert d.locator(".hand-die__orks").evaluate("e => getComputedStyle(e).color") == pg.evaluate("(c) => { const i = document.createElement('i'); i.style.color = c; document.body.append(i); const v = getComputedStyle(i).color; i.remove(); return v; }", danger)
+    pg.wait_for_function("() => document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)                     # tech and game have a task at work
+    stop = d.locator(".hand-die__stop")
+    assert stop.evaluate("e => e.tagName") == "BUTTON" and stop.inner_text() == "Stop all" and stop.get_attribute("aria-label") == STOP_WORDS and stop.get_attribute("title") == STOP_WORDS
+    assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator("button").count() == 2
+    assert stop.evaluate("e => getComputedStyle(e).color") == paint(pg, token(pg, "--ork-danger"))
+    word, hit, box = d.locator(".hand-die__word").bounding_box(), stop.bounding_box(), d.locator(".ork-die").bounding_box()
+    assert word["y"] >= box["y"] + 40 and hit["y"] >= box["y"] + 40, "under the die"
+    if width == "wide":
+        assert hit["y"] >= word["y"] + word["height"] - 1, "Stop all under the word Play"
+    shot(pg, "e156-die-running.png")
     nothing_runs(host)
-    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-orks-running')", timeout=WAIT_MS)
-    assert front_colour(pg) == muted and d.locator(".hand-die__orks").inner_text() == "Stop all"
-    shot(pg, "s139-die-idle.png")
+    pg.wait_for_function("() => !document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
+    assert d.locator(".hand-die__stop").count() == 0 and d.locator("button").count() == 1, "no run, no button"
+    assert d.locator(".hand-die__word").inner_text() == "Play"
+    shot(pg, "e156-die-idle.png")
     finish(pg, errors)
 
 
-def test_a_press_on_the_front_sends_halt_says_stopped_and_goes_back_when_work_starts(gui):
+def test_a_press_on_stop_all_sends_halt_and_the_button_is_gone_until_work_starts(gui):
     host = Host(n=3)
     pg, errors = window(gui, host)
     d = die(pg)
-    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die.is-orks-running')", timeout=WAIT_MS)
-    shot(pg, "s139-die-running.png")
+    pg.wait_for_function("() => document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
     d.locator(".hand-die__stop").click()
-    pg.wait_for_function("() => document.querySelector('.hand-die__orks')?.textContent === 'Stopped'", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
     assert [c for c in host.log if c[0] == "halt"] == [("halt", {})]
-    assert d.locator(".hand-die__stop").get_attribute("aria-disabled") == "true" and "is-orks-running" not in d.locator(".ork-die").get_attribute("class")
-    assert pg.locator('.table-over[data-kind="play"]').count() == 0, "the front is not Play"
-    shot(pg, "s139-die-stopped.png")
-    d.locator(".hand-die__stop").click(force=True)
-    pg.wait_for_timeout(300)
-    assert len([c for c in host.log if c[0] == "halt"]) == 1, "a second press does nothing"
+    assert pg.locator('.table-over[data-kind="play"]').count() == 0, "Stop all is not Play"
     nothing_runs(host)                                                                                                       # the map is seen with none at work ...
     pg.wait_for_timeout(300)
-    assert d.locator(".hand-die__orks").inner_text() == "Stopped"
+    assert d.locator(".hand-die__stop:not(.is-resume)").count() == 0, "no Stop all while stopped"
     pg.evaluate("() => import('/static/js/board/store.js').then((m) => m.ask('ideas.add', { text: 'A new goal' }))")                  # a goal is started from this page: Stopped goes
-    pg.wait_for_function("() => document.querySelector('.hand-die__orks')?.textContent === 'Stop all'", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.hand-die__stopped') && !document.querySelector('.hand-die.is-orks-stopped')", timeout=WAIT_MS)
     finish(pg, errors)
 
 
 def test_the_play_press_does_not_halt_and_the_stop_press_opens_no_preview(gui):
     host = Host(n=3, play=PLAYING)
     pg, errors = window(gui, host)
+    pg.wait_for_function("() => document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
     press(pg)
     assert not [c for c in host.log if c[0] == "halt"]
     die(pg).locator(".hand-die__play").click()
     pg.wait_for_selector(".table-over", state="detached", timeout=WAIT_MS)
     die(pg).locator(".hand-die__stop").click()
-    pg.wait_for_function("() => document.querySelector('.hand-die__orks')?.textContent === 'Stopped'", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
     assert pg.locator(".table-over").count() == 0
     finish(pg, errors)
 
@@ -204,13 +197,17 @@ def test_the_play_press_does_not_halt_and_the_stop_press_opens_no_preview(gui):
 def test_the_die_lies_in_the_hand_left_of_the_potions_with_its_word_under_it_askew(gui, width):
     pg, errors = window(gui, Host(), {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
     d = die(pg)
-    pg.locator(".hand-mana .hand-pot").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".hand-mana .hand-pot, .hand-mana__rest").first.wait_for(state="attached", timeout=WAIT_MS)
     assert d.evaluate("e => e.closest(%r) !== null" % ".hand") and d.locator(".hand-die__play").get_attribute("aria-label") == "Play: the project's preview of dev" and d.locator(".hand-die__play").get_attribute("title") == d.locator(".hand-die__play").get_attribute("aria-label")
     assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator(".ork-die").get_attribute("aria-hidden") == "true"
     box, mana, word = d.locator(".ork-die").bounding_box(), pg.locator(".hand-mana").bounding_box(), d.locator(".hand-die__word").bounding_box()
-    assert 70 <= box["width"] <= 86 and 86 <= box["height"] <= 100                                                     # 72 x 90 (3 px a cell; orkUI 0.29.0's steeper view, decisions §246), turned a little: it keeps its size at the narrow width too
-    assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 7 and box["x"] < mana["x"]                # left of the potions, at the hand's right end on both widths (spec 156 D: no edge; E reshapes it)
-    assert word["y"] >= box["y"] + 56                                                                                   # its word under it
+    if width == "wide":
+        assert 46 <= box["width"] <= 60 and 58 <= box["height"] <= 72                                                      # 48 x 60 (2 px a cell, orkUI's .small; spec 156 E.2), turned a little
+        assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 1 and box["x"] < mana["x"]               # left of the drum, side by side in the hand's last track
+    else:
+        assert 70 <= box["width"] <= 86 and 86 <= box["height"] <= 100                                                     # the narrow width keeps 72 x 90 (3 px a cell)
+        assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 7 and box["x"] < mana["x"]
+    assert word["y"] >= box["y"] + (46 if width == "wide" else 56)                                                      # its word under it
     assert d.locator(".ork-die").evaluate("e => getComputedStyle(e).rotate") == "-6deg"                                 # the lean token the other way
     assert d.locator(".ork-die > .ork-die__cube > .ork-die__face").count() == 6                                         # orkUI's die is a cube in CSS 3D (0.24.0): its six faces
     assert d.locator(".ork-die__cube").evaluate("e => getComputedStyle(e).transformStyle") == "preserve-3d"
@@ -743,46 +740,29 @@ class StopHost(Host):
         return super().handle(name, a)
 
 
-def watch_turn(pg):
-    """Records the die's classes each time they change: whether `is-turning` was put on, and when it came off what the front said."""
-    pg.evaluate("""() => { window.__turn = { on: 0, off: [] }; let was = false;
-      const note = () => { const d = document.querySelector('.hand-die .ork-die'); if (!d) return; const t = d.classList.contains('is-turning');
-        if (t && !was) window.__turn.on++; if (!t && was) window.__turn.off.push([d.classList.contains('front-resume'), d.classList.contains('is-orks-stopped')]); was = t; };
-      new MutationObserver(note).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] }); note(); }""")
-
-
-def test_the_front_says_resume_while_stopped_sends_resume_and_turns_back_to_stop_all(gui):
+def test_the_button_says_resume_while_stopped_sends_resume_and_goes_back_to_stop_all(gui):
     host = StopHost(n=3)
     pg, errors = window(gui, host)
     d = die(pg)
-    watch_turn(pg)
-    assert "front-stop" in d.locator(".ork-die").get_attribute("class") and d.locator(".hand-die__stop").get_attribute("aria-label").startswith("Stop all")
-    d.locator(".hand-die__stop").click()
-    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die')?.classList.contains('front-resume')", timeout=WAIT_MS)
+    stop = d.locator(".hand-die__stop")
+    assert stop.inner_text() == "Stop all" and stop.get_attribute("aria-label").startswith("Stop all")
+    stop.click()
+    pg.wait_for_function("() => document.querySelector('.hand-die__stop')?.textContent === 'Resume'", timeout=WAIT_MS)
     cls = d.locator(".ork-die").get_attribute("class")
-    assert "is-orks-stopped" in cls and "front-stop" not in cls and "is-turning" not in cls
-    assert d.locator(".hand-die__stop").get_attribute("aria-label") == "Resume: the orks go back to work" and d.locator(".hand-die__stop").get_attribute("aria-disabled") is None
-    assert d.locator(".hand-die__orks").inner_text() == "Stopped"
-    assert pg.evaluate("() => window.__turn.on") == 1 and pg.evaluate("() => window.__turn.off") == [[True, True]], "the turn was put on, and taken off with the mark swapped"
-    shot(pg, "s139-die-resume.png")
-    d.locator(".hand-die__stop").click()
-    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die')?.classList.contains('front-stop')", timeout=WAIT_MS)
+    assert "front-stop" not in cls and "front-resume" not in cls and "is-turning" not in cls, "a die's face again: no mark, no turn"
+    assert stop.get_attribute("aria-label") == "Resume: the orks go back to work" and stop.get_attribute("aria-disabled") is None and stop.evaluate("e => e.tagName") == "BUTTON"
+    assert d.locator(".hand-die__word").inner_text() == "Play" and "is-orks-stopped" in d.get_attribute("class")
+    shot(pg, "e156-die-resume.png")
+    stop.click()
+    pg.wait_for_function("() => !document.querySelector('.hand-die.is-orks-stopped')", timeout=WAIT_MS)             # the stub's halt took the tasks and its resume gives none back: Resume is gone and no Stop all stands for a run
     assert [c[0] for c in host.log if c[0] in ("halt", "resume")] == ["halt", "resume"]
-    assert d.locator(".hand-die__orks").inner_text() == "Stop all" and "is-orks-stopped" not in d.locator(".ork-die").get_attribute("class")
-    assert pg.evaluate("() => window.__turn.on") == 2 and pg.evaluate("() => window.__turn.off")[1] == [False, False]
+    assert d.locator(".hand-die__stop").count() == 0
     finish(pg, errors)
 
 
-def test_a_stopped_host_at_the_first_snapshot_shows_resume_at_once_and_reduced_motion_swaps_without_a_turn(gui):
+def test_a_stopped_host_at_the_first_snapshot_shows_resume_at_once(gui):
     host = StopHost(n=3)
     host.stopped = True
     pg, errors = window(gui, host)
-    assert pg.locator(".hand-die .ork-die").get_attribute("class").count("front-resume") == 1 and pg.evaluate("() => !document.querySelector('.hand-die .is-turning')"), "the first snapshot turns nothing"
-    finish(pg, errors)
-    still = StopHost(n=3)
-    pg, errors = window(gui, still, reduced_motion="reduce")
-    watch_turn(pg)
-    die(pg).locator(".hand-die__stop").click()
-    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die')?.classList.contains('front-resume')", timeout=WAIT_MS)
-    assert pg.evaluate("() => window.__turn.on") == 0, "no turn under reduced motion"
+    assert die(pg).locator(".hand-die__stop").inner_text() == "Resume" and pg.locator(".hand-die .ork-die").get_attribute("class").count("front") == 0
     finish(pg, errors)

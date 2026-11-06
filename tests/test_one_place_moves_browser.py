@@ -8,6 +8,7 @@ import datetime as dt
 import pytest
 
 pytest.importorskip("playwright")
+from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_column_browser import ColumnHost, open_column  # noqa: E402
 from tests.test_hand_desktop_browser import head, node, task  # noqa: E402
@@ -48,6 +49,7 @@ def test_hovering_a_potion_dims_the_cards_not_waiting_for_its_tool_and_never_hid
         pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
         every = shown(pg)
         assert dimmed(pg) == [], "no potion hovered: no card dimmed"
+        narrow.unroll_drum(pg)
         potion(pg, "claude").hover()
         pg.wait_for_selector(".col-card.is-dim", timeout=WAIT_MS)
         assert shown(pg) == every, "dimmed, never hidden"
@@ -59,6 +61,8 @@ def test_hovering_a_potion_dims_the_cards_not_waiting_for_its_tool_and_never_hid
         assert [g for g in every if g not in dimmed(pg)] == ["codexwait"], "the goal at work held by Codex's spent window waits for Codex's reset"
         pg.mouse.move(5, 300)
         pg.wait_for_function("() => document.querySelectorAll('.col-card.is-dim').length === 0", timeout=WAIT_MS)
+        pg.locator(".hand-mana__drum").focus()                                                                                 # the focus unrolls the row
+        pg.locator(".hand-mana[data-open]").wait_for(timeout=WAIT_MS)
         potion(pg, "claude").focus()
         pg.wait_for_selector(".col-card.is-dim", timeout=WAIT_MS)
         pg.evaluate("() => document.activeElement.blur()")
@@ -71,7 +75,7 @@ def test_hovering_a_potion_dims_the_cards_not_waiting_for_its_tool_and_never_hid
 def test_a_potions_words_say_goals_wait_for_its_reset_when_any_does_and_never_how_many(gui):
     pg, host, log = open_column(gui, host=DayHost())
     try:
-        pg.wait_for_selector(".hand-mana .hand-pot", timeout=WAIT_MS)
+        pg.wait_for_selector(".hand-mana .hand-pot", state="attached", timeout=WAIT_MS)
         for provider in ("claude", "codex"):
             words = potion(pg, provider).get_attribute("aria-label")
             assert words.endswith("Goals wait for its reset") and not any(c.isdigit() for c in words.split("Goals")[1]), words
@@ -85,7 +89,7 @@ def test_a_potion_no_goal_waits_for_says_nothing_of_goals(gui):
     host.limits = TWO
     pg, host, log = open_column(gui, host=host)
     try:
-        pg.wait_for_selector(".hand-mana .hand-pot", timeout=WAIT_MS)
+        pg.wait_for_selector(".hand-mana .hand-pot", state="attached", timeout=WAIT_MS)
         assert "Goals wait" in potion(pg, "claude").get_attribute("aria-label") and "Goals wait" not in potion(pg, "codex").get_attribute("aria-label")
     finally:
         pg.close()

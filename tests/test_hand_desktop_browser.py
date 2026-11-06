@@ -832,7 +832,7 @@ def test_a_goal_sent_plays_the_rite_on_the_seal_in_its_element_once_and_none_und
         pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil.is-summoning')", timeout=3000)       # taken off after the animation
         assert not [c for c in sigil.get_attribute("class").split() if c.startswith("rite-")]
         pg.emulate_media(reduced_motion="reduce")                                                                          # nothing plays under reduced motion
-        _plus(pg).click()
+        _plus(pg).click(position={"x": 80, "y": 60})                                                                       # its upper part: the hand is 100 px high now (spec 156 E.1) and the card's middle lies at its rim
         _field(pg)[1].fill("Still")
         _field(pg)[1].press("Enter")
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)

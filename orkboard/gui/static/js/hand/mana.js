@@ -1,3 +1,5 @@
+// **The drum (spec 156 E, decisions §261.11, §261.13, §262.1): from 760 px up the potions are orkUI's `.ork-drum` in the hand's last track, the Release column's, right of the Play die** (`DrumRest`, drum.js `drumOf`): three in sight whatever the count, the front the active tool (`activeTool`: the picked goal at work's tool, else the open tab's, §177.1's rule), the neighbours in the person's order but for a tool at the warn or the danger level, which takes the nearer one's place at full brightness (`.is-alert`) with its share in words under it in its level's colour; the front's share (*back 14:00*, the week's when it runs out first) under it; the default's frame is gone, the front is the default. The drum turns when the front changes and never by the person.
+// Hover or focus unrolls it (`data-open`): `.hand-mana__row`, a row over the hand, right-aligned, every tool's potion as below at its own size and, last, the paid slot and the empty slot (Esc or the pointer leaving folds it; a drag in it changes `tools.order`; more tools than fit wrap to a second row). Under 760 px nothing of this: the potions lie in their rows as the rest of this comment says, the frame on the default.
 // The mana (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, decisions §175.2, §176.1–§176.2): the AI tools' limits as potions at the hand's right end, flush against the window's edge.
 // One potion (orkUI's `.ork-potion`) a tool, in the order the chips had: above it the tool's mark in its own colour (the tool's initial in the body face with no mark), under it the share left, in the warn or the danger colour at
 // those levels (`levelOf`).
@@ -25,7 +27,10 @@ import { Icon, ORKUI } from "../orkui.js";
 import { command, town } from "../link.js";
 import { untilWords } from "../arena/arenawords.js";
 import { MARKED, mapName, openTabOf, partiesAll } from "../table/data.js";
-import { ORKMASTER, lift, lifted, lower, openOver, tab } from "../frame/state.js";
+import { nodeOf } from "../table/goalmap.js";
+import { kindOf } from "../table/piles.js";
+import { drumOf } from "./drum.js";
+import { ORKMASTER, lift, lifted, lower, openOver, picked, tab } from "../frame/state.js";
 import { ADD_TOOL, TOOL, hatched, liftKey, litTool, markedDefault, markedTool } from "./state.js";
 import { setupNow } from "./setupcards.js";
 import { waitTool, defaultTool } from "../table/lit.js";
@@ -92,9 +97,10 @@ const toggleLift = (key) => { const k = liftKey(key); if (lifted.peek() === k) l
 
 /** Dragging a potion changes the order the work moves on in (`tools.order`): dropped on another, it takes that one's place. */
 function useDragOrder(tools) {
-  const from = useRef("");
-  if (!tools || (tools.order || []).length < 2) return () => ({});
-  return (id) => ({
+  const from = useRef(""), none = () => ({});
+  none.busy = () => !!from.current;                                                                           // a drag is on: the unrolled row stays open while a potion is carried
+  if (!tools || (tools.order || []).length < 2) return none;
+  const drag = (id) => ({
     draggable: true,
     onDragStart: (e) => { from.current = id; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", id); },
     onDragOver: (e) => { if (from.current && from.current !== id) e.preventDefault(); },
@@ -109,6 +115,8 @@ function useDragOrder(tools) {
     },
     onDragEnd: () => { from.current = ""; },
   });
+  drag.busy = none.busy;
+  return drag;
 }
 
 /** The empty slot: a potion's place in pixel dashes with a +. orkUI first: `.ork-potion.is-empty`. */
@@ -117,19 +125,25 @@ function EmptySlot({ lit, small }) {
     <span class=${cls("hand-pot__slot", { "is-small": small })}><span class="hand-pot__dashes" aria-hidden="true"><${Icon} name="plus" /></span></span></button>`;
 }
 
-function Pot({ l, cost, small, from, framed, parties = [], onPress = null, drag = null }) {
+/** What stands under a potion: the now share (*back 14:00* in its place at the danger's level), the week's muted, the window named; shared by the unrolled row's potions and the drum's front. */
+function Shares({ p, line = false }) {
+  if (line) return html`<span class="hand-pot__shares is-line"><span class="hand-pot__share">${p.back ? `back ${p.back}` : p.share}${p.took && html` <span class="hand-pot__took">−${p.took}</span>`}</span>${p.week && html`<span class="hand-pot__week"><span class="hand-pot__week-name">${p.week.name} </span>${p.week.share}</span>`}</span>`;
+  return html`<span class="hand-pot__shares"><span class="hand-pot__share">${p.back ? html`<span class="hand-pot__back">back ${p.back}</span><span class="hand-pot__pct">${p.share}</span>` : p.share}${p.took && html` <span class="hand-pot__took">−${p.took}</span>`}</span>
+    ${p.week && html`<span class="hand-pot__week"><span class="hand-pot__week-name">${p.week.name} </span>${p.week.share}</span>`}
+    ${p.of && html`<span class="hand-pot__week hand-pot__week--of">${p.of}</span>`}</span>`;
+}
+
+function Pot({ l, cost, small, from, framed, front = framed, parties = [], onPress = null, drag = null }) {
   const dflt = defaultTool(), waiting = (mapData.value?.nodes || []).some((n) => waitTool(n, dflt) === l.provider);                  // a goal waits for this tool's reset: said, never how many (spec 138 A.3, decisions §67)
   const p = potionOf(l, cost && cost.tool === l.provider ? cost : null, framed, usesWords(l.provider, parties), waiting);
   const style = `--ork-potion-left:${p.liquid}${p.took ? `;--ork-potion-spend:${cost.spend}` : ""}`;
-  const mark = () => { markedTool.value = l.provider; markedDefault.value = framed; litTool.value = l.provider; }, unmark = () => { if (markedTool.value === l.provider) { markedTool.value = ""; markedDefault.value = false; } if (litTool.value === l.provider) litTool.value = ""; };
+  const mark = () => { markedTool.value = l.provider; markedDefault.value = front; litTool.value = l.provider; }, unmark = () => { if (markedTool.value === l.provider) { markedTool.value = ""; markedDefault.value = false; } if (litTool.value === l.provider) litTool.value = ""; };
   return html`<button type="button" class=${cls("hand-pot", `is-${p.level}`, { "is-default": framed, "is-dry": p.dry })} data-provider=${l.provider} data-level=${p.level} data-size=${p.size} data-default=${framed ? "1" : undefined}
       title=${p.words} aria-label=${p.words} onClick=${onPress || (() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`))} ...${drag || {}}
       onPointerEnter=${mark} onPointerLeave=${unmark} onFocus=${mark} onBlur=${unmark}>
     <${Who} l=${l} />
     <span class=${cls("hand-pot__slot", { "is-small": small })}>${p.read && html`<span class=${cls("ork-potion", { [`size-${p.size}`]: p.size !== "large", small, "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${style} aria-hidden="true"></span>`}</span>
-    <span class="hand-pot__shares"><span class="hand-pot__share">${p.back ? html`<span class="hand-pot__back">back ${p.back}</span><span class="hand-pot__pct">${p.share}</span>` : p.share}${p.took && html` <span class="hand-pot__took">−${p.took}</span>`}</span>
-    ${p.week && html`<span class="hand-pot__week"><span class="hand-pot__week-name">${p.week.name} </span>${p.week.share}</span>`}
-    ${p.of && html`<span class="hand-pot__week hand-pot__week--of">${p.of}</span>`}</span>
+    <${Shares} p=${p} />
   </button>`;
 }
 
@@ -183,22 +197,64 @@ function useFrame(box, frame, key, deps) {
   }, [key, ...deps]);
 }
 
-/** The potions. `lifted`: the stop now lifted in the hand, whose cost names the tool it takes from. */
+/** The active tool (spec 156 E.4, decisions §261.13): the work tool of the goal picked while it is at work, else the open tab's (`framedOf`'s rule, §177.1). "" when neither names a tool in `limits`. */
+export function activeTool({ limits, mana, open, parties }) {
+  const n = nodeOf(picked.value), tool = n && kindOf(n)?.pile === "work" ? n.tool || "" : "";
+  if (tool && limits.some((l) => l.provider === tool)) return tool;
+  const on = framedOf({ limits, mana, open, parties });
+  return on === "paid" ? mana.paid.tool : on;
+}
+
+/** The drum at rest (orkUI's `.ork-drum`): the front's mark above it and its shares under it, an alert neighbour's mark and words (its share, *back 14:00*) in its level's colour; the drum itself is the thing to press (the potions are `pointer-events: none`). */
+function DrumRest({ drum, byId, words, press }) {
+  const { seq, front, alerts } = drum, ids = seq.map((l) => l.provider), pad = alerts.length ? "alert" : undefined;
+  return html`<span class="hand-mana__rest" data-alert=${pad}>
+    <span class="ork-drum" style=${`--ork-drum-front:${front}`} aria-hidden="true">
+      ${seq.map((l, i) => { const p = byId.get(l.provider); return html`<span key=${l.provider} class=${cls("ork-potion", { [`size-${p.size}`]: p.size !== "large", "is-warn": p.level === "warn", "is-danger": p.level === "danger", "is-alert": alerts.includes(l.provider), "is-unread": !p.read, "is-paid": !!p.paid })} data-provider=${l.provider} style=${`--ork-drum-at:${i};--ork-potion-left:${p.liquid}`}></span>`; })}
+    </span>
+    ${seq.map((l, i) => {
+      const at = i - front, p = byId.get(l.provider), who = Math.abs(at) === 1 && alerts.includes(l.provider);
+      if (at !== 0 && !who) return null;
+      return html`<span key=${l.provider} class=${cls("hand-mana__label", { "is-front": at === 0, "is-alert": who, [`is-${p.level}`]: true })} data-at=${at} data-provider=${l.provider} aria-hidden="true"><span class="hand-mana__mark"><${Who} l=${l} /></span>
+        ${p.paid && html`<span class="hand-pot__coins hand-mana__coins"><${Icon} name="coins" /></span>`}
+        ${at === 0 ? html`<${Shares} p=${alerts.length ? { ...p, week: null } : p} line=${true} />` : html`<span class="hand-pot__shares"><span class="hand-pot__share">${p.back ? `back ${p.back}` : p.share}</span></span>`}</span>`;
+    })}
+    <button type="button" class="hand-mana__drum" aria-label=${words} title=${words} aria-expanded="false" onClick=${press}></button>
+  </span>`;
+}
+
+/** The potions. At the wide width (spec 156 E.4–E.6) the drum of three, and, unrolled by hover or focus, the row of every tool and the empty slot over the hand; under 760 px the potions lie in their rows as before. `lifted`: the stop now lifted in the hand, whose cost names the tool it takes from. */
 export function Mana({ lifted = null }) {
   const narrow = useNarrow(), box = useRef(), frame = useRef(), tools = town.value?.tools || null, limits = potionsOf(town.value?.limits || [], tools), mana = town.value?.mana || null, paid = mana?.paid || null, empty = !!tools && !tools.full, drag = useDragOrder(tools);
-  const parties = partiesAll(), open = openTabOf(tab.value, parties);
-  const slots = PLACES - (paid ? 1 : 0), over = limits.length > slots, shown = over ? limits.slice(0, slots - 1) : limits, more = limits.length - shown.length;
-  const places = shown.length + (over ? 1 : 0) + (paid ? 1 : 0) + (empty ? 1 : 0), rows = places > 3 ? 2 : 1, small = narrow || rows === 2;
-  const key = framedOf({ limits, mana, open, parties, shown });
+  const parties = partiesAll(), open = openTabOf(tab.value, parties), [out, setOut] = useState(false), unrolled = out && !narrow;
+  const slots = PLACES - (paid ? 1 : 0), over = narrow && limits.length > slots, shown = over ? limits.slice(0, slots - 1) : limits, more = limits.length - shown.length;
+  const places = shown.length + (over ? 1 : 0) + (paid ? 1 : 0) + (empty ? 1 : 0), rows = narrow && places > 3 ? 2 : 1, small = narrow || rows === 2;
+  const key = narrow ? framedOf({ limits, mana, open, parties, shown }) : "";                                       // the default's frame is the phone-width page's; at the wide width the front is the default (decisions §261.13)
   useFrame(box, frame, key, [narrow, places, lifted ? 1 : 0, paid?.usd_task ?? ""]);
+  useEffect(() => {                                                                                             // Esc folds the row, the pointer leaving it too (below)
+    if (!unrolled) return undefined;
+    const esc = (e) => { if (e.key === "Escape" && !e.defaultPrevented) { setOut(false); e.preventDefault(); if (box.current?.contains(document.activeElement)) document.activeElement.blur(); } };
+    document.addEventListener("keydown", esc, true);
+    return () => document.removeEventListener("keydown", esc, true);
+  }, [unrolled]);
   if (!limits.length && !paid && !empty) return null;
   const cost = lifted ? costOf(lifted) : hatched.value, from = { title: mapName(tab.value, parties), key: "" };
-  return html`<div class="hand-mana" ref=${box} role="group" aria-label="What is left of your AI tools" data-rows=${rows} data-n=${places} data-paid=${paid ? "1" : undefined} data-default=${key || undefined}>
-    <span class="hand-mana__frame" ref=${frame} aria-hidden="true" hidden></span>
-    ${shown.map((l) => html`<${Pot} key=${l.provider} l=${l} cost=${cost} small=${small} from=${from} framed=${key === l.provider} parties=${parties} onPress=${tools ? () => toggleLift(`${TOOL}${l.provider}`) : null} drag=${tools ? drag(l.provider) : null} />`)}
-    ${over && html`<button type="button" class="hand-pot hand-pot--more" title=${`${more} more tools: what is left of them`} aria-label=${`${more} more tools: what is left of them`}
-      onClick=${() => openOver("limits", {}, from, "What is left of your AI tools")}><span class="hand-pot__initial" aria-hidden="true">+${more}</span></button>`}
-    ${paid && html`<${PaidPot} key="paid" paid=${paid} from=${from} framed=${key === "paid"} />`}
-    ${empty && html`<${EmptySlot} key="empty" lit=${setupNow.value?.step === "tools"} small=${small} />`}
+  const byId = new Map(limits.map((l) => [l.provider, potionOf(l, cost && cost.tool === l.provider ? cost : null, false, usesWords(l.provider, parties))]));
+  if (paid) byId.set(paid.tool, { read: true, paid: true, share: "API", back: "", week: null, of: "", size: "vial", liquid: 0, level: "ok", dry: false, took: "", words: paidWordsOf(paid) });          // the tool billed by its API stands in the drum as a place of its own: coins where the bottle would be (decisions §261.13)
+  const members = paid && !limits.some((l) => l.provider === paid.tool) ? [...limits, { provider: paid.tool, name: paid.name }] : limits;
+  const drum = narrow ? null : drumOf(members, activeTool({ limits, mana, open, parties }), (l) => byId.get(l.provider).level), fp = drum?.seq[drum.front];
+  const words = fp ? `What is left of your AI tools, ${byId.get(fp.provider).words}` : "What is left of your AI tools";
+  const fold = (e) => { if (!e.relatedTarget || !box.current?.contains(e.relatedTarget)) setOut(false); };
+  return html`<div class="hand-mana" ref=${box} role="group" aria-label="What is left of your AI tools" data-rows=${rows} data-n=${places} data-paid=${paid ? "1" : undefined} data-default=${key || undefined} data-open=${unrolled ? "1" : undefined}
+      onPointerEnter=${(e) => { if (!narrow && e.pointerType !== "touch") setOut(true); }} onPointerLeave=${() => { if (!drag.busy()) setOut(false); }} onFocusIn=${() => { if (!narrow) setOut(true); }} onFocusOut=${fold}>
+    ${!narrow && html`<${DrumRest} drum=${drum} byId=${byId} words=${words} press=${() => setOut(true)} />`}
+    <div class="hand-mana__row">
+      ${narrow && html`<span class="hand-mana__frame" ref=${frame} aria-hidden="true" hidden></span>`}
+      ${shown.map((l) => html`<${Pot} key=${l.provider} l=${l} cost=${cost} small=${small} from=${from} framed=${key === l.provider} front=${narrow ? key === l.provider : fp?.provider === l.provider} parties=${parties} onPress=${tools ? () => toggleLift(`${TOOL}${l.provider}`) : null} drag=${tools ? drag(l.provider) : null} />`)}
+      ${over && html`<button type="button" class="hand-pot hand-pot--more" title=${`${more} more tools: what is left of them`} aria-label=${`${more} more tools: what is left of them`}
+        onClick=${() => openOver("limits", {}, from, "What is left of your AI tools")}><span class="hand-pot__initial" aria-hidden="true">+${more}</span></button>`}
+      ${paid && html`<${PaidPot} key="paid" paid=${paid} from=${from} framed=${key === "paid"} />`}
+      ${empty && html`<${EmptySlot} key="empty" lit=${setupNow.value?.step === "tools"} small=${small} />`}
+    </div>
   </div>`;
 }
