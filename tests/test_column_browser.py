@@ -144,7 +144,7 @@ def test_in_analysis_is_the_orkmasters_hand_a_fan_of_small_backs_each_rune_in_it
 
 
 def test_a_press_on_a_face_down_card_picks_its_goal_with_no_list_and_next_and_remove_are_in_the_goals_menu(gui):
-    """Spec 155 B.2 (decisions §260.5): a face-down card is picked as any card; the pile's list over the pane is gone, *Next* and *Remove* are in the goal's menu."""
+    """Spec 156 B.2 (decisions §261.5): a face-down card is picked as any card; the pile's list over the pane is gone, *Next* and *Remove* are in the goal's menu."""
     pg, host, log = open_column(gui)
     try:
         pg.wait_for_selector(".col-card--down", timeout=WAIT_MS)

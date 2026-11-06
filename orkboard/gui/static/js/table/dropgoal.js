@@ -52,7 +52,7 @@ export function DropAsk({ slug, onKeep, onDone }) {
   </div>`;
 }
 
-/** The goal of In analysis that *Next* puts this one before: the first of its own party still waiting its turn (the Board moves a goal among its party's, `ideas.move`); "" when it is not in analysis or none is before it (spec 155 B.2: *Next* is in the goal's menu). */
+/** The goal of In analysis that *Next* puts this one before: the first of its own party still waiting its turn (the Board moves a goal among its party's, `ideas.move`); "" when it is not in analysis or none is before it (spec 156 B.2: *Next* is in the goal's menu). */
 export function nextBefore(slug) {
   const rows = pilesOf(mapData.value?.nodes || []).analysis, i = rows.findIndex(({ n }) => n.slug === slug);
   return i < 0 ? "" : rows.slice(0, i).find(({ n }) => n.goal === rows[i].n.goal && !ACTIVE.includes(n.state))?.n.slug || "";

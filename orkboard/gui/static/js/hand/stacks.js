@@ -37,7 +37,7 @@ function Stack({ stack, dealt, ghost = false }) {
   const goal = stack.goal && !stack.goal.startsWith("party:") ? stack.goal : "";
   const press = (s) => () => {
     if (ghost) return;
-    if (goal && picked.value !== goal) pick(goal);                     // a card lifted picks its goal, never toggling it off (spec 155 B.4); its lowering leaves the pick, which the same card of the column, Esc, an empty press or the back put away
+    if (goal && picked.value !== goal) pick(goal);                     // a card lifted picks its goal, never toggling it off (spec 156 B.4); its lowering leaves the pick, which the same card of the column, Esc, an empty press or the back put away
     if (on === liftKey(s.key)) lower(); else lift(liftKey(s.key));
   };
   if (ghost) {                                                          // the last card of the stack was answered: it crumbles where it lay

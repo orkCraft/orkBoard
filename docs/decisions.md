@@ -7043,7 +7043,7 @@ through. So:
    (`--decided-by`), `realm/board_check.py` (`reference_exists`, the finding); this repository's files written again.
 The owner's call.
 
-## 260. One card picked, on either side; the table follows its phase; the edge goes: the discard is the Release column at the window's right, Live and Release tabs again, the die and a drum of potions in the hand under it, Stop all said in words (6 November 2026, the owner)
+## 261. One card picked, on either side; the table follows its phase; the edge goes: the discard is the Release column at the window's right, Live and Release tabs again, the die and a drum of potions in the hand under it, Stop all said in words (6 November 2026, the owner)
 
 Changes: 126.4 (a phase gone by opened by its mark), 176.2 and 177.8 (the potions' rows), 177.1 (the default's frame),
 188.1–2 (Release and Live not tabs at the wide width), 206.4 and spec 128 B (a face-down card not picked, the pile's list),
@@ -7116,29 +7116,29 @@ So:
     four cards (§254.8, its potions' and portal's places read again from 10 to 13).
 15. **The words** (`TERMS`): *<party> is not on this goal. Press to leave it and look at <party>'s table.*; *Earlier*;
     *<party>'s discard*; *Stop all*, *Resume*, *Play* as today.
-16. **Built** by spec 155: **A.** orkUI 0.31.0 (the small die, the drum), then copied; **B.** one pick; **C.** the table by the
+16. **Built** by spec 156: **A.** orkUI 0.31.0 (the small die, the drum), then copied; **B.** one pick; **C.** the table by the
     phase; **D.** the Release column and no edge; **E.** the hand's right end.
 The owner's call.
 
-## 261. Goal 155's Talk answered: a tool running low is said in words in the drum, all five parts are built, the owner's week shows it; the pick's address has one writer, and C and D are built one after the other (6 November 2026, the owner)
+## 262. Goal 156's Talk answered: a tool running low is said in words in the drum, all five parts are built, the owner's week shows it; the pick's address has one writer, and C and D are built one after the other (6 November 2026, the owner)
 
-Changes: 260.13 (a tool at the warn or the danger level beside the front), 260.16 (the parts' order); spec 155's waves.
+Changes: 261.13 (a tool at the warn or the danger level beside the front), 261.16 (the parts' order); spec 156's waves.
 
-Why: goal 155's Talk, each leader in a context of its own (§258): Design *go*, against the drum's neighbour that says a tool
+Why: goal 156's Talk, each leader in a context of its own (§258): Design *go*, against the drum's neighbour that says a tool
 running out by a dimmed colour alone (WCAG 1.4.1, 1.4.11: it is money, CLAUDE.md's *say plainly*); Product *doubt*, the
 Release column and the drum a second bet after §254's edge of a day ago, better after a week of the pick alone; Tech *doubt*,
 the pick in the address a fourth writer of the browser's history (beside `table/table.js`, `upmenu.js`, `pwa/board.js`), and
 `table/pane.js` shared by C and D. The owner: *1) agreed, 2) we do all, 3) without testers*. So:
 1. **A tool at the warn or the danger level beside the drum's front is drawn at full brightness, its share in words under it**
    (*8%*, *back 14:00*), in its level's colour; only a neighbour at rest is dimmed and says nothing. The drum's box widens to
-   what that needs, within the Release column (this changes §260.13).
-2. **All five parts are built**, in spec 155's order (Product's split not taken).
+   what that needs, within the Release column (this changes §261.13).
+2. **All five parts are built**, in spec 156's order (Product's split not taken).
 3. **The simpler table is shown by the owner's own week of use**: a line in the project's journal when it ends, a pick lost or
    misread, or none; no tester is asked.
 4. **The pick's address has one writer**: `frame/state.js` alone writes and reads `#goal=` and puts the pick away on Esc;
    `table/table.js` (its Esc, and its pick that opens the goal's party's tab) is made to go through it, and is one of B's files.
    The narrow page's back entry and the pick's keep their order: a file opened over a pick closes on the first back, the pick on
    the second.
-5. **C and D are built one after the other** (spec 155's own rule, *parts of a wave share no file*; answered by its reference):
+5. **C and D are built one after the other** (spec 156's own rule, *parts of a wave share no file*; answered by its reference):
    waves **1** A, B · **2** C · **3** D · **4** E.
 The owner's call.

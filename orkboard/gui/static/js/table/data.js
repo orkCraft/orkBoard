@@ -98,7 +98,7 @@ export function routeParties(picked) {
   return out;
 }
 
-/** The parties a picked goal is on, for the tabs that are not grey (spec 155 B.5, decisions §260.3): those of its route as the Board has it (`routeParties`), without its own party's default when it is not routed yet (every leader is grey then:
+/** The parties a picked goal is on, for the tabs that are not grey (spec 156 B.5, decisions §261.3): those of its route as the Board has it (`routeParties`), without its own party's default when it is not routed yet (every leader is grey then:
  *  the Orkmaster's alone). null for a goal the snapshot does not have. */
 export function onRoute(picked) {
   const n = picked && (mapData.value?.nodes || []).find((x) => x.slug === picked);

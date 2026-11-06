@@ -446,7 +446,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   background: linear-gradient(color-mix(in srgb, var(--_liq) 45%, var(--ork-ink)), color-mix(in srgb, var(--_liq) 45%, var(--ork-ink)))
     0 calc((var(--_end) + 1 - var(--_rows) + var(--_hatch)) * var(--_c)) / 100% calc(2 * var(--_c)) no-repeat; }
 
-/* --- Drum: a row of potions laid as a drum seen from the front (drum/, 0.31.0; Orkboard's decisions §260.13, §261.1). Plain HTML, CSS only: the drum holds its `.ork-potion`s, each
+/* --- Drum: a row of potions laid as a drum seen from the front (drum/, 0.31.0; Orkboard's decisions §261.13, §262.1). Plain HTML, CSS only: the drum holds its `.ork-potion`s, each
    with its place in the row (`--ork-drum-at`, 0 for the first), and the drum names the one in front (`--ork-drum-front`, its index). `<span class="ork-drum" style="--ork-drum-front:1"
    aria-hidden="true"><span class="ork-potion" style="--ork-drum-at:0;..."></span><span class="ork-potion" style="--ork-drum-at:1;..."></span>...</span>`. The front one is at its
    own size (3 px a cell, any of the four bottles); its two neighbours are drawn at `.small` (2 px a cell, never the front scaled), each half behind it, at brightness 0.62; the others

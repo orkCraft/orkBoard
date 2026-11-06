@@ -1,6 +1,6 @@
 # orkUI / office / drum
 
-The drum: **a row of potions laid as a drum seen from the front** (orkBoard's decisions §260.13 and §261.1, spec 155 part A; orkUI 0.31.0). Orkboard draws the AI tools' limits as a drum
+The drum: **a row of potions laid as a drum seen from the front** (orkBoard's decisions §261.13 and §262.1, spec 156 part A; orkUI 0.31.0). Orkboard draws the AI tools' limits as a drum
 under the discard: the tool at work in front at its own size, the tools beside it behind it, small and dim, so three bottles stand where one used to, and one that runs low steps out beside the
 front where it is seen. Plain HTML and CSS, no script and no inner markup of its own: the drum holds `.ork-potion`s (`potion/README.md`) and nothing else.
 

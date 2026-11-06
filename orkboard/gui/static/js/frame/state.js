@@ -54,7 +54,7 @@ export function closeOver() {
 /** A goal picked (its stack, a card of it, a goal in the deck's row or the discard); the same goal again, or "", picks none. */
 export function pick(slug) { picked.value = slug && slug !== picked.value ? slug : ""; }
 
-// -- the pick in the address (docs/specs/155-one-pick-and-the-release-column.md part B.1, decisions §260.2, §261.4) --------------------------------------
+// -- the pick in the address (docs/specs/156-one-pick-and-the-release-column.md part B.1, decisions §261.2, §262.4) --------------------------------------
 // **This file is the one writer and reader of `#goal=<slug>`, and the one handler of the pick's Esc.** The pick is whatever sets `picked` (a press, a hand's card, a result of the host); an effect writes it to the address:
 // `pushState` from none to a goal (so the browser's and the phone's back put it away), `replaceState` from a goal to another, and from a goal to none the entry is taken off again (`history.back()`) when it is ours, else the hash is cleared in place.
 // The address is read on load (a slug the snapshot does not have reads as none, once there is a snapshot to say so) and on `popstate`. The narrow page's back entry (table.js `useBackButton`) is pushed over the pick's, so a file opened over a pick closes on the first back, the pick on the second.
@@ -77,7 +77,7 @@ function writeAddress(slug) {
   inAddress = slug;
 }
 
-/** A goal whose route leaves out the open tab's party gives way to the Orkmaster's tab (as the person's own press: §139.3 holds; decisions §260.3). */
+/** A goal whose route leaves out the open tab's party gives way to the Orkmaster's tab (as the person's own press: §139.3 holds; decisions §261.3). */
 function followPick(slug) {
   const route = slug ? goals.route(slug) : null, now = tab.peek();
   if (route && now !== ORKMASTER && !route.has(now)) openTab(ORKMASTER);

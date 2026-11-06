@@ -7,8 +7,8 @@ size:
 priority: normal
 short: One card picked
 phase: work
-spec: docs/specs/155-one-pick-and-the-release-column.md
-decisions: 260, 261
+spec: docs/specs/156-one-pick-and-the-release-column.md
+decisions: 261, 262
 route: design, product, tech
 by: person
 schema: 3
@@ -19,7 +19,7 @@ schema: 3
 У нас сейчас очень сложный интерфейс стола (переключатели lifecycle цели - talk, spec, work, done, крест для перехода на чистый стол и ещё выделение карт из сброса показывает совершенно другой стол, кнопка назад). Карты слева и карты справа могут быть выделенными или нет (максимум выделена одна карта из двух колонок, выделенные карты нужно сделать более явно и выделить можно карту в любом статусе: идеи, спеки, карты в работе, в сбросе) и соответственно стол может быть либо всего проекта (если карта не выбрана) либо показывает выделенную карту (если этот лидер участвует в работе над ней, иначе подсвечен серым и не выбирается пока выбрана эта карта).
 
 ## Why
-Three states of their own (the pick, what is over the pane, a lifted card) mixed freely, so neither ← nor × says where it goes; the edge asks *ready for main* and *the past* three times each (decision §260).
+Three states of their own (the pick, what is over the pane, a lifted card) mixed freely, so neither ← nor × says where it goes; the edge asks *ready for main* and *the past* three times each (decision §261).
 
 ## Done when
 - From any state of the table at the wide width, one Esc (or the picked card pressed again) shows the whole project: a browser test.
@@ -47,8 +47,8 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 ### Talk
 - verdict: doubt — D and E undo §254's edge, built a day ago, on an audit nobody has used; I'd do them only after B and C, the Gist's own ask, have been used a week
 - stance: Product backs the pick and the table by the phase: they are the owner's job (one goal or the whole project, at a glance); the Release column and the drum are a second bet
-- for: three mixed states become one, so each way back says where it goes; it reaches every session of every user, and the owner's own words ask for it (§260's Why)
-- against: five parts and ~40 files on one person's word, no mockup; the frame changes a second time in two days (§254, §260); spec 150 B's orkUI 0.30.0 is still open
+- for: three mixed states become one, so each way back says where it goes; it reaches every session of every user, and the owner's own words ask for it (§261's Why)
+- against: five parts and ~40 files on one person's word, no mockup; the frame changes a second time in two days (§254, §261); spec 150 B's orkUI 0.30.0 is still open
 - instead: B and C now (one pick, the table by the phase); the Release column, no edge and the drum a goal of their own after a week's use
 - assumes: one pick with grey tabs reads at once, with no × and no ← — shown by: a week of the owner's use with no pick lost or misread, written in the project's journal
 
@@ -62,11 +62,11 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 - assumes: the pick's history entry and the narrow back entry (table.js useBackButton) keep their order — shown by: a 390 px test: a pick, a file over it, back twice closes the file, then the pick
 
 ## Open questions
-- How is a tool in danger shown? (**at full brightness, its share in words** / dimmed, its colour only, as §260.13) — a tool running out is money: said plainly, not by colour alone (WCAG 1.4.1)
+- How is a tool in danger shown? (**at full brightness, its share in words** / dimmed, its colour only, as §261.13) — a tool running out is money: said plainly, not by colour alone (WCAG 1.4.1)
   - Answered: at full brightness, its share in words (the person, 2026-11-06)
-- Split the Release column off this goal? (**B and C now, D and E after a week's use** / all five parts in spec 155's waves) — D and E undo §254's edge built a day ago; the pick alone may make the table plain
-  - Answered: all five parts in spec 155's waves (the person, 2026-11-06)
+- Split the Release column off this goal? (**B and C now, D and E after a week's use** / all five parts in spec 156's waves) — D and E undo §254's edge built a day ago; the pick alone may make the table plain
+  - Answered: all five parts in spec 156's waves (the person, 2026-11-06)
 - How is the simpler table shown? (**the owner's week, a line in the project's journal** / one Orkline tester watched in the testers' week / not measured) — the frame changed twice in two days; a third needs a signal
   - Answered: the owner's week, a line in the project's journal; no testers (the person, 2026-11-06)
-- Build C and D one after another? (**C, then D** / C and D side by side, as spec 155's wave 2) — both must change table/pane.js: C its Phases, D the `discard` view it draws (l.114); a wave's parts share no file
-  - Answered: C, then D (decided by spec 155, 2026-11-06)
+- Build C and D one after another? (**C, then D** / C and D side by side, as spec 156's wave 2) — both must change table/pane.js: C its Phases, D the `discard` view it draws (l.114); a wave's parts share no file
+  - Answered: C, then D (decided by spec 156, 2026-11-06)

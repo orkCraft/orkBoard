@@ -1,4 +1,4 @@
-"""Spec 155 part B (docs/specs/155-one-pick-and-the-release-column.md, decisions §260.1-3, §260.5-6, §261.4), in a real browser against a stub host: one goal picked at most, from the Orkmaster's column (a face-down card too) or by a hand's card lifted; the pick put
+"""Spec 156 part B (docs/specs/156-one-pick-and-the-release-column.md, decisions §261.1-3, §261.5-6, §262.4), in a real browser against a stub host: one goal picked at most, from the Orkmaster's column (a face-down card too) or by a hand's card lifted; the pick put
 away by the same card again, Esc, an empty press of the column and the browser's back; the pick in the address (`#goal=<slug>`, written and read by frame/state.js alone); no × in the pane's title; the tabs of the parties the picked goal's route does not pass grey, pressed
 they put the pick away and open that tab; a pick whose route lacks the open tab opens the Orkmaster's; at 390 px a file over a pick closes on the first back, the pick on the second."""
 from __future__ import annotations

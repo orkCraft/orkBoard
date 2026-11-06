@@ -135,7 +135,7 @@ def test_esc_and_the_titles_cross_pick_nothing_and_the_board_is_as_it_was(gui):
         assert sig(pg, "frame/state.js", "picked") == "" and pg.locator('.table-card[data-goal="timer"]').count() == 1
         pick_music(pg)
         pg.wait_for_selector(".plan-arrow", state="attached", timeout=WAIT_MS)
-        assert pg.locator(".table-title__unpick").count() == 0, "no cross: spec 155 B.3"
+        assert pg.locator(".table-title__unpick").count() == 0, "no cross: spec 156 B.3"
         pg.keyboard.press("Escape")
         pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
         assert sig(pg, "frame/state.js", "picked") == ""

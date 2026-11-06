@@ -598,7 +598,7 @@ def test_an_edge_lifts_its_task_and_a_goals_strip_picks_the_goal(table):
         pg.locator('.table-casc[data-goal="seat"]').locator("xpath=..").locator(".table-gstrip").click()                  # the strip of a goal picks it
         pg.wait_for_selector('.table-board--plan[data-plan="seat"]', timeout=WAIT_MS)                                       # the goal picked: the Board is its plan alone (spec 128 F.1; tests/test_plan_arrows_browser.py)
         assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
-        pg.keyboard.press("Escape")                                                                                       # and Esc puts it down (no cross in the title: spec 155 B.3)
+        pg.keyboard.press("Escape")                                                                                       # and Esc puts it down (no cross in the title: spec 156 B.3)
         pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
     else:
         pg.locator('[data-lkey="t:task:bar/a2"]').click()                                                                 # a token lifts its front task: a screen over the pane, its tasks listed
@@ -1087,7 +1087,7 @@ def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_
 # -- a goal picked, the project, the keys, the motion, the presses ------------------------------------------------------------------------------------
 
 def on_route_tabs(pg):
-    """The party tabs that are not grey (spec 155 B.5): the ones the picked goal's route passes."""
+    """The party tabs that are not grey (spec 156 B.5): the ones the picked goal's route passes."""
     return sorted(t.get_attribute("data-tab") for t in pg.locator(".table-tab:not(.is-off)").all() if t.get_attribute("data-tab") not in ("orkmaster", "release", "live"))
 
 

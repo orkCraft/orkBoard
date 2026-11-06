@@ -115,7 +115,7 @@
 .col-pass__acts { display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-1); padding: 0 var(--ork-2) var(--ork-2); }
 .col-pass__acts .ork-btn { white-space: normal; }
 
-/* One pick (spec 155 B.2, decisions §260.1): the picked card is risen as a hovered one is and its edge is in the ink, the frame line's width doubled; nothing else is dimmed. A pile of To review hovered or focused fans its backs so each is reached. */
+/* One pick (spec 156 B.2, decisions §261.1): the picked card is risen as a hovered one is and its edge is in the ink, the frame line's width doubled; nothing else is dimmed. A pile of To review hovered or focused fans its backs so each is reached. */
 .col-card.ork-card.ork-picked { border-color: var(--ork-ink); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-ink); }
 .col-card--fan.ork-card.ork-picked { transform: translateY(-10px) rotate(var(--r, 0deg)); }
 .col-card--deck.ork-card.ork-picked { transform: translateX(var(--column-tuck)); }

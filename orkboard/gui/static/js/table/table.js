@@ -14,7 +14,7 @@ import { onRoute, openTabOf, partiesAll, partiesNow } from "./data.js";
 import { useFirstStart } from "./parties.js";
 import "./wayparts.js";                                   // the goal's way's pages over the pane (spec 100)
 
-keepGoalsBy({ known: (slug) => (mapData.value?.nodes || []).some((n) => n.slug === slug), route: onRoute });   // the pick's address and its tab are frame/state.js's (spec 155 B.1)
+keepGoalsBy({ known: (slug) => (mapData.value?.nodes || []).some((n) => n.slug === slug), route: onRoute });   // the pick's address and its tab are frame/state.js's (spec 156 B.1)
 
 const NARROW = "(max-width: 759px)";                       // spec 94: the phone's width is the narrow one
 const FIT = 150;                                            // a tab keeps its name while its lane is at least this wide (the lanes are the frame's `--cols`)
