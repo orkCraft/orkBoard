@@ -6,10 +6,11 @@ order: 3
 size:
 priority: normal
 short: One card picked
-phase: spec
+phase: talk
 spec: docs/specs/155-one-pick-and-the-release-column.md
 decisions: 260
 route: design, product, tech
+asks: person
 by: person
 schema: 3
 ---
@@ -34,3 +35,36 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 - [ ] C. The table by the phase
 - [ ] D. The Release column, no edge
 - [ ] E. The hand's right end
+
+## Design
+### Talk
+- verdict: go
+- stance: Design backs it: one pick, put away by Esc, the card again or the browser's back; no ×, no phase buttons. The drum's dim neighbours are the one part that hides a signal
+- for: one state where three mixed, so each way back says where it goes; Stop all in words, not on a 3D face (Nielsen 1, 3, 4; WCAG 2.5.3)
+- against: the drum says one share in words; a tool at warn or danger beside it is a dimmed, half-hidden colour with no word (WCAG 1.4.1, 1.4.11)
+- assumes: the active tool's share is the one a person needs at a glance — shown by: a week of the owner's use, how often the drum is unrolled to read another tool
+
+## Product
+### Talk
+- verdict: doubt — D and E undo §254's edge, built a day ago, on an audit nobody has used; I'd do them only after B and C, the Gist's own ask, have been used a week
+- stance: Product backs the pick and the table by the phase: they are the owner's job (one goal or the whole project, at a glance); the Release column and the drum are a second bet
+- for: three mixed states become one, so each way back says where it goes; it reaches every session of every user, and the owner's own words ask for it (§260's Why)
+- against: five parts and ~40 files on one person's word, no mockup; the frame changes a second time in two days (§254, §260); spec 150 B's orkUI 0.30.0 is still open
+- instead: B and C now (one pick, the table by the phase); the Release column, no edge and the drum a goal of their own after a week's use
+- assumes: one pick with grey tabs reads at once, with no × and no ← — shown by: a week of the owner's use with no pick lost or misread, written in the project's journal
+
+## Tech
+### Talk
+- verdict: doubt — B adds a fourth history writer (beside table.js, upmenu.js, pwa/board.js); I'd build it only if frame/state.js alone writes the pick's address and Esc, table.js in B
+- stance: Tech can build it: it takes code away (edge.js, pyramid.js, three views over the pane) and keeps the pick in one seam, frame/state.js; the risk is B's history and wave 2's shared file
+- for: the frame gets smaller: edge.js, edge.css, pyramid.js and the discard, talk, spec, quality overs go; `picked` stays one signal; every module touched is under 300 lines
+- against: B's files miss table/table.js, whose Esc and pick-opens-its-party's-tab (l.72) go against B.1 and B.5; C and D both change table/pane.js, so wave 2 shares a file
+- instead: B with frame/state.js the address's one writer and table.js in its files; then C, then D, one after the other; E after A's orkUI copy
+- assumes: the pick's history entry and the narrow back entry (table.js useBackButton) keep their order — shown by: a 390 px test: a pick, a file over it, back twice closes the file, then the pick
+
+## Open questions
+- How is a tool in danger shown? (**at full brightness, its share in words** / dimmed, its colour only, as §260.13) — a tool running out is money: said plainly, not by colour alone (WCAG 1.4.1)
+- Split the Release column off this goal? (**B and C now, D and E after a week's use** / all five parts in spec 155's waves) — D and E undo §254's edge built a day ago; the pick alone may make the table plain
+- How is the simpler table shown? (**the owner's week, a line in the project's journal** / one Orkline tester watched in the testers' week / not measured) — the frame changed twice in two days; a third needs a signal
+- Build C and D one after another? (**C, then D** / C and D side by side, as spec 155's wave 2) — both must change table/pane.js: C its Phases, D the `discard` view it draws (l.114); a wave's parts share no file
+  - Answered: C, then D (decided by spec 155, 2026-11-06)
