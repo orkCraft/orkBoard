@@ -13,7 +13,7 @@ import pytest
 from orkboard.core import idea_accept
 from orkboard.core.idea_accept import clean
 from orkboard.realm import event_log, findings, goal_team, idea_pick, idea_route, idea_spend, idea_target, ideas, journals, task_made
-from tests.test_idea_sections import _confirmed, host, model, parties  # noqa: F401  (the fixtures of the sections' tests)
+from tests.test_idea_sections import _confirmed, host, model, parties, section  # noqa: F401  (the fixtures of the sections' tests)
 
 pytestmark = pytest.mark.accepts
 
@@ -31,6 +31,10 @@ def _plan(row):
 
 @pytest.fixture
 def work(host, parties, model):                                                  # noqa: F811
+    return _work(host, parties, model)
+
+
+def _work(host, parties, model):
     """A two-step goal (Product, then Tech) planned and started, its runner spawning nothing: `work.merge(*ids)` as a session that landed; `work.look()` as the clock has the leader accept."""
     model.said[("plan", "")] = _plan
     model.said[("accept_step", "")] = OK
@@ -310,3 +314,93 @@ def test_the_fix_tasks_are_appended_to_the_plan_here_when_the_host_wires_no_runn
     work.tick()
     t = work.tasks()["k2"]
     assert t["title"] == "Fix: The setting is not saved" and t["step"] == 1 and t["party"] == p["product"] and t["state"] in ("waiting", "ready") and idea_accept.STAMPS
+
+
+# -- a Done when line says how it is proven (spec 152 F.4) --------------------------------------------------------------------------------
+
+LINES = ["[test] A theme is saved", "[look] The settings screen is dark", "[person] The tone of the words is kind", "The theme loads fast"]
+DIFF = (b"diff --git a/tests/test_theme.py b/tests/test_theme.py\nnew file mode 100644\n--- /dev/null\n+++ b/tests/test_theme.py\n@@ -0,0 +1,4 @@\n+import x\n"
+        b"+def test_a_theme_is_saved():\n+    pass\n+async def test_it_loads():\n+    pass\ndiff --git a/src/theme.py b/src/theme.py\n--- a/src/theme.py\n+++ b/src/theme.py\n@@ -1 +1,2 @@\n+def theme(): pass\n"
+        b"diff --git a/web/box.test.js b/web/box.test.js\nnew file mode 100644\n--- /dev/null\n+++ b/web/box.test.js\n@@ -0,0 +1 @@\n+it('x', () => {})\n")
+ALL = {"verdict": "accepted", "done_when": [{"n": i, "met": True, "why": "yes"} for i in range(1, 5)], "back": [], "learned": []}
+
+
+@pytest.fixture
+def proofed(host, parties, model, monkeypatch):                                  # noqa: F811
+    """`work`, with Product's section holding `LINES`; git answers `DIFF` for a diff and 3 files for a numstat."""
+    model.said[("section_first", "")] = section("Product's why.", LINES, ["changed src/ui — the settings screen"])
+    monkeypatch.setattr(task_made, "_git", lambda repo, *a: (b"3\t0\tsrc/theme.py\n" if "--numstat" in a else DIFF) if a and a[0] == "diff" else None)
+    w = _work(host, parties, model)
+    model.said[("accept_step", "")] = ALL
+    return w
+
+
+def _look(w, shot=False):
+    if shot:
+        folder = w.host.ideas.state_dir / "ideas" / w.slug / "picks" / "k1-shot-r1"
+        folder.mkdir(parents=True)
+        (folder / "shot.png").write_bytes(b"\x89PNG")
+    w.merge("k1")
+    w.runner._set_task(w.slug, "k1", tests={"passed": 5, "failed": 0, "skipped": 0}, **({"shot": {"id": "k1-shot-r1", "file": "shot.png"}} if shot else {}))
+    w.runner.tick()
+    w.tick()
+    return w.model.steps("accept_step")[0]["prompt"]
+
+
+def test_tests_in_a_diff_are_named_by_function_and_a_new_test_file_with_none_by_its_path():
+    assert idea_accept.tests_in_diff(DIFF.decode()) == ["tests/test_theme.py::test_a_theme_is_saved", "tests/test_theme.py::test_it_loads", "web/box.test.js"]
+    assert idea_accept.tests_in_diff("") == [] and idea_accept.tests_in_diff("diff --git a/src/a.py b/src/a.py\n+++ b/src/a.py\n+def test_not_a_test_file(): pass\n") == ["src/a.py::test_not_a_test_file"]
+
+
+def test_the_prompt_gives_each_done_when_line_its_proof_the_tests_the_step_added_and_the_pictures(proofed):
+    prompt = _look(proofed, shot=True)
+    assert "1. [test] A theme is saved" in prompt and "2. [look] The settings screen is dark" in prompt and "3. [person] The tone" in prompt and "4. The theme loads fast" in prompt
+    assert "- Done when 1 [test]: proven by a test. gate: 5 passed, 0 failed over 1 task that ran tests; tests the step added: tests/test_theme.py::test_a_theme_is_saved, tests/test_theme.py::test_it_loads, web/box.test.js" in prompt
+    assert "- Done when 2 [look]: proven by a picture. pictures: " in prompt and "k1-shot-r1" in prompt.split("Done when 2 [look]")[1].split("\n")[0]
+    assert "- Done when 3 [person]: decided by code, unseen: only the person can judge it. Do not judge it." in prompt
+    assert "- Done when 4: no mark, you judge it." in prompt
+
+
+def test_a_look_line_with_a_picture_is_the_leaders_to_judge_and_a_person_line_is_unseen_with_a_finding_asking_the_person(proofed):
+    h, slug = proofed.host, proofed.slug
+    _look(proofed, shot=True)
+    rows = findings.of_goal(h.ideas.state_dir, slug)
+    assert [r["what"] for r in rows] == ["Only you can judge: The tone of the words is kind"] and rows[0]["source"] == "accept" and rows[0]["status"] == "told"
+    done = {d["n"]: d["met"] for d in proofed.plan()["accepts"]["1"]["done_when"]}
+    assert done == {1: True, 2: True, 3: "unseen", 4: True}                                  # the leader's `true` for the person's line does not win
+    assert proofed.plan()["accepts"]["1"]["verdict"] == "accepted"
+
+
+def test_a_look_line_with_no_picture_is_unseen_by_code_with_a_finding_and_the_leaders_true_does_not_win(proofed):
+    h, slug = proofed.host, proofed.slug
+    prompt = _look(proofed)
+    assert "- Done when 2 [look]: decided by code, unseen: no picture of the step was made (no preview, no Play). Do not judge it." in prompt
+    done = {d["n"]: d["met"] for d in proofed.plan()["accepts"]["1"]["done_when"]}
+    assert done == {1: True, 2: "unseen", 3: "unseen", 4: True}
+    assert sorted(r["what"] for r in findings.of_goal(h.ideas.state_dir, slug)) == ["Nobody could look at: The settings screen is dark", "Only you can judge: The tone of the words is kind"]
+    texts = [e["text"] for e in journals.of_goal(h.ideas.state_dir, proofed.parties["product"], slug) if e["kind"] == "accepted"]
+    assert "2 of 4 Done when met" in texts[0]
+
+
+def test_nothing_is_sent_back_for_a_line_code_decided_and_a_line_the_leader_answers_missing_is_unseen_too(proofed):
+    proofed.model.said[("accept_step", "")] = {"verdict": "back", "done_when": [{"n": 2, "met": False, "why": "dark?"}],
+                                               "back": [{"what": "Make it dark", "where": "src/ui", "task": "k1", "done_when": 2}], "learned": []}
+    _look(proofed)
+    acc = proofed.plan()["accepts"]["1"]
+    assert acc["verdict"] == "accepted" and acc["back"] == [] and list(proofed.tasks()) == ["k1"]
+    assert {d["n"]: d["met"] for d in acc["done_when"]} == {2: "unseen", 3: "unseen"}
+
+
+def test_an_unmarked_line_is_judged_as_before_and_a_section_with_no_mark_has_no_proof_part(work):
+    work.merge("k1")
+    work.runner.tick()
+    work.tick()
+    prompt = work.model.steps("accept_step")[0]["prompt"]
+    assert "How each Done when line is proven" not in prompt and "No task claimed" not in prompt and "1. Players can pick a theme" in prompt
+    assert work.plan()["accepts"]["1"]["done_when"] == [{"n": 1, "met": True, "why": "it is so"}] and findings.of_goal(work.host.ideas.state_dir, work.slug) == []
+
+
+def test_the_lines_no_task_claimed_are_said_when_the_plan_names_them_and_nothing_when_it_does_not(proofed):
+    ideas.edit_plan(proofed.host.ideas.state_dir, proofed.slug, lambda p: p.update(unclaimed=[4, 2, 9, 4, "x"]))
+    prompt = _look(proofed, shot=True)
+    assert "No task claimed: 2. The settings screen is dark; 4. The theme loads fast" in prompt and "9." not in prompt.split("No task claimed")[1].split("\n")[0]
