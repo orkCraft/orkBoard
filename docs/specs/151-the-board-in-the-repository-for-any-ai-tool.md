@@ -2,7 +2,8 @@
 
 Decisions §255. **Builds:** the cheaper model, a part a session, each in its own worktree, reviewed by the spec's author and
 merged into `main` on the critical tests and the part's own (CLAUDE.md, alpha). **Waves** (parts of a wave share no file):
-**1** A · **2** B, C, D · **3** E, F · **4** G. No new pane, column, drawer or dialog; the page's words through `TERMS`.
+**1** A · **2** B, C, D · **3** E, F · **4** H · **5** G. No new pane, column, drawer or dialog; the page's words through `TERMS`.
+**This repository is the first project of §255** (§255.17): H lays it out by the rest, and G is tried on it.
 **Changes the Board's schema** (§255.12): this spec makes it 1. **Orkline the same day** as A (CLAUDE.md: the state keeps
 Orkline's names, and switching between them loses nothing).
 
@@ -14,7 +15,8 @@ Orkline's names, and switching between them loses nothing).
 | **D. Taking a goal** | `orkboard/taken`, a `<slug>.json` a goal, taken by a push without force; Orkboard takes as a goal's Talk or work starts | new `realm/goal_take.py`; `realm/plumbing.py` (shared, not copied); where a goal's Talk and its work start (find them: `core/idea_talk.py`, `core/idea_runner.py`), the tick of `gui/board_sync.py`; new `tests/test_goal_take.py` (two clones of one bare repository) |
 | **E. From a terminal** | `orkboard init`, `goal list/add/take/phase/ask/answer`, `gate`, `check`, with no app running; the CI step on a yes | `gui/board_cli.py` (its words), new `gui/board_cli_goals.py`, new `realm/board_check.py`, the workflow's template; new `tests/test_board_check.py`, new `tests/test_board_cli_goals.py` |
 | **F. A public repository and a goal kept off it** | `[board] in_code`; the question; the Board's tree on a ref of its own without it; a task's spec in its worktree's `.orkcraft/`; found public since; a goal kept off | `realm/board_branch.py` (`private_check` for the work branch's remote; `GOES`: only the pages kept off), `realm/idea_git.py` (`BoardTree`), `core/idea_task.py` (the spec's path), `realm/steps_git.py` (its `info/exclude`), Settings, `hand/pluscard.js`, `realm/lexicon.py`; new `tests/test_board_in_code.py`, `tests/test_board_branch.py` |
-| **G. The trial** | three tools, one goal each, no Orkboard; then Orkboard reads what they did | `docs/trials/151-the-board-in-three-tools.md`; a cloud session and the owner's computer |
+| **H. Orkboard's own repository on its Board** | the numbered specs as goals (a shape `read_in` reads, any project's); this repository laid out: its specs, decisions, hypotheses, chronicle, parties, `AGENTS.md`, `CLAUDE.md`, the README's section | `realm/read_in.py` (the shape), `gui/board_cli.py` (`import --goals`); this repository's `AGENTS.md`, `CLAUDE.md`, `README.md`, `docs/specs/AGENTS.md` and `CLAUDE.md`, `llm-wiki/general/`, `orkcraft.toml`; `tests/test_read_in.py` |
+| **G. The trial** | three tools, one goal each of this repository, no Orkboard; then Orkboard reads what they did | `docs/trials/151-the-board-in-three-tools.md`; a cloud session and the owner's computer |
 
 **Not this spec:** the MCP server of E's commands (§255.9: after the terminal's have been used); a tool writing the Board's
 working state; the work in Orkboard's own cloud run (§244.7 stands); adapters for a tool beyond `AGENTS.md`, Claude Code's
@@ -46,7 +48,9 @@ subagents and the skill.
 2. **The keys** a goal's page gains: `phase`; `route` (the parties' slugs of `state.json`'s `route`, in order, `tech, design`);
    `queue` (`hold` or `night` when `state.json` has it, else none); `asks` (`person` while a card of the hand waits for the
    person on that goal, else none); `gate` (`<short commit> · <n> files · green | red | did not finish`, from the goal's last
-   gate); `by` (`person`, or the tool's name when laid outside, A.4); `schema: 1`. The code's keys keep theirs.
+   gate); `by` (`person`, or the tool's name when laid outside, A.4); `spec` (a goal whose spec is a file of its own, from the
+   repository's root: H.1; Orkboard reads that file where it reads a page's sections, and a task's prompt names it);
+   `schema: 1`. The code's keys keep theirs.
 3. **Written with the Board's commit**, one place: `BoardTree.flush` writes, before it commits, the keys of A.2 into every
    goal page where they differ from its state, and keeps the phase it wrote as `state.json`'s new `phase_written`. A change
    of a goal's state asks the tree for a write as a page's change does (find how `ideas.save_state` can ask it without
@@ -233,17 +237,58 @@ This project's goals, their specs and its decisions are files, so any AI tool wo
    of it is committed by the task; `true` later moves them in once; found public since holds the push and asks; a goal kept off
    is read with the rest and in no commit of either branch.
 
+## H. Orkboard's own repository on its Board (§255.17)
+
+1. **A folder of numbered specs as goals** (a shape of `read_in`, spec 126 B, for any project):
+   `read_in.goals_from_specs(root, folder, done_through=None, parts=PARTS)` → the pages it would lay. Each `<folder>/<n>-<slug>.md`
+   (`<n>` a number, a letter after it allowed: `29a`) is one goal: its page `<wiki>/pages/ideas/<n>-<slug>.md` (the file's own
+   stem), its title the spec's `# ` heading without its number, its Gist that title in a line, `spec: <folder>/<file>` (A.2), its
+   decisions from the spec's first line (`Decisions §254.` → `decisions: 254`), `by: person`, party Tech until the owner lays it
+   elsewhere (H.3). **Its stages** are the spec's parts: each row of the spec's first table whose first cell is `**<id>. <name>**`
+   is a line of *Stages*, `- [x] A. The phase in the page` or `- [ ]` (a part's id is its letter and its digit, if it has one:
+   `E1`). **A part is built** when a commit's subject starts `Spec <n> <id>:` (`Spec 150 E2: …`; `PARTS`, this repository's way;
+   another project passes its own pattern, or none). **Its phase**: `done` for `<n>` up to `done_through`; else `done` when every part is built, `work` when some are, and
+   `spec` when none are (its spec is written). A spec with no table of parts is one stage. A goal page that is there already is
+   never written over (its stem is its ref), so it runs any number of times.
+2. **`orkboard import --goals <folder> [--done-through N] [--dry-run]`** (`gui/board_cli.py`): with `--dry-run`, one line a spec,
+   *151 · The Board in the repository for any AI tool · spec · 0/8 parts · Tech*, and the counts; without it, the pages written
+   into the working tree, never committed (E.1's rule).
+3. **This repository, laid out** (one commit of its own, after A–F are merged, on the owner's word at each of these):
+   - `orkboard import --goals docs/specs --done-through 149 --dry-run` shown to the owner; the owner's corrections (a phase, a
+     party) made on the list; then written. 150 and 151 take their phase and stages from their commits.
+   - The parties' pages: Tech, Design (orkUI's copy and `docs/mockups/` are its), Product, Release; each spec's goal in the party
+     the owner puts it in.
+   - `docs/decisions.md` stays as it is: `decisions_log.found` finds it, and the rules name it.
+   - `docs/hypotheses.md` read as the Board's hypotheses (find whether `realm/hypotheses_file.py` reads its shape; if not, a reader of
+     it, never a rewrite of the file); `docs/updates.md` as Release's chronicle (find spec 134's reader); `docs/trials/` and
+     `docs/mockups/` stay documents, named by the goals they belong to.
+   - `uvx orkboard init`: `AGENTS.md` made with the block; `CLAUDE.md` keeps every word of its own and gains the block with
+     `@AGENTS.md` at its end. Its *Alpha* section wins over the block's *main is the person's* (§255.5): the block is not changed
+     for it, the precedence does it.
+   - `docs/specs/AGENTS.md` and `docs/specs/CLAUDE.md`: *Each spec here is a goal's spec: its page is
+     `llm-wiki/general/pages/ideas/<the spec's file name>`. A new spec is written with its goal's page in the same commit.* And the
+     same line in `CLAUDE.md`'s *Where code goes*, as this repository's own rule.
+   - If the repository is public, `[board] in_code = true` on the owner's yes (F.1): its first *Publish the Board*.
+   - The README: a section *Without the app*: the four levels (the rules alone, `uvx orkboard`, an MCP server later, Orkboard),
+     `uvx orkboard init` in a project, and what only Orkboard adds; it links `BOARD.md`.
+   - `orkboard check` (E.3) in this repository's CI, on the owner's yes.
+4. **Tests** (`tests/test_read_in.py`): a fixture folder of numbered specs (one with a table of parts, one without, one `29a`)
+   laid as goals with their titles, `spec`, decisions, stages and phases (`done_through`, all parts built, some, none, read from a
+   fixture repository's commits); laid twice, written once; `--dry-run` writes nothing; `import --goals` commits nothing. The layout
+   of this repository is checked by `orkboard check` passing on it, not by a test.
+
 ## G. The trial (§255.15)
 
 `docs/trials/151-the-board-in-three-tools.md`, written before the runs. Claude Code, Codex and Cursor, each in a fresh clone
-of a small fixture project with the Board in the code and the rules written (C), first with nothing installed (the rules
-alone), then with `uvx orkboard`. One goal each from `docs/trials/143-four-goals-for-the-trial-again.md`, picked so that it has a
-decision only the person can make (a choice between two ways that the spec cannot settle). Recorded, per tool: read the rules;
+of **this repository, laid out by H**, first with nothing installed (the rules alone), then with `uvx orkboard`. One goal each of
+this repository's not yet done, picked by the owner so that each has a decision only the person can make (a choice between two
+ways that the spec cannot settle). The first run is a cloud session, as the one §255 was decided in. Recorded, per tool: read the rules;
 took the goal; routed it; Talk in a pass a leader; the sections; **stopped at the person's decision** (and did not answer it
 itself); did the stages in a branch; ran the gate and wrote its record; opened the pull request; the time and what it spent.
 Then Orkboard opens each project: every goal in its phase, the question in the hand, the gate's record, the journals' lines
 taken in. Talk in one tool against Orkboard's on the same goal is judged as `docs/trials/h1-head-to-head.md` judges. What each
-tool missed is a finding, sent on as the owner says (spec 143's, 149's way).
+tool missed is a finding, sent on as the owner says (spec 143's, 149's way). The trial is also H1's test in the open
+(`docs/hypotheses.md`: specs handed to any agent, and what comes back checked).
 
 ## Done when
 
@@ -255,5 +300,9 @@ tool missed is a finding, sent on as the owner says (spec 143's, 149's way).
 - In a public repository nothing of the Board reaches the work branch without the person's yes; a goal kept off reaches no
   branch.
 - `orkboard check` fails on each fault of E.2 and passes a clean Board; every prompt is unchanged by C.
+- **This repository is laid out by §255** (H): every spec of `docs/specs/` is a goal in its phase with its parts as stages, its
+  decisions, hypotheses and chronicle read by the Board, `AGENTS.md` and `CLAUDE.md` carry the rules with this repository's own
+  winning, the README says how to work it without the app, and `orkboard check` passes on it. A cloud session with nothing of
+  Orkboard installed takes one of its goals by the rules, and Orkboard then reads what it did.
 - The critical tests pass: `tests/test_architecture.py` (`realm/goal_phase.py`, `realm/goal_take.py`, `realm/agent_rules.py`,
   `realm/board_check.py` import no `gui/`), `tests/test_board_alone.py`, `tests/test_updates.py`, and each part's own.

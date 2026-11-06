@@ -6679,7 +6679,7 @@ the chronicle stays over the pane, so the table under it stays in use, and then,
     **F.** 9; **G.** 8 last, since it shows the rest. **Drawn first**, `docs/mockups/table-edge/`; the owner's pick.
 The owner's call.
 
-## 255. Any AI tool works the Board from the repository: its pages, each goal's phase and the journals on the work branch, the rules for agents in AGENTS.md and CLAUDE.md, Orkboard the best of the Board's readers; a tool leads the orks' work itself and stops at the person's decisions; a public repository's Board only on the person's yes (6 November 2026, the owner)
+## 255. Any AI tool works the Board from the repository: its pages, each goal's phase and the journals on the work branch, the rules for agents in AGENTS.md and CLAUDE.md, Orkboard the best of the Board's readers; a tool leads the orks' work itself and stops at the person's decisions; a public repository's Board only on the person's yes; Orkboard's own repository first, its own documentation its Board (6 November 2026, the owner)
 
 Changes: 244.1, 244.11, 244.12; spec 35 §13 (a public repository, a task's spec); spec 137 A.2 (the pages); spec 127 D (the journals' Markdown).
 
@@ -6791,14 +6791,38 @@ was asked. So:
     them out of a goal's way into main).
 14. **Orkboard's own cloud run is unchanged** (§244.7: it reads, never works). A tool the person opens in the cloud is the
     person's own worker, and works.
-15. **Tried before it is promised**: Claude Code, Codex and Cursor, each without Orkboard, each on one goal from the person's
-    words to a green gate and an open pull request; then Orkboard opens the project and must show each goal in its phase, each
-    question in the hand, each gate's record. What each tool missed is the trial's finding, and Talk in one tool is measured
-    against Orkboard's as H1's head-to-head is (`docs/trials/h1-head-to-head.md`).
+15. **Tried before it is promised**, on Orkboard's own repository (17): Claude Code, Codex and Cursor, each without Orkboard,
+    each on one of its goals from the person's words to a green gate and an open pull request; then Orkboard opens the
+    repository and must show each goal in its phase, each question in the hand, each gate's record. What each tool missed is the
+    trial's finding, and Talk in one tool is measured against Orkboard's as H1's head-to-head is
+    (`docs/trials/h1-head-to-head.md`).
 16. **The words** (`TERMS`): *the Board's rules* (the block), *taken* (*Taken by <tool> until <time>*), *Publish the Board* and
     *Keep the Board off the repository*, *Keep off the repository* (a goal's), the lines above. In the files the code's names
     stay (`pages/ideas/`, `track`); the rules' glossary says them in today's words (*idea* is a goal, *track* a party).
-17. **Built** by spec 151: **A.** the phase in the page (and Orkline the same day); **B.** the journals and the brief in the
+17. **Orkboard's own repository is the first project of this decision, and its own documentation is its Board.** The owner:
+    *the main thing: once it is built, Orkboard's own repository is laid out by the same principle*, its documentation as well
+    as the way it works; and, on the three choices, *as recommended*. Once A–F are built:
+    - `docs/decisions.md` is the Board's log as it is: its format is the one the Board writes (`doc_formats.parse_log`).
+    - **Each spec of `docs/specs/` is a goal**: a thin page (its title, `phase`, `route`, a Gist of one line) whose spec is the
+      spec's own file, kept in its long form and never rewritten into the page's sections; **the spec's parts are the goal's
+      stages**. The specs up to 149 are laid `done`, and the list is shown to the owner to correct; 150 and 151 take their
+      phase and their stages from what their commits say (`Spec <n> <part>:`). This is a shape `read_in` reads (spec 126 B),
+      so any project with a folder of numbered specs can be laid the same way. From then on a new spec of this repository is
+      written with its goal's page in the same commit.
+    - `docs/hypotheses.md` is read as the Board's hypotheses (spec 133), `docs/updates.md` as Release's chronicle (spec 134);
+      the trials and the mockups stay documents the goals name.
+    - The parties: Tech, Design, Product and Release, on the owner's yes.
+    - `CLAUDE.md` stays this repository's own rules, which win over the block: the alpha's *merged into main as soon as the
+      critical tests pass* over the block's *main is the person's*, which is the case the rule is for; `@AGENTS.md` is added to
+      it, and `AGENTS.md` gets the block.
+    - If the repository is public, its yes to 10 is the owner's first *Publish the Board*: its documentation goes out as the
+      vision the owner named.
+    - The README says how Orkboard is worked without the app (the four levels of 9); `BOARD.md` is part of the product's
+      documentation.
+    Done when a cloud session with nothing of Orkboard installed, in a clone of this repository, takes one of its goals by the
+    rules and Orkboard then reads what it did. It is H1's test in the open (`docs/hypotheses.md`: specs handed to any agent).
+18. **Built** by spec 151: **A.** the phase in the page (and Orkline the same day); **B.** the journals and the brief in the
     code; **C.** the rules and the roles; **D.** taking a goal; **E.** `orkboard` from a terminal and `orkboard check`; **F.** a
-    public repository and a goal kept off it; **G.** the trial. The MCP server is not this spec.
+    public repository and a goal kept off it; **H.** Orkboard's own repository on its Board (17); **G.** the trial, on it, last.
+    The MCP server is not this spec.
 The owner's call.
