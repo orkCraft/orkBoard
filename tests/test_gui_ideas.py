@@ -15,7 +15,7 @@ import pytest
 from orkboard.core import idea_keeper
 from orkboard.gui import ideas as gui_ideas
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import idea_secrets, ideas, jobs, roles, tool_run
+from orkboard.realm import idea_change, idea_secrets, ideas, jobs, roles, tool_run
 
 BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.plan", "ideas.start", "ideas.move",
                   "ideas.edit", "ideas.track_add", "ideas.track_set", "ideas.track_drop", "ideas.todo", "ideas.drop", "ideas.stop",
@@ -1276,6 +1276,23 @@ def test_the_page_says_what_changed_since_the_plan_whether_it_is_passed_and_the_
     assert stop["level"] == "work" and stop["pulls"]["level"] == "work"            # spec 132 C.2: a plan change's stop says its level and what it pulls
     assert stop["pulls"]["estimate"]["usd_high"] >= stop["pulls"]["estimate"]["usd_low"]
     assert host.snapshot()["needs_you"] == 1
+
+
+def test_a_plan_change_gives_no_task_to_the_leader_at_any_size_spec_152_a_2(host, monkeypatch):
+    """The rows a revise adds or changes go to the squad's seat that takes the tag, else the project's role; a leader never does a task, Lean too."""
+    for size in ("lean", "standard", "full"):
+        party = host.command("ideas.goal_save", {"title": f"Code {size}", "about": "Code.", "craft": "engineering", "leader": "architect",
+                                                 "team": ["tester"], "size": size})["slug"]
+        slug = host.command("ideas.add", {"text": f"x {size}", "track": party, "hold": True})["slug"]
+        _plan(host, slug)
+        _started(host, slug)
+        host.command("ideas.edit", {"slug": slug, "section": "Out", "text": f"no images {size}"})
+        _leader(monkeypatch, CHANGE)
+        host.command("ideas.revise", {"slug": slug})
+        _wait(host, slug)
+        change = idea_change.read(host.ideas.state_dir, slug)
+        rows = [*change["change"], *change["add"]]
+        assert rows and {r["role"] for r in rows} <= {"tester", "grunt"}, (size, rows)
 
 
 def test_re_plan_what_is_left_refuses_in_words_through_the_command(host, monkeypatch):

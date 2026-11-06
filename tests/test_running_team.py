@@ -134,7 +134,7 @@ def test_removing_the_team_party_gives_operations_back_and_a_note_about_a_gone_p
 
 def test_removing_another_party_leaves_the_note_alone(host):
     slug = _team(host)
-    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": [], "every": []})["slug"]
+    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": ["grunt"], "every": []})["slug"]
     host.command("ideas.track_drop", {"slug": other})
     assert ops_team.get(op_runs.root())["party"] == slug
 
@@ -249,7 +249,7 @@ def test_a_repeat_is_set_and_stopped_by_the_person(host):
 
 def test_no_goal_goes_to_the_team_party_not_by_add_not_by_move_and_no_pitch_is_offered_it(host):
     slug = _team(host)
-    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": [], "every": []})["slug"]
+    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": ["grunt"], "every": []})["slug"]
     with pytest.raises(Exception, match="Team holds your Operations"):
         host.command("ideas.add", {"text": "Call the bank", "track": slug})
     goal = host.command("ideas.add", {"text": "Fix the login", "track": other})["slug"]
@@ -261,7 +261,7 @@ def test_no_goal_goes_to_the_team_party_not_by_add_not_by_move_and_no_pitch_is_o
 
 def test_a_team_party_removed_by_hand_gives_operations_back_but_a_board_still_being_made_keeps_the_note(host):
     slug = _team(host)
-    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": [], "every": []})["slug"]
+    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": ["grunt"], "every": []})["slug"]
     assert host.snapshot()["ops_team"]["party"] == slug
     (host.root / ideas.TRACKS / f"{slug}.md").unlink()
     assert host.snapshot()["ops_team"] is None and ops_team.get(op_runs.root()) is None

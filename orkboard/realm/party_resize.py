@@ -1,5 +1,5 @@
 """A party's change of size (docs/specs/81-a-party-its-tool-and-size.md §3, changed by spec 99 §1.3): the size is how the work goes, apart from the squad. A size
-sets the seats' tiers and the party's Target; it joins no one and removes no one (`joins` and `leaves` stay for the faces of before, always empty).
+sets the seats' tiers and the party's Target; it joins no one and removes no one (`joins` and `leaves` stay for the faces of before, always empty), so it never leaves a party with no one who does (spec 152 A.3).
 
     recipe_for("architect", ["grunt", "tester"])         # the recipe a party is of: its kept one, else the one its team fits; None for none
     resized(root, "ship", "lean")                        # {"recipe", "size", "team", "tiers", "joins", "leaves"}: what the size would make of it

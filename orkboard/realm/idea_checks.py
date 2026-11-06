@@ -8,7 +8,7 @@ to `every` idea applies always.
     kept(answer.get("checks"), checks)  # what the draft said, as the page keeps it: [{"by", "applies", "why", "skipped"?}]
     skip(kept_, checks, "reviewer")   # the person skips a check: kept with `skipped`
     plan_lines(kept_, checks)         # for the plan prompt: the checks that apply, each one task
-    with_check_tasks(tasks, kept_, checks)  # the plan's tasks, a check task added where the plan left one out
+    with_check_tasks(tasks, kept_, checks, make, size)  # the plan's tasks, a check task added where the plan left one out, by the party's size
     status(kept_, checks, tasks)      # for a face: each check, whether it applies, why not, its task's state, what it found
     parse_findings(text)              # a check task's findings file (FINDINGS_FILE) as the list it holds, or None
     code_left(findings)               # the findings left that are of the code (spec 86 §4); an "env" one is of the place it ran in
@@ -158,13 +158,17 @@ def plan_lines(kept_: list[dict], checks: list[dict]) -> str:
     return ("The checks this spec must pass, one task each:\n" + "\n".join(rows) + "\n") if rows else ""
 
 
-def with_check_tasks(tasks: list[dict], kept_: list[dict], checks: list[dict], make) -> list[dict]:
-    """The plan's tasks with a check task for each check that applies and has none of its tag yet, after every other
-    task. `make(id, title, brief, tag, tier, after)`: a task as the plan writes it (core/idea_keeper.py `_task`)."""
+def with_check_tasks(tasks: list[dict], kept_: list[dict], checks: list[dict], make, size: str = "") -> list[dict]:
+    """The plan's tasks with a check task for each check the party's size holds that applies and has none of its tag yet, after every other task (spec 152 A.4):
+    **lean** none, **standard** the first check that applies in the squad's order, **full** every one that applies; `size` "" (a party made before sizes) every
+    one, as before. `make(id, title, brief, tag, tier, after)`: a task as the plan writes it (core/idea_keeper.py `_task`)."""
     go = on(kept_)
     out = list(tasks)
-    for c in checks:
-        if c["by"] in go and not any(t.get("kind") == c["tag"] for t in out):
+    if size == "lean":
+        return out
+    held = [c for c in checks if c["by"] in go]
+    for c in held[:1] if size == "standard" else held:
+        if not any(t.get("kind") == c["tag"] for t in out):
             out.append(make(f"k{len(out) + 1}", f"Check: {c['name']}", c["task"], c["tag"], c["tier"], [t["id"] for t in tasks]))
     return out
 

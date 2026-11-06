@@ -284,3 +284,21 @@ def test_the_review_list_carries_the_kind_the_reason_and_the_flag(town, monkeypa
     task = wait_task(runner, "k1", "review")
     row = ReviewMixin._check_of(SimpleNamespace(state_dir=town.state), task)
     assert row["findings"][0]["kind"] == "env" and row["same"] is False
+
+
+def test_the_checks_a_plan_holds_follow_the_partys_size_spec_152_a_4(tmp_path):
+    """Lean none, Standard the first check that applies in the squad's order, Full every one that applies, no size (a party of before) every one."""
+    checks = idea_checks.of_team(tmp_path, ["grunt", "reviewer", "security-reviewer"], [])
+    assert [c["by"] for c in checks] == ["reviewer", "security-reviewer"]
+    tasks = [{"id": "k1", "title": "Do", "kind": "code", "after": []}]
+    make = lambda i, title, brief, tag, tier, after: {"id": i, "kind": tag, "after": after}          # noqa: E731
+    both = idea_checks.kept(None, checks)
+    ids = lambda size, kept_: [t["kind"] for t in idea_checks.with_check_tasks(tasks, kept_, checks, make, size)[1:]]          # noqa: E731
+    assert ids("lean", both) == []
+    assert ids("standard", both) == ["review"]
+    assert ids("full", both) == ["review", "security"] and ids("", both) == ["review", "security"]
+    assert idea_checks.with_check_tasks(tasks, both, checks, make) == idea_checks.with_check_tasks(tasks, both, checks, make, "")
+    only_second = [{"by": "reviewer", "applies": False, "why": "small"}, {"by": "security-reviewer", "applies": True, "why": ""}]
+    assert ids("standard", only_second) == ["security"]                                                # the first that applies, not the first of the squad
+    skipped = [{"by": "reviewer", "applies": True, "why": "", "skipped": True}, {"by": "security-reviewer", "applies": True, "why": ""}]
+    assert ids("standard", skipped) == ["security"] and ids("lean", skipped) == []

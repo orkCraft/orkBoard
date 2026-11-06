@@ -15,7 +15,7 @@
 **One craft a party** (§1.1): a game has *Game design*, *Tech*, *Art*, *Release*, *LiveOps* and *Marketing*; an app, a site and any other kind *Product*,
 *Design*, *Tech*, *Release*, *Run* and *Marketing* (what it makes, its look, its code, its release, its running, its marketing). A recipe is made of the
 library's agents, `build` (who does) and `check` (who checks) most needed first: the craft's roles the person ticks from; `squad` is who is ticked by default
-(Release's is its leader alone). The mixed recipes of before are not offered. **The squad and the size are apart** (§1.3): a size never changes the squad; it
+(Release's is its engineer and its notes: a party holds one who does). The mixed recipes of before are not offered. **The squad and the size are apart** (§1.3): a size never changes the squad; it
 sets how a task goes (`goal_team.WAY`) and the seats' tiers by default (`tiers_for`). Which craft is offered at which stage of the project is
 `realm/project_stage.py`. No face, no model.
 """
@@ -54,7 +54,7 @@ CRAFTS: dict[str, dict] = {r["id"]: r for r in (
     _craft("marketing", "Marketing", "Pages, posts and search; the store page and the way people come", "growth",
            ["copywriter", "seo", "aso", "community"], ["editor"], "people come to what is told well"),
     _craft("release", "Release", "A version out: what goes in, its notes, the stores' list", "release-manager",
-           ["release-engineer", "release-notes", "aso"], ["release-checker"], "a version goes out to people", squad=[]),
+           ["release-engineer", "release-notes", "aso"], ["release-checker"], "a version goes out to people", squad=["release-engineer", "release-notes"]),
 )}
 APP = ("product", "design", "tech", "release", "run", "marketing")        # what it makes, its look, its code, its release, its running, its marketing
 GAME = ("game-design", "tech", "art", "release", "liveops", "marketing")
@@ -116,19 +116,19 @@ def squad_of(recipe: dict) -> list[str]:
 
 
 def tiers_for(leader: str, team: list[str], size: str) -> dict[str, str]:
-    """`{agent: tier}` a size gives a party's seats (spec 81 §2), for any leader and team: **lean** every seat Seasoned (`warrior`);
-    **standard** the leader Veteran (`elder`), the first who does Seasoned, the other seats as the library has them (no entry); **full** the
-    leader and the checkers Veteran, those who do Seasoned (spec 87 §5): none below Seasoned. The Taskmaster
-    (no leader picked) is no seat. Release's leader alone is Seasoned at every size (§151.6: the cheaper tier)."""
+    """`{agent: tier}` a size gives a party's seats (spec 81 §2, spec 152 A.1), for any leader and team: the leader's tier is its own at **every** size, Veteran
+    (`elder`), the Release manager's Seasoned (`warrior`, §151.6: the cheaper tier). The rest: **lean** those who do Seasoned; **standard** the first who does
+    Seasoned, the other seats as the library has them (no entry); **full** those who do Seasoned, the checkers Veteran (spec 87 §5): none below Seasoned.
+    The Taskmaster (no leader picked) is no seat."""
     from orkboard.realm import goal_team
     build = [s for s in team if goal_team.band_of(s) == "build"]
     check = [s for s in team if goal_team.band_of(s) == "check"]
-    lead = [] if leader in ("", "taskmaster") else [leader]
-    if size == "lean" or leader == library.RELEASE_MANAGER and not team:
-        return {s: "warrior" for s in [*lead, *team]}
+    lead = {} if leader in ("", "taskmaster") else {leader: "warrior" if leader == library.RELEASE_MANAGER else "elder"}
+    if size == "lean":
+        return {**lead, **{s: "warrior" for s in team}}
     if size == "standard":
-        return {**{s: "elder" for s in lead}, **{s: "warrior" for s in build[:1]}}
-    return {**{s: "elder" for s in lead}, **{s: "warrior" for s in build}, **{s: "elder" for s in check}}
+        return {**lead, **{s: "warrior" for s in build[:1]}}
+    return {**lead, **{s: "warrior" for s in build}, **{s: "elder" for s in check}}
 
 
 def sized(recipe: dict, size: str) -> dict:
@@ -146,6 +146,6 @@ def sized(recipe: dict, size: str) -> dict:
 def has(recipe: dict, tracks: list[dict]) -> bool:
     """The project has the recipe's party already: a party of that recipe (kept on its page), else, when it was made from no other craft's, one with the recipe's
     leader and its squad inside its team (a party made before spec 99 is its leader's craft)."""
-    want = set(squad_of(recipe))
+    want = set() if recipe["id"] == RELEASE else set(squad_of(recipe))         # Release: the one place to release, whatever seats the party was made with (spec 152 A.5)
     return any(t.get("recipe") == recipe["id"] or (t.get("recipe") not in CRAFTS and (t.get("leader") or "") == recipe["leader"] and want <= set(t.get("team") or []))
                for t in tracks)

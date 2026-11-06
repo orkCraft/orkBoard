@@ -152,9 +152,9 @@ function usePresets(key, on) {
 /** What a seated party's chair says under its head (§232's line): its size, who does and who checks. */
 export function seatLine(p) {
   const size = p.size || "standard", v = { p, squad: p.squad || [], tiers: {} }, word = (SIZES.find(([id]) => id === size) || [size, size])[1];
-  if (size === "lean") return `${word} · the leader does it`;
+  if (size === "lean") return `${word} · 1 does · the leader accepts`;
   const does = seatsOf(v, "build", size).on.length, checks = seatsOf(v, "check", size).on.length;
-  return `${word} · ${does} ${does === 1 ? "does" : "do"}${checks ? ` · ${checks} ${checks === 1 ? "checks" : "check"}` : ""}`;
+  return `${word} · ${does} ${does === 1 ? "does" : "do"} · ${checks ? `${checks} ${checks === 1 ? "checks" : "check"}` : "the leader accepts"}`;
 }
 
 /** The parties as chairs at the table's far side: empty until pressed, then its leader sits on it. */

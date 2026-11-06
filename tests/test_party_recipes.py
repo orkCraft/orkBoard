@@ -74,7 +74,7 @@ def test_the_art_party_is_the_librarys_preset_seats_and_the_roles_of_a_craft_are
     assert party_recipes.get("release")["build"] == ["release-engineer", "release-notes", "aso"] and party_recipes.get("release")["check"] == ["release-checker"]
 
 
-def test_the_squad_is_the_same_in_every_size_and_release_is_its_leader_alone():
+def test_the_squad_is_the_same_in_every_size_and_release_is_its_engineer_and_its_notes():
     for _k, r in ALL:
         teams = [party_recipes.sized(r, s)["team"] for s in idea_target.SIZES]
         assert teams[0] == teams[1] == teams[2] == party_recipes.squad_of(r), r["id"]
@@ -82,7 +82,8 @@ def test_the_squad_is_the_same_in_every_size_and_release_is_its_leader_alone():
     assert party_recipes.squad_of(tech) == ["grunt", "tester", "reviewer"]                      # the first two who do and the first who checks
     assert party_recipes.sized(tech, "lean")["team"] == ["grunt", "tester", "reviewer"]        # a size never changes the squad
     release = party_recipes.get("release")
-    assert party_recipes.squad_of(release) == [] and [party_recipes.sized(release, s)["team"] for s in idea_target.SIZES] == [[], [], []]
+    two = ["release-engineer", "release-notes"]                                                  # spec 152 A.5: a party holds one who does
+    assert party_recipes.squad_of(release) == two and [party_recipes.sized(release, s)["team"] for s in idea_target.SIZES] == [two] * 3
     assert party_recipes.sized(tech, "standard")["basis"] == ["grunt", "reviewer"] and party_recipes.sized(tech, "lean")["basis"] == ["grunt"]
 
 
@@ -95,7 +96,7 @@ def test_a_size_that_is_none_is_refused_and_each_size_has_its_target():
 def test_each_size_gives_its_seats_their_tiers_lean_seasoned_standard_the_leader_veteran_full_the_leader_and_the_checker_veteran():
     tech = party_recipes.get("tech")
     lean, std, full = (party_recipes.sized(tech, s) for s in idea_target.SIZES)
-    assert lean["tiers"] == {"architect": "warrior", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}
+    assert lean["tiers"] == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}          # the leader's tier is its own at every size (spec 152 A.1)
     assert std["tiers"] == {"architect": "elder", "grunt": "warrior"}
     assert full["tiers"] == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder"}
     for r in (party_recipes.get(i) for i in ("product", "design", "marketing", "run", "game-design")):
@@ -103,16 +104,20 @@ def test_each_size_gives_its_seats_their_tiers_lean_seasoned_standard_the_leader
         assert "laborer" not in got[2]["tiers"].values() and "laborer" not in got[0]["tiers"].values()
 
 
-def test_releases_leader_alone_is_seasoned_at_every_size_the_cheaper_tier():
+def test_releases_leader_is_seasoned_at_every_size_the_cheaper_tier_and_every_other_leader_veteran():
     release = party_recipes.get("release")
-    assert [party_recipes.sized(release, s)["tiers"] for s in idea_target.SIZES] == [{"release-manager": "warrior"}] * 3
+    both = {"release-manager": "warrior", "release-engineer": "warrior", "release-notes": "warrior"}
+    assert [party_recipes.sized(release, s)["tiers"] for s in idea_target.SIZES] == [both, {"release-manager": "warrior", "release-engineer": "warrior"}, both]
+    for size in idea_target.SIZES:
+        assert party_recipes.tiers_for("release-manager", [], size) == {"release-manager": "warrior"}
+        assert party_recipes.tiers_for("architect", [], size) == {"architect": "elder"}          # a leader of any other party: Veteran at every size, Lean too
     with_notes = party_recipes.tiers_for("release-manager", ["release-notes"], "standard")      # a seat added: as any party's
-    assert with_notes == {"release-manager": "elder", "release-notes": "warrior"}
+    assert with_notes == {"release-manager": "warrior", "release-notes": "warrior"}
 
 
 def test_tiers_for_any_team_follows_the_sizes_and_a_party_made_before_keeps_its_team():
     team = ["grunt", "tester", "reviewer", "security-reviewer"]
-    assert party_recipes.tiers_for("architect", team, "lean") == {s: "warrior" for s in ["architect", *team]}
+    assert party_recipes.tiers_for("architect", team, "lean") == {"architect": "elder", **{s: "warrior" for s in team}}
     assert party_recipes.tiers_for("architect", team, "standard") == {"architect": "elder", "grunt": "warrior"}
     assert party_recipes.tiers_for("architect", team, "full") == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder", "security-reviewer": "elder"}
     assert party_recipes.tiers_for("taskmaster", ["grunt"], "standard") == {"grunt": "warrior"}          # the Taskmaster is no seat

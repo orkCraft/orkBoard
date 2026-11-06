@@ -161,10 +161,9 @@ Answer with one JSON object and nothing else:
         cleaned = clean_change(plan, {"why": why, "change": got.get("change"), "drop": got.get("drop"), "add": got.get("add")})
         change = {"why": cleaned["why"], "change": [c for c in cleaned["change"] if str(c["id"]) in mine], "drop": [i for i in cleaned["drop"] if i in mine],
                   "add": cleaned["add"] if plan else []}                       # no plan yet: there is no task to change and none to add to
-        team = [*goal_team.team_of(root, party), goal_team.leader_of(root, party)]
-        lean = goal_team.lean_role(root, party)
+        team = goal_team.team_of(root, party)                                        # the squad: a leader never does a task (spec 152 A.2)
         for row in [*change["change"], *change["add"]]:
-            row["role"] = lean or (roles.role_for(self.state_dir, row["kind"], team)["slug"] if team else "")
+            row["role"] = roles.role_for(self.state_dir, row["kind"], team)["slug"] if team else ""
         change["estimate"] = self.change_price(plan, change) if plan else {"usd_low": 0.0, "usd_high": 0.0}
         before, after = leader_change.proposal(root, self.state_dir, slug, plan, idea_party, party, change, lines)
         if not (change["change"] or change["drop"] or change["add"] or lines):

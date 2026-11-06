@@ -18,7 +18,7 @@ export const LEADERS = { product: "Angel Invest Knight", "game-design": "Dungeon
   liveops: "Event Imp", marketing: "Growth Hack Gnome", release: "Release Night King" };
 
 export const SIZES = [["lean", "Lean"], ["standard", "Standard"], ["full", "Full"]];
-export const LEAN_LINE = "Lean: the leader does it, and checks it itself";
+export const LEAN_LINE = "Lean: one does it, the leader accepts it";
 export const MAX = { build: 5, check: 2 };
 
 export const libOf = (id) => (roles.value?.library || []).find((a) => a.id === id);
@@ -36,10 +36,10 @@ export const raceOf = (v, lead = false) => { const [seat, higher] = RACES[v.p.id
 /** Whether a seat is one who checks. */
 export const bandOf = (v, slug) => (libOf(slug)?.band === "check" || (v.p.check || []).includes(slug) ? "check" : "build");
 
-/** The seats of a band in a size (spec 81 §2, decisions §232.6): `{on, shadows}`. Lean: the leader does it, every seat a shadow. Standard: the first two who do and the first who checks. Full: the whole squad. The seats the craft has and the size leaves empty are shadows, up to five who do and two who check. */
+/** The seats of a band in a size (spec 81 §2, decisions §232.6): `{on, shadows}`. Lean: the first who does, the rest shadows, no one checks (the leader accepts). Standard: the first two who do and the first who checks. Full: the whole squad. The seats the craft has and the size leaves empty are shadows, up to five who do and two who check. */
 export function seatsOf(v, band, size) {
   const squad = (v.squad || []).filter((s) => bandOf(v, s) === band), craft = [...new Set([...(band === "build" ? v.p.build : v.p.check) || [], ...squad])];
-  const on = size === "lean" ? [] : size === "standard" ? squad.slice(0, band === "build" ? 2 : 1) : squad;
+  const on = size === "lean" ? (band === "build" ? squad.slice(0, 1) : []) : size === "standard" ? squad.slice(0, band === "build" ? 2 : 1) : squad;
   return { on, shadows: craft.filter((s) => !on.includes(s)).slice(0, Math.max(0, MAX[band] - on.length)) };
 }
 

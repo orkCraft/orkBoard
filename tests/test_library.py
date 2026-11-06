@@ -250,7 +250,8 @@ def test_the_art_instructions_hold_each_agent_to_its_work_in_the_librarys_voice(
     for i, text in told.items():
         assert text.startswith("you "), i
         assert 0 < len(library.get(i).instruction) <= roles.INSTRUCTION_CHARS and library.get(i).instruction.endswith("."), i
-    assert all(w in told["art-director"] for w in ("style guide", "docs/style-guide.md", "palette", "loudness", "list of assets", "who makes it", "unless the party is lean"))
+    assert all(w in told["art-director"] for w in ("style guide", "docs/style-guide.md", "palette", "loudness", "list of assets", "who makes it", "draw and record nothing yourself."))
+    assert "unless the party is lean" not in told["art-director"]
     assert all(w in told["icon-artist"] for w in ("sizes the project uses", "readable at its size", "one family", "svg source"))
     assert all(w in told["animator"] for w in ("sprite sheets", "lottie", "css", "loopable", "one place", "still frame"))
     assert all(w in told["composer"] for w in ("midi", "tone.js", "brief", "loop", "no click", "one loudness"))

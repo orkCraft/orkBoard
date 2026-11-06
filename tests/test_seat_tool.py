@@ -117,13 +117,13 @@ def test_a_task_runs_on_the_tool_of_the_seat_that_takes_it(host, installed, monk
     assert seen == ["agy", "codex"]
 
 
-def test_a_lean_partys_leader_takes_the_tasks_on_its_own_seat_tool(host, installed, monkeypatch):
+def test_a_lean_partys_task_takes_its_doers_tool_not_the_leaders_seat_tool(host, installed, monkeypatch):
     h = host
     main_tool(monkeypatch, "claude")
-    slug = save(h, size="lean", team=[], tool="codex", tools={"architect": "agy"})
+    slug = save(h, size="lean", team=["tester"], tool="codex", tools={"architect": "agy"})
     runner = h.ideas.runner(need=True)
     idea = ideas.add_idea(h.root, "A goal", slug, h.state)
-    assert runner.tool_of(idea, {"id": "k1", "kind": "code", "role": "architect"}) == "agy"
+    assert runner.tool_of(idea, {"id": "k1", "kind": "code", "role": "tester"}) == "codex"             # the leader does no task (spec 152 A.2): its seat tool is for its steps
 
 
 def test_a_task_waits_for_the_sign_in_of_its_seats_tool(host, installed, monkeypatch):

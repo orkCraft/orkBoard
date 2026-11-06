@@ -134,6 +134,10 @@ class GoalsMixin:
             kept += goal_team.team_of(self.root(False), slug)
         if why := goal_team.seats(team or [], leader or "", kept):          # a size sent changes the tiers, never the squad (spec 99 §1.3)
             raise IdeasError(why)
+        there = bool(slug) and ideas.track_page(self.root(False), slug) is not None
+        if team is not None and (why := goal_team.does_missing(team, leader if leader is not None else goal_team.leader_of(self.root(False), slug) if there else "",
+                                                               kept, there or bool(party))):         # a party holds one who does (spec 152 A.3)
+            raise IdeasError(why)
         size = self._size_asked(args, slug, team)
         got, new = ideas.save_goal(self.root(), slug, title[:ideas.TITLE_CHARS],
                                    about[:ideas.SECTION_CHARS] if about is not None else None, metrics,

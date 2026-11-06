@@ -240,7 +240,7 @@ def test_a_plan_says_the_kinds_no_one_of_its_party_does_and_its_prompt_says_the_
     keeper.plan(slug)
     _wait(keeper, slug)
     plan = ideas.plan(keeper.state, slug)
-    assert [t["role"] for t in plan["tasks"]] == ["grunt", "grunt", "grunt", "grunt", "product-designer"]
+    assert [t["role"] for t in plan["tasks"]] == ["grunt", "grunt", "grunt", "grunt", "grunt"]       # the leader does no task (spec 152 A.2)
     assert plan["missing"] == [{"kind": "art", "agent": "artist"}, {"kind": "uikit", "agent": "ui-kit"}]
     assert f"Its type: New logo. {goal_types.get('product-designer/logo').plan}\n" in keeper.call.asked[0]["prompt"]
     bare = ideas.add_idea(keeper.root, "export csv", state_dir=keeper.state)
@@ -514,6 +514,6 @@ def test_the_plan_a_leader_makes_for_its_step_is_stamped_so_its_tasks_wear_its_p
     _wait(keeper, slug)
     first, second = ideas.plan(keeper.state, slug)["tasks"]
     heads = [roles.task_head(keeper.state, t, "balance") for t in (first, second)]
-    assert [h["race"] for h in heads] == ["dryad", "peon"]          # Design's task is its leader's (no builder takes a design tag): its higher form; Tech's a Grunt's: an ork
+    assert [h["race"] for h in heads] == ["elf", "peon"]          # Design's task is a seat's, not its leader's (spec 152 A.2): an elf, not the dryad; Tech's a Grunt's: an ork
     assert roles.task_head(keeper.state, {**second, "role": "architect"}, "balance")["race"] == "shaman"      # its leader's higher form
     assert roles.task_head(keeper.state, {k: v for k, v in second.items() if k not in ("craft", "leader")}, "balance")["race"] == "peon"
