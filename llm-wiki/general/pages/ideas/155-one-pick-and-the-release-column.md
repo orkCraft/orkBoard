@@ -29,8 +29,8 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 - The narrow page and the phone keep their layout: the 390 px tests of the touched modules.
 
 ## Stages
-- [ ] A. orkUI 0.31.0
-- [ ] B. One pick
+- [x] A. orkUI 0.31.0
+- [x] B. One pick
 - [ ] C. The table by the phase
 - [ ] D. The Release column, no edge
 - [ ] E. The hand's right end
