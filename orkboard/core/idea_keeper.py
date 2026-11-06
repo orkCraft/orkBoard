@@ -65,6 +65,7 @@ from orkboard.core.idea_tree import TreeMixin
 from orkboard.core.idea_hypotheses import HypothesesMixin
 from orkboard.core.idea_journal import JournalMixin
 from orkboard.core.idea_slices import SlicesMixin
+from orkboard.core.idea_accept import AcceptMixin
 from orkboard.core.idea_findings import FindingsMixin
 from orkboard.core.idea_hypothesis_values import HypothesisValuesMixin
 from orkboard.core.idea_cascade import CascadeMixin
@@ -124,7 +125,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SpecChangeMixin, LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, HypothesisValuesMixin, ConcernsMixin, JournalMixin, SlicesMixin, CascadeMixin, GroupsMixin, FindingsMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SpecChangeMixin, LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, HypothesisValuesMixin, ConcernsMixin, JournalMixin, SlicesMixin, CascadeMixin, GroupsMixin, AcceptMixin, FindingsMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -375,7 +376,7 @@ class IdeaKeeper(SpecChangeMixin, LeaderChangeMixin, SignInMixin, TalkMixin, Ver
                 slug = i["slug"]
                 st = ideas.state(self.state_dir, slug)
                 if st["state"] == "working" and not st["error"] and not self.busy(slug) and not self.signed_out():
-                    started |= self._quiet(lambda: self.plan_next(slug))      # its step is merged in dev and the route has another: that party plans it (spec 99 §9.1)
+                    started |= self._quiet(lambda: self.accept_due(slug)) or self._quiet(lambda: self.plan_next(slug))      # its step landed: its leader accepts it first (spec 152 B.1), then the route's next party plans its own (spec 99 §9.1)
                     continue
                 if st["state"] == "sketch" and self.sketch_lost(slug):     # its run was lost with the process: back at its decision (spec 121 §2.2)
                     continue

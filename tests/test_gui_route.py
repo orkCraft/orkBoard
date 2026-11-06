@@ -90,7 +90,7 @@ def test_a_goal_sent_makes_no_call_and_waits_routed_with_its_route_row(host, par
     assert calls == [] and not host.ideas.keeper.busy(slug)
     row = _row(host, slug, "route")
     assert row["route"][0]["party"] == parties["tech"] and row["place"] == 1 and row["short"] is False and row["low"] is False
-    assert row["cost"]["calls"] == 4 and row["goal"] == parties["tech"] and row["blocks"] is False
+    assert row["cost"]["calls"] == 5 and row["goal"] == parties["tech"] and row["blocks"] is False
     node = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == slug)
     assert node["state"] == "routed" and node["place"] == "table" and node["asks_you"] is True
     page = host.command("ideas.page", {"slug": slug})
@@ -106,7 +106,7 @@ def test_a_goal_sent_to_no_party_is_routed_by_code_and_a_bug_is_techs_alone(host
     st = _state(host, bug["slug"])
     assert st["route_how"]["short"] is True and st["route_how"]["reproduces"] is True and st["route_how"]["by"] == "code"
     row = _row(host, bug["slug"], "route")
-    assert row["short"] is True and row["reproduces"] is True and row["cost"]["calls"] == 2           # no Talk, no decision
+    assert row["short"] is True and row["reproduces"] is True and row["cost"]["calls"] == 3           # no Talk, no decision: the draft, the plan, the acceptance
     assert ideas.idea_page(host.ideas.root(), bug["slug"]).get("track") == parties["tech"]                 # it lies in the first party of its route
     two = host.command("ideas.add", {"text": "a new logo and a launch post", "general": True, "track": "general", "marks": ["orkboard/gui"]})
     assert two["route"] == [parties["product"], parties["design"]] and ideas.idea_page(host.ideas.root(), two["slug"]).get("track") == parties["product"]
@@ -147,7 +147,7 @@ def test_the_route_is_edited_with_no_call_and_the_cost_is_answered_again(host, p
     assert _state(host, slug)["route"][0]["party"] == parties["tech"]
     one = _row(host, slug, "route")["cost"]
     got = host.command("ideas.route_set", {"idea": slug, "route": [parties["design"], parties["tech"]]})
-    assert calls == [] and [r["party"] for r in got["route"]] == [parties["design"], parties["tech"]] and got["cost"]["calls"] == 8
+    assert calls == [] and [r["party"] for r in got["route"]] == [parties["design"], parties["tech"]] and got["cost"]["calls"] == 10
     assert got["cost"]["usd_high"] > one["usd_high"] and got["short"] is False and got["changed"] is False
     assert _row(host, slug, "route")["cost"] == got["cost"] and _state(host, slug)["route_how"]["by"] == "person"
     host.command("ideas.route_set", {"idea": slug, "route": [{"party": parties["design"]}]})              # a party taken off

@@ -174,6 +174,7 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
         self.board_held = ""                  # spec 137 B (gui/board_sync.py): the words while another worker holds the Board; nothing that writes runs then
         self.keeper.index_root = self.wiki
         self.keeper.board_held = lambda: self.board_held
+        self.keeper.fix_tasks = lambda slug, change: self.runner(True).revise_tasks(slug, change)       # a leader's fix tasks for its step run as any added task (spec 152 B.3)
         self.host.bus.subscribe(idea_keeper.CHANGED, self._changed)
 
     # -- the project's Board settings (spec 37 §8) --------------------------------------------------------------

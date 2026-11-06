@@ -39,6 +39,7 @@ CALL_CHARS = 1500                         # what a call is given of one journal,
 ON_MAX = 8
 PROJECT_KINDS = ("decision", "done", "dropped", "hypothesis", "brief", "pitch_passed")
 LEADER_KINDS = ("stance", "heeded", "overruled", "came_back", "went_through", "concern_goal", "concern_dismissed", "since", "calibration",
+                "accepted", "sent_back", "learned",       # a step its leader accepted, sent back, and what it learned of it (spec 152 B.3)
                 "decision")                     # a decision of its craft read in from the project's documents (spec 126 B)
 KINDS = {"project": PROJECT_KINDS, "leader": LEADER_KINDS}
 HEADS = {"project": "What the project decided and what came of it (its journal, newest last)",

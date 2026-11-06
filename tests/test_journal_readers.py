@@ -190,7 +190,7 @@ def test_a_struck_entry_is_never_read_into_a_call(host, tech, goal):
 def test_a_members_call_is_given_none(host, tech, goal):
     """Only the leaders' prompts ask for the journals: no module of a member's call (a task's prompt, the Taskmaster's runner) reads `idea_journal`."""
     users = sorted(p.name for p in Path(idea_journal.__file__).parent.glob("*.py") if p.name != "idea_journal.py" and "idea_journal" in p.read_text(encoding="utf-8"))
-    assert users == ["idea_ask.py", "idea_concerns.py", "idea_decide.py", "idea_keeper.py", "idea_pass.py", "idea_sections.py", "idea_talk.py", "idea_verdict.py"]
+    assert users == ["idea_accept.py", "idea_ask.py", "idea_concerns.py", "idea_decide.py", "idea_keeper.py", "idea_pass.py", "idea_sections.py", "idea_talk.py", "idea_verdict.py"]
 
 
 # -- the context grew -----------------------------------------------------------------------------------------------------------------------

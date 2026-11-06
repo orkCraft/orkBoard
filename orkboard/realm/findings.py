@@ -12,6 +12,7 @@ files. The gathering where each thing is found is `realm/findings_gather.py`; th
     findings.record(state_dir, idea) / findings.save_record(state_dir, idea, **changes)   # a goal's quality record
     findings.ripe(state_dir, idea, now=None)         # the goal's findings are in: its verdict read, its checks done and the lenses' looks of the day after (or QUIET_H hours after the verdict)
     findings.pending(state_dir)                      # the goals ("" for no goal) that hold a finding not told yet
+    findings.waiting(state_dir)                      # …or told and not sorted yet
     findings.rows(state_dir, root)                   # the hand's rows: one `quality` card a goal, a `finding` row for each of no goal
     findings.clean_told(raw, ids) / findings.clean_levels(raw, ids)   # the two calls' answers, strictly
     findings.pulls_of(state_dir, root, finding)      # what its fix pulls after it, and the price (realm/way_down.py)
@@ -19,7 +20,7 @@ files. The gathering where each thing is found is `realm/findings_gather.py`; th
 **The record** is `<state_dir>/ideas/<slug>/quality.json` `{verdict: [goal_result rows], checks: [...], findings: [finding], hypothesis: {...} | null, at, status}`; a finding of no goal is in
 `<state_dir>/findings.json` `{findings: [...]}`. `realm/way_down.py` `open_levels` reads `findings[].status != "answered"`.
 
-A finding is `{id, at, source, idea, party, on, found, what, shows, promised, cause, level, change, status, answer, fix}`: `source` verdict · check · lens · concern · hypothesis · measure; `found` code's words
+A finding is `{id, at, source, idea, party, on, found, what, shows, promised, cause, level, change, status, answer, fix}`: `source` verdict · check · lens · concern · hypothesis · measure · accept; `found` code's words
 (`what` is `found` until its leader tells it); `level` work · spec · decision and `change` the Orkmaster's; `status` found → told → sorted → answered; `answer` fix · later · moved; `fix` what was made of it
 (`{idea}` a goal, `{cascade}`, `{change}`).
 
@@ -38,7 +39,7 @@ from orkboard.realm import ideas
 
 QUALITY = "quality.json"
 FILE = "findings.json"
-SOURCES = ("verdict", "check", "lens", "concern", "hypothesis", "measure")
+SOURCES = ("verdict", "check", "lens", "concern", "hypothesis", "measure", "accept")      # `accept`: what a leader's acceptance of a step left (spec 152 B.3)
 LEVELS = ("decision", "spec", "work")                       # a finding's level, in the order of its card: the heaviest first
 STATUS = ("found", "told", "sorted", "answered")
 ANSWERS = ("fix", "later", "moved")
@@ -224,11 +225,19 @@ def pending(state_dir: Path) -> list[str]:
     return [idea for idea in _goals(state_dir) if any(f["status"] == "found" for f in of_goal(state_dir, idea))]
 
 
+def waiting(state_dir: Path) -> list[str]:
+    """The goals ("" for no goal) that hold a finding not told yet or told and not sorted yet: an acceptance tells its own at once (spec 152 B.3), the Orkmaster still sorts them."""
+    return [idea for idea in _goals(state_dir) if any(f["status"] in ("found", "told") for f in of_goal(state_dir, idea))]
+
+
 def ripe(state_dir: Path, idea: str, now: dt.datetime | None = None) -> bool:
     """The goal's findings are in (§237.1): its verdict was read (the record's `at`) and its checks are done and the lenses of its parties looked after it, or `QUIET_H` hours have passed
-    since the verdict, whichever is first. A finding of no goal is ripe at once; a goal whose verdict was not read is not (a finding of its own, a lens's, waits for it)."""
+    since the verdict, whichever is first; and the goal's last step is accepted or gone on (spec 152 B.3). A finding of no goal is ripe at once; a goal whose verdict was not read is not (a finding of its own, a lens's, waits for it)."""
     if not idea:
         return True
+    from orkboard.realm import idea_route                            # a step landed and not accepted yet: its leader's findings are not all in (spec 152 B.3)
+    if idea_route.due(ideas.plan(Path(state_dir), idea)):
+        return False
     rec = record(state_dir, idea)
     try:
         at = dt.datetime.fromisoformat(rec["at"])

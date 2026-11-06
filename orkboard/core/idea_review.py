@@ -306,6 +306,7 @@ class ReviewMixin:
                 task = _task(tid, str(a.get("title") or ""), str(a.get("brief") or ""), str(a.get("kind") or "code"),
                              str(a.get("tier") or "warrior"), after)
                 task.update(short=str(a.get("short") or task["short"]), role=str(a.get("role") or ""))
+                task.update({k: a[k] for k in ("step", "party", "craft", "leader", "section") if k in a})      # a leader's fix of its step is stamped as the step's tasks are (spec 152 B.3)
                 kept.append(task)
                 added.append(tid)
             for t in old:

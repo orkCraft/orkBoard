@@ -266,6 +266,8 @@ EVENTS += (SLICES_CUT, SLICES_FOLDED)       # spec 131 A
 FINDINGS_TOLD = "findings_told"      # idea (the goal's slug, "" for findings of no goal), party, findings (how many), seconds, cost (None: unrecorded), failed (true: code's words kept)
 FINDINGS_SORTED = "findings_sorted"  # idea, findings (how many), levels ({work, spec, decision} counts), seconds, cost (None: unrecorded), failed (true: all left at work)
 EVENTS += (FINDINGS_TOLD, FINDINGS_SORTED)       # spec 132 D
+STEP_ACCEPTED = "step_accepted"      # spec 152 B.3: idea, step, party, verdict (accepted · back · gone_on), round, back (items sent back), seconds, cost (None: unrecorded), failed (true: the call did not answer); never a word of the goal
+EVENTS += (STEP_ACCEPTED,)       # spec 152 B
 MEASURE_READ = "measure_read"        # spec 146 C.1 (spec 133 B.3): idea (the hypothesis's id), party, measures (asked), read (kept), seconds, cost (None: unrecorded); never a number
 EVENTS += (MEASURE_READ,)       # spec 146 C
 
