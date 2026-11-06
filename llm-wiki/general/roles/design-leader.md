@@ -2,8 +2,8 @@
 seat: leader
 craft: design
 race: elf
-schema: 2
-hash: ecda9e162ae8
+schema: 3
+hash: e7c71ce59515
 ---
 # The design leader
 

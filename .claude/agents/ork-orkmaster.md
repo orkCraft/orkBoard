@@ -1,8 +1,11 @@
 ---
 name: ork-orkmaster
 description: "Routes a goal of this project's Board: names the parties that write its spec and do its work. Use it for a goal in phase new."
-schema: 2
-hash: 2719fd18b999
+# `tools`, `model` and `isolation` are Claude Code's own fields of a subagent (not the Agent Skills standard's); other tools ignore them.
+tools: Read, Grep, Glob, Edit, Write
+model: inherit
+schema: 3
+hash: 32c1ff1646ab
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/orkmaster.md`, which is who you are on this project's Board. What follows is the same text.
 

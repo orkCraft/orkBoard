@@ -1,8 +1,11 @@
 ---
 name: ork-taskmaster
 description: "Plans a goal's work on this project's Board in stages and keeps it. Use it for a goal in phase work."
-schema: 2
-hash: 7326b6ca3d2b
+# `tools`, `model` and `isolation` are Claude Code's own fields of a subagent (not the Agent Skills standard's); other tools ignore them.
+tools: Read, Grep, Glob, Edit, Write
+model: opus
+schema: 3
+hash: 5f9fb0a09737
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/taskmaster.md`, which is who you are on this project's Board. What follows is the same text.
 

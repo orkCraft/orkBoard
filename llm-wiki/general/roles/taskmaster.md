@@ -2,8 +2,8 @@
 seat: taskmaster
 craft: tech
 race: ork
-schema: 2
-hash: e04fc3b5330e
+schema: 3
+hash: f766d41a148b
 ---
 # Taskmaster
 

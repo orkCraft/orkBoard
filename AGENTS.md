@@ -1,6 +1,6 @@
 This project's own rules go above or below Orkboard's block.
 
-<!-- orkboard:begin schema=2 hash=c3796fd20460 -->
+<!-- orkboard:begin schema=3 hash=c3796fd20460 -->
 ## The Board (Orkboard)
 
 This project's goals, their specs and its decisions are files, so any AI tool works them as Orkboard does.

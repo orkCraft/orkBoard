@@ -1,8 +1,8 @@
-<!-- orkboard:file schema=2 hash=87c8d9f91caf -->
+<!-- orkboard:file schema=3 hash=14b2cae23257 -->
 # The Board's rules (Orkboard's file)
 
 Orkboard writes this file from its package; a change by hand is written back. This project's own rules go in `AGENTS.md` and `CLAUDE.md`, and they win: where they conflict
-with this file, ask the person. Schema 2.
+with this file, ask the person. Schema 3.
 
 ## Where the Board lies
 

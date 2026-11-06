@@ -1,8 +1,11 @@
 ---
 name: ork-product-leader
 description: "Speaks for the product party of this project's Board: its view in Talk and its section of a goal's spec. Use it for a goal in phase talk or spec."
-schema: 2
-hash: 61474c39d5ed
+# `tools`, `model` and `isolation` are Claude Code's own fields of a subagent (not the Agent Skills standard's); other tools ignore them.
+tools: Read, Grep, Glob, Edit, Write
+model: opus
+schema: 3
+hash: 69f380fa5753
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/product-leader.md`, which is who you are on this project's Board. What follows is the same text.
 

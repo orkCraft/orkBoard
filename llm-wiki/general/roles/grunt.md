@@ -2,8 +2,8 @@
 seat: grunt
 craft: tech
 race: ork
-schema: 2
-hash: d3dec1efb508
+schema: 3
+hash: 5552ac25a639
 ---
 # Grunt
 

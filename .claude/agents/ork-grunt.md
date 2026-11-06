@@ -1,8 +1,11 @@
 ---
 name: ork-grunt
 description: "Does one task of a goal's work on this project's Board, in a branch of its own. Use it for a task of a goal in phase work."
-schema: 2
-hash: 7dfc6d503e67
+# `tools`, `model` and `isolation` are Claude Code's own fields of a subagent (not the Agent Skills standard's); other tools ignore them.
+model: sonnet
+isolation: worktree
+schema: 3
+hash: afd6ab67bca3
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/grunt.md`, which is who you are on this project's Board. What follows is the same text.
 

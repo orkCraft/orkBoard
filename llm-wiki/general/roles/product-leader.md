@@ -2,8 +2,8 @@
 seat: leader
 craft: product
 race: knight
-schema: 2
-hash: 75bf5df5cca3
+schema: 3
+hash: 4b7dd1f94cdb
 ---
 # The product leader
 

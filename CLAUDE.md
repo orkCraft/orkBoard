@@ -80,7 +80,7 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   `always` in `orkcraft.toml`), and the test files of the modules the change touches.
 - This section is removed when the project leaves alpha.
 
-<!-- orkboard:begin schema=2 hash=d66e05148fe1 -->
+<!-- orkboard:begin schema=3 hash=d66e05148fe1 -->
 @AGENTS.md
 
 The Board's rules are in AGENTS.md; this project's own rules in this file win over them.

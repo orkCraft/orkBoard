@@ -2,8 +2,8 @@
 seat: leader
 craft: tech
 race: ork
-schema: 2
-hash: 2afadea304fd
+schema: 3
+hash: 6c97fed8acf3
 ---
 # The tech leader
 
