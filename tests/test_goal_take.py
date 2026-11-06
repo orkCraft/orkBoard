@@ -19,7 +19,7 @@ from orkboard.realm import board_branch as bb, event_log, goal_route, goal_take 
 from tests.test_board_branch import git, make_clone, make_origin
 
 T0 = dt.datetime(2026, 11, 6, 12, 0, 0, tzinfo=dt.timezone.utc)
-RULES = "# Rules\n<!-- orkboard:begin v1 -->\nthe rules\n<!-- orkboard:end -->\n"
+RULES = "# Rules\n<!-- orkboard:begin schema=1 hash=0 -->\nthe rules\n<!-- orkboard:end -->\n"
 
 
 def hrs(n: float) -> dt.timedelta:

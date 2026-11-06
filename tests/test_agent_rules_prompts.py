@@ -1,6 +1,6 @@
 """Spec 151 C.3: the seats' fixed instruction texts moved into functions their prompts are built from, and **no prompt changed by a character**.
 Each prompt is built on a fixture goal and compared with the exact text stored in `tests/prompts_151/` (made once from the code before the move;
-`ORKBOARD_WRITE_PROMPTS=1 pytest tests/test_agent_rules_prompts.py` writes them again, for a change of a prompt that is meant)."""
+`ORKCRAFT_WRITE_PROMPTS=1 pytest tests/test_agent_rules_prompts.py` writes them again, for a change of a prompt that is meant)."""
 from __future__ import annotations
 
 import os
@@ -34,7 +34,7 @@ def _party(host, title, leader, team, craft):
 
 def _same(name: str, text: str) -> None:
     path = STORED / f"{name}.txt"
-    if os.environ.get("ORKBOARD_WRITE_PROMPTS"):
+    if os.environ.get("ORKCRAFT_WRITE_PROMPTS"):
         STORED.mkdir(exist_ok=True)
         path.write_text(text, encoding="utf-8")
     assert path.read_text(encoding="utf-8") == text, f"the prompt {name} changed"

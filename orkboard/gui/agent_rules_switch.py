@@ -8,7 +8,8 @@
 `<state_dir>/rules_asked.json` and the line stays, with *Write the rules* alone. Once written the line says so. At the host's start, a project that has the rules and whose package text differs gets
 only Orkboard's blocks and files written again; one changed by hand is written back and said once (a toast, and this line for the run).
 
-A public repository's question (spec 151 F) comes first once F is built; the switch has no place for it yet.
+**A public repository is refused** until spec 151 F asks its question (decisions §255.10): the rules would let the journals and the brief go to the work
+branch (part B), and nothing of the Board goes into a public repository's code without the person's yes to that.
 """
 from __future__ import annotations
 
@@ -17,7 +18,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import agent_rules, agent_rules_text, event_log, lexicon
+from orkboard.realm import agent_rules, agent_rules_text, board_branch, event_log, lexicon
 
 ASKED_FILE = "rules_asked.json"
 LABEL = "Let any AI tool work the Board"
@@ -27,12 +28,20 @@ WRITE = "Write the rules"
 NOT_NOW = "Not now"
 ON_LINE = "{rules} are in this project (schema {schema}): AGENTS.md, CLAUDE.md, the Board's folder, and Claude Code's roles and skill. Your own rules in those files win over them."
 NO_TREE = "The Board's rules go into a project with git history; this one has none."
+PUBLIC_WAIT = ("This repository is public: your goals, their specs and the leaders' words would be public too. "
+               "Orkboard asks you about that first, in a later version.")
 HELD_LINE = "The Board's rules are written in the Board's tree; your work branch takes them when its files are clean: {why}"
 
 
 def message() -> str:
     """The Board commit's words: `board: the Board's rules (schema 1)`."""
     return f"board: {lexicon.term('board_rules')} (schema {agent_rules_text.SCHEMA})"
+
+
+def _public(root: Path) -> bool:
+    """Whether GitHub says the project's remote is public (an anonymous check, as the Board's branch makes it: spec 137 A.1)."""
+    ok, _line = board_branch.private_check(Path(root), board_branch.read_config(Path(root)) or board_branch.BoardConfig())
+    return not ok
 
 
 def _sentence(text: str) -> str:
@@ -102,6 +111,8 @@ class AgentRules:
     def write(self) -> dict:
         """The person's yes: the files written into the Board's tree and committed in one Board commit. ValueError in plain words where it cannot be."""
         p = self._project()
+        if _public(p.root):
+            raise ValueError(PUBLIC_WAIT)
         tree = self._tree(p)
         if tree is None:
             raise ValueError(NO_TREE)
