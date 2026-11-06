@@ -8,10 +8,12 @@ priority: normal
 short: One card picked
 phase: work
 spec: docs/specs/156-one-pick-and-the-release-column.md
-decisions: 261, 262
+decisions: 261, 262, 263, 264, 265
 route: design, product, tech
 by: person
 schema: 3
+gate: 4827c2c · 172 files · green
+asks: person
 ---
 # One card picked, on either side
 
@@ -42,6 +44,12 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 - for: one state where three mixed, so each way back says where it goes; Stop all in words, not on a 3D face (Nielsen 1, 3, 4; WCAG 2.5.3)
 - against: the drum says one share in words; a tool at warn or danger beside it is a dimmed, half-hidden colour with no word (WCAG 1.4.1, 1.4.11)
 - assumes: the active tool's share is the one a person needs at a glance — shown by: a week of the owner's use, how often the drum is unrolled to read another tool
+### Accepted
+- not met: From any state of the table at the wide width, one Esc (or the picked card pressed again) shows the whole project: a browser test. — a picked card's choices (table/column.js Acts) take the first Esc; test_one_pick_browser.py l.81–83 presses it twice
+- not met: The pane's title has no × and no phase button; ← only while a file or a diff is open: a browser test. — no × and spans only, but ← stands over every kind (table/pane.js Title l.93 `o &&`): Settings, Files, Play; no test opens one
+- met: No `.frame-edge` at 1280 × 800; Release's tab is the row's last and the discard its lane, through the open tab's eyes: a browser test.
+- met: The die and the drum stand inside the hand's shown height and the Release column's width; *Stop all* is a button only while a run is on: a browser test.
+- cannot see: The narrow page and the phone keep their layout: the 390 px tests of the touched modules.
 
 ## Product
 ### Talk
@@ -60,6 +68,12 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
 - against: B's files miss table/table.js, whose Esc and pick-opens-its-party's-tab (l.72) go against B.1 and B.5; C and D both change table/pane.js, so wave 2 shares a file
 - instead: B with frame/state.js the address's one writer and table.js in its files; then C, then D, one after the other; E after A's orkUI copy
 - assumes: the pick's history entry and the narrow back entry (table.js useBackButton) keep their order — shown by: a 390 px test: a pick, a file over it, back twice closes the file, then the pick
+### Accepted
+- not met: From any state of the table at the wide width, one Esc (or the picked card pressed again) shows the whole project: a browser test. — table/column.js l.135 takes the first Esc for a picked card's choices (test_one_pick_browser.py l.81–83, l.162–163 press it twice); shell/shell.js l.55 is a second pick Esc, against B.1's one handler
+- not met: The pane's title has no × and no phase button; ← only while a file or a diff is open: a browser test. — no × and Phases are spans, but table/pane.js Title l.93 draws ← for every `over` (`o &&`; its `code` is unused); no test opens Settings or Files to see no ←
+- met: No `.frame-edge` at 1280 × 800; Release's tab is the row's last and the discard its lane, through the open tab's eyes: a browser test.
+- met: The die and the drum stand inside the hand's shown height and the Release column's width; *Stop all* is a button only while a run is on: a browser test.
+- cannot see: The narrow page and the phone keep their layout: the 390 px tests of the touched modules.
 
 ## Open questions
 - How is a tool in danger shown? (**at full brightness, its share in words** / dimmed, its colour only, as §261.13) — a tool running out is money: said plainly, not by colour alone (WCAG 1.4.1)
@@ -70,3 +84,5 @@ Three states of their own (the pick, what is over the pane, a lifted card) mixed
   - Answered: the owner's week, a line in the project's journal; no testers (the person, 2026-11-06)
 - Build C and D one after another? (**C, then D** / C and D side by side, as spec 156's wave 2) — both must change table/pane.js: C its Phases, D the `discard` view it draws (l.114); a wave's parts share no file
   - Answered: C, then D (decided by spec 156, 2026-11-06)
+- What closes Settings, Projects, a log or a role over the pane at the wide width? (**← stays for every screen over the pane, §261's line changed** / ← only for a file or a diff as §261 says, each other screen gets its own close / ← only for a file or a diff, Esc alone closes the rest) — Design and Tech did not accept Done when 2: most screens over the pane have no close of their own, so taking ← away leaves Esc alone (Nielsen 3)
+- Product wrote no section of its own for this goal: accept it without one? (**yes: Product's Talk stands, its part goes under Not accepted** / Product writes its section now and accepts against it) — Product's accept found no Done when of its own to judge

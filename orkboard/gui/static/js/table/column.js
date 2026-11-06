@@ -132,7 +132,7 @@ export function Column() {
   useEffect(() => { if (gone) setLift(null); });
   useEffect(() => {                                                                    // Esc or a press away puts the lifted thing away
     if (!lift) return undefined;
-    const key = (e) => { if (e.key === "Escape" && !e.defaultPrevented && !e.target.closest?.(".table-drop")) { e.preventDefault(); setLift(null); } };
+    const key = (e) => { if (e.key === "Escape" && !e.defaultPrevented && !e.target.closest?.(".table-drop")) { e.preventDefault(); setLift(null); if (lift.kind === "acts" && picked.peek() === lift.slug) pick(""); } };      // the card's choices go with its pick: one Esc puts both away (spec 156 Done when 1)
     const away = (e) => { if (!e.target.closest?.(".col-lift, .col-card")) setLift(null); };
     addEventListener("keydown", key, true);                                             // first: what the column lifted is the topmost thing (a question asked in it takes its own Esc first)
     document.addEventListener("pointerdown", away, true);

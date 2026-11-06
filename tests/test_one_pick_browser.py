@@ -78,9 +78,7 @@ def test_esc_an_empty_press_of_the_column_and_the_browsers_back_each_put_the_pic
     try:
         press(pg, "raw3")
         wait_picked(pg, "raw3")
-        pg.keyboard.press("Escape")                                                    # the card's choices beside the column take the first
-        if picked(pg):
-            pg.keyboard.press("Escape")
+        pg.keyboard.press("Escape")                                                    # one Esc: the card's choices beside the column and its pick go together (Done when 1)
         wait_picked(pg, "")
         pg.wait_for_function("() => location.hash === ''", timeout=WAIT_MS)
         press(pg, "timer")
@@ -159,7 +157,6 @@ def test_a_pick_from_a_tab_the_goals_route_lacks_opens_the_orkmasters_tab(gui):
         press(pg, "both")
         wait_picked(pg, "both")
         assert sig(pg, STATE, "tab") == "design", "its route has Design: the tab stays"
-        pg.keyboard.press("Escape")
         pg.keyboard.press("Escape")
         wait_picked(pg, "")
         press(pg, "techonly")
