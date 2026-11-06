@@ -1,0 +1,21 @@
+# Written by Orkboard (orkboard init --ci).
+# Checks the Board on each pull request; your tests stay your CI's.
+name: Orkboard check
+
+on:
+  pull_request:
+    paths:
+      - "llm-wiki/general/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uvx --from git+https://github.com/orkCraft/orkBoard orkboard check

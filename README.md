@@ -104,6 +104,25 @@ pictures the races' heads.
 It shares Orkline's settings (`~/.config/orkcraft/`) and a project's Board (`<project>/.orkcraft/`, `orkcraft.toml`):
 switching between the two loses nothing.
 
+## Without the app
+
+The Board is files in the repository, so any AI tool works it as Orkboard does: Claude Code, Codex, Cursor, Copilot, Gemini
+CLI, or a cloud session of any of them.
+
+1. **The rules alone.** `AGENTS.md` holds Orkboard's block, and `CLAUDE.md` brings it in; the Board's folder holds `BOARD.md`
+   (the page's format) and `roles/` (each seat's instruction). A tool reads the goals, takes one, routes it, holds Talk with each
+   leader in a pass of its own, writes the spec, does it in a branch, runs the gate and opens a pull request, and stops to ask
+   you what is yours to decide.
+2. **Orkboard from a terminal**, with no app running: `uvx --from git+https://github.com/orkCraft/orkBoard orkboard init`
+   writes the rules into a project; `goal list|add|take|phase|ask|answer`, `gate` and `check` check what a tool writes.
+   Orkboard is not on PyPI: never `pip install orkboard` or `uvx orkboard`, which would run someone else's package.
+3. **An MCP server** of the same commands, later.
+4. **Orkboard itself**: the table and the hand, the phone, the mana across your tools, orks in parallel, Talk in several
+   voices.
+
+A public repository's Board goes into its code only on your yes (*Publish the Board*). This repository is laid out so:
+`AGENTS.md`, `llm-wiki/general/BOARD.md`, and a goal for each spec of `docs/specs/`.
+
 ## Licence
 
 Orkboard is open source under the [Apache License 2.0](LICENSE): use it, change it and share it, at work too. The

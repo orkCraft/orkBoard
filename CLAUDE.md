@@ -40,6 +40,10 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
 
 ## Where code goes
 
+- **A spec is a goal's** (decisions §255.17): a new spec in `docs/specs/` is written with its goal's page
+  (`llm-wiki/general/pages/ideas/<the spec's file name>`) in the same commit; `orkboard import --goals docs/specs` lays it. This
+  repository's Board is in its code (`[board] in_code` in `orkcraft.toml`), and the rules any AI tool follows for it are
+  Orkboard's block in `AGENTS.md`; this file's own rules win over them (its *Alpha* over the block's *main is the person's*).
 - **The page is the one face** (`orkboard/gui/`): the desktop's `static/board.js` with the shell (`js/shell/*`,
   `js/board/*`), the phone's `static/pwa/board-app.js` with `pwa/shell-*.js`. Nothing imports Textual or Rich, and
   `tests/test_architecture.py` keeps it so.
@@ -75,3 +79,9 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
 - The critical tests: `tests/test_architecture.py`, `tests/test_board_alone.py`, `tests/test_updates.py` (the gate's
   `always` in `orkcraft.toml`), and the test files of the modules the change touches.
 - This section is removed when the project leaves alpha.
+
+<!-- orkboard:begin schema=1 hash=d66e05148fe1 -->
+@AGENTS.md
+
+The Board's rules are in AGENTS.md; this project's own rules in this file win over them.
+<!-- orkboard:end -->

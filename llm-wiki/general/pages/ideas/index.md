@@ -2,3 +2,122 @@
 
 The board's ideas: each a spec under discussion, kept by the board.
 
+- [v1: three windows, Board · Agents · Review (17 October, the owner)](33-v1-shell.md) — v1: three windows, Board · Agents · Review (17 October, the owner)
+- [v1, round 2](34-v1-round-2.md) — v1, round 2
+- [The Board](35-goals-window.md) — The Board
+- [Agents](36-agents-spend.md) — Agents
+- [Orkboard and Orkline, stage 1](37-board-and-line.md) — Orkboard and Orkline, stage 1
+- [Operations](38-operations.md) — Operations
+- [The Map](39-map.md) — The Map
+- [The phone, round 3](41-phone-round-3.md) — The phone, round 3
+- [Coming back](42-coming-back.md) — Coming back
+- [The week's pace](44-week-pace.md) — The week's pace
+- [Sign-in](45-sign-in.md) — Sign-in
+- [A goal's trail](46-goal-trail.md) — A goal's trail
+- [Keep the computer awake](47-keep-awake.md) — Keep the computer awake
+- [The Map shows one goal](48-map-ideas.md) — The Map shows one goal
+- [One window](49-one-window.md) — One window
+- [Parties and goals](50-parties-and-goals.md) — Parties and goals
+- [Pick one](51-pick-one.md) — Pick one
+- [Goal types](52-goal-types.md) — Goal types
+- [The phone, simpler](53-phone-simpler.md) — The phone, simpler
+- [One hand](54-one-hand.md) — One hand
+- [The type top right](55-type-top-right.md) — The type top right
+- [Fantasy signs](56-fantasy-signs.md) — Fantasy signs
+- [The deal on Start](57-deal-on-start.md) — The deal on Start
+- [A stop and its task](58-stop-and-its-task.md) — A stop and its task
+- [Mixed parties](59-mixed-parties.md) — Mixed parties
+- [The phone's members wear their tool and level](60-phone-member-marks.md) — The phone's members wear their tool and level
+- [Your own goal, first](61-your-own-goal.md) — Your own goal, first
+- [The spec after the start](62-spec-after-start.md) — The spec after the start
+- [The party gathered](63-party-gathered.md) — The party gathered
+- [The flags raised](64-flags-raised.md) — The flags raised
+- [Ideation](65-ideation.md) — Ideation
+- [Team briefs](66-team-briefs.md) — Team briefs
+- [The hand first](67-hand-first.md) — The hand first
+- [A goal's route across parties, and a Release party that gathers the flags](68-release-and-route.md) — A goal's route across parties, and a Release party that gathers the flags
+- [On the desktop the left column is the parties](69-parties-in-the-column.md) — On the desktop the left column is the parties
+- [The Orkmaster and the project's level](70-orkmaster-and-the-project.md) — The Orkmaster and the project's level
+- [The Orkmaster keeps the parties from colliding](71-orkmaster-keeps-parties-apart.md) — The Orkmaster keeps the parties from colliding
+- [A closed party says what it is at work on, in one line](72-at-work-under-a-closed-party.md) — A closed party says what it is at work on, in one line
+- [A lighter column](73-a-lighter-column.md) — A lighter column
+- [Moments of magic](74-moments-of-magic.md) — Moments of magic
+- [The Orkmaster fits the parties to the project, each in three sizes](75-parties-fitted-to-the-project.md) — The Orkmaster fits the parties to the project, each in three sizes
+- [The Orkmaster is crowned](76-the-orkmaster-crowned.md) — The Orkmaster is crowned
+- [The field is a game table](77-the-field-a-table.md) — The field is a game table
+- [Canvases](78-canvases.md) — Canvases
+- [The project's level is played on the table too](79-the-project-on-the-table.md) — The project's level is played on the table too
+- [A party removed](80-a-party-removed.md) — A party removed
+- [A party's AI tool, picked from a list](81-a-party-its-tool-and-size.md) — A party's AI tool, picked from a list
+- [The field at a glance](82-the-field-at-a-glance.md) — The field at a glance
+- [New goal in one field](83-one-field-and-the-night-asked.md) — New goal in one field
+- [The next task goes on](84-the-next-task-goes-on.md) — The next task goes on
+- [Progress is seen](85-the-elf-asks-and-shows.md) — Progress is seen
+- [What the logs said](86-what-the-logs-said.md) — What the logs said
+- [Quieter work, longer names](87-quieter-work-longer-names.md) — Quieter work, longer names
+- [Assets and Play](88-assets-and-play.md) — Assets and Play
+- [The Tech lens's *System*](89-the-tech-lens-system.md) — The Tech lens's System
+- [Running the project is a party](92-running-and-the-team.md) — Running the project is a party
+- [One page fitted to the width](94-one-page-fitted-to-the-width.md) — One page fitted to the width
+- [The window as decided](95-the-window-as-decided.md) — The window as decided
+- [What a leader's call reads](97-what-a-leaders-call-reads.md) — What a leader's call reads
+- [The table and the hand](98-the-table-and-the-hand.md) — The table and the hand
+- [A goal's way](99-a-goals-way.md) — A goal's way
+- [A goal's way as cards](100-a-goals-way-as-cards.md) — A goal's way as cards
+- [The cards, a goal's cascade, the hand under the lanes, no deck](101-the-cards-the-cascade-and-the-hand-under-the-lanes.md) — The cards, a goal's cascade, the hand under the lanes, no deck
+- [The other maps and picking on them](102-the-other-maps-and-picking-on-them.md) — The other maps and picking on them
+- [The phone's app a native frame](103-the-phones-app-a-native-frame.md) — The phone's app a native frame
+- [The mana in the hand, the discard on the table, a lifted card as a card](104-the-mana-the-discard-on-the-table-a-lifted-card.md) — The mana in the hand, the discard on the table, a lifted card as a card
+- [The default tool, moving on, going on paid, and the portal to main](105-the-default-tool-moving-on-and-the-portal.md) — The default tool, moving on, going on paid, and the portal to main
+- [A quick question](106-a-quick-question.md) — A quick question
+- [A leader says no, and shows where it hurts](108-a-leader-says-no-and-shows-where-it-hurts.md) — A leader says no, and shows where it hurts
+- [Each leader looks as a senior of its craft](109-each-leader-looks-as-a-senior-of-its-craft.md) — Each leader looks as a senior of its craft
+- [Runes on the table](110-runes-on-the-table.md) — Runes on the table
+- [A goal's rune from its summoning to main](111-a-goals-rune-release-and-live-at-the-portal.md) — A goal's rune from its summoning to main
+- [The bar's marks and the Play die](112-the-bars-marks-and-the-play-die.md) — The bar's marks and the Play die
+- [A project with no preview or no gate](113-a-project-with-no-preview-or-no-gate.md) — A project with no preview or no gate
+- [The mana in two windows](114-the-mana-in-two-windows.md) — The mana in two windows
+- [The live product under each leader's eyes](115-the-live-product-under-each-leaders-eyes.md) — The live product under each leader's eyes
+- [The phone](117-the-phone-a-menu-of-the-leaders.md) — The phone
+- [The die's up face](118-the-dies-up-face.md) — The die's up face
+- [The hammer and the bug](119-the-hammer-and-the-bug.md) — The hammer and the bug
+- [A goal heard at the Orkmaster](120-a-goal-heard-and-thrown-to-a-side.md) — A goal heard at the Orkmaster
+- [The day, the morning and the night](121-the-day-the-morning-and-the-night.md) — The day, the morning and the night
+- [The leaders at the table](123-the-leaders-at-the-table.md) — The leaders at the table
+- [The journals](125-the-journals.md) — The journals
+- [Read in and write out](126-read-in-and-write-out.md) — Read in and write out
+- [The field's best in the Board's formats](127-the-fields-best-in-our-formats.md) — The field's best in the Board's formats
+- [The Orkmaster's column on every tab, a goal picked at every leader, one way to talk to a leader, the + card turned](128-the-orkmasters-column-and-a-goal-at-every-leader.md) — The Orkmaster's column on every tab, a goal picked at every leader, one way to talk to a leader, the + card turned
+- [A task's steps](129-a-tasks-steps.md) — A task's steps
+- [The first open is the Orkmaster's](130-the-first-open-is-the-orkmasters.md) — The first open is the Orkmaster's
+- [A leader's slices of the decisions, and the cascade a leader's proposal runs](131-a-leaders-slices-and-the-cascade.md) — A leader's slices of the decisions, and the cascade a leader's proposal runs
+- [Four levels](132-four-levels-the-way-down-and-findings.md) — Four levels
+- [A new goal matched against the face-down pile when it is sent, joined only on the person's yes](135-a-new-goal-matched-against-the-face-down-pile.md) — A new goal matched against the face-down pile when it is sent, joined only on the person's yes
+- [The phone through the project's remote](136-the-phone-through-the-projects-remote.md) — The phone through the project's remote
+- [The Board on its own branch](137-the-board-on-its-own-branch.md) — The Board on its own branch
+- [The day read from the resets](138-the-day-read-from-the-resets.md) — The day read from the resets
+- [The die, the door and the bug](139-the-die-the-door-and-the-bug.md) — The die, the door and the bug
+- [The window made lighter](140-the-window-made-lighter.md) — The window made lighter
+- [A card picked by its rune](141-a-card-picked-by-its-rune.md) — A card picked by its rune
+- [A card's window where it has something to show](142-a-cards-window-where-it-has-something-to-show.md) — A card's window where it has something to show
+- [A spec's wait is one setting and a clock time](144-a-specs-wait-and-a-change-through-the-orkmaster.md) — A spec's wait is one setting and a clock time
+- [The engines read](145-the-engines-read.md) — The engines read
+- [One card, 5](147-one-card-four-corners.md) — One card, 5
+- [A window on every card, never empty](148-a-window-on-every-card.md) — A window on every card, never empty
+- [What a goal on local Codex found](149-what-a-goal-on-local-codex-found.md) — What a goal on local Codex found
+- [The table, its edge and the past through the open tab](150-the-table-its-edge-and-the-past-through-the-open-tab.md) — The table, its edge and the past through the open tab
+- [The Board in the repository for any AI tool](151-the-board-in-the-repository-for-any-ai-tool.md) — The Board in the repository for any AI tool
+- [A leader leads and accepts](152-a-leader-leads-and-accepts.md) — A leader leads and accepts
+- [A task is a whole session](153-a-task-is-a-whole-session.md) — A task is a whole session
+- [Orkboard in orkUI](40-design-system.md) — Orkboard in orkUI
+- [OrkUI 0.15.x copied](96-orkui-0.15.0-copied.md) — OrkUI 0.15.x copied
+- [A goal's party, measured](43-party-measured.md) — A goal's party, measured
+- [What the first look said](90-what-the-first-look-said.md) — What the first look said
+- [The owner's list of 26 October](91-the-owners-list.md) — The owner's list of 26 October
+- [What the owner's day said](107-what-the-owners-day-said.md) — What the owner's day said
+- [Hypotheses on Product's tree](116-hypotheses-on-products-tree.md) — Hypotheses on Product's tree
+- [The brief every leader reads, the measures of the arguing, and H1's trial](124-the-brief-the-measures-and-the-trial.md) — The brief every leader reads, the measures of the arguing, and H1's trial
+- [A hypothesis](133-a-hypothesis-its-two-conditions-its-test-its-file.md) — A hypothesis
+- [What a trial with real tools found](143-what-a-trial-with-real-tools-found.md) — What a trial with real tools found
+- [A hypothesis on the page](146-a-hypothesis-on-the-page.md) — A hypothesis on the page
+- [Release keeps the chronicle](134-release-keeps-the-chronicle.md) — Release keeps the chronicle

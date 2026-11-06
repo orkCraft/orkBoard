@@ -6812,7 +6812,7 @@ was asked. So:
       phase and their stages from what their commits say (`Spec <n> <part>:`). This is a shape `read_in` reads (spec 126 B),
       so any project with a folder of numbered specs can be laid the same way. From then on a new spec of this repository is
       written with its goal's page in the same commit.
-    - `docs/hypotheses.md` is read as the Board's hypotheses (spec 133), `docs/updates.md` as Release's chronicle (spec 134);
+    - `docs/hypotheses.md` is read as the Board's hypotheses (spec 133), Release's chronicle reads the tags (spec 134; `docs/updates.md` and `updates.json` are no changelog);
       the trials and the mockups stay documents the goals name.
     - The parties: Tech, Design, Product and Release, on the owner's yes.
     - `CLAUDE.md` stays this repository's own rules, which win over the block: the alpha's *merged into main as soon as the
