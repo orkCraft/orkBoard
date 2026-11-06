@@ -69,12 +69,13 @@ def _sum_usd(a: object, b: object) -> float | None:
 
 
 def readiness(data: dict) -> None:
-    """A task not started yet is `ready` when what it waits for is done (its `after`, its to-dos), else `waiting`."""
+    """A task not started yet is `ready` when what it waits for is done (its `after`, its to-dos), else `waiting`. A base it waits for counts as done when it is merged and accepted early
+    or gone on (`idea_route.waits_for_base`, spec 152 C.2)."""
     merged = {t["id"] for t in data.get("tasks") or [] if t.get("state") == "merged"}
     blocked = {f for td in data.get("todos") or [] if not td.get("done") for f in td.get("for") or []}
     for t in data.get("tasks") or []:
         if t.get("state") in ("waiting", "ready"):
-            t["state"] = "ready" if set(t.get("after") or []) <= merged and t["id"] not in blocked and not idea_route.holds(data, t) else "waiting"
+            t["state"] = "ready" if set(t.get("after") or []) <= merged and t["id"] not in blocked and not idea_route.holds(data, t) and not idea_route.waits_for_base(data, t) else "waiting"
 
 
 def _why(e: Exception) -> str:

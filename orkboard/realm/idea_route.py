@@ -11,6 +11,8 @@ own step when the one before is merged in dev; `way` is that route, `begin` reco
     way(root, state_dir, "dark-mode")          # the steps of its work: [{party, leader}], [] for a goal routed to nothing (an older one)
     at_step(plan) / step_done(plan, n)         # the step a plan is at (the highest a task is stamped with); whether step n's tasks are all merged or dropped, one merged at least
     next_step(plan) / steps_left(plan)         # {n, party, leader} when the plan's step is done and accepted and the route it was made for (`plan.route`) has another, else None
+    bases(plan, n) / base_key(n, tid)          # the tasks of step n that two or more name in `after` (spec 152 C.1); the key of a base's acceptance in `plan.accepts` ("<n>:<tid>")
+    base_due(plan) / waits_for_base(plan, t)   # a base merged, not accepted, its fixes in (the keeper accepts it alone); whether a task waits for a base not accepted yet (C.2)
     accepted(plan, n) / due(plan)              # step n was accepted by its leader (`plan.accepts`, spec 152 B.1); whether the plan's step landed and waits for it (the goal does not go on nor end)
     begin(state_dir, "dark-mode", 2, "web", "architect", ["k3"])   # step 2 planned: recorded (`route.json` `steps`), the steps after a re-planned one forgotten
     waits(plan) / holds(plan, task)            # a later step planned and held for the person's Start (`plan.waits`, decisions §169.3): {step, party, cost}; whether a task is of it
@@ -119,15 +121,15 @@ def steps_left(plan: dict | None) -> bool:
     return bool(plan and plan.get("passed_at")) and n < len(legs_of(plan)) and step_done(plan, n)
 
 
-def accept_of(plan: dict | None, n: int) -> dict:
-    """What the plan keeps of step `n`'s acceptance (`plan.accepts[str(n)]`: `{round, verdict, at, done_when, back, cost}`); {} for a step not yet looked at."""
+def accept_of(plan: dict | None, n: int | str) -> dict:
+    """What the plan keeps of step `n`'s acceptance (`plan.accepts[str(n)]`, or of a base's: `plan.accepts[base_key(n, tid)]`: `{round, verdict, at, done_when, back, cost}`); {} for a step not yet looked at."""
     kept = (plan or {}).get("accepts")
     got = kept.get(str(n)) if isinstance(kept, dict) else None
     return got if isinstance(got, dict) else {}
 
 
-def accepted(plan: dict | None, n: int) -> bool:
-    """Step `n` was accepted by its leader, or went on with what was left as findings (`verdict` `accepted` · `gone_on`)."""
+def accepted(plan: dict | None, n: int | str) -> bool:
+    """Step `n` (or a base, by its `base_key`) was accepted by its leader, or went on with what was left as findings (`verdict` `accepted` · `gone_on`)."""
     return accept_of(plan, n).get("verdict") in ("accepted", "gone_on")
 
 
@@ -135,6 +137,40 @@ def due(plan: dict | None) -> bool:
     """The plan's step landed (`step_done`) and its leader has not accepted it: the goal waits (spec 152 B.1). A step whose tasks were all dropped landed nothing and is not due."""
     n = at_step(plan)
     return bool(plan) and step_done(plan, n) and not accepted(plan, n)
+
+
+def base_key(n: int, tid: str) -> str:
+    """The key a base's acceptance has in `plan.accepts`: `"<step>:<task id>"`."""
+    return f"{n}:{tid}"
+
+
+def bases(plan: dict | None, n: int) -> list[str]:
+    """The tasks of step `n` that two or more tasks of the step name in `after`, directly (spec 152 C.1), in the plan's order. A fix task a base was sent back for (`fix_of`) is none."""
+    tasks = [t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict) and step_of(t) == n]
+    named: dict[str, int] = {}
+    for t in tasks:
+        for a in {str(a) for a in t.get("after") or []}:
+            named[a] = named.get(a, 0) + 1
+    return [str(t.get("id")) for t in tasks if named.get(str(t.get("id")), 0) >= 2 and not t.get("fix_of")]
+
+
+def fixes_of(plan: dict | None, tid: str) -> list[dict]:
+    """The fix tasks a base was sent back for (`fix_of` its id)."""
+    return [t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict) and t.get("fix_of") == tid]
+
+
+def base_due(plan: dict | None) -> list[str]:
+    """The bases of the plan's step that are merged, not accepted yet, and whose fix tasks (after a sending back) have all landed: the keeper accepts each alone (spec 152 C.3)."""
+    n = at_step(plan)
+    by_id = {str(t.get("id")): t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict)}
+    return [b for b in bases(plan, n) if by_id[b].get("state") == "merged" and not accepted(plan, base_key(n, b)) and all(f.get("state") in GONE for f in fixes_of(plan, b))]
+
+
+def waits_for_base(plan: dict | None, task: dict) -> bool:
+    """The task names, in `after`, a base of its step that is not accepted (or gone on) yet: it waits for the acceptance as well as for the merge (spec 152 C.2)."""
+    n = step_of(task)
+    mine = [a for a in bases(plan, n) if a in {str(x) for x in task.get("after") or []}]
+    return any(not accepted(plan, base_key(n, a)) for a in mine)
 
 
 def next_step(plan: dict | None) -> dict | None:

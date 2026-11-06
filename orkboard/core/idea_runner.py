@@ -440,7 +440,7 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
                 continue
             after_ok = all(a in merged for a in t.get("after") or [])
             todos_ok = all(d.get("done") for d in todos if tid in (d.get("for") or []))
-            if after_ok and todos_ok and not idea_route.holds(plan, t):        # a later step the person has not started (decisions §169.3) stays waiting
+            if after_ok and todos_ok and not idea_route.holds(plan, t) and not idea_route.waits_for_base(plan, t):        # a later step the person has not started (decisions §169.3) stays waiting
                 t["state"], changed = "ready", True
             elif state != "waiting":
                 t["state"], changed = "waiting", True

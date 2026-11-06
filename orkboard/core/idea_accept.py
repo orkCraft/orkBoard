@@ -44,6 +44,7 @@ TESTS_SHOWN = 12                  # the tests a step added the call names, at mo
 _TEST_DEF = re.compile(r"\s*(?:async\s+)?def\s+(test_\w*)\s*\(")
 _TEST_FILE = re.compile(r"(^|/)(test_[^/]*\.py|[^/]*_test\.py|[^/]*\.(test|spec)\.[jt]sx?)$")
 STAMPS = ("step", "party", "craft", "leader", "section")
+bases = idea_route.bases                  # spec 152 C.1: the tasks of a step that two or more name in `after`; they are accepted alone, early
 
 
 def _kw():
@@ -112,10 +113,12 @@ class AcceptMixin:
     def accept_due(self, slug: str) -> bool:
         """The goal's step landed and its leader has not accepted it: the call begins in the background. False, never an error, when nothing is due, the keeper is busy or a call cannot be made now."""
         kw = _kw()
-        if self._may_run() or self.busy(slug) or not idea_route.due(ideas.plan(self.state_dir, slug)):
+        plan = ideas.plan(self.state_dir, slug)
+        early = "" if idea_route.due(plan) else next(iter(idea_route.base_due(plan)), "")      # a step due is looked at whole; else a base merged and not accepted is looked at alone (spec 152 C.3)
+        if self._may_run() or self.busy(slug) or not (early or idea_route.due(plan)):
             return False
         try:
-            self._start(slug, "accepting", lambda: self.accept_run(slug))
+            self._start(slug, "accepting", lambda: self.accept_run(slug, early))
         except kw.KeeperError:
             return False
         return True
@@ -134,8 +137,22 @@ class AcceptMixin:
         return sec, (sec.parts if sec is not None else {})
 
     @staticmethod
-    def _numbered(text: str) -> str:
-        return "\n".join(f"{i}. {x}" for i, x in enumerate(spec_sections.items(text), start=1))
+    def _numbered(text: str, only: set[int] | None = None) -> str:
+        return "\n".join(f"{i}. {x}" for i, x in enumerate(spec_sections.items(text), start=1) if only is None or i in only)
+
+    @staticmethod
+    def _mine(plan: dict, n: int, base: str = "") -> list[dict]:
+        """The tasks a look is given: the step's; of a base looked at alone, the base and the fix tasks it was sent back for."""
+        tasks = [t for t in plan.get("tasks") or [] if isinstance(t, dict) and idea_route.step_of(t) == n]
+        return [t for t in tasks if str(t.get("id")) == base or t.get("fix_of") == base] if base else tasks
+
+    @staticmethod
+    def _served(plan: dict, n: int, base: str, lines: int) -> set[int] | None:
+        """The *Done when* lines a base serves (spec 152 C.3): its `proves` if it has them, else all of its section's. None for a step looked at whole."""
+        if not base:
+            return None
+        task = next((t for t in plan.get("tasks") or [] if isinstance(t, dict) and str(t.get("id")) == base), {})
+        return {x for x in task.get("proves") or [] if _number(x, lines)} or set(range(1, lines + 1))
 
     def _promise_text(self, slug: str, sec: Any, party: str, tasks: list[dict]) -> str:
         """What code read of the promise (`goal_result`): each *Will be* line `ok` · `differs` · `missing`, what changed that no line promised, and whether the party's tasks landed against each *Done when* line."""
@@ -193,12 +210,12 @@ class AcceptMixin:
             lines.append(f"picture: {path}")
         return "\n".join(lines)[:TASK_CHARS], [f["path"] for f in files]
 
-    def _proofs_text(self, slug: str, lines: list[str], mine: list[dict]) -> str:
+    def _proofs_text(self, slug: str, lines: list[str], mine: list[dict], only: set[int] | None = None) -> str:
         """How each *Done when* line is proven (spec 152 F.4): `[test]` with the gate's record and the tests the step's tasks added; `[look]` with the step's pictures; a line code has decided is
         said so and not the leader's to judge; no mark: the leader judges it. "" when no line has a mark."""
         if not any(spec_sections.proof_of(x) for x in lines):
             return ""
-        decided = self._decided(slug, lines, mine)
+        decided = self._decided(slug, lines, mine, only)
         ran = [t["tests"] for t in mine if isinstance(t.get("tests"), dict)]
         gate = (f"gate: {sum(int(r.get('passed') or 0) for r in ran)} passed, {sum(int(r.get('failed') or 0) for r in ran)} failed over {len(ran)} task{'s' if len(ran) != 1 else ''} that ran tests"
                 if ran else "gate: no test ran")
@@ -207,6 +224,8 @@ class AcceptMixin:
         out = []
         for i, line in enumerate(lines, start=1):
             proof = spec_sections.proof_of(line)
+            if only is not None and i not in only:
+                continue
             if i in decided:
                 out.append(f"- Done when {i} [{proof}]: decided by code, unseen: {decided[i][0]}. Do not judge it.")
             elif proof == "test":
@@ -218,37 +237,47 @@ class AcceptMixin:
                 out.append(f"- Done when {i}: no mark, you judge it.")
         return "\n".join(out)
 
-    def _decided(self, slug: str, lines: list[str], mine: list[dict]) -> dict[int, tuple[str, str]]:
+    def _decided(self, slug: str, lines: list[str], mine: list[dict], only: set[int] | None = None) -> dict[int, tuple[str, str]]:
         """The *Done when* lines code has decided are `unseen` (spec 152 F.4), without the leader's word: `{n: (why, the finding's words)}`. A `[person]` line (only the person can judge it); a
         `[look]` line when no task of the step has a picture (no preview, no Play)."""
         seen = any(self._picture(slug, t) for t in mine)
         out = {}
         for i, line in enumerate(lines, start=1):
             proof, text = spec_sections.proof_of(line), spec_sections.bare(line)
+            if only is not None and i not in only:
+                continue
             if proof == "person":
                 out[i] = ("only the person can judge it", f"Only you can judge: {text}")
             elif proof == "look" and not seen:
                 out[i] = ("no picture of the step was made (no preview, no Play)", f"Nobody could look at: {text}")
         return out
 
-    def accept_step_prompt(self, slug: str, n: int, party: str, rnd: int) -> str:
+    def accept_step_prompt(self, slug: str, n: int, party: str, rnd: int, base: str = "") -> str:
         """What the leader is told (after its voice): the task and the rules, the context cut to `CONTEXT["accept_step"]` and the JSON."""
         root = self.wiki_root()
         plan = ideas.plan(self.state_dir, slug) or {}
-        mine = [t for t in plan.get("tasks") or [] if isinstance(t, dict) and idea_route.step_of(t) == n]
+        mine = self._mine(plan, n, base)
         sec, parts = self._step_section(slug, party)
         lines = len(spec_sections.items(parts.get("Done when", "")))
+        served = self._served(plan, n, base, lines)
         title = (ideas.track_page(root, party).title or party) if ideas.track_page(root, party) is not None else party
-        context = [("Your section, whole", "\n\n".join(f"{name}:\n{self._numbered(text) if name == 'Done when' else text.strip()}" for name in SECTION_PARTS if (text := parts.get(name, "")).strip()))]
-        context.append(("What code read of the promise", self._promise_text(slug, sec, party, mine)))
+        context = [("Your section, whole", "\n\n".join(f"{name}:\n{self._numbered(text, served) if name == 'Done when' else text.strip()}" for name in SECTION_PARTS if (text := parts.get(name, "")).strip()))]
+        if base:                                                               # one task alone (spec 152 C.3): the rest of the step is not given
+            context.insert(0, ("What you look at", f"One task of your step, alone: {mine[0].get('title') if mine else base}. The rest of the step is not given and not yours to judge now. Judge only the Done when lines listed."))
+        else:
+            context.append(("What code read of the promise", self._promise_text(slug, sec, party, mine)))
         all_lines = spec_sections.items(parts.get("Done when", ""))
-        if text := self._proofs_text(slug, all_lines, mine):
+        if text := self._proofs_text(slug, all_lines, mine, served):
             context.append(("How each Done when line is proven", text))
-        top = sorted({x for x in (plan.get("unclaimed") if isinstance(plan.get("unclaimed"), list) else []) if _number(x, len(all_lines))})
+        top = [] if base else sorted({x for x in (plan.get("unclaimed") if isinstance(plan.get("unclaimed"), list) else []) if _number(x, len(all_lines))})
         if top:
             context.append(("Lines no task claimed", "No task claimed: " + "; ".join(f"{x}. {spec_sections.bare(all_lines[x - 1])}" for x in top)))
         texts, files = [], []
+        early = set(idea_route.bases(plan, n)) if not base else set()
         for t in mine:
+            if str(t.get("id")) in early and idea_route.accepted(plan, idea_route.base_key(n, str(t.get("id")))):       # a base accepted early: one line, not its part again (spec 152 C.3)
+                texts.append(f"Accepted early: {t.get('title')}")
+                continue
             text, changed = self._task_text(slug, t)
             texts.append(text)
             files += [p for p in changed if p not in files]
@@ -281,15 +310,15 @@ Answer with one JSON object and nothing else:
 
     # -- the run ---------------------------------------------------------------------------------------------------------------------------
 
-    def accept_run(self, slug: str) -> None:
-        """The leader's look at the goal's step (see the module). A stop keeps nothing; a call that does not answer is the step's finding."""
+    def accept_run(self, slug: str, base: str = "") -> None:
+        """The leader's look at the goal's step (see the module); with `base`, at that one task of it, alone (spec 152 C.3). A stop keeps nothing; a call that does not answer is the step's finding."""
         kw = _kw()
         plan = ideas.plan(self.state_dir, slug) or {}
         n = idea_route.at_step(plan)
-        if not idea_route.due(plan):
+        if not (base in idea_route.base_due(plan) if base else idea_route.due(plan)):
             return
         began = time.monotonic()
-        rnd = int(idea_route.accept_of(plan, n).get("round") or 0) + 1
+        rnd = int(idea_route.accept_of(plan, idea_route.base_key(n, base) if base else n).get("round") or 0) + 1
         measures: list[dict] = []
         got = None
         party = self._step_party(slug, n)
@@ -297,10 +326,10 @@ Answer with one JSON object and nothing else:
         self._tls.key = was or slug                                              # the goal's own run: its Target, its leader's voice, its ledger
         try:
             party = self._into(slug, n)
-            ids = [str(t.get("id")) for t in plan.get("tasks") or [] if isinstance(t, dict) and idea_route.step_of(t) == n]
+            ids = [str(t.get("id")) for t in self._mine(plan, n, base)]
             _sec, parts = self._step_section(slug, party)
             lines = len(spec_sections.items(parts.get("Done when", "")))
-            prompt = self.accept_step_prompt(slug, n, party, rnd)
+            prompt = self.accept_step_prompt(slug, n, party, rnd, base)
             got = self._tried(lambda: clean(kw.first_json(self.ask("accept_step", prompt)[0]), ids, lines), measures, self.leader_name(party))
         except InterruptedError:
             self.publish(slug)
@@ -311,36 +340,43 @@ Answer with one JSON object and nothing else:
             self._tls.key = was
         cost = total("accept_step", measures).get("cost") if measures else None
         try:
-            verdict = self._accepted(slug, n, party, rnd, got, cost)
+            verdict = self._accepted(slug, n, party, rnd, got, cost, base)
         except InterruptedError:
             return
         self._ev(event_log.STEP_ACCEPTED, idea=slug, step=n, party=party, verdict=verdict, round=rnd, back=len(got["back"]) if got and verdict == "back" else 0,
-                 seconds=round(time.monotonic() - began, 1), cost=cost, failed=got is None)
+                 seconds=round(time.monotonic() - began, 1), cost=cost, failed=got is None, **({"task": base} if base else {}))
         self.publish(slug)
 
     # -- what it does ----------------------------------------------------------------------------------------------------------------------
 
-    def _keep(self, slug: str, n: int, record: dict) -> None:
-        """The step's acceptance on the plan (`plan.accepts[step]`), under the Board's lock."""
+    def _keep(self, slug: str, n: int | str, record: dict) -> None:
+        """The step's acceptance on the plan (`plan.accepts[step]`; a base's, `plan.accepts["<step>:<task>"]`), under the Board's lock. A base accepted lets the tasks that wait for it be ready."""
         def put(plan: dict) -> None:
             if not isinstance(plan.get("accepts"), dict):
                 plan["accepts"] = {}
             plan["accepts"][str(n)] = record
+            if ":" in str(n):
+                from orkboard.core.idea_plan import readiness
+                readiness(plan)
         ideas.edit_plan(self.state_dir, slug, put)
 
-    def _accepted(self, slug: str, n: int, party: str, rnd: int, got: dict | None, cost: float | None) -> str:
+    def _accepted(self, slug: str, n: int, party: str, rnd: int, got: dict | None, cost: float | None, base: str = "") -> str:
         """Act on the leader's answer (`got`, None: the call failed) and keep it; the verdict kept (`accepted` · `back` · `gone_on`). The findings come before the plan keeps the step
         accepted: a goal never ends with a finding still to be raised."""
         root = self.wiki_root()
         at = ideas._now()
+        key = idea_route.base_key(n, base) if base else n
         if got is None:
-            self._raise(slug, party, f"{party}: acceptance of step {n}", f"{self.leader_name(party)} could not accept this step: its call failed", "", "")
-            self._keep(slug, n, {"round": rnd, "verdict": "gone_on", "at": at, "done_when": [], "back": [], "cost": cost})
+            self._raise(slug, party, f"{party}: acceptance of step {n}" + (f", {base}" if base else ""), f"{self.leader_name(party)} could not accept this {'task' if base else 'step'}: its call failed", "", "")
+            self._keep(slug, key, {"round": rnd, "verdict": "gone_on", "at": at, "done_when": [], "back": [], "cost": cost})
             return "gone_on"
         sec, parts = self._step_section(slug, party)
         lines = spec_sections.items(parts.get("Done when", ""))
         plan = ideas.plan(self.state_dir, slug) or {}
-        decided = self._decided(slug, lines, [t for t in plan.get("tasks") or [] if isinstance(t, dict) and idea_route.step_of(t) == n])
+        served = self._served(plan, n, base, len(lines))
+        if served is not None:                                                  # a base is judged on the lines it serves only
+            got = {**got, "done_when": [d for d in got["done_when"] if d["n"] in served], "back": [{**b, "done_when": b["done_when"] if b["done_when"] in served else 0} for b in got["back"]]}
+        decided = self._decided(slug, lines, self._mine(plan, n, base), served)
         if decided:                                                             # code's `unseen` wins over the leader's word for that line (spec 152 F.4)
             kept = {d["n"]: d for d in got["done_when"] if d["n"] not in decided}
             kept.update({i: {"n": i, "met": "unseen", "why": why} for i, (why, _f) in decided.items()})
@@ -355,7 +391,7 @@ Answer with one JSON object and nothing else:
         if got["verdict"] == "back":
             if rnd <= ROUNDS:
                 verdict = "back"
-                self._send_back(slug, n, party, got["back"])
+                self._send_back(slug, n, party, got["back"], base)
                 journal_notes.sent_back(self.state_dir, root, slug, party, len(got["back"]))
             else:
                 verdict = "gone_on"
@@ -366,8 +402,8 @@ Answer with one JSON object and nothing else:
                     self._raise(slug, party, f"{party}: Done when {n_dw}" if n_dw else f"{party}: {item['where'] or item['what']}"[:120], item["what"], item["where"],
                                 spec_sections.bare(lines[item["done_when"] - 1]) if item["done_when"] else "")
         if verdict == "accepted":
-            journal_notes.accepted(self.state_dir, root, slug, party, met, len(lines), got["learned"])
-        self._keep(slug, n, {"round": rnd, "verdict": verdict, "at": at, "done_when": got["done_when"], "back": got["back"], "cost": cost})
+            journal_notes.accepted(self.state_dir, root, slug, party, met, len(served) if served is not None else len(lines), got["learned"])
+        self._keep(slug, key, {"round": rnd, "verdict": verdict, "at": at, "done_when": got["done_when"], "back": got["back"], "cost": cost})
         return verdict
 
     def _raise(self, slug: str, party: str, on: str, what: str, shows: str, promised: str) -> None:
@@ -376,12 +412,15 @@ Answer with one JSON object and nothing else:
         if f is not None:
             findings.told(self.state_dir, slug, f["id"], {"what": what, "shows": shows, "promised": promised})
 
-    def _send_back(self, slug: str, n: int, party: str, items: list[dict]) -> None:
+    def _send_back(self, slug: str, n: int, party: str, items: list[dict], base: str = "") -> None:
         """Each item one more task of the step: *Fix: <what>*, its brief the item's what, where and the *Done when* line it fails, its tag and tier those of the task it names (else the step's first),
         stamped as the step's tasks are, its role the squad's by its tag. Through the runner's `revise_tasks` `add`; with no runner wired, appended to the plan."""
         root = self.wiki_root()
         plan = ideas.plan(self.state_dir, slug) or {}
         mine = [t for t in plan.get("tasks") or [] if isinstance(t, dict) and idea_route.step_of(t) == n]
+        before = {str(t.get("id")) for t in mine}
+        if base:                                                                # a base's fixes take its tag and tier
+            mine = [t for t in mine if str(t.get("id")) == base] or mine
         first = next((t for t in mine if t.get("kind") not in idea_checks.TAGS), mine[0] if mine else {})
         _sec, parts = self._step_section(slug, party)
         lines = spec_sections.items(parts.get("Done when", ""))
@@ -397,6 +436,8 @@ Answer with one JSON object and nothing else:
         self._stamp(slug, {"tasks": adds}, party, n, goal_team.leader_of(root, party))
         if self.fix_tasks is not None:
             self.fix_tasks(slug, {"add": adds})
+            if base:
+                self._fixes_of(slug, n, base, before)
             return
         from orkboard.core.idea_plan import _number as highest, _task, readiness
 
@@ -408,3 +449,13 @@ Answer with one JSON object and nothing else:
                 p["tasks"] = [*(p.get("tasks") or []), task]
             readiness(p)
         ideas.edit_plan(self.state_dir, slug, add)
+        if base:
+            self._fixes_of(slug, n, base, before)
+
+    def _fixes_of(self, slug: str, n: int, base: str, before: set[str]) -> None:
+        """The tasks the runner added for a base sent back are its fixes (`fix_of`): the base is looked at again when they have landed, and the tasks that wait for the base wait for that look (spec 152 C.3)."""
+        def mark(p: dict) -> None:
+            for t in p.get("tasks") or []:
+                if isinstance(t, dict) and idea_route.step_of(t) == n and str(t.get("id")) not in before:
+                    t["fix_of"] = base
+        ideas.edit_plan(self.state_dir, slug, mark)

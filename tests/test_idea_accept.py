@@ -35,9 +35,9 @@ def work(host, parties, model):                                                 
     return _work(host, parties, model)
 
 
-def _work(host, parties, model):
+def _work(host, parties, model, plan=None):
     """A two-step goal (Product, then Tech) planned and started, its runner spawning nothing: `work.merge(*ids)` as a session that landed; `work.look()` as the clock has the leader accept."""
-    model.said[("plan", "")] = _plan
+    model.said[("plan", "")] = plan or _plan
     model.said[("accept_step", "")] = OK
     slug = _confirmed(host, parties, model, ("product", "tech"))
     runner = host.ideas.runner(need=True)
@@ -405,3 +405,110 @@ def test_the_lines_no_task_claimed_are_said_when_the_plan_names_them_and_nothing
     ideas.edit_plan(proofed.host.ideas.state_dir, proofed.slug, lambda p: p.update(unclaimed=[4, 2, 9, 4, "x"]))
     prompt = _look(proofed, shot=True)
     assert "No task claimed: 2. The settings screen is dark; 4. The theme loads fast" in prompt and "9." not in prompt.split("No task claimed")[1].split("\n")[0]
+
+
+# -- C: a base accepted early (spec 152 C) -----------------------------------------------------------------------------------------------------
+
+def _t(tid, after=(), step=1, **more):
+    return {"id": tid, "after": list(after), "step": step, "state": "waiting", **more}
+
+
+def _fan(row):
+    """Step one as a fan: k1 (proves line 1) is a base that k2 and k3 name in `after`."""
+    if "step 2 of 2" in " ".join(row["prompt"].split()):
+        return _plan(row)
+    return {"tasks": [{"id": "a", "title": "Lay the theme store", "brief": "Lay it", "kind": "design", "tier": "elder", "proves": [1]},
+                      {"id": "b", "title": "Draw the picker", "brief": "Draw it", "kind": "design", "tier": "elder", "after": ["a"], "proves": [2, 3]},
+                      {"id": "c", "title": "Draw the preview", "brief": "Draw it", "kind": "design", "tier": "elder", "after": ["a"], "proves": [4, 5]}]}
+
+
+@pytest.fixture
+def fanned(host, parties, model):                                                # noqa: F811
+    return _work(host, parties, model, _fan)
+
+
+def _states(w):
+    return {k: t["state"] for k, t in w.tasks().items()}
+
+
+def test_a_base_is_a_task_two_or_more_tasks_of_its_step_name_in_after_a_fan_of_two_but_not_a_chain_and_a_fan_inside_a_chain():
+    fan = {"tasks": [_t("k1"), _t("k2", ["k1"]), _t("k3", ["k1"])]}
+    chain = {"tasks": [_t("k1"), _t("k2", ["k1"]), _t("k3", ["k2"])]}
+    inside = {"tasks": [_t("k1"), _t("k2", ["k1"]), _t("k3", ["k2"]), _t("k4", ["k2"]), _t("k5", ["k3", "k4"])]}
+    assert idea_accept.bases(fan, 1) == ["k1"] and idea_accept.bases(chain, 1) == [] and idea_accept.bases(inside, 1) == ["k2"]
+    assert idea_accept.bases({"tasks": [*fan["tasks"], _t("k4", ["k1"], step=2)]}, 1) == ["k1"] and idea_accept.bases({"tasks": [*fan["tasks"], _t("k4", ["k1"], step=2)]}, 2) == []
+    assert idea_accept.bases({"tasks": [_t("k1", fix_of="k0"), _t("k2", ["k1"]), _t("k3", ["k1"])]}, 1) == []          # a fix task is no base
+
+
+def test_a_task_waits_for_its_base_to_be_merged_and_accepted_and_for_nothing_else_a_chain_waits_for_the_merge_only():
+    from orkboard.core.idea_plan import readiness
+    plan = {"tasks": [_t("k1", state="merged"), _t("k2", ["k1"]), _t("k3", ["k1"])]}
+    readiness(plan)
+    assert [t["state"] for t in plan["tasks"]] == ["merged", "waiting", "waiting"]                          # merged is not enough
+    plan["accepts"] = {"1:k1": {"verdict": "back"}}
+    readiness(plan)
+    assert plan["tasks"][1]["state"] == "waiting"
+    for verdict in ("accepted", "gone_on"):
+        plan["accepts"] = {"1:k1": {"verdict": verdict}}
+        readiness(plan)
+        assert [t["state"] for t in plan["tasks"]] == ["merged", "ready", "ready"]
+    chain = {"tasks": [_t("k1", state="merged"), _t("k2", ["k1"]), _t("k3", ["k2"])]}
+    readiness(chain)
+    assert [t["state"] for t in chain["tasks"]] == ["merged", "ready", "waiting"]                           # no base: as before
+    other = {"tasks": [_t("k1", state="merged"), _t("k2", state="ready"), _t("k3", ["k1"]), _t("k4", ["k1", "k2"]), _t("k5", ["k2"])], "accepts": {"1:k1": {"verdict": "accepted"}}}
+    readiness(other)
+    assert [t["state"] for t in other["tasks"]][2:] == ["ready", "waiting", "waiting"]                      # the dependant still waits for its other `after`
+
+
+def test_a_base_merged_is_accepted_alone_by_its_part_only_its_dependants_wait_for_that_and_the_step_reads_it_as_one_line(fanned):
+    w = fanned
+    assert idea_route.bases(w.plan(), 1) == ["k1"] and _states(w)["k2"] == "waiting"
+    w.merge("k1")
+    w.runner.tick()
+    assert _states(w) == {"k1": "merged", "k2": "waiting", "k3": "waiting"} and not idea_route.due(w.plan())      # merged is not enough
+    assert w.tick() is True
+    calls = w.model.steps("accept_step")
+    prompt = calls[0]["prompt"]
+    assert len(calls) == 1 and "Lay the theme store" in prompt and "Draw the picker" not in prompt and "Draw the preview" not in prompt            # its part alone
+    section = prompt.split("Your section, whole:")[1].split("Checks:")[0]
+    assert "1. Players can pick a theme" in section and "\n2. " not in section and "What code read of the promise" not in prompt
+    assert w.plan()["accepts"]["1:k1"]["verdict"] == "accepted" and "1" not in w.plan()["accepts"] and not idea_route.accepted(w.plan(), 1)
+    w.runner.tick()
+    assert _states(w)["k2"] != "waiting" and _states(w)["k3"] != "waiting"                                  # its acceptance let them go
+    w.merge("k2", "k3")
+    w.runner.tick()
+    assert idea_route.due(w.plan())
+    w.tick()
+    calls = w.model.steps("accept_step")
+    assert len(calls) == 2 and "Accepted early: Lay the theme store" in calls[1]["prompt"] and "Draw the picker" in calls[1]["prompt"]
+    assert "k1 Lay the theme store [" not in calls[1]["prompt"] and idea_route.accepted(w.plan(), 1)
+    ev = [e for e in event_log.read(Path(w.host.repo_root)) if e["event"] == event_log.STEP_ACCEPTED]
+    assert [e.get("task") for e in ev] == ["k1", None]
+
+
+def test_a_base_sent_back_makes_its_dependants_wait_for_its_fixes_and_for_the_second_look(fanned):
+    w = fanned
+    w.model.said[("accept_step", "")] = BACK
+    w.merge("k1")
+    w.runner.tick()
+    w.tick()
+    t = w.tasks()
+    assert w.plan()["accepts"]["1:k1"]["verdict"] == "back" and t["k4"]["fix_of"] == "k1" and t["k4"]["step"] == 1 and idea_route.bases(w.plan(), 1) == ["k1"]
+    assert _states(w)["k2"] == "waiting" and _states(w)["k3"] == "waiting" and _states(w)["k4"] != "waiting"      # the fix runs; the dependants wait
+    assert not idea_route.base_due(w.plan()) and w.tick() is False and len(w.model.steps("accept_step")) == 1      # not looked at again before the fix lands
+    w.model.said[("accept_step", "")] = OK
+    w.merge("k4")
+    w.runner.tick()
+    assert _states(w)["k2"] == "waiting" and idea_route.base_due(w.plan()) == ["k1"]                         # the fix is in: the base is looked at again, its dependants still wait
+    w.tick()
+    assert w.plan()["accepts"]["1:k1"]["round"] == 2 and w.plan()["accepts"]["1:k1"]["verdict"] == "accepted" and "Fix: The setting is not saved" in w.model.steps("accept_step")[1]["prompt"]
+    w.runner.tick()
+    assert _states(w)["k2"] != "waiting" and _states(w)["k3"] != "waiting"
+
+
+def test_a_plan_with_no_base_makes_no_extra_call(work):
+    assert idea_route.bases(work.plan(), 1) == [] and idea_route.base_due(work.plan()) == []
+    work.merge("k1")
+    work.runner.tick()
+    work.tick()
+    assert len(work.model.steps("accept_step")) == 1 and set(work.plan()["accepts"]) == {"1"}
