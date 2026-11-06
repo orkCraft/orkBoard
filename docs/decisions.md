@@ -6920,3 +6920,43 @@ repository. And with §255 and spec 151 being built, nothing here may conflict w
    builds 1–3 and the rules' *Accept* (8); then the dossier (4); then reuse and the cache (5); then the recipes (7), *tool* among
    their kinds; then the tools a leader proposes (6), once the steps say what comes back alike. A spec each.
 The owner's call.
+
+## 257. A task is a whole session: the plan splits only for a reason, tells a task where to start, and claims every Done when line; a Done when line says how it is proven, and an acceptance may say it cannot see; Orkboard's own task is told the Board's rules are not its own (6 November 2026, the owner)
+
+Changes: 256.3; spec 99 §7.1, spec 152 B, D. (256.3: the acceptance's answers gain *cannot see*; spec 99 §7.1: a section's *Done when*
+lines carry their proof; spec 152 B and D: amended by this.)
+
+Why: the owner, after §256: *let's go through the leaders' new flow once more: is there anything that would raise the quality of
+the parties' work or lower the tokens?* Read in §253's run (spec 149 §0, one goal on Codex, this repository, Lean, 3,302,029
+tokens): the doers' sessions spent 2,777,161 (84%), the leaders' and the Board's calls 513,257 (16%), so what a leader saves is
+small beside what a doer spends. Of the doers', a send back for a red from before (588,106), a start again after a gate killed by
+its clock (326,936) and the review at Lean (556,105) are gone by spec 149 and spec 152; what is left is three tasks of about 420
+thousand each, for a change of four lines in three files and about 250 lines of tests: each session read the same code again. The
+plan's rules (`core/idea_plan.py`) bound how many tasks there are and say nothing of when to split; a task's brief says where in
+prose, though its planner read the files. And the run's miss (§253.10: every test green, the review found no blocker, nobody could
+look, and the screen was in the wrong state) is a *Done when* no test could prove and nobody saw. Found on the way: since spec 151
+C, a project with the Board's rules has their block in `AGENTS.md`, which every task session of Orkboard's loads (Codex reads
+`AGENTS.md`, Claude Code `CLAUDE.md`'s `@AGENTS.md`), and it tells whoever reads it to take a goal, route it, hold Talk and stop
+to ask the person; a task's prompt does not say that it is not for it. The owner's yes to each. So:
+1. **A task is a whole session, and the plan splits only for a reason**: a part another seat does (another tag), parts that run at
+   once in the party's size and touch no file in common, or a base the others must wait for (§256.3). Else one task. The planner is
+   told what one task's session has cost on this project (its tokens and dollars, from its own ledger once there are enough, a
+   first guess before), and `MAX_TASKS` stays the bound.
+2. **A task is told where to start**: the plan names, for each task, the files it starts at (at most six, from what its planner
+   read), kept only where they exist; its prompt says them first. The task may read more.
+3. **Every *Done when* line is claimed**: a task names the lines of its section it proves, by their numbers; a line no task proves
+   is asked of the planner once more, then kept as not claimed and said to the step's acceptance. By code, no call.
+4. **A *Done when* line says how it is proven**: `[test]` (a test the gate runs proves it: the task that proves it writes that test
+   first), `[look]` (a picture or Play shows it: the acceptance is given the picture), `[person]` (only the person can judge it: the
+   acceptance asks the person one question, never guesses). A line with no mark is judged by its leader, as every line is today. It
+   changes the page's format, so **the pages' schema is 2** (§255.12), read back to 1.
+5. **An acceptance may say it cannot see** (changes §256.3): each *Done when* line is met, not met, or *cannot see* (a `[look]` line
+   with no picture and no Play, a `[person]` line); one it cannot see is never accepted in silence: it is a finding, *Nobody could
+   look at: <line>*, and a `[person]` line is that finding's question to the person.
+6. **Orkboard's own task is told the Board's rules are not its own**: one line of its prompt, *You are one task of a goal Orkboard
+   leads: the Board's rules in AGENTS.md are for a tool that leads a goal, not for you. Do not take a goal, move its phase or write
+   the Board's pages*; it never reads BOARD.md for a task.
+7. **Release's reading is code** before it is a model (§256.6's first tool): what is ready, read from git; a model only for the
+   notes' words. In the tools' spec.
+8. **Built** by spec 152 (5, 6 and 4: its parts B, D and F) and spec 153 (1–3).
+The owner's yes.
