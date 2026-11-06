@@ -307,6 +307,10 @@ GROUPS_ANSWERED = "groups_answered"  # spec 135 B: the card *These look like one
 EVENTS += (BACKLOG_GROUPED, GROUPS_ANSWERED)
 GOAL_MOVED_OUTSIDE = "goal_moved_outside"      # spec 151 A.4: a goal's page was moved to another phase by someone else (an AI tool, a hand): slug, from (its phase before), to, commit ("" when not committed)
 EVENTS += (GOAL_MOVED_OUTSIDE,)
+GOAL_TAKEN = "goal_taken"            # spec 151 D.1: a goal taken on `orkboard/taken` so no other tool works it meanwhile: slug, by, kind ("orkboard" | "tool"), until
+GOAL_TAKE_REFUSED = "goal_take_refused"      # …held by another and not taken: slug, by (the holder), until
+GOAL_GIVEN_BACK = "goal_given_back"  # …given back (it waits for the person, or ended): slug, by
+EVENTS += (GOAL_TAKEN, GOAL_TAKE_REFUSED, GOAL_GIVEN_BACK)
 
 _LOCK = threading.Lock()
 

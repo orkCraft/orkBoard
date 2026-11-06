@@ -280,6 +280,8 @@ class Orkboard:
         self.commands.update(self.keep_awake.commands())   # awake.* (desktop only: not BoardPhone's)
         from orkboard.gui import board_sync
         self.board_sync = board_sync.BoardSync(self)      # spec 137 B: the Board's branch, held and pushed (nothing runs without `[board]`)
+        from orkboard.gui import goal_take_host
+        self.goal_take = goal_take_host.GoalTakeHost(self)      # spec 151 D: the goals Orkboard runs, taken on `orkboard/taken` (nothing runs before the rules are written)
         from orkboard.gui import phone_journal
         self.commands.update(phone_journal.commands(self))   # journal.phone_ask · turn_on · not_now: Settings' one-time question (spec 136 A.2)
         from orkboard.gui import board_switch
@@ -486,6 +488,8 @@ class Orkboard:
         phone_journal.tick(self)
         from orkboard.gui import board_sync
         board_sync.tick(self)             # the Board's branch (spec 137 B): taken, renewed, pushed; nothing without `[board]`
+        from orkboard.gui import goal_take_host
+        goal_take_host.tick(self)         # the goals Orkboard runs, taken and given back (spec 151 D); nothing before the rules are written
 
     def _mana(self) -> dict[str, Any]:
         """The tool now with no project open: the Main tool, nothing moved (a Board's own is `Ideas.mana`)."""
@@ -507,6 +511,8 @@ class Orkboard:
     def close(self) -> None:
         from orkboard.gui import board_sync
         board_sync.close(self)            # the Board's lease given back, the Board pushed (spec 137 B.2)
+        from orkboard.gui import goal_take_host
+        goal_take_host.close(self)        # the goals Orkboard held, given back (spec 151 D)
         self.sign_ins.close()             # quitting stops the sign-ins it opened
         self.ops.close()
         self.projects.close_all()

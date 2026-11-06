@@ -25,7 +25,7 @@ from pathlib import Path
 
 from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
-from orkboard.realm import (collide, goal_route, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
+from orkboard.realm import (collide, goal_route, goal_take, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
                             spec_sections, task_brief, tool_errors)
 from orkboard.realm.idea_words import CARD_RULE, short_of
 from orkboard.sources import pricing
@@ -287,7 +287,8 @@ Answer with one JSON object and nothing else:
         self.assess(slug)
         if later:
             self._gate_step(slug, n)                     # its risk is read as the first step's: one that holds waits for the person's Start (decisions §169.3)
-        ideas.save_state(self.state_dir, slug, state="working" if later else "plan", error="", held_until="", held_for="", measure=self.measure())
+        wait = later and bool(goal_take.refusal(self.repo_root, slug))     # another took the goal meanwhile (spec 151 D): its next step waits as a plan, not started
+        ideas.save_state(self.state_dir, slug, state="working" if later and not wait else "plan", error="", held_until="", held_for="", measure=self.measure())
         self.publish(slug)
         if not later:
             self.on_plan(slug)

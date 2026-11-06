@@ -36,7 +36,7 @@ from typing import Any
 
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import board_map, event_log, goal_route, hours, idea_ripe, idea_route, idea_target, ideas, orkmaster, pitches, spec_change, status
+from orkboard.realm import board_map, event_log, goal_route, goal_take, hours, idea_ripe, idea_route, idea_target, ideas, orkmaster, pitches, spec_change, status
 from orkboard.sources import window_rate
 
 ROUTE_S = 30.0                    # how often a route waiting for its call, or put off to the reset, is looked at
@@ -204,6 +204,8 @@ class RouteMixin:
                "said_route": st["route"], "changed": False}
         if how.get("short") and how.get("reproduces"):
             how.update(short=False, reproduces=False)                # the long way, by the person's choice
+        if taken := goal_take.refusal(self.host.repo_root, slug):
+            raise IdeasError(taken)                      # another holds it (spec 151 D): not started, tried again at the next tick
         ideas.save_state(self.state_dir, slug, state="talk", route_how=how, held_until="", held_for="", error="")
         self._seam(slug, "talk")
         self.changed(slug)

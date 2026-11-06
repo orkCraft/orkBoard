@@ -14,7 +14,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
-from orkboard.realm import (board_map, board_rows, collide, event_log, findings, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas,
+from orkboard.realm import (board_map, board_rows, collide, event_log, findings, goal_take, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas,
                             look_wait, night_order, way_down)
 from orkboard.realm.idea_git import BoardTree
 
@@ -335,6 +335,8 @@ class BoardMixin:
         plan = ideas.plan(self.state_dir, slug)
         if plan is None:
             raise IdeasError("This goal has no plan yet: Take it to work first")
+        if taken := goal_take.refusal(self.host.repo_root, slug):
+            raise IdeasError(taken)                      # another holds it (spec 151 D): not started, tried again at the next tick
         runner = self.runner(need=True)
         if not plan.get("passed_at"):
             page = ideas.idea_page(self.root(), slug)
@@ -371,7 +373,7 @@ class BoardMixin:
         for i in ideas.ideas(self.root(make=False)):
             plan = ideas.plan(self.state_dir, i["slug"])
             if plan and plan.get("passed_at") and plan.get("start_at") == "night" \
-                    and ideas.state(self.state_dir, i["slug"])["state"] == "plan":
+                    and ideas.state(self.state_dir, i["slug"])["state"] == "plan" and not goal_take.refusal(self.host.repo_root, i["slug"]):
                 ideas.save_state(self.state_dir, i["slug"], state="working", error="")
                 self.runner(need=True).start(i["slug"])
                 self._publish(i["slug"])
@@ -406,6 +408,8 @@ class BoardMixin:
             return {"ok": True}
         if not plan or (plan.get("start_at") != "night" and not held):
             raise IdeasError("This plan does not wait for the night or for your reserve")
+        if taken := goal_take.refusal(self.host.repo_root, slug):
+            raise IdeasError(taken)                      # another holds it (spec 151 D)
         ideas.edit_plan(self.state_dir, slug, lambda p: p.update(start_at=None, passed_by="person"))
         self._ev(event_log.PLAN_STARTED_NOW, args, idea=slug, via=_via(args), held=len(held))
         runner = self.runner(need=True)
