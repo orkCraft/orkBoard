@@ -19,7 +19,7 @@ import re
 
 SOURCE = "git+https://github.com/orkCraft/orkBoard"     # where Orkboard comes from: it is not on PyPI, and a package of that name there would be another's
 RUN = f"uvx --from {SOURCE} orkboard"                   # Orkboard run from a terminal by any tool, never `uvx orkboard` (that asks PyPI)
-SCHEMA = 1                                           # the rules' schema (decisions §255.12); the pages carry `goal_phase.SCHEMA`
+SCHEMA = 2                                           # the rules' schema (decisions §255.12); the pages carry `goal_phase.SCHEMA`
 BEGIN = "<!-- orkboard:begin schema={schema} hash={hash} -->"
 END = "<!-- orkboard:end -->"
 FILE_MARK = "<!-- orkboard:file schema={schema} hash={hash} -->"
@@ -55,7 +55,10 @@ This project's goals, their specs and its decisions are files, so any AI tool wo
   1. Take it first (`{RUN} goal take <slug>`, or BOARD.md's way). A goal another has taken, or on Hold, is not yours.
   2. Route it as the Orkmaster does (`{wiki}/roles/orkmaster.md`): the parties that write its spec and do its work, in `route`.
   3. Talk: each leader of the route says its view, in a pass of its own with only its role file and the page.
-  4. Spec: the leaders write their sections. Work: the stages, in a branch of your own.
+  4. Spec: the leaders write their sections. Work: the stages, in a branch of your own. Accept: after a party's stages, before
+     the next party's, its leader checks them against its section's Done when and Will be, in a pass of its own (its role file,
+     its section, the gate's record, the files they changed). What it does not accept is one more stage, twice at most; what is
+     still left goes in the pull request under “Not accepted”.
   5. Done: only with the gate green (`[gate]` in `orkcraft.toml`: `always`, then the tests of what you touched).
      Write its record in `gate`, open a pull request. Main is the person's.
 - **The person decides; you stop and ask**: a question no leader can settle, a choice between ways, a cost above what was
@@ -151,6 +154,13 @@ Set `asks: person` and stop. The person's answer is the line under it, written b
 An answered question stays in the page. Clear `asks` when none is left unanswered. Where no person is watching, the goal waits; never write an answer for the person. A card you thought of yourself
 (a goal nobody asked for) is a question too: *Take this goal?*
 
+## Accepting a step
+
+After a party's stages are done and before the next party's begin, that party's leader checks them against its section's *Done when* and *Will be*, in a pass of its own: it reads only its role file
+(`roles/<craft>-leader.md`, *Accepting a step*), its section, the gate's record of the stages and the files they changed. Each *Done when* line is met, not met, or one the leader cannot see (a picture
+or Play it needs is not there, or only the person can judge it). What the leader does not accept is one more stage, made for each thing; it looks again, and a step goes back twice at most. What is
+still not accepted then goes in the pull request under “Not accepted”, one line each, with a line it could not see as *Nobody could look at: <line>*. Never accept a line you could not look at.
+
 ## The gate and its record
 
 The gate is the project's `[gate]` in `orkcraft.toml`: the tests it lists under `always`, then the tests of the files you touched. It is green when they all pass on the pull request's last commit.
@@ -191,12 +201,13 @@ PHASE_WORDS = {"new": "the goal as the person wrote it; nobody has routed it.",
 def seat_text(seat: str, craft: str = "") -> str:
     """A seat's fixed instruction, from the code its prompt is built from (decisions §255.6): the Orkmaster's route and its join, a leader's say in Talk and its section, the Taskmaster's and a
     Grunt's built-in text. A test holds each role file to this text and each prompt to the function it is built from."""
-    from orkboard.core import idea_sections, idea_talk
+    from orkboard.core import idea_accept, idea_sections, idea_talk
     from orkboard.realm import goal_route, roles
     if seat == "orkmaster":
         return ("## Route a goal\n\n" + goal_route.instruction() + "\n\n## Join the sections of a goal's spec\n\n" + idea_sections.join_instruction())
     if seat == "leader":
-        return ("## Talk: what you say about a goal\n\n" + idea_talk.instruction(craft) + "\n\n## Your section of the spec\n\n" + idea_sections.instruction(craft))
+        return ("## Talk: what you say about a goal\n\n" + idea_talk.instruction(craft) + "\n\n## Your section of the spec\n\n" + idea_sections.instruction(craft)
+                + "\n\n## Accepting a step\n\n" + idea_accept.instruction(craft))
     return roles.instruction(seat)
 
 

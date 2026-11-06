@@ -400,6 +400,8 @@ class Ideas(PhaseMixin, LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalV
             st["queue"] = "hold"                  # a state of before the night went: held, never drafted at night (spec 99 §3)
         if st["state"] in ("reading", "planning") and not self.keeper.busy(slug):
             st["state"] = "raw" if st["state"] == "reading" else "ready"     # a run the host lost (it closed)
+        elif st["state"] == "working" and self.keeper.busy(slug) == "accepting":
+            st["busy"] = "accepting"              # its leader accepts the step now (spec 152 B.5): a busy run, not a state, so the node's `state` stays `working`
         elif st["state"] == "judging" and not self.keeper.busy(slug):
             st.update(state="failed", error=st["error"] or "stopped")          # a pitch's run the host lost: Try again (spec 65 §2)
         return st

@@ -10,7 +10,8 @@ from tests.test_idea_runner import git, plan_of, town  # noqa: F401  (the fixtur
 from tests.test_runner_35 import _runner
 
 PAGE = "llm-wiki/general/pages/ideas/other.md"
-LEAN = "You do this task yourself. It is not to be planned: make the change it asks for, in this worktree."
+NOT_THE_BOARDS = ("You are one task of a goal Orkboard leads: the Board's rules in AGENTS.md are for a tool that leads a goal, not for you. "
+                  "Do not take a goal, move its phase or write the Board's pages, and do not read BOARD.md for this task.")
 
 
 def _worktree(town):
@@ -102,9 +103,20 @@ def test_the_architect_is_not_told_to_write_a_plan_in_a_file_and_no_role_asks_fo
     assert not [a.id for a in library.LIBRARY if "own file" in a.instruction]
 
 
-def test_a_lean_code_task_is_told_it_does_it_a_standard_one_and_a_check_are_not_and_the_page_is_the_boards(town):
+def test_no_task_is_told_it_does_it_itself_and_a_task_is_told_the_boards_rules_are_not_its_own_only_where_they_are_written(town):
+    """Spec 152 D.3 (decisions §257.6): the Lean line is gone; in a project whose rules are written (a block in AGENTS.md) a task of any kind is told the Board's rules are not its own,
+    right after its role's part and before the finishing rules; where they are not written it is told nothing of them."""
+    from orkboard.core import idea_task
+    from orkboard.realm import agent_rules
     roles.install(town.state, "architect", "Architect", "", "engineering", library.get("architect").instruction, ("code",))
-    assert LEAN in _prompt(town, "lean")
-    standard = _prompt(town, "standard")
-    assert LEAN not in standard and "That page is the Board's: read it, never write to it." in standard
-    assert LEAN not in _prompt(town, "lean", kind="review")
+    assert not hasattr(idea_task, "LEAN_DOES") and not hasattr(idea_task.TaskMixin, "_does_it_itself")
+    for size in ("lean", "standard"):
+        assert "You do this task yourself" not in _prompt(town, size) and NOT_THE_BOARDS not in _prompt(town, size)    # the rules are not written
+    agent_rules.write(town.repo, "llm-wiki/general")
+    assert agent_rules.has_rules(town.repo)
+    for size, kind in (("lean", "code"), ("standard", "code"), ("lean", "review"), ("standard", "pick")):
+        prompt = _prompt(town, size, kind=kind)
+        assert "You do this task yourself" not in prompt and prompt.count(NOT_THE_BOARDS) == 1
+        assert prompt.startswith("# Your role: ") and prompt.index("# Your role: ") < prompt.index(NOT_THE_BOARDS) < prompt.index("# When you are done")
+        assert f"\n\n{NOT_THE_BOARDS}\n\n# When you are done" in prompt                                           # right after its role's part
+    assert "That page is the Board's: read it, never write to it." in _prompt(town, "standard")

@@ -67,3 +67,12 @@ def test_every_seats_prompt_is_the_text_it_was_before_its_fixed_part_became_a_fu
     texts = {e["party"]: {"parts": {"Why": "Because " + e["party"], "Done when": "- When it runs, then it shows", "Will be": "- changed src/app.py — the board", "Out": "- the phone"}}
              for e in route}
     _same("join", k.join_prompt(goal, route, texts))
+
+
+def test_the_acceptances_prompt_is_the_text_it_was_before_its_fixed_part_became_a_function(host):
+    """Spec 152 D.1: the acceptance of a step, on a fixture goal of Tech with one landed task, stored as `accept_tech.txt`."""
+    k = host.ideas.keeper
+    tech = _party(host, "Tech", "architect", ["grunt", "tester"], "engineering")
+    goal = ideas.add_idea(host.ideas.root(), "add a score board", tech, host.ideas.state_dir, "normal", "hold")
+    ideas.save_plan(host.ideas.state_dir, goal, {"tasks": [{"id": "k1", "title": "Build the board", "state": "merged", "step": 1, "tests": {"passed": 4, "failed": 0}}]})
+    _same("accept_tech", k.accept_step_prompt(goal, 1, tech, 1))

@@ -139,6 +139,14 @@ def test_rules_that_are_missing_changed_by_hand_or_of_an_older_schema_are_found(
     assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v0, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init"
 
 
+def test_a_block_of_schema_one_is_said_to_be_older_than_this_orkboards(repo):
+    """Spec 152 D.2: the rules moved to schema 2; a project whose block says 1 is told to run init again."""
+    agents = repo / "AGENTS.md"
+    agents.write_text(agents.read_text(encoding="utf-8").replace(f"schema={T.SCHEMA} ", "schema=1 "), encoding="utf-8")
+    f = only(repo, "v1")
+    assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v1, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init" and T.SCHEMA == 2
+
+
 def test_a_project_with_no_rules_at_all_is_told_once(repo):
     for rel in ("AGENTS.md", "CLAUDE.md", ".claude", WIKI):
         p = repo / rel

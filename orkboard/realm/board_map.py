@@ -502,6 +502,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,
                     "release": release_of(releasing.get(slug)), "back": board_back.of(root, state_dir, slug, st, settings),         # the goal's card face down at the Orkmaster (spec 120 §6.3)
                     "held_until": r["held_until"], **({"held_for": r["held_for"]} if r.get("held_for") else {}),
+                    **({"busy": st["busy"]} if st.get("busy") == "accepting" and r["state"] == "working" else {}),      # its leader accepts the step now (spec 152 B.5): a busy run the host knows, its `state` stays `working`
                     "start_at": r["start_at"], "night_by": r["night_by"],
                     "changing": any(n["kind"] == "spec_change" and n.get("status") in spec_change.OPEN for n in needs),      # a change to its spec is open: its leaders rewrite or the person has not answered (spec 144 D.1)
                     **({"look_until": r["look_until"]} if r.get("look_until") else {}),      # the look's wait: a clock time (spec 144 A.5)
