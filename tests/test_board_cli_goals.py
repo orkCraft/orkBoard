@@ -327,3 +327,14 @@ def test_outside_a_checkout_a_word_is_refused_in_words(tmp_path, monkeypatch, ca
     monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
     assert ob("goal", "list") == 1 and goals.NO_GIT in capsys.readouterr().err
     assert ob("check") == 1
+
+
+def test_init_writes_a_subagent_and_a_forked_skill_for_each_seat_the_project_has_spec_154_c(repo, capsys):
+    assert ob("init") == 0
+    out = capsys.readouterr().out
+    for path in (".claude/agents/ork-orkmaster.md", ".claude/agents/ork-grunt.md", ".claude/skills/orkmaster/SKILL.md", ".claude/skills/taskmaster/SKILL.md", ".claude/skills/orkboard/SKILL.md"):
+        assert f"wrote {path}" in out and (repo / path).is_file(), path
+    assert "context: fork\nagent: ork-orkmaster\n" in (repo / ".claude/skills/orkmaster/SKILL.md").read_text(encoding="utf-8")
+    assert not (repo / ".claude/skills/grunt").exists() and not list((repo / ".claude/skills").glob("*-leader"))      # a project with no party has no leader's files
+    assert "isolation: worktree" in (repo / ".claude/agents/ork-grunt.md").read_text(encoding="utf-8")
+    assert agent_rules.check(repo, WIKI, decisions=agent_rules.decisions_of(repo)) == []

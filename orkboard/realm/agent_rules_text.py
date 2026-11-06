@@ -19,7 +19,7 @@ import re
 
 SOURCE = "git+https://github.com/orkCraft/orkBoard"     # where Orkboard comes from: it is not on PyPI, and a package of that name there would be another's
 RUN = f"uvx --from {SOURCE} orkboard"                   # Orkboard run from a terminal by any tool, never `uvx orkboard` (that asks PyPI)
-SCHEMA = 2                                           # the rules' schema (decisions §255.12); the pages carry `goal_phase.SCHEMA`
+SCHEMA = 3                                           # the rules' schema (decisions §255.12; 3: spec 154 C, the seats' skills); the pages carry `goal_phase.SCHEMA`
 BEGIN = "<!-- orkboard:begin schema={schema} hash={hash} -->"
 END = "<!-- orkboard:end -->"
 FILE_MARK = "<!-- orkboard:file schema={schema} hash={hash} -->"
@@ -273,18 +273,52 @@ def subagent_body(seat: str, craft: str, wiki: str, decisions: str, name: str, r
 {role_body(seat, craft, wiki, decisions, name)}"""
 
 
+CLAUDE_OWN = ("# `context`, `agent`, `background` and `argument-hint` are Claude Code's own fields (not the Agent Skills standard's: it takes `name`, `description` and a few more); "
+              "other tools ignore them.")
+CLAUDE_OWN_AGENT = "# `tools`, `model` and `isolation` are Claude Code's own fields of a subagent (not the Agent Skills standard's); other tools ignore them."
+CLAUDE_OWN_STANDARD = "# `name` and `description` are the Agent Skills standard's; this skill runs in the conversation and uses no field of Claude Code's own."
+FILE_TOOLS = "Read, Grep, Glob, Edit, Write"        # an Orkmaster's, a leader's and the Taskmaster's tools: the page and the project read, the page written; no Bash, no web
+SEAT_VERB = {"orkmaster": "routes it", "taskmaster": "plans its work in stages"}
+
+
+def skill_description(role_id: str, title: str) -> str:
+    """The narrow description of a seat's skill (spec 154 C.2): who, on one goal, what for, and how it is called."""
+    if role_id.endswith("-leader"):
+        return (f"{title}'s leader on one goal of this project's Board: its say in Talk, its section, or its acceptance of its step. "
+                f"Called by the orkboard skill, or as /{role_id} talk|section|accept <goal>.")
+    who = "The Orkmaster" if role_id == "orkmaster" else "The Taskmaster"
+    return f"{who} on one goal of this project's Board: {SEAT_VERB[role_id]}. Called by the orkboard skill, or as /{role_id} {'route' if role_id == 'orkmaster' else 'plan'} <goal>."
+
+
+def seat_skill_body(role_id: str, wiki: str, decisions: str) -> str:
+    """A seat's skill after its front matter (spec 154 C.2): the first word of `$ARGUMENTS` is the step, the second the goal; each step is that step's agent frame (`seat_frames.agent`)."""
+    from orkboard.realm import seat_frames
+    craft = role_id[:-len("-leader")] if role_id.endswith("-leader") else ""
+    steps = seat_frames.steps(role_id)
+    listed = ", ".join(f"`{s}`" for s in steps)
+    parts = [f"Your arguments are `$ARGUMENTS`: the step is `$0`, the goal's slug `$1`. Read `{wiki}/BOARD.md` first. The steps you have are {listed}.\n\n"
+             f"If `$0` is none of them, say which steps you have ({listed}) and stop: write nothing."]
+    for step in steps:
+        parts.append(f"# The step `{step}`\n\nWhen `$0` is `{step}`:\n\n" + seat_frames.agent(role_id, step, craft, wiki, decisions).strip("\n"))
+    return "\n\n".join(parts) + "\n"
+
+
 def skill_body(wiki: str) -> str:
-    """The skill (after its front matter): the way in, in steps, pointing at BOARD.md and the roles."""
+    """The conductor (spec 154 C.3), after its front matter: the way of a goal through the seats' skills. It runs in the conversation and never writes a leader's part."""
     return f"""# Work a goal of this project's Board
 
-Read `{wiki}/BOARD.md` first: the page's format, the phases, a question's line and the gate's record. This project's own rules in `AGENTS.md` and `CLAUDE.md` win.
+You conduct. Each seat of the Board is a skill that runs in a context of its own and gives you back one line; you call them in order and write nothing of theirs. Read `{wiki}/BOARD.md` first: the page's format, the phases, a question's line and the gate's record. This project's own rules in `AGENTS.md` and `CLAUDE.md` win.
 
 1. **Take the goal.** Pick a goal whose `phase` is not `done` and that is not on Hold (`queue: hold`); take it (`{RUN} goal take <slug>`, or BOARD.md's way). Another's goal is not yours.
-2. **Route it** as the Orkmaster does: read `{wiki}/roles/orkmaster.md`, write `route` in the page and move `phase` to `talk`.
-3. **Hold Talk.** For each leader of the route, in a pass of its own, read only `{wiki}/roles/<craft>-leader.md` and the page, and write what that leader says. A question only the person can settle goes under
-   `## Open questions` with `asks: person`; say it in the chat and end your turn.
-4. **Write the spec.** Each leader writes its section (*Why*, *Done when*, *Stages*); move `phase` to `spec`.
-5. **Do the work** in a branch of your own, the stages in order (`{wiki}/roles/taskmaster.md`, `{wiki}/roles/grunt.md`); `phase: work`.
-6. **Run the gate** (`[gate]` in `orkcraft.toml`), write its record in `gate`, open a pull request, set `phase: done` only with the gate green.
-7. **Stop at what the person decides**: a choice between ways, a cost above what was agreed, a decision against an earlier one, dropping or holding a goal, going into main. Never answer for the person.
+2. **Route it:** call `/orkmaster route <slug>`. It writes `route` in the page and moves `phase` to `talk`; read `route` back.
+3. **Talk:** call `/<craft>-leader talk <slug>` for every leader of the route **in one turn, side by side**, then wait until all of them are back. Each writes its own `### Talk` in its section and gives you its verdict.
+4. **The person's questions:** a question only the person can settle is under `## Open questions` with `asks: person`. Say each in the chat and **end your turn**; go on when it is answered (`{RUN} goal answer`). Never answer for the person.
+5. **Sections:** call `/<craft>-leader section <slug>` for each leader of the route, in the route's order. Then move `phase` to `spec` (`{RUN} goal phase <slug> spec`).
+6. **Plan:** call `/taskmaster plan <slug>`; it writes `## Stages`. Move `phase` to `work`.
+7. **Do the tasks:** work in a branch of your own. Give each task of the stages, in order, to a Grunt (the `ork-grunt` subagent: the task, the goal's page and the gate), one at a time. A Grunt works in a worktree of its own and never asks the person.
+8. **Accept:** at the end of a party's stages, before the next party's, call `/<craft>-leader accept <slug>` for that party. What it does not accept is one more task for each thing, then accept again; twice at most. What is still not accepted goes in the pull request under “Not accepted”.
+9. **Run the gate** (`[gate]` in `orkcraft.toml`), write its record in `gate`, open a pull request, set `phase: done` only with the gate green.
+10. **Stop at what the person decides**: a choice between ways, a cost above what was agreed, a decision against an earlier one, dropping or holding a goal, going into main.
+
+You never write a leader's part yourself: not its `### Talk`, its section, its `### Accepted`, and not the route or the stages. If a skill gave back nothing, call it again; do not write it for it.
 """

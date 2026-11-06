@@ -11,7 +11,9 @@
 | `<wiki>/BOARD.md` | Orkboard's whole file: the page's format, the phases, a question's line, the gate's record, taking a goal |
 | `<wiki>/AGENTS.md`, `<wiki>/CLAUDE.md` | a pointer to BOARD.md, as a block added to the file the folder has (an LLM wiki's own pointer stays) |
 | `<wiki>/roles/<id>.md` | a seat's instruction, from the code its prompt is built from (`orkmaster`, `<craft>-leader`, `taskmaster`, `grunt`) |
-| `.claude/agents/ork-<id>.md`, `.claude/skills/orkboard/SKILL.md` | Claude Code's subagent for each role, and the skill |
+| `.claude/agents/ork-<id>.md` | Claude Code's subagent for each role: its `tools` (a Grunt every tool, in a `worktree`) and `model` (spec 154 C.1) |
+| `.claude/skills/<id>/SKILL.md` | a forked skill for each seat that has steps (`orkmaster`, `<craft>-leader`, `taskmaster`), run as its subagent (spec 154 C.2) |
+| `.claude/skills/orkboard/SKILL.md` | the conductor: the way of a goal through those skills (spec 154 C.3) |
 
 The person's own text in a file that holds a block is kept byte for byte; only Orkboard's block, and only Orkboard's own files, are written. A file at an Orkboard path that carries no stamp is the
 person's own and is left. Each block and file carries `schema` and the hash of its text (`agent_rules_text.digest`): a hash that is not the text's was changed by hand; a text that is not the package's
@@ -25,10 +27,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from orkboard.realm import agent_rules_text as T
+from orkboard.realm import seat_frames
 
 AGENTS, CLAUDE = "AGENTS.md", "CLAUDE.md"
 HASH_LINE = re.compile(r"^hash: ([0-9a-f]*)[ \t]*$", re.M)
 SCHEMA_LINE = re.compile(r"^schema: (\d+)[ \t]*$", re.M)
+MODELS = ("opus", "sonnet", "haiku")
 OK, MISSING, OUTDATED, CHANGED, BROKEN, NOT_OURS = "ok", "missing", "outdated", "changed", "broken", "not ours"
 
 
@@ -106,7 +110,31 @@ def _describe(role_id: str) -> str:
 
 
 def _front(pairs: list[tuple[str, str]]) -> str:
-    return "---\n" + "".join(f"{k}: {v}\n" for k, v in pairs) + f"schema: {T.SCHEMA}\nhash: \n---\n"
+    return "---\n" + "".join(f"{v}\n" if k == "#" else f"{k}: {v}\n" for k, v in pairs) + f"schema: {T.SCHEMA}\nhash: \n---\n"
+
+
+def model_of(role_id: str) -> str:
+    """The model a seat's subagent names in Claude Code (spec 154 C.1): the seat's tier through Orkboard's own tier table for Claude Code (`harnesses.model_on`), one of `opus`, `sonnet`, `haiku`; `inherit`
+    where it names none. A leader's tier is its party's (`party_recipes.tiers_for`: Veteran, the Release manager's Seasoned), the Taskmaster's and a Grunt's their roles' (`library`); the Orkmaster has no role in the library."""
+    from orkboard.realm import harnesses, library, party_recipes
+    seat, craft = _seat(role_id)
+    if seat == "leader":
+        lead = library.RELEASE_MANAGER if craft == party_recipes.RELEASE else role_id
+        tier = party_recipes.tiers_for(lead, [], "standard").get(lead, "")
+    else:
+        agent = library.get(seat)
+        tier = agent.tier if agent is not None else ""
+    model = harnesses.model_on("claude", tier) if tier else ""
+    return model if model in MODELS else "inherit"
+
+
+def _agent_front(role_id: str, seat: str) -> str:
+    pairs = [("name", f"ork-{role_id}"), ("description", json.dumps(_describe(role_id), ensure_ascii=False)), ("#", T.CLAUDE_OWN_AGENT)]
+    if seat == "grunt":
+        pairs += [("model", model_of(role_id)), ("isolation", "worktree")]           # every tool: `tools` left out inherits them all
+    else:
+        pairs += [("tools", T.FILE_TOOLS), ("model", model_of(role_id))]
+    return _front(pairs)
 
 
 def items(root: Path, wiki_rel: str, crafts: list[str] | None = None, decisions: str | None = None) -> list[Item]:
@@ -130,10 +158,15 @@ def items(root: Path, wiki_rel: str, crafts: list[str] | None = None, decisions:
     for role_id in ids_of(crafts):
         seat, craft = _seat(role_id)
         out.append(Item("file", f".claude/agents/ork-{role_id}.md",
-                        _front([("name", f"ork-{role_id}"), ("description", json.dumps(_describe(role_id), ensure_ascii=False))])
-                        + T.subagent_body(seat, craft, shown, decisions, _title(role_id), f"{base}roles/{role_id}.md")))
+                        _agent_front(role_id, seat) + T.subagent_body(seat, craft, shown, decisions, _title(role_id), f"{base}roles/{role_id}.md")))
+    for role_id in ids_of(crafts):                                # a skill for each seat that has steps (a Grunt has none), run forked as the seat's subagent; the caller waits for its line
+        if role_id != "grunt" and seat_frames.steps(role_id):
+            out.append(Item("file", f".claude/skills/{role_id}/SKILL.md",
+                            _front([("name", role_id), ("description", json.dumps(T.skill_description(role_id, seat_frames.title_of(role_id)), ensure_ascii=False)), ("#", T.CLAUDE_OWN),
+                                    ("argument-hint", '"<step> <goal>"'), ("context", "fork"), ("agent", f"ork-{role_id}"), ("background", "false")])
+                            + T.seat_skill_body(role_id, shown, decisions)))
     out.append(Item("file", ".claude/skills/orkboard/SKILL.md",
-                    _front([("name", "orkboard"), ("description", json.dumps(T.SKILL_DESCRIPTION, ensure_ascii=False))]) + T.skill_body(shown)))
+                    _front([("name", "orkboard"), ("description", json.dumps(T.SKILL_DESCRIPTION, ensure_ascii=False)), ("#", T.CLAUDE_OWN_STANDARD)]) + T.skill_body(shown)))
     return out
 
 

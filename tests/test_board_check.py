@@ -144,7 +144,7 @@ def test_a_block_of_schema_one_is_said_to_be_older_than_this_orkboards(repo):
     agents = repo / "AGENTS.md"
     agents.write_text(agents.read_text(encoding="utf-8").replace(f"schema={T.SCHEMA} ", "schema=1 "), encoding="utf-8")
     f = only(repo, "v1")
-    assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v1, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init" and T.SCHEMA == 2
+    assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v1, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init" and T.SCHEMA == 3
 
 
 
@@ -270,3 +270,16 @@ def test_an_accepted_line_that_names_no_done_when_line_or_is_free_is_found(repo)
     got = [f["what"] for f in board_check.run(repo)]
     assert len(got) == 2 and any("names no line of the section's Done when: 'something nobody asked'" in w for w in got) and any("none Orkboard can read" in w and "fine:" in w for w in got)
     assert not any("earlier score" in w for w in got)                                    # a line with a proof mark in Done when is named without it
+
+
+def test_a_seats_skill_or_subagent_that_is_missing_or_changed_by_hand_is_found_spec_154_c(repo):
+    """Spec 154 C.4: the seats' files are the rules' files, so check finds them missing and changed like the rest."""
+    assert board_check.run(repo) == []
+    skill = repo / ".claude" / "skills" / "orkmaster" / "SKILL.md"
+    skill.write_text(skill.read_text(encoding="utf-8").replace("context: fork", "context: none"), encoding="utf-8")
+    f = only(repo, "changed by hand")
+    assert f["path"] == ".claude/skills/orkmaster/SKILL.md"
+    (repo / ".claude" / "agents" / "ork-grunt.md").unlink()
+    assert only(repo, "is missing")["path"] == ".claude/agents/ork-grunt.md"
+    agent_rules.write(repo, WIKI)
+    assert board_check.run(repo) == []
