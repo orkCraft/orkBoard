@@ -42,11 +42,16 @@ _SLUG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}")
 
 
 def rules_written(root: Path) -> bool:
-    """Whether the root `AGENTS.md` holds Orkboard's block (`<!-- orkboard:begin`): before it, no other tool works the Board and nothing of D runs."""
-    try:
-        return RULES_MARK in (Path(root) / "AGENTS.md").read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return False
+    """Whether the repository has the Board's rules, Orkboard's block (`<!-- orkboard:begin`) in its root `AGENTS.md`: in the checkout `root`, or in the Board's
+    tree (`<root>/.orkcraft/board/`, the work branch, where Orkboard commits them while the person's checkout may be on another branch). Before it, no other
+    tool works the Board, and nothing of spec 151 B or D runs. The one test of it (gui/ideas_phase.py asks it too)."""
+    for base in (Path(root), Path(root) / ".orkcraft" / "board"):
+        try:
+            if RULES_MARK in (base / "AGENTS.md").read_text(encoding="utf-8", errors="replace")[:200_000]:
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def _utc(now: dt.datetime) -> dt.datetime:

@@ -20,7 +20,8 @@ from typing import Any
 
 from orkboard.realm import goal_take, ideas
 
-FETCH_S = 20             # the remote is asked at most this often
+FETCH_S = 60             # the remote is asked at most this often
+RENEW_LEFT_S = 20 * 60   # a hold of Orkboard's own is renewed only when less than this is left of it: a push an hour or so a goal, not one a tick
 HOURS = 1                # a take runs this long; the tick renews it long before
 RUNNING = ("talk", "planning", "working")       # the states Orkboard works a goal in; a plan waiting for Start, a failed or finished goal waits for the person or ends
 
@@ -85,6 +86,8 @@ class GoalTakeHost:
             for slug in sorted(wanted):                       # taken or renewed
                 if goal_take.blocked(p.root, slug, now):
                     continue                                  # another holds it: not ours to take
+                if slug in st.mine and _left(holds.get(slug), self.me, now) > RENEW_LEFT_S:
+                    continue                                  # ours, and long enough still: no push for nothing
                 got = (goal_take.renew if slug in st.mine else goal_take.take)(p.root, slug, self.me, goal_take.ORKBOARD, now, HOURS)
                 if got["taken"]:
                     st.mine.add(slug)
@@ -114,6 +117,16 @@ class GoalTakeHost:
                         st.mine.discard(slug)                 # type: ignore[union-attr]
                 except Exception:
                     pass
+
+
+def _left(hold: dict | None, me: str, now: dt.datetime) -> float:
+    """The seconds left of a hold of `me`'s (0 for none, another's, or one that cannot be read)."""
+    if not hold or hold.get("by") != me:
+        return 0.0
+    try:
+        return (dt.datetime.fromisoformat(str(hold["until"])) - now).total_seconds()
+    except (KeyError, ValueError, TypeError):
+        return 0.0
 
 
 def tick(host: Any) -> None:

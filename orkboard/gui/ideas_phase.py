@@ -17,18 +17,10 @@ import weakref
 from pathlib import Path
 
 from orkboard.gui.ideas_args import IdeasError
-from orkboard.realm import event_log, goal_phase, idea_questions, ideas, read_in, write_out, write_out_bank
+from orkboard.realm import event_log, goal_phase, goal_take, idea_questions, ideas, read_in, write_out, write_out_bank
 
 PHASE_READ_S = 5.0           # how often the clock looks for a page moved outside
-RULES_MARK = "<!-- orkboard:begin"     # Orkboard's block in the repository's AGENTS.md (spec 151 C.1): the rules are written
-
-
-def rules_written(repo: Path) -> bool:
-    """Whether the repository (a checkout: the Board's tree) has the Board's rules, Orkboard's block in its root `AGENTS.md`."""
-    try:
-        return RULES_MARK in (Path(repo) / "AGENTS.md").read_text(encoding="utf-8")[:200_000]
-    except (OSError, UnicodeDecodeError):
-        return False
+rules_written = goal_take.rules_written      # the Board's rules are written (spec 151 C.4): one test of it, realm/goal_take.py's
 
 
 class PhaseMixin:

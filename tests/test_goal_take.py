@@ -176,12 +176,14 @@ def test_orkboard_takes_what_it_runs_renews_it_and_gives_back_what_waits_for_the
     assert set(gt.read_all(a, T0)) == {"one", "two"} and remote_file(origin, "one")["kind"] == "orkboard"
     h.run(p, st, T0 + hrs(0.5), mono=1.0)                                           # within FETCH_S: no second fetch
     assert remote_file(origin, "one")["at"] == T0.isoformat(timespec="seconds")
+    h.run(p, st, T0 + hrs(0.5), mono=100.0)                                         # half an hour left: not renewed, nothing pushed
+    assert remote_file(origin, "one")["at"] == T0.isoformat(timespec="seconds")
     running.discard("two")                                                          # it now waits for the person
-    h.run(p, st, T0 + hrs(0.5), mono=100.0)
-    assert set(gt.read_all(a, T0 + hrs(0.5))) == {"one"} and remote_file(origin, "one")["until"] == (T0 + hrs(1.5)).isoformat(timespec="seconds")
+    h.run(p, st, T0 + hrs(0.75), mono=200.0)                                        # a quarter of an hour left: renewed
+    assert set(gt.read_all(a, T0 + hrs(0.75))) == {"one"} and remote_file(origin, "one")["until"] == (T0 + hrs(1.75)).isoformat(timespec="seconds")
     running.clear()
-    h.run(p, st, T0 + hrs(0.6), mono=200.0)
-    assert gt.read_all(a, T0 + hrs(0.6)) == {}
+    h.run(p, st, T0 + hrs(0.8), mono=300.0)
+    assert gt.read_all(a, T0 + hrs(0.8)) == {}
     h.close()
 
 
