@@ -69,7 +69,7 @@ class VerdictMixin:
     def _stance(self, entry: dict, got: dict) -> dict:
         """A leader's answer as the record keeps it: its stance, verdict and, from Product and Tech, `priority` and `risk`; `craft` says whose they are, `weigher` that it is not on the route."""
         return {"party": entry["party"], "leader": entry["leader"], "craft": self._craft(entry["party"]), "weigher": bool(entry.get("weigher")),
-                **{k: got[k] for k in ("stance", "for", "against", "verdict", "why", "instead", "after", "priority", "risk")}}
+                **{k: got[k] for k in ("stance", "for", "against", "verdict", "why", "instead", "after", "priority", "risk")}, "check": got.get("check") or ""}
 
     def reweigh(self, slug: str, rec: dict) -> dict:
         """The goal's weight (`idea_ripe.weight`) written into the record (`rec` is held under `ideas.LOCK` by the caller)."""

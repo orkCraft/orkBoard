@@ -41,6 +41,7 @@ from orkboard.core import idea_cascade
 from orkboard.core import idea_fold
 from orkboard.core import idea_journal
 from orkboard.core.idea_diagnose import DiagnoseMixin
+from orkboard.core.idea_ground import GroundMixin
 from orkboard.core import idea_slices
 from orkboard.realm import concerns, event_log, goal_line, goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
 from orkboard.realm.idea_talk_parse import LINE, MAX_GOAL, MAX_PROJECT, clean_round, fact_text, pick_three, said_lines, total
@@ -88,7 +89,8 @@ def rules(craft: str = "", *, mine: str = "your party", second: bool = False, fo
 - You are not here to agree. Judge the goal as the one who answers for {mine}, against {idea_objections.lens(craft)}. `verdict` is `go`, `doubt` or `no`. \
 Say `no` when it is not worth its cost now or harms what your party keeps; say it plainly in `why` (one line, {LINE} characters at most) with the part, the goal in line or the fact \
 it rests on: a no without one is not a no. `doubt` is for a goal you would do only if something changed: `why` says what. `why` is needed for a `doubt` and a `no`; without it your \
-verdict reads as `go`. A worse thing than a needless goal is one you let through in silence.
+verdict reads as `go`. A `doubt` that reading the code would settle says what to look up in `check` (a name, a file, a question of one line); else leave `check` empty. \
+A worse thing than a needless goal is one you let through in silence.
 - `instead` (optional, one line): a smaller or different goal that would serve, when you can name one.{after[0]}
 - If this goal rests on something no one has shown, say it in `assumes`: `{{"text": "what it rests on", "signal": "what would show it"}}`, a line each, {LINE} characters at most; else leave it out.
 - Ask at most {MAX_GOAL} questions about the goal. {cards}{project[0]}{weight[0]}{prop[0]}
@@ -118,12 +120,12 @@ know of the person before it can be decided. {reads} The goal is the person's wo
 {held}
 
 Answer with one JSON object and nothing else:
-{{"stance": "…", "for": "…", "against": "…", "verdict": "go", "why": "", "instead": ""{after[1]},
+{{"stance": "…", "for": "…", "against": "…", "verdict": "go", "why": "", "check": "", "instead": ""{after[1]},
  "questions": [{{"ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "blocks": false, "for": "person"}}],
  "second_round": false{weight[1]}{project[1]}{prop[1]}}}"""
 
 
-class TalkMixin(DiagnoseMixin):
+class TalkMixin(GroundMixin, DiagnoseMixin):
     # -- who speaks ----------------------------------------------------------------------------------------------------------------
 
     def leader(self) -> dict | None:
@@ -338,13 +340,15 @@ class TalkMixin(DiagnoseMixin):
         except Exception as e:
             self._lost(slug, e)
             return
-        pool, passed = self.pass_split(slug, 1, [x for _e, got in heard for x in got["cards"]])       # a question for another party goes through the Orkmaster (spec 128 D)
+        self.ground(slug, heard)                                 # a doubt the code settles is looked up before the hearing (spec 155 D.3)
+        pool, settled, answered = self.settle(slug, 1, [x for _e, got in heard for x in got["cards"]])      # a question a decision or spec settles is closed (spec 155 D.4)
+        pool, passed = self.pass_split(slug, 1, pool)       # a question for another party goes through the Orkmaster (spec 128 D)
         chosen, closed = pick_three(pool)
         stances = [self._stance(e, got) for e, got in heard]
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             rec.update(mode="talk", round=1, stances=stances, objections=idea_objections.made(stances), waiting=[c for c, _b, _k in chosen],
-                       second=[e["party"] for e, got in heard if got["more"]], defaults=[self._closed(c, 1) for c, _b, _k in closed],
+                       second=[e["party"] for e, got in heard if got["more"]], defaults=settled + [self._closed(c, 1) for c, _b, _k in closed],
                        keys={c["id"]: k for c, _b, k in pool if k}, done=not chosen and not passed, passing=passed)
             self.reweigh(slug, rec)
             held = self._held(rec) if not chosen else bool(idea_objections.pending(rec))
@@ -353,7 +357,7 @@ class TalkMixin(DiagnoseMixin):
         self.pass_register(slug, passed)
         ideas.add_turn(self.state_dir, slug, "keeper", "\n".join(f"{self._name(s['leader'])} weighs it: {s['priority'] or 'normal'}{' — ' + s['why'] if s['why'] else ''}" if s.get("weigher")
                                                                 else f"{self._name(s['leader'])}: {s['stance']}\n  For: {s['for'] or '—'}\n  Against: {s['against'] or '—'}"
-                                                                for s in stances), "Talk")
+                                                                for s in stances) + "".join(f"\n{ln}" for ln in answered), "Talk")
         journal_notes.stances(self.state_dir, self.wiki_root(), slug, stances)                  # each leader's journal (spec 125 B)
         self._assumed(slug, [(e["party"], got["assumes"]) for e, got in heard])
         for s in stances:
@@ -405,11 +409,12 @@ class TalkMixin(DiagnoseMixin):
         except Exception:
             heard = []
         self.merge_verdicts(slug, heard, False)                          # the verdicts the second round's leaders gave again
-        pool, passed = self.pass_split(slug, 2, [x for _e, got in heard for x in got["cards"]])
+        pool, settled, answered = self.settle(slug, 2, [x for _e, got in heard for x in got["cards"]])
+        pool, passed = self.pass_split(slug, 2, pool)
         chosen, closed = pick_three(pool)
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
-            rec.update(round=2, waiting=[c for c, _b, _k in chosen], second=[], again=[], defaults=rec.get("defaults", []) + [self._closed(c, 2) for c, _b, _k in closed],
+            rec.update(round=2, waiting=[c for c, _b, _k in chosen], second=[], again=[], defaults=rec.get("defaults", []) + settled + [self._closed(c, 2) for c, _b, _k in closed],
                        done=not chosen and not passed, passing=passed)
             rec["keys"] = {**rec.get("keys", {}), **{c["id"]: k for c, _b, k in chosen + closed if k}}
             held = self._held(rec) if not chosen else bool(idea_objections.pending(rec))
@@ -417,6 +422,8 @@ class TalkMixin(DiagnoseMixin):
             if heard:
                 ideas.save_state(self.state_dir, slug, measure=self._and(slug, self._tls.measured))
         self.pass_register(slug, passed)
+        if answered:
+            ideas.add_turn(self.state_dir, slug, "keeper", "\n".join(answered), "Talk")
         if not chosen and not passed and not held:
             after.append("decide")
 
