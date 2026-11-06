@@ -43,7 +43,7 @@ class FirstOpen:
             return {"step": at, "line": first_open.line(at), "name": "", "path": "", "recent": self.host.projects.list()["recent"] if at == "project" else [], "kind": None,
                     "hand": inn, "laid": False}
         state_dir = project.ideas.state_dir
-        laid = first_open.laid(state_dir, project.root)
+        laid = first_open.laid(state_dir, project.ideas.root(False))
         at = first_open.step(open=True, git=project_folder.has_git(project.root), kind_kept=bool(project_kind.kept(state_dir)), hand=inn,
                              tools_skipped=self.tools_skipped, laid=laid)
         kind, words = None, ""

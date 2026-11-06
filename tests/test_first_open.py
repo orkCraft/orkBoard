@@ -163,11 +163,11 @@ def test_the_other_keys_of_the_projects_file_are_left_as_they_are(fake_repo):
 
 
 def test_a_project_with_parties_of_its_own_is_laid_at_once(fake_repo):
-    ideas.add_track(fake_repo, "Tech")
     state_dir = fake_repo / ".orkcraft"
-    assert first_open.laid(state_dir, fake_repo) and not first_open.kept(state_dir)
     b = Orkboard(fake_repo)
     try:
+        ideas.add_track(b.ideas.root(False), "Tech")                                      # the parties are under the Board's root (the Wiki; spec 155 F.1), not the repository's
+        assert first_open.laid(state_dir, b.ideas.root(False)) and not first_open.kept(state_dir)
         assert b.snapshot()["laid"] is True and b.command("first_open.ask", {})["step"] == "laid"
     finally:
         sys.modules.pop("orkboard.core.idea_runner", None)

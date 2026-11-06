@@ -473,3 +473,32 @@ def test_a_party_holds_one_who_does_besides_its_leader_and_a_party_made_before_w
     with pytest.raises(CommandError, match="needs one who does"):
         host.command("ideas.goal_save", {"slug": old, "team": ["reviewer", "security-reviewer"], "leader": "architect"})
     assert goal_team.does_missing(["grunt"], "architect") == "" and goal_team.does_missing([], "taskmaster") == ""
+
+
+# -- a Board in the code: its leaders are seated, its table is laid (spec 155 F) ----------------------------------------
+
+def _page_party(host, slug, leader, recipe="tech"):
+    root = host.ideas.root(False)
+    (root / ideas.TRACKS).mkdir(parents=True, exist_ok=True)
+    (root / ideas.TRACKS / f"{slug}.md").write_text(f"---\ntitle: {slug.title()}\nleader: {leader}\nrecipe: {recipe}\n---\n", encoding="utf-8")
+    return root
+
+
+def test_a_party_page_names_its_leader_and_the_leader_is_installed_and_wears_the_party_s_race(host):
+    from orkboard.realm import first_open
+    root = _page_party(host, "tech", "architect")
+    state_dir = host.ideas.state_dir
+    assert roles.role(state_dir, "architect") is None
+    assert first_open.laid(state_dir, root) is True                       # the parties under the Board's root lay the table
+    row = next(g for g in host.command("ideas.board", {})["tracks"] if g["slug"] == "tech")
+    assert roles.role(state_dir, "architect") is not None
+    assert row["leader"]["slug"] == "architect" and row["leader"]["head"]["race"] == "shaman"
+    mapped = next(g for g in host.command("ideas.map", {})["goals"] if g["slug"] == "tech")
+    assert mapped["leader"]["slug"] == "architect" and mapped["leader"]["head"]["race"] == "shaman"
+
+
+def test_a_leader_not_in_the_library_falls_back_to_the_taskmaster(host):
+    _page_party(host, "ghosts", "no-such-leader")
+    assert goal_team.seat_leaders(host.ideas.root(False), host.ideas.state_dir) == []
+    row = next(g for g in host.command("ideas.board", {})["tracks"] if g["slug"] == "ghosts")
+    assert row["leader"]["slug"] == roles.TASKMASTER
