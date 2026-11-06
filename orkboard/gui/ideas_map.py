@@ -6,8 +6,8 @@ time the Map reads it one is given and stored (once, ever; `ideas_rev` does not 
 
 A party carries what its tab needs besides (spec 111 B): `free_elements`, the shapes no goal of the project holds (the + card's free runes and the field's row; empty
 when none is free; a rune is unique across the project, spec 128 G), beside `next_element` (a shape), `next_hue`, and `next_hues` (every shape's predicted hue, in ELEMENTS order); and its sword and shield (decisions §189): `does_tool` and `checks_tool`, the AI tools its Does and its Checks run on (a
-`harnesses` id, the Main tool resolved), `does_mixed` / `checks_mixed` when a column's roles run on more than one, and `lean` (no separate check: `checks_tool` is ""); and, per side,
-whether it follows the default tool (spec 114 B, decisions §192.4): `does_default`, `checks_default` (neither the party nor any seat of that side is set to a tool; a Lean party's check never is).
+`harnesses` id, the Main tool resolved), `does_mixed` / `checks_mixed` when a column's roles run on more than one, and `lean` (no separate check: `checks_tool` is the leader's); and, per side,
+whether it follows the default tool (spec 114 B, decisions §192.4): `does_default`, `checks_default` (neither the party nor any seat of that side is set to a tool; a Lean party's check follows its leader's side).
 
 A task done or at Review carries `craft_made` (spec 142 D, decisions §249.3; `made_for`, realm/task_made.py): what it made by its party's craft, read by code, the key absent where a craft has none.
 """
@@ -108,22 +108,22 @@ class MapMixin:
     def marks_of(g: dict, main: str) -> dict:
         """The tools of a party's sword and shield (decisions §189.1): `{does_tool, checks_tool, does_mixed, checks_mixed, lean, does_default, checks_default}`. A seat runs on its own tool,
         else the party's (`goal_team.tool_for`), else the Main tool `main`; **Does** is the tool most of its doing seats run on (its leader's when it has none), **Checks** the tool most
-        of its checking seats run on (its leader's when none checks: the leader checks, `goal_team.checkers`); a column that mixes tools is `*_mixed`. A **Lean** party has no
-        separate check: `lean`, and `checks_tool` is "" (the shield stands faint, no mark). A side **follows the default** (`does_default`, `checks_default`; decisions §192.4) when
+        of its checking seats run on (its leader's when none checks: the leader's acceptance is the check, `goal_team.checkers`, at **every** size, spec 152 A.7); a column that mixes
+        tools is `*_mixed`. A **Lean** party has no separate check: `lean` stays in the answer for the page, and `checks_tool` is its leader's tool. A side **follows the default** (`does_default`, `checks_default`; decisions §192.4) when
         the party has no tool and no seat of that side has one of its own: it goes where the work goes, the tool now (`town.mana.now`, which the page puts on the mark; the Main tool
-        here stands for it). A Lean party's check follows nothing."""
+        here stands for it). A Lean party's check follows its leader's side."""
         mine = goal_team.clean_tools(g.get("tools") or {})
         set_of = lambda agent: mine.get(agent) or g.get("tool") or ""                  # noqa: E731  (a tool set on purpose; "" follows the default)
         of = lambda agent: set_of(agent) or main                                       # noqa: E731  (`tool_for`, from what the map has read, the Main tool at the end)
         squad = [m["slug"] for m in g.get("team") or []]
         lead = (g.get("leader") or {}).get("slug") or "taskmaster"
         does_seats = [s for s in squad if goal_team.band_of(s) != "check"] or [lead]
-        checks_seats = [s for s in squad if goal_team.band_of(s) == "check"] or [lead]
-        does, checks = [of(s) for s in does_seats], [of(s) for s in checks_seats]
         lean = g.get("size") == "lean"
+        checks_seats = ([] if lean else [s for s in squad if goal_team.band_of(s) == "check"]) or [lead]       # none checks: the leader's acceptance is the check (spec 152 A.7)
+        does, checks = [of(s) for s in does_seats], [of(s) for s in checks_seats]
         most = lambda tools: Counter(tools).most_common(1)[0][0]                       # noqa: E731  (ties: the first seat's)
-        return {"does_tool": most(does), "does_mixed": len(set(does)) > 1, "checks_tool": "" if lean else most(checks), "checks_mixed": not lean and len(set(checks)) > 1, "lean": lean,
-                "does_default": not any(set_of(s) for s in does_seats), "checks_default": not lean and not any(set_of(s) for s in checks_seats)}
+        return {"does_tool": most(does), "does_mixed": len(set(does)) > 1, "checks_tool": most(checks), "checks_mixed": len(set(checks)) > 1, "lean": lean,
+                "does_default": not any(set_of(s) for s in does_seats), "checks_default": not any(set_of(s) for s in checks_seats)}
 
     def project_of(self, root: Path, got: dict, goal: str | None) -> dict:
         """The project's level (spec 70 §1.1): the Orkmaster and its deal of the parties. The flags are counted from the nodes already read

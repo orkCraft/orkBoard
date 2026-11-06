@@ -17,7 +17,7 @@ task, `price_team` the part of the squad a price counts.
     leader_of(root, "ship")                                     # "product-manager"; "taskmaster" when none was picked
     craft_of(root, "ship")                                      # "tech": the party's craft (its recipe's, else its leader's), "" for a party with none
     head_in(root, "ship", role, "balance")                      # the head a role wears as a seat of that party: its craft's race, its leader's higher form
-    way("standard")                                             # {"stages": ("plan", "do", "check"), "at_once": 2, "checks": "one"}
+    way("standard")                                             # {"stages": ("plan", "do", "check", "accept"), "at_once": 2, "checks": "one"}
     checkers("full", "architect", team, concerned)              # {"by": [who checks a task], "leader": bool, "own_tests": bool}
     seats(team, leader)                                         # the error of a party that has too many in a band, else ""
                                                                 # (Ideation: its four views and the skeptic, or a size's part of them; a view nowhere else)
@@ -40,6 +40,7 @@ from pathlib import Path
 
 from orkboard.realm import ideas
 
+MIN_DOES = 1                    # a party holds at least one who does besides its leader (spec 152 A.3)
 SEATS = 7                       # a squad: its leader and six more at most (up to five who do, up to two who check: `library.SEATS`)
 IDEATION_WHOLE = "Ideation reads every pitch from all four sides: its views and the skeptic stay"
 PITCH_ONLY = "The views judge pitches: they are in Ideation only"
@@ -89,6 +90,20 @@ def seats(team: list[str], leader: str = "", kept: list[str] | tuple[str, ...] =
     return ""
 
 
+NO_DOER = "A party needs one who does besides its leader"
+
+
+def does_missing(team: list[str], leader: str, kept: list[str] | tuple[str, ...] = (), before: bool = False) -> str:
+    """Why a party has no one who does ("" when it has one; spec 152 A.3): a squad of a party led by a real leader holds `MIN_DOES` seats whose band is `build`.
+    The Taskmaster's goals and Ideation (its views) are no such party. A party made before (`before`, `kept`: its team) that had none keeps its seats."""
+    from orkboard.realm import library
+    if leader in ("", "taskmaster", library.INVESTOR) or sum(band_of(s) == "build" for s in team) >= MIN_DOES:
+        return ""
+    if before and set(team) <= set(kept) and not any(band_of(s) == "build" for s in kept):
+        return ""
+    return NO_DOER
+
+
 def leader_of(root: Path, slug: str) -> str:
     page = ideas.track_page(root, slug)
     return (page.get("leader") if page is not None else "") or "taskmaster"
@@ -116,9 +131,10 @@ def set_team(root: Path, slug: str, team: list[str], every: list[str] | None = N
 SIZES = ("lean", "standard", "full")                 # a party's size (spec 75 §3): its Target, for its goals
 
 # How a task goes in each size, apart from the squad (spec 99 §1.3, decisions §151.2): its stages, how many tasks run at once, and who checks.
-WAY = {"lean": {"stages": ("plan", "do"), "at_once": 1, "checks": "none"},                  # no separate check: the doer runs its own tests
-       "standard": {"stages": ("plan", "do", "check"), "at_once": 2, "checks": "one"},      # one checker checks each task
-       "full": {"stages": ("plan", "do", "check"), "at_once": 3, "checks": "every"}}        # every checker the task concerns checks it
+# Every size ends in the leader's acceptance of the step (spec 152 A.4, B).
+WAY = {"lean": {"stages": ("plan", "do", "accept"), "at_once": 1, "checks": "none"},                  # no checker: the leader accepts the step
+       "standard": {"stages": ("plan", "do", "check", "accept"), "at_once": 2, "checks": "one"},      # the first check that applies, then the leader accepts
+       "full": {"stages": ("plan", "do", "check", "accept"), "at_once": 3, "checks": "every"}}        # every check that applies, then the leader accepts
 
 
 def way(size: str) -> dict:
@@ -129,16 +145,15 @@ def way(size: str) -> dict:
 
 
 def checkers(size: str, leader: str, team: list[str], concerned: list[str] | None = None) -> dict:
-    """Who checks a task in a size (decisions §151.2): `{"by": [slugs], "leader": bool, "own_tests": bool}`. **Lean** no one: `own_tests`, the doer runs its own
-    tests. **Standard** one checker of the squad, the first that the task concerns (`concerned`: the checkers whose check applies, all of them when it is None);
-    **full** every one it concerns. With no checker in the squad, or none that concerns the task, the leader checks (`leader`, said plainly)."""
+    """Who checks a task in a size (decisions §151.2, §256.1): `{"by": [slugs], "leader": bool, "own_tests": bool}`. The leader never checks a task: with no
+    checker in play (**lean** whatever the squad; a squad with no checker, or none that concerns the task) `by` is empty and `leader` says that the leader's
+    acceptance of the step is the only check. **Standard** one checker of the squad, the first that the task concerns (`concerned`: the checkers whose check
+    applies, all of them when it is None); **full** every one it concerns."""
     if size not in WAY:
         raise ValueError("A size is lean, standard or full")
-    if size == "lean":
-        return {"by": [], "leader": False, "own_tests": True}
-    mine = [s for s in team if band_of(s) == "check" and (concerned is None or s in concerned)]
+    mine = [] if size == "lean" else [s for s in team if band_of(s) == "check" and (concerned is None or s in concerned)]
     if not mine:
-        return {"by": [leader] if leader and leader != "taskmaster" else [], "leader": True, "own_tests": False}
+        return {"by": [], "leader": True, "own_tests": False}
     return {"by": mine[:1] if size == "standard" else mine, "leader": False, "own_tests": False}
 
 
@@ -268,12 +283,6 @@ def seat_role(r: dict | None, tiers: dict[str, str]) -> dict | None:
     if model and model != (a.tier if a is not None else ""):
         return r
     return {**r, "model": tiers[str(r["slug"])]}
-
-
-def lean_role(root: Path, slug: str) -> str:
-    """In a Lean party the leader does every task no one else takes (spec 81 §2): its slug; "" for any other party or no leader."""
-    lead = leader_of(root, slug)
-    return lead if size_of(root, slug) == "lean" and lead != "taskmaster" else ""
 
 
 def party_of(root: Path, slug: str) -> str:

@@ -126,7 +126,7 @@ def test_a_size_that_lets_a_member_with_work_open_go_is_refused_and_one_that_doe
     ideas.save_state(h.state, idea, state="working")
     ideas.save_plan(h.state, idea, {"idea": idea, "todos": [], "tasks": [{"id": "t1", "title": "T", "state": "running", "role": "grunt", "kind": "code"}]})
     with pytest.raises(CommandError, match="Grunt has work open: it cannot leave"):
-        h.command("ideas.goal_save", {"slug": slug, "size": "lean", "leader": "architect", "team": []})
+        h.command("ideas.goal_save", {"slug": slug, "size": "lean", "leader": "architect", "team": ["tester"]})
     assert track(h, slug)["size"] == "full" and track(h, slug)["team"] == ["grunt", "reviewer"]
     h.command("ideas.goal_save", {"slug": slug, "size": "standard", "leader": "architect", "team": ["grunt"]})      # (the reviewer has none open)
     assert track(h, slug)["size"] == "standard" and track(h, slug)["team"] == ["grunt"]
@@ -150,7 +150,7 @@ def test_a_goals_draft_plan_and_task_pick_their_partys_tier_not_the_settings(hos
     assert picked["lean"][0] == "thrift" and picked["lean"][1][1] == "low"
     assert picked["full"][0] == "quality" and picked["full"][1][1] == "high"
     assert picked["old"][1][1] == "medium"
-    assert picked["lean_party"][0] == "thrift" and picked["lean_party"][1] == ("warrior", idea_target.pick("goal", "thrift")[1])   # (spec 81: the Lean leader is Seasoned)
+    assert picked["lean_party"][0] == "thrift" and picked["lean_party"][1] == idea_target.pick("goal", "thrift")   # (spec 152 A.1: the Lean leader is Veteran, its own: the step's own pick)
     assert picked["full_party"][1][1] == "xhigh"
     # the budget of a call follows the party's Target too
     keeper._tls.key = keeper._tls.slug = ideas.add_idea(h.root, "Another in lean", lean, h.state)
@@ -223,13 +223,14 @@ def test_a_mobile_folder_is_proposed_three_parties_each_in_three_sizes_with_pric
     squad = first["squad"]
     assert feat["lean"]["team"] == feat["standard"]["team"] == feat["full"]["team"] == squad and feat["lean"]["agents"] == 1 + len(squad)       # the squad and the size are apart
     assert feat["lean"]["price"]["high"] < feat["standard"]["price"]["high"] < feat["full"]["price"]["high"]
-    assert feat["lean"]["heads"][0] == {"race": "unicorn", "tier": "warrior"} and feat["standard"]["heads"][0] == {"race": "unicorn", "tier": "elder"}     # the leader first: Product's higher form
+    assert feat["lean"]["heads"][0] == {"race": "unicorn", "tier": "elder"} and feat["standard"]["heads"][0] == {"race": "unicorn", "tier": "elder"}     # the leader first: Product's higher form
     assert {h["race"] for h in feat["standard"]["heads"][1:]} == {"knight"}                                          # its seats, the knights (decisions §162)
     tech = {p["id"]: p for p in got["proposals"]}["tech"]["sizes"]["full"]["heads"]
     assert tech[0] == {"race": "shaman", "tier": "elder"} and {h["race"] for h in tech[1:]} == {"peon"}
     release = got["proposals"][3]                                                                                   # Release: in every project, its leader alone, locked
-    assert release["id"] == "release" and release["name"] == "Release" and release["locked"] is True and release["squad"] == []
-    assert [release["sizes"][s]["team"] for s in ("lean", "standard", "full")] == [[], [], []] and release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}]
+    assert release["id"] == "release" and release["name"] == "Release" and release["locked"] is True and release["squad"] == ["release-engineer", "release-notes"]
+    assert [release["sizes"][s]["team"] for s in ("lean", "standard", "full")] == [["release-engineer", "release-notes"]] * 3
+    assert release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}]
 
 
 def test_a_party_the_project_has_is_proposed_last_as_have(mobile):

@@ -79,7 +79,7 @@ def test_goal_save_with_a_team_makes_its_agents_keeps_the_team_and_never_overwri
     assert pd["instruction"] == library.get("product-designer").instruction
     host.command("ideas.role_save", {"slug": "product-designer", "name": "Product designer", "model": "", "max_parallel": 1,
                                      "instruction": "Mine now."})
-    host.command("ideas.goal_save", {"about": "Another page.", "craft": "design", "leader": "product-designer", "team": []})
+    host.command("ideas.goal_save", {"about": "Another page.", "craft": "design", "leader": "product-designer", "team": ["ui-kit"]})
     assert roles.role(host.ideas.state_dir, "product-designer")["instruction"] == "Mine now."   # the person's edit stays
     assert roles.role(host.ideas.state_dir, "product-designer")["takes"] == ["design"]
     with pytest.raises(CommandError, match="No agent 'wizard'"):
@@ -130,11 +130,11 @@ def test_the_plan_tags_each_task_and_gives_it_to_the_team_member_who_does_that_k
     assert "The goal's team, by the tags each does: Grunt (" in prompt and "Product designer (design)" in prompt
     assert "Accessibility reviewer (a11y)" in prompt
     tasks = host.command("ideas.page", {"slug": slug})["plan"]["tasks"]
-    assert [(t["kind"], t["role"]) for t in tasks] == [("design", "product-designer"), ("a11y", "accessibility-reviewer"),
-                                                       ("code", "grunt"), ("code", "grunt")]   # an unknown tag is code
-    assert [t["head"]["race"] for t in tasks] == ["dryad", "elf", "elf", "elf"]      # a task wears its party's race (spec 99 §9.2): Design's elf, its leader the dryad
+    assert [(t["kind"], t["role"]) for t in tasks] == [("design", "grunt"), ("a11y", "accessibility-reviewer"),
+                                                       ("code", "grunt"), ("code", "grunt")]   # the leader never does a task (spec 152 A.2): a tag no seat takes goes to the project's role; an unknown tag is code
+    assert [t["head"]["race"] for t in tasks] == ["elf", "elf", "elf", "elf"]      # a task wears its party's race (spec 99 §9.2): Design's elf; no task wears the leader's higher form (spec 152 A.2)
     from orkboard.core.idea_runner import IdeaRunner
-    assert IdeaRunner._role(host.ideas.keeper, tasks[0])["slug"] == "product-designer"
+    assert IdeaRunner._role(host.ideas.keeper, tasks[0])["slug"] == "grunt"
     assert goal_team.for_idea(host.ideas.root(), slug) == ["grunt", "accessibility-reviewer"]
     assert ideas.state(host.ideas.state_dir, slug)["state"] == "plan"
 
@@ -204,9 +204,9 @@ def test_a_check_s_status_is_its_task_s_passed_once_merged_and_none_where_it_doe
 def test_the_map_s_goal_carries_its_team_and_its_ideas_their_checks(host):
     from orkboard.realm import idea_checks
     goal = host.command("ideas.goal_save", {"about": "A settings screen.", "craft": "design", "every": ["reviewer"],
-                                            "leader": "product-designer", "team": ["accessibility-reviewer"]})["slug"]
+                                            "leader": "product-designer", "team": ["ui-kit", "accessibility-reviewer"]})["slug"]
     library.install(host.ideas.state_dir, ["reviewer"])
-    goal_team.set_team(host.ideas.root(), goal, ["accessibility-reviewer", "reviewer"], ["reviewer"])                          # a party made before keeps its team
+    goal_team.set_team(host.ideas.root(), goal, ["ui-kit", "accessibility-reviewer", "reviewer"], ["reviewer"])                          # a party made before keeps its team
     _wait(host, goal, goal=True)
     slug = host.command("ideas.add", {"text": "Dark mode", "track": goal, "hold": True})["slug"]
     ideas.set_meta(host.ideas.root(), slug, checks=json.dumps([{"by": "accessibility-reviewer", "applies": False, "why": "No screen"}]))
@@ -214,7 +214,7 @@ def test_the_map_s_goal_carries_its_team_and_its_ideas_their_checks(host):
     g = next(x for x in m["goals"] if x["slug"] == goal)
     assert (g["craft"], g["race"]) == ("design", "elf")
     assert [(t["slug"], t["name"], t["head"]["race"], t["checks"], t["every"]) for t in g["team"]] == [
-        ("accessibility-reviewer", "Accessibility reviewer", "elf", True, False), ("reviewer", "Reviewer", "peon", True, True)]
+        ("ui-kit", "Design system designer", "elf", False, False), ("accessibility-reviewer", "Accessibility reviewer", "elf", True, False), ("reviewer", "Reviewer", "peon", True, True)]
     node = next(n for n in m["nodes"] if n["slug"] == slug)
     assert [(c["by"], c["applies"], c["state"]) for c in node["checks"]] == [("accessibility-reviewer", False, ""), ("reviewer", True, "")]
     assert idea_checks.DONE == ("merged",)
@@ -268,7 +268,7 @@ def test_a_party_is_never_accepted_by_itself_but_the_person_can_still_ask_its_le
         return json.dumps({"summary": "ok", "questions": []}), 0.1, 10, "s"
 
     monkeypatch.setattr(jobs, "run_read", run_read)
-    goal = host.command("ideas.goal_save", {"about": "Weekly numbers.", "craft": "product", "leader": "product-manager", "team": [],
+    goal = host.command("ideas.goal_save", {"about": "Weekly numbers.", "craft": "product", "leader": "product-manager", "team": ["copywriter"],
                                             "metrics": [{"name": "weekly reports", "target": "10 opened"}]})["slug"]
     _wait(host, goal, goal=True)
     a = ideas.add_idea(host.ideas.root(), "A weekly report", goal, host.ideas.state_dir)
@@ -332,7 +332,7 @@ def test_a_check_skipped_before_the_plan_is_left_out_and_after_it_its_task_is_ta
 
 
 def test_a_check_under_way_cannot_be_skipped(host):
-    slug = host.command("ideas.goal_save", {"about": "x", "craft": "engineering", "leader": "architect", "team": ["reviewer"]})["slug"]
+    slug = host.command("ideas.goal_save", {"about": "x", "craft": "engineering", "leader": "architect", "team": ["grunt", "reviewer"]})["slug"]
     idea = host.command("ideas.add", {"text": "y", "track": slug, "priority": "low"})["slug"]
     ideas.save_plan(host.ideas.state_dir, idea, {"idea": idea, "todos": [], "tasks": [
         {"id": "k1", "title": "Check: Reviewer", "kind": "review", "state": "review", "after": []}]})
@@ -422,19 +422,19 @@ def test_a_party_has_up_to_five_who_do_and_two_who_check_for_every_leader_and_th
 
 
 def test_a_size_is_how_a_task_goes_apart_from_the_squad_and_with_no_checker_the_leader_checks():
-    """Spec 99 §1.3 (decisions §151.2): lean plan → do, one at once, no separate check; standard plan → do → check, two at once, one checker; full every checker."""
-    assert goal_team.way("lean") == {"stages": ("plan", "do"), "at_once": 1, "checks": "none"}
-    assert goal_team.way("standard") == {"stages": ("plan", "do", "check"), "at_once": 2, "checks": "one"}
-    assert goal_team.way("full") == {"stages": ("plan", "do", "check"), "at_once": 3, "checks": "every"}
+    """Spec 99 §1.3 (decisions §151.2), spec 152 A.4: lean plan, do, accept, one at once, no checker; standard plan, do, check, accept, two at once, one checker; full every checker."""
+    assert goal_team.way("lean") == {"stages": ("plan", "do", "accept"), "at_once": 1, "checks": "none"}
+    assert goal_team.way("standard") == {"stages": ("plan", "do", "check", "accept"), "at_once": 2, "checks": "one"}
+    assert goal_team.way("full") == {"stages": ("plan", "do", "check", "accept"), "at_once": 3, "checks": "every"}
     with pytest.raises(ValueError, match="lean, standard or full"):
         goal_team.way("huge")
     squad = ["grunt", "tester", "reviewer", "security-reviewer"]
-    assert goal_team.checkers("lean", "architect", squad) == {"by": [], "leader": False, "own_tests": True}          # the doer runs its own tests
+    assert goal_team.checkers("lean", "architect", squad) == {"by": [], "leader": True, "own_tests": False}          # no checker at Lean: the leader's acceptance is the check
     assert goal_team.checkers("standard", "architect", squad) == {"by": ["reviewer"], "leader": False, "own_tests": False}
     assert goal_team.checkers("full", "architect", squad) == {"by": ["reviewer", "security-reviewer"], "leader": False, "own_tests": False}
     assert goal_team.checkers("full", "architect", squad, ["security-reviewer"])["by"] == ["security-reviewer"]      # every checker the task concerns
     assert goal_team.checkers("standard", "architect", squad, ["security-reviewer"])["by"] == ["security-reviewer"]
-    assert goal_team.checkers("standard", "architect", ["grunt"]) == {"by": ["architect"], "leader": True, "own_tests": False}     # no checker: the leader
+    assert goal_team.checkers("standard", "architect", ["grunt"]) == {"by": [], "leader": True, "own_tests": False}     # no checker: the leader's acceptance, never the leader in `by`
     assert goal_team.checkers("full", "architect", squad, ["accessibility-reviewer"])["leader"] is True            # none that concerns it
     assert goal_team.checkers("full", "taskmaster", ["grunt"]) == {"by": [], "leader": True, "own_tests": False}
     assert goal_team.price_team("lean", squad) == ["grunt"] and goal_team.price_team("standard", squad) == ["grunt", "reviewer"] and goal_team.price_team("full", squad) == ["grunt", "reviewer", "security-reviewer"]
@@ -455,3 +455,21 @@ def test_a_partys_size_is_kept_on_its_page_and_read_back(host):
     with pytest.raises(ValueError, match="No party"):
         goal_team.set_size(root, "nowhere", "lean")
     assert goal_team.size_of(root, "nowhere") == ""
+
+
+def test_a_party_holds_one_who_does_besides_its_leader_and_a_party_made_before_with_none_keeps_its_seats(host):
+    """Spec 152 A.3: `goal_save` refuses a squad with no seat whose band is build; a party of before with none can still be saved as it is."""
+    assert goal_team.MIN_DOES == 1
+    for team in ([], ["reviewer"]):
+        with pytest.raises(CommandError, match="A party needs one who does besides its leader"):
+            host.command("ideas.goal_save", {"about": "x", "craft": "engineering", "leader": "architect", "team": team})
+    ok = host.command("ideas.goal_save", {"about": "x", "craft": "engineering", "leader": "architect", "team": ["grunt", "reviewer"]})["slug"]
+    with pytest.raises(CommandError, match="needs one who does"):
+        host.command("ideas.goal_save", {"slug": ok, "team": ["reviewer"]})                                   # taking the last who does out
+    root = host.ideas.root()
+    old = host.command("ideas.goal_save", {"about": "y", "craft": "engineering"})["slug"]
+    goal_team.set_team(root, old, ["reviewer"], [], "architect")                                               # made before: none who does
+    host.command("ideas.goal_save", {"slug": old, "team": ["reviewer"], "leader": "architect"})                # saved as it is: kept
+    with pytest.raises(CommandError, match="needs one who does"):
+        host.command("ideas.goal_save", {"slug": old, "team": ["reviewer", "security-reviewer"], "leader": "architect"})
+    assert goal_team.does_missing(["grunt"], "architect") == "" and goal_team.does_missing([], "taskmaster") == ""

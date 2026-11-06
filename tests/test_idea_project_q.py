@@ -391,7 +391,7 @@ def _goal(host, party):
 
 def _design(host, model):
     """A party the person saves with *Save party* (its goal is read by the keeper at once: that call is no question of the project's)."""
-    slug = host.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": ["accessibility-reviewer"]})["slug"]
+    slug = host.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": ["ui-kit", "accessibility-reviewer"]})["slug"]
     for _ in range(1000):
         if not host.ideas.keeper.busy(f"goal:{slug}"):
             break
@@ -421,7 +421,7 @@ def test_party_save_with_first_true_is_not_refused_where_the_questions_cannot_be
 
 def test_party_save_with_first_true_is_never_refused(fake_repo):
     h = Orkboard(fake_repo)
-    goal = h.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": ["accessibility-reviewer"]})["slug"]
+    goal = h.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": ["ui-kit", "accessibility-reviewer"]})["slug"]
     assert set(h.command("ideas.party_save", {"goal": goal, "name": "Design alone", "first": True})) == {"id"}
 
 

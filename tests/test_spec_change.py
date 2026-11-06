@@ -196,6 +196,7 @@ def test_accept_writes_both_sections_and_one_decisions_line_and_is_the_look_no_n
     assert answered["answer"] == "take" and answered["parties"] == [tech, design]
     ideas_tasks = {t["id"]: t for t in plan["tasks"]}
     assert ideas_tasks["k2"]["title"] == "Winner first", "the leader's plan change for its tasks not started is taken too"
+    assert ideas_tasks["k2"].get("role") in ("grunt", "tester") and ideas_tasks["k2"].get("role") != "architect"      # the leader never does a task (spec 152 A.2)
     with pytest.raises(CommandError, match="No change waits"):
         host.command("ideas.spec_change_take", {"idea": slug, "id": got["id"]})
 

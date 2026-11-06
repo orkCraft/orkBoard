@@ -78,8 +78,9 @@ def test_a_partys_line_its_heads_and_its_shadows_and_the_size_changes_them_at_on
     r = row(pg, "game-design")
     assert r.get_attribute("data-size") == "lean" or r.get_attribute("data-size") == "standard"
     r.locator('[data-size="lean"]').click()
-    assert r.locator(".pc-grp [data-seat]").count() == 0 and r.locator(".pc-hd.is-empty").count() >= 3, "Lean: the seats are shadows"
-    assert "Lean: the leader does it, and checks it itself" in r.inner_text()
+    assert r.locator('.pc-grp[data-band="build"] [data-seat]').count() == 1 and r.locator('.pc-grp[data-band="check"] [data-seat]').count() == 0, "Lean: the first who does, no checker"
+    assert r.locator(".pc-hd.is-empty").count() >= 3, "Lean: the rest are shadows"
+    assert "Lean: one does it, the leader accepts it" in r.inner_text()
     assert "is-dim" in r.locator('.pc-grp[data-band="check"]').get_attribute("class")
     r.locator('[data-size="standard"]').click()
     assert r.locator('.pc-grp[data-band="build"] [data-seat]').count() == 2 and r.locator('.pc-grp[data-band="check"] [data-seat]').count() == 1

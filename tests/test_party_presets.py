@@ -43,9 +43,10 @@ def test_a_row_says_its_stage_its_proposed_size_the_roles_to_tick_and_the_squad_
     assert (tech["name"], tech["leader"], tech["build"], tech["check"], tech["squad"], tech["locked"]) == (
         "Tech", "architect", ["grunt", "tester"], ["reviewer", "security-reviewer"], ["grunt", "tester", "reviewer"], False)
     release = rows["release"]
-    assert (release["leader"], release["squad"], release["locked"]) == ("release-manager", [], True)
-    assert [release["sizes"][s]["tiers"] for s in idea_target.SIZES] == [{"release-manager": "warrior"}] * 3
-    assert tech["sizes"]["lean"]["tiers"] == {"architect": "warrior", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}
+    assert (release["leader"], release["squad"], release["locked"]) == ("release-manager", ["release-engineer", "release-notes"], True)
+    both = {"release-manager": "warrior", "release-engineer": "warrior", "release-notes": "warrior"}
+    assert [release["sizes"][s]["tiers"] for s in idea_target.SIZES] == [both, {"release-manager": "warrior", "release-engineer": "warrior"}, both]
+    assert tech["sizes"]["lean"]["tiers"] == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}
     assert tech["sizes"]["standard"]["tiers"] == {"architect": "elder", "grunt": "warrior"}
     assert tech["sizes"]["full"]["tiers"] == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder"}
     game = {r["id"]: r for r in party_presets.listed("game")}

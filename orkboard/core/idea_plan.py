@@ -247,14 +247,12 @@ Answer with one JSON object and nothing else:
             track = self._into(slug, n)
             text, *_rest = self.ask("plan", self.plan_prompt(root, slug, n))
             data = kw.make_plan(slug, self.cascade_seen(self.parse(text), self._step_party(slug, n), "plan", slug), look="" if later else idea_look.screen_title(self.state_dir, root, slug))
-            data["tasks"] = idea_checks.with_check_tasks(data["tasks"], self.idea_checks(root, slug), self.team_checks(root, slug), _task)
-            team = goal_team.for_idea(root, slug)
+            data["tasks"] = idea_checks.with_check_tasks(data["tasks"], self.idea_checks(root, slug), self.team_checks(root, slug), _task,
+                                                         goal_team.size_of(root, track) if track else "")      # the size's checks (spec 152 A.4)
+            team = goal_team.for_idea(root, slug)        # the squad: a leader leads and never does a task (spec 152 A.2)
             lead = goal_team.leader_of(root, track)
-            if team and lead not in team:
-                team = [*team, lead]                     # the leader does the tags it takes when no builder does
-            lean = goal_team.lean_role(root, track) if track else ""         # a Lean party's leader does it all (spec 81 §2)
-            for t in data["tasks"]:                      # who of the goal's team does it, by its tag (none: the project's)
-                t["role"] = lean or (roles.role_for(self.state_dir, t["kind"], team)["slug"] if team else "")
+            for t in data["tasks"]:                      # who of the goal's squad does it, by its tag (none: the project's role, else Grunt)
+                t["role"] = roles.role_for(self.state_dir, t["kind"], team)["slug"] if team else ""
             data["missing"] = goal_types.of_plan(self.state_dir, data["tasks"], team, lead) if team else []     # what no one of the party does (spec 52 §2.6)
             target = self.target()
             tiers = goal_team.tiers_of(root, track) if track else {}

@@ -41,9 +41,11 @@ def test_a_column_that_mixes_tools_shows_the_most_used_with_a_dot():
     assert got["checks_mixed"] is True and got["checks_tool"] in ("claude", "codex")      # one each: the first seat's
 
 
-def test_a_lean_party_has_no_separate_check_and_so_no_shield_mark():
+def test_a_lean_partys_shield_is_its_leaders_tool_its_acceptance_is_the_check():
     got = MapMixin.marks_of(goal(team=["grunt", "reviewer"], size="lean", tool="codex"), "claude")
-    assert got == {"does_tool": "codex", "checks_tool": "", "does_mixed": False, "checks_mixed": False, "lean": True, "does_default": False, "checks_default": False}
+    assert got == {"does_tool": "codex", "checks_tool": "codex", "does_mixed": False, "checks_mixed": False, "lean": True, "does_default": False, "checks_default": False}
+    lone = MapMixin.marks_of(goal(team=["grunt", "reviewer"], size="lean", tools={"architect": "agy", "reviewer": "claude"}), "claude")
+    assert lone["checks_tool"] == "agy" and lone["lean"] is True        # at Lean the checking seats are not read: the leader accepts (spec 152 A.7)
 
 
 def test_with_no_checker_the_leader_checks_and_with_no_doer_the_leader_does():
@@ -70,11 +72,13 @@ def test_a_seats_own_tool_sets_only_its_side():
     assert got["does_default"] is False and got["does_mixed"] is True and got["checks_default"] is True      # one doer set: the Does side no longer follows
 
 
-def test_with_no_checker_the_leader_decides_that_sides_default_and_a_lean_check_follows_nothing():
+def test_with_no_checker_the_leader_decides_that_sides_default_and_a_lean_check_follows_the_leaders_side():
     got = MapMixin.marks_of(goal(team=["grunt"], tools={"architect": "codex"}), "claude")
     assert got["does_default"] is True and got["checks_default"] is False                      # the leader checks, and the leader is set
     lean = MapMixin.marks_of(goal(team=["grunt", "reviewer"], size="lean"), "claude")
-    assert lean["does_default"] is True and lean["checks_default"] is False and lean["checks_tool"] == ""      # Lean: no separate check, so no default to follow
+    assert lean["does_default"] is True and lean["checks_default"] is True and lean["checks_tool"] == "claude"      # Lean: the leader's acceptance, so the leader's side: nothing set, it follows the default
+    lean = MapMixin.marks_of(goal(team=["grunt", "reviewer"], size="lean", tools={"architect": "codex"}), "claude")
+    assert lean["checks_default"] is False and lean["checks_tool"] == "codex"
 
 
 def test_the_maps_party_nodes_carry_them_from_the_pages_and_the_machines_main_tool(host):
@@ -88,7 +92,7 @@ def test_the_maps_party_nodes_carry_them_from_the_pages_and_the_machines_main_to
     parties = {g["slug"]: g for g in host.command("ideas.map", {})["goals"]}
     main = machine.main_tool(host.machine)
     assert (parties[p]["does_tool"], parties[p]["checks_tool"], parties[p]["lean"]) == ("codex", "claude", False)
-    assert (parties[q]["does_tool"], parties[q]["checks_tool"], parties[q]["lean"]) == (main, "", True)
+    assert (parties[q]["does_tool"], parties[q]["checks_tool"], parties[q]["lean"]) == (main, main, True)
     assert all(parties[s]["does_mixed"] is False and parties[s]["checks_mixed"] is False for s in (p, q))
     assert (parties[p]["does_default"], parties[p]["checks_default"]) == (False, False)                      # the party is set to Codex
-    assert (parties[q]["does_default"], parties[q]["checks_default"]) == (True, False)                       # nothing set; Lean has no check
+    assert (parties[q]["does_default"], parties[q]["checks_default"]) == (True, True)                       # nothing set; Lean's check is its leader's

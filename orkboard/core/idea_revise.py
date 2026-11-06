@@ -124,11 +124,8 @@ class ReviseMixin:
         self._start(slug, "planning", lambda: self.revise_one(slug))
 
     def plan_team(self, root: Path, slug: str) -> list[str]:
-        """The goal's team as the plan gives its tasks their roles: the party and its leader (who does the tags no builder does)."""
-        team = goal_team.for_idea(root, slug)
-        if team and (lead := goal_team.leader_of(root, (ideas.idea_page(root, slug) or ideas.Page()).get("track") or "")) not in team:
-            team = [*team, lead]
-        return team
+        """The goal's squad as the plan gives its tasks their roles: the seats that do and check, never the leader (spec 152 A.2)."""
+        return goal_team.for_idea(root, slug)
 
     def revise_prompt(self, root: Path, slug: str) -> str:
         """§0's `plan` context, and three parts more (spec 62 §2.2): what changed; what is done and at work, which stay as they are; the
@@ -224,10 +221,8 @@ Answer with one JSON object and nothing else:
             plan = ideas.plan(self.state_dir, slug) or {}
             got = clean_change(plan, self.parse(text))
             team = self.plan_team(root, slug)
-            track = (ideas.idea_page(root, slug) or ideas.Page()).get("track") or ""
-            lean = goal_team.lean_role(root, track) if track else ""         # a Lean party's leader does it all (spec 81 §2)
             for row in [*got["change"], *got["add"]]:
-                row["role"] = lean or (roles.role_for(self.state_dir, row["kind"], team)["slug"] if team else "")
+                row["role"] = roles.role_for(self.state_dir, row["kind"], team)["slug"] if team else ""
             got["changed"] = idea_change.changed_of(ideas.state(self.state_dir, slug))
             got["estimate"] = self.change_price(plan, got)
             with ideas.LOCK:

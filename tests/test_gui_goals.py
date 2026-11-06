@@ -384,7 +384,7 @@ def test_general_team_and_ideation_are_not_made_and_a_party_of_a_craft_is(host):
 def test_the_board_row_of_a_party_says_its_craft_its_race_and_its_leaders_higher_form(host):
     root = host.ideas.root()
     slug = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": ["grunt"], "proposal": "tech"})["slug"]
-    old = host.command("ideas.goal_save", {"title": "Screens", "about": "Looks.", "craft": "design", "leader": "product-designer", "team": []})["slug"]    # made with no recipe
+    old = host.command("ideas.goal_save", {"title": "Screens", "about": "Looks.", "craft": "design", "leader": "product-designer", "team": ["ui-kit"]})["slug"]    # made with no recipe
     alone = host.command("ideas.goal_save", {"title": "Alone", "about": "x"})["slug"]
     rows = {g["slug"]: g for g in host.command("ideas.board")["tracks"]}
     assert (rows[slug]["party_craft"], rows[slug]["race"], rows[slug]["leader"]["head"]["race"]) == ("tech", "peon", "shaman")

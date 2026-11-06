@@ -9,7 +9,7 @@
 
 **The crafts by stage**: *Idea* the concept's crafts (Game design and Art; Product and Design), lean; *Being made* adds Tech, standard; *Live* adds LiveOps or
 Run, and Marketing (§151.7), standard. **Release is in every project at every stage** (§137.1): its card is `locked` (ticked, never unticked, never dropped),
-Lean, its leader alone (`squad` is empty) on the cheaper tier (§151.6, §157.2: Seasoned). A card is `{id, name, line, craft, leader, build, check, squad, size,
+Lean, its leader and its engineer and notes (`squad`: a party holds one who does, spec 152 A.5), the leader on the cheaper tier (§151.6, §157.2: Seasoned). A card is `{id, name, line, craft, leader, build, check, squad, size,
 tiers, from, locked, because}`; `from` is the stage that adds it, so a face groups the cards under the stages' headings. The names `idea` · `being_made` ·
 `live` are code's; the face says Idea, Being made and Live (spec 100; the host returns keys, never words). No face, no model; the project's names are read, never
 a file's contents.
@@ -114,10 +114,10 @@ def offered(kind: str) -> dict[str, list[dict]]:
 
 
 def release_card() -> dict:
-    """Release's card (in every project): Lean, its leader alone."""
+    """Release's card (in every project): Lean, its leader and the two who do."""
     return card(party_recipes.CRAFTS[party_recipes.RELEASE])
 
 
 def leader_tier() -> str:
-    """The tier Release's leader runs on (§151.6, §157.2): the cheaper one, Seasoned."""
-    return party_recipes.tiers_for(library.RELEASE_MANAGER, [], "lean")[library.RELEASE_MANAGER]
+    """The tier Release's leader runs on (§151.6, §157.2): its own, the cheaper one, Seasoned, at every size."""
+    return party_recipes.tiers_for(library.RELEASE_MANAGER, [], "standard")[library.RELEASE_MANAGER]
