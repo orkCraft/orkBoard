@@ -19,14 +19,14 @@ schema: 3
 What trial 152 found: one bad page never stops the Board; a step that changed what people see is looked at or said unlooked; a doubt the code settles is checked and a question a reference settles answered without the person; the weigher weighs only; the Board in the code opens as it is.
 
 ## Stages
-- [ ] A. One bad page never stops the Board
-- [ ] B. A step nobody looked at; a screen's line
-- [ ] C. The plan and the diff
-- [ ] D. A doubt checked, a question settled
-- [ ] E. The weigher weighs only
-- [ ] F. The Board in the code is laid, its leaders seated
-- [ ] G. Opening writes nothing it need not; history is not news
-- [ ] H. This repository's Board files
+- [x] A. One bad page never stops the Board
+- [x] B. A step nobody looked at; a screen's line
+- [x] C. The plan and the diff
+- [x] D. A doubt checked, a question settled
+- [x] E. The weigher weighs only
+- [x] F. The Board in the code is laid, its leaders seated
+- [x] G. Opening writes nothing it need not; history is not news
+- [x] H. This repository's Board files
 
 ## Open questions
 
