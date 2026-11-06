@@ -21,7 +21,7 @@ from orkboard.realm import agent_rules, agent_rules_text as T, goal_phase, idea_
 DEFAULT_WIKI = "llm-wiki/general"
 WORKFLOW = ".github/workflows/orkboard-check.yml"
 STAMP = "# Written by Orkboard (orkboard init --ci)."
-INIT = "run uvx orkboard init"
+INIT = f"run {T.RUN} init"
 GREEN = re.compile(r"^[0-9a-f]{4,40}\s*·\s*\d+\s+files?\s*·\s*green$")        # `goal_phase.gate_of`'s line
 _NAMED = re.compile(r"the goals `([^`\n]*?)/?pages/ideas/<slug>\.md`")
 _SKIP = ("index.md", "CLAUDE.md", "AGENTS.md", "BOARD.md")
@@ -239,7 +239,7 @@ def run(root: Path) -> list[dict]:
 # -- the CI step (E.3) ---------------------------------------------------------------------------------------------------------------
 
 def workflow(wiki: str) -> str:
-    """`.github/workflows/orkboard-check.yml`: on a pull request that touches the Board's folder, `AGENTS.md` or `CLAUDE.md`, `uvx orkboard check`. It has no `push` trigger, so a Board commit
+    """`.github/workflows/orkboard-check.yml`: on a pull request that touches the Board's folder, `AGENTS.md` or `CLAUDE.md`, Orkboard's `check` run from git (`agent_rules_text.RUN`). It has no `push` trigger, so a Board commit
     starts nothing; the project's own tests stay its own CI's."""
     folder = f"{wiki.strip('/')}/**" if wiki.strip("/") else "pages/**"
     return f"""{STAMP}
@@ -262,7 +262,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uvx orkboard check
+      - run: {T.RUN} check
 """
 
 

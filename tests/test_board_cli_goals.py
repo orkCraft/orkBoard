@@ -264,7 +264,7 @@ def test_init_writes_the_rules_and_the_ci_step_and_commits_nothing(repo, capsys)
     assert "wrote AGENTS.md" in out and f"wrote {WIKI}/BOARD.md" in out and "wrote .github/workflows/orkboard-check.yml" in out and "commits nothing" in out
     assert agent_rules.has_rules(repo) and agent_rules.check(repo, WIKI, decisions=agent_rules.decisions_of(repo)) == []
     text = (repo / ".github/workflows/orkboard-check.yml").read_text(encoding="utf-8")
-    assert "pull_request:" in text and f'"{WIKI}/**"' in text and "uvx orkboard check" in text and "push" not in text
+    assert "pull_request:" in text and f'"{WIKI}/**"' in text and "uvx --from git+https://github.com/orkCraft/orkBoard orkboard check" in text and "push" not in text
     assert ob("init") == 0 and "nothing to write" in capsys.readouterr().out    # twice changes nothing
     assert head(repo) == before
 

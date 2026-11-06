@@ -6731,7 +6731,7 @@ was asked. So:
    `@AGENTS.md` (Claude Code reads CLAUDE.md). The details are the Board folder's `BOARD.md` (the page's format, the phases, a
    question's line and its answer's, the gate's record, taking a goal), and the folder's own `AGENTS.md` and `CLAUDE.md` point
    to it, so a tool loads it where it works. The person's own words in these files are never touched, and **the project's own
-   rules win over the block**: where they conflict, a tool asks. Written on the person's yes (Settings, or `uvx orkboard init`
+   rules win over the block**: where they conflict, a tool asks. Written on the person's yes (Settings, or `orkboard init`
    in the project) and committed as the Board's pages are; written again when Orkboard's rules change (12).
 6. **The roles in the project.** Each seat's instruction that Orkboard gives a model (the Orkmaster's route, each craft's
    leader: its say in Talk, its sections, its *no* and where it hurts as spec 108 has it; the Taskmaster; a Grunt) is a file of
@@ -6760,12 +6760,14 @@ was asked. So:
    its `until` is. Orkboard takes a goal the same way once the rules are written (5). A tool that cannot push follows it as a
    rule, not a guarantee, and the rules say so.
 9. **The levels**: **the rules alone** (any tool, nothing installed: it reads everything and writes by the rules; Orkboard
-   checks the pages when it next reads them) · **`uvx orkboard` from a terminal, with no app running** (`init`,
+   checks the pages when it next reads them) · **`orkboard` from a terminal, with no app running**, run from git (`uvx --from
+   git+https://github.com/orkCraft/orkBoard orkboard`: Orkboard is not on PyPI, and a package of that name there would be someone
+   else's, so no rule ever says `uvx orkboard`) (`init`,
    `goal list|add|take|phase|ask|answer`, `gate`, `check`: the writes checked; `orkboard drive` stays the served page's) · **an
    MCP server of the same commands**, later, when the terminal's have been used · **Orkboard**. `orkboard check` reads the Board as
    Orkboard does and fails (for CI) on a page it cannot read, a phase it does not know, a `done` with no green gate, a secret's
    shape, a rules block or a role file that is not Orkboard's own (by its hash: a changed one is said, never followed), and a
-   `schema` older than this Orkboard writes (*The Board's rules are v1, this Orkboard writes v2: run uvx orkboard init*); it is
+   `schema` older than this Orkboard writes (*The Board's rules are v1, this Orkboard writes v2: run orkboard init*); it is
    offered as a step of the project's CI on the person's yes, as §244.6 writes a workflow.
 10. **A public repository: the Board in the code only on the person's yes** (this changes §244.11 for the code; the Board's
     branch stays private only). Before the yes, said plainly: *Your goals, their specs, the leaders' words and the decisions will

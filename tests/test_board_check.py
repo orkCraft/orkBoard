@@ -131,19 +131,19 @@ def test_rules_that_are_missing_changed_by_hand_or_of_an_older_schema_are_found(
     agent_rules.write(repo, WIKI)
     (repo / ".claude" / "skills" / "orkboard" / "SKILL.md").unlink()
     f = only(repo, "is missing")
-    assert f == {"path": ".claude/skills/orkboard/SKILL.md", "line": 0, "what": "Orkboard's file is missing: run uvx orkboard init"}
+    assert f == {"path": ".claude/skills/orkboard/SKILL.md", "line": 0, "what": f"Orkboard's file is missing: run {T.RUN} init"}
     agent_rules.write(repo, WIKI)
     agents = repo / "AGENTS.md"
     agents.write_text(agents.read_text(encoding="utf-8").replace(f"schema={T.SCHEMA} ", "schema=0 "), encoding="utf-8")
     f = only(repo, "v0")
-    assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v0, this Orkboard writes v{T.SCHEMA}: run uvx orkboard init"
+    assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v0, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init"
 
 
 def test_a_project_with_no_rules_at_all_is_told_once(repo):
     for rel in ("AGENTS.md", "CLAUDE.md", ".claude", WIKI):
         p = repo / rel
         shutil.rmtree(p) if p.is_dir() else p.unlink()
-    assert board_check.run(repo) == [{"path": "AGENTS.md", "line": 0, "what": "The Board's rules are not written in this project: run uvx orkboard init"}]
+    assert board_check.run(repo) == [{"path": "AGENTS.md", "line": 0, "what": f"The Board's rules are not written in this project: run {T.RUN} init"}]
 
 
 def test_a_journal_line_of_an_unknown_kind_is_found_at_its_line(repo):
@@ -188,5 +188,5 @@ def test_the_boards_folder_is_the_one_the_block_names_when_two_hold_pages(repo):
 def test_the_ci_steps_file_runs_on_pull_requests_for_the_boards_files_only():
     text = board_check.workflow(WIKI)
     assert "on:\n  pull_request:\n    paths:\n" in text and f'      - "{WIKI}/**"\n      - "AGENTS.md"\n      - "CLAUDE.md"\n' in text
-    assert "push" not in text and "uvx orkboard check" in text and "astral-sh/setup-uv" in text
+    assert "push" not in text and f"{T.RUN} check" in text and "uvx orkboard check" not in text and "astral-sh/setup-uv" in text
     assert "Checks the Board on each pull request; your tests stay your CI's." in text

@@ -23,7 +23,7 @@ import sys
 import threading
 from pathlib import Path
 
-from orkboard.realm import agent_rules, board_check, goal_phase, goal_take, idea_questions, ideas
+from orkboard.realm import agent_rules, agent_rules_text, board_check, goal_phase, goal_take, idea_questions, ideas
 from orkboard.realm.idea_page import Page
 
 PHASE_WORDS = ", ".join(goal_phase.PHASES)
@@ -113,7 +113,7 @@ def _init(args: argparse.Namespace) -> int:
         if board_check.write_workflow(root, rel):
             print(f"wrote {board_check.WORKFLOW}")
         else:
-            print(f"{board_check.WORKFLOW} is your own file and stays; add `uvx orkboard check` to it, or move it and run this again")
+            print(f"{board_check.WORKFLOW} is your own file and stays; add `{agent_rules_text.RUN} check` to it, or move it and run this again")
     if written or args.ci:
         print(COMMIT_YOURSELF)
     return 0
