@@ -134,12 +134,14 @@ def test_product_weighs_a_goal_it_is_not_routed_on_with_a_verdict_and_a_priority
     weigh = next(c for c in calls if c["party"] == parties["product"])["prompt"]
     assert "not routed to your party" in weigh and "weigh it against the goals in line" in weigh and "Read no file" in weigh
     assert '"priority"' in weigh and '"questions"' not in weigh and "Ask nothing" in weigh                              # no question, no stance, no section later
+    assert '"verdict"' not in weigh and '"instead"' not in weigh and "weigh only" in weigh                              # it weighs: no go, doubt or no (spec 155 E)
     assert (_state(host, slug)["route"]) == [{"party": parties["tech"], "leader": "architect"}]                          # it is not on the route
     rec = _record(host, slug)
     assert [(s["party"], s["weigher"]) for s in rec["stances"]] == [(parties["tech"], False), (parties["product"], True)]
     weigher = rec["stances"][1]
     assert (weigher["verdict"], weigher["why"], weigher["instead"], weigher["priority"], weigher["stance"], weigher["craft"]) == (
-        "doubt", "Is it worth it before the lobby?", "Only the setting", "low", "", "product")
+        "go", "Is it worth it before the lobby?", "", "low", "", "product")                                             # its doubt opens nothing (spec 155 E)
+    assert not rec.get("hearing") and rec["objections"] == [] and _row(host, slug, "talk") is not None
     assert [c["by"] for c in rec["waiting"]] == [parties["tech"]] and rec["second"] == []                              # its question and its second round were never taken
     assert rec["weight"]["priority"] == "low" and sorted(rec["heard"]) == sorted([parties["tech"], parties["product"]])
     (told,) = [e for e in _events(host, event_log.TALK_HEARD) if e["weigher"] is True]
@@ -147,11 +149,27 @@ def test_product_weighs_a_goal_it_is_not_routed_on_with_a_verdict_and_a_priority
 
 
 @pytest.mark.weighs
-def test_a_weighers_no_is_an_objection_like_any_leaders(host, parties, model):
+def test_a_weighers_no_makes_no_objection_and_its_priority_is_kept(host, parties, model):
     _noes(model, parties, per=0, product={"verdict": "no", "why": "Not before the lobby", "priority": "low"})
     slug = _talk(host, parties, ["tech"])
-    (row,) = _objections(host, slug)
-    assert row["party"] == parties["product"] and row["why"] == "Not before the lobby" and row["leader"] == "product-manager"
+    assert _objections(host, slug) == []
+    rec = _record(host, slug)
+    assert rec["weight"]["priority"] == "low" and not rec.get("hearing")
+    line = next(t["text"] for t in ideas.talk(host.ideas.state_dir, slug) if t["section"] == "Talk" and "weighs it" in t["text"])
+    assert "weighs it: low — Not before the lobby" in line and "For: —" not in line.split("weighs it")[1]                # the weigher's record line (spec 155 E)
+
+
+def test_a_weighers_stance_counts_in_no_objection_no_hearing_no_rejudging():
+    from orkboard.core.idea_talk import TalkMixin
+    from orkboard.core.idea_verdict import VerdictMixin
+    from orkboard.realm import idea_hearing, idea_objections
+    w = {"party": "p", "leader": "pm", "weigher": True, "verdict": "no", "why": "Not now", "after": "x", "instead": "", "priority": "low"}
+    assert idea_objections.made([w]) == [] and idea_objections.made([{**w, "weigher": False}]) != []
+    assert idea_hearing.of_talk({"stances": [w]}, lambda leader: leader)["sides"][0]["leaders"] == []
+    assert TalkMixin._held({"stances": [{**w, "verdict": "doubt"}]}) is False
+    assert TalkMixin._held({"stances": [{**w, "verdict": "doubt", "weigher": False}]}) is True
+    rec = {"stances": [w, {"party": "t", "verdict": "doubt"}]}
+    assert VerdictMixin.rejudges(None, rec, [{"how": "text", "id": "c", "by": "t", "answer": "a"}]) == ["t"]
 
 
 @pytest.mark.weighs

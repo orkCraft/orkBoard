@@ -67,7 +67,7 @@ def _side(kind: str, group: list[dict], name_of: Callable[[str], str], line: str
 def of_talk(rec: dict, name_of: Callable[[str], str]) -> dict:
     """The hearing of a Talk's disagreement: `{moment: "talk", title, sides: [...], left_out: [...], own: true}` from the stances of its record (`party`, `leader`, `verdict`, `why`,
     `for`, `instead`, `after`, and `after_title` when the goal named is in line). `name_of(leader)`: the name a leader is called by. Never more than three sides."""
-    stances = [s for s in rec.get("stances") or [] if isinstance(s, dict) and s.get("party") and s.get("leader")]
+    stances = [s for s in rec.get("stances") or [] if isinstance(s, dict) and s.get("party") and s.get("leader") and not s.get("weigher")]      # the weigher weighs only (spec 155 E)
     against = [s for s in stances if s.get("verdict") in ("no", "doubt") and _s(s.get("why"))]
     goes = [s for s in stances if s not in against]
     drop = [s for s in against if s["verdict"] == "no" and not _s(s.get("instead")) and not _s(s.get("after"))]

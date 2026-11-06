@@ -106,6 +106,15 @@ def clean_judgement(answer: object, craft: str = "", line: Iterable[str] = ()) -
     return {**clean_verdict(answer, line), **clean_weight(answer, craft)}
 
 
+def clean_weigh(answer: object, craft: str = "", line: Iterable[str] = ()) -> dict | None:
+    """What the weigher gives (spec 155 E, decisions §260.7), strictly: a verdict shaped like `clean_judgement`'s but always `go` with no `instead`, its `why` (one line), the `after` (a goal
+    in `line` it should wait for) and its `priority`. A doubt or a no it may write opens nothing. None when the answer is no object."""
+    if not isinstance(answer, dict):
+        return None
+    after = answer.get("after").strip() if isinstance(answer.get("after"), str) else ""
+    return {"verdict": "go", "why": _line(answer.get("why")), "instead": "", "after": after if after in set(line) else "", **clean_weight(answer, craft)}
+
+
 def clean_assumes(value: object) -> dict:
     """What a leader says the goal rests on that no one has shown (spec 116 §3), strictly: `{text, signal}`, a line each of `LINE` characters at most, or `{}` when it says none. The
     shape asked for is an object (`text`: the assumption, `signal`: what would show it); a bare line is the text alone (`signal` is ""), as a leader that writes less still has said it."""

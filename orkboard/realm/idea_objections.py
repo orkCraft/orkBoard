@@ -44,9 +44,9 @@ def lens(craft: str) -> str:
 
 
 def made(stances: list[dict]) -> list[dict]:
-    """The objections of a round: one for each stance whose verdict is `no`, in the route's order, unanswered."""
+    """The objections of a round: one for each stance whose verdict is `no`, in the route's order, unanswered. The weigher's stance (`weigher: true`) makes none (spec 155 E)."""
     return [{"party": s["party"], "leader": s["leader"], "why": s.get("why", ""), "instead": s.get("instead", ""), "after": s.get("after", ""), "answer": ""}
-            for s in stances if isinstance(s, dict) and s.get("verdict") == "no" and s.get("why")]
+            for s in stances if isinstance(s, dict) and not s.get("weigher") and s.get("verdict") == "no" and s.get("why")]
 
 
 def pending(rec: dict) -> list[dict]:
