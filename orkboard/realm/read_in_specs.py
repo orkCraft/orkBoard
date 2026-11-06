@@ -39,7 +39,8 @@ def _title(heading: str) -> str:
     """The heading without its number, cut where its subtitle starts (`Title: what it builds`, `Title; and more`)."""
     head = re.split(r": |; ", heading, maxsplit=1)[0]
     title = head if len(head) >= 3 else heading
-    title = title[:1].upper() + title[1:]                     # a goal's title starts as a sentence does (`# Spec 35 — the Board` → *The Board*)
+    if title.split(" ", 1)[0].isalpha():                     # a goal's title starts as a sentence does (`# Spec 35 — the Board` → *The Board*); `v1` stays a version
+        title = title[:1].upper() + title[1:]
     return title if len(title) <= TITLE_CHARS else title[:TITLE_CHARS - 1].rsplit(" ", 1)[0]
 
 
