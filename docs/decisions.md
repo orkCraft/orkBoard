@@ -7352,3 +7352,32 @@ number goes*. So:
    are used (§266.4); the mockup's heroes follow with the first spec.
 7. **The words**: the heroes' names are words of the interface (§164.3), in `TERMS` with the first spec.
 The owner's call.
+
+## 268. A game's heroes: Game design's and Art's, LiveOps' chair empty until its map; the game's star mended (7 November 2026, the owner)
+
+Changes: 267 (its point 5: a game's star).
+
+Why: the owner asked whether §267's heroes fit every kind of project there is. Weighed against the parties each kind is
+given (`party_recipes.RECIPES`: nine kinds take Product, Design, Tech, Release, Run and Marketing; a game takes Game design,
+Tech, Art, Release, LiveOps and Marketing) and against what System reads (Python and JS/TS, Godot, Unity and Unreal): a web
+app takes all fifteen; a mobile app most, React Native and Expo best (Flutter and native apps have no System, and Play is the
+web client); a backend and code or data work take Tech, Product and Release, with Design empty and Run in part; a designer's
+folder, a wiki, texts and an empty folder take mostly the heroes that stand on the brief or the sketches. **A game had no
+hero at Game design, Art or LiveOps**, and §267.5 starred Jobwise Knight and Sprint Dryad for a game, whose chairs a game does
+not have. So, by §267.1's rule (a hero works on what is built today):
+1. **Game design's heroes** (the Loop map and its hints are built): *Dungeon Master Knight* (MDA and the loops; loop →
+   reward → hook, on `no_reward`, `unfed`, `flat`, `spike`, `no_hook`), *Economy Knight* (sources and sinks; currency →
+   source → sink, on `no_source`, `pile_up`), and *Pillar Knight* seated here too (the pillars over the loop are Game
+   design's, §211.3), as at Product.
+2. **Art's hero** (the Assets map and its hints are built): *Sprite Dryad* (an art bible, its pipeline and a budget; style →
+   pipeline → budget, on `mixed_sizes`, `naming`, `unused`, `heavy`).
+3. **LiveOps' chair stays empty** until its map (§215) is built: no map and no hint, so no hero; *Event Imp* comes with it.
+4. **A game's star** (this replaces §267.5's for a game): *Dungeon Master Knight*, *Sprite Dryad*, *Scene Shaman*, *Position
+   Gnome*. An app's stays as §267.5 says.
+5. **What each kind takes is said, not hidden**: a hero with nothing to stand on in the project's kind (Scene Shaman outside a
+   game, Design's heroes in a backend, a wiki or texts, Store Gnome with no store) is not offered there; a chair whose craft
+   has no hero for the kind is an empty chair. That a wiki or texts is given a Design chair at all is the parties' recipe's
+   question, not the heroes': later.
+6. **The new faces**: *Dungeon Master Knight*, *Economy Knight* and *Sprite Dryad* are drawn in orkUI before they are used
+   (§266.4), with §267.6's four; their names in `TERMS` with the first spec (§267.7).
+The owner's call.
