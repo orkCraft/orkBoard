@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
 <link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
 <link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<link rel="stylesheet" href="tables.css">
 <style>
 /* An experiment, not a goal (the owner, 6–7 November 2026): the Inventory, how the project is set, as the chairs, the table and the
    hand. The backpack at the chairs' end (after Release and the empty chair, before Stop all's door) opens it: the table's edge is
@@ -113,19 +114,11 @@ button { font: inherit; }
 .says b { color: var(--ork-ink); font-weight: 600; }
 .win.inv .says { display: flex; }
 /* the Board's lanes, while the Inventory is shut */
-.lanes { display: grid; grid-template-columns: repeat(5, 160px); gap: 12px; margin-top: 10px; padding-left: 10px; }
-.win.inv .lanes { display: none; }
+.lanes { margin-top: 2px; }
+.lane-empty { height: 440px; display: grid; place-items: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
 .lane { height: 420px; background: color-mix(in srgb, var(--ork-ink) 3%, transparent); padding: 10px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .mini { width: 64px; height: 90px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch); font: 600 10px/12px var(--ork-font-read); color: var(--ork-ink-read); }
 .mini .ork-elem { align-self: flex-end; }
-/* the ways, a row a part */
-.rows { display: none; flex-direction: column; gap: var(--ork-6); margin-top: 14px; }
-.win.inv .rows { display: flex; }
-.row { display: grid; grid-template-columns: 150px 1fr; gap: var(--ork-5); align-items: center; }
-.row__lab { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.row__lab b { display: block; color: var(--ork-ink); font-weight: 600; }
-.row__opts { display: flex; flex-wrap: wrap; gap: var(--ork-5); align-items: flex-end; }
-.rows__empty { color: var(--ork-ink-faint); font: var(--ork-type-caption); padding: 30px 0 0; }
 .ware { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .ware .face { cursor: pointer; }
 .ware:not(.mine):not(.locked):hover .face { transform: translateY(-6px); border-color: var(--ork-edge); }
@@ -221,24 +214,78 @@ button { font: inherit; }
 .receipt { margin-top: var(--ork-6); min-height: 20px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .receipt b { color: var(--ork-ink); font-weight: 600; }
 
-/* ---------- the sheet on the table, the ways in the hand ---------- */
-.tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px; border: var(--ork-line) solid transparent; cursor: pointer; }
-.tile:hover { border-color: var(--ork-frame); }
-.tile.is-on { border-color: var(--ork-ink); }
-.tile.fixed { cursor: default; }
-.tile > small { max-width: 150px; text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; line-height: 14px; }
-.tile .yours { padding: 0 4px; border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink); }
-.tile .heros { font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink-faint); }
-.tile.ghost .face { opacity: .7; border-style: dashed; border-color: var(--ork-edge); }
-.tile.pulse .face { animation: pulse .5s var(--ork-motion-ease); }
-.offer { display: none; gap: var(--ork-6); align-items: flex-end; padding: 0 0 0 30px; min-height: 290px; flex-wrap: nowrap; }
-.win.inv .offer { display: flex; }
-.offer__hint { align-self: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
-.offer__lab { align-self: flex-start; width: 110px; flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); padding-top: 8px; }
-.offer__lab b { display: block; font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); margin-bottom: 4px; }
-.offer .ware { cursor: pointer; }
-.offer .ware:not(.mine):not(.locked):hover .face { transform: translateY(-14px); border-color: var(--ork-edge); }
-.win.inv .hand { height: auto; }
+/* ---------- the stall: the merchant at the rug's left, the wares laid on the rug, a price under each ---------- */
+.stall { display: none; grid-template-columns: 124px 1fr; gap: 6px 16px; margin-top: 10px; }
+.win.inv .stall { display: grid; }
+.win.inv .lanes { display: none; }
+.bubble { grid-column: 1 / -1; position: relative; justify-self: start; margin-left: 58px; max-width: 760px; min-height: 36px; padding: 8px 12px;
+  background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.bubble b { color: var(--ork-ink); font-weight: 600; }
+.bubble::after { content: ""; position: absolute; left: -1px; bottom: -9px; width: 10px; height: 9px; background: var(--ork-edge);
+  clip-path: polygon(0 0, 100% 0, 0 100%); }
+.merchant { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.merchant__who { position: relative; display: grid; place-items: end center; height: 112px; }
+.merchant__who .hd { position: relative; z-index: 1; width: 96px; height: 88px; margin-bottom: 22px; }
+.merchant__who svg { position: absolute; bottom: 0; }
+.merchant__name { font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+.merchant__role { font: var(--ork-type-caption); font-size: 10.5px; color: var(--ork-ink-faint); text-align: center; line-height: 13px; }
+.service { margin-top: 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; background: none; border: 0; padding: 0; color: inherit; }
+.service__card { width: 96px; height: 126px; display: grid; place-items: center; padding: 8px; text-align: center; border: 2px dashed var(--ork-frame);
+  font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; color: var(--ork-ink-faint); transition: border-color .15s, transform .2s var(--ork-motion-ease); }
+.service__card b { display: block; margin-bottom: 4px; font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink-muted); }
+.service:hover .service__card, .service.is-over .service__card { border-color: var(--ork-edge); transform: translateY(-4px); }
+.service.is-over .service__card { border-color: var(--ork-danger); }
+.service.can .service__card { border-color: var(--ork-edge); color: var(--ork-ink-muted); }
+.rug { position: relative; isolation: isolate; padding: 20px 26px 16px; background: color-mix(in srgb, var(--ork-panel) 88%, transparent);
+  border: 2px solid var(--ork-frame); box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--ork-panel) 88%, transparent), inset 0 0 0 7px var(--ork-frame); }
+.rug::before, .rug::after { content: ""; position: absolute; top: 4px; bottom: 4px; width: 7px; opacity: .55;
+  background: repeating-linear-gradient(180deg, var(--ork-edge) 0 2px, transparent 2px 6px); }
+.rug::before { left: -9px; } .rug::after { right: -9px; }
+.rug__weave { position: absolute; inset: 10px; z-index: -1; pointer-events: none; background: var(--ork-ink); opacity: .05;
+  -webkit-mask-image: var(--tex-weave); mask-image: var(--tex-weave); -webkit-mask-repeat: repeat; mask-repeat: repeat; }
+:root { --tex-weave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M10 1L19 10L10 19L1 10Z' stroke='%23000' fill='none'/%3E%3Crect x='9' y='9' width='2' height='2'/%3E%3C/svg%3E"); }
+.shelf__lab { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.shelf__lab b { font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+.shelf.is-on .shelf__lab b { text-decoration: underline; text-underline-offset: 4px; }
+.rug__low { display: grid; grid-template-columns: 1fr auto; gap: 20px; margin-top: 18px; align-items: start; }
+.rug__low.solo { grid-template-columns: 1fr; }
+.rug__right { display: flex; flex-direction: column; gap: 14px; }
+.rug__low.solo .rug__right { flex-direction: row; flex-wrap: wrap; gap: 16px 36px; }
+.wares { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.rug__top .wares { gap: 12px; }
+.ware { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ware .face { cursor: pointer; }
+.ware:not(.mine):not(.locked):hover .face { transform: translateY(-10px); border-color: var(--ork-edge); }
+.ware.mine .face { opacity: .45; cursor: default; }
+.ware.locked .face { opacity: .35; cursor: default; }
+.ware.pulse .face { animation: pulse .5s var(--ork-motion-ease); }
+.ware small { max-width: 132px; text-align: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; }
+.ware .before { color: var(--ork-ink-muted); font-style: italic; }
+.ware .star { color: var(--ork-alert); }
+.ware .heros { color: var(--ork-ink-muted); }
+/* the price plate under a ware: the first potion's vial and the share of its week */
+.price { display: inline-flex; align-items: center; gap: 4px; height: 18px; padding: 0 6px; background: var(--ork-room); border: var(--ork-line) solid var(--ork-frame);
+  font: 600 11px/16px var(--ork-font-read); color: var(--ork-ink); white-space: nowrap; }
+.price .ork-potion { transform: scale(.5); margin: -12px -6px; }
+.price.less { color: var(--ork-success); } .price.money { color: var(--ork-warning); }
+.price.mine { background: none; border-style: dashed; color: var(--ork-ink-muted); font-weight: 400; }
+.price.same { color: var(--ork-ink-muted); }
+.price .lock { margin-right: 1px; }
+.price .ico { width: 12px; height: 12px; }
+/* a relic: the small things of a shelf (a tool, a tier, what leaves, the cap) */
+.f-relic { width: 68px; height: 70px; padding: 5px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; }
+.f-relic img { width: 24px; height: 22px; }
+.f-relic .ork-sign, .f-relic .ico { width: 18px; height: 18px; color: var(--ork-ink-muted); }
+.f-relic .ork-potion { transform: scale(.6); margin: -10px 0 -12px; }
+.f-relic p { font: 600 10.5px/12px var(--ork-font-read); color: var(--ork-ink); max-height: 24px; overflow: hidden; }
+/* the hand: what you carry of this chair, a card a thing */
+.win.inv .hand { height: 268px; }
+.win.inv .fan { margin-top: 44px; }
+.hc.ghost { border-style: dashed; border-color: var(--ork-edge); }
+.hc.ghost .hc__val { color: var(--ork-ink); }
+.hc.pulse { animation: pulse .5s var(--ork-motion-ease); }
+.hc.fixed { cursor: default; }
+.hc[draggable="true"] { cursor: grab; }
 /* the door and the die */
 .door { background: none; border: var(--ork-line) solid transparent; cursor: pointer; padding: 2px 6px; }
 .door:hover { border-color: var(--ork-frame); color: var(--ork-ink); }
@@ -306,13 +353,14 @@ button { font: inherit; }
 <body>
 <header class="mk-bar">
   <b>The inventory</b>
-  <nav><a href="#inv">1 · The inventory</a><a href="#tex">2 · Whose table: the textures</a><a href="#heads">3 · The heroes' faces</a><a href="#notes">What it changes</a></nav>
+  <nav><a href="#inv">1 · The inventory: a stall</a><a href="#tables">2 · The eighteen tables</a><a href="#tex">3 · Whose table: the textures</a><a href="#heads">4 · The heroes' faces</a><a href="#notes">What it changes</a></nav>
 </header>
 
 <main class="mk-main">
 <section class="mk-sec" id="inv">
-  <h1>1 · The inventory: the chairs say whose, the hand holds it, the table lays the ways</h1>
-  <p class="mk-line"><b>The table shows what you have, the hand what you could take</b>, as everywhere in the window: the hand is what you decide. <b>The backpack</b> opens the inventory: the table's edge is stitched, and the table lays out the picked chair as it is set, a sheet of things. <b>Press a thing</b>: its ways come to your hand, each priced against yours; hover one and the table shows it in place, the potions what it costs; play it and it flies to its place. <b>A chair is a craft</b>: empty, its back shows its table's texture; taken, the hero's race says the craft. The potions and <b>the die</b> at the table's edge are pressed as they are. <b>Drag a thing onto the discard</b> to give it back to its default. <b>Stop all</b> is the door again; <b>the die's faces</b> are what the project can run: client and server together or apart, an Android build to your phone, iOS locked on a computer with no Xcode.</p>
+  <h1>1 · The inventory: a merchant's stall</h1>
+  <p class="mk-line"><b>The backpack opens a stall on the table</b>, as a deck-builder's merchant lays one out: <b>the Orkmaster stands at the rug's left</b> and says what it would take; <b>the wares lie on the rug</b>, every one at once, a price plate under each; <b>your hand is what you carry</b> of the chair picked. On a leader's chair: <b>its heroes</b> on the rug's top shelf (a set each: school, flow, size, how much it decides itself, how often it says no), <b>the ways of the card you lift</b> from your hand on the shelf below, <b>its seats</b> (its AI tool and its tier) as the small things at the right. <b>A price is what a ware adds to the first potion's week</b> (the vial and <i>+2%</i>; a saving in green; money said as money, <i>$2/night</i>); what you carry reads <i>in your hand</i>. Hover a ware: your card shows it, the potions what it costs, the merchant's face how dear it is. Press it: it flies into your hand over the card it replaces, with <i>Undo</i>. <b>The merchant's own service is <i>Back to default</i></b>, free: drop a card of your hand on it (or on the discard). The chairs say whose, the potions and the die are pressed as they are, Stop all is the door.</p>
+  <p class="mk-line" style="color:var(--ork-ink-muted)">Shut the backpack and press a chair: its table is laid as its hero reads it (section 2). Take a hero on the rug, shut the backpack, and the same chair's table is laid the new hero's way.</p>
 
   <p class="stage" id="stage"></p>
   <div class="scroll-x">
@@ -322,14 +370,22 @@ button { font: inherit; }
         <div class="chairs" id="chairs"></div>
         <div class="table ork-table" id="table" data-tex="felt">
           <div class="table__head" id="head"></div>
-          <p class="says" id="says"></p>
           <div class="lanes" id="lanes"></div>
-          <div class="rows" id="rows"></div>
+          <div class="stall" id="stall">
+            <p class="bubble" id="bubble"></p>
+            <div class="merchant">
+              <div class="merchant__who"><svg width="88" height="30" viewBox="0 0 22 8" id="crate" aria-hidden="true"></svg><img class="hd" id="keeper-face" alt=""></div>
+              <p class="merchant__name">Orkmaster</p><p class="merchant__role">lays out the wares</p>
+              <button class="service" id="service" type="button"><span class="service__card"><span><b>Back to default</b>drop a card of your hand here, or press it with one lifted</span></span><span class="price same">free</span></button>
+            </div>
+            <div class="rug" id="rug"></div>
+          </div>
           <p class="receipt" id="receipt"></p>
           <p class="receipt" id="stopped-line"></p>
         </div>
         <div class="hand">
-          <div class="offer" id="offer"></div>
+          <p class="fan__lab" id="fan-lab"></p>
+          <div class="fan" id="fan"></div>
           <div class="normal-hand" id="normal-hand">
             <div class="k ork-card">
               <div class="k__top"><span><img class="hd" id="ask-head" alt="">Tech</span><span class="ork-sign question" style="color:var(--ork-alert)"></span></div>
@@ -350,8 +406,16 @@ button { font: inherit; }
   </div>
 </section>
 
+<section class="mk-sec" id="tables">
+  <h1>2 · The eighteen tables: each leader's table, as its hero reads it</h1>
+  <p class="mk-line"><b>A hero brings its school's frame</b> (decisions §266.3, §184): the same craft's map (spec 95 §3), laid by its school. The sixteen heroes on the rug,
+    four a craft for Product, Design and Tech, two for Run and Marketing; and the two that are not traded: <b>the Orkmaster</b>, whose table is the Board, and <b>Release Night King</b>,
+    whose table is dev against main. Each on its craft's texture; colour only where something calls (an alert, a failure, a pass, a goal's element). The project, its goals and its numbers are made up. Their screenshots: <code>shots/tables/</code>; the stall's: <code>shots/stall-*.png</code>.</p>
+  <div class="scroll-x" id="tables-gallery"></div>
+</section>
+
 <section class="mk-sec" id="tex">
-  <h1>2 · Whose table: a texture a chair, a stitch for the inventory</h1>
+  <h1>3 · Whose table: a texture a chair, a stitch for the inventory</h1>
   <p class="mk-line">No colour: <b>a pattern in the ink at a few percent</b> on the table's surface, under the cards, so whose table it is reads at a
     glance on any day, not only in the inventory. <b>The inventory is told by its edge</b>, a stitch like the backpack's seam: the mode by the edge,
     whose by the texture, so the two never mix.</p>
@@ -359,8 +423,8 @@ button { font: inherit; }
 </section>
 
 <section class="mk-sec" id="heads">
-  <h1>3 · The heroes' faces</h1>
-  <p class="mk-line">Four heroes a leader's race, each its race's elder head with <b>its skin or helm, its horns, antlers or wings and one detail</b>
+  <h1>4 · The heroes' faces</h1>
+  <p class="mk-line">Four heroes a leader's race (two for Run's and Marketing's), each its race's elder head with <b>its skin or helm, its horns, antlers or wings and one detail</b>
     changed (<code>heads/make_heads.py</code>); the hood stays the tier's gear, the unicorn's helm a warm metal, no skin the action's green; the moods
     laid over each from orkUI's own. At the window's sizes: 48 × 44 and 24 × 22.</p>
   <div class="scroll-x"><div class="heads" id="heads-grid"></div></div>
@@ -369,18 +433,20 @@ button { font: inherit; }
 <section class="mk-sec" id="notes">
   <h1>What it changes</h1>
   <div class="mk-notes">
-    <p><b>The window's own axis.</b> A tab already says <i>through whom</i>; in the inventory a chair says <i>whose settings</i>. Nothing disappears, nothing new to learn: the chairs stay, the table and the hand change what they hold.</p>
-    <p><b>A hero is a set.</b> The chair pressed lays its heroes with their stats: school, flow, size, how much it decides itself, how often it says no, the cost. The hand never repeats them.</p>
+    <p><b>A stall, not a sheet.</b> Everything a chair can take lies on the rug at once with its price, as at a merchant's: nothing to open to learn what there is. The Orkmaster is the merchant: it lays the wares and stars its pick.</p>
+    <p><b>The rug and the hand turned round, open for the owner.</b> §266.1 lays what is set on the table and the ways in the hand. The stall lays the ways on the rug (the table) and what you carry in the hand, as a merchant's does. If this is kept, a new decision replaces §266.1's table and hand; the rest of §266 stands.</p>
+    <p><b>A price you can read.</b> The plate says the share of the first potion's week (<i>+2%</i>, a saving in green) and money as money (<i>$2/night</i>); the hover says the rest. No gold, no coins to collect: the potions are the purse.</p>
+    <p><b>Back to default is the merchant's service</b>, free, at its feet; the discard keeps taking a card too (§266.1).</p>
+    <p><b>A hero lays its table.</b> Its school is a frame the table is laid by: C4's containers and hotspots, DDD's contexts, XP's red and green, an opportunity tree, a funnel, a trace. Eighteen tables, one map a craft (spec 95 §3), its hero's way.</p>
     <p><b>Yours outlives the hero.</b> A hero brings its own ways of answering its party's questions; what you set yourself is marked <i>yours</i> and stays when the hero changes. Your trust is yours (§52.6).</p>
-    <p><b>Whose by texture, the mode by the edge.</b> Tech's grid, Design's dots, Product's contours, Release's stones, the Orkmaster's plain felt; the inventory's stitch. No new colour: colour stays a signal.</p>
-    <p><b>One way in.</b> The backpack after the chairs, apart from Stop all's door. Settings' <i>…</i> keeps the plumbing (sign-ins, the phone, updates, logs) and ends with <i>How the project is set: Inventory</i>.</p>
-    <p><b>Open for the owner.</b> <i>Inventory</i> is a game's word: it goes into <code>TERMS</code> with plain words beside it (<i>how the project is set</i>). Do the seats (Does, Checks) go into a leader's hand, or stay with the hero? Do the textures go into orkUI for every day, or only for the inventory?</p>
+    <p><b>Open for the owner.</b> Do Run's and Marketing's tables (an SLO's budget, a trace, a funnel, a store page) become maps of their own in spec 95 §3? Does the hero's table replace the craft's map, or lay over it as a lens?</p>
   </div>
-  <p class="mk-foot">An experiment of 6–7 November 2026, not a goal and not a spec. Every colour, face and size is orkUI's token; the heads' variants, the backpack,
+  <p class="mk-foot">An experiment of 6–7 November 2026 (the stall and the eighteen tables, 7 November), not a goal and not a spec. Every colour, face and size is orkUI's token; the heads' variants, the backpack,
     the textures, the stitch, the lock and the answer cards' art are drawn here first and would go into orkUI after a yes. The prices are made up.</p>
 </section>
 </main>
 
+<script src="tables.js"></script>
 <script>
 const ORK = "../../../design-system/orkui/";
 const ICON = id => `<svg class="ico" aria-hidden="true"><use href="${ORK}icons/icons.svg#${id}"/></svg>`;
@@ -407,10 +473,10 @@ const HEROES = {
   "sh-fit":      { short: "Fitness", name: "Fitness Shaman", school: "Evolutionary architecture", flow: "fitness → change → check", size: "Full", trust: 2, temper: 3, d: 1, ways: { "ans-tier": "silent", "ans-test": "fork" } },
 };
 Object.assign(HEROES, {
-  "imp-slo":   { short: "SLOs", name: "Uptime Imp", school: "SLOs and error budgets", flow: "objective → budget → alert", size: "Lean", trust: 2, temper: 3, d: 0, ways: {}, img: "imp-elder" },
-  "imp-obs":   { short: "Traces", name: "Lantern Imp", school: "Observability first", flow: "trace → read → fix", size: "Standard", trust: 2, temper: 2, d: 1, ways: {}, img: "imp-elder" },
-  "fairy-aarrr": { short: "AARRR", name: "Growth Hack Gnome", school: "AARRR", flow: "acquire → activate → retain", size: "Standard", trust: 2, temper: 2, d: 0, ways: {}, img: "fairy-elder" },
-  "fairy-aso": { short: "ASO", name: "Store Gnome", school: "The store page first", flow: "title → shots → test", size: "Lean", trust: 3, temper: 1, d: -1, ways: {}, img: "fairy-elder" },
+  "imp-slo":   { short: "SLOs", name: "Uptime Imp", school: "SLOs and error budgets", flow: "objective → budget → alert", size: "Lean", trust: 2, temper: 3, d: 0, ways: {} },
+  "imp-obs":   { short: "Traces", name: "Lantern Imp", school: "Observability first", flow: "trace → read → fix", size: "Standard", trust: 2, temper: 2, d: 1, ways: {} },
+  "fairy-aarrr": { short: "AARRR", name: "Growth Hack Gnome", school: "AARRR", flow: "acquire → activate → retain", size: "Standard", trust: 2, temper: 2, d: 0, ways: {} },
+  "fairy-aso": { short: "ASO", name: "Store Gnome", school: "The store page first", flow: "title → shots → test", size: "Lean", trust: 3, temper: 1, d: -1, ways: {} },
 });
 const HIMG = id => HEROES[id].img ? RACE(HEROES[id].img) : HEAD(id);
 const TOOLS = {
@@ -694,81 +760,161 @@ function pickChair(id) {
   drawChairs(); drawTable();
 }
 
-/* ---------------- a thing on the table: what you have ---------------- */
+/* ---------------- the stall: the merchant lays the picked chair's wares on the rug; the hand is what you carry ---------------- */
+const SHOPS = {
+  keeper: { pick: ["target", "look", "start-high", "start-normal", "start-low", "hours", "ans-low", "cf-decision"], right: ["push", "cloud", "cap"] },
+  product: { big: "lead-product", pick: ["ans-pain", "cf-product"], right: ["tool-product", "tier-product"] },
+  design: { big: "lead-design", pick: ["ans-icon", "cf-design"], right: ["tool-design", "tier-design"] },
+  tech: { big: "lead-tech", pick: ["ans-tier", "ans-test", "cf-tech"], right: ["tool-tech", "tier-tech"] },
+  run: { big: "lead-run", pick: [], right: ["tool-run", "tier-run"] },
+  marketing: { big: "lead-marketing", pick: [], right: ["tool-marketing", "tier-marketing"] },
+  release: { big: "hero-release", pick: ["ans-main", "ans-dev"], right: ["gate"] },
+  empty: { big: "craft", pick: [], right: [] },
+  potions: { pick: ["pot-1", "pot-2", "pot-3"], right: [] },
+  die: { pick: ["die-up", "die-phone"], right: [] },
+};
+const pickOf = {};                                   // whose ways lie on the rug's second shelf, a chair each
+const shopKey = () => view || chair;
+function onPick() { const k = shopKey(), sh = SHOPS[k]; if (!sh.pick.length) return null; if (!sh.pick.includes(pickOf[k])) pickOf[k] = sh.pick[0]; return pickOf[k]; }
+const VIAL = `<span class="ork-potion size-vial" style="--ork-potion-left:.7"></span>`;
+const isFixed = s => s.kind === "fixed-hero" || s.fixed;
+
 function faceOf(s) {
   const v = val(s);
-  if (s.kind === "fixed-hero") return `<div class="face f-hero">${pennant("stones", 2)}${SIL()}<img class="hd" src="${RACE("lich-elder")}" width="48" height="44" alt=""><p class="f-hero__name">Release Night King</p><p class="f-hero__school">in every project ${LOCK}</p></div>`;
-  if (s.kind === "hero" && !v) return `<div class="face f-hero empty-hero">${pennant(texOfLead(s.id), 2)}${SIL()}<span>No hero yet<br>pick one in your hand</span></div>`;
-  if (s.kind === "craft") return `<div class="face f-craft"><div><span class="ork-chair is-empty" style="position:relative;display:block;margin:0 auto 6px"></span><b>No craft yet</b>pick one in your hand</div></div>`;
+  if (s.kind === "fixed-hero") return `<div class="face f-hero">${pennant("stones", 2)}${SIL()}<img class="hd" src="${RACE("lich-elder")}" width="48" height="44" alt=""><p class="f-hero__name">Release Night King</p><p class="f-hero__school">DORA's keys, readiness and semver</p>
+    <div class="stats"><span>Flow</span><b>dev → the gate → main</b><span>Size</span><b>Standard</b><span>Decides</span><span class="bar"><span>asks</span>${bar(1)}<span>itself</span></span><span>Says no</span><span class="bar"><span>seldom</span>${bar(3)}<span>often</span></span></div></div>`;
   return face(s, v);
 }
-function tile(id) {
-  const s = BY[id], fixed = s.kind === "fixed-hero" || s.fixed;
-  const mark = isYours(s) ? `<span class="yours">yours</span>` : heroWay(s) !== undefined ? `<span class="heros">the hero's way</span>` : "";
-  return `<div class="tile${sel === id ? " is-on" : ""}${fixed ? " fixed" : ""}" data-slot="${id}" draggable="${!fixed}">${faceOf(s)}<small>${s.lab}${fixed ? " " + LOCK : ""}</small>${mark}</div>`;
+/* the price plate: the first potion's vial and the share of its week, the money said as money */
+function priceOf(s, id) {
+  if (isFixed(s)) return `<span class="price same">${LOCK}not traded</span>`;
+  if (s.kind === "craft") { const at = CHAIRS.find(c => c.id === id).seated;
+    return at ? `<span class="price mine">at the table</span>` : `<span class="price same" title="${stage === "made" ? "before Live: yours to seat" : "its stage has come"}">${stage === "made" ? "seat it sooner" : "its stage came"}</span>`; }
+  if (val(s) === id) return `<span class="price mine">${s.kind === "hero" ? "on the chair" : "in your hand"}</span>`;
+  if (s.locked && s.locked[id]) return `<span class="price same">${LOCK}not here</span>`;
+  const t = s.kind === "tok" ? TOK[id] : null;
+  if (t && t.money) return `<span class="price money" title="${t.money}">${ICON("coins")}${t.money.replace(" a night, from your API key", "/night")}</span>`;
+  const d = deltaOf(s, id), title = d > 0 ? `about ${d}% more of the first potion's week` : d < 0 ? `saves about ${-d}% of the first potion's week` : "costs what yours costs";
+  return `<span class="price${d < 0 ? " less" : d === 0 ? " same" : ""}" title="${title}">${d ? VIAL : ""}${d > 0 ? `+${d}%` : d < 0 ? `−${-d}%` : "same cost"}</span>`;
 }
+function relic(s, id) {
+  let mark, ti, line;
+  if (s.kind === "tier") { mark = `<img class="hd" src="${RACE(s.race + "-" + id)}" alt="">`; ti = TIERS[id].ti; line = TIERS[id].line; }
+  else { const t = TOK[id]; ti = t.ti; line = t.line;
+    mark = t.tool ? `<img class="hd" style="width:18px;height:18px" src="${ORK}marks/${TOOLS[t.tool].mark}@2x.png" alt="">`
+      : t.potion ? `<span class="ork-potion" style="--ork-potion-left:${{ cap3: .3, cap5: .5, cap8: .8 }[id] ?? .6}"></span>` : t.sign ? SIGN(t.sign) : ICON(t.icon); }
+  return `<div class="face f-relic" title="${line}">${mark}<p>${ti}</p></div>`;
+}
+function ware(s, id, small) {
+  const lock = s.locked && s.locked[id], mine = s.kind !== "craft" && val(s) === id, hw = s.kind !== "hero" && heroWay(s) === id;
+  const fixed = isFixed(s), f = fixed ? (small ? relic(s, s.base) : faceOf(s)) : small ? relic(s, id) : face(s, id);
+  return `<div class="ware${mine ? " mine" : ""}${lock || fixed ? " locked" : ""}" data-slot="${s.id}" data-o="${id}"${lock ? ` title="${lock}"` : ""}>${f}${priceOf(s, id)}`
+    + (!mine && !lock && s.star === id ? `<small class="star">★${small ? "" : " the Orkmaster's pick"}</small>` : "")
+    + (hw && !small ? `<small class="heros">the hero's way</small>` : "") + (!mine && prev[s.id] === id ? `<small class="before">Yours before</small>` : "") + `</div>`;
+}
+const shelf = (lab, sub, inner, on, cls = "") => `<div class="shelf ${cls}${on ? " is-on" : ""}"><p class="shelf__lab"><b>${lab}</b>${sub || ""}</p><div class="wares">${inner}</div></div>`;
+function rugHtml() {
+  const sh = SHOPS[shopKey()], p = onPick();
+  const opts = s => (s.opts || [s.base]).map(id => ware(s, id, false)).join("");
+  const small = id => { const s = BY[id]; return shelf(s.lab, "", (s.opts || [s.base]).map(o => ware(s, o, true)).join(""), sel === id, "small"); };
+  let top = "", low = "";
+  if (sh.big) { const s = BY[sh.big];
+    top = s.kind === "fixed-hero" ? shelf("Its hero", "Release is in every project: its hero is not traded", ware(s, null, false), false)
+      : s.kind === "craft" ? shelf("New parties", "a craft comes with its stage; its chair comes empty", opts(s), true)
+      : shelf("Heroes", "a set each: its school, its flow, its size, how much it decides itself, how often it says no", opts(s), sel === s.id);
+    if (p) low = shelf(BY[p].lab, "its ways · another card of your hand lays its own", opts(BY[p]), sel === p);
+  } else if (p) top = shelf(BY[p].lab, "its ways · another card of your hand lays its own", opts(BY[p]), sel === p);
+  const right = sh.right.map(small).join("");
+  return `<span class="rug__weave"></span><div class="rug__top">${top}</div>` + (low || right ? `<div class="rug__low${low && right ? "" : " solo"}">${low ? `<div>${low}</div>` : ""}${right ? `<div class="rug__right">${right}</div>` : ""}</div>` : "");
+}
+const CRATE = ["XXXXXXXXXXXXXXXXXXXXXX", "X##P####P####P####P##X", "X##P####P####P####P##X", "XXXXXXXXXXXXXXXXXXXXXX", "X##P####P####P####P##X", "X##P####P####P####P##X", "X##P####P####P####P##X", "XXXXXXXXXXXXXXXXXXXXXX"];
 function drawTable() {
-  const table = document.getElementById("table"), head = document.getElementById("head"), rows = document.getElementById("rows"), says = document.getElementById("says");
+  const table = document.getElementById("table"), head = document.getElementById("head");
   const c = CHAIRS.find(x => x.id === (inv() ? chair : tableOf));
   table.dataset.tex = view ? "felt" : c.tex;
   if (!inv()) {
-    head.innerHTML = `<b>${c.id === "keeper" ? "The whole project" : c.lab + "'s table"}</b> · through ${c.id === "keeper" ? "the Orkmaster" : c.lab}`;
-    document.getElementById("lanes").innerHTML = c.id === "keeper" ? [["Lobby chat", "ice"], ["Waves", "meadow"], ["Waves", "meadow"], ["Daily quest", "dust"], ["", ""]].map(([t, e]) => `<div class="lane">${t ? `<div class="mini">${t}<span class="ork-elem ${e}"></span></div>` : ""}</div>`).join("")
-      : `<div class="lane" style="grid-column:span 5;height:420px;display:grid;place-items:center;color:var(--ork-ink-faint);font:var(--ork-type-caption)">${c.lab}'s table, laid as its hero reads it</div>`;
-    drawHand(); return;
+    const who = c.id === "keeper" ? "keeper" : c.id === "release" ? "release" : c.lead ? BY[c.lead].value : null;
+    head.innerHTML = `<b>${c.id === "keeper" ? "The whole project" : c.lab + "'s table"}</b> · through ${c.id === "keeper" ? "the Orkmaster" : who && HEROES[who] ? HEROES[who].name : c.lab}`;
+    document.getElementById("lanes").innerHTML = who && window.TABLES ? TABLES.map(who) : `<div class="lane-empty">${c.lab}'s table: no hero yet</div>`;
+    drawFan(); return;
   }
   const whose = view ? VIEWS[view] : c.id === "keeper" ? "the whole project" : c.lab;
   head.innerHTML = `<span class="pix">Inventory</span> how the project is set · <b>${whose}</b>${!view && c.lead && c.seated ? ` <button class="ork-btn quiet back" id="off">Take off the chair</button>` : ""}`;
   const off = document.getElementById("off"); if (off) off.onclick = () => takeOff(c);
-  const line = sel ? SAY[sel] : view ? "Press a thing on the table: its ways come to your hand." : c.id === "keeper" ? "The whole project as it is set. <b>Press a thing</b>, and I lay its ways in your hand." : c.id === "empty" ? SAY.craft : `${c.lab} as it is set. Press its hero, or any of its things: their ways come to your hand.`;
-  says.innerHTML = `<img class="hd" id="keeper-face" src="${RACE(sel ? "peon-crown-focused" : "peon-crown")}" alt=""><span>${line}</span>`;
-  rows.innerHTML = SHEETS[view || chair].map(([lab, ids]) => `<div class="row"><p class="row__lab"><b>${lab}</b></p><div class="row__opts">${ids.map(tile).join("")}</div></div>`).join("");
-  rows.querySelectorAll(".tile").forEach(t => t.onclick = () => { const s = BY[t.dataset.slot]; sel = sel === s.id ? null : s.id; document.getElementById("receipt").innerHTML = ""; drawTable(); });
-  drawHand();
-}
-
-/* ---------------- the hand: the ways of what is pressed ---------------- */
-function drawHand() {
-  const box = document.getElementById("offer");
-  if (!inv()) { box.innerHTML = ""; return; }
-  const s = sel && BY[sel];
-  if (!s) { box.innerHTML = `<p class="offer__hint">Press a thing on the table: its ways come to your hand.</p>`; return; }
-  if (s.kind === "fixed-hero" || s.fixed || !s.opts) { box.innerHTML = `<p class="offer__hint">${LOCK} Nothing to trade: ${s.kind === "fixed-hero" ? "Release is in every project" : "it is the project's own"}.</p>`; return; }
-  box.innerHTML = `<p class="offer__lab"><b>${s.lab}</b>its ways</p>` + s.opts.map(id => {
-    if (s.kind === "craft") { const at = CHAIRS.find(c => c.id === id).seated;
-      return `<div class="ware${at ? " locked" : ""}" data-o="${id}">${face(s, id)}<span class="tag">${at ? "at the table" : stage === "made" ? "before Live: yours to seat" : "its stage has come"}</span><small>its chair comes empty</small></div>`; }
-    const lock = s.locked && s.locked[id], mine = val(s) === id, hw = s.kind !== "hero" && heroWay(s) === id;
-    return `<div class="ware${mine ? " mine" : ""}${lock ? " locked" : ""}" data-o="${id}">${face(s, id)}
-      ${mine ? `<span class="tag mine">Yours</span>` : lock ? `<span class="tag">${LOCK} not here</span><small>${lock}</small>` : tagOf(s, id)}
-      ${!mine && !lock && s.star === id ? `<small class="star">★ the Orkmaster's pick</small>` : ""}${hw ? `<small class="heros">the hero's way</small>` : ""}${!mine && prev[s.id] === id ? `<small class="before">Yours before</small>` : ""}</div>`;
-  }).join("");
-  box.querySelectorAll(".ware").forEach(el => {
-    const id = el.dataset.o;
+  const line = sel ? SAY[sel] : c.id === "keeper" && !view ? "Welcome back. The whole project's wares are on the rug: <b>press a card of your hand</b> and I lay its ways; the price is what it adds to the first potion's week." : view ? `${VIEWS[view][0].toUpperCase() + VIEWS[view].slice(1)}: press a card of your hand, its ways are on the rug.` : c.id === "empty" ? SAY.craft : `${c.lab}'s wares: its heroes on top, the ways of what you carry below. Press a ware to take it.`;
+  document.getElementById("bubble").innerHTML = line;
+  document.getElementById("keeper-face").src = RACE(sel ? "peon-crown-focused" : "peon-crown");
+  pix(document.getElementById("crate"), CRATE, { X: "var(--ork-edge)", "#": "var(--ork-raised)", P: "var(--ork-frame)" });
+  const rug = document.getElementById("rug"); rug.innerHTML = rugHtml();
+  rug.querySelectorAll(".ware").forEach(el => {
+    const s = BY[el.dataset.slot], id = el.dataset.o;
+    if (isFixed(s)) return;
     el.addEventListener("mouseenter", () => preview(s, id));
     el.addEventListener("mouseleave", () => preview(null));
-    el.onclick = () => { if (s.kind === "craft") return seat(id, el); if (val(s) !== id && !(s.locked && s.locked[id])) trade(s, id, el); };
+    el.onclick = () => { if (s.kind === "craft") return seat(id); if (val(s) !== id && !(s.locked && s.locked[id])) trade(s, id, el); };
+  });
+  const svc = document.getElementById("service");
+  svc.classList.toggle("can", !!sel && !isFixed(BY[sel]));
+  drawFan();
+}
+
+/* ---------------- the hand: what you carry of the chair picked, a card a thing ---------------- */
+let fanIds = [], fanStep = 112;
+function handCard(id, i, ghost) {
+  const s = BY[id], v = ghost ?? val(s), n = fanIds.length;
+  let idx, word, line;
+  if (s.kind === "fixed-hero") { idx = `<img class="hd" src="${RACE("lich-elder")}" alt="">`; word = "Release Night King"; line = "in every project"; }
+  else if (s.kind === "hero") { idx = v ? `<img class="hd" src="${HIMG(v)}" alt="">` : SIL(3); word = v ? HEROES[v].name : "No hero yet"; line = v ? HEROES[v].school : "pick one on the rug"; }
+  else if (s.kind === "craft") { idx = `<span class="ork-chair is-empty small"></span>`; word = "No craft yet"; line = "pick one on the rug"; }
+  else if (s.kind === "ans") { const a = ANS[v]; idx = SIGN(a.conf ? "conflict" : "question"); word = a.ti + (a.wait ? ", " + a.wait : ""); line = a.line; }
+  else if (s.kind === "tier") { idx = `<img class="hd" src="${RACE(s.race + "-" + v)}" alt="">`; word = TIERS[v].ti; line = TIERS[v].line; }
+  else if (s.kind === "pot") { const t = TOOLS[v]; idx = t.empty ? "+" : `<img class="hd" style="width:16px;height:16px" src="${ORK}marks/${t.mark}@2x.png" alt="">`; word = t.name; line = t.line || ""; }
+  else { const t = TOK[v]; idx = t.tool ? `<img class="hd" style="width:16px;height:16px" src="${ORK}marks/${TOOLS[t.tool].mark}@2x.png" alt="">` : t.potion ? VIAL : t.sign ? SIGN(t.sign) : ICON(t.icon); word = t.ti; line = t.line; }
+  const mark = isYours(s) ? `<span class="yours">yours</span>` : heroWay(s) !== undefined ? `<span class="heros">the hero's way</span>` : isFixed(s) ? `<span class="heros">${LOCK} the project's own</span>` : "";
+  const mid = (n - 1) / 2, rot = (i - mid) * 1.4, drop = Math.abs(i - mid) * 2.5;
+  return `<div class="hc${sel === id ? " is-on" : ""}${isFixed(s) ? " fixed" : ""}${ghost != null ? " ghost" : ""}" data-slot="${id}" data-i="${i}" draggable="${!isFixed(s) && s.kind !== "craft"}"
+    style="left:${i * fanStep}px;transform:translateY(${drop}px) rotate(${rot}deg);z-index:${i + 1}"><div class="hc__idx">${idx}</div>
+    <div class="hc__body"><p class="hc__what">${s.lab}</p><p class="hc__val">${word}</p><p class="hc__line">${line}</p>${mark}</div></div>`;
+}
+function drawFan() {
+  const fan = document.getElementById("fan"), lab = document.getElementById("fan-lab");
+  if (!inv()) { fan.innerHTML = ""; lab.innerHTML = ""; return; }
+  fanIds = SHEETS[shopKey()].flatMap(([, ids]) => ids);
+  fanStep = Math.min(122, 880 / Math.max(1, fanIds.length));
+  const c = CHAIRS.find(x => x.id === chair);
+  lab.innerHTML = `<b>Your hand</b>what you carry of ${view ? VIEWS[view] : c.id === "keeper" ? "the whole project" : c.lab}`;
+  fan.classList.toggle("tight", fanStep < 110);
+  fan.innerHTML = fanIds.map((id, i) => handCard(id, i)).join("");
+  fan.querySelectorAll(".hc").forEach(el => el.onclick = () => {
+    const id = el.dataset.slot; sel = sel === id ? null : id;
+    if (sel && SHOPS[shopKey()].pick.includes(sel)) pickOf[shopKey()] = sel;
+    document.getElementById("receipt").innerHTML = ""; drawTable();
   });
 }
 
-/* hovering a way: the table shows it in place, the potions what it costs */
+/* hovering a ware: your card shows it in your hand, the potions what it costs, the merchant how dear it is */
 function preview(s, id) {
-  if (typeof dragging !== "undefined" && dragging) return;          // a thing dragged from the table is not redrawn under the pointer
-  document.querySelectorAll(".tile.ghost").forEach(t => { t.classList.remove("ghost"); t.querySelector(".face").outerHTML = faceOf(BY[t.dataset.slot]); });
-  if (!s || val(s) === id || s.kind === "craft" || (s.locked && s.locked[id])) { drawPotions(); return; }
-  const t = document.querySelector(`.tile[data-slot="${s.id}"]`); if (t) { t.classList.add("ghost"); t.querySelector(".face").outerHTML = face(s, id); }
+  if (dragging) return;
+  document.querySelectorAll(".hc.ghost").forEach(h => { h.outerHTML = handCard(h.dataset.slot, +h.dataset.i); });
+  if (!s || val(s) === id || s.kind === "craft" || (s.locked && s.locked[id])) { drawPotions(); bindFan(); return; }
+  const h = document.querySelector(`.hc[data-slot="${s.id}"]`); if (h) h.outerHTML = handCard(s.id, +h.dataset.i, id);
+  bindFan();
   drawPotions(Math.max(0, deltaOf(s, id)) / 100 * 8);       // a week's percent, drawn large enough to read: the mockup's lens
-  const f = document.getElementById("keeper-face"); if (f && deltaOf(s, id) >= 3) f.src = RACE("peon-crown-worried");
+  const f = document.getElementById("keeper-face"); f.src = RACE(deltaOf(s, id) >= 2 ? "peon-crown-worried" : deltaOf(s, id) < 0 ? "peon-crown-pleased" : "peon-crown-focused");
 }
+function bindFan() { document.querySelectorAll("#fan .hc").forEach(el => { if (!el.onclick) el.onclick = () => { const id = el.dataset.slot; sel = sel === id ? null : id; if (sel && SHOPS[shopKey()].pick.includes(sel)) pickOf[shopKey()] = sel; drawTable(); }; }); }
 
-/* the trade: the way played from the hand flies to its place on the table */
+/* the trade: the ware taken from the rug flies into your hand, over the card it replaces */
 function trade(s, id, el) {
-  const old = val(s), from = el.querySelector(".face"), to = document.querySelector(`.tile[data-slot="${s.id}"] .face`);
+  const old = val(s), from = el.querySelector(".face"), to = document.querySelector(`.hc[data-slot="${s.id}"]`);
   if (from && to) {
     const r = from.getBoundingClientRect(), t = to.getBoundingClientRect(), cl = from.cloneNode(true);
     cl.classList.add("flying"); Object.assign(cl.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
     document.body.appendChild(cl);
-    cl.animate([{ transform: "none" }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top - 30}px)`, offset: .7 }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top}px)` }],
-      { duration: 480, easing: "cubic-bezier(.2,.7,.2,1)" }).onfinish = () => cl.remove();
+    const k = Math.min(t.width / r.width, t.height / r.height);
+    cl.animate([{ transform: "none" }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top - 40}px) scale(${(1 + k) / 2})`, offset: .6 }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top}px) scale(${k})`, opacity: .4 }],
+      { duration: 520, easing: "cubic-bezier(.2,.7,.2,1)" }).onfinish = () => cl.remove();
+    cl.style.transformOrigin = "0 0";
   }
   setTimeout(() => {
     prev[s.id] = old; let said;
@@ -784,19 +930,20 @@ function trade(s, id, el) {
     }
     drawChairs(); drawTable(); drawPotions();
     if (s.kind === "hero") { const img = document.querySelector(`[data-head="${chair}"]`); if (img) { img.classList.remove("is-new"); void img.offsetWidth; img.classList.add("is-new"); } }
-    const tl = document.querySelector(`.tile[data-slot="${s.id}"]`); if (tl) tl.classList.add("pulse");
-    const kf = document.getElementById("keeper-face"); if (kf) kf.src = RACE("peon-crown-pleased");
+    const hc = document.querySelector(`.hc[data-slot="${s.id}"]`); if (hc) hc.classList.add("pulse");
+    document.getElementById("keeper-face").src = RACE("peon-crown-pleased");
+    document.getElementById("bubble").innerHTML = "A good trade. " + said;
     document.getElementById("receipt").innerHTML = `${said} <button class="ork-btn quiet" id="undo">Undo</button>`;
     document.getElementById("undo").onclick = () => { if (s.kind === "hero") { s.value = old; if (!old) CHAIRS.find(x => x.lead === s.id).seated = "empty"; } else if (old === heroWay(s)) delete yours[s.id]; else yours[s.id] = old;
       drawChairs(); drawTable(); drawPotions(); document.getElementById("receipt").innerHTML = ""; };
     document.getElementById("ask-head").src = HEAD(BY["lead-tech"].value);
-  }, 440);
+  }, 480);
 }
 function seat(id) {
   const c = CHAIRS.find(x => x.id === id); if (c.seated) return;
   c.seated = "empty"; freshFlag = id; chair = id; view = null; sel = c.lead;
   drawChairs(); drawTable(); freshFlag = null;
-  document.getElementById("receipt").innerHTML = `<b>${CRAFTS[id].ti}</b> is at the table, its chair empty: its heroes are in your hand, the Orkmaster's pick starred.`;
+  document.getElementById("receipt").innerHTML = `<b>${CRAFTS[id].ti}</b> is at the table, its chair empty: its heroes are on the rug, the Orkmaster's pick starred.`;
 }
 function takeOff(c) {
   const was = { seated: c.seated, value: BY[c.lead].value };
@@ -805,20 +952,23 @@ function takeOff(c) {
   document.getElementById("undo").onclick = () => { c.seated = was.seated; BY[c.lead].value = was.value; chair = c.id; drawChairs(); drawTable(); document.getElementById("receipt").innerHTML = ""; };
 }
 
-/* the discard: a thing of the table dropped on it goes back to its default */
-const pile = document.getElementById("pile");
-pile.addEventListener("dragover", e => { if (!inv()) return; e.preventDefault(); pile.classList.add("is-over"); });
-pile.addEventListener("dragleave", () => pile.classList.remove("is-over"));
-pile.addEventListener("drop", e => { e.preventDefault(); pile.classList.remove("is-over"); giveBack(e.dataTransfer.getData("text/plain")); });
+/* back to default: a card of your hand dropped on the merchant's service (or on the discard) goes back to its default */
+const pile = document.getElementById("pile"), service = document.getElementById("service");
+[pile, service].forEach(t => {
+  t.addEventListener("dragover", e => { if (!inv()) return; e.preventDefault(); t.classList.add("is-over"); });
+  t.addEventListener("dragleave", () => t.classList.remove("is-over"));
+  t.addEventListener("drop", e => { e.preventDefault(); t.classList.remove("is-over"); giveBack(e.dataTransfer.getData("text/plain")); });
+});
+service.onclick = () => { if (sel) giveBack(sel); else document.getElementById("bubble").innerHTML = "Lift a card of your hand first, or drop one here: it goes back to its default, for nothing."; };
 let dragging = false;
-document.addEventListener("dragstart", e => { const t = e.target.closest && e.target.closest(".tile"); if (t) { dragging = true; e.dataTransfer.setData("text/plain", t.dataset.slot); } });
+document.addEventListener("dragstart", e => { const t = e.target.closest && e.target.closest(".hc"); if (t) { dragging = true; e.dataTransfer.setData("text/plain", t.dataset.slot); } });
 document.addEventListener("dragend", () => { dragging = false; });
 function giveBack(id) {
   const s = BY[id]; if (!s) return;
   const say = html => { document.getElementById("receipt").innerHTML = html; };
   pile.querySelector(".pile").classList.remove("took"); void pile.offsetWidth; pile.querySelector(".pile").classList.add("took");
   if (s.kind === "hero") return takeOff(CHAIRS.find(c => c.lead === id));
-  if (s.kind === "fixed-hero" || s.fixed) return say(`${s.lab} is the project's own: it goes back on the table.`);
+  if (isFixed(s)) return say(`${s.lab} is the project's own: it stays in your hand.`);
   if (!isYours(s)) return say(`<b>${s.lab}</b> is already at its default.`);
   const kept = yours[id]; delete yours[id]; drawTable(); drawPotions();
   say(`<b>${s.lab}</b> goes back to ${s.party ? "its hero's way" : "the project's default"}. <button class="ork-btn quiet" id="undo">Undo</button>`);
@@ -897,13 +1047,14 @@ document.getElementById("texes").innerHTML = [["felt", "The Orkmaster", "plain f
   .map(([t, who, line], i) => `<div class="tex"><div class="ork-table${i === 7 ? " stitch" : ""}" data-tex="${t}"><div class="mini">Waves<span class="ork-elem meadow"></span></div><span style="position:absolute;right:14px;top:14px;display:flex;gap:10px;align-items:flex-end">${t === "felt" ? "" : craftChair(t) + pennant(t, 2)}</span></div><span><b>${who}</b> · ${line}${t === "felt" ? "" : "; its empty chair and its card's corner"}</span></div>`).join("");
 
 /* the heads */
-const RACES_SHOWN = [["Tech · the shaman", ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"]], ["Product · the unicorn knight", ["uni-ost", "uni-jtbd", "uni-lean", "uni-shape"]], ["Design · the dryad", ["dry-heur", "dry-diamond", "dry-atom", "dry-sprint"]]];
+const RACES_SHOWN = [["Tech · the shaman", ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"]], ["Product · the unicorn knight", ["uni-ost", "uni-jtbd", "uni-lean", "uni-shape"]], ["Design · the dryad", ["dry-heur", "dry-diamond", "dry-atom", "dry-sprint"]], ["Run · the imp", ["imp-slo", "imp-obs"]], ["Marketing · the fairy", ["fairy-aarrr", "fairy-aso"]]];
 document.getElementById("heads-grid").innerHTML = RACES_SHOWN.map(([lab, ids]) => `<p class="h"><b>${lab}</b>calm at 48 × 44 and 24 × 22; worried, pleased, says no</p>` +
   ids.map(id => `<div class="cell"><b>${HEROES[id].name}</b>${HEROES[id].school}
     <div><img class="hd" src="${HEAD(id)}" width="48" height="44" alt=""><img class="hd" src="heads/${id}.png" width="24" height="22" alt=""></div>
     <div>${["worried", "pleased", "no"].map(m => `<img class="hd" src="heads/${id}-${m}.png" width="24" height="22" alt="">`).join("")}</div></div>`).join("")).join("");
 
 document.getElementById("ask-head").src = HEAD(BY["lead-tech"].value);
+document.getElementById("tables-gallery").innerHTML = TABLES.gallery();
 drawStage(); drawChairs(); drawTable(); drawPotions(); drawDie(); drawNormal();
 </script>
 </body>

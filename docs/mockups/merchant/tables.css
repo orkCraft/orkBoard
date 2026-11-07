@@ -1,0 +1,75 @@
+/* The eighteen tables (the owner, 7 November 2026): each leader's table laid as its hero reads it, a school each (decisions §266.3,
+   §184); the Orkmaster's the Board, Release Night King's dev against main. Every colour, face and size is orkUI's token; colour is a
+   signal (an alert, a failure, a pass, a goal's element), never a decoration. The project, its numbers and its names are made up. */
+.map { position: relative; height: 440px; margin-top: 10px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.map b { color: var(--ork-ink); font-weight: 600; }
+.mrow { display: flex; gap: 12px; align-items: flex-start; }
+.mcol { display: flex; flex-direction: column; gap: 8px; }
+.mh { font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); font-weight: 400; }
+.mh small { margin-left: 8px; font: var(--ork-type-caption); font-size: 10.5px; text-transform: none; letter-spacing: 0; color: var(--ork-ink-faint); }
+.mc { position: relative; width: 112px; min-height: 58px; padding: 6px 7px; display: flex; flex-direction: column; gap: 2px; flex: none;
+  background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch); }
+.mc b { font: 600 11.5px/14px var(--ork-font-read); color: var(--ork-ink); }
+.mc small { font-size: 10.5px; line-height: 13px; color: var(--ork-ink-muted); }
+.mc__top { display: flex; align-items: center; gap: 4px; height: 13px; }
+.mc__top .ork-sign { width: 12px; height: 12px; color: var(--ork-ink-muted); margin-left: auto; }
+.mc__top .ork-elem { transform: scale(.75); transform-origin: left center; }
+.mc.hot { border-color: var(--ork-alert); } .mc.bad { border-color: var(--ork-danger); } .mc.good { border-color: var(--ork-success); }
+.mc.on { border-color: var(--ork-ink); } .mc.faint { opacity: .45; }
+.mc.ghost { background: transparent; border-style: dashed; border-color: var(--ork-edge); }
+.mc.big b { font-size: 13px; line-height: 17px; }
+.ml { display: flex; flex-direction: column; gap: 8px; padding: 8px; background: color-mix(in srgb, var(--ork-ink) 3%, transparent); }
+.ml.now { box-shadow: inset 0 0 0 1px var(--ork-edge); }
+.ml__h { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+.ml__h span { font-family: var(--ork-font-read); text-transform: none; letter-spacing: 0; color: var(--ork-ink-faint); font-size: 10.5px; }
+.chip { display: inline-flex; align-items: center; gap: 3px; height: 18px; padding: 0 6px; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel);
+  font-size: 10.5px; color: var(--ork-ink-read); white-space: nowrap; }
+.chip.hot { border-color: var(--ork-alert); color: var(--ork-alert); } .chip.bad { border-color: var(--ork-danger); color: var(--ork-danger); }
+.chip.good { border-color: var(--ork-success); color: var(--ork-success); } .chip.mute { color: var(--ork-ink-faint); background: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.meter { display: block; width: 100%; height: 6px; background: var(--ork-frame); }
+.meter i { display: block; height: 100%; background: var(--ork-ink-muted); }
+.meter.hot i { background: var(--ork-alert); } .meter.bad i { background: var(--ork-danger); } .meter.good i { background: var(--ork-success); }
+.sq { display: inline-flex; gap: 2px; vertical-align: middle; }
+.sq i { width: 7px; height: 7px; background: var(--ork-frame); }
+.sq i.g { background: var(--ork-success); } .sq i.r { background: var(--ork-danger); } .sq i.a { background: var(--ork-alert); } .sq i.n { background: var(--ork-ink-muted); }
+.mfoot { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; padding-top: 8px; border-top: var(--ork-line) dashed var(--ork-frame); }
+.mnote { color: var(--ork-ink-faint); font-size: 10.5px; line-height: 13px; }
+.ok { color: var(--ork-success); } .no { color: var(--ork-danger); } .warn { color: var(--ork-alert); }
+/* a graph: boxes and named arrows */
+.mgraph { position: absolute; }
+.mgraph > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.mgraph > .node { position: absolute; }
+.mgraph > .node > .mc { width: 100%; height: 100%; }
+.elabel { position: absolute; transform: translate(-50%, -50%); padding: 0 4px; background: var(--ork-table); font-size: 10px; line-height: 13px; color: var(--ork-ink-muted); white-space: nowrap; }
+.region { position: absolute; border: 1px dashed var(--ork-edge); padding: 8px; }
+.region > .mh { display: block; margin-bottom: 6px; }
+/* a phone's screen, a wireframe */
+.phone { width: 76px; height: 132px; flex: none; display: flex; flex-direction: column; gap: 4px; padding: 9px 6px; background: var(--ork-room); border: 2px solid var(--ork-edge); }
+.phone i { display: block; height: 6px; background: var(--ork-frame); } .phone i.t { height: 4px; width: 60%; background: var(--ork-ink-faint); }
+.phone i.b { height: 26px; } .phone i.btn { height: 10px; width: 70%; margin-top: auto; align-self: center; background: var(--ork-action); }
+.phone.on { border-color: var(--ork-ink); }
+.screen { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.screen > b { font: 600 11px/14px var(--ork-font-read); }
+/* a time axis's bars (a trace, a burn) */
+.span { position: absolute; height: 14px; background: var(--ork-ink-muted); }
+.span.hot { background: var(--ork-alert); } .span.lo { background: var(--ork-edge); }
+.slab { position: absolute; font-size: 10.5px; color: var(--ork-ink-read); white-space: nowrap; }
+.bars { display: flex; align-items: flex-end; gap: 3px; }
+.bars i { width: 10px; background: var(--ork-ink-muted); } .bars i.hot { background: var(--ork-alert); } .bars i.lo { background: var(--ork-frame); }
+
+/* ---------- the gallery: a figure a table ---------- */
+.tables { display: flex; flex-direction: column; gap: 28px; }
+.tfig { width: 1052px; background: var(--ork-room); padding: 12px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
+.tfig__top { display: flex; align-items: flex-end; gap: 16px; height: 74px; padding-left: 24px; }
+.tfig__top .chair { cursor: default; }
+.tfig__who { display: flex; flex-direction: column; gap: 2px; padding-bottom: 6px; }
+.tfig__who b { font-family: var(--ork-font-pixel); font-weight: 400; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+.tfig__who span { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.tfig__lays { margin-left: auto; max-width: 430px; padding-bottom: 6px; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.tfig .table.ork-table { min-height: 0; }
+.tfig__n { font-family: var(--ork-font-pixel); font-size: 11px; color: var(--ork-ink-faint); padding-bottom: 8px; }
+.tindex { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; max-width: 1052px; }
+.tindex a { display: flex; align-items: center; gap: 8px; font: var(--ork-type-caption); color: var(--ork-ink-muted); text-decoration: none; }
+.tindex a:hover { color: var(--ork-ink); }
+.tindex img { width: 24px; height: 22px; }

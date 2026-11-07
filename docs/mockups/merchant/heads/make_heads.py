@@ -1,4 +1,5 @@
-"""The merchant mockup's heads: four variants of three leaders (Tech's shaman, Product's unicorn knight, Design's dryad),
+"""The merchant mockup's heads: four variants of three leaders (Tech's shaman, Product's unicorn knight, Design's dryad) and
+two of two more (Run's imp, Marketing's fairy),
 each its race's elder head with a few colours and cells changed, and the moods laid over it from orkUI's own mood heads
 (the cells where a mood differs from the calm head). Drawn here first; they would go into orkUI's races.json after a yes.
 Run from the repository's root: python docs/mockups/merchant/heads/make_heads.py"""
@@ -51,6 +52,12 @@ VARIANTS = {
     "dry-diamond": ("dryad", {"#eadcc2": "#d9c09c", "#a98259": "#cac7c1", "#d8c38a": "#ac8b4d"}, []),
     "dry-atom": ("dryad", {"#eadcc2": "#d6dcc8", "#a98259": "#6e5034", "#d8c38a": "#aca8a1"}, []),
     "dry-sprint": ("dryad", {"#eadcc2": "#e6c9b4", "#d8c38a": "#9a6b4a"}, [(0, 0, "#f0ede4"), (11, 0, "#f0ede4")]),
+    # Run's imp: the skin (#b07259, shade #9e686a), the horns (#d3c29a), a detail
+    "imp-slo": ("imp", {}, []),
+    "imp-obs": ("imp", {"#b07259": "#8c6f86", "#9e686a": "#77596f", "#d3c29a": "#aca8a1"}, [(3, 5, "#cac7c1"), (6, 5, "#cac7c1")]),
+    # Marketing's fairy: the skin (#e3b58c, shade #c99a74), the wings (#d8e6ea), the beard (#ece4cf)
+    "fairy-aarrr": ("fairy", {}, []),
+    "fairy-aso": ("fairy", {"#e3b58c": "#d4a07c", "#c99a74": "#b8845e", "#d8e6ea": "#e6d8b0", "#ece4cf": "#aca8a1"}, []),
 }
 
 for name, (race, swap, cells) in VARIANTS.items():
