@@ -3,19 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Setting the Table</title>
+<title>The Inventory</title>
 <link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
 <link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
 <link rel="stylesheet" href="../../../design-system/orkui/components.css">
 <style>
-/* An experiment, not a goal (the owner, 6 November 2026): the project's setup as the hand and the table, no new surface. Opened, the
-   leaders and their lanes step away: the Orkmaster sits alone at the far side and the table is bare. The hand turns into what you have,
-   three narrow fans, each a third of the width at most: Who (the leaders and an empty place), When and how much (the project's rules),
-   How you are asked (the questions no one party owns). A card pressed lays its ways on the table, a row a part, each priced against
-   what you have in the first potion's week and hatched on the potions; a leader pressed lays its party's own parts under it. Take
-   trades: the new flies into the hand, yours stays on the table as *Yours before*. Leaving, the leaders come back and a new one sits
-   down at its tab. A card's corner says what it is, so a fan's thin edges read. Every colour, face and size is orkUI's token; the
-   heads' variants (heads/make_heads.py), the lock, the satchel and the answer cards' art are drawn here first. Prices are made up. */
+/* An experiment, not a goal (the owner, 6–7 November 2026): the Inventory, how the project is set, as the chairs, the table and the
+   hand. The backpack at the chairs' end (after Release and the empty chair, before Stop all's door) opens it: the table's edge is
+   stitched, the chairs stay. A chair picked says whose: the Orkmaster's is the whole project, a leader's its party. The chair itself
+   pressed lays its heroes on the table (a hero brings its school, its flow, its size and its temper, with its stats); the hand holds
+   that chair's other settings, one fan, and a card pressed lays its ways on the table, a row a part, priced against yours and hatched
+   on the potions. A hero brings its own ways of answering; what you set yourself is marked *yours* and stays when the hero changes.
+   The table wears a texture a chair (Tech's grid, Design's dots, Product's contours, Release's stones, the Orkmaster's plain felt), in
+   the ink at a few percent, so whose table it is reads without a colour; the Inventory is told by the stitch on its edge. Every colour,
+   face and size is orkUI's token; the heads' variants (heads/make_heads.py), the backpack, the textures, the stitch, the lock and the
+   answer cards' art are drawn here first. Prices are made up. */
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--ork-canvas); color-scheme: dark; }
 body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body);
@@ -30,12 +32,12 @@ button { font: inherit; }
 .mk-main { padding-block: var(--ork-6); display: flex; flex-direction: column; gap: 56px; }
 .mk-sec { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; scroll-margin-top: 64px; }
 .mk-sec > h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); }
-.mk-line { max-width: 110ch; color: var(--ork-ink-read); }
+.mk-line { max-width: 112ch; color: var(--ork-ink-read); }
 .mk-line b { color: var(--ork-ink); }
 .mk-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ork-4) var(--ork-8); max-width: 1160px; }
 .mk-notes p { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .mk-notes p b { color: var(--ork-ink); font-weight: 600; }
-.mk-foot { max-width: 110ch; margin-bottom: var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-foot { max-width: 112ch; margin-bottom: var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .scroll-x { overflow-x: auto; max-width: 100%; padding-bottom: var(--ork-2); }
 .hd { image-rendering: pixelated; flex: none; display: block; }
 .ico { width: 16px; height: 16px; fill: currentColor; shape-rendering: crispEdges; flex: none; }
@@ -44,42 +46,64 @@ button { font: inherit; }
 /* ---------- the window ---------- */
 .win { position: relative; width: 1196px; background: var(--ork-room); padding: var(--ork-5) var(--ork-5) var(--ork-6); }
 .win__grid { display: grid; grid-template-columns: 1012px 140px; column-gap: var(--ork-6); }
-.far { height: 86px; display: flex; align-items: flex-end; gap: 40px; padding-left: 40px; }
-.tab { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); color: var(--ork-ink-muted); font: var(--ork-type-caption);
-  transition: opacity .35s var(--ork-motion-ease), transform .35s var(--ork-motion-ease); }
-.tab__seat { position: relative; display: grid; place-items: end center; }
-.tab__seat .ork-chair { position: absolute; bottom: 2px; }
-.tab__seat img { position: relative; z-index: 1; }
-.tab.open { color: var(--ork-ink); font-weight: 600; }
-.tab img.is-new { animation: seat .7s var(--ork-motion-ease); }
+.chairs { height: 92px; display: flex; align-items: flex-end; gap: 30px; padding-left: 30px; }
+.chair { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0; background: none; border: 0; cursor: pointer; color: var(--ork-ink-muted); font: var(--ork-type-caption); min-width: 64px; }
+.chair__seat { position: relative; display: grid; place-items: end center; height: 50px; }
+.chair__seat .ork-chair { position: absolute; bottom: 2px; }
+.chair__seat img { position: relative; z-index: 1; width: 36px; height: 33px; transition: width .2s, height .2s; }
+.chair small { color: var(--ork-ink-faint); font-size: 10px; line-height: 12px; height: 12px; }
+.chair.on { color: var(--ork-ink); font-weight: 600; }
+.chair.on .chair__seat img { width: 48px; height: 44px; }
+.chair:hover { color: var(--ork-ink); }
+.chair img.is-new { animation: seat .7s var(--ork-motion-ease); }
 @keyframes seat { 0% { transform: translateY(-18px) scale(1.2); } 60% { transform: translateY(2px); } 100% { transform: none; } }
-.keeper { display: none; align-items: flex-start; gap: var(--ork-4); }
-.bubble { position: relative; max-width: 560px; padding: var(--ork-3) var(--ork-4); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-read); }
-.bubble::before { content: ""; position: absolute; left: -7px; top: 14px; width: 12px; height: 12px; background: var(--ork-raised); border-left: var(--ork-line) solid var(--ork-frame); border-bottom: var(--ork-line) solid var(--ork-frame); transform: rotate(45deg); }
-.bubble b { color: var(--ork-ink); font-weight: 600; }
-.win.shop .tab:not(.open) { opacity: 0; transform: translateY(-12px); pointer-events: none; }
-.win.shop .tab.open { display: none; }
-.win.shop .keeper { display: flex; }
+.chairs .gap { flex: 1; }
+.pack { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; background: none; border: var(--ork-line) solid transparent; cursor: pointer; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; }
+.pack:hover { border-color: var(--ork-frame); color: var(--ork-ink); }
+.pack svg { display: block; shape-rendering: crispEdges; }
+.win.inv .pack { color: var(--ork-ink); }
+.door { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 11px; margin-right: 10px; }
 
-.table.ork-table { position: relative; min-height: 470px; padding: 14px 18px 18px; }
-.table__title { font: var(--ork-type-caption); color: var(--ork-ink-muted); display: flex; align-items: center; gap: var(--ork-4); min-height: 26px; }
-.table__title b { color: var(--ork-ink); font-weight: 600; }
-.table__title .back { margin-left: auto; }
-/* the table as the Board: lanes, shown while the stall is shut */
-.lanes { display: none; grid-template-columns: repeat(4, 160px); gap: 12px; margin-top: 10px; padding-left: 22px; }
-.win:not(.shop) .lanes { display: grid; }
-.lane { height: 400px; background: color-mix(in srgb, var(--ork-ink) 3%, transparent); padding: 10px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+/* the table, its texture a chair, its edge stitched in the Inventory */
+.table.ork-table { position: relative; isolation: isolate; min-height: 500px; padding: 14px 20px 18px; }
+.table::before { content: ""; position: absolute; inset: 3px; z-index: -1; pointer-events: none; background: var(--ork-ink); opacity: .055;
+  -webkit-mask-repeat: repeat; mask-repeat: repeat; transition: opacity .3s; }
+.table::after { content: ""; position: absolute; inset: 7px; pointer-events: none; opacity: 0; transition: opacity .3s;
+  border: 2px solid transparent; border-image: repeating-linear-gradient(90deg, var(--ork-edge) 0 6px, transparent 6px 10px) 2; }
+.win.inv .table::after { opacity: .75; }
+[data-tex="felt"]::before { opacity: 0; }
+[data-tex="grid"]::before { -webkit-mask-image: var(--tex-grid); mask-image: var(--tex-grid); }
+[data-tex="dots"]::before { -webkit-mask-image: var(--tex-dots); mask-image: var(--tex-dots); opacity: .09; }
+[data-tex="contours"]::before { -webkit-mask-image: var(--tex-contours); mask-image: var(--tex-contours); opacity: .07; }
+[data-tex="stones"]::before { -webkit-mask-image: var(--tex-stones); mask-image: var(--tex-stones); }
+:root {
+  --tex-grid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M0 .5H24M.5 0V24' stroke='%23000' fill='none'/%3E%3C/svg%3E");
+  --tex-dots: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Crect width='2' height='2'/%3E%3C/svg%3E");
+  --tex-contours: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120'%3E%3Cg fill='none' stroke='%23000'%3E%3Cpath d='M0 20C40 4 80 36 120 20S160 10 160 20'/%3E%3Cpath d='M0 50C30 36 70 70 110 52S150 40 160 50'/%3E%3Cpath d='M0 80C40 62 70 98 120 82S150 72 160 80'/%3E%3Cpath d='M0 108C40 96 80 120 120 106S150 100 160 108'/%3E%3Cellipse cx='60' cy='66' rx='14' ry='7'/%3E%3C/g%3E%3C/svg%3E");
+  --tex-stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16'%3E%3Cpath d='M0 .5H32M0 8.5H32M.5 0V8M16.5 8V16' stroke='%23000' fill='none'/%3E%3C/svg%3E");
+}
+.table__head { display: flex; align-items: center; gap: var(--ork-4); min-height: 28px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.table__head b { color: var(--ork-ink); font-weight: 600; }
+.table__head .pix { font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+.table__head .back { margin-left: auto; }
+.says { display: none; margin-top: 8px; align-items: flex-start; gap: 8px; font: var(--ork-type-caption); color: var(--ork-ink-read); max-width: 760px; }
+.says img { width: 24px; height: 22px; }
+.says b { color: var(--ork-ink); font-weight: 600; }
+.win.inv .says { display: flex; }
+/* the Board's lanes, while the Inventory is shut */
+.lanes { display: grid; grid-template-columns: repeat(5, 160px); gap: 12px; margin-top: 10px; padding-left: 10px; }
+.win.inv .lanes { display: none; }
+.lane { height: 420px; background: color-mix(in srgb, var(--ork-ink) 3%, transparent); padding: 10px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .mini { width: 64px; height: 90px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch); font: 600 10px/12px var(--ork-font-read); color: var(--ork-ink-read); }
 .mini .ork-elem { align-self: flex-end; }
-/* the table as the counter: a row a part */
-.rows { display: none; flex-direction: column; gap: var(--ork-6); margin-top: 8px; }
-.win.shop .rows { display: flex; }
+/* the ways, a row a part */
+.rows { display: none; flex-direction: column; gap: var(--ork-6); margin-top: 14px; }
+.win.inv .rows { display: flex; }
 .row { display: grid; grid-template-columns: 150px 1fr; gap: var(--ork-5); align-items: center; }
 .row__lab { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .row__lab b { display: block; color: var(--ork-ink); font-weight: 600; }
 .row__opts { display: flex; flex-wrap: wrap; gap: var(--ork-5); align-items: flex-end; }
-.row.sub { padding-top: var(--ork-5); border-top: 2px solid transparent; border-image: repeating-linear-gradient(90deg, var(--ork-table-rim-hi) 0 2px, transparent 2px 8px) 2; }
-.rows__empty { color: var(--ork-ink-faint); font: var(--ork-type-caption); padding: 40px 0 0; }
+.rows__empty { color: var(--ork-ink-faint); font: var(--ork-type-caption); padding: 30px 0 0; }
 .ware { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .ware .face { cursor: pointer; }
 .ware:not(.mine):not(.locked):hover .face { transform: translateY(-6px); border-color: var(--ork-edge); }
@@ -89,26 +113,28 @@ button { font: inherit; }
 @keyframes pulse { 40% { transform: scale(1.06); } }
 .tag { font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-muted); white-space: nowrap; display: flex; align-items: center; gap: 4px; height: 16px; }
 .tag.more { color: var(--ork-ink); } .tag.less { color: var(--ork-success); } .tag.money { color: var(--ork-warning); } .tag.mine { color: var(--ork-ink); font-weight: 600; }
-.ware small { max-width: 128px; text-align: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; }
+.ware small { max-width: 132px; text-align: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; }
 .ware .before { color: var(--ork-ink-muted); font-style: italic; }
-.ware .take { padding: 1px 12px; }
 .ware .star { color: var(--ork-alert); }
+.ware .heros { color: var(--ork-ink-muted); }
+.ware .take { padding: 1px 12px; }
 
 /* ---------- the faces on the table ---------- */
 .face { position: relative; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch);
   transition: transform var(--ork-motion-base) var(--ork-motion-ease), border-color var(--ork-motion-quick); }
-.f-hero { width: 120px; height: 164px; padding: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-2); }
+.f-hero { width: 148px; height: 236px; padding: var(--ork-3); display: flex; flex-direction: column; gap: 3px; }
 .f-hero .hd { align-self: center; margin-top: 2px; }
 .f-hero__name { font: 600 12px/15px var(--ork-font-read); color: var(--ork-ink); text-align: center; }
-.f-hero__school { font: var(--ork-type-caption); font-size: 11px; line-height: 13px; color: var(--ork-ink-muted); text-align: center; }
-.f-hero__spec { flex: 1; min-height: 0; overflow: hidden; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-table); padding: 3px 5px; font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; color: var(--ork-ink-read); }
+.f-hero__school { font: var(--ork-type-caption); font-size: 11px; line-height: 13px; color: var(--ork-ink-muted); text-align: center; min-height: 26px; }
+.stats { margin-top: 2px; border-top: var(--ork-line) solid var(--ork-card-frame); padding-top: 4px; display: grid; grid-template-columns: auto 1fr; gap: 3px 6px; font: var(--ork-type-caption); font-size: 10px; line-height: 13px; color: var(--ork-ink-muted); }
+.stats b { color: var(--ork-ink); font-weight: 600; }
+.bar { display: flex; align-items: center; gap: 3px; } .bar i { width: 9px; height: 7px; background: var(--ork-frame); } .bar i.on { background: var(--ork-ink); }
+.bar span { color: var(--ork-ink-faint); }
 .f-tok { width: 118px; height: 80px; padding: var(--ork-3); display: flex; flex-direction: column; gap: 3px; }
-.f-tok__top { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); height: 18px; }
-.f-tok__top .ork-sign { width: 16px; height: 16px; }
+.f-tok__top { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); height: 22px; }
+.f-tok__top .ork-sign { width: 16px; height: 16px; } .f-tok__top img { width: 24px; height: 22px; }
 .f-tok__ti { font: 600 12px/15px var(--ork-font-read); color: var(--ork-ink); }
 .f-tok__line { font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; color: var(--ork-ink-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.f-size { width: 86px; height: 50px; display: grid; place-items: center; text-align: center; font: 600 12px/15px var(--ork-font-read); }
-.f-size i { font-style: normal; display: block; font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink-faint); }
 .f-pot { width: 86px; height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-read); }
 .f-pot.empty { background: none; border-style: dashed; border-color: var(--ork-frame); color: var(--ork-ink-faint); }
 .f-pot__mark { display: flex; align-items: center; gap: 3px; } .f-pot__mark img { width: 14px; height: 14px; }
@@ -141,35 +167,30 @@ button { font: inherit; }
 .art-declare .ork-sign { width: 20px; height: 20px; color: var(--ork-ink); }
 .f-ans .conf { position: absolute; right: 4px; top: 4px; width: 12px; height: 12px; color: var(--ork-alert); }
 
-/* ---------- the hand: three fans, a third each at most ---------- */
-.hand { position: relative; height: 250px; margin-top: var(--ork-5); }
-.fans { display: none; grid-template-columns: repeat(3, 330px); gap: 11px; height: 210px; }
-.win.shop .fans { display: grid; }
-.fan-labs { display: none; grid-template-columns: repeat(3, 330px); gap: 11px; }
-.win.shop .fan-labs { display: grid; }
-.fan-labs p { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.fan-labs b { font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); margin-right: 6px; }
-.fan { position: relative; height: 196px; }
-.fan__lab { position: absolute; bottom: 6px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+/* ---------- the hand: the picked chair's fan ---------- */
+.hand { position: relative; height: 236px; margin-top: var(--ork-5); }
+.fan { display: none; position: relative; height: 200px; margin-left: 30px; }
+.win.inv .fan { display: block; }
+.fan__lab { display: none; margin: 6px 0 0 30px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .fan__lab b { font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); margin-right: 6px; }
-.hc { position: absolute; top: 18px; width: 104px; height: 168px; padding: 5px 6px 6px 34px; cursor: pointer; text-align: left;
+.win.inv .fan__lab { display: block; }
+.hc { position: absolute; top: 20px; width: 112px; height: 168px; padding: 5px 6px 6px 36px; cursor: pointer; text-align: left;
   background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch);
-  transition: transform .22s var(--ork-motion-ease), border-color .15s; box-shadow: -2px 0 0 var(--ork-room); }
-.hc:hover { transform: translateY(-34px) rotate(0deg) !important; border-color: var(--ork-edge); z-index: 30 !important; }
-.hc.is-on { transform: translateY(-22px) rotate(0deg) !important; border-color: var(--ork-ink); z-index: 29 !important; }
-.hc.place { background: none; border: 2px dashed var(--ork-frame); color: var(--ork-ink-faint); display: grid; place-items: center; padding: 6px; font: var(--ork-type-caption); font-size: 11px; text-align: center; }
-/* a card's corner: what it is, readable on a fan's thin edge */
-.hc__idx { position: absolute; left: 5px; top: 5px; width: 26px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ork-ink-muted); font: 600 9px/10px var(--ork-font-read); text-align: center; }
+  transition: transform .22s var(--ork-motion-ease), border-color .15s; }
+.hc:hover { transform: translateY(-30px) rotate(0deg) !important; border-color: var(--ork-edge); z-index: 30 !important; }
+.hc.is-on { transform: translateY(-46px) rotate(0deg) !important; border-color: var(--ork-ink); z-index: 29 !important; }
+.hc__idx { position: absolute; left: 5px; top: 5px; width: 28px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ork-ink-muted); font: 600 9px/10px var(--ork-font-read); text-align: center; }
 .hc__idx img { width: 24px; height: 22px; }
 .hc__idx .ork-sign, .hc__idx .ico { width: 16px; height: 16px; }
-.hc__idx .lock { margin-top: 2px; }
 .hc__what { font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; color: var(--ork-ink-muted); }
 .hc__val { margin-top: 3px; font: 600 12px/15px var(--ork-font-read); color: var(--ork-ink); }
 .hc__line { margin-top: 4px; font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; color: var(--ork-ink-faint); }
-.hc .big { display: block; margin: 6px 0 4px; }
-.fan .hc:not(:last-child):not(:hover):not(.is-on) .hc__body { visibility: hidden; }
-.normal-hand { display: flex; gap: var(--ork-8); padding-left: 40px; }
-.win.shop .normal-hand { display: none; }
+.hc .yours { display: inline-block; margin-top: 6px; padding: 0 4px; border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink); }
+.hc .heros { display: inline-block; margin-top: 6px; font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink-faint); }
+.fan.tight .hc:not(:last-child):not(:hover):not(.is-on) .hc__body { visibility: hidden; }
+.fan__none { position: absolute; left: 0; top: 60px; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.normal-hand { display: flex; gap: var(--ork-8); padding-left: 30px; }
+.win.inv .normal-hand { display: none; }
 .k.ork-card { width: 128px; height: 190px; padding: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-2); border-color: var(--ork-alert); }
 .k__top { height: 18px; display: flex; align-items: center; justify-content: space-between; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; }
 .k__top span { display: flex; align-items: center; gap: 3px; } .k__top img { width: 16px; height: 15px; }
@@ -182,14 +203,22 @@ button { font: inherit; }
 .edge { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--ork-8); padding-top: 120px; }
 .edge__ring { position: relative; width: 104px; height: 104px; }
 .edge__ring .ork-portal-ring { transform: scale(0.542); transform-origin: 0 0; }
-.satchel { display: grid; justify-items: center; gap: var(--ork-1); padding: var(--ork-2) var(--ork-3); background: none; border: var(--ork-line) solid transparent; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; cursor: pointer; }
-.satchel:hover { border-color: var(--ork-frame); color: var(--ork-ink); }
-.win.shop .satchel { background: var(--ork-raised); border-color: var(--ork-edge); color: var(--ork-ink); }
-.satchel svg { display: block; shape-rendering: crispEdges; }
+.pile { position: relative; width: 48px; height: 67px; }
+.pile .ork-card-back { position: absolute; width: 48px; }
+.pile .ork-card-back:nth-child(1) { transform: translate(-3px, 3px) rotate(-4deg); } .pile .ork-card-back:nth-child(2) { transform: rotate(3deg); }
 .potions { display: flex; gap: var(--ork-4); align-items: flex-end; margin-top: auto; padding-bottom: 60px; }
 .potion-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .potion-box img { width: 14px; height: 14px; }
 .flying { position: fixed; z-index: 100; pointer-events: none; margin: 0; }
+
+/* ---------- the textures, side by side ---------- */
+.texes { display: flex; flex-wrap: wrap; gap: var(--ork-6); }
+.tex { display: flex; flex-direction: column; gap: 6px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.tex b { color: var(--ork-ink); font-weight: 600; }
+.tex .ork-table { position: relative; isolation: isolate; width: 200px; height: 130px; }
+.tex .ork-table::before { content: ""; position: absolute; inset: 3px; z-index: -1; background: var(--ork-ink); opacity: .055; -webkit-mask-repeat: repeat; mask-repeat: repeat; }
+.tex .ork-table.stitch::after { content: ""; position: absolute; inset: 7px; border: 2px solid transparent; border-image: repeating-linear-gradient(90deg, var(--ork-edge) 0 6px, transparent 6px 10px) 2; opacity: .75; }
+.tex .mini { position: absolute; left: 20px; top: 20px; }
 
 /* ---------- the heads ---------- */
 .heads { display: grid; grid-template-columns: 220px repeat(4, 160px); gap: var(--ork-4) var(--ork-5); align-items: center; }
@@ -202,44 +231,34 @@ button { font: inherit; }
 </head>
 <body>
 <header class="mk-bar">
-  <b>Setting the table</b>
-  <nav><a href="#set">1 · The hand and the table</a><a href="#heads">2 · The heroes' faces</a><a href="#notes">What it changes</a></nav>
+  <b>The inventory</b>
+  <nav><a href="#inv">1 · The inventory</a><a href="#tex">2 · Whose table: the textures</a><a href="#heads">3 · The heroes' faces</a><a href="#notes">What it changes</a></nav>
 </header>
 
 <main class="mk-main">
-<section class="mk-sec" id="set">
-  <h1>1 · The hand is what you have, the table what you could take</h1>
-  <p class="mk-line">The satchel at the table's edge <b>sends the leaders and their lanes away</b>: the Orkmaster sits alone at the far side and the
-    table is bare. <b>The hand turns into what you have</b>, three fans, each a third of the width at most: <i>Who</i>, <i>When and how much</i>,
-    <i>How you are asked</i>. <b>Press a card</b>: its ways lie on the table, a row a part, each priced against yours and hatched on the potions;
-    a leader lays its party's own parts under it. <b>Take</b> trades: the new flies into your hand, yours stays on the table as <i>Yours before</i>.
-    <b>Back to the table</b>: the leaders come back, and a new one sits down at its tab.</p>
+<section class="mk-sec" id="inv">
+  <h1>1 · The inventory: the chairs say whose, the hand holds it, the table lays the ways</h1>
+  <p class="mk-line"><b>The backpack</b> at the chairs' end opens the inventory: the table's edge is stitched, the chairs stay. <b>Pick a chair</b>:
+    the Orkmaster's is the whole project, a leader's its party; the table takes that chair's texture. <b>Press the chair again</b> and its heroes
+    lie on the table: a hero brings its school, its flow, its size and its temper. <b>The hand</b> holds that chair's other settings; a card
+    pressed lays its ways on the table, priced against yours and hatched on the potions. What you set yourself is marked <i>yours</i>, and stays
+    when the hero changes. Close the backpack: the lanes come back, a new hero sits down at its chair.</p>
 
   <div class="scroll-x">
-  <div class="win shop" id="win">
+  <div class="win inv" id="win">
     <div class="win__grid">
       <div>
-        <div class="far">
-          <div class="tab open"><span class="tab__seat"><span class="ork-chair big"></span><img class="hd" src="../../../design-system/orkui/races/peon-crown@2x.png" width="48" height="44" alt=""></span>Party game</div>
-          <div class="tab"><span class="tab__seat"><span class="ork-chair"></span><img class="hd" data-tab="lead-product" width="36" height="33" alt=""></span>Product</div>
-          <div class="tab"><span class="tab__seat"><span class="ork-chair"></span><img class="hd" data-tab="lead-design" width="36" height="33" alt=""></span>Design</div>
-          <div class="tab"><span class="tab__seat"><span class="ork-chair"></span><img class="hd" data-tab="lead-tech" width="36" height="33" alt=""></span>Tech</div>
-          <div class="keeper">
-            <span class="tab__seat"><span class="ork-chair big"></span><img class="hd" id="keeper" src="../../../design-system/orkui/races/peon-crown@2x.png" width="48" height="44" alt=""></span>
-            <p class="bubble" id="bubble"></p>
-          </div>
-        </div>
-
-        <div class="table ork-table">
-          <p class="table__title" id="title"></p>
+        <div class="chairs" id="chairs"></div>
+        <div class="table ork-table" id="table" data-tex="felt">
+          <div class="table__head" id="head"></div>
+          <p class="says" id="says"></p>
           <div class="lanes" id="lanes"></div>
           <div class="rows" id="rows"></div>
           <p class="receipt" id="receipt"></p>
         </div>
-
         <div class="hand">
-          <div class="fans" id="fans"></div>
-          <div class="fan-labs" id="fan-labs"></div>
+          <div class="fan" id="fan"></div>
+          <p class="fan__lab" id="fan-lab"></p>
           <div class="normal-hand">
             <div class="k ork-card">
               <div class="k__top"><span><img class="hd" id="ask-head" alt="">Tech</span><span class="ork-sign question" style="color:var(--ork-alert)"></span></div>
@@ -249,10 +268,9 @@ button { font: inherit; }
           </div>
         </div>
       </div>
-
       <div class="edge">
         <div class="edge__ring"><span class="ork-portal-ring"></span></div>
-        <button class="satchel" id="satchel" title="Set the table"><svg id="satchel-art" width="48" height="48" viewBox="0 0 16 16"></svg>Set the table</button>
+        <div class="pile"><span class="ork-card-back small"></span><span class="ork-card-back small"></span></div>
         <div class="potions" id="edge-potions"></div>
       </div>
     </div>
@@ -260,26 +278,34 @@ button { font: inherit; }
   </div>
 </section>
 
+<section class="mk-sec" id="tex">
+  <h1>2 · Whose table: a texture a chair, a stitch for the inventory</h1>
+  <p class="mk-line">No colour: <b>a pattern in the ink at a few percent</b> on the table's surface, under the cards, so whose table it is reads at a
+    glance on any day, not only in the inventory. <b>The inventory is told by its edge</b>, a stitch like the backpack's seam: the mode by the edge,
+    whose by the texture, so the two never mix.</p>
+  <div class="texes" id="texes"></div>
+</section>
+
 <section class="mk-sec" id="heads">
-  <h1>2 · The heroes' faces</h1>
+  <h1>3 · The heroes' faces</h1>
   <p class="mk-line">Four heroes a leader's race, each its race's elder head with <b>its skin or helm, its horns, antlers or wings and one detail</b>
-    changed (<code>heads/make_heads.py</code>); the hood stays the tier's gear, the unicorn's helm a warm metal (grey is the plain knight's), no skin
-    the action's green. The moods are laid over each from orkUI's own. At the window's sizes: 48 × 44 and 24 × 22, the corner of a fanned card.</p>
+    changed (<code>heads/make_heads.py</code>); the hood stays the tier's gear, the unicorn's helm a warm metal, no skin the action's green; the moods
+    laid over each from orkUI's own. At the window's sizes: 48 × 44 and 24 × 22.</p>
   <div class="scroll-x"><div class="heads" id="heads-grid"></div></div>
 </section>
 
 <section class="mk-sec" id="notes">
   <h1>What it changes</h1>
   <div class="mk-notes">
-    <p><b>No new surface.</b> The stall is a mode of the hand and the table: the hand holds what you have, the table lays what you could take, as a lifted card lays its answers today. Nothing scrolls sideways; the fans are a third each.</p>
-    <p><b>Three questions, three fans.</b> <i>Who</i>: the leaders and an empty place. <i>When and how much</i>: how deep, the look, the starts, your hours, the cloud, the push, the day's cap, the gate. <i>How you are asked</i>: the questions no one party owns. A party's own (its size, its questions, its conflicts) lie under its leader on the table.</p>
-    <p><b>A card's corner says what it is.</b> A fan shows each card's left edge only: the leader's head and its party, or the rule's sign and one word, as a playing card's index. The whole card rises on hover.</p>
-    <p><b>A choice is a trade, priced as a difference.</b> Yours stays on the table as <i>Yours before</i>, and taking it back is the undo; each way says what it adds or saves in the first potion's week, hatched on the potions before you take it. Money is said as money.</p>
-    <p><b>The Orkmaster keeps it.</b> Alone at the far side, its bubble says what it would take and why; its pick is starred on the table.</p>
-    <p><b>Open for the owner.</b> Is the satchel the way in, or Settings' <i>This project</i>? Does a fan of eight read at a 31-pixel edge, or does <i>When and how much</i> split in two? Do a party's own parts stay under its leader, or get a fan of their own?</p>
+    <p><b>The window's own axis.</b> A tab already says <i>through whom</i>; in the inventory a chair says <i>whose settings</i>. Nothing disappears, nothing new to learn: the chairs stay, the table and the hand change what they hold.</p>
+    <p><b>A hero is a set.</b> The chair pressed lays its heroes with their stats: school, flow, size, how much it decides itself, how often it says no, the cost. The hand never repeats them.</p>
+    <p><b>Yours outlives the hero.</b> A hero brings its own ways of answering its party's questions; what you set yourself is marked <i>yours</i> and stays when the hero changes. Your trust is yours (§52.6).</p>
+    <p><b>Whose by texture, the mode by the edge.</b> Tech's grid, Design's dots, Product's contours, Release's stones, the Orkmaster's plain felt; the inventory's stitch. No new colour: colour stays a signal.</p>
+    <p><b>One way in.</b> The backpack after the chairs, apart from Stop all's door. Settings' <i>…</i> keeps the plumbing (sign-ins, the phone, updates, logs) and ends with <i>How the project is set: Inventory</i>.</p>
+    <p><b>Open for the owner.</b> <i>Inventory</i> is a game's word: it goes into <code>TERMS</code> with plain words beside it (<i>how the project is set</i>). Do the seats (Does, Checks) go into a leader's hand, or stay with the hero? Do the textures go into orkUI for every day, or only for the inventory?</p>
   </div>
-  <p class="mk-foot">An experiment of 6 November 2026, not a goal and not a spec. Every colour, face and size is orkUI's token; the heads' variants, the lock,
-    the satchel and the answer cards' art are drawn here first and would go into orkUI after a yes. The prices are made up.</p>
+  <p class="mk-foot">An experiment of 6–7 November 2026, not a goal and not a spec. Every colour, face and size is orkUI's token; the heads' variants, the backpack,
+    the textures, the stitch, the lock and the answer cards' art are drawn here first and would go into orkUI after a yes. The prices are made up.</p>
 </section>
 </main>
 
@@ -288,22 +314,25 @@ const ORK = "../../../design-system/orkui/";
 const ICON = id => `<svg class="ico" aria-hidden="true"><use href="${ORK}icons/icons.svg#${id}"/></svg>`;
 const SIGN = (id, cls = "") => `<span class="ork-sign ${id} ${cls}" aria-hidden="true"></span>`;
 const HEAD = (id, mood = "") => `heads/${id}${mood ? "-" + mood : ""}@2x.png`;
+const RACE = id => `${ORK}races/${id}@2x.png`;
 const LOCK = `<svg class="lock" viewBox="0 0 7 8" aria-hidden="true" style="shape-rendering:crispEdges"><path fill="var(--ork-ink-muted)" d="M2 0h3v1H2zM1 1h1v2H1zM5 1h1v2H5zM0 3h7v5H0z"/><path fill="var(--ork-card)" d="M3 5h1v2H3z"/></svg>`;
+const L = "A decision is never rewritten: a new one replaces it, and that is yours";
+const M = "Going into main is always yours";
 
-/* ---------------- the ways ---------------- */
+/* ---------------- the heroes: a set each ---------------- */
 const HEROES = {
-  "uni-ost":     { name: "Angel Invest Knight", school: "Opportunity solution tree", spec: "Ties every goal to the job it serves, and shows the jobs no goal serves.", d: 0 },
-  "uni-jtbd":    { name: "Jobwise Knight", school: "Jobs to be done", spec: "Asks what job a player hires the game for, before any feature.", d: 0 },
-  "uni-lean":    { name: "Pivot Knight", school: "Lean Startup", spec: "No work without a hypothesis and its measure; pivot or persevere at its end.", d: 1 },
-  "uni-shape":   { name: "Appetite Knight", school: "Shape Up", spec: "Gives each goal an appetite; past it the goal is cut, never stretched.", d: -1 },
-  "dry-heur":    { name: "Pixel-Perfect Dryad", school: "Nielsen's heuristics", spec: "Walks every screen against the ten rules and WCAG.", d: 0 },
-  "dry-diamond": { name: "Diamond Dryad", school: "Double Diamond", spec: "Widens before it narrows: two ways for a screen, then one.", d: 2 },
-  "dry-atom":    { name: "Atom Dryad", school: "Atomic design", spec: "Builds screens from orkUI's parts up; a new part is a question.", d: -1 },
-  "dry-sprint":  { name: "Sprint Dryad", school: "Design sprint", spec: "Five steps to a prototype tested, then the screen.", d: 1 },
-  "sh-c4":       { name: "Sh.man", school: "C4 and hotspots", spec: "Reads the system as containers, then parts; the hotspots first.", d: 0 },
-  "sh-ddd":      { name: "Domain Shaman", school: "Domain-driven design", spec: "Draws the domain's borders first; one word per concept, in the code too.", d: 1 },
-  "sh-xp":       { name: "Spike Shaman", school: "Extreme programming", spec: "A test first, the smallest step, the code always green.", d: 2 },
-  "sh-fit":      { name: "Fitness Shaman", school: "Evolutionary architecture", spec: "Names what the architecture must keep, and checks it on every change.", d: 1 },
+  "uni-ost":     { short: "OST", name: "Angel Invest Knight", school: "Opportunity solution tree", flow: "outcome → jobs → goals", size: "Standard", trust: 2, temper: 2, d: 0, ways: { "ans-pain": "choice" } },
+  "uni-jtbd":    { short: "JTBD", name: "Jobwise Knight", school: "Jobs to be done", flow: "job → struggle → goal", size: "Lean", trust: 2, temper: 1, d: -1, ways: { "ans-pain": "choice-2h" } },
+  "uni-lean":    { short: "Lean", name: "Pivot Knight", school: "Lean Startup", flow: "hypothesis → test → pivot or persevere", size: "Standard", trust: 1, temper: 3, d: 1, ways: { "ans-pain": "fork" } },
+  "uni-shape":   { short: "Shape Up", name: "Appetite Knight", school: "Shape Up", flow: "shape → bet → build in the appetite", size: "Lean", trust: 3, temper: 2, d: -1, ways: { "ans-pain": "silent" } },
+  "dry-heur":    { short: "Heuristics", name: "Pixel-Perfect Dryad", school: "Nielsen's heuristics", flow: "walk → the ten rules → fix", size: "Standard", trust: 2, temper: 2, d: 0, ways: { "ans-icon": "choice-2h" } },
+  "dry-diamond": { short: "Double Diamond", name: "Diamond Dryad", school: "Double Diamond", flow: "discover → define → develop → deliver", size: "Full", trust: 1, temper: 2, d: 2, ways: { "ans-icon": "fork" } },
+  "dry-atom":    { short: "Atomic", name: "Atom Dryad", school: "Atomic design", flow: "tokens → parts → screen", size: "Lean", trust: 3, temper: 3, d: -1, ways: { "ans-icon": "silent" } },
+  "dry-sprint":  { short: "Sprint", name: "Sprint Dryad", school: "Design sprint", flow: "map → sketch → decide → test", size: "Standard", trust: 2, temper: 1, d: 1, ways: { "ans-icon": "choice" } },
+  "sh-c4":       { short: "C4", name: "Sh.man", school: "C4 and hotspots", flow: "containers → parts → hotspots", size: "Standard", trust: 2, temper: 2, d: 0, ways: { "ans-tier": "silent", "ans-test": "choice" } },
+  "sh-ddd":      { short: "DDD", name: "Domain Shaman", school: "Domain-driven design", flow: "words → borders → code", size: "Full", trust: 1, temper: 3, d: 1, ways: { "ans-tier": "choice", "ans-test": "choice" } },
+  "sh-xp":       { short: "XP", name: "Spike Shaman", school: "Extreme programming", flow: "test → code → refactor", size: "Standard", trust: 3, temper: 2, d: 2, ways: { "ans-tier": "silent", "ans-test": "silent" } },
+  "sh-fit":      { short: "Fitness", name: "Fitness Shaman", school: "Evolutionary architecture", flow: "fitness → change → check", size: "Full", trust: 2, temper: 3, d: 1, ways: { "ans-tier": "silent", "ans-test": "fork" } },
 };
 const TOOLS = {
   claude: { name: "Claude", mark: "harness-claude", left: .62 }, codex: { name: "Codex", mark: "harness-codex", left: .18 },
@@ -334,8 +363,10 @@ const TOK = {
   cap5: { potion: true, ti: "5% a day", line: "what answers by itself spends at most this", d: 0 },
   cap8: { potion: true, ti: "8% a day", line: "what answers by itself spends at most this", d: 2 },
   gate:    { sign: "shield", ti: "Always + the tests", line: "the gate's always, then the tests of what changed" },
-  lean: { size: "Lean", line: "plan → do", d: -1 }, standard: { size: "Standard", line: "→ one check", d: 0 }, full: { size: "Full", line: "→ every check", d: 2 },
+  "t-claude": { tool: "claude", ti: "Claude", line: "its seats work on Claude" }, "t-codex": { tool: "codex", ti: "Codex", line: "its seats work on Codex" },
+  "t-first": { sign: "after", ti: "The first potion", line: "its seats follow the project's order" },
 };
+const TIERS = { laborer: { ti: "Laborer", line: "the lightest model", d: -2 }, warrior: { ti: "Warrior", line: "the middle model", d: 0 }, elder: { ti: "Elder", line: "the heaviest model", d: 3 } };
 const ANS = {
   pen:        { ti: "Pen", art: "pen", line: "it asks; you answer in your words" },
   choice:     { ti: "Choice", art: "choice", line: "it offers its ways; you pick" },
@@ -347,87 +378,110 @@ const ANS = {
   declare:    { ti: "Declare", art: "declare", conf: true, line: "rewrites the earlier spec, lays a card where it changed" },
   "c-silent": { ti: "Silent", art: "silent", conf: true, line: "rewrites; the evening line and Changed since say it" },
 };
-const CRAFTS = { "run": { ti: "Run", line: "comes at Live" }, "marketing": { ti: "Marketing", line: "comes at Live" } };
-const L = "A decision is never rewritten: a new one replaces it, and that is yours";
-const M = "Going into main is always yours";
+const CRAFTS = { run: { ti: "Run", line: "comes at Live" }, marketing: { ti: "Marketing", line: "comes at Live" } };
 
-/* ---------------- the parts ---------------- */
+/* ---------------- the chairs and what each holds ---------------- */
+const CHAIRS = [
+  { id: "keeper", lab: "Party game", sub: "the whole project", head: RACE("peon-crown"), tex: "felt",
+    cards: ["c-pots", "c-target", "c-look", "c-starts", "c-hours", "c-cloud", "c-push", "c-cap", "c-gate", "c-low", "c-decision"] },
+  { id: "product", lab: "Product", lead: "lead-product", tex: "contours", race: "knight", cards: ["c-ans-pain", "c-cf-product", "c-tool-product", "c-tier-product"] },
+  { id: "design", lab: "Design", lead: "lead-design", tex: "dots", race: "elf", cards: ["c-ans-icon", "c-cf-design", "c-tool-design", "c-tier-design"] },
+  { id: "tech", lab: "Tech", lead: "lead-tech", tex: "grid", race: "peon", cards: ["c-ans-tier", "c-ans-test", "c-cf-tech", "c-tool-tech", "c-tier-tech"] },
+  { id: "release", lab: "Release", head: RACE("lich-elder"), tex: "stones", locked: "Release is in every project, its leader the lich: its hero is not traded", cards: ["c-main", "c-dev"] },
+  { id: "empty", lab: "New party", empty: true, tex: "felt", cards: [] },
+];
 const SLOTS = [
-  { id: "lead-product", kind: "hero", lab: "Product's leader", value: "uni-ost", opts: ["uni-ost", "uni-jtbd", "uni-lean", "uni-shape"], star: "uni-jtbd" },
-  { id: "lead-design", kind: "hero", lab: "Design's leader", value: "dry-heur", opts: ["dry-heur", "dry-diamond", "dry-atom", "dry-sprint"], star: "dry-atom" },
-  { id: "lead-tech", kind: "hero", lab: "Tech's leader", value: "sh-c4", opts: ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"], star: "sh-xp" },
-  { id: "size-product", kind: "tok", lab: "Product's size", value: "lean", opts: ["lean", "standard", "full"] },
-  { id: "size-design", kind: "tok", lab: "Design's size", value: "standard", opts: ["lean", "standard", "full"] },
-  { id: "size-tech", kind: "tok", lab: "Tech's size", value: "standard", opts: ["lean", "standard", "full"], star: "full" },
-  { id: "ans-tier", kind: "ans", lab: "A small task's tier", who: "lead-tech", value: "silent", opts: ["pen", "choice", "choice-2h", "fork", "silent"] },
-  { id: "ans-test", kind: "ans", lab: "A test fails twice", who: "lead-tech", value: "choice", opts: ["pen", "choice", "choice-2h", "fork", "silent"], star: "choice-2h" },
-  { id: "ans-icon", kind: "ans", lab: "A new icon", who: "lead-design", value: "choice-2h", opts: ["pen", "choice", "choice-2h", "fork", "silent"], star: "silent" },
-  { id: "cf-product", kind: "ans", lab: "A conflict with its spec", who: "lead-product", value: "ask", opts: ["ask", "ask-fork", "declare", "c-silent"] },
-  { id: "cf-design", kind: "ans", lab: "A conflict with its spec", who: "lead-design", value: "declare", opts: ["ask", "ask-fork", "declare", "c-silent"] },
-  { id: "cf-tech", kind: "ans", lab: "A conflict with its spec", who: "lead-tech", value: "c-silent", opts: ["ask", "ask-fork", "declare", "c-silent"] },
-  { id: "target", kind: "tok", lab: "How deep", value: "balance", opts: ["thrift", "balance", "quality"], star: "quality" },
-  { id: "look", kind: "tok", lab: "Give me time to look", value: "2h", opts: ["30m", "2h", "tonight", "nowait"] },
-  { id: "start-high", kind: "tok", lab: "High goals start", value: "now", opts: ["now", "week", "night", "hand"] },
-  { id: "start-normal", kind: "tok", lab: "Normal goals start", value: "week", opts: ["now", "week", "night", "hand"] },
-  { id: "start-low", kind: "tok", lab: "Low goals start", value: "night", opts: ["now", "week", "night", "hand"] },
-  { id: "hours", kind: "tok", lab: "When I am here", value: "days", opts: ["days", "evenings", "weekend"] },
-  { id: "cloud", kind: "tok", lab: "While it sleeps", value: "cloud-off", opts: ["cloud-off", "cloud-on", "cloud-week"] },
-  { id: "push", kind: "tok", lab: "After merging", value: "keep", opts: ["keep", "push"] },
-  { id: "cap", kind: "tok", lab: "The day's cap", value: "cap5", opts: ["cap3", "cap5", "cap8"] },
-  { id: "gate", kind: "tok", lab: "The gate", value: "gate", opts: ["gate"], fixed: "The gate is the project's own, in orkcraft.toml" },
-  { id: "ans-low", kind: "ans", lab: "A Low goal is ready", who: "keeper", value: "pen", opts: ["pen", "choice", "choice-2h", "fork", "silent"], star: "choice" },
-  { id: "ans-dev", kind: "ans", lab: "A result holds: into dev", who: "lead-release", value: "silent", opts: ["pen", "choice", "choice-2h", "silent"] },
-  { id: "ans-main", kind: "ans", lab: "To main", who: "lead-release", value: "fork", opts: ["pen", "choice", "fork", "choice-2h", "silent"], locked: { "choice-2h": M, silent: M } },
-  { id: "cf-decision", kind: "ans", lab: "A conflict with a decision", who: "keeper", value: "ask-fork", opts: ["ask", "ask-fork", "declare", "c-silent"], locked: { declare: L, "c-silent": L } },
-  { id: "craft", kind: "craft", lab: "A new party", value: null, opts: ["run", "marketing"], locked: { run: "The project is Being made: Run comes at Live", marketing: "The project is Being made: Marketing comes at Live" } },
+  { id: "lead-product", kind: "hero", lab: "Product's leader", value: "uni-ost", opts: ["uni-ost", "uni-jtbd", "uni-lean", "uni-shape"], star: "uni-jtbd",
+    say: "For a game sold once I would take <b>Jobwise Knight</b>: it asks what job a player hires the game for, and spends less." },
+  { id: "lead-design", kind: "hero", lab: "Design's leader", value: "dry-heur", opts: ["dry-heur", "dry-diamond", "dry-atom", "dry-sprint"], star: "dry-atom",
+    say: "Your screens are built from orkUI's parts. <b>Atom Dryad</b> would ask before a new one, and decide the rest itself." },
+  { id: "lead-tech", kind: "hero", lab: "Tech's leader", value: "sh-c4", opts: ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"], star: "sh-xp",
+    say: "The spawner's tests fail often. <b>Spike Shaman</b> writes the test first, and retries a failing one itself." },
+  { id: "ans-pain", kind: "ans", lab: "A pain with no measure", party: "lead-product", base: "choice", opts: ["pen", "choice", "choice-2h", "fork", "silent"] },
+  { id: "ans-icon", kind: "ans", lab: "A new icon", party: "lead-design", base: "choice", opts: ["pen", "choice", "choice-2h", "fork", "silent"] },
+  { id: "ans-tier", kind: "ans", lab: "A small task's tier", party: "lead-tech", base: "silent", opts: ["pen", "choice", "choice-2h", "fork", "silent"] },
+  { id: "ans-test", kind: "ans", lab: "A test fails twice", party: "lead-tech", base: "choice", opts: ["pen", "choice", "choice-2h", "fork", "silent"] },
+  { id: "cf-product", kind: "ans", lab: "A conflict with its spec", party: "lead-product", base: "ask", opts: ["ask", "ask-fork", "declare", "c-silent"] },
+  { id: "cf-design", kind: "ans", lab: "A conflict with its spec", party: "lead-design", base: "declare", opts: ["ask", "ask-fork", "declare", "c-silent"] },
+  { id: "cf-tech", kind: "ans", lab: "A conflict with its spec", party: "lead-tech", base: "c-silent", opts: ["ask", "ask-fork", "declare", "c-silent"] },
+  { id: "tool-product", kind: "tok", lab: "Its AI tool", base: "t-first", opts: ["t-first", "t-claude", "t-codex"] },
+  { id: "tool-design", kind: "tok", lab: "Its AI tool", base: "t-first", opts: ["t-first", "t-claude", "t-codex"] },
+  { id: "tool-tech", kind: "tok", lab: "Its AI tool", base: "t-codex", opts: ["t-first", "t-claude", "t-codex"] },
+  { id: "tier-product", kind: "tier", lab: "Its seats' tier", race: "knight", base: "warrior", opts: ["laborer", "warrior", "elder"] },
+  { id: "tier-design", kind: "tier", lab: "Its seats' tier", race: "elf", base: "warrior", opts: ["laborer", "warrior", "elder"] },
+  { id: "tier-tech", kind: "tier", lab: "Its seats' tier", race: "peon", base: "warrior", opts: ["laborer", "warrior", "elder"] },
+  { id: "pot-1", kind: "pot", lab: "First", base: "claude", opts: ["claude", "codex", "cursor", "agy"] },
+  { id: "pot-2", kind: "pot", lab: "Then", base: "codex", opts: ["codex", "cursor", "agy", "none"] },
+  { id: "pot-3", kind: "pot", lab: "Then", base: "none", opts: ["none", "cursor", "agy"] },
+  { id: "target", kind: "tok", lab: "How deep", base: "balance", opts: ["thrift", "balance", "quality"], star: "quality" },
+  { id: "look", kind: "tok", lab: "Give me time to look", base: "2h", opts: ["30m", "2h", "tonight", "nowait"] },
+  { id: "start-high", kind: "tok", lab: "High goals start", base: "now", opts: ["now", "week", "night", "hand"] },
+  { id: "start-normal", kind: "tok", lab: "Normal goals start", base: "week", opts: ["now", "week", "night", "hand"] },
+  { id: "start-low", kind: "tok", lab: "Low goals start", base: "night", opts: ["now", "week", "night", "hand"] },
+  { id: "hours", kind: "tok", lab: "When I am here", base: "days", opts: ["days", "evenings", "weekend"] },
+  { id: "cloud", kind: "tok", lab: "While it sleeps", base: "cloud-off", opts: ["cloud-off", "cloud-on", "cloud-week"] },
+  { id: "push", kind: "tok", lab: "After merging", base: "keep", opts: ["keep", "push"] },
+  { id: "cap", kind: "tok", lab: "The day's cap", base: "cap5", opts: ["cap3", "cap5", "cap8"] },
+  { id: "gate", kind: "tok", lab: "The gate", base: "gate", opts: ["gate"], fixed: true },
+  { id: "ans-low", kind: "ans", lab: "A Low goal is ready", who: "keeper", base: "pen", opts: ["pen", "choice", "choice-2h", "fork", "silent"], star: "choice" },
+  { id: "cf-decision", kind: "ans", lab: "A conflict with a decision", who: "keeper", base: "ask-fork", opts: ["ask", "ask-fork", "declare", "c-silent"], locked: { declare: L, "c-silent": L } },
+  { id: "ans-dev", kind: "ans", lab: "A result holds: into dev", who: "release", base: "silent", opts: ["pen", "choice", "choice-2h", "silent"] },
+  { id: "ans-main", kind: "ans", lab: "To main", who: "release", base: "fork", opts: ["pen", "choice", "fork", "choice-2h", "silent"], locked: { "choice-2h": M, silent: M } },
+  { id: "craft", kind: "craft", lab: "A new party", base: null, opts: ["run", "marketing"], locked: { run: "The project is Being made: Run comes at Live", marketing: "The project is Being made: Marketing comes at Live" } },
 ];
 const BY = Object.fromEntries(SLOTS.map(s => [s.id, s]));
+const CARDS = {
+  "c-pots": { parts: ["pot-1", "pot-2", "pot-3"], idx: ["potion", "Potions"], what: "The potions' order", say: "The first potion is where decisions run and work starts; prices are said in its week. The work moves on to the next when one runs out." },
+  "c-target": { parts: ["target"], idx: ["balance", "Deep"], say: "It is Release week: I would spend more on the checks, <b>Quality</b>, until Friday." },
+  "c-look": { parts: ["look"], idx: ["clock", "Look"], say: "How long a spec made waits for your look before its plan goes by itself." },
+  "c-starts": { parts: ["start-high", "start-normal", "start-low"], idx: ["play", "Starts"], what: "When work starts", say: "When work starts by itself, by its goal's priority. High risk and open questions always wait for you, whatever these say." },
+  "c-hours": { parts: ["hours"], idx: ["eye", "Hours"], say: "Questions come in your hours; the night is the night's." },
+  "c-cloud": { parts: ["cloud"], idx: ["coins", "Night"], say: "The one way paid in money: the cloud run, <b>up to $2 a night</b>, from your API key." },
+  "c-push": { parts: ["push"], idx: ["git-merge", "Push"], say: "<b>Push after merging</b> sends your code to origin each time a goal is merged." },
+  "c-cap": { parts: ["cap"], idx: ["potion", "Cap"], say: "What answers by itself stops at this; past it, it asks." },
+  "c-gate": { parts: ["gate"], idx: ["shield", "Gate"], say: "The gate is the project's own, in orkcraft.toml: nothing to trade here." },
+  "c-low": { parts: ["ans-low"], say: "You write me a line for each Low goal, and your lines are alike: a <b>Choice</b> would do." },
+  "c-decision": { parts: ["cf-decision"], say: "A decision is never rewritten: only you replace it." },
+  "c-main": { parts: ["ans-main"], say: "To main is yours. A <b>Fork</b> lays out what each goal ready brings." },
+  "c-dev": { parts: ["ans-dev"], say: "Its tests green, nothing left to fix, no risk path touched: a result lands in dev by itself." },
+};
+["product", "design", "tech"].forEach(p => {
+  CARDS[`c-tool-${p}`] = { parts: [`tool-${p}`], idx: ["after", "Tool"], say: "Which potion its seats drink from. The leader's own calls stay on the cheaper tier." };
+  CARDS[`c-tier-${p}`] = { parts: [`tier-${p}`], idx: ["tier", "Tier"], say: "How heavy a model its seats work on: the gear on their heads." };
+  CARDS[`c-cf-${p}`] = { parts: [`cf-${p}`], say: "When a new goal goes against this party's earlier spec." };
+});
+CARDS["c-ans-pain"] = { parts: ["ans-pain"], say: "A pain someone has, with no number to tell it is gone." };
+CARDS["c-ans-icon"] = { parts: ["ans-icon"], say: "You picked orkUI's set all week: it could go <b>Silent</b>." };
+CARDS["c-ans-tier"] = { parts: ["ans-tier"], say: "You answered the cheaper tier every time." };
+CARDS["c-ans-test"] = { parts: ["ans-test"], say: "One more try, or stop and ask." };
 
-/* the hand: three fans; a card and the parts it lays on the table */
-const FANS = [
-  { lab: "Who", note: "the leaders, and a place for one more", cards: [
-    { id: "c-product", parts: ["lead-product", "size-product", "cf-product"], say: "Product's knights read the same tree four ways. For a game sold once I would take <b>Jobwise Knight</b>: it asks what job a player hires the game for." },
-    { id: "c-design", parts: ["lead-design", "size-design", "ans-icon", "cf-design"], say: "Your screens are built from orkUI's parts. <b>Atom Dryad</b> would ask before a new one, and spend less." },
-    { id: "c-tech", parts: ["lead-tech", "size-tech", "ans-tier", "ans-test", "cf-tech"], say: "The spawner's tests fail often. <b>Spike Shaman</b> writes the test first: more checks, fewer second tries." },
-    { id: "c-release", fixed: true, say: "Release is in every project, its leader the lich: nothing to trade." },
-    { id: "c-new", place: true, parts: ["craft"], say: "A craft comes to the table with its stage. The project is <b>Being made</b>: Run and Marketing come at Live." },
-  ]},
-  { lab: "When and how much", note: "the project's rules", cards: [
-    { id: "c-target", parts: ["target"], say: "It is Release week: I would spend more on the checks, <b>Quality</b>, until Friday." },
-    { id: "c-look", parts: ["look"], say: "How long a spec made waits for your look before its plan goes by itself." },
-    { id: "c-starts", parts: ["start-high", "start-normal", "start-low"], say: "When work starts by itself, by its goal's priority. High risk and open questions always wait for you, whatever these say." },
-    { id: "c-hours", parts: ["hours"], say: "Questions come in your hours; the night is the night's." },
-    { id: "c-cloud", parts: ["cloud"], say: "The one way paid in money: the cloud run, <b>up to $2 a night</b>, from your API key." },
-    { id: "c-push", parts: ["push"], say: "<b>Push after merging</b> sends your code to origin each time a goal is merged." },
-    { id: "c-cap", parts: ["cap"], say: "What answers by itself stops at this; past it, it asks." },
-    { id: "c-gate", parts: ["gate"], say: "The gate is the project's own, in orkcraft.toml: nothing to trade here." },
-  ]},
-  { lab: "How you are asked", note: "the questions no one party owns", cards: [
-    { id: "c-low", parts: ["ans-low"], say: "You write me a line for each Low goal, and your lines are alike: a <b>Choice</b> would do." },
-    { id: "c-dev", parts: ["ans-dev"], say: "Its tests green, nothing left to fix, no risk path touched: a result lands in dev by itself." },
-    { id: "c-main", parts: ["ans-main"], say: "To main is yours. A <b>Fork</b> lays out what each goal ready brings." },
-    { id: "c-decision", parts: ["cf-decision"], say: "A decision is never rewritten: only you replace it." },
-  ]},
-];
-const CARDS = Object.fromEntries(FANS.flatMap(f => f.cards).map(c => [c.id, c]));
-const prev = {};
-let open = null;
+/* the values: a hero's ways, yours over them */
+const yours = {}, prev = {};
+const leadOf = s => s.party ? BY[s.party] : null;
+const heroWay = s => { const l = leadOf(s); return l ? HEROES[l.value].ways[s.id] : undefined; };
+const val = s => s.kind === "hero" ? s.value : (yours[s.id] ?? heroWay(s) ?? s.base);
+const isYours = s => s.id in yours;
+let chair = "tech", open = null, tableOf = "keeper";
 
 /* ---------------- drawing ---------------- */
-function headOf(slotId) {
-  if (slotId === "keeper") return ORK + "races/peon-crown@2x.png";
-  if (slotId === "lead-release") return ORK + "races/lich-elder@2x.png";
-  return HEAD(BY[slotId].value);
-}
+const headOfWho = w => w === "keeper" ? RACE("peon-crown") : w === "release" ? RACE("lich-elder") : HEAD(BY[w].value);
+const bar = n => `<span class="bar">${[1, 2, 3].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</span>`;
 function face(s, id) {
   if (s.kind === "hero") { const h = HEROES[id];
-    return `<div class="face f-hero"><img class="hd" src="${HEAD(id)}" width="48" height="44" alt=""><p class="f-hero__name">${h.name}</p><p class="f-hero__school">${h.school}</p><p class="f-hero__spec">${h.spec}</p></div>`; }
+    return `<div class="face f-hero"><img class="hd" src="${HEAD(id)}" width="48" height="44" alt=""><p class="f-hero__name">${h.name}</p><p class="f-hero__school">${h.school}</p>
+      <div class="stats"><span>Flow</span><b>${h.flow}</b><span>Size</span><b>${h.size}</b>
+        <span>Decides</span><span class="bar"><span>asks</span>${bar(h.trust)}<span>itself</span></span>
+        <span>Says no</span><span class="bar"><span>seldom</span>${bar(h.temper)}<span>often</span></span></div></div>`; }
   if (s.kind === "craft") { const c = CRAFTS[id]; return `<div class="face f-craft"><div><span class="ork-chair is-empty" style="position:relative;display:block;margin:0 auto 6px"></span><b>${c.ti}</b>${c.line}</div></div>`; }
+  if (s.kind === "pot") { const t = TOOLS[id];
+    if (t.empty) return `<div class="face f-pot empty">+<span>no third</span></div>`;
+    return `<div class="face f-pot"><span class="ork-potion small" style="--ork-potion-left:${t.left}"></span><span class="f-pot__mark"><img class="hd" src="${ORK}marks/${t.mark}@2x.png" alt="">${t.name}</span>${t.line ? `<span style="color:var(--ork-ink-faint);font-size:10px">${t.line}</span>` : ""}</div>`; }
+  if (s.kind === "tier") { const t = TIERS[id];
+    return `<div class="face f-tok"><div class="f-tok__top"><img class="hd" src="${RACE(s.race + "-" + id)}" alt=""></div><p class="f-tok__ti">${t.ti}</p><p class="f-tok__line">${t.line}</p></div>`; }
   if (s.kind === "tok") { const t = TOK[id];
-    if (t.size) return `<div class="face f-size"><span>${t.size}<i>${t.line}</i></span></div>`;
-    const mark = t.sign ? SIGN(t.sign) : t.icon ? ICON(t.icon) : `<span class="ork-potion size-vial" style="--ork-potion-left:.6"></span>`;
-    return `<div class="face f-tok"><div class="f-tok__top">${mark}</div><p class="f-tok__ti">${t.ti}</p><p class="f-tok__line">${t.line}</p></div>`; }
-  if (s.kind === "ans") { const a = ANS[id], who = headOf(s.who);
+    const mark = t.tool ? `<img class="hd" style="width:16px;height:16px" src="${ORK}marks/${TOOLS[t.tool].mark}@2x.png" alt="">` : t.sign ? SIGN(t.sign) : t.icon ? ICON(t.icon) : `<span class="ork-potion size-vial" style="--ork-potion-left:.6"></span>`;
+    return `<div class="face f-tok"><div class="f-tok__top">${mark}${s.fixed ? LOCK : ""}</div><p class="f-tok__ti">${t.ti}</p><p class="f-tok__line">${t.line}</p></div>`; }
+  if (s.kind === "ans") { const a = ANS[id], who = headOfWho(s.who || s.party);
     const art = { pen: `<div class="f-ans__art art-pen"><span class="w" style="top:9px;width:56px"></span><span class="w" style="top:21px;width:40px"></span><span class="caret" style="left:50px;top:16px"></span>${ICON("pencil")}</div>`,
       choice: `<div class="f-ans__art art-choice"><i class="on">${SIGN("check")}</i><i></i><i></i></div>`,
       fork: `<div class="f-ans__art art-fork"><span></span><span></span><span></span></div>`,
@@ -435,8 +489,8 @@ function face(s, id) {
       declare: `<div class="f-ans__art art-declare"><span>${SIGN("conflict")}</span></div>` }[a.art];
     return `<div class="face f-ans">${a.conf ? SIGN("conflict", "conf") : ""}<p class="f-ans__ti">${a.ti}${a.wait ? `<span class="f-ans__wait">${ICON("clock")}${a.wait}</span>` : ""}</p>${art}</div>`; }
 }
-const dOf = (s, id) => id == null ? 0 : s.kind === "hero" ? HEROES[id].d : s.kind === "ans" ? (ANS[id].d || 0) : s.kind === "tok" ? (TOK[id].d || 0) : 0;
-const deltaOf = (s, id) => dOf(s, id) - dOf(s, s.value);
+const cost = (s, id) => id == null ? 0 : s.kind === "hero" ? HEROES[id].d : s.kind === "ans" ? (ANS[id].d || 0) : s.kind === "tier" ? TIERS[id].d : s.kind === "tok" ? (TOK[id].d || 0) : 0;
+const deltaOf = (s, id) => cost(s, id) - cost(s, val(s));
 function tagOf(s, id) {
   const t = s.kind === "tok" ? TOK[id] : null;
   if (t && t.money) return `<span class="tag money">${ICON("coins")}${t.money}</span>`;
@@ -445,143 +499,182 @@ function tagOf(s, id) {
   if (d < 0) return `<span class="tag less">saves about ${-d}% of the week</span>`;
   return `<span class="tag">the same cost</span>`;
 }
-const lineOf = (s, id) => s.kind === "ans" ? ANS[id].line : "";
-const wordOf = (s, id) => s.kind === "hero" ? HEROES[id].name : s.kind === "ans" ? ANS[id].ti + (ANS[id].wait ? ", " + ANS[id].wait : "") : s.kind === "craft" ? CRAFTS[id].ti : (TOK[id].ti || TOK[id].size);
+const wordOf = (s, id) => s.kind === "hero" ? HEROES[id].name : s.kind === "ans" ? ANS[id].ti + (ANS[id].wait ? ", " + ANS[id].wait : "") : s.kind === "craft" ? CRAFTS[id].ti :
+  s.kind === "pot" ? TOOLS[id].name : s.kind === "tier" ? TIERS[id].ti : TOK[id].ti;
 
-/* a card of the hand: its corner, and its face as the fan shows it */
-function handCard(c) {
-  if (c.place) return `<div class="hc place" data-card="${c.id}"><span>+<br>A new party</span></div>`;
-  if (c.fixed) return `<div class="hc" data-card="${c.id}"><div class="hc__idx"><img class="hd" src="${ORK}races/lich-elder@2x.png" alt="">Release${LOCK}</div><div class="hc__body">    <img class="hd big" src="${ORK}races/lich-elder@2x.png" width="48" height="44" alt=""><p class="hc__val">Release Night King</p><p class="hc__line">in every project</p></div></div>`;
-  const s = BY[c.parts[0]], v = s.value;
-  if (s.kind === "hero") { const h = HEROES[v], party = s.lab.replace("'s leader", "");
-    return `<div class="hc" data-card="${c.id}"><div class="hc__idx"><img class="hd" src="${HEAD(v)}" alt="">${party}</div><div class="hc__body">      <img class="hd big" src="${HEAD(v)}" width="48" height="44" alt=""><p class="hc__val">${h.name}</p><p class="hc__line">${h.school}</p></div></div>`; }
-  if (s.kind === "ans") { const a = ANS[v];
-    return `<div class="hc" data-card="${c.id}"><div class="hc__idx"><img class="hd" src="${headOf(s.who)}" alt="">${a.ti}${s.locked ? LOCK : ""}</div><div class="hc__body">      <p class="hc__what">${s.lab}</p><p class="hc__val">${a.ti}${a.wait ? ", " + a.wait : ""}</p><p class="hc__line">${a.line}</p></div></div>`; }
-  const parts = c.parts.map(p => BY[p]), t = TOK[v];
-  const mark = t.sign ? SIGN(t.sign) : t.icon ? ICON(t.icon) : `<span class="ork-potion size-vial" style="--ork-potion-left:.6"></span>`;
-  const word = { target: "Deep", look: "Look", "start-high": "Starts", hours: "Hours", cloud: "Night", push: "Push", cap: "Cap", gate: "Gate" }[s.id];
-  const val = parts.length > 1 ? parts.map(p => `${p.lab.split(" ")[0]}: ${TOK[p.value].ti}`).join("<br>") : t.ti;
-  return `<div class="hc" data-card="${c.id}"><div class="hc__idx">${mark}${word}${s.fixed ? LOCK : ""}</div><div class="hc__body">    <p class="hc__what">${parts.length > 1 ? "When work starts" : s.lab}</p><p class="hc__val">${val}</p>${parts.length > 1 ? "" : `<p class="hc__line">${t.line}</p>`}</div></div>`;
+function drawChairs() {
+  const inv = document.getElementById("win").classList.contains("inv"), on = inv ? chair : tableOf;
+  document.getElementById("chairs").innerHTML = CHAIRS.map(c => {
+    const src = c.lead ? HEAD(BY[c.lead].value) : c.head;
+    if (c.empty) return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat"><span class="ork-chair is-empty"></span></span>${c.lab}<small></small></button>`;
+    return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat"><span class="ork-chair${on === c.id ? " big" : ""}"></span><img class="hd" data-head="${c.id}" src="${src}" alt=""></span>${c.lab}<small>${c.lead ? HEROES[BY[c.lead].value].short : c.sub || ""}</small></button>`;
+  }).join("") + `<span class="gap"></span>
+    <button class="pack" id="pack" title="${inv ? "Close the inventory" : "Inventory: how the project is set"}"><svg width="40" height="40" viewBox="0 0 16 16" id="pack-art"></svg>Inventory</button>
+    <span class="door"><span class="ork-door small"></span>Stop all</span>`;
+  drawPack(inv);
+  document.querySelectorAll(".chair").forEach(b => b.onclick = () => pickChair(b.dataset.chair));
+  document.getElementById("pack").onclick = () => inv ? close() : enter();
 }
-function drawFans() {
-  const W = 330, CW = 104;
-  document.getElementById("fans").innerHTML = FANS.map(f => `<div class="fan">${f.cards.map((c, i) => {
-      const n = f.cards.length, step = n > 1 ? Math.min(CW + 8, (W - CW) / (n - 1)) : 0, mid = (n - 1) / 2;
-      return handCard(c).replace('class="hc', `style="left:${i * step}px;z-index:${i + 1};transform:rotate(${(i - mid) * 2}deg) translateY(${Math.abs(i - mid) * 3}px)" class="hc${open === c.id ? " is-on" : ""}`);
-    }).join("")}</div>`).join("");
-  document.querySelectorAll(".hc").forEach(el => el.onclick = () => { open = open === el.dataset.card ? null : el.dataset.card; drawFans(); drawTable(); });
+function pickChair(id) {
+  const inv = document.getElementById("win").classList.contains("inv");
+  if (!inv) { tableOf = id; drawChairs(); drawTable(); return; }
+  if (chair === id) open = null; else { chair = id; open = null; }
+  drawChairs(); drawFan(); drawTable();
 }
 
-/* the table: a row a part of the card pressed */
+/* a card of the hand */
+function handCard(cid) {
+  const c = CARDS[cid], s = BY[c.parts[0]], v = val(s);
+  let idx, body;
+  if (s.kind === "ans") {
+    const who = headOfWho(s.who || s.party), a = ANS[v];
+    idx = `<img class="hd" src="${who}" alt="">${a.ti}${s.locked ? LOCK : ""}`;
+    body = `<p class="hc__what">${s.lab}</p><p class="hc__val">${a.ti}${a.wait ? ", " + a.wait : ""}</p><p class="hc__line">${a.line}</p>`;
+  } else if (s.kind === "tier") {
+    idx = `<img class="hd" src="${RACE(s.race + "-" + v)}" alt="">Tier`;
+    body = `<p class="hc__what">${s.lab}</p><p class="hc__val">${TIERS[v].ti}</p><p class="hc__line">${TIERS[v].line}</p>`;
+  } else {
+    const [mk, word] = c.idx, mark = mk === "potion" ? `<span class="ork-potion size-vial" style="--ork-potion-left:.6"></span>` : ["clock", "eye", "coins", "git-merge"].includes(mk) ? ICON(mk) : SIGN(mk);
+    idx = `${mark}${word}${s.fixed ? LOCK : ""}`;
+    const many = c.parts.length > 1;
+    const value = many ? c.parts.map(p => `${BY[p].lab.split(" ")[0]}: ${wordOf(BY[p], val(BY[p]))}`).join("<br>") : wordOf(s, v);
+    body = `<p class="hc__what">${c.what || s.lab}</p><p class="hc__val">${value}</p>${many ? "" : `<p class="hc__line">${s.kind === "tok" ? TOK[v].line : ""}</p>`}`;
+  }
+  const mine = c.parts.some(p => isYours(BY[p])), hero = c.parts.some(p => heroWay(BY[p]) !== undefined && !isYours(BY[p]));
+  const mark = mine ? `<span class="yours">yours</span>` : hero ? `<span class="heros">the hero's way</span>` : "";
+  return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}"><div class="hc__idx">${idx}</div><div class="hc__body">${body}${mark}</div></div>`;
+}
+function drawFan() {
+  const c = CHAIRS.find(x => x.id === chair), n = c.cards.length, CW = 112, W = Math.max(CW, Math.min(n * (CW + 10), 820));
+  const step = n > 1 ? Math.min(CW + 10, (W - CW) / (n - 1)) : 0, mid = (n - 1) / 2;
+  document.getElementById("fan").classList.toggle("tight", step < CW);
+  document.getElementById("fan").innerHTML = n ? c.cards.map((cid, i) => handCard(cid).replace('class="hc', `style="left:${i * step}px;z-index:${i + 1};transform:rotate(${(i - mid) * 1.5}deg) translateY(${Math.abs(i - mid) * 2}px)" class="hc`)).join("")
+    : `<p class="fan__none">A new party has nothing to hold yet: pick its craft on the table.</p>`;
+  const lab = { keeper: "the whole project", release: "Release's questions", empty: "" }[chair] ?? `${c.lab}'s party, beside its hero`;
+  document.getElementById("fan-lab").innerHTML = `<b>${c.lab}</b>${lab}`;
+  document.querySelectorAll(".hc").forEach(el => el.onclick = () => { open = open === el.dataset.card ? null : el.dataset.card; drawFan(); drawTable(); });
+}
+
+/* the table */
 function ware(s, id) {
-  const lock = s.locked && s.locked[id], mine = s.value === id;
+  const lock = s.locked && s.locked[id], mine = val(s) === id, hw = s.kind !== "hero" && heroWay(s) === id;
   return `<div class="ware${mine ? " mine" : ""}${lock ? " locked" : ""}" data-s="${s.id}" data-o="${id}">${face(s, id)}
-    ${mine ? `<span class="tag mine">Yours</span><button class="ork-btn take" style="visibility:hidden" tabindex="-1">Take</button>` : lock ? `<span class="tag">${LOCK} not here</span><small>${lock}</small>` :
-      `${tagOf(s, id)}${s.star === id ? `<small class="star">★ the Orkmaster's pick</small>` : ""}${prev[s.id] === id ? `<small class="before">Yours before</small>` : ""}<button class="ork-btn take">Take</button>`}</div>`;
-}
-function say(html, mood = "") {
-  document.getElementById("bubble").innerHTML = html;
-  document.getElementById("keeper").src = ORK + `races/peon-crown${mood ? "-" + mood : ""}@2x.png`;
+    ${mine ? `<span class="tag mine">Yours</span>${isYours(s) && heroWay(s) !== undefined ? `<small>you set it; the hero's is ${wordOf(s, heroWay(s))}</small>` : hw ? `<small class="heros">the hero's way</small>` : ""}<button class="ork-btn take" style="visibility:hidden" tabindex="-1">Take</button>` :
+      lock ? `<span class="tag">${LOCK} not here</span><small>${lock}</small>` :
+      `${tagOf(s, id)}${s.star === id ? `<small class="star">★ the Orkmaster's pick</small>` : ""}${hw ? `<small class="heros">the hero's way</small>` : ""}${prev[s.id] === id ? `<small class="before">Yours before</small>` : ""}<button class="ork-btn take">Take</button>`}</div>`;
 }
 function drawTable() {
-  const rows = document.getElementById("rows"), title = document.getElementById("title");
-  const back = `<button class="ork-btn back" id="back">Back to the table</button>`;
-  if (!open) {
-    title.innerHTML = `<b>Setting the table</b> · through the Orkmaster ${back}`;
-    say("Your hand is what you have. <b>Press a card</b>, and I lay out what it trades for.");
-    rows.innerHTML = `<p class="rows__empty">Press a card in your hand: its ways lie here, priced against yours.</p>`;
-  } else {
-    const c = CARDS[open];
-    say(c.say, "focused");
-    if (c.fixed) { title.innerHTML = `<b>Release</b> · in every project ${back}`; rows.innerHTML = `<p class="rows__empty">Nothing to trade.</p>`; }
-    else {
-      const first = BY[c.parts[0]];
-      title.innerHTML = `<b>${c.parts.length > 1 && first.kind === "hero" ? first.lab.replace("'s leader", "") + " and its party" : c.parts.length > 1 ? "When work starts" : first.lab}</b> · through the Orkmaster ${back}`;
-      rows.innerHTML = c.parts.map((p, i) => { const s = BY[p];
-        const who = s.kind === "ans" && s.who.startsWith("lead") ? BY[s.who] ? s.who : "" : "";
-        return `<div class="row${i && first.kind === "hero" ? " sub" : ""}"><p class="row__lab"><b>${s.lab}</b>${s.fixed || ""}</p>
-          <div class="row__opts">${s.opts.map(o => ware(s, o)).join("")}</div></div>`; }).join("");
-    }
+  const win = document.getElementById("win"), inv = win.classList.contains("inv"), table = document.getElementById("table");
+  const c = CHAIRS.find(x => x.id === (inv ? chair : tableOf));
+  table.dataset.tex = c.tex;
+  const head = document.getElementById("head"), rows = document.getElementById("rows"), says = document.getElementById("says");
+  if (!inv) {
+    head.innerHTML = `<b>${c.id === "keeper" ? "The whole project" : c.lab + "'s table"}</b> · through ${c.id === "keeper" ? "the Orkmaster" : c.lab}`;
+    document.getElementById("lanes").innerHTML = c.id === "keeper" ? [["Lobby chat", "ice"], ["Waves", "meadow"], ["Waves", "meadow"], ["Daily quest", "dust"], ["", ""]].map(([t, e]) => `<div class="lane">${t ? `<div class="mini">${t}<span class="ork-elem ${e}"></span></div>` : ""}</div>`).join("")
+      : `<div class="lane" style="grid-column:span 5;height:420px;display:grid;place-items:center;color:var(--ork-ink-faint);font:var(--ork-type-caption)">${c.lab}'s table, laid as its hero reads it</div>`;
+    return;
   }
-  document.getElementById("back").onclick = leave;
+  head.innerHTML = `<span class="pix">Inventory</span> how the project is set · <b>${c.id === "keeper" ? "the whole project" : c.lab}</b>`;
+  const sayAs = (html, mood = "") => says.innerHTML = `<img class="hd" id="keeper-face" src="${RACE("peon-crown" + (mood ? "-" + mood : ""))}" alt=""><span>${html}</span>`;
+  let parts = [];
+  if (open) { parts = CARDS[open].parts; sayAs(CARDS[open].say, "focused"); }
+  else if (c.lead) { parts = [c.lead]; sayAs(BY[c.lead].say); }
+  else if (c.empty) { parts = ["craft"]; sayAs("A craft comes to the table with its stage. The project is <b>Being made</b>: Run and Marketing come at Live."); }
+  else if (c.locked) { sayAs(c.locked + ". Its questions are in the hand."); }
+  else sayAs("The whole project: <b>press a card in your hand</b>, and I lay out what it trades for.");
+  rows.innerHTML = parts.length ? parts.map(p => { const s = BY[p];
+      const lab = s.kind === "hero" ? `<b>${s.lab}</b>its school, its flow, its size, its temper` : `<b>${s.lab}</b>${s.fixed ? "the project's own, in orkcraft.toml" : ""}`;
+      return `<div class="row"><p class="row__lab">${lab}</p><div class="row__opts">${s.opts.map(o => ware(s, o)).join("")}</div></div>`; }).join("")
+    : `<p class="rows__empty">${c.locked ? "" : "Press a card in your hand: its ways lie here, priced against yours."}</p>`;
   document.querySelectorAll("#rows .ware").forEach(el => {
     const s = BY[el.dataset.s], id = el.dataset.o;
     el.addEventListener("mouseenter", () => preview(s, id));
     el.addEventListener("mouseleave", () => preview(null));
-    const take = () => { if (s.value !== id && !(s.locked && s.locked[id]) && !s.fixed) trade(s, id, el); };
+    const take = () => { if (val(s) !== id && !(s.locked && s.locked[id]) && !s.fixed && s.kind !== "craft") trade(s, id, el); };
     el.querySelector(".face").onclick = take; const b = el.querySelector(".take"); if (b) b.onclick = take;
   });
 }
 
-/* the potions at the edge, hatched by what a way would add */
+/* the potions, hatched by what a way would add */
 function drawPotions(spend = 0) {
-  document.getElementById("edge-potions").innerHTML = ["claude", "codex"].map((t, n) => {
+  const ids = ["pot-1", "pot-2", "pot-3"].map(k => val(BY[k])).filter(v => v !== "none");
+  document.getElementById("edge-potions").innerHTML = ids.map((t, n) => {
     const left = TOOLS[t].left, sp = n === 0 ? Math.min(spend, left) : 0, warn = left - sp < .2 ? (left - sp < .08 ? " is-danger" : " is-warn") : "";
     return `<div class="potion-box"><span class="ork-potion${warn}" style="--ork-potion-left:${left};--ork-potion-spend:${sp}" title="${TOOLS[t].name}"></span><img class="hd" src="${ORK}marks/${TOOLS[t].mark}@2x.png" alt=""></div>`;
   }).join("");
 }
 function preview(s, id) {
-  if (!s || s.value === id) { drawPotions(); return; }
-  drawPotions(Math.max(0, deltaOf(s, id)) / 100 * 8);        // a week's percent, drawn large enough to read: the mockup's lens
-  if (deltaOf(s, id) >= 3) document.getElementById("keeper").src = ORK + "races/peon-crown-worried@2x.png";
+  if (!s || val(s) === id) { drawPotions(); return; }
+  drawPotions(Math.max(0, deltaOf(s, id)) / 100 * 8);       // a week's percent, drawn large enough to read: the mockup's lens
+  const f = document.getElementById("keeper-face"); if (f && deltaOf(s, id) >= 3) f.src = RACE("peon-crown-worried");
 }
 
-/* the trade: the way taken flies into the hand when it is the card's own; yours stays on the table */
+/* the trade */
 function trade(s, id, wareEl) {
-  const old = s.value, card = CARDS[open], toHand = card.parts[0] === s.id;
-  const target = toHand ? document.querySelector(`.hc[data-card="${open}"]`) : null, from = wareEl.querySelector(".face");
+  const old = val(s);
+  const target = s.kind === "hero" ? document.querySelector(`[data-head="${chair}"]`) : document.querySelector(`.hc[data-card="${open}"]`);
+  const from = wareEl.querySelector(".face");
   if (target) {
     const r = from.getBoundingClientRect(), t = target.getBoundingClientRect(), cl = from.cloneNode(true);
     cl.classList.add("flying"); Object.assign(cl.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
     document.body.appendChild(cl);
-    cl.animate([{ transform: "none" }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top - 40}px) scale(.9)`, offset: .65 }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top}px) scale(.86)`, opacity: .2 }],
+    cl.animate([{ transform: "none" }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top - 40}px) scale(.7)`, offset: .65 }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top}px) scale(.3)`, opacity: .1 }],
       { duration: 560, easing: "cubic-bezier(.2,.7,.2,1)" }).onfinish = () => cl.remove();
   }
   setTimeout(() => {
-    prev[s.id] = old; s.value = id; drawFans(); drawTable(); drawPotions(); heads();
+    prev[s.id] = old;
+    let said;
+    if (s.kind === "hero") {
+      const before = SLOTS.filter(x => x.party === s.id).map(x => [x, val(x)]);
+      s.value = id;
+      const moved = before.filter(([x, v]) => val(x) !== v).map(([x]) => `${x.lab.toLowerCase()}: ${wordOf(x, val(x))}`);
+      const kept = before.filter(([x]) => isYours(x)).map(([x]) => x.lab.toLowerCase());
+      said = `<b>${HEROES[id].name}</b> sits at ${s.lab.replace("'s leader", "")}. ${moved.length ? "It brings its ways: " + moved.join("; ") + ". " : ""}${kept.length ? "Yours stay: " + kept.join(", ") + "." : ""}`;
+      const img = document.querySelector(`[data-head="${chair}"]`);
+    } else {
+      if (heroWay(s) === id) delete yours[s.id]; else yours[s.id] = id;
+      said = `From the next task: <b>${s.lab}</b>, ${wordOf(s, id)}${isYours(s) ? " (yours)" : ""}.`;
+    }
+    drawChairs(); drawFan(); drawTable(); drawPotions();
+    if (s.kind === "hero") { const img = document.querySelector(`[data-head="${chair}"]`); img.classList.remove("is-new"); void img.offsetWidth; img.classList.add("is-new"); }
     const el = document.querySelector(`#rows [data-s="${s.id}"][data-o="${id}"]`); if (el) el.classList.add("pulse");
-    document.getElementById("receipt").innerHTML = `From the next task: <b>${s.lab}</b>, ${wordOf(s, id)}. <button class="ork-btn quiet" id="undo">Undo</button>`;
-    document.getElementById("undo").onclick = () => { const e = document.querySelector(`#rows [data-s="${s.id}"][data-o="${old}"]`); if (e && open) trade(s, old, e); else { s.value = old; drawFans(); drawTable(); heads(); } };
-    if (s.kind === "hero") { changed.add(s.id); say(`<b>${HEROES[id].name}</b> takes ${s.lab.replace("'s leader", "")}'s chair when you go back to the table; from its next goal, its table reads by <b>${HEROES[id].school}</b>.`, "pleased"); }
-    else say(`Taken. ${card.say}`, "pleased");
-  }, toHand ? 500 : 120);
+    const kf = document.getElementById("keeper-face"); if (kf) kf.src = RACE("peon-crown-pleased");
+    document.getElementById("receipt").innerHTML = `${said} <button class="ork-btn quiet" id="undo">Undo</button>`;
+    document.getElementById("undo").onclick = () => { const e = document.querySelector(`#rows [data-s="${s.id}"][data-o="${old}"]`); if (e) trade(s, old, e); };
+    document.getElementById("ask-head").src = HEAD(BY["lead-tech"].value);
+  }, 470);
 }
+function enter() { document.getElementById("win").classList.add("inv"); open = null; drawChairs(); drawFan(); drawTable(); }
+function close() { document.getElementById("win").classList.remove("inv"); open = null; tableOf = "keeper"; document.getElementById("receipt").innerHTML = ""; drawChairs(); drawTable(); }
 
-/* in and out */
-const changed = new Set();
-function heads() {
-  document.querySelectorAll("[data-tab]").forEach(img => { img.src = HEAD(BY[img.dataset.tab].value); });
-  document.getElementById("ask-head").src = HEAD(BY["lead-tech"].value);
-}
-function leave() {
-  const win = document.getElementById("win"); win.classList.remove("shop"); open = null;
-  document.getElementById("title").innerHTML = `<b>The whole project</b> · through the Orkmaster`;
-  setTimeout(() => changed.forEach(id => { const img = document.querySelector(`[data-tab="${id}"]`); img.classList.remove("is-new"); void img.offsetWidth; img.classList.add("is-new"); }), 250);
-  changed.clear();
-}
-function enter() { document.getElementById("win").classList.add("shop"); open = null; drawFans(); drawTable(); }
-document.getElementById("satchel").onclick = () => document.getElementById("win").classList.contains("shop") ? leave() : enter();
-document.getElementById("lanes").innerHTML = [["Lobby chat", "ice"], ["Waves", "meadow"], ["Waves", "meadow"], ["Daily quest", "dust"]]
-  .map(([t, e], i) => `<div class="lane">${i === 0 ? `<div class="mini">Lobby chat<span class="ork-elem ice"></span></div><div class="mini">Daily quest<span class="ork-elem dust"></span></div>` : `<div class="mini">${t}<span class="ork-elem ${e}"></span></div>`}</div>`).join("");
-
-/* the satchel */
-(function pix(svg, rows, colours) {
-  const ns = "http://www.w3.org/2000/svg";
+/* the backpack, shut and open */
+function pix(svg, rows, colours) {
+  const ns = "http://www.w3.org/2000/svg"; svg.innerHTML = "";
   rows.forEach((row, y) => [...row].forEach((ch, x) => { if (!colours[ch]) return;
     const r = document.createElementNS(ns, "rect"); r.setAttribute("x", x); r.setAttribute("y", y); r.setAttribute("width", 1); r.setAttribute("height", 1); r.setAttribute("fill", colours[ch]); svg.appendChild(r); }));
-})(document.getElementById("satchel-art"), ["................", "......XXXX......", ".....X....X.....", "......XXXX......", ".....XXXXXX.....", "......X..X......",
-  "....XX####XX....", "...X########X...", "..X##########X..", ".X######o#####X.", ".X#####o#o####X.", ".X######o#####X.", ".X############X.", "..X##########X..", "...XXXXXXXXXX...", "................"],
-  { X: "var(--ork-edge)", "#": "var(--ork-panel)", o: "var(--ork-mana)" });
+}
+const PACK_BODY = [".X############X.", ".X#PPPP##PPPP#X.", ".X#P..P##P..P#X.", ".X#PPPP##PPPP#X.", ".X############X.", ".X############X.", "..XXXXXXXXXXXX..", "................"];
+const PACK_SHUT = ["................", ".....XXXXXX.....", "....X......X....", "..XXXXXXXXXXXX..", ".X#FFFFFFFFFF#X.", ".X#F........F#X.", ".X#FFFFFoFFFF#X.", ".X#####oo#####X."].concat(PACK_BODY);
+const PACK_OPEN = ["..FFFFFFFFFFFF..", "..F..........F..", "..FFFFFFoFFFFF..", "..XXXXXXXXXXXX..", ".X##CC###ii###X.", ".X##CC##iiii##X.", ".X##CC##iiii##X.", ".X############X."].concat(PACK_BODY);
+function drawPack(open) {
+  pix(document.getElementById("pack-art"), open ? PACK_OPEN : PACK_SHUT,
+    { X: "var(--ork-edge)", "#": "var(--ork-panel)", F: "var(--ork-ink-faint)", o: "var(--ork-mana)", P: "var(--ork-frame)", C: "var(--ork-ink-muted)", i: "var(--ork-mana)" });
+}
+
+/* the textures, side by side */
+document.getElementById("texes").innerHTML = [["felt", "The Orkmaster", "plain felt: the whole project"], ["grid", "Tech", "a blueprint's grid"], ["dots", "Design", "a canvas's dots"],
+  ["contours", "Product", "a map's contours"], ["stones", "Release", "the lich's stones"], ["grid", "Tech, in the inventory", "the same grid, the edge stitched"]]
+  .map(([t, who, line], i) => `<div class="tex"><div class="ork-table${i === 5 ? " stitch" : ""}" data-tex="${t}"><div class="mini">Waves<span class="ork-elem meadow"></span></div></div><span><b>${who}</b> · ${line}</span></div>`).join("");
 
 /* the heads */
-const RACES = [["Tech · the shaman", ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"]], ["Product · the unicorn knight", ["uni-ost", "uni-jtbd", "uni-lean", "uni-shape"]], ["Design · the dryad", ["dry-heur", "dry-diamond", "dry-atom", "dry-sprint"]]];
-document.getElementById("heads-grid").innerHTML = RACES.map(([lab, ids]) => `<p class="h"><b>${lab}</b>calm at 48 × 44 and 24 × 22; worried, pleased, says no</p>` +
+const RACES_SHOWN = [["Tech · the shaman", ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"]], ["Product · the unicorn knight", ["uni-ost", "uni-jtbd", "uni-lean", "uni-shape"]], ["Design · the dryad", ["dry-heur", "dry-diamond", "dry-atom", "dry-sprint"]]];
+document.getElementById("heads-grid").innerHTML = RACES_SHOWN.map(([lab, ids]) => `<p class="h"><b>${lab}</b>calm at 48 × 44 and 24 × 22; worried, pleased, says no</p>` +
   ids.map(id => `<div class="cell"><b>${HEROES[id].name}</b>${HEROES[id].school}
     <div><img class="hd" src="${HEAD(id)}" width="48" height="44" alt=""><img class="hd" src="heads/${id}.png" width="24" height="22" alt=""></div>
     <div>${["worried", "pleased", "no"].map(m => `<img class="hd" src="heads/${id}-${m}.png" width="24" height="22" alt="">`).join("")}</div></div>`).join("")).join("");
 
-document.getElementById("fan-labs").innerHTML = FANS.map(f => `<p><b>${f.lab}</b>${f.note}</p>`).join("");
-heads(); drawFans(); drawTable(); drawPotions();
+document.getElementById("ask-head").src = HEAD(BY["lead-tech"].value);
+drawChairs(); drawFan(); drawTable(); drawPotions();
 </script>
 </body>
 </html>
