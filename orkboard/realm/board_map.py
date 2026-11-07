@@ -470,7 +470,8 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
         goals.append({"slug": g["slug"], "title": g["title"], "short": g["short"], "priority": g["priority"], "state": gst["state"],
                       "craft": g.get("craft") or roles.DEFAULT_CRAFT, "race": roles.RACES.get(g.get("craft"), "peon"), "team": team,
                       "party_craft": goal_team.craft_of(root, g["slug"]),           # the party's craft (spec 99 §1): which map its tab shows (spec 102 §4)
-                      "leader": {"slug": lead["slug"], "name": lead["name"], "head": goal_team.head_in(root, g["slug"], lead, target, tiers)} if lead else None,
+                      "leader": {"slug": lead["slug"], "name": lead["name"], "head": goal_team.head_in(root, g["slug"], lead, target, tiers),
+                                 **_hero_of(root, g["slug"])} if lead else None,      # …and its hero (spec 157 C.4)
                       "size": g.get("size") or "",                                  # the party's size (spec 75 §3): lean · standard · full, "" with none
                       "tool": g.get("tool") or "",                                  # the party's AI tool (spec 81): a harnesses id, "" the Main tool
                       "tools": g.get("tools") or {},                                # … and each seat's own, {agent: tool} (spec 91 §6)
@@ -548,3 +549,10 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                          flags=sum(1 for n in mine_nodes if n["flag"]),
                          waits_main=sum(1 for n in mine_nodes if n["state"] == "done" and not n["flag"]))
     return {"goals": goals, "nodes": nodes, "edges": edges, "rows": board_rows.rows(state_dir, root), "rev": rev}      # the stacks of no goal's, laid after the goals' own (spec 99 §8.2; the hypotheses judged, spec 116 §4.1)
+
+
+def _hero_of(root, party: str) -> dict:
+    """`{"hero": {id, name, school, default, head}}` of a party with a craft (spec 157 C.4), else nothing."""
+    from orkboard.realm import heroes
+    h = goal_team.hero_of(root, party)
+    return {"hero": {"id": h.id, "name": h.name, "school": h.school, "default": h.default, "head": heroes.head(h)}} if h is not None else {}

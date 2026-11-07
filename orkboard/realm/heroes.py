@@ -203,3 +203,11 @@ def get(hero_id: str) -> Hero | None:
 def default(craft: str) -> Hero | None:
     """The craft's default hero; None for a craft with none."""
     return next((h for h in HEROES.values() if h.craft == craft and h.default), None)
+
+
+def head(hero: Hero) -> dict:
+    """The head that draws a hero, `{race, tier}`: orkUI's `hero-<id>` when its copy has the file (spec 157 B), else its craft's leader race at the elder tier."""
+    from orkboard.realm import roles
+    if (roles.RACE_FILES / f"hero-{hero.id}-elder.png").is_file():
+        return {"race": f"hero-{hero.id}", "tier": "elder"}
+    return {"race": roles.party_race(hero.craft, True, "elder"), "tier": "elder"}
