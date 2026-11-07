@@ -1,0 +1,242 @@
+"""Spec 157 C (docs/specs/157-the-inventory-a-merchants-stall.md): the stall's host, on the Board's host of tests/test_board_35.py: `ideas.stall`, `stall_take`, `stall_back`,
+`hero_table`, and the hero in the snapshot."""
+from __future__ import annotations
+
+import json
+import sys
+import types
+
+import pytest
+
+from orkboard import settings
+from orkboard.gui.board_host import CommandError
+from orkboard.realm import goal_team, hero_table, ideas, party_recipes
+from tests.test_board_35 import host, model, runner  # noqa: F401  (fixtures)
+
+
+def _party(host, craft="tech", title=None):
+    root = host.ideas.root()
+    slug = ideas.add_track(root, title or f"{craft} party")
+    recipe = party_recipes.CRAFTS[craft]
+    goal_team.set_recipe(root, slug, craft)
+    goal_team.set_team(root, slug, party_recipes.squad_of(recipe), leader=recipe["leader"])
+    return slug
+
+
+def stall(host, chair=""):
+    return host.command("ideas.stall", {"chair": chair})
+
+
+def shelf(got, slot):
+    return next(s for s in got["shelves"] if s["slot"] == slot)
+
+
+def ware(got, slot, wid):
+    return next(w for w in shelf(got, slot)["wares"] if w["id"] == wid)
+
+
+def card(got, slot):
+    return next(c for c in got["hand"] if c["slot"] == slot)
+
+
+def prices(got):
+    return [w["price"] for s in got["shelves"] for w in s["wares"]]
+
+
+def test_the_orkmasters_chair_has_its_five_shelves_and_carries_what_is_set(host):
+    got = stall(host)
+    assert got["chair"] == "" and got["whose"] == "The Orkmaster" and got["say"]
+    assert [s["slot"] for s in got["shelves"]] == ["target", "look_wait", "autostart", "work_at_night", "push"]
+    assert all(s["kind"] == "small" for s in got["shelves"])
+    assert [w["id"] for w in shelf(got, "target")["wares"]] == ["thrift", "balance", "quality"]
+    assert [w["id"] for w in shelf(got, "look_wait")["wares"]] == ["30m", "2h", "tonight", "none"]
+    assert {c["slot"]: c["yours"] for c in got["hand"]} == {"target": "balance", "look_wait": settings.IDEAS["look_wait"], "autostart": "on", "work_at_night": "off", "push": "off"}
+    assert all(c["fixed"] is False and c["word"] for c in got["hand"])
+    assert ware(got, "target", "balance")["price"] == {"mine": True}
+    assert ware(got, "target", "thrift")["price"] == {"word": "lighter"} and ware(got, "target", "quality")["price"] == {"word": "heavier"}
+    assert ware(got, "autostart", "off")["price"] == {"word": "same cost"}
+
+
+def test_no_price_is_a_number_the_host_did_not_estimate(host):
+    party = _party(host)
+    for chair in ("", party):
+        for p in prices(stall(host, chair)):
+            assert set(p) <= {"mine", "locked", "word"}
+            assert "word" not in p or p["word"] in ("lighter", "heavier", "one pass", "same cost")
+
+
+def test_a_take_writes_the_setting_publishes_and_undoes(host):
+    got = host.command("ideas.stall_take", {"chair": "", "slot": "target", "value": "quality"})
+    assert host.command("ideas.board")["target"] == "quality"
+    assert got["undo"] == {"slot": "target", "value": "balance"}
+    assert card(got["stall"], "target")["yours"] == "quality" and ware(got["stall"], "target", "balance")["before"] is True
+    assert ware(got["stall"], "target", "quality")["before"] is False
+    back = host.command("ideas.stall_take", {"chair": "", **got["undo"]})
+    assert host.command("ideas.board")["target"] == "balance" and back["undo"]["value"] == "quality"
+
+
+def test_a_take_publishes_changed(host):
+    seen = []
+    real = host.ideas.changed
+    host.ideas.changed = lambda slug: (seen.append(slug), real(slug))
+    host.command("ideas.stall_take", {"chair": "", "slot": "push", "value": "on"})
+    assert "" in seen
+
+
+def test_the_other_settings_go_through_their_own_writers(host):
+    host.command("ideas.stall_take", {"chair": "", "slot": "look_wait", "value": "none"})
+    host.command("ideas.stall_take", {"chair": "", "slot": "autostart", "value": "off"})
+    host.command("ideas.stall_take", {"chair": "", "slot": "work_at_night", "value": "on"})
+    got = host.command("ideas.stall_take", {"chair": "", "slot": "push", "value": "on"})["stall"]
+    b = host.command("ideas.board")
+    assert (b["look_wait"], b["autostart"], b["work_at_night"]) == ("none", False, True) and host.ideas.settings_now()["push"] is True
+    assert {c["slot"]: c["yours"] for c in got["hand"]} == {"target": "balance", "look_wait": "none", "autostart": "off", "work_at_night": "on", "push": "on"}
+
+
+def test_stall_back_writes_the_defaults(host):
+    for slot, value in (("target", "thrift"), ("look_wait", "30m"), ("autostart", "off"), ("work_at_night", "on"), ("push", "on")):
+        host.command("ideas.stall_take", {"chair": "", "slot": slot, "value": value})
+    for slot in ("target", "look_wait", "autostart", "work_at_night", "push"):
+        got = host.command("ideas.stall_back", {"chair": "", "slot": slot})
+    b = host.command("ideas.board")
+    assert (b["target"], b["look_wait"], b["autostart"], b["work_at_night"]) == (settings.IDEAS["target"], settings.IDEAS["look_wait"], True, False)
+    assert host.ideas.settings_now()["push"] is False
+    assert card(got["stall"], "push")["yours"] == "off"
+
+
+def test_a_tech_partys_chair_has_its_heroes_its_tool_and_its_tiers(host):
+    party = _party(host)
+    got = stall(host, party)
+    assert got["chair"] == party and [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier"]
+    assert shelf(got, "hero")["kind"] == "heroes" and shelf(got, "tool")["kind"] == "small"
+    assert [w["id"] for w in shelf(got, "hero")["wares"]] == ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"]
+    xp = ware(got, "hero", "sh-xp")
+    assert xp["word"] == "Spike Shaman" and xp["stats"] == {"school": "Extreme programming", "flow": "test → code → refactor", "size": "standard", "decides": 3, "says_no": 2}
+    assert xp["head"]["tier"] == "elder" and xp["head"]["race"] and xp["price"] == {"word": "one pass"}
+    assert "Sh.man" in got["say"] and "C4 and hotspots" in got["say"]
+    assert ware(got, "hero", "sh-c4")["price"] == {"mine": True}
+    assert card(got, "hero")["yours"] == "sh-c4" and card(got, "hero")["head"] == ware(got, "hero", "sh-c4")["head"]
+    assert [w["id"] for w in shelf(got, "tier")["wares"]] == ["laborer", "warrior", "elder"]
+    assert card(got, "tool")["yours"] == "" and ware(got, "tool", "")["price"] == {"mine": True}
+
+
+def test_a_tool_signed_in_is_a_ware_and_a_tool_not_signed_in_is_refused(host, monkeypatch):
+    party = _party(host)
+    monkeypatch.setattr(host.ideas, "tools", lambda a: {"main": "claude", "tools": [{"id": "claude", "name": "Claude Code", "ready": True}, {"id": "codex", "name": "Codex", "ready": False}]})
+    assert [w["id"] for w in shelf(stall(host, party), "tool")["wares"]] == ["", "claude"]
+    got = host.command("ideas.stall_take", {"chair": party, "slot": "tool", "value": "claude"})
+    assert goal_team.tool_of(host.ideas.root(), party) == "claude" and got["undo"] == {"slot": "tool", "value": ""}
+    with pytest.raises(CommandError):
+        host.command("ideas.stall_take", {"chair": party, "slot": "tool", "value": "codex"})
+    host.command("ideas.stall_back", {"chair": party, "slot": "tool"})
+    assert goal_team.tool_of(host.ideas.root(), party) == ""
+
+
+def test_a_hero_is_taken_undone_and_put_back(host):
+    party, root = _party(host), host.ideas.root()
+    got = host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "sh-xp"})
+    assert goal_team.hero_of(root, party).id == "sh-xp" and got["undo"] == {"slot": "hero", "value": "sh-c4"}
+    assert card(got["stall"], "hero")["yours"] == "sh-xp" and ware(got["stall"], "hero", "sh-c4")["before"] is True
+    assert "Red" in got["stall"]["say"]
+    host.command("ideas.stall_take", {"chair": party, **got["undo"]})
+    assert goal_team.hero_of(root, party).id == "sh-c4"
+    host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "sh-fit"})
+    host.command("ideas.stall_back", {"chair": party, "slot": "hero"})
+    assert goal_team.hero_of(root, party).id == "sh-c4" and "hero" not in dict(ideas.track_page(root, party).meta)
+
+
+def test_taking_a_hero_calls_the_lay_hook_when_it_exists_and_only_for_a_hero_that_is_not_the_default(host, monkeypatch):
+    laid = []
+    fake = types.SimpleNamespace(lay_party=lambda root, state_dir, party: laid.append(party))
+    monkeypatch.setitem(sys.modules, "orkboard.realm.lay_tables", fake)
+    import orkboard.realm as realm
+    monkeypatch.setattr(realm, "lay_tables", fake, raising=False)
+    party = _party(host)
+    host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "sh-xp"})
+    host.command("ideas.stall_back", {"chair": party, "slot": "hero"})
+    assert laid == [party]
+
+
+def test_a_tier_is_taken_for_every_seat_and_put_back_to_the_recipes(host):
+    party, root = _party(host), host.ideas.root()
+    team = goal_team.team_of(root, party)
+    assert team
+    start = card(stall(host, party), "tier")["yours"]
+    got = host.command("ideas.stall_take", {"chair": party, "slot": "tier", "value": "laborer"})
+    assert {goal_team.tiers_of(root, party)[s] for s in team} == {"laborer"} and card(got["stall"], "tier")["yours"] == "laborer"
+    assert got["undo"] == {"slot": "tier", "value": start}
+    assert ware(got["stall"], "tier", "laborer")["price"] == {"mine": True}
+    assert set(ware(got["stall"], "tier", "elder")["price"]) == {"word"}
+    host.command("ideas.stall_back", {"chair": party, "slot": "tier"})
+    recipe = party_recipes.tiers_for(goal_team.leader_of(root, party), team, goal_team.size_of(root, party) or "standard")
+    assert {s: t for s, t in goal_team.tiers_of(root, party).items() if s in team} == {s: t for s, t in recipe.items() if s in team}
+
+
+def test_release_has_its_chair_locked(host):
+    (host.repo_root / "orkcraft.toml").write_text("[gate]\nalways = [\"tests/test_architecture.py\", \"tests/test_updates.py\"]\n")
+    party = _party(host, "release")
+    got = stall(host, party)
+    assert [s["slot"] for s in got["shelves"]] == ["hero", "gate"]
+    (only,) = shelf(got, "hero")["wares"]
+    assert only["id"] == "release" and only["price"] == {"mine": True}
+    gate = shelf(got, "gate")["wares"][0]
+    assert gate["price"]["locked"] and "tests/test_architecture.py" in gate["line"]
+    assert all(c["fixed"] for c in got["hand"])
+    for slot in ("hero", "gate"):
+        for cmd in ("ideas.stall_take", "ideas.stall_back"):
+            with pytest.raises(CommandError, match="fixed|orkcraft.toml"):
+                host.command(cmd, {"chair": party, "slot": slot, "value": "release"})
+    assert goal_team.hero_of(host.ideas.root(), party).id == "release"
+
+
+def test_what_cannot_be_taken_is_refused_in_plain_words(host):
+    party = _party(host)
+    for args, match in (({"chair": "", "slot": "target", "value": "lavish"}, "not a ware"),
+                        ({"chair": "", "slot": "hero", "value": "sh-xp"}, "no hero to take"),
+                        ({"chair": "", "slot": "target"}, "value is missing"),
+                        ({"chair": "nowhere", "slot": "target", "value": "thrift"}, "That party is gone"),
+                        ({"chair": party, "slot": "hero", "value": "dry-atom"}, "not a ware"),
+                        ({"chair": party, "slot": "hero", "value": "release"}, "not a ware"),
+                        ({"chair": party, "slot": "tier", "value": "king"}, "not a ware"),
+                        ({"chair": party, "slot": "target", "value": "thrift"}, "no target to take")):
+        with pytest.raises(CommandError, match=match):
+            host.command("ideas.stall_take", args)
+    with pytest.raises(CommandError, match="That party is gone"):
+        host.command("ideas.stall", {"chair": "nowhere"})
+    with pytest.raises(CommandError):
+        host.command("ideas.stall_back", {"chair": "", "slot": "hero"})
+    assert host.command("ideas.board")["target"] == "balance"
+
+
+def _leader(host, party):
+    return next(g for g in host.command("ideas.map", {})["goals"] if g["slug"] == party)["leader"]
+
+
+def test_the_snapshot_gives_a_partys_leader_its_hero(host):
+    party, root = _party(host), host.ideas.root()
+    hero = _leader(host, party)["hero"]
+    assert hero["id"] == "sh-c4" and hero["name"] == "Sh.man" and hero["school"] == "C4 and hotspots" and hero["default"] is True
+    assert hero["head"] == {"race": "shaman", "tier": "elder"}
+    goal_team.set_hero(root, party, "sh-xp")
+    hero = _leader(host, party)["hero"]
+    assert hero["id"] == "sh-xp" and hero["default"] is False and hero["name"] == "Spike Shaman" and hero["head"]["tier"] == "elder"
+
+
+def test_the_hero_table_reads_the_kept_cards_with_the_layout_and_the_elements(host):
+    party, root = _party(host), host.ideas.root()
+    goal_team.set_hero(root, party, "sh-xp")
+    got = host.command("ideas.hero_table", {"party": party})
+    assert got["hero"] == "sh-xp" and got["layout"] == "lanes" and got["party"] == party and got["elements"] == {}
+    assert [p["name"] for p in got["places"]] == ["Red", "Green", "Refactor", "Released small"] and all(p["cards"] == [] for p in got["places"])
+    hero_table.write(root, party, "sh-xp", {"Red": [{"title": "A test", "line": "fails first", "goal": "some-goal", "state": "hot"}]})
+    got = host.command("ideas.hero_table", {"party": party})
+    assert got["places"][0]["cards"][0]["goal"] == "some-goal" and set(got["elements"]) == {"some-goal"}
+    with pytest.raises(CommandError, match="That party is gone"):
+        host.command("ideas.hero_table", {"party": "nowhere"})
+
+
+def test_the_new_commands_are_in_the_hosts_table_and_the_projects(host):
+    from orkboard.gui.board_projects import _board_commands
+    for name in ("ideas.stall", "ideas.stall_take", "ideas.stall_back", "ideas.hero_table"):
+        assert name in host.commands and name in _board_commands()
+    json.dumps(stall(host))
