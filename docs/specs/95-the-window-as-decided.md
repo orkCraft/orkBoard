@@ -4,7 +4,7 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §167, and §201 and §254.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §167, and §201, §254 and §266 (the inventory, §13 below).
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
@@ -38,6 +38,8 @@ the same commit**; where it and a decision differ, the decision is right and thi
 3. **At the tabs' end**: the empty chair (*New party*, while a craft is not at the table), the AI tools' limits as the
    hand's mana (§107.1, spec 104) and **Stop all** as a door, shut at rest, open (*All stopped*) once pressed until work starts
    again (§126.1, §201.8).
+   **Since §266**: a tab's chair is a craft, the tabs in the route's order; an empty chair shows its craft's texture, a taken one
+   its hero's race; after the tabs the backpack (*Inventory*, §13); **Stop all and Resume are words above the potions**.
 4. **A tab is its column's head on the Board** (§143): the tabs, the Board's lanes and the hand share one grid, every
    lane a card and a quarter wide, narrowing to a card's width when they don't fit (§167.7).
 5. **A party's header is one row: its squad, its size, its leader's aspects** (§134.3, §151.3, §201.4): no *Leads* (the
@@ -177,7 +179,7 @@ the same commit**; where it and a decision differ, the decision is right and thi
    a seat added to it is a skeleton (§157.2).
 4. **A specialist's view is marks on its party's map** (§151.4): its head and the alert on the cards it speaks of;
    **Open its view** from its popover opens the whole of it over the pane. Never a tab or a switch.
-5. **One place makes and edits the parties** (§151.5), over the pane: at the left the project's kind and the parties
+5. **One place makes and edits the parties** (§151.5; **since §266 the inventory**, §13, and what follows is read there), over the pane: at the left the project's kind and the parties
    under the stages' headings (the project's stage picked on its heading, Release locked); at the right the size, the
    leader's row (its name of its own, §164, beside its role), **Does** (a sword) and **Checks** (a shield) of role cards; under the leader's row what it keeps of
    the project, its answers read and changed from the next goal (§153.4); at the foot the cost and **Start** or
@@ -259,3 +261,17 @@ of the parties), each at the owner's yes.
 *fork*, *out of the contract*, *To main*, *Release a version*, *in line*, *squad*, *size*, *Other…*. A part of a map is not called a *card* where a
 person reads it (spec 70 §0); the first lane's line reads *In line* and the discard *Done* on hover, so the battler's words are never
 the only ones.
+
+## 13. The inventory (§266)
+1. **The backpack** after the tabs opens it: the table's edge stitched, the tabs stay, **a tab picked says whose** (the
+   Orkmaster's the whole project, a leader's its party). **The table lays it out as it is set**; **a thing pressed lays its
+   ways in the hand**, priced against the person's own and hatched on the potions; hovered, a way shows in its place on the
+   table; played, it flies there, with *Undo*; dropped on the discard, a thing goes back to its default.
+2. **The Orkmaster's sheet**: *When* (the look, the starts by priority, the person's hours), *How much* (how deep, the day's
+   cap), *What leaves this computer* (push, the cloud run in money), its questions. **A leader's**: its hero (a school's set:
+   framework, flow, size, how much it decides itself, how often it says no, cost), its questions, its conflicts, its seats'
+   tool and tier. Settings keeps the plumbing.
+3. **Four ways of answering** (Pen, Choice, Fork, Silent); a hero brings its own, the person's outlive it; the person's
+   decisions are locked from Silent. A conflict with a spec: Ask, Declare or Silent; with a decision: asked, always.
+4. **Whose table by its texture**, a craft each; **the die's faces** are what the project can run, each with its own state;
+   an iOS build locked without a Mac.

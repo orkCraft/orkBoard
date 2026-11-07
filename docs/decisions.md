@@ -7237,3 +7237,72 @@ so the goals at work have more room*. So:
 3. **The + card sits 32 px lower** at the wide width: its foot, the lower moon of the back's drawing (§264), lies under the
    window's edge, its seal whole; the Orkmaster's column ends 32 px lower, so the goals at work have that room.
 The owner's call.
+
+## 266. The inventory: how the project is set, laid on the table, its ways in the hand; a leader is a hero of a school; four ways of answering; a chair is a craft; the die's faces are what the project can run; Stop all above the potions (7 November 2026, the owner)
+
+Changes: 47.4 (*Start plans by themselves* as one switch), 57.1 (what the Board puts off, now by the goal's priority), 145.6
+(the project's **…** keeps Settings' plumbing only), 151.5 (the one place of the parties), 164.1 (a leader's name its
+hero's), 190 and 196 (the die one Play, its up face its state), 261.12 (Stop all and Resume at the die's word).
+
+Why: the owner, as designer and product manager: *simplify the interface by game mechanics, not complicate it*; the settings
+are rows of switches in Settings, the parties' place and the potions, and none says what it costs. Talked through on the
+mockups `docs/mockups/merchant/` (and the first try, `docs/mockups/route-and-stall/`, not decided), from a merchant's stall
+to what was kept: the table shows what is, the hand what the person decides, as everywhere in the window (§145.1, §167.7); a
+leader is a set chosen at once, as a hero is; the person's trust stays the person's (§52.6). So:
+1. **The inventory** (`TERMS`: *Inventory*, always beside *how the project is set*): a backpack, the row's last thing after
+   the tabs. Opened, the table's edge is stitched and the tabs stay; **a tab picked says whose**: the Orkmaster's the whole
+   project, a leader's its party. **The table lays that tab out as it is set**, a sheet of things in groups; **a thing
+   pressed lays its ways in the hand** (the hand's cards step aside while it is open), each priced against the person's own
+   in the first potion's week and hatched on the potions; **hovered, a way shows in its place on the table**; **played, it
+   flies to its place**, with *Undo*. The person's own is marked *Yours*, what was before *Yours before*, the Orkmaster's
+   pick a star. **A thing dropped on the discard goes back to its default** (in the inventory only; *Back to default* on a
+   thing picked, for the keyboard and the phone). The potions and the die are pressed as they are. Settings' **…** keeps the
+   plumbing (sign-ins, the Board in the repository, the rules for any AI tool, the phone, keeping awake, updates, logs) and
+   ends with *How the project is set: Inventory*.
+2. **The Orkmaster's sheet**: *When* (*Give me time to look*; *High*, *Normal*, *Low goals start*: *Now*, *By the week*,
+   *Tonight*, *By hand*; *When I am here*), *How much* (how deep, the day's cap of what answers by itself), *What leaves
+   this computer* (*Push after merging*; the cloud run, its money said as money), *The Orkmaster's questions* (a Low goal
+   ready, a conflict with a decision). Risk still decides whether work may start without the person, whatever these say
+   (§57.3). The gate is read, not traded, at Release's hero.
+3. **A leader is a hero of a school**: a set of its craft's framework (its lens's aspects, §184, and how its table is laid),
+   its flow (steps within the phases, never other phases), its size, **how much it decides itself** and **how often it says
+   no**, and its cost, shown as stats on its card. Three to six a craft, the Orkmaster's pick starred; its name says its
+   school, after §164 (*Spike Shaman*, *Jobwise Knight*), never a real person's. **How often it says no moves only where it
+   stops**: a risk is said by every hero; the locks, the gate and §57.3 are no hero's. A leader's sheet: its hero, its
+   questions, its conflicts with its spec, its seats' AI tool and tier. The framework is never a card of its own here.
+4. **A hero's face** is its race's higher form with its skin or helm, its horns, antlers or wings and one detail changed
+   (`heads/make_heads.py` drew four a race); the hood stays the tier's gear, the knight's helm a warm metal, no skin the
+   action's green; the moods are laid over each. Drawn in orkUI before they are used.
+5. **Four ways of answering**, a question kind each: **Pen** (the person's words), **Choice** (the leader's ways; *if you do
+   not look in N, the leader's pick* is a Choice with a wait), **Fork** (three or four ways worked out, each drawn on the
+   table, the leader's pick marked, *Other…* to the Pen; it costs, and says so), **Silent** (the leader decides and says it
+   in its evening line). **A hero brings its own ways; what the person sets is the person's and outlives the hero.** Locked
+   to Pen, Choice or Fork, never Silent nor a wait: going into main, money above what was agreed, dropping or holding a
+   goal, a decision against an earlier one. The night offers a step up from how the person answered (§51.4), taken or not by
+   the person.
+6. **A conflict with an earlier spec**, a leader's: **Ask** (a Choice or a Fork), **Declare** (the leader rewrites the
+   earlier spec and lays a card where it changed, with *Undo*), **Silent** (it rewrites; the evening line and the spec's
+   *Changed since* say it); a spec rewritten often goes back to Declare by itself. **A decision is never rewritten**: a
+   conflict with one is asked, always.
+7. **A tab's chair is a craft**: the tabs stand in the route's order; the Orkmaster seats the crafts of the project's stage
+   (§122.5) with its pick; the crafts a new stage brings come as **empty chairs**, no card; the empty chair at the end seats
+   one sooner; a hero taken off leaves its chair empty. **An empty chair shows its craft's texture on its back; a taken one,
+   its hero's race says the craft.** **A hero's card**: its craft's texture at the top left (whose), the one hero silhouette
+   at the top right (what card; a new sign).
+8. **Whose table, by its texture**: a pattern in the ink at a few percent on the table's surface, a craft each (Tech a
+   blueprint's grid, Design a canvas's dots, Product contours, Release stones, Run stripes, Marketing chevrons, the
+   Orkmaster plain felt), every day, not only in the inventory; the inventory is told by its stitched edge. No new colour.
+9. **The die's faces are what the project can run**, read from Tech's table (§112): a client, a server, both at once as one
+   face, an Android build, an iOS build; six at most. The up face is what Play starts; a side pressed turns the die to it;
+   **each face its own state** (the cross of a start that failed, the spark of something new, §196's marks moved to the face
+   they belong to). A build is the computer's work, no mana: its time is said (*about 4 min*), the die wobbles while it
+   builds; an Android build goes to the paired phone or stays a file; **an iOS build needs a Mac with Xcode**, its face
+   locked elsewhere with those words. In the inventory: the face it rests on, where an Android build goes.
+10. **Stop all and Resume are words above the potions** (this changes §261.12): *Stop all* while the orks work, *Resume*
+   after it; the die's word is Play's alone.
+11. **Later, not decided here**: a forge where the person makes a hero (its framework a part there) and shares it as a copy
+   (a leader's code: data only, read before it is taken, never a real person); the tiers' gear as no gear, an iron band, a
+   silver circlet (the gold crown the Orkmaster's); the route drawn as a path on the table.
+12. **The words** (`TERMS`, with the first spec): *Inventory*, *hero*, *Pen*, *Choice*, *Silent*, *Declare*, *Yours*, *Yours
+   before*, *the hero's way*, *Back to default*, *Take off the chair*, *What leaves this computer*.
+The owner's call.
