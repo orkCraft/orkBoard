@@ -7,7 +7,7 @@ import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { town } from "../link.js";
-import { ORKMASTER, closeOver, lifted, openOver, over, picked } from "../frame/state.js";
+import { ORKMASTER, closeOver, inventory, lifted, openOver, over, picked } from "../frame/state.js";
 import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
 import { PHASES, isRelease, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
@@ -22,6 +22,8 @@ import { Earlier, PhaseView, RouteView, phaseKind } from "./phaseview.js";   // 
 import { nodeOf } from "./goalmap.js";
 import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
 import { LimitChip } from "./tabs.js";
+import { Stall } from "./stall.js";                          // the inventory: the merchant's stall, drawn instead of the map while it is open (spec 157 D)
+import { stall } from "./stallstate.js";
 import { Menu } from "./menu.js";
 import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
@@ -85,38 +87,41 @@ function Phases({ goal }) {
 
 /** The pane's title: *The whole project · through Tech*, or ← and *System · server/lobby.ts*. */
 function Title({ parties, tab, narrow }) {
-  const o = over.value, where = o?.from?.title || "", code = o && (o.kind === "file" || (o.kind === "diff" && o.props?.path));
+  const stalled = inventory.value !== null, o = over.value, where = o?.from?.title || "", code = o && (o.kind === "file" || (o.kind === "diff" && o.props?.path));
   const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" };
   const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ...(currentProject.value ? [["Files", () => openOver("files", {}, from, "Files"), false, "folder"]] : []),
     ["Report a problem…", () => openReport(), false, "sign:bug"]];     // the bug left the top row (spec 139 A.5, decisions §246.6)   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
   return html`<header class=${cls("ork-head table-title", { "is-bare": !o && !picked.value })}>
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
-    <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
-    ${picked.value && html`<${Phases} goal=${picked.value} />`}
+    <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : stalled ? html`<span class="stall-title">Inventory</span> how the project is set · <b>${tab === ORKMASTER ? "the whole project" : stall.value?.whose || mapName(tab, parties)}</b>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
+    ${picked.value && !stalled && html`<${Phases} goal=${picked.value} />`}
     <span class="table-grow"></span>
     ${!o && tab === ORKMASTER && html`<${Menu} label="The Orkmaster's menu" items=${items}
       top=${narrow && limits.length > 0 ? html`<div class="table-menu__limits"><span class="ork-label">Limits</span><div class="table-menu__chips">${limits.map((l) => html`<${LimitChip} key=${l.provider} l=${l} from=${from} />`)}</div></div>` : null} />`}
   </header>`;
 }
 
+/** A party whose hero is not its craft's default lays the hero's table, even where the craft's own map is the System (spec 157 E): `mapOf` answers the hero's map first. */
+const heroLaid = (g) => !!g?.leader?.hero && !g.leader.hero.default;
+
 export function Pane({ parties, tab, narrow, column = false }) {
   const body = useRef(), o = over.value, g = parties.find((x) => x.slug === tab);
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
-  const bare = !laidNow(), form = isForm(o);                // not laid yet: the table is bare (spec 130 C.6); a form covers the whole table, its end included (C.5)
+  const bare = !laidNow(), form = isForm(o), stalled = inventory.value !== null && !o && !bare;      // the inventory open: the stall is the table (spec 157 D.2); a form or an open thing lies over it                // not laid yet: the table is bare (spec 130 C.6); a form covers the whole table, its end included (C.5)
   const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), past = !o && !bare && !!picked.value && !picks && !!mapData.value && !narrow, kind = !o && !bare && picks ? phaseKind(tab === ORKMASTER ? null : g, picks) : "";     // a goal picked: what the table shows by its phase at this tab (phaseview.js)
-  return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`}>
+  return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`} data-stall=${stalled ? "open" : undefined}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
-    ${!o && !bare && html`<${Notice} />`}
-    ${!o && !bare && html`<${ToMain} />`}
-    ${!o && !bare && g && isRelease(g) && html`<${ChecksView} />`}
+    ${!o && !bare && !stalled && html`<${Notice} />`}
+    ${!o && !bare && !stalled && html`<${ToMain} />`}
+    ${!o && !bare && !stalled && g && isRelease(g) && html`<${ChecksView} />`}
     <div class="table-body" ref=${body} data-end=${form ? "form" : o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
-      ${o ? html`<${Over} />` : past ? html`<${PastGoal} idea=${picked.value} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${kind === "route" ? html`<${RouteView} n=${picks} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`}
+      ${o ? html`<${Over} />` : stalled ? html`<${Stall} g=${g} />` : past ? html`<${PastGoal} idea=${picked.value} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${kind === "route" ? html`<${RouteView} n=${picks} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`}
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
         : g && kind ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PhaseView} g=${g} n=${picks} kind=${kind} />`
-        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
-      ${!o && !bare && picks && (tab === ORKMASTER || g) && html`<${Earlier} key=${`${tab}:${picks.slug}`} g=${tab === ORKMASTER ? null : g} n=${picks} />`}
+        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) && !heroLaid(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
+      ${!o && !bare && !stalled && picks && (tab === ORKMASTER || g) && html`<${Earlier} key=${`${tab}:${picks.slug}`} g=${tab === ORKMASTER ? null : g} n=${picks} />`}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
       ${!bare && !form && narrow && html`<${DiscardEnd} />`}
     </div>

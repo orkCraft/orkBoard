@@ -15,6 +15,7 @@ import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
 import { DEAL_MS, leans } from "../hand/motion.js";
 import { nightFirst, nightMoons } from "../hand/nightcard.js";
+import { backDrop } from "./stalldrop.js";              // a card of what you carry dropped on the discard goes back to its default (spec 157 D.4)
 import { Portal, ReadyCards, chosenSlug, toMain } from "./portal.js";
 import { noGate } from "./data.js";
 import { CornerTop, CornerFoot, muchOf, secondsBetween, IN_MAIN } from "./corners.js";             // the card is read by its four corners (spec 147 A.3, decisions §251)
@@ -146,7 +147,7 @@ export function DiscardView() {
 export function DiscardEnd() {
   const dealing = useNightDeal(), pile = hasDiscard();
   if (!pile) return null;
-  return html`<div class="table-end" data-end="discard">${!noGate() && html`<${Portal} />`}<span class="table-end__label">Discard</span><${Discard} dealing=${dealing} /></div>`;
+  return html`<div class="table-end" data-end="discard" ...${backDrop()}>${!noGate() && html`<${Portal} />`}<span class="table-end__label">Discard</span><${Discard} dealing=${dealing} /></div>`;
 }
 
 drawn("discard", DiscardView);

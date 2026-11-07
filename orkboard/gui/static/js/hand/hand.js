@@ -10,7 +10,7 @@ import { html } from "../html.js";
 import { board } from "../board/store.js";
 import { mapData } from "../shell/store.js";
 import { drawn } from "../frame/kinds.js";
-import { lift, lifted, lower, tab } from "../frame/state.js";
+import { inventory, lift, lifted, lower, tab } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
 import { lanesBeforeEnd } from "../table/data.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
@@ -23,6 +23,7 @@ import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
+import { Carry } from "./carry.js";                         // the inventory open: what you carry, instead of the stacks (spec 157 D.3)
 import { Upright } from "./upright.js";
 import { ADD_TOOL, TOOL, fieldOpen, isToolKey, liftDecision, liftKey, stopKeyOf } from "./state.js";
 import { AddTool } from "./addtool.js";
@@ -83,12 +84,14 @@ export function Hand() {
   const bare = !laidNow();                                                              // not laid yet: only the Orkmaster's cards and the AI tools (spec 130 C.6)
   useEffect(() => { if (layLine.value && (fieldOpen.value || (map?.nodes || []).length)) layLine.value = ""; }, [fieldOpen.value, (map?.nodes || []).length]);      // the laid table's line goes with the first goal
   if (!map && !bare) return null;
-  const none = !(map?.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length && !bare && !layLine.value;      // no goal at all and nothing asked: the + card lies large in the pane
+  const carrying = inventory.value !== null && !bare && !uprightNow.value;                  // the inventory open: the hand is what you carry of the chair (carry.js)
+  const none = !(map?.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length && !bare && !layLine.value && !carrying;      // no goal at all and nothing asked: the + card lies large in the pane
   const plus = () => { lower(); fieldOpen.value = true; };
   if (uprightNow.value) return html`<${Upright} root=${root} stacks=${stacks} plus=${plus} />`;                  // a touch phone upright: the hand is the first screen (upright.js)
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
-    ${!middle && html`<div class="hand-places"><div class="hand-row" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
+    ${carrying && html`<div class="hand-carrying"><${Carry} /><div class="hand-end"><${PlayDie} /><${Mana} lifted=${s} /></div></div>`}
+    ${!middle && !carrying && html`<div class="hand-places"><div class="hand-row" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
       <div class="hand-end">${!bare && html`<${PlayDie} />`}<${Mana} lifted=${s} /></div>
     </div></div>`}

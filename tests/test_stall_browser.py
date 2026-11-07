@@ -1,0 +1,403 @@
+"""Spec 157 D (docs/specs/157-the-inventory-a-merchants-stall.md; decisions §267.1), in a real browser against a stub host that answers `ideas.stall`, `ideas.stall_take` and `ideas.stall_back` in the host's real shapes
+(`orkboard/gui/ideas_stall.py`): the backpack at the tabs' end opens the stall and Esc closes it; the rug's shelves and the plate under each ware (in your hand, not here with its why, a word, a share with the vial, money);
+a ware pressed sends the take and Undo the value it had; a card of the hand dropped on the service, and on the discard, sends `stall_back`; a tab pressed picks the chair; Settings' last line opens it; at 1280 x 800 nothing
+overflows the table; and a Tech party whose hero is not its craft's default reaches its hero's table. Screenshots go to the folder `STALL_SHOTS` names when it is set."""
+from __future__ import annotations
+
+import copy
+import os
+from pathlib import Path
+
+import pytest
+
+pytest.importorskip("playwright.sync_api")
+
+from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+from tests.test_hand_desktop_browser import HandHost, open_hand  # noqa: E402
+from tests.test_hero_table_browser import HeroHost, XP, table  # noqa: E402
+from tests.test_night_card_browser import open_settings  # noqa: E402
+from tests.test_shell_browser import _sent  # noqa: E402
+from tests.test_table_desktop_browser import open_tab  # noqa: E402
+
+pytestmark = pytest.mark.browser
+
+SHOTS = Path(os.environ["STALL_SHOTS"]) if os.environ.get("STALL_SHOTS") else None
+
+
+def shot(pg, name):
+    if SHOTS:
+        SHOTS.mkdir(parents=True, exist_ok=True)
+        pg.screenshot(path=str(SHOTS / f"{name}.png"))
+
+
+def ware(id, word, line, price, **more):
+    return {"id": id, "word": word, "line": line, "price": price, "before": False, **more}
+
+
+def stats(school, flow, size, decides, says_no):
+    return {"school": school, "flow": flow, "size": size, "decides": decides, "says_no": says_no}
+
+
+SH = {"race": "shaman", "tier": "elder"}
+# the Orkmaster's chair, as the host lays it: five shelves of small wares (a shelf: slot, label, sub, [(id, word, line)])
+KEEPER = [("target", "How deep", "How much the orks spend on a goal", [("thrift", "Thrift", "Cheaper models, fewer checks"), ("balance", "Balance", "The usual mix"), ("quality", "Quality", "Better models, more checks")]),
+          ("autostart", "Starts by itself", "A safe plan starts without asking", [("on", "On", "A safe plan starts by itself"), ("off", "Off", "Every plan waits for you")]),
+          ("work_at_night", "Works at night", "Plans that would start by themselves wait for the night", [("on", "On", "The orks work in the night's hours"), ("off", "Off", "The orks do not start work at night")]),
+          ("push", "Push after merging", "Whether a merge into the work branch is pushed", [("on", "On", "Results are pushed after they merge"), ("off", "Off", "Results stay on this computer")])]
+PRICE = {("target", "thrift"): {"word": "lighter"}, ("target", "quality"): {"word": "heavier"}}
+HEROES = [("sh-c4", "Sh.man", "C4 and hotspots", stats("C4 and hotspots", "containers → parts → hotspots", "standard", 2, 2)),
+          ("sh-ddd", "Domain Shaman", "Domain-driven design", stats("Domain-driven design", "words → borders → code", "full", 1, 3)),
+          ("sh-xp", "Spike Shaman", "Extreme programming", stats("Extreme programming", "test → code → refactor", "standard", 3, 2)),
+          ("sh-fit", "Fitness Shaman", "Evolutionary architecture", stats("Evolutionary architecture", "fitness → change → check", "full", 2, 3))]
+TIERS = [("laborer", "Laborer", "The lightest model of its tool", {"share": -2}), ("warrior", "Warrior", "The middle model", None), ("elder", "Elder", "The strongest model", {"share": 3})]
+TOOLS = [("", "Main tool", "The potions' order: the first AI tool in your hand that has mana", None), ("claude", "Claude", "Every seat works on Claude", {"money": "up to $2 a night"}), ("codex", "Codex", "Signed out", {"locked": "Codex is signed out"})]
+
+
+class StallHost(HandHost):
+    """The stall of the host in stub form: what is carried per chair and slot, each ware's price by what is carried (a ware carried is `{mine}`)."""
+
+    def __init__(self, **more):
+        super().__init__(bare=True, **more)
+        self.carry = {"": {"target": "balance", "autostart": "on", "work_at_night": "off", "push": "off"},
+                      "tech": {"hero": "sh-c4", "tool": "", "tier": "warrior"}}
+        self.defaults = {"": {"target": "balance", "autostart": "on", "work_at_night": "off", "push": "off"}, "tech": {"hero": "sh-c4", "tool": "", "tier": "warrior"}}
+
+    def shelves(self, chair):
+        now = self.carry.get(chair) or {}
+
+        def priced(slot, id, base):
+            return {"mine": True} if now.get(slot) == id else base
+        if chair == "":
+            return [{"id": slot, "label": label, "sub": sub, "kind": "small", "slot": slot,
+                     "wares": [ware(id, word, line, priced(slot, id, PRICE.get((slot, id)) or {"word": "same cost"})) for id, word, line in wares]} for slot, label, sub, wares in KEEPER]
+        if chair == "release":
+            lock = {"locked": "Release is in every project: its hero and its gate are fixed"}
+            return [{"id": "hero", "label": "Its hero", "sub": "The school its leader looks by", "kind": "heroes", "slot": "hero",
+                     "wares": [ware("lich-nk", "Release Night King", "DORA's keys, readiness and semver", lock, head={"race": "lich", "tier": "elder"}, stats=stats("DORA's keys", "dev → the gate → main", "standard", 1, 3))]}]
+        return [{"id": "hero", "label": "Its hero", "sub": "The school its leader looks by", "kind": "heroes", "slot": "hero",
+                 "wares": [ware(id, word, line, priced("hero", id, {"word": "one pass"}), head=SH, stats=st) for id, word, line, st in HEROES]},
+                {"id": "tool", "label": "Its AI tool", "sub": "What runs this party's goals", "kind": "small", "slot": "tool",
+                 "wares": [ware(id, word, line, priced("tool", id, price or {"word": "same cost"})) for id, word, line, price in TOOLS]},
+                {"id": "tier", "label": "Its seats' tier", "sub": "The model each seat of the party gets", "kind": "small", "slot": "tier",
+                 "wares": [ware(id, word, line, priced("tier", id, price or {"word": "same cost"})) for id, word, line, price in TIERS]}]
+
+    def stall(self, chair):
+        shelves = self.shelves(chair)
+        now = self.carry.get(chair) or {}
+        hand = []
+        for s in shelves:
+            w = next((x for x in s["wares"] if x["id"] == now.get(s["slot"], "")), s["wares"][0])
+            card = {"slot": s["slot"], "label": s["label"], "word": w["word"], "yours": now.get(s["slot"], ""), "line": w["line"], "fixed": chair == "release"}
+            if w.get("head"):
+                card["head"] = w["head"]
+            hand.append(card)
+        say = "Every ware has its price in words: lighter or heavier than what you carry, one pass, or the same cost. Nothing is guessed." if chair == "" else "Sh.man looks by C4 and hotspots. It lays its craft's map."
+        return {"chair": chair, "whose": "The Orkmaster" if chair == "" else "tech party", "say": say, "shelves": shelves, "hand": hand}
+
+    def handle(self, name, a):
+        if name == "ideas.stall":
+            self.log.append((name, a))
+            return self.stall(a["chair"])
+        if name == "ideas.stall_take":
+            self.log.append((name, a))
+            old = self.carry[a["chair"]].get(a["slot"], "")
+            self.carry[a["chair"]][a["slot"]] = a["value"]
+            return self.bump({"stall": self.stall(a["chair"]), "undo": {"slot": a["slot"], "value": old}})
+        if name == "ideas.stall_back":
+            self.log.append((name, a))
+            old = self.carry[a["chair"]].get(a["slot"], "")
+            self.carry[a["chair"]][a["slot"]] = self.defaults[a["chair"]][a["slot"]]
+            return self.bump({"stall": self.stall(a["chair"]), "undo": {"slot": a["slot"], "value": old}})
+        return super().handle(name, a)
+
+
+def opened(gui, chair=None, host=None):
+    """The page, the stall open on a chair: the tab pressed first (a party's), then the backpack."""
+    pg, host, log = open_hand(gui, host=host or StallHost())
+    if chair:
+        open_tab(pg, chair)
+    pg.locator("[data-backpack]").click()
+    pg.locator(".stall-rug .stall-ware").first.wait_for(timeout=WAIT_MS)
+    return pg, host, log
+
+
+def plate(pg, slot, id):
+    return pg.locator(f'.stall-ware[data-slot="{slot}"][data-ware="{id}"] .stall-price')
+
+
+def test_the_backpack_opens_the_stall_and_esc_shuts_it(gui):
+    pg, host, log = open_hand(gui, host=StallHost())
+    try:
+        pack = pg.locator("[data-backpack]")
+        pack.wait_for(timeout=WAIT_MS)
+        assert pack.get_attribute("title") == "Inventory: how the project is set" and pack.get_attribute("aria-pressed") == "false"
+        order = pg.evaluate("() => { const e = document.querySelector('.table-tabs__end'); return [...e.children].map((c) => c.className); }")
+        assert "stall-pack" in order[0], order                                    # the backpack stands first at the tabs' end, before New party's chair
+        assert pg.locator(".stall").count() == 0 and pg.locator(".table-pane").get_attribute("data-stall") is None
+        pack.click()
+        pg.locator(".stall").wait_for(timeout=WAIT_MS)
+        assert pg.locator(".table-pane").get_attribute("data-stall") == "open"
+        assert pg.locator(".table-pane").evaluate("e => getComputedStyle(e, '::after').borderTopStyle") == "dashed"       # the table's edge is stitched
+        assert pack.get_attribute("title") == "Close the inventory" and pack.get_attribute("aria-pressed") == "true"
+        assert ("ideas.stall", {"chair": ""}) in host.log
+        assert pg.locator(".hand .carry").count() == 1 and pg.locator(".hand .hand-stack, .hand .hand-slot").count() == 0       # what you carry, not the stacks
+        assert pg.locator(".table-tab").count() > 0                                  # the tabs stay
+        pg.keyboard.press("Escape")
+        pg.wait_for_function("() => !document.querySelector('.stall')", timeout=WAIT_MS)
+        assert pg.locator(".hand .carry").count() == 0 and pg.locator("[data-backpack]").get_attribute("aria-pressed") == "false"
+        pack.click()
+        pg.locator(".stall").wait_for(timeout=WAIT_MS)
+        pack.click()
+        pg.wait_for_function("() => !document.querySelector('.stall')", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_orkmasters_rug_lays_every_ware_with_its_plate_and_its_hand_what_it_carries(gui):
+    pg, host, log = opened(gui)
+    try:
+        assert pg.locator(".stall-bubble").inner_text().startswith("Every ware has its price in words")
+        assert pg.locator(".stall-merchant__name").inner_text().lower() == "orkmaster"
+        box = pg.locator(".stall-merchant .ork-race__head").bounding_box()
+        assert (round(box["width"]), round(box["height"])) == (96, 88)                          # the merchant's crowned head at 96 x 88
+        assert pg.locator(".stall-shelf").evaluate_all("els => els.map((e) => e.dataset.shelf)") == ["target", "autostart", "work_at_night", "push"]
+        assert [t.lower() for t in pg.locator(".stall-shelf__lab b").all_inner_texts()[:2]] == ["how deep", "starts by itself"]
+        assert pg.locator(".stall-ware").count() == 3 + 2 + 2 + 2                              # every ware at once
+        assert plate(pg, "target", "balance").inner_text() == "in your hand" and plate(pg, "target", "balance").evaluate("e => getComputedStyle(e).borderTopStyle") == "dashed"
+        assert plate(pg, "target", "thrift").inner_text() == "lighter" and plate(pg, "target", "quality").inner_text() == "heavier"
+        green = plate(pg, "target", "thrift").evaluate("e => getComputedStyle(e).color"), plate(pg, "target", "quality").evaluate("e => getComputedStyle(e).color")
+        assert green[0] != green[1]                                                              # lighter is in the success colour, heavier in the ink
+        assert plate(pg, "autostart", "off").inner_text() == "same cost"
+        cards = pg.locator(".carry-card")
+        assert cards.evaluate_all("els => els.map((e) => e.dataset.slot)") == ["target", "autostart", "work_at_night", "push"]
+        assert "Balance" in cards.first.inner_text() and "How deep" in cards.first.inner_text() and "The usual mix" in cards.first.inner_text()
+        assert "What you carry of the whole project" in pg.locator(".carry__lab").inner_text() or "what you carry of the whole project" in pg.locator(".carry__lab").inner_text()
+        shot(pg, "stall-orkmaster")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_leaders_rug_has_its_heroes_on_top_its_small_things_below_and_every_form_of_plate(gui):
+    pg, host, log = opened(gui, "tech")
+    try:
+        assert ("ideas.stall", {"chair": "tech"}) in host.log
+        assert pg.locator(".stall-title").inner_text() == "Inventory"
+        assert pg.locator(".stall-shelf.is-heroes .stall-hero").count() == 4
+        sh = pg.locator('.stall-ware[data-ware="sh-xp"]')
+        assert "Spike Shaman" in sh.inner_text() and "Extreme programming" in sh.inner_text() and "test → code → refactor" in sh.inner_text()
+        assert sh.locator(".stall-pips").count() == 2 and sh.locator(".stall-pips i.on").count() == 3 + 2       # the stats' bars: decides 3, says no 2
+        assert sh.locator(".ork-race__head").count() == 1
+        top, low = pg.locator(".stall-shelf.is-heroes").bounding_box(), pg.locator(".stall-low").bounding_box()
+        assert top["y"] + top["height"] <= low["y"] + 1                                           # the heroes on the top shelf, the small things below
+        assert plate(pg, "hero", "sh-c4").inner_text() == "in your hand" and plate(pg, "hero", "sh-ddd").inner_text() == "one pass"
+        share = plate(pg, "tier", "elder")
+        assert share.inner_text().strip() == "+3%" and share.locator(".ork-potion.size-vial").count() == 1
+        less = plate(pg, "tier", "laborer")
+        assert less.inner_text().strip() == "−2%" and less.locator(".ork-potion").count() == 1
+        assert less.evaluate("e => getComputedStyle(e).color") != share.evaluate("e => getComputedStyle(e).color")      # a saving in the success colour
+        money = plate(pg, "tool", "claude")
+        assert money.inner_text().strip() == "up to $2 a night" and money.get_attribute("data-price") == "money"
+        assert money.evaluate("e => getComputedStyle(e).color") not in (share.evaluate("e => getComputedStyle(e).color"), less.evaluate("e => getComputedStyle(e).color"))      # money in the warning colour
+        locked = plate(pg, "tool", "codex")
+        assert locked.inner_text().strip() == "not here" and locked.locator(".stall-lock").count() == 1 and locked.get_attribute("title") == "Codex is signed out"
+        assert pg.locator('.stall-ware[data-ware="codex"] .stall-ware__press').get_attribute("aria-disabled") == "true"
+        cards = pg.locator(".carry-card")
+        assert cards.evaluate_all("els => els.map((e) => e.dataset.slot)") == ["hero", "tool", "tier"]
+        assert "Sh.man" in cards.first.inner_text() and cards.first.locator(".ork-race__head").count() == 1
+        assert "what you carry of tech party" in pg.locator(".carry__lab").inner_text()
+        shot(pg, "stall-tech")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_hovering_a_ware_shows_it_in_its_card_and_the_merchant_worries_at_two_percent_or_more(gui):
+    pg, host, log = opened(gui, "tech")
+    try:
+        face = lambda: pg.locator(".stall-merchant .ork-race__head").get_attribute("data-mood")      # noqa: E731
+        pg.locator('.stall-ware[data-ware="elder"] .stall-ware__press').hover()
+        pg.wait_for_function("() => document.querySelector('.carry-card[data-slot=tier]').classList.contains('is-ghost')", timeout=WAIT_MS)
+        ghost = pg.locator('.carry-card[data-slot="tier"]')
+        assert "Elder" in ghost.inner_text() and ghost.evaluate("e => getComputedStyle(e).borderTopStyle") == "dashed"
+        assert face() == "worried"
+        assert "Elder: The strongest model" in pg.locator(".stall-bubble").inner_text()
+        shot(pg, "stall-tech-hover")
+        pg.locator('.stall-ware[data-ware="laborer"] .stall-ware__press').hover()
+        pg.wait_for_function("() => document.querySelector('.carry-card[data-slot=tier]').innerText.includes('Laborer')", timeout=WAIT_MS)
+        assert face() == "focused"
+        pg.mouse.move(5, 5)
+        pg.wait_for_function("() => !document.querySelector('.carry-card.is-ghost')", timeout=WAIT_MS)
+        assert "Warrior" in ghost.inner_text()
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_ware_pressed_sends_the_take_the_receipt_says_so_and_undo_sends_the_old_value(gui):
+    pg, host, log = opened(gui, "tech")
+    try:
+        pg.locator('.stall-ware[data-ware="elder"] .stall-ware__press').click()
+        assert _sent(pg, host, ("ideas.stall_take", {"chair": "tech", "slot": "tier", "value": "elder"}))
+        pg.wait_for_function("() => document.querySelector('[data-receipt]').innerText.includes('Elder')", timeout=WAIT_MS)
+        assert plate(pg, "tier", "elder").inner_text() == "in your hand" and plate(pg, "tier", "warrior").inner_text() != "in your hand"
+        assert "Elder" in pg.locator('.carry-card[data-slot="tier"]').inner_text()
+        pg.locator('.stall-ware[data-ware="warrior"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator('.stall-merchant .ork-race__head').get_attribute("data-mood") == "pleased"
+        pg.locator("[data-undo]").click()
+        assert _sent(pg, host, ("ideas.stall_take", {"chair": "tech", "slot": "tier", "value": "warrior"}))
+        pg.wait_for_function("() => !document.querySelector('[data-undo]')", timeout=WAIT_MS)
+        assert plate(pg, "tier", "warrior").inner_text() == "in your hand"
+        before = [e for e in host.log if e[0] == "ideas.stall_take"]
+        pg.locator('.stall-ware[data-ware="warrior"] .stall-ware__press').click(force=True)          # what is carried is not taken again
+        pg.locator('.stall-ware[data-ware="codex"] .stall-ware__press').click(force=True)   # a locked ware is not taken
+        pg.wait_for_timeout(300)
+        assert [e for e in host.log if e[0] == "ideas.stall_take"] == before
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_card_dropped_on_the_service_goes_back_to_its_default_and_so_does_one_lifted_and_the_service_pressed(gui):
+    host = StallHost()
+    host.carry["tech"]["tier"] = "elder"
+    host.carry["tech"]["hero"] = "sh-xp"
+    pg, host, log = opened(gui, "tech", host=host)
+    try:
+        assert pg.locator(".stall-service").get_attribute("data-service") == "back" and "free" in pg.locator(".stall-service").inner_text()
+        pg.locator('.carry-card[data-slot="tier"]').drag_to(pg.locator(".stall-service"))
+        assert _sent(pg, host, ("ideas.stall_back", {"chair": "tech", "slot": "tier"}))
+        pg.wait_for_function("() => document.querySelector('[data-receipt]').innerText.includes('back to its default')", timeout=WAIT_MS)
+        assert "Warrior" in pg.locator('.carry-card[data-slot="tier"]').inner_text() and plate(pg, "tier", "warrior").inner_text() == "in your hand"
+        pg.locator(".stall-service").click()                                                  # no card lifted: the merchant says what to do, nothing is sent
+        assert "Lift a card of your hand first" in pg.locator(".stall-bubble").inner_text()
+        assert [e for e in host.log if e[0] == "ideas.stall_back"] == [("ideas.stall_back", {"chair": "tech", "slot": "tier"})]
+        pg.locator('.carry-card[data-slot="hero"]').click()                                   # a card pressed is lifted; Esc lowers it first
+        assert pg.locator('.carry-card[data-slot="hero"]').get_attribute("aria-pressed") == "true" and "is-can" in pg.locator(".stall-service").get_attribute("class")
+        assert pg.locator('.stall-shelf[data-shelf="hero"]').get_attribute("class").count("is-on") == 1
+        pg.keyboard.press("Escape")
+        assert pg.locator('.carry-card[data-slot="hero"]').get_attribute("aria-pressed") == "false" and pg.locator(".stall").count() == 1
+        pg.locator('.carry-card[data-slot="hero"]').click()
+        pg.locator(".stall-service").click()
+        assert _sent(pg, host, ("ideas.stall_back", {"chair": "tech", "slot": "hero"}))
+        pg.wait_for_function("() => document.querySelector('.carry-card[data-slot=hero]').innerText.includes('Sh.man')", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_card_dropped_on_the_discard_goes_back_to_its_default_only_while_the_stall_is_open(gui):
+    pg, host, log = open_hand(gui, host=HandWithDiscard())
+    try:
+        pg.locator(".release-lane").wait_for(timeout=WAIT_MS)
+        pg.locator("[data-backpack]").click()
+        pg.locator(".carry-card").first.wait_for(timeout=WAIT_MS)
+        open_tab(pg, "tech")
+        pg.locator('.carry-card[data-slot="tier"]').wait_for(timeout=WAIT_MS)
+        pg.evaluate("() => import('/static/js/table/stallstate.js').then(() => 1)")                          # the module is loaded: the lane answers a drop
+        pg.locator('.carry-card[data-slot="tier"]').drag_to(pg.locator(".release-lane"))
+        assert _sent(pg, host, ("ideas.stall_back", {"chair": "tech", "slot": "tier"}))
+        assert pg.locator(".release-lane").count() == 1                                    # nothing else changed on it
+        shot(pg, "stall-discard")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class HandWithDiscard(StallHost):
+    """The project of the hand's tests with goals done (the discard lane holds cards) and the stall's answers."""
+
+    def __init__(self):
+        HandHost.__init__(self)                                                              # not bare: goals done and ready for main lie in the discard
+        self.carry = copy.deepcopy(StallHost().carry)
+        self.defaults = copy.deepcopy(StallHost().defaults)
+
+
+def test_a_tab_pressed_while_open_picks_the_chair_and_the_hand_follows(gui):
+    pg, host, log = opened(gui)
+    try:
+        open_tab(pg, "tech")
+        pg.wait_for_function("() => document.querySelector('.stall')?.dataset.stall === 'tech'", timeout=WAIT_MS)
+        assert ("ideas.stall", {"chair": "tech"}) in host.log and pg.locator(".stall-shelf.is-heroes").count() == 1
+        assert pg.locator(".carry").get_attribute("data-carry") == "tech"
+        pg.locator('.col-head__tab[data-tab="orkmaster"], .table-tab[data-tab="orkmaster"]').first.click()
+        pg.wait_for_function("() => document.querySelector('.stall')?.dataset.stall === 'orkmaster'", timeout=WAIT_MS)
+        assert pg.locator(".stall-shelf.is-heroes").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_releases_rug_is_all_locked(gui):
+    pg, host, log = opened(gui, "release")
+    try:
+        assert ("ideas.stall", {"chair": "release"}) in host.log
+        assert plate(pg, "hero", "lich-nk").inner_text().strip() == "not here"
+        assert pg.locator(".carry-card.is-fixed").count() == 1 and pg.locator(".carry-card").first.get_attribute("draggable") is None
+        pg.locator(".carry-card").first.click()
+        assert pg.locator(".carry-card.is-on").count() == 0                                   # a fixed card is not lifted
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_settings_ends_with_the_inventory_line_which_opens_the_stall(gui):
+    pg, host, log = open_hand(gui, host=StallHost())
+    try:
+        pg.locator(".hand").wait_for(timeout=WAIT_MS)
+        open_settings(pg)
+        line = pg.locator('[data-settings="inventory"]')
+        assert line.inner_text().split("\n")[0].strip().lower() == "how the project is set"
+        assert pg.evaluate("() => { const f = [...document.querySelectorAll('.place .shell-form > *')]; return f[f.length - 1].dataset.settings; }") == "inventory"       # the last line
+        line.get_by_role("button", name="Inventory").click()
+        pg.locator(".stall").wait_for(timeout=WAIT_MS)
+        assert pg.locator('.place[aria-label="Settings"]').count() == 0
+        assert ("ideas.stall", {"chair": ""}) in host.log
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("chair", [None, "tech"])
+def test_at_1280_by_800_nothing_overflows_the_table(gui, chair):
+    pg, host, log = opened(gui, chair)
+    try:
+        assert pg.viewport_size == {"width": 1280, "height": 800}
+        pg.wait_for_timeout(400)
+        got = pg.evaluate("""() => {
+          const pane = document.querySelector('.table-pane').getBoundingClientRect(), out = [];
+          for (const e of document.querySelectorAll('.stall-rug, .stall-bubble, .stall-merchant, .stall-ware, .stall-service')) {
+            const r = e.getBoundingClientRect();
+            if (r.right > pane.right + 1 || r.left < pane.left - 1) out.push([e.className, Math.round(r.left), Math.round(r.right), Math.round(pane.right)]);
+          }
+          const de = document.documentElement;
+          return { out, sideways: de.scrollWidth > de.clientWidth, stall: [document.querySelector('.stall').scrollWidth, document.querySelector('.stall').clientWidth] };
+        }""")
+        assert not got["out"], got
+        assert not got["sideways"] and got["stall"][0] <= got["stall"][1], got
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class ArchitectHost(HeroHost):
+    """A Tech party led by the Architect (whose craft map is the System) with a hero that is not Tech's default: its table is the hero's."""
+
+    def __init__(self):
+        super().__init__(table("sh-xp", "lanes", XP, {}), laying=False)
+        for p in self.parties:
+            if p["slug"] == "tech":
+                p["leader"] = {**p["leader"], "slug": "architect"}
+
+
+def test_a_tech_party_with_a_non_default_hero_shows_its_heros_table_not_the_system(gui):
+    pg, host, log = open_hand(gui, host=ArchitectHost())
+    try:
+        open_tab(pg, "tech")
+        pg.locator(".hm").wait_for(timeout=WAIT_MS)
+        assert ("ideas.hero_table", {"party": "tech"}) in host.log
+        assert [t.lower() for t in pg.locator(".hm-place__nm").all_inner_texts()] == ["red", "green", "refactor", "released small"]
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

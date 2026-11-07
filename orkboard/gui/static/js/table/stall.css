@@ -1,0 +1,103 @@
+/* The stall (docs/specs/157-the-inventory-a-merchants-stall.md D, decisions §267.1; the look is docs/mockups/merchant/): the table while the inventory is open. Layout and look only: every colour, face, corner and motion is orkUI's
+   (tokens.css, components.css `.ork-potion`); no colour, font or corner of its own. The table's edge is stitched while it is open. */
+
+/* the stitched edge: a dashed border in the edge, inset on the table, never taking a press */
+.table-pane[data-stall="open"]::after { content: ""; position: absolute; inset: var(--ork-2); border: 2px dashed var(--ork-edge); pointer-events: none; z-index: 1; }
+.stall-title { font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+
+/* the backpack, at the tabs' end */
+.stall-pack { appearance: none; display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; padding: 0 var(--ork-2); background: none; border: 0; cursor: pointer; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.stall-pack:hover, .stall-pack:focus-visible, .stall-pack.is-open { color: var(--ork-ink); }
+.stall-pack:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.stall-pack__art { display: block; flex: none; image-rendering: pixelated; }
+.stall-pack__word { line-height: 14px; }
+.stall-pack.is-small .stall-pack__word { display: none; }
+.stall-pack .pk-X { fill: var(--ork-edge); } .stall-pack .pk-\# { fill: var(--ork-panel); } .stall-pack .pk-F { fill: var(--ork-ink-faint); } .stall-pack .pk-o, .stall-pack .pk-i { fill: var(--ork-mana); }
+.stall-pack .pk-P { fill: var(--ork-frame); } .stall-pack .pk-C { fill: var(--ork-ink-muted); }
+
+/* the stall: the merchant at the left, the rug at the right, his line over them, the receipt under */
+.stall { flex: 1; min-height: 0; min-width: 0; display: grid; grid-template-columns: 124px minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: start; gap: var(--ork-2) var(--ork-5); padding: var(--ork-3) var(--ork-5) var(--ork-4); overflow: auto; }
+.stall p { margin: 0; }
+.stall-bubble { grid-column: 1 / -1; position: relative; justify-self: start; margin-left: 58px !important; max-width: 760px; min-height: 36px; box-sizing: border-box; padding: var(--ork-2) var(--ork-3); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.stall-bubble::after { content: ""; position: absolute; left: -1px; bottom: -9px; width: 10px; height: 9px; background: var(--ork-edge); clip-path: polygon(0 0, 100% 0, 0 100%); }
+.stall-merchant { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
+.stall-merchant__who { display: grid; place-items: end center; height: 96px; }
+.stall-merchant__who .ork-race__head { width: 96px; height: 88px; image-rendering: pixelated; }
+.stall-merchant__name { font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+.stall-merchant__role { font: var(--ork-type-caption); font-size: 10.5px; color: var(--ork-ink-faint); text-align: center; line-height: 13px; }
+
+/* the service at his feet: back to default, free */
+.stall-service { margin-top: var(--ork-4); display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); cursor: pointer; background: none; border: 0; padding: 0; color: inherit; font: inherit; }
+.stall-service__card { box-sizing: border-box; width: 108px; min-height: 126px; display: grid; place-items: center; padding: var(--ork-2); text-align: center; border: 2px dashed var(--ork-frame); font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; color: var(--ork-ink-faint);
+  transition: border-color var(--ork-motion-quick), transform var(--ork-motion-base) var(--ork-motion-ease); }
+.stall-service__card b { display: block; margin-bottom: var(--ork-1); font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink-muted); }
+.stall-service:hover .stall-service__card, .stall-service:focus-visible .stall-service__card, .stall-service.is-over .stall-service__card { border-color: var(--ork-edge); transform: translateY(-4px); }
+.stall-service.is-over .stall-service__card { border-color: var(--ork-danger); }
+.stall-service.is-can .stall-service__card { border-color: var(--ork-edge); color: var(--ork-ink-muted); }
+.stall-service:focus-visible { outline: 0; }
+
+/* the rug: a stitched mat with the weave faint under the wares */
+.stall-rug { position: relative; isolation: isolate; min-width: 0; padding: var(--ork-4) var(--ork-6) var(--ork-3); background: color-mix(in srgb, var(--ork-panel) 88%, transparent); border: 2px solid var(--ork-frame);
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--ork-panel) 88%, transparent), inset 0 0 0 7px var(--ork-frame); }
+.stall-rug::before, .stall-rug::after { content: ""; position: absolute; top: 4px; bottom: 4px; width: 7px; opacity: .55; background: repeating-linear-gradient(180deg, var(--ork-edge) 0 2px, transparent 2px 6px); }
+.stall-rug::before { left: -9px; } .stall-rug::after { right: -9px; }
+.stall-rug__weave { position: absolute; inset: 10px; z-index: -1; pointer-events: none; background: var(--ork-ink); opacity: .05; -webkit-mask-repeat: repeat; mask-repeat: repeat;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M10 1L19 10L10 19L1 10Z' stroke='%23000' fill='none'/%3E%3Crect x='9' y='9' width='2' height='2'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M10 1L19 10L10 19L1 10Z' stroke='%23000' fill='none'/%3E%3Crect x='9' y='9' width='2' height='2'/%3E%3C/svg%3E"); }
+.stall-empty { color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.stall-shelf__lab { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ork-2); margin-bottom: var(--ork-2) !important; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.stall-shelf__lab b { font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+.stall-shelf.is-on .stall-shelf__lab b { text-decoration: underline; text-underline-offset: 4px; }
+.stall-low { display: flex; flex-wrap: wrap; gap: var(--ork-3) var(--ork-8); margin-top: var(--ork-3); align-items: flex-start; }
+.stall-low.is-solo { margin-top: 0; }
+.stall-wares { display: flex; flex-wrap: wrap; gap: var(--ork-2); align-items: flex-end; }
+.stall-shelf.is-heroes .stall-wares { gap: var(--ork-3); }
+
+/* a ware: its face, its plate under it */
+.stall-ware { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
+.stall-ware__press { appearance: none; display: block; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: inherit; cursor: pointer; }
+.stall-ware__press:focus-visible { outline: 0; }
+.stall-ware__press:focus-visible .stall-face { border-color: var(--ork-ink); }
+.stall-ware:not(.is-mine):not(.is-locked):hover .stall-face, .stall-ware:not(.is-mine):not(.is-locked):focus-within .stall-face { transform: translateY(-10px); border-color: var(--ork-edge); }
+.stall-ware.is-mine .stall-ware__press, .stall-ware.is-locked .stall-ware__press { cursor: default; }
+.stall-ware.is-mine .stall-face { opacity: .45; }
+.stall-ware.is-locked .stall-face { opacity: .35; }
+.stall-ware__before { color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 10.5px; font-style: italic; }
+.stall-face { position: relative; box-sizing: border-box; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch);
+  transition: transform var(--ork-motion-base) var(--ork-motion-ease), border-color var(--ork-motion-quick); }
+.stall-hero { width: 148px; height: 212px; padding: var(--ork-3); display: flex; flex-direction: column; gap: 3px; }
+.stall-hero__head { align-self: center; margin-top: 2px; display: flex; }
+.stall-hero__name { display: block; font: 600 12px/15px var(--ork-font-read); color: var(--ork-ink); text-align: center; }
+.stall-hero__school { display: block; font: var(--ork-type-caption); font-size: 11px; line-height: 13px; color: var(--ork-ink-muted); text-align: center; min-height: 26px; }
+.stall-stats { margin-top: 2px; border-top: var(--ork-line) solid var(--ork-card-frame); padding-top: 4px; display: grid; grid-template-columns: auto 1fr; gap: 3px 6px; text-align: left; font: var(--ork-type-caption); font-size: 10px; line-height: 13px; color: var(--ork-ink-muted); }
+.stall-stats b { color: var(--ork-ink); font-weight: 600; }
+.stall-bar { display: flex; align-items: center; gap: 3px; } .stall-pips { display: flex; gap: 3px; } .stall-pips i { width: 9px; height: 7px; background: var(--ork-frame); } .stall-pips i.on { background: var(--ork-ink); }
+.stall-bar > span { color: var(--ork-ink-faint); }
+.stall-relic { width: 76px; height: 76px; padding: 5px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; }
+.stall-relic .ork-race__head, .stall-relic .ork-mark { flex: none; }
+.stall-relic .ork-mark { width: 18px; height: 18px; }
+.stall-relic .ork-icon, .stall-relic .ork-sign { width: 18px; height: 18px; color: var(--ork-ink-muted); }
+.stall-relic__word { display: block; font: 600 10.5px/12px var(--ork-font-read); color: var(--ork-ink); max-height: 24px; overflow: hidden; }
+
+/* the plate under a ware: the vial and the share of the first potion's week; money as money; what you carry, dashed */
+.stall-price { display: inline-flex; align-items: center; gap: var(--ork-1); height: 18px; box-sizing: border-box; padding: 0 6px; background: var(--ork-room); border: var(--ork-line) solid var(--ork-frame); font: 600 11px/16px var(--ork-font-read); color: var(--ork-ink); white-space: nowrap; }
+.stall-price .ork-potion { transform: scale(.5); margin: -12px -6px; }
+.stall-price.is-less { color: var(--ork-success); }
+.stall-price.is-money { color: var(--ork-warning); }
+.stall-price.is-mine { background: none; border-style: dashed; color: var(--ork-ink-muted); font-weight: 400; }
+.stall-price.is-same { color: var(--ork-ink-muted); }
+.stall-price .ork-icon { width: 12px; height: 12px; }
+.stall-lock { display: inline-block; width: 10px; height: 12px; flex: none; margin-right: 1px; vertical-align: -1px; shape-rendering: crispEdges; }
+.stall-lock__body { fill: var(--ork-ink-muted); } .stall-lock__hole { fill: var(--ork-card); }
+
+/* the receipt under the table, and the clone that flies into the hand */
+.stall-receipt { grid-column: 1 / -1; min-height: 20px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.stall-flying { position: fixed; z-index: 100; pointer-events: none; margin: 0; }
+
+/* the discard takes a card dropped on it while the inventory is open */
+.release-lane.is-over, .table-end.is-over { outline: 2px dashed var(--ork-danger); outline-offset: -4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stall-face, .stall-service__card { transition: none; }
+  .stall-ware:not(.is-mine):not(.is-locked):hover .stall-face, .stall-ware:not(.is-mine):not(.is-locked):focus-within .stall-face, .stall-service:hover .stall-service__card, .stall-service.is-over .stall-service__card { transform: none; }
+}

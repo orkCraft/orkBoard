@@ -9,6 +9,7 @@ import { board } from "../board/store.js";
 import { TargetSetting } from "../board/target.js";
 import { LookWaitSetting } from "../board/lookwait.js";
 import { Place, closePlace, openPlace } from "../frame/place.js";
+import { openInventory } from "../frame/state.js";
 import { currentProject } from "./projects.js";
 import { saveLogs } from "./errors.js";
 import { UpdatesField } from "./update.js";
@@ -98,6 +99,8 @@ export function SettingsPlace() {
         <p class="ok-font-status ok-tone-muted">What you did and what the orks did, on this machine only. Off by default. The colours follow your system's light or dark setting.</p>
         <${HoursField} />
       </section>
+      ${html`<div class="shell-field" data-settings="inventory"><span class="ok-font-label">How the project is set</span>
+        <span><button type="button" class="ork-btn" data-open-inventory onClick=${() => { closePlace(); openInventory(); }} title="Opens the inventory: what the orks are set to, on the merchant's rug">Inventory</button></span></div>`}
     </div>
   <//>`;
 }
