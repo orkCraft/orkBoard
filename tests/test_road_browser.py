@@ -1,9 +1,9 @@
-"""Spec 111 part C (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, decisions §188, §187.4), in a real browser against a stub host, at the two widths of `tests/narrow.py`: Release and Live are no tabs and
-have no lanes at the wide width, and wait in the portal ring's corners, asleep (their leader's head, grey and still) or awake (in colour, with their members, stepping while a task runs, an alert on the leader) on the signals the tabs
-use; a press on a corner opens that party's view with no tab lit; the narrow width keeps them in the row of heads. A goal chosen for main has its checks asked (`ideas.to_main_checks`) and followed in the snapshot's `main_checks`
-(scripted here as the host's `main.check` moves it): each check a skeleton in the gate in front of the portal (the portal `is-sealed is-guarded`, the line *Checking the way into main*), passed ones in Release's corner with a tick,
-a red one staying with its words (*Sealed: Tests is red: 2 tests fail*), the portal open when all passed; a seal no check owns keeps its X; `ideas.to_main` is not asked while a skeleton stands; the ring plays the rite as the goal
-goes in. A road party's cards lie in the hand's last lane, at its right end. With no gate (spec 113 §4: dev and main one branch) there is no ring: Release and Live stay tabs with their lanes and the table's end is the discard alone. Screenshots to $ROAD_SHOTS when it is set."""
+"""The road after the work (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, decisions §188; docs/specs/156-one-pick-and-the-release-column.md D.2, D.4, decisions §261.7–§261.8), in a real browser against a stub host, at the two widths
+of `tests/narrow.py`: Release and Live are tabs at the wide width too, **Live before Release, Release last**, Live's lane after the tabs' end and Release's lane the discard; their leaders' heads wear the corners' old waking rules on the tabs' faces (asleep:
+grey and still; awake: in colour, stepping while a task runs, an alert sign on it); the narrow width keeps them in the row of heads in the Board's order. A goal chosen for main (the ready card picked in the lane) has its checks asked (`ideas.to_main_checks`)
+and followed in the snapshot's `main_checks` (scripted here as the host's `main.check` moves it): Release's table shows each check, a skeleton with its name and its state and, for a red one, why; *To main* waits while they run and says the reason while one
+is red; `ideas.to_main` is not asked while a check stands; the ring plays the rite as the goal goes in. A road party's cards lie in the hand's last lane, at its right end. With no gate (spec 113 §4: dev and main one branch) there is no ring and no
+goal ready for main: the lane holds the goals done. Screenshots to $ROAD_SHOTS when it is set."""
 from __future__ import annotations
 
 import os
@@ -16,13 +16,12 @@ pytest.importorskip("playwright.sync_api")
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import RoadHost, need, node, sig, task  # noqa: E402
-from tests.test_portal_browser import PortalHost, SEALED, card, portal, woken  # noqa: E402
+from tests.test_portal_browser import PortalHost, SEALED, woken  # noqa: E402
 from tests.test_shell_browser import _calls, _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
 SHOTS = Path(os.environ["ROAD_SHOTS"]) if os.environ.get("ROAD_SHOTS") else None
-SK = "/ds/orkui/races/skeleton-"
 
 
 class RoadPortalHost(PortalHost, RoadHost):
@@ -32,7 +31,7 @@ class RoadPortalHost(PortalHost, RoadHost):
 def shot(pg, name, still=True):
     if SHOTS:
         if still:
-            woken(pg)                                                                # the ring's first waking is over
+            woken(pg)
         SHOTS.mkdir(parents=True, exist_ok=True)
         pg.screenshot(path=str(SHOTS / f"{name}.png"))
 
@@ -50,124 +49,106 @@ def open_page(gui, host, width="wide", reduced=False):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.wait_for_selector(".hand", state="attached", timeout=WAIT_MS)
+    pg.locator(".table-tab[data-tab]").first.wait_for(timeout=WAIT_MS)
     return pg, log
 
 
-def open_view(gui, host, width="wide", reduced=False):
-    """The window with the discard's view open (the pile pressed)."""
-    pg, log = open_page(gui, host, width, reduced)
-    pile = pg.locator(":is(.frame-edge, .table-end) .hand-done")
-    pile.wait_for(timeout=WAIT_MS)
-    pg.wait_for_timeout(500)
-    pile.click()
-    pg.locator(".portal-cards").wait_for(timeout=WAIT_MS)
-    return pg, log
+def tab(pg, slug):
+    return pg.locator(f'.table-tab[data-tab="{slug}"]')
 
 
-def release(pg):
-    return pg.locator(".ork-portal-ring__before")
-
-
-def live(pg):
-    return pg.locator(".ork-portal-ring__after")
-
-
-def gate(pg):
-    return pg.locator(".ork-portal-ring__gate > .ork-portal-ring__guard")
-
-
-def srcs(loc):
-    """The heads' files, without their size and extension: `lich-elder`, `skeleton-warrior`."""
-    return loc.locator(".ork-race__head").evaluate_all("els => els.map((e) => e.getAttribute('src').split('/').pop().replace(/(@2x)?\\.png$/, ''))")
+def asleep(pg, slug):
+    return "is-asleep" in tab(pg, slug).get_attribute("class")
 
 
 def tabs(pg):
     return pg.locator(".col-head__tab[data-tab], .table-tab[data-tab]").evaluate_all("els => els.map((e) => e.dataset.tab)")
 
 
+def card(pg, slug):
+    return pg.locator(f'.release-lane [data-portal-card="{slug}"]')
+
+
+def choose(pg, slug):
+    """Picks the ready card: the goal is chosen for main (its plan, its checks)."""
+    card(pg, slug).click()
+    pg.wait_for_function("(s) => import('/static/js/frame/state.js').then((m) => m.picked.value === s)", arg=slug, timeout=WAIT_MS)
+
+
 def settle(pg, ms=300):
     pg.wait_for_timeout(ms)
 
 
+def to_main(pg):
+    return pg.locator("[data-tomain] [data-to-main]")
+
+
+def states(pg):
+    return pg.locator(".table-checks .table-check__state").all_inner_texts()
+
+
 # -- the tabs and the lanes ---------------------------------------------------------------------------------------------------------------------
 
-def test_at_the_wide_width_release_and_live_are_no_tabs_and_have_no_lanes_and_at_the_narrow_width_they_are_kept(gui):
+def test_at_the_wide_width_release_and_live_are_the_last_tabs_live_first_and_at_the_narrow_width_they_are_kept_in_the_boards_order(gui):
     pg, log = open_page(gui, RoadHost(bare=True))
     try:
-        assert tabs(pg) == ["orkmaster", "tech", "design", "product"]
-        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "3", "three parties' lanes: the project's is the Orkmaster's column at the wide width (spec 128 B.1)"
-        assert pg.locator(".hand-lane").count() == 4 and pg.locator(".table-lane[data-party]").count() == 3
-        assert pg.locator('.table-lane[data-party="release"], .table-lane[data-party="live"]').count() == 0
+        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "live", "release"], "Live before Release, Release last"
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "3", "three lanes before the tabs' end; Live's lane follows it and Release's is the discard"
+        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".table-lane[data-party]").count() == 4
+        assert pg.locator('.table-lane[data-party="release"]').count() == 0 and pg.locator('.table-lane[data-party="live"]').count() == 1, "Live has a lane, Release's is the discard"
+        assert pg.locator(".ork-portal-ring__before, .ork-portal-ring__after, .ork-portal-ring").count() == 0, "their heads have left the ring"
     finally:
         pg.close()
     assert not log, "\n".join(log)
     pg, log = open_page(gui, RoadHost(bare=True), "narrow")
     try:
         assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"], "the narrow width keeps them in the row of heads"
-        assert pg.locator(".ork-portal-ring").count() == 0
+        assert pg.locator(".ork-portal-ring, .release-lane").count() == 0
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_asleep_each_corner_is_its_leaders_head_alone_grey_and_a_press_opens_the_party_with_no_tab_lit(gui):
+def test_asleep_each_road_tab_is_its_leaders_head_grey_and_still_and_a_press_opens_the_party(gui):
     pg, log = open_page(gui, RoadHost(bare=True))
     try:
-        pg.locator(".ork-portal-ring").wait_for(timeout=WAIT_MS)
-        ring = pg.locator(".ork-portal-ring").bounding_box()
-        assert pg.locator(".portal-host").get_attribute("class").split().count("is-asleep") == 1 and "is-bare" not in pg.locator(".ork-portal-ring").get_attribute("class").split(), "no goal ready, no check: the ring is drawn, asleep (spec 150 D.3)"
-        assert pg.locator(".portal__label, .ork-portal-ring > .ork-portal").count() == 0, "no *Main*, no portal"
-        assert pg.locator(".ork-portal-ring").evaluate("e => [getComputedStyle(e, '::before').display, getComputedStyle(e, '::after').display]") == ["block", "block"], "its dots and its runes drawn, faint: the ring asleep"
-        for corner, words, race in ((release(pg), "Release: open the past", "lich-elder"), (live(pg), "Live: open what is live", "imp-elder")):
-            assert corner.evaluate("e => e.tagName") == "BUTTON" and corner.get_attribute("title") == words and corner.get_attribute("aria-label") == words
-            assert "is-asleep" in corner.get_attribute("class") and "is-working" not in corner.get_attribute("class") and corner.get_attribute("data-awake") == "false"
-            assert srcs(corner) == [race], "its leader's head alone"
-            assert corner.locator(".ork-race__head").evaluate("e => getComputedStyle(e).filter") == "grayscale(1)"
-        assert pg.locator(".ork-portal-ring").get_attribute("aria-hidden") is None, "a ring that holds buttons is not hidden"
-        r, l = release(pg).bounding_box(), live(pg).bounding_box()
-        mid = ring["x"] + ring["width"] / 2
-        assert r["x"] < mid < r["x"] + r["width"] and r["y"] >= ring["y"] + ring["height"] - 12, "Release (the lich) at the ring's six (spec 150 D.4)"
-        assert l["x"] < mid < l["x"] + l["width"] and l["y"] + l["height"] <= ring["y"] + 8, "Live (the imp) at its twelve"
+        for slug, race in (("release", "lich-elder"), ("live", "imp-elder")):
+            assert asleep(pg, slug) and "is-working" not in tab(pg, slug).get_attribute("class")
+            src = tab(pg, slug).locator(".ork-race__head").get_attribute("src")
+            assert race in src and "asleep" in src, f"{slug}: its leader's head, the asleep face"
         shot(pg, "asleep")
-        release(pg).click()                                                    # the lich opens the past through the open tab (spec 150 E2.2), the tab stays
-        pg.locator('.table-over[data-kind="chronicle"]').wait_for(timeout=WAIT_MS)
-        assert sig(pg, "frame/state.js", "tab") == "orkmaster"
-        assert pg.locator(".table-title__pt").text_content().strip().endswith("The past · through the Orkmaster · every version")
-        live(pg).click()
-        assert sig(pg, "frame/state.js", "tab") == "live" and pg.locator('.table-tab[aria-selected="true"]').count() == 0
-        shot(pg, "live-view")
+        tab(pg, "live").click()
+        pg.locator('.table-tab[data-tab="live"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+        assert sig(pg, "frame/state.js", "tab") == "live"
+        tab(pg, "release").click()
+        pg.locator('.table-tab[data-tab="release"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator(".release-lane__label").text_content() == "Release's discard"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_corner_wakes_on_the_signals_the_tabs_use_and_steps_while_a_task_runs(gui):
+def test_a_road_tab_wakes_on_the_signals_the_corners_used_and_steps_while_a_task_runs(gui):
     host = RoadHost()
     pg, log = open_page(gui, host)
     try:
-        pg.locator(".ork-portal-ring__before").wait_for(timeout=WAIT_MS)
-        assert "is-asleep" not in release(pg).get_attribute("class"), "goals are ready for main: Release is awake"
-        assert srcs(release(pg)) == ["lich-elder", "lich-warrior", "lich-laborer"], "its leader and two of its members"
-        assert "is-working" not in release(pg).get_attribute("class")
-        assert "is-asleep" in live(pg).get_attribute("class") and len(srcs(live(pg))) == 1
+        assert not asleep(pg, "release"), "goals are ready for main: Release is awake"
+        assert asleep(pg, "live")
         host.nodes.append(node("hotfix", "live", "Ship the hotfix", "table", state="working", stage="implementation", tasks=[task("h1", "Patch the server", "running")]))
         host.bump(None)
-        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring__after').classList.contains('is-asleep')", timeout=WAIT_MS)
-        assert "is-working" in live(pg).get_attribute("class") and srcs(live(pg)) == ["imp-elder", "goblin-warrior", "peon-warrior"], "Live's leader and two members (the one at work among them)"
-        assert live(pg).locator(".ork-portal-ring__alert").count() == 0
-        assert live(pg).locator(".ork-race__head").first.evaluate("e => getComputedStyle(e).animationName") != "none", "the leader steps while a task runs"
+        pg.wait_for_function("() => !document.querySelector('.table-tab[data-tab=\"live\"]').classList.contains('is-asleep')", timeout=WAIT_MS)
+        assert tab(pg, "live").get_attribute("data-working") is not None, "Live's leader is at work"
         host.nodes = [n for n in host.nodes if n["slug"] != "hotfix"]
         next(p for p in host.parties if p["slug"] == "live")["concerns"] = {"alerts": 1}
         host.bump(None)
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__after .ork-portal-ring__alert').length === 1", timeout=WAIT_MS)
-        assert "is-asleep" not in live(pg).get_attribute("class") and "is-working" not in live(pg).get_attribute("class"), "awake with an alert on its leader, not stepping"
-        assert live(pg).locator(".ork-portal-ring__guard").first.locator(".ork-portal-ring__alert").count() == 1
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab[data-tab=\"live\"] .table-tab__alert').length === 1", timeout=WAIT_MS)
+        assert not asleep(pg, "live") and tab(pg, "live").get_attribute("data-working") is None, "awake with an alert on its leader, not at work"
         shot(pg, "live-awake")
         next(p for p in host.parties if p["slug"] == "live")["concerns"] = {"alerts": 0}
         host.needs.append(need("asks", "live", "ask", "Which region first?", "Where does it run?", asked=[{"ask": "Where does it run?", "choices": ["EU", "US"], "pick": None, "why": "", "by": None, "look": False}]))
         host.nodes.append(node("ask", "live", "Which region first?", "hand", state="asks", asks_you=True))
         host.bump(None)
-        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring__after').classList.contains('is-asleep')", timeout=WAIT_MS)      # it asks: a card of its lies in the hand
+        pg.wait_for_function("() => !document.querySelector('.table-tab[data-tab=\"live\"]').classList.contains('is-asleep')", timeout=WAIT_MS)      # it asks: a card of its lies in the hand
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -177,12 +158,11 @@ def test_release_wakes_for_a_task_that_runs_and_sleeps_with_nothing_to_do(gui):
     host = RoadHost(bare=True)
     pg, log = open_page(gui, host)
     try:
-        pg.locator(".ork-portal-ring__before").wait_for(timeout=WAIT_MS)
-        assert "is-asleep" in release(pg).get_attribute("class")
+        assert asleep(pg, "release")
         host.nodes.append(node("cut", "release", "Cut the release", "table", state="working", stage="implementation", tasks=[task("r1", "Tag it", "running")]))
         host.bump(None)
-        pg.wait_for_function("() => document.querySelector('.ork-portal-ring__before').classList.contains('is-working')", timeout=WAIT_MS)
-        assert "is-asleep" not in release(pg).get_attribute("class")
+        pg.wait_for_function("() => document.querySelector('.table-tab[data-tab=\"release\"]').dataset.working !== undefined", timeout=WAIT_MS)
+        assert not asleep(pg, "release")
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -198,12 +178,12 @@ def test_a_road_partys_cards_lie_in_the_last_lane_at_its_right_end_before_the_po
     pg, log = open_page(gui, host)
     try:
         pg.locator('.hand-stack[data-goal="gate"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator('.hand-lane[data-lane="3"] .hand-stack[data-goal="gate"]').count() == 1, "in the last lane, where the lanes end (Release has none of its own)"
+        assert pg.locator('.hand-lane[data-lane="4"] .hand-stack[data-goal="gate"]').count() == 1, "in the last lane, where the lanes end (Release's lane is the discard)"
         assert pg.locator('.hand-lane[data-lane="3"] .hand-stack[data-goal="theme"]').count() == 1
-        road, own = pg.locator('.hand-stack[data-goal="gate"]').bounding_box(), pg.locator('.hand-stack[data-goal="theme"]').bounding_box()
-        assert road["x"] > own["x"], "at the lane's right end, in front"
-        potions = pg.locator(".hand .ork-potion").first.bounding_box() if pg.locator(".hand .ork-potion").count() else None
-        assert potions is None or road["x"] + road["width"] <= potions["x"] + 1
+        road = pg.locator('.hand-stack[data-goal="gate"]').bounding_box()
+        live = tab(pg, "live").bounding_box()
+        assert road["x"] >= live["x"] - 60 and road["x"] + road["width"] <= pg.viewport_size["width"], "under Live's tab, at the hand's right"
+        assert pg.locator(".hand-end .hand-die").count() == 1
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -216,197 +196,147 @@ GATE = {"into": "dev", "main": "main", "same": False, "commits": 0, "files": 0, 
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_with_no_gate_there_is_no_ring_and_release_and_live_stay_tabs_with_their_lanes_and_the_end_is_the_discard_alone(gui, width):
+def test_with_no_gate_there_is_no_ring_release_and_live_are_tabs_and_nothing_is_ready_for_main(gui, width):
     host = RoadHost(bare=True)
     host.gate_doc = dict(NO_GATE)
     pg, log = open_page(gui, host, width)
     try:
-        pg.locator(".table-tab[data-tab]").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
-        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"], "in the row of heads as at the narrow width"
-        assert pg.locator(".ork-portal-ring, .portal-host, .ork-portal, .ork-portal-ring__before, .ork-portal-ring__after").count() == 0
-        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("5" if width == "wide" else "6"), "five parties' lanes, and the project's at the narrow width (at the wide it is the Orkmaster's column: spec 128 B.1)"
-        assert pg.locator(".hand-lane").count() == 6
-        if width == "wide":
-            assert pg.locator(".table-end, .table-end__label, .ork-card-place").count() == 0, "nothing done: no end, no label, no dashed place (§247.1)"
-            shot(pg, "c113-no-gate-wide", still=False)
-        else:
-            assert pg.locator(".table-end").count() == 0
-            shot(pg, "c113-no-gate-narrow", still=False)
-        pg.locator('.table-tab[data-tab="release"]').click()                            # and Release is a tab that opens its party, as at the narrow width
+        assert tabs(pg) == (["orkmaster", "tech", "design", "product", "live", "release"] if width == "wide" else ["orkmaster", "tech", "design", "product", "release", "live"])
+        assert pg.locator(".ork-portal-ring, .portal-host, .ork-portal, [data-portal-card]").count() == 0
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("3" if width == "wide" else "6")
+        assert pg.locator(".hand-lane").count() == (5 if width == "wide" else 6)
+        assert pg.locator(".table-end").count() == 0 and pg.locator(".release-lane .hand-done, .release-lane [data-portal-card]").count() == 0, "nothing done, nothing ready"
+        shot(pg, f"c113-no-gate-{width}", still=False)
+        tab(pg, "release").click()
         pg.locator('.table-tab[data-tab="release"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_with_no_gate_a_goal_done_lies_on_the_pile_with_no_ring_and_no_ready_for_main(gui):
+def test_with_no_gate_a_goal_done_lies_in_the_lane_with_no_ring_and_no_ready_for_main(gui):
     host = RoadHost()
     host.gate_doc = dict(NO_GATE)
     pg, log = open_page(gui, host)
     try:
-        pile = pg.locator(":is(.frame-edge, .table-end) .hand-done")
-        pile.wait_for(timeout=WAIT_MS)
+        pile = pg.locator(".release-lane .hand-done")
+        pile.first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
-        assert pg.locator(".ork-portal-ring, .portal-host").count() == 0 and pg.locator(":is(.frame-edge, .table-end) .table-end__label").text_content() == "Discard"
-        assert pg.locator(":is(.frame-edge, .table-end) .ork-card-place").count() == 0 and pg.locator(":is(.frame-edge, .table-end) .hand-card .hand-done__line").count() == 0, "no *ready for main* on the pile (spec 147 A: the discard card's line, drawn only when it says something)"
-        pile.click()
-        pg.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-discardview").get_by_text("Ready for").count() == 0 and pg.locator(".portal-cards").count() == 0
-        shot(pg, "c113-no-gate-pile", still=False)
+        assert pg.locator(".ork-portal-ring, .portal-host, [data-portal-card], [data-tomain]").count() == 0 and pg.locator(".release-lane__label").text_content() == "Discard"
+        assert pile.count() == 2, "both goals done lie in the lane, whole"
+        assert pg.locator(".release-lane").get_by_text("ready for main").count() == 0, "no *ready for main* in the lane"
+        shot(pg, "c113-no-gate-lane", still=False)
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_the_ring_comes_and_goes_with_the_gate_and_release_and_live_follow_into_it_and_out_of_the_tabs(gui):
+def test_the_ring_comes_and_goes_with_the_gate_and_the_tabs_stay_where_they_are(gui):
     host = RoadHost(bare=True)
     host.gate_doc = dict(NO_GATE)
     pg, log = open_page(gui, host)
     try:
-        pg.locator(".table-tab[data-tab]").first.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".ork-portal-ring").count() == 0 and "release" in tabs(pg)
-        host.gate_doc = dict(GATE)                                                         # a main branch appears: the gate is there, nothing ready for it yet
+        assert pg.locator(".ork-portal-ring").count() == 0 and tabs(pg)[-2:] == ["live", "release"]
+        host.nodes.append(node("music", "tech", "Lobby music loop", "discard", state="done", element="void", updated="2026-10-20T12:00:00"))
+        host.gate_doc = {**GATE, "commits": 2, "files": 1, "ideas": [{"slug": "music", "title": "Lobby music loop", "goal": "tech", "tasks": 1}]}      # a main branch appears, and a goal is ready for it
         host.bump({})
-        release(pg).wait_for(timeout=WAIT_MS)
-        assert pg.locator(".ork-portal-ring").count() == 1 and tabs(pg) == ["orkmaster", "tech", "design", "product"] and live(pg).count() == 1
+        pg.locator(".release-lane .ork-portal-ring").wait_for(timeout=WAIT_MS)
+        assert tabs(pg)[-2:] == ["live", "release"] and card(pg, "music").count() == 1
         host.gate_doc = dict(NO_GATE)
         host.bump({})
-        pg.locator(".ork-portal-ring").wait_for(state="detached", timeout=WAIT_MS)
-        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"]
+        pg.locator(".release-lane .ork-portal-ring").wait_for(state="detached", timeout=WAIT_MS)
+        assert tabs(pg)[-2:] == ["live", "release"]
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-# -- the gate ------------------------------------------------------------------------------------------------------------------------------------
+# -- the checks, on Release's table ----------------------------------------------------------------------------------------------------------------
 
-def choose(pg, slug):
-    card(pg, slug).click()
-    portal(pg).wait_for(timeout=WAIT_MS)
-
-
-def test_the_skeletons_stand_in_the_gate_while_their_checks_run_and_step_aside_with_a_tick_as_each_passes(gui):
+def test_release_shows_the_checks_a_skeleton_each_while_they_run_and_to_main_waits_for_the_last(gui):
     host = RoadPortalHost()
     host.step("music", "passed", "running", "waiting")
-    pg, log = open_view(gui, host)
+    pg, log = open_page(gui, host)
     try:
+        card(pg, "music").wait_for(timeout=WAIT_MS)
         choose(pg, "music")
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard').length === 2", timeout=WAIT_MS)
+        tab(pg, "release").click()
+        pg.locator(".table-checks .table-check").nth(2).wait_for(timeout=WAIT_MS)
         assert _calls(pg, host, "ideas.to_main_checks", 1) == [{"idea": "music"}]
-        door = portal(pg)
-        assert "is-sealed" in door.get_attribute("class") and "is-guarded" in door.get_attribute("class") and "is-sealed" in pg.locator(".ork-portal-ring").get_attribute("class")
-        assert pg.locator(".portal__line").text_content() == "Checking the way into main" and pg.locator(".portal__sealed").text_content() == ""
-        assert srcs(gate(pg)) == ["skeleton-warrior", "skeleton-elder"], "the merge has passed: Tests and Looks stand"
-        assert [g.get_attribute("aria-label") for g in gate(pg).all()] == ["Tests: checking", "Looks: checking"]
-        assert "is-working" in gate(pg).nth(0).get_attribute("class") and "is-working" not in gate(pg).nth(1).get_attribute("class"), "the one running steps"
-        assert gate(pg).first.locator(".ork-race__head").evaluate("e => e.className.includes('big') && (e.width === 48 || e.getBoundingClientRect().width === 48)")
-        assert srcs(release(pg)) == ["lich-elder", "skeleton-laborer"] and release(pg).locator(".ork-portal-ring__tick").count() == 1, "the passed skeleton beside the lich, with a tick"
-        assert "is-asleep" not in release(pg).get_attribute("class") and "is-working" in release(pg).get_attribute("class"), "Release is awake and working while its checks run"
-        gate_box, ring = pg.locator(".ork-portal-ring__gate").bounding_box(), pg.locator(".ork-portal-ring").bounding_box()
-        assert ring["y"] + 90 < gate_box["y"] < ring["y"] + 125, "in front of the portal's lower part"
+        assert pg.locator(".table-checks .table-check__name").all_inner_texts() == ["The merge", "Tests", "Looks"] and states(pg) == ["passed", "checking", "waiting"]
+        srcs = pg.locator(".table-checks .ork-race__head").evaluate_all("els => els.map((e) => e.getAttribute('src'))")
+        assert ["skeleton-laborer" in srcs[0], "skeleton-warrior" in srcs[1], "skeleton-elder" in srcs[2]] == [True, True, True], "Release's members, one a check"
+        assert "is-working" in pg.locator(".table-checks .table-check__head").nth(1).get_attribute("class") and not asleep(pg, "release"), "the one running steps; Release is awake"
+        assert pg.locator("[data-tomain]").get_attribute("data-portal") == "check" and pg.locator(".table-tomain__line").text_content() == "Checking the way into main"
         shot(pg, "checking")
-        pg.locator(".ork-portal-ring__gate").click()                                  # the gate lies over the portal: a press on it is a press on the portal
-        settle(pg)
-        assert [a for n, a in host.log if n == "ideas.to_main"] == [], "nothing goes to main while a skeleton stands"
-        host.step("music", "passed", "passed", "running")
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard').length === 1", timeout=WAIT_MS)
-        assert [g.get_attribute("aria-label") for g in gate(pg).all()] == ["Looks: checking"] and len(srcs(release(pg))) == 3
+        to_main(pg).click(force=True)                                                        # a press while a check runs waits for it: nothing goes to main yet
+        settle(pg, 500)
+        assert [a for n, a in host.log if n == "ideas.to_main"] == []
         host.step("music", "passed", "passed", "passed")
-        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring__gate')", timeout=WAIT_MS)
-        pg.wait_for_function("() => document.querySelector('.portal-host').dataset.portal === 'open'", timeout=WAIT_MS)
-        assert "is-sealed" not in portal(pg).get_attribute("class") and "is-guarded" not in portal(pg).get_attribute("class") and "is-open" in pg.locator(".ork-portal-ring").get_attribute("class")
-        assert pg.locator(".portal__line").text_content() == "Into main: Lobby, and Reconnect it stands on"
-        assert srcs(release(pg)) == ["lich-elder", "skeleton-laborer", "skeleton-warrior", "skeleton-elder"] and release(pg).locator(".ork-portal-ring__tick").count() == 3
-        shot(pg, "passed")
-        portal(pg).click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "music"})), "all passed: the goal goes"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_red_check_stays_in_front_with_its_words_and_blocks_the_portal(gui):
+def test_a_red_check_says_why_in_words_blocks_to_main_and_clears_when_fixed(gui):
     host = RoadPortalHost()
     host.step("codes", "passed", "failed", words={1: "2 tests fail"})
-    pg, log = open_view(gui, host)
+    pg, log = open_page(gui, host)
     try:
+        card(pg, "codes").wait_for(timeout=WAIT_MS)
         choose(pg, "codes")
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard.is-red').length === 1", timeout=WAIT_MS)
-        assert gate(pg).count() == 1 and gate(pg).first.get_attribute("aria-label") == "Tests: 2 tests fail" and gate(pg).first.locator(".ork-portal-ring__alert").count() == 1
-        assert pg.locator(".portal__line").text_content() == "Sealed: Tests is red: 2 tests fail" and pg.locator(".portal__sealed").text_content() == "", "the line over the portal says it"
-        assert pg.locator(".portal__line").evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-danger)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
-        assert pg.locator(".portal__line").count() == 1, "the sealed words stand in place of the line"
-        assert "is-guarded" in portal(pg).get_attribute("class") and portal(pg).get_attribute("aria-label") == "Sealed: Tests is red: 2 tests fail"
-        assert srcs(release(pg)) == ["lich-elder", "skeleton-laborer"] and release(pg).locator(".ork-portal-ring__tick").count() == 1, "the one that passed is in the corner"
-        assert "is-working" not in gate(pg).first.get_attribute("class") and pg.locator(".portal-host").get_attribute("data-portal") == "sealed"
+        tab(pg, "release").click()
+        pg.locator(".table-checks .table-check.is-red").wait_for(timeout=WAIT_MS)
+        assert pg.locator(".table-check.is-red .table-check__why").text_content() == "2 tests fail" and states(pg) == ["passed", "red"]
+        assert pg.locator(".table-tomain__sealed").text_content() == "Sealed: Tests is red: 2 tests fail" and pg.locator("[data-tomain]").get_attribute("data-portal") == "sealed"
+        assert pg.locator(".table-tomain__sealed").evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-danger)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
         shot(pg, "red")
-        pg.locator(".ork-portal-ring__gate").click()
+        to_main(pg).click()
         settle(pg)
-        assert [a for n, a in host.log if n == "ideas.to_main"] == []
-        host.step("codes", "passed", "passed")                                     # fixed
-        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring__gate') && document.querySelector('.portal-host').dataset.portal === 'open'", timeout=WAIT_MS)
-        assert pg.locator(".portal__line").text_content() == "Into main: Reconnect"
+        assert [a for n, a in host.log if n == "ideas.to_main"] == [], "a red check blocks the way"
+        host.step("codes", "passed", "passed")                                       # fixed
+        pg.wait_for_function("() => document.querySelector('[data-tomain]').dataset.portal === 'open'", timeout=WAIT_MS)
+        assert pg.locator(".table-tomain__line").text_content() == "Into main: Reconnect"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_card_dropped_on_the_portal_while_its_checks_run_is_not_lost_in_silence_and_goes_nowhere(gui):
-    host = RoadPortalHost()
-    host.step("codes", "passed", "running")
-    pg, log = open_view(gui, host)
-    try:
-        woken(pg)
-        src = card(pg, "codes").bounding_box()
-        pg.mouse.move(src["x"] + 40, src["y"] + 60)
-        pg.mouse.down()
-        pg.mouse.move(src["x"] + 60, src["y"] + 70, steps=4)
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard').length === 1", timeout=WAIT_MS)
-        door = pg.locator(".ork-portal-ring__gate").bounding_box()
-        pg.mouse.move(door["x"] + door["width"] / 2, door["y"] + door["height"] / 2, steps=12)                           # over the skeleton standing in front of the portal
-        pg.wait_for_function("() => document.querySelector('.ork-portal')?.classList.contains('is-taking')", timeout=WAIT_MS)
-        pg.mouse.up()
-        pg.locator(".gui-toasts").get_by_text("Checking the way into main").wait_for(timeout=WAIT_MS)                  # said in a toast, not dropped in silence
-        assert [a for n, a in host.log if n == "ideas.to_main"] == [], "nothing goes to main while a skeleton stands"
-        assert "is-taking" not in portal(pg).get_attribute("class")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_fourth_check_is_folded_into_the_third_skeletons_words(gui):
+def test_a_fourth_check_is_shown_too_a_skeleton_each(gui):
     host = RoadPortalHost()
     host.step("codes", "passed", "passed", "passed", "running")
-    pg, log = open_view(gui, host)
+    pg, log = open_page(gui, host)
     try:
+        card(pg, "codes").wait_for(timeout=WAIT_MS)
         choose(pg, "codes")
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard').length === 1", timeout=WAIT_MS)
-        assert gate(pg).first.get_attribute("aria-label") == "Looks and 1 more: checking" and srcs(gate(pg))[0] == "skeleton-elder"
-        assert len(srcs(release(pg))) == 3 and release(pg).locator(".ork-portal-ring__tick").count() == 2, "the first two have passed"
+        tab(pg, "release").click()
+        pg.locator(".table-checks .table-check").nth(3).wait_for(timeout=WAIT_MS)
+        assert pg.locator(".table-checks .table-check__name").all_inner_texts() == ["The merge", "Tests", "Looks", "Regression"] and states(pg)[-1] == "checking"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_seal_no_check_owns_keeps_its_x_and_asks_for_no_checks_and_a_conflict_is_the_merges(gui):
+def test_a_seal_no_check_owns_says_its_reason_and_asks_for_no_checks_and_a_conflict_is_the_merges(gui):
     host = RoadPortalHost()
     host.plans["menu"]["conflict"] = False
-    pg, log = open_view(gui, host)
+    pg, log = open_page(gui, host)
     try:
+        card(pg, "menu").wait_for(timeout=WAIT_MS)
         choose(pg, "menu")
-        pg.wait_for_function("() => document.querySelector('.portal-host').dataset.portal === 'sealed'", timeout=WAIT_MS)
-        assert "is-sealed" in portal(pg).get_attribute("class") and "is-guarded" not in portal(pg).get_attribute("class"), "the sealed portal with its X"
-        assert pg.locator(".ork-portal-ring__gate").count() == 0 and pg.locator(".portal__sealed").text_content() == f"Sealed: {SEALED}"
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'sealed'", timeout=WAIT_MS)
+        assert pg.locator(".table-tomain__sealed").text_content() == f"Sealed: {SEALED}" and pg.locator(".table-checks").count() == 0
         assert [n for n, _ in host.log if n == "ideas.to_main_checks"] == [], "no check owns this seal"
-        host.plans["menu"]["conflict"] = True                                      # the host's trial pick did not apply: the merge's reason
+        host.plans["menu"]["conflict"] = True                                        # the host's trial pick did not apply: the merge's reason
         host.step("menu", "failed", "waiting", words={0: SEALED})
         card(pg, "music").click()
         settle(pg)
         card(pg, "menu").click()
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard.is-red').length === 1", timeout=WAIT_MS)
-        assert "is-guarded" in portal(pg).get_attribute("class") and pg.locator(".portal__line").text_content() == f"Sealed: The merge is red: {SEALED}"
-        assert gate(pg).count() == 2 and gate(pg).nth(1).get_attribute("aria-label") == "Tests: checking" and srcs(release(pg)) == ["lich-elder"], "the merge is red: no skeleton has passed"
+        tab(pg, "release").click()
+        pg.wait_for_function("() => document.querySelectorAll('.table-checks .table-check.is-red').length === 1", timeout=WAIT_MS)
+        assert pg.locator(".table-tomain__sealed").text_content() == f"Sealed: The merge is red: {SEALED}"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -415,17 +345,18 @@ def test_a_seal_no_check_owns_keeps_its_x_and_asks_for_no_checks_and_a_conflict_
 def test_a_red_goal_chosen_again_asks_the_host_to_check_it_again(gui):
     host = RoadPortalHost()
     host.script["codes"] = (("passed", "failed"), {1: "2 tests fail"})
-    pg, log = open_view(gui, host)
+    pg, log = open_page(gui, host)
     try:
+        card(pg, "codes").wait_for(timeout=WAIT_MS)
         choose(pg, "codes")
-        pg.wait_for_function("() => document.querySelector('.portal-host').dataset.portal === 'sealed'", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'sealed'", timeout=WAIT_MS)
         assert _calls(pg, host, "ideas.to_main_checks", 1) == [{"idea": "codes"}]
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.portal__line') && !document.querySelector('.ork-portal-ring__gate')", timeout=WAIT_MS)
-        host.script["codes"] = (("passed", "passed"), {})                          # fixed since
+        pg.keyboard.press("Escape")                                                  # put away: the choice is dropped
+        pg.wait_for_function("() => !document.querySelector('[data-tomain]')", timeout=WAIT_MS)
+        host.script["codes"] = (("passed", "passed"), {})                            # fixed since
         choose(pg, "codes")
         assert _calls(pg, host, "ideas.to_main_checks", 2) == [{"idea": "codes"}, {"idea": "codes", "again": True}]
-        pg.wait_for_function("() => document.querySelector('.portal-host').dataset.portal === 'open'", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'open'", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -433,12 +364,16 @@ def test_a_red_goal_chosen_again_asks_the_host_to_check_it_again(gui):
 
 def test_at_the_narrow_width_no_check_is_asked_and_the_portal_is_as_it_was(gui):
     host = RoadPortalHost()
-    pg, log = open_view(gui, host, "narrow")
+    pg, log = open_page(gui, host, "narrow")
     try:
-        choose(pg, "music")
+        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(500)
+        pg.locator(".table-end .hand-done").click()
+        pg.locator(".portal-cards").wait_for(timeout=WAIT_MS)
+        pg.locator('[data-portal-card="music"]').click()
         pg.wait_for_function("() => document.querySelector('.portal-host')?.dataset.portal === 'open'", timeout=WAIT_MS)
         assert pg.locator(".ork-portal-ring").count() == 0 and [n for n, _ in host.log if n == "ideas.to_main_checks"] == []
-        portal(pg).click()
+        pg.locator(".portal-host .ork-portal").click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
     finally:
         pg.close()
@@ -450,75 +385,63 @@ def test_at_the_narrow_width_no_check_is_asked_and_the_portal_is_as_it_was(gui):
 def test_the_ring_plays_the_rite_in_the_goals_colour_as_it_goes_in_once_and_never_under_reduced_motion(gui):
     host = RoadPortalHost()
     host.step("music", "passed", "passed")
-    pg, log = open_view(gui, host)
+    pg, log = open_page(gui, host)
     try:
+        card(pg, "music").wait_for(timeout=WAIT_MS)
         choose(pg, "music")
-        pg.wait_for_function("() => document.querySelector('.portal-host').dataset.portal === 'open'", timeout=WAIT_MS)
-        assert "is-sending" not in pg.locator(".ork-portal-ring").get_attribute("class")
-        portal(pg).click()
-        pg.wait_for_function("() => document.querySelector('.ork-portal-ring').classList.contains('is-sending')", timeout=WAIT_MS)
-        cls = pg.locator(".ork-portal-ring").get_attribute("class")
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'open'", timeout=WAIT_MS)
+        assert "is-sending" not in pg.locator(".release-lane .ork-portal-ring").get_attribute("class")
+        to_main(pg).click()
+        pg.wait_for_function("() => document.querySelector('.release-lane .ork-portal-ring')?.classList.contains('is-sending')", timeout=WAIT_MS)
+        cls = pg.locator(".release-lane .ork-portal-ring").get_attribute("class")
         assert "rite-void" in cls and "is-open" in cls, "Lobby's rune is void"
         shot(pg, "rite", still=False)
-        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring').classList.contains('is-sending')", timeout=4000)
-        assert "rite-" not in pg.locator(".ork-portal-ring").get_attribute("class")
+        pg.wait_for_function("() => !document.querySelector('.release-lane .ork-portal-ring')?.classList.contains('is-sending')", timeout=4000)
     finally:
         pg.close()
     assert not log, "\n".join(log)
     host = RoadPortalHost()
     host.step("music", "passed", "passed")
-    pg, log = open_view(gui, host, reduced=True)
+    pg, log = open_page(gui, host, reduced=True)
     try:
+        card(pg, "music").wait_for(timeout=WAIT_MS)
         choose(pg, "music")
-        pg.wait_for_function("() => document.querySelector('.portal-host').dataset.portal === 'open'", timeout=WAIT_MS)
-        portal(pg).click()
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'open'", timeout=WAIT_MS)
+        to_main(pg).click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
-        seen = pg.evaluate("() => new Promise((done) => { let on = false; const end = Date.now() + 1500; const tick = () => { if (document.querySelector('.ork-portal-ring')?.classList.contains('is-sending')) on = true; if (Date.now() > end) done(on); else requestAnimationFrame(tick); }; tick(); })")
+        seen = pg.evaluate("() => new Promise((done) => { let on = false; const end = Date.now() + 1500; const tick = () => { if (document.querySelector('.ork-portal-ring')?.classList.contains('is-sending')) on = true; if (Date.now() < end) requestAnimationFrame(tick); else done(on); }; tick(); })")
         assert seen is False, "nothing plays under reduced motion"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-# -- the room ------------------------------------------------------------------------------------------------------------------------------------
-
 @pytest.mark.parametrize("width", ["wide", "small"])
-def test_the_road_fits_over_the_hand_at_1280_and_1024_wide_in_every_state(gui, width):
+def test_the_lane_and_the_table_fit_over_the_hand_at_1280_and_1024_wide_in_every_state(gui, width):
     host = RoadPortalHost()
     host.step("codes", "passed", "failed", words={1: "2 tests fail"})
-    pg, log = open_view(gui, host, width)
+    pg, log = open_page(gui, host, width)
     try:
+        card(pg, "codes").wait_for(timeout=WAIT_MS)
+
         def clear(state):
-            edge = pg.locator(".frame-edge").bounding_box()
-            for sel in (".ork-portal-ring", ".ork-portal-ring__before .ork-race__head", ".ork-portal-ring__after .ork-race__head", ".ork-portal-ring__gate", ".portal__sealed", ".portal__line"):    # the corners' own boxes reach 6 px past the ring
-                for el in pg.locator(sel).all():
-                    box = el.bounding_box()
-                    if box and box["height"]:
-                        assert edge["y"] - 1 <= box["y"] and box["y"] + box["height"] <= edge["y"] + edge["height"] + 1, f"{state}: {sel} leaves the table's edge"
-                        assert box["x"] >= 0 and box["x"] + box["width"] <= pg.viewport_size["width"] + 1, f"{state}: {sel} leaves the window"
+            lane = pg.locator(".release-lane").bounding_box()
+            hand = pg.locator(".hand").bounding_box()
+            assert lane["y"] + lane["height"] <= hand["y"] + 1 and lane["x"] + lane["width"] <= pg.viewport_size["width"] + 1, f"{state}: the lane is over the hand and inside the window"
             narrow.no_sideways(pg)
-            corners = [b for b in (el.bounding_box() for el in pg.locator(".ork-portal-ring__before, .ork-portal-ring__after").all()) if b]
-            for sel in (".portal__hint", ".portal__sealed", ".portal__line", ".portal__label", ".table-end__label"):
-                for el in pg.locator(sel).all():
-                    box = el.bounding_box()
-                    if box and box["height"] and el.inner_text().strip():
-                        if sel == ".table-end__label" and box["y"] + box["height"] > pg.locator(".edge-discard").bounding_box()["y"] + pg.locator(".edge-discard").bounding_box()["height"] + 0.5:
-                            continue                                                       # a pile squeezed out by a tall ring (the line, the reason) is cut from its foot: its word is out of sight, not over a corner
-                        for c in corners:
-                            apart = box["x"] + box["width"] <= c["x"] or c["x"] + c["width"] <= box["x"] or box["y"] + box["height"] <= c["y"] or c["y"] + c["height"] <= box["y"]
-                            assert apart, f"{state}: {sel} overlaps a corner of the ring"
-        clear("asleep or open")
+            assert pg.evaluate("() => { const e = document.querySelector('.release-lane__scroll'); return e.scrollWidth <= e.clientWidth; }"), f"{state}: nothing of the lane scrolls sideways"
+        clear("at rest")
         shot(pg, f"{width}-rest")
         choose(pg, "codes")
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard.is-red').length === 1", timeout=WAIT_MS)
+        tab(pg, "release").click()
+        pg.wait_for_function("() => document.querySelectorAll('.table-checks .table-check.is-red').length === 1", timeout=WAIT_MS)
         clear("red")
         shot(pg, f"{width}-red")
         host.step("codes", "passed", "running", "waiting")
-        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard').length === 2", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.table-checks .table-check').length === 3", timeout=WAIT_MS)
         clear("checking")
-        shot(pg, f"{width}-checking")
         host.step("codes", "passed", "passed", "passed")
-        pg.wait_for_function("() => !document.querySelector('.ork-portal-ring__gate')", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('[data-tomain]').dataset.portal === 'open'", timeout=WAIT_MS)
         clear("passed")
         shot(pg, f"{width}-passed")
     finally:

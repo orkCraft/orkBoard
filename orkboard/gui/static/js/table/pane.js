@@ -10,7 +10,7 @@ import { town } from "../link.js";
 import { ORKMASTER, closeOver, lifted, openOver, over, picked } from "../frame/state.js";
 import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
-import { PHASES, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
+import { PHASES, isRelease, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
 import { BoardMap } from "./boardmap.js";
 import { mapOf } from "./maps.js";
 import "./mapparts.js";                                     // the parties' maps (spec 102)
@@ -25,7 +25,10 @@ import { LimitChip } from "./tabs.js";
 import { Menu } from "./menu.js";
 import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
-import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C), at the narrow width; at the wide one it lies in the edge (frame/edge.js, spec 150 D.2)
+import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C), at the narrow width; at the wide one it is Release's lane beside the pane (table/lane.js, spec 156 D.3)
+import { ToMain } from "./tomain.js";                  // the picked ready card's act (spec 156 D.4)
+import { ChecksView } from "./checksview.js";          // Release's table shows the checks on the way into main (spec 156 D.4)
+import { PastGoal } from "./pastgoal.js";              // a goal of the past picked, as it was (spec 156 D.5)
 import { openReport } from "../hand/logsbtn.js";      // the bug's panel opens from the Orkmaster's … (spec 139 A.5)
 import { laidNow } from "./laying.js";
 import { currentProject } from "../shell/projects.js";
@@ -86,7 +89,7 @@ function Title({ parties, tab, narrow }) {
   const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" };
   const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ...(currentProject.value ? [["Files", () => openOver("files", {}, from, "Files"), false, "folder"]] : []),
     ["Report a problem…", () => openReport(), false, "sign:bug"]];     // the bug left the top row (spec 139 A.5, decisions §246.6)   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
-  return html`<header class="ork-head table-title">
+  return html`<header class=${cls("ork-head table-title", { "is-bare": !o && !picked.value })}>
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
     ${picked.value && html`<${Phases} goal=${picked.value} />`}
@@ -100,12 +103,14 @@ export function Pane({ parties, tab, narrow, column = false }) {
   const body = useRef(), o = over.value, g = parties.find((x) => x.slug === tab);
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
   const bare = !laidNow(), form = isForm(o);                // not laid yet: the table is bare (spec 130 C.6); a form covers the whole table, its end included (C.5)
-  const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), kind = !o && !bare && picks ? phaseKind(tab === ORKMASTER ? null : g, picks) : "";     // a goal picked: what the table shows by its phase at this tab (phaseview.js)
+  const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), past = !o && !bare && !!picked.value && !picks && !!mapData.value && !narrow, kind = !o && !bare && picks ? phaseKind(tab === ORKMASTER ? null : g, picks) : "";     // a goal picked: what the table shows by its phase at this tab (phaseview.js)
   return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
     ${!o && !bare && html`<${Notice} />`}
+    ${!o && !bare && html`<${ToMain} />`}
+    ${!o && !bare && g && isRelease(g) && html`<${ChecksView} />`}
     <div class="table-body" ref=${body} data-end=${form ? "form" : o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
-      ${o ? html`<${Over} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${kind === "route" ? html`<${RouteView} n=${picks} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`}
+      ${o ? html`<${Over} />` : past ? html`<${PastGoal} idea=${picked.value} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${kind === "route" ? html`<${RouteView} n=${picks} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`}
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`

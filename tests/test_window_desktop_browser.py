@@ -188,7 +188,8 @@ def test_every_place_is_reached_over_the_pane(window):
     open_tab(pg, "orkmaster")
     # a tool's limits and the week's work; Play
     if w == "wide":
-        pg.locator(".hand-pot").first.click()                                                                              # the limits are the hand's potions (spec 104 B)
+        narrow.unroll_drum(pg)
+        pg.locator(".hand-pot").first.click()                                                                              # the limits are the hand's potions (spec 104 B), in the row the drum unrolls into
     else:
         open_menu(pg)
         pg.locator(".table-menu__chips .table-chip").first.click()
@@ -203,11 +204,17 @@ def test_every_place_is_reached_over_the_pane(window):
     nothing_modal(pg)
     back(pg)
     # the hand's: the discard, a stop's questions and its to-do
-    pg.locator(".hand-done").click()
-    over(pg, "discard")
-    shot(pg, f"window-discard-{w}.png")
-    nothing_modal(pg)
-    back(pg)
+    if w == "wide":                                                                                                                # at the wide width the discard is Release's lane: a card is picked, nothing opens over the pane (spec 156 D.3)
+        pg.locator(".release-lane .hand-done, .release-lane [data-portal-card]").first.click()
+        pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.picked.value !== '' && m.over.value === null)", timeout=WAIT_MS)
+        shot(pg, f"window-discard-{w}.png")
+        pg.keyboard.press("Escape")
+    else:
+        pg.locator(".hand-done").click()
+        over(pg, "discard")
+        shot(pg, f"window-discard-{w}.png")
+        nothing_modal(pg)
+        back(pg)
     pg.locator('.hand-card[data-kind="asks"]').click(position=EDGE)
     pg.get_by_role("button", name="Open…").click()
     over(pg, "stop")

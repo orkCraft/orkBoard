@@ -7183,3 +7183,57 @@ the pick in the address a fourth writer of the browser's history (beside `table/
 5. **C and D are built one after the other** (spec 156's own rule, *parts of a wave share no file*; answered by its reference):
    waves **1** A, B · **2** C · **3** D · **4** E.
 The owner's call.
+
+## 263. The back redrawn closer to a tarot back; To review's ring at the middle of the back; the pane says nothing when nothing is picked (6 November 2026, the owner)
+
+Changes: 254.5 (the back kept plain: four strips and four curls, no moon, no star, no lozenge); 261.6 (the pane's title when
+nothing is picked).
+
+Why: the owner, looking at the table after spec 156 D: *the ring of runes is not in the horizontal middle, and the curls are
+poor: closer to the reference* (a tarot back: filigree corners, a line with a lozenge down each side, a moon in a circle at
+the top and the bottom, stars round a sun). And, on the same screen: the pane kept an empty title row with its `…` when
+nothing was picked, and *Nothing is at work* sat at the top of the last lane, not in the table's middle. So:
+1. **The back is redrawn after the reference** (orkUI 0.32.0, `backs/back.svg`, `tools/build_back.py`): **filigree in the four
+   corners** (a scroll that curls into itself, a tendril along each side ending in a small curl, a leaf at the very corner),
+   **a thin line down each long side with a lozenge at its middle**, **a moon in a circle at the top and the bottom** of the
+   card's axis with a bead and a small lozenge before the ring, **four small stars** round the ring. On a finer grid, 80 x 112
+   (a stroke about 1.8 px on a 144 px card, an engraving's line). Still two greys, no colour (decisions §53.5): the
+   reference's gold is not taken. The ring of runes stays the CSS's, and the small back keeps the sides and their lozenges
+   alone.
+2. **To review's back lies whole in what shows**: the deck's card keeps its 13 px under the window's edge (§251.4), but the
+   back's drawing is laid on the part that shows, so its corners, its sides and its ring share one middle, the one the ring
+   of the wait already had.
+3. **The pane draws no title row while nothing is picked**: the table is the project's then, and the lanes say it; the
+   Orkmaster's menu (`…`) stays, alone in the pane's corner over the lanes. *Nothing is at work* stands in the middle of the
+   lanes, not at the top of the last one.
+The owner's call.
+
+## 264. The + card wears the back's drawing in its own green, round its seal; its corner brackets go (6 November 2026, the owner)
+
+Changes: 185.4 (the + card's face: its corner brackets), 263.1 (the back's drawing is the + card's too).
+
+Why: the owner, on the redrawn back (§263): *the same back must be on the card that makes a goal, only green and with the +*.
+So:
+1. **The + card wears the back's drawing in its own colour** (orkUI 0.33.0, `.ork-card.ork-plus::before`,
+   `backs/plus-lines.svg`): the back's four corners, the first stretch of its sides and a moon in a circle at the top and the
+   bottom, in the card's green at 42%, round the seal of summoning, its + and its element as they were. The seal (136 px on a
+   144 px card) lies where the back has its stars, its bead and its sides' lozenges, so the + card leaves them out and its moon
+   is a little smaller. On the narrow page the + card's seal is `.small`, and it takes the small back's sides alone.
+2. **Its corner brackets go** (`hand/hand.css`): the back's corners stand there now.
+The owner's call.
+
+## 265. The drum shows three round its front; an alert neighbour's mark stands on its own bottle; the + card sits 32 px lower (6 November 2026, the owner)
+
+Changes: 261.13 and orkUI's drum note *no wrap-around* (the places beside the front), 249.2 (the + card lies whole in the
+window).
+
+Why: the owner, on spec 156 E's hand: *fix the drum*: a tool in danger beside the front had its mark far over its small
+bottle, and with the first tool in front the place before it stood empty. And: *lower the card that makes a goal a little,
+so the goals at work have more room*. So:
+1. **The drum shows three round its front whenever there are three tools**: with the first in the person's order in front,
+   the last stands before it, and with the last in front, the first stands after it. A tool at the warn or the danger level
+   still takes the nearer neighbour's place (§262.1). Nothing the person does turns the drum (§261.13).
+2. **A mark over the drum stands 2 px over its own bottle**, whatever the bottle's size, the front's and an alert neighbour's.
+3. **The + card sits 32 px lower** at the wide width: its foot, the lower moon of the back's drawing (§264), lies under the
+   window's edge, its seal whole; the Orkmaster's column ends 32 px lower, so the goals at work have that room.
+The owner's call.

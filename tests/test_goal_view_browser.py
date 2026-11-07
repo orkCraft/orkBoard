@@ -184,11 +184,9 @@ def test_a_goal_done_picked_from_the_discard_shows_what_it_changed_against_what_
     try:
         open_tab(pg, "tech")
         pg.wait_for_selector(".table-sys", timeout=WAIT_MS)
-        pg.locator(".table-discard .hand-done").click()
-        pg.locator('.hand-drow[data-slug="codes"]').click()
-        pg.wait_for_function("() => document.querySelector('.hand-result')", timeout=WAIT_MS)
-        assert sig(pg, "frame/state.js", "picked") == "codes", "the goal pressed in the discard is the goal picked"
-        pg.keyboard.press("Escape")                                                               # the Result put away
+        pg.locator('.release-lane [data-slug="codes"], .release-lane [data-portal-card="codes"]').first.click()
+        pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.picked.value === 'codes')", timeout=WAIT_MS)
+        assert sig(pg, "frame/state.js", "picked") == "codes" and sig(pg, "frame/state.js", "over") is None, "the goal pressed in the discard is the goal picked, nothing over the pane (spec 156 D.3)"
         view = pg.locator('.gv[data-view="changed"][data-party="tech"]')
         view.wait_for(timeout=WAIT_MS)
         assert pg.locator('.table-tab[aria-selected="true"]').get_attribute("data-tab") == "tech", "the open tab stays"

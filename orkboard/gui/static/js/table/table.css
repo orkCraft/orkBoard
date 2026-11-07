@@ -79,6 +79,9 @@ button.table-chip { appearance: none; font: inherit; }
 /* -- the pane ------------------------------------------------------------------------------------------------------------------- */
 .table-pane { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: var(--ork-1); box-sizing: border-box; }
 .table-title { flex: none; min-width: 0; padding-right: var(--ork-2); }
+@media (min-width: 760px) { .table-title.is-bare { position: absolute; top: var(--ork-1); right: var(--ork-1); z-index: 3; min-height: 0; padding: 0; background: none; border: 0; box-shadow: none; }      /* nothing picked: no title row, its menu alone in the pane's corner over the lanes (decisions §263.3); the narrow page keeps its row */
+  .table-title.is-bare > :is(.table-title__pt, .table-grow) { display: none; }      /* the menu alone: no empty title, no room between */
+  .table-title.is-bare ~ .table-notice { margin-right: var(--ork-bar); } }      /* a notice in the title's place leaves the menu its corner */
 .table-title__pt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-pathcase { text-transform: none; font-family: var(--ork-font-code); }
 /* the picked goal's phases in the title: Talk · Spec · Work · Done, the current one underlined, the ones gone by a step lighter; Talk and Spec are pressed to open their page */
@@ -91,9 +94,9 @@ button.table-phase { appearance: none; min-height: 28px; cursor: pointer; }
 .table-body { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
 
 /* -- the Board: a lane a party under its tab, the first the project's ----------------------------------------------------------------- */
-.table-board { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--cols); margin: 0 calc(var(--ork-1) * -1); padding: 0 var(--ork-4); overflow-y: auto; overflow-x: hidden; align-content: stretch; }
+.table-board { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: var(--cols); margin: 0 calc(var(--ork-1) * -1); padding: 0 var(--ork-4); overflow-y: auto; overflow-x: hidden; align-content: stretch; }
 .table-lane { display: flex; flex-direction: column; align-items: center; gap: var(--ork-5); min-width: 0; padding: var(--ork-4) var(--ork-2) var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
-.table-board__none { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; }
+.table-board__none { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; pointer-events: none; }      /* in the middle of the lanes, not at the top of the last one (decisions §263.3) */
 .table-goal { display: flex; flex-direction: column; gap: var(--ork-1); width: min(var(--card-w, 144px), 100%); flex: none; }
 
 /* a goal's strip: a line high (22 px), the whole strip a button */

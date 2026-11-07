@@ -17,7 +17,7 @@
 /* -- the piles ------------------------------------------------------------------------------------------------------------------------ */
 .col-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-3) calc(var(--column-w) - var(--col-edge)) var(--ork-5) 0; overflow: hidden; }      /* never scrolls (spec 147 B.5); no margin at its left: the window's own edge cuts a back on its side */
 .col-scroll:has(.col-card:is(:hover, :focus-visible)) { margin-right: calc(var(--col-out) * -1); padding-right: calc(var(--column-w) - var(--col-edge) + var(--col-out)); }      /* a card slid out lies over the table, not clipped by the pile's box */
-@media (min-width: 760px) { .col-scroll { padding-bottom: 88px; } }                                 /* the last pile ends clear of the + card, which stands 78 px over the table's foot (hand/hand.css) */
+@media (min-width: 760px) { .col-scroll { padding-bottom: 56px; } }                                 /* the last pile ends clear of the + card, which stands 46 px over the table's foot since it sits 32 px lower (hand/hand.css, decisions §265) */
 .col-sec { flex: none; display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
 .col-sec--work { flex: 1 1 0; }
 .col-plab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--ork-2); min-width: 0; padding-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
@@ -52,7 +52,7 @@
 .col-card--deck.ork-card:is(:hover, :focus-visible) { z-index: 40; transform: translateX(var(--column-tuck)); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* slid out whole, over the table */
 .col-card--deck.ork-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink), -4px 4px 0 var(--ork-scrim); }           /* the focus ring inside what shows */
 .col-card--deck.ork-card.asks { border-color: var(--ork-alert); }
-.col-deck__back { position: absolute; left: 50%; top: 50%; width: 112px; height: 157px; transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }      /* orkUI's back, turned on its side */
+.col-deck__back { position: absolute; left: calc(var(--column-tuck) + var(--col-shown) / 2); top: 50%; width: 112px; height: var(--col-shown); transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }      /* orkUI's back, turned on its side, laid on the part that shows: its drawing and the wait's ring share one middle (decisions §263.2) */
 .col-deck__back::before { display: none; }      /* orkUI 0.30.0 draws a ring on every back: To review's own ring (the wait, filling in eighths) stands there instead */
 .col-card--deck .table-back-sigil.ork-sigil.col-sigil { top: 50%; left: calc(var(--column-tuck) + var(--col-shown) / 2); right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.72); transform-origin: 50% 50%; color: var(--ork-ink-faint); }
 .col-sigil.col-stopped::after { color: var(--ork-alert); }      /* it waits for the person: the ring full, still, in the alert */

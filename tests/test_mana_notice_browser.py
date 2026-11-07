@@ -59,7 +59,11 @@ def test_the_line_is_a_strip_under_the_panes_title_with_the_crowned_head_in_the_
         head = strip.locator("img.ork-race__head")
         assert "/races/peon-crown" in head.get_attribute("src")                                                                  # the Orkmaster's crowned head
         title, body, bar = pg.locator(".table-title").bounding_box(), pg.locator(".table-body").bounding_box(), strip.bounding_box()
-        assert title["y"] + title["height"] <= bar["y"] + 1 and bar["y"] + bar["height"] <= body["y"] + 1                          # under the title, over the map
+        if width == "narrow":
+            assert title["y"] + title["height"] <= bar["y"] + 1                                                                  # under the title
+        else:
+            assert bar["x"] + bar["width"] <= title["x"] + 1                                                                     # nothing picked, no title row (decisions §263.3): the strip in its place, clear of the menu's corner
+        assert bar["y"] + bar["height"] <= body["y"] + 1                                                                         # over the map
         assert head.bounding_box()["x"] < strip.locator(".table-notice__line").bounding_box()["x"]
         faces = pg.evaluate("() => [getComputedStyle(document.querySelector('.table-notice__line')).fontFamily, getComputedStyle(document.querySelector('.table-title__pt')).fontFamily]")
         assert faces[0] != faces[1]                                                                                              # the body face, never the pixel face

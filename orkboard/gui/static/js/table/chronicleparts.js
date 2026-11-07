@@ -26,7 +26,7 @@ export function whose() {
 
 const IN = { title: "its name", spec: "its spec", decision: "its decision" };
 
-/** A card of the deal. `item`: `{type: "goal" | "decision", id, title, element, hue, day, decision, in}`, `version`: the deck it lies in (its bottom right). `lit`: the card the pyramid or the conflict names. */
+/** A card of the deal. `item`: `{type: "goal" | "decision", id, title, element, hue, day, decision, in}`, `version`: the deck it lies in (its bottom right). `lit`: the card a pick marks. */
 export function Card({ item, version = "", found = false, lit = false, onOpen, onDecision }) {
   const goal = item.type === "goal", mark = goal ? { "data-goal": item.id } : { "data-decision-row": item.id };
   return html`<li class=${cls("chr-card-wrap", { "is-lit": lit })} data-lit=${lit ? "1" : undefined} ...${mark}>

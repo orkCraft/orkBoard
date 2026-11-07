@@ -64,7 +64,11 @@ def open_mana(gui, limits, width="wide", mana=None, parties=None):
     for slug, more in (parties or {}).items():
         next(p for p in host.parties if p["slug"] == slug).update(more)
     pg, host, log = open_hand(gui, host, width)
-    pg.locator(".up-pot" if width == "phone" else ".hand-mana .hand-pot").first.wait_for(timeout=WAIT_MS)       # the phone's top row has bottles of its own (spec 117 B)
+    pg.locator(".up-pot" if width == "phone" else ".hand-mana .hand-pot").first.wait_for(state="attached", timeout=WAIT_MS)       # the phone's top row has bottles of its own (spec 117 B)
+    if width == "wide":                                                                                                # the wide width's potions lie in the row the drum unrolls into (spec 156 E.5): the pointer rests on the drum
+        b = pg.locator(".hand-mana__drum").bounding_box()
+        pg.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
+        pg.locator(".hand-mana[data-open]").wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(300)
     return pg, host, log
 
@@ -237,8 +241,8 @@ def test_the_now_share_stands_under_the_potion_bold_and_the_weeks_muted_only_whi
         assert [x.locator(".hand-pot__share").inner_text() for x in pg.locator(".hand-pot").all()] == ["30%", "100%", "70%"]
         assert [x.locator(".hand-pot__week").inner_text().replace("week ", "") if x.locator(".hand-pot__week").count() else "" for x in pg.locator(".hand-pot").all()] == ["", "45%", "18%"]
         if width == "wide":
-            e, m = pg.locator(".frame-edge").bounding_box(), pg.locator(".hand-mana").bounding_box()
-            assert e["x"] <= m["x"] and m["x"] + m["width"] <= e["x"] + e["width"] and m["x"] + m["width"] <= pg.viewport_size["width"], "the potions lie in the table's edge (spec 150 D.2)"
+            m = pg.locator(".hand-mana").bounding_box()
+            assert m["x"] + m["width"] <= pg.viewport_size["width"] + 1 and pg.locator(".hand-mana").evaluate("e => e.closest('.hand-end') !== null"), "the potions lie at the hand's right end (spec 156 D: no edge)"
         narrow.no_sideways(pg)
         shot(pg, f"{width}-shares")
     finally:
@@ -250,14 +254,14 @@ def test_the_potions_words_say_both_windows_and_when_each_comes_back(gui):
     pg, host, log = open_mana(gui, TOOLS[:2] + [two("hermes", "Hermes", 0.5, 0.5, soon="", later="")])
     try:
         said = lambda p: pot(pg, p).get_attribute("aria-label")                                                           # noqa: E731
-        assert said("claude") == f"Claude Code: 30% of the 5 hours left, until {SOON_SAID}; 82% of the week, until {WEEK_SAID}, the default"
+        assert said("claude") == f"Claude Code: 30% of the 5 hours left, until {SOON_SAID}; 82% of the week, until {WEEK_SAID}"            # the default's frame is the narrow page's (spec 156 E.4): no ", the default" at the wide width
         assert said("codex") == f"Codex: 100% of the 5 hours left, until {SOON_SAID}; 45% of the week, until {WEEK_SAID}"
         assert said("hermes") == "Hermes: 50% of the 5 hours left; 50% of the week"                                       # no reset said: no *until*
         assert pot(pg, "claude").get_attribute("title") == said("claude")
         host.mana = mana_of("claude", "codex")                                                                             # the default moves: ', the default' with it
         host.bump({})
-        pg.wait_for_function("() => document.querySelector('.hand-pot[data-provider=\"codex\"]').getAttribute('aria-label').endsWith(', the default')", timeout=WAIT_MS)
-        assert not said("claude").endswith(", the default")
+        pg.wait_for_function("() => document.querySelector('.hand-mana__label.is-front')?.dataset.provider === 'codex'", timeout=WAIT_MS)       # the front of the drum is the default at the wide width: no ', the default' in a label
+        assert not said("claude").endswith(", the default") and not said("codex").endswith(", the default")
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -311,7 +315,7 @@ def test_four_to_six_tools_keep_their_two_lines_in_two_small_rows(gui, width):
     pg, host, log = open_mana(gui, limits, width)
     try:
         p = pg.locator(".hand-mana .hand-pot")
-        assert p.count() == 6 and all(b.locator(".hand-pot__slot").evaluate("e => e.classList.contains('is-small')") for b in p.all())
+        assert p.count() == 6 and all(b.locator(".hand-pot__slot").evaluate("e => e.classList.contains('is-small')") == (width == "narrow") for b in p.all())      # small in two rows at the narrow width; the unrolled row at the wide one keeps the bottles' own size
         assert [b.get_attribute("data-size") for b in p.all()] == ["large", "medium", "small", "vial", "medium", "small"]
         hand, mana = pg.locator(".hand").bounding_box(), pg.locator(".hand-mana").bounding_box()
         assert mana["y"] + mana["height"] <= hand["y"] + hand["height"] + 1 and hand["height"] <= 260                       # the hand holds both rows and grows by what they need
@@ -447,9 +451,12 @@ def test_a_potion_hovered_lights_the_tabs_of_the_parties_that_run_on_it_and_the_
     pg, host, log = open_mana(gui, LIMITS, "wide", mana_of("claude", "codex", until=WEEK), {**PARTY_MARKS, "product": {**PARTY_MARKS["product"], "tool": "claude"}})
     try:
         pg.locator('.table-tab[data-tab="design"] .table-tab__marks').wait_for(state="attached", timeout=WAIT_MS)
+        pg.mouse.move(640, 300)                                                                             # the row opened by the helper folds: no potion is hovered
+        pg.locator(".hand-mana[data-open]").wait_for(state="detached", timeout=WAIT_MS)
         assert lit(pg) == [] and pg.locator(".table-tab .is-marked").count() == 0
         bg = lambda slug: tab(pg, slug).evaluate("e => getComputedStyle(e).backgroundColor")                  # noqa: E731
         before = bg("tech")
+        narrow.unroll_drum(pg)
         pot(pg, "codex").hover()                                                                            # the default potion is the tool now, Codex
         pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
         assert lit(pg) == ["design", "product", "release", "tech"]                                          # Codex's own (design, product, release) and those that follow the default (tech, design)
@@ -459,12 +466,15 @@ def test_a_potion_hovered_lights_the_tabs_of_the_parties_that_run_on_it_and_the_
         pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
         tab(pg, "product").click()                                                                          # a party set to Claude: its tab frames Claude's potion, the default is still Codex's
         pg.wait_for_timeout(500)
-        assert pg.locator('.hand-pot[data-default="1"]').get_attribute("data-provider") == "claude"
+        pg.wait_for_function("() => document.querySelector('.hand-mana__label.is-front')?.dataset.provider === 'claude'", timeout=WAIT_MS)        # the drum's front: the default at the wide width
+        narrow.unroll_drum(pg)
         pot(pg, "claude").hover()                                                                           # the default's potion: Claude's own parties and those that follow the default (the open tab keeps its own look)
         pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
         assert lit(pg) == ["design", "tech"]
         pg.mouse.move(5, 300)
         pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
+        pg.locator(".hand-mana__drum").focus()                                                              # the focus unrolls the row, a potion then has it
+        pg.locator(".hand-mana[data-open]").wait_for(timeout=WAIT_MS)
         pot(pg, "cursor").focus()                                                                           # a potion that is not the default's lights its own parties only
         pg.wait_for_timeout(300)
         assert lit(pg) == []                                                                                # nobody drinks from Cursor here
@@ -508,18 +518,19 @@ PAID = {"tool": "agy", "name": "Antigravity", "until": "2026-10-29T18:00", "usd_
 
 
 @pytest.mark.parametrize("tools,paid", [(4, False), (6, False), (6, True)], ids=["four", "six", "six-and-paid"])
-def test_at_1280_by_800_two_rows_of_potions_leave_the_portal_ring_and_its_label_clear_of_the_panes_head(gui, tools, paid):
+def test_at_1280_by_800_the_drum_and_the_unrolled_row_leave_the_portal_ring_and_its_label_clear_of_the_panes_head(gui, tools, paid):
     pg, host, log = open_mana(gui, (TOOLS + MORE)[:tools], "wide", mana_of("claude", "claude", paid=PAID if paid else None))
     try:
-        pg.locator(".portal__label").wait_for(timeout=WAIT_MS)
-        label, edge, host, die = pg.locator(".portal__label").bounding_box(), pg.locator(".frame-edge").bounding_box(), pg.locator(".frame-edge > .portal-host").bounding_box(), pg.locator(".frame-edge > .hand-die").bounding_box()
-        assert label["y"] >= edge["y"] and host["y"] + host["height"] <= die["y"] + 1, "the label lies inside the edge and the ring over the die, however many rows of potions (spec 150 D.7)"
-        assert pg.evaluate("() => { const e = document.querySelector('.frame-edge'); return e.scrollHeight <= e.clientHeight; }"), "the edge does not scroll"
+        pg.locator(".hand-end .hand-die").wait_for(timeout=WAIT_MS)
+        die, mana = pg.locator(".hand-end .hand-die").bounding_box(), pg.locator(".hand-mana").bounding_box()
+        assert die["x"] + die["width"] <= mana["x"] + 1 and mana["x"] + mana["width"] <= pg.viewport_size["width"] + 1 and mana["y"] + mana["height"] <= pg.viewport_size["height"] + 1, "the die and the drum lie at the hand's right end, inside the window"
+        assert pg.evaluate("() => { const e = document.querySelector('.release-lane__scroll'); return !e || e.scrollWidth <= e.clientWidth; }"), "the Release column does not scroll sideways"
         hand = pg.locator(".hand").bounding_box()
-        assert hand["height"] <= (192 if paid else 172) + 16                                                     # the week's share lies beside the now share: two rows are no taller than with one share (the hand's rim is 3 px now, spec 123 §7.7: 2 px more); + one line of the why: the cards keep their top and the cut lies between two lines (spec 147 C.2)
-        assert pg.locator(".hand-pot__shares").first.evaluate("e => getComputedStyle(e).flexDirection") == "row"
+        assert hand["height"] <= 140, hand                                                                       # the hand keeps its rim: the drum is 90 tall whatever the count of tools (spec 156 E.1)
+        row = pg.locator(".hand-mana__row").bounding_box()
+        assert row["x"] >= 0 and row["x"] + row["width"] <= pg.viewport_size["width"] and row["y"] + row["height"] <= pg.viewport_size["height"] + 1      # the unrolled row lies inside the window
         narrow.no_sideways(pg)
-        shot(pg, f"fix-wide-two-rows-{tools}{'-paid' if paid else ''}")
+        shot(pg, f"fix-wide-row-{tools}{'-paid' if paid else ''}")
     finally:
         pg.close()
     assert not log, "\n".join(log)

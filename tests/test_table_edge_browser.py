@@ -1,7 +1,7 @@
-"""The table's edge (docs/specs/150-the-table-its-edge-and-the-past-through-the-open-tab.md D, decisions §254.3–§254.4), in a real browser: at 760 px and up the window has a third column, 212 px wide, at the right of the table and the hand,
-holding top to bottom the ring (the imp at twelve, the lich at six, always drawn from Start, asleep while nothing is ready), the discard, the die (its right face Resume, waiting there while Stop all is in front) and the potions; the table gains
-the width (no `padding-right` for an end); in a 1366 x 768 window everything fits with no scroll; under 760 px the edge is not drawn and the table's end and the hand's end are as they were.
-Screenshots to $TABLE_EDGE_SHOTS when it is set."""
+"""The Release column (docs/specs/156-one-pick-and-the-release-column.md D, decisions §261.7–§261.10; before it the table's edge, spec 150 D), in a real browser: at 760 px and up there is no edge column (no `.frame-edge`); Live's and Release's are
+tabs at the row's end (Live, then Release last, their heads asleep or awake by the corners' old rules), and the discard is Release's lane under Release's tab, beside the pane, flush with the window's right edge, on every tab, its label *Discard* or
+*<party>'s discard*; the die and the potions stand at the hand's right end, as they do under 760 px; a project without a Release party has a headless *Discard* lane; in a 1366 x 768 window the ready card and the first goal not yet seen are in view;
+under 760 px the narrow page is as it was (the table's end, the hand's end). Screenshots to $TABLE_EDGE_SHOTS when it is set."""
 from __future__ import annotations
 
 import os
@@ -18,8 +18,16 @@ from tests.test_hand_desktop_browser import HandHost, RoadHost  # noqa: E402
 pytestmark = pytest.mark.browser
 
 SHOTS = Path(os.environ["TABLE_EDGE_SHOTS"]) if os.environ.get("TABLE_EDGE_SHOTS") else None
-EDGE_W = 212
 SIZES = {"1280x800": {"viewport": {"width": 1280, "height": 800}}, "1366x768": {"viewport": {"width": 1366, "height": 768}}}
+
+
+class LaneHost(RoadHost):
+    """RoadHost with one goal ready for main (Lobby music loop, Tech's) and another done and not yet seen (Room codes, Design's)."""
+
+    def __init__(self, **more):
+        super().__init__(**more)
+        if self.gate_doc.get("ideas"):
+            self.gate_doc["ideas"] = [g for g in self.gate_doc["ideas"] if g["slug"] == "music"]
 
 
 def open_at(gui, host, size="1280x800"):
@@ -49,146 +57,105 @@ def box(pg, selector):
     return b
 
 
-def test_the_edge_lies_at_the_frames_right_with_the_ring_the_discard_the_die_and_the_potions_in_that_order(gui):
-    pg, log = open_at(gui, RoadHost())
+def test_there_is_no_edge_the_table_spans_to_the_windows_right_and_the_lane_is_its_last_column(gui):
+    pg, log = open_at(gui, LaneHost())
     try:
-        edge = box(pg, ".frame > .frame-edge")
-        assert round(edge["x"] + edge["width"]) == 1280 and round(edge["width"]) == EDGE_W and round(edge["y"]) == 0 and round(edge["height"]) == 800, "the frame's third column, as tall as the window"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.frame')).gridTemplateColumns.split(' ').length") == 3, "the Orkmaster's column, the table and the edge"
-        kids = pg.evaluate("() => [...document.querySelector('.frame-edge').children].map((e) => e.classList[0])")
-        assert kids == ["portal-host", "edge-discard", "hand-die", "hand-mana"], "top to bottom: the ring, the discard, the die, the potions"
-        ys = [box(pg, f".frame-edge > .{k}")["y"] for k in kids]
-        assert ys == sorted(ys), "in that order down the edge"
-        assert pg.locator(".table-end, .hand-end, .hand-mana-only").count() == 0, "the table's end and the hand's end are gone at the wide width"
-        assert pg.locator(".frame-hand .hand-die, .frame-hand .hand-mana, .frame-table .portal-host, .frame-table .table-discard").count() == 0, "none of them lies in the table or the hand now"
-        hand = box(pg, ".frame-hand")
-        assert round(hand["x"] + hand["width"]) == round(edge["x"]), "the hand ends where the edge begins"
+        assert pg.locator(".frame-edge").count() == 0 and pg.evaluate("() => document.querySelector('.frame').dataset.edge") is None, "no edge"
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.frame')).gridTemplateColumns.split(' ').length") == 2, "the Orkmaster's column and the table"
+        table, lane, pane = box(pg, ".frame-table"), box(pg, ".table-under > .release-lane"), box(pg, ".table-under > .table-pane")
+        assert round(table["x"] + table["width"]) == 1280 and round(lane["x"] + lane["width"]) == 1280, "the table and its lane reach the window's right edge"
+        assert round(pane["x"] + pane["width"]) == round(lane["x"]), "the pane ends where the lane begins"
+        assert pg.locator(".table-end").count() == 0, "no end at the foot of the lanes"
+        assert pg.locator(".frame-hand .hand-end .hand-die").count() == 1 and pg.locator(".frame-hand .hand-end .hand-mana").count() == 1, "the die and the potions at the hand's right end"
+        shot(pg, "column-1280x800")
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_the_table_gains_the_width_and_its_right_edge_is_the_edges_left(gui):
-    pg, log = open_at(gui, RoadHost())
+def test_live_and_release_are_tabs_at_the_rows_end_release_last_and_its_lane_stands_under_its_tab(gui):
+    pg, log = open_at(gui, LaneHost())
     try:
-        edge, table = box(pg, ".frame-edge"), box(pg, ".frame-table")
-        assert round(table["x"] + table["width"]) == round(edge["x"]), "the table's right edge is the edge's left"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.table-body')).paddingRight") == "0px", "no room kept for an end"
-        pg.locator('.table-tab[data-tab="tech"]').click()                              # a party's tab: the map takes the width, there is still no end
+        tabs = pg.evaluate("() => [...document.querySelectorAll('.table-tab[data-tab]')].map((e) => e.dataset.tab)")
+        assert tabs == ["tech", "design", "product", "live", "release"], "Live before Release, Release last"
+        live, release, lane = box(pg, '[data-cell="live"]'), box(pg, '[data-cell="release"]'), box(pg, ".release-lane")
+        assert release["x"] > live["x"] and round(release["x"]) == round(lane["x"]), "Release's tab stands over the lane"
+        assert round(release["x"] + release["width"]) <= 1280 - 7, "the gutter at the right"
+        assert pg.locator(".ork-portal-ring__before, .ork-portal-ring__after, .portal__past, .pyramid").count() == 0, "their heads have left the ring; no past line, no pyramid"
+        assert round(box(pg, '.table-board [data-live]')["x"]) == round(live["x"]), "Live's lane under Live's tab"
+        pg.locator('.table-tab[data-tab="release"]').click()
+        pg.locator('.table-tab[data-tab="release"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_road_tabs_heads_wake_by_the_old_corners_rules(gui):
+    pg, log = open_at(gui, LaneHost(bare=True))                                          # nothing ready, nothing at work
+    try:
+        for slug in ("release", "live"):
+            assert "is-asleep" in pg.locator(f'.table-tab[data-tab="{slug}"]').get_attribute("class"), f"{slug} asleep while it has nothing to do"
+    finally:
+        pg.close()
+    pg, log = open_at(gui, LaneHost())                                                    # a goal is ready for main: Release wakes, Live stays asleep
+    try:
+        assert "is-asleep" not in pg.locator('.table-tab[data-tab="release"]').get_attribute("class")
+        assert "is-asleep" in pg.locator('.table-tab[data-tab="live"]').get_attribute("class")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("tab,label", [("orkmaster", "Discard"), ("tech", "Tech's discard"), ("design", "Design's discard"), ("live", "Live's discard"), ("release", "Release's discard")])
+def test_the_discard_lane_is_on_every_tab_through_its_eyes(gui, tab, label):
+    pg, log = open_at(gui, LaneHost())
+    try:
+        if tab != "orkmaster":
+            pg.locator(f'.table-tab[data-tab="{tab}"]').click()
+            pg.locator(f'.table-tab[data-tab="{tab}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator(".release-lane__label").text_content() == label and pg.locator(".release-lane").get_attribute("aria-label") == label
+        slugs = pg.evaluate("() => [...document.querySelectorAll('.release-lane [data-slug], .release-lane [data-portal-card]')].map((e) => e.dataset.slug || e.dataset.portalCard)")
+        want = {"orkmaster": ["music", "codes"], "tech": ["music"], "design": ["codes"], "live": ["music", "codes"], "release": ["music", "codes"]}[tab]
+        assert slugs == want, f"on {tab}'s tab: {slugs}"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_project_without_a_release_party_has_a_headless_discard_lane(gui):
+    pg, log = open_at(gui, HandHost())                                                    # no party of the release craft
+    try:
+        lane = pg.locator(".release-lane")
+        assert "is-headless" in lane.get_attribute("class") and pg.locator(".release-lane__label").text_content() == "Discard"
+        assert pg.locator('.table-tab[data-tab="release"]').count() == 1
+        pg.locator('.table-tab[data-tab="tech"]').click()
         pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.table-body')).paddingRight") == "0px" and pg.locator(".table-end").count() == 0
+        assert pg.locator(".release-lane__label").text_content() == "Discard", "the word stays on every tab"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_the_ring_is_drawn_from_start_asleep_with_nothing_ready_the_imp_at_twelve_and_the_lich_at_six(gui):
-    pg, log = open_at(gui, RoadHost(bare=True))                                          # a gate with nothing to merge: nothing ready, nothing done
+def test_in_a_1366_by_768_window_the_ready_card_and_the_first_not_seen_are_in_view_and_nothing_scrolls_the_page(gui):
+    pg, log = open_at(gui, LaneHost(), "1366x768")
     try:
-        host = pg.locator(".frame-edge > .portal-host")
-        assert "is-ring" in host.get_attribute("class") and "is-asleep" in host.get_attribute("class") and "is-bare" not in host.get_attribute("class"), "asleep, faint and still, and drawn"
-        assert pg.locator(".ork-portal-ring.is-bare, .ork-portal-ring.is-open").count() == 0 and pg.locator(".portal__label").count() == 0, "no *Main* while nothing is ready"
-        assert pg.locator(".frame-edge > .edge-discard").count() == 0, "nothing done: no pile"
-        ring, imp, lich = box(pg, ".ork-portal-ring"), box(pg, ".ork-portal-ring__after"), box(pg, ".ork-portal-ring__before")
-        cx, cy = ring["x"] + ring["width"] / 2, ring["y"] + ring["height"] / 2
-        assert imp["y"] + imp["height"] <= cy - ring["height"] / 2 + 8 and lich["y"] >= cy + ring["height"] / 2 - 12, "the imp above the ring's centre (at twelve), the lich below it (at six)"
-        for corner in (imp, lich):
-            assert abs(corner["x"] + 18 - cx) <= 6, "the head stands on the ring's vertical axis"
-        for sel in (".ork-portal-ring__after > .ork-portal-ring__guard > img", ".ork-portal-ring__before > .ork-portal-ring__guard > img"):
-            head = box(pg, sel)
-            assert (round(head["width"]), round(head["height"])) == (36, 33), "each head 36 x 33"
-        assert pg.locator(".ork-portal-ring__after .portal__corner-word").text_content() == "Live" and pg.locator(".ork-portal-ring__before .portal__corner-word").text_content() == "Release", "their words beside them"
-        for side in ("after", "before"):
-            assert "is-asleep" in pg.locator(f".ork-portal-ring__{side}").get_attribute("class"), "asleep grey, as today"
-        word, head = box(pg, ".ork-portal-ring__after .portal__corner-word"), box(pg, ".ork-portal-ring__after > .ork-portal-ring__guard")
-        assert word["x"] >= head["x"] + head["width"] - 1, "the word beside the head"
-        shot(pg, "edge-nothing-ready")
+        scroll = box(pg, ".release-lane__scroll")
+        ready, seen = box(pg, '[data-portal-card="music"]'), box(pg, '.release-lane__done [data-slug="codes"]')
+        for b in (ready, seen):
+            assert b["y"] >= scroll["y"] - 1 and b["y"] + b["height"] <= scroll["y"] + scroll["height"] + 1, f"in view: {b} in {scroll}"
+        assert ready["y"] < seen["y"], "the ready card on top"
+        assert round(ready["width"]) == 144 and round(ready["height"]) == 202, "whole cards at the hand's size"
+        assert pg.evaluate("() => document.documentElement.scrollHeight - innerHeight") <= 0, "the page itself does not scroll"
+        shot(pg, "lane-1366x768")
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_goal_ready_for_main_wakes_the_ring_with_its_word_main_and_the_imp_and_the_lich_stay(gui):
-    pg, log = open_at(gui, RoadHost())                                                    # two goals ready for main
-    try:
-        host = pg.locator(".frame-edge > .portal-host")
-        assert "is-asleep" not in host.get_attribute("class") and "is-open" in pg.locator(".ork-portal-ring").get_attribute("class")
-        assert pg.locator(".portal__label").text_content() == "Main"
-        assert pg.locator(".ork-portal-ring__after, .ork-portal-ring__before").count() == 2
-        assert pg.locator(".frame-edge > .edge-discard .hand-done").count() == 1, "the discard lies under the ring"
-        shot(pg, "edge-ready-for-main")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_die_wears_the_right_face_resume_while_stop_all_is_in_front(gui):
-    pg, log = open_at(gui, RoadHost())
-    try:
-        die = pg.locator(".frame-edge > .hand-die .ork-die")
-        classes = die.get_attribute("class").split()
-        assert "front-stop" in classes and "right-resume" in classes, "Stop all in front, Resume waiting on its right face"
-        assert pg.locator(".frame-edge > .hand-die .ork-die__face.is-right").count() == 1
-        assert pg.locator(".frame-edge > .hand-die .hand-die__play, .frame-edge > .hand-die .hand-die__stop").count() == 2, "its two presses are laid over its faces as before"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("hosts", ["ready", "nothing"])
-def test_everything_in_the_edge_fits_a_1366_by_768_window_with_no_scroll(gui, hosts):
-    pg, log = open_at(gui, RoadHost() if hosts == "ready" else RoadHost(bare=True), "1366x768")
-    try:
-        sizes = pg.evaluate("() => { const e = document.querySelector('.frame-edge'); return { sh: e.scrollHeight, ch: e.clientHeight, sw: e.scrollWidth, cw: e.clientWidth, page: document.documentElement.scrollHeight - innerHeight }; }")
-        assert sizes["sh"] <= sizes["ch"] and sizes["sw"] <= sizes["cw"] and sizes["page"] <= 0, f"nothing scrolls: {sizes}"
-        edge = box(pg, ".frame-edge")
-        for k in ("portal-host", "hand-die", "hand-mana"):
-            b = box(pg, f".frame-edge > .{k}")
-            assert b["y"] >= edge["y"] - 1 and b["y"] + b["height"] <= edge["y"] + edge["height"] + 1 and b["x"] >= edge["x"] - 1 and b["x"] + b["width"] <= edge["x"] + edge["width"] + 1, f"{k} lies inside the edge"
-        if hosts == "ready":
-            pile = box(pg, ".frame-edge > .edge-discard")
-            die = box(pg, ".frame-edge > .hand-die")
-            assert pile["y"] + pile["height"] <= die["y"] + 1, "the discard lies over the die"
-            assert round(box(pg, ".frame-edge .table-discard")["height"]) == 202 and round(box(pg, ".frame-edge .table-discard")["width"]) == 144, "the discard 144 x 202"
-        shot(pg, f"edge-1366x768-{hosts}")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_shorter_window_cuts_the_discard_from_its_foot_and_the_die_and_the_potions_keep_their_place(gui):
-    server, browser = gui
-    pg = browser.new_context(viewport={"width": 1280, "height": 640}).new_page()
-    pg.route_web_socket("**/ws*", RoadHost().on_socket)
-    pg.goto(server.url)
-    pg.wait_for_selector(".frame-edge .hand-die", timeout=WAIT_MS)
-    pg.wait_for_timeout(700)
-    try:
-        edge, die, pots = box(pg, ".frame-edge"), box(pg, ".frame-edge > .hand-die"), box(pg, ".frame-edge > .hand-mana")
-        assert die["y"] + die["height"] <= pots["y"] + 1 and pots["y"] + pots["height"] <= edge["y"] + edge["height"] + 1, "the die and the potions at the foot, whole"
-        assert pg.evaluate("() => { const e = document.querySelector('.frame-edge'); return e.scrollHeight <= e.clientHeight; }"), "the edge itself does not scroll"
-        assert pg.locator(".frame-edge .table-discard .hand-done").count() == 1, "the top card is there"
-    finally:
-        pg.close()
-
-
-@pytest.mark.parametrize("shot_size", ["1280x800", "1366x768"])
-def test_screenshots(gui, shot_size):
-    if not SHOTS:
-        pytest.skip("screenshots only when $TABLE_EDGE_SHOTS is set")
-    for name, host in (("nothing-ready", RoadHost(bare=True)), ("ready-for-main", RoadHost())):
-        pg, log = open_at(gui, host, shot_size)
-        try:
-            shot(pg, f"edge-{shot_size}-{name}")
-        finally:
-            pg.close()
-        assert not log, "\n".join(log)
-
-
-def test_under_760_px_the_edge_is_not_drawn_and_the_end_and_the_hands_end_are_as_they_were(gui):
+def test_under_760_px_there_is_no_lane_and_the_end_and_the_hands_end_are_as_they_were(gui):
     pg, log = open_at(gui, HandHost(), "narrow")
     try:
-        assert pg.locator(".frame-edge").count() == 0 and pg.evaluate("() => document.querySelector('.frame').dataset.edge") is None
+        assert pg.locator(".release-lane, .frame-edge").count() == 0
         assert pg.locator(".table-end").count() == 1 and pg.locator(".hand-end").count() == 1, "the discard's end on the table and the die and the potions in the hand's end, as today"
         assert pg.locator(".hand-end .hand-die").count() == 1 and pg.locator(".hand-end .hand-mana").count() == 1 and pg.locator(".table-end .table-discard").count() == 1
         narrow.no_sideways(pg)

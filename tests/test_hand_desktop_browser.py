@@ -277,7 +277,7 @@ def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_s
         size = pg.viewport_size
         assert pg.locator(".hand-deckback, .hand-deck, .hand-end--deck").count() == 0, "no deck: the goals in line lie on the table"
         assert pg.evaluate("() => import('/static/js/frame/kinds.js').then((m) => 'deck' in m.KINDS)") is False
-        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == (0 if width == "wide" else 1), "a lane under each tab (the project's first, four parties); the mana's place at the narrow width (at the wide one the die and the potions lie in the table's edge, spec 150 D.2)"
+        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == 1, "a lane under each tab (the project's first, four parties); the die and the potions at the hand's right end (spec 156 D: no edge)"
         sizes = set(map(tuple, pg.evaluate("() => [...document.querySelectorAll('.hand .hand-card, .hand .hand-back:not(.edge)')].map((e) => [e.offsetWidth, e.offsetHeight])")))
         assert len(sizes) == 1, f"one card size, got {sizes}"
         assert sizes == ({(144, 202)} if width == "wide" else {(80, 112)}), sizes          # spec 147 C.1, decisions §251.5: 144 x 202 cut by the hand's rim (the narrow card 80 x 112)
@@ -285,7 +285,9 @@ def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_s
         assert plus_size == ((144, 202) if width == "wide" else (80, 112)), plus_size      # decisions §249.2: the + card keeps its 5 : 7
         if width == "wide":
             plus_box = pg.locator(".hand-plus").bounding_box()
-            assert plus_box["y"] + plus_box["height"] <= size["height"] + 1, "the + card lies whole in the window, its turned corners too"
+            seal = pg.locator(".hand-plus .ork-sigil").bounding_box()
+            assert seal["y"] + seal["height"] <= size["height"] + 1, "the + card's seal lies whole in the window"
+            assert plus_box["y"] + plus_box["height"] > size["height"] + 16, "its foot (the lower moon) lies under the window's edge: it sits 32 px lower (decisions §265)"
             assert pg.locator(".hand-plus .ork-sigil").evaluate("e => e.offsetHeight <= e.parentElement.clientHeight"), "its whole seal shows"
         hand = pg.locator(".hand").bounding_box()
         card = pg.locator('.hand-card[data-goal="timer"]').bounding_box()
@@ -298,14 +300,13 @@ def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_s
         assert hand["height"] <= (150 if width == "wide" else 130), "the hand is short: the table gains what it gave back"
         if width == "wide":
             cols = pg.locator(".hand-row").evaluate("e => getComputedStyle(e).gridTemplateColumns.split(' ').map(parseFloat)")
-            assert len(cols) == 6 and cols[0] == 160 and len(set(cols[1:5])) == 1 and 144 <= cols[1] <= 180, f"the first under the Orkmaster's column (its own width, spec 130 E.1; 160 px, spec 147 B.1), every lane one width, a card and a quarter at most (less by the edge's column, spec 150 D.1), then the tabs' end: {cols}"
+            assert len(cols) == 7 and cols[0] == 160 and len(set(cols[1:5])) == 1 and 144 <= cols[1] <= 180 and cols[6] == 180, f"the first under the Orkmaster's column (its own width, spec 130 E.1; 160 px, spec 147 B.1), every lane one width, a card and a quarter at most, then the tabs' end and Release's track (Live has none here), the Release column's width (spec 156 D.1): {cols}"
             boxes = [lane(pg, i).bounding_box() for i in range(5)]
             assert all(abs(boxes[i + 1]["x"] - (boxes[i]["x"] + boxes[i]["width"])) <= 1 for i in range(4)), "the lanes are side by side on the grid"
             mana = pg.locator(".hand-mana").bounding_box()
-            edge = pg.locator(".frame-edge").bounding_box()
-            assert edge["x"] <= mana["x"] and mana["x"] + mana["width"] <= edge["x"] + edge["width"] <= size["width"] + 1 and pg.locator(".hand .hand-done, .hand .table-discard, .hand .hand-mana").count() == 0, "the mana in the table's edge, none in the hand, no discard in the hand (it lies in the edge)"
-            done, die = pg.locator(":is(.frame-edge, .table-end) .hand-done").bounding_box(), pg.locator(".frame-edge > .hand-die").bounding_box()
-            assert done["x"] >= boxes[4]["x"] - 1 and edge["x"] <= done["x"] and done["y"] + done["height"] <= die["y"] + 1, "the discard in the edge, right of the lanes, over the die"
+            assert mana["x"] + mana["width"] <= size["width"] + 1 and pg.locator(".hand .hand-done, .hand .table-discard").count() == 0, "the potions at the hand's right end, no discard in the hand (it is Release's lane)"
+            done, lane_box = pg.locator(".release-lane [data-portal-card]").first.bounding_box(), pg.locator(".release-lane").bounding_box()
+            assert done["x"] >= boxes[4]["x"] + boxes[4]["width"] - 1 and lane_box["x"] <= done["x"] and done["y"] + done["height"] <= hand["y"] + 1, "the discard's card in Release's lane, right of the lanes, over the hand"
         else:
             slots = sorted(pg.locator(".hand-slot, .hand-mana").evaluate_all("els => els.map((e) => [e.classList.contains('is-plus') ? 'plus' : e.classList.contains('hand-mana') ? 'mana' : 'stack', e.getBoundingClientRect().x])"), key=lambda t: t[1])
             assert slots[0][0] == "plus" and slots[-1][0] == "mana" and pg.locator(".hand .hand-done").count() == 0, "a free row in the lanes' order: the + card first, the mana last; the discard is not in it"
@@ -414,7 +415,7 @@ def test_two_goals_under_one_lane_fan_within_its_width_the_back_ones_edge_only_a
 def test_a_tap_on_the_discard_opens_it_over_the_pane_at_the_narrow_width(gui):
     pg, host, log = open_hand(gui, width="narrow")
     try:
-        done = pg.locator(":is(.frame-edge, .table-end) .hand-done")
+        done = pg.locator(".table-end .hand-done")
         done.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(900)
         b = done.bounding_box()
@@ -498,7 +499,7 @@ def _field(pg):
 
 # -- the deck -------------------------------------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])                                                           # at the wide width the discard is Release's lane (test_discard_table_browser.py)
 def test_no_part_with_nothing_to_hold(gui, width):
     pg, host, log = open_hand(gui, host=HandHost(bare=True), width=width)
     try:
@@ -566,8 +567,8 @@ def test_the_plus_card_bears_the_seal_of_summoning_with_the_next_goals_element_t
         s = sigil.bounding_box()
         assert round(s["width"]) <= (72 if width == "narrow" else 136) + 14, "the seal's size (the card is turned a little)"
         assert plus.evaluate("e => getComputedStyle(e).backgroundImage") == "none", "the hatch is gone"
-        assert plus.evaluate("e => getComputedStyle(e, '::before').content") in ("none", "normal"), "so is the band of light"
-        assert plus.evaluate("e => getComputedStyle(e, '::after').content") == '""', "the corner brackets stay"
+        assert "plus-lines" in plus.evaluate("e => getComputedStyle(e, '::before').maskImage || getComputedStyle(e, '::before').webkitMaskImage"), "so is the band of light: its ::before is the back's drawing (decisions §264)"
+        assert plus.evaluate("e => getComputedStyle(e, '::after').content") == 'none', "the corner brackets gave way to the back's corners (decisions §264)"
         assert "double" in plus.evaluate("e => getComputedStyle(e).borderTopStyle") and plus.evaluate("e => getComputedStyle(e).rotate") != "none", "the double frame and the lean stay"
         assert plus.evaluate("e => getComputedStyle(e).color") == plus.evaluate("e => getComputedStyle(e).borderTopColor"), "the green: the seal takes the card's colour"
         assert _seal(pg) == "ice", "the Orkmaster's tab, no party named: the first party's next element (the runes are the project's, §253.10)"
@@ -833,7 +834,7 @@ def test_a_goal_sent_plays_the_rite_on_the_seal_in_its_element_once_and_none_und
         pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil.is-summoning')", timeout=3000)       # taken off after the animation
         assert not [c for c in sigil.get_attribute("class").split() if c.startswith("rite-")]
         pg.emulate_media(reduced_motion="reduce")                                                                          # nothing plays under reduced motion
-        _plus(pg).click()
+        _plus(pg).click(position={"x": 80, "y": 60})                                                                       # its upper part: the hand is 100 px high now (spec 156 E.1) and the card's middle lies at its rim
         _field(pg)[1].fill("Still")
         _field(pg)[1].press("Enter")
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
@@ -1172,7 +1173,7 @@ def test_open_on_a_lifted_card_opens_the_stop_over_the_pane_and_it_goes_back_whe
 
 # -- the discard ----------------------------------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])                                                           # at the wide width the discard is Release's lane: no view over the pane (spec 156 D.3)
 def test_the_discard_shows_the_last_goal_done_and_what_is_ready_for_main_and_opens_over_the_pane(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
@@ -1202,8 +1203,10 @@ def test_the_discard_shows_the_last_goal_done_and_what_is_ready_for_main_and_ope
 
 
 def test_a_goal_pressed_in_the_discard_opens_its_result_is_seen_and_leaves_the_discard(gui):
-    pg, host, log = open_hand(gui)
+    pg, host, log = open_hand(gui, width="narrow")
     try:
+        pg.locator(".hand-done").wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(900)
         pg.locator(".hand-done").click()
         box = pg.locator("#table-pane")
         box.get_by_role("region", name="Done, not yet seen").locator('.hand-drow[data-slug="codes"]').click()
@@ -1212,6 +1215,8 @@ def test_a_goal_pressed_in_the_discard_opens_its_result_is_seen_and_leaves_the_d
         assert _sent(pg, host, ("ideas.seen", {"idea": "codes"})) and host.seen_log == ["codes"]
         box.locator(".hand-result").wait_for(timeout=WAIT_MS)
         assert "room codes are four letters" in box.inner_text().lower()
+        pg.keyboard.press("Escape")                                                                                                 # at the narrow width the pile is hidden while something is over the pane
+        pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value === null)", timeout=WAIT_MS)
         pg.locator(".hand-done").click()
         assert box.get_by_role("region", name="Done, not yet seen").locator(".hand-drow").count() == 1                              # it left the discard
         box.get_by_role("region", name="Done, not yet seen").locator('.hand-drow[data-slug="music"]').click()

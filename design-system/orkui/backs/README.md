@@ -1,19 +1,22 @@
 # orkUI / office / backs
 
-**The back**: a hand card face down (orkBoard's decisions §149.3, §160.3, §254.5): the deck, the cards under a stack's top, the discard's cards
-under its top, the Orkmaster's fan. One back for them all, after a tarot card's back, kept plain (0.30.0): on the card's grey **a thin plain strip along each of its four sides** and
-**a small curl in each corner**, drawn in the faint ink's grey, and **orkUI's ring of runes in its middle**, drawn by CSS. **No colour**: the two greys are the tokens `--ork-card` (the ground)
-and `--ork-ink-faint` (the strokes), and a test holds the files to them. No lattice, no diamond, no ring in the SVG; no moon and no star as an ornament.
+**The back**: a hand card face down (orkBoard's decisions §149.3, §160.3, §254.5, §263): the deck, the cards under a stack's top, the discard's cards
+under its top, the Orkmaster's fan. One back for them all, **after a tarot back** (0.32.0, redrawn closer to it): **filigree in the four corners** (a scroll that
+curls into itself, a tendril along the top and one down the side, each ending in a small curl, a leaf at the very corner), **a thin line down each long side with a
+lozenge at its middle**, **a moon in a circle at the top and at the bottom** of the card's axis with a bead and a small lozenge between it and the ring, and
+**four small stars** round the ring, all drawn in the faint ink's grey in strokes of one cell, and **orkUI's ring of runes in its middle**, drawn by CSS.
+**No colour**: the two greys are the tokens `--ork-card` (the ground) and `--ork-ink-faint` (the strokes), and a test holds the files to them.
 
-    back.svg        the back: 40 x 56 unit squares (5 : 7), crispEdges, the card's grey and the faint ink's: four strips and four curls
-    back-small.svg  the same strips, no curls, for a back under about 100 px wide (56 x 78)
+    back.svg        the back: 80 x 112 unit squares (5 : 7; a stroke about 1.8 px on a 144 px card, an engraving's line), crispEdges, the card's grey and the faint ink's
+    back-small.svg  40 x 56: the long sides and their lozenges alone, for a back under about 100 px wide (56 x 78), where a scroll would be a smudge
+    plus-lines.svg       (0.33.0) a mask, the strokes alone: the back's corners, the sides' first stretch and a smaller moon, which `.ork-card.ork-plus::before`
+                         draws in the card's own colour at 42% round its seal of summoning (the stars and the bead lie under the seal, so they are left out)
+    plus-lines-small.svg the small back's sides as a mask, for a + card whose seal is `.small`
     ork.svg         orkUI's ork mark: a 7 x 7 head on the signs' grid (one path of unit squares, a mask like a sign); kept as the mark, no longer drawn by the back
 
-**The strips**: one cell wide, inset 3 cells from the edge. The long ones (left and right) run from y 12 to y 43 (x 3 and x 36), the short ones (top and bottom) from x 10 to x 29 (y 3 and
-y 52), so the four corners stay free.
-
-**The curls**: a quarter of a spiral, 6 x 6 cells, one cell thick, the same drawing mirrored into the four corners (the top left one, at cells 3 to 8, is
-`.####.` / `#....#` / `#.#..#` / `#..##.` / `#.....` / `#.....`, the others its mirror images about the card's middle lines).
+**Generated** (`tools/build_back.py`, `--check`): the drawing is made of strokes (arcs, spirals, lines, lozenges, stars) in the top left quarter and mirrored about
+the card's two middle lines, so the four corners, the two sides, the top and the bottom are one drawing. It leaves the ring's room (58% of the width round the
+centre) empty. Change the drawing there, never the SVGs.
 
 **The ring of runes** is CSS, not the SVG: `.ork-card-back::before` is the mask of the runes' ring `.ork-sigil` draws (`../runes/sigil-runes.svg`, the seven runes of the seal) in `--ork-ink-faint`, centred, **58% of the
 back's width**, behind the seal slot. `.ork-card-back.small` swaps the background to `back-small.svg`, draws the ring at **66%** and the seal's element at 14 px.

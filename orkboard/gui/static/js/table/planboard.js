@@ -4,7 +4,7 @@
 // width keeps the Board as it is. Nothing here changes a task: a press lifts it (card.js), as on the Board.
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { nameOf, partiesNow } from "./data.js";
+import { isLive, nameOf, partiesNow, wide } from "./data.js";
 import { TaskCard } from "./card.js";
 import { PlanArrows } from "./planarrows.js";
 
@@ -25,7 +25,7 @@ export function PlanBoard({ n }) {
   const order = [...tasks].map((t, i) => ({ t, i })).sort((a, b) => (a.t.wave || 1) - (b.t.wave || 1) || a.i - b.i).map(({ t }) => t);
   const mine = (g) => order.filter((t) => laneOf(n, t, lanes) === g.slug);
   return html`<div class="table-board table-board--plan" ref=${host} data-picked=${n.slug} data-plan=${n.slug} data-tokens="false">
-    ${lanes.map((g) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} role="group" aria-label=${nameOf(g)}>
+    ${lanes.map((g) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} data-live=${wide.value && isLive(g) ? "1" : undefined} role="group" aria-label=${nameOf(g)}>
       ${mine(g).map((t) => html`<div key=${t.id} class=${cls("plan-slot", `is-${planPhase(t)}`)} data-plan-task=${t.id} data-phase=${planPhase(t)}><${TaskCard} n=${n} t=${t} /></div>`)}
       ${tasks.length > 0 && mine(g).length === 0 && html`<p class="table-board__none plan-none" data-none=${g.slug}>Nothing for ${nameOf(g)}</p>`}
     </div>`)}

@@ -88,7 +88,7 @@ def test_the_discards_card_has_a_top_row_and_a_foot_row(gui):
         host.nodes.append(node("music", "tech", "Lobby music loop with a very long name that goes on and on for more than four lines of the card", "done", element="void", place="discard", updated="2026-10-20T12:00:00",
                                tasks=[done("m1", "grunt"), done("m2", "artist")]))
         host.push()
-        card = pg.locator(":is(.frame-edge, .table-end) .hand-done.hand-card")
+        card = pg.locator(":is(.release-lane, .table-end) .hand-done.hand-card")
         card.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(600)
         box = card.bounding_box()

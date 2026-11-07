@@ -11,12 +11,9 @@
 .frame[data-column] { grid-template-columns: var(--column-w) minmax(0, 1fr); }
 .frame[data-column] > .frame-hand { grid-column: 1 / -1; }
 .frame-column { position: relative; z-index: 1; min-width: 0; min-height: 0; background: var(--ork-room); }
-/* the table's edge (spec 150 D.1, decisions §254.3; frame/edge.js, edge.css): at 760 px and up a third column, `--edge-w`, at the right of the table and the hand and as tall as both; the table keeps the first (or second, with the Orkmaster's column) and the hand lies under it and the column, never under the edge. Under 760 px nothing changes. */
-.frame { --edge-w: 212px; }
+/* the Release column (spec 156 D.1, decisions §261.7–§261.10): no edge. At 760 px and up `--cols` is the lanes, the tabs' end, Live's lane (`--col-w`, when the project has a Live party: `data-live`) and Release's lane (`--col-w`), the last, flush with the window's right edge
+   less the gutter; the tabs and the hand read it, the Board reads `--board-cols` (the same less Release's track: Release's lane is the discard, beside the pane: table/lane.js). Under 760 px nothing changes. */
 @media (min-width: 760px) {
-  .frame[data-edge] { grid-template-columns: minmax(0, 1fr) var(--edge-w); }
-  .frame[data-edge][data-column] { grid-template-columns: var(--column-w) minmax(0, 1fr) var(--edge-w); }
-  .frame[data-edge] > .frame-table { grid-column: -3 / -2; grid-row: 1; }
-  .frame[data-edge] > .frame-hand { grid-column: 1 / -2; grid-row: 2; }
-  .frame[data-edge][data-column] > .frame-column { grid-column: 1; grid-row: 1; }
+  .frame { --live-t: ; --cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr) var(--live-t) var(--col-w); --board-cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr) var(--live-t); }        /* Live's track only when the project has a Live party */
+  .frame[data-live] { --live-t: var(--col-w); }
 }

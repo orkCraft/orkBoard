@@ -1,6 +1,6 @@
-/* The discard on the table (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3; mockup docs/mockups/mana/): the pile of goals done, a hand card's size (`--hc-w`, the sizes hand.css gives `.table-end` and `.frame-edge` too),
+/* The discard on the table (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3; mockup docs/mockups/mana/): the pile of goals done, a hand card's size (`--hc-w`, the sizes hand.css gives `.table-end` and `.release-lane` too),
    with the pixel-face word *Discard* above it. Layout only: every colour, face, corner and move is orkUI's (`.ork-deck`, `.ork-card`, `.ork-card-back`, `.ork-leans`, `.ork-label`'s heading face); the card's anatomy is the hand's (hand.css `.hand-card__*`).
-   - At 760 px and up it lies in the table's edge (spec 150 D, decisions §254.3: frame/edge.js, edge.css), under the ring: there is no end on the table and the table keeps the whole width.
+   - At 760 px and up it is Release's lane (spec 156 D, decisions §261.7: table/lane.js, lane.css), the cards whole: there is no end on the table; the pile below is the narrow width's.
    - Under 760 px the pile is 80 px wide at the lanes' end (`.table-end`, the table's absolutely placed corner, with the portal above it while a goal is chosen); a screen opened over the pane (what the narrow width makes of it) has no pile over it, except the discard's own, which keeps it
      to press again; a party's map ends above it.
    The hand (z-index 2) stands over it, so a card lifted from the hand lies above the pile where they meet. */
@@ -9,28 +9,28 @@
 .table-end { position: absolute; z-index: 1; right: var(--ork-8); bottom: var(--ork-4); display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); width: var(--hc-w); }
 .table-place { width: var(--hc-w); flex: none; }
 .table-end__label { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
-:is(.table-end, .frame-edge) .table-discard { width: var(--hc-w); height: var(--hc-h); flex: none; }          /* over hand.css's 100 %: the column is wider than the pile at the wide width */
-:is(.table-end, .frame-edge) .hand-card.hand-done { cursor: pointer; }
-:is(.table-end, .frame-edge) .hand-card .hand-mark { color: var(--ork-ink-muted); }
-:is(.table-end, .frame-edge) .hand-card .hand-mark.is-ok { color: var(--ork-success); }
-:is(.table-end, .frame-edge) .hand-card .hand-mark .ork-sign { opacity: 0.85; }
-:is(.table-end, .frame-edge) .hand-card .is-ok { color: var(--ork-success); }
+:is(.table-end, .release-lane) .table-discard { width: var(--hc-w); height: var(--hc-h); flex: none; }          /* over hand.css's 100 %: the column is wider than the pile at the wide width */
+:is(.table-end, .release-lane) .hand-card.hand-done { cursor: pointer; }
+:is(.table-end, .release-lane) .hand-card .hand-mark { color: var(--ork-ink-muted); }
+:is(.table-end, .release-lane) .hand-card .hand-mark.is-ok { color: var(--ork-success); }
+:is(.table-end, .release-lane) .hand-card .hand-mark .ork-sign { opacity: 0.85; }
+:is(.table-end, .release-lane) .hand-card .is-ok { color: var(--ork-success); }
 /* A goal done in the night wears a small moon until its result is seen (docs/specs/128 C.3, decisions §206.9; table/discard.js): orkUI's `moon` sign in the quiet ink, at the corner of the card's window, and at the end of its row over the pane. */
-:is(.table-end, .frame-edge) .hand-done__moon { position: absolute; top: var(--ork-1); right: var(--ork-1); display: inline-flex; color: var(--ork-ink-muted); }
+:is(.table-end, .release-lane) .hand-done__moon { position: absolute; top: var(--ork-1); right: var(--ork-1); display: inline-flex; color: var(--ork-ink-muted); }
 .hand-drow__moon { display: inline-flex; flex: none; color: var(--ork-ink-muted); }
 
 
 /* Words stay inside the card (spec 143 F.5, decisions §250.7): the back that says only what is ready for main (no goal done to show) holds its sentence inside the frame of its art, wrapped, a long branch's name broken, and cut at the
    fourth line with the whole sentence in its `title`; at the narrow width (80 px) the padding keeps them inside the art's window and they are set smaller (spec 149 G.5); the front card's foot is cut the same way at its second line (hand.css). */
-:is(.table-end, .frame-edge) .hand-done.hand-back { grid-template-columns: minmax(0, 1fr); }
-:is(.table-end, .frame-edge) .hand-back__ready { box-sizing: border-box; min-width: 0; max-width: 100%; padding: var(--ork-4) var(--ork-5); }
-:is(.table-end, .frame-edge) .hand-back__ready .cap { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; max-width: 100%; overflow: hidden; overflow-wrap: anywhere; }
+:is(.table-end, .release-lane) .hand-done.hand-back { grid-template-columns: minmax(0, 1fr); }
+:is(.table-end, .release-lane) .hand-back__ready { box-sizing: border-box; min-width: 0; max-width: 100%; padding: var(--ork-4) var(--ork-5); }
+:is(.table-end, .release-lane) .hand-back__ready .cap { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; max-width: 100%; overflow: hidden; overflow-wrap: anywhere; }
 
 
 @media (max-width: 759.98px) {
   .table-end { right: var(--ork-4); gap: var(--ork-2); }
-  :is(.table-end, .frame-edge) .hand-back__ready { padding: var(--ork-3) var(--ork-5); gap: var(--ork-1); }          /* the art's window is 12 px in from each side of the 80 px card: the words wrap inside it (spec 149 G.5, decisions §250.7) */
-  :is(.table-end, .frame-edge) .hand-back__ready .cap { font-size: 10px; line-height: 12px; }
+  :is(.table-end, .release-lane) .hand-back__ready { padding: var(--ork-3) var(--ork-5); gap: var(--ork-1); }          /* the art's window is 12 px in from each side of the 80 px card: the words wrap inside it (spec 149 G.5, decisions §250.7) */
+  :is(.table-end, .release-lane) .hand-back__ready .cap { font-size: 10px; line-height: 12px; }
   .table-body[data-end="side"]:has(> .table-end) { padding-bottom: var(--table-end-h); }
   .table-body[data-end="over"] > .table-end { display: none; }
 }

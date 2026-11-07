@@ -88,10 +88,12 @@ class NightHost(HandHost):
         return super().handle(name, a)
 
 
-def window(gui, width="wide", reduced=False, init=None, **kw):
-    """The page against a NightHost; `reduced`: under reduced motion from the first frame, `init`: a script run before the page's own (it watches the discard)."""
+def window(gui, width="narrow", reduced=False, init=None, prep=None, **kw):
+    """The page against a NightHost (at the narrow width by default: the pile is there; Release's lane holds the same cards whole at the wide one); `reduced`: under reduced motion from the first frame, `init`: a script run before the page's own (it watches the discard)."""
     server, browser = gui
     host = NightHost(**kw)
+    if prep:
+        prep(host)
     pg = narrow.page(browser, width)
     log: list[str] = []
     pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
@@ -110,7 +112,7 @@ def window(gui, width="wide", reduced=False, init=None, **kw):
 # What the discard looked like, each time it changed: `place` (nothing in it), else `<slug of the card on top>/<how many lie under it>/<the slug dealt just now>`.
 WATCH = """() => { const seen = window.__pile = [];
   const look = () => { const d = document.querySelector('.table-discard'), top = d?.querySelector('.hand-done');
-    const now = !d ? (document.querySelector(':is(.frame-edge, .table-end) .table-place') ? 'place' : 'none') : `${top?.dataset.slug || 'back'}/${d.dataset.n}/${top?.dataset.dealt || ''}`;
+    const now = !d ? (document.querySelector(':is(.release-lane, .table-end) .table-place') ? 'place' : 'none') : `${top?.dataset.slug || 'back'}/${d.dataset.n}/${top?.dataset.dealt || ''}`;
     if (seen[seen.length - 1] !== now) seen.push(now); };
   new MutationObserver(look).observe(document, { subtree: true, childList: true, attributes: true }); }"""
 INIT = "document.addEventListener('DOMContentLoaded', (" + WATCH + "));"
@@ -121,11 +123,11 @@ def nights(host):
 
 
 def pile(pg):
-    return pg.locator(":is(.frame-edge, .table-end) .table-discard")
+    return pg.locator(":is(.release-lane, .table-end) .table-discard")
 
 
 def top(pg):
-    return pg.locator(":is(.frame-edge, .table-end) .table-discard .hand-done")
+    return pg.locator(":is(.release-lane, .table-end) .table-discard .hand-done")
 
 
 # -- no morning's card; the moon in the discard -------------------------------------------------------------------------------------------------
@@ -147,7 +149,7 @@ def test_a_goal_done_in_the_night_lies_in_the_discard_under_a_small_moon_until_i
     pg, host, log = window(gui, reduced=True)                                                              # (reduced motion: no deal to wait for)
     try:
         top(pg).wait_for(timeout=WAIT_MS)
-        pg.locator(':is(.frame-edge, .table-end) .hand-done[data-moon="1"]').wait_for(timeout=WAIT_MS)
+        pg.locator(':is(.release-lane, .table-end) .hand-done[data-moon="1"]').wait_for(timeout=WAIT_MS)
         assert top(pg).get_attribute("data-slug") == "music" and top(pg).locator(".hand-done__moon .ork-sign.moon").count() == 1, "the newest done goal is the pile's top, a moon on it"
         moon, kind = top(pg).locator(".hand-done__moon").bounding_box(), top(pg).locator(".corner__kind").bounding_box()
         assert moon["x"] + moon["width"] <= kind["x"] + 1 and abs((moon["y"] + moon["height"] / 2) - (kind["y"] + kind["height"] / 2)) <= 3, "in the top row, left of the kind's sign (spec 147 A.3: the card has no window now)"
@@ -159,7 +161,7 @@ def test_a_goal_done_in_the_night_lies_in_the_discard_under_a_small_moon_until_i
         assert rows.count() == 2 and [rows.nth(i).locator(".hand-drow__moon").count() for i in range(2)] == [1, 1], "a moon on each of the night's goals in the list"
         assert pg.locator(".hand-drow__moon .ork-sign.moon").count() == 2
         rows.nth(0).click()                                                                                  # its result is seen: it leaves the discard, so does its moon
-        pg.wait_for_function("() => document.querySelector(':is(.frame-edge, .table-end) .hand-done')?.dataset.slug === 'codes'", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector(':is(.release-lane, .table-end) .hand-done')?.dataset.slug === 'codes'", timeout=WAIT_MS)
         assert host.seen_log == ["music"] and top(pg).get_attribute("data-moon") == "1" and pile(pg).get_attribute("data-n") == "0", "it is gone from the pile and the next one keeps its moon"
     finally:
         pg.close()
@@ -172,7 +174,7 @@ def test_a_goal_the_night_did_not_finish_wears_no_moon(gui):
     pg, host, log = window(gui, reduced=True, night=night)
     try:
         top(pg).wait_for(timeout=WAIT_MS)
-        pg.locator(':is(.frame-edge, .table-end) .hand-done[data-moon="1"]').wait_for(timeout=WAIT_MS)
+        pg.locator(':is(.release-lane, .table-end) .hand-done[data-moon="1"]').wait_for(timeout=WAIT_MS)
         top(pg).click()
         pg.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
         moons = pg.locator(".hand-drow").evaluate_all("els => els.map((e) => [e.dataset.slug, !!e.querySelector('.hand-drow__moon')])")
@@ -320,6 +322,23 @@ def test_a_plan_that_starts_tonight_says_so_and_build_it_now_starts_it_at_once(g
         assert _calls(pg, host, "ideas.start_now")[0] == {"slug": "export", "via": "hand"}
         narrow.no_sideways(pg)
         shot(pg, f"{width}-held-plan")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_at_the_wide_width_a_goal_done_in_the_night_wears_the_moon_on_its_card_in_release_lane_until_it_is_picked_and_seen(gui):
+    def no_ready(host):
+        host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0}
+    pg, host, log = window(gui, "wide", reduced=True, prep=no_ready)
+    try:
+        cards = pg.locator('.release-lane__done .hand-done[data-moon="1"]')
+        cards.first.wait_for(timeout=WAIT_MS)
+        assert cards.count() == 2 and cards.first.locator(".hand-done__moon .ork-sign.moon").count() == 1, "a moon on each of the night's goals, whole cards in the lane"
+        cards.first.click()                                                                                    # picked: it is seen and leaves *not yet seen*
+        pg.wait_for_function("() => document.querySelectorAll('.release-lane__done .hand-done').length === 1", timeout=WAIT_MS)
+        assert host.seen_log == [cards.first.get_attribute("data-slug")] or len(host.seen_log) == 1
+        assert pg.locator(".hand-discardview").count() == 0
     finally:
         pg.close()
     assert not log, "\n".join(log)

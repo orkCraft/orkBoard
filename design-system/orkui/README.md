@@ -227,10 +227,10 @@ rotates: the two sides swap at once. **`.ork-gives`** is a head's one beat as it
 class on when it happens and takes it off at the `animationend` named `ork-give` (put it on again after a reflow to play it again). Nothing plays under reduced motion.
 
 ## The back
-`backs/back.svg` is the one back of a hand card face down (the deck, the cards under a stack's top, the discard's), 40 x 56 pixels (5 : 7): a thin plain strip along each side and a small curl in each corner in the faint ink's grey on
-the card's grey: **no colour** (`backs/README.md`; 0.30.0, after a tarot back); `backs/back-small.svg` is the strips alone for a back under about 100 px wide (`.ork-card-back.small`); orkUI's ring of runes lies in its middle, drawn by CSS (`.ork-card-back::before`, 58% of the width, 66% on `.small`). It carries no mark: at its middle lies the **seal slot**, `.ork-card-back__seal`, which holds the element of the goal that waits
+`backs/back.svg` is the one back of a hand card face down (the deck, the cards under a stack's top, the discard's), 80 x 112 pixels (5 : 7; 0.32.0): filigree in the corners, a line with a lozenge down each long side, a moon in a circle at the top and the bottom, four small stars, in the faint ink's grey on
+the card's grey: **no colour** (`backs/README.md`; after a tarot back, `tools/build_back.py`); `backs/back-small.svg` is the long sides and their lozenges alone for a back under about 100 px wide (`.ork-card-back.small`); orkUI's ring of runes lies in its middle, drawn by CSS (`.ork-card-back::before`, 58% of the width, 66% on `.small`). It carries no mark: at its middle lies the **seal slot**, `.ork-card-back__seal`, which holds the element of the goal that waits
 next (`<span class="ork-elem dust">`, drawn 28 px) and, beside it, the sign `moon` when that goal waits for the reset, the pair centred; with nothing in it the back is the pattern and its ring alone.
-`<div class="ork-card-back"><span class="ork-card-back__seal"><span class="ork-elem dust"></span></span></div>` draws it; at 120 x 168 a pixel is 8 px, whole. A map card's back stays its details.
+`<div class="ork-card-back"><span class="ork-card-back__seal"><span class="ork-elem dust"></span></span></div>` draws it; at 160 x 224 a cell is 2 px, whole. A map card's back stays its details.
 `.ork-card.ork-plus` is the new goal's card, face up, its face the `plus` icon centred at 28 px and nothing else; `.ork-deck` is a pile (the backs' edges, `--ork-deck-i`, the top back) with the
 + card lying off its top, to the left, a little up and turned by the lean token: a transform, still at rest and under reduced motion. The page gives the deck its width and room at its left.
 

@@ -129,6 +129,7 @@ export function Parties({ props = {}, close }) {
   const total = sum.length ? { low: sum.reduce((a, b) => a + b.low, 0), high: sum.reduce((a, b) => a + b.high, 0) } : null;
   const setStage = async (s) => { const r = await ask("ideas.stage_set", { stage: s }); if (r) setGot((was) => ({ ...was, stage: r })); };
   const commit = async () => {
+    const mine = over.peek();                                                        // what was over the pane when Start or Save was pressed: only that is closed at the end
     setBusy(true);
     let failed = false;
     for (const { args } of todo) {
@@ -137,7 +138,7 @@ export function Parties({ props = {}, close }) {
     await refreshShell();
     if (!failed && first) await ask("ideas.project_ask", {});
     setBusy(false);
-    if (!failed) close?.();
+    if (!failed && over.peek() === mine) close?.();                                 // the person may have opened the card again meanwhile (the project's questions take a while): that one stays
   };
   const setKind = async (id) => { if (id !== got.kind?.id && (await ask("ideas.project_kind_set", { kind: id }))) await reload(); };      // the person's correction: the parties fitted to it are asked again
   const kind = got.kind?.id || "", kinds = KINDS.some(([id]) => id === kind) || !kind ? KINDS : [[kind, got.kind.words || kind], ...KINDS];

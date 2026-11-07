@@ -368,13 +368,16 @@ TERMS: tuple[Term, ...] = (
     _t("every_version", "every version"),                          # … no deck picked: every version dealt, newest first
     _t("unreleased", "Unreleased"),                                # … the deck on top: what went through the portal after the last version
     _t("past_search", "Search <party>'s past…"),                   # … its search (*Search the past…* on the Orkmaster's tab)
-    _t("past_line", "<party>'s past"),                             # the lich's line in the table's edge, *Design's past ›*
+    _t("past_line", "<party>'s past"),                             # the lich's line in the table's edge, *Design's past ›* (gone with the edge: spec 156 D.5; the word stays for what was written with it)
     _t("project_past", "The project's past"),                      # … on the Orkmaster's tab
     _t("show_on_table", "Show on <party>'s table"),                # a card lifted in the past: that tab, what it touched lit
     _t("open_in_past", "Open in the past"),                        # the conflict's earlier decision: the past, its deck dealt and its card lit (spec 150 E2.1)
     _t("how_works_now", "How it works now"),                      # a goal's row in the chronicle opens the living spec of its part (spec 127, spec 134 A.5)
     _t("changed_by", "changed by"),                                # a spec or a decision a later decision changed: *changed by §238* (spec 134 A.5)
     _t("other_choice", "Other…"),                                  # a question card's last choice: the person's own words
+    _t("party_discard", "<party>'s discard"),                      # Release's lane, the discard through the open tab's eyes: *Discard* on the Orkmaster's tab, *Tech's discard* on a party's (spec 156 D.3, decisions §261.7)
+    _t("new_decision", "A decision is newer than your last look at this party's past"),   # the muted dot on a party's tab (spec 156 D.5, decisions §261.9)
+    _t("checks_before_main", "Checks before main"),                # Release's table while a goal is chosen for main: a skeleton a check (spec 156 D.4, decisions §261.8)
     _t("to_main", "To main"),                                     # merge what is ready in dev into main, by code (the discard's button)
     # Operations (docs/specs/38-operations.md §0): the person's everyday work by templates, across projects
     _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)

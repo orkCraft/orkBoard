@@ -1,14 +1,10 @@
-// The discard (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3, §185.3; docs/specs/101 §4.4, decisions §145.4, §159, §167.7): it lies on the table, at the foot of its last column (the one right of
-// the lanes), the hand card's size, with the word *Discard* above it, on every tab. It was the hand's (hand/discard.js); the hand imports nothing of it. Its sheet is discard.css (the card's anatomy and sizes are the hand's, hand.css).
-// The last goal done lies face up on a card's face (spec 147 A.3, decisions §251: the rune and the done sign at the top, its name in four lines, the heads that did it and the time it took at the foot; *N tasks, in main since HH:MM* where the snapshot says it) with the backs of the others under it; while dev holds goals main lacks (the gate), its
-// window carries the lich's head and its foot *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
-// its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*: each goal ready is a card (table/portal.js, spec 105 F: pressed or dragged it is chosen for the portal in the ring over the pile, which sends that goal alone to main) and **To main** (spec 149 G.1: the goal chosen, or the first ready, goes the portal's way with its checks; dev whole by code only for commits that belong to no goal). No act on main lies on the pile (§160.5): the pile only shows and opens.
-// A goal done in the night (`ideas.night`, hand/nightcard.js) wears a small moon on its card and its row until its result is seen, and on the first look after the night the night's goals are dealt into the pile one by one (docs/specs/128 C.3, decisions §206.9).
-// The ring in it also holds the road's two corners, Release and Live, and the gate of skeletons while a goal's way into main is checked (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, portal.js, road.js).
-// With no gate (dev and main one branch, or no main: `gateData.same`, docs/specs/113-a-project-with-no-preview-or-no-gate.md §4, decisions §191.2) the end is the label and the pile's place or the pile alone: no ring, no portal, no corners.
-// The end is laid for what it holds (decisions §247.1, spec 140 A1; before, at the wide width, always: docs/specs/110 §3.2, decisions §185, §186): **the discard is drawn from its first goal done** (the label *Discard* and the pile); with nothing done and nothing
-// ready for main nothing lies there, no frame (no `.ork-card-place`) and no word. The portal's ring over it is drawn only while a goal is ready for main or its checks run, else the road's two corners alone (portal.js); with none of these
-// the end is not laid at all and the table gains its width (discard.css). At the narrow width, as before, no part with nothing done and nothing ready for main.
+// The discard (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3, §185.3; docs/specs/101 §4.4, decisions §145.4, §159, §167.7). **At the wide width it is Release's lane** (table/lane.js, docs/specs/156-one-pick-and-the-release-column.md D.3,
+// decisions §261.7): the frame's last column, on every tab, through the open tab's eyes, its cards whole and each picked; this file gives it the face of a goal done (`DoneFace`), the goals done and not yet seen (`shownDone`: the night's goals still to be dealt lie out
+// of it until their turn, `useNightDeal`) and what a card says of itself. **At the narrow width** (under 760 px) it is what it was: the pile at the foot of the lanes' end (`.table-end`), the hand card's size, with the word *Discard* above it and the portal above that while a
+// goal is chosen (portal.js); the last goal done lies face up with the backs of the others under it, the lich's head and *n goals ready for main* on its back when nothing is done to see; pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
+// its Result and tells the host it was seen, `ideas.seen`) and *Ready for main*, each goal ready a card chosen for the portal (spec 105 F), and **To main** (spec 149 G.1). No act on main lies on the pile (§160.5): the pile only shows and opens.
+// A goal done in the night (`ideas.night`, hand/nightcard.js) wears a small moon on its card until its result is seen, and on the first look after the night the night's goals are dealt one by one (docs/specs/128 C.3, decisions §206.9).
+// With no gate (dev and main one branch, or no main: `gateData.same`, docs/specs/113 §4, decisions §191.2) there is no portal and no goal ready for main. The end is laid for what it holds (decisions §247.1): from the first goal done, else nothing.
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
@@ -29,13 +25,13 @@ const EDGES = 3;
 const GAP_MS = 380;                                       // the night's goals are dealt into the pile this far apart (on the first look after the night: spec 128 C.3)
 
 /** The goals done and not yet seen that the pile shows: the night's goals still to be dealt (nightcard.js `nightFirst`) lie out of it until their turn. */
-function shownDone() {
+export function shownDone() {
   const first = nightFirst.value, held = first ? new Set(first.goals.slice(first.n)) : null;
   return held?.size ? doneOf().filter((g) => !held.has(g.slug)) : doneOf();
 }
 
 /** Deals the night's goals into the pile one by one, a gap apart, from the first look (`nightFirst`); `n` is kept on the record, so a pile drawn again does not deal them again. Returns the slug just dealt while its card flies, else "". */
-function useNightDeal() {
+export function useNightDeal() {
   const first = nightFirst.value, [, tick] = useState(0);
   useEffect(() => {
     if (!first || first.n >= first.goals.length) return undefined;
@@ -52,7 +48,7 @@ function useNightDeal() {
 }
 
 /** The seconds a goal took: from its first task started to its last finished; NaN when the tasks carry no such times. */
-function tookOf(tasks = []) {
+export function tookOf(tasks = []) {
   const from = Math.min(...tasks.map((t) => Date.parse(t.started || "")).filter(Number.isFinite)), to = Math.max(...tasks.map((t) => Date.parse(t.finished || "")).filter(Number.isFinite));
   return Number.isFinite(from) && Number.isFinite(to) ? secondsBetween(new Date(from).toISOString(), new Date(to).toISOString()) : NaN;
 }
@@ -68,7 +64,7 @@ function headsOf(tasks = []) {
 }
 
 /** *3 tasks, in main since 11:40*: only where the snapshot says when the goal reached main (`in_main`, an ISO time of the host); "" otherwise — nothing is made up. */
-function mainLine(g) {
+export function mainLine(g) {
   const at = String((mapData.value?.nodes || []).find((n) => n.slug === g.slug)?.in_main || "").slice(11, 16), n = g.tasks.length;
   return at && n ? `${n} ${n === 1 ? "task" : "tasks"}, ${IN_MAIN} ${at}` : "";
 }
@@ -90,7 +86,21 @@ export async function seeResult(g) {
 /** Whether there is a pile: a goal done, or goals ready for main. */
 export const hasDiscard = () => shownDone().length > 0 || !!readyOf();
 
-/** The pile: the last goal done, the backs under it, the lich's head and what is ready for main. */
+/** The face of a goal done (spec 147 A.3, decisions §251): the rune and the done sign, its name, its window, the heads that did it and the time it took. The narrow pile's top card and every card of Release's lane (lane.js, spec 156 D.3) wear it.
+ *  `on`: it is lit (the narrow view open) or picked (the lane); `line`: the words under the name when it has no window. */
+export function DoneFace({ g, on = false, picked = false, dealing = "", moon = false, line = "", label, onPress }) {
+  const made = lastMade(g.tasks), windowed = windowOf({ made, picture: g.picture }).kind !== "none";       // its window between the name and the foot: the last made, else the goal's picture, else its line (spec 148 B.3)
+  return html`<button key=${dealing ? g.slug : "top"} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-card--corners hand-done${g.element ? ` el-${g.hue || g.element}` : ""}`, { "is-on": on, "ork-picked": picked, "ork-deal": !!dealing })} data-slug=${g.slug} data-moon=${moon ? "1" : undefined} data-dealt=${dealing || undefined}
+      aria-label=${label} aria-expanded=${picked ? undefined : on ? "true" : "false"} aria-pressed=${picked ? "true" : undefined} onClick=${onPress} ...${leans}>
+      <${CornerTop} rune=${{ name: g.element, hue: g.hue, dim: !g.element }} kind="check" signal="success" />
+      <span class="hand-done__name" title=${g.title}>${g.title}</span>
+      ${windowed ? html`<${CardWindow} of=${{ made, picture: g.picture, name: g.title }} />` : line && html`<span class="hand-done__line" title=${line}>${line}</span>`}
+      ${moon && html`<span class="hand-done__moon" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
+      <${CornerFoot} who=${{ heads: headsOf(g.tasks) }} much=${muchOf({ done: true, took: tookOf(g.tasks) })} />
+    </button>`;
+}
+
+/** The pile at the narrow width: the last goal done, the backs under it, the lich's head and what is ready for main. */
 export function Discard({ dealing = "" }) {
   const done = shownDone(), ready = readyOf(), moons = nightMoons();
   if (!done.length && !ready) return null;
@@ -98,17 +108,9 @@ export function Discard({ dealing = "" }) {
   const press = () => { if (lit) closeOver(); else openOver("discard", {}, null, "Done"); };
   const label = `Done${top ? `: ${top.full}` : ""}${words ? `. ${words}` : ""}`;
   const lich = lichOf(), line = top ? words || mainLine(top) : "";
-  const made = top ? lastMade(top.tasks) : null, windowed = !!top && windowOf({ made, picture: top.picture }).kind !== "none";       // its window between the name and the foot: the last made, else the goal's picture, else its line (spec 148 B.3)
   return html`<div class="ork-deck table-discard" data-n=${under} title="Done">
     ${Array.from({ length: under }, (_, k) => under - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i}`} aria-hidden="true"></i>`)}
-    ${top ? html`<button key=${dealing ? top.slug : "top"} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-card--corners hand-done${top.element ? ` el-${top.hue || top.element}` : ""}`, { "is-on": lit, "ork-deal": !!dealing })} data-slug=${top.slug} data-moon=${moon ? "1" : undefined} data-dealt=${dealing || undefined}
-        aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press} ...${leans}>
-        <${CornerTop} rune=${{ name: top.element, hue: top.hue, dim: !top.element }} kind="check" signal="success" />
-        <span class="hand-done__name" title=${top.title}>${top.title}</span>
-        ${windowed ? html`<${CardWindow} of=${{ made, picture: top.picture, name: top.title }} />` : line && html`<span class="hand-done__line" title=${line}>${line}</span>`}
-        ${moon && html`<span class="hand-done__moon" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
-        <${CornerFoot} who=${{ heads: headsOf(top.tasks) }} much=${muchOf({ done: true, took: tookOf(top.tasks) })} />
-      </button>`
+    ${top ? html`<${DoneFace} g=${top} on=${lit} dealing=${dealing} moon=${moon} line=${line} label=${label} onPress=${press} />`
       : html`<button type="button" class=${cls("ork-card-back hand-back hand-done", { "is-on": lit })} aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press}>
         <span class="hand-back__ready"><${Head} race=${lich.race} tier=${lich.tier} /><span class="cap" title=${words || undefined}>${words}</span></span></button>`}
   </div>`;
@@ -145,12 +147,6 @@ export function DiscardEnd() {
   const dealing = useNightDeal(), pile = hasDiscard();
   if (!pile) return null;
   return html`<div class="table-end" data-end="discard">${!noGate() && html`<${Portal} />`}<span class="table-end__label">Discard</span><${Discard} dealing=${dealing} /></div>`;
-}
-
-/** The discard in the table's edge at the wide width (spec 150 D.2, frame/edge.js): the word and the pile, the pile cut from its foot when the window is short. Nothing while nothing is done or ready. */
-export function EdgeDiscard() {
-  const dealing = useNightDeal();
-  return hasDiscard() ? html`<div class="edge-discard" data-end="discard"><span class="table-end__label">Discard</span><${Discard} dealing=${dealing} /></div>` : null;
 }
 
 drawn("discard", DiscardView);

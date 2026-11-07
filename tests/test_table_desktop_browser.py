@@ -405,10 +405,12 @@ def test_plus_opens_the_parties_in_the_pane_and_a_potion_opens_what_used_the_too
     pg.get_by_role("button", name="Back").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
     if wide(w):
+        narrow.unroll_drum(pg)
         pg.locator('.hand-pot[data-provider="codex"]').click()
         pg.locator('.table-over[data-kind="limits"] .arena-usage').wait_for(timeout=WAIT_MS)
         assert title(pg) == "Board · Codex: what used it"
         assert ("ideas.usage", {"provider": "codex", "scope": "project"}) in host.log
+    pg.mouse.move(640, 300)                                                                                                # the row the drum unrolled folds: it lay over the die
     pg.get_by_role("button", name="Stop all").click()
     for _ in range(40):
         if ("halt", {}) in host.log:
@@ -1066,19 +1068,23 @@ def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_
     lit = lambda: sorted(pg.locator(".table-tab.is-lit").evaluate_all("els => els.map((e) => e.dataset.tab)"))        # noqa: E731
     assert lit() == [] and pg.locator(".table-tab .is-marked").count() == 0
     claude, codex = pg.locator('.hand-pot[data-provider="claude"]'), pg.locator('.hand-pot[data-provider="codex"]')
+    narrow.unroll_drum(pg)
     claude.hover()
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
     assert lit() == ["art", "game", "release", "tech"]                                                                    # every party that does or checks on Claude (marks drawn or not), none of Codex's alone
     assert pg.locator('.table-tab[data-tab="game"]').evaluate("e => [getComputedStyle(e).outlineStyle, getComputedStyle(e).backgroundColor]")[0] == "none"      # lit as a tab hovered is, not by a 1 px outline
     pg.mouse.move(5, 300)
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
-    codex.focus()                                                                                                         # the focus lights too
+    pg.locator(".hand-mana__drum").focus()                                                                                   # the focus unrolls the row, and lights too
+    pg.locator(".hand-mana[data-open]").wait_for(timeout=WAIT_MS)
+    codex.focus()
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
     assert lit() == ["release", "tech"]
     pg.evaluate("() => document.activeElement.blur()")
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
     assert claude.get_attribute("aria-label").endswith(". 3 parties do on it, 2 parties check on it")                       # the parties that do and check on it: Lean checks on none
     assert codex.get_attribute("aria-label") == "Codex: 18% of the day left. 1 party does on it, 1 party checks on it" and codex.get_attribute("title") == codex.get_attribute("aria-label")
+    narrow.unroll_drum(pg)
     claude.hover()
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
     shot(pg, "table-potion-marks-wide.png")
@@ -1300,15 +1306,15 @@ def test_a_form_over_the_pane_covers_the_tables_end_and_the_column_and_the_hand_
     from tests.test_discard_table_browser import open_maps
     pg, host, log = open_maps(gui, "wide")
     try:
-        pg.locator(".frame-edge .edge-discard").wait_for(timeout=WAIT_MS)
+        pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
         pg.get_by_role("button", name="The Orkmaster's menu").click()
         pg.get_by_role("menuitem", name="Settings").click()
         pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-end, .ork-portal-ring, .edge-discard").count() == 0 and pg.locator('.table-body[data-end="form"]').count() == 1, "no ring and no discard beside a form"
-        assert pg.locator(".frame-edge > .hand-die, .frame-edge > .hand-mana").count() == 2, "the die and the potions stay: they are the hand's"
+        assert pg.locator(".table-end, .ork-portal-ring, .release-lane").count() == 0 and pg.locator('.table-body[data-end="form"]').count() == 1, "no ring and no discard lane beside a form"
+        assert pg.locator(".hand-end > .hand-die, .hand-end > .hand-mana").count() == 2, "the die and the potions stay: they are the hand's"
         assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
         pg.keyboard.press("Escape")
-        pg.locator(".frame-edge .edge-discard").wait_for(timeout=WAIT_MS)
+        pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1351,10 +1357,10 @@ def test_start_lays_the_table_in_order_and_says_so_and_the_ring_waits_for_its_fi
     pg.locator('[data-place="table"] .fo-chair').first.click()                                    # a chair pressed seats its leader (spec 150 G.2.3)
     pg.locator('[data-act="start"]:not([disabled])').click()
     pg.locator(".frame[data-laying] .table-tabcell").first.wait_for(timeout=WAIT_MS)
-    delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.frame-edge > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
+    delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.hand-end > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
     assert delays["tab"] < delays["chair"] < delays["die"] < delays["plus"], delays
     pg.locator(".hand-field [data-first-lit]").wait_for(timeout=WAIT_MS)                       # the + card's card is open, its first corner lit (spec 150 G.2.4): no tour
-    assert pg.locator(".table-end__label, .ork-card-place").count() == 0, "§247.1: the discard's place comes with its first content"
+    assert pg.locator(".table-end, .ork-card-place, .release-lane .hand-done").count() == 0, "§247.1: no pile and no dashed place before the first content (Release's lane is there, empty)"
     pg.locator('.frame:not([data-laying])').wait_for(timeout=WAIT_MS)
     pg.locator(".fo-bubble").wait_for(state="detached", timeout=WAIT_MS)
     assert not d.errors, d.errors

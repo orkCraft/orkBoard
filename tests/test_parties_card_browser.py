@@ -55,7 +55,7 @@ def test_the_card_is_large_says_what_the_project_is_and_never_covers_the_potions
     assert "The parties for skyhop".upper() in pg.locator(".pc-title").inner_text().upper()
     assert pg.locator(".pc-kind select").input_value() == "game"
     assert pg.locator('[data-how="1"]').inner_text().startswith("read from ")
-    pot = pg.locator(".hand-pot").first.bounding_box()
+    pot = pg.locator(".hand-mana").bounding_box()                                                                      # the drum (the potions lie in a row only while it is unrolled)
     assert box["x"] + box["width"] <= pot["x"] or box["y"] + box["height"] <= pot["y"]
     assert pg.locator(".parties__left, .parties__right").count() == 0, "its half-and-half layout is gone"
     assert not d.errors, d.errors
@@ -161,6 +161,7 @@ def test_its_foot_says_what_they_cost_and_start_makes_the_parties_and_lays_the_t
     pg.locator('[data-act="start"]').click()
     pg.locator(CARD).wait_for(state="detached", timeout=WAIT_MS)
     pg.locator('.frame[data-laid="1"]').wait_for(timeout=WAIT_MS)
+    until(pg, lambda: first_open.kept(d.host.ideas.state_dir))                  # the table is laid as the parties are made; Start's last step (the project's questions) keeps it a moment after
     assert first_open.kept(d.host.ideas.state_dir) is True
     assert set(p["recipe"] for p in parties_of(d.host).values()) >= {"game-design", "art", "release"}
     assert not d.errors, d.errors
@@ -170,6 +171,7 @@ def test_later_the_same_card_saves_only_what_changed_from_the_next_task(desk, ga
     d, pg = open_first(desk, game)
     pg.locator('[data-act="start"]').click()
     pg.locator(CARD).wait_for(state="detached", timeout=WAIT_MS)
+    pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value === null)", timeout=WAIT_MS)      # the start has finished (its last step closes the card it came from): the chair is pressed after it
     pg.locator(".table-chair").click()
     pg.locator(f"{CARD} .pc-row").first.wait_for(timeout=WAIT_MS)
     save = pg.locator('[data-act="save"]')
@@ -186,6 +188,7 @@ def test_the_leaders_seat_of_a_made_party_says_what_it_keeps_of_the_project(desk
     d, pg = open_first(desk, game)
     pg.locator('[data-act="start"]').click()
     pg.locator(CARD).wait_for(state="detached", timeout=WAIT_MS)
+    pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value === null)", timeout=WAIT_MS)      # the start has finished (its last step closes the card it came from): the chair is pressed after it
     pg.locator(".table-chair").click()
     row(pg, "art").locator(".pc-lead").click()
     facts = pg.locator(".pc-seat [data-facts]")
