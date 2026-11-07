@@ -17,8 +17,8 @@ FIRST = "Lay the tables"
 TABLES = "pages/tables"
 
 
-def _seated(root: Path) -> list[tuple[dict, heroes.Hero]]:
-    """The parties with a leader and a hero to lay a table for, in the Board's order: not General, not Release's, none of a craft without a hero."""
+def _parties(root: Path) -> list[tuple[dict, heroes.Hero]]:
+    """The parties with a leader and a hero, in the Board's order: not General, not Release's, none of a craft without a hero."""
     out = []
     for t in ideas.tracks(root, make=False):
         if t["slug"] == ideas.GENERAL or not t.get("leader"):
@@ -28,6 +28,11 @@ def _seated(root: Path) -> list[tuple[dict, heroes.Hero]]:
             continue
         out.append((t, hero))
     return out
+
+
+def _seated(root: Path) -> list[tuple[dict, heroes.Hero]]:
+    """The parties whose hero has a frame to lay (§267.2): a craft's default hero lays its craft's map, read from the code, so it has nothing to keep."""
+    return [(t, h) for t, h in _parties(root) if not h.default and h.places]
 
 
 def _where(root: Path) -> str:
@@ -40,7 +45,7 @@ def _where(root: Path) -> str:
 
 
 def _frame(hero: heroes.Hero) -> str:
-    return "its craft's map" if hero.default or not hero.places else ", ".join(name for name, _ask in hero.places)
+    return ", ".join(name for name, _ask in hero.places)
 
 
 def _line(party: dict, hero: heroes.Hero) -> str:
@@ -59,14 +64,18 @@ def _lay(root: Path, state_dir: Path, title: str, body: str, route: list[str]) -
 
 
 def lay_first(root: Path, state_dir: Path) -> str:
-    """*Lay the tables* for every party seated, once. Records `tables_laid` in `<state_dir>/project.json` (its other keys kept)."""
+    """*Lay the tables* for every party whose hero has a frame, once. Records `tables_laid` in `<state_dir>/project.json` (its other keys kept), also when
+    every hero is its craft's default and nothing is laid: a hero taken later lays its own goal (`lay_party`)."""
     root, state_dir = Path(root), Path(state_dir)
     path = state_dir / FILE
     with ideas.LOCK:
         if (ideas._json(path) or {}).get("tables_laid") is True:
             return ""
+        if not _parties(root):
+            return ""                                  # no party seated yet: asked again at the next start
         seated = _seated(root)
-        if not seated:
+        if not seated:                                 # every hero its craft's default: its map is read from the code, nothing to lay (§267.2)
+            ideas._write_json(path, {**(ideas._json(path) or {}), "tables_laid": True})
             return ""
         body = "Lay each party's table as its hero keeps it:\n\n" + "\n".join(_line(t, h) for t, h in seated) + "\n\n" + _rule(root)
         slug = _lay(root, state_dir, FIRST, body, [t["slug"] for t, _h in seated])
