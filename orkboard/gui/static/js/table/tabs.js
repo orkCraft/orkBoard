@@ -27,6 +27,7 @@ import { Marks, marksOf, marksWords, projectMarks, runsOn } from "./tabmarks.js"
 import { AskBubble, askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { EmptyChair, useOffer } from "./chairs.js";
 import { PresenceDoor } from "./presence.js";
+import { Backpack } from "./backpack.js";                    // the inventory's backpack, before *New party* (spec 157 D.1)
 import { laidNow } from "./laying.js";
 import { isWorking, moodOf } from "./moods.js";
 import { answeringOn } from "./passing.js";
@@ -126,6 +127,7 @@ export function Tabs({ parties, all = parties, current, narrow, compact, column 
         alert=${hasAlert(g) ? `${theLeader(g.leader?.name)} has an alert on the table` : ""} compact=${compact} narrow=${narrow} onPick=${() => leave(g.slug)} />`)}
     </div>
     <div class="table-tabs__end">
+      ${laid && html`<${Backpack} small=${narrow} />`}
       ${offer && html`<${EmptyChair} from=${from} narrow=${narrow} />`}
       <span class="table-grow"></span>
       ${laid && html`<${PresenceDoor} small=${narrow} />`}

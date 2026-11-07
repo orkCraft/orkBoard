@@ -16,10 +16,18 @@ export const tab = signal(keptTabs()[projectKey()] || ORKMASTER);   // "orkmaste
 export const picked = signal("");      // the picked goal's slug (the code's idea), "" for the whole project
 export const over = signal(null);      // what is open over the pane: {kind, title, from, props}, null for the map
 export const lifted = signal("");      // the key of the one lifted card (a map's card or a hand's card), "" for none
+export const inventory = signal(null);   // the inventory (the merchant's stall, spec 157 D): the chair open, "" the Orkmaster's, a party's slug a leader's; null while it is shut
+export const carried = signal("");       // the slot of the card of what you carry lifted in the stall (table/stallstate.js), "" for none
+
+/** The chair of a tab, as the stall says it: "" for the Orkmaster's. */
+export const chairOf = (slug) => (!slug || slug === ORKMASTER ? "" : slug);
+export const openInventory = (slug = tab.peek()) => { carried.value = ""; inventory.value = chairOf(slug); };
+export const closeInventory = () => { carried.value = ""; inventory.value = null; };
 
 /** The person opens a tab (never the code under them: §139.3). Kept for the project on this device. */
 export function openTab(slug) {
   tab.value = slug || ORKMASTER;
+  if (inventory.peek() !== null) { carried.value = ""; inventory.value = chairOf(tab.value); }      // a tab pressed while the stall is open picks the chair
   try { localStorage.setItem(TAB_KEPT, JSON.stringify({ ...keptTabs(), [projectKey()]: tab.value })); } catch { /* this run only */ }
 }
 
@@ -35,7 +43,7 @@ export function followTab(title) {
 }
 
 /** The tab kept for the project now shown (on a project switch). */
-export function restoreTab() { tab.value = keptTabs()[projectKey()] || ORKMASTER; }
+export function restoreTab() { tab.value = keptTabs()[projectKey()] || ORKMASTER; closeInventory(); }
 
 /** One thing over the pane (§142): `kind` one of kinds.js `KINDS`, `props` what its face reads, `from` where it came from
  *  (`{title, key}`: the title's *← System* and the card lit on the way back). The next replaces it. */
@@ -105,6 +113,13 @@ effect(() => {
 });
 
 if (typeof addEventListener === "function") {
+  addEventListener("keydown", (e) => {                                   // Esc closes the stall first: a card lifted is lowered, then the stall shuts (spec 157 D.1)
+    if (e.key !== "Escape" || e.defaultPrevented || inventory.peek() === null || over.peek()) return;
+    const el = e.target;
+    if (el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable || el.closest?.(".table-drop, [role=dialog], [role=alertdialog], [role=menu]"))) return;
+    e.preventDefault();
+    if (carried.peek()) carried.value = ""; else closeInventory();
+  });
   addEventListener("popstate", () => {
     if (expectPop > 0) { expectPop -= 1; return; }                       // the step back we took ourselves: `picked` is already none
     const slug = hashSlug();

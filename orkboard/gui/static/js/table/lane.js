@@ -19,6 +19,7 @@ import { PastDecks } from "./pastlane.js";
 import { discardLabel } from "./chroniclewords.js";
 import { ReadyCards, choose, chosenSlug, close, sending } from "./portal.js";
 import { RingAround } from "./ring.js";
+import { backDrop } from "./stalldrop.js";                   // a card of what you carry dropped here goes back to its default while the inventory is open (spec 157 D.4)
 
 /** Whether the lane is drawn: the table is laid and no form covers it. */
 export const laneShown = () => laidNow() && !isForm(over.value);
@@ -42,7 +43,7 @@ export function ReleaseLane({ tab, parties }) {
     if (!again && shownDone().some((x) => x.slug === slug)) act("ideas.seen", { idea: slug });
   };
   const merge = (e) => mergeGate(e);
-  return html`<aside class=${cls("release-lane", { "is-headless": headless })} aria-label=${label} data-lane="release" data-through=${party || undefined}>
+  return html`<aside class=${cls("release-lane", { "is-headless": headless })} aria-label=${label} data-lane="release" data-through=${party || undefined} ...${backDrop()}>
     <span class="table-end__label release-lane__label">${label}</span>
     <div class="release-lane__scroll" ref=${scroll}>
       ${(top || sending.value) && html`<${RingAround} slug=${top?.slug || null}>${top && html`<${ReadyCards} goals=${[top]} main=${ready.main} on=${now} onPress=${press} />`}<//>`}
