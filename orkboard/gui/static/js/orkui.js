@@ -53,8 +53,8 @@ export function Door({ open = false, small = false, lit = false }) {
 const LEADER_RACES = ["shaman", "dryad", "imp", "fairy", "unicorn", "lich"];
 /** The moods a leader's face has besides calm (the plain file): focused, worried, no, pleased, asleep. */
 export const MOODS = ["focused", "worried", "no", "pleased", "asleep"];
-/** Whether a head has faces: a leader's race, or the crowned ork. */
-export const hasFaces = (race, tier) => LEADER_RACES.includes(race) || (race === "peon" && tier === "crown");
+/** Whether a head has faces: a leader's race, a hero's head (`hero-<id>`, orkUI 0.34.0, spec 157 B), or the crowned ork. */
+export const hasFaces = (race, tier) => LEADER_RACES.includes(race) || String(race).startsWith("hero-") || (race === "peon" && tier === "crown");
 
 /** A race's head (orkUI races/), pixelated: 24 x 22 (its @2x for a sharp screen), a pixel a cell, an accent in a line of text, `mid` 36 x 33
  *  (a member's head, from the @2x) or `big` 48 x 44 (the leader's); never 12 x 11 (spec 96 §2.1). A head is an accent, never a picture to

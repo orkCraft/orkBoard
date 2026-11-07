@@ -34,9 +34,6 @@ Places read by code, the ways of answering's engine, the starts by priority and 
 ## Stages
 Spec 157's parts in its waves: 1 A (the heroes), B (orkUI's heads) · 2 C (the stall's host) · 3 D (the stall's face), E (the hero's table), F (lay the tables).
 
-## Not built
-- B, the heroes' heads in orkUI: orkUI's repository was not reachable from the session; every hero is drawn with its race's elder head until its `hero-<id>` head is in orkUI (spec 157 B, §267.6).
-
 ## Open questions
 
 ## Decisions
