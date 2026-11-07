@@ -231,6 +231,16 @@ button { font: inherit; }
 .potions { display: flex; gap: var(--ork-4); align-items: flex-end; margin-top: auto; padding-bottom: 60px; }
 .potion-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .potion-box img { width: 14px; height: 14px; }
+.win.inv .potions { padding: 6px; border: var(--ork-line) solid var(--ork-frame); cursor: pointer; }
+.win.inv .potions:hover, .win.inv .potions.is-on { border-color: var(--ork-ink); }
+.vial-add { display: none; width: 28px; height: 54px; border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-faint); place-items: center; font: var(--ork-type-caption); }
+.win.inv .vial-add { display: grid; }
+.pile-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border: 2px dashed transparent; transition: border-color .15s; }
+.win.inv .pile-wrap { border-color: var(--ork-frame); }
+.pile-wrap.is-over { border-color: var(--ork-danger) !important; }
+.pile-wrap small { display: none; max-width: 110px; text-align: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; }
+.win.inv .pile-wrap small { display: block; }
+.pile.took { animation: pulse .5s var(--ork-motion-ease); }
 .flying { position: fixed; z-index: 100; pointer-events: none; margin: 0; }
 
 /* ---------- the textures, side by side ---------- */
@@ -260,7 +270,7 @@ button { font: inherit; }
 <main class="mk-main">
 <section class="mk-sec" id="inv">
   <h1>1 · The inventory: the chairs say whose, the hand holds it, the table lays the ways</h1>
-  <p class="mk-line"><b>A chair is a craft</b>: empty, its back shows its table's texture; taken, the hero's race says the craft (a race is a craft in a project), so a new hero changes the face, never the craft. A hero's card: the craft's texture at its top left (whose), the one silhouette of every hero at its top right (what card). The chairs stand in the route's order; the Orkmaster seats the crafts of the project's stage, the empty chair seats one sooner, and at Live the Orkmaster lays a card in the hand. <b>The backpack</b> at the chairs' end opens the inventory: the table's edge is stitched, the chairs stay. <b>Pick a chair</b>:
+  <p class="mk-line"><b>A chair is a craft</b>: empty, its back shows its table's texture; taken, the hero's race says the craft (a race is a craft in a project), so a new hero changes the face, never the craft. A hero's card: the craft's texture at its top left (whose), the one silhouette of every hero at its top right (what card). The chairs stand in the route's order; the Orkmaster seats the crafts of the project's stage, the empty chair seats one sooner, and at Live the Orkmaster lays a card in the hand. The Orkmaster's hand holds four cards (<i>When</i>, <i>How much</i>, <i>What leaves this computer</i>, <i>The Orkmaster's questions</i>); the potions at the table's edge are pressed as they are, and <b>the discard pile takes a card back to its default</b>. <b>The backpack</b> at the chairs' end opens the inventory: the table's edge is stitched, the chairs stay. <b>Pick a chair</b>:
     the Orkmaster's is the whole project, a leader's its party; the table takes that chair's texture. <b>Press the chair again</b> and its heroes
     lie on the table: a hero brings its school, its flow, its size and its temper. <b>The hand</b> holds that chair's other settings; a card
     pressed lays its ways on the table, priced against yours and hatched on the potions. What you set yourself is marked <i>yours</i>, and stays
@@ -293,7 +303,7 @@ button { font: inherit; }
       </div>
       <div class="edge">
         <div class="edge__ring"><span class="ork-portal-ring"></span></div>
-        <div class="pile"><span class="ork-card-back small"></span><span class="ork-card-back small"></span></div>
+        <div class="pile-wrap" id="pile"><div class="pile"><span class="ork-card-back small"></span><span class="ork-card-back small"></span></div><small>Drop a card here: it goes back to its default</small></div>
         <div class="potions" id="edge-potions"></div>
       </div>
     </div>
@@ -414,8 +424,7 @@ let stage = "made";
 /* ---------------- the chairs and what each holds ---------------- */
 const CHAIRS = [
   { id: "keeper", lab: "Guild app", sub: "the whole project", head: RACE("peon-crown"), tex: "felt",
-    cards: ["c-pots", "c-target", "c-look", "c-starts", "c-hours", "c-cloud", "c-push", "c-cap", "c-gate", "c-low", "c-decision"],
-    groups: [["When and how much", ["c-pots", "c-target", "c-look", "c-starts", "c-hours", "c-cloud", "c-push", "c-cap", "c-gate"]], ["How you are asked", ["c-low", "c-decision"]]] },
+    cards: ["c-when", "c-much", "c-leaves", "c-asks"] },
   { id: "product", lab: "Product", lead: "lead-product", tex: "contours", race: "knight", cards: ["c-hero-product", "c-ans-pain", "c-cf-product", "c-tool-product", "c-tier-product"] },
   { id: "design", lab: "Design", lead: "lead-design", tex: "dots", race: "elf", cards: ["c-hero-design", "c-ans-icon", "c-cf-design", "c-tool-design", "c-tier-design"] },
   { id: "tech", lab: "Tech", lead: "lead-tech", tex: "grid", race: "peon", cards: ["c-hero-tech", "c-ans-tier", "c-ans-test", "c-cf-tech", "c-tool-tech", "c-tier-tech"] },
@@ -455,24 +464,29 @@ const SLOTS = [
   { id: "pot-1", kind: "pot", lab: "First", base: "claude", opts: ["claude", "codex", "cursor", "agy"] },
   { id: "pot-2", kind: "pot", lab: "Then", base: "codex", opts: ["codex", "cursor", "agy", "none"] },
   { id: "pot-3", kind: "pot", lab: "Then", base: "none", opts: ["none", "cursor", "agy"] },
-  { id: "target", kind: "tok", lab: "How deep", base: "balance", opts: ["thrift", "balance", "quality"], star: "quality" },
-  { id: "look", kind: "tok", lab: "Give me time to look", base: "2h", opts: ["30m", "2h", "tonight", "nowait"] },
-  { id: "start-high", kind: "tok", lab: "High goals start", base: "now", opts: ["now", "week", "night", "hand"] },
-  { id: "start-normal", kind: "tok", lab: "Normal goals start", base: "week", opts: ["now", "week", "night", "hand"] },
-  { id: "start-low", kind: "tok", lab: "Low goals start", base: "night", opts: ["now", "week", "night", "hand"] },
-  { id: "hours", kind: "tok", lab: "When I am here", base: "days", opts: ["days", "evenings", "weekend"] },
-  { id: "cloud", kind: "tok", lab: "While it sleeps", base: "cloud-off", opts: ["cloud-off", "cloud-on", "cloud-week"] },
-  { id: "push", kind: "tok", lab: "After merging", base: "keep", opts: ["keep", "push"] },
-  { id: "cap", kind: "tok", lab: "The day's cap", base: "cap5", opts: ["cap3", "cap5", "cap8"] },
+  { sl: "Deep", id: "target", kind: "tok", lab: "How deep", base: "balance", opts: ["thrift", "balance", "quality"], star: "quality" },
+  { sl: "Look", id: "look", kind: "tok", lab: "Give me time to look", base: "2h", opts: ["30m", "2h", "tonight", "nowait"] },
+  { sl: "High", id: "start-high", kind: "tok", lab: "High goals start", base: "now", opts: ["now", "week", "night", "hand"] },
+  { sl: "Normal", id: "start-normal", kind: "tok", lab: "Normal goals start", base: "week", opts: ["now", "week", "night", "hand"] },
+  { sl: "Low", id: "start-low", kind: "tok", lab: "Low goals start", base: "night", opts: ["now", "week", "night", "hand"] },
+  { sl: "Here", id: "hours", kind: "tok", lab: "When I am here", base: "days", opts: ["days", "evenings", "weekend"] },
+  { sl: "Asleep", id: "cloud", kind: "tok", lab: "While it sleeps", base: "cloud-off", opts: ["cloud-off", "cloud-on", "cloud-week"] },
+  { sl: "Merged", id: "push", kind: "tok", lab: "After merging", base: "keep", opts: ["keep", "push"] },
+  { sl: "Cap", id: "cap", kind: "tok", lab: "The day's cap", base: "cap5", opts: ["cap3", "cap5", "cap8"] },
   { id: "gate", kind: "tok", lab: "The gate", base: "gate", opts: ["gate"], fixed: true },
-  { id: "ans-low", kind: "ans", lab: "A Low goal is ready", who: "keeper", base: "pen", opts: ["pen", "choice", "choice-2h", "fork", "silent"], star: "choice" },
-  { id: "cf-decision", kind: "ans", lab: "A conflict with a decision", who: "keeper", base: "ask-fork", opts: ["ask", "ask-fork", "declare", "c-silent"], locked: { declare: L, "c-silent": L } },
+  { sl: "Low goal", id: "ans-low", kind: "ans", lab: "A Low goal is ready", who: "keeper", base: "pen", opts: ["pen", "choice", "choice-2h", "fork", "silent"], star: "choice" },
+  { sl: "Decision", id: "cf-decision", kind: "ans", lab: "A conflict with a decision", who: "keeper", base: "ask-fork", opts: ["ask", "ask-fork", "declare", "c-silent"], locked: { declare: L, "c-silent": L } },
   { id: "ans-dev", kind: "ans", lab: "A result holds: into dev", who: "release", base: "silent", opts: ["pen", "choice", "choice-2h", "silent"] },
   { id: "ans-main", kind: "ans", lab: "To main", who: "release", base: "fork", opts: ["pen", "choice", "fork", "choice-2h", "silent"], locked: { "choice-2h": M, silent: M } },
   { id: "craft", kind: "craft", lab: "A new party", base: null, opts: ["run", "marketing"] },
 ];
 const BY = Object.fromEntries(SLOTS.map(s => [s.id, s]));
 const CARDS = {
+  "c-when": { parts: ["look", "start-high", "start-normal", "start-low", "hours"], idx: ["play", "When"], what: "When work starts",
+    say: "One chain: a spec made waits for your look, then starts by its goal's priority, and questions come in your hours. High risk and open questions always wait for you, whatever these say." },
+  "c-much": { parts: ["target", "cap"], idx: ["balance", "Much"], what: "How much it spends", say: "How deep every step reasons, and how much what answers by itself may spend a day. It is Release week: I would take <b>Quality</b> until Friday." },
+  "c-leaves": { parts: ["push", "cloud"], idx: ["git-merge", "Leaves"], what: "What leaves this computer", say: "What goes out by itself: your code to origin after a merge, and the work to the cloud while this computer sleeps, <b>paid from your API key</b>." },
+  "c-asks": { parts: ["ans-low", "cf-decision"], idx: ["question", "Asks"], what: "The Orkmaster's questions", say: "The questions no one party owns. A decision is never rewritten: only you replace it." },
   "c-pots": { parts: ["pot-1", "pot-2", "pot-3"], idx: ["potion", "Potions"], what: "The potions' order", say: "The first potion is where decisions run and work starts; prices are said in its week. The work moves on to the next when one runs out." },
   "c-target": { parts: ["target"], idx: ["balance", "Deep"], say: "It is Release week: I would spend more on the checks, <b>Quality</b>, until Friday." },
   "c-look": { parts: ["look"], idx: ["clock", "Look"], say: "How long a spec made waits for your look before its plan goes by itself." },
@@ -493,7 +507,7 @@ const CARDS = {
   CARDS[`c-tier-${p}`] = { parts: [`tier-${p}`], idx: ["tier", "Tier"], say: "How heavy a model its seats work on: the gear on their heads." };
   CARDS[`c-cf-${p}`] = { parts: [`cf-${p}`], say: "When a new goal goes against this party's earlier spec." };
 });
-CARDS["c-hero-release"] = { fixed: true, parts: [], say: "Release is in every project, its leader the lich: its hero is not traded. Its questions are beside it." };
+CARDS["c-hero-release"] = { fixed: true, parts: ["gate"], say: "Release is in every project, its leader the lich: its hero is not traded. Its questions are beside it." };
 CARDS["c-ans-pain"] = { parts: ["ans-pain"], say: "A pain someone has, with no number to tell it is gone." };
 CARDS["c-ans-icon"] = { parts: ["ans-icon"], say: "You picked orkUI's set all week: it could go <b>Silent</b>." };
 CARDS["c-ans-tier"] = { parts: ["ans-tier"], say: "You answered the cheaper tier every time." };
@@ -607,15 +621,21 @@ function pickChair(id) {
 /* a card of the hand */
 function handCard(cid) {
   const c = CARDS[cid];
-  if (c.fixed) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}"><div class="hc__idx">${pennant("stones", 2)}${LOCK}</div>${SIL()}<div class="hc__body">
+  if (c.fixed) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true"><div class="hc__idx">${pennant("stones", 2)}${LOCK}</div>${SIL()}<div class="hc__body">
     <img class="hd" src="${RACE("lich-elder")}" width="48" height="44" alt="" style="margin:4px 0"><p class="hc__val">Release Night King</p><p class="hc__line">in every project</p></div></div>`;
   const s = BY[c.parts[0]], v = val(s);
   let idx, body;
+  if (c.parts.length > 1 && s.kind !== "hero") {
+    const [mk, word] = c.idx, mark = ["clock", "eye", "coins", "git-merge"].includes(mk) ? ICON(mk) : SIGN(mk);
+    const lines = c.parts.map(p => `<span style="color:var(--ork-ink-muted);font-weight:400">${BY[p].sl}:</span> ${wordOf(BY[p], val(BY[p]))}`).join("<br>");
+    const mine = c.parts.some(p => isYours(BY[p]));
+    return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true"><div class="hc__idx">${mark}${word}</div><div class="hc__body"><p class="hc__what">${c.what}</p><p class="hc__val" style="font-size:11px;line-height:15px">${lines}</p>${mine ? `<span class="yours">yours</span>` : ""}</div></div>`;
+  }
   if (s.kind === "hero") {
     const corner = `<div class="hc__idx">${pennant(texOfLead(s.id), 2)}</div>${SIL()}`;
-    if (!v) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}">${corner}<div class="hc__body"><p class="hc__val" style="margin-top:24px">No hero yet</p><p class="hc__line">pick one on the table</p></div></div>`;
+    if (!v) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true">${corner}<div class="hc__body"><p class="hc__val" style="margin-top:24px">No hero yet</p><p class="hc__line">pick one on the table</p></div></div>`;
     const h = HEROES[v];
-    return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}">${corner}<div class="hc__body">
+    return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true">${corner}<div class="hc__body">
       <img class="hd" src="${HIMG(v)}" width="48" height="44" alt="" style="margin:4px 0"><p class="hc__val">${h.name}</p><p class="hc__line">${h.school}<br>${h.flow}</p></div></div>`;
   }
   if (s.kind === "ans") {
@@ -634,7 +654,7 @@ function handCard(cid) {
   }
   const mine = c.parts.some(p => isYours(BY[p])), hero = c.parts.some(p => heroWay(BY[p]) !== undefined && !isYours(BY[p]));
   const mark = mine ? `<span class="yours">yours</span>` : hero ? `<span class="heros">the hero's way</span>` : "";
-  return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}"><div class="hc__idx">${idx}</div><div class="hc__body">${body}${mark}</div></div>`;
+  return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true"><div class="hc__idx">${idx}</div><div class="hc__body">${body}${mark}</div></div>`;
 }
 function fanHtml(cards, W) {
   const n = cards.length, CW = 112, step = n > 1 ? Math.min(CW + 10, (W - CW) / (n - 1)) : 0, mid = (n - 1) / 2;
@@ -651,7 +671,7 @@ function drawFan() {
   }).join("") : `<p class="fan__none">A new party has nothing to hold yet: pick its craft on the table.</p>`;
   const lab = { keeper: "", release: "its hero and its questions", empty: "" }[chair] ?? "its hero first, then its party";
   document.getElementById("fan-lab").innerHTML = lab ? `<b>${c.lab}</b>${lab}` : "";
-  document.querySelectorAll(".hc").forEach(el => el.onclick = () => { open = open === el.dataset.card ? null : el.dataset.card; drawFan(); drawTable(); });
+  document.querySelectorAll(".hc").forEach(el => el.onclick = () => { open = open === el.dataset.card ? null : el.dataset.card; document.getElementById("receipt").innerHTML = ""; drawFan(); drawTable(); });
 }
 
 /* the table */
@@ -678,7 +698,7 @@ function drawTable() {
       : `<div class="lane" style="grid-column:span 5;height:420px;display:grid;place-items:center;color:var(--ork-ink-faint);font:var(--ork-type-caption)">${c.lab}'s table, laid as its hero reads it</div>`;
     return;
   }
-  head.innerHTML = `<span class="pix">Inventory</span> how the project is set · <b>${c.id === "keeper" ? "the whole project" : c.lab}</b>${c.lead ? ` <button class="ork-btn quiet back" id="off">Take off the chair</button>` : ""}`;
+  head.innerHTML = `<span class="pix">Inventory</span> how the project is set · <b>${open === "c-pots" ? "the potions" : c.id === "keeper" ? "the whole project" : c.lab}</b>${c.lead ? ` <button class="ork-btn quiet back" id="off">Take off the chair</button>` : ""}`;
   const off = document.getElementById("off");
   if (off) off.onclick = () => { c.seated = false; BY[c.lead].value = c.id === "run" || c.id === "marketing" ? null : BY[c.lead].value; chair = "keeper"; open = null; drawChairs(); drawFan(); drawTable();
     document.getElementById("receipt").innerHTML = `<b>${c.lab}</b> leaves the table; the empty chair at the end seats it again.`; };
@@ -708,7 +728,9 @@ function drawPotions(spend = 0) {
   document.getElementById("edge-potions").innerHTML = ids.map((t, n) => {
     const left = TOOLS[t].left, sp = n === 0 ? Math.min(spend, left) : 0, warn = left - sp < .2 ? (left - sp < .08 ? " is-danger" : " is-warn") : "";
     return `<div class="potion-box"><span class="ork-potion${warn}" style="--ork-potion-left:${left};--ork-potion-spend:${sp}" title="${TOOLS[t].name}"></span><img class="hd" src="${ORK}marks/${TOOLS[t].mark}@2x.png" alt=""></div>`;
-  }).join("");
+  }).join("") + (ids.length < 3 ? `<span class="vial-add" title="Another AI tool">+</span>` : "");
+  const box = document.getElementById("edge-potions"); box.classList.toggle("is-on", open === "c-pots");
+  box.onclick = () => { if (!document.getElementById("win").classList.contains("inv")) return; open = open === "c-pots" ? null : "c-pots"; document.getElementById("receipt").innerHTML = ""; drawFan(); drawTable(); drawPotions(); };
 }
 function preview(s, id) {
   if (!s || val(s) === id) { drawPotions(); return; }
@@ -756,6 +778,30 @@ function seat(id, el) {
   c.seated = "empty"; freshFlag = id; chair = id; open = c.cards[0];
   drawChairs(); drawFan(); drawTable(); drawNormal(); freshFlag = null;
   document.getElementById("receipt").innerHTML = `<b>${CRAFTS[id].ti}</b> is at the table, its chair empty: its heroes lie here, the Orkmaster's pick starred.`;
+}
+const pile = document.getElementById("pile");
+pile.addEventListener("dragover", e => { if (!document.getElementById("win").classList.contains("inv")) return; e.preventDefault(); pile.classList.add("is-over"); });
+pile.addEventListener("dragleave", () => pile.classList.remove("is-over"));
+pile.addEventListener("drop", e => { e.preventDefault(); pile.classList.remove("is-over"); giveBack(e.dataTransfer.getData("text/plain")); });
+document.addEventListener("dragstart", e => { const hc = e.target.closest && e.target.closest(".hc"); if (hc) e.dataTransfer.setData("text/plain", hc.dataset.card); });
+function giveBack(cid) {
+  const c = CARDS[cid]; if (!c) return;
+  const say = html => { document.getElementById("receipt").innerHTML = html; };
+  if (c.fixed) { say(`Release is in every project: its hero goes back to the hand.`); return; }
+  const first = BY[c.parts[0]];
+  pile.querySelector(".pile").classList.remove("took"); void pile.offsetWidth; pile.querySelector(".pile").classList.add("took");
+  if (first.kind === "hero") {
+    const ch = CHAIRS.find(x => x.lead === first.id), was = { seated: ch.seated, value: first.value };
+    ch.seated = false; chair = "keeper"; open = null; drawChairs(); drawFan(); drawTable();
+    say(`<b>${ch.lab}</b> leaves the table: its hero, its tool, its tier. <button class="ork-btn quiet" id="undo">Undo</button>`);
+    document.getElementById("undo").onclick = () => { ch.seated = was.seated; first.value = was.value; chair = ch.id; open = cid; drawChairs(); drawFan(); drawTable(); say(""); };
+    return;
+  }
+  const kept = Object.fromEntries(c.parts.filter(p => p in yours).map(p => [p, yours[p]]));
+  if (!Object.keys(kept).length) { say(`<b>${c.what || first.lab}</b> is already at its default.`); return; }
+  Object.keys(kept).forEach(p => delete yours[p]); drawFan(); drawTable(); drawPotions();
+  say(`<b>${c.what || first.lab}</b> goes back to ${first.party ? "its hero's way" : "the project's default"}. <button class="ork-btn quiet" id="undo">Undo</button>`);
+  document.getElementById("undo").onclick = () => { Object.assign(yours, kept); drawFan(); drawTable(); drawPotions(); say(""); };
 }
 function enter(keep) { document.getElementById("win").classList.add("inv"); if (!keep) { chair = "keeper"; open = null; } drawChairs(); drawFan(); drawTable(); }
 function close() { document.getElementById("win").classList.remove("inv"); open = null; tableOf = "keeper"; document.getElementById("receipt").innerHTML = ""; drawChairs(); drawTable(); }
