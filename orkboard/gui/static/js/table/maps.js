@@ -3,6 +3,7 @@
 // (part F fills it: a card of the map the + card's field is addressed to is taken as a mark, §6). Tech's map stays syspane.js's System.
 import { html } from "../html.js";
 import { leadsSystem } from "./data.js";
+import { HeroMap } from "./heromap.js";
 
 const MAPS = {};
 
@@ -13,7 +14,7 @@ export function mapFor(craft, Component) { MAPS[craft] = Component; }
 export const craftOf = (g) => g?.party_craft || (leadsSystem(g) ? "tech" : "");
 
 /** The map's face of party `g`, or null (System is drawn by the pane itself, a craft with no map yet draws its header alone). */
-export const mapOf = (g) => (craftOf(g) === "tech" ? null : MAPS[craftOf(g)] || null);
+export const mapOf = (g) => (g?.leader?.hero && !g.leader.hero.default ? HeroMap : craftOf(g) === "tech" ? null : MAPS[craftOf(g)] || null);   // a party whose hero is not its craft's default lays the hero's table (spec 157 E)
 
 // Picking's seam (§6): until part F, a card is itself.
 let wrap = ({ children }) => children;

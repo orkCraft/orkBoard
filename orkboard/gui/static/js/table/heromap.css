@@ -1,0 +1,27 @@
+/* A hero's table (docs/specs/157-the-inventory-a-merchants-stall.md E; mockup docs/mockups/merchant/tables.css). Layout only: every colour, face and corner is orkUI's. */
+.hm-laying { margin: 0 0 var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.hm-laying__goal { color: var(--ork-ink); font-weight: 600; }
+button.hm-laying__goal { display: inline; padding: 0; min-height: 0; }
+.hm { display: flex; gap: var(--ork-3); align-items: stretch; }
+.hm.is-rows { flex-direction: column; }
+.hm-place { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-2); background: color-mix(in srgb, var(--ork-ink) 3%, transparent); }
+.hm-place__h { display: flex; flex-direction: column; gap: 2px; }
+.hm-place__nm { margin: 0; font-family: var(--ork-font-pixel); font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
+.hm-place__ask { font: var(--ork-type-caption); color: var(--ork-ink-faint); }
+.hm-place__cards { display: flex; flex-direction: column; gap: var(--ork-2); }
+.hm.is-rows .hm-place { flex-direction: row; align-items: flex-start; gap: var(--ork-3); }
+.hm.is-rows .hm-place__h { flex: none; width: 128px; }
+.hm.is-rows .hm-place__cards { flex-direction: row; flex-wrap: wrap; }
+.hm-card { position: relative; box-sizing: border-box; width: 112px; min-height: 58px; padding: 6px 7px; display: flex; flex-direction: column; gap: 2px; flex: none;
+  background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch); }
+.hm:not(.is-rows) .hm-card { width: 100%; }
+.hm-card b { font: 600 11.5px/14px var(--ork-font-read); color: var(--ork-ink); }
+.hm-card small { font-size: 10.5px; line-height: 13px; color: var(--ork-ink-muted); }
+.hm-card__top { display: flex; align-items: center; height: 13px; }
+.hm-card__top:empty { display: none; }
+.hm-card__top .ork-elem { transform: scale(.75); transform-origin: left center; }
+.hm-card.hot { border-color: var(--ork-alert); }
+.hm-card.bad { border-color: var(--ork-danger); }
+.hm-card.good { border-color: var(--ork-success); }
+.hm-card.ghost { background: transparent; border-style: dashed; border-color: var(--ork-edge); }
+@media (max-width: 700px) { .hm:not(.is-rows) { flex-direction: column; } .hm.is-rows .hm-place { flex-direction: column; } .hm.is-rows .hm-place__h { width: auto; } }
