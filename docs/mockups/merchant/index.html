@@ -221,8 +221,50 @@ button { font: inherit; }
 .receipt { margin-top: var(--ork-6); min-height: 20px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .receipt b { color: var(--ork-ink); font-weight: 600; }
 
+/* ---------- the sheet on the table, the ways in the hand ---------- */
+.tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px; border: var(--ork-line) solid transparent; cursor: pointer; }
+.tile:hover { border-color: var(--ork-frame); }
+.tile.is-on { border-color: var(--ork-ink); }
+.tile.fixed { cursor: default; }
+.tile > small { max-width: 150px; text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; line-height: 14px; }
+.tile .yours { padding: 0 4px; border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink); }
+.tile .heros { font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink-faint); }
+.tile.ghost .face { opacity: .7; border-style: dashed; border-color: var(--ork-edge); }
+.tile.pulse .face { animation: pulse .5s var(--ork-motion-ease); }
+.offer { display: none; gap: var(--ork-6); align-items: flex-end; padding: 0 0 0 30px; min-height: 290px; flex-wrap: nowrap; }
+.win.inv .offer { display: flex; }
+.offer__hint { align-self: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.offer__lab { align-self: flex-start; width: 110px; flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); padding-top: 8px; }
+.offer__lab b { display: block; font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); margin-bottom: 4px; }
+.offer .ware { cursor: pointer; }
+.offer .ware:not(.mine):not(.locked):hover .face { transform: translateY(-14px); border-color: var(--ork-edge); }
+.win.inv .hand { height: auto; }
+/* the door and the die */
+.door { background: none; border: var(--ork-line) solid transparent; cursor: pointer; padding: 2px 6px; }
+.door:hover { border-color: var(--ork-frame); color: var(--ork-ink); }
+.door.is-stopped { color: var(--ork-danger); }
+.door i { font-style: normal; color: var(--ork-ink); font-size: 10px; }
+.die-box { display: flex; flex-direction: column; align-items: center; gap: 6px; font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-muted); text-align: center; max-width: 120px; }
+.cube { position: relative; width: 60px; height: 60px; }
+.cube .f-up { position: absolute; left: 0; bottom: 0; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; cursor: pointer; color: var(--ork-ink);
+  background: var(--ork-card); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
+.cube .f-right { position: absolute; left: 44px; bottom: 0; width: 14px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer; color: var(--ork-ink-muted);
+  background: var(--ork-raised); border: var(--ork-line) solid var(--ork-frame); transform: skewY(-45deg); transform-origin: left bottom; }
+.cube .f-top { position: absolute; left: 0; bottom: 44px; width: 44px; height: 14px; display: grid; place-items: center; cursor: pointer; color: var(--ork-ink-muted);
+  background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); transform: skewX(-45deg); transform-origin: left bottom; }
+.cube .mark { position: absolute; right: 3px; top: 2px; display: flex; } .cube .mark .ork-sign { width: 10px; height: 10px; color: var(--ork-danger); }
+.cube .spark { color: var(--ork-ink); font-size: 10px; line-height: 10px; }
+.cube.is-playing .f-up { border-color: var(--ork-mana); box-shadow: inset 0 0 0 1px var(--ork-mana); }
+.cube.is-building { animation: wobble .35s infinite; }
+.cube.is-turning { animation: turn .35s var(--ork-motion-ease); }
+@keyframes wobble { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes turn { 0% { transform: rotate(-80deg) scale(.85); } 100% { transform: none; } }
+.win.inv .cube { outline: var(--ork-line) solid var(--ork-frame); outline-offset: 6px; cursor: pointer; }
+.win.inv .cube.is-on { outline-color: var(--ork-ink); }
+.die-word { color: var(--ork-ink-read); }
+
 /* ---------- the table's edge ---------- */
-.edge { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--ork-8); padding-top: 120px; }
+.edge { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--ork-6); padding-top: 110px; }
 .edge__ring { position: relative; width: 104px; height: 104px; }
 .edge__ring .ork-portal-ring { transform: scale(0.542); transform-origin: 0 0; }
 .pile { position: relative; width: 48px; height: 67px; }
@@ -270,11 +312,7 @@ button { font: inherit; }
 <main class="mk-main">
 <section class="mk-sec" id="inv">
   <h1>1 · The inventory: the chairs say whose, the hand holds it, the table lays the ways</h1>
-  <p class="mk-line"><b>A chair is a craft</b>: empty, its back shows its table's texture; taken, the hero's race says the craft (a race is a craft in a project), so a new hero changes the face, never the craft. A hero's card: the craft's texture at its top left (whose), the one silhouette of every hero at its top right (what card). The chairs stand in the route's order; the Orkmaster seats the crafts of the project's stage, the empty chair seats one sooner, and at Live the Orkmaster lays a card in the hand. The Orkmaster's hand holds four cards (<i>When</i>, <i>How much</i>, <i>What leaves this computer</i>, <i>The Orkmaster's questions</i>); the potions at the table's edge are pressed as they are, and <b>the discard pile takes a card back to its default</b>. <b>The backpack</b> at the chairs' end opens the inventory: the table's edge is stitched, the chairs stay. <b>Pick a chair</b>:
-    the Orkmaster's is the whole project, a leader's its party; the table takes that chair's texture. <b>Press the chair again</b> and its heroes
-    lie on the table: a hero brings its school, its flow, its size and its temper. <b>The hand</b> holds that chair's other settings; a card
-    pressed lays its ways on the table, priced against yours and hatched on the potions. What you set yourself is marked <i>yours</i>, and stays
-    when the hero changes. Close the backpack: the lanes come back, a new hero sits down at its chair.</p>
+  <p class="mk-line"><b>The table shows what you have, the hand what you could take</b>, as everywhere in the window: the hand is what you decide. <b>The backpack</b> opens the inventory: the table's edge is stitched, and the table lays out the picked chair as it is set, a sheet of things. <b>Press a thing</b>: its ways come to your hand, each priced against yours; hover one and the table shows it in place, the potions what it costs; play it and it flies to its place. <b>A chair is a craft</b>: empty, its back shows its table's texture; taken, the hero's race says the craft. The potions and <b>the die</b> at the table's edge are pressed as they are. <b>Drag a thing onto the discard</b> to give it back to its default. <b>Stop all</b> is the door again; <b>the die's faces</b> are what the project can run: client and server together or apart, an Android build to your phone, iOS locked on a computer with no Xcode.</p>
 
   <p class="stage" id="stage"></p>
   <div class="scroll-x">
@@ -288,10 +326,10 @@ button { font: inherit; }
           <div class="lanes" id="lanes"></div>
           <div class="rows" id="rows"></div>
           <p class="receipt" id="receipt"></p>
+          <p class="receipt" id="stopped-line"></p>
         </div>
         <div class="hand">
-          <div class="fan" id="fan"></div>
-          <p class="fan__lab" id="fan-lab"></p>
+          <div class="offer" id="offer"></div>
           <div class="normal-hand" id="normal-hand">
             <div class="k ork-card">
               <div class="k__top"><span><img class="hd" id="ask-head" alt="">Tech</span><span class="ork-sign question" style="color:var(--ork-alert)"></span></div>
@@ -304,6 +342,7 @@ button { font: inherit; }
       <div class="edge">
         <div class="edge__ring"><span class="ork-portal-ring"></span></div>
         <div class="pile-wrap" id="pile"><div class="pile"><span class="ork-card-back small"></span><span class="ork-card-back small"></span></div><small>Drop a card here: it goes back to its default</small></div>
+        <div class="die-box" id="die"></div>
         <div class="potions" id="edge-potions"></div>
       </div>
     </div>
@@ -402,6 +441,13 @@ const TOK = {
   cap3: { potion: true, ti: "3% a day", line: "what answers by itself spends at most this", d: -1 },
   cap5: { potion: true, ti: "5% a day", line: "what answers by itself spends at most this", d: 0 },
   cap8: { potion: true, ti: "8% a day", line: "what answers by itself spends at most this", d: 2 },
+  "f-both":    { sign: "screen", ti: "Client + server", line: "starts both, closes both" },
+  "f-web":     { sign: "screen", ti: "Web client", line: "opens in the preview" },
+  "f-server":  { icon: "list-box", ti: "Server", line: "starts here, its log in the preview" },
+  "f-android": { icon: "phone", ti: "Android", line: "a build, about 4 min" },
+  "f-ios":     { icon: "phone", ti: "iOS", line: "a build on a Mac with Xcode" },
+  "to-phone":  { icon: "phone", ti: "To your phone", line: "the APK goes to the phone you paired" },
+  "to-file":   { icon: "file", ti: "Keep the file", line: "the APK stays in the project's builds" },
   gate:    { sign: "shield", ti: "Always + the tests", line: "the gate's always, then the tests of what changed" },
   "t-claude": { tool: "claude", ti: "Claude", line: "its seats work on Claude" }, "t-codex": { tool: "codex", ti: "Codex", line: "its seats work on Codex" },
   "t-first": { sign: "after", ti: "The first potion", line: "its seats follow the project's order" },
@@ -478,6 +524,9 @@ const SLOTS = [
   { sl: "Decision", id: "cf-decision", kind: "ans", lab: "A conflict with a decision", who: "keeper", base: "ask-fork", opts: ["ask", "ask-fork", "declare", "c-silent"], locked: { declare: L, "c-silent": L } },
   { id: "ans-dev", kind: "ans", lab: "A result holds: into dev", who: "release", base: "silent", opts: ["pen", "choice", "choice-2h", "silent"] },
   { id: "ans-main", kind: "ans", lab: "To main", who: "release", base: "fork", opts: ["pen", "choice", "fork", "choice-2h", "silent"], locked: { "choice-2h": M, silent: M } },
+  { id: "hero-release", kind: "fixed-hero", lab: "Release's leader" },
+  { id: "die-up", kind: "tok", lab: "The face it rests on", base: "f-both", opts: ["f-both", "f-web", "f-server", "f-android", "f-ios"], locked: { "f-ios": "iOS builds need a Mac with Xcode: this computer is Linux" } },
+  { id: "die-phone", kind: "tok", lab: "An Android build goes", base: "to-phone", opts: ["to-phone", "to-file"] },
   { id: "craft", kind: "craft", lab: "A new party", base: null, opts: ["run", "marketing"] },
 ];
 const BY = Object.fromEntries(SLOTS.map(s => [s.id, s]));
@@ -596,217 +645,226 @@ function tagOf(s, id) {
 const wordOf = (s, id) => s.kind === "hero" ? HEROES[id].name : s.kind === "ans" ? ANS[id].ti + (ANS[id].wait ? ", " + ANS[id].wait : "") : s.kind === "craft" ? CRAFTS[id].ti :
   s.kind === "pot" ? TOOLS[id].name : s.kind === "tier" ? TIERS[id].ti : TOK[id].ti;
 
+/* ---------------- what each chair's sheet lays on the table ---------------- */
+const SHEETS = {
+  keeper: [["When", ["look", "start-high", "start-normal", "start-low", "hours"]], ["How much", ["target", "cap"]], ["What leaves this computer", ["push", "cloud"]], ["The Orkmaster's questions", ["ans-low", "cf-decision"]]],
+  product: [["Its hero", ["lead-product"]], ["Its questions", ["ans-pain", "cf-product"]], ["Its seats", ["tool-product", "tier-product"]]],
+  design: [["Its hero", ["lead-design"]], ["Its questions", ["ans-icon", "cf-design"]], ["Its seats", ["tool-design", "tier-design"]]],
+  tech: [["Its hero", ["lead-tech"]], ["Its questions", ["ans-tier", "ans-test", "cf-tech"]], ["Its seats", ["tool-tech", "tier-tech"]]],
+  run: [["Its hero", ["lead-run"]], ["Its seats", ["tool-run", "tier-run"]]],
+  marketing: [["Its hero", ["lead-marketing"]], ["Its seats", ["tool-marketing", "tier-marketing"]]],
+  release: [["Its hero", ["hero-release", "gate"]], ["Its questions", ["ans-main", "ans-dev"]]],
+  empty: [["A new party", ["craft"]]],
+  potions: [["The potions' order", ["pot-1", "pot-2", "pot-3"]]],
+  die: [["The die", ["die-up", "die-phone"]]],
+};
+const SAY = { "lead-product": BY["lead-product"].say, "lead-design": BY["lead-design"].say, "lead-tech": BY["lead-tech"].say, "lead-run": BY["lead-run"].say, "lead-marketing": BY["lead-marketing"].say,
+  "hero-release": "Release is in every project, its leader the lich: its hero is not traded.", gate: "The gate is the project's own, in orkcraft.toml: nothing to trade here.",
+  craft: "A craft comes to the table with its stage; you may seat one sooner. Its chair comes empty, and you pick its hero.",
+  "die-up": "The face the die rests on: what Play starts when you press it. The faces are read from Tech's table: what this project can run.",
+  "die-phone": "Where an Android build goes: to the phone you paired, or kept as a file." };
+Object.values(CARDS).forEach(c => (c.parts || []).forEach(p => { if (!SAY[p]) SAY[p] = c.say; }));
+const VIEWS = { potions: "the potions", die: "the die" };
+let sel = "lead-tech", view = null, stopped = false, dieUp = null, dieState = "";
+const inv = () => document.getElementById("win").classList.contains("inv");
+
+/* ---------------- the chairs, the backpack, the door ---------------- */
 function drawChairs() {
-  const inv = document.getElementById("win").classList.contains("inv"), on = inv ? chair : tableOf;
+  const on = inv() ? (view ? null : chair) : tableOf;
   document.getElementById("chairs").innerHTML = CHAIRS.filter(c => c.seated !== false).map(c => {
     if (c.seated === "empty") return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat">${craftChair(c.tex, freshFlag === c.id || (Array.isArray(freshFlag) && freshFlag.includes(c.id)))}</span>${c.lab}<small>no hero yet</small></button>`;
     const src = c.lead ? HIMG(BY[c.lead].value) : c.head;
     if (c.empty) return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat"><span class="ork-chair is-empty"></span></span>${c.lab}<small></small></button>`;
     return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat"><span class="ork-chair${on === c.id ? " big" : ""}"></span><img class="hd" data-head="${c.id}" src="${src}" alt=""></span>${c.lab}<small>${c.lead ? HEROES[BY[c.lead].value].short : c.sub || ""}</small></button>`;
   }).join("") + `<span class="gap"></span>
-    <button class="pack" id="pack" title="${inv ? "Close the inventory" : "Inventory: how the project is set"}"><svg width="40" height="40" viewBox="0 0 16 16" id="pack-art"></svg>Inventory</button>
-    <span class="door"><span class="ork-door small"></span>Stop all</span>`;
-  drawPack(inv);
+    <button class="pack" id="pack" title="${inv() ? "Close the inventory" : "Inventory: how the project is set"}"><svg width="40" height="40" viewBox="0 0 16 16" id="pack-art"></svg>Inventory</button>
+    <button class="door${stopped ? " is-stopped" : ""}" id="door" title="${stopped ? "Resume: the orks go back to work" : "Stop all: every ork stops"}"><span class="ork-door small${stopped ? " is-open" : ""}"></span>${stopped ? "All stopped" : "Stop all"}${stopped ? "<i>Resume</i>" : ""}</button>`;
+  drawPack(inv());
   document.querySelectorAll(".chair").forEach(b => b.onclick = () => pickChair(b.dataset.chair));
-  document.getElementById("pack").onclick = () => inv ? close() : enter();
+  document.getElementById("pack").onclick = () => inv() ? close() : enter();
+  document.getElementById("door").onclick = () => { stopped = !stopped; drawChairs(); drawNormal(); };
 }
 function pickChair(id) {
-  const inv = document.getElementById("win").classList.contains("inv");
-  if (!inv && id === "empty") { chair = "empty"; enter(true); return; }
-  if (!inv) { tableOf = id; drawChairs(); drawTable(); return; }
-  chair = id; const c = CHAIRS.find(x => x.id === id); open = c.cards[0] && (c.lead || id === "release") ? c.cards[0] : null;
-  drawChairs(); drawFan(); drawTable();
+  if (!inv() && id === "empty") { chair = "empty"; view = null; enter(true); return; }
+  if (!inv()) { tableOf = id; drawChairs(); drawTable(); return; }
+  const c = CHAIRS.find(x => x.id === id);
+  if (chair === id && !view) sel = c.lead || (id === "empty" ? "craft" : null);
+  else { chair = id; view = null; sel = id === "empty" ? "craft" : c.lead && !BY[c.lead].value ? c.lead : null; }
+  document.getElementById("receipt").innerHTML = "";
+  drawChairs(); drawTable();
 }
 
-/* a card of the hand */
-function handCard(cid) {
-  const c = CARDS[cid];
-  if (c.fixed) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true"><div class="hc__idx">${pennant("stones", 2)}${LOCK}</div>${SIL()}<div class="hc__body">
-    <img class="hd" src="${RACE("lich-elder")}" width="48" height="44" alt="" style="margin:4px 0"><p class="hc__val">Release Night King</p><p class="hc__line">in every project</p></div></div>`;
-  const s = BY[c.parts[0]], v = val(s);
-  let idx, body;
-  if (c.parts.length > 1 && s.kind !== "hero") {
-    const [mk, word] = c.idx, mark = ["clock", "eye", "coins", "git-merge"].includes(mk) ? ICON(mk) : SIGN(mk);
-    const lines = c.parts.map(p => `<span style="color:var(--ork-ink-muted);font-weight:400">${BY[p].sl}:</span> ${wordOf(BY[p], val(BY[p]))}`).join("<br>");
-    const mine = c.parts.some(p => isYours(BY[p]));
-    return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true"><div class="hc__idx">${mark}${word}</div><div class="hc__body"><p class="hc__what">${c.what}</p><p class="hc__val" style="font-size:11px;line-height:15px">${lines}</p>${mine ? `<span class="yours">yours</span>` : ""}</div></div>`;
-  }
-  if (s.kind === "hero") {
-    const corner = `<div class="hc__idx">${pennant(texOfLead(s.id), 2)}</div>${SIL()}`;
-    if (!v) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true">${corner}<div class="hc__body"><p class="hc__val" style="margin-top:24px">No hero yet</p><p class="hc__line">pick one on the table</p></div></div>`;
-    const h = HEROES[v];
-    return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true">${corner}<div class="hc__body">
-      <img class="hd" src="${HIMG(v)}" width="48" height="44" alt="" style="margin:4px 0"><p class="hc__val">${h.name}</p><p class="hc__line">${h.school}<br>${h.flow}</p></div></div>`;
-  }
-  if (s.kind === "ans") {
-    const who = headOfWho(s.who || s.party), a = ANS[v];
-    idx = `<img class="hd" src="${who}" alt="">${a.ti}${s.locked ? LOCK : ""}`;
-    body = `<p class="hc__what">${s.lab}</p><p class="hc__val">${a.ti}${a.wait ? ", " + a.wait : ""}</p><p class="hc__line">${a.line}</p>`;
-  } else if (s.kind === "tier") {
-    idx = `<img class="hd" src="${RACE(s.race + "-" + v)}" alt="">Tier`;
-    body = `<p class="hc__what">${s.lab}</p><p class="hc__val">${TIERS[v].ti}</p><p class="hc__line">${TIERS[v].line}</p>`;
-  } else {
-    const [mk, word] = c.idx, mark = mk === "potion" ? `<span class="ork-potion size-vial" style="--ork-potion-left:.6"></span>` : ["clock", "eye", "coins", "git-merge"].includes(mk) ? ICON(mk) : SIGN(mk);
-    idx = `${mark}${word}${s.fixed ? LOCK : ""}`;
-    const many = c.parts.length > 1;
-    const value = many ? c.parts.map(p => `${BY[p].lab.split(" ")[0]}: ${wordOf(BY[p], val(BY[p]))}`).join("<br>") : wordOf(s, v);
-    body = `<p class="hc__what">${c.what || s.lab}</p><p class="hc__val">${value}</p>${many ? "" : `<p class="hc__line">${s.kind === "tok" ? TOK[v].line : ""}</p>`}`;
-  }
-  const mine = c.parts.some(p => isYours(BY[p])), hero = c.parts.some(p => heroWay(BY[p]) !== undefined && !isYours(BY[p]));
-  const mark = mine ? `<span class="yours">yours</span>` : hero ? `<span class="heros">the hero's way</span>` : "";
-  return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}" draggable="true"><div class="hc__idx">${idx}</div><div class="hc__body">${body}${mark}</div></div>`;
+/* ---------------- a thing on the table: what you have ---------------- */
+function faceOf(s) {
+  const v = val(s);
+  if (s.kind === "fixed-hero") return `<div class="face f-hero">${pennant("stones", 2)}${SIL()}<img class="hd" src="${RACE("lich-elder")}" width="48" height="44" alt=""><p class="f-hero__name">Release Night King</p><p class="f-hero__school">in every project ${LOCK}</p></div>`;
+  if (s.kind === "hero" && !v) return `<div class="face f-hero empty-hero">${pennant(texOfLead(s.id), 2)}${SIL()}<span>No hero yet<br>pick one in your hand</span></div>`;
+  if (s.kind === "craft") return `<div class="face f-craft"><div><span class="ork-chair is-empty" style="position:relative;display:block;margin:0 auto 6px"></span><b>No craft yet</b>pick one in your hand</div></div>`;
+  return face(s, v);
 }
-function fanHtml(cards, W) {
-  const n = cards.length, CW = 112, step = n > 1 ? Math.min(CW + 10, (W - CW) / (n - 1)) : 0, mid = (n - 1) / 2;
-  return { tight: step < CW, width: n ? (n - 1) * step + CW : 0, html: cards.map((cid, i) => handCard(cid).replace('class="hc', `style="left:${i * step}px;z-index:${i + 1};transform:rotate(${(i - mid) * 1.5}deg) translateY(${Math.abs(i - mid) * 2}px)" class="hc`)).join("") };
-}
-function drawFan() {
-  const c = CHAIRS.find(x => x.id === chair), fan = document.getElementById("fan");
-  const groups = c.groups || [[null, c.cards]];
-  let x = 0;
-  fan.innerHTML = c.cards.length ? groups.map(([lab, cards], gi) => {
-    const W = groups.length > 1 ? (gi === 0 ? 660 : 250) : Math.min(cards.length * 122, 820), f = fanHtml(cards, W);
-    const out = `<div class="fgroup${f.tight ? " tight" : ""}" style="left:${x}px;width:${f.width}px">${f.html}${lab ? `<p class="fgroup__lab"><b>${lab}</b></p>` : ""}</div>`;
-    x += f.width + 60; return out;
-  }).join("") : `<p class="fan__none">A new party has nothing to hold yet: pick its craft on the table.</p>`;
-  const lab = { keeper: "", release: "its hero and its questions", empty: "" }[chair] ?? "its hero first, then its party";
-  document.getElementById("fan-lab").innerHTML = lab ? `<b>${c.lab}</b>${lab}` : "";
-  document.querySelectorAll(".hc").forEach(el => el.onclick = () => { open = open === el.dataset.card ? null : el.dataset.card; document.getElementById("receipt").innerHTML = ""; drawFan(); drawTable(); });
-}
-
-/* the table */
-function ware(s, id) {
-  if (s.kind === "craft") {
-    const at = CHAIRS.find(c => c.id === id).seated;
-    return `<div class="ware${at ? " locked" : ""}" data-s="${s.id}" data-o="${id}">${face(s, id)}${at ? `<span class="tag">at the table</span>` :
-      `<span class="tag">${stage === "made" ? "before Live: yours to seat" : "its stage has come"}</span><small>its chair comes empty; you pick its hero</small><button class="ork-btn take">Seat it</button>`}</div>`;
-  }
-  const lock = s.locked && s.locked[id], mine = val(s) === id, hw = s.kind !== "hero" && heroWay(s) === id;
-  return `<div class="ware${mine ? " mine" : ""}${lock ? " locked" : ""}" data-s="${s.id}" data-o="${id}">${face(s, id)}
-    ${mine ? `<span class="tag mine">Yours</span>${isYours(s) && heroWay(s) !== undefined ? `<small>you set it; the hero's is ${wordOf(s, heroWay(s))}</small>` : hw ? `<small class="heros">the hero's way</small>` : ""}<button class="ork-btn take" style="visibility:hidden" tabindex="-1">Take</button>` :
-      lock ? `<span class="tag">${LOCK} not here</span><small>${lock}</small>` :
-      `${tagOf(s, id)}${s.star === id ? `<small class="star">★ the Orkmaster's pick</small>` : ""}${hw ? `<small class="heros">the hero's way</small>` : ""}${prev[s.id] === id ? `<small class="before">Yours before</small>` : ""}<button class="ork-btn take">Take</button>`}</div>`;
+function tile(id) {
+  const s = BY[id], fixed = s.kind === "fixed-hero" || s.fixed;
+  const mark = isYours(s) ? `<span class="yours">yours</span>` : heroWay(s) !== undefined ? `<span class="heros">the hero's way</span>` : "";
+  return `<div class="tile${sel === id ? " is-on" : ""}${fixed ? " fixed" : ""}" data-slot="${id}" draggable="${!fixed}">${faceOf(s)}<small>${s.lab}${fixed ? " " + LOCK : ""}</small>${mark}</div>`;
 }
 function drawTable() {
-  const win = document.getElementById("win"), inv = win.classList.contains("inv"), table = document.getElementById("table");
-  const c = CHAIRS.find(x => x.id === (inv ? chair : tableOf));
-  table.dataset.tex = c.tex;
-  const head = document.getElementById("head"), rows = document.getElementById("rows"), says = document.getElementById("says");
-  if (!inv) {
+  const table = document.getElementById("table"), head = document.getElementById("head"), rows = document.getElementById("rows"), says = document.getElementById("says");
+  const c = CHAIRS.find(x => x.id === (inv() ? chair : tableOf));
+  table.dataset.tex = view ? "felt" : c.tex;
+  if (!inv()) {
     head.innerHTML = `<b>${c.id === "keeper" ? "The whole project" : c.lab + "'s table"}</b> · through ${c.id === "keeper" ? "the Orkmaster" : c.lab}`;
     document.getElementById("lanes").innerHTML = c.id === "keeper" ? [["Lobby chat", "ice"], ["Waves", "meadow"], ["Waves", "meadow"], ["Daily quest", "dust"], ["", ""]].map(([t, e]) => `<div class="lane">${t ? `<div class="mini">${t}<span class="ork-elem ${e}"></span></div>` : ""}</div>`).join("")
       : `<div class="lane" style="grid-column:span 5;height:420px;display:grid;place-items:center;color:var(--ork-ink-faint);font:var(--ork-type-caption)">${c.lab}'s table, laid as its hero reads it</div>`;
-    return;
+    drawHand(); return;
   }
-  head.innerHTML = `<span class="pix">Inventory</span> how the project is set · <b>${open === "c-pots" ? "the potions" : c.id === "keeper" ? "the whole project" : c.lab}</b>${c.lead ? ` <button class="ork-btn quiet back" id="off">Take off the chair</button>` : ""}`;
-  const off = document.getElementById("off");
-  if (off) off.onclick = () => { c.seated = false; BY[c.lead].value = c.id === "run" || c.id === "marketing" ? null : BY[c.lead].value; chair = "keeper"; open = null; drawChairs(); drawFan(); drawTable();
-    document.getElementById("receipt").innerHTML = `<b>${c.lab}</b> leaves the table; the empty chair at the end seats it again.`; };
-  const sayAs = (html, mood = "") => says.innerHTML = `<img class="hd" id="keeper-face" src="${RACE("peon-crown" + (mood ? "-" + mood : ""))}" alt=""><span>${html}</span>`;
-  let parts = [];
-  if (open) { parts = CARDS[open].parts; sayAs(CARDS[open].say, "focused"); }
-  else if (c.lead) { parts = [c.lead]; sayAs(BY[c.lead].say); }
-  else if (c.empty) { parts = ["craft"]; sayAs(stage === "made" ? "A craft comes to the table with its stage. The project is <b>Being made</b>: Run and Marketing would come at Live, but you may seat one now." : "The project is <b>Live</b>: Run and Marketing belong at the table now."); }
-  else if (c.locked) { sayAs(c.locked + ". Its questions are in the hand."); }
-  else sayAs("The whole project: <b>press a card in your hand</b>, and I lay out what it trades for.");
-  rows.innerHTML = parts.length ? parts.map(p => { const s = BY[p];
-      const lab = s.kind === "hero" ? `<b>${s.lab}</b>its school, its flow, its size, its temper` : `<b>${s.lab}</b>${s.fixed ? "the project's own, in orkcraft.toml" : ""}`;
-      return `<div class="row"><p class="row__lab">${lab}</p><div class="row__opts">${s.opts.map(o => ware(s, o)).join("")}</div></div>`; }).join("")
-    : `<p class="rows__empty">${c.locked ? "" : "Press a card in your hand: its ways lie here, priced against yours."}</p>`;
-  document.querySelectorAll("#rows .ware").forEach(el => {
-    const s = BY[el.dataset.s], id = el.dataset.o;
+  const whose = view ? VIEWS[view] : c.id === "keeper" ? "the whole project" : c.lab;
+  head.innerHTML = `<span class="pix">Inventory</span> how the project is set · <b>${whose}</b>${!view && c.lead && c.seated ? ` <button class="ork-btn quiet back" id="off">Take off the chair</button>` : ""}`;
+  const off = document.getElementById("off"); if (off) off.onclick = () => takeOff(c);
+  const line = sel ? SAY[sel] : view ? "Press a thing on the table: its ways come to your hand." : c.id === "keeper" ? "The whole project as it is set. <b>Press a thing</b>, and I lay its ways in your hand." : c.id === "empty" ? SAY.craft : `${c.lab} as it is set. Press its hero, or any of its things: their ways come to your hand.`;
+  says.innerHTML = `<img class="hd" id="keeper-face" src="${RACE(sel ? "peon-crown-focused" : "peon-crown")}" alt=""><span>${line}</span>`;
+  rows.innerHTML = SHEETS[view || chair].map(([lab, ids]) => `<div class="row"><p class="row__lab"><b>${lab}</b></p><div class="row__opts">${ids.map(tile).join("")}</div></div>`).join("");
+  rows.querySelectorAll(".tile").forEach(t => t.onclick = () => { const s = BY[t.dataset.slot]; sel = sel === s.id ? null : s.id; document.getElementById("receipt").innerHTML = ""; drawTable(); });
+  drawHand();
+}
+
+/* ---------------- the hand: the ways of what is pressed ---------------- */
+function drawHand() {
+  const box = document.getElementById("offer");
+  if (!inv()) { box.innerHTML = ""; return; }
+  const s = sel && BY[sel];
+  if (!s) { box.innerHTML = `<p class="offer__hint">Press a thing on the table: its ways come to your hand.</p>`; return; }
+  if (s.kind === "fixed-hero" || s.fixed || !s.opts) { box.innerHTML = `<p class="offer__hint">${LOCK} Nothing to trade: ${s.kind === "fixed-hero" ? "Release is in every project" : "it is the project's own"}.</p>`; return; }
+  box.innerHTML = `<p class="offer__lab"><b>${s.lab}</b>its ways</p>` + s.opts.map(id => {
+    if (s.kind === "craft") { const at = CHAIRS.find(c => c.id === id).seated;
+      return `<div class="ware${at ? " locked" : ""}" data-o="${id}">${face(s, id)}<span class="tag">${at ? "at the table" : stage === "made" ? "before Live: yours to seat" : "its stage has come"}</span><small>its chair comes empty</small></div>`; }
+    const lock = s.locked && s.locked[id], mine = val(s) === id, hw = s.kind !== "hero" && heroWay(s) === id;
+    return `<div class="ware${mine ? " mine" : ""}${lock ? " locked" : ""}" data-o="${id}">${face(s, id)}
+      ${mine ? `<span class="tag mine">Yours</span>` : lock ? `<span class="tag">${LOCK} not here</span><small>${lock}</small>` : tagOf(s, id)}
+      ${!mine && !lock && s.star === id ? `<small class="star">★ the Orkmaster's pick</small>` : ""}${hw ? `<small class="heros">the hero's way</small>` : ""}${!mine && prev[s.id] === id ? `<small class="before">Yours before</small>` : ""}</div>`;
+  }).join("");
+  box.querySelectorAll(".ware").forEach(el => {
+    const id = el.dataset.o;
     el.addEventListener("mouseenter", () => preview(s, id));
     el.addEventListener("mouseleave", () => preview(null));
-    const take = () => { if (s.kind === "craft") return seat(id, el); if (val(s) !== id && !(s.locked && s.locked[id]) && !s.fixed) trade(s, id, el); };
-    el.querySelector(".face").onclick = take; const b = el.querySelector(".take"); if (b) b.onclick = take;
+    el.onclick = () => { if (s.kind === "craft") return seat(id, el); if (val(s) !== id && !(s.locked && s.locked[id])) trade(s, id, el); };
   });
 }
 
-/* the potions, hatched by what a way would add */
-function drawPotions(spend = 0) {
-  const ids = ["pot-1", "pot-2", "pot-3"].map(k => val(BY[k])).filter(v => v !== "none");
-  document.getElementById("edge-potions").innerHTML = ids.map((t, n) => {
-    const left = TOOLS[t].left, sp = n === 0 ? Math.min(spend, left) : 0, warn = left - sp < .2 ? (left - sp < .08 ? " is-danger" : " is-warn") : "";
-    return `<div class="potion-box"><span class="ork-potion${warn}" style="--ork-potion-left:${left};--ork-potion-spend:${sp}" title="${TOOLS[t].name}"></span><img class="hd" src="${ORK}marks/${TOOLS[t].mark}@2x.png" alt=""></div>`;
-  }).join("") + (ids.length < 3 ? `<span class="vial-add" title="Another AI tool">+</span>` : "");
-  const box = document.getElementById("edge-potions"); box.classList.toggle("is-on", open === "c-pots");
-  box.onclick = () => { if (!document.getElementById("win").classList.contains("inv")) return; open = open === "c-pots" ? null : "c-pots"; document.getElementById("receipt").innerHTML = ""; drawFan(); drawTable(); drawPotions(); };
-}
+/* hovering a way: the table shows it in place, the potions what it costs */
 function preview(s, id) {
-  if (!s || val(s) === id) { drawPotions(); return; }
+  if (typeof dragging !== "undefined" && dragging) return;          // a thing dragged from the table is not redrawn under the pointer
+  document.querySelectorAll(".tile.ghost").forEach(t => { t.classList.remove("ghost"); t.querySelector(".face").outerHTML = faceOf(BY[t.dataset.slot]); });
+  if (!s || val(s) === id || s.kind === "craft" || (s.locked && s.locked[id])) { drawPotions(); return; }
+  const t = document.querySelector(`.tile[data-slot="${s.id}"]`); if (t) { t.classList.add("ghost"); t.querySelector(".face").outerHTML = face(s, id); }
   drawPotions(Math.max(0, deltaOf(s, id)) / 100 * 8);       // a week's percent, drawn large enough to read: the mockup's lens
   const f = document.getElementById("keeper-face"); if (f && deltaOf(s, id) >= 3) f.src = RACE("peon-crown-worried");
 }
 
-/* the trade */
-function trade(s, id, wareEl) {
-  const old = val(s);
-  const target = s.kind === "hero" ? document.querySelector(`[data-head="${chair}"]`) : document.querySelector(`.hc[data-card="${open}"]`);
-  const from = wareEl.querySelector(".face");
-  if (target) {
-    const r = from.getBoundingClientRect(), t = target.getBoundingClientRect(), cl = from.cloneNode(true);
+/* the trade: the way played from the hand flies to its place on the table */
+function trade(s, id, el) {
+  const old = val(s), from = el.querySelector(".face"), to = document.querySelector(`.tile[data-slot="${s.id}"] .face`);
+  if (from && to) {
+    const r = from.getBoundingClientRect(), t = to.getBoundingClientRect(), cl = from.cloneNode(true);
     cl.classList.add("flying"); Object.assign(cl.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
     document.body.appendChild(cl);
-    cl.animate([{ transform: "none" }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top - 40}px) scale(.7)`, offset: .65 }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top}px) scale(.3)`, opacity: .1 }],
-      { duration: 560, easing: "cubic-bezier(.2,.7,.2,1)" }).onfinish = () => cl.remove();
+    cl.animate([{ transform: "none" }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top - 30}px)`, offset: .7 }, { transform: `translate(${t.left - r.left}px, ${t.top - r.top}px)` }],
+      { duration: 480, easing: "cubic-bezier(.2,.7,.2,1)" }).onfinish = () => cl.remove();
   }
   setTimeout(() => {
-    prev[s.id] = old;
-    let said;
+    prev[s.id] = old; let said;
     if (s.kind === "hero") {
       const before = SLOTS.filter(x => x.party === s.id).map(x => [x, val(x)]);
       s.value = id; const ch = CHAIRS.find(x => x.lead === s.id); if (ch) ch.seated = true;
       const moved = before.filter(([x, v]) => val(x) !== v).map(([x]) => `${x.lab.toLowerCase()}: ${wordOf(x, val(x))}`);
       const kept = before.filter(([x]) => isYours(x)).map(([x]) => x.lab.toLowerCase());
       said = `<b>${HEROES[id].name}</b> sits at ${s.lab.replace("'s leader", "")}${old ? "" : "'s empty chair"}. ${moved.length ? "It brings its ways: " + moved.join("; ") + ". " : ""}${kept.length ? "Yours stay: " + kept.join(", ") + "." : ""}`;
-      const img = document.querySelector(`[data-head="${chair}"]`);
     } else {
       if (heroWay(s) === id) delete yours[s.id]; else yours[s.id] = id;
       said = `From the next task: <b>${s.lab}</b>, ${wordOf(s, id)}${isYours(s) ? " (yours)" : ""}.`;
     }
-    drawChairs(); drawFan(); drawTable(); drawPotions();
-    if (s.kind === "hero") { const img = document.querySelector(`[data-head="${chair}"]`); img.classList.remove("is-new"); void img.offsetWidth; img.classList.add("is-new"); }
-    const el = document.querySelector(`#rows [data-s="${s.id}"][data-o="${id}"]`); if (el) el.classList.add("pulse");
+    drawChairs(); drawTable(); drawPotions();
+    if (s.kind === "hero") { const img = document.querySelector(`[data-head="${chair}"]`); if (img) { img.classList.remove("is-new"); void img.offsetWidth; img.classList.add("is-new"); } }
+    const tl = document.querySelector(`.tile[data-slot="${s.id}"]`); if (tl) tl.classList.add("pulse");
     const kf = document.getElementById("keeper-face"); if (kf) kf.src = RACE("peon-crown-pleased");
     document.getElementById("receipt").innerHTML = `${said} <button class="ork-btn quiet" id="undo">Undo</button>`;
-    document.getElementById("undo").onclick = () => { const e = document.querySelector(`#rows [data-s="${s.id}"][data-o="${old}"]`); if (e) trade(s, old, e); };
+    document.getElementById("undo").onclick = () => { if (s.kind === "hero") { s.value = old; if (!old) CHAIRS.find(x => x.lead === s.id).seated = "empty"; } else if (old === heroWay(s)) delete yours[s.id]; else yours[s.id] = old;
+      drawChairs(); drawTable(); drawPotions(); document.getElementById("receipt").innerHTML = ""; };
     document.getElementById("ask-head").src = HEAD(BY["lead-tech"].value);
-  }, 470);
+  }, 440);
 }
-function seat(id, el) {
+function seat(id) {
   const c = CHAIRS.find(x => x.id === id); if (c.seated) return;
-  c.seated = "empty"; freshFlag = id; chair = id; open = c.cards[0];
-  drawChairs(); drawFan(); drawTable(); drawNormal(); freshFlag = null;
-  document.getElementById("receipt").innerHTML = `<b>${CRAFTS[id].ti}</b> is at the table, its chair empty: its heroes lie here, the Orkmaster's pick starred.`;
+  c.seated = "empty"; freshFlag = id; chair = id; view = null; sel = c.lead;
+  drawChairs(); drawTable(); freshFlag = null;
+  document.getElementById("receipt").innerHTML = `<b>${CRAFTS[id].ti}</b> is at the table, its chair empty: its heroes are in your hand, the Orkmaster's pick starred.`;
 }
+function takeOff(c) {
+  const was = { seated: c.seated, value: BY[c.lead].value };
+  c.seated = false; chair = "keeper"; sel = null; drawChairs(); drawTable();
+  document.getElementById("receipt").innerHTML = `<b>${c.lab}</b> leaves the table: its hero, its tool, its tier. <button class="ork-btn quiet" id="undo">Undo</button>`;
+  document.getElementById("undo").onclick = () => { c.seated = was.seated; BY[c.lead].value = was.value; chair = c.id; drawChairs(); drawTable(); document.getElementById("receipt").innerHTML = ""; };
+}
+
+/* the discard: a thing of the table dropped on it goes back to its default */
 const pile = document.getElementById("pile");
-pile.addEventListener("dragover", e => { if (!document.getElementById("win").classList.contains("inv")) return; e.preventDefault(); pile.classList.add("is-over"); });
+pile.addEventListener("dragover", e => { if (!inv()) return; e.preventDefault(); pile.classList.add("is-over"); });
 pile.addEventListener("dragleave", () => pile.classList.remove("is-over"));
 pile.addEventListener("drop", e => { e.preventDefault(); pile.classList.remove("is-over"); giveBack(e.dataTransfer.getData("text/plain")); });
-document.addEventListener("dragstart", e => { const hc = e.target.closest && e.target.closest(".hc"); if (hc) e.dataTransfer.setData("text/plain", hc.dataset.card); });
-function giveBack(cid) {
-  const c = CARDS[cid]; if (!c) return;
+let dragging = false;
+document.addEventListener("dragstart", e => { const t = e.target.closest && e.target.closest(".tile"); if (t) { dragging = true; e.dataTransfer.setData("text/plain", t.dataset.slot); } });
+document.addEventListener("dragend", () => { dragging = false; });
+function giveBack(id) {
+  const s = BY[id]; if (!s) return;
   const say = html => { document.getElementById("receipt").innerHTML = html; };
-  if (c.fixed) { say(`Release is in every project: its hero goes back to the hand.`); return; }
-  const first = BY[c.parts[0]];
   pile.querySelector(".pile").classList.remove("took"); void pile.offsetWidth; pile.querySelector(".pile").classList.add("took");
-  if (first.kind === "hero") {
-    const ch = CHAIRS.find(x => x.lead === first.id), was = { seated: ch.seated, value: first.value };
-    ch.seated = false; chair = "keeper"; open = null; drawChairs(); drawFan(); drawTable();
-    say(`<b>${ch.lab}</b> leaves the table: its hero, its tool, its tier. <button class="ork-btn quiet" id="undo">Undo</button>`);
-    document.getElementById("undo").onclick = () => { ch.seated = was.seated; first.value = was.value; chair = ch.id; open = cid; drawChairs(); drawFan(); drawTable(); say(""); };
-    return;
-  }
-  const kept = Object.fromEntries(c.parts.filter(p => p in yours).map(p => [p, yours[p]]));
-  if (!Object.keys(kept).length) { say(`<b>${c.what || first.lab}</b> is already at its default.`); return; }
-  Object.keys(kept).forEach(p => delete yours[p]); drawFan(); drawTable(); drawPotions();
-  say(`<b>${c.what || first.lab}</b> goes back to ${first.party ? "its hero's way" : "the project's default"}. <button class="ork-btn quiet" id="undo">Undo</button>`);
-  document.getElementById("undo").onclick = () => { Object.assign(yours, kept); drawFan(); drawTable(); drawPotions(); say(""); };
+  if (s.kind === "hero") return takeOff(CHAIRS.find(c => c.lead === id));
+  if (s.kind === "fixed-hero" || s.fixed) return say(`${s.lab} is the project's own: it goes back on the table.`);
+  if (!isYours(s)) return say(`<b>${s.lab}</b> is already at its default.`);
+  const kept = yours[id]; delete yours[id]; drawTable(); drawPotions();
+  say(`<b>${s.lab}</b> goes back to ${s.party ? "its hero's way" : "the project's default"}. <button class="ork-btn quiet" id="undo">Undo</button>`);
+  document.getElementById("undo").onclick = () => { yours[id] = kept; drawTable(); drawPotions(); say(""); };
 }
-function enter(keep) { document.getElementById("win").classList.add("inv"); if (!keep) { chair = "keeper"; open = null; } drawChairs(); drawFan(); drawTable(); }
-function close() { document.getElementById("win").classList.remove("inv"); open = null; tableOf = "keeper"; document.getElementById("receipt").innerHTML = ""; drawChairs(); drawTable(); }
 
-/* the stage: a mockup's switch, and the Orkmaster's card when the project goes Live */
+/* ---------------- the table's edge: the potions and the die, pressed in the inventory ---------------- */
+function drawPotions(spend = 0) {
+  const ids = ["pot-1", "pot-2", "pot-3"].map(k => val(BY[k])).filter(v => v !== "none");
+  const box = document.getElementById("edge-potions");
+  box.innerHTML = ids.map((t, n) => {
+    const left = TOOLS[t].left, sp = n === 0 ? Math.min(spend, left) : 0, warn = left - sp < .2 ? (left - sp < .08 ? " is-danger" : " is-warn") : "";
+    return `<div class="potion-box"><span class="ork-potion${warn}" style="--ork-potion-left:${left};--ork-potion-spend:${sp}" title="${TOOLS[t].name}"></span><img class="hd" src="${ORK}marks/${TOOLS[t].mark}@2x.png" alt=""></div>`;
+  }).join("") + (ids.length < 3 ? `<span class="vial-add" title="Another AI tool">+</span>` : "");
+  box.classList.toggle("is-on", view === "potions");
+  box.onclick = () => { if (!inv()) return; view = "potions"; sel = null; document.getElementById("receipt").innerHTML = ""; drawChairs(); drawTable(); drawPotions(); drawDie(); };
+}
+const FACES = ["f-both", "f-web", "f-server", "f-android", "f-ios"];
+const FACE_STATE = { "f-server": "failed", "f-web": "new" };
+function faceIcon(id, size = 20) { const t = TOK[id]; return t.sign ? `<span class="ork-sign ${t.sign}" style="width:${size}px;height:${size}px"></span>` : `<svg class="ico" style="width:${size}px;height:${size}px"><use href="${ORK}icons/icons.svg#${t.icon}"/></svg>`; }
+function drawDie() {
+  if (!dieUp) dieUp = val(BY["die-up"]);
+  const i = FACES.indexOf(dieUp), next = FACES[(i + 1) % FACES.length], after = FACES[(i + 2) % FACES.length], t = TOK[dieUp];
+  const locked = dieUp === "f-ios", st = FACE_STATE[dieUp];
+  const word = dieState === "playing" ? `Playing · ${t.ti}` : dieState === "building" ? `Building ${t.ti} · about 4 min` : dieState === "sent" ? `${t.ti}: sent to your phone` : locked ? `${t.ti} · needs a Mac` : `Play · ${t.ti}`;
+  const box = document.getElementById("die");
+  box.innerHTML = `<div class="cube${dieState === "playing" ? " is-playing" : ""}${dieState === "building" ? " is-building" : ""}${view === "die" ? " is-on" : ""}">
+      <span class="f-top" title="Turn to ${TOK[after].ti}">${faceIcon(after, 9)}</span>
+      <button class="f-up" title="${word}">${faceIcon(dieUp)}${locked ? `<span class="mark">${LOCK}</span>` : st === "failed" ? `<span class="mark">${SIGN("cross")}</span>` : st === "new" ? `<span class="mark spark">✦</span>` : ""}</button>
+      <button class="f-right" title="Turn to ${TOK[next].ti}">${faceIcon(next, 9)}</button></div><span class="die-word">${word}</span>`;
+  const cube = box.querySelector(".cube");
+  if (inv()) { cube.onclick = () => { view = "die"; sel = null; document.getElementById("receipt").innerHTML = ""; drawChairs(); drawTable(); drawPotions(); drawDie(); }; return; }
+  box.querySelector(".f-right").onclick = () => { dieUp = next; dieState = ""; drawDie(); box.querySelector(".cube").classList.add("is-turning"); };
+  box.querySelector(".f-top").onclick = () => { dieUp = after; dieState = ""; drawDie(); box.querySelector(".cube").classList.add("is-turning"); };
+  box.querySelector(".f-up").onclick = () => {
+    if (locked) return;
+    if (dieUp === "f-android") { dieState = "building"; drawDie(); setTimeout(() => { dieState = val(BY["die-phone"]) === "to-phone" ? "sent" : ""; drawDie(); }, 2500); return; }
+    dieState = dieState === "playing" ? "" : "playing"; drawDie();
+  };
+}
+
+/* ---------------- in and out ---------------- */
+function enter(keep) { document.getElementById("win").classList.add("inv"); if (!keep) { chair = "keeper"; sel = null; view = null; } drawChairs(); drawTable(); drawPotions(); drawDie(); }
+function close() { document.getElementById("win").classList.remove("inv"); sel = null; view = null; tableOf = "keeper"; document.getElementById("receipt").innerHTML = ""; drawChairs(); drawTable(); drawPotions(); drawDie(); }
+
+/* the stage: a mockup's switch; at Live the Orkmaster pulls up the stage's chairs, empty */
 function drawStage() {
   document.getElementById("stage").innerHTML = `Mockup: the project is <b>${stage === "made" ? "Being made" : "Live"}</b>. ${stage === "made" ? `<button class="ork-btn" id="golive">Make it Live</button>` : ""}`;
   const b = document.getElementById("golive"); if (b) b.onclick = () => {
@@ -815,18 +873,7 @@ function drawStage() {
     document.getElementById("stage").insertAdjacentHTML("beforeend", come.length ? ` The Orkmaster pulls up ${come.map(c => c.lab).join(" and ")}'s chairs, empty: press one to seat its hero, or take it off.` : ""); };
 }
 function drawNormal() {
-  const waiting = CHAIRS.filter(c => c.seated === false);
-  const stageCard = false ? `<div class="k ork-card" style="border-color:var(--ork-ink)">
-      <div class="k__top"><span><img class="hd" src="${RACE("peon-crown")}" alt="">Orkmaster</span>${SIGN("flag")}</div>
-      <p class="k__ti">Live: ${waiting.map(c => c.lab).join(" and ")} come to the table</p>
-      <p class="k__win">${waiting.map(c => `${c.lab}: ${HEROES[BY[c.lead].star].name}`).join("<br>")}</p>
-      <div style="display:flex;flex-wrap:wrap;gap:2px 6px;align-items:center"><button class="ork-btn" id="seat-all" style="padding:0 8px">Seat them</button><button class="ork-btn quiet" id="later">Later</button></div></div>` : "";
-  const ask = document.querySelector("#normal-hand .k:not([style])");
-  document.getElementById("normal-hand").innerHTML = (ask ? ask.outerHTML : "") + stageCard;
-  const sa = document.getElementById("seat-all");
-  if (sa) sa.onclick = () => { waiting.forEach(c => { c.seated = true; }); freshFlag = waiting[0].id; drawChairs(); freshFlag = null; drawNormal();
-    document.querySelectorAll(".pennant").forEach(p => { const ch = p.closest(".chair"); if (ch && waiting.some(w => w.id === ch.dataset.chair)) p.classList.add("is-new"); }); };
-  const lt = document.getElementById("later"); if (lt) lt.onclick = () => { document.getElementById("seat-all").closest(".k").remove(); };
+  document.getElementById("stopped-line").innerHTML = stopped ? `<b>All stopped.</b> Nothing starts by itself until you press the door again: <i>Resume</i>.` : "";
 }
 
 /* the backpack, shut and open */
@@ -857,7 +904,7 @@ document.getElementById("heads-grid").innerHTML = RACES_SHOWN.map(([lab, ids]) =
     <div>${["worried", "pleased", "no"].map(m => `<img class="hd" src="heads/${id}-${m}.png" width="24" height="22" alt="">`).join("")}</div></div>`).join("")).join("");
 
 document.getElementById("ask-head").src = HEAD(BY["lead-tech"].value);
-drawStage(); drawChairs(); drawFan(); drawTable(); drawPotions(); drawNormal();
+drawStage(); drawChairs(); drawTable(); drawPotions(); drawDie(); drawNormal();
 </script>
 </body>
 </html>
