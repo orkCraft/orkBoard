@@ -7306,3 +7306,49 @@ leader is a set chosen at once, as a hero is; the person's trust stays the perso
 12. **The words** (`TERMS`, with the first spec): *Inventory*, *hero*, *Pen*, *Choice*, *Silent*, *Declare*, *Yours*, *Yours
    before*, *the hero's way*, *Back to default*, *Take off the chair*, *What leaves this computer*.
 The owner's call.
+
+## 267. A craft's heroes are only those that work on what is built: fifteen, no least number; the Orkmaster's star by the project (7 November 2026, the owner)
+
+Changes: 266 (its point 3: *three to six a craft*).
+
+Why: the owner asked for each craft's heroes with their framework, flow and team, then for each to be weighed against the
+product (the indie game developer with a day job, §218.2; a solo maker of a web or mobile app, H1; the day's three jobs,
+§199), against what the window can show (its craft's map and aspects, spec 109) and against what is gathered by itself (the
+hints of code, Play's signals, the brief, the mana's record). A hero whose framework has no map, no data or a cost the person
+cannot carry is words the leader cannot stand on; the owner: *keep only the heroes that will surely work well; the least
+number goes*. So:
+1. **A craft's heroes are those that work on what is built today**: its framework has its craft's map and aspects, and what
+   it judges by is gathered by code, Play, the brief or the mana's record. **No least number**: a craft has as many as work,
+   six at most; a craft with one shows it with no choice; a hero is added when the map and the data it stands on are built.
+2. **The heroes**, each with its school and its flow:
+   - **Product**: *Angel Invest Knight* (the opportunity solution tree; outcome → jobs → goals), *Jobwise Knight* (jobs to be
+     done; job → struggle → goal), *Appetite Knight* (Shape Up; shape → bet → build in the appetite, on the mana's record; the
+     bet stays the person's), *Pillar Knight* (design pillars and what it leaves out; pillars → the goal against them → keep
+     or cut, on the brief's *pillars* and *leaves_out*).
+   - **Design**: *Pixel-Perfect Dryad* (Nielsen's heuristics; walk → the ten rules → fix), *Sprint Dryad* (the design sprint;
+     map → sketch → decide → test: §199.3's sketches, picked on the phone, tried in Play), *Inclusive Dryad* (WCAG 2.2;
+     barriers → contrast and keys → fix: `a11y` today, the controller, the Deck and the focus path once §209.3–4 are built).
+   - **Tech**: *Sh.man* (C4 and hotspots; containers → parts → hotspots), *Spike Shaman* (extreme programming; test → code →
+     refactor; the dearest of the three), *Scene Shaman* (an engine's scenes; scene → autoloads → coupling, on Godot, Unity
+     and Unreal as System reads them).
+   - **Run**: *Lantern Imp* (observability first; trace → read → fix, on Play's errors, failed requests and slow places).
+   - **Marketing**: *Store Gnome* (the store page first; title → shots → test), *Growth Hack Gnome* (AARRR; acquire →
+     activate → retain, by its hints, not numbers), *Position Gnome* (positioning; the alternatives → what only it does →
+     who cares, on the brief's *why this, not what they use now*).
+   - **Release**: *Release Night King*, not traded (as §266).
+3. **Not taken, and why**: *Pivot Knight* (no measure to pivot by: the project's analytics are not read), *Diamond Dryad*
+   (Full and dear, research there is none of, and its four steps are a goal's phases again, which §266.3 forbids), *Atom
+   Dryad* (only for a project with a component library of its own, and Consistency has no hint), *Domain Shaman* (an indie
+   game's architecture is rewritten in an evening, §208), *Fitness Shaman* (fitness functions as records are later, spec 109
+   §5), *Uptime Imp* (no server and no SLO: nothing gathered). Talked of and dropped: a story map's, an API contract's,
+   chaos', the cloud bill's and building in public's heroes, each needing a map or a source there is none of.
+4. **Later**, when what they stand on is built: *Pivot Knight* with the project's analytics (spec 115's later part), *Uptime
+   Imp* with Run's map (§215), *Atom Dryad* with a hint of a part made outside the project's library, a *Wishlist Gnome*
+   (the Steam page → the demo's end → Next Fest) with §214.2 and §211.2.
+5. **The Orkmaster's star by the project**, read from its kind and its stage (`project_kind`, `project_stage`), never fixed:
+   for a game, *Jobwise Knight*, *Sprint Dryad*, *Scene Shaman*, *Position Gnome* (cheap, decided in a minute on the phone);
+   for a web or mobile app, *Angel Invest Knight*, *Pixel-Perfect Dryad*, *Spike Shaman*, *Store Gnome*.
+6. **The new faces**: *Pillar Knight*, *Inclusive Dryad*, *Scene Shaman* and *Position Gnome* are drawn in orkUI before they
+   are used (§266.4); the mockup's heroes follow with the first spec.
+7. **The words**: the heroes' names are words of the interface (§164.3), in `TERMS` with the first spec.
+The owner's call.
