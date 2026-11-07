@@ -104,6 +104,7 @@ with this file, ask the person. Schema {SCHEMA}.
 All of it is text in this repository, in `{wiki}/`:
 
 - `pages/ideas/<slug>.md`: a goal. `pages/tracks/<slug>.md`: a party. In these files and in the keys, *idea* is a goal and *track* is a party.
+- `pages/tables/<party>.md`: a party's table as its hero lays it, kept by its leader.
 - `roles/<id>.md`: what each seat is told (the Orkmaster, each craft's leader, the Taskmaster, a Grunt). Read the role before you play it.
 - `journals/<scope>.md`: what a party and the project learned, a line an entry. `project.md`: the project's brief.
 - The decisions: `{decisions}`. A decision is written as the project writes its decisions; a past one is never edited, a new one replaces it and says *Changes: <number>*.
@@ -261,13 +262,35 @@ READS = {"orkmaster": ("the goal's page `{wiki}/pages/ideas/<slug>.md`, its *Gis
                    "the tasks before yours, and the repository you work in")}
 
 
+def table_text(craft: str, wiki: str) -> str:
+    """A leader's table (spec 157 F.3): its hero, its school and its places, and that its pass keeps `pages/tables/<party>.md` in `hero_table`'s format. "" for a craft with no hero to lay a table (Release's is fixed)."""
+    from orkboard.realm import heroes
+    crafted = heroes.of(craft) if craft != "release" else []
+    if not crafted:
+        return ""
+    lines = []
+    for h in crafted:
+        frame = "the craft's map, laid by code" if h.default else ", ".join(f"*{n}* ({a})" for n, a in h.places)
+        lines.append(f"- **{h.name}**{' (the default)' if h.default else ''}: {h.school}. Its places: {frame}.")
+    return f"""## Your hero and your table
+
+Your party's hero is the key `hero` of its page `{wiki}/pages/tracks/<party>.md`; none there is the default. You look by its school. The heroes of your craft:
+
+""" + "\n".join(lines) + f"""
+
+A hero that is not the default lays its places as a table, which you keep in `{wiki}/pages/tables/<party>.md`. Each pass of yours on a goal of your party keeps it: front matter `owner: board`, `kind: table`, `party`, `hero` (your hero's id), `laid` (today's date), `schema: 1`; then one `## <place>` section for each place of your hero, in its order, its lines `- <title> — <line>`, with an optional trailing `{{goal: <slug>, state: hot|bad|good|ghost}}`. A line is at most 160 characters, a place has at most 12 lines. A line is a thing you read in the page, the repository or the Board, and no number you did not read. A place with nothing yet stays empty.
+"""
+
+
 def role_body(seat: str, craft: str, wiki: str, decisions: str, name: str) -> str:
-    """`roles/<id>.md` after its front matter: a title, the seat's text and *What it reads*."""
+    """`roles/<id>.md` after its front matter: a title, the seat's text, a leader's hero and table, and *What it reads*."""
     reads = "\n".join(f"- {line.format(wiki=wiki, decisions=decisions)}" for line in READS[seat])
+    table = table_text(craft, wiki) if seat == "leader" else ""
+    table = f"\n{table}" if table else ""
     return f"""# {name}
 
 {seat_text(seat, craft)}
-
+{table}
 ## What it reads
 
 {reads}

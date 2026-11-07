@@ -11,12 +11,13 @@ segment and its pain (`idea_lens.keep_segment`) for Product's map. Answered or l
 """
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError
-from orkboard.realm import first_open, goal_team, idea_lens, journal_notes, project_facts, project_questions, read_in
+from orkboard.realm import first_open, goal_team, idea_lens, journal_notes, lay_tables, project_facts, project_questions, read_in
 
 SEGMENT_CHARS, PAIN_CHARS = 120, 300                 # `idea_lens`: a segment's name, a pain
 
@@ -28,6 +29,7 @@ class ProjectQMixin:
         first Start, which is what calls this, keeps it laid (`realm/first_open.py`); a project laid already is as it was."""
         if first_open.lay(self.state_dir):
             self.changed("")                                     # the page plays the laying once (decisions §232.1)
+        self._lay_tables()
         try:
             read_in.first_start(Path(self.host.repo_root), self.state_dir, self.root(False))
         except Exception:
@@ -41,6 +43,14 @@ class ProjectQMixin:
             return {"asked": False, "why": str(e)}
         self.changed("")
         return {"asked": asked}
+
+    def _lay_tables(self) -> None:
+        """The first goal, *Lay the tables* (spec 157 F.2, decisions §267.4), laid once after the table is: it waits in line, nothing starts, and a failure to lay never breaks the first open."""
+        try:
+            if lay_tables.lay_first(Path(self.root()), self.state_dir):
+                self.changed("")
+        except Exception:
+            logging.getLogger(__name__).warning("The first goal, Lay the tables, could not be laid", exc_info=True)
 
     def brief_more(self) -> None:
         """The brief's other half (spec 124 A): once the first start's questions are answered or let go, the next goal added asks the rest of the brief, quietly (no refusal,

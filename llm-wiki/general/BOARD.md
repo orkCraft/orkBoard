@@ -1,4 +1,4 @@
-<!-- orkboard:file schema=3 hash=91783766eb98 -->
+<!-- orkboard:file schema=3 hash=a063a0510c76 -->
 # The Board's rules (Orkboard's file)
 
 Orkboard writes this file from its package; a change by hand is written back. This project's own rules go in `AGENTS.md` and `CLAUDE.md`, and they win: where they conflict
@@ -9,6 +9,7 @@ with this file, ask the person. Schema 3.
 All of it is text in this repository, in `llm-wiki/general/`:
 
 - `pages/ideas/<slug>.md`: a goal. `pages/tracks/<slug>.md`: a party. In these files and in the keys, *idea* is a goal and *track* is a party.
+- `pages/tables/<party>.md`: a party's table as its hero lays it, kept by its leader.
 - `roles/<id>.md`: what each seat is told (the Orkmaster, each craft's leader, the Taskmaster, a Grunt). Read the role before you play it.
 - `journals/<scope>.md`: what a party and the project learned, a line an entry. `project.md`: the project's brief.
 - The decisions: `docs/decisions.md`. A decision is written as the project writes its decisions; a past one is never edited, a new one replaces it and says *Changes: <number>*.

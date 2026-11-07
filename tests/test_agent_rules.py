@@ -412,3 +412,18 @@ def test_the_seats_files_are_written_again_when_the_packages_text_changes(tmp_pa
     assert sorted(f["path"] for f in check(root) if f["what"] == "outdated") == sorted(f".claude/agents/ork-{i}.md" for i in ("orkmaster", "tech-leader", "design-leader", "taskmaster"))
     agent_rules.refresh(root, WIKI, decisions=DECISIONS)
     assert front(root / ".claude/agents/ork-tech-leader.md")[0]["tools"] == "Read, Grep"
+
+
+def test_a_leaders_role_names_its_heroes_and_places_and_keeps_its_table_and_board_md_lays_the_line(tmp_path):
+    """Spec 157 F.3: the role file of a leader says its hero, its school, its places and that its pass keeps `pages/tables/<party>.md`; BOARD.md lists the file."""
+    root = project(tmp_path)
+    write(root)
+    role = (root / WIKI / "roles" / "tech-leader.md").read_text(encoding="utf-8")
+    assert "## Your hero and your table" in role and "**Sh.man** (the default): C4 and hotspots" in role
+    assert "**Spike Shaman**: Extreme programming. Its places: *Red* (" in role and "*Refactor*" in role and "*Released small*" in role
+    assert f"`{WIKI}/pages/tables/<party>.md`" in role and "owner: board" in role and "no number you did not read" in role
+    assert "## Your hero and your table" in (root / WIKI / "roles" / "design-leader.md").read_text(encoding="utf-8")
+    assert "## Your hero and your table" not in (root / WIKI / "roles" / "taskmaster.md").read_text(encoding="utf-8")
+    board = (root / WIKI / "BOARD.md").read_text(encoding="utf-8")
+    assert "- `pages/tables/<party>.md`: a party's table as its hero lays it, kept by its leader." in board
+    assert check(root) == []
