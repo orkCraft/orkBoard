@@ -64,7 +64,18 @@ button { font: inherit; }
 @keyframes unfurl { 0% { transform: scaleY(0); opacity: 0; } 60% { transform: scaleY(1.1); opacity: 1; } 100% { transform: none; } }
 .stage { display: flex; align-items: center; gap: var(--ork-4); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .stage b { color: var(--ork-ink); font-weight: 600; }
-.f-craft .pennant, .tex .pennant { position: static; display: block; margin: 0 auto 4px; }
+.f-craft .pennant, .tex .pennant, .hc__idx .pennant, .f-hero .pennant { position: static; display: block; }
+.f-craft .pennant { margin: 0 auto 4px; }
+.craft-chair { display: block; shape-rendering: crispEdges; }
+.craft-chair.is-new { animation: unfurl .8s var(--ork-motion-ease); transform-origin: bottom center; }
+.sil { display: block; shape-rendering: crispEdges; }
+.hc .sil, .f-hero .sil { position: absolute; right: 6px; top: 6px; }
+.f-hero .pennant { position: absolute; left: 6px; top: 6px; }
+.f-hero.empty-hero { display: grid; place-items: center; text-align: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 11px; }
+.fgroup { position: absolute; top: 0; height: 200px; }
+.fgroup__lab { position: absolute; left: 0; top: 196px; white-space: nowrap; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.fgroup__lab b { font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); margin-right: 6px; }
+.fgroup.tight .hc:not(:last-child):not(:hover):not(.is-on) .hc__body { visibility: hidden; }
 .pack { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; background: none; border: var(--ork-line) solid transparent; cursor: pointer; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-size: 11px; }
 .pack:hover { border-color: var(--ork-frame); color: var(--ork-ink); }
 .pack svg { display: block; shape-rendering: crispEdges; }
@@ -179,7 +190,7 @@ button { font: inherit; }
 .f-ans .conf { position: absolute; right: 4px; top: 4px; width: 12px; height: 12px; color: var(--ork-alert); }
 
 /* ---------- the hand: the picked chair's fan ---------- */
-.hand { position: relative; height: 236px; margin-top: var(--ork-5); }
+.hand { position: relative; height: 250px; margin-top: var(--ork-5); }
 .fan { display: none; position: relative; height: 200px; margin-left: 30px; }
 .win.inv .fan { display: block; }
 .fan__lab { display: none; margin: 6px 0 0 30px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
@@ -249,7 +260,7 @@ button { font: inherit; }
 <main class="mk-main">
 <section class="mk-sec" id="inv">
   <h1>1 · The inventory: the chairs say whose, the hand holds it, the table lays the ways</h1>
-  <p class="mk-line"><b>A chair is a craft</b>: its pennant wears its table's texture, so a new hero on it changes the face, never the craft. The chairs stand in the route's order; the Orkmaster seats the crafts of the project's stage, the empty chair seats one sooner, and at Live the Orkmaster lays a card in the hand. <b>The backpack</b> at the chairs' end opens the inventory: the table's edge is stitched, the chairs stay. <b>Pick a chair</b>:
+  <p class="mk-line"><b>A chair is a craft</b>: empty, its back shows its table's texture; taken, the hero's race says the craft (a race is a craft in a project), so a new hero changes the face, never the craft. A hero's card: the craft's texture at its top left (whose), the one silhouette of every hero at its top right (what card). The chairs stand in the route's order; the Orkmaster seats the crafts of the project's stage, the empty chair seats one sooner, and at Live the Orkmaster lays a card in the hand. <b>The backpack</b> at the chairs' end opens the inventory: the table's edge is stitched, the chairs stay. <b>Pick a chair</b>:
     the Orkmaster's is the whole project, a leader's its party; the table takes that chair's texture. <b>Press the chair again</b> and its heroes
     lie on the table: a hero brings its school, its flow, its size and its temper. <b>The hand</b> holds that chair's other settings; a card
     pressed lays its ways on the table, priced against yours and hatched on the potions. What you set yourself is marked <i>yours</i>, and stays
@@ -403,7 +414,8 @@ let stage = "made";
 /* ---------------- the chairs and what each holds ---------------- */
 const CHAIRS = [
   { id: "keeper", lab: "Guild app", sub: "the whole project", head: RACE("peon-crown"), tex: "felt",
-    cards: ["c-pots", "c-target", "c-look", "c-starts", "c-hours", "c-cloud", "c-push", "c-cap", "c-gate", "c-low", "c-decision"] },
+    cards: ["c-pots", "c-target", "c-look", "c-starts", "c-hours", "c-cloud", "c-push", "c-cap", "c-gate", "c-low", "c-decision"],
+    groups: [["When and how much", ["c-pots", "c-target", "c-look", "c-starts", "c-hours", "c-cloud", "c-push", "c-cap", "c-gate"]], ["How you are asked", ["c-low", "c-decision"]]] },
   { id: "product", lab: "Product", lead: "lead-product", tex: "contours", race: "knight", cards: ["c-hero-product", "c-ans-pain", "c-cf-product", "c-tool-product", "c-tier-product"] },
   { id: "design", lab: "Design", lead: "lead-design", tex: "dots", race: "elf", cards: ["c-hero-design", "c-ans-icon", "c-cf-design", "c-tool-design", "c-tier-design"] },
   { id: "tech", lab: "Tech", lead: "lead-tech", tex: "grid", race: "peon", cards: ["c-hero-tech", "c-ans-tier", "c-ans-test", "c-cf-tech", "c-tool-tech", "c-tier-tech"] },
@@ -419,9 +431,9 @@ const SLOTS = [
     say: "Your screens are built from orkUI's parts. <b>Atom Dryad</b> would ask before a new one, and decide the rest itself." },
   { id: "lead-tech", kind: "hero", lab: "Tech's leader", value: "sh-c4", opts: ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"], star: "sh-xp",
     say: "The spawner's tests fail often. <b>Spike Shaman</b> writes the test first, and retries a failing one itself." },
-  { id: "lead-run", kind: "hero", lab: "Run's leader", value: "imp-slo", opts: ["imp-slo", "imp-obs"], star: "imp-slo",
+  { id: "lead-run", kind: "hero", lab: "Run's leader", value: null, opts: ["imp-slo", "imp-obs"], star: "imp-slo",
     say: "For a small app, <b>Uptime Imp</b>: one objective, a budget for errors, and quiet until it is spent." },
-  { id: "lead-marketing", kind: "hero", lab: "Marketing's leader", value: "fairy-aso", opts: ["fairy-aarrr", "fairy-aso"], star: "fairy-aso",
+  { id: "lead-marketing", kind: "hero", lab: "Marketing's leader", value: null, opts: ["fairy-aarrr", "fairy-aso"], star: "fairy-aso",
     say: "Before anyone comes, the store page: <b>Store Gnome</b>, lighter and cheaper." },
   { id: "ans-pain", kind: "ans", lab: "A pain with no measure", party: "lead-product", base: "choice", opts: ["pen", "choice", "choice-2h", "fork", "silent"] },
   { id: "ans-icon", kind: "ans", lab: "A new icon", party: "lead-design", base: "choice", opts: ["pen", "choice", "choice-2h", "fork", "silent"] },
@@ -490,7 +502,7 @@ CARDS["c-ans-test"] = { parts: ["ans-test"], say: "One more try, or stop and ask
 /* the values: a hero's ways, yours over them */
 const yours = {}, prev = {};
 const leadOf = s => s.party ? BY[s.party] : null;
-const heroWay = s => { const l = leadOf(s); return l ? HEROES[l.value].ways[s.id] : undefined; };
+const heroWay = s => { const l = leadOf(s); return l && l.value ? HEROES[l.value].ways[s.id] : undefined; };
 const val = s => s.kind === "hero" ? s.value : (yours[s.id] ?? heroWay(s) ?? s.base);
 const isYours = s => s.id in yours;
 let chair = "tech", open = "c-hero-tech", tableOf = "keeper";
@@ -501,7 +513,7 @@ const MOTIF = {
   felt: () => false,
   grid: (x, y) => x % 3 === 0 || y % 3 === 0,
   dots: (x, y) => x % 2 === 1 && y % 2 === 1,
-  contours: (x, y) => y === WAVE[x] + 1 || y === WAVE[x] + 5,
+  contours: (x, y) => y === WAVE[x % 7] + 1 || y === WAVE[x % 7] + 5,
   stones: (x, y) => y % 3 === 0 || (Math.floor(y / 3) % 2 === 0 ? x === 2 || x === 5 : x === 3),
   stripes: (x, y) => (x + y) % 3 === 0,
   chevrons: (x, y) => (y - Math.abs(x - 3) + 8) % 4 === 0,
@@ -517,13 +529,26 @@ function pennant(tex, cell = 2, fresh = false) {
   return `<svg class="pennant${fresh ? " is-new" : ""}" width="${7 * cell}" height="${9 * cell}" viewBox="0 0 7 9" aria-hidden="true">${r}</svg>`;
 }
 let freshFlag = null;
+function SIL(cell = 2) {
+  const rows = ["..XXX..", ".XXXXX.", ".XXXXX.", "..XXX..", ".XXXXX.", "XXXXXXX", "XXXXXXX"];
+  let r = ""; rows.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === "X") r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; }));
+  return `<svg class="sil" width="${7 * cell}" height="${7 * cell}" viewBox="0 0 7 7" fill="var(--ork-ink-muted)" aria-hidden="true"><title>Hero</title>${r}</svg>`;
+}
+function craftChair(tex, fresh = false, cell = 2) {
+  const posts = [[2, 0, 2, 10], [14, 0, 2, 10], [4, 1, 10, 2], [0, 9, 18, 2], [1, 11, 2, 7], [15, 11, 2, 7]], panel = [4, 3, 10, 6];
+  let r = posts.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--ork-edge)"/>`).join("");
+  for (let y = 0; y < panel[3]; y++) for (let x = 0; x < panel[2]; x++)
+    r += `<rect x="${panel[0] + x}" y="${panel[1] + y}" width="1" height="1" fill="${MOTIF[tex](x, y) ? "var(--ork-ink-muted)" : "var(--ork-raised)"}"/>`;
+  return `<svg class="craft-chair${fresh ? " is-new" : ""}" width="${18 * cell}" height="${18 * cell}" viewBox="0 0 18 18" aria-hidden="true">${r}</svg>`;
+}
+const texOfLead = id => (CHAIRS.find(c => c.lead === id) || {}).tex || "felt";
 
 /* ---------------- drawing ---------------- */
 const headOfWho = w => w === "keeper" ? RACE("peon-crown") : w === "release" ? RACE("lich-elder") : HIMG(BY[w].value);
 const bar = n => `<span class="bar">${[1, 2, 3].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</span>`;
 function face(s, id) {
   if (s.kind === "hero") { const h = HEROES[id];
-    return `<div class="face f-hero"><img class="hd" src="${HIMG(id)}" width="48" height="44" alt=""><p class="f-hero__name">${h.name}</p><p class="f-hero__school">${h.school}</p>
+    return `<div class="face f-hero">${pennant(texOfLead(s.id), 2)}${SIL()}<img class="hd" src="${HIMG(id)}" width="48" height="44" alt=""><p class="f-hero__name">${h.name}</p><p class="f-hero__school">${h.school}</p>
       <div class="stats"><span>Flow</span><b>${h.flow}</b><span>Size</span><b>${h.size}</b>
         <span>Decides</span><span class="bar"><span>asks</span>${bar(h.trust)}<span>itself</span></span>
         <span>Says no</span><span class="bar"><span>seldom</span>${bar(h.temper)}<span>often</span></span></div></div>`; }
@@ -560,9 +585,10 @@ const wordOf = (s, id) => s.kind === "hero" ? HEROES[id].name : s.kind === "ans"
 function drawChairs() {
   const inv = document.getElementById("win").classList.contains("inv"), on = inv ? chair : tableOf;
   document.getElementById("chairs").innerHTML = CHAIRS.filter(c => c.seated !== false).map(c => {
+    if (c.seated === "empty") return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat">${craftChair(c.tex, freshFlag === c.id || (Array.isArray(freshFlag) && freshFlag.includes(c.id)))}</span>${c.lab}<small>no hero yet</small></button>`;
     const src = c.lead ? HIMG(BY[c.lead].value) : c.head;
     if (c.empty) return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat"><span class="ork-chair is-empty"></span></span>${c.lab}<small></small></button>`;
-    return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat"><span class="ork-chair${on === c.id ? " big" : ""}"></span><img class="hd" data-head="${c.id}" src="${src}" alt="">${c.id === "keeper" ? "" : pennant(c.tex, on === c.id ? 3 : 2, freshFlag === c.id)}</span>${c.lab}<small>${c.lead ? HEROES[BY[c.lead].value].short : c.sub || ""}</small></button>`;
+    return `<button class="chair${on === c.id ? " on" : ""}" data-chair="${c.id}"><span class="chair__seat"><span class="ork-chair${on === c.id ? " big" : ""}"></span><img class="hd" data-head="${c.id}" src="${src}" alt=""></span>${c.lab}<small>${c.lead ? HEROES[BY[c.lead].value].short : c.sub || ""}</small></button>`;
   }).join("") + `<span class="gap"></span>
     <button class="pack" id="pack" title="${inv ? "Close the inventory" : "Inventory: how the project is set"}"><svg width="40" height="40" viewBox="0 0 16 16" id="pack-art"></svg>Inventory</button>
     <span class="door"><span class="ork-door small"></span>Stop all</span>`;
@@ -581,13 +607,15 @@ function pickChair(id) {
 /* a card of the hand */
 function handCard(cid) {
   const c = CARDS[cid];
-  if (c.fixed) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}"><div class="hc__idx"><img class="hd" src="${RACE("lich-elder")}" alt="">Hero${LOCK}</div><div class="hc__body">
+  if (c.fixed) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}"><div class="hc__idx">${pennant("stones", 2)}${LOCK}</div>${SIL()}<div class="hc__body">
     <img class="hd" src="${RACE("lich-elder")}" width="48" height="44" alt="" style="margin:4px 0"><p class="hc__val">Release Night King</p><p class="hc__line">in every project</p></div></div>`;
   const s = BY[c.parts[0]], v = val(s);
   let idx, body;
   if (s.kind === "hero") {
+    const corner = `<div class="hc__idx">${pennant(texOfLead(s.id), 2)}</div>${SIL()}`;
+    if (!v) return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}">${corner}<div class="hc__body"><p class="hc__val" style="margin-top:24px">No hero yet</p><p class="hc__line">pick one on the table</p></div></div>`;
     const h = HEROES[v];
-    return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}"><div class="hc__idx"><img class="hd" src="${HIMG(v)}" alt="">Hero</div><div class="hc__body">
+    return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}">${corner}<div class="hc__body">
       <img class="hd" src="${HIMG(v)}" width="48" height="44" alt="" style="margin:4px 0"><p class="hc__val">${h.name}</p><p class="hc__line">${h.school}<br>${h.flow}</p></div></div>`;
   }
   if (s.kind === "ans") {
@@ -608,14 +636,21 @@ function handCard(cid) {
   const mark = mine ? `<span class="yours">yours</span>` : hero ? `<span class="heros">the hero's way</span>` : "";
   return `<div class="hc${open === cid ? " is-on" : ""}" data-card="${cid}"><div class="hc__idx">${idx}</div><div class="hc__body">${body}${mark}</div></div>`;
 }
+function fanHtml(cards, W) {
+  const n = cards.length, CW = 112, step = n > 1 ? Math.min(CW + 10, (W - CW) / (n - 1)) : 0, mid = (n - 1) / 2;
+  return { tight: step < CW, width: n ? (n - 1) * step + CW : 0, html: cards.map((cid, i) => handCard(cid).replace('class="hc', `style="left:${i * step}px;z-index:${i + 1};transform:rotate(${(i - mid) * 1.5}deg) translateY(${Math.abs(i - mid) * 2}px)" class="hc`)).join("") };
+}
 function drawFan() {
-  const c = CHAIRS.find(x => x.id === chair), n = c.cards.length, CW = 112, W = Math.max(CW, Math.min(n * (CW + 10), 820));
-  const step = n > 1 ? Math.min(CW + 10, (W - CW) / (n - 1)) : 0, mid = (n - 1) / 2;
-  document.getElementById("fan").classList.toggle("tight", step < CW);
-  document.getElementById("fan").innerHTML = n ? c.cards.map((cid, i) => handCard(cid).replace('class="hc', `style="left:${i * step}px;z-index:${i + 1};transform:rotate(${(i - mid) * 1.5}deg) translateY(${Math.abs(i - mid) * 2}px)" class="hc`)).join("")
-    : `<p class="fan__none">A new party has nothing to hold yet: pick its craft on the table.</p>`;
-  const lab = { keeper: "the whole project", release: "its hero and its questions", empty: "" }[chair] ?? "its hero first, then its party";
-  document.getElementById("fan-lab").innerHTML = `<b>${c.lab}</b>${lab}`;
+  const c = CHAIRS.find(x => x.id === chair), fan = document.getElementById("fan");
+  const groups = c.groups || [[null, c.cards]];
+  let x = 0;
+  fan.innerHTML = c.cards.length ? groups.map(([lab, cards], gi) => {
+    const W = groups.length > 1 ? (gi === 0 ? 660 : 250) : Math.min(cards.length * 122, 820), f = fanHtml(cards, W);
+    const out = `<div class="fgroup${f.tight ? " tight" : ""}" style="left:${x}px;width:${f.width}px">${f.html}${lab ? `<p class="fgroup__lab"><b>${lab}</b></p>` : ""}</div>`;
+    x += f.width + 60; return out;
+  }).join("") : `<p class="fan__none">A new party has nothing to hold yet: pick its craft on the table.</p>`;
+  const lab = { keeper: "", release: "its hero and its questions", empty: "" }[chair] ?? "its hero first, then its party";
+  document.getElementById("fan-lab").innerHTML = lab ? `<b>${c.lab}</b>${lab}` : "";
   document.querySelectorAll(".hc").forEach(el => el.onclick = () => { open = open === el.dataset.card ? null : el.dataset.card; drawFan(); drawTable(); });
 }
 
@@ -624,7 +659,7 @@ function ware(s, id) {
   if (s.kind === "craft") {
     const at = CHAIRS.find(c => c.id === id).seated;
     return `<div class="ware${at ? " locked" : ""}" data-s="${s.id}" data-o="${id}">${face(s, id)}${at ? `<span class="tag">at the table</span>` :
-      `<span class="tag">${stage === "made" ? "before Live: yours to seat" : "its stage has come"}</span><small>its leader: ${HEROES[BY["lead-" + id].star].name}, the Orkmaster's pick</small><button class="ork-btn take">Seat it</button>`}</div>`;
+      `<span class="tag">${stage === "made" ? "before Live: yours to seat" : "its stage has come"}</span><small>its chair comes empty; you pick its hero</small><button class="ork-btn take">Seat it</button>`}</div>`;
   }
   const lock = s.locked && s.locked[id], mine = val(s) === id, hw = s.kind !== "hero" && heroWay(s) === id;
   return `<div class="ware${mine ? " mine" : ""}${lock ? " locked" : ""}" data-s="${s.id}" data-o="${id}">${face(s, id)}
@@ -643,7 +678,10 @@ function drawTable() {
       : `<div class="lane" style="grid-column:span 5;height:420px;display:grid;place-items:center;color:var(--ork-ink-faint);font:var(--ork-type-caption)">${c.lab}'s table, laid as its hero reads it</div>`;
     return;
   }
-  head.innerHTML = `<span class="pix">Inventory</span> how the project is set · <b>${c.id === "keeper" ? "the whole project" : c.lab}</b>`;
+  head.innerHTML = `<span class="pix">Inventory</span> how the project is set · <b>${c.id === "keeper" ? "the whole project" : c.lab}</b>${c.lead ? ` <button class="ork-btn quiet back" id="off">Take off the chair</button>` : ""}`;
+  const off = document.getElementById("off");
+  if (off) off.onclick = () => { c.seated = false; BY[c.lead].value = c.id === "run" || c.id === "marketing" ? null : BY[c.lead].value; chair = "keeper"; open = null; drawChairs(); drawFan(); drawTable();
+    document.getElementById("receipt").innerHTML = `<b>${c.lab}</b> leaves the table; the empty chair at the end seats it again.`; };
   const sayAs = (html, mood = "") => says.innerHTML = `<img class="hd" id="keeper-face" src="${RACE("peon-crown" + (mood ? "-" + mood : ""))}" alt=""><span>${html}</span>`;
   let parts = [];
   if (open) { parts = CARDS[open].parts; sayAs(CARDS[open].say, "focused"); }
@@ -695,10 +733,10 @@ function trade(s, id, wareEl) {
     let said;
     if (s.kind === "hero") {
       const before = SLOTS.filter(x => x.party === s.id).map(x => [x, val(x)]);
-      s.value = id;
+      s.value = id; const ch = CHAIRS.find(x => x.lead === s.id); if (ch) ch.seated = true;
       const moved = before.filter(([x, v]) => val(x) !== v).map(([x]) => `${x.lab.toLowerCase()}: ${wordOf(x, val(x))}`);
       const kept = before.filter(([x]) => isYours(x)).map(([x]) => x.lab.toLowerCase());
-      said = `<b>${HEROES[id].name}</b> sits at ${s.lab.replace("'s leader", "")}. ${moved.length ? "It brings its ways: " + moved.join("; ") + ". " : ""}${kept.length ? "Yours stay: " + kept.join(", ") + "." : ""}`;
+      said = `<b>${HEROES[id].name}</b> sits at ${s.lab.replace("'s leader", "")}${old ? "" : "'s empty chair"}. ${moved.length ? "It brings its ways: " + moved.join("; ") + ". " : ""}${kept.length ? "Yours stay: " + kept.join(", ") + "." : ""}`;
       const img = document.querySelector(`[data-head="${chair}"]`);
     } else {
       if (heroWay(s) === id) delete yours[s.id]; else yours[s.id] = id;
@@ -715,9 +753,9 @@ function trade(s, id, wareEl) {
 }
 function seat(id, el) {
   const c = CHAIRS.find(x => x.id === id); if (c.seated) return;
-  c.seated = true; freshFlag = id; chair = id; open = c.cards[0];
+  c.seated = "empty"; freshFlag = id; chair = id; open = c.cards[0];
   drawChairs(); drawFan(); drawTable(); drawNormal(); freshFlag = null;
-  document.getElementById("receipt").innerHTML = `<b>${CRAFTS[id].ti}</b> sits at the table, ${HEROES[BY["lead-" + id].value].name} on its chair. Its heroes are on the table; the Orkmaster's pick is already seated.`;
+  document.getElementById("receipt").innerHTML = `<b>${CRAFTS[id].ti}</b> is at the table, its chair empty: its heroes lie here, the Orkmaster's pick starred.`;
 }
 function enter(keep) { document.getElementById("win").classList.add("inv"); if (!keep) { chair = "keeper"; open = null; } drawChairs(); drawFan(); drawTable(); }
 function close() { document.getElementById("win").classList.remove("inv"); open = null; tableOf = "keeper"; document.getElementById("receipt").innerHTML = ""; drawChairs(); drawTable(); }
@@ -725,11 +763,14 @@ function close() { document.getElementById("win").classList.remove("inv"); open 
 /* the stage: a mockup's switch, and the Orkmaster's card when the project goes Live */
 function drawStage() {
   document.getElementById("stage").innerHTML = `Mockup: the project is <b>${stage === "made" ? "Being made" : "Live"}</b>. ${stage === "made" ? `<button class="ork-btn" id="golive">Make it Live</button>` : ""}`;
-  const b = document.getElementById("golive"); if (b) b.onclick = () => { stage = "live"; close(); drawStage(); drawNormal(); };
+  const b = document.getElementById("golive"); if (b) b.onclick = () => {
+    stage = "live"; const come = CHAIRS.filter(c => c.seated === false); come.forEach(c => { c.seated = "empty"; });
+    close(); freshFlag = come.map(c => c.id); drawChairs(); freshFlag = null; drawStage();
+    document.getElementById("stage").insertAdjacentHTML("beforeend", come.length ? ` The Orkmaster pulls up ${come.map(c => c.lab).join(" and ")}'s chairs, empty: press one to seat its hero, or take it off.` : ""); };
 }
 function drawNormal() {
   const waiting = CHAIRS.filter(c => c.seated === false);
-  const stageCard = stage === "live" && waiting.length ? `<div class="k ork-card" style="border-color:var(--ork-ink)">
+  const stageCard = false ? `<div class="k ork-card" style="border-color:var(--ork-ink)">
       <div class="k__top"><span><img class="hd" src="${RACE("peon-crown")}" alt="">Orkmaster</span>${SIGN("flag")}</div>
       <p class="k__ti">Live: ${waiting.map(c => c.lab).join(" and ")} come to the table</p>
       <p class="k__win">${waiting.map(c => `${c.lab}: ${HEROES[BY[c.lead].star].name}`).join("<br>")}</p>
@@ -760,7 +801,7 @@ function drawPack(open) {
 document.getElementById("texes").innerHTML = [["felt", "The Orkmaster", "plain felt: the whole project"], ["grid", "Tech", "a blueprint's grid"], ["dots", "Design", "a canvas's dots"],
   ["contours", "Product", "a map's contours"], ["stones", "Release", "the lich's stones"], ["stripes", "Run", "a warning's stripes"], ["chevrons", "Marketing", "the way people come"],
   ["grid", "Tech, in the inventory", "the same grid, the edge stitched"]]
-  .map(([t, who, line], i) => `<div class="tex"><div class="ork-table${i === 7 ? " stitch" : ""}" data-tex="${t}"><div class="mini">Waves<span class="ork-elem meadow"></span></div><span style="position:absolute;right:16px;top:16px">${pennant(t, 3)}</span></div><span><b>${who}</b> · ${line}</span></div>`).join("");
+  .map(([t, who, line], i) => `<div class="tex"><div class="ork-table${i === 7 ? " stitch" : ""}" data-tex="${t}"><div class="mini">Waves<span class="ork-elem meadow"></span></div><span style="position:absolute;right:14px;top:14px;display:flex;gap:10px;align-items:flex-end">${t === "felt" ? "" : craftChair(t) + pennant(t, 2)}</span></div><span><b>${who}</b> · ${line}${t === "felt" ? "" : "; its empty chair and its card's corner"}</span></div>`).join("");
 
 /* the heads */
 const RACES_SHOWN = [["Tech · the shaman", ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"]], ["Product · the unicorn knight", ["uni-ost", "uni-jtbd", "uni-lean", "uni-shape"]], ["Design · the dryad", ["dry-heur", "dry-diamond", "dry-atom", "dry-sprint"]]];
