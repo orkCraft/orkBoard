@@ -2,7 +2,7 @@
 and the kinds of hints of code (`realm/map_signals.py`; for tech and design also the live product's, `realm/play_signals.py`: `error` and `failed` in *safety*, `slow` in *hotspots*, `dead_press` in *flow*, `again` in *status*) that ground it. Pure data and code; no face, no model.
 
     lens_rubrics.RUBRICS[craft] = {"framework": str, "short": str, "aspects": ({"id", "name", "ask", "signals": (kind, …)}, …)}     # the crafts: tech, design, product, game-design, art, release, marketing, run, liveops
-    lens_rubrics.rubric(craft)                       # the craft's rubric, or None (a craft with none)
+    lens_rubrics.rubric(craft, hero=None)            # the craft's rubric, or None (a craft with none); a non-default hero of the craft (realm/heroes.py) gives its frame
     lens_rubrics.aspect_of(craft, kind)              # the aspect (its id) a hint's kind belongs to, "" for none
     lens_rubrics.prompt_lines(craft)                 # the rubric as lines for a model: "How a senior of <craft> reviews this map: <framework>." then "- <id>: <name>. <ask>"; "" for none
     lens_rubrics.scorecard(craft, rec)               # [{id, name, ask, state, n, hints: [words]}] in the rubric's order, from a concerns record (`realm/concerns.py`); [] for none
@@ -82,9 +82,20 @@ RUBRICS = {
 }
 
 
-def rubric(craft: str) -> dict | None:
-    """The craft's rubric (see the module), or None for a craft with none."""
-    return RUBRICS.get(craft)
+def _hero(craft: str, hero: object) -> object:
+    """The hero (`realm/heroes.py`, or its id) whose frame replaces the craft's: a hero of that craft that is not its default; None else (today's rubric)."""
+    from orkboard.realm import heroes
+    h = heroes.get(hero) if isinstance(hero, str) else hero
+    return h if h is not None and h.craft == craft and not h.default else None
+
+
+def rubric(craft: str, hero: object = None) -> dict | None:
+    """The craft's rubric (see the module), or None for a craft with none. `hero`: a non-default hero of the craft (a `Hero` or its id) gives its own frame
+    (`{framework, short, aspects}`, the aspects without signals: spec 157 A.3); none, a default hero or one of another craft gives today's."""
+    h = _hero(craft, hero)
+    if h is None:
+        return RUBRICS.get(craft)
+    return {"framework": h.framework, "short": h.short, "aspects": tuple({**a, "signals": ()} for a in h.aspects)}
 
 
 def aspect_of(craft: str, kind: str) -> str:
@@ -95,17 +106,18 @@ def aspect_of(craft: str, kind: str) -> str:
     return ""
 
 
-def prompt_lines(craft: str) -> str:
-    """The rubric as lines for a model: how a senior of the craft reviews the map, then one line an aspect (`- <id>: <name>. <ask>`); "" for a craft with none."""
-    r = RUBRICS.get(craft)
+def prompt_lines(craft: str, hero: object = None) -> str:
+    """The rubric as lines for a model: how a senior of the craft reviews the map, then one line an aspect (`- <id>: <name>. <ask>`); "" for a craft with none. `hero`: as `rubric`."""
+    r = rubric(craft, hero)
     if r is None:
         return ""
     return "\n".join([f"How a senior of {craft} reviews this map: {r['framework']}.", *[f"- {a['id']}: {a['name']}. {a['ask']}" for a in r["aspects"]]])
 
 
-def scorecard(craft: str, rec: dict) -> list[dict]:
-    """Each aspect of the craft's rubric in its state (see the module) from a concerns record: `[{id, name, ask, state, n, hints}]` in the rubric's order; [] for a craft with none."""
-    r = RUBRICS.get(craft)
+def scorecard(craft: str, rec: dict, hero: object = None) -> list[dict]:
+    """Each aspect of the craft's rubric in its state (see the module) from a concerns record: `[{id, name, ask, state, n, hints}]` in the rubric's order; [] for a craft with none.
+    `hero`: as `rubric` (a hint of code is in a hero's aspect only when it names that aspect: code's kinds belong to the craft's default rubric)."""
+    r = rubric(craft, hero)
     if r is None:
         return []
     open_ = [c for c in rec.get("concerns") or [] if not c.get("idea")]

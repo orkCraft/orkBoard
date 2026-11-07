@@ -336,6 +336,37 @@ def craft_of(root: Path, slug: str) -> str:
     return party_recipes.craft_of(recipe_of(root, slug), leader_of(root, slug))
 
 
+def hero_of(root: Path, slug: str):
+    """The party's hero (`realm/heroes.py`): the one kept on its page (`hero`) when it is of the party's craft, else the craft's default; None for a party with no craft."""
+    from orkboard.realm import heroes, map_parts
+    craft = map_parts.craft_of(Path(root), slug)
+    page = ideas.track_page(root, slug)
+    kept = heroes.get((page.get("hero") if page is not None else "") or "")
+    return kept if kept is not None and kept.craft == craft else heroes.default(craft)
+
+
+def set_hero(root: Path, slug: str, hero_id: str) -> None:
+    """The party's hero kept on its page (`hero`); the craft's default writes the key away. ValueError for an unknown hero, one of another craft, or Release's (fixed)."""
+    from orkboard.realm import heroes, map_parts
+    craft = map_parts.craft_of(Path(root), slug)
+    h = heroes.get(hero_id)
+    if h is None:
+        raise ValueError(f"No hero {hero_id}")
+    if h.craft == "release" or craft == "release":
+        raise ValueError("Release's hero is fixed")
+    if h.craft != craft:
+        raise ValueError(f"{h.name} is not a hero of this party's craft")
+    with ideas.LOCK:
+        page = ideas.track_page(root, slug)
+        if page is None:
+            raise ValueError(f"No party {slug!r}")
+        if h.default:
+            page.meta = [(k, v) for k, v in page.meta if k != "hero"]
+        else:
+            page.set("hero", h.id)
+        ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
+
+
 def seat_leaders(root: Path, state_dir: Path) -> list[str]:
     """Each party page's leader that has no role on this machine yet but is in the library is installed (a Board in the repository comes with its leaders named,
     its roles are not: spec 155 F.2). Idempotent; a leader neither installed nor in the library is left, and the party falls back to the Taskmaster. The ids installed."""

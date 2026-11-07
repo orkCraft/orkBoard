@@ -501,6 +501,16 @@ TERMS: tuple[Term, ...] = (
     _t("orc.catapult", "Loader"),
     _t("orc.workshop", "Tinker"),
     _t("orc.custom", "Peon", "Peons"),
+    # -- the Inventory (spec 157 A.5) ------------------------------------------------------------------
+    _t("inventory", "Inventory"),
+    _t("hero", "hero", "heroes"),
+    _t("hero.yours", "Yours"),
+    _t("hero.yours_before", "Yours before"),
+    _t("hero.back_to_default", "Back to default"),
+    _t("hero.in_your_hand", "in your hand"),
+    _t("hero.what_leaves", "What leaves this computer"),
+    _t("hero.lay_tables", "Lay the tables"),
+    _t("hero.frame", "frame", "frames"),
 )
 
 # Short names the interface uses for a building as well as its full title.
