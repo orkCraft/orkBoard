@@ -7306,3 +7306,42 @@ leader is a set chosen at once, as a hero is; the person's trust stays the perso
 12. **The words** (`TERMS`, with the first spec): *Inventory*, *hero*, *Pen*, *Choice*, *Silent*, *Declare*, *Yours*, *Yours
    before*, *the hero's way*, *Back to default*, *Take off the chair*, *What leaves this computer*.
 The owner's call.
+
+## 267. The inventory is a merchant's stall: the wares on the rug, what you carry in the hand; a hero lays its table, its frame kept by its leader; the first goal lays the tables (7 November 2026, the owner)
+
+Changes: 266.1 (the table and the hand turned round in the inventory; *Back to default* the merchant's service), 266.3 (how a
+hero's table is laid, made precise), 266.11 (the route drawn on the table stays later); spec 95 §13.1.
+
+Why: the owner, on the mockup `docs/mockups/merchant/` (its section 1, the stall, and section 2, the eighteen tables): *make the
+merchant's mockup more like a deck-builder's merchant, and show how the tables of all eighteen agreed leaders will look*; then
+*a spec and its implementation on the simpler models, into main*; and, asked whether laying the tables the first time calls a
+model, *yes: make it the first goal of the onboarding*. §266.1 laid what is set on the table and the ways in the hand, so a
+thing had to be pressed before anyone learned what there was to take; a merchant lays every ware at once, its price under it,
+and what you carry stays yours in the hand. A hero's table needs what code can read (the Board, git, the System map, the
+screens) and what only its leader can keep (a job's words, an opportunity tree, a bounded context); the first is free, the
+second is a model's pass, which is the person's money and so is never spent silently (§57.3, §160.6). So:
+1. **The inventory is a stall** (`TERMS`: *Inventory*, beside *how the project is set*). The backpack at the tabs' end opens it;
+   the table's edge is stitched, the tabs stay and say whose. **The Orkmaster stands at the rug's left** and says in one line
+   what it would take; **every ware of the chair picked lies on the rug at once**: on a leader's chair its heroes on the top
+   shelf, the ways of the card lifted from the hand on the shelf below, its seats (its AI tool, its tier) as the small things at
+   the right; on the Orkmaster's, its own wares. **A price plate under each ware**: what it adds to the first potion's week, a
+   saving in the success colour, money said as money; what you carry reads *in your hand*, a locked ware *not here* with why.
+   **The hand is what you carry** of that chair, a card a thing; a ware hovered shows in its card, the potions what it costs;
+   pressed, it flies into the hand over the card it replaces, with *Undo*. **Back to default is the merchant's service**, free,
+   at its feet: a card of the hand dropped on it, or pressed with a card lifted; the discard takes a card too (§266.1).
+2. **A hero lays its table** (this makes §266.3's *how its table is laid* precise): **its frame** is its school's places, a lane
+   or a row each with its question (XP's *Red*, *Green*, *Refactor*, *Released small*; AARRR's five steps). A hero whose
+   school is its craft's default (§184: Sh.man, Pixel-Perfect Dryad, Angel Invest Knight, Uptime Imp, Growth Hack Gnome) lays
+   its craft's map as today; **any other lays its frame**, its places filled from what its leader keeps and empty, with their
+   questions, until then. The Orkmaster's table stays the Board, Release Night King's dev against main.
+3. **The frame is kept in the Board**, a file a party (`llm-wiki/general/pages/tables/<party>.md`), its places and their lines
+   written by the leader and read by any AI tool as the rest of the Board; each later pass of the leader keeps it.
+4. **The first goal lays the tables**: after the first open the Orkmaster lays one goal, *Lay the tables*, routed to the parties
+   seated, its price said; it waits in line as any goal, started by the person. **A hero taken in the stall lays a goal of its
+   own**, *Lay <party>'s table*, and its plate says that pass's price. No model is called by opening a project.
+5. **Not in this step, later**: a frame's places read by code (hotspots from git, the tests' runs, a trace, a funnel's numbers),
+   the ways of answering's engine (§266.5–6), the starts by priority and the day's cap as settings (§266.2), the Orkmaster's star
+   on a ware, the textures (§266.8), the die's faces (§266.9). A ware the engine does not have yet is not laid on the rug.
+6. **The heroes' faces** are drawn in orkUI first (`heads/make_heads.py`, sixteen with the imp's and the fairy's two); until a
+   hero's head is in orkUI, its race's elder head stands for it.
+The owner's call.

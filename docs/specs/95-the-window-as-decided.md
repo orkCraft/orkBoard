@@ -262,7 +262,10 @@ of the parties), each at the owner's yes.
 person reads it (spec 70 §0); the first lane's line reads *In line* and the discard *Done* on hover, so the battler's words are never
 the only ones.
 
-## 13. The inventory (§266)
+## 13. The inventory (§266, §267)
+0. **A merchant's stall** (§267, which changes item 1's table and hand): the Orkmaster at the rug's left, every ware of the chair
+   on the rug with its price plate, the hand what you carry, *Back to default* the merchant's service; a hero lays its table, its
+   frame kept by its leader in `pages/tables/<party>.md`, the first goal *Lay the tables* (spec 157).
 1. **The backpack** after the tabs opens it: the table's edge stitched, the tabs stay, **a tab picked says whose** (the
    Orkmaster's the whole project, a leader's its party). **The table lays it out as it is set**; **a thing pressed lays its
    ways in the hand**, priced against the person's own and hatched on the potions; hovered, a way shows in its place on the
