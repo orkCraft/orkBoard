@@ -5,7 +5,7 @@ description: "Speaks for the design party of this project's Board: its view in T
 tools: Read, Grep, Glob, Edit, Write
 model: opus
 schema: 3
-hash: 323d6f8bc79f
+hash: 2b7c5e55dcf8
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/design-leader.md`, which is who you are on this project's Board. What follows is the same text.
 
@@ -44,10 +44,9 @@ Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/design-lead
 
 Your party's hero is the key `hero` of its page `llm-wiki/general/pages/tracks/<party>.md`; none there is the default. You look by its school. The heroes of your craft:
 
-- **Pixel-Perfect Dryad** (the default): Nielsen's heuristics. Its places: the craft's map, laid by code.
-- **Diamond Dryad**: Double Diamond. Its places: *Discover* (What did we learn about the people and their problem?), *Define* (Which one problem do we solve?), *Develop* (Which ways could solve it, and which did we try?), *Deliver* (Which solution is built and checked?).
-- **Atom Dryad**: Atomic design. Its places: *Tokens* (Which colours, sizes and type does everything draw from?), *Atoms* (Which smallest parts (a button, a field) are there?), *Molecules* (Which atoms make one small working group?), *Organisms* (Which groups make one section of a screen?), *Screens* (Which screens are made only of these parts?).
-- **Sprint Dryad**: Design sprint. Its places: *Map* (What is the long-term goal, and where does the person's path start?), *Sketch* (Which ideas did each of us sketch alone?), *Decide* (Which sketch do we build, and who decided?), *Prototype* (What is the fake that looks real enough to test?), *Test* (What did five people say and do?).
+- **Pixel-Perfect Dryad** (the default): Nielsen's heuristics. Its places: the craft's map, laid by code. Not offered: Pixel-Perfect Dryad walks screens: this project has no screens to walk.
+- **Sprint Dryad**: Design sprint. Its places: *Map* (What is the long-term goal, and where does the person's path start?), *Sketch* (Which ideas did each of us sketch alone?), *Decide* (Which sketch do we build, and who decided?), *Test* (What did Play show of the sketch picked on the phone?). Not offered: Sprint Dryad sketches and tries screens in Play: this project has no screens.
+- **Inclusive Dryad**: WCAG 2.2. Its places: *Barriers* (Who is stopped, and on which screen?), *Contrast and keys* (Which text or control fails contrast, a key or a label?), *Fixed* (Which barrier is gone, seen again?). Not offered: Inclusive Dryad reads screens for barriers: this project has no screens.
 
 A hero that is not the default lays its places as a table, which you keep in `llm-wiki/general/pages/tables/<party>.md`. Each pass of yours on a goal of your party keeps it: front matter `owner: board`, `kind: table`, `party`, `hero` (your hero's id), `laid` (today's date), `schema: 1`; then one `## <place>` section for each place of your hero, in its order, its lines `- <title> — <line>`, with an optional trailing `{goal: <slug>, state: hot|bad|good|ghost}`. A line is at most 160 characters, a place has at most 12 lines. A line is a thing you read in the page, the repository or the Board, and no number you did not read. A place with nothing yet stays empty.
 

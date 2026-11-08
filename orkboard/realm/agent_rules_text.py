@@ -274,8 +274,14 @@ def table_text(craft: str, wiki: str) -> str:
         return ""
     lines = []
     for h in crafted:
-        frame = "the craft's map, laid by code" if h.default else ", ".join(f"*{n}* ({a})" for n, a in h.places)
-        lines.append(f"- **{h.name}**{' (the default)' if h.default else ''}: {h.school}. Its places: {frame}.")
+        if not h.default:
+            frame = ", ".join(f"*{n}* ({a})" for n, a in h.places)
+        elif craft == "run":
+            frame = "none, it lays no table; what Play gathers is what it reads"
+        else:
+            frame = "the craft's map, laid by code"
+        away = f" Not offered: {h.not_here.rstrip('.')}." if h.not_here else ""
+        lines.append(f"- **{h.name}**{' (the default)' if h.default else ''}: {h.school}. Its places: {frame}.{away}")
     return f"""## Your hero and your table
 
 Your party's hero is the key `hero` of its page `{wiki}/pages/tracks/<party>.md`; none there is the default. You look by its school. The heroes of your craft:
