@@ -6,8 +6,9 @@ order: 14
 size:
 priority: normal
 short: A leader's view
-phase: talk
+phase: spec
 route: product, design, tech
+spec: docs/specs/167-each-leaders-view-of-the-product.md
 by: claude-code
 schema: 3
 ---
@@ -137,3 +138,36 @@ I want to open Orkboard and read, from Product, Tech and Design each, where the 
 - against: gui/ideas.py (769 lines) and realm/ideas.py (689) are past the 600-line split; the digest call reads only its own journal, so feeding it decisions grows a cheaper call
 - instead: the digest read back from the tree and shown atop the bubble, its call fed the project journal's decision lines; no new file, no new trigger
 - assumes: stance, accepted and learned lines say what works and hurts in the product, not only how goals went — shown by: a digest of goals 163–167's lines names a hurt System's heat shows
+### Why
+- The view is the journal's digest grown (§282.1): one store, `<scope>.digest.json`, mirrored to the tree's `journals/<party>.md`; a second store or a second writer that wins blindly would split the truth between machines.
+- Two writers now write it, the window's call and a skill's Accept pass (§282.6); today `read_in.take_outside` reads entries only, so the tree's `digest:` is overwritten by the next `journals_into`.
+- Each trigger (a goal done, a press, Orkboard's look) is a cheaper call with a cost; Tech keeps it one call a party, refused as every call is, and out of `gui/ideas.py`, already past 600 lines.
+### Done when
+- [test] When the tree's `journals/<party>.md` holds a view newer than the machine's, then the next journals look keeps it as the party's view and writes nothing over it; an older one is replaced
+- [test] When a goal moves to done, in the window or outside it, then one view call is begun for each party of its route, and none when the window or the limit is spent
+- [test] When the view's call runs, then its prompt holds the done goals' pages and the decisions it read, and a line naming no goal slug, § or map part it was given is dropped before the view is kept
+- [test] When the person asks for a look now, or a map's look runs on open and the view is a day old, then one view call is begun; a second ask while it runs begins none
+- [test] When a leader's Accept frame is written for a skill, then it tells the leader to write its view (works, hurts, next, its date, what it read) into `<wiki>/journals/<party>.md` in the tree
+### Checks
+- `tests/test_architecture.py` stays green: the view's code lies in `core/idea_journal.py` and `realm/journals.py`, neither importing `gui/`; no new CLI command, no new store.
+- `gui/ideas.py` and `realm/ideas.py` gain no line; a new command goes in `gui/ideas_journal.py`, and no touched module grows past ~600 lines.
+- The view's call stays the cheaper tier, no tools, READS 0: the pages and decisions are given in its prompt, cut to its budget; its cost lands in the party's ledger as the *spec* stage.
+- The tree's file carries the view, its date and its sources only: nothing of `.orkcraft/` beyond them, no secret, no concern's words.
+- Event `journal_digested` keeps no word of the view; a failed or stopped call keeps nothing and the next trigger tries again.
+### Will be
+- changed orkboard/core/idea_journal.py — the digest's call becomes the view's: it reads goal pages and decisions, and is begun on a goal done, on a press and on a map's look
+### Out
+- The view's face, its place on the tab and its button's words: Design's mockups and the person's pick (§282.4).
+- The view on the phone (§282.5), and Product's tree and its jobs (goal 163).
+- The concerns written into the tree: they stay in `.orkcraft/` on one machine, shown beside the view; the tree's file carries the digest alone.
+### Risks
+- medium
+- Two writers of one key (a skill's Accept pass, the window's call): the newest `at` wins, so a machine's clock set wrong keeps the older view.
+- The landing trigger sits in `gui/ideas_phase.py`'s `phase_moved` and the window's own move to done, next to `gui/ideas.py` (770 lines), a hotspot.
+- Spend grows with a route's length and with each look on open; a goal done with four parties is four calls the person may not have seen coming.
+- Pages and decisions may outgrow the cheaper tier's budget; cut newest first, a view reads thinner on a long project.
+### Defaults
+- The view is the digest grown: `<scope>.digest.json` keeps `{text, upto, at, read}`, its text three heads, *Works:*, *Hurts:*, *Next:*, within `journals.DIGEST_CHARS`; the tree's file adds `digest_at:` and `digest_read:`.
+- The call reads the goals done since the last view (their Gist and the party's section), the decisions those goals cite with the log's last ten headings, and the party's table where its hero lays one.
+- A goal done begins its route's views without `DIGEST_AFTER`'s twelve entries; Orkboard's own look rides the concerns' look on open (`core/idea_concerns.py`), no new timer.
+- Tech's hero is the default (Sh.man): no table kept.
