@@ -8113,4 +8113,18 @@ another, and the cards' pictures, redrawn, are best seen where the work is done.
 5. **A lesson for every sheet**: a sheet's whole image stays near square or at most 2 : 1; Gemini squashes the tiles of a wider
    grid (sheet 4's tiles 1–4 and K4 were drawn again as a 2 × 2 and a 3 × 2 grid).
 
+## 291. Product's tree on the Board as its leaders recommended; the routing call reads decisions' titles; a view's line can be struck; the System link lights; main's four reds fixed before goal 165 closes (8 November 2026, the owner)
+
+Why: goals 163 and 166's Talk, goal 167's points from a dropped double's Talk, goal 165's gate. The owner took the leaders'
+recommended ways (*the rest by the recommendation*). So:
+1. **Product's tree** (goal 163): its hypotheses (`hypotheses.json`) beside it; the 121 done goals proposed by Product's leader
+   and taken job by job; a job's done goals the newest seven, then *All · search*; proposed attachments on the tree, dashed until
+   kept; a goal's job a `job:` line in its page; the tree's file Markdown, `llm-wiki/general/tree.md`.
+2. **Orkboard's routing call reads the titles** of the decisions its goal names and of the log's newest (goal 166).
+3. **A line of a leader's view can be struck** (*Not so*, `ideas.journal_strike`), so a wrong line is read into no later call
+   (goal 167).
+4. **On System, a link lights when a reach crosses it** (§280.2, goal 165).
+5. **The four browser tests red on main** (the hand's corner takes the press) are fixed in a goal of their own; goal 165 is done
+   once its gate is green.
+
 The owner's call.

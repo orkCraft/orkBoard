@@ -8,7 +8,6 @@ priority: normal
 short: Product's tree
 phase: talk
 route: product, design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -42,13 +41,20 @@ What I expect:
 
 ## Open questions
 - Which hypotheses go with the tree? (**hypotheses.json beside the tree** / docs/hypotheses.md as theirs / Stay on the machine) — the tree's text sets each hypothesis under its job; a tree moved alone shows no test · hypotheses.json beside the tree: One Board file set: jobs, goals and their tests, read on every machine · docs/hypotheses.md as theirs: H1 and its kin under jobs; two hypothesis stores kept in step · Stay on the machine: Tree in the repo without its tests; a clone sees no hypothesis
+  - Answered: hypotheses.json beside the tree (the person, 2026-11-08)
 - How are the 121 done goals attached? (**Leader proposes, you take each job** / Only goals done in the window / By hand) — one cheaper call reads the titles and routes; you keep the say, as with the tree's first proposal (§172.2) · Leader proposes, you take each job: One call drafts it all; you keep, move or drop per job · Only goals done in the window: The 119 history goals stay unattached; closed cases count from now · By hand: No model cost; 121 picks before the tree says what is done
+  - Answered: Leader proposes, you take each job (the person, 2026-11-08)
 - How are a job's done goals drawn? (**Newest seven, then All · search** / Every done goal, whole cards / Open goals only; done in the past) — about twenty done cards a job bury its open goals and the empty jobs; §277.5 already deals the past seven · Newest seven, then All · search: Open goals on top; a job's done deck deals seven, the rest over the pane · Every done goal, whole cards: One long column a job; its open goals sink under twenty done ones · Open goals only; done in the past: The tree shows no closed cases; the Gist's one place is not kept
+  - Answered: Newest seven, then All · search (the person, 2026-11-08)
 - Where do you take proposed attachments? (**On the tree, dashed until kept** / A hand card a job / One hand card opening the tree) — proposed hypotheses are already kept on the tree (Keep, Drop): the same act, where the goal will lie · On the tree, dashed until kept: Each job's proposed goals dashed; Keep all, or Move or Drop one · A hand card a job: Five to seven cards, each a job and its goals listed; the tree waits · One hand card opening the tree: One card says the tree is proposed; its press opens Product's tab
+  - Answered: On the tree, dashed until kept (the person, 2026-11-08)
 - Where does a goal's job lie? (**job: in the goal's page** / serves in the tree file) — no two goal branches edit one file; a goal carries its job as it carries route: (§277.3) · job: in the goal's page: 121 pages gain a line; a goal's branch edits only its own page · serves in the tree file: The whole tree in one file; two goal branches conflict in it
+  - Answered: job: in the goal's page (the person, 2026-11-08)
 - Which form does the tree's file take? (**Markdown, llm-wiki/general/tree.md** / tree.json as kept now) — the Board's files are Markdown read in a commit, as docs/hypotheses.md is · Markdown, llm-wiki/general/tree.md: Read and edited as a page; a parser and writer to build and test · tree.json as kept now: Moved as it is, no parser; the pull request shows a JSON diff
+  - Answered: Markdown, llm-wiki/general/tree.md (the person, 2026-11-08)
 
 ## Decisions
+- §291: the person's answers (8 November 2026)
 
 ## Product
 ### Talk

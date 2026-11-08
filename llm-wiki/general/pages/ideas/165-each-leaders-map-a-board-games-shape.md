@@ -91,6 +91,7 @@ Heat and reach first, on the maps as they are (A–K, §281.4), desktop only (§
   - Answered: The plan kept, without its trial (the person, 2026-11-08)
 
 ## Decisions
+- §291: the person's answers (8 November 2026)
 - §281: the person's answers in Talk (8 November 2026)
 
 ## Design
