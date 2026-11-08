@@ -2,8 +2,11 @@
 icons, sound, music, clips), the others under them (fonts, the screens' pictures), read from dev's tree (never the working tree) as `realm/assets.py` lists
 them; a picked file keeps the variants not picked under it. No model, no face.
 
-    art_map.read(state_dir, root, since="", ref="dev")   # {commit, short, ref, since, none, kinds: [{kind, own, n, folders: [{folder, n}], assets: [...]}], stacks, removed}
+    art_map.read(state_dir, root, since="", ref="dev")   # {commit, short, ref, since, none, budget_mb, kinds: [{kind, own, n, bytes, folders: [{folder, n}], assets: [...]}], stacks, removed}
     art_map.text(state_dir, root, since="", pages=None, ref="dev")   # Art's leader's map as text: the kinds by folder, the picks, the changed since its last call; None with no dev
+
+An asset also has its `weight` (`light`, `normal` or `heavy`, spec 165 N, decisions §280.2): its `bytes` against its kind's limits in `WEIGHTS`; a kind has the
+`bytes` of all its assets, and the map the `budget_mb` of `orkcraft.toml` `[art] budget_mb` (None unset or not a number above 0). The text does not say them.
 
 An asset is `assets.listed`'s row (`id`, `kind`, `name`, `bytes`, `w`, `h`, `seconds`, `goal`, `task`, `at`, `change`; `stack` in a stack; a screen its `shot`) with its
 `folder`; a picked file also has `others` (`{goal, pick, picked, variants: [the variants not picked]}`), the grouping the face lays under the one picked. A kind of Art's
@@ -14,6 +17,7 @@ counts and a line saying how many more past it. No time, no dict order.
 """
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 from orkboard.realm import assets, commit_goal
@@ -25,6 +29,11 @@ WORDS = {"art": ("picture", "pictures"), "sound": ("sound", "sounds"), "music": 
 HEADS = {"art": "Pictures", "sound": "Sounds", "music": "Music", "clip": "Clips", "font": "Fonts", "screen": "Screens' pictures"}
 NOTHING = "Nothing to read yet: the project's pictures, sounds, music and clips."
 TOP = "./"                                        # the folder of a file at the project's top
+KB, MB = 1024, 1024 * 1024
+# An asset's weight by its kind: (light up to, heavy above), in bytes. No decision sets these limits: Design's leader approves them at acceptance (spec 165 N).
+WEIGHTS = {"art": (32 * KB, 512 * KB), "sound": (128 * KB, 1 * MB), "music": (1 * MB, 5 * MB), "clip": (2 * MB, 10 * MB),
+           "font": (64 * KB, 512 * KB), "screen": (32 * KB, 512 * KB)}
+BUDGET_FILE = "orkcraft.toml"
 PICKS = 500                                       # of the text, the picks' lines at most
 
 
@@ -33,11 +42,29 @@ def _folder(path: str) -> str:
     return path.rpartition("/")[0] + "/" if "/" in path else TOP
 
 
+def weight(kind: str, size: object) -> str:
+    """`light` up to the kind's first limit, `heavy` above its second, else `normal`; a size not known is `normal`."""
+    if not isinstance(size, (int, float)) or isinstance(size, bool) or kind not in WEIGHTS:
+        return "normal"
+    light, heavy = WEIGHTS[kind]
+    return "light" if size <= light else "heavy" if size > heavy else "normal"
+
+
+def budget_mb(root: Path) -> float | None:
+    """`[art] budget_mb` of the project's `orkcraft.toml`: a number above 0, else None (no file, a bad file, no table, a value that is not one)."""
+    try:
+        table = tomllib.loads((Path(root) / BUDGET_FILE).read_text(encoding="utf-8")).get("art")
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return None
+    value = table.get("budget_mb") if isinstance(table, dict) else None
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0 else None
+
+
 def read(state_dir: Path, root: Path, since: str = "", ref: str = "dev") -> dict:
     """The map (see the module): `none` is True when dev has no asset to read; with no dev at all the map is empty (`commit` "")."""
     root = Path(root)
     commit = commit_goal.head(root, ref)
-    out: dict = {"commit": commit, "short": commit[:7], "ref": ref, "since": "", "none": True, "kinds": [], "stacks": [], "removed": []}
+    out: dict = {"commit": commit, "short": commit[:7], "ref": ref, "since": "", "none": True, "budget_mb": budget_mb(root), "kinds": [], "stacks": [], "removed": []}
     if not commit:
         return out
     changes = assets.changed(state_dir, root, since, ref) if str(since or "").strip() else {"since": "", "added": [], "changed": [], "removed": []}
@@ -45,7 +72,7 @@ def read(state_dir: Path, root: Path, since: str = "", ref: str = "dev") -> dict
     out["stacks"] = assets.stacks(rows)
     out["since"], out["removed"] = changes["since"], changes["removed"]
     for kind in (*ART, *OTHERS):
-        mine = [{**r, "folder": _folder(r["id"]) if kind != "screen" else ""} for r in rows if r["kind"] == kind]
+        mine = [{**r, "folder": _folder(r["id"]) if kind != "screen" else "", "weight": weight(kind, r.get("bytes"))} for r in rows if r["kind"] == kind]
         if not mine and kind not in ART:
             continue
         folders: dict[str, int] = {}
@@ -53,6 +80,7 @@ def read(state_dir: Path, root: Path, since: str = "", ref: str = "dev") -> dict
             if r["folder"]:
                 folders[r["folder"]] = folders.get(r["folder"], 0) + 1
         out["kinds"].append({"kind": kind, "own": kind in ART, "n": len(mine), "assets": mine,
+                             "bytes": sum(a["bytes"] for a in mine if isinstance(a.get("bytes"), int)),
                              "folders": [{"folder": f, "n": n} for f, n in sorted(folders.items())]})
     out["none"] = not rows
     return out
