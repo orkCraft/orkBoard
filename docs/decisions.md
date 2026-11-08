@@ -7501,3 +7501,19 @@ call (§137.4): Release's leader is needed for a version, not for a merge. So:
    (§137.4's *Release a version*).
 
 The owner's call.
+
+## 275. A tab's name is light, its party's colour under it; words lie on a flat plate over the light's steps; the phone in the same goal (8 November 2026, the owner)
+
+Changes: 268.1 (the party colours its tab's name), 269.1 (the steps under everything), 270.7 for the table's look (the phone in a
+goal of its own).
+
+Why: goal 160's Talk: Design's leader found the mockup below WCAG AA where a closed tab's name is in its party's dimmed colour
+on the dark felt, and where the dithered steps of the light run under small words (a word then has no one contrast). The owner
+picked the first of the two ways offered each time, and asked for the phone in the same goal. So:
+1. **A tab's name is in the light ink**, open or closed; its party's colour is in the rule under it, its pennant and its glow.
+   Text keeps 4.5:1 on every felt, lit or out; a test checks it.
+2. **Words lie on a flat plate**: where the table's light steps and their dither would run under words (a label, a lane's words,
+   a card's text), the words sit on a flat plate of one colour; the steps show between them.
+3. **The phone in goal 160**: the table's look, the lamp and the backpack are drawn on the phone too, in the same goal.
+
+The owner's call.
