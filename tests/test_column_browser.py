@@ -75,7 +75,7 @@ def test_the_column_lies_left_of_the_table_the_table_height_and_its_head_is_the_
         assert h["x"] == 0 and h["width"] >= c["width"] + t["width"] - 1
         tab = col.get_by_role("tab")
         assert tab.count() == 1 and tab.get_attribute("data-tab") == "orkmaster" and tab.get_attribute("aria-selected") == "true"
-        assert "orkmaster" not in tab.text_content().lower() and "orkmaster" in tab.get_attribute("aria-label").lower()      # the project's name in the head; the Orkmaster only in its label (spec 160 J)
+        assert "orkmaster" not in tab.text_content().lower() and "orkmaster" in tab.get_attribute("aria-label").lower()      # the project's name in the head; the Orkmaster only in its label (spec 161 J)
         assert pg.locator(".table-tabs [role=tab][data-tab=orkmaster]").count() == 0, "the tabs at the top are the leaders' alone"
         assert pg.locator(".table-tabs [role=tab]").count() == 4 or pg.locator(".table-tabs [role=tab]").count() >= 3
         assert pg.locator(".table-lane--first").count() == 0, "its goals are in the column, not the Board's first lane"

@@ -1,11 +1,11 @@
-# 160. The table's look and the room's things
+# 161. The table's look and the room's things
 
 Decisions §268 (colour is the party, the element and a signal), §269 (the table's look), §271 (the lamp is the person), §272
 (the backpack and the new chair), §273 (the discard beside the table), §275 (a tab's name light, words on a flat plate, the phone
 in this goal); §274.1 (Release a craft as any). **Mockups:** `docs/mockups/table-look/` (the colour layer, the felts, the steps,
 the bronze, the pennants) and `docs/mockups/room-things/` (the lamp's chain, the backpack shut and open with the leather, the
 chair dealing its crafts, the stall open on a new craft). **The goal's page**
-`llm-wiki/general/pages/ideas/160-the-tables-look-and-the-rooms-things.md` holds the spec: Design's and Tech's sections and the
+`llm-wiki/general/pages/ideas/161-the-tables-look-and-the-rooms-things.md` holds the spec: Design's and Tech's sections and the
 Taskmaster's twelve *Stages*; this file is their summary, kept with it.
 
 **orkUI first** (§269.9, CLAUDE.md): stages A and B are made in orkUI (github.com/orkCraft/orkUI), released as **0.35.0**, then

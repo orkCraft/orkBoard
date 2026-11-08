@@ -27,7 +27,7 @@ import { ProjectLine, useProjectNow } from "./projectdeal.js";
 
 const CROWN = { race: "peon", tier: "crown" };                   // the Orkmaster's head
 
-/** The Orkmaster's tab: the column's head, its first line the project's name, its second the project's kind and stage (projectdeal.js; spec 160 J). *The Orkmaster* is in its `aria-label` and `title` only. Open at first; pressed again, it asks the Orkmaster (the bubble, ask.js). The project's ▾ beside it (*Switch project*). */
+/** The Orkmaster's tab: the column's head, its first line the project's name, its second the project's kind and stage (projectdeal.js; spec 161 J). *The Orkmaster* is in its `aria-label` and `title` only. Open at first; pressed again, it asks the Orkmaster (the bubble, ask.js). The project's ▾ beside it (*Switch project*). */
 function Top({ parties, all }) {
   const open = openTabOf(tab.value, all) === ORKMASTER, name = currentProject.value?.name || "The project", ask = desk() && all.length > 0;
   const from = { title: mapName(openTabOf(tab.value, all), all), key: "" }, now = useProjectNow(currentProject.value?.path || "");

@@ -1,5 +1,5 @@
 // The window as two parts (docs/specs/98-the-table-and-the-hand.md §7, decisions §145.1): the table (js/table/table.js `Table`) over the hand (js/hand/hand.js `Hand`), the page's only window. The top bar,
-// the left column, the right column and the dialogs are gone: what was a dialog lies over the pane (frame/place.js), what was the drawer is the pane's one thing (frame/kinds.js). Nothing is drawn beside them. The discard is the window's right column beside the table, on every tab (table/lane.js, spec 160 D, decisions §273); there is no edge column.
+// the left column, the right column and the dialogs are gone: what was a dialog lies over the pane (frame/place.js), what was the drawer is the pane's one thing (frame/kinds.js). Nothing is drawn beside them. The discard is the window's right column beside the table, on every tab (table/lane.js, spec 161 D, decisions §273); there is no edge column.
 import { html } from "../html.js";
 import { Table } from "../table/table.js";
 import { DiscardColumn, laneShown } from "../table/lane.js";

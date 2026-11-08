@@ -1,4 +1,4 @@
-"""Spec 160 G (the lamp's chain, decisions §271; before it the door of spec 139 C.2 and C.4, decisions §246.4–§246.5): the person's presence, in a real browser against the hand's stub host that says `presence` in its snapshot.
+"""Spec 161 G (the lamp's chain, decisions §271; before it the door of spec 139 C.2 and C.4, decisions §246.4–§246.5): the person's presence, in a real browser against the hand's stub host that says `presence` in its snapshot.
 
 On the desktop (1280 x 800) the discard column's head holds the backpack (left) and the lamp's chain (right) over *Discard*: *Here · until 23:00*, or pulled (`.is-pulled`) *Away · until 19:00* (the word muted), *· held* when the
 press holds; `aria-pressed` is *here*; a pull sends one `presence.set` with the other state, and the snapshot that follows turns the chain and puts the pane `.is-out` (the felt flat, the signals as they were); with no `presence`
@@ -229,7 +229,7 @@ def test_the_phones_table_wears_the_felt_and_away_puts_it_out(gui):
 
 
 def test_the_phones_backpack_opens_the_stall_over_the_hand_and_the_way_back_closes_it(gui):
-    """Spec 160 K: on the phone the backpack shows the inventory's stall over the hand; ← closes it."""
+    """Spec 161 K: on the phone the backpack shows the inventory's stall over the hand; ← closes it."""
     host = DoorHost(HERE)
     pg, errors = start(gui, "phone", host)
     try:
@@ -249,7 +249,7 @@ def test_the_phones_backpack_opens_the_stall_over_the_hand_and_the_way_back_clos
 
 
 def test_the_phones_table_wears_the_shown_goals_party_felt_and_the_wood_when_nothing_is_shown(gui):
-    """Spec 160 K (decisions §275.3): a Tech goal shown -> Tech's race (ork); nothing shown -> the Orkmaster's wood."""
+    """Spec 161 K (decisions §275.3): a Tech goal shown -> Tech's race (ork); nothing shown -> the Orkmaster's wood."""
     pg, errors = start(gui, "phone", DoorHost(HERE))
     try:
         pg.locator('.up-look[data-look="goal"]').wait_for(timeout=WAIT_MS)

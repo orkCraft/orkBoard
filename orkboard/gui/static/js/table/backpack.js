@@ -1,4 +1,4 @@
-// The backpack (docs/specs/157-the-inventory-a-merchants-stall.md D.1, decisions §267.1): at the left of the discard column's head (lane.js; under 760 px, small, at the tabs' end), spec 160 H, decisions §272.1: orkUI's `.ork-pack`, shut and `.is-open` while the stall is open
+// The backpack (docs/specs/157-the-inventory-a-merchants-stall.md D.1, decisions §267.1): at the left of the discard column's head (lane.js; under 760 px, small, at the tabs' end), spec 161 H, decisions §272.1: orkUI's `.ork-pack`, shut and `.is-open` while the stall is open
 // (the pane then wears `.ork-leather`: pane.js); under 760 px (`small`) its word is in `aria-label` and `title` only. Pressed it opens the stall on the open tab's chair, or shuts it.
 import { html, cls } from "../html.js";
 import { closeInventory, inventory, openInventory } from "../frame/state.js";

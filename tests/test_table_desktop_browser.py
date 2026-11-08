@@ -323,7 +323,7 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_no_stop_all_in_the_r
     assert [t.get_attribute("data-tab") for t in tabs.all()] == (["game", "tech", "art", "release"] if wide(w) else ["orkmaster", "game", "tech", "art", "release"])         # the project's first at the narrow width, then the Board's order; the leaders' alone at the wide (the Orkmaster's tab is the column's head: spec 128 B.2)
     first = tab(pg, "orkmaster")
     if wide(w):
-        assert first.get_attribute("aria-selected") == "true" and first.get_attribute("role") == "tab" and "orkmaster" not in first.text_content().lower() and first.text_content().strip() == "shop"      # the project's name on its first line; the Orkmaster only in its label (spec 160 J, decisions §272.5)
+        assert first.get_attribute("aria-selected") == "true" and first.get_attribute("role") == "tab" and "orkmaster" not in first.text_content().lower() and first.text_content().strip() == "shop"      # the project's name on its first line; the Orkmaster only in its label (spec 161 J, decisions §272.5)
         assert first.get_attribute("aria-label") == "The Orkmaster · shop" and first.evaluate("e => !!e.closest('.frame-column')")
     else:
         assert first.get_attribute("aria-label") == "shop · Does on Claude · Checks on Claude" and first.get_attribute("aria-selected") == "true"                # the first tab is the project's: its name (spec 101 §3.4, decisions §167.6) and the main tool on both (spec 111 §3.4)

@@ -8,7 +8,7 @@ priority: normal
 short: The table's look, the room's things
 phase: work
 route: design, tech
-spec: docs/specs/160-the-tables-look-and-the-rooms-things.md
+spec: docs/specs/161-the-tables-look-and-the-rooms-things.md
 decisions: 268, 269, 271, 272, 273, 275
 by: claude-code
 schema: 3

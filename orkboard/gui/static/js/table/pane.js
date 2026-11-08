@@ -38,7 +38,7 @@ import { laidNow } from "./laying.js";
 import { currentProject } from "../shell/projects.js";
 import { setupNow } from "../hand/setupcards.js";
 import { Notice } from "./notice.js";                    // the Orkmaster's line when the work moved to another tool (spec 105 D)
-import { feltOf } from "./felt.js";                      // the open party's felt (spec 160 E)
+import { feltOf } from "./felt.js";                      // the open party's felt (spec 161 E)
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
 export function back() {

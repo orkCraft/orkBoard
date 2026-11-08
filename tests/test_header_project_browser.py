@@ -1,4 +1,4 @@
-"""The project in the Orkmaster's header (docs/specs/160-the-tables-look-and-the-rooms-things.md stage J, decisions §272.5), in a real browser at 1280 x 800 against the hand's stub host: the header's first line is the project's name
+"""The project in the Orkmaster's header (docs/specs/161-the-tables-look-and-the-rooms-things.md stage J, decisions §272.5), in a real browser at 1280 x 800 against the hand's stub host: the header's first line is the project's name
 and its second the kind and stage in the caption face (*Game · Being made*); *The Orkmaster* is in the `aria-label` and the `title`, not in the visible words; the stage or the kind pressed deals its choices to the hand as 144 x 202 cards,
 the present one marked, each with its one line; a card pressed sends `ideas.stage_set` or `ideas.project_kind_set` once; *Put it back* and Esc send nothing. The narrow page keeps its head. Screenshots to $HEADER_SHOTS when it is set."""
 from __future__ import annotations

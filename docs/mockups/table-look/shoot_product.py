@@ -1,4 +1,4 @@
-"""The product's window at 1280 x 800 on the Orkmaster's tab and on Tech's (spec 160 E): a camera, not a test.
+"""The product's window at 1280 x 800 on the Orkmaster's tab and on Tech's (spec 161 E): a camera, not a test.
 
     PRODUCT_OUT=docs/mockups/table-look/shots PYTHONPATH=. uv run --extra dev --extra browser --extra gui pytest -q -p tests.conftest -p no:xdist docs/mockups/table-look/shoot_product.py
 """
@@ -36,7 +36,7 @@ def test_shots(gui):
 
 
 def test_room_things(gui):
-    """Spec 160 G and H: Tech's tab with the lamp lit, out, and the backpack open (docs/mockups/room-things/shots/product-*.png)."""
+    """Spec 161 G and H: Tech's tab with the lamp lit, out, and the backpack open (docs/mockups/room-things/shots/product-*.png)."""
     import json
     out = Path(os.environ.get("ROOM_OUT", "docs/mockups/room-things/shots"))
     server, browser = gui

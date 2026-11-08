@@ -158,7 +158,7 @@ def test_orkboards_own_sheets_carry_no_colour_no_font_and_no_corner_of_their_own
         legacy -= {"--up-h", "--up-rise"}   # spec 147 F: the phone's opened card as tall as the screen leaves while the keyboard is up, and how far a pressed card of the hand's row rises (hand/upright.css, stopcard.js)
         legacy -= {"--hc-lap", "--hc-ways", "--hc-wleft", "--hc-sunk-s"}   # spec 158 F: the sunk hand's shrink beside the ways row; spec 150 A: how far past its box a card laid over the column lets its shadow fall (hand/hand.css, the field and the lifted card); spec 158 F: where the answer cards lie, from the hand's foot and from its left (hand/openedcard.css)
         legacy -= {"--dash"}   # spec 130 B.1: the empty slot's dashes in the edge or the ink (hand/mana.css), until orkUI draws `.ork-potion.is-empty`
-        legacy -= {"--party-hue", "--_plate"}   # spec 160 E: the colour of the race a cell, lane or head names (table/look.css `data-race`), and the plate orkUI's felt gives what lies in it (design-system/orkui `.ork-table[data-party]`)
+        legacy -= {"--party-hue", "--_plate"}   # spec 161 E: the colour of the race a cell, lane or head names (table/look.css `data-race`), and the plate orkUI's felt gives what lies in it (design-system/orkui `.ork-table[data-party]`)
         legacy -= {"--edge-w"}   # spec 150 D.1: the width of the table's edge, the frame's third column (frame/frame.css)
         assert not legacy, (path.name, legacy)
 
@@ -220,7 +220,7 @@ def test_the_page_draws_the_turn_the_wait_the_give_and_the_play_arrow_with_orkui
     assert '"play"' in (STATIC / "js" / "hand" / "playdie.js").read_text(encoding="utf-8")
 
 
-# ---- spec 160 C (decisions §268, §269, §275, §276): orkUI 0.35.0, the table's colours and their contrast ----------------------
+# ---- spec 161 C (decisions §268, §269, §275, §276): orkUI 0.35.0, the table's colours and their contrast ----------------------
 
 def test_the_copy_is_orkui_0_35_0_with_the_felts_steps_plate_bronze_pennant_chain_backpack_and_leather():
     stamp = orkui.stamp()
@@ -336,8 +336,8 @@ def test_the_rings_danger_and_alert_are_seen_3_to_1_on_every_ground_and_lead_eve
 
 # No smooth gradient and no blurred shadow or glow (decisions §269.1): hard pixel rings and hard-stop dithers only.
 # These sheets still hold soft ones (the scroll cues' and the opened card's fade masks, the lifted card's cast shadow); a later stage of
-# spec 160 takes each out and removes its file here. A file not listed must hold none, so a new one is caught.
-SOFT_KNOWN = {"page.css", "js/hand/openedcard.css"}          # js/hand/hand.css lost its blurred shadow in spec 160 F
+# spec 161 takes each out and removes its file here. A file not listed must hold none, so a new one is caught.
+SOFT_KNOWN = {"page.css", "js/hand/openedcard.css"}          # js/hand/hand.css lost its blurred shadow in spec 161 F
 
 
 def _top_split(text: str) -> list[str]:

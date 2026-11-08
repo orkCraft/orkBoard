@@ -1,4 +1,4 @@
-"""Spec 160 stage I (decisions §272, §274.1, §160.6; hand/chairdeal.js), in a real browser at 1280 x 800 against the stall's stub host: the new chair at the tabs' end, pressed, is lit and the Orkmaster's question rises
+"""Spec 161 stage I (decisions §272, §274.1, §160.6; hand/chairdeal.js), in a real browser at 1280 x 800 against the stall's stub host: the new chair at the tabs' end, pressed, is lit and the Orkmaster's question rises
 (*A new chair at the table · Which craft sits in it?*); the hand holds a 144 x 202 card for each craft not seated, with its race's head, its whole line and its price in words (one with no price says so), the Orkmaster's pick starred
 and named in words; the rest of the hand sinks; *Put it back* sends nothing; a craft's card sends `ideas.goal_save` once and the backpack opens on its chair. The narrow page keeps the parties' place. Screenshots to $CHAIR_SHOTS when set."""
 from __future__ import annotations
@@ -79,7 +79,7 @@ def press_chair(pg):
 
 
 def test_the_chair_deals_a_card_for_each_craft_not_seated_with_head_line_price_and_the_pick_starred_and_named(gui):
-    """Spec 160 I: the question rises, each unseated craft is a 144 x 202 card, its pick starred and named, the rest of the hand sunk."""
+    """Spec 161 I: the question rises, each unseated craft is a 144 x 202 card, its pick starred and named, the rest of the hand sunk."""
     pg, host, log = open_hand(gui, host=ChairHost())
     try:
         chair = pg.locator(".table-chair")
@@ -112,7 +112,7 @@ def test_the_chair_deals_a_card_for_each_craft_not_seated_with_head_line_price_a
 
 
 def test_with_no_pick_in_the_presets_the_first_reached_unseated_craft_is_the_orkmasters_pick(gui):
-    """Spec 160 I: no preset says a pick, so the Orkmaster's is the first unseated craft whose stage is reached, in the presets' order."""
+    """Spec 161 I: no preset says a pick, so the Orkmaster's is the first unseated craft whose stage is reached, in the presets' order."""
     pg, host, log = open_hand(gui, host=ChairHost(pick=False))
     try:
         press_chair(pg)
@@ -151,7 +151,7 @@ def test_put_it_back_and_esc_send_nothing_and_seat_nothing(gui):
 
 
 def test_a_crafts_card_seats_it_once_and_the_backpack_opens_on_its_chair(gui):
-    """Spec 160 I: the card sends `ideas.goal_save` as the parties' place does (title, about, leader, team, size, preset), once, and the stall opens on the new party's chair."""
+    """Spec 161 I: the card sends `ideas.goal_save` as the parties' place does (title, about, leader, team, size, preset), once, and the stall opens on the new party's chair."""
     pg, host, log = open_hand(gui, host=ChairHost())
     try:
         press_chair(pg)

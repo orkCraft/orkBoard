@@ -1,4 +1,4 @@
-"""The product as built, spec 160 L (a camera, not a test): Tech's tab lit and out, the Orkmaster's, the new chair dealt, the header's stage dealt and the backpack open at 1280 x 800; the phone Here, Away and the backpack at 390 x 844.
+"""The product as built, spec 161 L (a camera, not a test): Tech's tab lit and out, the Orkmaster's, the new chair dealt, the header's stage dealt and the backpack open at 1280 x 800; the phone Here, Away and the backpack at 390 x 844.
 
     FINAL_OUT=docs/mockups/table-look/shots PYTHONPATH=. uv run --extra dev --extra browser --extra gui pytest -q -s -p tests.conftest -p no:xdist docs/mockups/table-look/shoot_final.py
 """

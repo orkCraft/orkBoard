@@ -23,7 +23,7 @@ import { presenceNow } from "../table/presence.js";
 import { partiesAll } from "../table/data.js";
 import { routeOf } from "./upway.js";
 
-/** The felt the phone's table wears (spec 160 K, decisions §275.3): the party shown, the party of the goal shown (the one at work in its route, else its first, else the goal's own) or of the card's leader; the Orkmaster's wood when none is. */
+/** The felt the phone's table wears (spec 161 K, decisions §275.3): the party shown, the party of the goal shown (the one at work in its route, else its first, else the goal's own) or of the card's leader; the Orkmaster's wood when none is. */
 function feltOfLook(look) {
   if (look.kind === "party") return feltOf(look.g);
   const legs = look.node ? routeOf(look.node) : [], at = legs.find((r) => r.state === "now") || legs[0], stop = look.entry?.stops?.[0];

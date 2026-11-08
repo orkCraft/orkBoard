@@ -37,7 +37,7 @@ def open_first(desk, root, width=1280, stage="idea"):
 
 
 def edit_parties(pg):
-    """The place of the parties again, as a party's *Edit* opens it (`openParties`; spec 160 I: the new chair deals its crafts to the hand instead, tests/test_chair_deal_browser.py)."""
+    """The place of the parties again, as a party's *Edit* opens it (`openParties`; spec 161 I: the new chair deals its crafts to the hand instead, tests/test_chair_deal_browser.py)."""
     pg.evaluate("() => import('/static/js/table/parties.js').then((m) => m.openParties({}))")
     pg.locator(f"{CARD} .pc-row").first.wait_for(timeout=WAIT_MS)
 

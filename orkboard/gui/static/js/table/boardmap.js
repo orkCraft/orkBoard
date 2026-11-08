@@ -13,7 +13,7 @@ import { PlanBoard } from "./planboard.js";
 import { raceOf } from "./felt.js";
 import "./line.js";
 
-/** An empty lane says whose it is, on a flat plate (spec 160 E, decisions §275.2): *Release is free · throw a goal here or @Release*. */
+/** An empty lane says whose it is, on a flat plate (spec 161 E, decisions §275.2): *Release is free · throw a goal here or @Release*. */
 const freeWords = (g) => `${nameOf(g)} is free · throw a goal here or @${nameOf(g)}`;
 
 const CARD_W = 144;                                                 // a card (frame.css `--card-w`); a lane whose room is narrower than this lays tokens

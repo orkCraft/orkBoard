@@ -1,4 +1,4 @@
-"""**The table's look on the desktop** (docs/specs/160-the-tables-look-and-the-rooms-things.md E, decisions §268, §269, §275), in a real browser at 1280 x 800: the pane wears the open party's felt (`data-party` from the open tab, the Orkmaster's the wood; the
+"""**The table's look on the desktop** (docs/specs/161-the-tables-look-and-the-rooms-things.md E, decisions §268, §269, §275), in a real browser at 1280 x 800: the pane wears the open party's felt (`data-party` from the open tab, the Orkmaster's the wood; the
 computed background uses orkUI's felt tokens), the open tab has a pennant `.is-open` and each closed one a plain pennant, every closed tab's name is the light ink (its party's colour is only the rule under it, the pennant and the glow), the column's and
 the discard's headings are bronze plaques, and an empty lane says whose it is on a flat plate in the party's plate colour. Screenshots to $TABLE_LOOK_SHOTS when it is set."""
 from __future__ import annotations

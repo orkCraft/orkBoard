@@ -1,4 +1,4 @@
-// The project in the Orkmaster's header (docs/specs/160-the-tables-look-and-the-rooms-things.md stage J, decisions §272.5): the header's second line says the project's kind and stage in the caption face (*Game · Being made*); pressed, the kind or the stage
+// The project in the Orkmaster's header (docs/specs/161-the-tables-look-and-the-rooms-things.md stage J, decisions §272.5): the header's second line says the project's kind and stage in the caption face (*Game · Being made*); pressed, the kind or the stage
 // deals its choices to the hand as the answer cards are dealt (hand/answercards.js): the Orkmaster's question rises onto the table, each choice is a 144 x 202 card in the hand's row with its one line of what changes, the present one marked, the rest of the
 // hand sunk. A card pressed sends `ideas.project_kind_set` or `ideas.stage_set` once; *Put it back* and Esc send nothing. Wide only (760 px and over): the narrow page keeps its head. What the host says is `ideas.stage` (stage, kind, the crafts each stage offers).
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";

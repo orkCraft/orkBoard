@@ -132,7 +132,7 @@ def test_the_backpack_opens_the_stall_and_esc_shuts_it(gui):
         pack.wait_for(timeout=WAIT_MS)
         assert pack.get_attribute("title") == "Inventory: how the project is set" and pack.get_attribute("aria-pressed") == "false"
         head = pg.locator('.release-lane__head[data-room-things="discard"]')
-        assert head.locator("[data-backpack]").count() == 1 and pg.locator(".table-tabs__end .stall-pack").count() == 0       # the backpack stands at the left of the discard column's head, not at the tabs' end (spec 160 H)
+        assert head.locator("[data-backpack]").count() == 1 and pg.locator(".table-tabs__end .stall-pack").count() == 0       # the backpack stands at the left of the discard column's head, not at the tabs' end (spec 161 H)
         assert pack.bounding_box()["x"] > pg.viewport_size["width"] * 0.8 and head.locator(".ork-pack:not(.is-open)").count() == 1
         assert pg.locator(".stall").count() == 0 and pg.locator(".table-pane").get_attribute("data-stall") is None
         pack.click()

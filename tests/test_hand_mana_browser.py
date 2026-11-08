@@ -110,7 +110,7 @@ def test_two_tools_are_two_potions_in_one_row_in_the_chips_order_flush_against_t
 
 
 def test_the_tabs_end_keeps_the_backpack_and_the_empty_chair_no_door_no_bug_and_no_chip(gui):
-    """Decisions §267.1: the backpack stood at the tabs' end before the empty chair; spec 160 H, §272.1: it stands at the left of the discard column's head, the tabs' end keeps the empty chair."""
+    """Decisions §267.1: the backpack stood at the tabs' end before the empty chair; spec 161 H, §272.1: it stands at the left of the discard column's head, the tabs' end keeps the empty chair."""
     pg, host, log = open_mana(gui, TWO)
     try:
         pots(pg)

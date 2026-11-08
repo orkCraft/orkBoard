@@ -66,7 +66,7 @@ function useBackButton(open, narrow) {
 }
 
 export function Table({ column = false }) {
-  const parties = partiesAll(), tabs = tabsNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(tabs.length, narrow);   // `tabs`: the lanes' parties, Release among them in the route's order (spec 160 D)
+  const parties = partiesAll(), tabs = tabsNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(tabs.length, narrow);   // `tabs`: the lanes' parties, Release among them in the route's order (spec 161 D)
   const project = currentProject.value?.path || "";
   const was = useRef(project);
   useEffect(() => { const from = was.current; was.current = project; if (from && from !== project) dropPick(); restoreTab(); lower(); closeOver(); }, [project]);   // another project: its tab, nothing picked, nothing open

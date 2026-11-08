@@ -1,5 +1,5 @@
 /* The lamp's chain as the person (presence.js, spec 139 C.2 and 160 G): layout only; every colour, face and size is orkUI's. */
-/* the lamp's chain (presence.js PresenceChain, spec 160 G): orkUI's chain hung at the right of the discard column's head, its words to its left. Layout only. */
+/* the lamp's chain (presence.js PresenceChain, spec 161 G): orkUI's chain hung at the right of the discard column's head, its words to its left. Layout only. */
 .presence-chain { appearance: none; flex: none; display: flex; align-items: flex-start; justify-content: flex-end; gap: var(--ork-2); align-self: flex-start; margin: 0; padding: 0 var(--ork-1); border: 0; background: none; color: var(--ork-ink); cursor: pointer; text-align: right; }
 .presence-chain:focus-visible { outline: 2px solid var(--ork-ink); }
 .presence-chain__words { display: flex; flex-direction: column; align-items: flex-end; padding-top: var(--ork-3); font: var(--ork-type-caption); }

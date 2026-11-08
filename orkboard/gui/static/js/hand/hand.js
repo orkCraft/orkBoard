@@ -21,8 +21,8 @@ import { PlayDie } from "./playdie.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
 import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
-import { ProjectDeal, dealt as headerDeal } from "../table/projectdeal.js";                       // the header's kind or stage dealt to the hand (spec 160 J)
-import { ChairDeal, dealing } from "./chairdeal.js";                                     // the new chair deals its crafts (spec 160 I)
+import { ProjectDeal, dealt as headerDeal } from "../table/projectdeal.js";                       // the header's kind or stage dealt to the hand (spec 161 J)
+import { ChairDeal, dealing } from "./chairdeal.js";                                     // the new chair deals its crafts (spec 161 I)
 import { AnswerLifted, answerSet, useWide } from "./answercards.js";           // a lifted question or failure stays a hand card, its ways the hand (spec 158 F, decisions §270)
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
@@ -94,7 +94,7 @@ export function Hand() {
   if (uprightNow.value) return html`<${Upright} root=${root} stacks=${stacks} plus=${plus} />`;                  // a touch phone upright: the hand is the first screen (upright.js)
   const deal = wide && !s && !carrying && headerDeal.value ? headerDeal.value : "";                   // the Orkmaster's header pressed: the kinds or the stages are the hand
   useEffect(() => { if ((key || fieldOpen.value || !wide) && headerDeal.value) headerDeal.value = ""; }, [key, fieldOpen.value, wide]);
-  const chair = dealing.value && wide && !carrying && !middle && !bare && !s;                                   // the new chair pressed: its crafts are the hand (spec 160 I)
+  const chair = dealing.value && wide && !carrying && !middle && !bare && !s;                                   // the new chair pressed: its crafts are the hand (spec 161 I)
   const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>

@@ -7507,14 +7507,14 @@ The owner's call.
 Changes: 268.1 (the party colours its tab's name), 269.1 (the steps under everything), 270.7 for the table's look (the phone in a
 goal of its own).
 
-Why: goal 160's Talk: Design's leader found the mockup below WCAG AA where a closed tab's name is in its party's dimmed colour
+Why: goal 161's Talk: Design's leader found the mockup below WCAG AA where a closed tab's name is in its party's dimmed colour
 on the dark felt, and where the dithered steps of the light run under small words (a word then has no one contrast). The owner
 picked the first of the two ways offered each time, and asked for the phone in the same goal. So:
 1. **A tab's name is in the light ink**, open or closed; its party's colour is in the rule under it, its pennant and its glow.
    Text keeps 4.5:1 on every felt, lit or out; a test checks it.
 2. **Words lie on a flat plate**: where the table's light steps and their dither would run under words (a label, a lane's words,
    a card's text), the words sit on a flat plate of one colour; the steps show between them.
-3. **The phone in goal 160**: the table's look, the lamp and the backpack are drawn on the phone too, in the same goal.
+3. **The phone in goal 161**: the table's look, the lamp and the backpack are drawn on the phone too, in the same goal.
 
 The owner's call.
 
@@ -7522,7 +7522,7 @@ The owner's call.
 
 Changes: 268.1 (a signal, danger, alert and success, the brightest, always a ring and an icon).
 
-Why: goal 160's Design leader, at orkUI 0.35.0: the success green (`#86c062`) stands as light as Tech's moss (`#8fbf4a`, kept by
+Why: goal 161's Design leader, at orkUI 0.35.0: the success green (`#86c062`) stands as light as Tech's moss (`#8fbf4a`, kept by
 the owner), so it cannot be the brightest on the table without leaning on the action's green. The owner: success is no ring. So:
 1. **A ring is a failure's or a question's** (danger, alert): the brightest colours on the table, by a lead a person sees over
    every party's and element's colour; orkUI's test asks a visible margin, not a unit.
