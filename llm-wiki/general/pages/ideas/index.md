@@ -128,4 +128,5 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [A hypothesis](133-a-hypothesis-its-two-conditions-its-test-its-file.md) — A hypothesis
 - [What a trial with real tools found](143-what-a-trial-with-real-tools-found.md) — What a trial with real tools found
 - [A hypothesis on the page](146-a-hypothesis-on-the-page.md) — A hypothesis on the page
+- [A way's own line: each way of a question says what it leads to, on its card](159-a-ways-own-line.md) — A way's own line: each way of a leader's question carries one line of what it leads to, written by the leader to fit the card (decisions §270.2, §270.5); the Board's question format holds it, the host
 - [Release keeps the chronicle](134-release-keeps-the-chronicle.md) — Release keeps the chronicle
