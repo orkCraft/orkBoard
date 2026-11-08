@@ -4,16 +4,13 @@
 .ac-on .hand-lifted { display: none !important; }
 .ac-on .hand-row { opacity: .28; filter: saturate(.5); }
 
-/* ---- the stage: the question, then the answers, the acts at the end ------------------------------------------- */
-.ac-stage {
-  position: fixed; z-index: 60; display: grid; align-items: end; column-gap: 40px; row-gap: 10px;
-  grid-template-columns: auto auto; grid-template-areas: "q ." "answers acts" "pen pen";
-}
-.ac-qbox { grid-area: q; }
-.ac-answers { grid-area: answers; display: flex; flex-direction: column; gap: 6px; }
-.ac-acts { grid-area: acts; display: flex; flex-direction: column; gap: 8px; align-self: end; padding-bottom: 50px; }
-.ac-row { display: flex; gap: 14px; align-items: end; }
-.ac-label { font: var(--ork-type-heading); letter-spacing: var(--ork-type-heading-track, .06em); text-transform: var(--ork-type-heading-case, none); color: var(--ork-ink-muted); }
+/* ---- the question on the table, the answers as the hand --------------------------------------------------- */
+.ac-on .hand-row { translate: 0 64px; opacity: .3; filter: grayscale(1); transition: translate 200ms, opacity 200ms; }   /* the rest of the hand sinks */
+.ac-qbox, .ac-hand, .ac-pen { position: fixed; z-index: 60; }
+.ac-hand { display: flex; flex-direction: column; gap: 0; }
+.ac-label { position: absolute; top: -22px; left: 0; white-space: nowrap; font: var(--ork-type-heading); letter-spacing: var(--ork-type-heading-track, .06em); text-transform: var(--ork-type-heading-case, none); color: var(--ork-ink-muted); }
+.ac-row { display: flex; gap: 14px; align-items: start; }
+.ac-acts { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 12px 0 0 10px; }
 
 /* ---- a card: the hand card's anatomy, its corners and three lines ------------------------------------------ */
 .ac-card {
@@ -42,20 +39,19 @@
 .ac-much { flex: none; }
 
 /* the question: raised a little higher than its answers, its signal's ring (orkUI's .asks / .fails, or table-look's) */
-.ac-q { translate: none; }
+.ac-q { translate: none; cursor: default; }
 .ac-q .ac-text { color: var(--ork-ink); font: var(--ork-type-body); font-style: italic; -webkit-line-clamp: 3; line-clamp: 3; }
 
 /* an answer: the leader's pick marked by its head; hovered it rises; the Pen card dashed until it is pressed */
-.ac-row .ac-card:hover { translate: 0 -12px; }
+.ac-row .ac-card:hover { translate: 0 -96px; }
 .ac-card.is-pick { box-shadow: inset 0 0 0 1px var(--ork-ink), inset 0 0 0 3px color-mix(in srgb, var(--ork-ink) 18%, transparent) !important; }
 .ac-card[data-pen] { border-style: dashed; background: color-mix(in srgb, var(--ork-card) 70%, transparent); }
-.ac-card[data-pen].is-on { border-style: solid; translate: 0 -12px; box-shadow: inset 0 0 0 1px var(--ork-ink) !important; }
+.ac-card[data-pen].is-on { border-style: solid; box-shadow: inset 0 0 0 1px var(--ork-ink) !important; }
 
-/* the Pen's field: under the answers, over the hand's rim */
-.ac-pen { grid-area: pen; display: none; gap: 8px; align-items: stretch; }
+/* the Pen's field: on the table beside the risen question, its bottom on the question's */
+.ac-pen { display: none; width: 520px; flex-direction: column; gap: 8px; align-items: flex-end; }
 .ac-stage.is-pen .ac-pen { display: flex; }
-.ac-pen textarea { flex: 1; min-width: 0; resize: none; font: var(--ork-type-body); padding: 6px 8px; background: var(--ork-room); color: var(--ork-ink); border: var(--ork-line) solid var(--ork-ink); }
-.ac-stage.is-pen .ac-acts { padding-bottom: 0; }
+.ac-pen textarea { box-sizing: border-box; width: 100%; resize: none; font: var(--ork-type-body); padding: 6px 8px; background: var(--ork-room); color: var(--ork-ink); border: var(--ork-line) solid var(--ork-ink); }
 
 /* ---- the goal's card in the column: ringed in the lifted card's signal (an outline: a face-down card's back covers its inside) */
 .col-card.ac-about { z-index: 5; outline-offset: -2px; }

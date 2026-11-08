@@ -5,6 +5,7 @@
   const lifted = document.querySelector('.hand-lifted');
   if (!lifted) return 'no lifted card';
   document.querySelector('.ac-stage')?.remove();
+  document.body.classList.remove('ac-on');   // measured with the hand where it rests
   const kind = lifted.dataset.kind, failed = kind === 'failed';
   const elem = [...lifted.classList].find((c) => c.startsWith('el-')) || '';
   const rune = lifted.querySelector('.corner__rune .ork-elem')?.outerHTML || '';
@@ -40,22 +41,25 @@
   const q = card({ t: title, why: text, kindHtml: `<span class="ork-sign ${failed ? 'alert' : 'question'} ${failed ? 'is-danger' : 'is-alert'}" aria-hidden="true"></span>`,
     footWho: `${head}<span>${failed ? 'Tech' : asker}</span>`, cost: failed ? gem : '' }, `ac-q ${failed ? 'fails' : 'asks'}`);
 
+  // the question rises out of its slot onto the table; the answers are the hand; the rest of the hand sinks, grey
+  const rest = document.querySelector(`.hand .hand-card[data-key="${CSS.escape(lifted.dataset.key || '')}"]`)?.getBoundingClientRect();
+  const hand = document.querySelector('.hand')?.getBoundingClientRect();
+  const plus = document.querySelector('.hand .hand-plus')?.getBoundingClientRect();
   const stage = document.createElement('div');
   stage.className = 'ac-stage';
   stage.innerHTML = `<div class="ac-qbox">${q}</div>
-    <div class="ac-answers"><span class="ac-label">${failed ? 'What now' : 'Your answer'}</span><div class="ac-row">${answers.map((a) => card(a, a.pick ? 'is-pick' : '')).join('')}</div></div>
-    <div class="ac-acts"><button type="button" class="ork-btn quiet">Open…</button><button type="button" class="ork-btn">Put it back</button></div>
-    <div class="ac-pen"><textarea class="ork-input" rows="2" placeholder="Your words to ${asker}…">The server counts, but a phone that drops keeps counting and checks back on reconnect.</textarea><button type="button" class="ork-btn primary">Send to ${asker}</button></div>`;
+    <div class="ac-hand"><div class="ac-row">${answers.map((a) => card(a, a.pick ? 'is-pick' : '')).join('')}
+        <div class="ac-acts"><button type="button" class="ork-btn quiet">Open…</button><button type="button" class="ork-btn">Put it back</button></div></div></div>
+    <div class="ac-pen"><textarea class="ork-input" rows="3" placeholder="Your words to ${asker}…">The server counts, but a phone that drops keeps counting and checks back on reconnect.</textarea><button type="button" class="ork-btn primary">Send to ${asker}</button></div>`;
   document.body.append(stage);
   document.body.classList.add('ac-on');
   if (mode === 'pen') { stage.classList.add('is-pen'); stage.querySelector('[data-pen]')?.classList.add('is-on'); }
-
-  // place it: the answers stand on the hand's rim, risen out of it; the question a row above them
-  const hand = document.querySelector('.hand')?.getBoundingClientRect();
-  const pane = document.querySelector('.table-pane')?.getBoundingClientRect();
-  if (hand && pane) {
-    stage.style.left = `${pane.left + 24}px`;
-    stage.style.bottom = `${innerHeight - hand.top - 40}px`;
+  if (hand) {
+    const qx = rest ? rest.left : hand.left + 200, cardTop = rest ? rest.top : hand.top + 10;
+    const qb = stage.querySelector('.ac-qbox'), hr = stage.querySelector('.ac-hand'), pen = stage.querySelector('.ac-pen');
+    qb.style.left = `${qx}px`; qb.style.top = `${hand.top - 202 - 18}px`;
+    hr.style.left = `${plus ? plus.right + 28 : hand.left + 200}px`; hr.style.top = `${cardTop}px`;
+    pen.style.left = `${qx + 144 + 20}px`; pen.style.top = `${hand.top - 18 - 92}px`;
   }
 
   // the context is the table's own: lifting a card already turns the table to its goal; its card in the column is marked
