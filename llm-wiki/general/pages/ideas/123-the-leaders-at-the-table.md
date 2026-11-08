@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The leaders at the table
 phase: done
+route: design, tech
 spec: docs/specs/123-the-leaders-at-the-table.md
 decisions: 201
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The party gathered
 phase: done
+route: design, tech
 spec: docs/specs/63-party-gathered.md
 decisions:
 by: person

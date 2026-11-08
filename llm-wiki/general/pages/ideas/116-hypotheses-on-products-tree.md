@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Hypotheses on Product's
 phase: done
+route: product, design, tech
 spec: docs/specs/116-hypotheses-on-products-tree.md
 decisions: 194
 by: person

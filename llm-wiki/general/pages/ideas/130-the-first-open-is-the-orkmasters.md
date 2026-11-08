@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The first open is
 phase: done
+route: design, tech
 spec: docs/specs/130-the-first-open-is-the-orkmasters.md
 decisions: 232, 236, 239, 245, 249
 by: person

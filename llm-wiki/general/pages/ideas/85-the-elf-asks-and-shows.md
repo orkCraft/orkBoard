@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Progress is seen
 phase: done
+route: design, tech
 spec: docs/specs/85-the-elf-asks-and-shows.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Orkboard and Orkline
 phase: done
+route: tech
 spec: docs/specs/37-board-and-line.md
 decisions:
 by: person

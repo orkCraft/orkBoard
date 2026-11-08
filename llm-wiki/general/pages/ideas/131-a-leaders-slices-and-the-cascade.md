@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A leader's slices
 phase: done
+route: design, tech
 spec: docs/specs/131-a-leaders-slices-and-the-cascade.md
 decisions: 233, 237
 by: person

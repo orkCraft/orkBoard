@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A closed party says what
 phase: done
+route: design, tech
 spec: docs/specs/72-at-work-under-a-closed-party.md
 decisions:
 by: person

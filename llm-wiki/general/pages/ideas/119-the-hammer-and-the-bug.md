@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The hammer and the bug
 phase: done
+route: design, tech
 spec: docs/specs/119-the-hammer-and-the-bug.md
 decisions:
 by: person

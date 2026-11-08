@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The mana in the hand
 phase: done
+route: design, tech
 spec: docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md
 decisions: 175, 176
 by: person

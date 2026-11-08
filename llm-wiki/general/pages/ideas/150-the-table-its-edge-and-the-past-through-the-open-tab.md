@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The table, its edge
 phase: work
+route: design, tech
 spec: docs/specs/150-the-table-its-edge-and-the-past-through-the-open-tab.md
 decisions: 254
 by: person

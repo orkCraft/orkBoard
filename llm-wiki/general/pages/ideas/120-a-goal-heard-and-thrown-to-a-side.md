@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A goal heard
 phase: done
+route: design, tech
 spec: docs/specs/120-a-goal-heard-and-thrown-to-a-side.md
 decisions: 198
 by: person

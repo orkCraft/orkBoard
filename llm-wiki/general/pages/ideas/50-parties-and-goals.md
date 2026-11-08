@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Parties and goals
 phase: done
+route: design, tech
 spec: docs/specs/50-parties-and-goals.md
 decisions:
 by: person

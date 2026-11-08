@@ -7,6 +7,7 @@ size:
 priority: normal
 short: What the first look said
 phase: done
+route: product, design, tech
 spec: docs/specs/90-what-the-first-look-said.md
 decisions:
 by: person

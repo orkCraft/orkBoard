@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The bar's marks
 phase: done
+route: design, tech
 spec: docs/specs/112-the-bars-marks-and-the-play-die.md
 decisions: 190
 by: person

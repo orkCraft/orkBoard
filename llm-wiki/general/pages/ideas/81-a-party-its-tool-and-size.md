@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A party's AI tool
 phase: done
+route: design, tech
 spec: docs/specs/81-a-party-its-tool-and-size.md
 decisions:
 by: person

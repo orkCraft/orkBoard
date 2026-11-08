@@ -7,6 +7,7 @@ size:
 priority: normal
 short: One hand
 phase: done
+route: design, tech
 spec: docs/specs/54-one-hand.md
 decisions:
 by: person

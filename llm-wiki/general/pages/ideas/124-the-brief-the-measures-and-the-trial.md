@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The brief every leader
 phase: done
+route: product, tech
 spec: docs/specs/124-the-brief-the-measures-and-the-trial.md
 decisions: 202
 by: person

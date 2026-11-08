@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Orkmaster fits
 phase: done
+route: product, design, tech
 spec: docs/specs/75-parties-fitted-to-the-project.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Each leader looks
 phase: done
+route: design, tech
 spec: docs/specs/109-each-leader-looks-as-a-senior-of-its-craft.md
 decisions: 184
 by: person

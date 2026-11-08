@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A task is a whole
 phase: work
+route: tech
 spec: docs/specs/153-a-task-is-a-whole-session.md
 decisions: 257
 by: person

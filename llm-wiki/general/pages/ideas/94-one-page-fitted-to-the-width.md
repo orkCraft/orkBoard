@@ -7,6 +7,7 @@ size:
 priority: normal
 short: One page fitted
 phase: done
+route: design, tech
 spec: docs/specs/94-one-page-fitted-to-the-width.md
 decisions:
 by: person

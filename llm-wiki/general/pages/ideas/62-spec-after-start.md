@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The spec after the start
 phase: done
+route: design, tech
 spec: docs/specs/62-spec-after-start.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: New goal in one field
 phase: done
+route: design, tech
 spec: docs/specs/83-one-field-and-the-night-asked.md
 decisions:
 by: person

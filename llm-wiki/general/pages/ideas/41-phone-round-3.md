@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The phone, round 3
 phase: done
+route: design, tech
 spec: docs/specs/41-phone-round-3.md
 decisions:
 by: person

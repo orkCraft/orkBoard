@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The phone through
 phase: done
+route: tech
 spec: docs/specs/136-the-phone-through-the-projects-remote.md
 decisions: 243
 by: person

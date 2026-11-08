@@ -7,6 +7,7 @@ size:
 priority: normal
 short: What a goal on local
 phase: done
+route: product, tech
 spec: docs/specs/149-what-a-goal-on-local-codex-found.md
 decisions: 253
 by: person

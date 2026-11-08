@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The phone's members wear
 phase: done
+route: design, tech
 spec: docs/specs/60-phone-member-marks.md
 decisions:
 by: person

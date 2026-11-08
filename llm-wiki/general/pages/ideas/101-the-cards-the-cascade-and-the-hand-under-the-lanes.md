@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The cards, a goal's
 phase: done
+route: design, tech
 spec: docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The phone, simpler
 phase: done
+route: design, tech
 spec: docs/specs/53-phone-simpler.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A goal's trail
 phase: done
+route: design, tech
 spec: docs/specs/46-goal-trail.md
 decisions:
 by: person
