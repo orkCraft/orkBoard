@@ -22,7 +22,7 @@ from typing import Callable
 
 import re
 
-from orkboard.realm import gate_config, ideas, map_parts, map_signals, project_map, screen_map, spec_sections
+from orkboard.realm import gate_config, ideas, map_parts, map_reach_crafts, map_signals, project_map, screen_map, spec_sections
 
 
 def heat(state_dir: Path, root: Path, craft: str, pages: Path | None = None, ref: str = "dev") -> list[dict]:
@@ -34,11 +34,7 @@ def heat(state_dir: Path, root: Path, craft: str, pages: Path | None = None, ref
     return [{"on": h["on"], "kind": h["kind"]} for h in rows if h.get("on") and h.get("kind") and h.get("map", map_id) == map_id]
 
 
-def _out(lit: set[str], links: dict[str, set[str]]) -> tuple[set[str], set[str]]:
-    """The parts one and two steps out of `lit` by `links` (part -> the parts it reaches), none twice and none lit."""
-    one = set().union(*(links.get(p, set()) for p in lit)) - lit if lit else set()
-    two = set().union(*(links.get(p, set()) for p in one)) - lit - one if one else set()
-    return one, two
+_out = map_reach_crafts.steps_out
 
 
 def _system(state_dir: Path, root: Path, ref: str):
@@ -91,10 +87,14 @@ def _wills(pages: Path, party: str) -> dict[str, list[str]]:
 
 def reach(state_dir: Path, root: Path, pages: Path, party: str, craft: str, ref: str = "dev") -> dict[str, dict]:
     """`{slug: {lit, one, two, no_test}}` for every goal not done whose section for `party` has a *Will be* that names a part of `craft`'s map (see the module's doc). Never raises: {} for a map
-    that cannot be read or a craft this module has no map for (only "tech" and "design" here)."""
+    that cannot be read or a craft with no reach (the other crafts are `map_reach_crafts`'s; Dev and main's is read from the plan kept)."""
     try:
         wills = _wills(pages, party)
-        if not wills or craft not in ("tech", "design"):
+        if not wills:
+            return {}
+        if craft in map_reach_crafts.CRAFTS:
+            return map_reach_crafts.reach(state_dir, root, pages, craft, wills, ref)
+        if craft not in ("tech", "design"):
             return {}
         out: dict[str, dict] = {}
         if craft == "tech":
