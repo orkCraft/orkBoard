@@ -124,7 +124,8 @@ def clean_ask(raw: object, leader: bool = False) -> dict | None:
     ask, target = " ".join(str(raw.get("ask") or "").split())[:ASK_MAX], "" if leader else clean_target(raw.get("target"))
     if isinstance(n, bool) or not isinstance(n, int) or not N_MIN <= n <= N_MAX or kind not in KINDS or not ask or (not target and not leader) or (kind in LEADER_KINDS and not leader):
         return None
-    return {"n": n, "kind": kind, "ask": ask, "target": target, **({"look": True} if raw.get("look") is True and not leader else {})}
+    return {"n": n, "kind": kind, "ask": ask, "target": target, **({"look": True} if raw.get("look") is True and not leader else {}),
+            **({"tool": raw["tool"].strip()[:80]} if isinstance(raw.get("tool"), str) and raw["tool"].strip() else {})}
 
 
 def ask_of(task: dict) -> dict | None:
@@ -277,6 +278,8 @@ def store(state_dir: Path, slug: str, task: dict, rnd: int, variants: list[dict]
         shutil.move(str(v["src"]), str(folder / v["file"]))
     data = {"id": pid, "task": str(task.get("id")), "round": rnd, "by": by, "kind": ask.get("kind"), "ask": ask.get("ask"),
             "target": ask.get("target"), **({"look": True} if ask.get("look") else {}), "at": now or _now(), "variants": [{k: v[k] for k in VARIANT_KEYS} for v in variants]}
+    if ask.get("tool"):
+        data.update(tool=ask["tool"], cost=task.get("craft_cost"), cap=task.get("craft_cap"))
     _write(folder / "pick.json", data)
     return data
 

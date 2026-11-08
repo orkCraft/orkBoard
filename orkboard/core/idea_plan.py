@@ -24,6 +24,7 @@ import json
 import re
 from pathlib import Path
 
+from orkboard.core import craft_pick
 from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
 from orkboard.realm import (collide, event_log, goal_route, goal_take, goal_team, goal_types, harnesses, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
@@ -309,6 +310,7 @@ class PlanMixin:
         kinds = "; ".join(f'"{k}" ({roles.KIND_LINES[k]})' for k in roles.TASK_KINDS)
         team_of = goal_team.team_of(root, party)     # the squad alone: a leader never takes a task (spec 152 A.2)
         team = self.team_lines([s for s in dict.fromkeys(team_of) if s != roles.TASKMASTER])
+        team += craft_pick.plan_lines(root, party)
         team += idea_look.instruction(self.state_dir, root, slug) if n == 1 else ""      # a screen's look is picked first, a task may name its screen (spec 85 §2, §3)
         checks = idea_checks.plan_lines(self.idea_checks(root, slug), self.team_checks(root, slug), goal_team.size_of(root, party) if party else "")      # the size's checks (spec 152 A.4)
         legs = self._legs(slug)
@@ -389,6 +391,7 @@ Answer with one JSON object and nothing else:
             text, *_rest = self.ask("plan", prompt)
             look = "" if later else idea_look.screen_title(self.state_dir, root, slug)
             data = kw.make_plan(slug, self.cascade_seen(self.parse(text), self._step_party(slug, n), "plan", slug), look=look, root=self.repo_root)
+            craft_pick.clean_plan(data, root, track)
             data = self._claimed(slug, root, track, n, data, prompt, look)
             data["tasks"] = idea_checks.with_check_tasks(data["tasks"], self.idea_checks(root, slug), self.team_checks(root, slug), _task,
                                                          goal_team.size_of(root, track) if track else "")      # the size's checks (spec 152 A.4)
@@ -450,6 +453,7 @@ Answer with one JSON object and nothing else:
             except kw.KeeperError:                       # the second answer is no plan: the first stands
                 again = None
             if again is not None:
+                craft_pick.clean_plan(again, root, party)
                 data = again
             left = unclaimed(page, party, data["tasks"], heading)
             self._ev(event_log.PLAN_UNCLAIMED, idea=slug, step=n, lines=[str(i) for i in left], asked_again=True)
