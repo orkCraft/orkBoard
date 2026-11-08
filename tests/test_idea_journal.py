@@ -17,7 +17,8 @@ from orkboard.core.idea_journal import DIGEST_AFTER, JournalMixin
 from orkboard.gui.board_host import Orkboard
 from orkboard.realm import event_log, goal_team, idea_spend, idea_target, ideas, journals, library
 
-DIGEST = {"digest": "You have learned that the person shrinks goals that touch the cache, and that your no's on the cache were right."}
+DIGEST = {"works": ["The person shrinks goals that touch the cache (goal-0), and the no's on it held."]}
+DIGEST_TEXT = "Works: The person shrinks goals that touch the cache (goal-0), and the no's on it held."
 
 
 @pytest.fixture
@@ -160,7 +161,7 @@ def test_the_digest_is_one_call_of_the_partys_leader_on_the_cheaper_tier_with_no
     p = call["prompt"]
     assert p.startswith("You are Architect, the leader of this goal's party")                                                        # its leader's voice
     assert "Read no file" in p and '{"works": ["…"], "hurts": ["…"], "next": ["…"]}' in p and str(journals.DIGEST_CHARS) in p
-    assert "You said go on “Goal 0”." in p and "You said go on “Goal 11”." in p and "Your view so far" not in p            # no view yet
+    assert "I said go on “Goal 0”." in p and "I said go on “Goal 11”." in p and "You said" not in p and "Your view so far" not in p            # no view yet
 
 
 def test_the_call_is_given_its_old_digest_and_only_the_entries_since(host, tech, model):
@@ -201,24 +202,24 @@ def test_the_digest_is_kept_with_the_last_entry_it_read_and_the_event_has_no_wor
     assert host.ideas.keeper.journal_digest(tech) is True
     _wait(host, tech)
     got = journals.digest(host.ideas.state_dir, tech)
-    assert got["text"] == DIGEST["digest"] and got["upto"] == last
+    assert got["text"] == DIGEST_TEXT and got["upto"] == last and got["read"] == ["goal-0"]
     assert journals.since_digest(host.ideas.state_dir, tech) == [] and not host.ideas.keeper.journal_due(tech)
     (ev,) = _events(host)
-    assert ev["party"] == tech and ev["entries"] == DIGEST_AFTER and ev["chars"] == len(DIGEST["digest"]) and ev["cost"] == 0.01 and isinstance(ev["seconds"], float)
-    assert DIGEST["digest"] not in json.dumps(ev) and "Goal" not in json.dumps(ev)
-    assert "You have learned" in journals.text(host.ideas.state_dir, tech)                       # and it is read into the leader's calls from then on
+    assert ev["party"] == tech and ev["entries"] == DIGEST_AFTER and ev["chars"] == len(DIGEST_TEXT) and ev["why"] == "add" and ev["dropped"] == 0 and ev["cost"] == 0.01 and isinstance(ev["seconds"], float)
+    assert DIGEST_TEXT not in json.dumps(ev) and "Goal" not in json.dumps(ev)
+    assert "shrinks goals" in journals.text(host.ideas.state_dir, tech)                       # and it is read into the leader's calls from then on
 
 
-def test_a_digest_is_cut_to_the_limit_and_made_one_line(host, tech, model):
-    model.answer = {"digest": "A line.\n  Another " + "z" * 2000}
+def test_a_view_is_cut_to_the_limit_in_whole_lines_and_made_one_line(host, tech, model):
+    model.answer = {"works": ["A line\n  on goal-0.", "Another goal-1 " + "z" * 2000, "Short goal-2."]}
     _fill(host, tech)
     host.ideas.keeper.journal_digest(tech)
     _wait(host, tech)
     text = journals.digest(host.ideas.state_dir, tech)["text"]
-    assert text.startswith("A line. Another z") and len(text) == journals.DIGEST_CHARS and "\n" not in text
+    assert text == "Works: A line on goal-0.; Short goal-2." and "\n" not in text and len(text) <= journals.DIGEST_CHARS
 
 
-@pytest.mark.parametrize("answer", ["not json", {"digest": ""}, {"digest": 5}, {"other": "x"}, RuntimeError("the tool failed")])
+@pytest.mark.parametrize("answer", ["not json", {"digest": ""}, {"digest": "A digest of no view."}, {"works": ["It names nothing given."]}, {"other": "x"}, RuntimeError("the tool failed")])
 def test_a_call_that_fails_keeps_nothing_and_the_next_trigger_tries_again(host, tech, model, answer):
     _fill(host, tech)
     model.answer = answer
@@ -229,7 +230,7 @@ def test_a_call_that_fails_keeps_nothing_and_the_next_trigger_tries_again(host, 
     model.answer = DIGEST
     assert host.ideas.keeper.journal_digest(tech) is True
     _wait(host, tech)
-    assert journals.digest(host.ideas.state_dir, tech)["text"] == DIGEST["digest"]
+    assert journals.digest(host.ideas.state_dir, tech)["text"] == DIGEST_TEXT
 
 
 def test_a_stop_keeps_nothing(host, tech, model):
@@ -265,7 +266,7 @@ def test_adding_a_goal_digests_the_journal_of_each_party_on_its_route_that_is_du
     assert "error" not in got
     _wait(host, tech)
     assert [c["key"] for c in model.steps("journal")] == [f"goal:{tech}"]                       # Tech's was due; Design's, eleven entries, was not
-    assert journals.digest(host.ideas.state_dir, tech)["text"] == DIGEST["digest"] and journals.digest(host.ideas.state_dir, design) == {}
+    assert journals.digest(host.ideas.state_dir, tech)["text"] == DIGEST_TEXT and journals.digest(host.ideas.state_dir, design) == {}
 
 
 def test_a_trigger_that_breaks_never_troubles_the_goal(host, tech, model, monkeypatch):
@@ -342,4 +343,56 @@ def test_product_with_no_tree_is_told_so_and_an_answer_in_heads_is_read(host):
     product = _party(host, "Product", "product-manager", ["pm"], "product")
     assert product == "product"
     assert "Product's tree is not on the Board." in host.ideas.keeper.journal_prompt(product, {}, [])
-    assert idea_journal.clean({"works": ["a (x-goal)"], "hurts": [], "next": ["b"]}) == "Works: a (x-goal) Next: b"
+    given = {"slugs": {"x-goal"}, "nums": {7}, "ids": {"cache"}}
+    assert idea_journal.clean({"works": ["a (x-goal)"], "hurts": [], "next": ["b §7"]}, given) == ("Works: a (x-goal) Next: b §7", ["x-goal", "§7"], 0)
+
+
+# -- every line traced, or dropped (spec 167 G) ----------------------------------------------------------------------------------------------
+
+GIVEN = {"slugs": {"x-goal"}, "nums": {7}, "ids": {"cache"}}
+
+
+def test_a_line_naming_nothing_the_call_was_given_is_dropped_and_counted():
+    raw = {"works": ["Fine, x-goal", "Fine, but nothing named"], "hurts": ["Slow, §7", "Slow, §8", "Slow, §7 and §8"], "next": ["The cache (cache) next", "x-goal-2 is another", "Ship it"]}
+    text, read, dropped = idea_journal.clean(raw, GIVEN)
+    assert text == "Works: Fine, x-goal Hurts: Slow, §7 Next: The cache (cache) next" and read == ["x-goal", "§7", "cache"] and dropped == 5
+    assert idea_journal.clean({"works": ["Nothing named"]}, GIVEN) is None and idea_journal.clean({"works": ["x-goal"]}, None) is None
+
+
+def test_the_views_words_never_say_you():
+    assert idea_journal.clean({"works": ["You said no to x-goal", "Your no on x-goal held", "x-goal holds"]}, GIVEN) == ("Works: x-goal holds", ["x-goal"], 2)
+
+
+def test_product_with_no_tree_says_so_in_code_and_names_no_job(host, model):
+    product = _party(host, "Product", "product-manager", ["pm"], "product")
+    assert product == "product"
+    journals.add(host.ideas.state_dir, product, "stance", "You said go on “Cache”.", idea="cache-goal")
+    model.answer = {"works": ["The cache is cached, cache-goal."]}
+    for i in range(DIGEST_AFTER):
+        journals.add(host.ideas.state_dir, product, "stance", f"You said go on “G{i}”.", idea="cache-goal")
+    assert host.ideas.keeper.journal_digest(product) is True
+    _wait(host, product)
+    got = journals.digest(host.ideas.state_dir, product)
+    assert "Hurts: Product's tree is not on the Board yet (163-products-tree-on-the-board)." in got["text"] and "163-products-tree-on-the-board" in got["read"]
+    assert "job" not in got["text"].lower()
+    nothing = {"hurts": ["No source named here."]}
+    assert idea_journal.clean(nothing, GIVEN, no_tree=True) is None             # the code adds its line only to a view that has lines
+
+
+def test_a_decision_placed_in_a_journal_by_its_titles_words_never_reaches_the_view(host, tech, model):
+    journals.add(host.ideas.state_dir, tech, "decision", "Decision 12: Cache the lobby (by its words, no goal)", ref="docs/decisions.md#12")
+    _fill(host, tech)
+    host.ideas.keeper.journal_digest(tech)
+    _wait(host, tech)
+    assert "Cache the lobby" not in model.calls[0]["prompt"] and "I said go on" in model.calls[0]["prompt"]
+    assert idea_journal.view_entries([{"kind": "decision"}, {"kind": "stance"}]) == [{"kind": "stance"}]
+
+
+def test_a_stored_line_is_read_into_the_view_call_in_the_leaders_voice(host, tech, model):
+    assert idea_journal.voiced("You said no to “A”; your no was overruled. You are right, You have won.") == "I said no to “A”; my no was overruled. I am right, I have won."
+    journals.add(host.ideas.state_dir, tech, "overruled", "You said no to the cache; your no was overruled.", idea="goal-9")
+    _fill(host, tech)
+    host.ideas.keeper.journal_digest(tech)
+    _wait(host, tech)
+    p = model.calls[0]["prompt"]
+    assert "overruled (goal-9): I said no to the cache; my no was overruled." in p and "You said no" not in p and "never say *you*" in p
