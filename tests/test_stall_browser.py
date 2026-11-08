@@ -593,3 +593,35 @@ def test_arts_cap_plate_fits_at_1280_by_800_and_has_a_picture(gui, cap_open):
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+WHY_SCENE = "a web app has no scene to shape"
+
+
+class LockedHeroHost(StallHost):
+    def shelves(self, chair):
+        shelves = super().shelves(chair)
+        if chair == "tech":
+            shelves[0]["wares"].append(ware("sh-scene", "Scene Shaman", "Scenes and their beats", {"locked": WHY_SCENE}, head=SH, stats=stats("Scenes", "scene → beat → cut", "standard", 2, 2)))
+        return shelves
+
+
+def test_a_locked_hero_says_its_why_in_words_tied_to_its_button_and_takes_nothing(gui):
+    pg, host, log = opened(gui, "tech", host=LockedHeroHost())
+    try:
+        w = pg.locator('.stall-ware[data-ware="sh-scene"]')
+        why = w.locator("#hero-why-sh-scene")
+        press = w.locator(".stall-ware__press")
+        assert why.is_visible() and WHY_SCENE in why.inner_text()
+        assert press.get_attribute("aria-describedby") == "hero-why-sh-scene" and press.get_attribute("aria-disabled") == "true"
+        assert why.evaluate("e => !e.closest('.stall-face')")                                   # the why lies outside the dimmed face
+        before = [e for e in host.log if e[0] == "ideas.stall_take"]
+        press.click(force=True)
+        press.focus()
+        pg.keyboard.press("Enter")
+        pg.wait_for_timeout(300)
+        assert [e for e in host.log if e[0] == "ideas.stall_take"] == before
+        assert pg.locator('.stall-ware[data-ware="sh-xp"] #hero-why-sh-xp').count() == 0         # an offered hero has no why
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
