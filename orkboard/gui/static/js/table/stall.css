@@ -114,6 +114,7 @@
 /* Keep the reason on the rug, including while its Settings link has focus. */
 .stall-maker__why { visibility: hidden; color: var(--ork-ink-read); font: var(--ork-type-caption); text-align: center; overflow-wrap: anywhere; }
 .is-makers .stall-ware:hover .stall-maker__why, .is-makers .stall-ware:focus-within .stall-maker__why { visibility: visible; }
+.stall-hero__why { margin: 0; color: var(--ork-ink-read); font: var(--ork-type-caption); text-align: center; overflow-wrap: anywhere; }
 .is-makers .stall-price.is-same { color: var(--ork-ink-read); }
 
 /* A cap is agreed on the plate, without an initial amount. */

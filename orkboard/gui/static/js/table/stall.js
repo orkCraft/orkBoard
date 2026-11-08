@@ -50,7 +50,7 @@ function Ware({ shelf, w, chair, head }) {
     }
   }, [w.id, makerPlate.value]);
   const currency = w.prices?.[0]?.currency || w.cap?.currency;
-  const fieldId = `maker-cap-${w.id}`, whyId = `maker-why-${w.id}`;
+  const fieldId = `maker-cap-${w.id}`, whyId = `maker-why-${w.id}`, heroWhyId = `hero-why-${w.id}`;
   // Focus after the form has been inserted or removed, before the redraw is painted.
   useLayoutEffect(() => {
     if (editing) input.current?.focus();
@@ -81,7 +81,7 @@ function Ware({ shelf, w, chair, head }) {
   };
   const point = () => pointAt(mine || locked ? null : shelf.slot, w.id, w.price), leave = () => pointAt(null);
   return html`<div class=${cls("stall-ware", { "is-mine": mine, "is-locked": locked, "is-on": on })} data-ware=${w.id} data-slot=${shelf.slot} onKeyDown=${(e) => { if (e.key === "Escape" && editing) { e.preventDefault(); e.stopPropagation(); close(); } }} onMouseEnter=${point} onMouseLeave=${leave} onFocusIn=${point} onFocusOut=${leave}>
-    <button ref=${trigger} type="button" class="stall-ware__press" aria-expanded=${shelf.kind === "makers" && !locked ? editing : undefined} aria-controls=${shelf.kind === "makers" && !locked ? fieldId : undefined} aria-describedby=${shelf.kind === "makers" && locked ? whyId : undefined} aria-disabled=${mine || locked ? "true" : undefined} title=${locked ? w.price.locked : w.line || undefined} aria-label=${`${shelf.label}: ${w.word}`} onClick=${press}>
+    <button ref=${trigger} type="button" class="stall-ware__press" aria-expanded=${shelf.kind === "makers" && !locked ? editing : undefined} aria-controls=${shelf.kind === "makers" && !locked ? fieldId : undefined} aria-describedby=${locked && (shelf.kind === "makers" || heroes) ? (heroes ? heroWhyId : whyId) : undefined} aria-disabled=${mine || locked ? "true" : undefined} title=${locked ? w.price.locked : w.line || undefined} aria-label=${`${shelf.label}: ${w.word}`} onClick=${press}>
       ${heroes ? html`<${HeroFace} w=${w} fallback=${head} />` : html`<${Relic} w=${w} slot=${shelf.slot} race=${head?.race} />`}
     </button>
     ${shelf.kind === "makers" && !locked ? html`<button type="button" class="stall-maker__cap" tabIndex="-1" aria-expanded=${editing} aria-controls=${fieldId} onClick=${edit}><${Plate} price=${w.price} /></button>` : html`<${Plate} price=${shelf.kind === "makers" && locked ? { locked: w.why } : w.price} />`}
@@ -91,6 +91,7 @@ function Ware({ shelf, w, chair, head }) {
       ${error && html`<p id=${`${fieldId}-error`} role="alert">${error}</p>`}
       <button type="submit" class="ork-btn" disabled=${saving}>Save cap</button>
     </form>`}
+    ${heroes && locked && html`<p class="stall-hero__why" id=${heroWhyId}>${w.price.locked}</p>`}
     ${shelf.kind === "makers" && locked && html`<p class="stall-maker__why" id=${whyId}>${w.why}
       ${w.why === "no key on this computer" && html`<button type="button" class="ork-btn quiet" onClick=${() => openPlace("settings", {}, "Settings")}>Settings · sign-ins</button>`}
     </p>`}
