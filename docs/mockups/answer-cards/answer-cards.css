@@ -1,0 +1,64 @@
+/* Orkboard mockup: no big card. A lifted card stays a hand card (144 x 202), its answers are cards of the same size,
+   why it is asked lies on the asker's table. Laid over the live page (and over ../table-look/); nothing here is in the product. */
+
+.ac-on .hand-lifted { display: none !important; }
+.ac-on .hand-row { opacity: .28; filter: saturate(.5); }
+
+/* ---- the stage: the question, then the answers, the acts at the end ------------------------------------------- */
+.ac-stage {
+  position: fixed; z-index: 60; display: grid; align-items: end; column-gap: 40px; row-gap: 10px;
+  grid-template-columns: auto auto; grid-template-areas: "q ." "answers acts" "pen pen";
+}
+.ac-qbox { grid-area: q; }
+.ac-answers { grid-area: answers; display: flex; flex-direction: column; gap: 6px; }
+.ac-acts { grid-area: acts; display: flex; flex-direction: column; gap: 8px; align-self: end; padding-bottom: 50px; }
+.ac-row { display: flex; gap: 14px; align-items: end; }
+.ac-label { font: var(--ork-type-heading); letter-spacing: var(--ork-type-heading-track, .06em); text-transform: var(--ork-type-heading-case, none); color: var(--ork-ink-muted); }
+
+/* ---- a card: the hand card's anatomy, its corners and three lines ------------------------------------------ */
+.ac-card {
+  --el: var(--ork-card-frame);
+  box-sizing: border-box; width: 144px !important; height: 202px !important; min-width: 0; max-width: none; flex: none !important; aspect-ratio: auto; padding: 8px 9px 7px; margin: 0;
+  display: grid; grid-template-rows: 22px auto 1fr 24px; row-gap: 6px; text-align: left; cursor: pointer;
+  border: var(--ork-line) solid color-mix(in srgb, var(--el) 60%, var(--ork-edge)); color: var(--ork-ink);
+  background:
+    linear-gradient(var(--el) 0 4px, color-mix(in srgb, var(--el) 26%, var(--ork-card)) 4px 24%,
+                    color-mix(in srgb, var(--el) 14%, var(--ork-card)) 24% 52%, color-mix(in srgb, var(--el) 6%, var(--ork-card)) 52%);
+  transition: translate 160ms, box-shadow 160ms;
+}
+.ac-card.el-meadow { --el: var(--ork-elem-meadow); } .ac-card.el-ice { --el: var(--ork-elem-ice); } .ac-card.el-dust { --el: var(--ork-elem-dust); }
+.ac-card.el-void { --el: var(--ork-elem-void); } .ac-card.el-lava { --el: var(--ork-elem-lava); }
+.ac-top, .ac-foot { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; }
+.ac-top img, .ac-foot img { width: 24px; height: 22px; image-rendering: pixelated; flex: none; }
+.ac-name {
+  font: var(--ork-type-body); font-weight: 600; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; line-clamp: 3; overflow-wrap: anywhere;
+}
+.ac-text {
+  font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4; line-clamp: 4; align-self: start;
+}
+.ac-who { display: inline-flex; align-items: center; gap: 4px; min-width: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; }
+.ac-much { flex: none; }
+
+/* the question: raised a little higher than its answers, its signal's ring (orkUI's .asks / .fails, or table-look's) */
+.ac-q { translate: none; }
+.ac-q .ac-text { color: var(--ork-ink); font: var(--ork-type-body); font-style: italic; -webkit-line-clamp: 3; line-clamp: 3; }
+
+/* an answer: the leader's pick marked by its head; hovered it rises; the Pen card dashed until it is pressed */
+.ac-row .ac-card:hover { translate: 0 -12px; }
+.ac-card.is-pick { box-shadow: inset 0 0 0 1px var(--ork-ink), inset 0 0 0 3px color-mix(in srgb, var(--ork-ink) 18%, transparent) !important; }
+.ac-card[data-pen] { border-style: dashed; background: color-mix(in srgb, var(--ork-card) 70%, transparent); }
+.ac-card[data-pen].is-on { border-style: solid; translate: 0 -12px; box-shadow: inset 0 0 0 1px var(--ork-ink) !important; }
+
+/* the Pen's field: under the answers, over the hand's rim */
+.ac-pen { grid-area: pen; display: none; gap: 8px; align-items: stretch; }
+.ac-stage.is-pen .ac-pen { display: flex; }
+.ac-pen textarea { flex: 1; min-width: 0; resize: none; font: var(--ork-type-body); padding: 6px 8px; background: var(--ork-room); color: var(--ork-ink); border: var(--ork-line) solid var(--ork-ink); }
+.ac-stage.is-pen .ac-acts { padding-bottom: 0; }
+
+/* ---- the goal's card in the column: ringed in the lifted card's signal (an outline: a face-down card's back covers its inside) */
+.col-card.ac-about { z-index: 5; outline-offset: -2px; }
+.col-card.ac-about.is-alert { outline: 2px solid var(--ork-alert); }
+.col-card.ac-about.is-danger { outline: 2px solid var(--ork-danger); }
+.ac-on .table-lane[data-empty]::before { display: none; }   /* table-look's empty-lane words, under the cards */
