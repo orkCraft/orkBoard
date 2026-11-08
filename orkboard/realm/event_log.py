@@ -105,8 +105,8 @@ KIND_SET = "kind_set"             # kind, role, device
 # Spec 35 §12: the Board writes and starts what is safe (its night went: spec 99 §3).
 BOARD_SET = "board_set"           # target, autostart, night, device
 IDEA_DRAFTED = "idea_drafted"     # idea, risk, triggers, questions, tier, effort, seconds
-IDEA_ANSWERED = "idea_answered"   # idea, answers (how many), picked, recommended, typed, decided (spec 41 §10)
-GOAL_ANSWERED = "goal_answered"   # goal, answers, picked, recommended, typed, decided, device (spec 41 §10)
+IDEA_ANSWERED = "idea_answered"   # idea, answers (how many), picked, recommended, typed, decided, from ("hand": the lifted card's answers · "open": after Open…; else absent) (spec 41 §10, spec 158)
+GOAL_ANSWERED = "goal_answered"   # goal, answers, picked, recommended, typed, decided, device, from (as idea_answered) (spec 41 §10, spec 158)
 # … and every keeper event (goal_read, idea_drafted, idea_answered, idea_said, plan_made, night_run) carries §0's
 # step, prompt_chars, tokens ({"in", "out", "cache_read"}) and cost (null when unpriced, never 0)
 KEEPER_STOPPED = "keeper_stopped"  # idea (the person stopped the keeper's run on it)

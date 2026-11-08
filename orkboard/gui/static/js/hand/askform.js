@@ -21,7 +21,7 @@ export function AskForm({ slug, goal = false, asked = null, picks = [], done = (
     return () => { live = false; };
   }, [slug, goal]);
   const send = async (answers, photos = []) => {
-    const got = await act("ideas.answer", { slug, answers, ...(photos.length && !goal ? { photos: photos.map((url) => ({ data: url.slice(url.indexOf(",") + 1) })) } : {}), ...(goal ? { goal: true } : {}) });
+    const got = await act("ideas.answer", { slug, answers, from: "open", ...(photos.length && !goal ? { photos: photos.map((url) => ({ data: url.slice(url.indexOf(",") + 1) })) } : {}), ...(goal ? { goal: true } : {}) });
     if (got) done();
     else if (photos.length) toast("The pictures could not be sent: try fewer or smaller ones.", "warning");
   };
