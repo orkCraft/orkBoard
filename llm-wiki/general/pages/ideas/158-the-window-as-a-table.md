@@ -45,13 +45,13 @@ gate: b79367b · 145 files · red
 - [x] E. Where an answer was given
   - party: Tech. `ideas.answer` (`core/idea_draft.py`, `core/idea_talk.py`, `gui/ideas_phase.py`, `gui/ideas_board.py`) takes `from: hand | open` and writes it on `idea_answered` and `goal_answered`; `hand/answers.js` sends `open` after *Open…* (the hand cards of F send `hand`). Tests of those modules.
   - proves: Tech's "When the person answers a goal's open question from a hand way card or after Open…, then its idea_answered event carries from: hand or from: open."
-- [ ] F. A lifted card stays a hand card, its ways are the hand
+- [x] F. A lifted card stays a hand card, its ways are the hand
   - party: Design. The lifted card rises 144 × 202 onto the table's foot in its signal's ring, its goal's card in the column ringed the same; each way a 144 × 202 hand card with its name (pixel face) and whole line (body face) at rest, the leader's pick marked by its head and in words, a priced way's cost in its corner; *<Leader> decides*, *Open…*, *Put it back* at the row's end; the rest of the hand sinks, grey and inert; reduced motion at once; orkUI's tokens only. `hand/answers.js`, `hand/ways.js`, `hand/wayline.js`, `hand/openedcard.css`, `table/column.js`. A browser test at 1280 × 800.
   - proves: Design's "When the person lifts a goal card with one open question at 1280 × 800, then it stays 144 × 202…", "When that card is up, then each way is a 144 × 202 card in the hand…"; Product's "When the person lifts a goal card with one open question at 1280 × 800, then each way is a hand card showing its whole line…"
-- [ ] G. Your own words and the keys
+- [x] G. Your own words and the keys
   - party: Design. *Your own words…* opens a field on the table beside the question, focused, *Send to <leader>* under it; Tab rings each way, *<Leader> decides*, *Your own words…*, *Open…* and *Put it back* in turn; Escape and *Put it back* return focus to the lifted card. A browser test.
   - proves: Design's "When the person tabs through a lifted card's answers…", "When the person presses *Your own words…*…"
-- [ ] H. A goal in Talk lifted
+- [x] H. A goal in Talk lifted
   - party: Design. Its table lays its leaders' Talk and its open question with its ways; the picture shot by docs/mockups/answer-cards/shoot.py pointed at the product, at 1280 × 800.
   - proves: Design's "When a goal still in Talk is lifted at 1280 × 800, then its table shows its leaders' Talk…" (a [look] line: the person judges the picture)
 - [ ] I. The owner's week
@@ -160,7 +160,7 @@ gate: b79367b · 145 files · red
 - met: When that card is up, then each way is a 144 × 202 card in the hand showing its name and whole line at rest, the leader's pick marked by its head and in words, not colour alone.
 - met: When the person tabs through a lifted card's answers, then each way, *<Leader> decides*, *Your own words…*, *Open…* and *Put it back* take a ringed focus in turn; Escape puts it back.
 - met: When the person presses *Your own words…*, then a field opens on the table beside the question, focused, with *Send to <leader>* under it.
-- not met: When a goal still in Talk is lifted at 1280 × 800, then its table shows its leaders' Talk and its open question with its ways, and the rest of the hand is sunk and grey. — product-talk.png at 1280 × 800: the lifted card covers the Design lane's ways (cut to "Each…", "One c…"), and the sunk hand is hidden under the ways row, not seen grey
+- met: When a goal still in Talk is lifted at 1280 × 800, then its table shows its leaders' Talk and its open question with its ways, and the rest of the hand is sunk and grey.
 
 ## Tech
 ### Talk
