@@ -46,7 +46,7 @@ button.scr-steplab:not(:disabled) { cursor: pointer; color: var(--ork-ink); }
 .scr-doors--in { left: 0; }
 .scr-doors--out { right: 0; }
 .scr-door { display: block; box-sizing: border-box; flex: none; width: 8px; height: 12px; background: var(--ork-card); border: var(--ork-line) solid var(--ork-ink-muted); }
-.scr-wall { display: block; flex: none; width: calc(var(--ork-line) * 2); height: calc(100% - var(--ork-3) * 2); background: var(--ork-edge); }
+.scr-wall { pointer-events: auto; display: block; flex: none; width: calc(var(--ork-line) * 2); height: calc(100% - var(--ork-3) * 2); background: var(--ork-edge); }
 .scr-doors--in .scr-wall { margin-left: calc(var(--ork-line) * 2); }
 .scr-doors--out .scr-wall { margin-right: calc(var(--ork-line) * 2); }
 .scr-card.is-aim, .scr-card.is-over, .scr-card.is-lit { background: var(--ork-raised); }

@@ -12,7 +12,7 @@ import { mapFor } from "./maps.js";
 import { MapBack, MapCard, MapFrame, Sec, Win, countWords, useLifted, useRead } from "./mapkit.js";
 
 const MAP = "release", SHORT = 7, BATCH = 8;   // past the eighth car the batch is big (spec 165 Q, decisions §280.2)
-const BATCH_WORDS = "The big batch starts here: the cars after this mark go to main together";
+const BATCH_WORDS = "Past here the batch is big: To main takes every goal in dev together";
 const typeOf = (slug) => (mapData.value?.nodes || []).find((n) => n.slug === slug)?.type?.sign || "release";   // the goal's own type while the Board still holds it, else a release's sign
 
 /** A goal's age in words (*3 days*), from the epoch seconds of its oldest commit main lacks; "" when unread. */
