@@ -11,6 +11,7 @@ route: product, design, tech
 spec: docs/specs/167-each-leaders-view-of-the-product.md
 by: claude-code
 schema: 3
+asks: person
 ---
 # Each leader's view of the product, on its tab
 
@@ -89,6 +90,7 @@ Accepting: Tech accepts after K; Design once, after N (A and B are its stages to
   - Answered: No phone for now: a goal of its own (the person, 2026-11-08)
 - Who writes the view in skills? (**The leader's Accept pass, in the tree** / Orkboard's call, on the window's next goal / A command the conductor runs) — here every pass is a skill, and Orkboard's digest call runs only when a goal is added in its window · The leader's Accept pass, in the tree: No new call: the pass rewrites digest: from its journal, read back on open · Orkboard's call, on the window's next goal: One writer; a skill-only project's view waits for the window · A command the conductor runs: orkboard journal digest: a new CLI command and a call outside the pass
   - Answered: The leader's Accept pass, in the tree (the person, 2026-11-08)
+- Which face for a leader's view? (docs/mockups/leader-view/shots/) (A, the leader's bubble / B, a plate atop the pane / C, over the pane from the party's …) — §282.4: the person picks among the mockups
 
 ## Decisions
 - §282: the person's answers in Talk (8 November 2026)
