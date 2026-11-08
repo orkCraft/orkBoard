@@ -85,6 +85,7 @@ def test_the_default_checks_pass_on_a_clean_trial_and_leave_main_dev_and_the_wor
 
 def test_a_project_with_no_tests_passes_the_tests_check_saying_so(host, repo, work):
     lobby, *_ = work
+    (repo / "orkcraft.toml").unlink()                                                       # the fixture's gate (`true`) is gone: no tests at all
     got, _seen = steps_of(host, repo, lobby)
     assert states(got) == [("The merge", "passed"), ("Tests", "passed")] and "no tests ran" in got[1]["words"]
 
