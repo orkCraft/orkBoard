@@ -328,10 +328,10 @@ def test_checked_records_every_classification(monkeypatch, tmp_path):
         return False, "4 failed"
     monkeypatch.setattr(main_checks, "_gate", gate)
     monkeypatch.setattr(gate_rerun, "sort_out", lambda *a, **kw: gate_rerun.Sorted((ids[0],), (ids[1],), (ids[2],), 0, (ids[3],)))
-    ok, words, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30)
+    ok, words, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30, alone=True)
     assert not ok
     assert [f["classification"] for f in record["failures"]] == ["flaky", "pre-existing", "new", "unresolved"]
-    assert all(i in words for i in ids)
+    assert all(i in words for i in ids[:main_checks.SAID_MAX]) and ids[3] not in words and words.endswith("; and 1 more"), "the words name three, the record keeps all"
 
 
 def test_merge_boundary_refuses_unbound_and_superseded_results(host):
@@ -350,7 +350,7 @@ def test_diagnostic_exception_retains_unresolved_identity(monkeypatch, tmp_path)
         raise OSError("unavailable")
     monkeypatch.setattr(main_checks, "_gate", gate)
     monkeypatch.setattr(gate_rerun, "sort_out", unavailable)
-    ok, _, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30)
+    ok, _, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30, alone=True)
     assert not ok and record["failures"] == [{"id": "tests/t.py::test_x", "classification": "unresolved"}]
 
 
@@ -368,3 +368,50 @@ def test_main_moving_during_pick_cannot_use_the_old_green_result(host, repo, wor
         host.command("ideas.to_main", {"idea": lobby})
     assert git(repo, "log", "-1", "--format=%s", "main") == "edit raced.txt"
     assert not (repo / "lobby/room.ts").exists()
+
+
+FLAKY = """import os
+def test_flaky():
+    seen = os.path.join(os.path.dirname(__file__), "seen")
+    if not os.path.exists(seen):
+        open(seen, "w").close()
+        assert False
+"""
+
+
+def test_only_the_gates_own_pytest_may_excuse_a_red_and_a_written_command_never_is(tmp_path):
+    """Trial 152 E's review: a written command that runs more than the tests (`pytest; lint`, `pytest && lint`) is red whatever its tests were,
+    so a flaky test it names is unresolved and the check stays red; only the gate's own pytest run is pytest alone."""
+    import sys
+    from types import SimpleNamespace
+    assert main_checks._alone(gate_config.Check("Tests", gate=True), gate_config.Gate()) is True
+    assert main_checks._alone(gate_config.Check("Tests", gate=True), gate_config.Gate(run="pytest && ruff check .")) is False
+    assert main_checks._alone(gate_config.Check("Lint and tests", run="pytest"), gate_config.Gate()) is False
+    (tmp_path / "test_f.py").write_text(FLAKY)
+    git = SimpleNamespace(python=lambda: sys.executable, remove=lambda p: None)
+    for tail in ("; echo LINT-FAILED; false", " && echo LINT-RAN && false"):
+        (tmp_path / "seen").unlink(missing_ok=True)
+        check = gate_config.Check("Lint and tests", run=f"{sys.executable} -m pytest -q -p no:cacheprovider test_f.py{tail}")
+        ok, words, record = main_checks._checked(git, tmp_path, "base", check, threading.Event(), 60, main_checks._alone(check, gate_config.Gate()))
+        assert not ok, words
+        assert record["failures"] == [{"id": "test_f.py::test_flaky", "classification": "unresolved"}]
+
+
+def test_the_merge_of_dev_runs_its_tests_with_the_repository_free_and_refuses_a_main_that_moved_meanwhile(host, repo, work, monkeypatch):
+    """Trial 152 E's review: the tests of a merge of dev no longer hold the repository's lock (up to half an hour); what they ran on is what merges,
+    or nothing does."""
+    from orkboard.realm.idea_git import IdeaGit
+    verify = main_checks.verify
+    free = []
+    def raced(repo_, tip, base, *a, **kw):
+        lock = IdeaGit(Path(repo_)).lock
+        got = threading.Thread(target=lambda: free.append(lock.acquire(timeout=5) and (lock.release() or True)))
+        got.start(); got.join()
+        out = verify(repo_, tip, base, *a, **kw)
+        commit_in(repo, "raced.txt", "main moved while the tests ran\n")
+        return out
+    monkeypatch.setattr(main_checks, "verify", raced)
+    with pytest.raises(CommandError, match="moved while the tests ran"):
+        host.command("ideas.gate_merge")
+    assert free == [True], "another thread takes the repository's lock while the tests run"
+    assert git(repo, "log", "-1", "--format=%s", "main") == "edit raced.txt"

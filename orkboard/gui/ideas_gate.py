@@ -12,8 +12,6 @@ while any of them is not passed.
 """
 from __future__ import annotations
 
-from contextlib import nullcontext
-
 import hashlib
 import json
 import threading
@@ -133,10 +131,9 @@ class GateMixin:
                 held = []
             if held:                            # nothing reaches main half made by a press that does not say so (spec 149 G.2, decisions §253.7)
                 raise IdeasError(self._half_made(held, main))
+        tested = self._merge_tested(git, into, main)            # the tests run with the repository free; the merge then takes what they ran on, or nothing
         try:
-            with git.lock:
-                self._merge_tested(git, into, main)
-                got = idea_gate.merge(git, into, main, push)
+            got = idea_gate.merge(git, into, main, push, tested=tested)
         except RuntimeError as e:               # a refusal (GateRefused) or git's own words
             raise IdeasError(" ".join(str(e).split())[:300] or "The merge failed") from None
         brought = self._gate_ideas(got["commits"])
@@ -146,16 +143,19 @@ class GateMixin:
         self.changed("")
         return {"ok": True, "commit": got["commit"], "note": got["note"]}
 
-    def _merge_tested(self, git: IdeaGit, into: str, main: str) -> None:
+    def _merge_tested(self, git: IdeaGit, into: str, main: str) -> tuple[str, str] | None:
         """Nothing reaches main untested (decisions §274.2): the checks after *The merge* run on what main would become, here and now, and a red stops the
-        press with main as it was, naming the test (realm/main_checks.py `verify`; the trial worktree is gone). Nothing waiting is the merge's own refusal."""
+        press with main as it was, naming the test (realm/main_checks.py `verify`; the trial worktree is gone). Nothing waiting is the merge's own refusal.
+        `(main, into)` as the checks found them, for the merge to refuse should either move while they ran (None: nothing was tested)."""
         if idea_gate.same(into, main) or not idea_gate.waiting_by_patch(git, into, main)[0]:
-            return
+            return None
         if gate_config.read(Path(self.host.repo_root)).none:     # no tests, no green: the one way is To main without the tests (decisions §274.3)
             raise IdeasError(self._NO_TESTS)
         try:
-            tip = idea_gate.tip(git, into, main)
-            base = _git(Path(self.host.repo_root), "rev-parse", "--verify", "-q", f"refs/heads/{main}").stdout.strip()
+            with git.lock:
+                heads = idea_gate.heads(git, into, main)
+                tip = idea_gate.tip(git, into, main)
+            base = heads[0]
             ok, name, words = main_checks.verify(Path(self.host.repo_root), tip, base)
         except idea_gate.GateRefused as e:
             raise IdeasError(" ".join(str(e).split())[:300]) from None
@@ -163,6 +163,7 @@ class GateMixin:
             raise IdeasError(" ".join(str(e).split())[:300] or "The tests could not run") from None
         if not ok:
             raise IdeasError(f"Sealed: {name} is red: {words}")
+        return heads
 
     @staticmethod
     def _half_made(held: list[dict], main: str) -> str:
@@ -200,9 +201,9 @@ class GateMixin:
         push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
         git = IdeaGit(Path(self.host.repo_root))
         try:
-            with git.lock, self._main_lock:
+            with git.lock:                     # the checks' record is read under its own lock, briefly: none is held through the push
                 got = goal_main.merge(Path(self.host.repo_root), self.state_dir, slug, push, **where,
-                                      validate=None if untested else lambda commits, base: self._validate_checks(slug, commits, base, locked=True))
+                                      validate=None if untested else lambda commits, base: self._validate_checks(slug, commits, base))
         except RuntimeError as e:               # a refusal (GoalRefused) or git's own words
             raise IdeasError(" ".join(str(e).split())[:300] or "The merge failed") from None
         self._ev(event_log.GOAL_TO_MAIN, args, idea=slug, goals=got["goals"], commits=len(got["commits"]), files=got["files"],
@@ -230,9 +231,11 @@ class GateMixin:
         head = _git(Path(self.host.repo_root), "rev-parse", "--verify", "-q", f"refs/heads/{where['main']}").stdout.strip()
         return hashlib.sha1(json.dumps([plan["commits"], head]).encode()).hexdigest()[:16], plan["sealed"] or ""
 
-    def _validate_checks(self, slug, commits, base, *, locked=False):
+    def _validate_checks(self, slug: str, commits: list[str], base: str) -> None:
+        """The goal's checks passed on exactly these picks onto exactly this main (called by the merge, under the repository's lock, before and after
+        the picks); else refused: no older green carries a changed way into main."""
         key = hashlib.sha1(json.dumps([commits, base]).encode()).hexdigest()[:16]
-        with nullcontext() if locked else self._main_lock:
+        with self._main_lock:
             got = self._main_checks.get(slug) or {}
             if (got.get("key") != key or got.get("binding") != [commits, base]
                     or got.get("running", True) or not got.get("checks")

@@ -14,15 +14,23 @@ const told = signal({});                                                // slug 
 
 const snap = (slug) => town.value?.main_checks?.[slug] || null;
 
-/** A goal's checks as they stand: the snapshot's, else (until it has moved on) what the command answered; [] when none were asked. */
+/** A goal's checks as they stand: the snapshot's, else (until it has moved on) what the command answered; [] when none were asked, or when the host
+ *  has since forgotten them (a restart: what it said before is not kept on the page). */
 export function checksOf(slug) {
   const mine = told.value[slug], now = snap(slug);
-  if (mine && (!now || JSON.stringify(now) === mine.was)) return mine.checks;
+  if (mine && JSON.stringify(now) === mine.was) return mine.checks;
   return now || [];
 }
 
 /** Whether a check of the goal is red. */
 export const isRed = (list) => list.some((c) => c.state === "failed");
+
+/** Whether the goal is sealed by a red check: its checks as they stand on this page, else (none followed here yet) the gate's row (`main_ready`,
+ *  read with the Board and not again when a check ends: a green *Test again* would stay sealed by it). */
+export function redOf(slug, row) {
+  const list = checksOf(slug);
+  return list.length ? isRed(list) : row?.main_ready === false;
+}
 
 /** Asks the host to run (or to answer the last results of) the checks of the goal; `again` after a red one. */
 const requests = {};
@@ -33,7 +41,7 @@ export const readChecks = (slug) => startChecks(slug);
 export function startChecks(slug, again = false) {
   if (active.has(slug)) {
     pending.value = slug;
-    asked = active.get(slug);
+    asked = again ? active.get(slug).then(() => startChecks(slug, true)) : active.get(slug);   // a Test again pressed while a read is out goes after it
     return asked;
   }
   const request = requests[slug] = (requests[slug] || 0) + 1;

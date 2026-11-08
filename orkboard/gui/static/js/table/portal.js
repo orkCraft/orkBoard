@@ -17,7 +17,7 @@ import { uprightNow } from "../frame/upright.js";
 import { readyOf } from "../hand/data.js";
 import { reduced, leans } from "../hand/motion.js";
 import { wide } from "./data.js";
-import { CHECKING, checksOf, forgetChecks, isRed, pending, readChecks, sealedWords, startChecks, whenAsked } from "./checks.js";
+import { CHECKING, checksOf, forgetChecks, isRed, pending, readChecks, redOf, sealedWords, startChecks, whenAsked } from "./checks.js";
 
 const SEEN_KEY = "orkboard.portal.seen";
 const NARROW = "(max-width: 759.98px)";
@@ -220,7 +220,7 @@ function PortalDoor() {
   if (!open) return null;
   const candidate = r?.goals.find((g) => g.slug === slug);
   const checking = pending.value === slug || checksOf(slug).some((c) => c.state === "waiting" || c.state === "running");
-  const main = r?.main || "main", red = candidate?.main_ready === false || isRed(checksOf(slug)), sealed = red || p?.state === "fail" || !!p?.sealed, reason = red ? sealedWords(checksOf(slug)) || candidate?.main_reason || "Checks failed" : sealed ? reasonOf(p) : "", said = html`<span key=${echo.value}>Sealed: ${reason}</span>`;
+  const main = r?.main || "main", red = redOf(slug, candidate), sealed = red || p?.state === "fail" || !!p?.sealed, reason = red ? sealedWords(checksOf(slug)) || candidate?.main_reason || "Checks failed" : sealed ? reasonOf(p) : "", said = html`<span key=${echo.value}>Sealed: ${reason}</span>`;
   const held = (e) => { if (!chosen.value) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move"; taking.value = true; };
   const left = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) taking.value = false; };
   const drop = (e) => { e.preventDefault(); taking.value = false; play(); };
@@ -241,8 +241,8 @@ function PortalDoor() {
 export function ReadyCards({ goals, main, onPress = null, on: picked = "" }) {
   const nodes = Object.fromEntries((mapData.value?.nodes || []).map((n) => [n.slug, n]));
   const held = onPress ? picked : chosen.value;
-  return html`<ul class="portal-cards" aria-label=${goals.some((g) => g.main_ready === false || isRed(checksOf(g.slug))) ? "Goals awaiting checks before main" : `Goals ready for ${main}`}>${goals.map((g) => {
-    const n = nodes[g.slug] || {}, on = held === g.slug, gone = going.value === g.slug, red = g.main_ready === false || isRed(checksOf(g.slug));
+  return html`<ul class="portal-cards" aria-label=${goals.some((g) => redOf(g.slug, g)) ? "Goals awaiting checks before main" : `Goals ready for ${main}`}>${goals.map((g) => {
+    const n = nodes[g.slug] || {}, on = held === g.slug, gone = going.value === g.slug, red = redOf(g.slug, g);
     return html`<li key=${g.slug}><button type="button" data-portal-card=${g.slug} draggable=${onPress ? undefined : "true"} aria-pressed=${on ? "true" : "false"}
         class=${cls(`ork-card ork-leans hand-card hand-card--stop${n.element ? ` el-${n.hue || n.element}` : ""}`, { "ork-picked": on, "is-going": gone })}
         aria-label=${`${g.title}, ${red ? "checks failed" : `ready for ${main}`}`}

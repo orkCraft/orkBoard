@@ -294,7 +294,7 @@ def test_a_red_check_says_why_in_words_blocks_to_main_and_clears_when_fixed(gui)
         assert pg.locator(".table-tomain__sealed").text_content() == "Sealed: Tests is red: 2 tests fail" and pg.locator("[data-tomain]").get_attribute("data-portal") == "sealed"
         assert pg.locator(".table-tomain__sealed").evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-danger)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
         shot(pg, "red")
-        to_main(pg).click()
+        to_main(pg).click(force=True)                                                # it does not look pressable (goal B), and a press says why and sends nothing
         settle(pg)
         assert [a for n, a in host.log if n == "ideas.to_main"] == [], "a red check blocks the way"
         host.step("codes", "passed", "passed")                                       # fixed
@@ -343,7 +343,8 @@ def test_a_seal_no_check_owns_says_its_reason_and_asks_for_no_checks_and_a_confl
     assert not log, "\n".join(log)
 
 
-def test_a_red_goal_chosen_again_asks_the_host_to_check_it_again(gui):
+def test_a_red_goal_chosen_again_stays_red_and_only_test_again_asks_the_host_to_check_it_again(gui):
+    """Goal B (the checks into main and a red from before): choosing a red goal anew reads its red, it does not run the checks again; *Test again* does."""
     host = RoadPortalHost()
     host.script["codes"] = (("passed", "failed"), {1: "2 tests fail"})
     pg, log = open_page(gui, host)
@@ -356,7 +357,11 @@ def test_a_red_goal_chosen_again_asks_the_host_to_check_it_again(gui):
         pg.wait_for_function("() => !document.querySelector('[data-tomain]')", timeout=WAIT_MS)
         host.script["codes"] = (("passed", "passed"), {})                            # fixed since
         choose(pg, "codes")
-        assert _calls(pg, host, "ideas.to_main_checks", 2) == [{"idea": "codes"}, {"idea": "codes", "again": True}]
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'sealed'", timeout=WAIT_MS)
+        settle(pg, 500)
+        assert not any(a.get("again") for n, a in host.log if n == "ideas.to_main_checks"), "choosing it anew runs nothing again"
+        pg.locator("[data-tomain]").get_by_role("button", name="Test again", exact=True).click()
+        assert _sent(pg, host, ("ideas.to_main_checks", {"idea": "codes", "again": True}))
         pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'open'", timeout=WAIT_MS)
     finally:
         pg.close()

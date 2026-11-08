@@ -222,3 +222,27 @@ def test_red_survives_reselection_and_only_test_again_retries(gui):
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+def test_a_green_test_again_lifts_the_seal_the_gates_row_still_says(gui):
+    """Trial 152 E's review: the gate's row says `main_ready: false` as the Board was read, and is not read again when a check ends; a Test again that
+    passes lifts the seal on the goal's card and in the discard all the same."""
+    host = NoReleaseHost()
+    host.red = True
+    for row in host.gate_doc["ideas"]:
+        if row["slug"] == "music":
+            row.update(main_ready=False, main_reason="tests/test_player.py::test_lobby_opens failed (1 of 12)")
+    pg, host, log = open_lane(gui, host)
+    try:
+        assert lane_card(pg, "music").get_attribute("aria-label").endswith("checks failed"), "the row's word before any check is followed here"
+        lane_card(pg, "music").click()
+        retry = tomain(pg).get_by_role("button", name="Test again", exact=True)
+        retry.wait_for(timeout=WAIT_MS)
+        host.red = False
+        retry.click()
+        pg.wait_for_function("() => document.querySelector('.release-lane [data-portal-card=\"music\"]')?.getAttribute('aria-label').endsWith('ready for main')", timeout=WAIT_MS)
+        assert "Checks failed" not in lane_card(pg, "music").text_content()
+        assert not tomain(pg).locator("[data-to-main]").is_disabled()
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

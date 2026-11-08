@@ -156,18 +156,20 @@ def all_in(git: IdeaGit, shas: Iterable[str], main: str) -> bool:
     return got.returncode == 0 and not got.stdout.strip()
 
 
-def merge(git: IdeaGit, into: str, main: str, push: bool = False) -> dict[str, Any]:
+def merge(git: IdeaGit, into: str, main: str, push: bool = False, *, tested: tuple[str, str] | None = None) -> dict[str, Any]:
     """Main moved to the work in `into`, then pushed when asked. {"commit" (main's new head), "how" ("fast-forward" |
     "merge"), "commits" (the shas it brought), "files", "note" (the push's, as `land`'s: "" when pushed or no origin),
     "pushed"}. Raises GateRefused in plain words; RuntimeError when git cannot move main (a root checkout with the
-    files changed): either way main is as it was."""
+    files changed): either way main is as it was. `tested` (`heads` when the checks began): main or `into` moved since is refused."""
     with git.lock:
         if same(into, main):
             raise GateRefused(refusal_same(into, main))
         shas, files = waiting_by_patch(git, into, main)
         if not shas:
             raise GateRefused(f"Nothing in {into} waits for {main}")
-        old, new = (_ok(_git(git.root, "rev-parse", _ref(b))) for b in (main, into))
+        old, new = heads(git, into, main)
+        if tested is not None and (old, new) != tuple(tested):
+            raise GateRefused(f"{main} or {into} moved while the tests ran: press again to test what is there now")
         if _git(git.root, "merge-base", "--is-ancestor", old, new).returncode == 0:
             how, tip = "fast-forward", new
         else:
@@ -176,6 +178,11 @@ def merge(git: IdeaGit, into: str, main: str, push: bool = False) -> dict[str, A
         note = git.push(main) if push else ""
         pushed = bool(push and not note and "origin" in _git(git.root, "remote").stdout.split())
     return {"commit": tip, "how": how, "commits": shas, "files": files, "note": note, "pushed": pushed}
+
+
+def heads(git: IdeaGit, into: str, main: str) -> tuple[str, str]:
+    """(main's head, `into`'s head) now."""
+    return tuple(_ok(_git(git.root, "rev-parse", _ref(b))) for b in (main, into))
 
 
 def tip(git: IdeaGit, into: str, main: str) -> str:

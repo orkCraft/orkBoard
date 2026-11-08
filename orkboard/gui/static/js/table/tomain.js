@@ -17,7 +17,7 @@ export function ToMain() {
   const line = !p || p.state === "wait" ? "" : checking ? CHECKING : p.state === "ok" ? lineOf(p, slug, main) : `Into ${main}`;
   const go = async () => { setBusy(true); try { await toMain(slug); } finally { setBusy(false); } };
   return html`<div class=${cls("table-tomain", { "is-sealed": !!reason })} data-tomain=${slug} data-portal=${reason ? "sealed" : checking ? "check" : "open"}>
-    <button type="button" class="ork-btn primary" data-to-main disabled=${busy || red || checking} aria-disabled=${checking || !p || p.state === "wait" ? "true" : undefined}
+    <button type="button" class="ork-btn primary" data-to-main disabled=${busy} aria-disabled=${red || checking || !p || p.state === "wait" ? "true" : undefined}
       title=${`Sends the goal through the portal to ${main}: its checks run first, nothing reaches ${main} without you`} onClick=${go}>To ${main}</button>
     ${red && html`<button type="button" class="ork-btn" onClick=${() => startChecks(slug, true)}>Test again</button>`}
     <span class="table-tomain__line" role="status" aria-live="polite">${reason ? html`<span key=${echo.value} class="table-tomain__sealed">Sealed: ${reason}</span>` : line}</span>

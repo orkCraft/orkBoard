@@ -28,6 +28,7 @@ from orkboard.realm.gate_config import Check
 from orkboard.realm.idea_git import GateRun, IdeaGit, _git, _ok
 
 WORDS_MAX = 160
+SAID_MAX = 3                         # a red check's words name this many failed tests, the rest counted (its record keeps them all)
 
 
 def _long(timeout_s: int) -> str:
@@ -105,7 +106,15 @@ def _gate(git: IdeaGit, path: Path, old: str, cancel: threading.Event, timeout_s
     return False, f"{name} failed ({said})"[:WORDS_MAX * 2] if name else said
 
 
-def _checked(git, path, base, check, cancel, timeout):
+def _alone(check: Check, gate: gate_config.Gate) -> bool:
+    """The check is pytest and nothing else (the gate's own run, not a command the project wrote): only then is a red it names all that failed,
+    so only then may a red from before or a flaky one be let through. A written command may run more after the tests, or not reach it (trial 152 E)."""
+    return check.gate and not gate.custom
+
+
+def _checked(git, path, base, check, cancel, timeout, alone: bool = False):
+    """(passed, words, record) of one check: a red check's failed tests sorted (`flaky`, `pre-existing`, `new`, `unresolved`), and passed when every
+    one is flaky or red before. `alone` (`_alone`) says the run was pytest alone; a red of any other command is never excused, its tests unresolved."""
     began = time.monotonic()
     details = {}
     ok, words = (_gate(git, path, base, cancel, timeout, details) if check.gate
@@ -116,7 +125,7 @@ def _checked(git, path, base, check, cancel, timeout):
         ids = gate_rerun.ids_failing(run.out)
         try:
             found = gate_rerun.sort_out(git, path, base, "", run, cancel,
-                                        timeout - (time.monotonic() - began), exact_main_base=True)
+                                        timeout - (time.monotonic() - began), exact_main_base=True) if alone and ids else None
         except InterruptedError:
             raise
         except Exception:
@@ -128,7 +137,9 @@ def _checked(git, path, base, check, cancel, timeout):
         ok = bool(ids and found and not found.left and not found.unresolved
                   and gate_rerun._complete(run.out, ids))
         if ids:
-            words += "; " + "; ".join(f"{f['classification']}: {f['id']}" for f in record["failures"])
+            told = record["failures"][:SAID_MAX]
+            more = len(ids) - len(told)
+            words += "; " + "; ".join(f"{f['classification']}: {f['id']}" for f in told) + (f"; and {more} more" if more else "")
     return ok, words, record
 
 
@@ -145,7 +156,7 @@ def verify(repo: Path, tip: str, base: str, cancel: threading.Event | None = Non
             path.parent.mkdir(parents=True, exist_ok=True)
             _ok(_git(git.root, "worktree", "add", "--detach", str(path), tip))
         for check in gate_config.main_checks(Path(repo))[1:]:
-            ok, words, _ = _checked(git, path, base, check, cancel, timeout)
+            ok, words, _ = _checked(git, path, base, check, cancel, timeout, _alone(check, gate))
             if not ok:
                 return False, check.name, words
         return True, "", ""
@@ -184,7 +195,7 @@ def run(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, int
         say(0, "passed", f"{n} {'commit applies' if n == 1 else 'commits apply'} to {main or 'main'}")
         for at, check in enumerate(checks[1:], 1):
             say(at, "running")
-            ok, words, record = _checked(git, t.path, t.old, check, cancel, timeout)
+            ok, words, record = _checked(git, t.path, t.old, check, cancel, timeout, _alone(check, gate))
             say(at, "passed" if ok else "failed", words)
             if record:
                 steps[at].update(record)
