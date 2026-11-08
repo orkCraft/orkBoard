@@ -240,3 +240,88 @@ def test_the_new_commands_are_in_the_hosts_table_and_the_projects(host):
     for name in ("ideas.stall", "ideas.stall_take", "ideas.stall_back", "ideas.hero_table"):
         assert name in host.commands and name in _board_commands()
     json.dumps(stall(host))
+
+
+def test_only_arts_chair_lays_its_makers_after_the_ai_tool_and_tier(host, monkeypatch):
+    from orkboard.realm import craft_tools
+
+    monkeypatch.setattr(craft_tools, "key", lambda _: None)
+    art = _party(host, "art")
+    got = stall(host, art)
+    assert [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier", "craft_tools"]
+    makers = shelf(got, "craft_tools")
+    assert makers["label"] == "Its makers"
+    assert makers["sub"] == "Run in Orkboard on your key"
+    assert [w["word"] for w in makers["wares"]] == ["Picture maker", "Sound maker"]
+    for w in makers["wares"]:
+        assert w["line"] == craft_tools.get(w["id"]).title
+        assert w["leaves"] == craft_tools.get(w["id"]).leaves
+        assert not w["here"] and w["why"] == "no key on this computer"
+        assert w["cap"] is None and w["price"] == {"word": "Set a cap"}
+    for chair in ("", _party(host, "tech")):
+        assert not any(s["slot"] == "craft_tools" for s in stall(host, chair)["shelves"])
+
+
+def test_maker_plates_say_the_agreed_cap_in_money_and_about_an_estimate(host):
+    from orkboard.realm import craft_tools
+
+    art = _party(host, "art")
+    craft_tools.set_taken(host.ideas.root(), art, {
+        tid: {"cap": {"amount": "1.25", "currency": "USD"}} for tid in craft_tools.REGISTRY
+    })
+    got = stall(host, art)
+    assert ware(got, "craft_tools", "openai-images")["price"] == {"money": "1.25 USD cap"}
+    assert ware(got, "craft_tools", "elevenlabs-sound")["price"] == {"money": "about 1.25 USD cap"}
+
+
+def test_maker_host_strings_shown_on_the_rug_never_say_harness(host, monkeypatch):
+    from dataclasses import replace
+    from orkboard.realm import craft_tools
+
+    monkeypatch.setattr(craft_tools, "key", lambda _: None)
+    art = _party(host, "art")
+    tool = craft_tools.get("openai-images")
+    reasons = []
+    for changed in (tool, replace(tool, needs=("unavailable-making",)), replace(tool, official_api=False)):
+        monkeypatch.setitem(craft_tools.REGISTRY, tool.id, changed)
+        got = stall(host, art)
+        reasons.append(ware(got, "craft_tools", tool.id)["why"])
+        assert "harness" not in json.dumps(got).lower()
+    assert reasons == ["no key on this computer", "its AI tool cannot make it", "no official API"]
+
+
+def test_a_maker_take_needs_an_explicit_valid_cap_and_preserves_other_makers(host, monkeypatch):
+    from orkboard.realm import craft_tools
+
+    monkeypatch.setattr(craft_tools, "key", lambda _: "fake-maker-key")
+    art = _party(host, "art")
+    args = {"chair": art, "slot": "craft_tools", "value": "openai-images"}
+    path = host.ideas.root() / ideas.TRACKS / f"{art}.md"
+    before = path.read_text()
+    for cap in (None, {}, {"amount": "0", "currency": "USD"}, {"amount": "-1", "currency": "USD"},
+                {"amount": "NaN", "currency": "USD"}, {"amount": "2", "currency": "EUR"},
+                {"amount": "no money", "currency": "USD"}):
+        with pytest.raises(CommandError, match="maker.*cap"):
+            host.command("ideas.stall_take", {**args, "cap": cap})
+        assert path.read_text() == before
+    cap = {"amount": "1.25", "currency": "USD"}
+    got = host.command("ideas.stall_take", {**args, "cap": cap})
+    assert ware(got["stall"], "craft_tools", "openai-images")["price"] == {"money": "1.25 USD cap"}
+    host.command("ideas.stall_take", {**args, "value": "elevenlabs-sound", "cap": cap})
+    assert set(craft_tools.taken(host.ideas.root(), art)) == {"openai-images", "elevenlabs-sound"}
+    host.command("ideas.stall_take", {**args, "cap": {"amount": "2", "currency": "USD"}})
+    assert craft_tools.taken(host.ideas.root(), art)["elevenlabs-sound"]["cap"] == cap
+
+
+def test_a_maker_take_refuses_the_wrong_chair_and_a_missing_key(host, monkeypatch):
+    from orkboard.realm import craft_tools
+
+    monkeypatch.setattr(craft_tools, "key", lambda _: None)
+    art, tech = _party(host, "art"), _party(host)
+    args = {"slot": "craft_tools", "value": "openai-images", "cap": {"amount": "1", "currency": "USD"}}
+    for chair in ("", tech):
+        with pytest.raises(CommandError, match="not for this party"):
+            host.command("ideas.stall_take", {**args, "chair": chair})
+    with pytest.raises(CommandError, match="not here: no key"):
+        host.command("ideas.stall_take", {**args, "chair": art})
+    assert craft_tools.taken(host.ideas.root(), art) == {}

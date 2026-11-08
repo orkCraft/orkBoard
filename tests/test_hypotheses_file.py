@@ -10,7 +10,7 @@ import pytest
 
 from orkboard.realm import hypotheses as hyp, hypotheses_file as hf
 
-OWN = Path(__file__).resolve().parent.parent / "docs" / "hypotheses.md"          # this repository's own file: H1–H4
+OWN = Path(__file__).resolve().parent.parent / "docs" / "hypotheses.md"          # this repository's own file: H1–H5
 
 
 def changed(old: str, new: str) -> list[str]:
@@ -37,11 +37,11 @@ def test_the_file_is_the_chosen_one_else_docs_hypotheses_never_outside_the_root_
 
 # -- read: this repository's own file -------------------------------------------------------------------------------------------------------
 
-def test_the_own_file_reads_as_four_hypotheses_with_their_conditions_and_drafts():
+def test_the_own_file_reads_as_five_hypotheses_with_their_conditions_and_drafts():
     got = hf.parse(OWN.read_text("utf-8"))
-    assert got["skipped"] == [] and [i["id"] for i in got["items"]] == ["h1", "h2", "h3", "h4"]
-    h1, h2, h3, h4 = got["items"]
-    assert [i["state"] for i in got["items"]] == ["open"] * 4                                  # `testing` is the goals' to say, not the file's
+    assert got["skipped"] == [] and [i["id"] for i in got["items"]] == ["h1", "h2", "h3", "h4", "h5"]
+    h1, h2, h3, h4, h5 = got["items"]
+    assert [i["state"] for i in got["items"]] == ["open"] * 5                                  # `testing` is the goals' to say, not the file's
     assert h1["text"].startswith("Orkboard is a studio that sees your real product") and h1["signal"].startswith("on the same real tasks, goals made in Orkboard")
     assert [w["name"] for w in h1["refuted"]] == [""] and h1["refuted"][0]["when"].startswith("no difference in first-time acceptance")            # `Refutes:` has no name
     assert h2["signal"].startswith("over the owner's week") and h2["refuted"][0]["when"].startswith("sketches are mostly skipped")
@@ -49,6 +49,9 @@ def test_the_own_file_reads_as_four_hypotheses_with_their_conditions_and_drafts(
     assert h3["refuted"][1]["when"].startswith("the Camp clip is cheaper, but its people drop")
     assert [w["name"] for w in h4["refuted"]] == ["the hook", "the noise"] and h4["signal"].startswith("over four weeks, the people with the push land at least 20% more goals")
     assert h3["if_holds"].startswith("The clips and landings are made in Camp") and h4["if_holds"].startswith("A decision makes the push a setting")
+    assert h5["text"] == "A paid asset is kept at its price"
+    assert h5["signal"] == "most of Art's first ten paid picks are kept in the project's tree at their receipt price."
+    assert h5["refuted"] and h5["if_holds"]
     assert all(len(i["text"]) <= hyp.TEXT_CHARS and len(i["signal"]) <= hyp.TEXT_CHARS and len(i["if_holds"]) <= hyp.DRAFT_CHARS for i in got["items"])
     assert all(i["evidence"] == [] and i["verdict"] == {} for i in got["items"])
 
@@ -338,3 +341,16 @@ def test_a_bound_files_measures_are_read_with_their_value_from_the_record_and_wr
     assert next(m for m in kept(proj)[0]["measures"] if m["what"] == "Came back within 7 days")["value"]["n"] == 41.0
     hyp.measure_drop(state, "h1", "m1")
     assert "Camp clip" not in (proj / "docs" / "hypotheses.md").read_text("utf-8") and [m["what"] for m in kept(proj)[0]["measures"]] == ["Came back within 7 days"]
+
+
+def test_product_map_reads_h5_from_own_file(proj):
+    from orkboard.realm import map_parts
+    state = proj / '.orkcraft'
+    (proj / 'docs' / 'hypotheses.md').write_text(OWN.read_text('utf-8'), 'utf-8')
+    hyp.bind(state, 'docs/hypotheses.md')
+    h5 = next(h for h in hyp.read(state)['items'] if h['id'] == 'h5')
+    assert "Art's first ten paid picks" in h5['signal']
+    assert 'kept' in h5['signal'] and 'price' in h5['signal']
+    assert {'map': 'product', 'id': 'hyp:h5', 'name': h5['text'], 'group': 'hypotheses'} in map_parts.parts(state, proj, 'product')
+    text = OWN.read_text('utf-8').split('## H5.', 1)[1]
+    assert 'project that seats Art' in text and 'kept share' in text

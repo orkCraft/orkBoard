@@ -105,8 +105,14 @@ class PickMixin:
                 self._set_task(slug, tid, state="running", why="", error="", note=note, finished="", conflict="",
                                picked={"key": key, "name": variant["name"], "note": note})
                 again = {"why": "", "files": [], "taken": True}
+            maker = {}
+            if pick.get("tool"):
+                # Publish only the receipt, never the pick's prompt or variant files.
+                receipt = event_log.line(event_log.PICK_ANSWERED, tool=pick["tool"], cost=pick.get("cost"))
+                maker = {k: receipt[k] for k in ("tool", "cost") if k in receipt}
             self._emit(event_log.PICK_ANSWERED, idea=slug, task=tid, key=key, note_chars=len(note),
-                       via=via, seconds=asked, device=device or "desktop", round=rnd)
+                       via=via, seconds=asked, device=device or "desktop", round=rnd,
+                       **maker)
             if slug not in self._active:
                 self._active.append(slug)
                 self._set_idea(slug, "working")

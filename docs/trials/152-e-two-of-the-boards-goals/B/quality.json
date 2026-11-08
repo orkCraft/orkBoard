@@ -1,0 +1,219 @@
+{
+  "idea": "the-checks-into-main-and-a-red-from-before",
+  "title": "Main checks explain and remember failures",
+  "state": "done",
+  "at": "",
+  "result": {
+    "idea": "the-checks-into-main-and-a-red-from-before",
+    "state": "done",
+    "parties": [
+      {
+        "party": "tech",
+        "title": "Tech",
+        "parts": [],
+        "done_when": [
+          {
+            "text": "Main checks retry named pytest failures alone, then compare remaining failures against the checked main base within the remaining timeout, following spec 149 E; flaky and pre-existing failures are reported, while new or unresolved failures block main.",
+            "proof": "",
+            "state": "ok"
+          },
+          {
+            "text": "The check record retains failed test identities and their classification, not merely counts or the first failure; incomplete diagnostics never imply a pass.",
+            "proof": "",
+            "state": "ok"
+          },
+          {
+            "text": "After a blocking red, reopening the discard shows its reason and failed tests; Ready for main and To main no longer appear enabled for the failed candidate.",
+            "proof": "",
+            "state": "ok"
+          },
+          {
+            "text": "To main never silently retries a failed check; an explicit Test again action shows progress, and passing results authorize only the unchanged candidate and main base.",
+            "proof": "",
+            "state": "ok"
+          },
+          {
+            "text": "The change was reviewed and no blocking finding is left",
+            "proof": "",
+            "state": "ok"
+          }
+        ]
+      }
+    ],
+    "files": 12,
+    "screens": [],
+    "made": [
+      {
+        "task": "k1",
+        "title": "Explain failures and enforce main eligibility",
+        "files": 12,
+        "added": 371,
+        "removed": 44,
+        "gate": "289 passed"
+      },
+      {
+        "task": "k2",
+        "title": "Review failure handling before merge",
+        "files": 2,
+        "added": 57,
+        "removed": 7,
+        "gate": "68 passed"
+      },
+      {
+        "task": "k3",
+        "title": "Fix: On reopening discard after red, show the retained reason and failed tests…",
+        "files": 2,
+        "added": 13,
+        "removed": 9,
+        "gate": "186 passed"
+      },
+      {
+        "task": "k4",
+        "title": "Fix: Separate reading checks from retrying: only an explicit Test again action…",
+        "files": 2,
+        "added": 24,
+        "removed": 6,
+        "gate": "173 passed"
+      }
+    ],
+    "red_before": 0
+  },
+  "verdict": [],
+  "checks": [],
+  "lenses": [],
+  "hypothesis": null,
+  "findings": [
+    {
+      "id": "f-31e9f6f4cd",
+      "at": "2026-11-08T12:12:17",
+      "source": "accept",
+      "idea": "the-checks-into-main-and-a-red-from-before",
+      "party": "tech",
+      "on": "tech: look at Done when 1",
+      "found": "Nobody could look at: Main checks retry named pytest failures alone, then compare remaining failures against the checked main base within the remaining timeout, following spec 149 E; flaky and pre-existing failures are reported, while new or unresolved failures block main.",
+      "what": "Nobody could look at: Main checks retry named pytest failures alone, then compare remaining failures against the checked main base within the remaining timeout, following spec 149 E; flaky and pre-existing failures are reported, while new or unresolved failures block main.",
+      "shows": "Done when 1",
+      "promised": "Main checks retry named pytest failures alone, then compare remaining failures against the checked main base within the remaining timeout, following spec 149 E; flaky and pre-existing failures are reported, while new or unresolved failures block main.",
+      "cause": "",
+      "level": "",
+      "change": "",
+      "status": "told",
+      "answer": "",
+      "fix": null,
+      "pulls": {
+        "level": "work",
+        "sections": [],
+        "tasks": [
+          {
+            "idea": "the-checks-into-main-and-a-red-from-before",
+            "id": ""
+          }
+        ],
+        "checks": 1,
+        "estimate": {
+          "usd_low": 0.75,
+          "usd_high": 1.05
+        }
+      }
+    },
+    {
+      "id": "f-820945fce5",
+      "at": "2026-11-08T12:12:17",
+      "source": "accept",
+      "idea": "the-checks-into-main-and-a-red-from-before",
+      "party": "tech",
+      "on": "tech: look at Done when 2",
+      "found": "Nobody could look at: The check record retains failed test identities and their classification, not merely counts or the first failure; incomplete diagnostics never imply a pass.",
+      "what": "Nobody could look at: The check record retains failed test identities and their classification, not merely counts or the first failure; incomplete diagnostics never imply a pass.",
+      "shows": "Done when 2",
+      "promised": "The check record retains failed test identities and their classification, not merely counts or the first failure; incomplete diagnostics never imply a pass.",
+      "cause": "",
+      "level": "",
+      "change": "",
+      "status": "told",
+      "answer": "",
+      "fix": null,
+      "pulls": {
+        "level": "work",
+        "sections": [],
+        "tasks": [
+          {
+            "idea": "the-checks-into-main-and-a-red-from-before",
+            "id": ""
+          }
+        ],
+        "checks": 1,
+        "estimate": {
+          "usd_low": 0.75,
+          "usd_high": 1.05
+        }
+      }
+    },
+    {
+      "id": "f-1a6d2d5c1c",
+      "at": "2026-11-08T12:12:17",
+      "source": "accept",
+      "idea": "the-checks-into-main-and-a-red-from-before",
+      "party": "tech",
+      "on": "tech: nobody looked at step 1",
+      "found": "Nobody looked at what this step changed: orkboard/gui/static/js/table/checks.js, orkboard/gui/static/js/table/discard.js, orkboard/gui/static/js/table/portal.js, orkboard/gui/static/js/table/tomain.js",
+      "what": "Nobody looked at what this step changed: orkboard/gui/static/js/table/checks.js, orkboard/gui/static/js/table/discard.js, orkboard/gui/static/js/table/portal.js, orkboard/gui/static/js/table/tomain.js",
+      "shows": "",
+      "promised": "",
+      "cause": "",
+      "level": "",
+      "change": "",
+      "status": "told",
+      "answer": "",
+      "fix": null,
+      "pulls": {
+        "level": "work",
+        "sections": [],
+        "tasks": [
+          {
+            "idea": "the-checks-into-main-and-a-red-from-before",
+            "id": ""
+          }
+        ],
+        "checks": 1,
+        "estimate": {
+          "usd_low": 0.75,
+          "usd_high": 1.05
+        }
+      }
+    },
+    {
+      "id": "f-8906ce80dc",
+      "at": "2026-11-08T12:18:40",
+      "source": "accept",
+      "idea": "the-checks-into-main-and-a-red-from-before",
+      "party": "tech",
+      "on": "tech: acceptance of step 1",
+      "found": "Architect could not accept this step: its call failed",
+      "what": "Architect could not accept this step: its call failed",
+      "shows": "",
+      "promised": "",
+      "cause": "",
+      "level": "",
+      "change": "",
+      "status": "told",
+      "answer": "",
+      "fix": null,
+      "pulls": {
+        "level": "work",
+        "sections": [],
+        "tasks": [
+          {
+            "idea": "the-checks-into-main-and-a-red-from-before",
+            "id": ""
+          }
+        ],
+        "checks": 1,
+        "estimate": {
+          "usd_low": 0.75,
+          "usd_high": 1.05
+        }
+      }
+    }
+  ]
+}

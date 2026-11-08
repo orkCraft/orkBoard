@@ -28,6 +28,8 @@ No face, no model, no write: the callers (`gui/ideas_route.py`) save.
 """
 from __future__ import annotations
 
+from orkboard.realm.seat_route_rules import rules
+
 import datetime as dt
 import json
 import re
@@ -204,13 +206,6 @@ def home(root: Path, routed: dict) -> str:
 
 GOAL_NOTE = "(the goal, in the person's words, cut)"
 PARTIES_NOTE = "- (each of the project's parties a route may name: its slug, then its title)"
-
-
-def rules() -> str:
-    """The route's rules (spec 154 A.1): what the Orkmaster judges and how, apart from the call's frame. `instruction` and an agent's frame (`seat_frames.agent("orkmaster", "route")`) both hold this text."""
-    return """A person wrote a goal for their project. Say which of the project's parties work on it, in the order they should \
-be heard: the party that makes the product, then the one that makes its look, then the one that writes its code, then the one that runs it, then the one \
-that markets it. Name only the parties the goal needs; never invent one."""
 
 
 def instruction(goal: str = GOAL_NOTE, parties: str = PARTIES_NOTE) -> str:

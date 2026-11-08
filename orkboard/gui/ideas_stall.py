@@ -19,7 +19,7 @@ from typing import Any
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import goal_team, hero_table, heroes, ideas, library, look_wait, map_parts, party_price, party_recipes
+from orkboard.realm import craft_tools, goal_team, hero_table, heroes, ideas, library, look_wait, map_parts, party_price, party_recipes
 
 ON_OFF = (("on", "On"), ("off", "Off"))
 TARGETS = (("thrift", "Thrift", "Cheaper models, fewer checks"), ("balance", "Balance", "The usual mix"), ("quality", "Quality", "Better models, more checks"))
@@ -171,6 +171,17 @@ class StallMixin:
             if have and "head" in have:
                 card["head"] = have["head"]
             hand.append(card)
+        makers = craft_tools.for_party(root, chair, goal_team.tool_of(root, chair)) if chair else []
+        if makers:
+            wares = []
+            for maker in makers:
+                cap = maker["cap"]
+                estimate = any(p["estimate"] for p in maker["prices"])
+                money = f"{'about ' if estimate else ''}{cap['amount']} {cap['currency']} cap" if cap else ""
+                wares.append({**maker, "word": maker["maker"], "line": maker["title"],
+                              "price": {"money": money} if cap else {"word": "Set a cap"}, "before": False})
+            shelves.append({"id": "craft_tools", "slot": "craft_tools", "label": "Its makers", "kind": "makers",
+                            "sub": "Run in Orkboard on your key", "wares": wares})
         if craft == "release":                      # the gate: read from orkcraft.toml, locked
             from orkboard.realm import gate_config
             always = ", ".join(gate_config.read(Path(self.host.repo_root)).always) or "None set"
@@ -239,6 +250,22 @@ class StallMixin:
         return {"stall": self.stall({"chair": chair}), "undo": {"slot": slot, "value": old}}
 
     def stall_take(self, args: dict) -> dict:
+        if args.get("slot") == "craft_tools":
+            chair, root, _craft = self._chair(args)
+            maker_id = _text(args, "value", 100)
+            maker = next((m for m in craft_tools.for_party(root, chair, goal_team.tool_of(root, chair)) if m["id"] == maker_id), None) if chair else None
+            if maker is None:
+                raise IdeasError("That maker is not for this party's craft")
+            if not maker["here"]:
+                raise IdeasError(f"{maker['maker']} is not here: {maker['why']}")
+            with ideas.LOCK:
+                taken = craft_tools.taken(root, chair)
+                try:
+                    craft_tools.set_taken(root, chair, {**taken, maker_id: {"cap": args.get("cap")}})
+                except ValueError as exc:
+                    raise IdeasError(str(exc)) from None
+            self.changed(chair)
+            return {"stall": self.stall({"chair": chair})}
         chair, root, _craft, slot, value = self._slot(args, True)
         return self._done(chair, root, slot, value)
 

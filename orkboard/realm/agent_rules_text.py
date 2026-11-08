@@ -88,7 +88,8 @@ def pointer_body() -> str:
 
 def board_md(wiki: str, decisions: str) -> str:
     """The whole BOARD.md (after its first line, which `agent_rules` stamps): the page's format as the code writes it."""
-    from orkboard.realm import goal_phase, idea_page, idea_questions
+    from orkboard.realm import seat_phase_rules as goal_phase, seat_page_rules as idea_page, seat_question_format_rules as idea_questions
+    from orkboard.realm.seat_question_rules import LINES_RULE
     question = idea_questions.line({"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "most of its users are on iPhone",
                                  "lines": ["Reaches most of its users first; review takes days", "Android users wait; the review is quicker"]})
     answer = idea_questions.answer_line("App Store", "2026-11-06")
@@ -152,7 +153,7 @@ A leader's question is one list line under `## Open questions`, its choices in b
 
     - {question}
 
-{idea_questions.LINES_RULE} A question with no lines is as valid as before.
+{LINES_RULE} A question with no lines is as valid as before.
 
 Set `asks: person` and stop. The person's answer is the line under it, written by whoever hears it (Orkboard writes it too when the person answers in its hand):
 
@@ -240,10 +241,10 @@ def seat_text(seat: str, craft: str = "") -> str:
     """A seat's rules, from the code its prompt is built from (decisions §255.6, §258.7): the Orkmaster's route and its join, a leader's say in Talk, its section and its acceptance, the
     Taskmaster's and a Grunt's built-in text. Its rules only, never a call's frame (*Read no file*, *one JSON object*): that is the call's, and an agent's step has its own (`seat_frames`).
     A test holds each role file to this text and each prompt to the rules it is built from."""
-    from orkboard.core import idea_accept, idea_sections, idea_talk
-    from orkboard.realm import goal_route, roles
+    from orkboard.realm import seat_accept_rules as idea_accept, seat_section_rules as idea_sections, seat_talk_rules as idea_talk
+    from orkboard.realm import seat_route_rules as goal_route, seat_builtin_rules as roles, seat_join_rules
     if seat == "orkmaster":
-        return ("## Route a goal\n\n" + goal_route.rules() + "\n\n## Join the sections of a goal's spec\n\n" + idea_sections.join_rules())
+        return ("## Route a goal\n\n" + goal_route.rules() + "\n\n## Join the sections of a goal's spec\n\n" + seat_join_rules.join_rules())
     if seat == "leader":
         return ("## Talk: what you say about a goal\n\n" + idea_talk.rules(craft) + "\n\n## Your section of the spec\n\n" + idea_sections.rules()
                 + "\n\n## Accepting a step\n\n" + idea_accept.rules())
@@ -267,7 +268,7 @@ READS = {"orkmaster": ("the goal's page `{wiki}/pages/ideas/<slug>.md`, its *Gis
 
 def table_text(craft: str, wiki: str) -> str:
     """A leader's table (spec 157 F.3): its hero, its school and its places, and that its pass keeps `pages/tables/<party>.md` in `hero_table`'s format. "" for a craft with no hero to lay a table (Release's is fixed)."""
-    from orkboard.realm import heroes
+    from orkboard.realm import seat_hero_rules as heroes
     crafted = heroes.of(craft) if craft != "release" else []
     if not crafted:
         return ""

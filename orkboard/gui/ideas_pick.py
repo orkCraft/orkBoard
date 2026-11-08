@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from orkboard.gui import media
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _text
-from orkboard.realm import idea_pick, idea_shots, ideas, roles
+from orkboard.realm import craft_tools, idea_pick, idea_shots, ideas, roles
 from orkboard.realm.board_map import task_short
 
 PICK_VIA = ("hand", "front", "drawer", "screen")           # where a pick was answered: the stops along the bottom, the drawer, the phone's own screen
@@ -87,5 +87,8 @@ class PickMixin:
                         "by": {"slug": who.get("slug") or "", "name": who.get("name") or "", "head": roles.task_head(self.state_dir, t, target, read, self.tiers_of_idea(slug))},
                         "ask": pick.get("ask") or "", "n": len(pick["variants"]), "media": pick.get("kind"),
                         "variants": [self._variant_row(slug, pick, v) for v in pick["variants"] if isinstance(v, dict)],
+                        **({"maker": {"id": pick["tool"], "word": craft_tools.get(pick["tool"]).maker,
+                                     "cost": pick.get("cost"), "cap": pick.get("cap")}}
+                           if craft_tools.get(pick.get("tool")) else {}),
                         "round": int(pick.get("round") or 1), "at": str(pick.get("at") or t.get("finished") or "")})
         return out

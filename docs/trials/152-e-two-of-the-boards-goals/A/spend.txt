@@ -1,0 +1,22 @@
+4 calls for cut-the-import-cycle-between-realm-and-core: 3,298,856 tokens, no price known for these models, 555.9 s
+  in 174,248 · out 14,336 · cache read 3,110,272 · cache written 0 · read from the cache: 95%
+By tool and model
+  codex gpt-6.1-sol                   2 calls   3,076,348 tokens  no price known for these models
+  codex gpt-6-astra                   2 calls     222,508 tokens  no price known for these models
+By step
+  work                                1 calls   2,977,286 tokens  no price known for these models
+  plan                                1 calls     119,445 tokens  no price known for these models
+  accept_step                         1 calls     103,063 tokens  no price known for these models
+  draft                               1 calls      99,062 tokens  no price known for these models
+By goal
+  cut-the-import-cycle-between-realm-and-core    4 calls   3,298,856 tokens  no price known for these models
+The dearest calls
+  2026-11-08T11:12:31  cut-the-import-cycle-between-realm-and-core · work · codex gpt-6.1-sol: 2,977,286 tokens, no price known for these models
+  2026-11-08T11:03:55  cut-the-import-cycle-between-realm-and-core · plan · codex gpt-6-astra: 119,445 tokens, no price known for these models
+  2026-11-08T11:16:03  cut-the-import-cycle-between-realm-and-core · accept_step · codex gpt-6-astra: 103,063 tokens, no price known for these models
+  2026-11-08T11:03:04  cut-the-import-cycle-between-realm-and-core · draft · codex gpt-6.1-sol: 99,062 tokens, no price known for these models
+Worth a look
+  failed calls: 0 ($0.00)
+  a big cache written and none read: 0 calls, 0 tokens ($0.00)
+  heavy reads with a short answer: 0 calls, 0 tokens ($0.00)
+  no step asked again

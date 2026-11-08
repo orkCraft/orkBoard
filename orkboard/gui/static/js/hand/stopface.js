@@ -1,3 +1,4 @@
+import { MakerStop } from "../arena/makerreceipt.js";
 // A stop of the hand opened over the pane (a line that repeats its title is not drawn: docs/specs/140 A4, decisions §247.6) (its header as a card's: the element at the left, the action's sign by its kind, the asker's head at the right; docs/specs/101 §4.5) (`stop`, docs/specs/98-the-table-and-the-hand.md §0.2): what a card has no room for. A lifted card's *Open…* opens it here, whole: the
 // stop's text and why, a plan's tasks, a failure's error and log, a question's choices, a pick's variants large with their note (the old drawer's `PickView`), and the same answers as the
 // lifted card. Props: `{key}` of the stop (data.js `stopsOfProject`). When the stop is answered it is gone from the Board and the pane goes back.
@@ -45,6 +46,7 @@ export function StopFace({ props }) {
       ${(s.kind === "asks" || s.kind === "goal") && html`<${AskForm} key=${s.key} slug=${s.kind === "goal" ? s.row.goal : s.row?.idea || s.node?.slug} goal=${s.kind === "goal"} asked=${s.row?.asked?.length ? askedOf(s.row, s.node) : null}
         picks=${props.picks || askedOf(s.row, s.node).map((q) => (q.pick != null ? q.choices[q.pick] || "" : ""))} done=${closeOver} />`}
       ${s.kind === "todo" && html`<${TodoForm} idea=${s.row.idea} todo=${s.row.todo} lead=${s.party.lead} done=${closeOver} />`}
+      <${MakerStop} stop=${s.task?.craft_stop} />
       ${tasks.length > 0 && html`<h3 class="board-sub">Tasks</h3><ul class="hand-stopface__tasks">${tasks.map((t) => html`<li key=${t.id} data-state=${t.state}>
         <span class="body">${t.title}</span><span class="cap">${t.by?.name || ""} · ${TASK_STATE[t.state] || t.state}${t.error ? ` · ${t.error}` : ""}</span></li>`)}</ul>`}
       ${log && html`${said && said !== s.text && html`<p class="body hand-stopface__said">${said}</p>`}<${LogView} text=${log.log} label="Log" />`}

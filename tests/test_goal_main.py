@@ -222,6 +222,21 @@ def test_a_goal_it_stands_on_that_is_not_done_seals_it(host, repo, work):
     assert plan_of(host, repo, lobby)["sealed"] in (f"{short(host, chat)} is not done yet", f"{short(host, third)} is not done yet")
 
 
+def test_a_goal_it_stands_on_done_before_this_machine_read_it_seals_nothing(host, repo, work):
+    """Trial 152 E, F1: a goal done in history (or by another tool) has no plan here; its state or its page says done, so it is not lacking."""
+    lobby, *_ = work
+    history = goal(host, "Done in history", state="done")                                  # done, no plan on this machine
+    depends(host, lobby, history)
+    got = plan_of(host, repo, lobby)
+    assert got["sealed"] is None and got["goals"] == [lobby]
+    paged = goal(host, "Done by another tool", state="raw")                                # the state never moved; the page says done
+    ideas.set_meta(host.ideas.root(), paged, phase="done")
+    depends(host, lobby, paged)
+    assert plan_of(host, repo, lobby)["sealed"] is None
+    ideas.set_meta(host.ideas.root(), paged, phase="work")                                  # the page says work: it is not done
+    assert plan_of(host, repo, lobby)["sealed"] == f"{short(host, paged)} is not done yet"
+
+
 def test_a_pick_that_would_conflict_seals_it_with_the_files_and_leaves_nothing_behind(host, repo):
     lobby = goal(host, "Lobby")
     task(host, repo, lobby, "k1", {"a.txt": "dev's a\n"})

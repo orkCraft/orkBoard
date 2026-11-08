@@ -2,13 +2,14 @@
 // would take; every ware of the chair lies on the rug at once (a leader's heroes on the top shelf, the small things below; the Orkmaster's own wares), a price plate under each; *Back to default* is its service at its feet. What you
 // carry is the hand's (hand/carry.js). Pressed, a ware flies into the hand over the card it replaces (a clone, `--ork-motion-play`, none under reduced motion) and `ideas.stall_take` is sent; the receipt under the table says what
 // changed, with Undo. Layout and look: stall.css; the host's data and calls: stallstate.js; the faces: stallfaces.js.
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head } from "../orkui.js";
+import { openPlace } from "../frame/place.js";
 import { board } from "../board/store.js";
 import { carried, inventory } from "../frame/state.js";
 import { HeroFace, Relic, Plate } from "./stallfaces.js";
-import { cardOf, dragging, giveBack, hover, load, pleased, pointAt, receipt, reset, service, stall, take, undo, wareOf } from "./stallstate.js";
+import { makerPlate, cardOf, dragging, giveBack, hover, load, pleased, pointAt, receipt, reset, service, stall, take, undo, wareOf } from "./stallstate.js";
 
 if (typeof document !== "undefined") {
   const href = new URL("./stall.css", import.meta.url).href;
@@ -38,19 +39,62 @@ export function fly(from, slot) {
 }
 
 function Ware({ shelf, w, chair, head }) {
-  const mine = !!w.price?.mine, locked = !!w.price?.locked, heroes = shelf.kind === "heroes", on = hover.value?.slot === shelf.slot && hover.value?.id === w.id;
+  const mine = !!w.price?.mine, locked = !!w.price?.locked || (shelf.kind === "makers" && w.here === false), heroes = shelf.kind === "heroes", on = hover.value?.slot === shelf.slot && hover.value?.id === w.id;
+  const [editing, setEditing] = useState(false), [amount, setAmount] = useState(""), [error, setError] = useState(""), [saving, setSaving] = useState(false);
+  const input = useRef(null), trigger = useRef(null), restoreFocus = useRef(false);
+  useLayoutEffect(() => {
+    if (shelf.kind === "makers" && makerPlate.value === w.id) {
+      trigger.current?.scrollIntoView({ block: "nearest" });
+      trigger.current?.focus();
+      makerPlate.value = "";
+    }
+  }, [w.id, makerPlate.value]);
+  const currency = w.prices?.[0]?.currency || w.cap?.currency;
+  const fieldId = `maker-cap-${w.id}`, whyId = `maker-why-${w.id}`;
+  // Focus after the form has been inserted or removed, before the redraw is painted.
+  useLayoutEffect(() => {
+    if (editing) input.current?.focus();
+    else if (restoreFocus.current) {
+      restoreFocus.current = false;
+      trigger.current?.focus();
+    }
+  }, [editing]);
+  const close = () => { restoreFocus.current = true; setEditing(false); setError(""); };
+  const edit = () => { setAmount(w.cap?.amount || ""); setError(""); setEditing(true); };
+  const save = async (e) => {
+    e.preventDefault();
+    if (saving) return;
+    if (!/^(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$/.test(amount.trim()) || !Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+      setError(`Enter a positive amount in ${currency}.`); input.current?.focus(); return;
+    }
+    setSaving(true);
+    const ok = await take(chair, shelf.slot, w.id, { amount: amount.trim(), currency });
+    setSaving(false);
+    if (ok) close(); else setError("The maker cap could not be saved. Try again.");
+  };
   const press = (e) => {
     if (mine || locked) return;
+    if (shelf.kind === "makers") { edit(); return; }
     fly(e.currentTarget.querySelector(".stall-face"), shelf.slot);
     pointAt(null);
     take(chair, shelf.slot, w.id);
   };
   const point = () => pointAt(mine || locked ? null : shelf.slot, w.id, w.price), leave = () => pointAt(null);
-  return html`<div class=${cls("stall-ware", { "is-mine": mine, "is-locked": locked, "is-on": on })} data-ware=${w.id} data-slot=${shelf.slot} onMouseEnter=${point} onMouseLeave=${leave} onFocusIn=${point} onFocusOut=${leave}>
-    <button type="button" class="stall-ware__press" aria-disabled=${mine || locked ? "true" : undefined} title=${locked ? w.price.locked : w.line || undefined} aria-label=${`${shelf.label}: ${w.word}`} onClick=${press}>
+  return html`<div class=${cls("stall-ware", { "is-mine": mine, "is-locked": locked, "is-on": on })} data-ware=${w.id} data-slot=${shelf.slot} onKeyDown=${(e) => { if (e.key === "Escape" && editing) { e.preventDefault(); e.stopPropagation(); close(); } }} onMouseEnter=${point} onMouseLeave=${leave} onFocusIn=${point} onFocusOut=${leave}>
+    <button ref=${trigger} type="button" class="stall-ware__press" aria-expanded=${shelf.kind === "makers" && !locked ? editing : undefined} aria-controls=${shelf.kind === "makers" && !locked ? fieldId : undefined} aria-describedby=${shelf.kind === "makers" && locked ? whyId : undefined} aria-disabled=${mine || locked ? "true" : undefined} title=${locked ? w.price.locked : w.line || undefined} aria-label=${`${shelf.label}: ${w.word}`} onClick=${press}>
       ${heroes ? html`<${HeroFace} w=${w} fallback=${head} />` : html`<${Relic} w=${w} slot=${shelf.slot} race=${head?.race} />`}
     </button>
-    <${Plate} price=${w.price} />
+    ${shelf.kind === "makers" && !locked ? html`<button type="button" class="stall-maker__cap" tabIndex="-1" aria-expanded=${editing} aria-controls=${fieldId} onClick=${edit}><${Plate} price=${w.price} /></button>` : html`<${Plate} price=${shelf.kind === "makers" && locked ? { locked: w.why } : w.price} />`}
+    ${editing && html`<form class="stall-maker__form" id=${fieldId} onSubmit=${save} noValidate>
+      <label for=${`${fieldId}-amount`}>Cap per round (${currency})</label>
+      <input ref=${input} id=${`${fieldId}-amount`} type="text" inputMode="decimal" value=${amount} onInput=${(e) => setAmount(e.currentTarget.value)} aria-invalid=${error ? "true" : undefined} aria-describedby=${error ? `${fieldId}-error` : undefined} />
+      ${error && html`<p id=${`${fieldId}-error`} role="alert">${error}</p>`}
+      <button type="submit" class="ork-btn" disabled=${saving}>Save cap</button>
+    </form>`}
+    ${shelf.kind === "makers" && locked && html`<p class="stall-maker__why" id=${whyId}>${w.why}
+      ${w.why === "no key on this computer" && html`<button type="button" class="ork-btn quiet" onClick=${() => openPlace("settings", {}, "Settings")}>Settings · sign-ins</button>`}
+    </p>`}
+    ${shelf.kind === "makers" && html`<p class="stall-maker__leaves"><b>What leaves this computer</b>${w.leaves}</p>`}
     ${w.before && !mine && html`<small class="stall-ware__before">Yours before</small>`}
   </div>`;
 }

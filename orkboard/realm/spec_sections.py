@@ -19,6 +19,8 @@ them after the spec's parts, and `arrange` keeps them when a section is written 
 """
 from __future__ import annotations
 
+from orkboard.realm.seat_section_limits_rules import WHY_CHARS, LINE_CHARS, MAX_DONE, MAX_CHECKS, MAX_WILL, MAX_OUT, MAX_RISKS, MAX_ASSUMED
+
 import re
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -29,7 +31,6 @@ SAYS = ("Talk", "Accepted")                                            # a leade
 OLD = ("Gist", "Why", "Done when", "Out", "Risks", "Depends on", "Stages", "Open questions", "Decisions")          # realm/idea_page.py `SECTIONS`
 RESERVED = {n.lower() for n in (*COMMON, *OLD, *PARTS, *SAYS)}
 FOLDED = ("Why", "Done when", "Out", "Risks")                          # an old section a page of the new format answers for (its first section's, Done when all of them)
-WHY_CHARS, LINE_CHARS, MAX_DONE, MAX_CHECKS, MAX_WILL, MAX_OUT, MAX_RISKS, MAX_ASSUMED = 1200, 240, 5, 5, 12, 3, 4, 4
 ID_CHARS = 200
 PROOFS = ("test", "look", "person")                                    # how a *Done when* line is proven (decisions §257.4): a test the gate runs · a picture or Play · the person
 FILE = "way.json"

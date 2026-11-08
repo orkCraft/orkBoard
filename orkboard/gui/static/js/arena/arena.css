@@ -164,3 +164,5 @@
 .arena-goesin__row, .arena-releasesfrom__row { display: flex; align-items: center; gap: var(--ork-4); min-height: 32px; cursor: pointer; }
 .arena-goesin__row.is-held { opacity: 0.5; cursor: default; }
 .arena-goesin__text { display: flex; flex-direction: column; min-width: 0; }
+
+.pick-receipt { color: var(--ork-warning); }

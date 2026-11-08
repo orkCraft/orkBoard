@@ -21,7 +21,7 @@ from tests.test_table_desktop_browser import open_tab  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
-SHOTS = Path(os.environ["STALL_SHOTS"]) if os.environ.get("STALL_SHOTS") else None
+SHOTS = Path(os.environ["STALL_SHOTS"]) if os.path.isabs(os.environ.get("STALL_SHOTS", "")) else None     # a folder named in full: `1` is no folder
 
 
 def shot(pg, name):
@@ -401,6 +401,197 @@ def test_a_tech_party_with_a_non_default_hero_shows_its_heros_table_not_the_syst
         pg.locator(".hm").wait_for(timeout=WAIT_MS)
         assert ("ideas.hero_table", {"party": "tech"}) in host.log
         assert [t.lower() for t in pg.locator(".hm-place__nm").all_inner_texts()] == ["red", "green", "refactor", "released small"]
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class MakerShelfHost(StallHost):
+    """Art's maker data on the existing chair fixture; Tech retains its own shelves."""
+
+    def __init__(self):
+        super().__init__()
+        self.carry["art"] = copy.deepcopy(self.carry["tech"])
+        self.parties.append({**copy.deepcopy(next(p for p in self.parties if p["slug"] == "tech")), "slug": "art", "title": "Art party"})
+
+    def shelves(self, chair):
+        shelves = super().shelves(chair)
+        if chair == "art":
+            shelves.append({"id": "craft_tools", "slot": "craft_tools", "kind": "makers", "label": "Its makers",
+                            "sub": "Run in Orkboard on your key", "wares": [
+                ware("openai-images", "Picture maker", "OpenAI Images", {"money": "1.25 USD cap"},
+                     title="OpenAI Images", makes="pictures", leaves="The picture prompt is sent to OpenAI."),
+                ware("elevenlabs-sound", "Sound maker", "ElevenLabs Sound Effects", {"money": "about 1.25 USD cap"},
+                     title="ElevenLabs Sound Effects", makes="sound", leaves="The sound prompt is sent to ElevenLabs.")
+            ]})
+        return shelves
+
+
+def test_art_lays_makers_after_its_ai_tool_and_tier_with_money_and_disclosures(gui):
+    pg, host, log = opened(gui, "art", host=MakerShelfHost())
+    try:
+        assert pg.locator(".stall-shelf").evaluate_all("els => els.map(e => e.dataset.shelf)") == ["hero", "tool", "tier", "craft_tools"]
+        makers = pg.locator('[data-shelf="craft_tools"]')
+        assert makers.locator(".stall-shelf__lab b").inner_text().lower() == "its makers"
+        assert makers.locator(".stall-relic__word").all_inner_texts() == ["Picture maker", "Sound maker"]
+        assert makers.locator(".stall-maker__service").all_inner_texts() == ["OpenAI Images", "ElevenLabs Sound Effects"]
+        assert makers.locator(".ork-sign.picture, .ork-sign.sound").count() == 2
+        assert makers.locator(".stall-price").all_inner_texts() == ["1.25 USD cap", "about 1.25 USD cap"]
+        assert makers.locator(".stall-maker__leaves").count() == 2
+        assert "What leaves this computer" in makers.inner_text()
+        assert makers.locator(".stall-price").first.evaluate("e => getComputedStyle(e).color") == pg.locator('.stall-price.is-money').first.evaluate("e => getComputedStyle(e).color")
+        tier = pg.locator('.stall-ware[data-slot="tier"]').last.locator("button")
+        tier.focus()
+        pg.keyboard.press("Tab")
+        assert pg.locator(":focus").get_attribute("aria-label") == "Its makers: Picture maker"
+        pg.keyboard.press("Tab")
+        assert pg.locator(":focus").get_attribute("aria-label") == "Its makers: Sound maker"
+        open_tab(pg, "tech")
+        pg.wait_for_function("() => document.querySelector('.stall')?.dataset.stall === 'tech'", timeout=WAIT_MS)
+        assert pg.locator('[data-shelf="craft_tools"]').count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("why", ["no key on this computer", "its AI tool cannot make it", "no official API"])
+def test_unavailable_maker_says_why_on_focus_and_hover_without_harness(gui, why):
+    class MissingMakerHost(MakerShelfHost):
+        def shelves(self, chair):
+            shelves = super().shelves(chair)
+            for s in shelves:
+                if s["slot"] == "craft_tools":
+                    s["wares"][0].update(here=False, why=why)
+            return shelves
+
+    pg, host, log = opened(gui, "art", host=MissingMakerHost())
+    try:
+        w = pg.locator('[data-slot="craft_tools"][data-ware="openai-images"]')
+        reason = w.locator(".stall-maker__why")
+        assert w.locator(".stall-price").inner_text().strip() == "not here"
+        press = w.locator(".stall-ware__press")
+        press.focus()
+        assert reason.is_visible() and why in reason.inner_text()
+        assert press.get_attribute("aria-describedby") == reason.get_attribute("id")
+        pg.locator(".stall-pack").first.focus()
+        w.hover()
+        assert reason.is_visible() and why in reason.inner_text()
+        # Test the computed reading ink against the rug's token background.
+        contrast = reason.evaluate('''e => {
+          const s = getComputedStyle(e), root = getComputedStyle(document.documentElement);
+          const lum = c => { const rgb = c.match(/[\\d.]+/g).slice(0,3).map(Number).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return rgb[0]*.2126 + rgb[1]*.7152 + rgb[2]*.0722; };
+          const probe = document.createElement('span'); e.append(probe);
+          probe.style.color = root.getPropertyValue('--ork-panel');
+          const a = lum(s.color), b = lum(getComputedStyle(probe).color); probe.remove();
+          return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+        }''')
+        assert contrast >= 4.5
+        assert "harness" not in pg.locator(".stall").inner_text().lower()
+        # Scan words a reader receives; orkUI's image src filenames keep their names.
+        reader_attributes = pg.locator(".stall").evaluate('''e =>
+          [e, ...e.querySelectorAll('*')].flatMap(node =>
+            ['aria-label', 'title', 'alt'].map(name => node.getAttribute(name) || '')
+          ).join(' ')
+        ''')
+        assert "harness" not in reader_attributes.lower()
+        if why == "no key on this computer":
+            reason.get_by_role("button", name="Settings · sign-ins").click()
+            assert pg.locator('[data-place][aria-label="Settings"]').is_visible()
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class CapMakerHost(MakerShelfHost):
+    def __init__(self):
+        super().__init__()
+        self.caps = {}
+
+    def shelves(self, chair):
+        shelves = super().shelves(chair)
+        for s in shelves:
+            if s["slot"] == "craft_tools":
+                for w in s["wares"]:
+                    cap = self.caps.get(w["id"])
+                    w.update(here=True, cap=cap, prices=[{"currency": "USD"}])
+                    w["price"] = {"money": f"{'about ' if w['makes'] == 'sound' else ''}{cap['amount']} USD cap"} if cap else {"word": "Set a cap"}
+        return shelves
+
+    def handle(self, name, a):
+        if name == "ideas.stall_take" and a.get("slot") == "craft_tools":
+            self.log.append((name, a))
+            self.caps[a["value"]] = a["cap"]
+            return self.bump({"stall": self.stall(a["chair"])})
+        return super().handle(name, a)
+
+
+@pytest.mark.parametrize("activation", ["click", "Enter"])
+def test_a_paid_maker_waits_for_a_cap_and_keeps_focus_after_redraw(gui, activation):
+    pg, host, log = opened(gui, "art", host=CapMakerHost())
+    try:
+        w = pg.locator('[data-slot="craft_tools"][data-ware="openai-images"]')
+        press = w.locator(".stall-ware__press")
+        assert w.locator(".stall-price").inner_text() == "Set a cap"
+        if activation == "click":
+            w.locator(".stall-maker__cap").click()
+        else:
+            press.focus()
+            pg.keyboard.press("Enter")
+        field = w.get_by_label("Cap per round (USD)")
+        field.wait_for(timeout=WAIT_MS)
+        assert field.input_value() == "" and field.evaluate("e => e === document.activeElement")
+        assert field.bounding_box()["width"] >= 24 and field.bounding_box()["height"] >= 24
+        assert w.locator("label").is_visible()
+        for amount in ("", "wrong", "0", "-2"):
+            field.fill(amount)
+            w.get_by_role("button", name="Save cap").click()
+            assert w.get_by_role("alert").inner_text() == "Enter a positive amount in USD."
+            assert not any(n == "ideas.stall_take" for n, _ in host.log)
+        field.fill("1.25")
+        pg.keyboard.press("Enter")
+        pg.wait_for_function("() => document.querySelector('[data-ware=\"openai-images\"] .stall-price')?.textContent.includes('1.25 USD cap')", timeout=WAIT_MS)
+        assert _sent(pg, host, ("ideas.stall_take", {"chair": "art", "slot": "craft_tools", "value": "openai-images", "cap": {"amount": "1.25", "currency": "USD"}}))
+        assert w.locator("form").count() == 0
+        assert press.evaluate("e => e === document.activeElement")
+        assert press.evaluate("e => e.matches(':focus-visible')")
+        pg.keyboard.press("Enter")
+        assert field.input_value() == "1.25"
+        pg.keyboard.press("Escape")
+        assert w.locator("form").count() == 0 and pg.locator(".stall").count() == 1
+        assert press.evaluate("e => e === document.activeElement")
+        pg.keyboard.press("Escape")
+        assert pg.locator(".stall").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("cap_open", [False, True])
+def test_arts_cap_plate_fits_at_1280_by_800_and_has_a_picture(gui, cap_open):
+    host = CapMakerHost()
+    host.caps["elevenlabs-sound"] = {"amount": "1.25", "currency": "USD"}
+    pg, host, log = opened(gui, "art", host=host)
+    try:
+        assert pg.viewport_size == {"width": 1280, "height": 800}
+        assert pg.locator('[data-shelf="craft_tools"] .stall-shelf__lab b').inner_text() == "ITS MAKERS"
+        w = pg.locator('[data-slot="craft_tools"][data-ware="openai-images"]')
+        if cap_open:
+            w.locator(".stall-maker__cap").click()
+            w.get_by_label("Cap per round (USD)").wait_for(timeout=WAIT_MS)
+        w.scroll_into_view_if_needed()
+        money = pg.locator('[data-slot="craft_tools"][data-ware="elevenlabs-sound"] .stall-price.is-money')
+        assert money.inner_text() == "about 1.25 USD cap"
+        assert money.evaluate("e => getComputedStyle(e).color") == money.evaluate("""e => {
+          const p = document.createElement('span'); p.style.color = 'var(--ork-warning)'; e.append(p);
+          const c = getComputedStyle(p).color; p.remove(); return c;
+        }""")
+        assert pg.evaluate("""() => {
+          const pane = document.querySelector('.table-pane').getBoundingClientRect();
+          return [...document.querySelectorAll('.stall-rug, .stall-ware, .stall-maker__form, .stall-maker__form input')].every(e => {
+            const r = e.getBoundingClientRect(); return r.left >= pane.left && r.right <= pane.right;
+          }) && document.documentElement.scrollWidth <= document.documentElement.clientWidth;
+        }""")
+        shot(pg, f"art-makers-cap-{'open' if cap_open else 'closed'}-1280x800")
     finally:
         pg.close()
     assert not log, "\n".join(log)

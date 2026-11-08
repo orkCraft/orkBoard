@@ -10,17 +10,17 @@ ideas and their files stay in realm/ideas.py, which re-exports every name here. 
 """
 from __future__ import annotations
 
+from orkboard.realm.seat_page_rules import SECTIONS, ANSWERED
+
 import datetime as dt
 import re
 import unicodedata
 
-SECTIONS = ("Gist", "Why", "Done when", "Out", "Risks", "Depends on", "Stages", "Open questions", "Decisions")   # spec 35 §3
 FOLDED = ("Why", "Done when", "Out", "Risks")      # the old sections a page of the new format answers for (spec 99 §7.1: realm/spec_sections.py)
 SECTION_CHARS = 20_000           # of a section, the most a write keeps
 _FENCE = re.compile(r"\A---\n(.*?)\n---\n?", re.S)
 _HEADING = re.compile(r"^(#{1,2})[ \t]+(.+?)[ \t]*#*[ \t]*$", re.M)
 _KEY = re.compile(r"^([A-Za-z_][\w-]*):[ \t]*(.*)$")
-ANSWERED = re.compile(r"^[ \t]+[-*+][ \t]+Answered:[ \t]*(.*?)\s*$")     # a question's answer, the line under it (spec 151 A.6: realm/idea_questions.py)
 
 
 # -- a page: front matter, a title, sections --------------------------------------------------------

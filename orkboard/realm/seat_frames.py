@@ -9,7 +9,7 @@ asked for an object: it reads the paths, writes its part of the goal's page and 
 *Read no file*, never asks for the answer as an object and never has the placeholder of a context that follows.
 
 `seat` is `orkmaster`, `taskmaster`, `grunt` or `<party>-leader` (`tech-leader`: the leader of the party Tech; its title is the page's section `## Tech`); `craft` is the party's craft
-(`engineering`, `design`, …) and only gives a leader's Talk its lens. Pure text: no model, no face. It lives in `realm/` and reaches the seats' modules in `core/` lazily, as `agent_rules_text` does.
+(`engineering`, `design`, …) and only gives a leader's Talk its lens. Pure text: no model, no face. It lives in `realm/` and consumes the pure shared seat rules directly, as `agent_rules_text` does.
 """
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ def agent(seat: str, step: str, craft: str = "", wiki: str = WIKI, decisions: st
     project = f"the project's brief `{wiki}/project.md`"
     log = f"the decisions `{decisions}`, the newest first, and the one the goal rests on"
     if kind == "orkmaster":
-        from orkboard.realm import goal_route
+        from orkboard.realm import seat_route_rules as goal_route
         return _frame(
             "You are the Orkmaster of this project's Board.", "Your step is **route**: say which of the project's parties work on a goal, and in what order.",
             [f"the goal's page `{page}` (the goal is given in your arguments): its *Gist*, the person's words", f"the parties `{wiki}/pages/tracks/*.md`", project],
@@ -78,7 +78,7 @@ def agent(seat: str, step: str, craft: str = "", wiki: str = WIKI, decisions: st
             [f"`route` in the goal's page: the parties' slugs, in order, as the rules say (BOARD.md says the line); move `phase` to `talk` once it is written", "nothing else of the page"],
             "One line: the route, the parties' slugs in order.")
     if kind == "leader":
-        from orkboard.core import idea_accept, idea_sections, idea_talk
+        from orkboard.realm import seat_accept_rules as idea_accept, seat_section_rules as idea_sections, seat_talk_rules as idea_talk
         party = title_of(seat) or "your party"
         mine = f"`## {party}`" if title_of(seat) else "your party's section `## <Party title>`"
         journal = f"your party's journal `{wiki}/journals/<party>.md` and the project's `{wiki}/journals/project.md`"
@@ -117,7 +117,7 @@ def agent(seat: str, step: str, craft: str = "", wiki: str = WIKI, decisions: st
              "nothing of your section but `### Accepted`"],
             "One line to the conductor: `accepted`, or `not accepted: <the lines>` with the things to make again, one a line; `cannot see: <the lines>` when there are any.")
     if kind == "taskmaster":
-        from orkboard.realm import roles
+        from orkboard.realm import seat_builtin_rules as roles
         return _frame(
             "You are the Taskmaster of this project's Board.", "Your step is **plan**: cut a decided goal's work into stages, each a task or two a Grunt can do, in order.",
             [f"the goal's page `{page}` (the goal is given in your arguments): every leader's section and its *Stages*", f"the decisions `{decisions}` and the journals `{wiki}/journals/`",
@@ -125,7 +125,7 @@ def agent(seat: str, step: str, craft: str = "", wiki: str = WIKI, decisions: st
             roles.rules("taskmaster"),
             ["`## Stages` in the goal's page (BOARD.md says its format): the stages in order, each with the party that does it and the *Done when* lines it proves", "nothing of a leader's section"],
             "One line: the number of stages and the first one's title.")
-    from orkboard.realm import roles
+    from orkboard.realm import seat_builtin_rules as roles
     return _frame(
         "You are a Grunt of this project's Board.", "Your step is **task**: do the one task you were given, in your own worktree and branch.",
         [f"the goal's page `{page}` and the task you were given", "the tasks before yours, and the repository you work in", "the project's own rules (`CLAUDE.md`, `AGENTS.md`), which you follow"],

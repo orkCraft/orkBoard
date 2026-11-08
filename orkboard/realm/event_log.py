@@ -82,6 +82,7 @@ GATE_MERGED = "gate_merged"       # commits, ideas, files (what dev held that ma
 GOAL_TO_MAIN = "goal_to_main"     # idea, goals (the slugs it took into main: it and what it stood on), commits, files, pushed, into, main, tests ("run" · "skipped": To main without the tests, decisions §274.3), checks_s (the checks' seconds, when they ran), device (spec 105 §5: a goal sent to main on its own)
 PICK_ASKED = "pick_asked"         # idea, task, n, media (image · audio · video · text), round (spec 51 §2.4: a task left variants for the person to pick from)
 PICK_ANSWERED = "pick_answered"   # idea, task, key (the variant's letter; null: none of them, new ones asked), note_chars, via (hand · front · drawer · screen; else idea), seconds from pick_asked, device, round (the round that was answered)
+#                                    tool (maker's id), cost ({amount, currency, estimate}, from pick.json), only for a maker's pick; no prompt, credential or file
 IDEA_FLAGGED = "idea_flagged"   # idea, goal (its party), by ("gate" · "done"), tasks, first_time, usd, days (spec 50 §2.2: a goal raised its flag in main)
 OPENED = "opened"                 # what (idea · plan · todo · task · result · tab · map · recap · flag · week · push · party · gate · today · pick), ref, via (map · board · needs · agents · review · recap · week · flags · push · hand · front · party · today · gate; old lines ""), device
 CANVAS_MADE = "canvas_made"       # tool (claude · codex · agy), kind (design · slides · document · page · picture), task ("" outside a task) (spec 78 §2)
@@ -349,6 +350,13 @@ def line(event: str, at: dt.datetime | None = None, **fields: Any) -> dict | Non
     at = at or dt.datetime.now().astimezone()
     row: dict[str, Any] = {"at": at.isoformat(timespec="seconds"), "event": event}
     for k, v in fields.items():
+        if event == PICK_ANSWERED and k == "cost" and isinstance(v, dict):
+            # Money has strings, unlike token counts. Keep only its receipt fields.
+            money = {name: v[name] for name in ("amount", "currency") if isinstance(v.get(name), str)}
+            if isinstance(v.get("estimate"), bool):
+                money["estimate"] = v["estimate"]
+            row[k] = money
+            continue
         kept = _plain(v)
         if kept is not None or v is None:
             row[k] = kept

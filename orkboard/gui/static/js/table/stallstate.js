@@ -7,6 +7,7 @@ import { town } from "../link.js";
 import { hatched } from "../hand/state.js";
 import { carried } from "../frame/state.js";
 
+export const makerPlate = signal("");        // a cap-stopped pick opens this maker
 export const stall = signal(null);          // the host's answer for the chair open: {chair, whose, say, shelves, hand}
 export const hover = signal(null);          // {slot, id}: the ware under the pointer or the focus
 export const receipt = signal(null);        // {text, undo: {slot, value} | null}: the line under the table
@@ -35,7 +36,7 @@ const said = (slot, was) => {
 function settle(chair, slot, was, got, back = false) {
   if (!got || !got.stall) return false;
   stall.value = got.stall;
-  const text = back ? `${cardOf(slot)?.label || slot} is back to its default. ${said(slot, was)}` : said(slot, was);
+  const text = slot === "craft_tools" ? "Maker cap saved." : back ? `${cardOf(slot)?.label || slot} is back to its default. ${said(slot, was)}` : said(slot, was);
   receipt.value = { text, undo: got.undo || null, back };
   pleased.value += 1;
   service.value = "";
@@ -43,9 +44,9 @@ function settle(chair, slot, was, got, back = false) {
 }
 
 /** A ware pressed: it is taken. `chair` the chair open. Resolves with whether it was written. */
-export async function take(chair, slot, value) {
+export async function take(chair, slot, value, cap = undefined) {
   const was = cardOf(slot)?.word || "";
-  const got = await ask("ideas.stall_take", { chair, slot, value });
+  const got = await ask("ideas.stall_take", { chair, slot, value, ...(cap ? { cap } : {}) });
   const ok = settle(chair, slot, was, got);
   if (ok) refreshShell();
   return ok;

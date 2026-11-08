@@ -210,3 +210,50 @@ def test_orkboard_starts_alone(tmp_path):
     mods = modules()
     line = [n for n in loaded if n not in mods]
     assert not line, f"Orkboard loaded modules that are not its own: {line}"
+
+
+def core_dependencies(starts: list[str], mods: dict[str, Path]) -> list[str]:
+    """Follow local imports at every depth, including imports inside functions."""
+    seen, bad = set(), []
+    def visit(name, chain):
+        if name == 'orkboard.core' or name.startswith('orkboard.core.'):
+            bad.append(' -> '.join([*chain, name]))
+            return
+        if name in seen or name not in mods:
+            return
+        seen.add(name)
+        path = mods[name]
+        package = name if path.name == '__init__.py' else name.rpartition('.')[0]
+        for node in ast.walk(ast.parse(path.read_text(encoding='utf-8'))):
+            targets = []
+            if isinstance(node, ast.Import):
+                targets = [a.name for a in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                base = node.module or ''
+                if node.level:
+                    base = '.'.join(package.split('.')[:len(package.split('.')) - node.level + 1] + ([base] if base else []))
+                targets = [base, *(base + '.' + a.name for a in node.names)]
+            for target in targets:
+                visit(target, [*chain, name])
+    for start in starts:
+        visit(start, [])
+    return bad
+
+
+def test_seat_rules_never_reach_core():
+    mods = modules()
+    starts = ['orkboard.realm.seat_frames', 'orkboard.realm.agent_rules_text']
+    starts += [m for m in mods if m.startswith('orkboard.realm.seat_') and m.endswith('_rules')]
+    assert not (bad := core_dependencies(starts, mods)), '\n'.join(bad)
+
+
+@pytest.mark.parametrize('statement', ['import orkboard.core.hidden', 'from orkboard.core import hidden', 'from ..core import hidden'])
+def test_seat_dependency_check_catches_lazy_and_indirect_imports(tmp_path, statement):
+    root = tmp_path / 'orkboard'
+    (root / 'realm').mkdir(parents=True)
+    consumer = root / 'realm/consumer.py'
+    helper = root / 'realm/helper.py'
+    consumer.write_text('from . import helper\n')
+    helper.write_text('def lazy():\n    ' + statement + '\n')
+    bad = core_dependencies(['orkboard.realm.consumer'], modules(root))
+    assert bad and all('orkboard.realm.consumer -> orkboard.realm.helper -> orkboard.core' in x for x in bad)

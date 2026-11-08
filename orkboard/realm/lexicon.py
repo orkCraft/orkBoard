@@ -91,6 +91,11 @@ TERMS: tuple[Term, ...] = (
     _t("food", "ork slots", "", "food"),
     _t("treasury", "Budget", "", "Treasury"),
     _t("logins", "Login", "Logins"),
+    _t("maker", "maker", "makers"),
+    _t("picture_maker", "Picture maker"),
+    _t("sound_maker", "Sound maker"),
+    _t("its_makers", "Its makers"),
+    _t("set_a_cap", "Set a cap"),
     _t("ai_tool", "AI tool", "AI tools"),
     # a model's tier says how seasoned the mind is (realm/tiers.py; docs/design/warchief-line-and-cards.md §6)
     _t("tier.laborer", "Novice", "Novices", "Laborer", "Laborers"),

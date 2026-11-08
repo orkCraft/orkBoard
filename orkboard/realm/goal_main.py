@@ -48,9 +48,14 @@ def _depends(root: Path | None, slug: str) -> list[str]:
     return [str(x) for x in got if isinstance(x, str)] if isinstance(got, list) else []
 
 
-def _done(state_dir: Path, slug: str) -> bool:
-    """The goal has a plan and every task of it that was not dropped has landed."""
-    tasks = [t for t in (ideas.plan(state_dir, slug) or {}).get("tasks") or [] if isinstance(t, dict) and not goal_types.is_dropped(t)]
+def _done(state_dir: Path, slug: str, root: Path | None = None) -> bool:
+    """The goal has a plan and every task of it that was not dropped has landed. A goal with no plan on this machine is done when its state or
+    its page says so: one done before this machine read it (history, or another tool's) has nothing here to land (trial 152 E, F1)."""
+    plan = ideas.plan(state_dir, slug)
+    if plan is None:
+        page = ideas.idea_page(root, slug) if root is not None else None
+        return ideas.state(state_dir, slug).get("state") == "done" or (page is not None and page.get("phase").strip().lower() == "done")
+    tasks = [t for t in plan.get("tasks") or [] if isinstance(t, dict) and not goal_types.is_dropped(t)]
     return bool(tasks) and all(t.get("state") == "merged" for t in tasks)
 
 
@@ -111,7 +116,7 @@ def _compose(git: IdeaGit, state_dir: Path, slug: str, root: Path | None, into: 
         lost = ideas.idea_page(root, g) is None if root is not None else not ideas.plan(state_dir, g)
         if lost:
             return False                                      # a goal the Board lost is nothing to stand on
-        return idea_flag.flag_of(state_dir, g) is None and (not _done(state_dir, g) or bool(by_goal.get(g)))
+        return idea_flag.flag_of(state_dir, g) is None and (not _done(state_dir, g, root) or bool(by_goal.get(g)))
 
     chosen, todo = [slug], [slug]
     while todo:
@@ -131,7 +136,7 @@ def _compose(git: IdeaGit, state_dir: Path, slug: str, root: Path | None, into: 
     out["commits"], out["owner"] = commits, {s: owner[s] for s in commits}
     out["files"] = len({f for s in commits for f in files[s]})
     for g in chosen:
-        if not _done(state_dir, g):
+        if not _done(state_dir, g, root):
             out["sealed"] = f"{name(g)} is not done yet"
             return out
     if not commits:

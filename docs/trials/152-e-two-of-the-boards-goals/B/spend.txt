@@ -1,0 +1,24 @@
+10 calls for the-checks-into-main-and-a-red-from-before: 7,559,556 tokens, no price known for these models, 1496.9 s
+  in 377,485 · out 59,261 · cache read 10,730,624 · cache written 0 · read from the cache: 97%
+By tool and model
+  codex gpt-6.1-sol                   4 calls   5,670,858 tokens  no price known for these models
+  codex gpt-6-astra                   6 calls   1,888,698 tokens  no price known for these models
+By step
+  work                                5 calls   7,320,693 tokens  no price known for these models
+  draft                               1 calls      97,016 tokens  no price known for these models
+  accept_step                         3 calls      74,996 tokens  no price known for these models
+  plan                                1 calls      66,851 tokens  no price known for these models
+By goal
+  the-checks-into-main-and-a-red-from-before   10 calls   7,559,556 tokens  no price known for these models
+The dearest calls
+  2026-11-08T11:59:32  the-checks-into-main-and-a-red-from-before · work · codex gpt-6.1-sol: 3,607,814 tokens, no price known for these models
+  2026-11-08T12:11:21  the-checks-into-main-and-a-red-from-before · work · codex gpt-6-astra: 1,649,835 tokens, no price known for these models
+  2026-11-08T12:03:38  the-checks-into-main-and-a-red-from-before · work · codex gpt-6.1-sol: 1,065,971 tokens, no price known for these models
+  2026-11-08T12:17:16  the-checks-into-main-and-a-red-from-before · work · codex gpt-6.1-sol: 578,599 tokens, no price known for these models
+  2026-11-08T12:13:49  the-checks-into-main-and-a-red-from-before · work · codex gpt-6.1-sol: 418,474 tokens, no price known for these models
+Worth a look
+  failed calls: 2 ($0.00)
+  a big cache written and none read: 0 calls, 0 tokens ($0.00)
+  heavy reads with a short answer: 0 calls, 0 tokens ($0.00)
+  asked again: the-checks-into-main-and-a-red-from-before · accept_step, 3 calls
+  sent back: the-checks-into-main-and-a-red-from-before · task k1, 1 calls after a red gate (1,065,971 tokens, $0.00)
