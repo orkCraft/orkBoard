@@ -81,6 +81,10 @@ def test_system_parts_wear_at_most_three_squares_each_saying_its_kind_in_words(g
     a, b = pg.locator(f'.ht-slot[data-ht-for="{LOBBY}"]').bounding_box(), pg.locator(f'.cn-slot[data-cn-for="{LOBBY}"]').bounding_box()
     assert a["x"] + a["width"] <= b["x"] + 0.5
     assert pg.locator(f'.ht-slot[data-ht-for="{LOBBY}"]').evaluate("e => getComputedStyle(e).pointerEvents") == "none"
+    for pid in (LOBBY, ROOMS):                                                       # clear of the card's name (spec 165 K)
+        slot = pg.locator(f'.ht-slot[data-ht-for="{pid}"]').bounding_box()
+        name = pg.locator(f'[data-pick-id="{pid}"] .sys-part__name').first.bounding_box()
+        assert slot["x"] >= name["x"] + name["width"] or slot["y"] >= name["y"] + name["height"] or slot["y"] + slot["height"] <= name["y"], (pid, slot, name)
     assert not errors, "\n".join(errors)
     pg.context.close()
 
