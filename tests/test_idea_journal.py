@@ -159,8 +159,8 @@ def test_the_digest_is_one_call_of_the_partys_leader_on_the_cheaper_tier_with_no
     assert call["budget"] == idea_target.budget("journal", "balance")
     p = call["prompt"]
     assert p.startswith("You are Architect, the leader of this goal's party")                                                        # its leader's voice
-    assert "Read no file" in p and '{"digest": "…"}' in p and str(journals.DIGEST_CHARS) in p
-    assert "You said go on “Goal 0”." in p and "You said go on “Goal 11”." in p and "Your digest so far" not in p            # no digest yet
+    assert "Read no file" in p and '{"works": ["…"], "hurts": ["…"], "next": ["…"]}' in p and str(journals.DIGEST_CHARS) in p
+    assert "You said go on “Goal 0”." in p and "You said go on “Goal 11”." in p and "Your view so far" not in p            # no view yet
 
 
 def test_the_call_is_given_its_old_digest_and_only_the_entries_since(host, tech, model):
@@ -170,7 +170,7 @@ def test_the_call_is_given_its_old_digest_and_only_the_entries_since(host, tech,
     assert host.ideas.keeper.journal_digest(tech) is True
     _wait(host, tech)
     p = model.calls[0]["prompt"]
-    assert "Your digest so far:\nYou know the cache." in p
+    assert "Your view so far:\nYou know the cache." in p
     assert "Goal 100" in p and "Goal 111" in p and "Goal 3”" not in p                    # the first twelve are in the digest already
 
 
@@ -282,3 +282,64 @@ def test_a_goal_added_with_no_journal_due_makes_no_digest_call(host, tech, model
     _add(host, tech)
     assert model.steps("journal") == []
     assert idea_journal.JournalMixin.journal_digest_for(host.ideas.keeper, [tech, "", tech]) == 0
+
+
+# -- the view's prompt (spec 167 F) --------------------------------------------------------------------------------------------------------
+
+def _done_goal(host, party, title, gist, own, cites):
+    root = host.ideas.root()
+    slug = ideas.add_idea(root, gist, party)
+    ideas.set_meta(root, slug, phase="done", route=party)
+    page = ideas.idea_page(root, slug)
+    page.sections += [("Tech", own), ("Decisions", "\n".join(f"- §{n}" for n in cites))]
+    ideas._write(root / ideas.IDEAS / f"{slug}.md", page.text())
+    return slug
+
+
+def _log(host, text):
+    (host.ideas.state_dir / "project.json").write_text('{"decisions": "docs/decisions.md"}', encoding="utf-8")
+    base, rel = host.ideas.keeper._decisions()                 # the Board's tree where it stands, else the working copy
+    (base / rel).parent.mkdir(parents=True, exist_ok=True)
+    (base / rel).write_text(text, encoding="utf-8")
+
+
+def test_the_views_prompt_holds_a_done_goals_gist_and_the_decision_it_cites_and_asks_the_three_heads(host, tech, model):
+    slug = _done_goal(host, tech, "Cache the lobby", "The lobby is cached for a minute.", "Tech built a keyed cache.", [7])
+    _log(host, "# Decisions\n\n## 7. Cache the lobby for a minute (1 May, the owner)\n\nWhy: speed.\n\n## 8. No accounts (2 May, the owner)\n\nWhy: scope.\n")
+    _fill(host, tech)
+    assert host.ideas.keeper.journal_digest(tech) is True
+    _wait(host, tech)
+    p = model.calls[0]["prompt"]
+    assert slug in p and "The lobby is cached for a minute." in p and "Tech built a keyed cache." in p
+    assert "§7. Cache the lobby for a minute" in p and "§8. No accounts" in p
+    assert '"works"' in p and '"hurts"' in p and '"next"' in p and "Read no file" in p
+
+
+def test_the_views_prompt_reads_only_the_goals_done_since_the_last_view(host, tech):
+    old = _done_goal(host, tech, "Old goal", "Long ago.", "Tech did it.", [])
+    keeper = host.ideas.keeper
+    assert old in keeper.journal_prompt(tech, {}, [])
+    later = (dt.datetime.now() + dt.timedelta(days=1)).isoformat(timespec="seconds")
+    after = keeper.journal_prompt(tech, {"text": "You know.", "at": later}, [])
+    assert old not in after and "Your view so far:\nYou know." in after
+
+
+def test_the_views_prompt_names_the_parts_of_the_map_the_open_concerns_are_on_never_their_words(host, tech):
+    from orkboard.realm import concerns
+    concerns.save(host.ideas.state_dir, tech, concerns=[{"id": "c1", "on": "cache", "name": "The cache", "level": "alert", "what": "SECRET-WORDS", "why": "", "fix": "", "signal": "", "aspect": ""}])
+    p = host.ideas.keeper.journal_prompt(tech, {}, [])
+    assert "The cache (cache)" in p and "SECRET-WORDS" not in p
+
+
+def test_the_views_prompt_holds_the_partys_table_where_it_has_one(host, tech):
+    folder = host.ideas.root() / "pages" / "tables"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{tech}.md").write_text("# Table\n\nThe hero lays the cache first.\n", encoding="utf-8")
+    assert "The hero lays the cache first." in host.ideas.keeper.journal_prompt(tech, {}, [])
+
+
+def test_product_with_no_tree_is_told_so_and_an_answer_in_heads_is_read(host):
+    product = _party(host, "Product", "product-manager", ["pm"], "product")
+    assert product == "product"
+    assert "Product's tree is not on the Board." in host.ideas.keeper.journal_prompt(product, {}, [])
+    assert idea_journal.clean({"works": ["a (x-goal)"], "hurts": [], "next": ["b"]}) == "Works: a (x-goal) Next: b"
