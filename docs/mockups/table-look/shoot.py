@@ -2,7 +2,7 @@
 The table's stub host from the browser tests (goals in the lanes, a failure and a question in the hand, a goal done).
 
     MOCK_OUT=/tmp/after MOCK_CSS=docs/mockups/table-look/table-look.css MOCK_JS=docs/mockups/table-look/table-look.js \
-    MOCK_SCALE=2 uv run --extra dev --extra browser --extra gui pytest -q -p tests.conftest -p no:xdist docs/mockups/table-look/shoot.py
+    MOCK_SCALE=2 PYTHONPATH=. uv run --extra dev --extra browser --extra gui pytest -q -p tests.conftest -p no:xdist docs/mockups/table-look/shoot.py
     (without MOCK_CSS and MOCK_JS: the window as it is, the "before")"""
 import json, os, sys
 from pathlib import Path

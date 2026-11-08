@@ -69,6 +69,9 @@ Tiers (§154, §162): the same face bare, in iron, in a hood.
 
 - `references/`: the sheets Gemini made, in order (the owner's prompts are in the conversation; the last ones are below).
 - `checks/`: each sheet at the window's sizes beside today's heads, and in the Tech tab.
+- `sketches/check_sheet.py`: a Gemini sheet of six moods (3 × 2) cut into heads at the window's sizes, beside today's
+  heads (`python docs/mockups/leader-heads/sketches/check_sheet.py SHEET.jpg OUT_DIR [race]` → `OUT_DIR/sizes.png`).
+- `sketches/shoot_tab.py`: those heads put in the Tech tab on the table-look mockup, one shot a mood (see its docstring).
 - `sketches/shaman24.py`: the shaman drawn on 24 × 24 with six moods as overlays (`python sketches/shaman24.py OUT_DIR`);
   `sticker24.py`, the sticker round; `scale2x.py`, the dropped Scale2x round.
 
