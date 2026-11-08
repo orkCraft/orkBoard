@@ -31,9 +31,9 @@ def _kind(root, state_dir) -> str:
 
 
 def offer(root, state_dir, craft: str) -> list[tuple[Hero, str]]:
-    """The heroes of a craft in `of`'s order, each with its why: "" where the project's kind offers it, else its `not_here` (decisions §279.5)."""
+    """The heroes of a craft in `of`'s order, each with its why: "" where the project's kind offers it (or is not known: nothing is locked then), else its `not_here` (decisions §279.5)."""
     kind = _kind(root, state_dir)
-    return [(h, "" if not h.kinds or kind in h.kinds else (h.not_here or "Not offered in this project")) for h in of(craft)]
+    return [(h, "" if not h.kinds or not kind or kind in h.kinds else (h.not_here or "Not offered in this project")) for h in of(craft)]
 
 
 def star(root, state_dir, craft: str) -> str:

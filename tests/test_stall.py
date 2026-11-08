@@ -369,6 +369,17 @@ def test_scene_shaman_is_locked_and_refused_in_a_web_app_and_starred_in_a_game(h
     assert not any(w.get("star") for w in shelf(got, "hero")["wares"] if w["id"] != "sh-scene")
 
 
+def test_a_project_with_no_kind_offers_design_and_store_gnome_unlocked_and_shows_no_star(host, monkeypatch):
+    monkeypatch.setattr(heroes, "_kind", lambda root, state_dir: "")
+    got = stall(host, _party(host, "design"))
+    wares = shelf(got, "hero")["wares"]
+    assert [w["id"] for w in wares] == [h.id for h in heroes.of("design")] and len(wares) == 3
+    assert all("locked" not in w["price"] for w in wares) and not any(w.get("star") for w in wares)
+    assert "star" not in card(got, "hero")
+    market = heroes.offer(host.ideas.root(), host.ideas.state_dir, "marketing")
+    assert [h.id for h, why in market if why] == [] and "fairy-aso" in [h.id for h, _ in market]
+
+
 def test_a_games_art_has_no_shelf_and_liveops_has_no_card(host):
     _kind(host, "game")
     art = stall(host, _party(host, "art"))
