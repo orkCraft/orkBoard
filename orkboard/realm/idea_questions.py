@@ -7,6 +7,7 @@ the one it recommends and why — taken strictly from the model's answer, kept i
     idea_questions.line(q)       # "Which store first? (**App Store** / Google Play) — most of its users are on iPhone"
     idea_questions.parse(line)   # {"ask", "choices", "pick", "why"[, "lines"]}; a line of before ("… (one / other)") too
                                  # `lines` (spec 159): one per way, in the ways' order, after the why as " · <way>: <line>"; only when every way has one (<= 80 characters)
+    idea_questions.LINES_RULE    # the rule for a way's line, said by Talk's instruction, the leaders' role files and BOARD.md alike
     idea_questions.picks(lines)  # each question's recommended choice ("" where it has none): Let the Taskmaster decide
     idea_questions.tally(lines, answers)   # how the person answered: picked, recommended, typed
     idea_questions.card(raw, id=, by=, leader=, project=)   # a leader's question as a hand's card (spec 99 §5.2): {id, by, leader, q, choices, pick, why, project[, for]}; `for` (spec 128 D) only when it names a party
@@ -29,6 +30,8 @@ CHOICES = (2, 4)                 # a question's choices: at least, at most
 CHOICE_CHARS = 40
 WHY_CHARS = 120
 LINE_CHARS = 80                  # a way's own line (spec 159), at most
+LINES_RULE = (f"`lines` is one line for each way, in the ways' order: what that way leads to, its point in its first words, {LINE_CHARS} characters at most so it fits "
+              "under the way's name on its card, never the `why` said again; give a line for every way or none.")      # the one rule every place that tells a leader how to ask says (spec 159 C, §270.2, §270.5)
 
 # "<ask> (<choice> / **<pick>** / …)<?.!> — <why>": the choices in the last brackets that hold a slash.
 _LINE = re.compile(r"^(.*?)\s*\(([^()]*/[^()]*)\)\s*([?.!]?)\s*(?:[—–]\s*(.*))?$")

@@ -89,7 +89,8 @@ def pointer_body() -> str:
 def board_md(wiki: str, decisions: str) -> str:
     """The whole BOARD.md (after its first line, which `agent_rules` stamps): the page's format as the code writes it."""
     from orkboard.realm import goal_phase, idea_page, idea_questions
-    question = idea_questions.line({"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "most of its users are on iPhone"})
+    question = idea_questions.line({"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "most of its users are on iPhone",
+                                 "lines": ["Reaches most of its users first; review takes days", "Android users wait; the review is quicker"]})
     answer = idea_questions.answer_line("App Store", "2026-11-06")
     decided = idea_questions.answer_line("its rules only", "2026-11-06", "decided by spec 154 C.1")
     phases = "\n".join(f"- `{p}`: {PHASE_WORDS[p]}" for p in goal_phase.PHASES)
@@ -147,9 +148,11 @@ and `done` needs a green `gate`.
 
 ## A question for the person
 
-A leader's question is one list line under `## Open questions`, its choices in brackets with the recommended one in bold, and why after a dash:
+A leader's question is one list line under `## Open questions`, its choices in brackets with the recommended one in bold, and why after a dash, then one line for each way:
 
     - {question}
+
+{idea_questions.LINES_RULE} A question with no lines is as valid as before.
 
 Set `asks: person` and stop. The person's answer is the line under it, written by whoever hears it (Orkboard writes it too when the person answers in its hand):
 
