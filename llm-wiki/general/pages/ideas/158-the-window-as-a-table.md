@@ -114,6 +114,12 @@ gate: b79367b · 145 files · red
 - The week's signal is the event log read by the owner, not a new counter or screen.
 - *Open…* stays on the answer row, so the big card's words are still one press away.
 - A skipped-tests To main is still logged as goal_to_main, with a field saying the tests were skipped.
+### Accepted
+- met: When the person sends a goal in dev to main from the discard on a project with no Release seated, then the gate's tests run first and main gets the goal only when they are green.
+- met: When one of the gate's tests is red on a goal's way to main, then main is unchanged and the card says, in words, which test stopped it.
+- met: When a project's gate has no tests, then To main is refused in words and *To main without the tests* is offered; only that act skips them, and its event says the tests were skipped.
+- met: When the person lifts a goal card with one open question at 1280 × 800, then each way is a hand card showing its whole line, the leader's pick marked, and the answer's event says hand or Open….
+- cannot see: When the owner's week of use ends, then journals/project.md holds a line on answering from hand cards and sending to main from the discard.
 
 ## Design
 ### Talk
