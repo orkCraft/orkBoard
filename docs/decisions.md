@@ -7517,3 +7517,16 @@ picked the first of the two ways offered each time, and asked for the phone in t
 3. **The phone in goal 160**: the table's look, the lamp and the backpack are drawn on the phone too, in the same goal.
 
 The owner's call.
+
+## 276. Success is no ring: the brightest signals are a failure's and a question's (8 November 2026, the owner)
+
+Changes: 268.1 (a signal, danger, alert and success, the brightest, always a ring and an icon).
+
+Why: goal 160's Design leader, at orkUI 0.35.0: the success green (`#86c062`) stands as light as Tech's moss (`#8fbf4a`, kept by
+the owner), so it cannot be the brightest on the table without leaning on the action's green. The owner: success is no ring. So:
+1. **A ring is a failure's or a question's** (danger, alert): the brightest colours on the table, by a lead a person sees over
+   every party's and element's colour; orkUI's test asks a visible margin, not a unit.
+2. **Success is a check and a word**, as today, in its green: told from the parties by its form, never a ring round a card; it
+   keeps 3:1 on every felt, step and plate.
+
+The owner's call.
