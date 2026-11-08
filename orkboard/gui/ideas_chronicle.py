@@ -4,7 +4,7 @@ reads; none writes and none records an event. Keys and data, never words.
     ideas.chronicle {party?}            # {kind, earlier, chapters: [{id, kind, name, day, open, goals?, decisions?}], unreleased}: only the newest chapter is open
     ideas.chronicle_line {party?}       # {earlier}: Release's lens, one line, nothing else read
     ideas.chronicle_chapter {id, party?} # {id, kind, name, day, goals, decisions}; refused in words for a chapter that is gone
-    ideas.chronicle_find {query, party?} # {query, found, more, chapters, unreleased}: the search
+    ideas.chronicle_find {query, party?, id?} # {query, found, more, chapters, unreleased}: the search; `id` (spec 162 E, at most 40 characters) keeps it to one deck: a chapter's id or `unreleased`
     ideas.chronicle_goal {idea}         # a goal as it was (realm/chronicle.py `goal`) and its `quality` record (`ideas.quality`; None when it fails)
     ideas.chronicle_decision {number}   # {number, title, day, entry, changes, changed_by, goal}
     ideas.chronicle_last {party?, n=3}  # {decisions}: the party's last `n` decisions (at most 10), newest first, by code: [{number, title, element, kind: "decision", parties, version, at}]  (spec 150 E1.4)
@@ -51,7 +51,7 @@ class ChronicleMixin:
 
     def chronicle_find(self, args: dict) -> dict:
         state, pages, repo, log = self._chronicle_args()
-        return chronicle_find.find(state, pages, repo, log, args.get("query"), _opt(args, "party"))
+        return chronicle_find.find(state, pages, repo, log, args.get("query"), _opt(args, "party"), _text(args, "id", 40) if args.get("id") else "")
 
     def chronicle_goal(self, args: dict) -> dict:
         slug = _text(args, "idea", 100)

@@ -181,3 +181,19 @@ def test_the_party_reads_write_nothing(host, fake_repo):
     host.command("ideas.chronicle_last", {"party": "design"})
     host.command("ideas.chronicle", {"party": "design"})
     assert tree(host.ideas.root()) == before
+
+
+def test_the_search_kept_to_one_deck_by_its_id(host, fake_repo):
+    tag(fake_repo, "v0.1", "2026-10-10")
+    tag(fake_repo, "v0.2", "2026-10-20")
+    a = through(host, "Purple buttons", "2026-10-05", 1)
+    through(host, "Purple pages", "2026-10-15", 2)
+    c = through(host, "Purple next", "2026-10-25")
+    ask = lambda **kw: host.command("ideas.chronicle_find", {"query": "purple", **kw})
+    assert ask()["found"] >= 3
+    one = ask(id="v:v0.1")
+    assert [ch["id"] for ch in one["chapters"]] == ["v:v0.1"] and [g["idea"] for g in one["chapters"][0]["goals"]] == [a] and one["unreleased"] is None
+    new = ask(id="unreleased")
+    assert new["chapters"] == [] and [g["idea"] for g in new["unreleased"]["goals"]] == [c]
+    assert ask(id="v:v9")["found"] == 0
+    assert ask(id="x" * 90)["found"] == 0                                           # cut at 40 characters, no deck of that id

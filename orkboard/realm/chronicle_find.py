@@ -1,10 +1,11 @@
 """The chronicle's search (docs/specs/134-release-keeps-the-chronicle.md A.6, decisions §238.3): over the goals' titles, the decisions and the sections. No model, nothing written.
 
-    chronicle_find.find(state_dir, pages, repo, log, query, party="")      # `party` (spec 150 E1.4): the search over that party's past only
+    chronicle_find.find(state_dir, pages, repo, log, query, party="", deck="")      # `party` (spec 150 E1.4): the search over that party's past only; `deck` (spec 162 E): over one deck only
         # {query, found, more, chapters: [{id, kind, name, day, goals: [{idea, title, in}], decisions: [{number, title, day, in}]}], unreleased: {goals, decisions} | None}
 
 The query is cut at `QUERY_MAX` and split in at most `WORDS_MAX` words (lower case); an item is found when **every** word is in its text. A goal's text is its title, its spec (every section's parts)
 and its decision's title and entry; `in` says where a word was found: `title`, `spec`, `decision`. A decision of no goal: its title and entry (`in` `decision`).
+`deck` is a chapter's id (`w:2026-10-26`, `v:v0.1`) or `unreleased`: only that deck's goals and decisions are searched (a deck that is not there finds nothing); none, every deck.
 Chapters with no find are left out, the rest are by chapter, newest first; at most `FIND_MAX` items, `more` the number left out. An empty query finds nothing.
 """
 from __future__ import annotations
@@ -43,7 +44,7 @@ def _goal(want: list[str], pages: Path, g: dict, decisions: dict) -> dict | None
     return {"idea": g["idea"], "title": g["title"], "in": [k for k, v in parts.items() if any(w in v.lower() for w in want)]}
 
 
-def find(state_dir: Path, pages: Path, repo: Path, log: "str | Path", query: object, party: str = "") -> dict:
+def find(state_dir: Path, pages: Path, repo: Path, log: "str | Path", query: object, party: str = "", deck: str = "") -> dict:
     """See the module."""
     want = words(query)
     out = {"query": " ".join(want), "found": 0, "more": 0, "chapters": [], "unreleased": None}
@@ -62,8 +63,8 @@ def find(state_dir: Path, pages: Path, repo: Path, log: "str | Path", query: obj
         left -= len(gs) + len(ds)
         return {"id": c.get("id", ""), "kind": c.get("kind", ""), "name": c.get("name", ""), "day": c.get("day", ""), "goals": gs, "decisions": ds} if gs or ds else None
 
-    out["chapters"] = [x for c in got["chapters"] if (x := pick(c)) is not None]
-    if got["unreleased"] is not None:
+    out["chapters"] = [x for c in got["chapters"] if not deck or c.get("id") == deck if (x := pick(c)) is not None]
+    if got["unreleased"] is not None and deck in ("", "unreleased"):
         mine = pick({"goals": got["unreleased"]["goals"], "decisions": got["unreleased"]["decisions"]})
         out["unreleased"] = {"goals": mine["goals"], "decisions": mine["decisions"]} if mine else None
     shown = sum(len(c["goals"]) + len(c["decisions"]) for c in out["chapters"]) + (len(out["unreleased"]["goals"]) + len(out["unreleased"]["decisions"]) if out["unreleased"] else 0)
