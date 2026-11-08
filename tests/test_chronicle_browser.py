@@ -320,3 +320,91 @@ def test_a_deck_of_seven_or_fewer_deals_whole_with_no_all_search_and_on_one_day_
     pg.locator('.release-lane__deal[data-deck="v:0.4"] .chr-card-wrap').first.wait_for(timeout=WAIT_MS)
     assert dealt(pg, "v:0.4") == ["g1", "d301"] and pg.locator(".table-lstrip--all").count() == 0, "on one day the goal first"
     finish(pg, log)
+
+
+# -- a first open over the real host (spec 162 J; decisions §277): the past from history lies once ---------------------------------------------------
+
+import shutil  # noqa: E402
+import subprocess  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+
+HERE = Path(__file__).resolve().parents[1]
+HISTORY = [("201-first-sign", "201"), ("202-then-seat", "202"), ("203-the-lobby", "203"), ("204-no-decision", "")]
+
+
+def _page(slug, decisions):
+    return (f"---\nowner: board\nkind: idea\ntrack: tech\norder: 1\nsize:\npriority: normal\nshort: {slug}\nphase: done\nroute: design, tech\nspec: docs/specs/{slug}.md\n"
+            f"decisions: {decisions}\nby: person\nlaid: history\nschema: 3\n---\n# {slug}\n\n## Gist\n{slug}.\n")
+
+
+@pytest.fixture(scope="module")
+def first_open(tmp_path_factory, gui):
+    """The real host and server over a git project whose goal pages are laid done as history, with decisions: in a log: `(server, browser)`, the browser the gui fixture's, the state its own."""
+    tmp = tmp_path_factory.mktemp("first_open")
+    browser = gui[1]
+    mp = pytest.MonkeyPatch()
+    mp.setenv("ORKCRAFT_STATE_DIR", str(tmp / "state"))
+    repo = tmp / "project"
+    wiki = repo / "llm-wiki/general/pages"
+    (wiki / "ideas").mkdir(parents=True)
+    (wiki / "tracks").mkdir()
+    (repo / "docs").mkdir()
+    (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+    for t in ("design", "product", "tech", "general"):
+        shutil.copy(HERE / f"llm-wiki/general/pages/tracks/{t}.md", wiki / "tracks" / f"{t}.md")
+    log = ["# Decisions\n"]
+    for n, day in ((201, "26 October 2026"), (202, "27 October 2026"), (203, "3 November 2026")):
+        log.append(f"## {n}. Decision {n} ({day}, the owner)\n\nWhy: a reason.\n")
+    (repo / "docs/decisions.md").write_text("\n".join(log), encoding="utf-8")
+    for slug, dec in HISTORY:
+        (wiki / "ideas" / f"{slug}.md").write_text(_page(slug, dec), encoding="utf-8")
+    git = ["git", "-c", "user.email=test@orkcraft.local", "-c", "user.name=Test Runner"]
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run([*git, "add", "-A"], cwd=repo, check=True)
+    subprocess.run([*git, "commit", "-qm", "init"], cwd=repo, check=True)
+    from orkboard.gui.board_host import Orkboard
+    from orkboard.gui.server import Server
+    from orkboard.realm import project_kind
+    host = Orkboard(repo)
+    project_kind.keep(host.ideas.state_dir, "code")
+    host.first_open.tools_skipped = True
+    server = Server(host)
+    thread = server.start_thread()
+    yield server, browser
+    server.stop()
+    thread.join(10)
+    mp.undo()
+
+
+def test_a_first_open_lays_each_history_goal_once_in_its_weeks_deck_never_in_the_discard_and_no_tab_wears_the_dot(first_open):
+    server, browser = first_open
+    ctx = browser.new_context(viewport={"width": 1366, "height": 768})
+    pg = ctx.new_page()
+    errors: list[str] = []
+    pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
+    pg.on("console", lambda m: m.type == "error" and errors.append(f"console: {m.text}"))
+    pg.goto(server.url)
+    pg.locator(".table-tab[data-tab]").first.wait_for(timeout=WAIT_MS)
+    call(pg, "frame/state.js", "openTab", "design")
+    pg.locator('.release-lane__past .chr-deck[data-deck="w:2026-10-26"]').wait_for(timeout=WAIT_MS)       # the lane draws although the flags were raised while it first asked
+    assert [d.get_attribute("data-deck") for d in pg.locator(".release-lane__past .chr-deck").all()] == ["w:2026-11-02", "w:2026-10-26"], "the weeks, newest first"
+    for id_ in ("w:2026-11-02", "w:2026-10-26"):
+        deck(pg, id_).click()
+        pg.locator(f'.release-lane__deal[data-deck="{id_}"] .chr-card-wrap').first.wait_for(timeout=WAIT_MS)
+
+    def goals(id_):
+        return sorted(c.get_attribute("data-goal") for c in pg.locator(f'.release-lane__deal[data-deck="{id_}"] .chr-card-wrap[data-goal]').all())
+    assert goals("w:2026-10-26") == ["201-first-sign", "202-then-seat"] and goals("w:2026-11-02") == ["203-the-lobby", "204-no-decision"], "each in the week of its day"
+    assert sorted(c.get_attribute("data-goal") for c in pg.locator(".release-lane [data-goal].chr-card-wrap, .release-lane .chr-card-wrap[data-goal]").all()) == sorted(h[0] for h in HISTORY), "each card lies once"
+    assert pg.locator(".release-lane__done").count() == 0, "none among the goals done and not yet seen"
+    pg.wait_for_timeout(500)
+    assert pg.locator(".table-tab__new").count() == 0, "no party's tab wears the past's dot"
+    pg.evaluate("() => document.querySelectorAll('[class*=toast]').forEach((e) => { e.style.display = 'none'; })")      # the shot is of the lane
+    shot(pg, "past-first-open-design-1366.png")
+    for tab in ("tech", "product", "design"):                                                           # the dot is not lit by a look at another tab either
+        call(pg, "frame/state.js", "openTab", tab)
+        pg.wait_for_timeout(300)
+        assert pg.locator(".table-tab__new").count() == 0, tab
+    assert not errors, errors
+    ctx.close()
