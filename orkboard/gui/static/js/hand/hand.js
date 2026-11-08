@@ -49,7 +49,7 @@ function useKeys(root) {
       const t = e.target;
       if (!root.current || aloud(t)) return;
       if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
-      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card, .hand-ways-row, .hand-tool, .hand-pot")) lower();
+      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card, .hand-ways-row, .hand-pen, .hand-tool, .hand-pot")) lower();
     };
     const key = (e) => {
       if (e.key === "Escape" && !e.defaultPrevented && !aloud(document.activeElement)) {

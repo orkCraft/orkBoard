@@ -17,6 +17,9 @@ import { named } from "./todoform.js";
 import { actionOf, footOf, headOf, labelOf, signalOf } from "./stopcard.js";
 import { useAbout } from "./about.js";
 
+// Stage G: after *<Leader> decides* comes *Your own words…* (the Pen, dashed until pressed): a field opens on the table beside the question, its bottom on the question's, focused, with *Send to <leader>* under it (an empty field sends nothing; Esc closes
+// it and gives the focus back to the card). Tab runs the ways, *<Leader> decides*, *Your own words…*, *Open…*, *Put it back*; Esc and *Put it back* lower the card and give the focus back to the hand card it rose from.
+export const OWN_WORDS = "Your own words…", OWN_LINE = "Write it what you want; it reads it and goes on.";
 export const ITS_PICK = "its pick", NO_LINE = "Answers with this.", PICK_LINE = "What its leader recommends.", DECIDE_LINE = "It answers with what it recommends.";
 
 const WIDE = typeof matchMedia === "function" ? matchMedia("(min-width: 760px)") : null;
@@ -63,10 +66,10 @@ function useRing(goal, tone) {
 }
 
 /** One way as a hand card: its goal's rune and the way's sign at the top, its name (the pixel face), its whole line, and at the foot who (its pick) and what it costs. */
-function WayCard({ w, s, head, rune }) {
+function WayCard({ w, s, head, rune, btn = null, on = undefined }) {
   const cost = w.cost, much = cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null, leader = w.id === "decide";
   const kind = leader && head ? html`<${Head} race=${head.race} tier=${head.tier} title=${headWords(head)} />` : null;
-  return html`<button type="button" class=${cls("ork-card hand-ans", `el-${rune.hue}`, { "is-pick": w.pick, "is-decide": leader })} data-way=${w.id} data-pick=${w.pick ? "1" : undefined} data-cost=${cost?.gem || undefined}
+  return html`<button type="button" ref=${btn} class=${cls(`ork-card hand-ans el-${rune.hue}`, { "is-pick": w.pick, "is-decide": leader, "hand-ans--pen": w.id === "own" })} aria-expanded=${on === undefined ? undefined : String(on)} data-way=${w.id} data-pick=${w.pick ? "1" : undefined} data-cost=${cost?.gem || undefined}
       aria-label=${`${w.name}${w.pick ? `, ${ITS_PICK}` : ""}: ${s.full}`} title=${w.line} onClick=${w.run}>
     <${CornerTop} rune=${rune} kind=${w.sign} kindNode=${kind} />
     <span class="hand-ans__name">${w.name}</span>
@@ -93,7 +96,20 @@ export function AnswerLifted({ s, anchor, set }) {
     return () => window.removeEventListener("resize", place);
   }, [s.key, anchor]);
   useEffect(() => { box.current?.focus({ preventScroll: true }); }, [s.key]);
-  const { ways, decide } = set, tone = set.tone;
+  const { ways, decide } = set, tone = set.tone, asking = tone === "asks", own = asking ? askedInfo(s).name : "";
+  const [pen, setPen] = useState(false), [words, setWords] = useState(""), penBtn = useRef(), field = useRef(), from = useRef(null);
+  if (anchor?.isConnected) from.current = anchor;
+  useEffect(() => { setPen(false); setWords(""); }, [s.key]);
+  useEffect(() => { if (pen) field.current?.focus({ preventScroll: true }); }, [pen]);
+  useEffect(() => () => {                                              // lowered: the focus goes back to the hand card it rose from (answered, that card is gone)
+    const key = s.key;
+    setTimeout(() => { const back = from.current?.isConnected ? from.current : document.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`); if (back && !document.querySelector(".hand-lifted")) back.focus({ preventScroll: true }); }, 0);
+  }, [s.key]);
+  const send = () => { const text = words.trim(); if (text) sendAnswers(s, [text]); };
+  const fieldKey = (e) => {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setPen(false); penBtn.current?.focus({ preventScroll: true }); }
+    else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); send(); }
+  };
   return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--face hand-lifted hand-lifted--asked${element ? ` el-${hue}` : ""}`, { asks: tone === "asks", fails: tone === "fails" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind} style=${at ? `left:${at.left}px` : undefined}>
     <${CornerTop} rune=${rune} kind=${actionOf(s).sign} signal=${signalOf(s)} />
@@ -105,10 +121,15 @@ export function AnswerLifted({ s, anchor, set }) {
     <div class="hand-ways-cards">
       ${ways.map((w) => html`<${WayCard} key=${w.id} w=${w} s=${s} head=${head} rune=${rune} />`)}
       ${decide && html`<${WayCard} key=${decide.id} w=${{ ...decide, sign: "compass", pick: false, cost: null }} s=${s} head=${head} rune=${rune} />`}
+      ${asking && html`<${WayCard} key="own" w=${{ id: "own", name: OWN_WORDS, line: OWN_LINE, sign: "text", pick: false, cost: null, run: () => setPen(!pen) }} s=${s} head=${head} rune=${rune} btn=${penBtn} on=${pen} />`}
     </div>
     <div class="hand-ways-acts">
       <button type="button" class="ork-btn quiet" data-act="open" onClick=${set.open}>Open…</button>
       <button type="button" class="ork-btn hand-put" data-act="put" onClick=${lower}>Put it back</button>
     </div>
-  </div>`;
+  </div>
+  ${pen && html`<div class="hand-pen" role="group" aria-label="Your own words" style=${at ? `left:${at.left + 144 + 16}px` : undefined}>
+    <textarea ref=${field} class="ork-field hand-pen__text" rows="4" aria-label=${`Your words to ${named(own)}`} placeholder=${`Your words to ${named(own)}…`} value=${words} onInput=${(e) => setWords(e.currentTarget.value)} onKeyDown=${fieldKey}></textarea>
+    <button type="button" class="ork-btn primary" data-act="send-words" onClick=${send}>${`Send to ${named(own)}`}</button>
+  </div>`}`;
 }
