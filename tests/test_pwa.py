@@ -80,7 +80,7 @@ def test_the_app_is_its_own_files_and_nothing_else():
         assert _split(pwa.serve("GET", f"/app/{folder}/README.md"))[0].startswith("HTTP/1.1 404")
     css = _split(pwa.serve("GET", "/app/components.css"))[1].decode()                          # every mask of components.css resolves beside it
     masks = set(re.findall(r"url\(((?:elements|signs)/[a-z]+\.svg)\)", css))
-    assert len(masks) == 46 and masks <= set(pwa.files())                                # five elements, forty-one signs (orkUI 0.15: moon beside night, sword, shield; 0.15.5 question; 0.16 compass, steps)
+    assert len(masks) == 47 and masks <= set(pwa.files())                                # five elements, forty-two signs (orkUI 0.15: moon beside night, sword, shield; 0.15.5 question; 0.16 compass, steps; 0.30 conflict)
     head, body = _split(pwa.serve("HEAD", "/app/app.css"))
     assert head.startswith("HTTP/1.1 200") and body == b""
 
@@ -474,7 +474,7 @@ def test_the_workers_install_fills_its_cache_past_the_http_cache():
 
 def test_service_worker_names_cache_version_and_cache_first_prefixes():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "orkcraft-app-v104" in sw
+    assert "orkcraft-app-v105" in sw
     prefixes = sw[sw.index("CACHE_PREFIXES = ["):sw.index("];", sw.index("CACHE_PREFIXES = ["))]
     assert set(re.findall(r'"([^"]+)"', prefixes)) == set(pwa.CACHE_PREFIXES) == {"fonts/"}
 
