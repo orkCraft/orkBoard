@@ -100,14 +100,14 @@ function arrowsOf(host, links, scale = 1) {
 function Head({ c }) {
   const ways = c.ways_in || [];
   return html`<header class="arch-head">
-    <span class="arena-member__nm arch-name" title=${c.path === "." ? c.name : c.path}>${c.name}</span>
+    <span class="arena-member__nm arch-name ork-plate" title=${c.path === "." ? c.name : c.path}>${c.name}</span>
     <span class="arch-rule" aria-hidden="true"></span>
     ${((c.stack || []).length > 0 || c.unknown > 0) && html`<ul class="arch-stack" aria-label=${`${c.name}: its stack`}>
       ${(c.stack || []).map((s) => html`<li key=${s.name} class="arch-lib" data-role=${s.role} title=${`${s.name} · ${s.role}`}><span class="arch-lib__nm">${s.name}</span><span class="arch-lib__role">${s.role}</span></li>`)}
       ${c.unknown > 0 && html`<li class="arch-lib is-more" title=${`${c.unknown} more not on the list of known libraries`}><span class="arch-lib__nm">${moreWords(c.unknown)}</span></li>`}
     </ul>`}
-    ${ways.length > 0 && html`<div class="arch-ways"><span class="arch-ways__h">${WAYS_IN}</span>
-      <ul class="arch-ways__list">${ways.map((w, i) => html`<li key=${i} class="arch-way" data-kind=${w.kind} title=${w.path || w.name}><${Icon} name="arrow-right" />
+    ${ways.length > 0 && html`<div class="arch-ways"><span class="arch-ways__h ork-plate">${WAYS_IN}</span>
+      <ul class="arch-ways__list">${ways.map((w, i) => html`<li key=${i} class="arch-way ork-plate" data-kind=${w.kind} title=${w.path || w.name}><${Icon} name="arrow-right" />
         <b>${WAY_WORDS[w.kind] || w.kind}</b> <span class="arch-way__what">${w.kind === "script" || w.kind === "bin" ? w.name || base(w.path) : base(w.path)}</span></li>`)}</ul></div>`}
   </header>`;
 }
@@ -153,14 +153,14 @@ export function Architecture({ doc, order, step, pick, party }) {
         <div class="arch-lanes" style=${`height:${links.length * LANE + 8}px`} aria-hidden="true"></div>
         <div class="arch-cols">
           ${cols.map((col) => (col.kind === "shared" ? html`<section key=${`shared:${col.serves.join(",")}`} class="arch-col arch-shared" data-shared=${col.serves.join(",")} aria-label=${SHARED}>
-              <header class="arch-head"><span class="arena-member__nm arch-name">${SHARED}</span><span class="arch-rule" aria-hidden="true"></span>
-                <span class="arena-cap arch-serves">${col.serves.map((p) => names[p] || p).join(" · ")}</span></header>
+              <header class="arch-head"><span class="arena-member__nm arch-name ork-plate">${SHARED}</span><span class="arch-rule" aria-hidden="true"></span>
+                <span class="arena-cap arch-serves ork-plate">${col.serves.map((p) => names[p] || p).join(" · ")}</span></header>
               <div class="arch-layer__parts">${col.parts.map((p) => card(p, SHARED))}</div>
             </section>`
             : html`<section key=${col.c.path} class=${cls("arch-col", { "is-bare": !col.rows.length })} data-container=${col.c.path} aria-label=${col.c.name}>
               <${Head} c=${col.c} />
               ${col.rows.length > 0 && html`<div class="arch-layers">${col.rows.map((r, i) => html`<div key=${i} class=${cls("arch-layer", { "is-gone": !!r.gone })} data-role=${r.role || undefined}>
-                <span class="arch-layer__nm">${ROLE_WORDS[r.role] || ""}</span>
+                <span class="arch-layer__nm ork-plate">${ROLE_WORDS[r.role] || ""}</span>
                 <div class="arch-layer__parts">${r.parts.map((p) => card(p, col.c.name))}</div></div>`)}</div>`}
             </section>`))}
         </div>

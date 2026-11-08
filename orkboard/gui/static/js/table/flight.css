@@ -1,6 +1,7 @@
 /* A failure thrown to the hand leaves its place in the lane (docs/specs/128 C.2, decisions §206.7; table/flight.js `ThrownPlace`): orkUI's `.ork-card-place` (the card's outline in dashes, 5 : 7) as wide as the card was and as high (the page sets
    the height it measured), its words in the caption's face, *Try again* the quieter ink's. Layout only: every colour, face and corner is orkUI's. */
 .table-thrown { display: grid; place-items: center; width: 100%; flex: none; padding: var(--ork-3); color: var(--ork-ink-faint); font: var(--ork-type-caption); text-align: center; }
+.table-thrown__words { color: var(--ork-ink-faint); }   /* on orkUI's flat plate (§275.2) */
 .table-thrown i { font-style: normal; color: var(--ork-ink-muted); }
 
 /* A card that turns on its way (turnfly.js; spec 147 D.2 and E, decisions §251.7, §70): orkUI's `.ork-turn` laid at the box where the card lands, its back the Orkmaster's hand's back (the small seal and the goal's rune in the middle, column.css `.col-fan__seal`), its face a copy of the card.

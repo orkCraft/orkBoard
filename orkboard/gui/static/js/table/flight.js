@@ -116,5 +116,5 @@ export function useThrown(stops, ready = true) {
 /** A lane's place for a failure that lies in the hand: orkUI's card outline where the card lay, its height kept, *Back here on Try again*. */
 export function ThrownPlace({ n, t, h = 0 }) {
   return html`<div class="ork-card-place table-thrown" data-goal=${n.slug} data-task=${t.id} data-about=${`idea:${n.slug} task:${n.slug}/${t.id}`} data-place="thrown" style=${h ? `height:${h}px` : undefined} aria-label=${`${t.title}: back here when you try again`}>
-    <span>Back here on <i>Start again</i></span></div>`;
+    <span class="table-thrown__words ork-plate">Back here on <i>Start again</i></span></div>`;
 }
