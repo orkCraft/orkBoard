@@ -1,0 +1,13 @@
+/* The project in the Orkmaster's header (docs/specs/160 stage J, decisions §272.5; table/projectdeal.js): the column's head says the project's name on its first line and its kind and stage on its second, in the caption face.
+   Layout only; the faces, inks and rings are orkUI's tokens. The cards dealt to the hand are the answer cards' (hand/openedcard.css). */
+@media (min-width: 760px) {
+  .ork-tab.col-head__tab { align-items: center; padding-top: 0; padding-bottom: 0; padding-right: 22px; }
+  .ork-tab.col-head__tab .ork-race__head { align-self: center; }
+  .ork-tab.col-head__tab .col-head__nm { flex: 1; min-width: 0; align-self: flex-start; margin-top: var(--ork-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .col-head__sub { position: absolute; left: calc(var(--ork-5) + 24px + var(--ork-2)); right: var(--ork-1); bottom: var(--ork-2); z-index: 2; display: flex; align-items: baseline; min-width: 0; white-space: nowrap; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+  .col-head__pick { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+  .col-head__pick:hover, .col-head__pick[aria-expanded="true"] { color: var(--ork-ink); text-decoration-style: solid; }
+  .col-head__pick:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+  .col-head__dot { flex: none; white-space: pre; }
+}
+@media (max-width: 759px) { .col-head__sub { display: none; } }
