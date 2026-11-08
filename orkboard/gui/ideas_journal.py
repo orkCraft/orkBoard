@@ -28,6 +28,15 @@ class JournalMixin:
         scope = self._journal_scope(args)
         return {"entries": journals.read(self.state_dir, scope, struck=True), "digest": journals.digest(self.state_dir, scope)}
 
+    def views_when_done(self, slug: str) -> int:
+        """A goal became done (spec 167 H): one view call is begun for each party of its `route` (its page's, else its party), none when the window or the limit is spent; how many were begun."""
+        page = ideas.idea_page(self.root(False), slug)
+        if page is None:
+            return 0
+        parties = [x.strip() for x in page.get("route").split(",") if x.strip()] or [page.get("track")]
+        begin = getattr(self.keeper, "journal_view_for", None)
+        return begin(parties, "done") if begin is not None else 0
+
     def journal_strike(self, args: dict) -> dict:
         scope = self._journal_scope(args)
         got = journals.strike(self.state_dir, scope, _text(args, "id", 100), _str(args, "why", 300))

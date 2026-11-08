@@ -536,3 +536,22 @@ def test_a_board_read_before_gets_the_quiet_flag_once_for_each_done_goal_with_no
     host.ideas._phase_sig = None                                                                 # a second look: the catch-up is not made again
     host.ideas.phase_moved(host.ideas._board_tree)
     assert idea_flag.flag_of(sd, b) is None
+
+
+def test_a_page_moved_to_done_outside_begins_its_views_and_one_laid_done_begins_none(host, monkeypatch):
+    """Spec 167 H: `phase_moved` begins the route's views for a page moved to done, never for a page laid done (spec 155 G.2)."""
+    seen = []
+    monkeypatch.setattr(type(host.ideas), "views_when_done", lambda self, slug: seen.append(slug) or 0)
+    root, slug = _goal(host)
+    host.ideas.tree_flush(force=True)
+    _commit_outside(host, "laid-done", lambda t: "---\nowner: board\nkind: idea\ntrack: general\norder: 8\nphase: done\nby: Cursor\n---\n# Laid done\n\n## Gist\nOld.\n")
+    tree = host.ideas._board_tree
+    with tree.git.lock:
+        tree.follow()
+    host.ideas.phase_moved(tree)
+    assert seen == []
+    _commit_outside(host, slug, lambda t: re.sub(r"phase: \w+", "phase: done", t, count=1))
+    with tree.git.lock:
+        tree.follow()
+    host.ideas.phase_moved(tree)
+    assert seen == [slug]

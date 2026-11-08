@@ -408,7 +408,11 @@ class GateMixin:
 
     def _flag_when_done(self, slug: str) -> None:
         """A goal became done: where there is no gate (results merge into main itself), or when all its commits are in main
-        already (its last task a clean check, after an earlier merge), its flag is raised. Done in dev, it waits for the gate."""
+        already (its last task a clean check, after an earlier merge), its flag is raised. Done in dev, it waits for the gate. The views of its route begin first (spec 167 H)."""
+        try:
+            self.views_when_done(slug)
+        except Exception:                                      # a view never troubles the flag
+            pass
         try:
             git = IdeaGit(Path(self.host.repo_root))
             main, commits = self._gate_main(git), idea_flag.commits_of(self.state_dir, slug)

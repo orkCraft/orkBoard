@@ -396,3 +396,49 @@ def test_a_stored_line_is_read_into_the_view_call_in_the_leaders_voice(host, tec
     _wait(host, tech)
     p = model.calls[0]["prompt"]
     assert "overruled (goal-9): I said no to the cache; my no was overruled." in p and "You said no" not in p and "never say *you*" in p
+
+
+# -- a goal done begins its route's views (spec 167 H) ---------------------------------------------------------------------------------------
+
+def _wait_all(host, *parties):
+    for p in parties:
+        _wait(host, p)
+
+
+def test_a_goal_done_begins_one_view_call_for_each_party_of_its_route(host, tech, design, model):
+    slug = _done_goal(host, tech, "Cache", "The lobby is cached.", "Built.", [])
+    ideas.set_meta(host.ideas.root(), slug, route=f"{tech}, {design}")
+    assert host.ideas.views_when_done(slug) == 2
+    _wait_all(host, tech, design)
+    assert {c["key"] for c in model.steps("journal")} == {f"goal:{tech}", f"goal:{design}"}      # a call a party (one retry each: the stub names no source)
+
+
+def test_a_goal_done_with_no_route_begins_its_partys_view(host, tech, model):
+    slug = _done_goal(host, tech, "Cache", "The lobby is cached.", "Built.", [])
+    ideas.set_meta(host.ideas.root(), slug, route="")
+    assert host.ideas.views_when_done(slug) == 1
+    _wait_all(host, tech)
+    assert {c["key"] for c in model.steps("journal")} == {f"goal:{tech}"}
+
+
+def test_no_view_is_begun_when_the_limit_or_the_window_is_spent_or_the_party_is_busy(host, tech, model):
+    keeper = host.ideas.keeper
+    keeper.budget_ok = lambda: False
+    assert keeper.journal_view(tech, "done") is False and keeper.journal_view_for([tech, tech], "done") == 0
+    keeper.budget_ok = lambda: True
+    keeper.window_until = lambda: time.time() + 3600
+    assert keeper.journal_view(tech, "done") is False
+    keeper.window_until = lambda: None
+    keeper.demo = True
+    assert keeper.journal_view(tech, "ask") is False and keeper.journal_view("ghost", "ask") is False
+    keeper.demo = False
+    keeper._claim(f"goal:{tech}", "busy")
+    assert keeper.journal_view(tech, "done") is False
+    assert model.calls == []
+
+
+def test_the_window_flag_of_a_done_goal_begins_the_views_first(host, tech, monkeypatch):
+    seen = []
+    monkeypatch.setattr(type(host.ideas), "views_when_done", lambda self, slug: seen.append(slug) or 0)
+    host.ideas._flag_when_done("some-goal")
+    assert seen == ["some-goal"]
