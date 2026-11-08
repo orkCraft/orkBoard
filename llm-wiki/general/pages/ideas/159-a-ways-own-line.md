@@ -12,6 +12,7 @@ spec: docs/specs/159-a-ways-own-line.md
 decisions: 270
 by: claude-code
 schema: 3
+gate: fc30302 · 36 files · green
 ---
 # A way's own line: each way of a question says what it leads to, on its card
 
