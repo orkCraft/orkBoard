@@ -58,6 +58,6 @@ def test_shots(gui):
         pg.get_by_text("New party").first.click(); pg.wait_for_timeout(1500)
         pg.screenshot(path=str(OUT / f"{TAG}-chair.png"))
         pg.keyboard.press("Escape"); pg.wait_for_timeout(800)
-    pg.locator(".stall-pack").first.click(); pg.wait_for_timeout(1500)
+    pg.evaluate("() => document.querySelector('.table-tabs .stall-pack')?.click()"); pg.wait_for_timeout(1500)
     dress(pg, "pack")
     pg.screenshot(path=str(OUT / f"{TAG}-pack.png"))

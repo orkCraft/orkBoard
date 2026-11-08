@@ -12,6 +12,8 @@ the product**. Each of the three goes against a written decision (the door, §24
   down the table from its top edge (`../table-look/`). **Out, the person is away**: the table's light goes, the felt flat
   and darker, the lanes unlit but for the rule under their tabs; the cards keep their faces and a signal stays as bright.
   Pulled, the chain hangs longer and the bead lower.
+- **The backpack and the chain share the head of the window's right column** (the Release column, the discard), over its
+  label: 188 px holds both, the column is not widened; the tabs' row ends with the new chair.
 - **The backpack**, drawn in pixels: shut (the flap down, its buckle fastened) and open (the flap thrown back, a card in
   its mouth). **Open, the table lies in its leather**: a leather frame with its stitches in place of the bronze, two straps
   with their buckles over the top edge, no rivets. Shut, the bronze is back.

@@ -39,6 +39,16 @@
       + px(9, 2, 2, 2, B)                                                                                      // its buckle, loose
       + px(6, 13, 1, 3, S) + px(13, 13, 1, 3, S) + px(7, 14, 6, 2, D);
     pack.insertAdjacentHTML('afterbegin', `<svg class="rt-pack" viewBox="3 1 14 18" width="31" height="40" shape-rendering="crispEdges" aria-hidden="true">${open ? opened : shut}</svg>`);
+    // its place: the head of the window's right column (the Release column, the discard), beside the lamp's chain
+    const lane = $('.release-lane')?.getBoundingClientRect();
+    $('.rt-pack-here')?.remove();
+    if (lane) {
+      const here = pack.cloneNode(true);
+      here.classList.add('rt-pack-here');
+      here.style.left = `${lane.left + 12}px`;
+      document.body.append(here);
+      pack.classList.add('rt-moved');
+    }
   }
 
   // ---- the new chair: its crafts dealt to the hand, as a question's answers are --------------------------------

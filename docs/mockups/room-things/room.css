@@ -71,3 +71,7 @@
 }
 
 .table-tabs__end > .table-tabcell { flex: none; }
+
+/* the backpack and the chain share the right column's head (the Release column, the discard), over its label */
+.rt-pack-here { position: fixed !important; top: 2px; z-index: 70; }
+.table-tabs .stall-pack.rt-moved { display: none !important; }
