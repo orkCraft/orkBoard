@@ -12,6 +12,7 @@ spec: docs/specs/160-the-tables-look-and-the-rooms-things.md
 decisions: 268, 269, 271, 272, 273, 275
 by: claude-code
 schema: 3
+gate: 5228b60 · 103 files · red
 ---
 # The table's look and the room's things: colour by party, felt and light, the lamp, the backpack and the chair, the discard beside the table
 
@@ -70,6 +71,7 @@ orkUI first (§269.9): A and B are done in orkUI (/home/user/orkui), released as
   - proves: Design's "When the page opens at 1280 × 800 on Tech's tab with the lamp lit, then the felt is moss…", "When the phone opens `/app/` at 390 × 844 with the person Here…" ([look] lines: the person judges the pictures)
 
 ## Open questions
+- The gate is red on one test only, red on main before goal 158 too: tests/test_pwa_frame_browser.py::test_a_notification_opens_the_app_logged_and_the_goal_it_names_is_picked (the app keeps `#goal=signin` in its address after picking the goal; the test wants the address clean). Which is right? (**the address clean, as the test says** / the goal kept in the address) — a red from before, not this goal's
 - Party name below 4.5:1 contrast? (**light text, the party's colour in the rule under it** / the party's hue lightened to 4.5:1) — the mockup's muted closed tabs and *Release is free* blue fall under AA on dark felt (WCAG 1.4.3) · light text, the party's colour in the rule under it: Names always readable; the party is told by its rule, pennant and felt · the party's hue lightened to 4.5:1: The name keeps its hue; light hues drift toward the signals' brightness
   - Answered: light text, the party's colour in the rule under it and in its pennant (the person, 2026-11-08)
 - Dithered light steps under text? (**no: words sit on a flat plate, steps between** / yes: the steps run under all, as the mockup) — a 2 px checker under 13 px text has no single contrast to test (WCAG 1.4.3, 1.4.11) · no: words sit on a flat plate, steps between: Every word's contrast is one number a test can check on each felt · yes: the steps run under all, as the mockup: The light is unbroken; small words over the checker shimmer and blur
