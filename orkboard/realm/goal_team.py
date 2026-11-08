@@ -342,7 +342,7 @@ def hero_of(root: Path, slug: str):
     craft = map_parts.craft_of(Path(root), slug)
     page = ideas.track_page(root, slug)
     kept = heroes.get((page.get("hero") if page is not None else "") or "")
-    return kept if kept is not None and kept.craft == craft else heroes.default(craft)
+    return kept if kept is not None and heroes.sits_at(kept, craft) else heroes.default(craft)
 
 
 def set_hero(root: Path, slug: str, hero_id: str) -> None:
@@ -354,7 +354,7 @@ def set_hero(root: Path, slug: str, hero_id: str) -> None:
         raise ValueError(f"No hero {hero_id}")
     if h.craft == "release" or craft == "release":
         raise ValueError("Release's hero is fixed")
-    if h.craft != craft:
+    if not heroes.sits_at(h, craft):
         raise ValueError(f"{h.name} is not a hero of this party's craft")
     with ideas.LOCK:
         page = ideas.track_page(root, slug)

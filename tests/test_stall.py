@@ -109,7 +109,7 @@ def test_a_tech_partys_chair_has_its_heroes_its_tool_and_its_tiers(host):
     got = stall(host, party)
     assert got["chair"] == party and [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier"]
     assert shelf(got, "hero")["kind"] == "heroes" and shelf(got, "tool")["kind"] == "small"
-    assert [w["id"] for w in shelf(got, "hero")["wares"]] == ["sh-c4", "sh-xp"]
+    assert [w["id"] for w in shelf(got, "hero")["wares"]] == ["sh-c4", "sh-xp", "sh-scene"]
     xp = ware(got, "hero", "sh-xp")
     assert xp["word"] == "Spike Shaman" and xp["stats"] == {"school": "Extreme programming", "flow": "test → code → refactor", "size": "standard", "decides": 3, "says_no": 2}
     assert xp["head"]["tier"] == "elder" and xp["head"]["race"] and xp["price"] == {"word": "one pass"}
