@@ -10,10 +10,11 @@
 /* the Orkmaster's column pinned at the window's left (spec 128 B.1, decisions §206.2): the table's height, off the table on orkUI's room as the hand is, its own width (`--column-w`; the hand's first track follows it, so its lanes stand under the table's: hand/hand.css); the table to its right, the hand under both */
 .frame[data-column] { grid-template-columns: var(--column-w) minmax(0, 1fr); }
 .frame[data-column] > .frame-hand { grid-column: 1 / -1; }
+/* the discard beside the table (spec 160 D, decisions §273.1): the window's right column, the table's height, at its old width (a lane and its gutter), flush with the window's right edge; the hand's last track (`--col-w`) stands under it */
+@media (min-width: 760px) { .frame[data-column][data-discard] { grid-template-columns: var(--column-w) minmax(0, 1fr) calc(var(--col-w) + var(--ork-4)); } }
 .frame-column { position: relative; z-index: 1; min-width: 0; min-height: 0; background: var(--ork-room); }
-/* the Release column (spec 156 D.1, decisions §261.7–§261.10): no edge. At 760 px and up `--cols` is the lanes, the tabs' end, Live's lane (`--col-w`, when the project has a Live party: `data-live`) and Release's lane (`--col-w`), the last, flush with the window's right edge
-   less the gutter; the tabs and the hand read it, the Board reads `--board-cols` (the same less Release's track: Release's lane is the discard, beside the pane: table/lane.js). Under 760 px nothing changes. */
+/* the discard's column (spec 156 D.1, decisions §261.7–§261.10, §273): no edge. At 760 px and up `--cols` is the lanes (Release's among them), the tabs' end and Live's lane (`--col-w`, when the project has a Live party: `data-live`); the tabs and the Board read it (`--board-cols` is the same). The discard is beside the table, outside it (table/lane.js); the hand's own grid ends in a track as wide as it. Under 760 px nothing changes. */
 @media (min-width: 760px) {
-  .frame { --live-t: ; --cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr) var(--live-t) var(--col-w); --board-cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr) var(--live-t); }        /* Live's track only when the project has a Live party */
+  .frame { --live-t: ; --cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr) var(--live-t); --board-cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr) var(--live-t); }        /* Live's track only when the project has a Live party */
   .frame[data-live] { --live-t: var(--col-w); }
 }

@@ -89,13 +89,14 @@ def states(pg):
 
 # -- the tabs and the lanes ---------------------------------------------------------------------------------------------------------------------
 
-def test_at_the_wide_width_release_and_live_are_the_last_tabs_live_first_and_at_the_narrow_width_they_are_kept_in_the_boards_order(gui):
+def test_at_the_wide_width_release_stands_in_the_leaders_row_and_live_is_the_last_tab_and_at_the_narrow_width_they_are_kept_in_the_boards_order(gui):
     pg, log = open_page(gui, RoadHost(bare=True))
     try:
-        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "live", "release"], "Live before Release, Release last"
-        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "3", "three lanes before the tabs' end; Live's lane follows it and Release's is the discard"
-        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".table-lane[data-party]").count() == 4
-        assert pg.locator('.table-lane[data-party="release"]').count() == 0 and pg.locator('.table-lane[data-party="live"]').count() == 1, "Live has a lane, Release's is the discard"
+        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"], "Release in the leaders' row in the Board's order, Live last"
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "4", "four lanes before the tabs' end, Release's among them; Live's lane follows it and the discard is the window's column beside the table"
+        assert pg.locator(".hand-lane").count() == 6 and pg.locator(".table-lane[data-party]").count() == 5
+        assert pg.locator('.table-lane[data-party="release"]').count() == 1 and pg.locator('.table-lane[data-party="live"]').count() == 1, "Release has a lane as any party, Live has one after the end"
+        assert pg.locator(".frame > .release-lane").count() == 1 and pg.locator(".frame-table .release-lane").count() == 0, "the discard is beside the table, outside it"
         assert pg.locator(".ork-portal-ring__before, .ork-portal-ring__after, .ork-portal-ring").count() == 0, "their heads have left the ring"
     finally:
         pg.close()
@@ -170,7 +171,7 @@ def test_release_wakes_for_a_task_that_runs_and_sleeps_with_nothing_to_do(gui):
 
 # -- the hand ------------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_road_partys_cards_lie_in_the_last_lane_at_its_right_end_before_the_potions(gui):
+def test_a_road_partys_cards_lie_in_its_lane_under_its_tab_before_the_potions(gui):
     host = RoadHost()
     host.needs.append(need("asks", "release", "gate", "Hold the release?", "Hold it for the weekend?", at="2026-10-20T10:30:00",
                            asked=[{"ask": "Hold it for the weekend?", "choices": ["Yes", "No"], "pick": None, "why": "", "by": None, "look": False}]))
@@ -178,11 +179,11 @@ def test_a_road_partys_cards_lie_in_the_last_lane_at_its_right_end_before_the_po
     pg, log = open_page(gui, host)
     try:
         pg.locator('.hand-stack[data-goal="gate"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator('.hand-lane[data-lane="4"] .hand-stack[data-goal="gate"]').count() == 1, "in the last lane, where the lanes end (Release's lane is the discard)"
+        assert pg.locator('.hand-lane[data-lane="4"] .hand-stack[data-goal="gate"]').count() == 1, "in Release's lane, as any party's (the discard is the column beside the table)"
         assert pg.locator('.hand-lane[data-lane="3"] .hand-stack[data-goal="theme"]').count() == 1
         road = pg.locator('.hand-stack[data-goal="gate"]').bounding_box()
-        live = tab(pg, "live").bounding_box()
-        assert road["x"] >= live["x"] - 60 and road["x"] + road["width"] <= pg.viewport_size["width"], "under Live's tab, at the hand's right"
+        release = tab(pg, "release").bounding_box()
+        assert road["x"] >= release["x"] - 60 and road["x"] + road["width"] <= pg.viewport_size["width"], "under Release's tab, in the leaders' lanes"
         assert pg.locator(".hand-end .hand-die").count() == 1
     finally:
         pg.close()
@@ -202,10 +203,10 @@ def test_with_no_gate_there_is_no_ring_release_and_live_are_tabs_and_nothing_is_
     pg, log = open_page(gui, host, width)
     try:
         pg.wait_for_timeout(400)
-        assert tabs(pg) == (["orkmaster", "tech", "design", "product", "live", "release"] if width == "wide" else ["orkmaster", "tech", "design", "product", "release", "live"])
+        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"]
         assert pg.locator(".ork-portal-ring, .portal-host, .ork-portal, [data-portal-card]").count() == 0
-        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("3" if width == "wide" else "6")
-        assert pg.locator(".hand-lane").count() == (5 if width == "wide" else 6)
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("4" if width == "wide" else "6")
+        assert pg.locator(".hand-lane").count() == 6
         assert pg.locator(".table-end").count() == 0 and pg.locator(".release-lane .hand-done, .release-lane [data-portal-card]").count() == 0, "nothing done, nothing ready"
         shot(pg, f"c113-no-gate-{width}", still=False)
         tab(pg, "release").click()
@@ -237,16 +238,16 @@ def test_the_ring_comes_and_goes_with_the_gate_and_the_tabs_stay_where_they_are(
     host.gate_doc = dict(NO_GATE)
     pg, log = open_page(gui, host)
     try:
-        assert pg.locator(".ork-portal-ring").count() == 0 and tabs(pg)[-2:] == ["live", "release"]
+        assert pg.locator(".ork-portal-ring").count() == 0 and tabs(pg)[-2:] == ["release", "live"]
         host.nodes.append(node("music", "tech", "Lobby music loop", "discard", state="done", element="void", updated="2026-10-20T12:00:00"))
         host.gate_doc = {**GATE, "commits": 2, "files": 1, "ideas": [{"slug": "music", "title": "Lobby music loop", "goal": "tech", "tasks": 1}]}      # a main branch appears, and a goal is ready for it
         host.bump({})
         pg.locator(".release-lane .ork-portal-ring").wait_for(timeout=WAIT_MS)
-        assert tabs(pg)[-2:] == ["live", "release"] and card(pg, "music").count() == 1
+        assert tabs(pg)[-2:] == ["release", "live"] and card(pg, "music").count() == 1
         host.gate_doc = dict(NO_GATE)
         host.bump({})
         pg.locator(".release-lane .ork-portal-ring").wait_for(state="detached", timeout=WAIT_MS)
-        assert tabs(pg)[-2:] == ["live", "release"]
+        assert tabs(pg)[-2:] == ["release", "live"]
     finally:
         pg.close()
     assert not log, "\n".join(log)

@@ -10,8 +10,7 @@ import { mapData } from "../shell/store.js";
 import { Tabs } from "./tabs.js";
 import { Pane, back } from "./pane.js";
 import { litKey, elOf, mineKey, useLowering } from "./card.js";
-import { columnOn, onRoute, openTabOf, partiesAll, tabsNow } from "./data.js";
-import { ReleaseLane, laneShown } from "./lane.js";
+import { onRoute, openTabOf, partiesAll, tabsNow } from "./data.js";
 import { useFirstStart } from "./parties.js";
 import "./wayparts.js";                                   // the goal's way's pages over the pane (spec 100)
 
@@ -67,7 +66,7 @@ function useBackButton(open, narrow) {
 }
 
 export function Table({ column = false }) {
-  const parties = partiesAll(), tabs = tabsNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(tabs.length, narrow);   // `tabs`: the lanes' parties and, at the wide width, Release last (spec 156 D.2)
+  const parties = partiesAll(), tabs = tabsNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(tabs.length, narrow);   // `tabs`: the lanes' parties, Release among them in the route's order (spec 160 D)
   const project = currentProject.value?.path || "";
   const was = useRef(project);
   useEffect(() => { const from = was.current; was.current = project; if (from && from !== project) dropPick(); restoreTab(); lower(); closeOver(); }, [project]);   // another project: its tab, nothing picked, nothing open
@@ -95,12 +94,10 @@ export function Table({ column = false }) {
     addEventListener("keydown", off, true);
     return () => { clearInterval(poll); lit?.classList.remove("is-lit"); removeEventListener("pointerdown", off, true); removeEventListener("keydown", off, true); };
   }, [litKey.value]);
-  const lane = columnOn() && laneShown();                                                                  // the Release column: the discard beside the pane, on every tab (spec 156 D.3)
-  return html`<div class="table" ref=${host} data-lane=${lane ? "1" : undefined} data-tab=${current} data-narrow=${String(narrow)} data-compact=${String(compact)}>
+  return html`<div class="table" ref=${host} data-tab=${current} data-narrow=${String(narrow)} data-compact=${String(compact)}>
     <${Tabs} parties=${tabs} all=${parties} current=${current} narrow=${narrow} compact=${compact} column=${column} />
     <div class="table-under">
       <${Pane} parties=${parties} tab=${current} narrow=${narrow} column=${column} />
-      ${lane && html`<${ReleaseLane} tab=${current} parties=${parties} />`}
     </div>
   </div>`;
 }

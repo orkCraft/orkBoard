@@ -50,19 +50,16 @@ export const roadSlugs = (all = partiesAll()) => new Set(Object.values(roadParti
 export const isRelease = (g) => !!g && g.party_craft === "release";
 export const isLive = (g) => !!g && LIVE_CRAFTS.includes(g.party_craft) && roadParties().live?.slug === g.slug;
 
-/** The parties of the Board's lanes: every party, but at the wide width not Release (its lane is the discard: table/lane.js) and Live after the others (its tab and its lane stand after the tabs' end). */
+/** The parties of the Board's lanes and of the tabs: every party in the Board's order (Release a craft as any, its tab in the leaders' row: spec 160 D, decisions §273.2), but at the wide width Live after the others (its tab and its lane stand after the tabs' end). The discard is no party's lane: it is the window's right column (table/lane.js). */
 export function partiesNow() {
   const all = partiesAll();
   if (!wide.value) return all;
-  const { release, live } = roadParties(all), rest = all.filter((g) => g !== release && g !== live);
+  const { live } = roadParties(all), rest = all.filter((g) => g !== live);
   return live ? [...rest, live] : rest;
 }
 
-/** The parties of the tabs: the lanes' and, at the wide width, Release last (spec 156 D.2). */
-export function tabsNow() {
-  const lanes = partiesNow(), release = wide.value ? roadParties().release : null;
-  return release ? [...lanes, release] : lanes;
-}
+/** The parties of the tabs: the lanes' (spec 160 D: Release stands among them in the route's order). */
+export const tabsNow = partiesNow;
 
 /** How many of the lanes stand before the tabs' end (`--lanes`): all but Live's at the wide width, where Live's lane follows the end. */
 export const lanesBeforeEnd = () => partiesNow().length - (wide.value && roadParties().live ? 1 : 0);
