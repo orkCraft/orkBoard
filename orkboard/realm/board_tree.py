@@ -115,6 +115,32 @@ class BoardTree:
         got = _git(self.path, "log", "-1", "--format=%h%x09%an", "--", rel).stdout.strip().split("\t")
         return (got[0], got[1]) if len(got) == 2 else ("", "")
 
+    def _page_days(self, *args: str) -> dict[str, str]:
+        """One `git log` over the Board's pages: `{slug: author day}` of the first commit listed (newest first) that names each page
+        (`--name-only`); with `--diff-filter=A`, the one that added it. Empty when the tree is not made."""
+        folder = f"{self.wiki_rel}/pages/ideas"
+        if not self.exists():
+            return {}
+        proc = _git(self.path, "log", "--format=%x00%ad", "--date=format:%Y-%m-%d", *args, "--name-only", "--", folder)
+        if proc.returncode != 0:
+            return {}
+        days: dict[str, str] = {}
+        for block in proc.stdout.split("\x00")[1:]:
+            day, *names = block.splitlines()
+            for name in names:
+                if name.startswith(folder + "/") and name.endswith(".md"):
+                    days.setdefault(Path(name).stem, day.strip())
+        return days
+
+    def laid_days(self) -> dict[str, str]:
+        """The day (author date, `YYYY-MM-DD`) of the commit that added each page under pages/ideas, by slug: one `git log --diff-filter=A`,
+        not a call a page (spec 162). A page added twice (removed, laid again) has its latest laying."""
+        return self._page_days("--diff-filter=A")
+
+    def moved_days(self) -> dict[str, str]:
+        """The day of the commit that last changed each page under pages/ideas, by slug: one `git log` for them all (spec 162)."""
+        return self._page_days()
+
     def note(self, title: str, what: str, now: float) -> None:
         """A write of the Board's: committed with the others within COMMIT_AFTER_S."""
         if self._since is None:

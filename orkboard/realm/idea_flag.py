@@ -69,16 +69,36 @@ def tally(root: Path, state_dir: Path, slug: str, *, now: dt.datetime | None = N
             "usd": round(spent, 2) if spent else None, "days": max(1, (now - min(starts)).days) if starts else None}
 
 
-def raise_flag(root: Path, state_dir: Path, slug: str, by: str, commit: str = "") -> dict:
+def _stamp(at: dt.datetime | dt.date | str | None) -> str:
+    """The flag's `at`: now, or the day the host gives (a date, a datetime or an ISO text), kept as an ISO time."""
+    if at is None:
+        return dt.datetime.now().isoformat(timespec="seconds")
+    if isinstance(at, dt.datetime):
+        return at.isoformat(timespec="seconds")
+    if isinstance(at, dt.date):
+        return dt.datetime.combine(at, dt.time()).isoformat(timespec="seconds")
+    text = str(at).strip()
+    try:
+        return dt.datetime.fromisoformat(text).isoformat(timespec="seconds")
+    except ValueError:
+        raise ValueError(f"A flag's day is a date, not {text!r}") from None
+
+
+def raise_flag(root: Path, state_dir: Path, slug: str, by: str, commit: str = "", *,
+               at: dt.datetime | dt.date | str | None = None) -> dict:
     """Write the goal's flag, `{"at", "by", "commit", **tally}`, once: a goal that has one keeps it, and that is what is
-    returned. `by`: "gate" or "done". `commit`: the merge that took it into main (the last commit of its work when it is done)."""
+    returned, its `at` and `by` never rewritten. `by`: "gate" or "done". `commit`: the merge that took it into main (the last
+    commit of its work when it is done). `at`: a day the host gives (a goal read done long after it was; spec 162), for `by: done` only."""
     if by not in BY:
         raise ValueError(f"A flag is raised by the gate or when the goal is done, not {by!r}")
+    if at is not None and by != "done":
+        raise ValueError("A flag is given a day only when the goal is done, not by the gate")
+    stamp = _stamp(at)
     with ideas.LOCK:
         have = flag_of(state_dir, slug)
         if have is not None:
             return have
-        got = {"at": dt.datetime.now().isoformat(timespec="seconds"), "by": by, "commit": str(commit or ""),
+        got = {"at": stamp, "by": by, "commit": str(commit or ""),
                **tally(root, state_dir, slug)}
         ideas._write_json(flag_path(state_dir, slug), got)
     return got
