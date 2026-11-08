@@ -218,3 +218,9 @@ What I expect:
 - The laid day is the author day of the commit that added the page; for a page moved to done after it was read, the day of the commit that moved it.
 - The quiet flag's commit is that commit; a history page calls no `collide_released` and logs only `goal_moved_outside`, as today.
 - A goal moved to done outside after it was read gets the same quiet flag and §277.2's day; it stays in the discard until seen, as today.
+### Accepted
+- met: When phase_moved first reads a page laid done, then its flag is raised once, `by: done`, at the day history_day gives, with no keeper fold, no journal line and no `idea_flagged` event.
+- met: When a Board read before this change opens again, then each done goal with no plan and no flag gets that quiet flag once, and a goal done in dev waiting for the gate gets none.
+- met: When history_day dates a page, then it takes the newest of its decisions: in the log, else the highest §N in the log its spec file names, else the day of the commit that laid it.
+- met: When chronicle.read is asked for a party, then a goal whose page route: names it is in its past while the state has no route, and each decision that goal carries stands under it.
+- met: When chronicle_find is given a deck's id with a query, then it finds only among that deck's goals and decisions in the party's past, and every word must be in an item found.
