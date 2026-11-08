@@ -233,7 +233,7 @@ RIPE_HELD = "ripe_held"          # idea, left_s (what was left of the wait when 
 RIPE_DONE = "ripe_done"          # idea: the wait ended and the leaders' decision was written
 
 # Spec 125 D (decisions §203): a leader's digest of its own journal, written in the background. Never a word of the journal or of the digest.
-JOURNAL_DIGESTED = "journal_digested"   # party, entries (how many the call read), chars (of the digest kept), seconds, cost (None: unrecorded)
+JOURNAL_DIGESTED = "journal_digested"   # party, entries (how many the call read), chars (of the digest kept), seconds, cost (None: unrecorded), why (done, ask, open or add: what began the view), dropped (how many lines were dropped; a count, never a word)
 
 # Spec 131 A (decisions §233): a decision cut into the leaders' slices, and a leader's fold of the slices past the bound, both in the background. Never a word of a decision or of a slice.
 SLICES_CUT = "slices_cut"        # decision (its number), parties (how many got a slice), none (how many none), replaced (slices replaced), seconds, cost (None: unrecorded), failed (true: nothing kept)
