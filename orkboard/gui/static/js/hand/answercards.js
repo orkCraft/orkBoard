@@ -84,16 +84,20 @@ export function AnswerLifted({ s, anchor, set }) {
   const rune = { name: element, hue, dim: !element }, goal = s.node?.slug || s.row?.idea || "";
   useAbout(s);
   useRing(goal, set.tone === "fails" ? "fails" : "asks");
-  useLayoutEffect(() => {                                              // over the slot it left, kept inside the hand's width; its ways start where the hand's cards lie, after the + card
+  useLayoutEffect(() => {                                              // risen at the right end of the ways row, over its acts (never over a lane's Talk or question); the sunk hand shrinks into the strip right of the ways
     const place = () => {
-      const hand = box.current?.parentElement, a = anchor?.isConnected ? anchor.getBoundingClientRect() : null;
+      const hand = box.current?.parentElement, r = row.current?.getBoundingClientRect();
       if (!hand) { setAt(null); return; }
-      const h = hand.getBoundingClientRect(), plus = hand.querySelector(".hand-plus")?.getBoundingClientRect();
-      setAt({ left: a ? Math.max(0, Math.min(a.left - h.left, h.width - 144)) : 0, ways: Math.max(0, plus ? plus.right - h.left + 28 : 200) });
+      const h = hand.getBoundingClientRect(), plus = hand.querySelector(".hand-plus")?.getBoundingClientRect(), ways = Math.max(0, plus ? plus.right - h.left + 28 : 200);
+      const end = r && r.width ? r.right - h.left : h.width, left = Math.max(0, Math.min(end - 144, h.width - 144 - 12));
+      hand.style.setProperty("--hc-sunk-s", String(Math.max(0.2, Math.min(0.5, (h.width - end - 16) / h.width))));
+      setAt({ left, ways });
     };
     place();
+    const watch = typeof ResizeObserver === "function" && row.current ? new ResizeObserver(place) : null;
+    watch?.observe(row.current);
     window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
+    return () => { watch?.disconnect(); window.removeEventListener("resize", place); box.current?.parentElement?.style.removeProperty("--hc-sunk-s"); };
   }, [s.key, anchor]);
   useEffect(() => { box.current?.focus({ preventScroll: true }); }, [s.key]);
   const { ways, decide } = set, tone = set.tone, asking = tone === "asks", own = asking ? askedInfo(s).name : "";
@@ -128,7 +132,7 @@ export function AnswerLifted({ s, anchor, set }) {
       <button type="button" class="ork-btn hand-put" data-act="put" onClick=${lower}>Put it back</button>
     </div>
   </div>
-  ${pen && html`<div class="hand-pen" role="group" aria-label="Your own words" style=${at ? `left:${at.left + 144 + 16}px` : undefined}>
+  ${pen && html`<div class="hand-pen" role="group" aria-label="Your own words" style=${at ? `left:${Math.max(0, at.left - 16 - 360)}px;width:${Math.min(360, at.left - 16)}px` : undefined}>
     <textarea ref=${field} class="ork-field hand-pen__text" rows="4" aria-label=${`Your words to ${named(own)}`} placeholder=${`Your words to ${named(own)}…`} value=${words} onInput=${(e) => setWords(e.currentTarget.value)} onKeyDown=${fieldKey}></textarea>
     <button type="button" class="ork-btn primary" data-act="send-words" onClick=${send}>${`Send to ${named(own)}`}</button>
   </div>`}`;

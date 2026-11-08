@@ -94,6 +94,8 @@ def test_a_lifted_question_stays_a_hand_card_in_its_ring_and_its_ways_are_cards_
         assert row.evaluate("e => getComputedStyle(e).filter") == "grayscale(1)", "grey"
         top, hand = card.bounding_box(), pg.locator(".hand").bounding_box()
         assert top["y"] + top["height"] < pg.locator(".hand-ways-row").bounding_box()["y"] + 1, "the question stands on the table's foot over its ways"
+        wr = pg.locator(".hand-ways-row").bounding_box()
+        assert abs(top["x"] + top["width"] - (wr["x"] + wr["width"])) <= 2, "at the right end of the ways row, over its acts"
         assert top["y"] >= 0 and hand["y"] > 0
         narrow.no_sideways(pg)
         shot(pg, "question")
@@ -240,7 +242,7 @@ def test_your_own_words_opens_a_focused_field_beside_the_question_and_sends_the_
         assert field.evaluate("e => e === document.activeElement"), "focused"
         assert own.evaluate("e => getComputedStyle(e).borderStyle") == "solid"
         box, q = pg.locator(".hand-pen").bounding_box(), card.bounding_box()
-        assert abs(box["y"] + box["height"] - (q["y"] + q["height"])) <= 2 and box["x"] >= q["x"] + q["width"], (box, q)
+        assert abs(box["y"] + box["height"] - (q["y"] + q["height"])) <= 2 and box["x"] + box["width"] <= q["x"], (box, q)      # left of the question: the right of it is the table's empty foot and the discard
         send = pg.get_by_role("button", name="Send to ")
         assert send.inner_text().strip().startswith("Send to ")
         shot(pg, "pen")
@@ -304,6 +306,31 @@ def test_a_goal_in_talk_lifted_lays_its_leaders_talk_and_its_question_on_the_tab
         assert pg.locator(".plan-wait").count() == 0, "something was said: not the empty line"
         assert board.locator(".plan-talk button, .plan-talk input").count() == 0, "read-only: nothing to press"
         shot(pg, "talk-table")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_risen_question_covers_no_lanes_talk_and_the_sunk_hand_can_be_seen(gui):
+    """Spec 158 H, Design's Done when 5: at 1280 x 800 the risen question stands right of the ways, over no lane's Talk or question; the sunk hand shows beside the ways row, grey and inert."""
+    pg, host, log = open_hand(gui, host=TalkHost())
+    try:
+        card = lift(pg, "asks", "phones")
+        pg.locator(".plan-talk").first.wait_for(timeout=WAIT_MS)
+        q = card.bounding_box()
+        for lane in pg.locator(".plan-talk").all():
+            for part in lane.locator(":scope > *, .plan-talk__ask > *").all():
+                b = part.bounding_box()
+                if not b or not b["width"]:
+                    continue
+                apart = q["x"] >= b["x"] + b["width"] or q["x"] + q["width"] <= b["x"] or q["y"] >= b["y"] + b["height"] or q["y"] + q["height"] <= b["y"]
+                assert apart, ("the question covers Talk", q, b)
+        row, ways = pg.locator(".hand-row.is-sunk"), pg.locator(".hand-ways-row").bounding_box()
+        assert row.evaluate("e => e.inert") and row.evaluate("e => getComputedStyle(e).filter") == "grayscale(1)"
+        r = row.bounding_box()
+        assert r["x"] >= ways["x"] + ways["width"] - 2 and r["width"] > 100, ("the sunk hand beside the ways, not under them", r, ways)
+        assert row.locator(".hand-card, .hand-slot").count() > 0
+        shot(pg, "product-talk")
     finally:
         pg.close()
     assert not log, "\n".join(log)

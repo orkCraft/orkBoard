@@ -87,7 +87,7 @@
   .hand .hand-lifted--asked.asks { box-shadow: 0 0 0 2px var(--ork-alert), -14px 10px 30px var(--ork-scrim); }
   .hand .hand-lifted--asked.fails { box-shadow: 0 0 0 2px var(--ork-danger), -14px 10px 30px var(--ork-scrim); }
   .hand .hand-lifted--asked:focus-visible { outline: 0; }
-  .hand-row.is-sunk { translate: 0 64px; opacity: 0.3; filter: grayscale(1); transition: translate var(--ork-motion-base) var(--ork-motion-ease), opacity var(--ork-motion-base) var(--ork-motion-ease); pointer-events: none; }
+  .hand-row.is-sunk { transform-origin: 100% 100%; scale: var(--hc-sunk-s, 0.3); opacity: 0.5; filter: grayscale(1); transition: scale var(--ork-motion-base) var(--ork-motion-ease), opacity var(--ork-motion-base) var(--ork-motion-ease); pointer-events: none; }      /* still there, set aside: shrunk, grey and inert into the strip right of the ways row */
   .hand-ways-row { position: absolute; left: var(--hc-wleft, 200px); bottom: var(--hc-ways); z-index: 60; display: flex; align-items: flex-end; gap: var(--ork-4); max-width: calc(100% - var(--hc-wleft, 200px) - var(--ork-3));
     animation: hand-rise var(--ork-motion-base) var(--ork-motion-ease) both; }
   .hand-ways-cards { display: flex; align-items: flex-end; gap: var(--ork-4); min-width: 0; padding: var(--ork-1); overflow-x: auto; }
