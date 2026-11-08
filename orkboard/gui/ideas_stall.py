@@ -19,7 +19,7 @@ from typing import Any
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import craft_tools, goal_team, hero_table, heroes, ideas, library, look_wait, map_parts, party_price, party_recipes
+from orkboard.realm import craft_tools, goal_team, hero_table, heroes, ideas, lexicon, library, look_wait, map_parts, party_price, party_recipes
 
 ON_OFF = (("on", "On"), ("off", "Off"))
 TARGETS = (("thrift", "Thrift", "Cheaper models, fewer checks"), ("balance", "Balance", "The usual mix"), ("quality", "Quality", "Better models, more checks"))
@@ -88,7 +88,7 @@ class StallMixin:
         if not chair:
             return list(next(v for s, _l, _s, v in ORKMASTER if s == slot))
         if slot == "hero":
-            return [(h.id, h.name, h.flow) for h in heroes.of(map_parts.craft_of(root, chair))]
+            return [(h.id, lexicon.term(f"hero.{h.id}"), h.flow) for h in heroes.of(map_parts.craft_of(root, chair))]
         if slot == "tool":
             return [("", "Main tool", "The potions' order: the first AI tool in your hand that has mana")] + [(i, n, "Runs this party's goals") for i, n in self._tool_ids()]
         return list(TIERS)
@@ -147,9 +147,9 @@ class StallMixin:
             if h is None:
                 say = "This party has no hero: its goals run as the Taskmaster plans them."
             elif h.default:
-                say = f"{h.name} looks by {h.school}. It lays its craft's map."
+                say = f"{lexicon.term(f'hero.{h.id}')} looks by {h.school}. It lays its craft's map."
             else:
-                say = f"{h.name} looks by {h.school}. It lays {len(h.places)} places: {', '.join(n for n, _a in h.places)}."
+                say = f"{lexicon.term(f'hero.{h.id}')} looks by {h.school}. It lays {len(h.places)} places: {', '.join(n for n, _a in h.places)}."
         shelves, hand, cache = [], [], {}
         for slot, label, sub, kind in slots:
             mine = self._carried(chair, root, slot)

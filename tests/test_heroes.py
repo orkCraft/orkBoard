@@ -160,3 +160,18 @@ def test_pillar_knight_sits_at_game_design_as_at_product(root):
         assert goal_team.hero_of(root, slug).id == "uni-pillar" and lens_rubrics.rubric(craft, "uni-pillar")["short"] == "Design pillars"
     with pytest.raises(ValueError):
         goal_team.set_hero(root, _party(root, "tech"), "uni-pillar")
+
+
+def test_the_leaders_of_the_party_seats_name_each_crafts_default_spec_164_c():
+    from pathlib import Path
+    from orkboard.realm import seat_hero_rules as rules
+    text = (Path(heroes.__file__).parents[1] / "gui/static/js/table/partyseats2.js").read_text(encoding="utf-8")
+    block = re.search(r"export const LEADERS = \{(.*?)\};", text, re.S).group(1)
+    named = dict(re.findall(r'"?([\w-]+)"?:\s*"([^"]+)"', block))
+    for craft in {h.craft for h in rules.HEROES.values()} | {"liveops"}:
+        d = rules.default(craft)
+        if d is None:
+            assert craft not in named
+        else:
+            assert named[craft] == d.name
+    assert named["run"] == "Lantern Imp"
