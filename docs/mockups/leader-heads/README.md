@@ -38,6 +38,7 @@ without colour, and recolouring now clashes with *colour is the party*.
 | redrawn by Claude on 24 × 24 | `checks/09`, `10`, `sketches/shaman24.py` | the moods read at 48 px, but **still cute** |
 | grotesque card creature v1 | `references/10`, `checks/11`–`14` | the character right at last (heavy, menacing, dry); the skin too dark and grey, the whites small: at 48 px calm, focused, worried and asleep read, no and pleased do not (pleased reads as a snarl); at 24 px only worried |
 | grotesque v2 (v1 corrected in the same chat) | `references/11`, `checks/15` | Gemini changed 1 % of the pixels: the skin a little lighter (forehead 61 → 73 of 255, asked ~128), a faint rim light; no, pleased, the whites and the horns as they were. Editing in place has reached its end |
+| grotesque on a pushed 24 grid (fresh chat) | `references/12`, `checks/16`–`18` | the grid closer (~30 cells, not 24); the light skin and the cold rim make the head stand out of the window at last; but the eyes shrank and the face filled with cross lines: at 48 px focused, says no and asleep read, calm and worried weakly, pleased still a snarl; at 24 px only asleep. The light and the silhouette from here, the faces from v2 |
 
 **The owner's direction now: closer to Slay the Spire.** Not cute, not a sticker, not a cartoon: a hand-painted roguelike
 card's creature (grotesque, heavy, a strong silhouette, a dramatic light) translated into pixel art, with the moods kept.
