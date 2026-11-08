@@ -95,9 +95,35 @@ function PricedWays({ s, q, send }) {
     <button type="button" class="ork-btn primary" data-answer="priced" onClick=${() => send([q.choices[at]])}>Answer</button>`;
 }
 
+/** The question of a stop `s` that asks (a goal's or a task's): where its answer goes (`target`), the questions (`asked`) and the one who decides when the leader does (`name`). */
+export function askedInfo(s) {
+  const row = s.row, n = s.node, isGoal = s.kind === "goal", target = isGoal ? row.goal : row?.idea || n?.slug || "", asked = askedOf(row, n);
+  return { isGoal, target, asked, name: isGoal ? s.party.lead : asked.find((q) => q.by?.name)?.by?.name || s.party.lead };
+}
+
+/** Answers the stop `s` from the hand (`from: "hand"`, stage E of spec 158): the hand's way cards press it too. */
+export async function sendAnswers(s, answers) {
+  const { isGoal, target } = askedInfo(s), got = await act("ideas.answer", { slug: target, answers, from: "hand", ...(isGoal ? { goal: true } : {}) });
+  if (got) toast(say(SENT));
+  return got;
+}
+
+/** *Let <name> decide* as a card of the hand presses it: the one who asks answers with what it recommends. */
+export async function decideStop(s) {
+  const { isGoal, target, name } = askedInfo(s), got = await act("ideas.answer", { slug: target, decide: true, from: "hand", ...(isGoal ? { goal: true } : {}) });
+  if (got) toast(say(`Sent: ${named(name)} decides.`));
+  return got;
+}
+
+/** *Start again* of a failure, as a card of the hand presses it. */
+export const startAgain = (s) => act("ideas.start", { slug: s.node?.slug || s.row?.idea, via: "hand" });
+
+/** What *Start again* says it does, as the button's title says it. */
+export const againWords = (s) => "Its goal’s tasks that are not merged or at Review run again" + (s.task?.holds_commits ? ". The task's work is thrown away and made again" : "");
+
 function AskAnswers({ s, row, n, slug, here }) {
   const isGoal = s.kind === "goal", target = isGoal ? row.goal : slug, asked = askedOf(row, n);
-  const send = async (answers) => { const got = await act("ideas.answer", { slug: target, answers, from: "hand", ...(isGoal ? { goal: true } : {}) }); if (got) toast(say(SENT)); };
+  const send = (answers) => sendAnswers(s, answers);
   const more = (picks) => openStop(s, { picks });                                          // the questions as a form, over the pane
   const picks = asked.map((q) => (q.pick != null ? q.choices[q.pick] || "" : ""));
   const decide = html`<${Decide} s=${s} target=${target} isGoal=${isGoal} name=${isGoal ? s.party.lead : asked.find((q) => q.by?.name)?.by?.name || s.party.lead} />`;
@@ -133,8 +159,8 @@ export function Answers({ s, here = false }) {
     }
     case "todo": return here ? null : html`<button type="button" class="ork-btn" onClick=${() => openStop(s)}>Open…</button>
       <${TodoWays} idea=${row.idea} todo=${row.todo} lead=${s.party.lead} agent=${row.todo?.by?.name} />`;
-    case "failed": return html`<button type="button" class="ork-btn primary" title=${"Its goal’s tasks that are not merged or at Review run again" + (s.task?.holds_commits ? ". The task's work is thrown away and made again" : "")}
-        onClick=${() => act("ideas.start", { slug: n?.slug || row.idea, via: "hand" })}>Start again</button>
+    case "failed": return html`<button type="button" class="ork-btn primary" title=${againWords(s)}
+        onClick=${() => startAgain(s)}>Start again</button>
       ${!here && html`<button type="button" class="ork-btn" title="Its brief, state and log, over the pane" onClick=${() => openStop(s)}>Open…</button>`}`;
     case "pitch": return here ? null : html`<button type="button" class="ork-btn primary" title="Its views, the case against and the decision" onClick=${() => openStop(s)}>Open the pitch</button>`;
     case "collide": return html`<${CollideAnswers} s=${s} />`;

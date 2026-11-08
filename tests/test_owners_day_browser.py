@@ -265,7 +265,7 @@ def test_a_goals_face_over_the_pane_has_the_menu_in_its_head(gui):
     pg, host, log = open_hand(gui)
     try:
         pg.locator('.hand-card[data-goal="timer"][data-top="1"]').click(position={"x": 10, "y": 24})
-        pg.locator(".hand-lifted").get_by_role("button", name="Open…").click()
+        pg.locator(".hand-ways-row, .hand-lifted").get_by_role("button", name="Open…").click()
         box = pane(pg)
         box.locator(".hand-stopface").wait_for(timeout=WAIT_MS)
         head = box.locator(".hand-stopface__head")

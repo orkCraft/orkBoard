@@ -78,3 +78,29 @@
 .hand-pick__face .ork-race__head { width: auto; height: 20px; }
 .hand-pick__word { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hand-pick__note { flex: none; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+
+/* -- a lifted question or failure stays a hand card, its ways are the hand (docs/specs/158 part F, decisions §270; hand/answercards.js). Wide only: under 760 px the card is the inline one above. Layout only; colour and faces are orkUI's tokens. -- */
+@media (min-width: 760px) {
+  .hand { --hc-ways: var(--ork-3); }
+  .hand .hand-card.hand-lifted--asked { position: absolute; bottom: calc(var(--hc-ways) + var(--hc-h) + var(--ork-4)); left: var(--ork-6); z-index: 60; width: var(--hc-w); height: var(--hc-h); cursor: default;
+    animation: hand-rise var(--ork-motion-base) var(--ork-motion-ease) both; }
+  .hand .hand-lifted--asked.asks { box-shadow: 0 0 0 2px var(--ork-alert), -14px 10px 30px var(--ork-scrim); }
+  .hand .hand-lifted--asked.fails { box-shadow: 0 0 0 2px var(--ork-danger), -14px 10px 30px var(--ork-scrim); }
+  .hand .hand-lifted--asked:focus-visible { outline: 0; }
+  .hand-row.is-sunk { translate: 0 64px; opacity: 0.3; filter: grayscale(1); transition: translate var(--ork-motion-base) var(--ork-motion-ease), opacity var(--ork-motion-base) var(--ork-motion-ease); pointer-events: none; }
+  .hand-ways-row { position: absolute; left: var(--hc-wleft, 200px); bottom: var(--hc-ways); z-index: 60; display: flex; align-items: flex-end; gap: var(--ork-4); max-width: calc(100% - var(--hc-wleft, 200px) - var(--ork-3));
+    animation: hand-rise var(--ork-motion-base) var(--ork-motion-ease) both; }
+  .hand-ways-cards { display: flex; align-items: flex-end; gap: var(--ork-4); min-width: 0; padding: var(--ork-1); overflow-x: auto; }
+  .hand-ways-acts { display: flex; flex: none; flex-direction: column; gap: var(--ork-3); align-items: flex-start; padding-bottom: var(--ork-2); }
+  /* a way: a hand card's anatomy (the corners, a name, a line), 144 x 202; the name in the pixel face, its line in the body face and whole */
+  .hand .hand-ans.ork-card { position: relative; flex: none; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--hc-fgap); width: var(--hc-w); height: var(--hc-h); padding: var(--hc-pad); text-align: left; cursor: pointer; color: var(--ork-ink); }
+  .hand .hand-ans > .corner { flex: none; height: var(--hc-corner); }
+  .hand .hand-ans > .corner--foot { margin-top: auto; }
+  .hand .hand-ans__name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-heading); }
+  .hand .hand-ans__line { flex: 1 1 auto; min-height: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; line-clamp: 6; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); color: var(--ork-ink-read); }   /* the fallback only: a leader writes it to fit */
+  .hand .hand-ans.is-pick { border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
+  .hand .hand-ans:hover { border-color: var(--ork-ink); }
+  .hand .hand-ans:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+  @keyframes hand-rise { from { translate: 0 var(--ork-6); opacity: 0.4; } to { translate: 0 0; opacity: 1; } }
+}
+@media (prefers-reduced-motion: reduce) { .hand .hand-card.hand-lifted--asked, .hand-ways-row, .hand-row.is-sunk { animation: none; transition: none; } }
