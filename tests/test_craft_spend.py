@@ -173,6 +173,7 @@ def test_cap_stop_keeps_price_cap_party_and_maker_for_its_plate(setup, monkeypat
     stop = saved['craft_stop']
     assert stop == {'tool': 'openai-images', 'party': ideas.idea_page(runner.repo_root, slug).get('track'),
                     'price': {'amount': '0.061455', 'currency': 'USD', 'estimate': True, 'dated': '2026-11-08'},
-                    'cap': {'amount': '0.01', 'currency': 'USD'}}
+                    'cap': {'amount': '0.01', 'currency': 'USD'},
+                    'held': {'amount': '0', 'currency': 'USD', 'estimate': True}}
     from orkboard.realm.board_map import _run_of
     assert _run_of(saved)['craft_stop'] == stop

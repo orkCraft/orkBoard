@@ -17,6 +17,6 @@ export function MakerStop({ stop }) {
     makerPlate.value = stop.tool;
     openInventory(stop.party);
   };
-  return html`<div class="pick-receipt"><p>The next request costs ${money(stop.price)}; it exceeds the ${money(stop.cap)} cap.</p>
-    <button type="button" class="ork-btn" onClick=${open}>Set a cap</button></div>`;
+  return html`<div class="pick-receipt"><p>The next request costs ${money(stop.price)}; with ${money(stop.held)} already held, it would exceed the ${money(stop.cap)} cap.</p>
+    <button type="button" class="ork-btn" onClick=${open}>Change the cap</button></div>`;
 }

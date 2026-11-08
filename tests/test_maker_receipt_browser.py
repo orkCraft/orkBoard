@@ -21,13 +21,13 @@ def test_receipt_under_variants_and_cap_stop_opens_the_partys_plate(gui):
           const el = document.createElement('div'); el.id = 'receipt-test'; document.body.append(el);
           const cost = {amount:'0.12', currency:'USD', estimate:true}, cap = {amount:'1', currency:'USD'};
           render(html`<${Tiles} row=${{slug:'g', task:'k1', media:'text', variants:[{key:'A', name:'One', text:'A'}], maker:{word:'Picture maker', cost, cap}}} />
-            <${MakerStop} stop=${{tool:'openai-images', party:'art', price:cost, cap}} />`, el);
+            <${MakerStop} stop=${{tool:'openai-images', party:'art', price:cost, cap, held:{amount:'0.96', currency:'USD', estimate:true}}} />`, el);
         }''')
         receipt = pg.locator('#receipt-test .pick-receipt').first
         assert receipt.inner_text() == 'Made by the Picture maker · about 0.12 USD of a 1 USD cap'
         assert pg.locator('#receipt-test .pick-tiles').evaluate('(e) => !!e.nextElementSibling?.classList.contains("pick-receipt")')
-        assert 'about 0.12 USD' in pg.locator('#receipt-test').inner_text()
-        pg.locator('#receipt-test button', has_text='Set a cap').click()
+        assert pg.locator('#receipt-test .pick-receipt p').inner_text() == 'The next request costs about 0.12 USD; with about 0.96 USD already held, it would exceed the 1 USD cap.'
+        pg.locator('#receipt-test button', has_text='Change the cap').click()
         plate = pg.locator('[data-stall="art"] [data-ware="openai-images"] .stall-ware__press')
         plate.wait_for(timeout=WAIT_MS)
         pg.wait_for_function('() => document.activeElement?.closest("[data-ware]")?.dataset.ware === "openai-images"', timeout=WAIT_MS)
