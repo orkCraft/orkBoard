@@ -133,6 +133,12 @@ Heat and reach first, on the maps as they are (A–K, §281.4), desktop only (§
 - The reach lights after the pointer rests about 150 ms on a hand card and at once on focus; leaving the card or Esc clears it.
 - Where the rooms' wall shows a screen nothing leads to or one that leads nowhere, the `loose` and `dead_end` squares are not drawn a second time.
 - The [look] line's pictures are each shape stage's own at 1280 × 800; Tech's mockup (docs/mockups/tech-reach/ on its branch) the only reference.
+### Accepted
+- not met: When the page opens at 1280 × 800 on any leader's tab with no goal picked, then each part with hints by code wears at most three hollow squares beside its concern's mark, each saying its hint's kind in words in its label and title. — on Screens heat.js drops `loose` and `dead_end` for the wall, but the wall is aria-hidden with pointer-events none: its words reach no one (L, screenparts.js, screens.css)
+- met: When the pointer rests on, or the keyboard focuses, a goal's card in the hand with Tech's System open at 1280 × 800, then the parts its *Will be* names wear a solid edge in its element, one step out dashed, two dotted, the rest dimmed, and a line says *changes*, *reaches* and *no test* in words.
+- met: When a goal's reach dims the rest of a map, lamp lit and out, then every dimmed part's name measures at least 4.5:1 over its card, and the solid, dashed and dotted edges 3:1 against the felt.
+- met: When the pointer leaves the hand, Esc is pressed, or the card hovered is a goal whose spec has no *Will be*, then the open map shows no reach: nothing lit, nothing dimmed, no line.
+- not met: When each shape's stage lands, then its tab at 1280 × 800 with no goal picked shows its shape with its cards unchanged: Screens as rooms with doors and walls, the loop a closed ring, Art's cards by weight, Dev and main's goals as cars, oldest first. — rooms, ring and weights hold; Dev and main's 96 px car cuts its commit to *000000…* (Q-after.png) and clamps a long name, and the batch mark says *cars* in words (§280.3)
 
 ## Tech
 ### Talk

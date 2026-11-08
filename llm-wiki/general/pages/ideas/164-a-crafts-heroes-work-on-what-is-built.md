@@ -177,6 +177,13 @@ Build decisions §278 and §279 (the owner, 8 November; first taken on 7 Novembe
 - Sprint Dryad's places become Map, Sketch, Decide, Test (§278.2's flow): Prototype goes, the sketch picked on the phone is it; Test asks what Play showed of it.
 - The star is a sign of orkUI's, drawn with the faces, its accessible name *The Orkmaster's pick*.
 
+### Accepted
+- met: When a web app's Design party's stall opens as a person first meets it, then its shelf offers Pixel-Perfect, Sprint and Inclusive Dryad in that order, no Diamond or Atom Dryad, Pixel-Perfect starred by a sign named *The Orkmaster's pick*.
+- met: When a web app's Tech party's stall opens as a person first meets it, then Scene Shaman lies locked, its why in words under it tied to its button by aria-describedby, not only a title; pressed or Enter, nothing is taken.
+- met: When a game's Art party's stall opens as a person first meets it, then Sprite Dryad, its one hero, is in the hand drawn by its own orkUI head, and no shelf offers a choice of heroes.
+- met: When the catalog offers its heroes in each kind, then no two wares of one shelf draw the same head, and the seven new heroes' heads (`hero-<id>-elder.png` and their moods) are in orkUI's copy, stamped in `ORKUI.json`.
+- met: When Orkboard writes the role files, then `roles/design-leader.md` names Pixel-Perfect, Sprint and Inclusive Dryad with their places, no Diamond or Atom Dryad, and Sprint's Test asks what Play showed of the sketch picked.
+
 ## Tech
 ### Talk
 - verdict: go — one catalog (realm/seat_hero_rules.py, 196 lines) and the stall's filter; no new caller of gui, no cycle; Run's default and the JS copy of the names must be mended with it
