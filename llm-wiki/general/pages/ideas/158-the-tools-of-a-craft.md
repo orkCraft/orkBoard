@@ -6,7 +6,8 @@ order: 5
 size:
 priority: normal
 short: Ввести инструменты
-phase: new
+phase: talk
+route: product, design, tech
 by: claude-code
 schema: 3
 ---
