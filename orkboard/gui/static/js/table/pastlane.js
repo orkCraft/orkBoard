@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { pick, picked } from "../frame/state.js";
+import { town } from "../link.js";
 import { Icon } from "../orkui.js";
 import { Card, Deck, ask } from "./chronicleparts.js";
 import { UNRELEASED, byDay, chapterName, dayWord, itemsOf } from "./chroniclewords.js";
@@ -29,6 +30,13 @@ export function PastDecks({ party = "", seeing = null }) {
     ask("ideas.chronicle", withParty({}, party)).then(([r]) => { if (live) setD(r); });
     return () => { live = false; };
   }, [party]);
+  const rev = town.value?.ideas_rev, empty = !!d && !(d.unreleased || (d.chapters || []).length);
+  useEffect(() => {                                                       // a first open reads the past while the flags of the goals laid done are being raised (spec 162 J): an empty past is read again when the Board changes
+    if (!empty) return undefined;
+    let live = true;
+    ask("ideas.chronicle", withParty({}, party)).then(([r]) => { if (live && r) setD(r); });
+    return () => { live = false; };
+  }, [rev, empty]);
   useEffect(() => {                                                       // scrolled to: the party's newest decision is seen
     const el = host.current, root = seeing?.current;
     if (!el || typeof IntersectionObserver !== "function") return undefined;
