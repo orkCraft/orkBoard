@@ -42,7 +42,7 @@ function Decide({ s, target, isGoal, name }) {
   const [busy, setBusy] = useState(false);
   const decide = async () => {
     setBusy(true);
-    const got = await act("ideas.answer", { slug: target, decide: true, ...(isGoal ? { goal: true } : {}) });
+    const got = await act("ideas.answer", { slug: target, decide: true, from: "hand", ...(isGoal ? { goal: true } : {}) });
     setBusy(false);
     if (got) toast(say(`Sent: ${named(name)} decides.`));
   };
@@ -97,7 +97,7 @@ function PricedWays({ s, q, send }) {
 
 function AskAnswers({ s, row, n, slug, here }) {
   const isGoal = s.kind === "goal", target = isGoal ? row.goal : slug, asked = askedOf(row, n);
-  const send = async (answers) => { const got = await act("ideas.answer", { slug: target, answers, ...(isGoal ? { goal: true } : {}) }); if (got) toast(say(SENT)); };
+  const send = async (answers) => { const got = await act("ideas.answer", { slug: target, answers, from: "hand", ...(isGoal ? { goal: true } : {}) }); if (got) toast(say(SENT)); };
   const more = (picks) => openStop(s, { picks });                                          // the questions as a form, over the pane
   const picks = asked.map((q) => (q.pick != null ? q.choices[q.pick] || "" : ""));
   const decide = html`<${Decide} s=${s} target=${target} isGoal=${isGoal} name=${isGoal ? s.party.lead : asked.find((q) => q.by?.name)?.by?.name || s.party.lead} />`;

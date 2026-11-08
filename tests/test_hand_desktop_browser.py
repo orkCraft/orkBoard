@@ -1116,7 +1116,7 @@ def test_a_question_is_answered_from_its_card_and_the_card_goes_with_the_stop(gu
         assert lifted.get_by_role("button", name="Let Design lead decide").count() == 1 and lifted.get_by_role("button", name="Put it back").count() == 1
         shot(pg, "wide-lifted-question")
         lifted.get_by_role("button", name="● Server counts, phones show it").click()
-        assert _sent(pg, host, ("ideas.answer", {"slug": "phones", "answers": ["Server counts, phones show it"]}))
+        assert _sent(pg, host, ("ideas.answer", {"slug": "phones", "answers": ["Server counts, phones show it"], "from": "hand"}))
         pg.wait_for_function("() => !document.querySelector('.hand-stack[data-stack=\"phones@2\"]:not(.is-gone)')", timeout=WAIT_MS)
         assert pg.locator(".hand-lifted").count() == 0 and sig(pg, "frame/state.js", "lifted") == ""
         assert [s.get_attribute("data-stack") for s in pg.locator(".hand-stack:not(.is-gone)").all()] == ["timer@1", "export@1", "words@2", "theme@3"]

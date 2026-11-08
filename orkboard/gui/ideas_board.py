@@ -13,7 +13,7 @@ from typing import Any
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
+from orkboard.gui.ideas_args import IdeasError, _device, _from, _opt, _text, _via
 from orkboard.realm import (board_in_code, board_map, board_rows, collide, event_log, findings, goal_take, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas,
                             look_wait, night_order, way_down)
 from orkboard.realm.idea_git import BoardTree
@@ -478,12 +478,12 @@ class BoardMixin:
             self.keeper.read_goal(slug, said, answered=True)
             how = idea_questions.tally(g["questions"], [] if decide else answers)
             self._ev(event_log.GOAL_ANSWERED, args, goal=slug, answers=sum(1 for a in answers if a.strip()),
-                     decided=decide, **how)
+                     decided=decide, **how, **_from(args))
             self._what[f"goal:{slug}"] = "answered"
             self.changed(f"goal:{slug}")
             return {"ok": True}
         self._answer_photos(slug, args.get("photos"))
-        self.keeper.answer(slug, answers, decide)
+        self.keeper.answer(slug, answers, decide, _from(args).get("from", ""))
         self._what[slug] = "answered"
         self.changed(slug)
         return {"ok": True}
