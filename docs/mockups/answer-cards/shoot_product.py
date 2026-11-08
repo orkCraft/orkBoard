@@ -8,14 +8,14 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[2]))
 import pytest  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401
-from tests.test_answer_cards_browser import TalkHost, WaysHost  # noqa: E402
+from tests.test_answer_cards_browser import LongHost, TalkHost  # noqa: E402
 
 OUT = Path(os.environ["MOCK_OUT"])
 
 
 def test_shots(gui):
     server, browser = gui
-    h = WaysHost()
+    h = LongHost()
     pg = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
     pg.route_web_socket("**/ws*", h.on_socket)
     pg.goto(server.url)

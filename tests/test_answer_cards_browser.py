@@ -334,3 +334,64 @@ def test_the_risen_question_covers_no_lanes_talk_and_the_sunk_hand_can_be_seen(g
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+LONG = ["Counts on the server, so every phone draws the very same second as the host does", "Counts on each phone alone, so no server is needed and a second may drift apart."]
+
+
+class LongHost(WaysHost):
+    """The same host whose ways' lines are the 80 characters a leader may write."""
+
+    def __init__(self):
+        super().__init__()
+        assert all(len(x) == 80 for x in LONG), [len(x) for x in LONG]
+        for n in self.nodes:
+            if n["slug"] == "phones":
+                n["asked"][0]["lines"] = LONG
+        for row in self.needs:
+            if row.get("idea") == "phones":
+                row["asked"] = next(n for n in self.nodes if n["slug"] == "phones")["asked"]
+
+
+def test_a_way_of_eighty_characters_shows_it_whole_and_its_accessible_name_reads_name_pick_line_question(gui):
+    """Spec 159 D: each way card shows its leader's line whole (80 characters, no cut, never "Answers with this."); its aria-label is the name, "its pick" on the pick, the line, then the question."""
+    pg, host, log = open_hand(gui, host=LongHost())
+    try:
+        lift(pg, "asks", "phones")
+        ways = pg.locator(".hand-ways-row .hand-ans")
+        ask = "Round timer shows on every phone"
+        for i, line in enumerate(LONG):
+            w = ways.nth(i)
+            el = w.locator(".hand-ans__line")
+            assert el.inner_text().strip() == line and el.is_visible()
+            assert el.evaluate("e => e.scrollHeight <= e.clientHeight + 1"), "cut nowhere"
+            assert w.evaluate("e => e.scrollHeight <= e.clientHeight + 1")
+            assert "Answers with this." not in w.inner_text()
+            name = w.locator(".hand-ans__name").inner_text().strip()
+            label = w.get_attribute("aria-label")
+            want = f"{name}{', its pick' if i == 0 else ''}, {line}"
+            assert label.startswith(want) and ask in label[len(want):], label
+        shot(pg, "question-lines")
+        ways.nth(1).click()
+        got = _calls(pg, host, "ideas.answer")
+        assert got and got[0]["slug"] == "phones" and got[0]["from"] == "hand", got
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_question_without_lines_reads_as_before(gui):
+    """Spec 159 D: no lines, the pick shows the question's why, the rest "Answers with this.", the accessible name without a line."""
+    pg, host, log = open_hand(gui, host=WaysHost())
+    try:
+        lift(pg, "asks", "clock")
+        ways = pg.locator(".hand-ways-row .hand-ans")
+        assert ways.nth(0).locator(".hand-ans__line").inner_text().strip() == "Answers with this."
+        assert ways.nth(1).locator(".hand-ans__line").inner_text().strip() == "Amber reads on every screen."
+        for i in range(2):
+            label = ways.nth(i).get_attribute("aria-label")
+            assert "Amber reads on every screen" not in label and "Answers with this" not in label, label
+        assert ways.nth(1).get_attribute("aria-label").startswith("Amber, its pick: ")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

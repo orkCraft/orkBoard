@@ -38,7 +38,7 @@ export function useWide() {
 /** The line a way says of itself: the leader's own (`lines[i]`, written to fit the card), else the question's why for the pick, else a plain one. */
 const lineOf = (q, i) => String(q.lines?.[i] || q.hints?.[i] || (i === q.pick ? q.why || PICK_LINE : NO_LINE));
 
-/** The ways of a stop `s` as cards, or null when the stop is not one this draws (a goal with more than one question, any other kind): `{tone, ways, decide, open}`. A way is `{id, name, line, pick, cost, sign, run}`. */
+/** The ways of a stop `s` as cards, or null when the stop is not one this draws (a goal with more than one question, any other kind): `{tone, ways, decide, open}`. A way is `{id, name, line, own (the line is the leader's own), pick, cost, sign, run}`. */
 export function answerSet(s) {
   if (s.kind === "failed") {
     return { tone: "fails", ways: [{ id: "again", name: "Start again", line: againWords(s), pick: false, cost: costOf(s), sign: "play", run: () => startAgain(s) }], decide: null, open: () => openStop(s) };
@@ -47,7 +47,7 @@ export function answerSet(s) {
   const { asked, name } = askedInfo(s);
   if (asked.length !== 1) return null;
   const q = asked[0], picks = [q.pick != null ? q.choices?.[q.pick] || "" : ""];
-  const ways = (q.choices || []).map((c, i) => ({ id: `way-${i}`, name: c, line: lineOf(q, i), pick: i === q.pick, cost: wayCostOf(q.costs?.[i]), sign: "compass", run: () => (c === PICTURES ? openStop(s, { picks: [c] }) : sendAnswers(s, [c])) }));
+  const ways = (q.choices || []).map((c, i) => ({ id: `way-${i}`, name: c, line: lineOf(q, i), own: !!q.lines?.[i], pick: i === q.pick, cost: wayCostOf(q.costs?.[i]), sign: "compass", run: () => (c === PICTURES ? openStop(s, { picks: [c] }) : sendAnswers(s, [c])) }));
   return { tone: "asks", ways, decide: { id: "decide", name: `${named(name)} decides`, line: DECIDE_LINE, run: () => decideStop(s) }, open: () => openStop(s, { picks }) };
 }
 
@@ -70,7 +70,7 @@ function WayCard({ w, s, head, rune, btn = null, on = undefined }) {
   const cost = w.cost, much = cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null, leader = w.id === "decide";
   const kind = leader && head ? html`<${Head} race=${head.race} tier=${head.tier} title=${headWords(head)} />` : null;
   return html`<button type="button" ref=${btn} class=${cls(`ork-card hand-ans el-${rune.hue}`, { "is-pick": w.pick, "is-decide": leader, "hand-ans--pen": w.id === "own" })} aria-expanded=${on === undefined ? undefined : String(on)} data-way=${w.id} data-pick=${w.pick ? "1" : undefined} data-cost=${cost?.gem || undefined}
-      aria-label=${`${w.name}${w.pick ? `, ${ITS_PICK}` : ""}: ${s.full}`} title=${w.line} onClick=${w.run}>
+      aria-label=${`${w.name}${w.pick ? `, ${ITS_PICK}` : ""}${w.own ? `, ${w.line}` : ""}: ${s.full}`} title=${w.line} onClick=${w.run}>
     <${CornerTop} rune=${rune} kind=${w.sign} kindNode=${kind} />
     <span class="hand-ans__name">${w.name}</span>
     <span class="hand-ans__line">${w.line}</span>
