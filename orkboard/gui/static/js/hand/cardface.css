@@ -1,0 +1,59 @@
+/* A card's face (docs/specs/160 stage F, decisions §269.6 and §269.7, §276): the table's card, the hand's, the discard's and the column's standing one are drawn as a playing card.
+   Its element (`el-<name>`, set by the page from the goal's hue) is a thick frame with a gilt line inside it, and stepped bands down the face (hard stops, no smooth gradient); the window is bevelled in hard pixel edges;
+   a goal's strip is a ribbon. A signal's ring is a failure's (danger) or a question's (alert): one ring and a faint second, drawn over the element's frame so it is never hidden by it; success is no ring (§276.2).
+   The frame lies on the card's `::after`, over its face, so the pixel shadow a card lifts on (orkUI's `.ork-leans`) does not take it away. No blur, no glow. Every colour is orkUI's token. */
+:is(.table-card, .hand .hand-card--face, .hand-done, .col-card--up, .table-gstrip) { --ork-el: var(--ork-card-frame); }
+:is(.table-card, .hand-card, .col-card, .table-gstrip).el-meadow { --ork-el: var(--ork-elem-meadow); }
+:is(.table-card, .hand-card, .col-card, .table-gstrip).el-ice { --ork-el: var(--ork-elem-ice); }
+:is(.table-card, .hand-card, .col-card, .table-gstrip).el-dust { --ork-el: var(--ork-elem-dust); }
+:is(.table-card, .hand-card, .col-card, .table-gstrip).el-void { --ork-el: var(--ork-elem-void); }
+:is(.table-card, .hand-card, .col-card, .table-gstrip).el-lava { --ork-el: var(--ork-elem-lava); }
+.hand .hand-card--face.el-meadow { --ork-el: var(--ork-elem-meadow); }
+.hand .hand-card--face.el-ice { --ork-el: var(--ork-elem-ice); }
+.hand .hand-card--face.el-dust { --ork-el: var(--ork-elem-dust); }
+.hand .hand-card--face.el-void { --ork-el: var(--ork-elem-void); }
+.hand .hand-card--face.el-lava { --ork-el: var(--ork-elem-lava); }
+
+/* the element in steps down the face, hard stops: a bright edge on top, then three bands fainter */
+:is(.ork-card.table-card, .hand .ork-card.hand-card--face, .ork-card.hand-done, .ork-card.col-card--up) {
+  background: linear-gradient(var(--ork-el) 0 3px,
+    color-mix(in srgb, var(--ork-el) 28%, var(--ork-card)) 3px 24%,
+    color-mix(in srgb, var(--ork-el) 17%, var(--ork-card)) 24% 50%,
+    color-mix(in srgb, var(--ork-el) 8%, var(--ork-card)) 50% 76%,
+    var(--ork-card) 76%);
+}
+/* the goal's strip: a ribbon, its swallowtail ends cut, the element a bar at its left */
+.ork-card.table-gstrip {
+  background: linear-gradient(90deg, var(--ork-el) 0 4px, color-mix(in srgb, var(--ork-el) 22%, var(--ork-card)) 4px 40%, color-mix(in srgb, var(--ork-el) 11%, var(--ork-card)) 40%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 50%, 100% 100%, 0 100%, 6px 50%); padding-left: var(--ork-3); padding-right: var(--ork-3);
+}
+
+/* the frame: the element's thick line, a gilt line inside it, a dark line inside that */
+:is(.ork-card.table-card, .hand .ork-card.hand-card--face, .ork-card.hand-done, .ork-card.table-gstrip) { position: relative; }
+:is(.ork-card.table-card, .hand .ork-card.hand-card--face, .ork-card.hand-done, .ork-card.col-card--up, .ork-card.table-gstrip)::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; box-sizing: border-box;
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--ork-el) 62%, var(--ork-room)), inset 0 0 0 4px color-mix(in srgb, var(--ork-gilt) 62%, transparent), inset 0 0 0 5px var(--ork-scrim); }
+.ork-card.table-gstrip::after { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ork-el) 62%, var(--ork-room)), inset 0 0 0 3px color-mix(in srgb, var(--ork-gilt) 62%, transparent); }
+.hand .hand-card.is-slot::after { display: none; }
+:is(.ork-card.table-card, .hand .ork-card.hand-card--face, .ork-card.hand-done, .ork-card.col-card--up):is(.ork-picked, .is-on, :focus-visible)::after {
+  box-shadow: inset 0 0 0 2px var(--ork-ink), inset 0 0 0 5px color-mix(in srgb, var(--ork-el) 62%, var(--ork-room)), inset 0 0 0 6px color-mix(in srgb, var(--ork-gilt) 62%, transparent); }
+
+/* a signal: one ring and a faint second over the frame. Only a failure's and a question's; the column's standing rows keep orkUI's border alone and no frame */
+:is(.ork-card.table-card, .hand .ork-card.hand-card--face, .ork-card.hand-done).fails::after {
+  box-shadow: inset 0 0 0 2px var(--ork-danger), inset 0 0 0 4px color-mix(in srgb, var(--ork-danger) 26%, transparent), inset 0 0 0 5px color-mix(in srgb, var(--ork-el) 62%, var(--ork-room)), inset 0 0 0 6px color-mix(in srgb, var(--ork-gilt) 62%, transparent); }
+:is(.ork-card.table-card, .hand .ork-card.hand-card--face, .ork-card.hand-done).asks::after {
+  box-shadow: inset 0 0 0 2px var(--ork-alert), inset 0 0 0 4px color-mix(in srgb, var(--ork-alert) 26%, transparent), inset 0 0 0 5px color-mix(in srgb, var(--ork-el) 62%, var(--ork-room)), inset 0 0 0 6px color-mix(in srgb, var(--ork-gilt) 62%, transparent); }
+.ork-card.col-card--up.fails::after, .ork-card.col-card--up.asks::after { display: none; }
+
+/* the window: bevelled, its edges hard pixels (a dark edge top and left, a gilt one bottom and right) */
+.table-card__win.is-window, .hand .hand-card--face .card-win {
+  box-shadow: inset 2px 2px 0 var(--ork-scrim), inset -1px -1px 0 color-mix(in srgb, var(--ork-gilt-hi) 16%, transparent), inset 0 0 0 3px color-mix(in srgb, var(--ork-room) 30%, transparent); }
+.table-card__nm, .hand-card__name { text-shadow: 1px 1px 0 var(--ork-room); }
+
+/* the hand fans: a lane's front card turned two degrees, one way and the other by lane, straight when it is pointed at (it rises on its slot, hand.css). None of it under reduced motion */
+@media (min-width: 760px) and (prefers-reduced-motion: no-preference) {
+  .hand-lane:nth-child(2n) .hand-slot:not(.is-behind):not(.is-plus) .hand-stack > .hand-card--face:not(.hand-lifted) { rotate: -2deg; }
+  .hand-lane:nth-child(2n+1) .hand-slot:not(.is-behind):not(.is-plus) .hand-stack > .hand-card--face:not(.hand-lifted) { rotate: 2deg; }
+  .hand-slot .hand-stack > .hand-card--face { transition: rotate var(--ork-motion-base) var(--ork-motion-spring); }
+  .hand-slot:is(:hover, :focus-within, .is-risen) .hand-stack > .hand-card--face { rotate: 0deg; }
+}

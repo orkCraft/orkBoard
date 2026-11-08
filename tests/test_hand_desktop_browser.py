@@ -432,6 +432,7 @@ def test_a_tap_on_the_discard_opens_it_over_the_pane_at_the_narrow_width(gui):
 def test_a_cards_face_is_the_corners_a_title_and_under_the_cut_its_why_and_foot(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
+        pg.emulate_media(reduced_motion="reduce")                                                    # the fan turns the front cards two degrees (cardface.css): their sizes are measured upright
         timer, phones = pg.locator('.hand-card[data-goal="timer"]'), pg.locator('.hand-card[data-goal="phones"]')
         timer.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(900)
@@ -1240,7 +1241,7 @@ def test_a_card_leans_and_rises_under_the_pointer_and_nothing_moves_under_reduce
         pg.wait_for_timeout(900)
         assert card.evaluate("e => getComputedStyle(e).transform") == "none"                    # at rest it is flat
         b = card.bounding_box()
-        pg.mouse.move(b["x"] + b["width"] - 6, b["y"] + 10)
+        pg.mouse.move(b["x"] + b["width"] - 24, b["y"] + 24)                                                 # inside the card turned two degrees, not at its box's corner
         pg.wait_for_timeout(400)
         assert card.evaluate("e => getComputedStyle(e).transform") != "none" and card.evaluate("e => getComputedStyle(e).getPropertyValue('--ork-lean-x')").strip() != ""
         assert pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])').bounding_box()["y"] <= b["y"] - 4          # and lifts a little (a spring, hand.css; the card is whole at rest, spec 142 B.4)
