@@ -9,7 +9,7 @@ import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
 import { act, mapData } from "../shell/store.js";
-import { mergeGate } from "../arena/gate.js";
+import { TESTING, mergeGate, testing } from "../arena/gate.js";
 import { closeOver, openOver, over, picked } from "../frame/state.js";
 import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
@@ -132,7 +132,8 @@ export function DiscardView() {
           title=${ready.goals.length > 0 ? `Sends the goal chosen, or the first one ready, through the portal to ${ready.main}: its checks run first, nothing reaches ${ready.main} without you` : `Merges ${ready.into} into ${ready.main}: nothing reaches ${ready.main} without you`} onClick=${merge}>To ${ready.main}</button></div>
       ${ready.goals.length > 0 ? html`<${ReadyCards} goals=${ready.goals} main=${ready.main} />`
         : html`<p class="cap">${readyWords(ready)}: commits that belong to no goal.</p>`}
-      <p class="cap">Nothing reaches ${ready.main} without you.</p></section>`}
+      <p class="cap">Nothing reaches ${ready.main} without you.</p>
+      ${testing.value && html`<p class="cap" role="status" data-testing>${TESTING}</p>`}</section>`}
     ${done.length > 0 && html`<section class="hand-part" aria-label="Done, not yet seen">
       <h2 class="ork-label">Done, not yet seen</h2>
       <ul class="hand-rows">${done.map((g) => html`<li key=${g.slug}><button type="button" class="ork-row hand-drow" data-slug=${g.slug} onClick=${() => seeResult(g)}>

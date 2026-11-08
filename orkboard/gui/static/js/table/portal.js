@@ -9,7 +9,7 @@ import { signal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Sign } from "../orkui.js";
-import { toast } from "../link.js";
+import { command, toast } from "../link.js";
 import { ask } from "../board/store.js";
 import { mapData, refreshShell } from "../shell/store.js";
 import { openOver, over } from "../frame/state.js";
@@ -17,7 +17,7 @@ import { uprightNow } from "../frame/upright.js";
 import { readyOf } from "../hand/data.js";
 import { reduced, leans } from "../hand/motion.js";
 import { wide } from "./data.js";
-import { CHECKING, checksOf, forgetChecks, isRed, pending, startChecks, whenAsked } from "./checks.js";
+import { CHECKING, checksOf, forgetChecks, isRed, pending, sealedWords, startChecks, whenAsked } from "./checks.js";
 
 const SEEN_KEY = "orkboard.portal.seen";
 const NARROW = "(max-width: 759.98px)";
@@ -31,6 +31,7 @@ export const first = signal(false);                               // the first t
 export const sending = signal("");                                // the element of the goal that went in: the ring plays its rite (`is-sending rite-<element>`) for RITE_MS
 export const RITE_MS = 1200;
 export const woke = signal(false);                                       // the ring's first waking has played: its class comes off, so the ring opening and closing again (the checks) does not play it again
+export const stopped = signal(null);                              // what stopped the goal on its way into main, in words: {slug, words, none}; `none` when the project has no tests (the card then offers *To main without the tests*)
 export const echo = signal(0);                                    // a press on a sealed portal says its reason again
 let planning = Promise.resolve(), said = false;
 
@@ -66,6 +67,7 @@ export function choose(slug) {
   chosen.value = slug;
   taking.value = false;
   plan.value = { slug, state: "wait" };
+  stopped.value = null;
   planning = ask("ideas.to_main_plan", { idea: slug }).then((p) => {
     if (chosen.value !== slug) return;
     plan.value = p ? { ...p, slug, state: "ok", sealed: p.sealed || "" } : { slug, state: "fail" };
@@ -78,7 +80,7 @@ const checkedOpen = (slug) => pending.value === slug || checksOf(slug).some((c) 
 
 /** Closes the portal and drops the choice. */
 export function close() {
-  chosen.value = ""; plan.value = null; taking.value = false; first.value = false; going.value = "";
+  chosen.value = ""; plan.value = null; stopped.value = null; taking.value = false; first.value = false; going.value = "";
   forgetChecks();
 }
 
@@ -92,13 +94,40 @@ export async function play() {
   await whenAsked();                                                                         // a press before the host has said what its checks stand at waits for that
   const p = plan.value;
   if (chosen.value !== slug || !p || p.slug !== slug) return;
-  if (p.state !== "ok" || (p.sealed && !(p.conflict && checksOf(slug).length)) || checkedOpen(slug)) {
+  const owned = p.state === "ok" && (!p.sealed || p.conflict);                              // a seal no check owns is not checked: it keeps its X
+  let asked = false;
+  if (owned && !checksOf(slug).length && pending.value !== slug) {                          // the checks come first, on every width: nothing is sent that was not checked (decisions §274.2)
+    asked = true;
+    await startChecks(slug);
+    while (chosen.value === slug && (pending.value === slug || checksOf(slug).some((c) => c.state === "waiting" || c.state === "running"))) await wait(150);
+    if (chosen.value !== slug) return;
+  }
+  if (isRed(checksOf(slug))) {                                                              // a red check stops it, and says which test
+    stopped.value = { slug, words: `Sealed: ${sealedWords(checksOf(slug))}`, none: false };
     echo.value += 1;
-    if (p.state === "ok" && !isRed(checksOf(slug)) && checkedOpen(slug) && !(p.sealed && !p.conflict)) toast(CHECKING, "information", "", 3);   // a press or a drop while the checks run is not lost in silence
     return;
   }
-  const got = await ask("ideas.to_main", { idea: slug });                                   // an error is toasted by `ask`, as every failed act of the page is
-  if (!got) return;
+  if (p.state !== "ok" || (p.sealed && !(p.conflict && checksOf(slug).length)) || (!asked && checkedOpen(slug))) {
+    echo.value += 1;
+    if (p.state === "ok" && checkedOpen(slug) && !(p.sealed && !p.conflict)) toast(CHECKING, "information", "", 3);   // a press or a drop while the checks run is not lost in silence
+    return;
+  }
+  stopped.value = null;
+  await enter(slug, false);
+}
+
+/** **To main without the tests** (decisions §274.3): the one way past a project that has no tests, sent only from the card that said so. */
+export async function playUntested(slug) {
+  if (!slug || going.value || chosen.value !== slug) return;
+  await enter(slug, true);
+}
+
+/** Sends the goal (`untested` only from *To main without the tests*); a refusal of the host is said on the card in its words. */
+async function enter(slug, untested) {
+  let got = null;
+  try { got = await command("ideas.to_main", { idea: slug, ...(untested ? { untested: true } : {}) }, true); } catch (e) { if (!e.refused) toast(e.message, "error", "ideas.to_main"); stoppedBy(slug, e.message); return; }
+  if (got?.error) { toast(got.error, "error"); stoppedBy(slug, got.error); return; }
+  got = got || {};
   if (got.note) toast(got.note, "warning");
   const sent = (mapData.value?.nodes || []).find((n) => n.slug === slug), element = sent?.hue || sent?.element || "";
   if (element && !reduced() && document.querySelector(".portal-host.is-ring")) sending.value = element;       // the rite in the ring, in the goal's colour
@@ -112,6 +141,20 @@ export async function play() {
   }
   close();
   await refreshShell();
+}
+
+function stoppedBy(slug, words) {
+  if (!words || chosen.value !== slug) return;
+  stopped.value = { slug, words, none: /^This project has no tests/.test(words) };
+  echo.value += 1;
+}
+
+/** What stopped the chosen goal and, for a project with no tests, the one way on: *To main without the tests*. */
+export function Stopped({ slug, tone = "portal__sealed" }) {
+  const s = stopped.value;
+  if (!s || s.slug !== slug) return null;
+  return html`<p class=${tone} role="status" aria-live="polite" data-stopped=${slug}>${s.words}</p>${s.none && html`<button type="button" class="ork-btn quiet" data-to-main-untested
+    title="Sends the goal to main with no test run: nothing has shown it is safe" onClick=${() => playUntested(slug)}>To main without the tests</button>`}`;
 }
 
 /** The goal chosen for the portal (its slug), "" when none is. */
@@ -186,7 +229,7 @@ function PortalDoor() {
   return html`<div class=${cls("portal-host", { "is-new": first.value })} data-portal=${state}>
     <p class="portal__line">${line}</p>
     <span class="portal__label">${main === "main" ? "Main" : main}</span>
-    ${button}${hint}<p class="portal__sealed" role="status" aria-live="polite">${sealed && said}</p>
+    ${button}${hint}<p class="portal__sealed" role="status" aria-live="polite">${sealed && said}</p><${Stopped} slug=${slug} />
   </div>`;
 }
 

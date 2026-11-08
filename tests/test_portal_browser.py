@@ -364,12 +364,12 @@ def test_an_error_from_the_host_is_shown_as_a_failed_act_and_the_goal_stays(gui)
 
 
 def test_the_button_to_main_with_no_goal_chosen_takes_the_first_goal_ready_the_portals_way_at_the_narrow_width(gui):
-    """Spec 149 G.1 (decisions §253.7): **To main** in the discard's view with no goal chosen takes the first goal ready through `ideas.to_main_plan` and `ideas.to_main` (no checks at the narrow width); dev whole is not merged."""
+    """Spec 149 G.1 (decisions §253.7): **To main** in the discard's view with no goal chosen takes the first goal ready through `ideas.to_main_plan` and `ideas.to_main`, its checks asked first at every width (decisions §274.2); dev whole is not merged."""
     pg, host, log = open_view(gui, "narrow")
     try:
         pg.get_by_role("button", name="To main", exact=True).click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
-        assert [n for n, _ in host.log if n in ("ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main", "ideas.gate_merge")] == ["ideas.to_main_plan", "ideas.to_main"]
+        assert [n for n, _ in host.log if n in ("ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main", "ideas.gate_merge")] == ["ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main"]
     finally:
         pg.close()
     assert not log, "\n".join(log)
