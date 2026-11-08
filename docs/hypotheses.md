@@ -221,3 +221,30 @@ A decision makes the push a setting of its own (*A weekly word from your leaders
 built on the Quality level's findings (§234) and the slices (§233). If the hook refutes it, the idea is dropped and that is
 said here; if the noise refutes it, only the reasons that were pressed are kept, and the rest wait in the column for the
 person to come.
+
+## H5. A paid asset is kept at its price
+
+**Status:** open. **Raised:** 2026-11-08 (goal 158).
+
+### The belief
+
+Art's Picture maker and Sound maker produce assets worth keeping in the project's tree at the price
+shown in the receipt. A paid generation is useful only if the person keeps its result.
+
+### What would prove it, what would refute it
+
+- **Holds** when most of Art's first ten paid picks are kept in the project's tree at their receipt price.
+- **Refuted** when half or more of Art's first ten paid picks are skipped or their picked assets are not kept.
+
+### How we test it
+
+On a project that seats Art (the owner's game, not this repository), measure the kept share of Art's first ten
+paid picks. Read `pick_answered` for the maker's id, the run's cost and the answer (a variant picked or none),
+then check whether the picked asset stays in the project's tree. A picked answer alone is not proof it was kept.
+Count skipped picks in the denominator and report the receipt prices beside the share; an estimate stays an estimate.
+The events carry no prompt, key or file; any sharing through `orkboard usage` requires the person's yes.
+
+### If it holds
+
+Keep Art's two makers and their caps; consider another craft's maker only when that craft asks for one.
+If refuted, review the quality and price before extending the makers to another craft.
