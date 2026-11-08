@@ -442,3 +442,36 @@ def test_the_window_flag_of_a_done_goal_begins_the_views_first(host, tech, monke
     monkeypatch.setattr(type(host.ideas), "views_when_done", lambda self, slug: seen.append(slug) or 0)
     host.ideas._flag_when_done("some-goal")
     assert seen == ["some-goal"]
+
+
+# -- the view read, and a look now (spec 167 I) -----------------------------------------------------------------------------------------------
+
+def test_the_view_is_read_with_its_date_and_what_it_read_and_its_opening_logs_no_word(host, tech, monkeypatch):
+    logged = []
+    monkeypatch.setattr(event_log, "record", lambda root, event, **f: logged.append((event, f)))
+    host.ideas.host.demo = False
+    assert host.ideas.view({"party": tech})["view"] == {} and host.ideas.view({"party": tech})["looking"] is False
+    journals.save_digest(host.ideas.state_dir, tech, DIGEST_TEXT, "e1", read=["goal-0"], at="2026-11-08T10:00:00")
+    got = host.ideas.view({"party": tech})
+    assert got["view"] == {"text": DIGEST_TEXT, "at": "2026-11-08T10:00:00", "read": ["goal-0"]} and got["leader"]
+    opened = [f for e, f in logged if e == "view_opened"]
+    assert opened[-1]["party"] == tech and opened[-1]["at"] == "2026-11-08T10:00:00" and DIGEST_TEXT not in json.dumps(opened)
+    with pytest.raises(Exception, match="No such party"):
+        host.ideas.view({"party": "ghost"})
+
+
+def test_a_look_now_begins_one_call_and_a_second_ask_while_it_runs_begins_none(host, tech, model):
+    keeper = host.ideas.keeper
+    keeper._claim(f"goal:{tech}", "busy")
+    assert host.ideas.view_look({"party": tech}) == {"ok": True, "asked": False, "why": "The leader is looking already"}
+    keeper._busy.pop(f"goal:{tech}", None)
+    assert host.ideas.view_look({"party": tech}) == {"ok": True, "asked": True}
+    assert host.ideas.view_look({"party": tech})["asked"] is False
+    _wait(host, tech)
+    assert {c["key"] for c in model.steps("journal")} == {f"goal:{tech}"}
+
+
+def test_a_look_now_refused_says_why_in_plain_words(host, tech, model):
+    host.ideas.keeper.budget_ok = lambda: False
+    got = host.ideas.view_look({"party": tech})
+    assert got["asked"] is False and "spend limit" in got["why"] and model.calls == []
