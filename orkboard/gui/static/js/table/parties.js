@@ -26,8 +26,8 @@ if (typeof document !== "undefined") {
   }
 }
 
-const STAGES = ["idea", "being_made", "live"];
-const STAGE_WORDS = { idea: "Idea", being_made: "Being made", live: "Live" };
+export const STAGES = ["idea", "being_made", "live"];
+export const STAGE_WORDS = { idea: "Idea", being_made: "Being made", live: "Live" };
 
 /** Opens the one place of the parties over the pane (`props.party`: the party it came from; `props.first`: the first start, whatever the Board holds). It says it came from the map that was shown. */
 export function openParties(props = {}, from = over.peek()?.from || { title: mapName(tab.value, partiesAll()), key: "" }) {
@@ -47,7 +47,7 @@ export function useFirstStart(parties) {
 }
 
 /** The kinds a project can be (realm/project_kind.py `KINDS`, in its order) and how the interface says each. A kind the host names that is not here is listed with the host's words. */
-const KINDS = [["empty", "an empty folder"], ["mobile", "a mobile app"], ["game", "a game"], ["web", "a web app"], ["backend", "a backend"], ["data", "data work"], ["wiki", "a team's wiki"],
+export const KINDS = [["empty", "an empty folder"], ["mobile", "a mobile app"], ["game", "a game"], ["web", "a web app"], ["backend", "a backend"], ["data", "data work"], ["wiki", "a team's wiki"],
   ["design", "a designer's folder"], ["texts", "texts"], ["code", "code"]];
 
 /** What the host says to start from: the stage (`ideas.stage`) and the parties of the project's kind (`ideas.party_presets`); null while asked. */

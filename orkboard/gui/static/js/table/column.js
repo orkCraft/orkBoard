@@ -23,13 +23,14 @@ import { holdWords, offWords, waitsWords } from "./holdwords.js";
 import { SetupBubble } from "../hand/setupcards.js";
 import { laidNow } from "./laying.js";
 import { Passing, askedWords } from "./passing.js";
+import { ProjectLine, useProjectNow } from "./projectdeal.js";
 
 const CROWN = { race: "peon", tier: "crown" };                   // the Orkmaster's head
 
-/** The Orkmaster's tab: the column's head. Open at first; pressed again, it asks the Orkmaster (the bubble, ask.js). The project's ▾ beside it (*Switch project*). */
+/** The Orkmaster's tab: the column's head, its first line the project's name, its second the project's kind and stage (projectdeal.js; spec 160 J). *The Orkmaster* is in its `aria-label` and `title` only. Open at first; pressed again, it asks the Orkmaster (the bubble, ask.js). The project's ▾ beside it (*Switch project*). */
 function Top({ parties, all }) {
   const open = openTabOf(tab.value, all) === ORKMASTER, name = currentProject.value?.name || "The project", ask = desk() && all.length > 0;
-  const from = { title: mapName(openTabOf(tab.value, all), all), key: "" };
+  const from = { title: mapName(openTabOf(tab.value, all), all), key: "" }, now = useProjectNow(currentProject.value?.path || "");
   const press = () => { if (!open) openTab(ORKMASTER); else if (ask) (askOpen.value === "" ? closeAsk() : openAsk(ORKMASTER)); };
   const keys = (e) => {
     if (e.key !== "ArrowRight" && e.key !== "End") return;
@@ -44,8 +45,9 @@ function Top({ parties, all }) {
     <button type="button" class=${cls("ork-tab col-head__tab", { "is-open": open })} role="tab" id=${`tab-${ORKMASTER}`} data-tab=${ORKMASTER} data-ask-head=${open && ask ? ORKMASTER : undefined} aria-selected=${String(open)} aria-controls="table-pane"
       aria-haspopup=${ask ? "dialog" : undefined} aria-expanded=${ask && open ? String(askOpen.value === "") : undefined} aria-label=${`The Orkmaster · ${name}`}
       title=${open && ask ? `The Orkmaster: who does what. Press again to ask it (${name})` : `The Orkmaster: who does what (${name})`} onClick=${press}>
-      <${Head} race=${CROWN.race} tier=${CROWN.tier} mood=${moodOf(null)} /><span class="col-head__nm">The Orkmaster</span>
+      <${Head} race=${CROWN.race} tier=${CROWN.tier} mood=${moodOf(null)} /><span class="col-head__nm" title=${name}>${name}</span>
     </button>
+    <${ProjectLine} now=${now} />
     ${currentProject.value && html`<button type="button" class="ork-btn quiet table-switch col-head__switch" aria-label="Switch project" title="Switch project" onClick=${() => openOver("projects", {}, from, "Projects")}><${Icon} name="chevron-down" /></button>`}
   </div>`;
 }
