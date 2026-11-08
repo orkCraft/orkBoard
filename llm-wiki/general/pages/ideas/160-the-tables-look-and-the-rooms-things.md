@@ -32,16 +32,16 @@ The table's look and the room's things, after goal 158 (the person's split of 8 
 
 ## Stages
 orkUI first (§269.9): A and B are done in orkUI (/home/user/orkui), released as a new orkUI version, then copied in C; nothing in design-system/orkui is edited by hand. Models as the person answered: the sheets, drawings and tokens (A, B, C, E, F, G, H, J, K, L) on simpler models; the discard's column move (D) and the chair's seating (I) on a stronger one. Release is a craft as any (§274.1, goal 158 C): the chair offers it when it is not seated; Tech's default *Release stays seated and locked* reads as that. No stage changes an orkboard/gui/*.py, core/ or realm/ module; every .js and .css a stage touches stays under 600 lines.
-- [ ] A. orkUI's colours: the parties, the felts, the light's steps, the plate
+- [x] A. orkUI's colours: the parties, the felts, the light's steps, the plate
   - party: Design, in orkUI (simpler model). `office/tokens.json` and `tools/build_tokens.py`: a colour per party by race (§268.3: gold, moss `#8fbf4a`, plum, night blue, rust, sea, the Orkmaster's warm wood), each party's felt lit and out (§269.2, §271.2: out flat and darker), the five light steps per felt (§269.1), the flat plate under words (§275.2), bronze and gilt. A test in orkUI's tests/test_orkui.py: every text token 4.5:1 on its plate over each felt, lit and out; every signal ring 3:1 and brighter than every party and element colour (§268.2).
   - proves: Design's "When orkUI's tokens are read, then every text token measures at least 4.5:1 on its flat plate over each party's felt, lit and out…" (orkUI's half)
-- [ ] B. orkUI's drawings and parts, released
+- [x] B. orkUI's drawings and parts, released
   - party: Design, in orkUI (simpler model). `.ork-table` (felt, five dithered steps by a 2 px checker, flat plates, bronze frame with rivets, out), a bronze plaque, a swallowtail pennant on a pole (tall when open), the lamp's chain with its bead at rest and pulled (in place of `door/`, §271.4), the backpack shut and open (§272.1, from the gui's rect art in js/table/backpack.js) and the open backpack's leather frame with two straps and buckles. No smooth gradient, no blurred shadow or glow (hard pixel rings only), a test says so. Preview, CHANGELOG, released as orkUI 0.35.0.
   - proves: Design's Checks "Felts, steps, bronze, plaques, pennants, the chain and the backpack are orkUI's tokens and drawings…", "No smooth gradient and no blurred shadow or glow…" (orkUI's half)
-- [ ] C. orkUI 0.35.0 copied, the contrast test here
+- [x] C. orkUI 0.35.0 copied, the contrast test here
   - party: Tech (simpler model). `python -m orkboard.design.orkui /home/user/orkui`; tests/test_design_system.py: the copy is 0.35.0 or later with the felts, steps, plate, bronze, pennant, chain and backpack; the token contrast test over each party's felt and step, lit and out, signal rings 3:1 and brightest; no `linear-gradient`/`radial-gradient`, no blurred `box-shadow`/`filter: blur`/`drop-shadow` in the desktop's or the phone's sheets.
   - proves: Design's "When orkUI's tokens are read, then every text token measures at least 4.5:1…"; Tech's Check "design-system/orkui is orkUI's stamped copy with its new version in test_design_system.py…"
-- [ ] D. The discard beside the table
+- [x] D. The discard beside the table
   - party: Tech (the stronger model). js/table/lane.js `ReleaseLane` becomes the window's right column outside the table, at its old width (`--col-w`), on every tab, its head a row for the room's things over the label *Discard* (§273.1–3); js/table/tabs.js: Release's tab joins the leaders' row in route order (§273.2), the backpack and the door leave the row's end (their places taken in G and H). Under 760 px discard.js `DiscardEnd` works as today. tests/test_discard_table_browser.py and test_table_edge_browser.py rewritten to the new places, not deleted.
   - proves: Tech's "When the page opens at 1280 × 800 on the Orkmaster's tab and on Tech's with the person Here, then the discard is the window's right column outside the table at its old width, Release's tab in the leaders' row in route order."
 - [ ] E. The table's look on the desktop
@@ -171,6 +171,12 @@ orkUI first (§269.9): A and B are done in orkUI (/home/user/orkui), released as
 - The chair seats a craft as the parties' place does today (`ideas.goal_save` with the preset); the parties' place stays for a party's *Edit*.
 - The chair's crafts are `ideas.party_presets` of group `stage`, not locked and not yet made, each priced by `ideas.party_price`.
 - Release stays seated and locked as today; only its tab moves into the leaders' row (§274 is out).
+### Accepted
+- met: When the page opens at 1280 × 800 on the Orkmaster's tab and on Tech's with the person Here, then the discard is the window's right column outside the table at its old width, Release's tab in the leaders' row in route order.
+- cannot see: When the person pulls the lamp's chain at 1280 × 800 with the person Here, then one `presence.set {here: false}` is sent, and after the snapshot the chain reads *Away · until …*, the cards and signal rings unchanged.
+- cannot see: When the person presses the new chair, then a craft's card, at 1280 × 800, then the craft is seated by `ideas.goal_save` and the backpack opens on its chair; *Put it back* sends no command and seats nothing.
+- cannot see: When the person presses the kind or the stage in the Orkmaster's header at 1280 × 800, then the hand deals its choices, the present one marked; a card sends `ideas.project_kind_set` or `ideas.stage_set` once.
+- cannot see: When the phone opens `/app/` at 390 × 844 with the person Here, then the lamp's chain stands in its top row where the door stood, a press sends `presence.set`, its words in `aria-label` and `title` only.
 
 ## Decisions
 §268, §269, §271, §272, §273, §275. Mockups: docs/mockups/table-look/, docs/mockups/room-things/.
