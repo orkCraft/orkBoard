@@ -8,7 +8,6 @@ priority: normal
 short: The past from history
 phase: talk
 route: product, design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -45,11 +44,17 @@ What I expect:
 
 ## Open questions
 - What shows Product's past on its tab? (**Discard's past, tree later** / Discard's past only / The tree in this goal) — Product's tree is kept in .orkcraft/, absent here; the discard's past is built (150 E2) and needs only the readings · Discard's past, tree later: Product's done goals now; a goal of its own lays jobs and direction · Discard's past only: Done goals and their decisions; use cases stay goal titles · The tree in this goal: Jobs and outcome on Product's table; the goal grows by keeping the tree
+  - Answered: Discard's past, tree later (the person, 2026-11-08)
 - A decision of no goal: whose? (**The Orkmaster's tab only** / By its words, by code) — a party's past that misplaces a decision is worse than a thin one; all 232 stay whole on the Orkmaster's tab · The Orkmaster's tab only: No guessing: a party's past holds what its goals carried · By its words, by code: Every tab fills; a decision may land on the wrong party
+  - Answered: The Orkmaster's tab only (the person, 2026-11-08)
 - Backfill route: on the history pages? (**Once, one commit you read** / No, route from today on) — 111 of 130 pages are track: tech, so Product's and Design's tabs miss the goals they shaped · Once, one commit you read: 119 history pages gain route:; each party's past fills · No, route from today on: Old goals stay their track's; a party's past starts thin
+  - Answered: Once, one commit you read (the person, 2026-11-08)
 - How does a long deck deal? (**Seven, then All · search** / Every card in place / A goal of its own) — 232 decisions and 120 goals fill 4 week decks; the line already ends in All · search past seven (§167.5) · Seven, then All · search: Findable: seven in place, the deck over the pane with a search (changes §261.9) · Every card in place: As built: each deck deals whole; one goal is found by scrolling the column · A goal of its own: Fills now: the long deck's reading waits for a goal the person lays later
+  - Answered: Seven, then All · search (the person, 2026-11-08)
 - How is a history goal dated? (**Its last Spec commit** / The commit that laid it / Its decision's day) — the 119 history pages were laid done by import, not done then; a flag is never undone, so its day is chosen once · Its last Spec commit: Each in the week its last part was built; the laying commit where none · The commit that laid it: As Gist says; the 119 fall in the weeks they were laid, not built · Its decision's day: The log's day; only 45 of 119 carry decisions:, the rest need another
+  - Answered: Its decision's day; where its page carries no decisions:, the latest decision (§N) its spec names; where none, the day it was laid. Git dates cannot serve: this repository's history begins on 6 November and all 119 history pages were laid by one commit (20d880cf) on 8 November (the person, 2026-11-08)
 - Fold the old goals into living specs? (**No, a quiet flag** / Fold each, as the gate does) — gui/ideas_gate._raise_flag runs a leader's fold, a model call, and a journal line for each goal it flags: 120 at a first open · No, a quiet flag: No call at a first open; the living specs keep what they hold today · Fold each, as the gate does: Living specs gain the old goals; 120 leader calls in the background
+  - Answered: No, a quiet flag (the person, 2026-11-08)
 
 ## Decisions
 
