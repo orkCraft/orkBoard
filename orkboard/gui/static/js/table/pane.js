@@ -8,7 +8,7 @@ import { html, cls } from "../html.js";
 import { presenceNow } from "./presence.js";
 import { Icon } from "../orkui.js";
 import { town } from "../link.js";
-import { ORKMASTER, closeOver, inventory, lifted, openOver, over, picked } from "../frame/state.js";
+import { ORKMASTER, closeInventory, closeOver, inventory, lifted, openOver, over, picked } from "../frame/state.js";
 import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
 import { PHASES, isRelease, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
@@ -23,6 +23,7 @@ import { Earlier, PhaseView, RouteView, phaseKind } from "./phaseview.js";   // 
 import { nodeOf } from "./goalmap.js";
 import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
 import { LimitChip } from "./tabs.js";
+import { uprightNow } from "../frame/upright.js";
 import { Stall } from "./stall.js";                          // the inventory: the merchant's stall, drawn instead of the map while it is open (spec 157 D)
 import { stall } from "./stallstate.js";
 import { Menu } from "./menu.js";
@@ -95,6 +96,7 @@ function Title({ parties, tab, narrow }) {
     ["Report a problem…", () => openReport(), false, "sign:bug"]];     // the bug left the top row (spec 139 A.5, decisions §246.6)   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
   return html`<header class=${cls("ork-head table-title", { "is-bare": !o && !picked.value })}>
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
+    ${!o && stalled && uprightNow.value && html`<button type="button" class="ork-btn quiet table-title__back" data-stall-back aria-label="Close the inventory" title="Close the inventory" onClick=${closeInventory}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : stalled ? html`<span class="stall-title">Inventory</span> how the project is set · <b>${tab === ORKMASTER ? "the whole project" : stall.value?.whose || mapName(tab, parties)}</b>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
     ${picked.value && !stalled && html`<${Phases} goal=${picked.value} />`}
     <span class="table-grow"></span>

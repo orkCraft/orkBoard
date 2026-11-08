@@ -8,7 +8,7 @@ import { Column } from "../table/column.js";
 import { columnOn, lanesBeforeEnd, roadParties } from "../table/data.js";
 import { ReportPanel } from "../hand/logsbtn.js";           // the bug's panel and a crash's card, once on the page (spec 139 A.5)
 import { CrashNote } from "../crashes.js";
-import { over } from "./state.js";
+import { inventory, over } from "./state.js";
 import { uprightNow } from "./upright.js";
 import { SetupWatch } from "../hand/setupcards.js";     // what the Orkmaster asks now, on the first open (spec 130 B.4)
 import { laidNow, laying, useLaying } from "../table/laying.js";   // the window not yet laid, and the laying at Start (spec 130 C.6)
@@ -37,7 +37,7 @@ export function Frame() {
       <${Room} /><${SetupWatch} /><${CrashNote} /><${ReportPanel} />
     </div>`;
   }
-  return html`<div class="frame" data-frame="1" data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-discard=${column && laneShown() ? "1" : undefined} data-live=${live ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && over.value ? "1" : undefined} style=${`--lanes:${lanesBeforeEnd() + (column ? 0 : 1)}`}>
+  return html`<div class="frame" data-frame="1" data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-discard=${column && laneShown() ? "1" : undefined} data-live=${live ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && (over.value || inventory.value !== null) ? "1" : undefined} style=${`--lanes:${lanesBeforeEnd() + (column ? 0 : 1)}`}>
     ${column && html`<aside class="frame-column" aria-label="The Orkmaster's goals"><${Column} /></aside>`}
     <div class="frame-table"><${Table} column=${column} /></div>
     <${DiscardColumn} />
