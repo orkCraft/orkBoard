@@ -1,4 +1,4 @@
-"""The product's lifted question as it is (spec 158 F), no mockup layer: the camera of shoot.py pointed at the page itself, at 1440 x 900, with the ways' lines the test host writes.
+"""The product's lifted question as it is (spec 158 F), no mockup layer: the camera of shoot.py pointed at the page itself, at 1280 x 800, with the ways' lines the test host writes.
 
     MOCK_OUT=docs/mockups/answer-cards/shots PYTHONPATH=. uv run --extra dev --extra browser --extra gui \
         pytest -q -p tests.conftest -p no:xdist docs/mockups/answer-cards/shoot_product.py"""
@@ -16,7 +16,7 @@ OUT = Path(os.environ["MOCK_OUT"])
 def test_shots(gui):
     server, browser = gui
     h = WaysHost()
-    pg = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+    pg = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
     pg.route_web_socket("**/ws*", h.on_socket)
     pg.goto(server.url)
     pg.locator(".hand-card").first.wait_for(state="attached", timeout=WAIT_MS)
@@ -33,7 +33,7 @@ def test_shot_talk(gui):
     """A goal still in Talk, lifted (spec 158 H): its leaders' Talk and its question with its ways on the table."""
     server, browser = gui
     h = TalkHost()
-    pg = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+    pg = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
     pg.route_web_socket("**/ws*", h.on_socket)
     pg.goto(server.url)
     pg.locator(".hand-card").first.wait_for(state="attached", timeout=WAIT_MS)
