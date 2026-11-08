@@ -4,7 +4,7 @@ card offers *To main without the tests*, the only press that sends `untested: tr
 from __future__ import annotations
 
 import pytest
-import time
+import json
 
 pytest.importorskip("playwright.sync_api")
 
@@ -29,13 +29,10 @@ class NoReleaseHost(PortalHost):
         self.checked = False
         self.red = False
         self.no_tests = False
-        self.retry_delay = 0
 
     def handle(self, name, a):
         if name == "ideas.to_main_checks":
             self.log.append((name, a))
-            if a.get("again"):
-                time.sleep(self.retry_delay)
             self.checked = True
             tests = {"name": "Tests", "state": "failed", "words": "tests/test_player.py::test_lobby_opens failed (1 of 12)"} if self.red else {"name": "Tests", "state": "passed", "words": ""}
             return {"idea": a["idea"], "running": False, "checks": [{"name": "The merge", "state": "passed", "words": ""}, tests]}
@@ -50,6 +47,33 @@ class NoReleaseHost(PortalHost):
             self.log.append((name, a))
             return {"error": "Sealed: Tests is red: tests/test_player.py::test_lobby_opens failed (1 of 12)"}
         return super().handle(name, a)
+
+
+
+class DeferredRetryHost(NoReleaseHost):
+    """Hold the retry reply without blocking Playwright's synchronous event handler."""
+
+    def __init__(self):
+        super().__init__()
+        self.retry_reply = None
+
+    def on_socket(self, ws):
+        super().on_socket(ws)
+
+        def on_message(raw):
+            message = json.loads(raw)
+            reply = {"t": "reply", "id": message["id"], "ok": True,
+                     "result": self.handle(message["name"], message["args"])}
+            if message["name"] == "ideas.to_main_checks" and message["args"].get("again"):
+                self.retry_reply = reply
+            else:
+                ws.send(json.dumps(reply))
+        ws.on_message(on_message)
+
+    def finish_retry(self):
+        assert self.retry_reply is not None, "the explicit retry must have reached the host"
+        self.ws.send(json.dumps(self.retry_reply))
+        self.retry_reply = None
 
 
 def names(host):
@@ -169,7 +193,7 @@ def test_the_merge_of_dev_says_the_tests_run_while_they_do_and_a_red_in_words(gu
 
 
 def test_red_survives_reselection_and_only_test_again_retries(gui):
-    host = NoReleaseHost()
+    host = DeferredRetryHost()
     host.red = True
     pg, host, log = open_lane(gui, host)
     try:
@@ -184,9 +208,12 @@ def test_red_survives_reselection_and_only_test_again_retries(gui):
         assert not any(a.get("again") for n, a in host.log if n == "ideas.to_main_checks")
         assert "ideas.to_main" not in names(host)
         host.red = False
-        host.retry_delay = 0.5
         retry.click()
         tomain(pg).get_by_text("Checking the way into main", exact=True).wait_for(timeout=WAIT_MS)
+        assert tomain(pg).locator("[data-to-main]").is_disabled()
+        assert "ideas.to_main" not in names(host)
+        assert _sent(pg, host, ("ideas.to_main_checks", {"idea": "music", "again": True}))
+        host.finish_retry()
         pg.wait_for_function("() => !document.querySelector('[data-tomain] [data-to-main]')?.disabled", timeout=WAIT_MS)
         assert any(a.get("again") is True for n, a in host.log if n == "ideas.to_main_checks")
         assert names(host).count("ideas.to_main_checks") > count
