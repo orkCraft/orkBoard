@@ -17,7 +17,7 @@ import { toast } from "../link.js";
 import { ORKMASTER, openTab, openOver, picked } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { levelOf, windowOf } from "../arena/limits.js";
-import { nameOf, onRoute, MARKED, markSrc, mapName, isLive, wide } from "./data.js";
+import { nameOf, onRoute, MARKED, markSrc, mapName, isLive, wide, columnOn } from "./data.js";
 import { onRoad, roadAwake } from "./road.js";
 import { chosenSlug } from "./portal.js";
 import { checksOf, pending } from "./checks.js";
@@ -27,8 +27,8 @@ import { Marks, marksOf, marksWords, projectMarks, runsOn } from "./tabmarks.js"
 import { AskBubble, askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { EmptyChair, useOffer } from "./chairs.js";
 import { raceOf } from "./felt.js";
-import { PresenceDoor } from "./presence.js";
-import { Backpack } from "./backpack.js";                    // the inventory's backpack, before *New party* (spec 157 D.1)
+import { PresenceChain } from "./presence.js";
+import { Backpack } from "./backpack.js";                    // the inventory's backpack (spec 157 D.1): at the discard column's head (lane.js); at the tabs' end only where there is no column
 import { laidNow } from "./laying.js";
 import { isWorking, moodOf } from "./moods.js";
 import { answeringOn } from "./passing.js";
@@ -130,10 +130,10 @@ export function Tabs({ parties, all = parties, current, narrow, compact, column 
         alert=${hasAlert(g) ? `${theLeader(g.leader?.name)} has an alert on the table` : ""} compact=${compact} narrow=${narrow} onPick=${() => leave(g.slug)} />`)}
     </div>
     <div class="table-tabs__end">
-      ${laid && html`<${Backpack} small=${narrow} />`}
+      ${laid && !columnOn() && html`<${Backpack} small=${narrow} />`}
       ${offer && html`<${EmptyChair} from=${from} narrow=${narrow} />`}
       <span class="table-grow"></span>
-      ${laid && html`<${PresenceDoor} small=${narrow} />`}
+      ${laid && !columnOn() && html`<${PresenceChain} small=${narrow} />`}
     </div>
   </nav>
   <${AskBubble} tab=${current} parties=${all} />`;

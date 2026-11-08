@@ -2,18 +2,14 @@
    (tokens.css, components.css `.ork-potion`); no colour, font or corner of its own. The table's edge is stitched while it is open. */
 
 /* the stitched edge: a dashed border in the edge, inset on the table, never taking a press */
-.table-pane[data-stall="open"]::after { content: ""; position: absolute; inset: var(--ork-2); border: 2px dashed var(--ork-edge); pointer-events: none; z-index: 1; }
 .stall-title { font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
 
 /* the backpack, at the tabs' end */
 .stall-pack { appearance: none; display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; padding: 0 var(--ork-2); background: none; border: 0; cursor: pointer; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .stall-pack:hover, .stall-pack:focus-visible, .stall-pack.is-open { color: var(--ork-ink); }
 .stall-pack:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.stall-pack__art { display: block; flex: none; image-rendering: pixelated; }
 .stall-pack__word { line-height: 14px; }
 .stall-pack.is-small .stall-pack__word { display: none; }
-.stall-pack .pk-X { fill: var(--ork-edge); } .stall-pack .pk-\# { fill: var(--ork-panel); } .stall-pack .pk-F { fill: var(--ork-ink-faint); } .stall-pack .pk-o, .stall-pack .pk-i { fill: var(--ork-mana); }
-.stall-pack .pk-P { fill: var(--ork-frame); } .stall-pack .pk-C { fill: var(--ork-ink-muted); }
 
 /* the stall: the merchant at the left, the rug at the right, his line over them, the receipt under */
 .stall { flex: 1; min-height: 0; min-width: 0; display: grid; grid-template-columns: 124px minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: start; gap: var(--ork-2) var(--ork-5); padding: var(--ork-3) var(--ork-5) var(--ork-4); overflow: auto; }

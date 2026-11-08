@@ -187,7 +187,7 @@ def test_the_field_is_orkuis_table_its_wood_a_surface_and_never_a_mark():
     assert all(f"--ork-{t}:" in tok for t in ("table", "table-rim", "table-rim-hi"))
     assert ".ork-table" in (orkui.ROOT / "components.css").read_text(encoding="utf-8")
     pane = (STATIC / "js" / "table" / "pane.js").read_text(encoding="utf-8")
-    assert re.search(r'<section class="table-pane ork-table"', pane)           # spec 98 §3: the table starts at the pane's top, the Board and what is opened over it on its wood
+    assert re.search(r'<section class=\$\{cls\("table-pane ork-table"', pane)           # spec 98 §3: the table starts at the pane's top, the Board and what is opened over it on its wood
     sheets = "".join(p.read_text(encoding="utf-8") for p in SHEETS)
     assert "var(--ork-table)" not in sheets                                       # only orkUI's .ork-table draws the wood (the sheets use its rim: spec 123 §7.7)
 

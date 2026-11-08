@@ -33,3 +33,46 @@ def test_shots(gui):
     pg.wait_for_timeout(1800)
     pg.mouse.move(640, 790)
     pg.screenshot(path=str(OUT / "product-tech.png"))
+
+
+def test_room_things(gui):
+    """Spec 160 G and H: Tech's tab with the lamp lit, out, and the backpack open (docs/mockups/room-things/shots/product-*.png)."""
+    import json
+    out = Path(os.environ.get("ROOM_OUT", "docs/mockups/room-things/shots"))
+    server, browser = gui
+    h = host()
+    pres = {"here": True, "until": "2026-11-04T23:00", "held": False}
+    snapshot, handle = h.snapshot, h.handle
+
+    def snap():
+        doc = snapshot()
+        doc["state"]["presence"] = dict(pres)
+        return doc
+
+    def hd(name, a):
+        if name == "presence.set":
+            pres.update(here=a["here"], until="2026-11-04T23:00" if a["here"] else "2026-11-05T19:00", held=True)
+            h.rev += 1
+            h.ws.send(json.dumps(snap()))
+            return dict(pres)
+        return handle(name, a)
+    h.snapshot, h.handle = snap, hd
+    pg = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
+    pg.route_web_socket("**/ws*", h.on_socket)
+    pg.goto(server.url)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator('.table-tab[data-tab="tech"]').click()
+    pg.wait_for_timeout(2500)
+    out.mkdir(parents=True, exist_ok=True)
+    pg.mouse.move(640, 790)
+    pg.screenshot(path=str(out / "product-lamp-on.png"))
+    pg.locator(".presence-chain").click()
+    pg.wait_for_timeout(1500)
+    pg.mouse.move(640, 790)
+    pg.screenshot(path=str(out / "product-lamp-off.png"))
+    pg.locator(".presence-chain").click()
+    pg.wait_for_timeout(1200)
+    pg.locator("[data-backpack]").click()
+    pg.wait_for_timeout(1500)
+    pg.mouse.move(640, 790)
+    pg.screenshot(path=str(out / "product-pack.png"))

@@ -337,7 +337,7 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_no_stop_all_in_the_r
     chair = pg.locator(".table-tabs__end .table-chair")
     assert " ".join(chair.text_content().split()) == ("New party" if wide(w) else "") and "primary" not in chair.get_attribute("class")           # spec 123 §7.5: the empty chair, green is New goal's
     assert pg.get_by_role("button", name="Switch project").count() == 1                                                  # the ▾ after the project's name, its own button
-    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button:not(.stall-pack)").count() == 1 and pg.locator(".table-tabs__end .stall-pack").count() == 1 and pg.locator(".table-logs").count() == 0                  # the tabs' end keeps the empty chair and the door, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
+    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button:not(.stall-pack):not(.presence-chain)").count() == 1 and pg.locator(".stall-pack").count() == 1 and pg.locator(".table-logs").count() == 0                  # the tabs' end keeps the empty chair and the door, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
     if not wide(w):
         assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
         assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen

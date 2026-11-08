@@ -131,13 +131,15 @@ def test_the_backpack_opens_the_stall_and_esc_shuts_it(gui):
         pack = pg.locator("[data-backpack]")
         pack.wait_for(timeout=WAIT_MS)
         assert pack.get_attribute("title") == "Inventory: how the project is set" and pack.get_attribute("aria-pressed") == "false"
-        order = pg.evaluate("() => { const e = document.querySelector('.table-tabs__end'); return [...e.children].map((c) => c.className); }")
-        assert "stall-pack" in order[0], order                                    # the backpack stands first at the tabs' end, before New party's chair
+        head = pg.locator('.release-lane__head[data-room-things="discard"]')
+        assert head.locator("[data-backpack]").count() == 1 and pg.locator(".table-tabs__end .stall-pack").count() == 0       # the backpack stands at the left of the discard column's head, not at the tabs' end (spec 160 H)
+        assert pack.bounding_box()["x"] > pg.viewport_size["width"] * 0.8 and head.locator(".ork-pack:not(.is-open)").count() == 1
         assert pg.locator(".stall").count() == 0 and pg.locator(".table-pane").get_attribute("data-stall") is None
         pack.click()
         pg.locator(".stall").wait_for(timeout=WAIT_MS)
         assert pg.locator(".table-pane").get_attribute("data-stall") == "open"
-        assert pg.locator(".table-pane").evaluate("e => getComputedStyle(e, '::after').borderTopStyle") == "dashed"       # the table's edge is stitched
+        assert pg.locator(".table-pane").evaluate("e => e.classList.contains('ork-leather')") and head.locator(".ork-pack.is-open").count() == 1       # the open pack, the table in its leather (stitched, two straps)
+        assert pg.locator(".table-pane").evaluate("e => getComputedStyle(e).outlineStyle") == "dashed"
         assert pack.get_attribute("title") == "Close the inventory" and pack.get_attribute("aria-pressed") == "true"
         assert ("ideas.stall", {"chair": ""}) in host.log
         assert pg.locator(".hand .carry").count() == 1 and pg.locator(".hand .hand-stack, .hand .hand-slot").count() == 0       # what you carry, not the stacks
@@ -145,6 +147,7 @@ def test_the_backpack_opens_the_stall_and_esc_shuts_it(gui):
         pg.keyboard.press("Escape")
         pg.wait_for_function("() => !document.querySelector('.stall')", timeout=WAIT_MS)
         assert pg.locator(".hand .carry").count() == 0 and pg.locator("[data-backpack]").get_attribute("aria-pressed") == "false"
+        assert not pg.locator(".table-pane").evaluate("e => e.classList.contains('ork-leather')")        # shut, the bronze is back
         pack.click()
         pg.locator(".stall").wait_for(timeout=WAIT_MS)
         pack.click()

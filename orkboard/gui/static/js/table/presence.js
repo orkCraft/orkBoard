@@ -1,9 +1,10 @@
-// The door as the person: **Here** or **Away** (docs/specs/139-the-die-the-door-and-the-bug.md C.2 and C.4, decisions §246.4–§246.5; the look: docs/mockups/die-and-door/index.html section 4; the host's side is spec 139 C.1,
+// The person's presence: **Here** or **Away**; on the desktop the lamp's chain (`PresenceChain`, spec 160 G, below); the door (`PresenceDoor`) stays only for the phone's top row until stage K. The door: (docs/specs/139-the-die-the-door-and-the-bug.md C.2 and C.4, decisions §246.4–§246.5; the look: docs/mockups/die-and-door/index.html section 4; the host's side is spec 139 C.1,
 // gui/board_host.py `presence` and `presence.set`, realm/hours.py). orkUI's `.ork-door` (design-system/orkui/door/README.md) stands at the top row's end, where *Stop all* stood (it moved to the die): **open** (`is-open`) with the word *Here*
 // and, under it, its line (*until 23:00*, the hours' next edge), **shut** with *Away* (*until 19:00*, the word muted); *· held* is appended while the press of the door holds the other state till the edge. The word is in the pixel face
 // as the tabs' words are, its line in the caption face. The door has no words inside (it is `aria-hidden`): the button carries them, `aria-pressed` is *here*, and `title` says what a press does. A press sends `presence.set {here: !here}`
 // and the snapshot that follows turns the door (nothing is guessed here). With no `presence` in the snapshot (an older host) there is no door. Under 760 px (a narrow desktop window) the door is the small one with its word alone;
 // the phone's top row (hand/uptop.js) has `PresenceDoor` with `small` too. The sheet is presence.css (orkUI's tokens only).
+import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { town, command } from "../link.js";
 
@@ -44,5 +45,21 @@ export function PresenceDoor({ small = false }) {
   return html`<button type="button" class=${cls("presence-door", { "is-away": !p.here, "is-small": small })} aria-pressed=${String(p.here)} aria-label=${`${word}${line ? `, ${line}` : ""}`} title=${title} data-here=${String(p.here)} onClick=${pressDoor}>
     <span class=${cls("ork-door", { "is-open": p.here, small })} aria-hidden="true"></span>
     <span class="presence-door__words"><b class="presence-door__word">${word}</b>${!small && line && html`<span class="presence-door__line">${line}</span>`}</span>
+  </button>`;
+}
+
+const reduced = () => !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+/** The lamp's chain (spec 160 G, decisions §271): orkUI's `.ork-chain` at the right of the discard column's head (lane.js; under 760 px, small, at the tabs' end), on the same press as the door's: `presence.set {here: !here}`.
+ *  Here it hangs at rest; Away it is `.is-pulled`. A press moves it once (`.is-tugging`, taken off at its animationend; at once under reduced motion: the class is never set). Its words stand beside it
+ *  (*Here*, its line *until 23:00*, *· held*); `small` has no words and `aria-label` and `title` keep them (§271.5). With no `presence` in the snapshot there is no chain. */
+export function PresenceChain({ small = false }) {
+  const [tug, setTug] = useState(false), p = presenceNow();
+  if (!p) return null;
+  const line = presenceLine(p), word = p.here ? "Here" : "Away", title = `${p.here ? HERE_TITLE : AWAY_TITLE}${line ? ` (${line})` : ""}`;
+  const press = () => { if (!reduced()) setTug(true); pressDoor(); };
+  return html`<button type="button" class=${cls("presence-chain", { "is-away": !p.here, "is-small": small })} aria-pressed=${String(p.here)} aria-label=${`${word}${line ? `, ${line}` : ""}`} title=${title} data-here=${String(p.here)} onClick=${press}>
+    ${!small && html`<span class="presence-chain__words"><b class="presence-chain__word">${word}</b>${line && html`<span class="presence-chain__line">${line}</span>`}</span>`}
+    <span class=${cls("ork-chain", { small, "is-pulled": !p.here, "is-tugging": tug })} aria-hidden="true" onAnimationEnd=${() => setTug(false)}></span>
   </button>`;
 }
