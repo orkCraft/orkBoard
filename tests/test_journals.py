@@ -137,3 +137,15 @@ def test_a_leaders_journal_keeps_what_it_accepted_sent_back_and_learned_of_a_ste
     assert got[3][1].startswith("You sent back 2 things of tech's step of") and got[4][1].startswith("You sent back 1 thing of tech's step of")
     journal_notes.accepted(sd, root, "lobby", "No Such Party", 1, 1)                                  # a journal never fails what it records
     assert journals.read(sd, "tech")[0]["kind"] == "accepted"
+
+
+def test_a_digest_keeps_its_date_and_what_it_read(sd):
+    got = journals.save_digest(sd, "tech", "Works: x", "u", read=["a", "§1", "a", "b, c", "", "z" * 200] + [f"s{i}" for i in range(30)])
+    assert got["read"][:4] == ["a", "§1", "b c", "z" * journals.READ_CHARS] and len(got["read"]) == journals.READ_MAX
+    assert journals.digest(sd, "tech")["read"] == got["read"] and got["at"]
+    journals.save_digest(sd, "tech", "Works: y", "u", read=["k"], at="2026-11-08T10:00:00")
+    assert journals.digest(sd, "tech") == {"text": "Works: y", "upto": "u", "at": "2026-11-08T10:00:00", "read": ["k"]}
+    journals.save_digest(sd, "tech", "Works: z", "u")
+    assert journals.digest(sd, "tech")["read"] == [] and journals.digest(sd, "tech")["at"] != "2026-11-08T10:00:00"
+    text = (sd / "journals" / "tech.md").read_text()
+    assert "digest_at: " in text and "digest_read:" not in text
