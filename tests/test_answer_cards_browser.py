@@ -4,6 +4,7 @@ marked by its head and by its words, a priced way's cost in its corner; *<Leader
 The narrow page keeps the inline card. Screenshots to $LIFT_SHOTS when it is set."""
 from __future__ import annotations
 
+import copy
 import os
 from pathlib import Path
 
@@ -255,6 +256,54 @@ def test_your_own_words_opens_a_focused_field_beside_the_question_and_sends_the_
         pg.get_by_role("button", name="Send to ").click()
         got = _calls(pg, host, "ideas.answer")
         assert got and got[0]["slug"] == "phones" and got[0]["answers"] == ["Phones count alone and check back."] and got[0]["from"] == "hand", got
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+TALK = {"idea": "phones", "mode": "talk", "round": 1, "done": False, "heard": ["tech", "design"], "cause": None, "stances": [
+    {"party": "tech", "leader": "Architect", "weigher": False, "verdict": "go", "stance": "The server owns the clock", "for": "One place to reset", "against": "Every round trip adds delay", "questions": []},
+    {"party": "design", "leader": "Designer", "weigher": False, "verdict": "doubt", "stance": "Phones must agree on the second", "for": "Nobody argues about the time", "against": "A phone offline shows a stale time",
+     "questions": [{"id": "q1", "q": "Where does the timer run?", "choices": ["Server counts, phones show it", "Each phone counts down alone"], "pick": 0, "why": "One clock: every phone agrees.", "project": False, "state": "waiting"}]}]}
+
+
+class TalkHost(WaysHost):
+    """The goal `phones` is still in Talk: its leaders' Talk as the host kept it, two stances and Design's open question."""
+
+    def __init__(self):
+        super().__init__()
+        for n in self.nodes:
+            if n["slug"] == "phones":
+                n["state"] = "talk"
+
+    def handle(self, name, a):
+        if name == "ideas.talk_read":
+            self.log.append((name, a))
+            return copy.deepcopy(TALK)
+        return super().handle(name, a)
+
+
+def test_a_goal_in_talk_lifted_lays_its_leaders_talk_and_its_question_on_the_table(gui):
+    """Spec 158 H, decisions §270.4: lifted at 1280 x 800, the table of a goal still in Talk shows in each leader's lane its verdict and its lines, and in the asking leader's lane the question with its ways."""
+    pg, host, log = open_hand(gui, host=TalkHost())
+    try:
+        lift(pg, "asks", "phones")
+        board = pg.locator(".table-board--plan")
+        board.wait_for(timeout=WAIT_MS)
+        pg.locator(".plan-talk").first.wait_for(timeout=WAIT_MS)
+        tech, design = board.locator('.table-lane[data-party="tech"] .plan-talk'), board.locator('.table-lane[data-party="design"] .plan-talk')
+        assert tech.count() == 1 and design.count() == 1
+        assert tech.locator(".plan-talk__verdict").inner_text().strip().lower() == "go" and design.locator(".plan-talk__verdict").inner_text().strip().lower() == "doubt"
+        text = tech.inner_text()
+        assert "The server owns the clock" in text and "One place to reset" in text and "Every round trip adds delay" in text
+        assert "Phones must agree on the second" in design.inner_text() and "A phone offline shows a stale time" in design.inner_text()
+        assert tech.locator(".plan-talk__ask").count() == 0, "the question lies in its asker's lane only"
+        ask = design.locator(".plan-talk__ask")
+        assert ask.count() == 1 and ask.locator(".plan-talk__q").inner_text().strip() == "Where does the timer run?"
+        assert ask.locator(".plan-talk__ways li").all_inner_texts() == ["\u25cf Server counts, phones show it", "Each phone counts down alone"]
+        assert pg.locator(".plan-wait").count() == 0, "something was said: not the empty line"
+        assert board.locator(".plan-talk button, .plan-talk input").count() == 0, "read-only: nothing to press"
+        shot(pg, "talk-table")
     finally:
         pg.close()
     assert not log, "\n".join(log)

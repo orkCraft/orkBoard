@@ -285,7 +285,7 @@ def _asked(c: dict, state: str) -> dict:
 
 
 def talk_of(state_dir, slug: str) -> dict:
-    """A goal's Talk as it is kept, as data, never words: `{mode: "talk"|"bug"|"", round, done, heard: [party], stances: [{party, leader, weigher, stance, for, against, questions}], cause}`. Each
+    """A goal's Talk as it is kept, as data, never words: `{mode: "talk"|"bug"|"", round, done, heard: [party], stances: [{party, leader, weigher, stance, for, against, verdict (go, doubt, no or empty), questions}], cause}`. Each
     stance holds its party's questions: those the person answered (`state` "answered": `answer`, `how`, `round`), those left to the leaders' picks ("closed": `answer`) and
     those waiting ("waiting"). `cause` is a bug's guess, `{text, where, by, pending, confirmed}`, None with none. A Talk not begun (or taken back) is `{mode: "", round: 1,
     done: false, stances: [], cause: None}`; a question of a party with no stance (a bug's) lies under a stance of its own with no words."""
@@ -296,8 +296,9 @@ def talk_of(state_dir, slug: str) -> dict:
             if isinstance(c, dict):
                 asked.setdefault(str(c.get("by") or ""), []).append(_asked(c, state))
     stances = [{"party": str(s.get("party") or ""), "leader": str(s.get("leader") or ""), "stance": str(s.get("stance") or ""), "for": str(s.get("for") or ""),
-                "against": str(s.get("against") or ""), "weigher": bool(s.get("weigher"))} for s in rec.get("stances") or [] if isinstance(s, dict)]
-    stances += [{"party": p, "leader": "", "stance": "", "for": "", "against": "", "weigher": False} for p in asked if p not in {s["party"] for s in stances}]
+                "against": str(s.get("against") or ""), "weigher": bool(s.get("weigher")),
+                "verdict": s.get("verdict") if s.get("verdict") in ("go", "doubt", "no") else ""} for s in rec.get("stances") or [] if isinstance(s, dict)]
+    stances += [{"party": p, "leader": "", "stance": "", "for": "", "against": "", "weigher": False, "verdict": ""} for p in asked if p not in {s["party"] for s in stances}]
     for s in stances:
         s["questions"] = asked.get(s["party"], [])
     c = rec.get("cause") if isinstance(rec.get("cause"), dict) and rec.get("cause") else None
