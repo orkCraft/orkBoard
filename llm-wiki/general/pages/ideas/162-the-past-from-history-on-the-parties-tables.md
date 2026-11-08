@@ -6,10 +6,11 @@ order: 11
 size:
 priority: normal
 short: The past from history
-phase: work
+phase: done
 route: product, design, tech
 spec: docs/specs/162-the-past-from-history-on-the-parties-tables.md
 by: claude-code
+gate: 9c2ae46 · 145 files · green
 schema: 3
 ---
 # The past from history on the parties' tables
