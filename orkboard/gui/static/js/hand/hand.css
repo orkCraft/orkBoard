@@ -191,7 +191,7 @@
   rotate: calc(var(--hc-lean, 1) * var(--ork-motion-lean) * 0.25); }
 .hand .hand-card--big:hover { border-color: var(--ork-card-frame); }
 /* spec 150 A (decisions §254.10): a card laid over the Orkmaster's column covers it whole, in its shadow. orkUI's `.ork-card` clips itself to its notch (`clip-path`), which clipped any shadow at the card's box so that the column looked cut at its edge: these cards' clip is the box widened by the shadow's room (no 2 px notch at the corners; the field's top stays as wide as mention.css gives it), and the shadow is a token's. */
-.hand .ork-card.hand-card--big, .hand .ork-card.hand-field { --hc-lap: 64px; box-shadow: -14px 10px 30px var(--ork-scrim);
+.hand .ork-card.hand-card--big, .hand .ork-card.hand-field { --hc-lap: 64px; box-shadow: -8px 8px 0 var(--ork-scrim);
   clip-path: polygon(calc(var(--hc-lap) * -1) calc(var(--hc-lap) * -1), calc(100% + var(--hc-lap)) calc(var(--hc-lap) * -1), calc(100% + var(--hc-lap)) calc(100% + var(--hc-lap)), calc(var(--hc-lap) * -1) calc(100% + var(--hc-lap))); }
 .hand .ork-card.hand-field { clip-path: polygon(calc(var(--hc-lap) * -1) -100vh, calc(100% + var(--hc-lap)) -100vh, calc(100% + var(--hc-lap)) calc(100% + var(--hc-lap)), calc(var(--hc-lap) * -1) calc(100% + var(--hc-lap))); }
 .hand-lifted:focus-visible { outline: 0; }

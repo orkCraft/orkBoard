@@ -171,7 +171,7 @@ function WorkCard({ n, i, off, y, x, onPress }) {
   const kind = bad ? "alert" : asks || now.asked ? "question" : n.type?.sign || "", signal = bad ? "danger" : asks ? "alert" : "";
   const made = lastMade(n.tasks), windowed = windowOf({ made, picture: n.picture }).kind !== "none";                // the window where *now* was (spec 148 B.2): what the work made, else the goal's picture, else what it does now
   const bar = off && ripe && Number(ripe.seconds) > 0 ? shareOf(ripe) : null;                                // a card put off waits: its bar in eighths where its wait is known, quiet where it is not
-  return html`<button type="button" class=${cls("ork-card col-card col-card--up", { "ork-picked": on, asks, fails: bad, "is-off": !!off, "is-dim": own.dim })} ...${own.hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="work" data-off=${off || undefined} style=${`--i:${i};--y:${y}px;--x:${x}px`}
+  return html`<button type="button" class=${cls("ork-card col-card col-card--up", { [`el-${n.hue || n.element}`]: !!(n.hue || n.element), "ork-picked": on, asks, fails: bad, "is-off": !!off, "is-dim": own.dim })} ...${own.hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="work" data-off=${off || undefined} style=${`--i:${i};--y:${y}px;--x:${x}px`}
     aria-pressed=${String(on)} aria-label=${`${name}: ${sayOf(n, "work", off)}${tasks ? `, ${tasks.done} of ${tasks.total} tasks finished` : ""}`} onClick=${() => onPress(n, "work", off)}>
     <${CornerTop} rune=${{ name: el, hue, dim: !el, glowing: glow, still: false }} kind=${kind} signal=${signal} />
     <span class="col-nm" title=${name}>${name}</span>

@@ -38,6 +38,7 @@ def edge(pg, selector):
 def test_the_rim_cuts_the_card_after_its_title_and_the_hand_is_as_tall_as_the_cut_unless_the_die_and_the_potions_need_more(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
+        pg.emulate_media(reduced_motion="reduce")                                                    # the fan turns the front cards two degrees (cardface.css): their sizes are measured upright
         settle(pg)
         card = pg.locator('.hand-card[data-goal="timer"]')
         box, hand = card.bounding_box(), pg.locator(".hand").bounding_box()
@@ -126,6 +127,7 @@ def test_a_card_hovered_shows_whole_at_once_under_reduced_motion(gui):
 def test_the_hands_cards_are_the_goals_rune_and_kind_over_a_whole_title_with_no_head_on_top(gui, width):
     pg, host, log = open_hand(gui, host=HandHost(extra=True), width=width)
     try:
+        pg.emulate_media(reduced_motion="reduce")                                                    # the fan turns the front cards two degrees (cardface.css): their sizes are measured upright
         settle(pg)
         cards = pg.locator(".hand .hand-card--face")
         assert cards.count() >= 6

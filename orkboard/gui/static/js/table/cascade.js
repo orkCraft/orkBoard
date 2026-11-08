@@ -19,7 +19,7 @@ const THRESHOLD = 6;                                               // px a point
 /** A goal's strip: its element and its name on one line; the whole strip picks the goal (or puts it down), and wears orkUI's pick while it is the picked one. */
 export function GoalStrip({ n }) {
   const on = picked.value === n.slug;
-  return html`<button type="button" class=${cls("ork-card table-gstrip", { "ork-picked": on, "is-on": on })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} aria-pressed=${String(on)}
+  return html`<button type="button" class=${cls("ork-card table-gstrip", { [`el-${n.hue || n.element}`]: !!(n.hue || n.element), "ork-picked": on, "is-on": on })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} aria-pressed=${String(on)}
     aria-label=${n.title} title=${n.title} onClick=${() => pick(n.slug)}><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="table-gstrip__nm">${n.short || n.title}</span></button>`;
 }
 
