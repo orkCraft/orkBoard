@@ -119,8 +119,12 @@ to the hand, as a question's answers are, and the pick should open the backpack 
    each; a hero is changed there as any ware (§267).
 4. **Money is said before it is spent**: the craft's card says its price a week before the press (§57.3, §160.6); the
    chair's press alone seats nothing.
-5. **New party's form goes**: the project's kind and stage (*Idea*, *Being made*, *Live*) are set at the Orkmaster's chair
-   in the backpack, as its wares.
+5. **New party's form goes; the project is said in the Orkmaster's header** (this changes §201's header): **its first line
+   the project's name** (the switch of project beside it), **its second the project's kind and stage** (*Game · Being
+   made*), in the caption face; the words *The Orkmaster* leave the header (its head stays, and its `aria-label` and
+   `title` still name it). **The kind or the stage pressed deals its choices to the hand** (the kinds; *Idea*, *Being
+   made*, *Live*), each card with one line of what changes (*Live: LiveOps and Run join the chair's crafts*), the present
+   one marked; a card pressed changes it, *Put it back* nothing.
 
 The owner's call.
 
