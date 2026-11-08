@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import concerns as store, event_log, goal_team, idea_lens, idea_spend, idea_target, ideas, lens_rubrics, lexicon, library, map_parts, project_facts
+from orkboard.realm import concerns as store, event_log, goal_team, idea_lens, idea_spend, idea_target, ideas, journals, lens_rubrics, lexicon, library, map_parts, project_facts
 
 APP = {
     "package.json": json.dumps({"dependencies": {"react-router-dom": "6"}}),
@@ -349,6 +349,7 @@ def test_a_map_that_changed_is_looked_at_again_only_when_the_last_look_is_a_day_
 
 
 def test_one_look_at_a_time_a_party_and_a_stale_looking_is_not_looking(host, design, model):
+    journals.save_digest(host.ideas.state_dir, design, "Works: x", 0)                          # a view of today: no view call (spec 167 J)
     model.gate = threading.Event()
     host.command("ideas.concerns", {"party": design})
     for _ in range(300):
@@ -362,6 +363,7 @@ def test_one_look_at_a_time_a_party_and_a_stale_looking_is_not_looking(host, des
     model.gate.set()
     _wait(host, design)
     assert host.command("ideas.concerns", {"party": design})["status"] == "ready"
+    journals.save_digest(host.ideas.state_dir, design, "Works: x", 0)                                           # a view of today: no view call is begun on opening (spec 167 J)
     store.save(host.ideas.state_dir, design, status="looking")                                                  # lost with the process: nobody is at it
     assert host.command("ideas.concerns", {"party": design})["status"] == ""
 
@@ -378,6 +380,7 @@ def test_a_spent_window_or_limit_is_said_and_the_record_is_not_touched(host, des
 
 
 def test_a_leader_that_does_not_answer_fails_the_look_and_the_next_opening_does_not_ask_at_once(host, design, model):
+    journals.save_digest(host.ideas.state_dir, design, "Works: x", 0)                          # a view of today: no view call (spec 167 J)
     model.answer = "not the json"
     _look(host, design)
     rec = host.command("ideas.concerns", {"party": design})
@@ -565,6 +568,7 @@ def test_a_look_of_a_map_that_changed_asks_for_the_line_and_keeps_it_with_its_ti
 
 
 def test_a_bad_way_is_unclear_and_a_look_that_says_no_line_keeps_none(host, design, model):
+    journals.save_digest(host.ideas.state_dir, design, "Works: x", 0)                          # a view of today: no view call (spec 167 J)
     _look(host, design)
     _change_map(host)
     _a_day_ago(host, design)
@@ -606,3 +610,36 @@ def test_a_failed_look_keeps_no_line_and_the_next_one_is_not_asked_one(host, des
     _look(host, design)
     rec = host.command("ideas.concerns", {"party": design})
     assert rec["status"] == "failed" and rec["since"] is None and rec["map_hash"] == ""
+
+
+# -- the leader's view on opening a tab (spec 167 J) ----------------------------------------------------------------------------------------------
+
+def _views(model):
+    return [c for c in model.calls if c["step"] != "concerns"]
+
+
+def test_opening_a_tab_begins_the_view_only_when_it_is_a_day_old_or_there_is_none(host, design, model):
+    state = host.ideas.state_dir
+    journals.save_digest(state, design, "Works: x", 0)                                         # a view of today
+    _look(host, design)                                                                        # the map's look, no view
+    _wait(host, design)
+    assert _views(model) == []
+    _look(host, design)
+    _wait(host, design)
+    assert _views(model) == [], "a view of today begins none"
+    journals.save_digest(state, design, "Works: x", 0, at=(dt.datetime.now() - dt.timedelta(days=2)).isoformat(timespec="seconds"))
+    _look(host, design)
+    _wait(host, design)
+    assert len(_views(model)) >= 1, "a view two days old begins one (a failed answer is tried twice)"
+
+
+def test_a_party_busy_with_its_maps_look_begins_no_view(host, design, model):
+    model.gate = threading.Event()
+    host.command("ideas.concerns", {"party": design})
+    assert host.ideas.keeper.busy_goal(design) and _views(model) == []
+    model.gate.set()
+    _wait(host, design)
+    assert _views(model) == []
+    _look(host, design)                                           # the next opening tries again
+    _wait(host, design)
+    assert len(_views(model)) >= 1

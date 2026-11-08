@@ -73,6 +73,11 @@ class ConcernsMixin:
                     self.changed("")                                  # the look has begun: the strip says so
             except KeeperError as e:                                  # a spent window or limit: said on the strip, nothing touched
                 waits = str(e)
+        try:                                                          # Orkboard's own look at the product, quietly (spec 167 J): a party busy with its map's look begins none, the next opening tries again
+            if self.keeper.view_due(party):
+                self.keeper.journal_view(party, "open")
+        except Exception:
+            pass
         rec = self._concern_record(party)
         if rec["concerns"]:                                           # the page sends no event of its own: each opening of a map that has concerns is one `concern_opened`
             self._ev(event_log.CONCERN_OPENED, args, party=party, level="alert" if any(c["level"] == "alert" for c in rec["concerns"]) else "note")
