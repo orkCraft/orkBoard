@@ -6,7 +6,8 @@ order: 14
 size:
 priority: normal
 short: A leader's view
-phase: new
+phase: talk
+route: product, design, tech
 by: claude-code
 schema: 3
 ---

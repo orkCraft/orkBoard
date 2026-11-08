@@ -6,7 +6,8 @@ order: 12
 size:
 priority: normal
 short: Product's tree
-phase: new
+phase: talk
+route: product, design, tech
 by: claude-code
 schema: 3
 ---
