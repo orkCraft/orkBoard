@@ -18,12 +18,13 @@ from __future__ import annotations
 import os
 import subprocess
 import threading
+import uuid
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import gate_config, goal_main, jobs
+from orkboard.realm import gate_config, goal_main, jobs, worktrees
 from orkboard.realm.gate_config import Check
-from orkboard.realm.idea_git import IdeaGit
+from orkboard.realm.idea_git import IdeaGit, _git, _ok
 
 WORDS_MAX = 160
 
@@ -44,6 +45,15 @@ def last_line(text: str) -> str:
         line = " ".join(line.strip("=-_*# \t").split())
         if line:
             return line[:WORDS_MAX]
+    return ""
+
+
+def failed_test(out: str) -> str:
+    """The first test pytest reports failed or errored (`-rfEs`: *FAILED tests/test_a.py::test_b - assert 1 == 2*), short: `tests/test_a.py::test_b`; "" when none is named."""
+    for line in str(out or "").splitlines():
+        head, _, rest = line.partition(" ")
+        if head in ("FAILED", "ERROR") and rest.strip():
+            return rest.split(" - ")[0].strip()[:WORDS_MAX]
     return ""
 
 
@@ -82,7 +92,31 @@ def _gate(git: IdeaGit, path: Path, old: str, cancel: threading.Event, timeout_s
         return True, last_line(run.out.split("\n! ")[0]) or "No tests to run"
     if run.ok:
         return True, ""
-    return False, run.env or last_line(run.out) or f"It ended with exit code {run.code}"
+    if run.env:
+        return False, run.env
+    name, said = failed_test(run.out), last_line(run.out) or f"It ended with exit code {run.code}"
+    return False, f"{name} failed ({said})"[:WORDS_MAX * 2] if name else said
+
+
+def verify(repo: Path, tip: str, base: str, cancel: threading.Event | None = None, timeout_s: int | None = None) -> tuple[bool, str, str]:
+    """The checks after *The merge* run on the commit `tip` (what a press that takes dev whole would make main; `base` is main's head now), in a worktree
+    of its own that is gone whatever happens: (passed, the check that stopped it, its words). No ref moves."""
+    cancel = cancel or threading.Event()
+    git = IdeaGit(Path(repo))
+    gate = gate_config.read(Path(repo))
+    timeout = timeout_s or int((gate.main_timeout_min or gate_config.MAIN_TIMEOUT_MIN) * 60)
+    path = worktrees.worktree_path(git.root, f"{goal_main.TRIAL}-{uuid.uuid4().hex[:8]}")
+    try:
+        with git.lock:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            _ok(_git(git.root, "worktree", "add", "--detach", str(path), tip))
+        for check in gate_config.main_checks(Path(repo))[1:]:
+            ok, words = _gate(git, path, base, cancel, timeout) if check.gate else _command(path, check.run, cancel, timeout)
+            if not ok:
+                return False, check.name, words
+        return True, "", ""
+    finally:
+        git.remove(path)
 
 
 def run(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, into: str = "dev", main: str = "",

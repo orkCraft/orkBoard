@@ -100,6 +100,18 @@ def worktrees(repo: Path) -> list[str]:
     return [ln for ln in git(repo, "worktree", "list", "--porcelain").splitlines() if ln.startswith("worktree ") and "gate-main" in ln]
 
 
+def to_main(host, slug: str, **more) -> dict:
+    """What the page does (stage A, decisions §274): the checks on the way into main asked and waited for, then the goal sent."""
+    import time
+    host.command("ideas.to_main_checks", {"idea": slug})
+    for _ in range(1000):
+        got = host.ideas._main_checks.get(slug)
+        if got and not got["running"]:
+            break
+        time.sleep(0.02)
+    return host.command("ideas.to_main", {"idea": slug, **more})
+
+
 def events(host, name: str) -> list[dict]:
     return [r for r in event_log.read(Path(host.repo_root)) if r["event"] == name]
 
@@ -163,7 +175,7 @@ def test_a_pick_is_in_main_by_its_patch_id_and_the_gate_does_not_count_it_again(
     lobby, chat, l1, c1, own, l2 = work
     before = host.command("ideas.gate")
     assert before["commits"] == 5 and [i["slug"] for i in before["ideas"]] == [lobby, chat] and before["files"] == 5
-    got = host.command("ideas.to_main", {"idea": lobby})
+    got = to_main(host, lobby)
     assert got["ok"] is True and got["goals"] == [lobby] and got["note"] == ""
     assert git(repo, "rev-parse", "main") == got["commit"] and set(git(repo, "rev-list", "main..dev").split()) >= {*l1, *l2}   # by sha: still ahead
     after = host.command("ideas.gate")
@@ -177,7 +189,7 @@ def test_a_pick_is_in_main_by_its_patch_id_and_the_gate_does_not_count_it_again(
 
 def test_dev_whole_still_goes_after_a_goal_went_alone(host, repo, work):
     lobby, chat, *_ = work
-    host.command("ideas.to_main", {"idea": lobby})
+    to_main(host, lobby)
     got = host.command("ideas.gate_merge")
     assert got["ok"] is True and git(repo, "merge-base", "--is-ancestor", "dev", "main") == ""
     assert host.command("ideas.gate")["commits"] == 0 and (repo / "chat" / "room.ts").exists() and (repo / "own.txt").exists()
@@ -217,7 +229,7 @@ def test_a_pick_that_would_conflict_seals_it_with_the_files_and_leaves_nothing_b
     got = plan_of(host, repo, lobby)
     assert got["sealed"] == f"{short(host, lobby)} does not apply to main cleanly: a.txt" and len(got["commits"]) == 1
     with pytest.raises(CommandError, match="does not apply to main cleanly: a.txt"):
-        host.command("ideas.to_main", {"idea": lobby})
+        to_main(host, lobby)
     assert git(repo, "rev-parse", "main") == before and worktrees(repo) == []
     assert git(repo, "status", "--porcelain") == "" and events(host, "goal_to_main") == []
     assert idea_flag.flag_of(host.ideas.state_dir, lobby) is None
@@ -225,7 +237,7 @@ def test_a_pick_that_would_conflict_seals_it_with_the_files_and_leaves_nothing_b
 
 def test_a_goal_in_main_already_and_a_goal_without_commits_have_nothing_to_send(host, repo, work):
     lobby, chat, *_ = work
-    host.command("ideas.to_main", {"idea": lobby})
+    to_main(host, lobby)
     assert plan_of(host, repo, lobby)["sealed"] == f"{short(host, lobby)} is in main already"
     with pytest.raises(CommandError, match="is in main already"):
         host.command("ideas.to_main", {"idea": lobby})
@@ -263,7 +275,7 @@ def test_the_merge_picks_the_commits_in_order_onto_main_and_the_checkout_follows
     lobby, chat, l1, c1, own, l2 = work
     depends(host, lobby, chat)
     rev = host.snapshot()["ideas_rev"]
-    got = host.command("ideas.to_main", {"idea": lobby})
+    got = to_main(host, lobby)
     assert got["ok"] is True and got["goals"] == [lobby, chat] and got["note"] == ""
     assert git(repo, "rev-parse", "main") == got["commit"]
     assert git(repo, "log", "--format=%s", "-4", "main").split("\n")[::-1] == [
@@ -282,7 +294,7 @@ def test_dev_is_not_moved_and_a_main_not_checked_out_moves_by_update_ref(host, r
     lobby, *_ = work
     dev = git(repo, "rev-parse", "dev")
     git(repo, "checkout", "-q", "-b", "mine")
-    host.command("ideas.to_main", {"idea": lobby, "device": "phone"})
+    to_main(host, lobby, device="phone")
     assert git(repo, "rev-parse", "dev") == dev and not (repo / "lobby").exists()
     assert git(repo, "show", "main:lobby/join.ts") == "join" and git(repo, "rev-parse", "--abbrev-ref", "HEAD") == "mine"
     assert events(host, "goal_to_main")[0]["device"] == "phone"
@@ -293,7 +305,7 @@ def test_the_flags_of_the_goals_it_took_are_raised_and_a_goal_left_behind_has_no
     other = goal(host, "Other")
     task(host, repo, other, "k1", {"other.txt": "o\n"})
     depends(host, lobby, chat)
-    got = host.command("ideas.to_main", {"idea": lobby})
+    got = to_main(host, lobby)
     for slug in (lobby, chat):
         flag = idea_flag.flag_of(host.ideas.state_dir, slug)
         assert flag and flag["by"] == "gate" and flag["commit"] == got["commit"]
@@ -304,7 +316,7 @@ def test_the_flags_of_the_goals_it_took_are_raised_and_a_goal_left_behind_has_no
 def test_a_goal_not_done_gets_no_flag_and_a_goal_stood_on_waits_for_nothing_it_lacks(host, repo):
     lobby = goal(host, "Lobby", state="done")
     task(host, repo, lobby, "k1", {"lobby.ts": "l\n"})
-    host.command("ideas.to_main", {"idea": lobby})
+    to_main(host, lobby)
     assert idea_flag.flag_of(host.ideas.state_dir, lobby)["by"] == "gate"
     assert host.command("ideas.gate")["commits"] == 0
 
@@ -317,13 +329,13 @@ def test_it_pushes_when_the_project_pushes_after_merging(host, repo, tmp_path):
     lobby = goal(host, "Lobby")
     task(host, repo, lobby, "k1", {"lobby.ts": "l\n"})
     host.ideas.save_settings({**host.ideas.settings_now(), "push": True})
-    got = host.command("ideas.to_main", {"idea": lobby})
+    got = to_main(host, lobby)
     assert got["note"] == "" and git(remote, "rev-parse", "main") == git(repo, "rev-parse", "main") == got["commit"]
     assert events(host, "goal_to_main")[0]["pushed"] is True
     second = goal(host, "Second")
     task(host, repo, second, "k1", {"second.ts": "s\n"})
     host.ideas.save_settings({**host.ideas.settings_now(), "push": False})
-    host.command("ideas.to_main", {"idea": second})
+    to_main(host, second)
     assert git(remote, "rev-parse", "main") != git(repo, "rev-parse", "main")
 
 
@@ -341,7 +353,7 @@ def test_the_commands_round_trip_and_the_phone_may_send_them(host, repo, work):
         host.command("ideas.to_main_plan", {})
     with pytest.raises(CommandError, match="idea is missing"):
         host.command("ideas.to_main", {})
-    done = host.command("ideas.to_main", {"idea": lobby})
+    done = to_main(host, lobby)
     assert done["ok"] is True and done["goals"] == [lobby, chat]
     assert host.command("ideas.to_main_plan", {"idea": chat})["sealed"] == f"{short(host, chat)} is in main already"
 
@@ -418,8 +430,8 @@ def test_the_pile_counts_only_the_commits_of_goals_ready_and_of_no_goal(host, re
 
 def test_a_goal_sent_alone_when_ready_leaves_a_pile_that_says_nothing_after_the_board_folds(host, repo, work):
     lobby, chat, *_ = work
-    host.command("ideas.to_main", {"idea": lobby})
-    host.command("ideas.to_main", {"idea": chat})
+    to_main(host, lobby)
+    to_main(host, chat)
     host.command("ideas.gate_merge")                                                         # the person's own commit goes with dev whole: nothing else is left
     git(repo, "checkout", "-q", "dev")
     (repo / "llm-wiki" / "wiki" / "specs").mkdir(parents=True)

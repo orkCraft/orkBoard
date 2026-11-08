@@ -178,6 +178,13 @@ def merge(git: IdeaGit, into: str, main: str, push: bool = False) -> dict[str, A
     return {"commit": tip, "how": how, "commits": shas, "files": files, "note": note, "pushed": pushed}
 
 
+def tip(git: IdeaGit, into: str, main: str) -> str:
+    """The commit main would become if `into` were merged now (`into` itself on a fast-forward, else the merge commit, made in a worktree that is gone); no ref moves."""
+    with git.lock:
+        old, new = (_ok(_git(git.root, "rev-parse", _ref(b))) for b in (main, into))
+        return new if _git(git.root, "merge-base", "--is-ancestor", old, new).returncode == 0 else _merge_commit(git, into, main, old)
+
+
 def _merge_commit(git: IdeaGit, into: str, main: str, old: str) -> str:
     """*Merge dev into main*, made in a worktree of its own detached at main (`old`); the commit. A conflict aborts the
     merge. The worktree is gone either way."""
