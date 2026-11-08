@@ -89,6 +89,8 @@ class _Maker:
         except (OSError, http.client.HTTPException, ValueError):
             raise MakerError(f"The {self.word}'s request failed or timed out") from None
         if not 200 <= response.status < 300:
+            if self.spend and 400 <= response.status < 500 and response.status != 408:     # refused, not made: nothing billed
+                self.spend.release(reservation)
             raise MakerError(f"The {self.word}'s request failed (HTTP {response.status})")
         if len(response.body) > limit:
             raise MakerError(f"The {self.word}'s answer is too large")
@@ -96,7 +98,7 @@ class _Maker:
             self.spend.settle(reservation)
         return response
 
-    def make(self, prompt: str, destination: Path, *, count: int = 1) -> list[Path]:
+    def make(self, prompt: str, destination: Path, *, count: int = 1, cancel=None) -> list[Path]:
         """Make assets in a new folder; remove that folder on any failure.
 
         Existing folders are refused so cleanup cannot remove an earlier pick.
@@ -109,6 +111,8 @@ class _Maker:
         made, total = [], 0
         try:
             for i in range(count):
+                if cancel is not None and cancel.is_set():       # Stop: no further request is paid for
+                    raise InterruptedError("stopped")
                 data, declared = self._asset(prompt)
                 kind = idea_pick.KINDS[self.kind]
                 if len(data) > kind.limit:

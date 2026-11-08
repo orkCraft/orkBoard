@@ -21,7 +21,7 @@ from tests.test_table_desktop_browser import open_tab  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
-SHOTS = Path(os.environ["STALL_SHOTS"]) if os.environ.get("STALL_SHOTS") else None
+SHOTS = Path(os.environ["STALL_SHOTS"]) if os.path.isabs(os.environ.get("STALL_SHOTS", "")) else None     # a folder named in full: `1` is no folder
 
 
 def shot(pg, name):

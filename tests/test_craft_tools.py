@@ -71,6 +71,15 @@ def test_keychain_account_precedence_and_environment_fallback(art, monkeypatch):
     assert tools.key("unknown") is None
 
 
+def test_a_keychain_key_is_stripped_as_the_variables_is(art, monkeypatch):
+    class Keychain:
+        def get_password(self, service, account):
+            return "fake-keychain-key\n"
+
+    monkeypatch.setattr(tools.idea_secrets, "_keychain", lambda: Keychain())
+    assert tools.key("openai-images") == "fake-keychain-key"
+
+
 def test_taken_caps_roundtrip_and_clear_preserve_harness_and_page(art):
     root, party = art
     assert tools.taken(root, party) == {}

@@ -177,3 +177,13 @@ def test_cap_stop_keeps_price_cap_party_and_maker_for_its_plate(setup, monkeypat
                     'held': {'amount': '0', 'currency': 'USD', 'estimate': True}}
     from orkboard.realm.board_map import _run_of
     assert _run_of(saved)['craft_stop'] == stop
+
+
+@pytest.mark.parametrize('status,held', [(429, '0'), (401, '0'), (408, '0.061455'), (500, '0.061455')])
+def test_a_refused_request_holds_nothing_and_an_uncertain_one_stays_held(setup, monkeypatch, status, held):
+    from orkboard.core import craft_run
+    monkeypatch.setattr('orkboard.core.craft_run.https_transport',
+                        lambda **kw: craft_run.Response(status, 'application/json', b'{}'))
+    with pytest.raises(ValueError, match=f'HTTP {status}'):
+        run(setup)
+    assert Decimal(ledger(setup).cost()['amount']) == Decimal(held)

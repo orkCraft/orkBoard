@@ -81,7 +81,7 @@ class Spend:
         return data.setdefault(self.tid, [])
 
     def total(self, data):
-        return sum((Decimal(e['price']['amount']) for e in self.entries(data)), Decimal(0))
+        return sum((Decimal(e['price']['amount']) for e in self.entries(data) if e.get('status') != 'released'), Decimal(0))
 
     def reserve(self, payload):
         quote = price(self.tool_id, payload)
@@ -104,6 +104,13 @@ class Spend:
         with self.locked() as data:
             entry = next(e for e in self.entries(data) if e['id'] == token)
             entry['status'] = 'settled'
+            self.write(data)
+
+    def release(self, token):
+        """A request the API refused for certain (a 4xx answer): not billed, so it holds nothing."""
+        with self.locked() as data:
+            entry = next(e for e in self.entries(data) if e['id'] == token)
+            entry['status'] = 'released'
             self.write(data)
 
     def cost(self):

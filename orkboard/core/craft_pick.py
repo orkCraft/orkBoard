@@ -36,10 +36,10 @@ def board_root(runner, slug: str) -> Path:
     raise ValueError("The maker's party could not be read from the Board")
 
 
-def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, spent, effort):
+def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, spent, effort, again=None):
     ask = idea_pick.ask_of(task) or {}
     tool_id = ask.get("tool")
-    if not tool_id:
+    if not tool_id or (again is not None and not again.get("pick")):     # a send back or a conflict is the AI tool's work, not new variants
         return runner._session(slug, tid, path, cancel, model, env, prompt, resume, spent, effort)
     root = board_root(runner, slug)
     page = ideas.idea_page(root, slug)
@@ -61,7 +61,7 @@ def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, s
     runner._set_task(slug, tid, craft_stop=None)
     try:
         files = maker(spend=spend).make(ask["ask"] + ("\n" + task["why"] if task.get("why") else ""),
-                                       path / idea_pick.PICK_DIR, count=ask["n"])
+                                       path / idea_pick.PICK_DIR, count=ask["n"], cancel=cancel)
     except craft_spend.CapStopped as exc:
         runner._set_task(slug, tid, craft_stop={**exc.details, "party": party})
         raise

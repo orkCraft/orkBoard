@@ -89,3 +89,29 @@ def test_planning_only_offers_taken_here_tools(setup, monkeypatch):
     monkeypatch.setattr(craft_tools, 'key', lambda _: None)
     craft_pick.clean_plan(plan, r.repo_root, party)
     assert 'tool' not in task['pick']
+
+
+@pytest.mark.parametrize('again', [{'why': 'Make the logo round', 'files': []}, {'conflict': True}])
+def test_a_send_back_runs_the_ai_tools_session_not_the_paid_maker_again(setup, monkeypatch, again):
+    r, slug, task, work, _ = setup
+    monkeypatch.setattr(craft_pick.craft_run, 'https_transport', lambda **kw: pytest.fail('the maker was paid again'))
+    sessions = []
+    r._session = lambda *a: sessions.append(a) or 'session'
+    assert craft_pick.session(r, slug, 'k1', task, work, threading.Event(), 'model', {}, 'prompt', '', {}, '', again) == 'session'
+    assert len(sessions) == 1 and not (work / idea_pick.PICK_DIR).exists()
+
+
+def test_stop_between_variants_pays_for_no_further_request(setup, monkeypatch):
+    from tests.test_craft_run import picture
+    stop, calls = threading.Event(), []
+
+    def fake(**kw):
+        calls.append(kw)
+        stop.set()                                       # Stop pressed while the first variant is made
+        return picture()
+
+    monkeypatch.setattr(craft_pick.craft_run, 'https_transport', fake)
+    r, slug, task, work, _ = setup
+    with pytest.raises(InterruptedError):
+        craft_pick.session(r, slug, 'k1', task, work, stop, 'model', {}, 'prompt', '', {}, '')
+    assert len(calls) == 1 and not (work / idea_pick.PICK_DIR).exists()

@@ -509,7 +509,7 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
                     return
             else:
                 self._log(slug, tid, f"== round {rnd} · {now_iso()} · {model}\n{task_commands.line(task_commands.allowed(self.repo_root, task))}\n{prompt}\n", env)
-                session = craft_pick.session(self, slug, tid, task, path, cancel, model, env, prompt, resume, spent, effort)
+                session = craft_pick.session(self, slug, tid, task, path, cancel, model, env, prompt, resume, spent, effort, again)
                 if is_pick(task) and (again is None or again.get("pick")) and self._variants(slug, tid, task, path, start_sha, rnd):
                     return                                        # it ends with variants for the person, not with a change (spec 51 §2.2)
             check_task, changed = is_check(task), True

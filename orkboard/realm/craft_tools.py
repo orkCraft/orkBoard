@@ -77,7 +77,7 @@ def key(tool_id: str) -> str | None:
         try:
             value = kc.get_password(idea_secrets.SERVICE, f"tools/{tool_id}")
             if isinstance(value, str) and value.strip():
-                return value
+                return value.strip()
         except Exception:
             pass
     return os.environ.get(tool.key_env, "").strip() or None
