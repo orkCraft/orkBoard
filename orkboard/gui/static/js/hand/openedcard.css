@@ -101,6 +101,12 @@
   .hand .hand-ans.is-pick { border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
   .hand .hand-ans:hover { border-color: var(--ork-ink); }
   .hand .hand-ans:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+  /* the Pen: dashed until pressed; its field on the table beside the question, its bottom on the question's, Send under it */
+  .hand .hand-ans--pen { border-style: dashed; }
+  .hand .hand-ans--pen[aria-expanded="true"] { border-style: solid; box-shadow: inset 0 0 0 1px var(--ork-ink); }
+  .hand-pen { position: absolute; bottom: calc(var(--hc-ways) + var(--hc-h) + var(--ork-4)); z-index: 61; display: flex; flex-direction: column; gap: var(--ork-3); align-items: flex-end; width: min(360px, calc(100% - 200px - var(--ork-6))); }
+  .hand-pen__text { box-sizing: border-box; width: 100%; resize: none; font: var(--ork-type-body); }
+  .hand-pen .ork-btn:focus-visible, .hand-ways-acts .ork-btn:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
   @keyframes hand-rise { from { translate: 0 var(--ork-6); opacity: 0.4; } to { translate: 0 0; opacity: 1; } }
 }
 @media (prefers-reduced-motion: reduce) { .hand .hand-card.hand-lifted--asked, .hand-ways-row, .hand-row.is-sunk { animation: none; transition: none; } }
