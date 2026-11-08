@@ -102,6 +102,38 @@ def test_the_text_counts_the_kinds_by_folder_in_words_and_is_the_same_bytes_for_
     assert art_map.text(state(game), game).split("\n", 1)[1] == text.split("\n", 1)[1]
 
 
+def test_each_asset_has_a_weight_by_its_kind_and_each_kind_its_total_bytes(repo):
+    kb = art_map.KB
+    put(repo, {"a/small.png": PNG, "a/mid.png": PNG + b"\0" * (100 * kb), "a/big.png": PNG + b"\0" * (600 * kb), "m/theme.wav": pf.wav(12, rate=200)})
+    got = art_map.read(state(repo), repo)
+    art = {a["id"]: a for a in lane(got, "art")["assets"]}
+    assert [art[i]["weight"] for i in ("a/small.png", "a/mid.png", "a/big.png")] == ["light", "normal", "heavy"]
+    assert lane(got, "art")["bytes"] == sum(a["bytes"] for a in art.values()) and lane(got, "sound")["bytes"] == 0
+    assert lane(got, "music")["assets"][0]["weight"] == "light" and lane(got, "music")["bytes"] == lane(got, "music")["assets"][0]["bytes"]
+
+
+def test_weight_is_light_up_to_the_first_limit_heavy_above_the_second_and_normal_when_unknown():
+    light, heavy = art_map.WEIGHTS["sound"]
+    assert [art_map.weight("sound", n) for n in (0, light, light + 1, heavy, heavy + 1)] == ["light", "light", "normal", "normal", "heavy"]
+    assert art_map.weight("sound", None) == art_map.weight("nothing", 5) == art_map.weight("sound", True) == "normal"
+
+
+def test_the_budget_is_read_from_the_art_table_of_orkcraft_toml_and_none_when_unset_or_bad(repo):
+    assert art_map.read(state(repo), repo)["budget_mb"] is None
+    for body, want in (("[art]\nbudget_mb = 250\n", 250), ("[art]\nbudget_mb = 1.5\n", 1.5), ("[art]\nbudget_mb = 0\n", None), ("[art]\nbudget_mb = \"big\"\n", None),
+                       ("[art]\n", None), ("[gate]\nalways = []\n", None), ("[art\n", None)):
+        (repo / "orkcraft.toml").write_text(body)
+        assert art_map.budget_mb(repo) == want, body
+    (repo / "orkcraft.toml").write_text("[art]\nbudget_mb = 80\n")
+    assert art_map.read(state(repo), repo)["budget_mb"] == 80
+
+
+def test_the_text_does_not_say_weights_or_the_budget(game):
+    before = art_map.text(state(game), game)
+    (game / "orkcraft.toml").write_text("[art]\nbudget_mb = 80\n")
+    assert art_map.text(state(game), game) == before and "heavy" not in before and "budget" not in before
+
+
 def test_nothing_to_read_when_dev_holds_no_asset(repo):
     assert art_map.text(state(repo), repo).endswith("\n\nNothing to read yet: the project's pictures, sounds, music and clips.")
 
