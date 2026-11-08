@@ -47,6 +47,38 @@ def _page(t, name, text="# Page\n"):
     return path
 
 
+def _dated_commit(t, day, message):
+    import os
+    env = {**os.environ, "GIT_AUTHOR_DATE": f"{day}T12:00:00+00:00", "GIT_COMMITTER_DATE": f"{day}T12:00:00+00:00"}
+    subprocess.run(["git", "add", "-A"], cwd=t.path, check=True, capture_output=True)
+    subprocess.run(["git", "-c", "user.name=T", "-c", "user.email=t@x", "commit", "-qm", message], cwd=t.path, check=True,
+                   capture_output=True, env=env)
+
+
+def test_the_day_each_page_was_laid_and_last_moved_are_read_in_one_log(repo, monkeypatch):
+    t = _tree(repo)
+    _page(t, "a.md")
+    _page(t, "b.md")
+    _dated_commit(t, "2026-10-01", "lay a and b")
+    _page(t, "b.md", "# Page\nphase: done\n")
+    _page(t, "c.md")
+    _dated_commit(t, "2026-10-05", "move b, lay c")
+    _page(t, "a.md", "# Page\nedited\n")
+    _dated_commit(t, "2026-10-09", "edit a")
+    calls = []
+    real = subprocess.run
+    monkeypatch.setattr(subprocess, "run", lambda cmd, *a, **k: (calls.append(cmd), real(cmd, *a, **k))[1])
+    laid, moved = t.laid_days(), t.moved_days()
+    assert laid == {"a": "2026-10-01", "b": "2026-10-01", "c": "2026-10-05"}
+    assert moved == {"a": "2026-10-09", "b": "2026-10-05", "c": "2026-10-05"}
+    assert [c[1] for c in calls] == ["log", "log"]                       # one call for all pages, not one a page
+
+
+def test_no_tree_no_days(tmp_path):
+    t = BoardTree(tmp_path / "none", tmp_path / "state", WIKI, lambda: "dev")
+    assert t.laid_days() == {} and t.moved_days() == {}
+
+
 def test_the_tree_is_detached_at_the_work_branch(repo):
     t = _tree(repo)
     assert subprocess.run(["git", "symbolic-ref", "-q", "HEAD"], cwd=t.path).returncode != 0
