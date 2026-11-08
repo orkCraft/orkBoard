@@ -1,8 +1,10 @@
-# Draft: five decisions from the mockups of 7–8 November 2026
+# Draft: six decisions from the mockups of 7–8 November 2026
 
 A draft for the owner, **not a decision**: nothing here is in `docs/decisions.md` until the owner says yes; then each is
 written there as it stands (or as changed), and this file goes. The mockups: `table-look/`, `answer-cards/`, `room-things/`.
-The numbers follow §267, the last written.
+The numbers follow §267, the last written. The owner's answers of 8 November are in them (the open questions 1–11); the
+work after them is **one goal** for Design and Tech: orkUI first (its tokens, components and drawings), copied here, then
+`gui/`; the phone a goal of its own, later.
 
 ---
 
@@ -20,7 +22,8 @@ Why: the owner, on the mockup `docs/mockups/table-look/`: the window is flat; *c
    signal. A test checks that a signal is seen on every felt and every element.
 3. **The parties' colours, by race:** knights gold (Game design, Product), orks moss (Tech), elves plum (Design, Art), the
    undead night blue (Release), goblins rust (Run, LiveOps), gnomes sea (Marketing), the Orkmaster the table's warm wood.
-   orkUI keeps them apart from the action's green and from the signals' hues.
+   orkUI keeps them apart from the signals' hues; Tech's moss stays as the mockup has it (`#8fbf4a`), beside the action's
+   green.
 4. **Still without colour:** a person's words, a control's state, a label's meaning. The ork green stays the one green of
    a button.
 
@@ -69,7 +72,12 @@ card what is asked, each answer is a card (`docs/mockups/answer-cards/`). So:
 4. **The table is the context, no new mode**: lifting a card already turns the table to its goal. A goal not yet agreed
    lays on its table what its leaders said in Talk and its open question with its ways.
 5. **A way's line is its leader's**, written to fit the card (§251).
-6. Cards have two sizes on the desktop: 144 × 202 and the Orkmaster's hand 56 × 78.
+6. **A new goal is made in the Orkmaster's first lane**, not opened: the + card lays a card of 144 × 202 at the lane's
+   top, its words written in its middle, **its settings at its four corners** as every card is read (§251.2): top left its
+   element, top right its kind (feature, bug, tidy, screen), bottom left who (the parties of its route, the Orkmaster's
+   until changed), bottom right how much (its price, when it starts). A corner pressed deals its choices to the hand, as a
+   question's answers are; the Orkmaster's pick starred.
+7. Cards have two sizes on the desktop: 144 × 202 and the Orkmaster's hand 56 × 78. The phone follows in a goal of its own.
 
 The owner's call.
 
@@ -87,6 +95,7 @@ presence the room's own light. So:
 3. **Pulled, it turns** as the door did (`presence.set`); the hours pull it by themselves (§246.4). The chain moves once,
    briefly; under reduced motion it is at once.
 4. **orkUI draws the chain** (its bronze, the bead, pulled and at rest), in place of its door.
+5. **Under 760 px** the chain and the backpack stand without their words (their `aria-label` and `title` keep them).
 
 The owner's call.
 
@@ -97,8 +106,8 @@ Changes: 267.1 (the backpack at the tabs' end; the stall told by its stitched ed
 
 Why: the owner, on the same mockup: the top row's controls as things; *the chair's press should deal the kinds of leader
 to the hand, as a question's answers are, and the pick should open the backpack on that kind*. So:
-1. **The backpack stands at the head of the right column**, beside the lamp's chain (188 px holds both: the column is not
-   widened). **orkUI draws it shut and open** (the flap fastened; thrown back, a card in its mouth). **Open, the table lies
+1. **The backpack stands at the head of the discard's column** (§273), beside the lamp's chain (188 px holds both: the
+   column is not widened). **orkUI draws it shut and open** (the flap fastened; thrown back, a card in its mouth). **Open, the table lies
    in its leather**: a stitched leather frame in place of the bronze, two straps with buckles over its top edge, no rivets;
    shut, the bronze is back.
 2. **The new chair stays at the tabs' end.** Pressed, it is lit, the Orkmaster's question rises onto the table (*A new
@@ -108,6 +117,26 @@ to the hand, as a question's answers are, and the pick should open the backpack 
 3. **A craft's card pressed seats it**: its tab stands where the chair stood (its leader's head, its pennant, *new*), and
    **the backpack opens on its chair**: its heroes on the rug, its default starred and in the hand, a price plate under
    each; a hero is changed there as any ware (§267).
-4. **Money is said before it is spent**: the craft's card says its price a week before the press (§57.3, §160.6).
+4. **Money is said before it is spent**: the craft's card says its price a week before the press (§57.3, §160.6); the
+   chair's press alone seats nothing.
+5. **New party's form goes**: the project's kind and stage (*Idea*, *Being made*, *Live*) are set at the Orkmaster's chair
+   in the backpack, as its wares.
+
+The owner's call.
+
+## 273. The discard stands beside the table, not under Release: the window's right column is its own, its head the room's things (8 November 2026, the owner)
+
+Changes: 261.7 (the discard under Release's tab, the row's last); 176.3 and 167 (the discard lies on the table, at its
+right); CLAUDE.md's frame says *the discard … lies beside the table* once this is written.
+
+Why: the owner, when the backpack and the lamp's chain needed a place: the right column's head is where they stand, so
+the discard is not Release's: *we make it outside the table*. So:
+1. **The discard is the window's right column, beside the table**, on every tab: what it holds is §261.7's (the done
+   through the open tab's eyes, *<party>'s discard*, the portal round the card ready for main at its top, the past deeper
+   in it, §261.8–9).
+2. **Release's tab stands in the row with the other leaders'**, in the route's order (§266.7), not over the column.
+3. **The column's head holds the room's things**: the backpack at its left, the lamp's chain at its right (§271, §272),
+   over the label *Discard*. The column keeps its width.
+4. The hand's right end under it is §261.11's (the die, the drum of potions).
 
 The owner's call.
