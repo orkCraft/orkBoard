@@ -6,7 +6,7 @@ order: 5
 size:
 priority: normal
 short: Ввести инструменты
-phase: spec
+phase: work
 route: product, design, tech
 spec: docs/specs/158-the-tools-of-a-craft.md
 by: claude-code
@@ -41,6 +41,44 @@ schema: 3
 ## Depends on
 
 ## Stages
+Tech's stages first (the registry, the makers, the pick and the cap: what the faces read), then Design's (the words, the shelf, the cap field, the receipt line), then Product's (money end to end, the answer counted). Each party's leader accepts its stages before the next party's begin.
+
+- [ ] A. The tools' registry and a party's taken tools
+  - Tech. A realm module of its own, named apart from `orkboard/tools.py` (e.g. `realm/craft_tools.py`): every craft's tools, each with its kind (code, MCP, API), its fixed host, its dated price table in money and whether its API is official; OpenAI's Images API (Art, picture) and ElevenLabs's sound effects (Art, sound), no Suno. Here or not here with its why: no key on this computer (keychain `orkcraft-ideas`, account `tools/<tool id>`, else `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`), its harness cannot make it, no official API. A party page's `craft_tools` (taken tools and each one's cap in money) read and written; a page without it reads as none taken; `tool` and `tools` keep naming the harness.
+  - Proves (Tech): When a party's tools are read for its chair, then each says here or not here with its why (no key on this computer, its harness cannot make it, no official API) — the reading half; the runner's refusal is C.
+- [ ] B. The makers, faked in the gate
+  - Tech. A core module of its own (e.g. `core/craft_run.py`): a Picture maker and a Sound maker, each over HTTPS to its tool's fixed host with a timeout, its transport injectable; an answer over idea_pick's limits (120 MB, its mimes) or of the wrong mime fails in words, its files removed. A guard in `tests/conftest.py` fails any test that opens a connection to a paid tool's host; each maker's tests run on a fake transport.
+  - Proves (Tech): When the gate runs the suite, then no test reaches a paid tool's host: each maker is faked, and a test fails when a real endpoint is called.
+- [ ] C. A pick a tool makes
+  - Tech. `idea_pick.clean_ask` keeps `pick.tool`; the plan's prompt (`core/idea_plan.py`) offers the party's taken tools that are here, and a plan naming another is cleaned to none. The runner gains one call where a pick's session runs (`idea_runner.py` ~511): a pick naming a tool runs its maker into `.orkcraft-pick/` and its manifest, then `_variants` as today; pick.json keeps the tool, the round's cost and its cap in money. A pick with a tool not here is refused in words, no session started. Nothing new imports `gui/`.
+  - Proves (Tech): When a pick task names a tool its party has taken, then Orkboard runs that tool's maker instead of a harness session, the pick opens as today's, and pick.json keeps the tool, the round's cost and its cap in money. · When a party's tools are read for its chair, then each says here or not here with its why (no key on this computer, its harness cannot make it, no official API), and the runner refuses a pick with a tool not here.
+- [ ] D. The spend held under its cap
+  - Tech. Before each request the price is reserved, written atomically in the goal's state, and settled after it; a request that would bring the round above its cap is not sent, and the task stops with the price and the cap in words. A run again after a crash or a send back reads the reserves already written. The key is read only at the request; a test runs a pick with a fake key and greps the page, plan.json, pick.json, the log, the events and the prompt for it.
+  - Proves (Tech): When a tool's next request would bring the round's spend above its cap, then no request leaves the computer and the task stops with the price and the cap in words. · When a tool's task is run again after a crash or a send back, then the spend reserved before each earlier request is still counted, so the round never pays above its cap.
+  - Then the Tech leader accepts A–D.
+- [ ] E. Harness and tool: the words and the desktop
+  - Design. `TERMS`: *harness* (the AI tool, its old spelling *AI tool* in `was`), *tool*, *Set a cap*; *What leaves this computer* kept. Every desktop face (`static/js/**`, `board.js`) and every host string a face shows (`gui/*.py`, `realm/*.py` labels and errors, `ideas_stall.LABELS` *Its harness*) says *harness*; the tests that check those strings follow. Code keeps its names (`ai_tool`, `tool`, `tools`).
+  - Proves (Design): When the person opens the inventory on a leader's chair of a craft with tools, as first met, then the rug lays a shelf *Its tools* apart from *Its harness*, and no face says "AI tool" — the words half, on the desktop.
+- [ ] F. Harness on the phone
+  - Design. The phone's faces (`static/pwa/*.js`, `party.css`, `app.css`) and their browser tests say *harness* where they said *AI tool*; a test scans the page's and the phone's templates for "AI tool" and finds none.
+  - Proves (Design): When the person opens the inventory on a leader's chair of a craft with tools, as first met, then the rug lays a shelf *Its tools* apart from *Its harness*, and no face says "AI tool" — every face.
+- [ ] G. The tools' shelf on the rug
+  - Design. `ideas_stall.py` lays *Its tools* after the harness and the tier, for a craft with tools only (none for a craft with none); a tool's plate says its cap in money, what leaves this computer, and *not here* with its why as a visible line on focus and hover (`table/stall.js`, `stallfaces.js`, `stall.css`). The mark an orkUI sign; keyboard order heroes, ways, harness, tier, tools.
+  - Proves (Design): When the person opens the inventory on a leader's chair of a craft with tools, as first met, then the rug lays a shelf *Its tools* apart from *Its harness*, and no face says "AI tool". · When a tool has no key on this computer or its harness cannot run it, then its plate reads *not here* and its why is text seen on focus and on hover, never a title alone.
+- [ ] H. Set a cap
+  - Design. A paid tool with no cap reads *Set a cap*; pressed or Enter, a labelled money field in the API's currency opens on the plate (24 × 24 px at least, a wrong amount said in words beside it); `ideas.stall_take` takes a paid tool only with a cap and writes `craft_tools`; Esc closes the field before the inventory; focus kept after the stall redraws. The stall drawn on Art's chair at 1280 × 800 in a browser test and a picture.
+  - Proves (Design): When a paid tool's ware lies on Art's rug with no cap, as first met, then its plate reads *Set a cap*; pressed or Enter, a labelled money field opens, and no take is sent until a cap is given. · When the stall is drawn on Art's chair at 1280 × 800, then the tools' shelf fits the rug in orkUI's tokens, money in the warning colour with its words, and nothing overflows the table.
+- [ ] I. The receipt line under a tool's pick
+  - Design. The pick's host sends the tool, its cost and its cap from pick.json; the pick in the hand (`table/picking.js`, `pickbox.js`) shows *Made by <tool> · <cost> of a <cap> cap* under its variants; a pick the cap stopped says the price and the cap, and one press opens that party's plate in the inventory.
+  - Proves (Design): When a pick a tool made opens in the hand, as first met, then a receipt line under its variants names the tool and its cost of its cap in money; a pick the cap stopped opens that plate in one press.
+  - Then the Design leader accepts E–I.
+- [ ] J. Money said and agreed, end to end
+  - Product. Tests across the plate, the run and the pick: a cap set on Art's plate stops a pick whose tool would cost more, no call made, the pick saying the price and the cap; a run's receipt line in money and its calls' sum never above its cap; Art's chair as first met, each paid plate with its cap and what leaves this computer, one with no key *not here* with why. Money as an amount and its currency everywhere (ElevenLabs's credits said in money, an estimate said so); no Suno on any rug.
+  - Proves (Product): When a pick task's tool would cost more than the cap a run set on its stall's plate, then no call is made and the pick says in words the price and the cap. · When a paid tool's run ends, then its receipt line says what the run cost in money, and the sum of its calls is never above its cap. · When the person opens the inventory on Art's chair, as first met, then each paid tool's plate says its cap in money and what leaves this computer, and one with no key reads not here with why.
+- [ ] K. The answer counted, and H5
+  - Product. `pick_answered` (`realm/event_log.py`, `core/idea_picking.py`) gains the tool and the run's cost for a tool's pick, never a prompt, a key or a file; H5 written in `docs/hypotheses.md` (a paid asset is kept at its price), its signal the kept share of Art's first ten paid picks, and Product's map reads it.
+  - Proves (Product): When the person answers a pick a tool made (picked or skipped), then an event keeps the tool, the run's cost and the answer, with no prompt text and no key in it. · When Product's map is read, then its hypotheses hold H5 (a paid asset is kept at its price), its signal the kept share of Art's first ten paid picks.
+  - Then the Product leader accepts J–K.
 
 ## Product
 ### Talk
