@@ -76,6 +76,11 @@ video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; m
 .mp-st__meta { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .mp-st__meta > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mp-st__feel { font: var(--ork-type-body); overflow-wrap: anywhere; }
+.mp-toks { display: flex; flex-wrap: wrap; gap: 2px; }
+.mp-tok { display: inline-flex; align-items: center; gap: 1px; padding: 0 2px; border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); line-height: 1.2; color: var(--ork-ink); }
+.mp-tok b { font-weight: 600; }
+.mp-tok.is-takes { border-style: dashed; }
+.mp-tok i { font-style: normal; }
 .mp-pips { flex: none; gap: 2px; }
 .mp-pips > i { width: 6px; height: 6px; }
 .mp-back__cur { font: var(--ork-type-body); overflow-wrap: anywhere; }
