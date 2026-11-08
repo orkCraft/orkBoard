@@ -11,6 +11,7 @@ import { mapName, partiesAll } from "./data.js";
 import { Decision, GoalAsItWas } from "./chroniclerows.js";
 import { whose } from "./chronicleparts.js";
 import { entryTitle } from "./chroniclewords.js";
+import { PastDeck } from "./pastdeck.js";
 
 if (typeof document !== "undefined") {                                  // the sheet, once, as mapkit.js links its own
   const href = new URL("./chronicle.css", import.meta.url).href;
@@ -22,13 +23,14 @@ if (typeof document !== "undefined") {                                  // the s
   }
 }
 
-/** Opens a decision's entry (`{decision}`) or a goal as it was (`{goal}`) over the pane from where it is pressed, through the open tab. */
+/** Opens a decision's entry (`{decision}`), a goal as it was (`{goal}`) or a whole deck with its search (`{deck: {id, name}}`, pastdeck.js) over the pane from where it is pressed, through the open tab. */
 export function openChronicle(props = {}) {
   openOver("chronicle", props, { title: mapName(tab.value, partiesAll()), key: "" }, entryTitle(whose().name, props));
 }
 
 /** The face of kind `chronicle`: a decision's entry or a goal as it was; a press inside walks on and the quiet button above walks back to where it began; the pane's ← leaves for the tab's table. */
 export function Chronicle({ props }) {
+  if (props?.deck) return html`<${PastDeck} deck=${props.deck} />`;
   const w = whose(), [stack, setStack] = useState([props?.goal ? { goal: props.goal } : { decision: props?.decision || props?.lit }]);
   const view = stack.at(-1);
   const goal = (idea) => setStack((s) => [...s, { goal: idea }]), decision = (number) => setStack((s) => [...s, { decision: number }]);

@@ -39,3 +39,5 @@
   .chr-table { flex-direction: column; }
   .chr-decks { flex-direction: row; flex-wrap: wrap; width: auto; }
 }
+.chr-deck-all { gap: var(--ork-4); }
+.chr-none { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-body); }
