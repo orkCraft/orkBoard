@@ -21,6 +21,7 @@ import { PlayDie } from "./playdie.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
 import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
+import { ChairDeal, dealing } from "./chairdeal.js";                                     // the new chair deals its crafts (spec 160 I)
 import { AnswerLifted, answerSet, useWide } from "./answercards.js";           // a lifted question or failure stays a hand card, its ways the hand (spec 158 F, decisions §270)
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
@@ -90,15 +91,16 @@ export function Hand() {
   const none = !(map?.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length && !bare && !layLine.value && !carrying;      // no goal at all and nothing asked: the + card lies large in the pane
   const plus = () => { lower(); fieldOpen.value = true; };
   if (uprightNow.value) return html`<${Upright} root=${root} stacks=${stacks} plus=${plus} />`;                  // a touch phone upright: the hand is the first screen (upright.js)
-  const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
+  const deal = dealing.value && wide && !carrying && !middle && !bare && !s, cards = s && wide ? answerSet(s) : null;                                         // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${carrying && html`<div class="hand-carrying"><${Carry} /><div class="hand-end"><${PlayDie} /><${Mana} lifted=${s} /></div></div>`}
-    ${!middle && !carrying && html`<div class="hand-places"><div class=${cards ? "hand-row is-sunk" : "hand-row"} inert=${cards ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
+    ${!middle && !carrying && html`<div class="hand-places"><div class=${cards || deal ? "hand-row is-sunk" : "hand-row"} inert=${cards || deal ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
       <div class="hand-end">${!bare && html`<${PlayDie} />`}<${Mana} lifted=${s} /></div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
+    ${deal && html`<${ChairDeal} />`}
     ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : html`<${Lifted} s=${s} anchor=${anchor} />`)}
     ${key === ADD_TOOL && html`<${AddTool} />`}
     ${key.startsWith(TOOL) && html`<${ToolCard} tool=${key.slice(TOOL.length)} />`}

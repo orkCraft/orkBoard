@@ -36,6 +36,12 @@ def open_first(desk, root, width=1280, stage="idea"):
     return d, pg
 
 
+def edit_parties(pg):
+    """The place of the parties again, as a party's *Edit* opens it (`openParties`; spec 160 I: the new chair deals its crafts to the hand instead, tests/test_chair_deal_browser.py)."""
+    pg.evaluate("() => import('/static/js/table/parties.js').then((m) => m.openParties({}))")
+    pg.locator(f"{CARD} .pc-row").first.wait_for(timeout=WAIT_MS)
+
+
 def until(pg, ok):
     for _ in range(50):
         if ok():
@@ -176,7 +182,7 @@ def test_later_the_same_card_saves_only_what_changed_from_the_next_task(desk, ga
     pg.locator('[data-act="start"]').click()
     pg.locator(CARD).wait_for(state="detached", timeout=WAIT_MS)
     pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value === null)", timeout=WAIT_MS)      # the start has finished (its last step closes the card it came from): the chair is pressed after it
-    pg.locator(".table-chair").click()
+    edit_parties(pg)
     pg.locator(f"{CARD} .pc-row").first.wait_for(timeout=WAIT_MS)
     save = pg.locator('[data-act="save"]')
     assert save.is_disabled() and "From the next task" in pg.locator(".pc-foot").inner_text()
@@ -193,7 +199,7 @@ def test_the_leaders_seat_of_a_made_party_says_what_it_keeps_of_the_project(desk
     pg.locator('[data-act="start"]').click()
     pg.locator(CARD).wait_for(state="detached", timeout=WAIT_MS)
     pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value === null)", timeout=WAIT_MS)      # the start has finished (its last step closes the card it came from): the chair is pressed after it
-    pg.locator(".table-chair").click()
+    edit_parties(pg)
     row(pg, "art").locator(".pc-lead").click()
     facts = pg.locator(".pc-seat [data-facts]")
     facts.wait_for(timeout=WAIT_MS)

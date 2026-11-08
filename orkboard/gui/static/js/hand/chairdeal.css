@@ -1,0 +1,10 @@
+/* The new chair's deal (docs/specs/160 stage I; hand/chairdeal.js): the craft cards are the answer cards' (.hand-ans, openedcard.css), 144 x 202; only what a craft adds is here. Wide only. orkUI's tokens only. */
+@media (min-width: 760px) {
+  .hand .hand-craft.hand-ans.ork-card { gap: var(--ork-1); }      /* the line stays whole beside the pick's words and the price's */
+  .hand .hand-craft__price { flex: none; margin-top: auto; font: var(--ork-type-caption); color: var(--ork-ink); overflow-wrap: anywhere; }      /* the price in words, plain, above the corners */
+  .hand .hand-craft__pick { flex: none; font: var(--ork-type-caption); font-weight: 700; color: var(--ork-ink); }      /* named in words, whole: the corner's word would be cut */
+  .hand .hand-craft__pick + .hand-craft__price { margin-top: 0; }
+  .hand .hand-craft .hand-ans__line { flex: 1 1 0; }
+  .hand .hand-craft__star { color: var(--ork-ink); font: var(--ork-type-heading); line-height: 1; }
+  .hand-crafts__wait { align-self: center; margin: 0 var(--ork-4); font: var(--ork-type-caption); }
+}
