@@ -11,6 +11,8 @@ round or a bug's diagnosis keeps is what these functions let through. Pure code,
 """
 from __future__ import annotations
 
+from orkboard.realm.seat_talk_limits_rules import LINE, MAX_GOAL, MAX_PROJECT
+
 import re
 from pathlib import Path
 from typing import Any, Iterable
@@ -19,9 +21,6 @@ from orkboard.hooks.warder import is_secret
 from orkboard.realm import idea_questions, project_facts
 
 MAX_CARDS = 3                      # a round's questions: the goal's three, the leaders' and the project's together (§121.2, §153.3)
-MAX_GOAL = 3                       # a leader's questions about the goal, at most
-MAX_PROJECT = 2                    # … and about the project, at most (a bug's Tech: one it cannot do without)
-LINE = 200                         # a stance, a for, an against
 PRIORITIES = ("high", "normal", "low")       # Product's word on how the goal stands against the goals in line (spec 120 §3.1)
 RISKS = ("low", "medium", "high")            # Tech's word on what the change may break
 PRODUCT, TECH = "product", "tech"            # the crafts (`goal_team.craft_of`) whose leaders give a priority and a risk

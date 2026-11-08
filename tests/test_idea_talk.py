@@ -179,6 +179,7 @@ def test_with_the_stagger_on_the_rest_do_not_wait_longer_than_the_stagger(host, 
     from orkboard.core import idea_verdict
     monkeypatch.setattr(idea_verdict, "STAGGER", True)
     monkeypatch.setattr(idea_verdict, "STAGGER_S", 0.02)                                                            # the first leader is slower than that: the rest go at its end of waiting
+    model.gate = threading.Barrier(3, action=lambda: setattr(model, "gate", None))  # Hold this round until all three enter, without timing repository reads.
     _round_one(model, parties)
     _talk(host, parties, ["product", "design", "tech"])
     first, *rest = sorted(model.steps("talk_round"), key=lambda c: c["at"])

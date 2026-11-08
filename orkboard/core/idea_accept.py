@@ -1,4 +1,6 @@
 """A step accepted by its leader (docs/specs/152-a-leader-leads-and-accepts.md B; decisions §256.3, §257.5): when a step's tasks have all landed, the leader of the party the step
+
+Shared acceptance rules and limits live in `realm/seat_accept_rules.py`; this module keeps prompt framing, context, validation and workflow.
 belongs to looks at the whole of it against its section: one call a step, its voice first, as the party's own step. A mixin of `IdeaKeeper`, as `idea_findings.py`'s is. The next
 step's plan and the goal's end wait for it (`realm/idea_route.py` `due`, `accepted`; the runner holds the goal at `working`: `core/idea_handover.py`).
 
@@ -23,6 +25,8 @@ step's plan and the goal's end wait for it (`realm/idea_route.py` `due`, `accept
 """
 from __future__ import annotations
 
+from orkboard.realm.seat_accept_rules import ROUNDS, BACK_MAX, LINE_CHARS, LEARNED_MAX, rules
+
 import re
 import time
 from pathlib import Path
@@ -33,10 +37,6 @@ from orkboard.realm import (event_log, findings, goal_result, goal_team, idea_ch
 from orkboard.realm.idea_talk_parse import total
 from orkboard.realm.idea_words import short_of, title_of
 
-ROUNDS = 2                        # a step goes back twice at most (the third look only accepts, or leaves what is left as findings)
-BACK_MAX = 4                      # items a leader sends back in one look
-LINE_CHARS = 200                  # an item's `what` and `where`
-LEARNED_MAX = 2                   # lines a leader keeps of what it learned
 TASK_CHARS = 1500                 # one task's part of the call
 FILES_SHOWN = 8                   # the files of a task the call names, at most
 SECTION_PARTS = ("Why", "Done when", "Checks", "Will be", "Out")
@@ -111,17 +111,6 @@ ACCEPT_CONTEXT_NOTE = ("(The context follows here in the prompt: your section wh
                        "the gate's record and their pictures, what you said of this goal in Talk, your slices and journal, and your map.)\n\n")
 ACCEPT_LAST_NOTE = f"If you send it back, one task is made for each thing and you look again (at most {ROUNDS} times it goes back)."
 ACCEPT_READS = "Start from the files the step changed. Read at most as many as the step allows; search only for what they don't cover."
-
-
-def rules() -> str:
-    """A leader's rules for accepting a step (spec 154 A.1): the lines met / not met / cannot see, what it sends back and what it learns; the lines under *Rules:*, apart from the call's frame. The same for
-    every craft. `instruction` and an agent's frame (`seat_frames.agent("<craft>-leader", "accept", craft)`) both hold this text."""
-    return f"""- Judge each *Done when* line by its number (a line code has decided is not yours; code's `unseen` stands): `met` true (it is so), false (it is not) or "unseen" (you cannot see it: a picture or Play it needs is not there, or only the person can judge it).
-  Never say true for a line you could not look at. `why` is one line.
-- `back`: at most {BACK_MAX} things that must change, each one line of at most {LINE_CHARS} characters (`what`), where (`where`), the task it is in (`task`: its id, or "") and the *Done when* line it fails
-  (`done_when`: its number, or 0). Send back only what your section promised and the step missed; send nothing back for a line you cannot see.
-- `learned`: up to {LEARNED_MAX} lines you keep of your party's work from this step, or none.
-- Invent nothing the words above and the files do not show."""
 
 
 def instruction(craft: str = "", *, title: str = "your party", reads: str = ACCEPT_READS, last: str = ACCEPT_LAST_NOTE, body: str = ACCEPT_CONTEXT_NOTE,

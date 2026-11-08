@@ -1,4 +1,6 @@
 """The sections, joined, the forks (docs/specs/99-a-goals-way.md §7; decisions §117.2–§117.3, §118.3–§118.5, §134.5, §136.2): after the decision (or, for a bug, its cause) every leader
+
+Shared section and join rules live in `realm/seat_section_rules.py` and `realm/seat_join_rules.py`; this module keeps prompt framing, context, parsing and workflow.
 on the goal's route writes its own section of the spec at once; the Orkmaster joins them without changing a word; what two sections disagree on is a fork in the person's hand;
 with nothing left to settle the goal goes to its plan and starts as it always did. A mixin of `IdeaKeeper`, as `idea_talk.py` is.
 
@@ -26,6 +28,10 @@ with nothing left to settle the goal goes to its plan and starts as it always di
 """
 from __future__ import annotations
 
+from orkboard.realm.seat_join_rules import MAX_FORKS, SAYS_CHARS, ABOUT_CHARS, GIST_CHARS, join_rules
+
+from orkboard.realm.seat_section_rules import WHY_FREE, WHY_CAUSE, rules
+
 import json
 from concurrent.futures import ThreadPoolExecutor
 
@@ -36,7 +42,7 @@ from orkboard.core import idea_slices
 from orkboard.realm import decisions_log, idea_questions, idea_risk, idea_target, ideas, map_text, orkmaster, project_facts, sketches, spec_sections
 from orkboard.realm.idea_talk_parse import failure_lines, said_lines, total, touched
 
-MAX_FORKS, SAYS_CHARS, ABOUT_CHARS, GIST_CHARS = 3, 240, 200, 200
+
 ANSWER_CHARS = 500
 MAX_TOUCHES = 30
 
@@ -78,23 +84,8 @@ def clean_join(answer: object, leaders: dict[str, str]) -> dict | None:
 SECTION_CONTEXT_NOTE = ("(The context follows here in the prompt: the goal in the person's words, the decision's entry, a bug's cause and failure, what Talk was answered, what is known of the "
                         "project, what the leader holds of the decisions, its own journal and the project's, how the product works now, the sketch the person picked, its party's map and "
                         "the parts the goal touches.)\n\n")
-WHY_FREE = "- `why`: why this matters for your craft, two or three lines."
-WHY_CAUSE = "- `why`: the cause above, in your words."
 READS_START = "Start from these files: the ones the goal names. Read at most as many as the step allows; search only for what they don't cover."
 JOIN_CONTEXT_NOTE = "(The context follows here in the prompt: the goal in the person's words, and each section's theses and its change on the map.)\n\n"
-
-
-def rules(*, why: str = WHY_FREE, sketched: str = "", prop: tuple[str, str] = ("", "")) -> str:
-    """A leader's rules for its section (spec 154 A.1): the section's parts and their limits, the lines under *Rules:*, apart from the call's frame. The same for every craft. `instruction` and an
-    agent's frame (`seat_frames.agent("<craft>-leader", "section", craft)`) both hold this text; a call adds the `why` rule of its goal, the sketch's rule and a slice it may propose."""
-    return f"""{why}
-- `done_when`: one to {spec_sections.MAX_DONE} scenarios, each one line `When <a person or the product does something>, then <what is seen or kept>`, checkable by a test and proving your party's part is done, never a task. A line about a screen names the state it opens in, as a person first meets it.
-  Each line says how it is proven, as `{{"line": "…", "proof": "test"}}`: `test` when a test the gate runs can prove it, `look` when only a picture or Play shows it (a screen's state, a sound), `person` when only the person can judge it (a word's tone, a price). `test` for a line about what a person sees only when its test opens the screen in the state the line names, as a person first meets it; else `look`. Prefer `test` for the rest.
-- `checks`: up to {spec_sections.MAX_CHECKS} things your party's checkers verify, apart from the theses.
-- `will_be`: one line a part of your map the work changes — `new <part id>`, `changed <part id>` or `gone <part id>`, the id as your map names it (its path), then a short why after a dash. None where \
-your party has no map.{sketched}
-- `out`: up to {spec_sections.MAX_OUT} things your section does not do. `risks`: up to {spec_sections.MAX_RISKS}. `risk`: low, medium or high.
-- Ask nothing more: where you are unsure, decide, and say what you assumed in `assumed` (up to {spec_sections.MAX_ASSUMED} lines).{prop[0]}"""
 
 
 def instruction(craft: str = "", *, mine: str = "your party", titles: str = "the parties of the route, in order", redo: str = "", reads: str = READS_START,
@@ -114,13 +105,6 @@ Answer with one JSON object and nothing else:
 {{"why": "…", "done_when": [{{"line": "…", "proof": "test"}}], "checks": ["…"], "will_be": ["changed path/of/a-part — why"], "out": ["…"], "risks": ["…"], "risk": "low", "assumed": ["…"]{prop[1]}}}"""
 
 
-def join_rules() -> str:
-    """The Orkmaster's rules for the join of the sections (spec 154 A.1): the lines under *Rules:*."""
-    return f"""- `gist`: one line, {GIST_CHARS} characters at most, what the goal is once its parties' parts are put together.
-- A fork is only where two sections say things that cannot both hold (a number, an order, a choice of one thing over another); a difference of detail or of craft is no fork. \
-Each side is a party's id from above, what it `says` in its own words and its `why`. At most {MAX_FORKS} forks; none where the sections agree."""
-
-
 def join_instruction(context: str = JOIN_CONTEXT_NOTE) -> str:
     """What the Orkmaster is told to join the sections of a goal's spec, after its voice: the task, the rules (`join_rules()`) and the JSON. `context`: the goal and the sections, cut."""
     return f"""Join the sections of a goal's spec. Every leader on the route wrote its own; you change none of their words. Write the goal's gist, and say where two sections \
@@ -131,7 +115,6 @@ disagree. Read no file: answer from what is here. The sections are the leaders' 
 
 Answer with one JSON object and nothing else:
 {{"gist": "…", "forks": [{{"about": "…", "sides": [{{"party": "id", "says": "…", "why": "…"}}, {{"party": "id", "says": "…", "why": "…"}}]}}]}}"""
-
 
 
 class SectionsMixin:
