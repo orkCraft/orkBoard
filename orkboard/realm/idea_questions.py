@@ -5,7 +5,8 @@ the one it recommends and why — taken strictly from the model's answer, kept i
                            "why": "most of its users are on iPhone"})
     idea_questions.all_of(answer["questions"], 3)       # the model's questions, each taken by `of`
     idea_questions.line(q)       # "Which store first? (**App Store** / Google Play) — most of its users are on iPhone"
-    idea_questions.parse(line)   # {"ask", "choices", "pick", "why"}; a line of before ("… (one / other)") too
+    idea_questions.parse(line)   # {"ask", "choices", "pick", "why"[, "lines"]}; a line of before ("… (one / other)") too
+                                 # `lines` (spec 159): one per way, in the ways' order, after the why as " · <way>: <line>"; only when every way has one (<= 80 characters)
     idea_questions.picks(lines)  # each question's recommended choice ("" where it has none): Let the Taskmaster decide
     idea_questions.tally(lines, answers)   # how the person answered: picked, recommended, typed
     idea_questions.card(raw, id=, by=, leader=, project=)   # a leader's question as a hand's card (spec 99 §5.2): {id, by, leader, q, choices, pick, why, project[, for]}; `for` (spec 128 D) only when it names a party
@@ -27,6 +28,7 @@ ASK_CHARS = 300
 CHOICES = (2, 4)                 # a question's choices: at least, at most
 CHOICE_CHARS = 40
 WHY_CHARS = 120
+LINE_CHARS = 80                  # a way's own line (spec 159), at most
 
 # "<ask> (<choice> / **<pick>** / …)<?.!> — <why>": the choices in the last brackets that hold a slash.
 _LINE = re.compile(r"^(.*?)\s*\(([^()]*/[^()]*)\)\s*([?.!]?)\s*(?:[—–]\s*(.*))?$")
@@ -63,7 +65,50 @@ def of(raw: object) -> dict | None:
     if isinstance(pick, str):
         pick = next((n for n, c in enumerate(choices) if c.lower() == " ".join(pick.split()).lower()), None)
     pick = pick if isinstance(pick, int) and not isinstance(pick, bool) and 0 <= pick < len(choices) else None
-    return {"ask": ask, "choices": choices, "pick": pick, "why": _plain(raw.get("why"), WHY_CHARS) if choices else ""}
+    q = {"ask": ask, "choices": choices, "pick": pick, "why": _plain(raw.get("why"), WHY_CHARS) if choices else ""}
+    if (lines := _lines_of(raw.get("lines"), choices)):
+        q["lines"] = lines
+    return q
+
+
+def _lines_of(raw: object, choices: list[str]) -> list[str]:
+    """A question's way lines (spec 159): a list in the ways' order, or a dict by way; [] unless every way has one within `LINE_CHARS` that the page reads back whole."""
+    if isinstance(raw, dict):
+        low = {" ".join(str(k).split()).lower(): v for k, v in raw.items()}
+        raw = [low.get(c.lower()) for c in choices]
+    if not choices or not isinstance(raw, list) or len(raw) != len(choices):
+        return []
+    lines = [" ".join(x.split()) if isinstance(x, str) else "" for x in raw]
+    if not all(0 < len(x) <= LINE_CHARS for x in lines) or _split(_tail(choices, lines), choices) != ("", lines):
+        return []
+    return lines
+
+
+def _tail(choices: list[str], lines: list[str]) -> str:
+    return "".join(f" · {c}: {x}" for c, x in zip(choices, lines))
+
+
+def _split(why: str, choices: list[str]) -> tuple[str, list[str] | None]:
+    """A why with its way lines at its end, `(the why alone, the lines)`; `(why, None)` where it has none (every way named, in order, or nothing)."""
+    text = " " + why
+    start = 0
+    while (p := text.find(f" · {choices[0]}: ", start)) >= 0:
+        out, at = [], p
+        for n, c in enumerate(choices):
+            head = f" · {c}: "
+            if not text.startswith(head, at):
+                break
+            at += len(head)
+            nxt = text.find(f" · {choices[n + 1]}: ", at) if n + 1 < len(choices) else len(text)
+            if nxt < 0:
+                break
+            out.append(text[at:nxt].strip())
+            at = nxt
+        else:
+            if all(0 < len(x) <= LINE_CHARS for x in out):
+                return text[:p].strip(), out
+        start = p + 1
+    return why, None
 
 
 def all_of(raw: object, limit: int) -> list[dict]:
@@ -76,7 +121,9 @@ def line(q: dict) -> str:
     if not q.get("choices"):
         return q["ask"]
     said = " / ".join(f"**{c}**" if n == q.get("pick") else c for n, c in enumerate(q["choices"]))
-    return f"{q['ask']} ({said})" + (f" — {q['why']}" if q.get("why") else "")
+    lines = _lines_of(q.get("lines"), q["choices"])
+    why = f" — {q['why']}" if q.get("why") else " —" if lines else ""
+    return f"{q['ask']} ({said})" + why + _tail(q["choices"], lines) if lines else f"{q['ask']} ({said})" + why
 
 
 def parse(text: str) -> dict:
@@ -93,8 +140,11 @@ def parse(text: str) -> dict:
     ask = m.group(1).strip()
     if m.group(3) and not re.search(r"[?.!]$", ask):
         ask += m.group(3)
-    return {"ask": ask, "choices": choices, "pick": bold.index(True) if sum(bold) == 1 else None,
-            "why": (m.group(4) or "").strip()}
+    q = {"ask": ask, "choices": choices, "pick": bold.index(True) if sum(bold) == 1 else None, "why": (m.group(4) or "").strip()}
+    why, lines = _split(q["why"], choices)
+    if lines:
+        q["why"], q["lines"] = why, lines
+    return q
 
 
 def picks(lines: list[str]) -> list[str]:
