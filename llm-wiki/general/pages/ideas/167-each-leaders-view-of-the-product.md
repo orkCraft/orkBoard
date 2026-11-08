@@ -99,6 +99,7 @@ Accepting: Tech accepts after K; Design once, after N (A and B are its stages to
 - Which face for a leader's view? (docs/mockups/leader-view/shots/) (A, the leader's bubble / B, a plate atop the pane / C, over the pane from the party's …) — §282.4: the person picks among the mockups
 
 ## Decisions
+- §283: the person's answers (8 November 2026)
 - §282: the person's answers in Talk (8 November 2026)
 
 ## Product

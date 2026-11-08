@@ -8,7 +8,6 @@ priority: normal
 short: The Orkmaster reads decisions
 phase: talk
 route: tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -31,8 +30,10 @@ Build decision §281.7: the Orkmaster's role (llm-wiki/general/roles/orkmaster.m
 
 ## Open questions
 - How does Orkboard's routing call read decisions? (**Titles only, named and newest** / Whole entries named / The call left as it is) — headings fit the call's 2,500 chars raised a little; whole entries, 4,000 each, would end a cheap call · Titles only, named and newest: Each §N's title and the log's ten newest; the call's budget grows a little · Whole entries named: The call reads each §N's text; its budget triples or more · The call left as it is: Role and skill only; code and the call route as today, reading nothing
+  - Answered: Titles only, named and newest (the person, 2026-11-08)
 
 ## Decisions
+- §283: the person's answers (8 November 2026)
 - §281: the person's answers (8 November 2026)
 
 ## Tech
