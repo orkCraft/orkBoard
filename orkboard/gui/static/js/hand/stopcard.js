@@ -145,7 +145,7 @@ export function Lifted({ s, anchor, inline = false, typing = false }) {
   }, [typing, inline, s.key]);
   const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted || (isSketch(s) ? SketchLifted : null);
   const shown = footCost(s.key, cost), asker = askerOf(s), party = s.party?.name || "";                  // the opened card (spec 147 D.1; on the phone F.3): its corners large, the title, a body that scrolls, the answers above its foot
-  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--card${inline ? " hand-lifted--up" : ""}${typing ? " is-typing" : ""}${element ? ` el-${hue}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide", "conflict"].includes(s.kind), fails: s.kind === "failed" })}
+  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--card${inline ? " hand-lifted--up" : ""}${typing ? " is-typing" : ""}${element ? ` el-${hue}` : ""}${tone ? ` ${tone}` : ""}`, { asks: ["asks", "goal", "pick", "collide", "conflict"].includes(s.kind), fails: s.kind === "failed" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind} data-typing=${typing ? "1" : undefined} style=${!inline && at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
     <${CornerTop} large=${true} rune=${{ name: element, hue, dim: !element }} name=${s.node?.short || s.node?.title || ""} kind=${actionOf(s).sign} signal=${signalOf(s)} word=${s.label} kindClass="hand-lifted__kind" />
     <span class="hand-card__name hand-lifted__title" title=${s.full || s.title}>${inline ? upName(s) : s.title || s.full}</span>

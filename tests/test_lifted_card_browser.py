@@ -131,6 +131,18 @@ class SaidHost(HandHost):
                 n["tasks"][0]["error"] = error
 
 
+@pytest.mark.parametrize("kind,signal", [("failed", "fails"), ("asks", "asks")])
+def test_a_lifted_card_keeps_its_signal(gui, kind, signal):
+    """Decisions §53.5 (a signal is always seen): lifted, a failure is ringed in danger and a question in alert, as at rest."""
+    pg, host, log = open_hand(gui, width="wide")
+    try:
+        card = lift(pg, kind)
+        assert signal in card.get_attribute("class").split(), f"the lifted {kind} card keeps its signal's class"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
 def test_a_lifted_card_does_not_draw_a_line_that_repeats_its_title(gui):
     """Spec 140 A4, decisions §247.6: a line equal to the title is not drawn."""
     pg, host, log = open_hand(gui, host=SaidHost("Reset the clock."), width="wide")
