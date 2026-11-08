@@ -8,6 +8,13 @@
 .plan-slot.is-done { opacity: 0.42; filter: grayscale(1); }                              /* done: grey */
 .plan-none { margin: 0; }
 .plan-wait { grid-column: 1 / -1; grid-row: 1; align-self: center; justify-self: center; z-index: 1; max-width: 40ch; }
+.plan-talk { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; padding: var(--ork-3); border: var(--ork-line) solid var(--ork-frame); overflow-wrap: anywhere; }
+.plan-talk p, .plan-talk ul { margin: 0; }
+.plan-talk__verdict { align-self: flex-start; }
+.plan-talk__verdict[data-verdict="doubt"], .plan-talk__verdict[data-verdict="no"] { color: var(--ork-alert); }
+.plan-talk__ways { padding: 0; list-style: none; }
+.plan-talk__ways li[data-pick] { font-weight: 600; }
+.plan-talk__ask { display: flex; flex-direction: column; gap: var(--ork-1); padding-top: var(--ork-2); border-top: var(--ork-line) solid var(--ork-frame); }
 .plan-arrows { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; z-index: 6; }
 .plan-arrow { fill: none; stroke: var(--ork-ink-muted); stroke-width: 2; }
 .plan-arrow.is-done { stroke-dasharray: 4 3; opacity: 0.6; }                             /* from a task done: dashed */

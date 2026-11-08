@@ -1,4 +1,4 @@
-"""Durable paid-request reservations (spec 158 D).
+"""Durable paid-request reservations (spec 160 D).
 
 Uncertain requests stay reserved. Send-backs share the task's allowance: changing
 its round number never erases money already committed. Prices are estimates,

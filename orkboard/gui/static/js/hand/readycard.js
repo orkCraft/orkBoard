@@ -6,7 +6,7 @@ import { useEffect } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
 import { gateData } from "../shell/store.js";
-import { choose, close, echo, first, joined, labelOf, lineOf, namesOf, plan, play, reasonOf } from "../table/portal.js";
+import { choose, close, echo, first, joined, labelOf, lineOf, namesOf, plan, play, reasonOf, Stopped } from "../table/portal.js";
 import { later } from "./entries.js";
 
 /** What the context of a ready card says: *Lobby and Reconnect are done and their checks are green*, *Lobby is done and its checks are green*. */
@@ -38,6 +38,7 @@ export function ReadyCard({ e }) {
       <span class="hand-ready__label">${main === "main" ? "Main" : main}</span>
       ${first.value && !sealed && html`<p class="cap hand-ready__hint">Tap the portal to send it to main</p>`}
       <p class="cap hand-ready__sealed" role="status" aria-live="polite">${sealed && html`<span key=${echo.value}>Sealed: ${reason}</span>`}</p>
+      <${Stopped} slug=${slug} tone="cap hand-ready__sealed" />
       <button type="button" class="ork-btn quiet hand-ready__later" onClick=${() => { later.value = [...later.value, slug]; }}>Later</button>
     </div>
     <span class="hand-card__foot hand-lifted__kind">Ready for ${main}</span>

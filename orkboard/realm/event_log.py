@@ -79,7 +79,7 @@ CHECK_SKIPPED = "check_skipped"   # idea, by (the checker), skipped (false: take
 STOP_ALL = "stop_all"             # count, device
 INTO_CHANGED = "into_changed"     # branch, push, device
 GATE_MERGED = "gate_merged"       # commits, ideas, files (what dev held that main lacked), how ("fast-forward" · "merge"), pushed, into, main, device (spec 49 §2.1: dev merged into main)
-GOAL_TO_MAIN = "goal_to_main"     # idea, goals (the slugs it took into main: it and what it stood on), commits, files, pushed, into, main, device (spec 105 §5: a goal sent to main on its own)
+GOAL_TO_MAIN = "goal_to_main"     # idea, goals (the slugs it took into main: it and what it stood on), commits, files, pushed, into, main, tests ("run" · "skipped": To main without the tests, decisions §274.3), checks_s (the checks' seconds, when they ran), device (spec 105 §5: a goal sent to main on its own)
 PICK_ASKED = "pick_asked"         # idea, task, n, media (image · audio · video · text), round (spec 51 §2.4: a task left variants for the person to pick from)
 PICK_ANSWERED = "pick_answered"   # idea, task, key (the variant's letter; null: none of them, new ones asked), note_chars, via (hand · front · drawer · screen; else idea), seconds from pick_asked, device, round (the round that was answered)
 #                                    tool (maker's id), cost ({amount, currency, estimate}, from pick.json), only for a maker's pick; no prompt, credential or file
@@ -106,8 +106,8 @@ KIND_SET = "kind_set"             # kind, role, device
 # Spec 35 §12: the Board writes and starts what is safe (its night went: spec 99 §3).
 BOARD_SET = "board_set"           # target, autostart, night, device
 IDEA_DRAFTED = "idea_drafted"     # idea, risk, triggers, questions, tier, effort, seconds
-IDEA_ANSWERED = "idea_answered"   # idea, answers (how many), picked, recommended, typed, decided (spec 41 §10)
-GOAL_ANSWERED = "goal_answered"   # goal, answers, picked, recommended, typed, decided, device (spec 41 §10)
+IDEA_ANSWERED = "idea_answered"   # idea, answers (how many), picked, recommended, typed, decided, from ("hand": the lifted card's answers · "open": after Open…; else absent) (spec 41 §10, spec 158)
+GOAL_ANSWERED = "goal_answered"   # goal, answers, picked, recommended, typed, decided, device, from (as idea_answered) (spec 41 §10, spec 158)
 # … and every keeper event (goal_read, idea_drafted, idea_answered, idea_said, plan_made, night_run) carries §0's
 # step, prompt_chars, tokens ({"in", "out", "cache_read"}) and cost (null when unpriced, never 0)
 KEEPER_STOPPED = "keeper_stopped"  # idea (the person stopped the keeper's run on it)

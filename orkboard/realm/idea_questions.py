@@ -5,7 +5,9 @@ the one it recommends and why — taken strictly from the model's answer, kept i
                            "why": "most of its users are on iPhone"})
     idea_questions.all_of(answer["questions"], 3)       # the model's questions, each taken by `of`
     idea_questions.line(q)       # "Which store first? (**App Store** / Google Play) — most of its users are on iPhone"
-    idea_questions.parse(line)   # {"ask", "choices", "pick", "why"}; a line of before ("… (one / other)") too
+    idea_questions.parse(line)   # {"ask", "choices", "pick", "why"[, "lines"]}; a line of before ("… (one / other)") too
+                                 # `lines` (spec 159): one per way, in the ways' order, after the why as " · <way>: <line>"; only when every way has one (<= 80 characters)
+    idea_questions.LINES_RULE    # the rule for a way's line, said by Talk's instruction, the leaders' role files and BOARD.md alike
     idea_questions.picks(lines)  # each question's recommended choice ("" where it has none): Let the Taskmaster decide
     idea_questions.tally(lines, answers)   # how the person answered: picked, recommended, typed
     idea_questions.card(raw, id=, by=, leader=, project=)   # a leader's question as a hand's card (spec 99 §5.2): {id, by, leader, q, choices, pick, why, project[, for]}; `for` (spec 128 D) only when it names a party
@@ -27,6 +29,9 @@ ASK_CHARS = 300
 CHOICES = (2, 4)                 # a question's choices: at least, at most
 CHOICE_CHARS = 40
 WHY_CHARS = 120
+LINE_CHARS = 80                  # a way's own line (spec 159), at most
+LINES_RULE = (f"`lines` is one line for each way, in the ways' order: what that way leads to, its point in its first words, {LINE_CHARS} characters at most so it fits "
+              "under the way's name on its card, never the `why` said again; give a line for every way or none.")      # the one rule every place that tells a leader how to ask says (spec 159 C, §270.2, §270.5)
 
 # "<ask> (<choice> / **<pick>** / …)<?.!> — <why>": the choices in the last brackets that hold a slash.
 _LINE = re.compile(r"^(.*?)\s*\(([^()]*/[^()]*)\)\s*([?.!]?)\s*(?:[—–]\s*(.*))?$")
@@ -63,7 +68,50 @@ def of(raw: object) -> dict | None:
     if isinstance(pick, str):
         pick = next((n for n, c in enumerate(choices) if c.lower() == " ".join(pick.split()).lower()), None)
     pick = pick if isinstance(pick, int) and not isinstance(pick, bool) and 0 <= pick < len(choices) else None
-    return {"ask": ask, "choices": choices, "pick": pick, "why": _plain(raw.get("why"), WHY_CHARS) if choices else ""}
+    q = {"ask": ask, "choices": choices, "pick": pick, "why": _plain(raw.get("why"), WHY_CHARS) if choices else ""}
+    if (lines := _lines_of(raw.get("lines"), choices)):
+        q["lines"] = lines
+    return q
+
+
+def _lines_of(raw: object, choices: list[str]) -> list[str]:
+    """A question's way lines (spec 159): a list in the ways' order, or a dict by way; [] unless every way has one within `LINE_CHARS` that the page reads back whole."""
+    if isinstance(raw, dict):
+        low = {" ".join(str(k).split()).lower(): v for k, v in raw.items()}
+        raw = [low.get(c.lower()) for c in choices]
+    if not choices or not isinstance(raw, list) or len(raw) != len(choices):
+        return []
+    lines = [" ".join(x.split()) if isinstance(x, str) else "" for x in raw]
+    if not all(0 < len(x) <= LINE_CHARS for x in lines) or _split(_tail(choices, lines), choices) != ("", lines):
+        return []
+    return lines
+
+
+def _tail(choices: list[str], lines: list[str]) -> str:
+    return "".join(f" · {c}: {x}" for c, x in zip(choices, lines))
+
+
+def _split(why: str, choices: list[str]) -> tuple[str, list[str] | None]:
+    """A why with its way lines at its end, `(the why alone, the lines)`; `(why, None)` where it has none (every way named, in order, or nothing)."""
+    text = " " + why
+    start = 0
+    while (p := text.find(f" · {choices[0]}: ", start)) >= 0:
+        out, at = [], p
+        for n, c in enumerate(choices):
+            head = f" · {c}: "
+            if not text.startswith(head, at):
+                break
+            at += len(head)
+            nxt = text.find(f" · {choices[n + 1]}: ", at) if n + 1 < len(choices) else len(text)
+            if nxt < 0:
+                break
+            out.append(text[at:nxt].strip())
+            at = nxt
+        else:
+            if all(0 < len(x) <= LINE_CHARS for x in out):
+                return text[:p].strip(), out
+        start = p + 1
+    return why, None
 
 
 def all_of(raw: object, limit: int) -> list[dict]:
@@ -76,7 +124,9 @@ def line(q: dict) -> str:
     if not q.get("choices"):
         return q["ask"]
     said = " / ".join(f"**{c}**" if n == q.get("pick") else c for n, c in enumerate(q["choices"]))
-    return f"{q['ask']} ({said})" + (f" — {q['why']}" if q.get("why") else "")
+    lines = _lines_of(q.get("lines"), q["choices"])
+    why = f" — {q['why']}" if q.get("why") else " —" if lines else ""
+    return f"{q['ask']} ({said})" + why + _tail(q["choices"], lines) if lines else f"{q['ask']} ({said})" + why
 
 
 def parse(text: str) -> dict:
@@ -93,8 +143,11 @@ def parse(text: str) -> dict:
     ask = m.group(1).strip()
     if m.group(3) and not re.search(r"[?.!]$", ask):
         ask += m.group(3)
-    return {"ask": ask, "choices": choices, "pick": bold.index(True) if sum(bold) == 1 else None,
-            "why": (m.group(4) or "").strip()}
+    q = {"ask": ask, "choices": choices, "pick": bold.index(True) if sum(bold) == 1 else None, "why": (m.group(4) or "").strip()}
+    why, lines = _split(q["why"], choices)
+    if lines:
+        q["why"], q["lines"] = why, lines
+    return q
 
 
 def picks(lines: list[str]) -> list[str]:
@@ -179,6 +232,14 @@ def with_answer(lines: object, ask: str | int, answer: str, day: str, who: str =
     return "\n".join(ln for row in rows for ln in row if ln)
 
 
+def card_line(c: dict) -> str:
+    """A card as its whole page line, the way lines in it (spec 159); just its question where it has no lines, or where a way is longer than `parse` reads (CHOICE_CHARS): what is written always reads back."""
+    choices = c.get("choices") or []
+    if not _lines_of(c.get("lines"), choices) or not all(0 < len(x) <= CHOICE_CHARS for x in choices):
+        return str(c.get("q") or "")
+    return line({"ask": c["q"], "choices": c["choices"], "pick": c.get("pick"), "why": c.get("why") or "", "lines": c["lines"]})
+
+
 def open_of(lines: object) -> list[tuple[int, str]]:
     """The questions with no answer yet, `(index, question)`."""
     return [(n, q) for n, (q, (_l, a)) in enumerate(zip(questions_of(lines), _rows(lines))) if not a]
@@ -210,6 +271,8 @@ def card(raw: object, *, id: str, by: str, leader: str, project: bool = False) -
         return None
     out = {"id": str(id), "by": str(by), "leader": str(leader), "q": q, "choices": choices, "pick": pick,
            "why": _plain(raw.get("why"), WHY_CHARS), "project": bool(project)}
+    if (lines := _lines_of(raw.get("lines"), choices)):
+        out["lines"] = lines                              # a way's own line (spec 159): kept only when every way has one
     if (to := for_of(raw)) != PERSON:
         out["for"] = to                                   # a party that may answer it (spec 128 D.1): kept only when it is one; no `for` is the person's
     return out
@@ -274,6 +337,8 @@ def _asked(c: dict, state: str) -> dict:
     pick = c.get("pick")
     out = {"id": str(c.get("id") or ""), "q": str(c.get("q") or ""), "choices": [str(x) for x in c.get("choices") or []],
            "pick": pick if isinstance(pick, int) and not isinstance(pick, bool) else None, "why": str(c.get("why") or ""), "project": bool(c.get("project")), "state": state}
+    if lines := _lines_of(c.get("lines"), out["choices"]):
+        out["lines"] = lines
     if state != "waiting":
         out["answer"] = str(c.get("answer") or "")
         out["round"] = 2 if c.get("round") == 2 else 1
@@ -285,7 +350,7 @@ def _asked(c: dict, state: str) -> dict:
 
 
 def talk_of(state_dir, slug: str) -> dict:
-    """A goal's Talk as it is kept, as data, never words: `{mode: "talk"|"bug"|"", round, done, heard: [party], stances: [{party, leader, weigher, stance, for, against, questions}], cause}`. Each
+    """A goal's Talk as it is kept, as data, never words: `{mode: "talk"|"bug"|"", round, done, heard: [party], stances: [{party, leader, weigher, stance, for, against, verdict (go, doubt, no or empty), questions}], cause}`. Each
     stance holds its party's questions: those the person answered (`state` "answered": `answer`, `how`, `round`), those left to the leaders' picks ("closed": `answer`) and
     those waiting ("waiting"). `cause` is a bug's guess, `{text, where, by, pending, confirmed}`, None with none. A Talk not begun (or taken back) is `{mode: "", round: 1,
     done: false, stances: [], cause: None}`; a question of a party with no stance (a bug's) lies under a stance of its own with no words."""
@@ -296,8 +361,9 @@ def talk_of(state_dir, slug: str) -> dict:
             if isinstance(c, dict):
                 asked.setdefault(str(c.get("by") or ""), []).append(_asked(c, state))
     stances = [{"party": str(s.get("party") or ""), "leader": str(s.get("leader") or ""), "stance": str(s.get("stance") or ""), "for": str(s.get("for") or ""),
-                "against": str(s.get("against") or ""), "weigher": bool(s.get("weigher"))} for s in rec.get("stances") or [] if isinstance(s, dict)]
-    stances += [{"party": p, "leader": "", "stance": "", "for": "", "against": "", "weigher": False} for p in asked if p not in {s["party"] for s in stances}]
+                "against": str(s.get("against") or ""), "weigher": bool(s.get("weigher")),
+                "verdict": s.get("verdict") if s.get("verdict") in ("go", "doubt", "no") else ""} for s in rec.get("stances") or [] if isinstance(s, dict)]
+    stances += [{"party": p, "leader": "", "stance": "", "for": "", "against": "", "weigher": False, "verdict": ""} for p in asked if p not in {s["party"] for s in stances}]
     for s in stances:
         s["questions"] = asked.get(s["party"], [])
     c = rec.get("cause") if isinstance(rec.get("cause"), dict) and rec.get("cause") else None

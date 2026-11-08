@@ -1,4 +1,4 @@
-"""Spec 158 J: a pick's receipt and the cap stop's one-press way to its plate."""
+"""Spec 160 J: a pick's receipt and the cap stop's one-press way to its plate."""
 import pytest
 
 pytest.importorskip('playwright.sync_api')

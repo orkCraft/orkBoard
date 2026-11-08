@@ -21,6 +21,7 @@ import { PlayDie } from "./playdie.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
 import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
+import { AnswerLifted, answerSet, useWide } from "./answercards.js";           // a lifted question or failure stays a hand card, its ways the hand (spec 158 F, decisions §270)
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
 import { Carry } from "./carry.js";                         // the inventory open: what you carry, instead of the stacks (spec 157 D.3)
@@ -48,7 +49,7 @@ function useKeys(root) {
       const t = e.target;
       if (!root.current || aloud(t)) return;
       if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
-      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card, .hand-tool, .hand-pot")) lower();
+      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card, .hand-ways-row, .hand-pen, .hand-tool, .hand-pot")) lower();
     };
     const key = (e) => {
       if (e.key === "Escape" && !e.defaultPrevented && !aloud(document.activeElement)) {
@@ -74,6 +75,7 @@ export function Hand() {
   const root = useRef(), map = mapData.value, needs = board.value?.needs_you || [], open = tab.value;
   useKeys(root);
   useNight();
+  const wide = useWide();
   const all = stopsOfProject(map, needs, open), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map && !isToolKey(key)) lower(); }, [key, !s]);   // the stop was answered: the card goes with it (a tool's card is no stop: it goes by its own)
   const asks = setupNow.value?.step;
@@ -88,15 +90,16 @@ export function Hand() {
   const none = !(map?.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length && !bare && !layLine.value && !carrying;      // no goal at all and nothing asked: the + card lies large in the pane
   const plus = () => { lower(); fieldOpen.value = true; };
   if (uprightNow.value) return html`<${Upright} root=${root} stacks=${stacks} plus=${plus} />`;                  // a touch phone upright: the hand is the first screen (upright.js)
+  const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${carrying && html`<div class="hand-carrying"><${Carry} /><div class="hand-end"><${PlayDie} /><${Mana} lifted=${s} /></div></div>`}
-    ${!middle && !carrying && html`<div class="hand-places"><div class="hand-row" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
+    ${!middle && !carrying && html`<div class="hand-places"><div class=${cards ? "hand-row is-sunk" : "hand-row"} inert=${cards ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
       <div class="hand-end">${!bare && html`<${PlayDie} />`}<${Mana} lifted=${s} /></div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
-    ${s && html`<${Lifted} s=${s} anchor=${anchor} />`}
+    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : html`<${Lifted} s=${s} anchor=${anchor} />`)}
     ${key === ADD_TOOL && html`<${AddTool} />`}
     ${key.startsWith(TOOL) && html`<${ToolCard} tool=${key.slice(TOOL.length)} />`}
     <${SetupCard} />

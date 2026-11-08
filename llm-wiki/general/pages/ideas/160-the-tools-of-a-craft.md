@@ -8,7 +8,7 @@ priority: normal
 short: Ввести инструменты
 phase: work
 route: product, design, tech
-spec: docs/specs/158-the-tools-of-a-craft.md
+spec: docs/specs/160-the-tools-of-a-craft.md
 by: claude-code
 schema: 3
 gate: 8640590 · 38 files · red

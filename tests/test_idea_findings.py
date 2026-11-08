@@ -145,6 +145,7 @@ def test_the_gate_gathers_when_a_goal_goes_to_main_and_a_read_that_fails_never_f
     gui = host.ideas
     monkeypatch.setattr(gui, "_to_main_args", lambda a: (slug, {"root": gui.root(False), "into": "dev", "main": "main"}))
     monkeypatch.setattr(gui, "_checks_refusal", lambda s, w: "")
+    monkeypatch.setattr(gui, "_no_tests_refusal", lambda s, w: "")                                            # the way to main's refusals are spec 158's; here the gathering
     monkeypatch.setattr(gui, "_flag_after_goal", lambda *a, **k: None)
     monkeypatch.setattr(goal_main, "merge", lambda *a, **k: {"goals": [slug], "commits": ["abc"], "files": 1, "pushed": False, "commit": "abc", "note": ""})
     assert gui.to_main({"idea": slug})["ok"] is True

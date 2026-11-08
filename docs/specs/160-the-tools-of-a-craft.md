@@ -1,6 +1,6 @@
-# 158. The tools of a craft: one shape for every craft's makers, Art's Picture maker and Sound maker in it, run by Orkboard in a pick under a cap
+# 160. The tools of a craft: one shape for every craft's makers, Art's Picture maker and Sound maker in it, run by Orkboard in a pick under a cap
 
-Goal: `llm-wiki/general/pages/ideas/158-the-tools-of-a-craft.md` (route: product, design, tech). The person's request is the page's *Gist*. This spec is the leaders' sections of that page as they wrote them in the Board's flow (Talk, then their sections), with the person's answers above them; each leader's *Talk* and *Accepted* stay in the page. **Builds:** the goal's stages (the page's *Stages*, the Taskmaster's), each task on local Codex, in the branch `claude/specialization-tools-32f7c8`, into a pull request; main is the person's.
+Goal: `llm-wiki/general/pages/ideas/160-the-tools-of-a-craft.md` (route: product, design, tech). The person's request is the page's *Gist*. This spec is the leaders' sections of that page as they wrote them in the Board's flow (Talk, then their sections), with the person's answers above them; each leader's *Talk* and *Accepted* stay in the page. **Builds:** the goal's stages (the page's *Stages*, the Taskmaster's), each task on local Codex, in the branch `claude/specialization-tools-32f7c8`, into a pull request; main is the person's.
 
 ## The person's answers (8 November 2026)
 

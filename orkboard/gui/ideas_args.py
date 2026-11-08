@@ -16,6 +16,11 @@ def _device(args: dict) -> str:
     return "phone" if args.get("device") == "phone" else "desktop"
 
 
+def _from(args: dict) -> dict:
+    """Where an answer was given (`ideas.answer`'s `from`): "hand" (the lifted card's answers) or "open" (after *Open…*); anything else, nothing: `{"from": …}` or `{}` for the event."""
+    return {"from": args["from"]} if args.get("from") in ("hand", "open") else {}
+
+
 def _via(args: dict) -> str:
     """Where the person pressed it (spec 41 §4, spec 49 §2.6): the `via` the face says when it is one of `VIA` ("map", the
     stops along the bottom's "hand", …), else "idea" (the idea's screen)."""

@@ -8,7 +8,7 @@
     crafts("web", "idea")                 # the cards of one stage
 
 **The crafts by stage**: *Idea* the concept's crafts (Game design and Art; Product and Design), lean; *Being made* adds Tech, standard; *Live* adds LiveOps or
-Run, and Marketing (§151.7), standard. **Release is in every project at every stage** (§137.1): its card is `locked` (ticked, never unticked, never dropped),
+Run, and Marketing (§151.7), standard. **Release is offered at every stage** (§137.1, §274.1): its card is not `locked` (a craft as any, it may be dropped),
 Lean, its leader and its engineer and notes (`squad`: a party holds one who does, spec 152 A.5), the leader on the cheaper tier (§151.6, §157.2: Seasoned). A card is `{id, name, line, craft, leader, build, check, squad, size,
 tiers, from, locked, because}`; `from` is the stage that adds it, so a face groups the cards under the stages' headings. The names `idea` · `being_made` ·
 `live` are code's; the face says Idea, Being made and Live (spec 100; the host returns keys, never words). No face, no model; the project's names are read, never
@@ -97,11 +97,11 @@ def card(recipe: dict) -> dict:
     got = party_recipes.sized(recipe, size)
     return {"id": recipe["id"], "name": recipe["name"], "line": recipe["line"], "craft": craft, "leader": recipe["leader"], "build": list(recipe["build"]),
             "check": list(recipe["check"]), "squad": got["team"], "size": size, "tiers": got["tiers"], "from": FROM.get(craft, "live"),
-            "locked": craft == party_recipes.RELEASE, "because": recipe.get("because") or ""}
+            "locked": False, "because": recipe.get("because") or ""}
 
 
 def crafts(kind: str, stage: str) -> list[dict]:
-    """The cards the project's kind is offered at a stage, in the kind's order: the crafts of the stages reached and Release (in every project)."""
+    """The cards the project's kind is offered at a stage, in the kind's order: the crafts of the stages reached and Release, offered at every stage (a craft as any, decisions §274.1: the person may remove it)."""
     if stage not in STAGES:
         raise ValueError("A stage is idea, being_made or live")
     reached = STAGES[:STAGES.index(stage) + 1]
@@ -114,7 +114,7 @@ def offered(kind: str) -> dict[str, list[dict]]:
 
 
 def release_card() -> dict:
-    """Release's card (in every project): Lean, its leader and the two who do."""
+    """Release's card (offered at every stage, not locked): Lean, its leader and the two who do."""
     return card(party_recipes.CRAFTS[party_recipes.RELEASE])
 
 

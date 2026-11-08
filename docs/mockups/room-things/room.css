@@ -1,0 +1,77 @@
+/* Orkboard mockup: the room's things (the lamp's chain, the backpack, the new chair). Laid over ../table-look/ and
+   ../answer-cards/ (whose cards it reuses); nothing here is in the product. */
+
+[data-party="marketing"], [data-cell="marketing"], [data-tab="marketing"] { --party: var(--mk-gnome); }
+[data-party="liveops"], [data-cell="liveops"], [data-tab="liveops"], [data-party="run"], [data-tab="run"] { --party: var(--mk-goblin); }
+.table[data-tab="marketing"] { --mk-lamp: #1d3533; --mk-felt: #0c1716; --mk-rim: #3a5e5a; --mk-rim-hi: #4c7a75; --mk-rim-lo: #0f1a19; }
+
+/* ---- the lamp's chain: bronze links from the window's top edge, a bead to pull, its words beside it ---------- */
+.rt-lamp {
+  position: fixed; z-index: 70; top: 0; right: 18px; height: 60px; padding: 0 20px 0 0; margin: 0; border: 0; background: none;
+  display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--ork-ink);
+}
+.rt-lamp__chain {
+  position: absolute; right: 7px; top: 0; width: 4px; height: 34px;
+  background: repeating-linear-gradient(var(--vb-bronze-hi) 0 3px, var(--vb-bronze-lo) 3px 4px, transparent 4px 6px);
+}
+.rt-lamp__bead {
+  position: absolute; right: 3px; top: 34px; width: 12px; height: 14px;
+  background: linear-gradient(var(--vb-bronze-hi) 0 3px, var(--vb-bronze) 3px 10px, var(--vb-bronze-lo) 10px);
+  clip-path: polygon(25% 0, 75% 0, 100% 30%, 100% 100%, 0 100%, 0 30%);
+}
+.rt-lamp.is-off .rt-lamp__chain { height: 42px; }          /* pulled: the chain hangs longer, the bead lower */
+.rt-lamp.is-off .rt-lamp__bead { top: 42px; }
+.rt-lamp__txt { display: flex; flex-direction: column; align-items: flex-end; }
+.rt-lamp__w { font: var(--ork-type-heading); letter-spacing: var(--ork-type-heading-track, .06em); text-transform: var(--ork-type-heading-case, none); color: #f0d890; text-shadow: 2px 2px 0 #000; }
+.rt-lamp__l { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.rt-lamp.is-off .rt-lamp__w { color: var(--ork-ink-muted); text-shadow: none; }
+
+/* ---- the lamp out: the table's light goes; the felt flat and darker, the lanes unlit; cards and signals as they are */
+.lamp-off .shell { background: #060504 !important; }
+.lamp-off .table-pane.ork-table { background: color-mix(in srgb, var(--mk-felt) 70%, #000) !important; }
+.lamp-off .rt-dither, .lamp-off .table-lane[data-party]::after { display: none !important; }
+.lamp-off .table-lane[data-party] { background: none !important; box-shadow: inset 0 3px 0 color-mix(in srgb, var(--party) 40%, transparent) !important; }
+.lamp-off .table-tabcell.is-open, .lamp-off .col-head:has(.col-head__tab[aria-selected="true"]) { background: none !important; }
+.lamp-off .portal-host { background: none !important; }
+
+/* ---- the backpack drawn in pixels; open, the table lies in its leather, two buckles on its top edge ----------- */
+.stall-pack .rt-pack { display: block; margin: 0 auto; image-rendering: pixelated; }
+.table-pane.ork-table[data-stall="open"] {
+  border-color: transparent !important;
+  box-shadow:
+    inset 0 0 0 2px #2a1a10, inset 0 0 0 9px #6b4a2e, inset 0 2px 0 9px #8a6240, inset 0 0 0 11px #2a1a10,
+    inset 0 0 0 30px rgba(0, 0, 0, .18) !important;
+  outline: 2px dashed #c9a97a; outline-offset: -6px;                                   /* the stitches */
+}
+.table-pane.ork-table[data-stall="open"]::after { display: none; }                      /* no bronze rivets on leather */
+.rt-buckle {                                                                          /* a strap over the top edge, its buckle */
+  position: absolute; z-index: 6; top: -6px; width: 20px; height: 40px; translate: -50% 0; pointer-events: none;
+  background:
+    linear-gradient(#d9b45c, #d9b45c) 3px 18px / 14px 2px no-repeat, linear-gradient(#d9b45c, #d9b45c) 3px 30px / 14px 2px no-repeat,
+    linear-gradient(#d9b45c, #d9b45c) 3px 18px / 2px 14px no-repeat, linear-gradient(#d9b45c, #d9b45c) 15px 18px / 2px 14px no-repeat,
+    linear-gradient(#8a6a3a, #8a6a3a) 9px 20px / 2px 10px no-repeat,
+    linear-gradient(90deg, #2a1a10 0 2px, #7a5534 2px 18px, #2a1a10 18px);
+}
+
+/* ---- the new chair pressed: lit, its question on the table ------------------------------------------------ */
+.table-chair.rt-lit .ork-chair { filter: drop-shadow(2px 0 0 var(--ork-alert)) drop-shadow(-2px 0 0 var(--ork-alert)); }
+.table-chair.rt-lit .table-chair__w { color: var(--ork-alert) !important; }
+.rt-chair-mini { width: 18px !important; height: 18px !important; }
+.rt-star { color: #f0d890; font-weight: 700; font-size: 16px; line-height: 1; text-shadow: 2px 2px 0 #000; }
+.rt-cost { font: var(--ork-type-caption); color: #f0d890; white-space: nowrap; }
+.ac-card .ac-who .rt-star + span { white-space: nowrap; }
+
+/* ---- the backpack open on a new craft: its tab, its heroes on the rug --------------------------------------- */
+.rt-new-word { font: var(--ork-type-caption); color: var(--party); }
+.stall-rug .rt-wares { display: flex; gap: 28px; padding: 18px 24px; align-items: flex-start; }
+.rt-ware { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.rt-plate {
+  font: var(--ork-type-caption); color: #f0d890; padding: 2px 8px;
+  background: linear-gradient(#3a2e20, #241b12); box-shadow: inset 0 0 0 1px var(--vb-bronze), 0 2px 0 #000;
+}
+
+.table-tabs__end > .table-tabcell { flex: none; }
+
+/* the backpack and the chain share the right column's head (the Release column, the discard), over its label */
+.rt-pack-here { position: fixed !important; top: 2px; z-index: 70; }
+.table-tabs .stall-pack.rt-moved { display: none !important; }

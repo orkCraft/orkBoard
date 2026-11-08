@@ -227,7 +227,7 @@ class DraftMixin:
 
     # -- one round of questions (§0) -------------------------------------------------------------------------
 
-    def answer(self, slug: str, answers: list[str], decide: bool = False) -> None:
+    def answer(self, slug: str, answers: list[str], decide: bool = False, source: str = "") -> None:
         """The person answers the spec's questions together (in their order): one `answer` call, in the background.
         `decide` (Let the Taskmaster decide, spec 41 §9): each question answered with its recommended choice, one
         without with "(no answer: decide)"."""
@@ -254,7 +254,7 @@ class DraftMixin:
         said = "\n".join(f"{idea_questions.parse(q)['ask']} — {a or '(no answer)'}" for q, a in pairs)
         ideas.add_turn(self.state_dir, slug, "you", f"Left to the Taskmaster:\n{said}" if decide else said,
                        "Open questions")
-        self._start(slug, "drafting", lambda: self.answer_one(slug, pairs, decide))
+        self._start(slug, "drafting", lambda: self.answer_one(slug, pairs, decide, source))
 
     def answer_prompt(self, root: Path, slug: str, pairs: list[tuple[str, str]]) -> str:
         """§0's `answer` context: the spec's sections but Decisions and Stages, the questions with the answers."""
@@ -275,7 +275,7 @@ you assumed. {self.reads("answer", touches)} You may read the repository (read o
  "assumed": ["one line for each thing you assumed where you were unsure"]}}
 Section names: {", ".join(names)}."""
 
-    def answer_one(self, slug: str, pairs: list[tuple[str, str]], decided: bool = False) -> None:
+    def answer_one(self, slug: str, pairs: list[tuple[str, str]], decided: bool = False, source: str = "") -> None:
         kw = _kw()
         root = self.wiki_root()
         ideas.save_state(self.state_dir, slug, state="reading", error="")
@@ -299,7 +299,7 @@ Section names: {", ".join(names)}."""
         ideas.save_state(self.state_dir, slug, state="ready", error="", asks_by=[], asks_look=0, measure=self.measure())
         how = idea_questions.tally([q for q, _a in pairs], [a for _q, a in pairs])
         self._ev(event_log.IDEA_ANSWERED, idea=slug, answers=sum(1 for _q, a in pairs if a), decided=decided,
-                 **({"picked": 0, "recommended": 0, "typed": 0} if decided else how), **self.measure())
+                 **({"picked": 0, "recommended": 0, "typed": 0} if decided else how), **({"from": source} if source in ("hand", "open") else {}), **self.measure())
         self.publish(slug)
         self.plan_now(slug)
 

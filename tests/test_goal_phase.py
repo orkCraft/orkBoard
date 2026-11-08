@@ -382,3 +382,26 @@ def test_a_done_page_new_to_this_machine_is_seen_in_history_and_makes_no_commit_
     assert st["state"] == "done" and st["phase_written"] == "done" and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d", st["seen_at"])
     assert notes == [("Spec before", "moved")]                                                  # the goal done before makes no note for a commit
     assert ideas.state(sd, "spec-before")["seen_at"] == ""
+
+
+def test_a_question_with_lines_is_an_outside_card_with_them_and_a_talk_card_with_lines_is_written_to_the_page_whole(host):
+    """Spec 159 B: the ways' lines travel to the page's outside cards, and a Talk card the page lacks is written with them."""
+    root, slug = _goal(host)
+    sd = host.ideas.state_dir
+    ideas.save_state(sd, slug, state="decided")
+    host.ideas.tree_flush(force=True)
+    ideas.set_section(root, slug, "Open questions", "- Which store first? (**App Store** / Google Play) — iPhone · App Store: Ships in a week · Google Play: Ships in a month\n- Which colour? (red / blue)")
+    ideas.set_meta(root, slug, asks="person", by="Claude Code")
+    cards = goal_phase.outside_cards(_page(root, slug))
+    assert cards[0]["lines"] == ["Ships in a week", "Ships in a month"] and cards[0]["why"] == "iPhone" and "lines" not in cards[1]
+    ideas.set_section(root, slug, "Open questions", "")
+    ideas.save_state(sd, slug, state="talk")
+    card = idea_questions.card({"q": "Which week?", "choices": ["this", "next"], "pick": 0, "why": "soon", "lines": ["Now", "Later"]}, id="c1", by="tech", leader="ork")
+    plain = idea_questions.card({"q": "Which size?", "choices": ["S", "L"], "pick": 0, "why": "small"}, id="c2", by="tech", leader="ork")
+    idea_questions.save_record(sd, slug, {"mode": "talk", "round": 1, "waiting": [card, plain], "stances": []})
+    host.ideas.keeper.talk_answer = lambda s, answers, decide=False: None
+    host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": "c1", "pick": 1}, {"id": "c2", "pick": 0}]})
+    text = _page(root, slug).section("Open questions")
+    assert idea_questions.questions_of(text) == ["Which week? (**this** / next) — soon · this: Now · next: Later", "Which size?"]
+    assert idea_questions.parse(idea_questions.questions_of(text)[0])["lines"] == ["Now", "Later"]
+    assert idea_questions.answers(text) == ["next", "S"]

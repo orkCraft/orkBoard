@@ -384,6 +384,7 @@ TERMS: tuple[Term, ...] = (
     _t("new_decision", "A decision is newer than your last look at this party's past"),   # the muted dot on a party's tab (spec 156 D.5, decisions §261.9)
     _t("checks_before_main", "Checks before main"),                # Release's table while a goal is chosen for main: a skeleton a check (spec 156 D.4, decisions §261.8)
     _t("to_main", "To main"),                                     # merge what is ready in dev into main, by code (the discard's button)
+    _t("to_main_untested", "To main without the tests"),          # the card's second act: the goal goes to main with no test run, the only skip (decisions §274.3; `ideas.to_main` `untested: true`)
     # Operations (docs/specs/38-operations.md §0): the person's everyday work by templates, across projects
     _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)
     _t("operations", "Operations"),                                # the person's list, one for all projects (decisions §51); reached through the Team party once there is one, and in the left column until then (spec 92 §3)

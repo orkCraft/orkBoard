@@ -123,6 +123,18 @@ def test_no_question_makes_the_plan_at_once_with_its_stages_and_risk(keeper):
     assert ideas.state(keeper.state, slug)["session"] == ""                  # §0: no session kept
 
 
+@pytest.mark.parametrize("source, written", [("hand", "hand"), ("open", "open"), ("elsewhere", None), ("", None)])
+def test_an_answer_says_where_it_was_given_only_when_it_is_hand_or_open(keeper, source, written):
+    # spec 158 E: `from` on `idea_answered`: "hand" (the lifted card) or "open" (after Open…); a bad value is not written
+    slug = ideas.add_idea(keeper.root, "a table", keeper.goal, keeper.state)
+    keeper.call = Model(draft={**DRAFT, "questions": ["Which columns?"]}, plan=PLAN, answer={"sections": {"Done when": "- shown"}})
+    keeper.draft_one(slug)
+    keeper.answer(slug, ["name, date"], source=source)
+    _wait(keeper, slug)
+    (e,) = _events(keeper, "idea_answered")
+    assert e.get("from") == written and ("from" in e) is (written is not None)
+
+
 def test_questions_go_to_asks_and_one_round_of_answers_writes_the_rest_then_the_plan(keeper):
     slug = ideas.add_idea(keeper.root, "a table", keeper.goal, keeper.state)
     keeper.call = model = Model(draft={**DRAFT, "questions": ["Which columns?", "Sorted how?"]}, plan=PLAN,

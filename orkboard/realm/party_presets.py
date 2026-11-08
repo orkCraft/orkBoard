@@ -35,7 +35,7 @@ def team_words(team_at: str) -> str:
 def listed(kind: str = "code", team_at: str = "", ops: bool = True) -> list[dict]:
     """The rows of New party's left half for a kind of project, in the order they are shown: the kind's crafts, then the person's own."""
     out = [_row(r["id"], r["name"], r["line"], "stage", r["leader"], r["build"], r["check"], stage=project_stage.FROM[r["id"]], craft=_craft_of(r["leader"]),
-                recipe=r["id"], squad=party_recipes.squad_of(r), size=project_stage.SIZE[r["id"]], locked=r["id"] == party_recipes.RELEASE,
+                recipe=r["id"], squad=party_recipes.squad_of(r), size=project_stage.SIZE[r["id"]], locked=False,
                 routines=party_recipes.routines_of(r["id"], kind)) for r in party_recipes.for_kind(kind)]
     out.append(_row(OWN["id"], OWN["name"], OWN["line"], "own", "taskmaster", [], [], craft="mixed"))
     return out

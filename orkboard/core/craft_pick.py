@@ -1,4 +1,4 @@
-"""Run a craft tool through the existing pick lifecycle (spec 158 C)."""
+"""Run a craft tool through the existing pick lifecycle (spec 160 C)."""
 from __future__ import annotations
 
 import json

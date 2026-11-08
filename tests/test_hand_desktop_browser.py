@@ -1112,11 +1112,12 @@ def test_a_question_is_answered_from_its_card_and_the_card_goes_with_the_stop(gu
         _press(pg, "phones")
         lifted = pg.locator(".hand-lifted")
         lifted.wait_for(timeout=WAIT_MS)
-        assert lifted.locator(".hand-spend").count() == 0 and "Where does the timer run?" in lifted.inner_text()                   # no gem, no words: it spends nothing
-        assert lifted.get_by_role("button", name="Let Design lead decide").count() == 1 and lifted.get_by_role("button", name="Put it back").count() == 1
+        ways = pg.locator(".hand-ways-row")                                                                                       # spec 158 F, decisions §270: the question stays a hand card, its ways are the hand
+        assert lifted.locator(".corner__much").count() == 0 and "Where does the timer run?" in lifted.inner_text()                  # no gem: it spends nothing
+        assert ways.get_by_role("button", name=re.compile("^Design lead decides")).count() == 1 and ways.get_by_role("button", name="Put it back").count() == 1
         shot(pg, "wide-lifted-question")
-        lifted.get_by_role("button", name="● Server counts, phones show it").click()
-        assert _sent(pg, host, ("ideas.answer", {"slug": "phones", "answers": ["Server counts, phones show it"]}))
+        ways.get_by_role("button", name=re.compile("^Server counts, phones show it, its pick")).click()
+        assert _sent(pg, host, ("ideas.answer", {"slug": "phones", "answers": ["Server counts, phones show it"], "from": "hand"}))
         pg.wait_for_function("() => !document.querySelector('.hand-stack[data-stack=\"phones@2\"]:not(.is-gone)')", timeout=WAIT_MS)
         assert pg.locator(".hand-lifted").count() == 0 and sig(pg, "frame/state.js", "lifted") == ""
         assert [s.get_attribute("data-stack") for s in pg.locator(".hand-stack:not(.is-gone)").all()] == ["timer@1", "export@1", "words@2", "theme@3"]
@@ -1152,7 +1153,7 @@ def test_open_on_a_lifted_card_opens_the_stop_over_the_pane_and_it_goes_back_whe
     pg, host, log = open_hand(gui)
     try:
         _press(pg, "timer")
-        pg.locator(".hand-lifted").get_by_role("button", name="Open…").click()
+        pg.locator(".hand-ways-row").get_by_role("button", name="Open…").click()
         over = sig(pg, "frame/state.js", "over")
         assert over["kind"] == "stop" and over["props"]["key"].startswith("failed/timer/") and sig(pg, "frame/state.js", "lifted") == ""
         box = pane(pg)
@@ -1401,7 +1402,8 @@ def test_a_goals_own_stack_lies_in_front_of_a_party_question_that_blocks_nothing
         top = max(front, key=lambda r: r[1])[0]
         assert top == "timer@1", f"the failure is the front of the fan: {front}"
         pg.locator('.hand-card[data-goal="timer"][data-top="1"]').click(position={"x": 60, "y": 30})       # the press lands on the front card
-        pg.wait_for_selector(".hand-card--big", timeout=WAIT_MS)
+        pg.wait_for_selector(".hand-lifted", timeout=WAIT_MS)
+        assert pg.locator(".hand-lifted").get_attribute("data-kind") == "failed", "the press lifted the failure"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1435,14 +1437,14 @@ def test_start_again_says_the_tasks_work_is_thrown_away_only_where_its_branch_ho
     pg, host, log = open_hand(gui)
     try:
         _press(pg, "timer")
-        btn = pg.locator(".hand-lifted").get_by_role("button", name="Start again")
+        btn = pg.locator(".hand-ways-row").get_by_role("button", name=re.compile("^Start again"))
         btn.wait_for(timeout=WAIT_MS)
         assert words not in (btn.get_attribute("title") or ""), "no commits: nothing is thrown away"
         pg.keyboard.press("Escape")
         next(n for n in host.nodes if n["slug"] == "timer")["tasks"][0]["holds_commits"] = True
         host.bump({})
         _press(pg, "timer")
-        btn = pg.locator(".hand-lifted").get_by_role("button", name="Start again")
+        btn = pg.locator(".hand-ways-row").get_by_role("button", name=re.compile("^Start again"))
         btn.wait_for(timeout=WAIT_MS)
         assert words in btn.get_attribute("title")
     finally:

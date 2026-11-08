@@ -1,4 +1,4 @@
-"""Picture and Sound makers (spec 158 B).
+"""Picture and Sound makers (spec 160 B).
 
 Each call makes one asset. The caller owns reservations and the pick manifest;
 makers only send the prompt and return validated files. No redirects or remote

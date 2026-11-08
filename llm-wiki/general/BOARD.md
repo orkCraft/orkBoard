@@ -1,4 +1,4 @@
-<!-- orkboard:file schema=3 hash=a063a0510c76 -->
+<!-- orkboard:file schema=3 hash=dbd6b39adf0c -->
 # The Board's rules (Orkboard's file)
 
 Orkboard writes this file from its package; a change by hand is written back. This project's own rules go in `AGENTS.md` and `CLAUDE.md`, and they win: where they conflict
@@ -56,9 +56,11 @@ and `done` needs a green `gate`.
 
 ## A question for the person
 
-A leader's question is one list line under `## Open questions`, its choices in brackets with the recommended one in bold, and why after a dash:
+A leader's question is one list line under `## Open questions`, its choices in brackets with the recommended one in bold, and why after a dash, then one line for each way:
 
-    - Which store first? (**App Store** / Google Play) — most of its users are on iPhone
+    - Which store first? (**App Store** / Google Play) — most of its users are on iPhone · App Store: Reaches most of its users first; review takes days · Google Play: Android users wait; the review is quicker
+
+`lines` is one line for each way, in the ways' order: what that way leads to, its point in its first words, 80 characters at most so it fits under the way's name on its card, never the `why` said again; give a line for every way or none. A question with no lines is as valid as before.
 
 Set `asks: person` and stop. The person's answer is the line under it, written by whoever hears it (Orkboard writes it too when the person answers in its hand):
 

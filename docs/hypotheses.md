@@ -224,7 +224,7 @@ person to come.
 
 ## H5. A paid asset is kept at its price
 
-**Status:** open. **Raised:** 2026-11-08 (goal 158).
+**Status:** open. **Raised:** 2026-11-08 (goal 160).
 
 ### The belief
 

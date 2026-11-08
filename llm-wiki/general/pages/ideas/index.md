@@ -117,7 +117,9 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [OrkUI 0.15.x copied](96-orkui-0-15-0-copied.md) — OrkUI 0.15.x copied
 - [One card picked, on either side](156-one-pick-and-the-release-column.md) — У нас сейчас очень сложный интерфейс стола (переключатели lifecycle цели - talk, spec, work, done, крест для перехода на чистый стол и ещё выделение карт из сброса показывает совершенно другой стол, к
 - [The inventory, a merchant's stall; a hero lays its table](157-the-inventory-a-merchants-stall.md) — Давай макет мерчанта сделаем более похожим на мерчанта из slay the spire и сделаем скрины как будут выглядеть столы всех 18 согласованных лидеров. Давай делаем спеку и имплементацию на моделях попроще
-- [Хочу ввести инструменты специализаций: то, чем пользуется каждая партия,…](158-the-tools-of-a-craft.md) — Хочу ввести инструменты специализаций: то, чем пользуется каждая партия, причём у одного харнеса инструмент может быть, у другого нет. Начать с art: сейчас картинки умеет делать только agy (и он exper
+- [Answers as cards in the hand, To main from the discard after the gate's tests](158-the-window-as-a-table.md) — Окно в облике стола: цвет — партия, стихия, сигнал; у каждого лидера своё сукно, свет от верхнего края ступенями, бронзовые рамы, вымпелы. Без большой карты: вопрос поднимается на стол, ответы — карты
+- [The table's look and the room's things, after goal 158 (the person's split…](the-table-s-look-and-the-room-s-things-after.md) — The table's look and the room's things, after goal 158 (the person's split of 8 November): colour is the party, the element and a signal; each leader's felt, the light from the top edge in steps, bron
+- [Хочу ввести инструменты специализаций: то, чем пользуется каждая партия,…](160-the-tools-of-a-craft.md) — Хочу ввести инструменты специализаций: то, чем пользуется каждая партия, причём у одного харнеса инструмент может быть, у другого нет. Начать с art: сейчас картинки умеет делать только agy (и он exper
 - [A goal's party, measured](43-party-measured.md) — A goal's party, measured
 - [What the first look said](90-what-the-first-look-said.md) — What the first look said
 - [The owner's list of 26 October](91-the-owners-list.md) — The owner's list of 26 October
@@ -127,4 +129,5 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [A hypothesis](133-a-hypothesis-its-two-conditions-its-test-its-file.md) — A hypothesis
 - [What a trial with real tools found](143-what-a-trial-with-real-tools-found.md) — What a trial with real tools found
 - [A hypothesis on the page](146-a-hypothesis-on-the-page.md) — A hypothesis on the page
+- [A way's own line: each way of a question says what it leads to, on its card](159-a-ways-own-line.md) — A way's own line: each way of a leader's question carries one line of what it leads to, written by the leader to fit the card (decisions §270.2, §270.5); the Board's question format holds it, the host
 - [Release keeps the chronicle](134-release-keeps-the-chronicle.md) — Release keeps the chronicle

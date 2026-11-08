@@ -1,4 +1,4 @@
-"""Spec 158 K: the plate's agreement follows fake paid calls into the pick."""
+"""Spec 160 K: the plate's agreement follows fake paid calls into the pick."""
 import json
 import threading
 from decimal import Decimal

@@ -356,6 +356,17 @@ def test_a_goals_question_comes_with_its_answer_picked_and_may_be_left_to_the_ta
     assert got["decided"] is True and got["answers"] == 2 and got["recommended"] == 0
 
 
+@pytest.mark.parametrize("source, written", [("hand", "hand"), ("open", "open"), ("elsewhere", None), (None, None)])
+def test_a_partys_answer_says_where_it_was_given_only_when_it_is_hand_or_open(host, model, source, written):
+    # spec 158 E: `from` on `goal_answered`
+    model.answers["goal"] = {"summary": "Installs first.", "metrics": [], "questions": [{"ask": "Which channel first?", "choices": ["npm", "brew"], "pick": 1}]}
+    slug = host.command("ideas.goal_save", GOAL)["slug"]
+    _wait(host, slug, goal=True)
+    host.command("ideas.answer", {"slug": slug, "answers": ["npm"], "goal": True, **({"from": source} if source is not None else {})})
+    got = _events(host, "goal_answered")[-1]
+    assert got.get("from") == written and ("from" in got) is (written is not None)
+
+
 def test_the_partys_reading_asks_no_metrics_and_keeps_those_written_before_spec_50(host, model):
     """Spec 50 §2.5: the reading's prompt has no `metrics` in its answer's shape; a metric in the answer is not read; the metrics the
     person set (or the keeper wrote before) stay on the page and are passed on to every goal's draft."""

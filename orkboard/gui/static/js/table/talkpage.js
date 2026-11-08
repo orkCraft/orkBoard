@@ -19,6 +19,7 @@ export function useKept(idea, sig) {
   const [kept, setKept] = useState(undefined);
   useEffect(() => {
     let live = true;
+    if (!idea) { setKept(undefined); return undefined; }                                                       // nothing to ask (planboard.js asks only for a goal with no tasks yet)
     command("ideas.talk_read", { idea }, true).then((a) => { if (live) setKept(a && Array.isArray(a.stances) ? a : null); }).catch(() => { if (live) setKept(null); });
     return () => { live = false; };
   }, [idea, sig]);
@@ -26,7 +27,7 @@ export function useKept(idea, sig) {
 }
 
 /** How a question stands, in words: *Waits for you*, *You said: …*, *Its pick stands: …*. */
-const standing = (q) => (q.state === "answered" ? `${q.how === "text" ? "You wrote" : q.how === "decide" ? "Left to its pick" : "You said"}: ${q.answer}` : q.state === "closed" ? `Its pick stands: ${q.answer}` : "Waits for you");
+export const standing = (q) => (q.state === "answered" ? `${q.how === "text" ? "You wrote" : q.how === "decide" ? "Left to its pick" : "You said"}: ${q.answer}` : q.state === "closed" ? `Its pick stands: ${q.answer}` : "Waits for you");
 
 /** One leader's stance: its head and its party's name, the line, *For* and *Against*; *More* the Talk as kept, in place: its questions, how each stands. */
 export function Stance({ st, g, asked }) {

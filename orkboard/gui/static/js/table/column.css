@@ -122,3 +122,7 @@
 .col-card--up.ork-card.ork-picked { transform: translate(calc(var(--x, 0px) + 36px), 0) rotate(2deg); }
 .col-pile.is-down:is(:hover, :focus-within) .col-card--deck.ork-card { top: calc(var(--i) * 36px); transition: top var(--ork-motion-base) var(--ork-motion-ease), transform var(--ork-motion-base) var(--ork-motion-ease); }
 @media (prefers-reduced-motion: reduce) { .col-pile.is-down:is(:hover, :focus-within) .col-card--deck.ork-card { transition: none; } }
+
+/* the goal's card whose question or failure is lifted in the hand (hand/answercards.js), ringed in its signal's colour: an outline, as a face-down card's back covers its inside (spec 158 F, decisions §270.1) */
+.col-card[data-ringed] { z-index: 5; outline: 2px solid var(--ork-alert); outline-offset: -2px; }
+.col-card[data-ringed="fails"] { outline-color: var(--ork-danger); }

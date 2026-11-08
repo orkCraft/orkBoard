@@ -1,4 +1,4 @@
-// A maker's receipt and the cap stop's one-press way to its plate (spec 158 J).
+// A maker's receipt and the cap stop's one-press way to its plate (spec 160 J).
 import { html } from "../html.js";
 import { closeOver, openInventory, openTab } from "../frame/state.js";
 import { makerPlate } from "../table/stallstate.js";

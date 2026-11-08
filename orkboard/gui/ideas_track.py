@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import event_log, goal_team, ideas, party_recipes
+from orkboard.realm import event_log, ideas
 
 
 class TrackMixin:
@@ -12,12 +12,10 @@ class TrackMixin:
         return {i["slug"] for i in ideas.ideas(self.root(False), slug) if self.keeper.busy(i["slug"]) or i["slug"] in runs}
 
     def track_drop(self, args: dict) -> dict:
-        """`{"slug", "goals"?: "move"|"drop"}`: a party removed, its goals moved to General (the default) or removed with it (spec 80 §2)."""
+        """`{"slug", "goals"?: "move"|"drop"}`: a party removed, its goals moved to General (the default) or removed with it (spec 80 §2). Release is a craft as any: it is removed with no refusal (decisions §274.1)."""
         slug, goals = _text(args, "slug", 100), _opt(args, "goals") or "move"
         if goals not in ("move", "drop"):
             raise IdeasError("Goals move to General or are removed")
-        if goal_team.craft_of(self.root(False), slug) == party_recipes.RELEASE:          # in every project, the one way into main (decisions §137.1, spec 99 §1.2)
-            raise IdeasError("Release stays in every project: it is the one way into main")
         page = ideas.track_page(self.root(False), slug)
         title = (page.title or page.get("title") or slug) if page is not None else slug
         try:

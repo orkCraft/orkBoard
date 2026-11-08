@@ -69,3 +69,72 @@ def test_an_answers_line_is_written_under_its_question_and_read_back():
     assert text.splitlines()[1] == "  - Answered: Google Play (the person, 2026-11-06)"
     assert iq.answers(text) == ["Google Play", ""] and iq.answers(text.splitlines()) == ["Google Play", ""]
     assert iq.answers("") == [] and iq.open_of(text) == [(1, "Which week?")]
+
+
+def test_a_ways_own_line_is_kept_after_the_why_and_read_back():
+    """Spec 159 A: `lines`, one per way in the ways' order, at most 80 characters; kept only when every way has one."""
+    raw = {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first",
+           "lines": ["Ships in a week", "Ships in a month"]}
+    q = iq.of(raw)
+    assert q["lines"] == ["Ships in a week", "Ships in a month"]
+    text = iq.line(q)
+    assert text == "Which store first? (**App Store** / Google Play) — iPhone first · App Store: Ships in a week · Google Play: Ships in a month"
+    assert iq.parse(text) == q and iq.of(text) == q                                     # the round trip
+    assert iq.of({**raw, "lines": {"google play": "Ships in a month", "App Store": "Ships in a week"}})["lines"] == q["lines"]
+    no_why = iq.of({**raw, "why": ""})
+    assert iq.parse(iq.line(no_why)) == no_why and no_why["lines"] == q["lines"]
+
+
+def test_a_question_without_lines_reads_as_before_and_a_bad_set_of_lines_is_dropped():
+    old = "Which store first? (**App Store** / Google Play) — iPhone first"
+    assert "lines" not in iq.parse(old) and iq.line(iq.parse(old)) == old
+    base = {"ask": "A?", "choices": ["x", "y"], "pick": 0, "why": "w"}
+    for bad in (["one"], ["a", ""], ["a", "b" * 81], ["a", 3], "a, b", ["a", "b", "c"]):
+        assert "lines" not in iq.of({**base, "lines": bad})
+    assert iq.of({**base, "lines": ["a", "b" * 80]})["lines"] == ["a", "b" * 80]
+    assert iq.line(iq.of({**base, "lines": ["a", "b" * 81]})) == "A? (**x** / y) — w"
+
+
+def test_todays_pattern_reads_a_new_line_with_the_lines_inside_the_why_and_ids_do_not_change():
+    q = iq.of({"ask": "A?", "choices": ["x", "y"], "pick": 1, "why": "w", "lines": ["one", "two"]})
+    text = iq.line(q)
+    today = iq._LINE.match(text)                         # the pattern of before
+    assert today.group(1) == "A?" and today.group(4) == "w · x: one · y: two"
+    assert [q["ask"], q["choices"], q["pick"]] == ["A?", ["x", "y"], 1]
+    plain = "A? (x / **y**) — w"
+    assert iq.questions_of(f"- {text}\n- B?") == [text, "B?"] and iq.questions_of(f"- {plain}\n- B?") == [plain, "B?"]
+    assert iq.picks([text]) == iq.picks([plain]) == ["y"]
+
+
+def test_ways_with_a_colon_or_a_dot_in_their_name_keep_their_lines():
+    q = iq.of({"ask": "A?", "choices": ["Plan: lean", "Ship · now"], "pick": 0, "why": "w", "lines": ["small: fast", "big · slow"]})
+    assert q["lines"] == ["small: fast", "big · slow"]
+    assert iq.parse(iq.line(q)) == q
+    assert "lines" not in iq.of({"ask": "A?", "choices": ["x", "y"], "lines": ["a · y: b", "c"]})
+
+
+def test_a_card_and_its_talk_read_keep_the_lines_and_a_card_without_lines_is_as_before(tmp_path):
+    """Spec 159 B: `lines` travel with the card into talk.json and the Talk read; the page line of a card is whole only with lines."""
+    raw = {"q": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone", "lines": ["Ships in a week", "Ships in a month"]}
+    c = iq.card(raw, id="c1", by="tech", leader="ork")
+    assert c["lines"] == ["Ships in a week", "Ships in a month"]
+    assert "lines" not in iq.card({**raw, "lines": ["only one"]}, id="c1", by="tech", leader="ork")
+    plain = iq.card({k: v for k, v in raw.items() if k != "lines"}, id="c2", by="tech", leader="ork")
+    assert "lines" not in plain and iq.card_line(plain) == "Which store first?"
+    assert iq.parse(iq.card_line(c))["lines"] == c["lines"] and iq.card_line(c).startswith("Which store first? (**App Store** / Google Play) — iPhone · App Store: Ships")
+    iq.save_record(tmp_path, "g", {"mode": "talk", "round": 1, "waiting": [c, plain], "stances": []})
+    qs = iq.talk_of(tmp_path, "g")["stances"][0]["questions"]
+    assert qs[0]["lines"] == c["lines"] and "lines" not in qs[1]
+
+
+def test_a_card_with_a_way_longer_than_a_page_line_reads_is_written_as_its_question_alone_and_an_old_line_is_unchanged():
+    """Spec 159 A: a card's way may be 60 characters, a page line's 40; what is written always reads back (never ways and lines lost into the ask)."""
+    long = "A" * 50
+    c = iq.card({"q": "Which container?", "choices": [long, "Docker"], "pick": 0, "why": "x", "lines": ["Fast to set up", "Slow to set up"]}, id="c1", by="tech", leader="ork")
+    assert c and c["choices"][0] == long and c["lines"]
+    written = iq.card_line(c)
+    assert written == "Which container?" and iq.parse(written)["ask"] == "Which container?"
+    short = iq.card({"q": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone", "lines": ["Ships in a week", "Ships in a month"]}, id="c2", by="tech", leader="ork")
+    old = iq.card_line(short)
+    assert old == "Which store first? (**App Store** / Google Play) — iPhone · App Store: Ships in a week · Google Play: Ships in a month"
+    assert iq.parse(old)["lines"] == short["lines"]

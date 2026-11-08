@@ -13,7 +13,7 @@ from orkboard.core import bus
 from orkboard.gui.board_host import CommandError
 from orkboard.realm import gate_config, goal_main, main_checks
 
-from tests.test_goal_main import commit_in, depends, git, goal, host, plan_of, repo, short, task, worktrees, work  # noqa: F401  (fixtures and helpers)
+from tests.test_goal_main import to_main, commit_in, depends, git, goal, host, plan_of, repo, short, task, worktrees, work  # noqa: F401  (fixtures and helpers)
 
 
 def toml(root: Path, text: str) -> None:
@@ -85,6 +85,7 @@ def test_the_default_checks_pass_on_a_clean_trial_and_leave_main_dev_and_the_wor
 
 def test_a_project_with_no_tests_passes_the_tests_check_saying_so(host, repo, work):
     lobby, *_ = work
+    (repo / "orkcraft.toml").unlink()                                                       # the fixture's gate (`true`) is gone: no tests at all
     got, _seen = steps_of(host, repo, lobby)
     assert states(got) == [("The merge", "passed"), ("Tests", "passed")] and "no tests ran" in got[1]["words"]
 
@@ -242,14 +243,62 @@ def test_a_red_check_seals_the_way_in_words_and_choosing_the_goal_anew_runs_the_
     assert host.command("ideas.to_main", {"idea": lobby})["ok"] is True
 
 
-def test_results_of_an_older_plan_are_refused_and_a_goal_never_checked_goes_as_before(host, repo, work):
+def test_results_of_an_older_plan_are_refused_and_a_goal_never_checked_is_refused_too(host, repo, work):
     lobby, chat, *_ = work
     host.command("ideas.to_main_checks", {"idea": lobby})
     wait_done(host, lobby)
     task(host, repo, lobby, "k3", {"lobby/more.ts": "more\n"})                           # a new commit in the plan
-    with pytest.raises(CommandError, match="The way into main changed"):
+    with pytest.raises(CommandError, match="The way into main changed since its checks passed.*run the checks again"):
         host.command("ideas.to_main", {"idea": lobby})
-    assert host.command("ideas.to_main", {"idea": chat})["ok"] is True                   # Chat's checks were never asked: today's way
+    with pytest.raises(CommandError, match="checks have not been run: run the checks"):        # Chat's checks were never asked: it does not go untested
+        host.command("ideas.to_main", {"idea": chat})
+    assert git(repo, "log", "-1", "--format=%s", "main") == "edit old.txt" and worktrees(repo) == []
+    assert to_main(host, chat)["ok"] is True                                              # asked and green: it goes
+
+
+def test_checks_that_passed_against_another_head_of_main_are_refused(host, repo, work):
+    lobby, chat, *_ = work
+    host.command("ideas.to_main_checks", {"idea": lobby})
+    wait_done(host, lobby)
+    to_main(host, chat)                                                                  # main moves under Lobby's green checks
+    with pytest.raises(CommandError, match="The way into main changed.*run the checks again"):
+        host.command("ideas.to_main", {"idea": lobby})
+    assert to_main(host, lobby)["ok"] is True                                            # checked on main as it is now
+
+
+RED = 'echo "FAILED tests/test_room.py::test_join - assert 1 == 2"; echo "===== 1 failed, 4 passed in 0.3s ====="; exit 1'
+
+
+def test_a_red_tests_check_leaves_main_as_it_was_and_names_the_test_that_failed(host, repo, work):
+    lobby, *_ = work
+    toml(repo, f"[gate]\nrun = '{RED}'\n")
+    main = git(repo, "rev-parse", "main")
+    with pytest.raises(CommandError, match=r"Sealed: Tests is red: tests/test_room.py::test_join failed \(1 failed, 4 passed in 0.3s\)"):
+        to_main(host, lobby)
+    assert git(repo, "rev-parse", "main") == main and worktrees(repo) == []
+
+
+def test_the_press_that_takes_dev_whole_runs_the_tests_too_and_a_red_stops_it(host, repo, work):
+    toml(repo, f"[gate]\nrun = '{RED}'\n")
+    main, dev = git(repo, "rev-parse", "main"), git(repo, "rev-parse", "dev")
+    with pytest.raises(CommandError, match="Sealed: Tests is red: tests/test_room.py::test_join failed"):
+        host.command("ideas.gate_merge")
+    assert git(repo, "rev-parse", "main") == main and git(repo, "rev-parse", "dev") == dev and worktrees(repo) == []
+    toml(repo, '[gate]\nrun = "true"\n')
+    assert host.command("ideas.gate_merge")["ok"] is True and git(repo, "rev-parse", "main") != main
+
+
+def test_the_press_that_takes_dev_whole_is_refused_in_words_when_the_project_has_no_tests(host, repo, work):
+    (repo / "orkcraft.toml").unlink()                                                       # no gate: no tests at all
+    main, dev = git(repo, "rev-parse", "main"), git(repo, "rev-parse", "dev")
+    with pytest.raises(CommandError, match="has no tests.*To main without the tests"):
+        host.command("ideas.gate_merge")
+    assert git(repo, "rev-parse", "main") == main and git(repo, "rev-parse", "dev") == dev and worktrees(repo) == []
+
+
+def test_pytests_failed_line_names_its_test():
+    out = "== short test summary info ==\nSKIPPED [1] x\nFAILED tests/test_a.py::test_b - assert 1 == 2\nERROR tests/test_c.py::test_d\n"
+    assert main_checks.failed_test(out) == "tests/test_a.py::test_b" and main_checks.failed_test("2 failed") == ""
 
 
 def test_a_seal_no_check_owns_is_answered_without_running_anything(host, repo, work):

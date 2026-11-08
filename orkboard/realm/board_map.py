@@ -299,7 +299,7 @@ def _asked(st: dict, asks: list[str], by_slug: dict, lead: dict | None, target: 
         r = by_slug.get(who[n]) if n < len(who) and isinstance(who[n], str) else None
         r = r or lead
         out.append({"ask": q["ask"], "choices": q.get("choices") or [], "pick": q.get("pick"), "why": q.get("why") or "", "look": n < looks,
-                    "by": {"slug": r["slug"], "name": r["name"], "head": roles.head(r, target)} if r else None})
+                    **({"lines": q["lines"]} if q.get("lines") else {}), "by": {"slug": r["slug"], "name": r["name"], "head": roles.head(r, target)} if r else None})
     return out
 
 

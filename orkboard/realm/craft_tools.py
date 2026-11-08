@@ -1,4 +1,4 @@
-"""A craft's tools, apart from the harnesses in tools.py (spec 158, stage A).
+"""A craft's tools, apart from the harnesses in tools.py (spec 160, stage A).
 
 Only permissions and money caps live on the Board. Hosts and prices are fixed here;
 keys stay on the machine and never occur in the chair's rows. API makers run in

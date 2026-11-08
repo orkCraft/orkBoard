@@ -1,4 +1,4 @@
-"""Spec 158 L: paid pick answers count money, without the generation's contents."""
+"""Spec 160 L: paid pick answers count money, without the generation's contents."""
 import json
 import threading
 from types import SimpleNamespace
