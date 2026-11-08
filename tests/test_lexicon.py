@@ -305,3 +305,8 @@ def test_each_heros_name_is_its_word_and_a_cut_hero_has_none_spec_164_c():
         assert lexicon.term(f"hero.{hero_id}") == hero.name
     keys = {t.key for t in lexicon.TERMS}
     assert not [f"hero.{i}" for i in rules.CUT if f"hero.{i}" in keys]
+
+
+def test_reach_is_one_word_spec_165_g():
+    """Spec 165 G (decisions §280.1): what a goal would change on a map, one and two steps out."""
+    assert lexicon.term("reach") == "reach" and lexicon.term("reach", many=True) == "reaches"
