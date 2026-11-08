@@ -36,6 +36,7 @@ without colour, and recolouring now clashes with *colour is the party*.
 | sticker shaman | `references/07` | too cute |
 | ugly-cute v1, v2 | `references/08`, `09`, `checks/06`–`08` | the character finally ours (a grumpy, scheming ork); v2's moods read at full size, but drawn at ~60 cells, dark |
 | redrawn by Claude on 24 × 24 | `checks/09`, `10`, `sketches/shaman24.py` | the moods read at 48 px, but **still cute** |
+| grotesque card creature v1 | `references/10`, `checks/11`–`14` | the character right at last (heavy, menacing, dry); the skin too dark and grey, the whites small: at 48 px calm, focused, worried and asleep read, no and pleased do not (pleased reads as a snarl); at 24 px only worried |
 
 **The owner's direction now: closer to Slay the Spire.** Not cute, not a sticker, not a cartoon: a hand-painted roguelike
 card's creature (grotesque, heavy, a strong silhouette, a dramatic light) translated into pixel art, with the moods kept.

@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 src = Image.open(sys.argv[1]).convert("RGB"); out = Path(sys.argv[2]); out.mkdir(parents=True, exist_ok=True)
 race = sys.argv[3] if len(sys.argv) > 3 else "shaman-elder"
-RACES = Path(__file__).resolve().parents[3] / "design-system" / "orkui" / "races"
+RACES = Path(__file__).resolve().parents[4] / "design-system" / "orkui" / "races"
 W, H = src.size; bg = src.getpixel((5, 5))
 MOODS = ["calm", "focused", "worried", "no", "pleased", "asleep"]
 for i, m in enumerate(MOODS):
