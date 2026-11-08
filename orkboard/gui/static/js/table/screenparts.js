@@ -74,8 +74,9 @@ function Doors({ side, n }) {
  *  *new* (changed since the leader's last call) is not drawn: `ideas.screens` does not say it (reported with part D). `lit`: a pain is carried and this is where it may go; `over`: a dragged pain is above it. */
 export function ScreenCard({ s, party, step, on, carry, over, onPress, ins = 0, outs = 0 }) {
   const el = elementOf(s), key = screenKey(party, s.id);
+  const walls = [ins === 0 && "nothing leads here", outs === 0 && "leads nowhere"].filter(Boolean).map((w) => `, ${w}`).join("");   // the walls' words, for those who cannot see or hover them
   const card = html`<button type="button" class=${cls("ork-card ork-leans scr-card", { "is-lifted": on, "is-lit": litKey.value === key, "is-aim": carry, "is-over": over })} data-lkey=${key} data-screen=${s.id} data-drop=${s.id} data-step=${step}
-    aria-pressed=${String(on)} aria-label=${`${s.name}, ${s.path}${carry ? ": pin the pain here" : ""}`} title=${carry ? `Pin the pain to ${s.name}` : s.file} onClick=${onPress} ...${leans}>
+    aria-pressed=${String(on)} aria-label=${`${s.name}, ${s.path}${walls}${carry ? ": pin the pain here" : ""}`} title=${carry ? `Pin the pain to ${s.name}` : s.file} onClick=${onPress} ...${leans}>
     <span class="scr-card__head">${el && html`<${Elem} name=${el} hue=${hueOf(s)} />`}<span class="scr-card__nm">${s.name}</span></span>
     <${Window} s=${s} />
     <span class="scr-card__row"><${Sign} name="screen" /><span class="scr-card__path" title=${s.path}>${s.path}</span></span>

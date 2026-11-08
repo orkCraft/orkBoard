@@ -171,10 +171,11 @@ video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; m
 .mp-goal.ork-card { width: 204px; }
 .mp-age { display: block; padding: 0 var(--ork-1); color: var(--ork-ink-muted); }
 .mp-batch { display: inline-flex; align-items: center; align-self: stretch; flex: none; padding: 0 var(--ork-1); border-left: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); }
+.mp-cars .mp-card__nm { -webkit-line-clamp: unset; line-clamp: unset; }   /* a long goal name reads whole */
 @media (min-width: 760px) {   /* the cars in one row, a long train scrolling inside its own row */
   .mp-cars { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--ork-2); }
   .mp-cars { gap: var(--ork-3); }
-  .mp-cars .mp-goal.ork-card { flex: none; width: 96px; }
+  .mp-cars .mp-goal.ork-card { flex: none; }   /* a car keeps the card's width, so its 7-character commit and a long name read whole */
 }
 .mp-foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-6); }
 .mp-tomain { display: flex; flex-direction: column; gap: var(--ork-3); }

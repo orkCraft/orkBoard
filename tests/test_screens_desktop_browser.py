@@ -243,6 +243,12 @@ def test_a_wall_where_nothing_leads_in_or_out(gui, monkeypatch):
     assert _doors(pg, "home") == (0, 2, 1, 0) and _doors(pg, "results") == (1, 0, 0, 1)                             # a screen nothing leads to, one that leads nowhere
     assert card(pg, "home").locator(".scr-wall").get_attribute("title") == "nothing leads here"
     assert card(pg, "results").locator(".scr-wall").get_attribute("title") == "leads nowhere"
+    assert "nothing leads here" in card(pg, "home").get_attribute("aria-label") and "leads nowhere" not in card(pg, "home").get_attribute("aria-label")      # the words reach a screen reader through the card
+    assert "leads nowhere" in card(pg, "results").get_attribute("aria-label") and "nothing leads here" not in card(pg, "results").get_attribute("aria-label")
+    wall = card(pg, "home").locator(".scr-wall")
+    assert wall.evaluate("e => getComputedStyle(e).pointerEvents") == "auto"                                         # the wall can be hovered
+    wall.hover()
+    assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y).classList.contains('scr-wall')", [wall.bounding_box()["x"] + wall.bounding_box()["width"] / 2, wall.bounding_box()["y"] + wall.bounding_box()["height"] / 2])
     card(pg, "home").click()                                                                                        # the card, its press and its lift as before
     pg.locator(".scr-back").wait_for(timeout=WAIT_MS)
     pg.context.close()
