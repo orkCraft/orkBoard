@@ -7,6 +7,7 @@ size:
 priority: normal
 short: V1
 phase: done
+route: design, tech
 spec: docs/specs/33-v1-shell.md
 decisions:
 by: person

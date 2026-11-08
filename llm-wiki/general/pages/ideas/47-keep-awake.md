@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Keep the computer awake
 phase: done
+route: design, tech
 spec: docs/specs/47-keep-awake.md
 decisions:
 by: person

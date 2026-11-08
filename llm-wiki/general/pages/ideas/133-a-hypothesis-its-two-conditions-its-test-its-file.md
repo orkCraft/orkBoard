@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A hypothesis
 phase: done
+route: product, tech
 spec: docs/specs/133-a-hypothesis-its-two-conditions-its-test-its-file.md
 decisions: 235, 237
 by: person

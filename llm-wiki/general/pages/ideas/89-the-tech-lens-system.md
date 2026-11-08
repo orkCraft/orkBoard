@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Tech lens's System
 phase: done
+route: design, tech
 spec: docs/specs/89-the-tech-lens-system.md
 decisions:
 by: person

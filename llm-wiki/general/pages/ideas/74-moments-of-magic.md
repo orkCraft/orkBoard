@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Moments of magic
 phase: done
+route: design, tech
 spec: docs/specs/74-moments-of-magic.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The next task goes
 phase: done
+route: design, tech
 spec: docs/specs/84-the-next-task-goes-on.md
 decisions:
 by: person

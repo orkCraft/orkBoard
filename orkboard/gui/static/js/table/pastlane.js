@@ -5,18 +5,22 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { pick, picked } from "../frame/state.js";
+import { town } from "../link.js";
+import { Icon } from "../orkui.js";
 import { Card, Deck, ask } from "./chronicleparts.js";
-import { UNRELEASED, chapterName, dayWord } from "./chroniclewords.js";
+import { UNRELEASED, byDay, chapterName, dayWord, itemsOf } from "./chroniclewords.js";
 import { openChronicle } from "./chronicle.js";
 import { markSeen } from "./pastseen.js";
 
 const withParty = (args, party) => (party ? { ...args, party } : args);
 
-/** The cards of a deck: its goals (a goal that went through the portal) and its decisions of no goal. */
-export const itemsOf = (c) => [
-  ...(c?.goals || []).map((g) => ({ type: "goal", id: g.idea, title: g.title, element: g.element, hue: g.hue, day: g.day, decision: g.decision, in: g.in })),
-  ...(c?.decisions || []).map((d) => ({ type: "decision", id: d.number, title: d.title, element: "", hue: "", day: d.day, decision: 0, in: d.in })),
-];
+export { itemsOf, byDay };
+
+/** How many cards a deck deals before *All · search* (the line's seven, decisions §277.5). */
+export const DEAL = 7;
+
+/** *All · search* pressed on a deck: the whole deck over the pane, with its search (pastdeck.js, spec 162 I). */
+export const openDeck = (deck) => openChronicle({ deck: { id: deck.id, name: deck.name } });
 
 export function PastDecks({ party = "", seeing = null }) {
   const [d, setD] = useState(null), [open, setOpen] = useState([]), [loaded, setLoaded] = useState({}), host = useRef();
@@ -26,6 +30,13 @@ export function PastDecks({ party = "", seeing = null }) {
     ask("ideas.chronicle", withParty({}, party)).then(([r]) => { if (live) setD(r); });
     return () => { live = false; };
   }, [party]);
+  const rev = town.value?.ideas_rev, empty = !!d && !(d.unreleased || (d.chapters || []).length);
+  useEffect(() => {                                                       // a first open reads the past while the flags of the goals laid done are being raised (spec 162 J): an empty past is read again when the Board changes
+    if (!empty) return undefined;
+    let live = true;
+    ask("ideas.chronicle", withParty({}, party)).then(([r]) => { if (live && r) setD(r); });
+    return () => { live = false; };
+  }, [rev, empty]);
   useEffect(() => {                                                       // scrolled to: the party's newest decision is seen
     const el = host.current, root = seeing?.current;
     if (!el || typeof IntersectionObserver !== "function") return undefined;
@@ -48,7 +59,16 @@ export function PastDecks({ party = "", seeing = null }) {
   return html`<section class="release-lane__past" ref=${host} aria-label="The past" data-past=${party || "orkmaster"}>
     ${decks.map((x) => html`<div key=${x.id} class="release-lane__deck" data-version=${x.id}>
       <${Deck} deck=${x} on=${open.includes(x.id)} onPress=${() => press(x)} />
-      ${open.includes(x.id) && html`<ul class="release-lane__deal" data-deck=${x.id}>${itemsOf(full(x.id)).map((it) => html`<${Card} key=${`${it.type}/${it.id}`} item=${it} version=${x.name} lit=${it.type === "goal" && picked.value === it.id} onOpen=${open_} onDecision=${(n) => openChronicle({ decision: n })} />`)}</ul>`}
+      ${open.includes(x.id) && html`<${DealtDeck} x=${x} party=${party} items=${byDay(full(x.id))} lit=${picked.value} open_=${open_} />`}
     </div>`)}
   </section>`;
+}
+
+/** A deck dealt in place: its newest seven, and past seven an eighth card, *All · search*, in the line's face (cascade.js `table-lstrip--all`). */
+function DealtDeck({ x, party, items, lit, open_ }) {
+  const more = items.length > DEAL;
+  return html`<ul class="release-lane__deal" data-deck=${x.id}>
+    ${items.slice(0, DEAL).map((it) => html`<${Card} key=${`${it.type}/${it.id}`} item=${it} version=${x.name} lit=${it.type === "goal" && lit === it.id} onOpen=${open_} onDecision=${(n) => openChronicle({ decision: n })} />`)}
+    ${more && html`<li class="release-lane__all"><button type="button" class="ork-card table-gstrip table-lstrip table-lstrip--all" data-deck-all=${x.id} aria-label=${`All of ${x.name}, with a search`} onClick=${() => openDeck(x)}><${Icon} name="search" /><span class="table-gstrip__nm">All · search</span></button></li>`}
+  </ul>`;
 }

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A leader says no
 phase: done
+route: design, tech
 spec: docs/specs/108-a-leader-says-no-and-shows-where-it-hurts.md
 decisions: 183
 by: person

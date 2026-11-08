@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The window as decided
 phase: done
+route: design, tech
 spec: docs/specs/95-the-window-as-decided.md
 decisions:
 by: person

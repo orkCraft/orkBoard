@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A hypothesis on the page
 phase: done
+route: product, design, tech
 spec: docs/specs/146-a-hypothesis-on-the-page.md
 decisions: 235, 237, 6, 7
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Running the project is
 phase: done
+route: design, tech
 spec: docs/specs/92-running-and-the-team.md
 decisions:
 by: person

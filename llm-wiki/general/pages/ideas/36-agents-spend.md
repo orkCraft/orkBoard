@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Agents
 phase: done
+route: product, design, tech
 spec: docs/specs/36-agents-spend.md
 decisions:
 by: person

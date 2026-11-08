@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A card picked by its
 phase: done
+route: design, tech
 spec: docs/specs/141-a-card-picked-by-its-rune.md
 decisions: 248
 by: person

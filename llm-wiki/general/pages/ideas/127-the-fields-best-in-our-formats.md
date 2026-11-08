@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The field's best
 phase: done
+route: tech
 spec: docs/specs/127-the-fields-best-in-our-formats.md
 decisions: 205
 by: person

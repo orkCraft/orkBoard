@@ -7,6 +7,7 @@ size:
 priority: normal
 short: What the owner's day
 phase: done
+route: product, design, tech
 spec: docs/specs/107-what-the-owners-day-said.md
 decisions: 182
 by: person

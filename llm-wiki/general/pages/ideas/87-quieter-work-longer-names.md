@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Quieter work, longer
 phase: done
+route: design, tech
 spec: docs/specs/87-quieter-work-longer-names.md
 decisions:
 by: person

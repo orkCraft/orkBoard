@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The die's up face
 phase: done
+route: design, tech
 spec: docs/specs/118-the-dies-up-face.md
 decisions:
 by: person

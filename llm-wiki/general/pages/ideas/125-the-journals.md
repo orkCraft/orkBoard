@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The journals
 phase: done
+route: product, tech
 spec: docs/specs/125-the-journals.md
 decisions: 203
 by: person

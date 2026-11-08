@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The phone
 phase: done
+route: design, tech
 spec: docs/specs/117-the-phone-a-menu-of-the-leaders.md
 decisions: 195
 by: person

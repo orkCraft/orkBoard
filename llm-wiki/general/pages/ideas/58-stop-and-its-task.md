@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A stop and its task
 phase: done
+route: design, tech
 spec: docs/specs/58-stop-and-its-task.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The die, the door
 phase: done
+route: design, tech
 spec: docs/specs/139-the-die-the-door-and-the-bug.md
 decisions: 246
 by: person

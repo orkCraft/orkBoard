@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The week's pace
 phase: done
+route: design, tech
 spec: docs/specs/44-week-pace.md
 decisions:
 by: person

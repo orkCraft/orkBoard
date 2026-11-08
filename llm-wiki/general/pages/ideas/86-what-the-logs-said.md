@@ -7,6 +7,7 @@ size:
 priority: normal
 short: What the logs said
 phase: done
+route: product, tech
 spec: docs/specs/86-what-the-logs-said.md
 decisions:
 by: person

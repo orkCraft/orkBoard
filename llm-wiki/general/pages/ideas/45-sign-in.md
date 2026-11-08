@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Sign-in
 phase: done
+route: design, tech
 spec: docs/specs/45-sign-in.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Runes on the table
 phase: done
+route: design, tech
 spec: docs/specs/110-runes-on-the-table.md
 decisions: 185, 186
 by: person

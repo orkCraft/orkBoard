@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A goal's way
 phase: done
+route: tech
 spec: docs/specs/99-a-goals-way.md
 decisions:
 by: person

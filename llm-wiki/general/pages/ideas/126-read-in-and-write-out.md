@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Read in and write out
 phase: done
+route: product, tech
 spec: docs/specs/126-read-in-and-write-out.md
 decisions: 204
 by: person

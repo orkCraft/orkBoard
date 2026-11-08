@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Board on its own
 phase: done
+route: tech
 spec: docs/specs/137-the-board-on-its-own-branch.md
 decisions: 244
 by: person

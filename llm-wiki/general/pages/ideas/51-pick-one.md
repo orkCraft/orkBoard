@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Pick one
 phase: done
+route: design, tech
 spec: docs/specs/51-pick-one.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: What a leader's call
 phase: done
+route: tech
 spec: docs/specs/97-what-a-leaders-call-reads.md
 decisions:
 by: person

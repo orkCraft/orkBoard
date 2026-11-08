@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A new goal matched
 phase: done
+route: design, tech
 spec: docs/specs/135-a-new-goal-matched-against-the-face-down-pile.md
 decisions: 242, 234, 239
 by: person

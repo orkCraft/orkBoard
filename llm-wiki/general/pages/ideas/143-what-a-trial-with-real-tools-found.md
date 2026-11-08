@@ -7,6 +7,7 @@ size:
 priority: normal
 short: What a trial with real
 phase: done
+route: product, design, tech
 spec: docs/specs/143-what-a-trial-with-real-tools-found.md
 decisions: 250
 by: person

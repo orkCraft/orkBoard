@@ -7530,3 +7530,26 @@ the owner), so it cannot be the brightest on the table without leaning on the ac
    keeps 3:1 on every felt, step and plate.
 
 The owner's call.
+
+## 277. The past from history is on the parties' tables: a goal done outside the window has its flag, dated by its decision; a long deck deals seven, then All · search (8 November 2026, the owner)
+
+Changes: 261.9 (the past over the pane goes: a deck of more than seven now opens over the pane with a search).
+
+Why: goal 162's Talk. A fresh Orkboard over this repository showed 0 goals in the past and an empty past on every party's tab: a
+goal gets its flag only from Orkboard's gate, the chronicle reads a goal's route from the state alone, and a decision's parties
+only when Orkboard decided it. This repository's git history begins on 6 November and its 119 history pages were laid by one
+commit on 8 November, so no git date tells when a goal was built. The owner took the leaders' recommended ways, and for the day
+the conductor's. So:
+1. **A goal done outside the window gets a quiet flag** (`by: done`): no leader's fold into the living specs, no model call,
+   no journal line. It stays history, never the discard; a flag is never undone.
+2. **Its day is its decision's** (the page's `decisions:`); where it has none, the latest decision its spec names (§N); where
+   none, the day it was laid.
+3. **A page's `route:` counts for a party's eyes** while the state holds no route of its own. The history pages gain their
+   `route:` once, in one commit the owner reads.
+4. **A decision a goal carries is seen by that goal's parties**; a decision of no goal stays whole on the Orkmaster's tab, never
+   placed by its words.
+5. **A deck of the past deals its newest seven in place, then *All · search***: the whole deck over the pane with a search, as
+   the goals in line end (§167.5).
+6. **Product's tab shows its past now**; its jobs and the product's direction (Product's tree) wait for a goal of their own.
+
+The owner's call.

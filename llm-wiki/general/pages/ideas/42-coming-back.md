@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Coming back
 phase: done
+route: product, design, tech
 spec: docs/specs/42-coming-back.md
 decisions:
 by: person

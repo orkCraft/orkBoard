@@ -7,6 +7,7 @@ size:
 priority: normal
 short: On the desktop the left
 phase: done
+route: design, tech
 spec: docs/specs/69-parties-in-the-column.md
 decisions:
 by: person

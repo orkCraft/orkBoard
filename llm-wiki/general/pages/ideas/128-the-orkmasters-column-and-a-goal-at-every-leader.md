@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Orkmaster's column
 phase: done
+route: design, tech
 spec: docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md
 decisions: 206
 by: person

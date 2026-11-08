@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A goal's route across
 phase: done
+route: design, tech
 spec: docs/specs/68-release-and-route.md
 decisions:
 by: person

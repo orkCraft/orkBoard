@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A goal's rune from its
 phase: done
+route: design, tech
 spec: docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md
 decisions: 187, 188, 189
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A goal's way as cards
 phase: done
+route: design, tech
 spec: docs/specs/100-a-goals-way-as-cards.md
 decisions:
 by: person

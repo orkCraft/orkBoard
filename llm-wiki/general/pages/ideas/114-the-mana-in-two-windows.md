@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The mana in two windows
 phase: done
+route: design, tech
 spec: docs/specs/114-the-mana-in-two-windows.md
 decisions:
 by: person

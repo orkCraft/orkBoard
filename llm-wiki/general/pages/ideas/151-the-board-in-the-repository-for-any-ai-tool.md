@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Board
 phase: work
+route: product, tech
 spec: docs/specs/151-the-board-in-the-repository-for-any-ai-tool.md
 decisions: 255
 by: person

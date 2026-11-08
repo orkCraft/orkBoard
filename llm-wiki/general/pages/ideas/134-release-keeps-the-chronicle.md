@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Release keeps
 phase: done
+route: design, tech, release
 spec: docs/specs/134-release-keeps-the-chronicle.md
 decisions: 238
 by: person

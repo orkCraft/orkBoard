@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A goal's party, measured
 phase: done
+route: product, design, tech
 spec: docs/specs/43-party-measured.md
 decisions:
 by: person

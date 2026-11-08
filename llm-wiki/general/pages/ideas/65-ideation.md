@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Ideation
 phase: done
+route: design, tech
 spec: docs/specs/65-ideation.md
 decisions:
 by: person

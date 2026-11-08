@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A project with no
 phase: done
+route: design, tech
 spec: docs/specs/113-a-project-with-no-preview-or-no-gate.md
 decisions:
 by: person

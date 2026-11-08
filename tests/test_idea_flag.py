@@ -123,6 +123,21 @@ def test_unknown_start_is_none_and_a_ledger_of_unpriced_lines_is_no_dollars(host
     assert idea_flag.tally(host.ideas.root(), state, slug)["usd"] is None
 
 
+def test_a_flag_by_done_takes_the_day_the_host_gives_and_keeps_it(host):
+    state, root = host.ideas.state_dir, host.ideas.root()
+    slug = goal(host, "Old goal", "done")
+    first = idea_flag.raise_flag(root, state, slug, "done", "", at="2026-10-26")
+    assert (first["by"], first["at"]) == ("done", "2026-10-26T00:00:00")
+    assert idea_flag.raise_flag(root, state, slug, "done", "e" * 40, at="2026-11-02") == first            # once-only: at and by never rewritten
+    assert idea_flag.raise_flag(root, state, slug, "gate", "f" * 40) == idea_flag.flag_of(state, slug) == first
+    other = goal(host, "Other old goal", "done")
+    assert idea_flag.raise_flag(root, state, other, "done", at=dt.date(2026, 10, 27))["at"] == "2026-10-27T00:00:00"
+    with pytest.raises(ValueError):
+        idea_flag.raise_flag(root, state, goal(host, "Third", "done"), "gate", at="2026-10-26")        # a day is for done only
+    with pytest.raises(ValueError):
+        idea_flag.raise_flag(root, state, goal(host, "Fourth", "done"), "done", at="last week")
+
+
 def test_a_flag_is_raised_once_and_the_one_it_has_is_kept(host):
     state, root = host.ideas.state_dir, host.ideas.root()
     slug = goal(host, "Cache the table", "done")

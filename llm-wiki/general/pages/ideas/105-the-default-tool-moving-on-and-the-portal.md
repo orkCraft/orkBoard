@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The default tool, moving
 phase: done
+route: product, design, tech
 spec: docs/specs/105-the-default-tool-moving-on-and-the-portal.md
 decisions: 177
 by: person

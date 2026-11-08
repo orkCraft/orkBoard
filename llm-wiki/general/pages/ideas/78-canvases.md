@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Canvases
 phase: done
+route: design, tech
 spec: docs/specs/78-canvases.md
 decisions:
 by: person

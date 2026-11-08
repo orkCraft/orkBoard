@@ -7,6 +7,7 @@ size:
 priority: normal
 short: One card, 5
 phase: done
+route: design, tech
 spec: docs/specs/147-one-card-four-corners.md
 decisions: 251
 by: person
