@@ -30,19 +30,19 @@ gate: ee0737d · 127 files · green
 ## Depends on
 
 ## Stages
-- [ ] A. To main only after the gate's checks
+- [x] A. To main only after the gate's checks
   - party: Tech (the strong model, the person's answer). `gui/ideas_gate.py` `to_main` and `_checks_refusal`: a goal whose checks were never asked, or passed for another head of main, is refused in words; a red check names its test, the trial worktree is gone; `gate_merge` takes nothing to main untested either. Tests in tests/test_goal_main.py, test_main_checks.py.
   - proves: Tech's "When ideas.to_main is called for a goal in dev whose checks were never run…", "When the gate's Tests check is red on a goal's way to main…"; Product's "When one of the gate's tests is red on a goal's way to main…" (the engine's half)
-- [ ] B. The one named skip
+- [x] B. The one named skip
   - party: Tech (the strong model). `untested: true`, a literal boolean, is the only argument that skips the checks; a project whose gate has no tests (`gate_config` gives `none`) is refused in words, *To main without the tests* offered; `goal_to_main` adds `tests: run | skipped` and the checks' time (`realm/event_log.py`'s line said too).
   - proves: Tech's "When a project's gate has no tests, then To main is refused in words; only ideas.to_main with untested: true sends it…"; Product's "When a project's gate has no tests…" (the engine's half)
-- [ ] C. Release a craft as any
+- [x] C. Release a craft as any
   - party: Tech. `gui/ideas_track.py` `track_drop` drops its refusal for Release; `realm/project_stage.py` no longer marks Release's card `locked`; `realm/goal_types.py` `release_party` still makes Release the one place to release while seated, and a seated Release's `[gate.main]` (the skeletons, §188) still runs before main. Tests in tests/test_party_removed.py, test_releases.py.
   - proves: Tech's "When the person removes the Release party, then it is removed with no refusal, and a goal in dev still reaches main by ideas.to_main after the gate's tests."
-- [ ] D. To main and To main without the tests on the page
+- [x] D. To main and To main without the tests on the page
   - party: Tech (the strong model). `js/table/tomain.js` and `portal.js`: *To main* always asks the checks first and sends only when green; the card says in words which test stopped it; the no-tests refusal offers *To main without the tests* in the card's menu, the only face that sends `untested: true`; `readycard.js` and any other caller of `ideas.to_main` ask the checks first. A browser test on a project with no Release seated.
   - proves: Product's "When the person sends a goal in dev to main from the discard on a project with no Release seated…", "When one of the gate's tests is red…", "When a project's gate has no tests…"
-- [ ] E. Where an answer was given
+- [x] E. Where an answer was given
   - party: Tech. `ideas.answer` (`core/idea_draft.py`, `core/idea_talk.py`, `gui/ideas_phase.py`, `gui/ideas_board.py`) takes `from: hand | open` and writes it on `idea_answered` and `goal_answered`; `hand/answers.js` sends `open` after *Open…* (the hand cards of F send `hand`). Tests of those modules.
   - proves: Tech's "When the person answers a goal's open question from a hand way card or after Open…, then its idea_answered event carries from: hand or from: open."
 - [ ] F. A lifted card stays a hand card, its ways are the hand
@@ -200,7 +200,7 @@ gate: ee0737d · 127 files · green
 ### Accepted
 - met: When ideas.to_main is called for a goal in dev whose checks were never run or not passed for main's head now, then it is refused in words and main's head is unchanged.
 - met: When the gate's Tests check is red on a goal's way to main, then main is unchanged, the worktree is gone, and the refusal names the test that failed.
-- not met: When a project's gate has no tests, then To main is refused in words; only ideas.to_main with untested: true sends it, and its goal_to_main event says tests: skipped. — gate_merge still sends dev to main untested: _merge_tested passes a no-tests gate (main_checks._gate "No tests to run"); releasemap.js To main, arena/gate.js, pwa/shell-gate.js reach it
+- met: When a project's gate has no tests, then To main is refused in words; only ideas.to_main with untested: true sends it, and its goal_to_main event says tests: skipped.
 - met: When the person removes the Release party, then it is removed with no refusal, and a goal in dev still reaches main by ideas.to_main after the gate's tests.
 - met: When the person answers a goal's open question from a hand way card or after Open…, then its idea_answered event carries from: hand or from: open.
 
