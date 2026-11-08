@@ -397,12 +397,18 @@ def test_the_orkmasters_menu_has_settings_files_and_report_a_problem_and_the_pro
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
 
 
-def test_plus_opens_the_parties_in_the_pane_and_a_potion_opens_what_used_the_tool(table):
+def test_the_chair_deals_its_crafts_wide_or_opens_the_parties_narrow_and_a_potion_opens_what_used_the_tool(table):
     pg, host, w = table
     pg.get_by_role("button", name="New party").click()
-    pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · Parties" and pg.locator(".place").count() == 0                                          # the one place of the parties (spec 100 §4)
-    pg.get_by_role("button", name="Back").click()
+    if wide(w):                                                                                                          # the wide page: the chair deals the crafts to the hand (decisions §272.2)
+        pg.locator('[data-chair-deal="question"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator('.table-over[data-kind="parties"]').count() == 0
+        pg.get_by_role("button", name="Put it back").click()
+        pg.locator('[data-chair-deal="question"]').wait_for(state="detached", timeout=WAIT_MS)
+    else:                                                                                                                # the narrow page keeps the one place of the parties (spec 100 §4)
+        pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
+        assert title(pg) == "Board · Parties" and pg.locator(".place").count() == 0
+        pg.get_by_role("button", name="Back").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
     if wide(w):
         narrow.unroll_drum(pg)
