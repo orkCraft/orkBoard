@@ -178,6 +178,12 @@ What I expect:
 - Its search asks the host (`ideas.chronicle_find`, kept to that deck's cards), so a spec's and a decision's words are found, not titles only.
 - The newest seven are by day across goals and decisions; on one day, goals before decisions, as the lane deals them today.
 - Will be names the file as the part, since Design's screen map is kept in .orkcraft/, absent here.
+### Accepted
+- met: When a deck of the past holding more than seven cards is pressed on Design's tab, then it deals its newest seven and an eighth card *All · search*; a deck of seven or fewer deals whole, with none.
+- met: When *All · search* is pressed, then the whole deck opens over the pane under the deck's name, its search field focused; words narrow it to the cards they are in, and Esc gives the lane back.
+- met: When a goal's card is pressed in that deck over the pane, then the view closes and the goal is picked, the table showing it as it was; a decision's card opens its entry, as from the lane.
+- met: When a fresh Orkboard first opens on this repository, then each history goal's card lies once, in its week's deck, never among the goals done and not yet seen, and no party's tab wears the dot.
+- met: When the Orkmaster's tab is open at 1366 × 768 with a week deck dealt, then its seven cards and *All · search* read as one deck in the lane, the All card the line's own face.
 
 ## Tech
 ### Talk
