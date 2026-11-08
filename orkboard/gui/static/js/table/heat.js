@@ -39,7 +39,8 @@ export const HEAT_WORDS = {
 export const heatWords = (kind) => HEAT_WORDS[kind] || String(kind).replace(/_/g, " ");
 
 /** The first SHOWN kinds, each once, in the hints' order. */
-const kindsOf = (list) => [...new Set(list.map((h) => h.kind))].slice(0, SHOWN);
+const kindsOf = (list, skip = []) => [...new Set(list.map((h) => h.kind).filter((k) => !skip.includes(k)))].slice(0, SHOWN);
+const WALLED = ["loose", "dead_end"];                      // the screens' rooms say these in their walls (spec 165 L): no square a second time
 
 function Squares({ kinds }) {
   return html`${kinds.map((k) => html`<i key=${k} class="ht-sq" role="img" data-kind=${k} aria-label=${heatWords(k)} title=${heatWords(k)}></i>`)}`;
@@ -60,7 +61,7 @@ export function sync(host, heat) {
       home.appendChild(slot);
     }
     used.add(slot);
-    render(html`<${Squares} kinds=${kindsOf(list)} />`, slot);
+    render(html`<${Squares} kinds=${kindsOf(list, w.dataset.pickMap === "screens" ? WALLED : [])} />`, slot);
   }
   for (const slot of host.querySelectorAll(".ht-slot")) if (!used.has(slot)) { render(null, slot); slot.remove(); }
 }
