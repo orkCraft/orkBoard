@@ -358,7 +358,7 @@ export function Modules({ doc, order, step, pick, party }) {
     <div class="sys-scroll">
       <div class="sys-table" ref=${host} style=${`--cols:repeat(${cols.length}, 128px)`} data-rows=${rows}>
         ${cols.map(({ col, ci }) => html`<div key=${`h${ci}`} class="sys-area" style=${`grid-column:${ci + 1}`} data-area=${col.name}>
-          <span class="arena-member__nm sys-area__nm" title=${col.name}>${col.name}</span>
+          <span class="arena-member__nm sys-area__nm ork-plate" title=${col.name}>${col.name}</span>
           ${col.stack.length > 0 && opened.has(ci) && html`<button type="button" class="ork-btn quiet sys-area__fold" aria-expanded="true" onClick=${() => toggle(ci)}><${Chev} dir="up" /> ×${col.stack.length}</button>`}
           <span class="sys-area__rule" aria-hidden="true"></span></div>`)}
         ${cols.flatMap(({ col, ci, cards }) => cards.map(({ c, slot, many }) => {

@@ -100,3 +100,48 @@ def test_the_headings_are_plaques_and_an_empty_lane_says_whose_it_is_on_a_plate(
     lane = pg.locator(".table-lane[data-free], .table-lane:has(.table-lane__free)").first
     assert lane.get_attribute("data-race") in {"ork", "knight", "elf", "undead", "goblin", "gnome"}
     shot(pg, "orkmaster")
+
+
+PLATES = ("--ork-plate", *[f"--ork-plate-{r}" for r in ("ork", "knight", "elf", "undead", "goblin", "gnome", "orkmaster")])
+LABELS = ".arch-name, .arch-layer__nm, .arch-ways__h, .arch-way, .arch-serves, .sys-area__nm"
+
+
+def test_on_techs_tab_every_label_of_the_system_map_lies_on_a_flat_plate(gui):
+    pg = open_window(gui)
+    pg.locator('.table-tab[data-tab="tech"]').click()
+    pg.locator(".arch-name").first.wait_for(timeout=WAIT_MS)
+    pg.wait_for_timeout(800)
+    plates = [pg.evaluate(BG, n) for n in PLATES]
+    labels = pg.locator(LABELS)
+    seen = set()
+    for i in range(labels.count()):
+        el = labels.nth(i)
+        if not el.is_visible():
+            continue
+        text = el.inner_text().strip()
+        bg = el.evaluate("(e) => getComputedStyle(e).backgroundColor")
+        assert bg not in ("rgba(0, 0, 0, 0)", "transparent") and bg in plates, (text, bg)
+        seen.add(text.lower())
+    assert {"its doors", "its face", "its data"} <= seen, seen
+    assert any(n.endswith("/") for n in seen), seen                      # the containers' names (server/, client/)
+    shot(pg, "tech-system")
+
+
+def test_an_empty_slot_a_failure_leaves_has_its_words_on_a_flat_plate(gui):
+    from tests.test_thrown_browser import HandHost, fail, open_page, working
+
+    host = HandHost()
+    working(host)
+    pg, log = open_page(gui, host)
+    try:
+        pg.wait_for_timeout(300)
+        fail(host)
+        words = pg.locator('.table-thrown[data-task="w1"] .ork-plate')
+        words.wait_for(timeout=WAIT_MS)
+        assert words.inner_text().strip() == "Back here on Start again"
+        plates = [pg.evaluate(BG, n) for n in PLATES]
+        bg = words.evaluate("(e) => getComputedStyle(e).backgroundColor")
+        assert bg not in ("rgba(0, 0, 0, 0)", "transparent") and bg in plates, bg
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
