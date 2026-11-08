@@ -228,7 +228,7 @@ def _meta(inner: str) -> dict:
 
 
 def parse_export(text: str, path: str = "") -> dict | None:
-    """One journal file of an Orkboard export (spec 126 §C) → `{scope, path, entries: [{at, kind, text, idea, on, id, ref}]}`; None for a file that is none."""
+    """One journal file of an Orkboard export (spec 126 §C) → `{scope, path, entries: [{at, kind, text, idea, on, id, ref}], digest, digest_at, digest_read}` (the leader's view, spec 167 E); None for a file that is none."""
     meta, rest = doc_formats.front_matter(text)
     scope = meta.get("orkboard-journal")
     if not isinstance(scope, str) or not scope.strip():
@@ -247,7 +247,10 @@ def parse_export(text: str, path: str = "") -> dict | None:
         key = got.get("id") or hashlib.sha1(f"{scope}|{m.group(1)}|{m.group(2)}|{said}".encode()).hexdigest()[:12]
         entries.append({"at": m.group(1), "kind": m.group(2), "text": said, "idea": got.get("idea", ""), "id": got.get("id", ""),
                         "on": [p.strip() for p in got.get("on", "").split(",") if p.strip()], "ref": key})
-    return {"scope": scope.strip(), "path": path, "entries": entries}
+    read = meta.get("digest_read", "")
+    read = read if isinstance(read, list) else [x.strip() for x in str(read).split(",")]
+    return {"scope": scope.strip(), "path": path, "entries": entries, "digest": str(meta.get("digest") or ""),
+            "digest_at": str(meta.get("digest_at") or ""), "digest_read": [x for x in read if x]}
 
 
 def _journal_dirs(root: Path) -> list[str]:
@@ -275,12 +278,16 @@ def _exports(root: Path) -> list[dict]:
     return out
 
 
+def _tree_exports(folder: Path) -> list[dict]:
+    return [got for name in _names(folder, "journals", dirs=False) if name.endswith(".md")
+            for got in [parse_export(_text(folder, f"journals/{name}") or "", f"journals/{name}")] if got is not None]
+
+
 def outside(folder: Path, state_dir: Path) -> tuple[list[dict], list[dict]]:
     """The journals of the Board's tree (`<wiki>/journals/*.md`, spec 151 B.2) read, nothing written: `(rows, left)`. `rows` are the lines no journal holds yet (an `id` Orkboard does not know,
     or no `id` at all: the plan's rows, once by `ref`); `left` the lines whose `kind` is not one of their scope's (or whose scope is none), `[{scope, path, at, kind, text}]`, for `orkboard check`."""
     folder = Path(folder)
-    exports = [got for name in _names(folder, "journals", dirs=False) if name.endswith(".md")
-               for got in [parse_export(_text(folder, f"journals/{name}") or "", f"journals/{name}")] if got is not None]
+    exports = _tree_exports(folder)
     left = []
     for exp in exports:
         scope = journals.PROJECT if exp["scope"] in ("_project", "project") else exp["scope"]
@@ -293,7 +300,7 @@ def outside(folder: Path, state_dir: Path) -> tuple[list[dict], list[dict]]:
 
 
 def take_outside(folder: Path, state_dir: Path) -> dict:
-    """The lines added outside taken into the journals, each once (its `ref` is kept): `{journals: n, left: [...]}` (`outside`'s `left`)."""
+    """The lines added outside taken into the journals, each once (its `ref` is kept): `{journals: n, left: [...]}` (`outside`'s `left`), and `views: n` when a newer view of a leader's was kept."""
     rows, left = outside(folder, state_dir)
     n = 0
     for r in rows:
@@ -301,7 +308,14 @@ def take_outside(folder: Path, state_dir: Path) -> dict:
             n += journals.add(state_dir, r["scope"], r["kind"], r["text"], idea=r["idea"], on=r["on"], ref=r["ref"], at=r["at"]) is not None
         except ValueError:
             continue
-    return {"journals": n, "left": left}
+    views = 0
+    for exp in _tree_exports(Path(folder)):                 # a leader's view, newest kept (spec 167 E); a file with a view and no entry is read too
+        if exp["digest"] and exp["scope"] not in ("_project", "project"):
+            try:
+                views += journals.take_view(state_dir, exp["scope"], exp["digest"], exp["digest_at"], exp["digest_read"])
+            except ValueError:
+                continue
+    return {"journals": n, "left": left, **({"views": views} if views else {})}
 
 
 # -- scan ----------------------------------------------------------------------------------------------------------------------------------

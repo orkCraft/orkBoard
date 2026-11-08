@@ -254,6 +254,31 @@ def save_digest(state_dir: Path, scope: str, text: str, upto: str, read: object 
     return got
 
 
+def _when(at: str) -> dt.datetime | None:
+    try:
+        d = dt.datetime.fromisoformat(_words(at, 25))
+    except ValueError:
+        return None
+    return d.replace(tzinfo=None) if d.tzinfo else d
+
+
+def take_view(state_dir: Path, scope: str, text: str, at: str, read: object = ()) -> bool:
+    """A view read back from the Board's tree (spec 167 E): kept as the scope's digest only when its `at` is newer than the machine's (the machine's `upto` stays);
+    one with no `at` is kept only where the machine has no view. Whether it was kept; an older or equal one, or one with no words, is left (the next write-out
+    writes the machine's over it)."""
+    if not _words(text, 1):
+        return False
+    mine = digest(state_dir, scope)
+    new, old = _when(at), _when(mine.get("at", "")) if mine else None
+    if mine and (new is None or (old is not None and new <= old)):
+        return False
+    try:
+        save_digest(state_dir, scope, text, mine.get("upto", "") if mine else "", read, at if new else "")
+    except (ValueError, OSError):
+        return False
+    return True
+
+
 def since_digest(state_dir: Path, scope: str) -> list[dict]:
     """The entries after the digest's last one (all of them with no digest, or when its last one is gone)."""
     rows = read(state_dir, scope)
