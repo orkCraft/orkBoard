@@ -177,3 +177,9 @@ Heat and reach first, on the maps as they are (A–K, §281.4), desktop only (§
 - The relation one and two steps out: System what uses a part; Screens the links both ways; the loop the step before and after; the tree a part's parent and children; Art and the way in none.
 - *no test* uses map_signals' own rule (the gate's map, a test named after a file, a tests folder), made public, never copied.
 - Reach is read for every goal not done whose spec has a *Will be*; Dev and main's for the goals in dev not yet in main.
+### Accepted
+- met: When dev's head and the Board are unchanged since the last read, then a map's heat is answered from what was kept with no git command run, and holds every hint of its craft, not cut at 20.
+- met: When a goal's Tech section says `changed orkboard/realm`, then its reach on System is that part lit, the parts that use it one step out and theirs two out, each with no test mapped marked *no test*.
+- met: When the pointer rests on, or the keyboard focuses, a hand card with System open at 1280 × 800 and no goal picked, then the page sends no command to the host: the reach shown is the one read at the last Board change.
+- met: When the reach of a goal waiting for main is read for Dev and main, then goal_main.plan runs with pick=False once per Board change, no worktree is made, and the goals it takes along are its reach.
+- met: When a goal's section has no *Will be*, names no part of the open map, or the map cannot be read, then its reach is empty and the host answers without an error.
