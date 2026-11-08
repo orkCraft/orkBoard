@@ -288,3 +288,76 @@ def test_goals_by_party_are_those_whose_route_held_it(pages, repo):
     ideas.save_state(state(repo), a, route=[{"party": "design"}])
     assert [g["idea"] for g in chronicle.goals(state(repo), pages, "design")] == [a] and {g["idea"] for g in chronicle.goals(state(repo), pages)} == {a, b}
     assert [g["idea"] for g in chronicle.goals(state(repo), pages, "general")] == [a, b]            # the party a goal lies in held it too
+
+
+# -- a party's past from the pages (spec 162 D; decisions §277.3) ---------------------------------------------------------------------------
+
+def page_key(pages: Path, slug: str, key: str, value: str) -> None:
+    p = pages / ideas.IDEAS / f"{slug}.md"
+    head, rest = p.read_text().split("\n---\n", 1)
+    p.write_text(f"{head}\n{key}: {value}\n---\n{rest}")
+
+
+def test_a_pages_route_holds_a_party_while_the_state_has_none_and_the_states_wins(pages, repo):
+    a = through(pages, repo, "Page routed", "2026-10-05")
+    b = through(pages, repo, "State routed", "2026-10-06")
+    page_key(pages, a, "route", "product, design, tech")
+    page_key(pages, b, "route", "product")
+    ideas.save_state(state(repo), b, route=[{"party": "design"}])
+    st = state(repo)
+    assert [g["idea"] for g in chronicle.goals(st, pages, "product")] == [a]                       # b's state names design: its page's product does not count
+    assert {g["idea"] for g in chronicle.goals(st, pages, "design")} == {a, b}
+    got = chronicle.read(st, pages, repo, LOG, party="product")
+    assert [g["idea"] for c in got["chapters"] for g in c["goals"]] == [a]
+
+
+def test_a_goal_carries_the_newest_decision_its_page_names_that_the_log_holds(pages, repo):
+    st = state(repo)
+    a = through(pages, repo, "Several", "2026-10-12")
+    page_key(pages, a, "decisions", "2, 3, 9")
+    b = through(pages, repo, "Own record", "2026-10-13", 1)
+    page_key(pages, b, "decisions", "4")
+    rows = chronicle_decisions.read(LOG)
+    got = {g["idea"]: g["decision"] for g in chronicle.goals(st, pages, rows=rows)}
+    assert got == {a: 3, b: 1}                                                                      # 9 is not in the log; the record's own decision wins
+    assert {g["idea"]: g["decision"] for g in chronicle.goals(st, pages)}[a] == 9                   # with no log, any named
+
+
+def test_with_a_party_a_carried_decision_stands_under_its_goal_and_one_of_no_goal_is_on_no_tab(pages, repo):
+    st = state(repo)
+    a = through(pages, repo, "Product's", "2026-10-12")
+    page_key(pages, a, "route", "product")
+    page_key(pages, a, "decisions", "2")
+    whole = chronicle.read(st, pages, repo, LOG)
+    assert [(g["idea"], g["decision"]) for c in whole["chapters"] for g in c["goals"]] == [(a, 2)]
+    assert sorted(d["number"] for c in whole["chapters"] for d in c["decisions"]) == [1, 3, 4]       # 2 stands under its goal, the rest whole
+    mine = chronicle.read(st, pages, repo, LOG, party="product")
+    assert [g["idea"] for c in mine["chapters"] for g in c["goals"]] == [a]
+    assert [d["number"] for c in mine["chapters"] for d in c["decisions"]] == []                    # 2 under its goal, no other on the tab
+    assert mine["decisions"][2]["goal"] == a and sorted(mine["decisions"]) == [1, 2, 3, 4]
+    other = chronicle.read(st, pages, repo, LOG, party="design")
+    assert [d["number"] for c in other["chapters"] for d in c["decisions"]] == [] and not [g for c in other["chapters"] for g in c["goals"]]
+
+
+def test_a_decision_carried_by_a_goal_of_another_party_stands_as_a_row_of_its_own_for_a_party_holding_a_slice(pages, repo):
+    from orkboard.realm import slices
+    st = state(repo)
+    a = through(pages, repo, "Tech's", "2026-10-12")
+    page_key(pages, a, "decisions", "2")
+    slices.add_cut(st, 2, {"design": {"says": "Two.", "points": ["2"]}})
+    got = chronicle.read(st, pages, repo, LOG, party="design")
+    assert [d["number"] for c in got["chapters"] for d in c["decisions"]] == [2] and not [g for c in got["chapters"] for g in c["goals"]]
+
+
+def test_last_by_party_agrees_with_read(pages, repo):
+    from orkboard.realm import slices
+    st = state(repo)
+    a = through(pages, repo, "Product's", "2026-10-12")
+    page_key(pages, a, "route", "product")
+    page_key(pages, a, "decisions", "2")
+    slices.add_cut(st, 4, {"product": {"says": "Four.", "points": ["4"]}})
+    got = chronicle.last(st, pages, repo, LOG, "product", 5)
+    assert [(d["number"], d["parties"]) for d in got] == [(4, ["product"]), (2, ["product"])]
+    assert got[1]["element"] == idea_element.of(st, a)
+    assert chronicle.last(st, pages, repo, LOG, "design", 5) == []
+    assert [d["number"] for d in chronicle.last(st, pages, repo, LOG, "", 5)] == [4, 3, 2, 1]        # no party: the whole log
