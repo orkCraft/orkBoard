@@ -6,12 +6,12 @@ order: 5
 size:
 priority: normal
 short: Ввести инструменты
-phase: work
+phase: done
 route: product, design, tech
 spec: docs/specs/160-the-tools-of-a-craft.md
 by: claude-code
 schema: 3
-gate: 8640590 · 38 files · red
+gate: 5f5c454 · 38 files · green
 ---
 # Хочу ввести инструменты специализаций: то, чем пользуется каждая партия,…
 
