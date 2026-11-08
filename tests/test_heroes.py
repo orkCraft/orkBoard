@@ -19,30 +19,38 @@ def _party(root, craft):
     return slug
 
 
-def test_the_catalog_is_the_specs_eleven_in_order_and_the_cut_six_are_said():
-    assert list(heroes.HEROES) == ["uni-ost", "uni-jtbd", "uni-shape", "dry-heur", "dry-sprint", "sh-c4", "sh-xp", "imp-obs", "fairy-aarrr", "fairy-aso", "release"]
-    assert len(heroes.HEROES) == 11 and all(k == h.id for k, h in heroes.HEROES.items())
+def test_the_catalog_is_the_specs_eighteen_in_order_and_the_cut_six_are_said():
+    assert list(heroes.HEROES) == ["uni-ost", "uni-jtbd", "uni-shape", "uni-pillar", "dry-heur", "dry-sprint", "dry-a11y", "sh-c4", "sh-xp", "sh-scene", "imp-obs",
+                                   "fairy-aarrr", "fairy-pos", "fairy-aso", "uni-mda", "uni-econ", "dry-sprite", "release"]
+    assert len(heroes.HEROES) == 18 and all(k == h.id for k, h in heroes.HEROES.items())
     assert set(heroes.CUT) == {"uni-lean", "dry-diamond", "dry-atom", "sh-ddd", "sh-fit", "imp-slo"} and not set(heroes.CUT) & set(heroes.HEROES)
     assert heroes.CUT["uni-lean"][0] == "Pivot Knight" and all(n and w for n, w in heroes.CUT.values())
     assert heroes.default("run").name == "Lantern Imp" and heroes.default("run").places == ()
-    assert [h.id for h in heroes.of("tech")] == ["sh-c4", "sh-xp"] and heroes.of("nowhere") == []
+    assert [h.id for h in heroes.of("tech")] == ["sh-c4", "sh-xp", "sh-scene"] and heroes.of("nowhere") == []
+    assert [h.id for h in heroes.of("product")] == ["uni-ost", "uni-jtbd", "uni-shape", "uni-pillar"]
+    assert [h.id for h in heroes.of("game-design")] == ["uni-mda", "uni-econ", "uni-pillar"]          # Pillar Knight sits at two crafts, once in the catalog
+    assert [h.id for h in heroes.of("art")] == ["dry-sprite"] and heroes.of("liveops") == []
+    assert [h.id for h in heroes.HEROES.values() if h.id == "uni-pillar"] == ["uni-pillar"] and heroes.sits_at(heroes.get("uni-pillar"), "game-design")
+    assert heroes.STARS["game"] == ("uni-mda", "dry-sprite", "sh-scene", "fairy-pos") and heroes.STARS["mobile"] == heroes.STARS["web"]
+    assert heroes.get("sh-scene").kinds == ("game",) and "not a game" in heroes.get("sh-scene").not_here and heroes.get("uni-ost").kinds == ()
+    assert all(len(heroes.of(c)) <= 6 for c in {h.craft for h in heroes.HEROES.values()})
     assert heroes.get("sh-xp").name == "Spike Shaman" and heroes.get("nowhere") is None and heroes.get("") is None
 
 
 def test_one_default_a_craft_and_places_only_on_the_others():
     crafts = {h.craft for h in heroes.HEROES.values()}
-    assert crafts == {"product", "design", "tech", "run", "marketing", "release"} and crafts <= set(lens_rubrics.RUBRICS)
+    assert crafts == {"product", "design", "tech", "run", "marketing", "release", "game-design", "art"} and crafts <= set(lens_rubrics.RUBRICS)
     for craft in crafts:
         assert [h.default for h in heroes.of(craft)].count(True) == 1 and heroes.default(craft).craft == craft
     assert heroes.default("liveops") is None
-    assert {h.id for h in heroes.HEROES.values() if h.default} == {"uni-ost", "dry-heur", "sh-c4", "imp-obs", "fairy-aarrr", "release"}
+    assert {h.id for h in heroes.HEROES.values() if h.default} == {"uni-ost", "dry-heur", "sh-c4", "imp-obs", "fairy-aarrr", "release", "uni-mda", "dry-sprite"}
     for h in heroes.HEROES.values():
         assert h.size in heroes.SIZES and h.layout in heroes.LAYOUTS and 1 <= h.decides <= 3 and 1 <= h.says_no <= 3
         assert h.name and h.school and h.flow
         if h.default:
             assert h.places == ()
         else:
-            assert 3 <= len(h.places) <= 5 and all(n and a.endswith("?") for n, a in h.places)
+            assert 3 <= len(h.places) <= 5 and all(n and ("?" in a and a.endswith(("?", "?)", ")"))) for n, a in h.places)
             assert len({n for n, _a in h.places}) == len(h.places)
             assert h.framework and h.short and 4 <= len(h.aspects) <= 6
             ids = [a["id"] for a in h.aspects]
@@ -143,3 +151,12 @@ def test_the_words_are_in_the_glossary():
     assert [lexicon.term(k) for k in ("inventory", "hero.yours", "hero.yours_before", "hero.back_to_default", "hero.in_your_hand", "hero.what_leaves", "hero.lay_tables")] == [
         "Inventory", "Yours", "Yours before", "Back to default", "in your hand", "What leaves this computer", "Lay the tables"]
     assert lexicon.term("hero", many=True) == "heroes" and lexicon.term("hero.frame") == "frame"
+
+
+def test_pillar_knight_sits_at_game_design_as_at_product(root):
+    for craft in ("product", "game-design"):
+        slug = _party(root, craft)
+        goal_team.set_hero(root, slug, "uni-pillar")
+        assert goal_team.hero_of(root, slug).id == "uni-pillar" and lens_rubrics.rubric(craft, "uni-pillar")["short"] == "Design pillars"
+    with pytest.raises(ValueError):
+        goal_team.set_hero(root, _party(root, "tech"), "uni-pillar")

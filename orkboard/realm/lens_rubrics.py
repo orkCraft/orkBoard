@@ -23,7 +23,7 @@ def _hero(craft: str, hero: object) -> object:
     """The hero (`realm/heroes.py`, or its id) whose frame replaces the craft's: a hero of that craft that is not its default; None else (today's rubric)."""
     from orkboard.realm import heroes
     h = heroes.get(hero) if isinstance(hero, str) else hero
-    return h if h is not None and h.craft == craft and not h.default else None
+    return h if h is not None and heroes.sits_at(h, craft) and not h.default else None
 
 
 def rubric(craft: str, hero: object = None) -> dict | None:
