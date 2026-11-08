@@ -262,6 +262,14 @@ class JournalMixin:
             return False
         return True
 
+    def view_due(self, party: str) -> bool:
+        """The party's view is a day old or more, or there is none (spec 167 J)."""
+        try:
+            at = journals.digest(self.state_dir, party).get("at")
+            return not at or dt.datetime.now() - dt.datetime.fromisoformat(at) >= dt.timedelta(seconds=DIGEST_AGE_S)
+        except (ValueError, OSError):
+            return False
+
     def journal_view_for(self, parties: list[str], why: str) -> int:
         """The view of each of these parties (once each), quietly: how many were begun."""
         begun = 0
