@@ -110,13 +110,13 @@ def test_two_tools_are_two_potions_in_one_row_in_the_chips_order_flush_against_t
 
 
 def test_the_tabs_end_keeps_the_backpack_and_the_empty_chair_no_door_no_bug_and_no_chip(gui):
-    """Decisions §267.1: the backpack stands at the tabs' end before the empty chair."""
+    """Decisions §267.1: the backpack stood at the tabs' end before the empty chair; spec 160 H, §272.1: it stands at the left of the discard column's head, the tabs' end keeps the empty chair."""
     pg, host, log = open_mana(gui, TWO)
     try:
         pots(pg)
         end = pg.locator(".table-tabs__end")
         assert end.get_by_role("button", name="New party").count() == 1 and end.get_by_role("button", name="Stop all").count() == 0
-        assert end.locator("button:not(.stall-pack)").count() == 1 and end.locator(".stall-pack").count() == 1 and end.locator(".table-logs").count() == 0 and pg.locator(".table-chip").count() == 0          # the empty chair alone: Stop all is the die's front face, the bug is in the Orkmaster's … (spec 139 A.4-A.5)
+        assert end.locator("button:not(.stall-pack)").count() == 1 and end.locator(".stall-pack").count() == 0 and pg.locator('.release-lane__head .stall-pack').count() == 1 and end.locator(".table-logs").count() == 0 and pg.locator(".table-chip").count() == 0          # the empty chair alone: Stop all is the die's front face, the bug is in the Orkmaster's … (spec 139 A.4-A.5)
     finally:
         pg.close()
     assert not log, "\n".join(log)

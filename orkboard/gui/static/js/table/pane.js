@@ -5,6 +5,7 @@
 // the map (card.js `Lifted`).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
+import { presenceNow } from "./presence.js";
 import { Icon } from "../orkui.js";
 import { town } from "../link.js";
 import { ORKMASTER, closeOver, inventory, lifted, openOver, over, picked } from "../frame/state.js";
@@ -110,7 +111,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
   const bare = !laidNow(), form = isForm(o), stalled = inventory.value !== null && !o && !bare;      // the inventory open: the stall is the table (spec 157 D.2); a form or an open thing lies over it                // not laid yet: the table is bare (spec 130 C.6); a form covers the whole table, its end included (C.5)
   const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), past = !o && !bare && !!picked.value && !picks && !!mapData.value && !narrow, kind = !o && !bare && picks ? phaseKind(tab === ORKMASTER ? null : g, picks) : "";     // a goal picked: what the table shows by its phase at this tab (phaseview.js)
-  return html`<section class="table-pane ork-table" id="table-pane" data-party=${feltOf(g) || undefined} role="tabpanel" aria-labelledby=${`tab-${tab}`} data-stall=${stalled ? "open" : undefined}>
+  return html`<section class=${cls("table-pane ork-table", { "is-out": presenceNow()?.here === false, "ork-leather": stalled })} id="table-pane" data-party=${feltOf(g) || undefined} role="tabpanel" aria-labelledby=${`tab-${tab}`} data-stall=${stalled ? "open" : undefined}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
     ${!o && !bare && !stalled && html`<${Notice} />`}
     ${!o && !bare && !stalled && html`<${ToMain} />`}
