@@ -66,7 +66,6 @@ class _Maker:
 
     def _request(self, payload: dict) -> Response:
         tool = craft_tools.get(self.tool_id)
-        reservation = self.spend.reserve(payload) if self.spend else None
         credential = craft_tools.key(self.tool_id)  # only at the request
         if not credential:
             raise MakerError(f"The {self.word} has no key on this computer")
@@ -78,9 +77,13 @@ class _Maker:
         # A base64 JSON image answer needs more room than its decoded asset.
         limit = (idea_pick.KINDS[self.kind].limit * 4 // 3 + 65536
                  if self.kind == "image" else idea_pick.KINDS[self.kind].limit)
+        body = json.dumps(payload).encode()
+        # Only commit money once local preparation has succeeded. Once handed
+        # to the transport, an uncertain request may still be billed.
+        reservation = self.spend.reserve(payload) if self.spend else None
         try:
             response = self.transport(host=tool.host, path=self.path, headers=headers,
-                                      body=json.dumps(payload).encode(), timeout=TIMEOUT, limit=limit)
+                                      body=body, timeout=TIMEOUT, limit=limit)
         except MakerError:
             raise
         except (OSError, http.client.HTTPException, ValueError):

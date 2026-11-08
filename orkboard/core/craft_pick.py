@@ -44,7 +44,7 @@ def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, s
     root = board_root(runner, slug)
     page = ideas.idea_page(root, slug)
     party = task.get("party") or (page.get("track") if page else "") or ideas.GENERAL
-    rows = {r["id"]: r for r in craft_tools.for_party(root, party, runner.tool_of(slug, task), check_key=False)}
+    rows = {r["id"]: r for r in craft_tools.for_party(root, party, runner.tool_of(slug, task), check_key=True)}
     row = rows.get(tool_id)
     if not row or not row["taken"]:
         raise ValueError("The party has not taken that maker")

@@ -108,6 +108,25 @@ def test_missing_key_never_calls_transport(tmp_path, monkeypatch):
     assert not (tmp_path / "assets").exists()
 
 
+@pytest.mark.parametrize('maker,payload', [
+    (run.PictureMaker, {'prompt': 'picture'}),
+    (run.SoundMaker, {'duration_seconds': 5}),
+])
+def test_pre_transport_refusal_never_reserves(tmp_path, monkeypatch, maker, payload):
+    from orkboard.core.craft_spend import Spend
+    spend = Spend(tmp_path, 'goal', 'k1', maker.tool_id,
+                  {'amount': '1', 'currency': 'USD'})
+    tool = maker(lambda **kw: pytest.fail('transport called'), spend=spend)
+    monkeypatch.setattr(run.craft_tools, 'key', lambda _: None)
+    with pytest.raises(run.MakerError, match='no key on this computer'):
+        tool._request(payload)
+    assert not spend.path.exists()
+    monkeypatch.setattr(run.craft_tools, 'key', lambda _: 'fake-key')
+    with pytest.raises(TypeError):
+        tool._request({**payload, 'invalid': object()})
+    assert not spend.path.exists()
+
+
 @pytest.mark.parametrize("host", ["api.openai.com", "api.elevenlabs.io"])
 def test_real_maker_endpoint_fails_the_gate_before_network(tmp_path, host):
     maker = run.PictureMaker if host == "api.openai.com" else run.SoundMaker

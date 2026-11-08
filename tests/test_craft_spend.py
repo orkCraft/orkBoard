@@ -101,6 +101,38 @@ def test_registry_prices_and_estimate_words():
     assert Decimal(image['amount']) == Decimal('0.061455')
 
 
+@pytest.mark.parametrize('existing', [False, True])
+def test_missing_key_pick_preserves_ledger_then_one_request_fits_cap(setup, monkeypatch, existing):
+    from orkboard.core import craft_pick
+    cap(setup, craft_spend.price('openai-images', {'prompt': 'A logo'})['amount'])
+    spend = ledger(setup)
+    if existing:
+        other = craft_spend.Spend(setup[0].state_dir, setup[1], 'other-task',
+                                  'elevenlabs-sound', {'amount': '1', 'currency': 'USD'})
+        other.reserve({'duration_seconds': 5})
+    before = spend.path.read_bytes() if existing else None
+    calls = []
+    monkeypatch.setattr(craft_tools, 'key', lambda _: None)
+    monkeypatch.setattr('orkboard.core.craft_run.https_transport',
+                        lambda **kw: calls.append(kw) or picture())
+    with monkeypatch.context() as missing:
+        missing.setattr(craft_pick.craft_spend, 'Spend',
+                        lambda *a, **kw: pytest.fail('Spend created before key check'))
+        with pytest.raises(ValueError, match='Picture maker is not here: no key on this computer'):
+            run(setup)
+    assert calls == []
+    assert (spend.path.read_bytes() if spend.path.exists() else None) == before
+    monkeypatch.setattr(craft_tools, 'key', lambda _: 'fake-key')
+    # Picks need at least two variants. The one-request cap must allow the
+    # first request, then stop the second rather than blocking the whole retry.
+    with pytest.raises(ValueError, match='USD.*cap'):
+        run(setup)
+    assert len(calls) == 1
+    entries = json.loads(spend.path.read_text())['k1']
+    assert len(entries) == 1 and entries[0]['status'] == 'settled'
+    assert setup[-1]['craft_cost']['amount'] == setup[-1]['craft_cap']['amount']
+
+
 def test_fake_key_only_read_at_request_and_absent_from_artifacts(setup, monkeypatch):
     from orkboard.core.idea_picking import PickMixin
     from types import SimpleNamespace
@@ -109,7 +141,9 @@ def test_fake_key_only_read_at_request_and_absent_from_artifacts(setup, monkeypa
     reads, calls, events, logs = [], [], [], []
     monkeypatch.setattr(craft_tools, 'key', lambda _: reads.append(True) or key)
     def fake(**kw):
-        assert len(reads) == len(calls) + 1
+        # The chair checks both makers' presence, then each request re-reads
+        # its own key instead of retaining the availability credential.
+        assert len(reads) == len(calls) + 3
         assert kw['headers']['Authorization'] == 'Bearer ' + key
         calls.append(True)
         return picture()
@@ -123,7 +157,7 @@ def test_fake_key_only_read_at_request_and_absent_from_artifacts(setup, monkeypa
     runner._emit = lambda *a, **kw: events.append((a, kw))
     runner._log = lambda *a: logs.append(a)
     PickMixin._variants(runner, slug, 'k1', task, work, 'base', 1)
-    assert len(reads) == len(calls) == 2
+    assert len(calls) == 2 and len(reads) == 4
     artifacts = [p.read_bytes() for p in runner.repo_root.rglob('*.md')]
     artifacts += [p.read_bytes() for p in runner.state_dir.rglob('*.json')]
     artifacts += [json.dumps(events).encode(), json.dumps(logs).encode(), plan.encode(), prompt.encode()]
