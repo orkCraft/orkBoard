@@ -18,6 +18,12 @@ asks: person
 ## Gist
 I want to open Orkboard and read, from Product, Tech and Design each, where the product stands now: what works, what hurts, what comes next, in a few lines, on that leader's tab. Today no such view is written anywhere: there is no llm-wiki/general/project.md (the project's brief), no journals (llm-wiki/general/journals/), no leader's table (pages/tables/); a leader speaks only per goal (its Talk and section on the goal's page) and, on a map's open, as concerns on its map's parts (core/idea_concerns.py, the cheaper tier, kept in .orkcraft/ on one machine). Product's view needs Product's tree on the Board (goal 163). The view is written into the Board's files so every machine and AI tool reads the same one, kept fresh after a goal lands or when the map changed, at a cost the person agrees to, and it reads the decisions (§281.7).
 
+From another session's Talk on a goal the owner dropped as this one's double (passed on by the owner, 8 November):
+1. Journal lines are stored addressed to the leader (*You said no to …*, realm/journals.py); the view shows them in the leader's voice, never as *you*.
+2. `ideas.journal_strike` (spec 125) is built but the page never calls it: a wrong line is read into every later call. Tech and Product there recommended a *Not so* on each line the view shows.
+3. The framework at work, laid by code with no model: realm/map_signals' hints laid by the rubric's aspects (realm/lens_rubrics.py), so a fresh tab shows something before *Look now*.
+4. `orkboard import --dry-run` here places 27 of 233 decisions into leaders' journals by their titles' words (realm/read_in.py). §277.4 says a decision of no goal is never placed by its words: a view that reads the journal must not carry them.
+
 ## Why
 
 ## Done when
