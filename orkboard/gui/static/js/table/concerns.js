@@ -97,7 +97,7 @@ function Mark({ party, list, lead, nodes, mid }) {
 }
 
 /** The slot of a card: inside it, or, for a button, beside it in the box that holds it. Made, or found, or null. */
-function homeOf(card) {
+export function homeOf(card) {
   const home = card.tagName === "BUTTON" ? card.parentElement : card;
   if (home && getComputedStyle(home).position === "static") home.dataset.cnHost = "";
   return home;

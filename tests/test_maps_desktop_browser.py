@@ -241,7 +241,7 @@ def test_the_loops_lie_as_rings_one_in_another_the_core_inside_or_as_lists_at_th
         tags = [t.replace("\n", " ").lower() for t in pg.locator(".mp-ring__tag").all_inner_texts()]
         assert tags[0] == "core · seconds hold the tower" and "feeds the session loop" in pg.locator(".mp-ring__tag").first.get_attribute("title")
         assert tags[1].startswith("session · minutes a night of matches") and tags[2].startswith("meta · days and weeks the season")       # each ring: its span and its name
-        assert pg.locator(".mp-ring__chev").count() == 6 and pg.locator(".mp-ring[data-span=\"core\"] .mp-st").count() == 3
+        assert pg.locator(".mp-ring__chev").count() == 9 and pg.locator(".mp-ring__chev.is-close").count() == 3 and pg.locator(".mp-ring[data-span=\"core\"] .mp-st").count() == 3
         ring = pg.locator(".mp-rings").bounding_box()
         cx, cy = centre(ring)
         far = {}
@@ -261,6 +261,25 @@ def test_the_loops_lie_as_rings_one_in_another_the_core_inside_or_as_lists_at_th
         assert pg.locator('.mp-ll[data-span="session"] .mp-st').count() == 3 and "Hold the tower" in pg.locator('.mp-ll[data-span="core"]').inner_text()
         assert "Ninety seconds to keep your tower standing." in mine.inner_text()                                           # a step in a list says its line
     shot(pg, f"maps-loop-{w}.png")
+
+
+def test_each_ring_closes_and_a_step_wears_what_it_gives_and_takes_as_tokens(maps):
+    pg, host, w = maps
+    go(pg, "game")
+    pg.locator(".mp-st").first.wait_for(timeout=WAIT_MS)
+    score, spend = card(pg, "score-the-round"), card(pg, "spend-the-coins")
+    assert [t.get_attribute("aria-label") for t in score.locator(".mp-tok").all()] == ["gives Coins"] and [t.get_attribute("aria-label") for t in spend.locator(".mp-tok").all()] == ["takes Coins"]
+    assert score.locator(".mp-tok").get_attribute("title") == "gives Coins" and card(pg, "pick-a-hero").locator(".mp-tok").count() == 0            # none where it gives and takes nothing
+    if wide(w):
+        for span in ("core", "session", "meta"):
+            ring = pg.locator(f'.mp-ring[data-span="{span}"]')
+            assert ring.locator(".mp-ring__chev").count() == 3 and ring.locator(".mp-ring__chev.is-close").count() == 1               # three steps, three chevrons: the last leads back to the first
+            close, tag = ring.locator(".is-close").bounding_box(), ring.locator(".mp-ring__tag").bounding_box()
+            assert close["x"] + close["width"] <= tag["x"] + 1 or close["x"] >= tag["x"] + tag["width"] - 1 or close["y"] + close["height"] <= tag["y"] or close["y"] >= tag["y"] + tag["height"]    # clear of the ring's tag
+        every = [b for b in (card(pg, i).bounding_box() for i in ("score-the-round", "join-a-match")) if b]
+        close = pg.locator('.mp-ring[data-span="core"] .is-close').bounding_box()
+        assert not any(close["x"] < b["x"] + b["width"] and b["x"] < close["x"] + close["width"] and close["y"] < b["y"] + b["height"] and b["y"] < close["y"] + close["height"] for b in every)
+    shot(pg, f"maps-loop-ring-{w}.png")
 
 
 def test_the_economy_the_feeling_and_what_the_loop_says(maps):

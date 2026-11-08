@@ -41,6 +41,8 @@ def test_the_goals_in_dev_and_not_in_main_newest_landing_first_ticked_with_their
     c, _ = land(repo, one, "k2", {"z.css": "z\n"})
     commit(repo, "mine.txt", "my own\n")                                             # the person's own commit: no goal's
     got = release_map.read(state(repo), repo, pages)
+    ats = [g.pop("at") for g in got["goals"]]
+    assert all(isinstance(t, int) and t > 0 for t in ats)
     assert got == {"into": "dev", "main": "main", "same": False, "commits": 4, "files": 4, "since": None,
                    "goals": [{"idea": one, "title": "Dark mode", "element": "ice", "hue": "ice", "commit": c, "ticked": True},
                              {"idea": two, "title": "Faster pages", "element": "", "hue": "", "commit": b, "ticked": True}]}
@@ -133,5 +135,21 @@ def test_the_command_answers_what_the_gate_would_merge(host, fake_repo):
     got = host.command("ideas.release_map", {})
     gate = host.command("ideas.gate", {})
     assert (got["into"], got["main"], got["commits"], got["files"]) == (gate["into"], gate["main"], gate["commits"], gate["files"])
-    assert got["goals"] == [{"idea": slug, "title": "Dark mode", "element": idea_element.of(host.ideas.state_dir, slug), "hue": idea_element.hue_of(host.ideas.state_dir, slug), "commit": sha, "ticked": True}]
+    assert got["goals"] == [{"idea": slug, "title": "Dark mode", "element": idea_element.of(host.ideas.state_dir, slug), "hue": idea_element.hue_of(host.ideas.state_dir, slug), "commit": sha, "ticked": True, "at": got["goals"][0]["at"]}]
     assert [g["slug"] for g in gate["ideas"]] == [slug]
+
+
+def test_a_goal_has_the_time_of_its_oldest_commit_main_lacks_from_one_log_for_all(repo, pages, monkeypatch):
+    import subprocess
+    one, two = goal(pages, repo, "Dark mode"), goal(pages, repo, "Faster pages")
+    a, _ = land(repo, one, "k1", {"x.css": "x\n"})
+    land(repo, two, "k1", {"y.css": "y\n"})
+    c, _ = land(repo, one, "k2", {"z.css": "z\n"})
+    calls: list[tuple] = []
+    real = release_map._git
+    monkeypatch.setattr(release_map, "_git", lambda cwd, *a, **k: (calls.append(a), real(cwd, *a, **k))[1])
+    got = {g["idea"]: g for g in release_map.read(state(repo), repo, pages)["goals"]}
+    out = subprocess.run(["git", "log", "--no-walk=unsorted", "--format=%H %ct", a, c], cwd=repo, capture_output=True, text=True).stdout.split()
+    when = dict(zip(out[::2], map(int, out[1::2])))
+    assert got[one]["at"] == when[a] and got[two]["at"] > 0
+    assert sum(1 for x in calls if x[0] == "log") == 1

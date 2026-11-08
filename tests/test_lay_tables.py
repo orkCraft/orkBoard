@@ -56,7 +56,7 @@ def test_lay_first_keeps_the_files_other_keys_and_lays_nothing_without_a_party(t
     assert first_open.lay(state)
     assert lay_tables.lay_first(root, state) == "" and "tables_laid" not in json.loads((state / "project.json").read_text())
     tech = _party(root, "tech", "Tech")
-    goal_team.set_hero(root, tech, "sh-ddd")
+    goal_team.set_hero(root, tech, "sh-xp")
     assert lay_tables.lay_first(root, state)
     assert json.loads((state / "project.json").read_text()) == {"laid": True, "tables_laid": True}
 
@@ -75,7 +75,7 @@ def test_release_and_general_are_not_routed(board):
     root, state, tech, design = board
     rel = _party(root, "release", "Release")
     goal_team.set_hero(root, tech, "sh-xp")
-    goal_team.set_hero(root, design, "dry-atom")
+    goal_team.set_hero(root, design, "dry-sprint")
     slug = lay_tables.lay_first(root, state)
     assert [r["party"] for r in ideas.state(state, slug)["route"]] == [tech, design]
     assert lay_tables.lay_party(root, state, rel) == "" and lay_tables.lay_party(root, state, ideas.GENERAL) == ""
@@ -100,7 +100,7 @@ def test_the_first_open_lays_the_first_goal_once_and_a_failure_to_lay_breaks_not
     from tests.test_stall import _party
     tech = _party(host, "tech", "Tech")
     root, state = host.ideas.root(), host.ideas.state_dir
-    goal_team.set_hero(root, tech, "sh-fit")
+    goal_team.set_hero(root, tech, "sh-xp")
     host.ideas.project_start()
     assert [g["title"] for g in ideas.ideas(root)].count("Lay the tables") == 1
     host.ideas.project_start()

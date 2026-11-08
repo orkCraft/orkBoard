@@ -61,15 +61,26 @@ function Window({ s }) {
   return html`<span class=${cls("scr-win", { "is-pic": !!src })}>${src ? html`<img src=${src} alt="" draggable="false" />` : html`<${Sign} name="screen" big=${true} />`}</span>`;
 }
 
+const DOORS = 5;                                                   // doors drawn on a side, at most (a room's wall has no room for more)
+/** A room's side (decisions §280.2): a door for each link in on its left, for each link out on its right (a link back to an earlier step a door too); a wall where there is none, which says *nothing leads here* or *leads nowhere*. */
+function Doors({ side, n }) {
+  const said = side === "in" ? "nothing leads here" : "leads nowhere";
+  return html`<span class=${`scr-doors scr-doors--${side}`} data-doors=${n} aria-hidden="true">${n > 0
+    ? Array.from({ length: Math.min(n, DOORS) }, (_, i) => html`<i key=${i} class="scr-door"></i>`)
+    : html`<i class="scr-wall" title=${said}></i>`}</span>`;
+}
+
 /** A screen as a card: the element of the goal that changed it at the left (none when no goal did), its name in the body face, a low window with its picture or the `screen` sign, and the label row with its path. The gem
  *  *new* (changed since the leader's last call) is not drawn: `ideas.screens` does not say it (reported with part D). `lit`: a pain is carried and this is where it may go; `over`: a dragged pain is above it. */
-export function ScreenCard({ s, party, step, on, carry, over, onPress }) {
+export function ScreenCard({ s, party, step, on, carry, over, onPress, ins = 0, outs = 0 }) {
   const el = elementOf(s), key = screenKey(party, s.id);
+  const walls = [ins === 0 && "nothing leads here", outs === 0 && "leads nowhere"].filter(Boolean).map((w) => `, ${w}`).join("");   // the walls' words, for those who cannot see or hover them
   const card = html`<button type="button" class=${cls("ork-card ork-leans scr-card", { "is-lifted": on, "is-lit": litKey.value === key, "is-aim": carry, "is-over": over })} data-lkey=${key} data-screen=${s.id} data-drop=${s.id} data-step=${step}
-    aria-pressed=${String(on)} aria-label=${`${s.name}, ${s.path}${carry ? ": pin the pain here" : ""}`} title=${carry ? `Pin the pain to ${s.name}` : s.file} onClick=${onPress} ...${leans}>
+    aria-pressed=${String(on)} aria-label=${`${s.name}, ${s.path}${walls}${carry ? ": pin the pain here" : ""}`} title=${carry ? `Pin the pain to ${s.name}` : s.file} onClick=${onPress} ...${leans}>
     <span class="scr-card__head">${el && html`<${Elem} name=${el} hue=${hueOf(s)} />`}<span class="scr-card__nm">${s.name}</span></span>
     <${Window} s=${s} />
     <span class="scr-card__row"><${Sign} name="screen" /><span class="scr-card__path" title=${s.path}>${s.path}</span></span>
+    <${Doors} side="in" n=${ins} /><${Doors} side="out" n=${outs} />
   </button>`;
   return html`<${Pickable} map="screens" id=${s.id} name=${s.name} group=${`step:${step}`}>${card}</${Pickable}>`;
 }

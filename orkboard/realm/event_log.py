@@ -233,7 +233,10 @@ RIPE_HELD = "ripe_held"          # idea, left_s (what was left of the wait when 
 RIPE_DONE = "ripe_done"          # idea: the wait ended and the leaders' decision was written
 
 # Spec 125 D (decisions §203): a leader's digest of its own journal, written in the background. Never a word of the journal or of the digest.
-JOURNAL_DIGESTED = "journal_digested"   # party, entries (how many the call read), chars (of the digest kept), seconds, cost (None: unrecorded)
+JOURNAL_DIGESTED = "journal_digested"   # party, entries (how many the call read), chars (of the digest kept), seconds, cost (None: unrecorded), why (done, ask, open or add: what began the view), dropped (how many lines were dropped; a count, never a word)
+
+# Spec 167 I: a leader's view opened on its tab (H6's signal). Never a word of the view.
+VIEW_OPENED = "view_opened"   # party, at (the view's date, "" when it has none)
 
 # Spec 131 A (decisions §233): a decision cut into the leaders' slices, and a leader's fold of the slices past the bound, both in the background. Never a word of a decision or of a slice.
 SLICES_CUT = "slices_cut"        # decision (its number), parties (how many got a slice), none (how many none), replaced (slices replaced), seconds, cost (None: unrecorded), failed (true: nothing kept)
@@ -255,6 +258,7 @@ EVENTS += (NIGHT_HELD, NIGHT_STARTED, BUILT_NOW)       # spec 121 C
 EVENTS += (NIGHT_CARD_OPENED, PLAY_AT_PATH)       # spec 121 D
 EVENTS += (SKETCH_MADE, SKETCH_ANSWERED, SKETCH_SKIPPED)       # spec 121 A
 EVENTS += (JOURNAL_DIGESTED,)       # spec 125 D
+EVENTS += (VIEW_OPENED,)            # spec 167 I
 PLAY_MARK = "play_mark"          # spec 121 G (H2): a mark made on Play (`ideas.play_mark`): idea, kind ("bug" · "looks" · "missing" · "confusing"), joined (added to a goal not started), minutes_since_open (the first mark after the morning's card was lifted: the minutes since `night_card_opened`; None for any other mark), device. Never a word of the mark's.
 HEARING_UNTHROWN = "hearing_unthrown"    # spec 120 F: a throw taken back (Undo): idea, moment ("talk"), kind (what had been thrown), seconds (since the throw)
 EVENTS += (HEARING_UNTHROWN, PLAY_MARK)

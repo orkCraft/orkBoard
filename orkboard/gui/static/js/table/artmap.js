@@ -1,4 +1,5 @@
-// Art's map: the assets (docs/specs/102-the-other-maps-and-picking-on-them.md §3.1, §5.4; decisions §135.3–§135.4, §171.1; mockup docs/mockups/s3/ state 4). The kinds are lanes, Art's four first (art and icons, sound, music, clips),
+// Art by weight (docs/specs/165-each-leaders-map-a-board-games-shape.md O, decisions §280.2, §280.4): a card's width is its asset's weight (`light`, `normal`, `heavy`, read by realm/art_map.py), a lane's foot its size in MB and,
+// with a budget, *of <n> MB*; an asset no goal's reach lights lies faint (its frame and window, never its name). Art's map: the assets (docs/specs/102-the-other-maps-and-picking-on-them.md §3.1, §5.4; decisions §135.3–§135.4, §171.1; mockup docs/mockups/s3/ state 4). The kinds are lanes, Art's four first (art and icons, sound, music, clips),
 // the others (fonts, the screens' pictures) under them; an asset is a card — a picture is its own window (the asset's `url`), a sound or a music track its two-tone sign and a play button, a clip its first frame and a play
 // button; *new* is the gem of one a goal made or changed since the device's last look at this map. Lifted, an asset shows large and plays (an audio or a video element), its file (a press opening it over the pane), its size and
 // where it was picked, and the variants not picked under it. Registered with maps.js for the craft `art`.
@@ -9,6 +10,7 @@ import { Elem, Sign } from "../orkui.js";
 import { town } from "../link.js";
 import { lift } from "../frame/state.js";
 import { mapFor } from "./maps.js";
+import { reachData } from "./reach.js";
 import { FileLink, MapBack, MapCard, MapFrame, Nothing, Sec, Win, countWords, keyOf, useLifted, useRead } from "./mapkit.js";
 
 const MAP = "art", NONE_WHAT = "the project's pictures, sounds, music and clips", SHOWN = 6, SHOWN_NARROW = 4;
@@ -27,6 +29,17 @@ export function lengthWords(s) {
 }
 const bytesWords = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : b >= 1024 ? `${Math.round(b / 1024)} KB` : b > 0 ? `${b} B` : "");
 const sizeWords = (a) => (a.w && a.h ? `${a.w} × ${a.h}` : lengthWords(a.seconds) || bytesWords(a.bytes));
+/** A size in MB for a lane's foot: *3.2 MB* (a size not known is 0). */
+export const mbWords = (b) => `${((b > 0 ? b : 0) / 1048576).toFixed(1)} MB`;
+/** A lane's foot: its total size, and with the project's budget *of <n> MB*. */
+export const footWords = (bytes, budget) => (budget > 0 ? `${mbWords(bytes)} of ${Number(budget)} MB` : mbWords(bytes));
+const WEIGHTS = ["light", "normal", "heavy"];
+/** Every id some goal's reach lights on this map (lit, one or two steps out); empty while nothing is kept. */
+export function lightedBy(data) {
+  const out = new Set();
+  for (const e of Object.values(data || {})) for (const k of ["lit", "one", "two"]) for (const id of e?.[k] || []) out.add(id);
+  return out;
+}
 const isAudio = (a) => a.kind === "sound" || a.kind === "music";
 
 /** A lane's caption under its name: its folder and what it holds (*sprites/: 40 pictures*), else the count and the folders. */
@@ -57,7 +70,7 @@ function Pic({ a, big = false }) {
   return html`<img class=${cls("mp-pic", { "is-pixel": pixel })} src=${a.url} alt=${a.name} draggable="false" loading=${big ? "eager" : "lazy"} />`;
 }
 
-function AssetCard({ a, goals, narrow }) {
+function AssetCard({ a, goals, narrow, faint }) {
   const goal = a.goal && goals[a.goal], element = goal?.element || "", hue = goal?.hue || element, on = playing.value === a.id;
   const gem = a.change === "added" ? "new" : a.change === "changed" ? "changed" : "";
   const play = (e) => {
@@ -66,7 +79,7 @@ function AssetCard({ a, goals, narrow }) {
     else { wantPlay = a.id; lift(keyOf(MAP, a.id)); }
   };
   const pic = a.kind === "art" || a.kind === "screen";
-  return html`<${MapCard} map=${MAP} id=${a.id} name=${a.name} code=${true} element=${element} hue=${hue} group=${a.kind} gem=${gem} row=${sizeWords(a)} rowCode=${true} className="mp-asset">
+  return html`<${MapCard} map=${MAP} id=${a.id} name=${a.name} code=${true} element=${element} hue=${hue} group=${a.kind} gem=${gem} row=${sizeWords(a)} rowCode=${true} className=${cls(`mp-asset is-${WEIGHTS.includes(a.weight) ? a.weight : "normal"}`, { "is-faint": faint })}>
     <${Win} tone=${hue} tall=${true} pic=${pic}>
       ${pic ? html`<${Pic} a=${a} />`
         : a.kind === "clip" ? html`<video class="mp-pic" src=${`${a.url}#t=0.001`} preload="metadata" muted playsinline aria-hidden="true"></video>`
@@ -77,12 +90,13 @@ function AssetCard({ a, goals, narrow }) {
   </${MapCard}>`;
 }
 
-function Lane({ k, goals, narrow, open, setOpen }) {
+function Lane({ k, goals, narrow, open, setOpen, budget, lit }) {
   const [head] = KINDS[k.kind] || [k.kind], cap = narrow ? SHOWN_NARROW : SHOWN, all = open.has(k.kind), shown = all ? k.assets : k.assets.slice(0, cap), more = k.assets.length - shown.length;
   return html`<section class="mp-lane" data-kind=${k.kind} aria-label=${head}>
     <header class="mp-lane__head"><span class="ork-label">${head}</span><span class="mp-cap">${k.n ? laneWords(k) : "None yet"}</span></header>
-    <div class="mp-lane__cards">${shown.map((a) => html`<${AssetCard} key=${a.id} a=${a} goals=${goals} narrow=${narrow} />`)}</div>
+    <div class="mp-lane__cards">${shown.map((a) => html`<${AssetCard} key=${a.id} a=${a} goals=${goals} narrow=${narrow} faint=${lit.size > 0 && !lit.has(a.id)} />`)}</div>
     ${more > 0 && html`<button type="button" class="ork-btn quiet mp-more" onClick=${() => setOpen(new Set([...open, k.kind]))}>and ${more} more</button>`}
+    ${k.n > 0 && html`<footer class="mp-lane__foot mp-cap" data-foot=${k.kind}>${footWords(k.bytes, budget)}</footer>`}
   </section>`;
 }
 
@@ -120,12 +134,12 @@ export function ArtMap({ g, narrow }) {
   const [rd] = useRead("ideas.art_map", since ? { since } : {}), d = rd.data, at = useLifted(MAP), seen = useRef("");
   seen.current = d?.commit || seen.current;
   useEffect(() => () => { stop(); if (seen.current) write(LOOK + project, seen.current); }, [project]);        // leaving the map is looking at it: what is new is new once
-  const goals = d?.goals || {}, kinds = (d?.kinds || []).filter((k) => k.own || k.n > 0);
+  const lit = lightedBy(reachData.value), goals = d?.goals || {}, kinds = (d?.kinds || []).filter((k) => k.own || k.n > 0);
   const asset = at ? kinds.flatMap((k) => k.assets).find((x) => x.id === at) : null;
   const back = asset ? html`<${MapBack} host=${host} name=${asset.name} narrow=${narrow} wide=${true}><${Back} key=${asset.id} a=${asset} goals=${goals} /></${MapBack}>` : null;
   return html`<${MapFrame} map=${MAP} host=${host} back=${back} className="mp--art">
     ${d && d.none ? html`<${Nothing} what=${NONE_WHAT} />`
-      : d && html`<div class="mp-lanes">${kinds.map((k) => html`<${Lane} key=${k.kind} k=${k} goals=${goals} narrow=${narrow} open=${open} setOpen=${setOpen} />`)}</div>`}
+      : d && html`<div class="mp-lanes">${kinds.map((k) => html`<${Lane} key=${k.kind} k=${k} goals=${goals} narrow=${narrow} open=${open} setOpen=${setOpen} budget=${d.budget_mb} lit=${lit} />`)}</div>`}
     ${!d && rd.err && html`<p class="mp-err" role="alert">${rd.err}</p>`}
   </${MapFrame}>`;
 }

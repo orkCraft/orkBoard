@@ -41,6 +41,14 @@ button.scr-steplab:not(:disabled) { cursor: pointer; color: var(--ork-ink); }
 .scr-win .ork-sign { opacity: 0.85; }
 .scr-card__row { display: flex; align-items: center; gap: var(--ork-2); min-height: 22px; min-width: 0; color: var(--ork-ink-muted); }
 .scr-card__path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--ork-font-code); font-size: 12px; line-height: 16px; }
+/* the room's sides (decisions §280.2): a door a link in on the left, a link out on the right; a wall where there is none. Marks on the frame, orkUI's tokens only; no colour, no motion of their own. */
+.scr-doors { position: absolute; top: 0; bottom: 0; width: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--ork-2); pointer-events: none; }
+.scr-doors--in { left: 0; }
+.scr-doors--out { right: 0; }
+.scr-door { display: block; box-sizing: border-box; flex: none; width: 8px; height: 12px; background: var(--ork-card); border: var(--ork-line) solid var(--ork-ink-muted); }
+.scr-wall { pointer-events: auto; display: block; flex: none; width: calc(var(--ork-line) * 2); height: calc(100% - var(--ork-3) * 2); background: var(--ork-edge); }
+.scr-doors--in .scr-wall { margin-left: calc(var(--ork-line) * 2); }
+.scr-doors--out .scr-wall { margin-right: calc(var(--ork-line) * 2); }
 .scr-card.is-aim, .scr-card.is-over, .scr-card.is-lit { background: var(--ork-raised); }
 .scr-card.is-over { outline: var(--ork-line) dashed var(--ork-ink); outline-offset: var(--ork-1); }
 

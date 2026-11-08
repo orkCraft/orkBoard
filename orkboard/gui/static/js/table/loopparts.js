@@ -23,10 +23,10 @@ export const KIND_WORDS = { soft: "soft", hard: "hard", energy: "energy", progre
 export const Pips = ({ n }) => html`<span class="ork-pips mp-pips" role="img" aria-label=${`intensity ${n} of 5`}>${[1, 2, 3, 4, 5].map((i) => html`<i key=${i} class=${i <= n ? "d" : ""}></i>`)}</span>`;
 
 export const RING_MIN = 640;                                             // under it the loops lie as lists
-const HEIGHTS = { 1: 420, 2: 560, 3: 720 }, MARGIN = 62;
+const HEIGHTS = { 1: 420, 2: 560, 3: 720 }, MARGIN = 62, TAG_HALF = 112;          // TAG_HALF: the half of a ring tag at its widest, and a little over
 
 /** The rings' places in `w` px: the loops from the core out, each an ellipse with its steps' centres clockwise round it from just right of its top (half a step from it, so that the top keeps the ring's tag), and the
- *  chevron between each two (at the mid-angle, pointing along the loop). The core ring of a game with more loops has its tag in its middle, any other at its top. The card's width follows the room between the rings. */
+ *  chevron between each two (at the mid-angle, pointing along the loop), the last one back to the first so that the ring closes (`close`). The core ring of a game with more loops has its tag in its middle, any other at its top. The card's width follows the room between the rings. */
 export function layout(loops, w) {
   const n = loops.length, h = HEIGHTS[n] || HEIGHTS[1], cx = w / 2, cy = h / 2;
   const rxMax = Math.max(120, w / 2 - MARGIN), ryMax = h / 2 - 40;
@@ -40,7 +40,9 @@ export function layout(loops, w) {
       const dx = -rx * Math.sin(m), dy = ry * Math.cos(m);
       return { x, y, mx, my, dir: Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up" };
     });
-    return { rx, ry, places, tag: n > 1 && i === 0 ? { x: cx, y: cy, mid: true } : { x: cx, y: cy - ry, mid: false } };
+    const mid = n > 1 && i === 0, gap = mid ? 0 : Math.asin(Math.min(0.5, TAG_HALF / rx)), c = -Math.PI / 2 - gap, [qx, qy] = at(c);      // the loop closes: the last step back to the first, at the ring's top (left of the tag where it has one)
+    const close = { mx: qx, my: qy, dir: Math.abs(-rx * Math.sin(c)) >= Math.abs(ry * Math.cos(c)) ? "right" : "up" };
+    return { rx, ry, places, close, tag: mid ? { x: cx, y: cy, mid: true } : { x: cx, y: cy - ry, mid: false } };
   });
   return { h, cx, cy, cw, rings };
 }
@@ -104,8 +106,16 @@ export function Feeling({ loop, width }) {
   </section>`;
 }
 
+/** What a step gives and takes as small tokens on it: a small square a currency, `+` for what it gives and `−` for what it takes, the currency's first letter in it; each says its words to a screen reader and in its title
+ *  (*gives Coins*). Nothing when it gives and takes nothing. */
+export function Tokens({ s, cur }) {
+  const one = (id, way) => { const c = cur?.get(id); return c ? html`<span key=${`${way}${id}`} class=${`mp-tok is-${way}`} role="img" data-currency=${id} aria-label=${`${way} ${c.name}`} title=${`${way} ${c.name}`}><b aria-hidden="true">${way === "gives" ? "+" : "−"}</b><i aria-hidden="true">${c.name.slice(0, 1)}</i></span>` : null; };
+  const all = [...s.gives.map((id) => one(id, "gives")), ...s.takes.map((id) => one(id, "takes"))].filter(Boolean);
+  return all.length ? html`<span class="mp-toks">${all}</span>` : null;
+}
+
 /** A step's small card on its ring (or in a list): its name, its feeling's word and its intensity as pips; a press lifts it (loopmap.js draws the back). */
-export function StepCard({ s, style, narrow }) {
+export function StepCard({ s, style, narrow, cur }) {
   return html`<${MapCard} map=${MAP} id=${s.id} name=${s.name} group="loop" compact=${true} className=${cls("mp-st", { "is-narrow": narrow })} style=${style}
-    foot=${html`<span class="mp-st__meta"><span>${s.feel || "no feeling said"}</span></span><${Pips} n=${s.intensity} />${narrow && html`<span class="mp-card__foot is-three">${s.line}</span>`}`} />`;
+    foot=${html`<span class="mp-st__meta"><span>${s.feel || "no feeling said"}</span></span><${Pips} n=${s.intensity} /><${Tokens} s=${s} cur=${cur} />${narrow && html`<span class="mp-card__foot is-three">${s.line}</span>`}`} />`;
 }

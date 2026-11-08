@@ -175,7 +175,7 @@ def test_a_journal_file_is_in_the_specs_format_and_reads_back_equal(project, sta
     b = journals.add(state, tech, "stance", "Go on the timer")
     c = journals.add(state, tech, "stance", "Struck line")
     journals.strike(state, tech, c["id"], "no")
-    journals.save_digest(state, tech, 'Tech says "small" and \\ keeps it', b["id"])
+    journals.save_digest(state, tech, 'Tech says "small" and \\ keeps it', b["id"], read=["add-lobby", "§282", "cache, net", "add-lobby"], at="2026-11-08T10:00:00")
     p = journals.add(state, journals.PROJECT, "decision", "Decision 12: no accounts", idea="lobby", ref="docs/my decisions/0012-x.md#12", at="2026-11-01")
     to = tmp_path / "out"
     got = write_out.write(project, state, to)
@@ -183,7 +183,8 @@ def test_a_journal_file_is_in_the_specs_format_and_reads_back_equal(project, sta
     text = (to / "journals" / f"{tech}.md").read_text("utf-8")
     lines = text.splitlines()
     assert lines[0] == "---" and lines[1] == f"orkboard-journal: {tech}" and lines[2] == "party: Tech" and lines[3].startswith("leader: ") and lines[3] != "leader: "
-    assert lines[4] == "digest: \"Tech says 'small' and / keeps it\"" and re.fullmatch(r"exported: \d{4}-\d\d-\d\dT\d\d:\d\d:\d\d", lines[5]) and lines[6] == "---"
+    assert lines[4] == "digest: \"Tech says 'small' and / keeps it\"" and lines[5] == "digest_at: 2026-11-08T10:00:00" and lines[6] == "digest_read: add-lobby, §282, cache net"
+    assert re.fullmatch(r"exported: \d{4}-\d\d-\d\dT\d\d:\d\d:\d\d", lines[7]) and lines[8] == "---"
     assert "# Tech's journal" in lines and f"- 2026-10-30 · overruled · You said no to “Add a lobby”: it breaks the cache. <!-- id={a['id']} idea=add-lobby on=cache,net ref=12 -->" in lines
     assert f"- {b['at'][:10]} · stance · Go on the timer <!-- id={b['id']} idea= on= ref= -->" in lines and "Struck line" not in text
     back = _read_journal(text)

@@ -16,6 +16,8 @@ import { BoardMap } from "./boardmap.js";
 import { mapOf } from "./maps.js";
 import "./mapparts.js";                                     // the parties' maps (spec 102)
 import { PickHost, PickStrip } from "./picking.js";         // picking on a party's map (spec 102 §6)
+import { Reach } from "./reach.js";                       // what a goal would change on the map, one and two steps out (spec 165 J)
+import { Heat } from "./heat.js";                         // what code found on a part: its hollow squares on every map (spec 165 H)
 import { Concerns } from "./concerns.js";               // the leader's concerns on its map: the marks (spec 108 B, spec 123 C)
 import { Header } from "./header.js";
 import { SystemPane, PartBack, LinkBack } from "./syspane.js";
@@ -124,7 +126,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
         : g && kind ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PhaseView} g=${g} n=${picks} kind=${kind} />`
-        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) && !heroLaid(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
+        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${Heat} key=${g.slug} g=${g}><${Reach} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) && !heroLaid(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//><//><//>` : null}
       ${!o && !bare && !stalled && picks && (tab === ORKMASTER || g) && html`<${Earlier} key=${`${tab}:${picks.slug}`} g=${tab === ORKMASTER ? null : g} n=${picks} />`}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
       ${!bare && !form && narrow && html`<${DiscardEnd} />`}

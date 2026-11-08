@@ -23,6 +23,9 @@ class Hero:
     framework: str = ""
     short: str = ""
     aspects: tuple[dict, ...] = ()
+    also: tuple[str, ...] = ()     # the other crafts it sits at (decisions §279.1: Pillar Knight at Game design too)
+    kinds: tuple[str, ...] = ()    # the project kinds it is offered in; empty is every kind
+    not_here: str = ""             # its why, in words, where it is not offered
 
     def __getattribute__(self, name: str):
         if name in _FRAME and object.__getattribute__(self, "default"):
@@ -40,8 +43,8 @@ def _a(id_: str, name: str, ask: str) -> dict:
     return {"id": id_, "name": name, "ask": ask}
 
 
-def _default(id_: str, craft: str, name: str, school: str, flow: str, size: str, decides: int, says_no: int) -> Hero:
-    return Hero(id_, craft, name, school, flow, size, decides, says_no, default=True)
+def _default(id_: str, craft: str, name: str, school: str, flow: str, size: str, decides: int, says_no: int, **more) -> Hero:
+    return Hero(id_, craft, name, school, flow, size, decides, says_no, default=True, **more)
 
 
 HEROES: dict[str, Hero] = {h.id: h for h in (
@@ -57,18 +60,6 @@ HEROES: dict[str, Hero] = {h.id: h for h in (
                   _a("struggle", "Struggles", "Is each struggle one that really stops the person from getting the job done?"),
                   _a("alternatives", "Hired instead", "Do we know what people hire today, even if it is a spreadsheet or nothing?"),
                   _a("progress", "Progress", "Does each goal make the person's progress on the job easier to see?"))),
-    Hero("uni-lean", "product", "Pivot Knight", "Lean Startup", "hypothesis → test → pivot or persevere", "standard", 1, 3, layout="lanes",
-         places=_p("Believe", "What do we believe is true that has not been tested?",
-                   "Testing", "Which test is running, and what would prove the belief wrong?",
-                   "Learned", "What did the last test teach us?",
-                   "Decide", "Do we pivot or persevere, and on what evidence?"),
-         framework="Lean Startup: a belief written as a hypothesis, the smallest test of it, what was learned, then pivot or persevere",
-         short="Lean Startup",
-         aspects=(_a("hypothesis", "Hypothesis", "Is each belief written so a test can prove it wrong?"),
-                  _a("experiment", "Smallest test", "Is the test the smallest thing that could teach us?"),
-                  _a("metric", "Metric", "Is the number that decides named before the test runs?"),
-                  _a("learning", "Learning", "Is what was learned written down, and did it change what comes next?"),
-                  _a("pivot", "Pivot or persevere", "Is the next step chosen by what was learned, not by hope?"))),
     Hero("uni-shape", "product", "Appetite Knight", "Shape Up", "shape → bet → build in the appetite", "lean", 3, 2, layout="lanes",
          places=_p("Pitches", "Which shaped pitch is worth betting on?",
                    "Bet this cycle", "What did we bet on, and how long may it take?",
@@ -80,55 +71,44 @@ HEROES: dict[str, Hero] = {h.id: h for h in (
                   _a("appetite", "Appetite", "Is the time we will spend said before the work starts?"),
                   _a("bet", "The bet", "Is each bet small enough to finish in one cycle?"),
                   _a("hill", "The hill", "Is each piece uphill (figuring out) or downhill (making it), and said so?"))),
-    _default("dry-heur", "design", "Pixel-Perfect Dryad", "Nielsen's heuristics", "walk → the ten rules → fix", "standard", 2, 2),
-    Hero("dry-diamond", "design", "Diamond Dryad", "Double Diamond", "discover → define → develop → deliver", "full", 1, 2, layout="lanes",
-         places=_p("Discover", "What did we learn about the people and their problem?",
-                   "Define", "Which one problem do we solve?",
-                   "Develop", "Which ways could solve it, and which did we try?",
-                   "Deliver", "Which solution is built and checked?"),
-         framework="The Double Diamond: open wide and then narrow twice, first to the right problem (discover, define), then to the right solution (develop, deliver)",
-         short="Double Diamond",
-         aspects=(_a("discover", "Discover", "Did we look at the people before we picked a problem?"),
-                  _a("define", "Define", "Is the problem said in one sentence everyone agrees on?"),
-                  _a("develop", "Develop", "Did we draw more than one way before choosing?"),
-                  _a("deliver", "Deliver", "Was the chosen way tested with people before it shipped?"))),
-    Hero("dry-atom", "design", "Atom Dryad", "Atomic design", "tokens → parts → screen", "lean", 3, 3, layout="rows",
-         places=_p("Tokens", "Which colours, sizes and type does everything draw from?",
-                   "Atoms", "Which smallest parts (a button, a field) are there?",
-                   "Molecules", "Which atoms make one small working group?",
-                   "Organisms", "Which groups make one section of a screen?",
-                   "Screens", "Which screens are made only of these parts?"),
-         framework="Atomic design: tokens, then atoms, molecules, organisms and screens, each made only of the level below it",
-         short="Atomic design",
-         aspects=(_a("tokens", "Tokens", "Does every colour, size and font come from a token?"),
-                  _a("atoms", "Atoms", "Is each smallest part made once and reused?"),
-                  _a("molecules", "Molecules", "Does each group do one job?"),
-                  _a("organisms", "Organisms", "Is each section built from the groups, not from loose parts?"),
-                  _a("screens", "Screens", "Does a screen use only parts the system has?"))),
+    Hero("uni-pillar", "product", "Pillar Knight", "Design pillars", "pillars → the goal against them → keep or cut", "lean", 3, 2, layout="lanes",
+         also=("game-design",),
+         places=_p("Pillars", "What must it always be? (the brief's pillars)",
+                   "Leaves out", "What does it leave out on purpose? (the brief's leaves out)",
+                   "Against them", "Which goal goes against a pillar?",
+                   "Keep or cut", "Is the goal kept or cut, and why?"),
+         framework="Design pillars: the few things the product must always be, what it leaves out on purpose, and each goal weighed against them to be kept or cut",
+         short="Design pillars",
+         aspects=(_a("pillars", "Pillars", "Are the pillars few and said in the brief, so a goal can be weighed against them?"),
+                  _a("leaves_out", "Leaves out", "Is what the product leaves out on purpose said in the brief?"),
+                  _a("against", "Against them", "Does any goal in line go against a pillar?"),
+                  _a("keep_cut", "Keep or cut", "Is each goal that goes against a pillar kept or cut, and the why written?"))),
+    _default("dry-heur", "design", "Pixel-Perfect Dryad", "Nielsen's heuristics", "walk → the ten rules → fix", "standard", 2, 2,
+         kinds=('empty', 'mobile', 'game', 'web', 'design'), not_here='Pixel-Perfect Dryad walks screens: this project has no screens to walk'),
     Hero("dry-sprint", "design", "Sprint Dryad", "Design sprint", "map → sketch → decide → test", "standard", 2, 1, layout="lanes",
          places=_p("Map", "What is the long-term goal, and where does the person's path start?",
                    "Sketch", "Which ideas did each of us sketch alone?",
                    "Decide", "Which sketch do we build, and who decided?",
-                   "Prototype", "What is the fake that looks real enough to test?",
-                   "Test", "What did five people say and do?"),
-         framework="The design sprint: in a week, map the problem, sketch alone, decide, build a prototype and test it with five people",
+                   "Test", "What did Play show of the sketch picked on the phone?"),
+         framework="The design sprint: map the problem, sketch alone, decide on the phone, then try the sketch picked in Play",
          short="Design sprint",
          aspects=(_a("map", "Map", "Is the path from a person's start to the goal drawn?"),
                   _a("sketch", "Sketches", "Did each of us sketch alone before we talked?"),
                   _a("decision", "Decision", "Is the chosen sketch the one a clear vote picked?"),
-                  _a("prototype", "Prototype", "Is the prototype real enough to test and no more?"),
-                  _a("test", "Test", "Did we watch five people use it and write down what they did?"))),
+                  _a("test", "Test", "Did Play show how the sketch picked works, and was it written down?")),
+         kinds=('empty', 'mobile', 'game', 'web', 'design'), not_here='Sprint Dryad sketches and tries screens in Play: this project has no screens'),
+    Hero("dry-a11y", "design", "Inclusive Dryad", "WCAG 2.2", "barriers → contrast and keys → fix", "standard", 2, 2, layout="lanes",
+         places=_p("Barriers", "Who is stopped, and on which screen?",
+                   "Contrast and keys", "Which text or control fails contrast, a key or a label?",
+                   "Fixed", "Which barrier is gone, seen again?"),
+         framework="WCAG 2.2: the barriers that stop a person on a screen, contrast, keys and labels, fixed and looked at again",
+         short="WCAG 2.2",
+         aspects=(_a("barriers", "Barriers", "Is each screen a person can be stopped on named, with who is stopped?"),
+                  _a("contrast", "Contrast and keys", "Do text and controls pass contrast, and have a key and a label?"),
+                  _a("fixed", "Fixed", "Is each fixed barrier looked at again on its screen?"),
+                  _a("labels", "Labels", "Does each control have a label a screen reader can say?")),
+         kinds=('empty', 'mobile', 'game', 'web', 'design'), not_here='Inclusive Dryad reads screens for barriers: this project has no screens'),
     _default("sh-c4", "tech", "Sh.man", "C4 and hotspots", "containers → parts → hotspots", "standard", 2, 2),
-    Hero("sh-ddd", "tech", "Domain Shaman", "Domain-driven design", "words → borders → code", "full", 1, 3, layout="lanes",
-         places=_p("Contexts", "Which parts of the product have their own words and rules?",
-                   "Links", "How does one context talk to another?",
-                   "The words", "Which words mean one thing here, and what is it?"),
-         framework="Domain-driven design: one shared language, bounded contexts with clear borders, and code that uses the language's words",
-         short="Domain-driven design",
-         aspects=(_a("language", "Shared language", "Do the code and the people use the same word for the same thing?"),
-                  _a("contexts", "Contexts", "Does each context have its own borders and its own meaning for a word?"),
-                  _a("links", "Links", "Is each link between contexts one-way and said how it translates?"),
-                  _a("core", "Core", "Is the part that makes the product special kept apart and given the best care?"))),
     Hero("sh-xp", "tech", "Spike Shaman", "Extreme programming", "test → code → refactor", "standard", 3, 2, layout="lanes",
          places=_p("Red", "Which test fails, written before its code?",
                    "Green", "What is the least code that makes it pass?",
@@ -141,29 +121,29 @@ HEROES: dict[str, Hero] = {h.id: h for h in (
                   _a("refactor", "Refactoring", "Is the code cleaned each time the tests go green?"),
                   _a("small_releases", "Small releases", "Does each step reach main small and often?"),
                   _a("integration", "Integration", "Does the whole build and test run after every change?"))),
-    Hero("sh-fit", "tech", "Fitness Shaman", "Evolutionary architecture", "fitness → change → check", "full", 2, 3, layout="lanes",
-         places=_p("The fitness functions", "Which automatic check says the design is still healthy?",
-                   "Breaking", "Which check fails now, and why?",
-                   "Checked changes", "Which change was made and then passed every check?"),
-         framework="Evolutionary architecture: fitness functions that check the design automatically, so each change is guided and checked as it is made",
-         short="Evolutionary architecture",
-         aspects=(_a("fitness", "Fitness functions", "Is each quality we care about measured by an automatic check?"),
-                  _a("guided", "Guided change", "Does each change say which check it must keep green?"),
-                  _a("incremental", "Small steps", "Is each change small enough to check on its own?"),
-                  _a("coupling", "Coupling", "Can a part change without the checks of others failing?"))),
-    _default("imp-slo", "run", "Uptime Imp", "SLOs and error budgets", "objective → budget → alert", "lean", 2, 3),
-    Hero("imp-obs", "run", "Lantern Imp", "Observability first", "trace → read → fix", "standard", 2, 2, layout="lanes",
-         places=_p("Slow traces", "Which request takes longer than it should?",
-                   "Errors", "Which error happens most, and for whom?",
-                   "Read", "What do the traces and logs say is the cause?",
-                   "Fixed", "Which fix is out, and did the trace get better?"),
-         framework="Observability first: read what the running product tells you (traces, logs, metrics) before you guess, then fix and look again",
-         short="Observability",
-         aspects=(_a("traces", "Traces", "Can one request be followed from the person's press to the answer?"),
-                  _a("logs", "Logs", "Do the logs say what happened, with enough to find it again?"),
-                  _a("metrics", "Metrics", "Are the numbers that show health watched where people can see them?"),
-                  _a("questions", "Questions", "Can we ask a new question of the running product without a new release?"))),
+    Hero("sh-scene", "tech", "Scene Shaman", "An engine's scenes", "scene → autoloads → coupling", "standard", 2, 2, layout="lanes",
+         places=_p("Scenes", "Which scenes does the game hold, and what is in each?",
+                   "Autoloads", "Which autoloads or singletons does every scene reach?",
+                   "Coupling", "Which scene needs another's insides to work?"),
+         framework="An engine's scenes: the scenes a game is built of, the autoloads they all reach, and how tightly one scene is tied to another",
+         short="Scenes",
+         aspects=(_a("scenes", "Scenes", "Is each scene one thing, small enough to open and understand?"),
+                  _a("autoloads", "Autoloads", "Is each autoload needed by many scenes, and does it hold no more than it must?"),
+                  _a("coupling", "Coupling", "Can a scene run alone, or does it reach into another's nodes?"),
+                  _a("shared", "Shared state", "Is state that many scenes share kept in one place, and said?")),
+         kinds=('game',), not_here="Scene Shaman reads an engine's scenes: this project is not a game"),
+    _default("imp-obs", "run", "Lantern Imp", "Observability first", "trace → read → fix", "standard", 2, 2),
     _default("fairy-aarrr", "marketing", "Growth Hack Gnome", "AARRR", "acquire → activate → retain", "standard", 2, 2),
+    Hero("fairy-pos", "marketing", "Position Gnome", "Positioning", "the alternatives → what only it does → who cares", "lean", 3, 1, layout="lanes",
+         places=_p("The alternatives", "What do people use now instead? (the brief's why this, not what they use now)",
+                   "What only it does", "What does it do that the alternatives do not?",
+                   "Who cares", "Who cares most about that, and how do we know?"),
+         framework="Positioning: the alternatives people use now, what only this product does, and who cares most about that",
+         short="Positioning",
+         aspects=(_a("alternatives", "The alternatives", "Is what people use instead said in the brief?"),
+                  _a("unique", "What only it does", "Is what only this product does said plainly, apart from the alternatives?"),
+                  _a("who", "Who cares", "Is the person who cares most about that named?"),
+                  _a("said", "Said", "Does the store page or the brief say the position in a line?"))),
     Hero("fairy-aso", "marketing", "Store Gnome", "The store page first", "title → shots → test", "lean", 3, 1, layout="lanes",
          places=_p("The title", "Does the title say what it is and who it is for?",
                    "The shots", "Does each screenshot show a reason to install?",
@@ -174,14 +154,50 @@ HEROES: dict[str, Hero] = {h.id: h for h in (
          aspects=(_a("title", "Title", "Does the title say what it is, within the store's limits?"),
                   _a("shots", "Screenshots", "Do the first screenshots show the best reason to install?"),
                   _a("words", "Description", "Do the first lines say what the person gets?"),
-                  _a("tests", "Tests", "Is a change to the page tried against the old one before it stays?"))),
+                  _a("tests", "Tests", "Is a change to the page tried against the old one before it stays?")),
+         kinds=('mobile', 'web', 'game'), not_here='Store Gnome works on a store page: this project has none'),
+    _default("uni-mda", "game-design", "Dungeon Master Knight", "MDA and the loops", "loop → reward → hook", "standard", 2, 2),
+    Hero("uni-econ", "game-design", "Economy Knight", "Sources and sinks", "currency → source → sink", "lean", 2, 2, layout="lanes",
+         places=_p("Currencies", "Which currencies does the game have?",
+                   "Sources", "Where does each currency come from?",
+                   "Sinks", "Where does each currency go, so it does not pile up?"),
+         framework="Sources and sinks: every currency of the game, where it comes from and where it goes",
+         short="Sources and sinks",
+         aspects=(_a("currencies", "Currencies", "Is every currency of the game named?"),
+                  _a("sources", "Sources", "Does every currency have a source?"),
+                  _a("sinks", "Sinks", "Does every currency have a sink, so none piles up?"),
+                  _a("balance", "Balance", "Does what comes in roughly match what goes out over a session?"))),
+    _default("dry-sprite", "art", "Sprite Dryad", "An art bible, its pipeline and a budget", "style → pipeline → budget", "standard", 2, 2),
     _default("release", "release", "Release Night King", "DORA's keys, readiness and semver", "dev → the gate → main", "standard", 1, 3),
 )}
 
 
+CUT: dict[str, tuple[str, str]] = {                  # decisions §278.3: the heroes not taken, {id: (name, why)}
+    "uni-lean": ("Pivot Knight", "no measure to pivot by: the project's analytics are not read"),
+    "dry-diamond": ("Diamond Dryad", "full and dear, research there is none of, and its four steps are a goal's phases again"),
+    "dry-atom": ("Atom Dryad", "only for a project with a component library of its own, and Consistency has no hint"),
+    "sh-ddd": ("Domain Shaman", "an indie game's architecture is rewritten in an evening"),
+    "sh-fit": ("Fitness Shaman", "fitness functions as records are later"),
+    "imp-slo": ("Uptime Imp", "no server and no SLO: nothing gathered"),
+}
+
+STARS: dict[str, tuple[str, ...]] = {                # decisions §278.5, §279.4: the Orkmaster's star by the project's kind (marks a ware on the shelf, seats nothing: §281.1)
+    "game": ("uni-mda", "dry-sprite", "sh-scene", "fairy-pos"),
+    "web": ("uni-ost", "dry-heur", "sh-xp", "fairy-aso"),
+    "mobile": ("uni-ost", "dry-heur", "sh-xp", "fairy-aso"),
+}
+
+
+def sits_at(hero: Hero, craft: str) -> bool:
+    """Whether a hero sits at a craft: its own, or one of its `also`."""
+    return hero.craft == craft or craft in hero.also
+
+
 def of(craft: str) -> list[Hero]:
-    """The heroes of a craft, in the catalog's order; [] for a craft with none."""
-    return [h for h in HEROES.values() if h.craft == craft]
+    """The heroes of a craft: its default first, then its own in the catalog's order, then those that sit there by `also`; [] for a craft with none."""
+    own = [h for h in HEROES.values() if h.craft == craft]
+    own.sort(key=lambda h: not h.default)
+    return own + [h for h in HEROES.values() if h.craft != craft and craft in h.also]
 
 
 def get(hero_id: str) -> Hero | None:

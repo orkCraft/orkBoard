@@ -9,7 +9,7 @@ journal is `core/idea_journal.py`'s; the host's commands `gui/ideas_journal.py`'
     journals.of_goal(state_dir, "tech", "add-lobby")  # one goal's entries
     journals.refs(state_dir, journals.PROJECT)        # the refs kept (what was read in from the project's documents is never read in twice)
     journals.strike(state_dir, "tech", entry_id, why) # the person's *Not so*: the entry is never read into a call again (kept, marked)
-    journals.digest(state_dir, "tech") / save_digest(state_dir, "tech", text, upto)   # the leader's own summary of its journal up to an entry
+    journals.digest(state_dir, "tech") / save_digest(state_dir, "tech", text, upto, read=, at=)   # the leader's own summary of its journal up to an entry
     journals.since_digest(state_dir, "tech")          # the entries after the digest's last one
     journals.text(state_dir, "tech", idea=, on=, chars=)  # what a call is given: the digest, then this goal's and these parts' entries, then the latest
     journals.mirror(state_dir, "tech")                # the Markdown mirror beside it, written again after each change (spec 127 D)
@@ -19,7 +19,7 @@ journal is `core/idea_journal.py`'s; the host's commands `gui/ideas_journal.py`'
 `KINDS[scope]` (a project's or a leader's), `text` one line in the product's words (at most `TEXT_CHARS`), `idea` the goal's slug or "", `on` the parts
 of the party's map it is about (ids, at most 8), `ref` a decision's number, a commit or "". Kept append only in `<state_dir>/journals/<scope>.jsonl`;
 a strike is a line of its own (`{strike: id, at, why}`), so nothing is ever rewritten. A journal read keeps its last `KEEP` entries; the digest is
-`<scope>.digest.json` (`{text, upto, at}`).
+`<scope>.digest.json` (`{text, upto, at, read}`; `read`: the sources the view read, spec 167 D).
 """
 from __future__ import annotations
 
@@ -34,6 +34,8 @@ PROJECT = "_project"                      # the project's own journal (no party'
 DIR = "journals"
 TEXT_CHARS = 300                          # an entry's line, at most
 DIGEST_CHARS = 900                        # a digest, at most
+READ_MAX = 20                             # the sources a view names it read (goal slugs, §N, map part ids), at most
+READ_CHARS = 80                           # one source, at most
 KEEP = 5000                               # the entries a read keeps, the newest
 CALL_CHARS = 1500                         # what a call is given of one journal, at most
 ON_MAX = 8
@@ -214,20 +216,32 @@ def strike(state_dir: Path, scope: str, entry_id: str, why: str = "") -> dict | 
     return {**mine, "struck": {"at": line["at"], "why": line["why"]}}
 
 
+def _sources(read: object) -> list[str]:
+    """The sources a view read: words only, none twice, at most `READ_MAX` of `READ_CHARS` (no comma stays in one: the tree's file separates by it)."""
+    out: list[str] = []
+    for r in read if isinstance(read, (list, tuple)) else ():
+        w = _words(str(r).replace(",", " "), READ_CHARS)
+        if w and w not in out:
+            out.append(w)
+    return out[:READ_MAX]
+
+
 def digest(state_dir: Path, scope: str) -> dict:
-    """The leader's (or the project's) digest of its journal: `{text, upto, at}`, {} when there is none."""
+    """The leader's (or the project's) digest of its journal: `{text, upto, at, read}`, {} when there is none."""
     try:
         got = json.loads(_file(state_dir, scope, ".digest.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
     if not isinstance(got, dict) or not _words(got.get("text"), 1):
         return {}
-    return {"text": _words(got["text"], DIGEST_CHARS), "upto": str(got.get("upto") or ""), "at": str(got.get("at") or "")}
+    return {"text": _words(got["text"], DIGEST_CHARS), "upto": str(got.get("upto") or ""), "at": str(got.get("at") or ""),
+            "read": _sources(got.get("read"))}
 
 
-def save_digest(state_dir: Path, scope: str, text: str, upto: str) -> dict:
-    """The digest kept (`upto`: the id of the last entry it read). ValueError for no words."""
-    got = {"text": _words(text, DIGEST_CHARS), "upto": _words(upto, 80), "at": _now()}
+def save_digest(state_dir: Path, scope: str, text: str, upto: str, read: object = (), at: str = "") -> dict:
+    """The digest kept (`upto`: the id of the last entry it read; `read`: the sources it read; `at`: given only by a view read back from the tree, else now).
+    ValueError for no words."""
+    got = {"text": _words(text, DIGEST_CHARS), "upto": _words(upto, 80), "at": _words(at, 25) or _now(), "read": _sources(read)}
     if not got["text"]:
         raise ValueError("A digest has words")
     f = _file(state_dir, scope, ".digest.json")
@@ -238,6 +252,31 @@ def save_digest(state_dir: Path, scope: str, text: str, upto: str) -> dict:
         tmp.replace(f)
     mirror(state_dir, scope)
     return got
+
+
+def _when(at: str) -> dt.datetime | None:
+    try:
+        d = dt.datetime.fromisoformat(_words(at, 25))
+    except ValueError:
+        return None
+    return d.replace(tzinfo=None) if d.tzinfo else d
+
+
+def take_view(state_dir: Path, scope: str, text: str, at: str, read: object = ()) -> bool:
+    """A view read back from the Board's tree (spec 167 E): kept as the scope's digest only when its `at` is newer than the machine's (the machine's `upto` stays);
+    one with no `at` is kept only where the machine has no view. Whether it was kept; an older or equal one, or one with no words, is left (the next write-out
+    writes the machine's over it)."""
+    if not _words(text, 1):
+        return False
+    mine = digest(state_dir, scope)
+    new, old = _when(at), _when(mine.get("at", "")) if mine else None
+    if mine and (new is None or (old is not None and new <= old)):
+        return False
+    try:
+        save_digest(state_dir, scope, text, mine.get("upto", "") if mine else "", read, at if new else "")
+    except (ValueError, OSError):
+        return False
+    return True
 
 
 def since_digest(state_dir: Path, scope: str) -> list[dict]:

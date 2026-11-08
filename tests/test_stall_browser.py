@@ -46,9 +46,7 @@ KEEPER = [("target", "How deep", "How much the orks spend on a goal", [("thrift"
           ("push", "Push after merging", "Whether a merge into the work branch is pushed", [("on", "On", "Results are pushed after they merge"), ("off", "Off", "Results stay on this computer")])]
 PRICE = {("target", "thrift"): {"word": "lighter"}, ("target", "quality"): {"word": "heavier"}}
 HEROES = [("sh-c4", "Sh.man", "C4 and hotspots", stats("C4 and hotspots", "containers → parts → hotspots", "standard", 2, 2)),
-          ("sh-ddd", "Domain Shaman", "Domain-driven design", stats("Domain-driven design", "words → borders → code", "full", 1, 3)),
-          ("sh-xp", "Spike Shaman", "Extreme programming", stats("Extreme programming", "test → code → refactor", "standard", 3, 2)),
-          ("sh-fit", "Fitness Shaman", "Evolutionary architecture", stats("Evolutionary architecture", "fitness → change → check", "full", 2, 3))]
+          ("sh-xp", "Spike Shaman", "Extreme programming", stats("Extreme programming", "test → code → refactor", "standard", 3, 2))]
 TIERS = [("laborer", "Laborer", "The lightest model of its tool", {"share": -2}), ("warrior", "Warrior", "The middle model", None), ("elder", "Elder", "The strongest model", {"share": 3})]
 TOOLS = [("", "Main tool", "The potions' order: the first AI tool in your hand that has mana", None), ("claude", "Claude", "Every seat works on Claude", {"money": "up to $2 a night"}), ("codex", "Codex", "Signed out", {"locked": "Codex is signed out"})]
 
@@ -187,14 +185,14 @@ def test_a_leaders_rug_has_its_heroes_on_top_its_small_things_below_and_every_fo
     try:
         assert ("ideas.stall", {"chair": "tech"}) in host.log
         assert pg.locator(".stall-title").inner_text() == "Inventory"
-        assert pg.locator(".stall-shelf.is-heroes .stall-hero").count() == 4
+        assert pg.locator(".stall-shelf.is-heroes .stall-hero").count() == 2
         sh = pg.locator('.stall-ware[data-ware="sh-xp"]')
         assert "Spike Shaman" in sh.inner_text() and "Extreme programming" in sh.inner_text() and "test → code → refactor" in sh.inner_text()
         assert sh.locator(".stall-pips").count() == 2 and sh.locator(".stall-pips i.on").count() == 3 + 2       # the stats' bars: decides 3, says no 2
         assert sh.locator(".ork-race__head").count() == 1
         top, low = pg.locator(".stall-shelf.is-heroes").bounding_box(), pg.locator(".stall-low").bounding_box()
         assert top["y"] + top["height"] <= low["y"] + 1                                           # the heroes on the top shelf, the small things below
-        assert plate(pg, "hero", "sh-c4").inner_text() == "in your hand" and plate(pg, "hero", "sh-ddd").inner_text() == "one pass"
+        assert plate(pg, "hero", "sh-c4").inner_text() == "in your hand" and plate(pg, "hero", "sh-xp").inner_text() == "one pass"
         share = plate(pg, "tier", "elder")
         assert share.inner_text().strip() == "+3%" and share.locator(".ork-potion.size-vial").count() == 1
         less = plate(pg, "tier", "laborer")
@@ -592,6 +590,88 @@ def test_arts_cap_plate_fits_at_1280_by_800_and_has_a_picture(gui, cap_open):
           }) && document.documentElement.scrollWidth <= document.documentElement.clientWidth;
         }""")
         shot(pg, f"art-makers-cap-{'open' if cap_open else 'closed'}-1280x800")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+WHY_SCENE = "a web app has no scene to shape"
+
+
+class LockedHeroHost(StallHost):
+    def shelves(self, chair):
+        shelves = super().shelves(chair)
+        if chair == "tech":
+            shelves[0]["wares"].append(ware("sh-scene", "Scene Shaman", "Scenes and their beats", {"locked": WHY_SCENE}, head=SH, stats=stats("Scenes", "scene → beat → cut", "standard", 2, 2)))
+        return shelves
+
+
+def test_a_locked_hero_says_its_why_in_words_tied_to_its_button_and_takes_nothing(gui):
+    pg, host, log = opened(gui, "tech", host=LockedHeroHost())
+    try:
+        w = pg.locator('.stall-ware[data-ware="sh-scene"]')
+        why = w.locator("#hero-why-sh-scene")
+        press = w.locator(".stall-ware__press")
+        assert why.is_visible() and WHY_SCENE in why.inner_text()
+        assert press.get_attribute("aria-describedby") == "hero-why-sh-scene" and press.get_attribute("aria-disabled") == "true"
+        assert why.evaluate("e => !e.closest('.stall-face')")                                   # the why lies outside the dimmed face
+        before = [e for e in host.log if e[0] == "ideas.stall_take"]
+        press.click(force=True)
+        press.focus()
+        pg.keyboard.press("Enter")
+        pg.wait_for_timeout(300)
+        assert [e for e in host.log if e[0] == "ideas.stall_take"] == before
+        assert pg.locator('.stall-ware[data-ware="sh-xp"] #hero-why-sh-xp').count() == 0         # an offered hero has no why
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class PickHost(StallHost):
+    """A web app's Design shelf (Pixel-Perfect starred), or a game's Art: its one hero in the hand and no shelf (spec 164 I)."""
+    art = False
+
+    def shelves(self, chair):
+        shelves = super().shelves(chair)
+        if chair != "tech":
+            return shelves
+        from orkboard.realm import heroes as cat
+        if self.art:
+            return [s for s in shelves if s["slot"] != "hero"]
+        wares = [ware(h.id, h.name, h.school, {"word": "one pass"}, head=cat.head(h), stats=stats(h.school, h.flow, h.size, h.decides, h.says_no), **({"star": True} if h.id == "dry-heur" else {}))
+                 for h in (cat.get(i) for i in ("dry-heur", "dry-sprint", "dry-a11y"))]
+        shelves[0]["wares"] = wares
+        return shelves
+
+    def stall(self, chair):
+        got = super().stall(chair)
+        if self.art and chair == "tech":
+            from orkboard.realm import heroes as cat
+            got["hand"].insert(0, {"slot": "hero", "label": "Its hero", "word": "Sprite Dryad", "yours": "dry-sprite", "line": "", "fixed": False, "head": cat.head(cat.get("dry-sprite"))})
+        return got
+
+
+def test_a_design_shelf_stars_one_ware_by_a_sign_named_for_the_pick_and_the_hand_never_does_spec_164_i(gui):
+    pg, host, log = opened(gui, "tech", host=PickHost())
+    try:
+        assert pg.locator('.stall-ware[data-slot="hero"]').evaluate_all("els => els.map((e) => e.dataset.ware)") == ["dry-heur", "dry-sprint", "dry-a11y"]
+        star = pg.locator(".stall-hero__star")
+        assert star.count() == 1 and star.get_attribute("aria-label") == "The Orkmaster's pick" and star.get_attribute("role") == "img"
+        assert pg.locator('.stall-ware[data-ware="dry-heur"] .stall-hero__star').count() == 1
+        assert pg.locator(".carry-card .stall-hero__star, .carry-card .ork-sign.pick").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_games_art_has_sprite_dryad_in_the_hand_drawn_by_its_own_head_and_no_shelf_spec_164_i(gui):
+    host = PickHost()
+    host.art = True
+    pg, host, log = opened(gui, "tech", host=host)
+    try:
+        assert pg.locator('.stall-ware[data-slot="hero"]').count() == 0
+        card = pg.locator('.carry-card[data-slot="hero"]')
+        assert card.count() == 1 and "hero-dry-sprite" in (card.inner_html() or "")
     finally:
         pg.close()
     assert not log, "\n".join(log)

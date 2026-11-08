@@ -62,6 +62,7 @@
 .stall-face { position: relative; box-sizing: border-box; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch);
   transition: transform var(--ork-motion-base) var(--ork-motion-ease), border-color var(--ork-motion-quick); }
 .stall-hero { width: 148px; height: 212px; padding: var(--ork-3); display: flex; flex-direction: column; gap: 3px; }
+.stall-hero__star { position: absolute; top: var(--ork-2); right: var(--ork-2); color: var(--ork-ink); }
 .stall-hero__head { align-self: center; margin-top: 2px; display: flex; }
 .stall-hero__name { display: block; font: 600 12px/15px var(--ork-font-read); color: var(--ork-ink); text-align: center; }
 .stall-hero__school { display: block; font: var(--ork-type-caption); font-size: 11px; line-height: 13px; color: var(--ork-ink-muted); text-align: center; min-height: 26px; }
@@ -114,6 +115,7 @@
 /* Keep the reason on the rug, including while its Settings link has focus. */
 .stall-maker__why { visibility: hidden; color: var(--ork-ink-read); font: var(--ork-type-caption); text-align: center; overflow-wrap: anywhere; }
 .is-makers .stall-ware:hover .stall-maker__why, .is-makers .stall-ware:focus-within .stall-maker__why { visibility: visible; }
+.stall-hero__why { margin: 0; color: var(--ork-ink-read); font: var(--ork-type-caption); text-align: center; overflow-wrap: anywhere; }
 .is-makers .stall-price.is-same { color: var(--ork-ink-read); }
 
 /* A cap is agreed on the plate, without an initial amount. */

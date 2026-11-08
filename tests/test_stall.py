@@ -10,7 +10,7 @@ import pytest
 
 from orkboard import settings
 from orkboard.gui.board_host import CommandError
-from orkboard.realm import goal_team, hero_table, ideas, party_recipes
+from orkboard.realm import goal_team, hero_table, heroes, ideas, party_recipes
 from tests.test_board_35 import host, model, runner  # noqa: F401  (fixtures)
 
 
@@ -109,7 +109,7 @@ def test_a_tech_partys_chair_has_its_heroes_its_tool_and_its_tiers(host):
     got = stall(host, party)
     assert got["chair"] == party and [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier"]
     assert shelf(got, "hero")["kind"] == "heroes" and shelf(got, "tool")["kind"] == "small"
-    assert [w["id"] for w in shelf(got, "hero")["wares"]] == ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"]
+    assert [w["id"] for w in shelf(got, "hero")["wares"]] == ["sh-c4", "sh-xp", "sh-scene"]
     xp = ware(got, "hero", "sh-xp")
     assert xp["word"] == "Spike Shaman" and xp["stats"] == {"school": "Extreme programming", "flow": "test → code → refactor", "size": "standard", "decides": 3, "says_no": 2}
     assert xp["head"]["tier"] == "elder" and xp["head"]["race"] and xp["price"] == {"word": "one pass"}
@@ -140,7 +140,7 @@ def test_a_hero_is_taken_undone_and_put_back(host):
     assert "Red" in got["stall"]["say"]
     host.command("ideas.stall_take", {"chair": party, **got["undo"]})
     assert goal_team.hero_of(root, party).id == "sh-c4"
-    host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "sh-fit"})
+    host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "sh-xp"})
     host.command("ideas.stall_back", {"chair": party, "slot": "hero"})
     assert goal_team.hero_of(root, party).id == "sh-c4" and "hero" not in dict(ideas.track_page(root, party).meta)
 
@@ -176,9 +176,8 @@ def test_release_has_its_chair_locked(host):
     (host.repo_root / "orkcraft.toml").write_text("[gate]\nalways = [\"tests/test_architecture.py\", \"tests/test_updates.py\"]\n")
     party = _party(host, "release")
     got = stall(host, party)
-    assert [s["slot"] for s in got["shelves"]] == ["hero", "gate"]
-    (only,) = shelf(got, "hero")["wares"]
-    assert only["id"] == "release" and only["price"] == {"mine": True}
+    assert [s["slot"] for s in got["shelves"]] == ["gate"]          # one hero offered: its hand card alone, no shelf
+    assert card(got, "hero")["yours"] == "release" and card(got, "hero")["fixed"]
     gate = shelf(got, "gate")["wares"][0]
     assert gate["price"]["locked"] and "tests/test_architecture.py" in gate["line"]
     assert all(c["fixed"] for c in got["hand"])
@@ -195,7 +194,7 @@ def test_what_cannot_be_taken_is_refused_in_plain_words(host):
                         ({"chair": "", "slot": "hero", "value": "sh-xp"}, "no hero to take"),
                         ({"chair": "", "slot": "target"}, "value is missing"),
                         ({"chair": "nowhere", "slot": "target", "value": "thrift"}, "That party is gone"),
-                        ({"chair": party, "slot": "hero", "value": "dry-atom"}, "not a ware"),
+                        ({"chair": party, "slot": "hero", "value": "dry-sprint"}, "not a ware"),
                         ({"chair": party, "slot": "hero", "value": "release"}, "not a ware"),
                         ({"chair": party, "slot": "tier", "value": "king"}, "not a ware"),
                         ({"chair": party, "slot": "target", "value": "thrift"}, "no target to take")):
@@ -248,7 +247,7 @@ def test_only_arts_chair_lays_its_makers_after_the_ai_tool_and_tier(host, monkey
     monkeypatch.setattr(craft_tools, "key", lambda _: None)
     art = _party(host, "art")
     got = stall(host, art)
-    assert [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier", "craft_tools"]
+    assert [s["slot"] for s in got["shelves"]] == ["tool", "tier", "craft_tools"]
     makers = shelf(got, "craft_tools")
     assert makers["label"] == "Its makers"
     assert makers["sub"] == "Run in Orkboard on your key"
@@ -325,3 +324,94 @@ def test_a_maker_take_refuses_the_wrong_chair_and_a_missing_key(host, monkeypatc
     with pytest.raises(CommandError, match="not here: no key"):
         host.command("ideas.stall_take", {**args, "chair": art})
     assert craft_tools.taken(host.ideas.root(), art) == {}
+
+
+# -- spec 164 E and F: offered, locked or starred by the project's kind; a cut hero said once --------------------------------------------------
+
+
+def _kind(host, kind):
+    from orkboard.realm import project_kind
+    project_kind.keep(host.ideas.state_dir, kind)
+
+
+def test_products_shelf_is_in_order_with_no_pivot_knight_and_pillar_knight_lays_four_places(host):
+    _kind(host, "web")
+    party = _party(host, "product")
+    got = stall(host, party)
+    ids = [w["id"] for w in shelf(got, "hero")["wares"]]
+    assert "uni-lean" not in ids and "uni-pillar" in ids
+    assert ids == [h.id for h in heroes.of("product")]
+    assert ware(got, "hero", "uni-pillar")["price"] == {"word": "one pass"}
+    taken = host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "uni-pillar"})
+    assert "4 places" in taken["stall"]["say"] and goal_team.hero_of(host.ideas.root(), party).id == "uni-pillar"
+
+
+def test_a_web_apps_design_shelf_stars_the_orkmasters_pick_and_the_hand_never(host):
+    _kind(host, "web")
+    got = stall(host, _party(host, "design"))
+    wares = shelf(got, "hero")["wares"]
+    assert [w["id"] for w in wares] == [h.id for h in heroes.of("design")]
+    assert [w["id"] for w in wares if w.get("star")] == ["dry-heur"]
+    assert "star" not in card(got, "hero")
+
+
+def test_scene_shaman_is_locked_and_refused_in_a_web_app_and_starred_in_a_game(host):
+    _kind(host, "web")
+    party = _party(host)
+    got = stall(host, party)
+    assert ware(got, "hero", "sh-scene")["price"] == {"locked": "Scene Shaman reads an engine's scenes: this project is not a game"}
+    with pytest.raises(CommandError, match="not a game"):
+        host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "sh-scene"})
+    assert "hero" not in dict(ideas.track_page(host.ideas.root(), party).meta)
+    _kind(host, "game")
+    got = stall(host, party)
+    assert ware(got, "hero", "sh-scene").get("star") is True and ware(got, "hero", "sh-scene")["price"] == {"word": "one pass"}
+    assert not any(w.get("star") for w in shelf(got, "hero")["wares"] if w["id"] != "sh-scene")
+
+
+def test_a_project_with_no_kind_offers_design_and_store_gnome_unlocked_and_shows_no_star(host, monkeypatch):
+    monkeypatch.setattr(heroes, "_kind", lambda root, state_dir: "")
+    got = stall(host, _party(host, "design"))
+    wares = shelf(got, "hero")["wares"]
+    assert [w["id"] for w in wares] == [h.id for h in heroes.of("design")] and len(wares) == 3
+    assert all("locked" not in w["price"] for w in wares) and not any(w.get("star") for w in wares)
+    assert "star" not in card(got, "hero")
+    market = heroes.offer(host.ideas.root(), host.ideas.state_dir, "marketing")
+    assert [h.id for h, why in market if why] == [] and "fairy-aso" in [h.id for h, _ in market]
+
+
+def test_a_games_art_has_no_shelf_and_liveops_has_no_card(host):
+    _kind(host, "game")
+    art = stall(host, _party(host, "art"))
+    assert not any(s["slot"] == "hero" for s in art["shelves"]) and card(art, "hero")["yours"] == "dry-sprite"
+    live = _party(host, "liveops")
+    got = stall(host, live)
+    assert not any(s["slot"] == "hero" for s in got["shelves"] + got["hand"])
+    with pytest.raises(CommandError, match="This party has no hero"):
+        host.command("ideas.stall_back", {"chair": live, "slot": "hero"})
+
+
+@pytest.mark.parametrize("cut", sorted(heroes.CUT))
+def test_a_cut_hero_is_said_once_and_the_page_and_table_stay(host, cut):
+    root = host.ideas.root()
+    craft = {"uni": "product", "dry": "design", "sh": "tech", "imp": "run"}[cut.split("-")[0]]
+    party = _party(host, craft)
+    page = root / ideas.TRACKS / f"{party}.md"
+    page.write_text(page.read_text().replace("\n---\n", f"\nhero: {cut}\n---\n", 1), encoding="utf-8")
+    table = root / "pages" / "tables" / f"{party}.md"
+    table.parent.mkdir(parents=True, exist_ok=True)
+    table.write_text(f"---\nowner: board\nkind: table\nparty: {party}\nhero: {cut}\nlaid: 2026-01-01\nschema: 1\n---\n\n## Anywhere\n- A card — kept as laid\n", encoding="utf-8")
+    before, table_before = page.read_bytes(), table.read_bytes()
+    name, why = heroes.CUT[cut]
+    first = stall(host, party)["say"]
+    assert first.startswith(f"{name} was cut: {why}.") and "its craft's default, leads now." in first
+    assert page.read_bytes() == before and table.read_bytes() == table_before
+    got = stall(host, party)
+    assert name not in got["say"] and table.read_bytes() == table_before
+    assert goal_team.hero_of(root, party).id == heroes.default(craft).id
+    assert [c["yours"] for c in got["hand"] if c["slot"] == "hero"] in ([heroes.default(craft).id], [] if craft != "product" else None)  # no hero card where no hero is offered
+    host.ideas.__dict__.pop("_stall_before", None)
+    got = stall(host, party)
+    assert name not in got["say"] and page.read_bytes() == before and table.read_bytes() == table_before
+    assert goal_team.hero_of(root, party).id == heroes.default(craft).id
+    assert [c["yours"] for c in got["hand"] if c["slot"] == "hero"] in ([heroes.default(craft).id], [] if craft != "product" else None)  # no hero card where no hero is offered

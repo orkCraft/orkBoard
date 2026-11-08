@@ -297,7 +297,8 @@ TERMS: tuple[Term, ...] = (
     _t("conflict_other", "Other…"),                                # … its third: the person's own words, the decision worded again with them
     _t("aspect", "aspect", "aspects"),                            # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
-    _t("play_mark", "mark", "marks"),                              # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)
+    _t("reach", "reach", "reaches"),                               # what a goal not yet started would change on a leader's map, one and two steps out (spec 165, decisions §280.1)
+    _t("play_mark", "mark", "marks"),                             # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)
     _t("hypothesis", "hypothesis", "hypotheses"),                  # what the project believes and has not shown, with the signal that would show it, on Product's tree; tested by goals, judged in the hand (spec 116)
     _t("refuted_way", "way it is refuted", "ways it is refuted"),  # one of the one to three conditions that would refute a hypothesis, named by what it would teach (the hook, the noise); the verdict picks the one that was met (decisions §235.1, spec 133 A)
     _t("test_measure", "measure", "measures"),                     # what a hypothesis is tested by besides a goal: a thing counted, where it is read from, its bar in each condition and the date it is read on (decisions §235.2, spec 133 B); `measure` is the table's own
@@ -517,6 +518,24 @@ TERMS: tuple[Term, ...] = (
     _t("hero.what_leaves", "What leaves this computer"),
     _t("hero.lay_tables", "Lay the tables"),
     _t("hero.frame", "frame", "frames"),
+    _t("hero.uni-ost", "Angel Invest Knight"),
+    _t("hero.uni-jtbd", "Jobwise Knight"),
+    _t("hero.uni-shape", "Appetite Knight"),
+    _t("hero.uni-pillar", "Pillar Knight"),
+    _t("hero.dry-heur", "Pixel-Perfect Dryad"),
+    _t("hero.dry-sprint", "Sprint Dryad"),
+    _t("hero.dry-a11y", "Inclusive Dryad"),
+    _t("hero.sh-c4", "Sh.man"),
+    _t("hero.sh-xp", "Spike Shaman"),
+    _t("hero.sh-scene", "Scene Shaman"),
+    _t("hero.imp-obs", "Lantern Imp"),
+    _t("hero.fairy-aarrr", "Growth Hack Gnome"),
+    _t("hero.fairy-pos", "Position Gnome"),
+    _t("hero.fairy-aso", "Store Gnome"),
+    _t("hero.uni-mda", "Dungeon Master Knight"),
+    _t("hero.uni-econ", "Economy Knight"),
+    _t("hero.dry-sprite", "Sprite Dryad"),
+    _t("hero.release", "Release Night King"),
 )
 
 # Short names the interface uses for a building as well as its full title.

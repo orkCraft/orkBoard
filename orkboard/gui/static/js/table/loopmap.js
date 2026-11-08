@@ -109,9 +109,11 @@ function CurrencyBack({ c, d, reload }) {
     <div class="mp-acts"><button type="button" class="ork-btn" onClick=${() => { setName(c.name); setEditing(true); }}>Edit</button></div>`;
 }
 
-/** The loops as rings one in another, the core inside; each ring's tag says its span and name; the pixel dot steps round the core ring while the party's ork is at work. */
+const currencies = (d) => new Map((d.currencies || []).map((c) => [c.id, c]));
+
+/** The loops as rings one in another, each closing on itself (the last step back to the first), the core inside; each ring's tag says its span and name; the pixel dot steps round the core ring while the party's ork is at work. */
 function Rings({ d, g, width, working }) {
-  const L = layout(d.loops, width), head = g.leader?.head, core = Math.max(0, d.loops.findIndex((lp) => lp.span === "core"));
+  const cur = currencies(d), L = layout(d.loops, width), head = g.leader?.head, core = Math.max(0, d.loops.findIndex((lp) => lp.span === "core"));
   return html`<div class="mp-rings" style=${`height:${L.h}px`} data-loops=${d.loops.length}>
     <svg class="mp-rings__line" width=${width} height=${L.h} aria-hidden="true">${L.rings.map((r, i) => html`<ellipse key=${i} cx=${L.cx} cy=${L.cy} rx=${r.rx} ry=${r.ry} />`)}</svg>
     ${d.loops.map((lp, i) => {
@@ -121,8 +123,8 @@ function Rings({ d, g, width, working }) {
           ${r.tag.mid && head && html`<${Head} race=${head.race} tier=${head.tier} />`}
           <span class="ork-label">${cap(lp.span)} · ${TIME[lp.span]}</span><span class="mp-ring__nm">${lp.name}</span>
         </div>
-        ${r.places.slice(0, -1).map((p, j) => html`<i key=${`c${j}`} class=${`ork-chev ${p.dir} mp-ring__chev`} style=${`left:${p.mx}px;top:${p.my}px`} aria-hidden="true"></i>`)}
-        ${lp.steps.map((s, j) => html`<div key=${s.id} class="mp-slot" style=${`left:${r.places[j].x}px;top:${r.places[j].y}px;width:${L.cw}px`}><${StepCard} s=${s} narrow=${false} /></div>`)}
+        ${[...r.places.slice(0, -1), r.close].map((p, j) => html`<i key=${`c${j}`} class=${cls(`ork-chev ${p.dir} mp-ring__chev`, { "is-close": p === r.close })} style=${`left:${p.mx}px;top:${p.my}px`} aria-hidden="true"></i>`)}
+        ${lp.steps.map((s, j) => html`<div key=${s.id} class="mp-slot" style=${`left:${r.places[j].x}px;top:${r.places[j].y}px;width:${L.cw}px`}><${StepCard} s=${s} narrow=${false} cur=${cur} /></div>`)}
       </div>`;
     })}
     ${working && html`<i class="mp-orbit" data-ring=${d.loops[core].span} style=${`offset-path:${orbitOf(L.cx, L.cy, L.rings[core].rx, L.rings[core].ry)}`} aria-hidden="true"></i>`}
@@ -133,7 +135,7 @@ function Rings({ d, g, width, working }) {
 const Lists = ({ d }) => html`<div class="mp-lists">${d.loops.map((lp) => html`<section key=${lp.span} class="mp-ll" data-span=${lp.span}>
   <span class="ork-label">${cap(lp.span)} · ${TIME[lp.span]}</span><h3 class="mp-ll__nm">${lp.name}</h3>
   <p class="mp-cap">${lp.line}${lp.feeds ? `${lp.line ? " · " : ""}feeds the ${lp.feeds} loop` : ""}</p>
-  <div class="mp-ll__steps">${lp.steps.map((s) => html`<${StepCard} key=${s.id} s=${s} narrow=${true} />`)}</div></section>`)}</div>`;
+  <div class="mp-ll__steps">${lp.steps.map((s) => html`<${StepCard} key=${s.id} s=${s} narrow=${true} cur=${currencies(d)} />`)}</div></section>`)}</div>`;
 
 /** Whether any task of the party is at work (the page's own store of tasks, as the table reads it). */
 const atWork = (g) => nodesFor(g).some((n) => (n.tasks || []).some((t) => RUN.includes(t.state)));

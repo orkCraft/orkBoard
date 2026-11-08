@@ -210,6 +210,10 @@ def journal_file(state_dir: Path, scope: str, title: str, leader: str, now: str)
     d = journals.digest(state_dir, scope)
     if d:
         head.append(f"digest: {_quoted(d['text'])}")
+        if d.get("at"):
+            head.append(f"digest_at: {d['at']}")
+        if d.get("read"):
+            head.append(f"digest_read: {', '.join(d['read'])}")
     head += [f"exported: {now}", "---", "", f"# {title}'s journal", ""]
     rows = [f"- {e['at'][:10]} · {e['kind']} · {e['text']} {_comment(e)}" for e in journals.read(state_dir, scope)]
     return "\n".join(head + rows) + "\n"

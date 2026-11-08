@@ -163,9 +163,9 @@ export function ScreensMap({ g, narrow }) {
       html`<${PainCard} key=${painKey(p)} p=${p} carried=${carried(p)} dragging=${drag?.p === p} onPress=${() => press(p)} onDown=${down(p)} />`)}</div>` : null;
   };
   const card = (sid, step) => {
-    const s = model.byId.get(sid);
+    const s = model.byId.get(sid), ins = (doc.links || []).filter((l) => l.to === sid && model.byId.has(l.from)).length, outs = (doc.links || []).filter((l) => l.from === sid && model.byId.has(l.to)).length;
     return html`<div class="scr-item" key=${sid}>
-      <${ScreenCard} s=${s} party=${g.slug} step=${step} on=${key === screenKey(g.slug, sid)} carry=${!!carry} over=${drag?.over === sid}
+      <${ScreenCard} s=${s} party=${g.slug} step=${step} ins=${ins} outs=${outs} on=${key === screenKey(g.slug, sid)} carry=${!!carry} over=${drag?.over === sid}
         onPress=${target(sid) || (() => lift(key === screenKey(g.slug, sid) ? "" : screenKey(g.slug, sid)))} />
       ${painsAt(sid)}
     </div>`;

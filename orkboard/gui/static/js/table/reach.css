@@ -1,0 +1,17 @@
+/* Reach on a party's map (docs/specs/165-each-leaders-map-a-board-games-shape.md J, decisions §280.1, §280.3): a goal's lit parts wear a solid edge in its element, one step out a dashed one, two a dotted one, the rest are dimmed.
+   orkUI's tokens only: the colour is the goal's element (set by reach.js), the line orkUI's. The card is the stamped element (a card of its own) or the first child of a `.pick` wrapper (display: contents). */
+.rc-line { flex: none; margin: 0; padding: var(--ork-1) var(--ork-6); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.rc-line[hidden] { display: none; }
+[data-reach="lit"]:not(.pick), .pick[data-reach="lit"] > :first-child { outline: var(--ork-line) solid currentcolor; outline-offset: calc(var(--ork-line) * -1); }
+[data-reach="one"]:not(.pick), .pick[data-reach="one"] > :first-child { outline: var(--ork-line) dashed currentcolor; outline-width: calc(var(--ork-line) * 2); outline-offset: calc(var(--ork-line) * -1); }
+[data-reach="two"]:not(.pick), .pick[data-reach="two"] > :first-child { outline: var(--ork-line) dotted currentcolor; outline-width: calc(var(--ork-line) * 2); outline-offset: calc(var(--ork-line) * -1); }
+/* dimmed: the frame and the window go down, the name's ink never (it keeps 4.5:1 over the card, lamp lit and out) */
+[data-reach="dim"]:not(.pick), .pick[data-reach="dim"] > :first-child { border-color: var(--ork-frame); background: transparent; box-shadow: none; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-reach]:not(.pick), .pick[data-reach] > :first-child { transition: border-color var(--ork-motion-quick) var(--ork-motion-ease), background-color var(--ork-motion-quick) var(--ork-motion-ease), outline-color var(--ork-motion-quick) var(--ork-motion-ease); }
+}
+.rc-host[data-hue="meadow"] :is([data-reach="lit"], [data-reach="one"], [data-reach="two"]):not(.pick), .rc-host[data-hue="meadow"] .pick:is([data-reach="lit"], [data-reach="one"], [data-reach="two"]) > :first-child { outline-color: var(--ork-elem-meadow); }
+.rc-host[data-hue="ice"] :is([data-reach="lit"], [data-reach="one"], [data-reach="two"]):not(.pick), .rc-host[data-hue="ice"] .pick:is([data-reach="lit"], [data-reach="one"], [data-reach="two"]) > :first-child { outline-color: var(--ork-elem-ice); }
+.rc-host[data-hue="dust"] :is([data-reach="lit"], [data-reach="one"], [data-reach="two"]):not(.pick), .rc-host[data-hue="dust"] .pick:is([data-reach="lit"], [data-reach="one"], [data-reach="two"]) > :first-child { outline-color: var(--ork-elem-dust); }
+.rc-host[data-hue="void"] :is([data-reach="lit"], [data-reach="one"], [data-reach="two"]):not(.pick), .rc-host[data-hue="void"] .pick:is([data-reach="lit"], [data-reach="one"], [data-reach="two"]) > :first-child { outline-color: var(--ork-elem-void); }
+.rc-host[data-hue="lava"] :is([data-reach="lit"], [data-reach="one"], [data-reach="two"]):not(.pick), .rc-host[data-hue="lava"] .pick:is([data-reach="lit"], [data-reach="one"], [data-reach="two"]) > :first-child { outline-color: var(--ork-elem-lava); }

@@ -19,7 +19,7 @@ from typing import Any
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import craft_tools, goal_team, hero_table, heroes, ideas, library, look_wait, map_parts, party_price, party_recipes
+from orkboard.realm import craft_tools, goal_team, hero_table, heroes, ideas, lexicon, library, look_wait, map_parts, party_price, party_recipes
 
 ON_OFF = (("on", "On"), ("off", "Off"))
 TARGETS = (("thrift", "Thrift", "Cheaper models, fewer checks"), ("balance", "Balance", "The usual mix"), ("quality", "Quality", "Better models, more checks"))
@@ -88,7 +88,7 @@ class StallMixin:
         if not chair:
             return list(next(v for s, _l, _s, v in ORKMASTER if s == slot))
         if slot == "hero":
-            return [(h.id, h.name, h.flow) for h in heroes.of(map_parts.craft_of(root, chair))]
+            return [(h.id, lexicon.term(f"hero.{h.id}"), h.flow) for h in heroes.of(map_parts.craft_of(root, chair))]
         if slot == "tool":
             return [("", "Main tool", "The potions' order: the first AI tool in your hand that has mana")] + [(i, n, "Runs this party's goals") for i, n in self._tool_ids()]
         return list(TIERS)
@@ -137,20 +137,26 @@ class StallMixin:
         else:
             page = ideas.track_page(root, chair)
             whose = (page.title if page is not None else "") or chair
-            if craft:
+            offered = [h for h, why in heroes.offer(root, self.state_dir, craft) if not why] if craft else []
+            if offered:
                 slots.append(("hero", LABELS["hero"], "The school its leader looks by", "heroes"))
             if craft != "release":
                 slots.append(("tool", LABELS["tool"], "What runs this party's goals", "small"))
                 if goal_team.team_of(root, chair):
                     slots.append(("tier", LABELS["tier"], "The model each seat of the party gets", "small"))
             h = goal_team.hero_of(root, chair) if craft else None
-            if h is None:
+            cut = heroes.cut_said(root, self.state_dir, chair, craft) if craft else ""
+            if cut:
+                say = cut
+            elif h is None:
                 say = "This party has no hero: its goals run as the Taskmaster plans them."
             elif h.default:
-                say = f"{h.name} looks by {h.school}. It lays its craft's map."
+                say = f"{lexicon.term(f'hero.{h.id}')} looks by {h.school}. It lays its craft's map."
             else:
-                say = f"{h.name} looks by {h.school}. It lays {len(h.places)} places: {', '.join(n for n, _a in h.places)}."
+                say = f"{lexicon.term(f'hero.{h.id}')} looks by {h.school}. It lays {len(h.places)} places: {', '.join(n for n, _a in h.places)}."
         shelves, hand, cache = [], [], {}
+        why_of = {h.id: why for h, why in heroes.offer(root, self.state_dir, craft)} if craft else {}
+        star = heroes.star(root, self.state_dir, craft) if craft else ""
         for slot, label, sub, kind in slots:
             mine = self._carried(chair, root, slot)
             wares = []
@@ -162,9 +168,14 @@ class StallMixin:
                     ware["stats"] = {"school": hero.school, "flow": hero.flow, "size": hero.size, "decides": hero.decides, "says_no": hero.says_no}
                     ware["line"] = hero.school
                 ware["price"] = {"locked": LOCKED_HERO} if craft == "release" and slot == "hero" and value != mine else self._price(chair, root, slot, value, mine, cache)
+                if slot == "hero" and value != mine and why_of.get(value):
+                    ware["price"] = {"locked": why_of[value]}
+                if slot == "hero" and value == star:
+                    ware["star"] = True
                 ware["before"] = before.get((chair, slot)) == value and value != mine
                 wares.append(ware)
-            shelves.append({"id": slot, "label": label, "sub": sub, "kind": kind, "slot": slot, "wares": wares})
+            if slot != "hero" or sum(1 for h, why in heroes.offer(root, self.state_dir, craft) if not why) >= 2:
+                shelves.append({"id": slot, "label": label, "sub": sub, "kind": kind, "slot": slot, "wares": wares})
             have = next((w for w in wares if w["id"] == mine), None)
             card: dict[str, Any] = {"slot": slot, "label": label, "word": have["word"] if have else "Mixed" if slot == "tier" else "", "yours": mine,
                                     "line": have["line"] if have else "", "fixed": craft == "release" and slot == "hero"}
@@ -217,7 +228,7 @@ class StallMixin:
             raise IdeasError(f"There is no {slot} to take here")
         if craft == "release":
             raise IdeasError(LOCKED_GATE if slot == "gate" else LOCKED_HERO if slot == "hero" else LOCKED_SEATS)
-        if chair and slot == "hero" and not craft:
+        if chair and slot == "hero" and (not craft or heroes.default(craft) is None):
             raise IdeasError("This party has no hero")
         if chair and slot == "tier" and not goal_team.team_of(root, chair):
             raise IdeasError("This party has no seats")
@@ -228,6 +239,10 @@ class StallMixin:
                 raise IdeasError("value is missing")
             if value not in [v for v, _w, _l in self._slot_values(chair, root, slot)]:
                 raise IdeasError(f"{value or 'That'} is not a ware of {LABELS.get(slot, slot)}")
+            if chair and slot == "hero":
+                why = next((w for h, w in heroes.offer(root, self.state_dir, craft) if h.id == value), "")
+                if why:
+                    raise IdeasError(f"{lexicon.term(f'hero.{value}')} is not here: {why}")
         return chair, root, craft, slot, value
 
     def _default(self, chair: str, craft: str, slot: str) -> str:

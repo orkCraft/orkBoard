@@ -266,6 +266,10 @@ READS = {"orkmaster": ("the goal's page `{wiki}/pages/ideas/<slug>.md`, its *Gis
                    "the tasks before yours, and the repository you work in")}
 
 
+KIND_WORDS = {"empty": "an empty folder", "mobile": "a mobile app", "web": "a web app", "backend": "a backend", "game": "a game",      # `project_kind.WORDS` (tests/test_heroes.py checks they agree):
+              "data": "data work", "wiki": "a team's wiki", "design": "a designer's folder", "texts": "texts", "code": "code"}      # a seat's rules never reach core
+
+
 def table_text(craft: str, wiki: str) -> str:
     """A leader's table (spec 157 F.3): its hero, its school and its places, and that its pass keeps `pages/tables/<party>.md` in `hero_table`'s format. "" for a craft with no hero to lay a table (Release's is fixed)."""
     from orkboard.realm import seat_hero_rules as heroes
@@ -274,8 +278,14 @@ def table_text(craft: str, wiki: str) -> str:
         return ""
     lines = []
     for h in crafted:
-        frame = "the craft's map, laid by code" if h.default else ", ".join(f"*{n}* ({a})" for n, a in h.places)
-        lines.append(f"- **{h.name}**{' (the default)' if h.default else ''}: {h.school}. Its places: {frame}.")
+        if not h.default:
+            frame = ", ".join(f"*{n}* ({a})" for n, a in h.places)
+        elif craft == "run":
+            frame = "none, it lays no table; what Play gathers is what it reads"
+        else:
+            frame = "the craft's map, laid by code"
+        away = f" Offered in: {', '.join(KIND_WORDS[k] for k in h.kinds)}." if h.kinds else ""
+        lines.append(f"- **{h.name}**{' (the default)' if h.default else ''}: {h.school}. Its places: {frame}.{away}")
     return f"""## Your hero and your table
 
 Your party's hero is the key `hero` of its page `{wiki}/pages/tracks/<party>.md`; none there is the default. You look by its school. The heroes of your craft:

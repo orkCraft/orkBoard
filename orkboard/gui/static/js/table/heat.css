@@ -1,0 +1,4 @@
+/* Heat on a party's map (docs/specs/165-each-leaders-map-a-board-games-shape.md H, decisions §280.1): at most three hollow squares on a card, beside the concern's mark (concerns.css). orkUI's tokens only. */
+.ht-slot { position: absolute; top: var(--ork-1); right: var(--ork-2); z-index: 2; display: inline-flex; align-items: center; gap: var(--ork-1); pointer-events: none; }
+*:has(> .cn-slot) > .ht-slot { right: 52px; }
+.ht-sq { display: inline-block; flex: none; box-sizing: border-box; width: 6px; height: 6px; border: var(--ork-line) solid var(--ork-ink-muted); background: none; }

@@ -76,6 +76,11 @@ video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; m
 .mp-st__meta { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .mp-st__meta > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mp-st__feel { font: var(--ork-type-body); overflow-wrap: anywhere; }
+.mp-toks { display: flex; flex-wrap: wrap; gap: 2px; }
+.mp-tok { display: inline-flex; align-items: center; gap: 1px; padding: 0 2px; border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); line-height: 1.2; color: var(--ork-ink); }
+.mp-tok b { font-weight: 600; }
+.mp-tok.is-takes { border-style: dashed; }
+.mp-tok i { font-style: normal; }
 .mp-pips { flex: none; gap: 2px; }
 .mp-pips > i { width: 6px; height: 6px; }
 .mp-back__cur { font: var(--ork-type-body); overflow-wrap: anywhere; }
@@ -117,6 +122,16 @@ video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; m
 .mp-lane__head { display: flex; flex-direction: column; gap: var(--ork-1); min-height: 38px; }
 .mp-lane__cards { display: flex; flex-direction: column; gap: var(--ork-4); }
 .mp-lane__cards .mp-card.ork-card { max-width: 224px; }
+/* Art by weight (spec 165 O): a card's width by its asset's weight, orkUI's spacing times 5, 7 and 9; a lane's foot its size; an asset no goal's reach lights lies faint (frame and window, the name's ink stays) */
+.mp-lane__foot { margin-top: auto; padding-top: var(--ork-2); }
+@media (min-width: 760px) {
+  .mp-lane__cards .mp-card.ork-card.mp-asset { box-sizing: border-box; max-width: 100%; }
+  .mp-lane__cards .mp-card.ork-card.mp-asset.is-light { width: calc(var(--ork-8) * 5); }
+  .mp-lane__cards .mp-card.ork-card.mp-asset.is-normal { width: calc(var(--ork-8) * 7); }
+  .mp-lane__cards .mp-card.ork-card.mp-asset.is-heavy { width: calc(var(--ork-8) * 9); }
+}
+.mp-asset.is-faint { border-color: var(--ork-frame); }
+.mp-asset.is-faint .mp-win { opacity: 0.45; }
 
 /* -- a card lifted: over the card where it lies ------------------------------------------------------------------------------------ */
 .mp-lift { display: contents; }
@@ -154,6 +169,14 @@ video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; m
 .mp-dev__head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--ork-4); }
 .mp-goals { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-5); }
 .mp-goal.ork-card { width: 204px; }
+.mp-age { display: block; padding: 0 var(--ork-1); color: var(--ork-ink-muted); }
+.mp-batch { display: inline-flex; align-items: center; align-self: stretch; flex: none; padding: 0 var(--ork-1); border-left: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); }
+.mp-cars .mp-card__nm { -webkit-line-clamp: unset; line-clamp: unset; }   /* a long goal name reads whole */
+@media (min-width: 760px) {   /* the cars in one row, a long train scrolling inside its own row */
+  .mp-cars { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--ork-2); }
+  .mp-cars { gap: var(--ork-3); }
+  .mp-cars .mp-goal.ork-card { flex: none; }   /* a car keeps the card's width, so its 7-character commit and a long name read whole */
+}
 .mp-foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-6); }
 .mp-tomain { display: flex; flex-direction: column; gap: var(--ork-3); }
 .mp-tomain .ork-label .ork-sign { margin-right: var(--ork-2); }

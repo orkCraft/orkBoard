@@ -215,6 +215,46 @@ def test_the_links_are_arrows_named_by_their_target_between_the_steps(screens):
         assert [c.inner_text() for c in pg.locator(".scr-step[data-step='2'] .scr-links .ork-chip").all()] == ["Join", "Host"]
 
 
+# -- the rooms: doors and walls (spec 165 L, decisions §280.2) -----------------------------------------------------------------------------------------
+
+def _doors(pg, sid):
+    c = card(pg, sid)
+    return c.locator(".scr-doors--in .scr-door").count(), c.locator(".scr-doors--out .scr-door").count(), c.locator(".scr-doors--in .scr-wall").count(), c.locator(".scr-doors--out .scr-wall").count()
+
+
+def test_each_screen_is_a_room_with_a_door_for_each_link_in_at_its_left_and_out_at_its_right_a_link_back_a_door_too(screens):
+    pg, host, w = screens
+    assert _doors(pg, "lobby") == (2, 1, 0, 0)                                                                      # join and host in, round out
+    assert _doors(pg, "home") == (1, 2, 0, 0)                                                                       # results back to it is a door in
+    assert _doors(pg, "results") == (1, 1, 0, 0)                                                                    # its link back to the first step a door out
+    box = card(pg, "lobby").bounding_box()
+    ins, outs = card(pg, "lobby").locator(".scr-doors--in .scr-door").first.bounding_box(), card(pg, "lobby").locator(".scr-doors--out .scr-door").first.bounding_box()
+    assert abs(ins["x"] + ins["width"] / 2 - box["x"]) < 2 and abs(outs["x"] + outs["width"] / 2 - (box["x"] + box["width"])) < 2     # on its edges, in at the left, out at the right
+    assert [c.get_attribute("data-pick-id") for c in pg.locator('[data-pick-map="screens"][data-pick-id]:not([data-pick-id^="step:"])').all()] == ["home", "join", "host", "lobby", "round", "results"]
+    shot(pg, f"screens-rooms-{w}.png")
+
+
+def test_a_wall_where_nothing_leads_in_or_out(gui, monkeypatch):
+    import tests.test_screens_desktop_browser as me
+    monkeypatch.setattr(me, "LINKS", [l for l in LINKS if l != ("results", "home")])
+    errors: list[str] = []
+    pg, host = start(gui, "wide", errors)
+    pg.locator(".scr-map[data-state='read']").wait_for(timeout=WAIT_MS)
+    assert _doors(pg, "home") == (0, 2, 1, 0) and _doors(pg, "results") == (1, 0, 0, 1)                             # a screen nothing leads to, one that leads nowhere
+    assert card(pg, "home").locator(".scr-wall").get_attribute("title") == "nothing leads here"
+    assert card(pg, "results").locator(".scr-wall").get_attribute("title") == "leads nowhere"
+    assert "nothing leads here" in card(pg, "home").get_attribute("aria-label") and "leads nowhere" not in card(pg, "home").get_attribute("aria-label")      # the words reach a screen reader through the card
+    assert "leads nowhere" in card(pg, "results").get_attribute("aria-label") and "nothing leads here" not in card(pg, "results").get_attribute("aria-label")
+    wall = card(pg, "home").locator(".scr-wall")
+    assert wall.evaluate("e => getComputedStyle(e).pointerEvents") == "auto"                                         # the wall can be hovered
+    wall.hover()
+    assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y).classList.contains('scr-wall')", [wall.bounding_box()["x"] + wall.bounding_box()["width"] / 2, wall.bounding_box()["y"] + wall.bounding_box()["height"] / 2])
+    card(pg, "home").click()                                                                                        # the card, its press and its lift as before
+    pg.locator(".scr-back").wait_for(timeout=WAIT_MS)
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
 # -- a screen lifted -------------------------------------------------------------------------------------------------------------------------------
 
 def test_a_screen_pressed_turns_over_with_its_picture_path_file_and_links_and_esc_lowers_it(screens):

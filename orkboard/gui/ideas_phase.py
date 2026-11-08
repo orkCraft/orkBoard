@@ -129,6 +129,11 @@ class PhaseMixin:
                 self.rev += 1                                    # the page is read again; no change is published, so no note rides in a Board commit
                 continue
             self._what[m["slug"]] = "moved"
+            if m["to"] == "done" and not m["new"]:               # a page laid done is history and begins none (spec 155 G.2); one moved to done begins its route's views (spec 167 H)
+                try:
+                    self.views_when_done(m["slug"])
+                except Exception:
+                    pass
             self.changed(m["slug"])
         if not getattr(self, "_quiet_caught", False):           # once per Ideas: a Board read before this change has done goals with no flag
             self._quiet_caught = True
