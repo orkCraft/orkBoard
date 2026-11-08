@@ -2,11 +2,11 @@
 element, its name, its commit), ticked by default; the last version that is out is *Since <version>*; **To main** is the gate's merge, by code (`ideas.gate_merge`,
 realm/idea_gate.py). Read from git and the goals' plans, never the working tree. No model, no face.
 
-    release_map.read(state_dir, root, pages=None, into="dev")   # {into, main, same, commits, files, goals: [{idea, title, element, commit, ticked}], since: {version, out} | None}
+    release_map.read(state_dir, root, pages=None, into="dev")   # {into, main, same, commits, files, goals: [{idea, title, element, hue, commit, ticked, at}], since: {version, out} | None}
     release_map.text(state_dir, root, since="", pages=None, into="dev")   # Release's leader's map as text: the goals waiting for main and the last version
 
 `goals` are the goals with a task merged into `into` whose commit `main` lacks, the newest landing first (the order dev holds them, not the Board's: no page is read for it);
-`commit` is the newest of such commits (full). `pages` (the Board's pages root) gives a goal its title and drops a goal gone from the Board, and gives `since` its party:
+`commit` is the newest of such commits (full); `at` the commit time (epoch seconds) of the oldest of them, from one `git log` for all the goals (None when git cannot tell). `pages` (the Board's pages root) gives a goal its title and drops a goal gone from the Board, and gives `since` its party:
 `releases.since` of the project's Release party; without it a goal's title is its slug and `since` is None. `same` (dev and main are one branch, or main is none) is *no gate*:
 `goals` is then empty. `since` of `text` is the commit of the party's last call: the map is a state, not a change log, so it is not used.
 """
@@ -15,7 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from orkboard.realm import first_open, goal_types, idea_element, idea_gate, ideas, releases, worktrees
-from orkboard.realm.idea_git import IdeaGit
+from orkboard.realm.idea_git import IdeaGit, _git
 
 SHORT = 7
 
@@ -28,10 +28,26 @@ def _main(git: IdeaGit, state_dir: Path | None = None) -> str:
         return ""
 
 
-def _waiting(state_dir: Path, shas: list[str], pages: Path | None) -> list[dict]:
-    """The goals with a merged task among `shas`, the one whose newest commit stands first in `shas` (newest first) first."""
+def _times(git: IdeaGit, shas: list[str]) -> dict[str, int]:
+    """The commit time (epoch seconds) of each of `shas`: one `git log` for all the goals, none more a goal."""
+    times: dict[str, int] = {}
+    for at in range(0, len(shas), 200):
+        try:
+            out = _git(git.root, "log", "--no-walk=unsorted", "--format=%H %ct", *shas[at:at + 200], "--").stdout
+        except Exception:
+            return times
+        for line in out.splitlines():
+            sha, _, when = line.partition(" ")
+            if when.strip().isdigit():
+                times[sha] = int(when)
+    return times
+
+
+def _waiting(state_dir: Path, shas: list[str], pages: Path | None, times: dict[str, int] | None = None) -> list[dict]:
+    """The goals with a merged task among `shas`, the one whose newest commit stands first in `shas` (newest first) first. A goal's `at` is the time of its oldest such commit (None unread)."""
+    times = times or {}
     place = {s: n for n, s in enumerate(shas)}
-    found: list[tuple[int, str, str]] = []
+    found: list[tuple[int, str, str, str]] = []
     base = Path(state_dir) / "ideas"
     for slug in sorted(d.name for d in base.iterdir() if d.is_dir()) if base.is_dir() else []:
         try:
@@ -41,9 +57,9 @@ def _waiting(state_dir: Path, shas: list[str], pages: Path | None) -> list[dict]
         mine = [str(t.get("commit") or "") for t in tasks if isinstance(t, dict) and t.get("state") == "merged" and str(t.get("commit") or "") in place]
         if mine:
             newest = min(mine, key=lambda c: place[c])
-            found.append((place[newest], slug, newest))
+            found.append((place[newest], slug, newest, max(mine, key=lambda c: place[c])))
     out = []
-    for _n, slug, commit in sorted(found):
+    for _n, slug, commit, oldest in sorted(found):
         title = slug
         if pages is not None:
             try:
@@ -53,7 +69,7 @@ def _waiting(state_dir: Path, shas: list[str], pages: Path | None) -> list[dict]
             if page is None:
                 continue                            # a goal dropped from the Board waits for nothing
             title = " ".join((page.title or slug).split())
-        out.append({"idea": slug, "title": title, "element": idea_element.of(state_dir, slug), "hue": idea_element.hue_of(state_dir, slug), "commit": commit, "ticked": True})
+        out.append({"idea": slug, "title": title, "element": idea_element.of(state_dir, slug), "hue": idea_element.hue_of(state_dir, slug), "commit": commit, "ticked": True, "at": times.get(oldest)})
     return out
 
 
@@ -75,7 +91,7 @@ def read(state_dir: Path, root: Path, pages: Path | None = None, into: str = "de
         shas, files = idea_gate.waiting(git, into, main)
     except Exception:
         return out
-    return {**out, "commits": len(shas), "files": files, "goals": _waiting(state_dir, shas, pages)}
+    return {**out, "commits": len(shas), "files": files, "goals": _waiting(state_dir, shas, pages, _times(git, shas))}
 
 
 def _count(n: int, one: str, many: str) -> str:
