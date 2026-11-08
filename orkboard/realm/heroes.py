@@ -22,3 +22,43 @@ def head(hero: Hero) -> dict:
     if (roles.RACE_FILES / f"hero-{hero.id}-elder.png").is_file():
         return {"race": f"hero-{hero.id}", "tier": "elder"}
     return {"race": roles.party_race(hero.craft, True, "elder"), "tier": "elder"}
+
+
+def _kind(root, state_dir) -> str:
+    from pathlib import Path
+    from orkboard.realm import project_kind
+    return str(project_kind.read_full(Path(root), state_dir=Path(state_dir))["kind"])
+
+
+def offer(root, state_dir, craft: str) -> list[tuple[Hero, str]]:
+    """The heroes of a craft in `of`'s order, each with its why: "" where the project's kind offers it, else its `not_here` (decisions §279.5)."""
+    kind = _kind(root, state_dir)
+    return [(h, "" if not h.kinds or kind in h.kinds else (h.not_here or "Not offered in this project")) for h in of(craft)]
+
+
+def star(root, state_dir, craft: str) -> str:
+    """The id of the hero the Orkmaster's star marks at a craft for the project's kind, "" for a kind with none (it marks a ware, seats nothing: §281.1)."""
+    for hid in STARS.get(_kind(root, state_dir), ()):
+        h = get(hid)
+        if h is not None and sits_at(h, craft):
+            return hid
+    return ""
+
+
+def cut_said(root, state_dir, party: str, craft: str) -> str:
+    """The line that says a cut hero once (decisions §281.2): where the party's page keeps a hero of `CUT` and `<state>/heroes_cut.json` does not hold it, the record is written and the line returned; "" otherwise.
+    The page's `hero` key and the party's table file are never written here."""
+    from pathlib import Path
+    from orkboard.realm import ideas, lexicon
+    page = ideas.track_page(Path(root), party)
+    kept = str((page.get("hero") if page is not None else "") or "")
+    if kept not in CUT or default(craft) is None:
+        return ""
+    path = Path(state_dir) / "heroes_cut.json"
+    with ideas.LOCK:
+        record = ideas._json(path) or {}
+        if record.get(party) == kept:
+            return ""
+        ideas._write_json(path, {**record, party: kept})
+    name, why = CUT[kept]
+    return f"{name} was cut: {why}. {lexicon.term(f'hero.{default(craft).id}')}, its craft's default, leads now."
