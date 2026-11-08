@@ -336,7 +336,7 @@ def test_the_rings_danger_and_alert_are_seen_3_to_1_on_every_ground_and_lead_eve
 # No smooth gradient and no blurred shadow or glow (decisions §269.1): hard pixel rings and hard-stop dithers only.
 # These sheets still hold soft ones (the scroll cues' and the opened card's fade masks, the lifted card's cast shadow); a later stage of
 # spec 160 takes each out and removes its file here. A file not listed must hold none, so a new one is caught.
-SOFT_KNOWN = {"page.css", "js/hand/openedcard.css", "js/hand/hand.css"}
+SOFT_KNOWN = {"page.css", "js/hand/openedcard.css"}          # js/hand/hand.css lost its blurred shadow in spec 160 F
 
 
 def _top_split(text: str) -> list[str]:
