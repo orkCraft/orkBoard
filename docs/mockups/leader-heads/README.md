@@ -39,6 +39,7 @@ without colour, and recolouring now clashes with *colour is the party*.
 | grotesque card creature v1 | `references/10`, `checks/11`–`14` | the character right at last (heavy, menacing, dry); the skin too dark and grey, the whites small: at 48 px calm, focused, worried and asleep read, no and pleased do not (pleased reads as a snarl); at 24 px only worried |
 | grotesque v2 (v1 corrected in the same chat) | `references/11`, `checks/15` | Gemini changed 1 % of the pixels: the skin a little lighter (forehead 61 → 73 of 255, asked ~128), a faint rim light; no, pleased, the whites and the horns as they were. Editing in place has reached its end |
 | grotesque on a pushed 24 grid (fresh chat) | `references/12`, `checks/16`–`18` | the grid closer (~30 cells, not 24); the light skin and the cold rim make the head stand out of the window at last; but the eyes shrank and the face filled with cross lines: at 48 px focused, says no and asleep read, calm and worried weakly, pleased still a snarl; at 24 px only asleep. The light and the silhouette from here, the faces from v2 |
+| drawn by Claude on 24 × 24 in the grotesque look | `sketches/grotesque24.py`, `checks/19`–`22` | every mood reads at 48 px, and at 24 px all but pleased; the light, the rim and the tusks are Gemini's, but the head is rounder and flatter than Gemini's (horns an open C, no spiral: a spiral does not fit in 24 cells and read as ears) |
 
 **The owner's direction now: closer to Slay the Spire.** Not cute, not a sticker, not a cartoon: a hand-painted roguelike
 card's creature (grotesque, heavy, a strong silhouette, a dramatic light) translated into pixel art, with the moods kept.
@@ -75,6 +76,8 @@ Tiers (§154, §162): the same face bare, in iron, in a hood.
 - `sketches/check_sheet.py`: a Gemini sheet of six moods (3 × 2) cut into heads at the window's sizes, beside today's
   heads (`python docs/mockups/leader-heads/sketches/check_sheet.py SHEET.jpg OUT_DIR [race]` → `OUT_DIR/sizes.png`).
 - `sketches/shoot_tab.py`: those heads put in the Tech tab on the table-look mockup, one shot a mood (see its docstring).
+- `sketches/grotesque24.py`: the grotesque shaman on 24 × 24, six moods (`python sketches/grotesque24.py OUT_DIR`, then
+  `shoot_tab.py` with MOCK_DIR=OUT_DIR).
 - `sketches/shaman24.py`: the shaman drawn on 24 × 24 with six moods as overlays (`python sketches/shaman24.py OUT_DIR`);
   `sticker24.py`, the sticker round; `scale2x.py`, the dropped Scale2x round.
 
