@@ -155,6 +155,12 @@ gate: b79367b · 145 files · red
 - A priced way shows its cost in the card's corner, as *Start again* does; picking it answers, no separate *Answer* press.
 - A question with more than one ask keeps *Send the picks* and *Open…* as today; cards are for one question's ways.
 - The picture for the [look] line is the camera of docs/mockups/answer-cards/ (shoot.py) pointed at the product.
+### Accepted
+- met: When the person lifts a goal card with one open question at 1280 × 800, then it stays 144 × 202 on the table's foot in its signal's ring, and its goal's card in the column wears the same ring.
+- met: When that card is up, then each way is a 144 × 202 card in the hand showing its name and whole line at rest, the leader's pick marked by its head and in words, not colour alone.
+- met: When the person tabs through a lifted card's answers, then each way, *<Leader> decides*, *Your own words…*, *Open…* and *Put it back* take a ringed focus in turn; Escape puts it back.
+- met: When the person presses *Your own words…*, then a field opens on the table beside the question, focused, with *Send to <leader>* under it.
+- not met: When a goal still in Talk is lifted at 1280 × 800, then its table shows its leaders' Talk and its open question with its ways, and the rest of the hand is sunk and grey. — shoot_product.py shoots at 1440 × 900, not 1280 × 800; reshoot both pictures at 1280 × 800 (product-question.png also predates *Your own words…*)
 
 ## Tech
 ### Talk
