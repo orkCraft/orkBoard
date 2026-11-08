@@ -36,6 +36,7 @@ const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 export function HeroFace({ w, fallback = null }) {
   const h = w.head || fallback, s = w.stats || {};
   return html`<div class="stall-face stall-hero">
+    ${w.star && html`<span class="ork-sign pick stall-hero__star" role="img" aria-label="The Orkmaster's pick" title="The Orkmaster's pick"></span>`}
     ${h && html`<span class="stall-hero__head"><${Head} race=${h.race} tier=${h.tier} size="big" /></span>`}
     <span class="stall-hero__name">${w.word}</span><span class="stall-hero__school">${s.school || w.line}</span>
     ${w.stats && html`<div class="stall-stats"><span>Flow</span><b>${s.flow}</b><span>Size</span><b>${cap(s.size)}</b>

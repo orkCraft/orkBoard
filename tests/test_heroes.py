@@ -202,9 +202,18 @@ def test_a_role_file_says_where_a_hero_is_offered_spec_164_e():
 def test_every_hero_a_kind_offers_has_its_head_in_orkuis_copy_spec_164_h():
     from orkboard.design import orkui
     from orkboard.realm import roles
-    wanted = {h.id for h in heroes.HEROES.values() if not h.default and h.kinds} | {"uni-mda", "dry-sprite"}
+    wanted = {h.id for h in heroes.HEROES.values() if not h.default} | {"uni-mda", "dry-sprite"}
     missing = sorted(i for i in wanted if not (roles.RACE_FILES / f"hero-{i}-elder.png").is_file())
     assert not missing, f"no hero-<id>-elder.png in orkUI's copy for {missing}"
     stamped = orkui.stamp()["files"]
     assert all(f"races/hero-{i}-elder.png" in stamped for i in wanted)
     assert "signs/pick.svg" in stamped and not orkui.problems()
+
+
+def test_no_two_heroes_offered_on_one_shelf_draw_the_same_head_spec_164_i():
+    from orkboard.realm import project_kind
+    for kind in project_kind.KINDS:
+        for craft in {h.craft for h in heroes.HEROES.values()} | {"game-design"}:
+            shelf = [h for h in heroes.of(craft) if not h.kinds or kind in h.kinds]
+            drawn = [tuple(heroes.head(h).values()) for h in shelf]
+            assert len(set(drawn)) == len(drawn), (kind, craft, [h.id for h in shelf])

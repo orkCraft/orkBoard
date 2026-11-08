@@ -625,3 +625,53 @@ def test_a_locked_hero_says_its_why_in_words_tied_to_its_button_and_takes_nothin
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+class PickHost(StallHost):
+    """A web app's Design shelf (Pixel-Perfect starred), or a game's Art: its one hero in the hand and no shelf (spec 164 I)."""
+    art = False
+
+    def shelves(self, chair):
+        shelves = super().shelves(chair)
+        if chair != "tech":
+            return shelves
+        from orkboard.realm import heroes as cat
+        if self.art:
+            return [s for s in shelves if s["slot"] != "hero"]
+        wares = [ware(h.id, h.name, h.school, {"word": "one pass"}, head=cat.head(h), stats=stats(h.school, h.flow, h.size, h.decides, h.says_no), **({"star": True} if h.id == "dry-heur" else {}))
+                 for h in (cat.get(i) for i in ("dry-heur", "dry-sprint", "dry-a11y"))]
+        shelves[0]["wares"] = wares
+        return shelves
+
+    def stall(self, chair):
+        got = super().stall(chair)
+        if self.art and chair == "tech":
+            from orkboard.realm import heroes as cat
+            got["hand"].insert(0, {"slot": "hero", "label": "Its hero", "word": "Sprite Dryad", "yours": "dry-sprite", "line": "", "fixed": False, "head": cat.head(cat.get("dry-sprite"))})
+        return got
+
+
+def test_a_design_shelf_stars_one_ware_by_a_sign_named_for_the_pick_and_the_hand_never_does_spec_164_i(gui):
+    pg, host, log = opened(gui, "tech", host=PickHost())
+    try:
+        assert pg.locator('.stall-ware[data-slot="hero"]').evaluate_all("els => els.map((e) => e.dataset.ware)") == ["dry-heur", "dry-sprint", "dry-a11y"]
+        star = pg.locator(".stall-hero__star")
+        assert star.count() == 1 and star.get_attribute("aria-label") == "The Orkmaster's pick" and star.get_attribute("role") == "img"
+        assert pg.locator('.stall-ware[data-ware="dry-heur"] .stall-hero__star').count() == 1
+        assert pg.locator(".carry-card .stall-hero__star, .carry-card .ork-sign.pick").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_games_art_has_sprite_dryad_in_the_hand_drawn_by_its_own_head_and_no_shelf_spec_164_i(gui):
+    host = PickHost()
+    host.art = True
+    pg, host, log = opened(gui, "tech", host=host)
+    try:
+        assert pg.locator('.stall-ware[data-slot="hero"]').count() == 0
+        card = pg.locator('.carry-card[data-slot="hero"]')
+        assert card.count() == 1 and "hero-dry-sprite" in (card.inner_html() or "")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
