@@ -121,9 +121,9 @@ orkUI first (§269.9): A and B are done in orkUI (/home/user/orkui), released as
 - The chair's craft cards follow §270's hand cards: 144 × 202, the line whole at rest, the price in the corner.
 ### Accepted
 - met: When orkUI's tokens are read, then every text token measures at least 4.5:1 on its flat plate over each party's felt, lit and out, and every signal ring 3:1 and brighter than any party or element colour.
-- cannot see: When the page opens at 1280 × 800 with the person Here, then the right column beside the table holds the backpack and the lamp's chain over *Discard* on every tab, the chain's words *Here · until …*, Release's tab in the leaders' row.
+- not met: When the page opens at 1280 × 800 with the person Here, then the right column beside the table holds the backpack and the lamp's chain over *Discard* on every tab, the chain's words *Here · until …*, Release's tab in the leaders' row. — product-tech.png: *Discard* alone heads the column, Inventory and New party still end the tabs' row; G and H's, not E and F's, nothing sent back
 - cannot see: When the person presses the new chair at 1280 × 800, then the hand holds a card for each craft not yet seated, with its race's head, its line and its price a week, the Orkmaster's pick starred and named in words.
-- cannot see: When the page opens at 1280 × 800 on Tech's tab with the lamp lit, then the felt is moss, the light falls in five dithered steps with words on flat plates, bronze frames round it and the open leader's pennant tallest; out, the felt is flat and darker.
+- not met: When the page opens at 1280 × 800 on Tech's tab with the lamp lit, then the felt is moss, the light falls in five dithered steps with words on flat plates, bronze frames round it and the open leader's pennant tallest; out, the felt is flat and darker. — product-tech.png: the System map's ITS DOORS/FACE/DATA, server/, client/ and the slots' *Back here on Start again* lie on the steps, no plate; out unseen
 - cannot see: When the phone opens `/app/` at 390 × 844 with the person Here, then its table wears the open party's felt and light, and the lamp's chain and the backpack stand at its head without words.
 
 ## Tech
