@@ -5,6 +5,8 @@
 leaving the hand, Esc and a goal with no entry clear it all; a touch press lights nothing."""
 from __future__ import annotations
 
+import os
+
 import pytest
 
 pytest.importorskip("playwright.sync_api")
@@ -112,5 +114,44 @@ def test_a_touch_press_on_a_hand_card_lights_nothing(gui):
       for (const t of ['pointerover', 'pointerdown']) el.dispatchEvent(new PointerEvent(t, { bubbles: true, pointerType: 'touch' })); }""")
     pg.wait_for_timeout(400)
     assert pg.locator("[data-reach]").count() == 0
+    assert not errors, "\n".join(errors)
+    pg.context.close()
+
+
+# Part K: dimmed, yet read; the edges seen (decisions §183.5, §280.3).
+MEASURE = """(arg) => {
+  const [sel, which] = arg;
+  const lum = (c) => { const m = c.match(/[\\d.]+/g).map(Number); const rgb = m.slice(0, 3).map((v) => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722; };
+  const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const opaque = (el) => { for (let e = el; e; e = e.parentElement) { const c = getComputedStyle(e).backgroundColor; const a = c.match(/[\\d.]+/g); if (a && (a.length < 4 || Number(a[3]) > 0.99)) return c; } return 'rgb(0, 0, 0)'; };
+  const card = document.querySelector(sel), el = card.classList.contains('pick') ? card.firstElementChild : card;
+  const felt = getComputedStyle(document.getElementById('table-pane')).backgroundColor;
+  if (which === 'name') {
+    const name = el.querySelector('.sys-part__name') || el;
+    return { ratio: ratio(getComputedStyle(name).color, opaque(name)), opacity: getComputedStyle(el).opacity };
+  }
+  const cs = getComputedStyle(el);
+  return { ratio: ratio(cs.outlineColor, felt), style: cs.outlineStyle, width: cs.outlineWidth };
+}"""
+
+
+@pytest.mark.parametrize("out", [False, True])
+def test_a_dimmed_name_reads_at_4_5_and_the_edges_stand_at_3_against_the_felt_lamp_lit_and_out(gui, out):
+    host, pg, errors = opened(gui)
+    if out:
+        pg.evaluate("() => document.getElementById('table-pane').classList.add('is-out')")
+    name_goal(pg, "timer")
+    pg.wait_for_function(f"() => document.querySelector('[data-pick-id=\"{LOBBY}\"]')?.dataset.reach === 'lit'", timeout=WAIT_MS)
+    pg.wait_for_timeout(300)
+    dim = pg.evaluate(MEASURE, [f'[data-pick-id="{INDEX}"]', "name"])
+    assert state(pg, INDEX) == "dim" and dim["opacity"] == "1" and dim["ratio"] >= 4.5, dim      # the frame and the window go down, never the name's ink
+    for pid, style in ((LOBBY, "solid"), (ROOMS, "dashed")):
+        edge = pg.evaluate(MEASURE, [f'[data-pick-id="{pid}"]', "edge"])
+        assert edge["style"] == style and edge["ratio"] >= 3, edge
+    one = pg.evaluate(MEASURE, [f'[data-pick-id="{ROOMS}"]', "edge"])
+    lit = pg.evaluate(MEASURE, [f'[data-pick-id="{LOBBY}"]', "edge"])
+    if os.environ.get("REACH_PICTURES"):
+        pg.screenshot(path=f"{os.environ['REACH_PICTURES']}/reach-system-{'out' if out else 'lit'}.png")
+    assert float(one["width"][:-2]) > 1 and float(one["width"][:-2]) >= float(lit["width"][:-2])   # a dash heavier than orkUI's disabled hairline
     assert not errors, "\n".join(errors)
     pg.context.close()

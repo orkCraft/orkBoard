@@ -3,11 +3,12 @@
 .rc-line { flex: none; margin: 0; padding: var(--ork-1) var(--ork-6); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .rc-line[hidden] { display: none; }
 [data-reach="lit"]:not(.pick), .pick[data-reach="lit"] > :first-child { outline: var(--ork-line) solid currentcolor; outline-offset: calc(var(--ork-line) * -1); }
-[data-reach="one"]:not(.pick), .pick[data-reach="one"] > :first-child { outline: var(--ork-line) dashed currentcolor; outline-offset: calc(var(--ork-line) * -1); }
-[data-reach="two"]:not(.pick), .pick[data-reach="two"] > :first-child { outline: var(--ork-line) dotted currentcolor; outline-offset: calc(var(--ork-line) * -1); }
-[data-reach="dim"]:not(.pick), .pick[data-reach="dim"] > :first-child { opacity: 0.55; }
+[data-reach="one"]:not(.pick), .pick[data-reach="one"] > :first-child { outline: var(--ork-line) dashed currentcolor; outline-width: calc(var(--ork-line) * 2); outline-offset: calc(var(--ork-line) * -1); }
+[data-reach="two"]:not(.pick), .pick[data-reach="two"] > :first-child { outline: var(--ork-line) dotted currentcolor; outline-width: calc(var(--ork-line) * 2); outline-offset: calc(var(--ork-line) * -1); }
+/* dimmed: the frame and the window go down, the name's ink never (it keeps 4.5:1 over the card, lamp lit and out) */
+[data-reach="dim"]:not(.pick), .pick[data-reach="dim"] > :first-child { border-color: var(--ork-frame); background: transparent; box-shadow: none; }
 @media (prefers-reduced-motion: no-preference) {
-  [data-reach]:not(.pick), .pick[data-reach] > :first-child { transition: opacity var(--ork-motion-quick) var(--ork-motion-ease), outline-color var(--ork-motion-quick) var(--ork-motion-ease); }
+  [data-reach]:not(.pick), .pick[data-reach] > :first-child { transition: border-color var(--ork-motion-quick) var(--ork-motion-ease), background-color var(--ork-motion-quick) var(--ork-motion-ease), outline-color var(--ork-motion-quick) var(--ork-motion-ease); }
 }
 .rc-host[data-hue="meadow"] :is([data-reach="lit"], [data-reach="one"], [data-reach="two"]):not(.pick), .rc-host[data-hue="meadow"] .pick:is([data-reach="lit"], [data-reach="one"], [data-reach="two"]) > :first-child { outline-color: var(--ork-elem-meadow); }
 .rc-host[data-hue="ice"] :is([data-reach="lit"], [data-reach="one"], [data-reach="two"]):not(.pick), .rc-host[data-hue="ice"] .pick:is([data-reach="lit"], [data-reach="one"], [data-reach="two"]) > :first-child { outline-color: var(--ork-elem-ice); }
