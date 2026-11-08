@@ -37,14 +37,8 @@ def run(data):
 
 
 def test_maker_feeds_existing_pick_and_receipt(setup, monkeypatch):
-    def make(self, prompt, dest, count):
-        assert prompt == 'A logo' and count == 2
-        dest.mkdir()
-        files = [dest / f'{i}.svg' for i in range(count)]
-        for f in files:
-            f.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>')
-        return files
-    monkeypatch.setattr(craft_pick.craft_run.PictureMaker, 'make', make)
+    from tests.test_craft_run import picture
+    monkeypatch.setattr(craft_pick.craft_run, 'https_transport', lambda **kw: picture())
     assert run(setup) == ''
     r, slug, task, work, saved = setup
     variants, why = idea_pick.read(work, task)
@@ -60,7 +54,7 @@ def test_maker_feeds_existing_pick_and_receipt(setup, monkeypatch):
     assert idea_pick.current(r.state_dir, slug, task) == pick
     assert pick['tool'] == 'openai-images'
     assert pick['cap'] == {'amount': '1', 'currency': 'USD'}
-    assert pick['cost'] == {'amount': None, 'currency': 'USD'}
+    assert pick['cost'] == {'amount': '0.122910', 'currency': 'USD', 'estimate': True}
     assert saved['craft_cost'] == pick['cost']
 
 
@@ -75,7 +69,7 @@ def test_unavailable_refused_without_session_or_maker(setup, monkeypatch, reason
         monkeypatch.setitem(craft_tools.REGISTRY, tool.id, replace(tool, official_api=False))
     else:
         craft_tools.set_taken(setup[0].repo_root, ideas.idea_page(setup[0].repo_root, setup[1]).get('track'), {})
-    monkeypatch.setattr(craft_pick.craft_run.PictureMaker, 'make', lambda *a, **kw: pytest.fail('maker started'))
+    monkeypatch.setattr(craft_pick.craft_run, 'https_transport', lambda **kw: pytest.fail('request sent'))
     with pytest.raises(ValueError, match='has not taken' if reason == 'not taken' else reason):
         run(setup)
 

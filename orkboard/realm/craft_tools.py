@@ -82,14 +82,14 @@ def key(tool_id: str) -> str | None:
     return os.environ.get(tool.key_env, "").strip() or None
 
 
-def availability(tool: Tool, harness: str) -> tuple[bool, str]:
+def availability(tool: Tool, harness: str, *, check_key: bool = True) -> tuple[bool, str]:
     """Here and its why. A chair exposes presence only, never the credential."""
     if tool.kind == "api" and not tool.official_api:
         return False, "no official API"
     h = harnesses.get(harness)
     if tool.needs and (h is None or not set(tool.needs).issubset(h.makes)):
         return False, "its harness cannot make it"
-    if tool.key_env and key(tool.id) is None:
+    if check_key and tool.key_env and key(tool.id) is None:
         return False, "no key on this computer"
     return True, ""
 
@@ -148,7 +148,7 @@ def set_taken(root: Path, party: str, tools: dict) -> None:
         ideas._write(Path(root) / ideas.TRACKS / f"{party}.md", page.text())
 
 
-def for_party(root: Path, party: str, harness: str) -> list[dict]:
+def for_party(root: Path, party: str, harness: str, *, check_key: bool = True) -> list[dict]:
     """The chair's tools, taken or not, with machine availability and money only."""
     page = ideas.track_page(root, party)
     if page is None:
@@ -159,7 +159,7 @@ def for_party(root: Path, party: str, harness: str) -> list[dict]:
     for tool in REGISTRY.values():
         if craft not in tool.crafts:
             continue
-        here, why = availability(tool, harness)
+        here, why = availability(tool, harness, check_key=check_key)
         rows.append({"id": tool.id, "title": tool.title, "kind": tool.kind, "makes": tool.makes,
                      "official_api": tool.official_api, "prices": [asdict(p) for p in tool.prices],
                      "here": here, "why": why, "taken": tool.id in allowed,

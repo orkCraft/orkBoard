@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from orkboard.core import craft_run
+from orkboard.core import craft_run, craft_spend
 from orkboard.realm import craft_tools, goal_route, idea_pick, ideas
 from orkboard.realm.board_tree import spec_paths
 
@@ -44,7 +44,7 @@ def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, s
     root = board_root(runner, slug)
     page = ideas.idea_page(root, slug)
     party = task.get("party") or (page.get("track") if page else "") or ideas.GENERAL
-    rows = {r["id"]: r for r in craft_tools.for_party(root, party, runner.tool_of(slug, task))}
+    rows = {r["id"]: r for r in craft_tools.for_party(root, party, runner.tool_of(slug, task), check_key=False)}
     row = rows.get(tool_id)
     if not row or not row["taken"]:
         raise ValueError("The party has not taken that tool")
@@ -57,15 +57,17 @@ def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, s
     if cancel.is_set():
         raise InterruptedError("stopped")
     idea_pick.discard(path)
-    files = maker().make(ask["ask"] + ("\n" + task["why"] if task.get("why") else ""),
-                         path / idea_pick.PICK_DIR, count=ask["n"])
+    spend = craft_spend.Spend(runner.state_dir, slug, tid, tool_id, row["cap"])
+    try:
+        files = maker(spend=spend).make(ask["ask"] + ("\n" + task["why"] if task.get("why") else ""),
+                                       path / idea_pick.PICK_DIR, count=ask["n"])
+    finally:
+        task.update(craft_cost=spend.cost(), craft_cap=row["cap"])
+        runner._set_task(slug, tid, craft_cost=task["craft_cost"], craft_cap=task["craft_cap"])
     try:
         (path / idea_pick.PICK_FILE).write_text(json.dumps({"variants": [
             {"name": f"Variant {i + 1}", "file": f.name, "why": ""} for i, f in enumerate(files)]}), encoding="utf-8")
     except BaseException:
         idea_pick.discard(path)
         raise
-    # Makers currently return assets only. Unknown billed money must not read as zero.
-    task.update(craft_cost={"amount": None, "currency": row["cap"]["currency"]}, craft_cap=row["cap"])
-    runner._set_task(slug, tid, craft_cost=task["craft_cost"], craft_cap=task["craft_cap"])
     return ""

@@ -55,11 +55,13 @@ class _Maker:
     kind: str
     path: str
 
-    def __init__(self, transport: Transport | None = None):
+    def __init__(self, transport: Transport | None = None, *, spend=None):
         self.transport = transport or https_transport
+        self.spend = spend
 
     def _request(self, payload: dict) -> Response:
         tool = craft_tools.get(self.tool_id)
+        reservation = self.spend.reserve(payload) if self.spend else None
         credential = craft_tools.key(self.tool_id)  # only at the request
         if not credential:
             raise MakerError("The tool has no key on this computer")
@@ -82,6 +84,8 @@ class _Maker:
             raise MakerError(f"The tool request failed (HTTP {response.status})")
         if len(response.body) > limit:
             raise MakerError("The tool's answer is too large")
+        if self.spend:
+            self.spend.settle(reservation)
         return response
 
     def make(self, prompt: str, destination: Path, *, count: int = 1) -> list[Path]:
