@@ -6,10 +6,11 @@ order: 13
 size:
 priority: normal
 short: A craft's heroes
-phase: work
+phase: done
 route: product, design, tech
 spec: docs/specs/164-a-crafts-heroes-work-on-what-is-built.md
 by: claude-code
+gate: b624cd2 · 291 files · green
 schema: 3
 ---
 # A craft's heroes work on what is built
