@@ -4,7 +4,7 @@
 // the leaders (upmenu.js). The row is one card an entry (entries.js); a press picks one, and answering the last card of the entry on the screen picks the next one at once (no motion of its own). With the middle on a party or on a goal that has no card, no card of the
 // row is raised. The field the + card opens lies over the keyboard (updeck.js).
 import { useEffect, useRef } from "preact/hooks";
-import { html } from "../html.js";
+import { html, cls } from "../html.js";
 import { ORKMASTER, openTab, picked, tab } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { Notice } from "../table/notice.js";
@@ -18,6 +18,8 @@ import { useKeyboard } from "./upkeys.js";
 import { Sheet } from "./upmenu.js";
 import { Row } from "./uprow.js";
 import { Top } from "./uptop.js";
+import { feltOf } from "../table/felt.js";
+import { presenceNow } from "../table/presence.js";
 
 /** The hand on a phone. `root`: the hand's element ref (the keys), `stacks`: data.js `stacksOf`, `plus`: opens the field. */
 export function Upright({ root, stacks, plus }) {
@@ -29,7 +31,7 @@ export function Upright({ root, stacks, plus }) {
     else if (look.kind === "goal" && had.current === look.slug && picked.value === look.slug) { had.current = ""; picked.value = ""; if (tab.value !== ORKMASTER) openTab(ORKMASTER); }       // its last card was answered: the next entry comes
     else had.current = "";
   }, [look.kind, look.slug, look.entry?.key]);
-  return html`<footer ref=${root} class="hand hand-up" aria-label="The hand" data-upright="1" data-empty=${look.kind === "none" ? "1" : undefined} data-typing=${typing ? "1" : undefined}>
+  return html`<footer ref=${root} class=${cls("hand hand-up ork-table", { "is-out": presenceNow()?.here === false })} data-party=${look.kind === "party" ? feltOf(look.g) : "orkmaster"} aria-label="The hand" data-upright="1" data-empty=${look.kind === "none" ? "1" : undefined} data-typing=${typing ? "1" : undefined}>
     <${Notice} />
     <${Top} />
     <${Look} look=${look} entries=${entries} typing=${typing} />
