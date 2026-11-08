@@ -45,3 +45,32 @@ def test_a_decision_the_board_wrote_with_no_goal_is_known_by_its_number(tmp_path
     (folder / doc_formats.file_name(1, "Postgres")).write_text(doc_formats.render_madr({"number": 1, "title": "Postgres", "decision": "Use it."}))
     read_in.take(tmp_path, sd)
     assert len(journals.read(sd, journals.PROJECT)) == 1
+
+
+def _view_file(wiki, party, text, at, read="goal-a, §12"):
+    (wiki / "journals").mkdir(parents=True, exist_ok=True)
+    (wiki / "journals" / f"{party}.md").write_text(
+        f"---\norkboard-journal: {party}\nparty: {party}\ndigest: \"{text}\"\ndigest_at: {at}\ndigest_read: {read}\n---\n\n# {party}'s journal\n")
+
+
+def test_a_newer_view_in_the_tree_is_kept_and_not_written_over(tmp_path):
+    sd, wiki = tmp_path / ".orkcraft", tmp_path / "wiki"
+    journals.add(sd, "tech", "stance", "On “Timer” you said go: small")
+    upto = journals.save_digest(sd, "tech", "Works: old.", "", at="2026-11-01T10:00:00")["upto"]
+    _view_file(wiki, "tech", "Works: new; goal-a.", "2026-11-08T09:00:00")
+    got = read_in.take_outside(wiki, sd)
+    assert got["views"] == 1
+    d = journals.digest(sd, "tech")
+    assert d["text"] == "Works: new; goal-a." and d["at"] == "2026-11-08T09:00:00" and d["read"] == ["goal-a", "§12"] and d["upto"] == upto
+    assert "views" not in read_in.take_outside(wiki, sd)
+
+
+def test_an_older_view_in_the_tree_is_not_kept(tmp_path):
+    sd, wiki = tmp_path / ".orkcraft", tmp_path / "wiki"
+    journals.save_digest(sd, "tech", "Works: mine.", "", at="2026-11-08T10:00:00")
+    _view_file(wiki, "tech", "Works: stale.", "2026-11-01T10:00:00")
+    assert "views" not in read_in.take_outside(wiki, sd)
+    assert journals.digest(sd, "tech")["text"] == "Works: mine."
+    wiki2 = tmp_path / "w2"                                                   # no view on the machine: the tree's is kept
+    _view_file(wiki2, "design", "Hurts: x.", "2026-11-01T10:00:00")
+    assert read_in.take_outside(wiki2, sd)["views"] == 1 and journals.digest(sd, "design")["at"] == "2026-11-01T10:00:00"
