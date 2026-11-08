@@ -140,3 +140,10 @@ button.ork-card.up-card { position: relative; flex: none; box-sizing: border-box
 .up-mic.is-on { color: var(--ork-alert); }
 .up-mid { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--ork-4); }
 .up-none { margin: 0; text-align: center; font: var(--ork-type-body); color: var(--ork-ink-muted); }
+
+/* the phone's table (spec 160 K, decisions §275.3): the hand's screen wears the open party's felt and light from orkUI's tokens as the desktop's (`.ork-table[data-party]`, the party felt.js names; `.is-out` while the person is away); the top row and
+   the words in the middle lie on the felt's flat plate, the steps showing between them. The lamp's chain and the backpack stand in the top row, no words. No gradient and no shadow of its own. */
+.hand-up .up-top { background: var(--_plate); border-bottom-color: var(--ork-frame); }
+.hand-up .up-top .stall-pack, .hand-up .up-top .presence-chain { min-width: var(--ork-tap); min-height: var(--ork-tap); box-sizing: border-box; justify-content: center; align-items: center; padding: 0; }
+.hand-up .up-top .presence-chain { align-self: stretch; align-items: flex-start; }
+.hand-up .up-none { padding: var(--ork-2) var(--ork-4); background: var(--_plate); }

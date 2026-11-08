@@ -2,7 +2,7 @@
 
 On the desktop (1280 x 800) the discard column's head holds the backpack (left) and the lamp's chain (right) over *Discard*: *Here · until 23:00*, or pulled (`.is-pulled`) *Away · until 19:00* (the word muted), *· held* when the
 press holds; `aria-pressed` is *here*; a pull sends one `presence.set` with the other state, and the snapshot that follows turns the chain and puts the pane `.is-out` (the felt flat, the signals as they were); with no `presence`
-(an older host) there is no chain; under 760 px the small chain with no words (`aria-label` and `title` keep them), at the tabs' end. The phone's top row keeps the door until stage K."""
+(an older host) there is no chain; under 760 px the small chain with no words (`aria-label` and `title` keep them), at the tabs' end. The phone's top row (390 x 844) holds the small chain, no words, and the small backpack beside it, on the felt of the open party (stage K)."""
 from __future__ import annotations
 
 import copy
@@ -183,18 +183,46 @@ def test_under_760_the_small_chain_has_no_words_and_the_label_keeps_them(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_the_phones_top_row_keeps_the_small_door_until_stage_k(gui):
+def test_the_phones_top_row_has_the_small_chain_where_the_door_stood(gui):
     host = DoorHost(AWAY)
     pg, errors = start(gui, "phone", host)
     try:
-        d = pg.locator(".up-top .presence-door")
+        d = pg.locator(".up-top .presence-chain")
         d.wait_for(timeout=WAIT_MS)
-        assert d.locator(".ork-door.small").count() == 1 and d.locator(".presence-door__word").text_content() == "Away"
+        assert pg.locator(".presence-door, .ork-door").count() == 0, "the door is gone"
+        assert d.locator(".ork-chain.small.is-pulled").count() == 1 and d.locator(".presence-chain__words").count() == 0, "small, pulled while away, no words"
+        assert not d.evaluate("e => /Here|Away/.test(e.innerText)"), "no visible words"
+        assert d.get_attribute("aria-label") == "Away, until 19:00" and "until 19:00" in d.get_attribute("title")
+        pack = pg.locator(".up-top .stall-pack")
+        assert pack.count() == 1 and pack.locator(".ork-pack.small").count() == 1 and pack.get_attribute("aria-label") and pack.get_attribute("title"), "the backpack beside the chain"
+        assert pack.evaluate("e => getComputedStyle(e.querySelector('.stall-pack__word')).display") == "none", "the backpack's word is in aria-label and title only"
+        kids = pg.evaluate("() => [...document.querySelectorAll('.up-top > *')].map((e) => e.className.split(' ')[0])")
+        assert kids.index("stall-pack") + 1 == kids.index("presence-chain") and kids.index("presence-chain") < kids.index("up-die"), kids
         d.click()
-        assert _calls(pg, host, "presence.set") == [{"here": True}]
-        pg.wait_for_function("() => document.querySelector('.up-top .presence-door__word').textContent === 'Here'", timeout=WAIT_MS)
-        box = d.bounding_box()
-        assert box["x"] >= 0 and box["x"] + box["width"] <= 390
+        assert _calls(pg, host, "presence.set") == [{"here": True}], "one press, one presence.set"
+        pg.wait_for_function("() => document.querySelector('.up-top .presence-chain').dataset.here === 'true'", timeout=WAIT_MS)
+        assert d.locator(".ork-chain.is-pulled").count() == 0 and d.get_attribute("aria-label").startswith("Here")
+        for el in (d, pack):
+            box = el.bounding_box()
+            assert box["x"] >= 0 and box["x"] + box["width"] <= 390 and box["width"] >= 44 and box["height"] >= 44, box
+    finally:
+        pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_the_phones_table_wears_the_felt_and_away_puts_it_out(gui):
+    host = DoorHost(HERE)
+    pg, errors = start(gui, "phone", host)
+    try:
+        hand = pg.locator(".hand-up")
+        hand.wait_for(timeout=WAIT_MS)
+        cls = hand.get_attribute("class")
+        assert "ork-table" in cls and "is-out" not in cls and hand.get_attribute("data-party") == "orkmaster"
+        assert "radial-gradient" in hand.evaluate("e => getComputedStyle(e).backgroundImage"), "the felt's light is orkUI's steps"
+        pg.locator(".up-top .presence-chain").click()
+        pg.wait_for_function("() => document.querySelector('.hand-up').classList.contains('is-out')", timeout=WAIT_MS)
+        flat = pg.evaluate("() => { const e = document.createElement('i'); e.style.backgroundColor = 'var(--ork-felt-orkmaster-out)'; document.body.append(e); const c = getComputedStyle(e).backgroundColor; e.remove(); return c; }")
+        assert hand.evaluate("e => getComputedStyle(e).backgroundImage") == "none" and hand.evaluate("e => getComputedStyle(e).backgroundColor") == flat, "away: the felt flat and darker"
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
