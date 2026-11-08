@@ -160,7 +160,7 @@ gate: b79367b · 145 files · red
 - met: When that card is up, then each way is a 144 × 202 card in the hand showing its name and whole line at rest, the leader's pick marked by its head and in words, not colour alone.
 - met: When the person tabs through a lifted card's answers, then each way, *<Leader> decides*, *Your own words…*, *Open…* and *Put it back* take a ringed focus in turn; Escape puts it back.
 - met: When the person presses *Your own words…*, then a field opens on the table beside the question, focused, with *Send to <leader>* under it.
-- not met: When a goal still in Talk is lifted at 1280 × 800, then its table shows its leaders' Talk and its open question with its ways, and the rest of the hand is sunk and grey. — shoot_product.py shoots at 1440 × 900, not 1280 × 800; reshoot both pictures at 1280 × 800 (product-question.png also predates *Your own words…*)
+- not met: When a goal still in Talk is lifted at 1280 × 800, then its table shows its leaders' Talk and its open question with its ways, and the rest of the hand is sunk and grey. — product-talk.png at 1280 × 800: the lifted card covers the Design lane's ways (cut to "Each…", "One c…"), and the sunk hand is hidden under the ways row, not seen grey
 
 ## Tech
 ### Talk
