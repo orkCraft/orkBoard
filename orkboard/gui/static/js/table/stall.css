@@ -97,3 +97,7 @@
   .stall-face, .stall-service__card { transition: none; }
   .stall-ware:not(.is-mine):not(.is-locked):hover .stall-face, .stall-ware:not(.is-mine):not(.is-locked):focus-within .stall-face, .stall-service:hover .stall-service__card, .stall-service.is-over .stall-service__card { transform: none; }
 }
+
+/* the leather's straps and buckles lie over the pane's top 40 px (orkUI `.ork-leather::after`): the head with the title starts below them, on the phone and the desktop alike (spec 160 K, decisions §272.1) */
+.table-pane.ork-leather > .table-title { margin-top: calc(var(--ork-8) + var(--ork-6)); }
+@media (min-width: 760px) { .table-pane.ork-leather > .table-title.is-bare { margin-top: 0; } }      /* the bare head is only the menu in the corner, between the straps */
