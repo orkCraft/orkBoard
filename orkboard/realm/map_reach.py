@@ -87,8 +87,10 @@ def _wills(pages: Path, party: str) -> dict[str, list[str]]:
 
 def reach(state_dir: Path, root: Path, pages: Path, party: str, craft: str, ref: str = "dev") -> dict[str, dict]:
     """`{slug: {lit, one, two, no_test}}` for every goal not done whose section for `party` has a *Will be* that names a part of `craft`'s map (see the module's doc). Never raises: {} for a map
-    that cannot be read or a craft with no reach (the other crafts are `map_reach_crafts`'s; Dev and main's is read from the plan kept)."""
+    that cannot be read or a craft with no reach (the other crafts are `map_reach_crafts`'s; Dev and main's is each goal's plan without its trial pick, read here only in the host's refresh)."""
     try:
+        if craft == "release":
+            return map_reach_crafts.release_reach(state_dir, root, pages, ref)
         wills = _wills(pages, party)
         if not wills:
             return {}

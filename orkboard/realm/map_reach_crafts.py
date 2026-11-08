@@ -7,14 +7,14 @@
 - the loop (Game design): the step before and after in its loop, a loop closing last step to first, then the next out;
 - the tree (Product): a job's hypotheses and goals, or a hypothesis' or a goal's job, then the next out;
 - Art and the way in (Marketing): none, `lit` only.
-`no_test` is always empty off System. Dev and main (Release) is read from the plan kept, not here. A goal that names nothing of the map has no entry; a map that cannot be read gives {}.
+`no_test` is always empty off System. Dev and main (Release): `release_reach` (stage E, decisions §281.6) below. A goal that names nothing of the map has no entry; a map that cannot be read gives {}.
 """
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-from orkboard.realm import hypotheses, loop, map_parts, opportunity_tree, spec_sections
+from orkboard.realm import goal_main, hypotheses, loop, map_parts, opportunity_tree, release_map, spec_sections
 
 CRAFTS = ("game-design", "product", "art", "marketing")
 
@@ -85,3 +85,21 @@ def reach(state_dir: Path, root: Path, pages: Path | None, craft: str, wills: di
         return out
     except Exception:
         return {}
+
+
+def release_reach(state_dir: Path, root: Path, pages: Path | None, ref: str = "dev") -> dict[str, dict]:
+    """Dev and main's reach (decisions §281.6, §280.2): for each goal `release_map.read` holds (in `ref`, not in main), `lit` its own card, `one` the other goals main must take with it, from
+    `goal_main.plan(..., pick=False)` (no trial pick, so no worktree and no conflict found). Call it in the host's refresh, once per Board change, never on a request. A goal whose plan cannot be read
+    is lit alone; a map that cannot be read gives {}. `two` and `no_test` are empty."""
+    try:
+        held = [g["idea"] for g in release_map.read(Path(state_dir), Path(root), pages, ref)["goals"]]
+    except Exception:
+        return {}
+    out: dict[str, dict] = {}
+    for slug in held:
+        try:
+            along = goal_main.plan(Path(root), Path(state_dir), slug, root=pages, into=ref, pick=False).get("goals") or []
+        except Exception:
+            along = []
+        out[slug] = {"lit": [slug], "one": sorted({str(g) for g in along if g != slug and g in held}), "two": [], "no_test": []}
+    return out
