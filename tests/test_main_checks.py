@@ -288,6 +288,14 @@ def test_the_press_that_takes_dev_whole_runs_the_tests_too_and_a_red_stops_it(ho
     assert host.command("ideas.gate_merge")["ok"] is True and git(repo, "rev-parse", "main") != main
 
 
+def test_the_press_that_takes_dev_whole_is_refused_in_words_when_the_project_has_no_tests(host, repo, work):
+    (repo / "orkcraft.toml").unlink()                                                       # no gate: no tests at all
+    main, dev = git(repo, "rev-parse", "main"), git(repo, "rev-parse", "dev")
+    with pytest.raises(CommandError, match="has no tests.*To main without the tests"):
+        host.command("ideas.gate_merge")
+    assert git(repo, "rev-parse", "main") == main and git(repo, "rev-parse", "dev") == dev and worktrees(repo) == []
+
+
 def test_pytests_failed_line_names_its_test():
     out = "== short test summary info ==\nSKIPPED [1] x\nFAILED tests/test_a.py::test_b - assert 1 == 2\nERROR tests/test_c.py::test_d\n"
     assert main_checks.failed_test(out) == "tests/test_a.py::test_b" and main_checks.failed_test("2 failed") == ""

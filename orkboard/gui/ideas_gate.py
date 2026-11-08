@@ -140,6 +140,8 @@ class GateMixin:
         press with main as it was, naming the test (realm/main_checks.py `verify`; the trial worktree is gone). Nothing waiting is the merge's own refusal."""
         if idea_gate.same(into, main) or not idea_gate.waiting_by_patch(git, into, main)[0]:
             return
+        if gate_config.read(Path(self.host.repo_root)).none:     # no tests, no green: the one way is To main without the tests (decisions §274.3)
+            raise IdeasError(self._NO_TESTS)
         try:
             tip = idea_gate.tip(git, into, main)
             base = _git(Path(self.host.repo_root), "rev-parse", "--verify", "-q", f"refs/heads/{main}").stdout.strip()
@@ -219,13 +221,15 @@ class GateMixin:
         """The skip still stops at a reason no check owns (not done, in main already, a pick that conflicts)."""
         return self._checks_key(slug, where)[1]
 
+    _NO_TESTS = "This project has no tests, so nothing can show the goal is safe for main: send it with To main without the tests"
+
     def _no_tests_refusal(self, slug: str, where: dict) -> str:
         """A project whose gate has no tests cannot show a green: it is refused in words, naming the one way out (decisions §274.3)."""
         sealed = self._checks_key(slug, where)[1]
         if sealed:
             return sealed
         if gate_config.read(Path(self.host.repo_root)).none:
-            return "This project has no tests, so nothing can show the goal is safe for main: send it with To main without the tests"
+            return self._NO_TESTS
         return ""
 
     def _checks_took(self, slug: str) -> float | None:
