@@ -86,3 +86,57 @@ bone-coloured horns, lighter than the #151412 background. Moods: calm = deadpan;
 wide; worried = huge eyes, a forced grin, a sweat drop; says no = side-eye, brows down; pleased = eyes closed in arcs, a
 toothy grin, a sparkle; asleep = eyes as lines, a snot bubble. No text. Do not copy any existing character.
 ```
+
+## The next round: a grotesque card creature (8 November 2026)
+
+What makes a hand-painted roguelike card's creature, and what of it survives 24 × 24:
+
+| trait | in the painting | on 24 × 24 |
+|---|---|---|
+| silhouette | one exaggerated mass (a huge jaw, a tiny skull, asymmetric horns), readable as a black shape | **survives best**: the race and the hero live here |
+| proportion | heavy below: the jaw and the underbite wider than the brow, the eyes set deep and small | survives; the eyes stay big in *contrast*, not in size |
+| light | one hard side light, half the face in shadow, a rim light on the dark side | survives as two flat planes (lit / shadow) at 48 px; at 24 px only the light side |
+| line | a thick, uneven dark contour, broken where the light hits | a 1-px outline in the hue's darkest tone, dropped on the lit edge |
+| palette | muddy, desaturated, one accent | survives; the shadow must stay lighter than #151412, so the rim light is not optional |
+| face | pale eyes glinting in dark sockets, a heavy brow shelf, teeth | the moods read by the eyes' whites against the socket's shadow and by the mouth's shape |
+| brushwork, wrinkles, texture | everywhere | **lost**: one or two dents in the planes at most |
+
+The cute devices go (no sweat drop, no snot bubble, no sparkle): the mood is the face alone. Calm = heavy-lidded,
+unimpressed; focused = one eye a slit, the other glaring; worried = pinpoint pupils in wide whites, a clenched grimace;
+says no = side-eye, the jaw jutting, the lower lip over a tusk; pleased = a wide crooked grin, eyes narrowed to glinting
+crescents; asleep = eyes shut as heavy lines, the jaw slack, a string of drool.
+
+The prompt given to Gemini (one sheet first, the shaman):
+
+```
+A sheet of six pixel-art ICONS of the same creature's head, arranged in a 3 x 2 grid of equal cells on a perfectly flat
+#151412 background (no vignette, no glow, no shadow cast on the background, no frames, no text, no labels).
+
+The creature: an old ork shaman, grotesque and heavy, like a monster from a hand-painted dark roguelike card game, not
+cute, not a cartoon, not a sticker. A small sloping skull, a brow shelf like a ledge, a massive underslung jaw much wider
+than the skull with two thick chipped tusks pushing up past the upper lip, a broad flattened nose, ragged ears. Two heavy
+ram horns of old bone curling down beside the jaw, one horn cracked. A thin braid with three square beads hanging from
+one horn. Asymmetric, lumpy, weathered: it should feel heavy and a little menacing, with dry humour, never sweet.
+
+Format: an ICON, not a portrait: the head only, front view, no neck or shoulders, the head filling the cell; the horns
+and the jaw break the silhouette so the head reads as a black shape. Pixel art on a strict 24 x 24 grid shown enlarged:
+hard square pixels, no anti-aliasing, no gradients, no dithering noise. One hard light from the upper left: the lit
+side in two flat tones, the other side in shadow, with a thin cold rim light along the shadowed edge so that edge stays
+clearly lighter than the background. A 1-pixel outline in the darkest tone of each material, left out where the light
+hits. A muted, desaturated palette of at most 12 colours: grey-olive skin (mid-tone, clearly lighter than the
+background, even in shadow), old bone horns and tusks, near-white eyes, a dark brown-violet mouth. No red, no yellow, no
+orange anywhere.
+
+The eyes sit deep under the brow, but their whites are large (at least 5 x 4 pixels) with a 1-pixel pupil, bright
+against the shadowed sockets: the mood is carried only by the eyes, the brows and the mouth, as big simple shapes. No
+sweat drops, no bubbles, no sparkles, no symbols. Same head, same size, same position and the same light in all six
+cells; only the face changes:
+1. calm: heavy half-closed lids, the mouth shut with the tusks up, utterly unimpressed.
+2. focused: one eye squeezed to a slit, the other wide and glaring, the brow knotted.
+3. worried: both eyes wide open with pinpoint pupils, the brows pushed up and together, the mouth stretched into a
+   clenched grimace showing the teeth.
+4. says no: a hard side-eye, the brows down, the jaw jutting forward, the lower lip pushed up over one tusk.
+5. pleased: a wide crooked grin full of uneven teeth, the eyes narrowed to glinting crescents, the cheeks raised.
+6. asleep: the eyes shut as heavy lines, the jaw hanging slack and open, a thin string of drool.
+
+Do not copy any existing character or any existing game's art.
