@@ -387,11 +387,20 @@ def test_a_cut_hero_is_said_once_and_the_page_and_table_stay(host, cut):
     party = _party(host, craft)
     page = root / ideas.TRACKS / f"{party}.md"
     page.write_text(page.read_text().replace("\n---\n", f"\nhero: {cut}\n---\n", 1), encoding="utf-8")
-    before = page.read_bytes()
+    table = root / "pages" / "tables" / f"{party}.md"
+    table.parent.mkdir(parents=True, exist_ok=True)
+    table.write_text(f"---\nowner: board\nkind: table\nparty: {party}\nhero: {cut}\nlaid: 2026-01-01\nschema: 1\n---\n\n## Anywhere\n- A card — kept as laid\n", encoding="utf-8")
+    before, table_before = page.read_bytes(), table.read_bytes()
     name, why = heroes.CUT[cut]
     first = stall(host, party)["say"]
     assert first.startswith(f"{name} was cut: {why}.") and "its craft's default, leads now." in first
-    assert page.read_bytes() == before
-    assert name not in stall(host, party)["say"]
+    assert page.read_bytes() == before and table.read_bytes() == table_before
+    got = stall(host, party)
+    assert name not in got["say"] and table.read_bytes() == table_before
+    assert goal_team.hero_of(root, party).id == heroes.default(craft).id
+    assert [c["yours"] for c in got["hand"] if c["slot"] == "hero"] in ([heroes.default(craft).id], [] if craft != "product" else None)  # no hero card where no hero is offered
     host.ideas.__dict__.pop("_stall_before", None)
-    assert name not in stall(host, party)["say"] and page.read_bytes() == before
+    got = stall(host, party)
+    assert name not in got["say"] and page.read_bytes() == before and table.read_bytes() == table_before
+    assert goal_team.hero_of(root, party).id == heroes.default(craft).id
+    assert [c["yours"] for c in got["hand"] if c["slot"] == "hero"] in ([heroes.default(craft).id], [] if craft != "product" else None)  # no hero card where no hero is offered
