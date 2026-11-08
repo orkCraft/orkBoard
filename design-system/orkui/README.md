@@ -99,10 +99,10 @@ No size between 14 and 28: whole pixels. The element is shown on a card, never n
 words and never named.
 
 ## The signs
-`signs/` holds the forty-three signs of orkBoard's window (spec 50 §1.6, spec 51 §1, spec 52 §1, spec 56, spec 59): check (done), cross (failed), work (at work), **moon**
+`signs/` holds the forty-four signs of orkBoard's window (spec 50 §1.6, spec 51 §1, spec 52 §1, spec 56, spec 59): check (done), cross (failed), work (at work), **moon**
 (starts by itself later, a crescent alone: it was `night`, a crescent and a star, before 0.15.0; the one moon of the window), alert (a stop that asks), flag (a goal in main),
 before (what a task waits for), after (what waits for it), and the media signs play and pause (a sound's or a clip's control), sound (a sound's tile), film (a clip's tile) and text
-(a text's tile), **sword** and **shield** (0.15.0: a squad's *Does* and *Checks* columns, never a state's sign), **question** (0.15.5: a question the person answers, drawn beside `alert` and `target`), **bug-squashed** (0.26.0: a bug fixed, the beetle squashed flat, drawn where the bug stood; it has a 14 x 14 of its own at 28 px and is no goal type's), **conflict** (0.30.0: a decision that goes against an earlier one, two cards crossed; no goal type's), and a goal type's mark, each type its own: feature, bug, tidy,
+(a text's tile), **sword** and **shield** (0.15.0: a squad's *Does* and *Checks* columns, never a state's sign), **question** (0.15.5: a question the person answers, drawn beside `alert` and `target`), **bug-squashed** (0.26.0: a bug fixed, the beetle squashed flat, drawn where the bug stood; it has a 14 x 14 of its own at 28 px and is no goal type's), **conflict** (0.30.0: a decision that goes against an earlier one, two cards crossed; no goal type's), **pick** (0.36.0: the Orkmaster's pick, a small star on a hero's ware; no goal type's), and a goal type's mark, each type its own: feature, bug, tidy,
 restructure, screen, picture, logo, target, flask, horn, chart, page, abtest, landing, post, tagline, mechanic, level, balance, character, release, store, tune, compass, steps,
 each a 7 x 7 grid of unit squares (`signs/README.md`, which says which the window as decided draws and that the goal types' signs stay for Orkline). `<span class="ork-sign check" aria-hidden="true"></span>` draws one at 14 x 14, `.ork-sign.big`
 at 28 x 28, as a mask in `currentColor`: the colour of the text it stands in (ink, muted, success, danger or alert; a sign adds no colour
