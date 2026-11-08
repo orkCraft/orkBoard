@@ -159,6 +159,13 @@ video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; m
 .mp-dev__head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--ork-4); }
 .mp-goals { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-5); }
 .mp-goal.ork-card { width: 204px; }
+.mp-age { display: block; padding: 0 var(--ork-1); color: var(--ork-ink-muted); }
+.mp-batch { display: inline-flex; align-items: center; align-self: stretch; flex: none; padding: 0 var(--ork-1); border-left: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); }
+@media (min-width: 760px) {   /* the cars in one row, a long train scrolling inside its own row */
+  .mp-cars { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--ork-2); }
+  .mp-cars { gap: var(--ork-3); }
+  .mp-cars .mp-goal.ork-card { flex: none; width: 96px; }
+}
 .mp-foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-6); }
 .mp-tomain { display: flex; flex-direction: column; gap: var(--ork-3); }
 .mp-tomain .ork-label .ork-sign { margin-right: var(--ork-2); }
