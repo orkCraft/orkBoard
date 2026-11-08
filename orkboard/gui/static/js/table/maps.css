@@ -122,6 +122,16 @@ video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; m
 .mp-lane__head { display: flex; flex-direction: column; gap: var(--ork-1); min-height: 38px; }
 .mp-lane__cards { display: flex; flex-direction: column; gap: var(--ork-4); }
 .mp-lane__cards .mp-card.ork-card { max-width: 224px; }
+/* Art by weight (spec 165 O): a card's width by its asset's weight, orkUI's spacing times 5, 7 and 9; a lane's foot its size; an asset no goal's reach lights lies faint (frame and window, the name's ink stays) */
+.mp-lane__foot { margin-top: auto; padding-top: var(--ork-2); }
+@media (min-width: 760px) {
+  .mp-lane__cards .mp-card.ork-card.mp-asset { box-sizing: border-box; max-width: 100%; }
+  .mp-lane__cards .mp-card.ork-card.mp-asset.is-light { width: calc(var(--ork-8) * 5); }
+  .mp-lane__cards .mp-card.ork-card.mp-asset.is-normal { width: calc(var(--ork-8) * 7); }
+  .mp-lane__cards .mp-card.ork-card.mp-asset.is-heavy { width: calc(var(--ork-8) * 9); }
+}
+.mp-asset.is-faint { border-color: var(--ork-frame); }
+.mp-asset.is-faint .mp-win { opacity: 0.45; }
 
 /* -- a card lifted: over the card where it lies ------------------------------------------------------------------------------------ */
 .mp-lift { display: contents; }
