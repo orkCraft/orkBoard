@@ -12,7 +12,7 @@ spec: docs/specs/158-the-window-as-a-table.md
 decisions: 270, 274
 by: claude-code
 schema: 3
-gate: ee0737d · 127 files · green
+gate: b79367b · 145 files · red
 ---
 # Answers as cards in the hand, To main from the discard after the gate's tests
 
