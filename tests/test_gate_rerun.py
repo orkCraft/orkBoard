@@ -116,7 +116,7 @@ def test_exact_main_uses_checked_sha_and_preserves_mixed_identities(tmp_path, mo
     answers = iter([{ids[1], ids[2]}, {ids[1]}])
     monkeypatch.setattr(gate_rerun, "run_ids", lambda *a: next(answers))
     monkeypatch.setattr(gate_rerun, "_base_tree", lambda git, sha: forks.append(sha) or base)
-    found = gate_rerun.sort_out(g, tmp_path, "exact-sha", "moving-main", GateRun(False, red_output("flaky", "before", "new")), threading.Event(), 30, exact_main_base=True)
+    found = gate_rerun.sort_out(g, tmp_path, "exact-sha", "moving-main", GateRun(False, red_output("flaky", "before", "new"), code=1), threading.Event(), 30, exact_main_base=True)
     assert found.flaky == (ids[0],) and found.red_before == (ids[1],) and found.left == (ids[2],)
     assert forks == ["exact-sha"] and removed == [base]
 
@@ -127,10 +127,10 @@ def test_exact_mode_incomplete_budget_and_different_identity_are_unresolved(tmp_
     output = red_output("before")
     key = "tests/test_red.py::before"
     for out, budget in [(output, 0), (output.replace("1 failed", "2 failed"), 30)]:
-        found = gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, out), threading.Event(), budget, exact_main_base=True)
+        found = gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, out, code=1), threading.Event(), budget, exact_main_base=True)
         assert found.unresolved == (key,)
     monkeypatch.setattr(gate_rerun, "run_ids", lambda *a: {"tests/test_other.py::other"})
-    assert gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, output), threading.Event(), 30, exact_main_base=True).unresolved == (key,)
+    assert gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, output, code=1), threading.Event(), 30, exact_main_base=True).unresolved == (key,)
 
 
 def test_all_reported_identities_are_kept():
@@ -153,7 +153,7 @@ def test_exact_cancel_removes_base_tree(tmp_path, monkeypatch):
     monkeypatch.setattr(gate_rerun, "run_ids", rerun)
     monkeypatch.setattr(gate_rerun, "_base_tree", lambda *a: base)
     with pytest.raises(InterruptedError):
-        gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, red_output("before")), threading.Event(), 30, exact_main_base=True)
+        gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, red_output("before"), code=1), threading.Event(), 30, exact_main_base=True)
     assert removed == [base]
 
 
@@ -170,3 +170,38 @@ def test_same_base_diagnostics_own_distinct_worktrees(town):
         for path in (first, second):
             if path is not None:
                 g.remove(path)
+
+
+def test_exact_mode_abnormal_exit_keeps_failures_unresolved(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    g = SimpleNamespace(python=lambda: "python")
+    def must_not_rerun(*args):
+        raise AssertionError("an incomplete initial run cannot be excused")
+    monkeypatch.setattr(gate_rerun, "run_ids", must_not_rerun)
+    for code in (None, 2, 3, 4, 5, 127):
+        found = gate_rerun.sort_out(g, tmp_path, "sha", "main",
+                                   GateRun(False, red_output("before"), code=code),
+                                   threading.Event(), 30, exact_main_base=True)
+        assert found.unresolved == ("tests/test_red.py::before",)
+        assert not found.flaky and not found.red_before
+
+
+def test_strict_rerun_rejects_abnormal_exit_even_with_complete_summary(tmp_path, monkeypatch):
+    from io import StringIO
+    from types import SimpleNamespace
+    key = "tests/test_red.py::before"
+    monkeypatch.setattr(gate_rerun.jobs, "_wait", lambda *args: None)
+    for code in (2, 3, 4, 5):
+        monkeypatch.setattr(gate_rerun.subprocess, "Popen", lambda *a, **kw: SimpleNamespace(
+            stdout=StringIO(red_output("before")), returncode=code))
+        assert gate_rerun.run_ids("python", tmp_path, [key], threading.Event(), 30, strict=True) is None
+
+
+def test_parameter_identity_with_separator_survives_real_rerun(tmp_path):
+    test = tmp_path / "test_parameter.py"
+    test.write_text('import pytest\n@pytest.mark.parametrize("x", [1], ids=["a - b"])\n'
+                    'def test_value(x):\n    assert False\n')
+    key = "test_parameter.py::test_value[a - b]"
+    output = f"\x1b[31mFAILED\x1b[0m {key} - AssertionError: a - b\n=== 1 failed in 0.1s ==="
+    assert gate_rerun.ids_failing(output) == [key]
+    assert gate_rerun.run_ids(sys.executable, tmp_path, [key], threading.Event(), 30, strict=True) == {key}

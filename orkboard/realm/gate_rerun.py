@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from orkboard.realm import dep_links, jobs, worktrees
-from orkboard.realm.idea_git import GateRun, IdeaGit, _git, _ok, has_summary, parse_tests
+from orkboard.realm.idea_git import GateRun, IdeaGit, _git, _ok, has_summary, parse_tests, plain
 
 MAX_IDS = 20
 MIN_BUDGET_S = 10                    # less of the gate's clock than this left: nothing is run again
@@ -39,7 +39,20 @@ def node_key(name: str) -> str:
 
 
 def ids_failing(output: str) -> list[str]:
-    return list(dict.fromkeys(m.group(1).split(" - ", 1)[0].strip() for line in output.splitlines() if (m := re.match(r"^(?:FAILED|ERROR)\s+(.+)", line.strip()))))
+    names = []
+    for line in plain(output).splitlines():
+        match = re.match(r"^(?:FAILED|ERROR)\s+(.+)", line.strip())
+        if not match:
+            continue
+        name = match.group(1)
+        # A parameter's display name may itself contain pytest's separator.
+        for separator in re.finditer(" - ", name):
+            prefix = name[:separator.start()]
+            if prefix.count("[") == prefix.count("]"):
+                name = prefix
+                break
+        names.append(name.strip())
+    return list(dict.fromkeys(names))
 
 
 def run_ids(python: str, cwd: Path, ids: list[str], cancel: threading.Event, timeout_s: float, strict: bool = False) -> set[str] | None:
@@ -64,6 +77,8 @@ def run_ids(python: str, cwd: Path, ids: list[str], cancel: threading.Event, tim
     out = box[0] if box else ""
     if proc.returncode == 0:
         return set() if not strict or (has_summary(out) and parse_tests(out)["passed"] >= len(ids)) else None
+    if strict and proc.returncode != 1:  # interrupted, internal or usage errors are not test verdicts
+        return None
     names = ids_failing(out) if strict else list(dict.fromkeys(node_key(n) for n in parse_tests(out)["failing"]))
     counts = parse_tests(out)
     if strict and counts["passed"] + counts["failed"] < len(ids):
@@ -148,7 +163,7 @@ def _exact(git, path, base, run, cancel, budget_s):
     """Main policy preserves all identities and blocks uncertainty."""
     began = time.monotonic()
     ids = ids_failing(run.out)
-    if not ids or run.env or run.timed_out or not _complete(run.out, ids) or budget_s < MIN_BUDGET_S:
+    if not ids or run.code != 1 or run.env or run.timed_out or not _complete(run.out, ids) or budget_s < MIN_BUDGET_S:
         return Sorted((), (), (), 0, tuple(ids))
     left_s = lambda: budget_s - (time.monotonic() - began)
     again = run_ids(git.python(), path, ids, cancel, left_s(), True)
