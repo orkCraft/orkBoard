@@ -57,7 +57,7 @@ def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, s
     if cancel.is_set():
         raise InterruptedError("stopped")
     idea_pick.discard(path)
-    spend = craft_spend.Spend(runner.state_dir, slug, tid, tool_id, row["cap"])
+    spend = craft_spend.Spend(runner.state_dir, slug, tid, tool_id, row["cap"], int(task.get("round") or 1))
     runner._set_task(slug, tid, craft_stop=None)
     try:
         files = maker(spend=spend).make(ask["ask"] + ("\n" + task["why"] if task.get("why") else ""),

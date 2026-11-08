@@ -87,8 +87,9 @@ host.
   4. **A keychain key was not stripped** (the variable's was): a trailing newline failed in the header, reserved. **Fixed.**
   5. **`STALL_SHOTS=1` made a `1/` folder in the tree**, which Codex's `git add` committed with stage I (`ba425ec2` removed it; the pictures stay in
      history). **Fixed**: only a folder named in full.
-  6. **Not fixed, the person's**: the cap counts a task's whole life, not one round (spec 160's Tech *Defaults* say *one round's*); after a round
-     that used most of it, *make new ones* is always stopped, and the receipt says the sum. Safe; the spec's word or the code's must change.
+  6. **The cap counted a task's whole life, not one round** (spec 160's Tech *Defaults* say *one round's*): after a round that used most of it,
+     *make new ones* was always stopped, and the receipt said the sum. **The person chose the spec's word; fixed**: the ledger is a round's, a
+     round run again after a crash keeps its number and what it held, a new round of variants has its own cap.
   7. **Not fixed**: *about* is on the plate's cap for ElevenLabs only, and on every receipt's cost.
 - The leaders' `[look]` line (*drawn on Art's chair at 1280 × 800 … nothing overflows*) is proved by `test_stall_browser.py` on a fake host whose
   chair says *tech party* with orks' heads (the sheet's last two tiles). The opened cap field pushes *What leaves this computer* to the rug's edge.

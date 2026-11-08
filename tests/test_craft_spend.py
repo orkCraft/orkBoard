@@ -30,7 +30,7 @@ def test_next_variant_over_cap_is_not_sent_and_receipt_counts_first(setup, monke
     spend = ledger(setup)
 
     def fake(**kw):
-        entries = json.loads(spend.path.read_text())['k1']
+        entries = json.loads(spend.path.read_text())['k1-r1']
         assert entries[-1]['status'] == 'reserved'  # on disk before transport
         calls.append(kw)
         return picture()
@@ -40,13 +40,13 @@ def test_next_variant_over_cap_is_not_sent_and_receipt_counts_first(setup, monke
         run(setup)
     assert len(calls) == 1
     assert setup[-1]['craft_cost']['amount'] == '0.061455'
-    assert json.loads(spend.path.read_text())['k1'][0]['status'] == 'settled'
+    assert json.loads(spend.path.read_text())['k1-r1'][0]['status'] == 'settled'
     assert not (setup[3] / '.orkcraft-pick').exists()
 
 
-@pytest.mark.parametrize('failure', ['crash', 'timeout', 'send back'])
-def test_restart_and_send_back_never_erase_earlier_spend(setup, monkeypatch, failure):
-    cap(setup, '0.15' if failure == 'send back' else '0.10')
+@pytest.mark.parametrize('failure', ['crash', 'timeout'])
+def test_a_round_run_again_keeps_what_it_held_and_a_new_round_has_its_own_cap(setup, monkeypatch, failure):
+    cap(setup, '0.10')
     calls = []
 
     def fake(**kw):
@@ -61,17 +61,26 @@ def test_restart_and_send_back_never_erase_earlier_spend(setup, monkeypatch, fai
     if failure == 'crash':
         with pytest.raises(SystemExit):
             run(setup)
-    elif failure == 'timeout':
+    else:
         with pytest.raises(ValueError, match='timed out'):
             run(setup)
-    else:
-        run(setup)
-    # A reconstructed Spend reads disk; a new round must not grant fresh money.
-    setup[2]['round'] = 2
+    # The same round again (a crash keeps its number): a reconstructed Spend reads disk, nothing fresh.
     with pytest.raises(ValueError, match='cap'):
         run(setup)
-    assert len(calls) == (2 if failure == 'send back' else 1)
-    assert Decimal(ledger(setup).cost()['amount']) <= Decimal('0.15')
+    assert len(calls) == 1
+    # *None of them, make new ones*: the next round has its own cap, the first round's held money stays its own.
+    setup[2]['round'] = 2
+    calls.clear()
+    monkeypatch.setattr('orkboard.core.craft_run.https_transport', lambda **kw: calls.append(kw) or picture())
+    with pytest.raises(ValueError, match='cap'):              # two variants of 0.061455 against 0.10: the second is not sent
+        run(setup)
+    assert len(calls) == 1
+    runner, slug, *_ = setup
+    rounds = json.loads(craft_spend.Spend(runner.state_dir, slug, 'k1', 'openai-images', {}).path.read_text())
+    assert [len(rounds['k1-r1']), len(rounds['k1-r2'])] == [1, 1]
+    for n in (1, 2):
+        assert Decimal(craft_spend.Spend(runner.state_dir, slug, 'k1', 'openai-images',
+                                         {'amount': '0.10', 'currency': 'USD'}, n).cost()['amount']) <= Decimal('0.10')
 
 
 def test_parallel_reservations_and_failed_atomic_replace(tmp_path, monkeypatch):
@@ -128,7 +137,7 @@ def test_missing_key_pick_preserves_ledger_then_one_request_fits_cap(setup, monk
     with pytest.raises(ValueError, match='USD.*cap'):
         run(setup)
     assert len(calls) == 1
-    entries = json.loads(spend.path.read_text())['k1']
+    entries = json.loads(spend.path.read_text())['k1-r1']
     assert len(entries) == 1 and entries[0]['status'] == 'settled'
     assert setup[-1]['craft_cost']['amount'] == setup[-1]['craft_cap']['amount']
 

@@ -77,7 +77,7 @@ def test_plate_cap_controls_calls_and_pick_receipt(host, tmp_path, monkeypatch, 
         rows = host.ideas.pick_rows(dict(slug=slug, track=party, title='Paid picture', priority='normal'), {'tasks': [task]})
         assert rows[-1]['maker'] == dict(id=plate['id'], word=craft_tools.get(tool_id).maker, cost=pick['cost'], cap=plate['cap'])
     assert len(calls) == calls_expected
-    entries = json.loads((ideas.state_folder(r.state_dir, slug) / 'craft-spend.json').read_text())['k1'] if calls else []
+    entries = json.loads((ideas.state_folder(r.state_dir, slug) / 'craft-spend.json').read_text())['k1-r1'] if calls else []
     total = sum((Decimal(e['price']['amount']) for e in entries), Decimal(0))
     assert total == Decimal(unit) * len(calls) <= Decimal(amount)
     assert saved['craft_cost'] == dict(amount=format(total, 'f'), currency='USD', estimate=True)

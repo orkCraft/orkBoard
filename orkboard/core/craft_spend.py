@@ -1,8 +1,10 @@
 """Durable paid-request reservations (spec 160 D).
 
-Uncertain requests stay reserved. Send-backs share the task's allowance: changing
-its round number never erases money already committed. Prices are estimates,
-not provider bills; no response currently supplies a settled monetary charge.
+Uncertain requests stay reserved. The cap is a round's (spec 160 Tech Defaults): a new
+round of variants starts from nothing, while a round run again after a crash keeps
+its number (`idea_pick.next_round` counts only the rounds that made a pick), so it
+still counts what it held. A send back never runs a maker (`craft_pick.session`).
+Prices are estimates, not provider bills; no response supplies a settled charge.
 """
 from __future__ import annotations
 
@@ -45,9 +47,9 @@ def price(tool_id: str, payload: dict) -> dict:
 
 
 class Spend:
-    def __init__(self, state_dir: Path, slug: str, tid: str, tool_id: str, cap: dict):
+    def __init__(self, state_dir: Path, slug: str, tid: str, tool_id: str, cap: dict, round: int = 1):
         self.path = ideas.state_folder(state_dir, slug) / 'craft-spend.json'
-        self.tid, self.tool_id, self.cap = tid, tool_id, cap
+        self.tid, self.tool_id, self.cap = f'{tid}-r{round}', tool_id, cap
 
     @contextmanager
     def locked(self):
