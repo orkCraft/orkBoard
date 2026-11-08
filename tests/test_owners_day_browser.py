@@ -109,12 +109,13 @@ def first(pg):
 
 
 def column_ask(pg, slug):
-    """At the wide width: the face-down pile's list over the pane and **Remove** on `slug`'s row, which asks in place; returns the list (the question lies in it) and the question."""
-    lift = pg.locator('.col-lift[data-lift="list"]')
+    """At the wide width: the goal's face-down card picked (spec 156 B, decisions §261.5: no pile list), its lift's menu and **Drop this goal…**, which asks in place; returns the lift (the question lies in it) and the question."""
+    lift = pg.locator('.col-lift[data-lift="acts"]')
     if not lift.count():
-        pg.locator(".col-card--down").first.click()
+        pg.locator(f'.col-card--down[data-goal="{slug}"]').click()
         lift.wait_for(timeout=WAIT_MS)
-    lift.locator(f'[data-remove="{slug}"]').click()
+    lift.locator(".table-menu__btn").click()
+    lift.get_by_role("menuitem", name="Drop this goal…").click()
     ask = lift.get_by_role("alertdialog")
     ask.wait_for(timeout=WAIT_MS)
     return lift, ask
@@ -137,9 +138,10 @@ def test_a_goal_sent_lies_in_the_orkmasters_lane_at_once_and_in_no_partys(day):
     pg, host, w = day
     assert pg.locator('.table-lane[data-party] [data-goal="fresh"]').count() == 0, "not drawn in a party's lane too"
     if wide(w):
-        pg.locator(".col-card--down").first.click()                                                                       # a pile shows four cards, its list all of them
-        row = pg.locator('.col-lift[data-lift="list"] .col-list__row[data-goal="fresh"]')
-        row.wait_for(timeout=WAIT_MS)
+        card = pg.locator('.col-card--down[data-goal="fresh"]')                                                           # a card of the column is picked; no pile list (§261.5)
+        card.click()
+        pg.locator('.col-lift[data-lift="acts"]').wait_for(timeout=WAIT_MS)
+        assert card.get_attribute("aria-pressed") == "true"
         assert pg.locator('.frame-column [data-pile="analysis"] .col-card--down').count() >= 1, "face down in the column's In analysis (spec 128 B.3)"
         assert pg.locator('.table-lane [data-lkey="t:orc:fresh"]').count() == 0
         return
@@ -221,7 +223,7 @@ def test_a_refusal_is_said_in_the_card_the_orkmaster_reading_it_in_its_own_words
     ask.get_by_role("alert").wait_for(timeout=WAIT_MS)
     assert ask.get_by_role("alert").inner_text() == SAID, "the host's words are said in the person's"
     assert ask.get_by_role("button", name="Drop it").is_enabled() and box.get_by_role("alertdialog").count() == 1, "the question stays; the goal is still there"
-    assert pg.locator('[data-lkey="t:orc:fresh"], .col-list__row[data-goal="fresh"]').count() == 1
+    assert pg.locator('[data-lkey="t:orc:fresh"], .col-card[data-goal="fresh"]').count() == 1
     host.refuse = "Nothing to drop here"
     ask.get_by_role("button", name="Drop it").click()
     pg.get_by_text("Nothing to drop here").wait_for(timeout=WAIT_MS)                                                      # any other refusal is said as it came
@@ -279,7 +281,7 @@ def test_a_goals_face_over_the_pane_has_the_menu_in_its_head(gui):
 
 
 def test_under_touch_the_menu_button_and_the_answers_are_44_by_44(gui):
-    """A touch screen wide enough for the table (1280 px); **Remove** in the column's list and the two answers are each a 44 px target (spec 94 §1.3)."""
+    """A touch screen wide enough for the table (1280 px); the menu button of the picked card's lift and the two answers are each a 44 px target (spec 94 §1.3)."""
     server, browser = gui
     errors: list[str] = []
     host = DayHost(line=4)
@@ -289,13 +291,11 @@ def test_under_touch_the_menu_button_and_the_answers_are_44_by_44(gui):
     pg.goto(server.url)
     try:
         pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
-        pg.locator(".col-card--down").first.click()
-        lift = pg.locator('.col-lift[data-lift="list"]')
+        pg.locator('.col-card--down[data-goal="fresh"]').click()
+        lift = pg.locator('.col-lift[data-lift="acts"]')
         lift.wait_for(timeout=WAIT_MS)
-        for el in lift.locator("[data-remove]").all():
-            box = el.bounding_box()
-            assert box["height"] >= 43.5, box
-        assert lift.locator("[data-remove]").count() >= 1
+        box = lift.locator(".table-menu__btn").bounding_box()
+        assert box["height"] >= 43.5 and box["width"] >= 43.5, box
         ask = column_ask(pg, "fresh")[1]
         for el in ask.get_by_role("button").all():
             b = el.bounding_box()
