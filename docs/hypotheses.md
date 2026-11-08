@@ -248,3 +248,34 @@ The events carry no prompt, key or file; any sharing through `orkboard usage` re
 
 Keep Art's two makers and their caps; consider another craft's maker only when that craft asks for one.
 If refuted, review the quality and price before extending the makers to another craft.
+
+## H6. The person reads a leader's view before laying a goal on its tab
+
+**Status:** open. **Raised:** 2026-11-08 (goal 167).
+
+### The belief
+
+A leader's view of the product (what works, what hurts, what comes next, each line naming the goal, decision or map part
+it rests on) is read by the person on that leader's tab before they lay a goal there. If it is not read first, it is a
+summary Orkboard pays for and no one uses, and the calls that write it (one cheaper call a party after a goal lands, on
+a map's open, or on the person's press) are spend with no return.
+
+### What would prove it, what would refute it
+
+- **Holds** when, over four weeks of the owner's use, most goals laid on a party's tab (`idea_added`) come after a
+  `view_opened` on the same party earlier the same day.
+- **Refuted** when the views are opened after the goal is laid, or on fewer than a third of the days a goal is laid on
+  that tab: the person lays goals from their own head, and the views are not what they decide by.
+
+### How we test it
+
+In the owner's week, on this repository first. The signal is the event `view_opened` (`party` and the view's date, never a
+word of the view), set against `idea_added` on the same party; both are events Orkboard already keeps on the person's
+machine, and nothing leaves it without their yes (`orkboard usage`). Count the days a goal was laid on a tab with a view
+written, and on how many of them the view had been opened first.
+
+### If it holds
+
+Keep the three heads and the calls that write them; consider the view on the phone (its own goal, §282.5) and a view
+that Product writes from its tree once goal 163 lands. If refuted, drop the call after each landing and keep the view
+only where the person asks for a look now.
