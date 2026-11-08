@@ -6,6 +6,8 @@ as `idea_project_q.py`'s `ProjectQMixin` is.
     keeper.journal_due(party)                               # True when the party's journal has DIGEST_AFTER entries or more after its digest, and the digest is a day old or more (or none)
     keeper.journal_digest(party)                            # begins the digest in the background: True when it was begun; False when none is due, the call cannot be made now, or the party is busy
     keeper.journal_digest_for(parties)                      # for each party that is due, quietly (`ideas.add`'s trigger)
+    keeper.journal_view(party, why)                         # begins the view in the background whatever its journal holds (why: done, ask, open): True when begun; False when the call cannot be made or the party is busy
+    keeper.journal_view_for(parties, why)                   # once each, quietly: how many were begun
 
 - **The parts** (§C): the text `journals.text` gives for the party (`idea` the goal's slug, `on` the goal's marks, the ids of the parts of the map it points at) and for the project (`idea` the slug), each its
   own part, placed by the prompt after the project's facts and before the party's map (`idea_target.cut` cuts from the end). The leader's own is followed, when it has had a no overruled and decided, by
@@ -247,6 +249,29 @@ class JournalMixin:
                 pass
         return begun
 
+    def journal_view(self, party: str, why: str) -> bool:
+        """Begin the party's view in the background, whatever its journal holds (spec 167 H: a goal done, a press, a look on open; not `DIGEST_AFTER`'s twelve entries). False, never an error, when the
+        call cannot be made now (no model, a spent limit or window), the party is gone or the party is busy (`goal:<party>`)."""
+        kw = _kw()
+        if ideas.track_page(self.wiki_root(), party) is None or self._may_run():
+            return False
+        try:
+            self.refuse_spent()
+            self._start(party, "digesting", lambda: self.journal_run(party, why), key=f"goal:{party}")
+        except kw.KeeperError:
+            return False
+        return True
+
+    def journal_view_for(self, parties: list[str], why: str) -> int:
+        """The view of each of these parties (once each), quietly: how many were begun."""
+        begun = 0
+        for party in dict.fromkeys(p for p in parties if isinstance(p, str) and p):
+            try:
+                begun += bool(self.journal_view(party, why))
+            except Exception:                                  # a view never troubles what asked for it
+                pass
+        return begun
+
     def view_parts(self, party: str, old: dict) -> list[tuple[str, str]]:
         """What a view's call reads besides the journal (spec 167 F, §282.3), as `(heading, text)` parts in the order they matter: the goals done since the last view, the decisions they cite and the
         log's last headings, the party's table where it has one, the parts of its map its open concerns are on (id and name, never the concern's words). Product, while no tree is kept,
@@ -328,9 +353,9 @@ Answer with one JSON object and nothing else:
         kw = _kw()
         began = time.monotonic()
         entries = journals.since_digest(self.state_dir, party)
-        if not entries:
-            return
         old = journals.digest(self.state_dir, party)
+        if not entries and why == "add":                       # a digest after an entry has entries; a view begun by a goal done, a press or an opening reads the pages besides
+            return
         measures_: list[dict] = []
         try:
             leader = goal_team.leader_of(self.wiki_root(), party)
@@ -339,7 +364,7 @@ Answer with one JSON object and nothing else:
             got = self._tried(lambda: clean(kw.first_json(self.ask("journal", self.journal_prompt(party, old, entries), tools=False)[0]), given, no_tree), measures_,
                               str(self.role_as(leader)["name"]))
             text, read, dropped = got
-            journals.save_digest(self.state_dir, party, text, entries[-1]["id"], read)
+            journals.save_digest(self.state_dir, party, text, entries[-1]["id"] if entries else old.get("upto", ""), read)
         except Exception:                                      # a stop, a leader that did not answer, a disk that refused: nothing is kept, the next trigger tries again
             return
         self._ev(event_log.JOURNAL_DIGESTED, party=party, entries=len(entries), chars=len(text), why=why, dropped=dropped, seconds=round(time.monotonic() - began, 1),
