@@ -1451,3 +1451,78 @@ def test_start_again_says_the_tasks_work_is_thrown_away_only_where_its_branch_ho
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+# -- the goal under the pointer (spec 165 I, decisions §280.1) -------------------------------------------------------------------------------
+
+REACH = "hand/reachhover.js"
+
+
+def _card(pg, goal):
+    return pg.locator(f'.hand-card[data-goal="{goal}"][data-top="1"]')
+
+
+def test_the_pointer_resting_on_a_hand_card_names_its_goal_after_a_moment_and_leaving_the_hand_clears_it(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        assert sig(pg, REACH, "reachGoal") == ""
+        sent = len(host.log)
+        pg.mouse.move(5, 5)
+        box = _card(pg, "timer").bounding_box()
+        pg.mouse.move(box["x"] + 10, box["y"] + 24)
+        assert sig(pg, REACH, "reachGoal") == "", "not at once: the pointer has to rest"
+        pg.wait_for_function("([m]) => import(m).then((x) => x.reachGoal.value === 'timer')", arg=[f"/static/js/{REACH}"], timeout=WAIT_MS)
+        pg.mouse.move(5, 5)                                                                          # out of the hand
+        pg.wait_for_function("([m]) => import(m).then((x) => x.reachGoal.value === '')", arg=[f"/static/js/{REACH}"], timeout=WAIT_MS)
+        assert len(host.log) == sent, "hovering sends no command"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_pointer_passing_over_a_card_without_resting_names_nothing(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        box = _card(pg, "timer").bounding_box()
+        pg.mouse.move(box["x"] + 10, box["y"] + 24)
+        pg.mouse.move(5, 5)
+        pg.wait_for_timeout(400)
+        assert sig(pg, REACH, "reachGoal") == ""
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_focus_names_the_goal_at_once_and_blur_and_esc_clear_it(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        _card(pg, "timer").focus()
+        assert sig(pg, REACH, "reachGoal") == "timer"
+        pg.evaluate("() => document.activeElement.blur()")
+        assert sig(pg, REACH, "reachGoal") == ""
+        _card(pg, "timer").focus()
+        assert sig(pg, REACH, "reachGoal") == "timer"
+        pg.keyboard.press("Escape")
+        assert sig(pg, REACH, "reachGoal") == ""
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_touch_press_on_a_hand_card_names_no_goal_and_lifts_it_as_before(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        pg.evaluate("""() => { const el = document.querySelector('.hand-card[data-goal="timer"][data-top="1"]');
+          for (const t of ['pointerover', 'pointerdown']) el.dispatchEvent(new PointerEvent(t, { bubbles: true, pointerType: 'touch' })); }""")
+        pg.wait_for_timeout(400)
+        assert sig(pg, REACH, "reachGoal") == ""
+        assert pg.locator(".hand-card.is-slot").count() == 0
+        _press(pg, "timer")                                                                          # the press as today lifts the card
+        pg.wait_for_selector(".hand-ways-row", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

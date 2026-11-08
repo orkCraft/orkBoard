@@ -11,6 +11,9 @@ import { goalOfStop, lieBehind } from "./data.js";
 import { mapData } from "../shell/store.js";
 import { Shards, fromWhere, useGone, useHanded } from "./motion.js";
 import { liftKey } from "./state.js";
+import { installReachHover } from "./reachhover.js";
+
+installReachHover();                               // the goal under the pointer or focus in the hand (spec 165 I), heard once for the whole page
 
 const EDGES = 5;                                  // the backs under a stack's top that show (the stack's depth, never a number)
 /** The fan (docs/specs/101 §7.1, decisions §168.4): a card's place behind the front one (1 the next) fixes its step aside in px and its turn in degrees, by turns right and left, never random (a redraw shakes nothing).
