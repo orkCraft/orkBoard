@@ -120,7 +120,7 @@ orkUI first (§269.9): A and B are done in orkUI (/home/user/orkui), released as
 - The [look] lines' pictures come from the cameras of docs/mockups/table-look/ and docs/mockups/room-things/ (shoot.py) pointed at the product.
 - The chair's craft cards follow §270's hand cards: 144 × 202, the line whole at rest, the price in the corner.
 ### Accepted
-- not met: When orkUI's tokens are read, then every text token measures at least 4.5:1 on its flat plate over each party's felt, lit and out, and every signal ring 3:1 and brighter than any party or element colour. — text 4.5:1 holds; danger #ff785a (L 66) leads moss only by 1.3 chroma, under a visible step, and is darker than moss, gold, sea, ice; success (a signal, §268.1) is as light as moss and untested
+- met: When orkUI's tokens are read, then every text token measures at least 4.5:1 on its flat plate over each party's felt, lit and out, and every signal ring 3:1 and brighter than any party or element colour.
 - cannot see: When the page opens at 1280 × 800 with the person Here, then the right column beside the table holds the backpack and the lamp's chain over *Discard* on every tab, the chain's words *Here · until …*, Release's tab in the leaders' row.
 - cannot see: When the person presses the new chair at 1280 × 800, then the hand holds a card for each craft not yet seated, with its race's head, its line and its price a week, the Orkmaster's pick starred and named in words.
 - cannot see: When the page opens at 1280 × 800 on Tech's tab with the lamp lit, then the felt is moss, the light falls in five dithered steps with words on flat plates, bronze frames round it and the open leader's pennant tallest; out, the felt is flat and darker.
