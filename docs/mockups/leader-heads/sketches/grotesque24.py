@@ -44,11 +44,40 @@ HALF = [
     "............",  # 22
     "............",  # 23
 ]
+
+# Coarser (--rough): a low small dome, a wider brow ledge, a square jaw the whole width, a flat chin; a scar, a wart.
+HALF_ROUGH = [
+    "............",  # 0
+    "..hHHHh.....",  # 1
+    ".hHkHHHh....",  # 2
+    "hHHk..kHh.LL",  # 3  the dome, low and small
+    "hkH....hSLLL",  # 4
+    "HhH....SSLLL",  # 5
+    "hHk..sSLLLLL",  # 6  the brow ledge, wider
+    "HhHhsSddddds",  # 7
+    ".khHsSddddDS",  # 8
+    "..hHSSSSddSL",  # 9
+    "...sSSSSSDLL",  # 10
+    "..sSSSSSDsDd",  # 11
+    ".sSSSSSSDSSs",  # 12 the jaw spreading to the whole width
+    ".sSSSSSSSSSS",  # 13
+    ".sSSSSSSSSSS",  # 14
+    ".sSSSSSSSSSS",  # 15
+    ".sSSSSSSSSSS",  # 16
+    ".sSSSSLLLLLL",  # 17
+    ".ssSSSLLLLLL",  # 18
+    ".ssSSSSSSSSS",  # 19
+    "..ssssssssss",  # 20 a flat chin
+    "............",  # 21
+    "............",  # 22
+    "............",  # 23
+]
+ROUGH = "--rough" in sys.argv
 DOWN = {"L": "S", "S": "s", "s": "D", "H": "h", "h": "k"}
 
 
 def base():
-    half = [list(line) for line in HALF]
+    half = [list(line) for line in (HALF_ROUGH if ROUGH else HALF)]
     g = [[None] * N for _ in range(N)]
     for y, line in enumerate(half):
         for x, c in enumerate(line):
@@ -79,6 +108,12 @@ def base():
     for x, y in ((5, 16), (6, 17), (18, 16), (17, 17)):            # the jowls
         g[y][x] = "D"
     g[3][10] = g[4][13] = "S"; g[2][12] = "S"
+    if ROUGH:
+        for x, y in ((8, 4), (9, 5), (10, 6)):                     # a scar down into the left brow
+            g[y][x] = "D"
+        g[13][3] = "L"; g[14][3] = "D"                             # a wart
+        for y in range(12, 20):                                    # the jaw's corners, square
+            g[y][1] = g[y][1] and "s"; g[y][22] = g[y][22] and "D"
     # a crack in the right horn, the braid with its beads from under the left horn
     g[3][22] = g[4][23] = "x"
     for y in range(10, 21):
@@ -177,7 +212,7 @@ def save(g, path, cell):
 
 MOODS = ["calm", "focused", "worried", "no", "pleased", "asleep"]
 if __name__ == "__main__":
-    OUT = Path(sys.argv[1]); OUT.mkdir(parents=True, exist_ok=True)
+    OUT = Path([a for a in sys.argv[1:] if not a.startswith("--")][0]); OUT.mkdir(parents=True, exist_ok=True)
     f = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
     big = Image.new("RGB", (6 * 210 + 20, 230), (21, 20, 18)); db = ImageDraw.Draw(big)
     sheet = Image.new("RGB", (40 + 6 * 130, 140), (21, 20, 18)); d = ImageDraw.Draw(sheet)
