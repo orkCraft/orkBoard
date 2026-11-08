@@ -11,12 +11,27 @@ import { flagDay } from "../arena/goalwords.js";
 import { mapFor } from "./maps.js";
 import { MapBack, MapCard, MapFrame, Sec, Win, countWords, useLifted, useRead } from "./mapkit.js";
 
-const MAP = "release", SHORT = 7;
+const MAP = "release", SHORT = 7, BATCH = 8;   // past the eighth car the batch is big (spec 165 Q, decisions §280.2)
+const BATCH_WORDS = "The big batch starts here: the cars after this mark go to main together";
 const typeOf = (slug) => (mapData.value?.nodes || []).find((n) => n.slug === slug)?.type?.sign || "release";   // the goal's own type while the Board still holds it, else a release's sign
+
+/** A goal's age in words (*3 days*), from the epoch seconds of its oldest commit main lacks; "" when unread. */
+export function ageWords(at, now = Date.now() / 1000) {
+  if (typeof at !== "number" || !isFinite(at)) return "";
+  const s = Math.max(0, now - at);
+  if (s < 3600) return "under an hour";
+  if (s < 86400) return countWords(Math.floor(s / 3600), "hour", "hours");
+  if (s < 14 * 86400) return countWords(Math.floor(s / 86400), "day", "days");
+  return countWords(Math.floor(s / (7 * 86400)), "week", "weeks");
+}
+
+/** The goals oldest first; one whose age is unread keeps its place after those that have one. */
+export const oldestFirst = (goals) => goals.map((g, i) => [g, i]).sort(([a, i], [b, j]) => ((a.at ?? Infinity) - (b.at ?? Infinity)) || i - j).map(([g]) => g);
 
 function GoalCard({ g, group }) {
   return html`<${MapCard} map=${MAP} id=${g.idea} name=${g.title} element=${g.element || ""} hue=${g.hue || ""} group=${group} className=${cls("mp-goal", { "is-out": !g.ticked })} ghost=${!g.ticked}
     row=${String(g.commit || "").slice(0, SHORT)} rowCode=${true}
+    foot=${ageWords(g.at) && html`<span class="mp-age mp-cap">${ageWords(g.at)}</span>`}
     mark=${html`<span class=${cls("mp-tick", { "is-off": !g.ticked })} role="img" aria-label=${g.ticked ? "In the merge" : "Not in the merge"}><${Sign} name="check" /></span>`}>
     <${Win} tone=${g.hue || g.element || ""}><${Sign} name=${typeOf(g.idea)} big=${true} /></${Win}>
   </${MapCard}>`;
@@ -45,14 +60,16 @@ export function ReleaseMap({ g, narrow }) {
     } catch (e) { setRefused(e.message || "The merge failed"); }
     setBusy(false);
   };
-  const goal = goals.find((x) => x.idea === at);
+  const cars = oldestFirst(goals), goal = goals.find((x) => x.idea === at);
   const back = goal ? html`<${MapBack} host=${host} name=${goal.title} narrow=${narrow}><${Back} key=${goal.idea} g=${goal} into=${into} main=${main} /></${MapBack}>` : null;
   const waits = !!d && !d.same && (d.commits > 0 || goals.length > 0);
   return html`<${MapFrame} map=${MAP} host=${host} back=${back} className="mp--release">
     ${d && html`<div class="mp-dev">
       <header class="mp-dev__head"><span class="ork-label">${`${into[0].toUpperCase()}${into.slice(1)}, not in ${main} yet`}</span>
         ${goals.length > 0 && html`<span class="mp-cap">${countWords(goals.length, "goal", "goals")} · ${ticked} ticked</span>`}</header>
-      ${goals.length > 0 ? html`<div class="mp-goals">${goals.map((x) => html`<${GoalCard} key=${x.idea} g=${x} group=${into} />`)}</div>`
+      ${goals.length > 0 ? html`<div class="mp-goals mp-cars">${cars.flatMap((x, i) => [
+          i === BATCH ? html`<span key="batch" class="mp-batch" role="img" aria-label=${BATCH_WORDS} title=${BATCH_WORDS}><${Sign} name="flag" /></span>` : null,
+          html`<${GoalCard} key=${x.idea} g=${x} group=${into} />`])}</div>`
         : html`<p class="mp-quiet">${d.same ? `${into} and ${main} are one branch here: nothing waits for ${main}.` : waits ? `The ${countWords(d.commits, "commit", "commits")} waiting for ${main} belong to no goal.` : `Nothing in ${into} waits for ${main}.`}</p>`}
       <div class="mp-foot">
         ${!d.same && html`<section class="mp-tomain" aria-label=${`Into ${main}`}>
