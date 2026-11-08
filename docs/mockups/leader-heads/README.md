@@ -37,6 +37,7 @@ without colour, and recolouring now clashes with *colour is the party*.
 | ugly-cute v1, v2 | `references/08`, `09`, `checks/06`–`08` | the character finally ours (a grumpy, scheming ork); v2's moods read at full size, but drawn at ~60 cells, dark |
 | redrawn by Claude on 24 × 24 | `checks/09`, `10`, `sketches/shaman24.py` | the moods read at 48 px, but **still cute** |
 | grotesque card creature v1 | `references/10`, `checks/11`–`14` | the character right at last (heavy, menacing, dry); the skin too dark and grey, the whites small: at 48 px calm, focused, worried and asleep read, no and pleased do not (pleased reads as a snarl); at 24 px only worried |
+| grotesque v2 (v1 corrected in the same chat) | `references/11`, `checks/15` | Gemini changed 1 % of the pixels: the skin a little lighter (forehead 61 → 73 of 255, asked ~128), a faint rim light; no, pleased, the whites and the horns as they were. Editing in place has reached its end |
 
 **The owner's direction now: closer to Slay the Spire.** Not cute, not a sticker, not a cartoon: a hand-painted roguelike
 card's creature (grotesque, heavy, a strong silhouette, a dramatic light) translated into pixel art, with the moods kept.
