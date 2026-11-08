@@ -35,7 +35,7 @@ const said = (slot, was) => {
 function settle(chair, slot, was, got, back = false) {
   if (!got || !got.stall) return false;
   stall.value = got.stall;
-  const text = back ? `${cardOf(slot)?.label || slot} is back to its default. ${said(slot, was)}` : said(slot, was);
+  const text = slot === "craft_tools" ? "Maker cap saved." : back ? `${cardOf(slot)?.label || slot} is back to its default. ${said(slot, was)}` : said(slot, was);
   receipt.value = { text, undo: got.undo || null, back };
   pleased.value += 1;
   service.value = "";
@@ -43,9 +43,9 @@ function settle(chair, slot, was, got, back = false) {
 }
 
 /** A ware pressed: it is taken. `chair` the chair open. Resolves with whether it was written. */
-export async function take(chair, slot, value) {
+export async function take(chair, slot, value, cap = undefined) {
   const was = cardOf(slot)?.word || "";
-  const got = await ask("ideas.stall_take", { chair, slot, value });
+  const got = await ask("ideas.stall_take", { chair, slot, value, ...(cap ? { cap } : {}) });
   const ok = settle(chair, slot, was, got);
   if (ok) refreshShell();
   return ok;

@@ -115,3 +115,12 @@
 .stall-maker__why { visibility: hidden; color: var(--ork-ink-read); font: var(--ork-type-caption); text-align: center; overflow-wrap: anywhere; }
 .is-makers .stall-ware:hover .stall-maker__why, .is-makers .stall-ware:focus-within .stall-maker__why { visibility: visible; }
 .is-makers .stall-price.is-same { color: var(--ork-ink-read); }
+
+/* A cap is agreed on the plate, without an initial amount. */
+.stall-maker__cap { appearance: none; background: none; border: 0; padding: 0; min-height: 24px; cursor: pointer; }
+.stall-maker__cap .stall-price { color: var(--ork-warning); }
+.stall-maker__form { display: flex; flex-direction: column; gap: var(--ork-1); width: 100%; min-width: 0; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.stall-maker__form input { box-sizing: border-box; width: 100%; min-width: 24px; min-height: 24px; background: var(--ork-room); color: var(--ork-ink-read); border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); }
+.stall-maker__form button { min-height: 24px; }
+.stall-maker__form input:focus-visible, .stall-maker__form button:focus-visible, .stall-maker__cap:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.stall-maker__form [role="alert"] { color: var(--ork-warning); overflow-wrap: anywhere; }

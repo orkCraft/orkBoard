@@ -250,6 +250,22 @@ class StallMixin:
         return {"stall": self.stall({"chair": chair}), "undo": {"slot": slot, "value": old}}
 
     def stall_take(self, args: dict) -> dict:
+        if args.get("slot") == "craft_tools":
+            chair, root, _craft = self._chair(args)
+            maker_id = _text(args, "value", 100)
+            maker = next((m for m in craft_tools.for_party(root, chair, goal_team.tool_of(root, chair)) if m["id"] == maker_id), None) if chair else None
+            if maker is None:
+                raise IdeasError("That maker is not for this party's craft")
+            if not maker["here"]:
+                raise IdeasError(f"{maker['maker']} is not here: {maker['why']}")
+            with ideas.LOCK:
+                taken = craft_tools.taken(root, chair)
+                try:
+                    craft_tools.set_taken(root, chair, {**taken, maker_id: {"cap": args.get("cap")}})
+                except ValueError as exc:
+                    raise IdeasError(str(exc)) from None
+            self.changed(chair)
+            return {"stall": self.stall({"chair": chair})}
         chair, root, _craft, slot, value = self._slot(args, True)
         return self._done(chair, root, slot, value)
 

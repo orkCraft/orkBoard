@@ -497,3 +497,98 @@ def test_unavailable_maker_says_why_on_focus_and_hover_without_harness(gui, why)
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+class CapMakerHost(MakerShelfHost):
+    def __init__(self):
+        super().__init__()
+        self.caps = {}
+
+    def shelves(self, chair):
+        shelves = super().shelves(chair)
+        for s in shelves:
+            if s["slot"] == "craft_tools":
+                for w in s["wares"]:
+                    cap = self.caps.get(w["id"])
+                    w.update(here=True, cap=cap, prices=[{"currency": "USD"}])
+                    w["price"] = {"money": f"{'about ' if w['makes'] == 'sound' else ''}{cap['amount']} USD cap"} if cap else {"word": "Set a cap"}
+        return shelves
+
+    def handle(self, name, a):
+        if name == "ideas.stall_take" and a.get("slot") == "craft_tools":
+            self.log.append((name, a))
+            self.caps[a["value"]] = a["cap"]
+            return self.bump({"stall": self.stall(a["chair"])})
+        return super().handle(name, a)
+
+
+@pytest.mark.parametrize("activation", ["click", "Enter"])
+def test_a_paid_maker_waits_for_a_cap_and_keeps_focus_after_redraw(gui, activation):
+    pg, host, log = opened(gui, "art", host=CapMakerHost())
+    try:
+        w = pg.locator('[data-slot="craft_tools"][data-ware="openai-images"]')
+        press = w.locator(".stall-ware__press")
+        assert w.locator(".stall-price").inner_text() == "Set a cap"
+        if activation == "click":
+            w.locator(".stall-maker__cap").click()
+        else:
+            press.focus()
+            pg.keyboard.press("Enter")
+        field = w.get_by_label("Cap per round (USD)")
+        field.wait_for(timeout=WAIT_MS)
+        assert field.input_value() == "" and field.evaluate("e => e === document.activeElement")
+        assert field.bounding_box()["width"] >= 24 and field.bounding_box()["height"] >= 24
+        assert w.locator("label").is_visible()
+        for amount in ("", "wrong", "0", "-2"):
+            field.fill(amount)
+            w.get_by_role("button", name="Save cap").click()
+            assert w.get_by_role("alert").inner_text() == "Enter a positive amount in USD."
+            assert not any(n == "ideas.stall_take" for n, _ in host.log)
+        field.fill("1.25")
+        pg.keyboard.press("Enter")
+        pg.wait_for_function("() => document.querySelector('[data-ware=\"openai-images\"] .stall-price')?.textContent.includes('1.25 USD cap')", timeout=WAIT_MS)
+        assert _sent(pg, host, ("ideas.stall_take", {"chair": "art", "slot": "craft_tools", "value": "openai-images", "cap": {"amount": "1.25", "currency": "USD"}}))
+        assert w.locator("form").count() == 0
+        assert press.evaluate("e => e === document.activeElement")
+        assert press.evaluate("e => e.matches(':focus-visible')")
+        pg.keyboard.press("Enter")
+        assert field.input_value() == "1.25"
+        pg.keyboard.press("Escape")
+        assert w.locator("form").count() == 0 and pg.locator(".stall").count() == 1
+        assert press.evaluate("e => e === document.activeElement")
+        pg.keyboard.press("Escape")
+        assert pg.locator(".stall").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("cap_open", [False, True])
+def test_arts_cap_plate_fits_at_1280_by_800_and_has_a_picture(gui, cap_open):
+    host = CapMakerHost()
+    host.caps["elevenlabs-sound"] = {"amount": "1.25", "currency": "USD"}
+    pg, host, log = opened(gui, "art", host=host)
+    try:
+        assert pg.viewport_size == {"width": 1280, "height": 800}
+        assert pg.locator('[data-shelf="craft_tools"] .stall-shelf__lab b').inner_text() == "ITS MAKERS"
+        w = pg.locator('[data-slot="craft_tools"][data-ware="openai-images"]')
+        if cap_open:
+            w.locator(".stall-maker__cap").click()
+            w.get_by_label("Cap per round (USD)").wait_for(timeout=WAIT_MS)
+        w.scroll_into_view_if_needed()
+        money = pg.locator('[data-slot="craft_tools"][data-ware="elevenlabs-sound"] .stall-price.is-money')
+        assert money.inner_text() == "about 1.25 USD cap"
+        assert money.evaluate("e => getComputedStyle(e).color") == money.evaluate("""e => {
+          const p = document.createElement('span'); p.style.color = 'var(--ork-warning)'; e.append(p);
+          const c = getComputedStyle(p).color; p.remove(); return c;
+        }""")
+        assert pg.evaluate("""() => {
+          const pane = document.querySelector('.table-pane').getBoundingClientRect();
+          return [...document.querySelectorAll('.stall-rug, .stall-ware, .stall-maker__form, .stall-maker__form input')].every(e => {
+            const r = e.getBoundingClientRect(); return r.left >= pane.left && r.right <= pane.right;
+          }) && document.documentElement.scrollWidth <= document.documentElement.clientWidth;
+        }""")
+        shot(pg, f"art-makers-cap-{'open' if cap_open else 'closed'}-1280x800")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
