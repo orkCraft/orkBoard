@@ -29,16 +29,16 @@ A way's own line: each way of a leader's question carries one line of what it le
 ## Depends on
 
 ## Stages
-- [ ] A. A way's line in the question
+- [x] A. A way's line in the question
   - party: Tech. `realm/idea_questions.py`: `LINE_CHARS = 80`; `of` and `card` take an optional `lines`, one a way, each through `_plain`, kept only when every way has one within 80 characters (else no `lines`, the card as today); `line` writes after the why ` · <way>: <line>` for each way by its exact name, in the ways' order (no why: the tail starts at the first way); `parse` reads that tail back anchored on every way's name in order, a line of before giving no `lines`; `_asked` carries `lines`. The module's docstring says it. Tests in tests/test_idea_questions.py, with `_LINE` of before kept in the test to read a new line.
   - proves: Tech's "When a leader's Talk answer gives a question with a line for each way… line() then parse() gives back the same ask, ways, pick, why and lines", "When a question line written before this goal, or BOARD.md's example, is parsed…", "When a new line with ways' lines is read by today's pattern…", "When a leader gives a line over 80 characters, or lines for only some ways…"; Product's "When a question written before this goal (no lines) is lifted…" (the engine's half)
-- [ ] B. The lines travel to the hand and the page
+- [x] B. The lines travel to the hand and the page
   - party: Tech. Talk's waiting card keeps `lines` in talk.json (`realm/idea_talk_parse.py` `_cards` through `card`) and `realm/board_map.py` `talk_rows` hands it on as it is; `realm/goal_phase.py` `outside_cards` passes `parse`'s `lines` into `card`; `gui/ideas_phase.py` `answers_written` writes a question the page lacks as its whole `idea_questions.line` (ways, pick, why, lines), not its ask alone, matched as today by its ask. The question stays one line: `questions_of`, `open_of` and the `page-<n>` ids unchanged. Tests in tests/test_goal_phase.py, test_board_map.py, test_idea_talk.py.
   - proves: Tech's "When Talk keeps a waiting card, or a page that asks the person lays its question outside, with ways' lines, then the hand's row carries `lines`…"; Product's "When a leader's Talk asks a question with a line for each way, then the page keeps it and reading the page back gives the same ways, pick and lines."
-- [ ] C. The rule for a way's line, from one source
+- [x] C. The rule for a way's line, from one source
   - party: Tech. `core/idea_talk.py` `CARDS` and both JSON examples of `instruction` gain `"lines": ["…", "…"]` and the rule: one line for each way, at most 80 characters, what that way leads to, its point first, never the why repeated (§270.2, §270.5); `realm/agent_rules_text.py`'s BOARD.md question example and its sentence say the same. Orkboard's own `llm-wiki/general/BOARD.md` and `roles/*-leader.md` are written back from that source. core/idea_talk.py stays under 600 lines (a split if it must). Tests in tests/test_idea_talk.py, test_agent_rules.py, test_agent_rules_prompts.py.
   - proves: Tech's Check "The Talk rules (rules(), the JSON example), roles/<craft>-leader.md and BOARD.md's example are built from one source…"; Design's Check of the 80-character, point-first rule; Product's Check "The leader's role rules ask for a way's line short enough for the card and its point first"
-- [ ] D. The way card says and speaks its line
+- [x] D. The way card says and speaks its line
   - party: Design. `gui/static/js/hand/answercards.js` `WayCard`: its aria-label reads the name, "its pick" where it is, its own line, then the question; `title` keeps the line; `lineOf` keeps today's fallback (the pick's why, the rest "Answers with this."). `openedcard.css`'s `.hand-ans__line` stays in the caption face with the 6-line clamp as the fallback, no colour, font or corner of its own. Tests in tests/test_hand_desktop_browser.py at 1280 × 800: 80-character lines shown whole and uncut, none "Answers with this."; each card's accessible name; a question with no lines as today; pressing a way with a line sends the answer and goal_answered says from "hand". tests/test_design_system.py and test_gui_wording.py pass.
   - proves: Design's four Done when lines (the [look] one for the person to see); Product's "When the person lifts a goal card at 1280 × 800 whose question has a way's own line…", "When a question written before this goal (no lines) is lifted…", "When the person presses a way card that carries its own line, then the answer is sent and goal_answered says from \"hand\"."; Product's [person] line is the owner's, read on the first ten questions after it lands
 
@@ -85,6 +85,12 @@ A way's own line: each way of a leader's question carries one line of what it le
 - A question with no line for a way keeps today's fallback; nothing is invented for it.
 - The signal is the event log's from "hand" read by the owner, no new counter or screen.
 - Desktop only; the phone follows with §270.7.
+### Accepted
+- met: When a leader's Talk asks a question with a line for each way, then the page keeps it and reading the page back gives the same ways, pick and lines.
+- met: When the person lifts a goal card at 1280 × 800 whose question has a way's own line, then that way's hand card shows its leader's line whole.
+- met: When a question written before this goal (no lines) is lifted, then its way cards read as today: the pick its why, the rest "Answers with this."
+- met: When the person presses a way card that carries its own line, then the answer is sent and goal_answered says from "hand".
+- cannot see: When the owner reads the first ten questions asked after this lands, then each way's line says what it leads to in its first words.
 
 ## Design
 ### Talk
@@ -124,6 +130,11 @@ A way's own line: each way of a leader's question carries one line of what it le
 - The aria-label reads name, its pick, line, then the question; the title keeps the line for the pointer.
 - The table's lane gains no lines in this goal: the way card is where the line matters.
 - Desktop at 760 px and over only; the narrow page and phone follow with §270.7.
+### Accepted
+- met: When the person lifts at 1280 × 800 a goal card whose one question has a line of 80 characters for each way, then each way card shows its line whole, uncut, and none says "Answers with this."
+- met: When that card is lifted at 1280 × 800, then each way card's accessible name says its name, "its pick" where it is the pick, and its own line.
+- met: When a question with no lines is lifted at 1280 × 800, then the pick shows the question's why and every other way "Answers with this.", as today.
+- met: When the person lifts such a card at 1280 × 800, then the line reads in the body face under the name, the pick marked by its head, in orkUI's office.
 
 ## Tech
 ### Talk
