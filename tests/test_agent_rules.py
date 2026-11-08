@@ -139,7 +139,9 @@ def test_board_md_says_the_real_format_of_part_a(tmp_path):
         assert f"`{key}`" in text, key
     for phase in goal_phase.PHASES:
         assert f"- `{phase}`: " in text
-    assert idea_questions.line({"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "most of its users are on iPhone"}) in text
+    example = idea_questions.line({"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "most of its users are on iPhone",
+                                   "lines": ["Reaches most of its users first; review takes days", "Android users wait; the review is quicker"]})
+    assert example in text and idea_questions.parse(example)["lines"] == ["Reaches most of its users first; review takes days", "Android users wait; the review is quicker"]
     assert idea_questions.answer_line("App Store", "2026-11-06") in text
     assert all(f"*{s}*" in text for s in idea_page.SECTIONS) and "<short commit> · <n> files · green" in text and "board: <title> — <what>" in text and "orkboard/taken" in text
     assert not re.search(r"\borcs?\b|orchestrat", text, re.I)                                              # ork, never orc; orkestration, never orchestration
@@ -427,3 +429,18 @@ def test_a_leaders_role_names_its_heroes_and_places_and_keeps_its_table_and_boar
     board = (root / WIKI / "BOARD.md").read_text(encoding="utf-8")
     assert "- `pages/tables/<party>.md`: a party's table as its hero lays it, kept by its leader." in board
     assert check(root) == []
+
+
+def test_a_ways_line_rule_is_one_source_for_talk_the_role_files_and_board_md(tmp_path):
+    """Spec 159 C: Talk's rules and JSON, roles/<craft>-leader.md and BOARD.md say the same 80-character, point-first rule from `idea_questions.LINES_RULE`."""
+    from orkboard.core import idea_talk
+    from orkboard.realm import idea_questions
+    root = project(tmp_path, crafts=("engineering", "design", "product"))
+    write(root)
+    rule = idea_questions.LINES_RULE
+    assert f"{idea_questions.LINE_CHARS} characters at most" in rule and "its point in its first words" in rule and "never the `why` said again" in rule
+    assert rule in (root / WIKI / "BOARD.md").read_text(encoding="utf-8")
+    for craft, role in (("tech", "tech-leader"), ("design", "design-leader"), ("product", "product-leader")):
+        assert rule in (root / WIKI / "roles" / f"{role}.md").read_text(encoding="utf-8")
+        assert rule in idea_talk.rules(craft) and rule in idea_talk.instruction(craft) and rule in idea_talk.instruction(craft, second=True)
+        assert idea_talk.instruction(craft).count('"lines": ["…", "…"]') == 1 and idea_talk.instruction(craft, second=True).count('"lines": ["…", "…"]') == 1
