@@ -179,7 +179,7 @@ def proposals(root: Path, state_dir: Path, settings: dict, kind: dict, facts: di
     """`ideas.proposals`' list (spec 75 §4.1): a card per recipe of the kind, those the project has last (`have`), each `sizes`: lean ·
     standard · full with the leader, the team (the squad: the same in every size), how many agents, the Target it works as, its price a goal (`low`, `high`:
     a size's price, never a squad's: `goal_team.price_team`) and the members' heads in seat order, each its party's race and the leader's its higher form.
-    A card says its `craft`, the stage that adds it (`from`), the `size` it is proposed in, its `squad` and whether it is `locked` (Release). `kind`:
+    A card says its `craft`, the stage that adds it (`from`), the `size` it is proposed in, its `squad` and whether it is `locked` (never: Release is a craft as any, decisions §274.1). `kind`:
     `{"id", "words", "signs"}`; `told`: the kind was read from the person's line; `stage`: only the crafts of the stages reached (`project_stage`), else all."""
     tracks = ideas.tracks(root, make=False) if tracks is None else tracks
     out = []
@@ -195,5 +195,5 @@ def proposals(root: Path, state_dir: Path, settings: dict, kind: dict, facts: di
                            "tiers": party["tiers"], "heads": [_head(state_dir, s, target, party["tiers"], craft, party["leader"]) for s in [party["leader"], *party["team"]]]}
         out.append({"id": recipe["id"], "name": recipe["name"], "line": recipe["line"], "why": _why(recipe, kind["signs"], kind["id"], told),
                     "craft": craft, "from": project_stage.FROM.get(craft, "live"), "size": project_stage.SIZE.get(craft, "standard"),
-                    "squad": party_recipes.squad_of(recipe), "locked": craft == party_recipes.RELEASE, "have": have, "sizes": sizes})
+                    "squad": party_recipes.squad_of(recipe), "locked": False, "have": have, "sizes": sizes})
     return out

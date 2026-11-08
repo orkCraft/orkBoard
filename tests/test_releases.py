@@ -375,3 +375,10 @@ def test_the_release_partys_work_says_releases_out_goals_a_release_and_the_days_
     assert got == {"made": 2, "out": 1, "goals": 1.5, "days": 4.0}
     party_work.forget()
     assert "releases" not in h.command("ideas.party", {"goal": h.app}) and "pitches" not in h.command("ideas.party", {"goal": h.rel})
+
+
+def test_a_removed_release_party_leaves_none(board):
+    h = board
+    assert goal_types.release_party(h.root) == h.rel
+    h.command("ideas.track_drop", {"slug": h.rel})
+    assert goal_types.release_party(h.root) == ""

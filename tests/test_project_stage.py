@@ -1,5 +1,5 @@
 """Spec 99 A (docs/specs/99-a-goals-way.md §1.2, decisions §122.5, §137.1, §151.7): the project's stage (kept in `<state_dir>/project.json`, read from the project when unset), the crafts each
-stage offers, Release in every project at every stage (locked, Lean, its leader alone), the commands `ideas.stage` and `ideas.stage_set`. Code, no model."""
+stage offers, Release offered at every stage (a craft as any, not locked, Lean, its leader alone), the commands `ideas.stage` and `ideas.stage_set`. Code, no model."""
 from __future__ import annotations
 
 import json
@@ -69,7 +69,7 @@ def test_the_crafts_by_stage_idea_the_concepts_lean_being_made_adds_tech_standar
 def test_release_is_in_every_kind_at_every_stage_locked_lean_its_engineer_and_notes_with_its_leader_on_the_cheaper_tier(kind):
     for stage in project_stage.STAGES:
         [release] = [c for c in project_stage.crafts(kind, stage) if c["id"] == "release"]
-        assert (release["locked"], release["size"], release["squad"], release["leader"]) == (True, "lean", ["release-engineer", "release-notes"], "release-manager")
+        assert (release["locked"], release["size"], release["squad"], release["leader"]) == (False, "lean", ["release-engineer", "release-notes"], "release-manager")
         assert release["tiers"] == {"release-manager": "warrior", "release-engineer": "warrior", "release-notes": "warrior"}
         assert not any(c["locked"] for c in project_stage.crafts(kind, stage) if c["id"] != "release")
     assert project_stage.release_card()["id"] == "release" and project_stage.leader_tier() == "warrior"
@@ -114,5 +114,5 @@ def test_the_proposals_take_the_stage_and_offer_only_the_crafts_of_the_stages_re
     ids = lambda stage: [p["id"] for p in orkmaster.proposals(h.ideas.root(), h.ideas.state_dir, {}, kind, None, [], stage=stage)]
     assert ids("idea") == ["product", "design", "release"] and ids("being_made") == ["product", "design", "tech", "release"] and len(ids("live")) == 6 == len(ids(None))
     release = [p for p in orkmaster.proposals(h.ideas.root(), h.ideas.state_dir, {}, kind, None, [], stage="idea") if p["id"] == "release"][0]
-    assert release["locked"] is True and release["squad"] == ["release-engineer", "release-notes"] and release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}]
+    assert release["locked"] is False and release["squad"] == ["release-engineer", "release-notes"] and release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}]
     assert orkmaster.proposal_ids("web", None, [], stage="idea") == ["product", "design", "release"]

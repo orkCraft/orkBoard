@@ -57,7 +57,7 @@ class PartyMixin:
     def stage(self, args: dict) -> dict:
         """`ideas.stage {}`: `{stage, read, kept, kind, offered: {idea|being_made|live: [card]}}` (realm/project_stage.py): the stage the project is at (the one the
         person set, else the one read from the project), the one read, the project's kind, and the crafts offered when it is at each stage (a card: id, name, line,
-        craft, leader, build, check, squad, size, tiers, from, locked). Release is in every stage's, `locked`. It writes nothing."""
+        craft, leader, build, check, squad, size, tiers, from, locked). Release is in every stage's, not `locked` (decisions §274.1). It writes nothing."""
         kind = project_kind.read(self.host.repo_root)["kind"]
         return {**project_stage.current(self.state_dir, self.host.repo_root), "kind": kind, "offered": project_stage.offered(kind)}
 
