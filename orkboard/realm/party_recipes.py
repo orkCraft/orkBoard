@@ -73,7 +73,7 @@ def craft_of(recipe: str = "", leader: str = "") -> str:
 
 
 def is_release(track: dict) -> bool:
-    """Whether a party of `ideas.tracks` is the Release party (§137.1): the one way into main, in every project; it is never dropped."""
+    """Whether a party of `ideas.tracks` is the Release party (§137.1): the one place to release a version while seated; a craft as any, it may be removed (§274.1)."""
     return track.get("recipe") == RELEASE or (track.get("leader") or "") == library.RELEASE_MANAGER
 
 

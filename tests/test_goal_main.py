@@ -475,3 +475,14 @@ def test_a_commit_by_the_board_under_either_name_is_no_pile(tmp_path):
         shas.append(run("rev-parse", "HEAD"))
     kept, files = idea_gate.without_board_pages(IdeaGit(tmp_path), shas, 3)
     assert kept == shas[2:] and files == 1
+
+
+def test_a_goal_in_dev_reaches_main_after_the_checks_with_no_release_party(host, repo):
+    """Release is a craft as any (decisions §274.1): no Release party, and the goal still goes to main by `ideas.to_main`."""
+    from orkboard.realm import goal_types
+    slug = goal(host, "No Release seated")
+    task(host, repo, slug, "t1", {"new.txt": "new\n"})
+    assert goal_types.release_party(host.ideas.root()) == ""
+    got = to_main(host, slug)
+    assert got.get("ok", True) is not False
+    assert "new.txt" in git(repo, "ls-tree", "--name-only", "-r", "main")

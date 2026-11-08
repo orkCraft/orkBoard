@@ -228,7 +228,7 @@ def test_a_mobile_folder_is_proposed_three_parties_each_in_three_sizes_with_pric
     tech = {p["id"]: p for p in got["proposals"]}["tech"]["sizes"]["full"]["heads"]
     assert tech[0] == {"race": "shaman", "tier": "elder"} and {h["race"] for h in tech[1:]} == {"peon"}
     release = got["proposals"][3]                                                                                   # Release: in every project, its leader alone, locked
-    assert release["id"] == "release" and release["name"] == "Release" and release["locked"] is True and release["squad"] == ["release-engineer", "release-notes"]
+    assert release["id"] == "release" and release["name"] == "Release" and release["locked"] is False and release["squad"] == ["release-engineer", "release-notes"]
     assert [release["sizes"][s]["team"] for s in ("lean", "standard", "full")] == [["release-engineer", "release-notes"]] * 3
     assert release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}]
 
