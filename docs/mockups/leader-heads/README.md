@@ -142,3 +142,41 @@ cells; only the face changes:
 6. asleep: the eyes shut as heavy lines, the jaw hanging slack and open, a thin string of drool.
 
 Do not copy any existing character or any existing game's art.
+
+The prompt for a fresh chat, the v1–v2 fixes inside it, the grid pushed hard (8 November 2026):
+
+```
+Six pixel-art icons of the same creature's head, in a 3 x 2 grid of equal square cells on a perfectly flat #151412
+background (no vignette, no glow, no frames, no grid lines, no text).
+
+PIXEL GRID, the most important rule: each head is drawn on a canvas of exactly 24 x 24 pixels, then enlarged 16 times
+with nearest-neighbour scaling, so every pixel is a hard square block of the same size and you could count exactly 24
+blocks across a head. No detail smaller than one block, no anti-aliasing, no gradients, no dithering, no texture,
+no wrinkle lines, no cracks on the skin: at 24 pixels there is no room for them. At most 10 colours in the whole sheet.
+
+The creature: an old ork shaman, grotesque and heavy, like a monster from a hand-painted dark roguelike card game,
+never cute, never a sticker. Big simple masses: a small sloping skull, a heavy brow ledge, a massive underslung jaw
+wider than the skull, two thick tusks pushing up past the upper lip, a flat broad nose. Two thick ram horns of old bone
+curled tight against the sides of the head (not sticking out wide), one horn chipped. A thin braid with three square
+beads hangs from one horn. Front view, the head only, no neck, filling the canvas.
+
+Colour and light: the skin is a MID-TONE grey-olive, clearly light: about 50% brightness on the lit side and 35% in the
+shadow, never darker. One hard light from the upper left: two flat tones of skin, lit and shadow, plus a 1-pixel pale
+cold rim light along the whole shadowed edge. A 1-pixel near-black outline around the head. Bone-coloured horns and
+tusks, a dark brown-violet mouth. No red, no yellow, no orange anywhere.
+
+Eyes carry the mood: in every mood where they are open, each eye is a near-white block of at least 4 x 3 pixels with a
+1-pixel black pupil, set in a darker socket under the brow. Only the eyes, the brows and the mouth change; no sweat
+drops, bubbles, sparkles or symbols. Same head, same size, same position, same light in all six:
+1. calm: heavy lids cover the top half of both eyes, the mouth shut, the tusks up, unimpressed.
+2. focused: one eye squeezed shut to a 1-pixel line, the other wide open and glaring, the brow knotted down.
+3. worried: both eyes wide open, pupils tiny, the brows raised high and slanted up in the middle, the mouth a wide
+   clenched grimace with teeth showing.
+4. says no: both eyes open wide with the pupils pushed hard to the same side (a side-eye), the brows flat and low,
+   the mouth a flat line pulled down at one corner.
+5. pleased: smug and satisfied, NOT angry: the brows relaxed and raised, the cheeks pushing the eyes up into upward
+   curved slits, a wide crooked grin full of teeth.
+6. asleep: the eyes shut as flat lines, the jaw hanging slack and open, a 1-pixel drool line.
+
+Do not copy any existing character or any existing game's art.
+```
