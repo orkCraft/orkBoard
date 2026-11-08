@@ -26,6 +26,7 @@ import { hasAlert, lookOf, stepMarked, theLeader } from "./concerns.js";
 import { Marks, marksOf, marksWords, projectMarks, runsOn } from "./tabmarks.js";
 import { AskBubble, askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { EmptyChair, useOffer } from "./chairs.js";
+import { raceOf } from "./felt.js";
 import { PresenceDoor } from "./presence.js";
 import { Backpack } from "./backpack.js";                    // the inventory's backpack, before *New party* (spec 157 D.1)
 import { laidNow } from "./laying.js";
@@ -84,7 +85,9 @@ function Tab({ slug, g = null, on, name, who = "", head, off = false, sleeps = f
     <span class="table-tab__txt"><span class="table-tab__main">${name}</span>${answering && html`<span class="table-tab__answering" data-answering=${slug}>answering…</span>`}${on && who && html`<span class="table-tab__who">${who}</span>`}<${Marks} m=${marks} on=${on} />${g && !on && html`<${PastDot} party=${g.slug} />`}</span>
     ${!on && alert && html`<span class="table-tab__alert" role="img" aria-label=${alert} title=${alert}><${Sign} name="alert" /></span>`}
   </button>`;
-  return html`<div class=${cls("table-tabcell", { "is-open": on })} role="presentation" data-cell=${slug} style=${place}>
+  const race = g ? raceOf(g) : "orkmaster";                       // its party's colour: the rule under its name, its pennant (spec 160 E, decisions §275.1); its name stays in the light ink
+  return html`<div class=${cls("table-tabcell", { "is-open": on })} role="presentation" data-cell=${slug} data-race=${race || undefined} style=${place}>
+    ${!narrow && html`<span class=${cls("ork-pennant small", { "is-open": on })} data-party=${race || undefined} aria-hidden="true"></span>`}
     ${on && head && html`<${Sit} head=${head} mood=${mood} size=${size} chair=${chair} on=${true} extra=${g ? html`<${LookMarks} slug=${slug} who=${theLeader(g.leader?.name)} />` : null}>${ask
       ? html`<button type="button" class="table-askhead" data-ask-head=${slug} aria-label=${`Ask the ${leader}`} aria-haspopup="dialog" aria-expanded=${String(askOpen.value === key)}
           title=${looking ? `${theLeader(leader)} is looking at the table` : `Ask the ${leader}`} onClick=${() => (askOpen.value === key ? closeAsk() : openAsk(slug))}><${Head} race=${head.race} tier=${head.tier} size=${size} mood=${mood} /></button>`

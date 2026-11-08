@@ -39,7 +39,8 @@ function Top({ parties, all }) {
     openTab(first);
     requestAnimationFrame(() => document.getElementById(`tab-${first}`)?.focus());
   };
-  return html`<div class="col-head" role="tablist" aria-label="The Orkmaster" onKeyDown=${keys}>
+  return html`<div class="col-head" role="tablist" aria-label="The Orkmaster" data-race="orkmaster" onKeyDown=${keys}>
+    <span class=${cls("ork-pennant small", { "is-open": open })} data-party="orkmaster" aria-hidden="true"></span>
     <button type="button" class=${cls("ork-tab col-head__tab", { "is-open": open })} role="tab" id=${`tab-${ORKMASTER}`} data-tab=${ORKMASTER} data-ask-head=${open && ask ? ORKMASTER : undefined} aria-selected=${String(open)} aria-controls="table-pane"
       aria-haspopup=${ask ? "dialog" : undefined} aria-expanded=${ask && open ? String(askOpen.value === "") : undefined} aria-label=${`The Orkmaster · ${name}`}
       title=${open && ask ? `The Orkmaster: who does what. Press again to ask it (${name})` : `The Orkmaster: who does what (${name})`} onClick=${press}>

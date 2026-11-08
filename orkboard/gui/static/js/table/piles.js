@@ -188,7 +188,7 @@ function WorkCard({ n, i, off, y, x, onPress }) {
  *  lies below the front one, or sunk). **A pile's heading appears with its first card**, never empty (spec 130 C.6). */
 export function Pile({ id, title, items, under = "", asked = "", onPress, way = null }) {
   if (!items.length) return null;
-  const head = html`<div class="col-plab"><span class="col-plab__t">${title}</span></div>
+  const head = html`<div class="col-plab"><span class="col-plab__t ork-plaque">${title}</span></div>
     <${Under} id=${id} text=${under} asks=${under === "waits for you"} />${asked && html`<${Under} id=${id} text=${asked} extra=${true} />`}`;
   if (id === "analysis") {
     const reads = ACTIVE.includes(items[0].n.state), said = (n) => `${n.title}: ${sayOf(n, "analysis")}`;

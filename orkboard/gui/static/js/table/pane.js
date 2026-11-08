@@ -36,6 +36,7 @@ import { laidNow } from "./laying.js";
 import { currentProject } from "../shell/projects.js";
 import { setupNow } from "../hand/setupcards.js";
 import { Notice } from "./notice.js";                    // the Orkmaster's line when the work moved to another tool (spec 105 D)
+import { feltOf } from "./felt.js";                      // the open party's felt (spec 160 E)
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
 export function back() {
@@ -109,7 +110,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
   const bare = !laidNow(), form = isForm(o), stalled = inventory.value !== null && !o && !bare;      // the inventory open: the stall is the table (spec 157 D.2); a form or an open thing lies over it                // not laid yet: the table is bare (spec 130 C.6); a form covers the whole table, its end included (C.5)
   const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), past = !o && !bare && !!picked.value && !picks && !!mapData.value && !narrow, kind = !o && !bare && picks ? phaseKind(tab === ORKMASTER ? null : g, picks) : "";     // a goal picked: what the table shows by its phase at this tab (phaseview.js)
-  return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`} data-stall=${stalled ? "open" : undefined}>
+  return html`<section class="table-pane ork-table" id="table-pane" data-party=${feltOf(g) || undefined} role="tabpanel" aria-labelledby=${`tab-${tab}`} data-stall=${stalled ? "open" : undefined}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
     ${!o && !bare && !stalled && html`<${Notice} />`}
     ${!o && !bare && !stalled && html`<${ToMain} />`}
