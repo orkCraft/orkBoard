@@ -1,0 +1,11 @@
+11:46:47 board          draft                      codex  gpt-6-astra      tok 97016 sec 51.7 exit None
+11:47:30 board          plan                       codex  gpt-6-astra      tok 66851 sec 43.3 exit None
+11:59:32 ideas          None                       codex  gpt-6.1-sol      tok 3607814 sec 684.7 exit None
+12:03:38 ideas          None                       codex  gpt-6.1-sol      tok 1065971 sec 94.5 exit None
+12:11:21 ideas          None                       codex  gpt-6-astra      tok 1649835 sec 346.2 exit None
+12:12:17 board          accept_step                codex  gpt-6-astra      tok 74996 sec 21.6 exit None
+12:13:49 ideas          None                       codex  gpt-6.1-sol      tok 418474 sec 90.6 exit None
+12:17:16 ideas          None                       codex  gpt-6.1-sol      tok 578599 sec 149.4 exit None
+12:18:38 board          accept_step                codex  gpt-6-astra      tok 0 sec 12.6 exit None
+12:18:40 board          accept_step                codex  gpt-6-astra      tok 0 sec 2.3 exit None
+12:18:57 board          goal                       codex  gpt-6.1-sol      tok 0 sec 2.5 exit None

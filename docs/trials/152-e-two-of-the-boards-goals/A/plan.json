@@ -1,0 +1,117 @@
+{
+  "idea": "cut-the-import-cycle-between-realm-and-core",
+  "made_at": "2026-11-08T11:03:55",
+  "passed_at": "2026-11-08T11:04:59",
+  "estimate": {
+    "tasks": 1,
+    "usd_low": null,
+    "usd_high": null
+  },
+  "todos": [],
+  "tasks": [
+    {
+      "id": "k1",
+      "title": "Extract shared seat rules into realm",
+      "short": "Extract seat rules",
+      "brief": "Implement the extraction after dependency goal 154-a-leader-is-a-skill-in-claude-code is available. Keep this one code session responsible for implementation and its tests. Before editing, capture committed fixtures from the original implementation containing complete Talk, section, join and acceptance prompts, role texts and agent frames. Cover all supported seats, leader seat forms and crafts, default and custom paths, both Talk rounds, and empty/nonempty rule options individually and in supported combinations; include section why/sketch/proposal variants and acceptance context/read/round/line variants. Compare exact strings, preserving whitespace and final newlines; never regenerate expected fixtures from the changed implementation.\nMove shared rules and their required text helpers/constants into new pure realm modules: seat_talk_rules.py, seat_section_rules.py, seat_join_rules.py and seat_accept_rules.py. Give each one responsibility and keep each below approximately 600 lines. Core retains prompt framing, context collection, parsing and workflow behavior; its existing rules, project_rules and join_rules entry points, signatures, defaults and exposed constants remain compatible through imports or thin wrappers. Update seat_frames and agent_rules_text to consume these realm rules directly, including the Orkmaster's join text. Trace required dependencies such as the craft lens, question/card rules and numeric limits; reuse only dependencies with no transitive core import, extracting necessary pure definitions into narrowly scoped seat rule support modules if needed. Do not duplicate authoritative rule text or limits.\nAllowed production changes are the five starting Python modules, new seat_*_rules.py modules, and existing realm providers only where relocating a required shared definition is necessary to remove a transitive core dependency; preserve their old entry points. Update stale architecture docstrings. Do not change unrelated lazy imports, prompt wording, schemas or behavior. Extend tests/test_architecture.py to reject imports of orkboard.core from both consumers and all extracted modules, traversing local dependencies and inspecting imports inside functions as well as module-level imports. Include regression cases showing the checker catches lazy and indirect imports. Add exact-output fixture tests and compatibility checks; update affected existing tests in this task. Run tests/test_architecture.py, tests/test_board_alone.py, tests/test_updates.py and the affected prompt, role, frame and core module tests without browsers or local servers. Record the settled dependency direction, module responsibilities and compatibility approach in the commit message, or .ork-commit.md when committing is unavailable.",
+      "kind": "code",
+      "tier": "elder",
+      "after": [],
+      "state": "merged",
+      "branch": "idea/cut-the-import-cycle-between-realm-and-core/k1",
+      "commit": "c3cc0e890f5517b3d1cc466e626907c0e3c2a983",
+      "session": "01a1ba9e-54f4-7c92-aac4-86d97190a3ec",
+      "cost": null,
+      "tokens": 2977286,
+      "started": "2026-11-08T11:04:59",
+      "finished": "2026-11-08T11:15:32",
+      "error": "",
+      "note": "",
+      "files": [
+        "CLAUDE.md",
+        "orkboard/realm/seat_frames.py",
+        "orkboard/realm/agent_rules_text.py",
+        "orkboard/core/idea_talk.py",
+        "orkboard/core/idea_sections.py",
+        "orkboard/core/idea_accept.py"
+      ],
+      "role": "grunt",
+      "step": 1,
+      "party": "tech",
+      "craft": "tech",
+      "leader": "architect",
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "session_total": null,
+      "last_tokens": 2977286,
+      "look": "",
+      "same_as_before": false,
+      "tests": {
+        "passed": 307,
+        "failed": 0,
+        "skipped": 0,
+        "failing": [],
+        "tail": "$ python -m pytest -q tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_idea_accept.py tests/test_idea_sections.py tests/test_idea_talk.py tests/test_goal_phase.py tests/test_goal_route.py tests/test_heroes.py tests/test_idea_page.py tests/test_idea_questions.py tests/test_lens_rubrics.py tests/test_roles.py tests/test_seat_frames.py tests/test_spec_sections.py tests/test_seat_rule_outputs.py\n........................................................................ [ 23%]\n........................................................................ [ 46%]\n........................................................................ [ 70%]\n........................................................................ [ 93%]\n...................                                                      [100%]\n307 passed in 180.23s (0:03:00)",
+        "green": true,
+        "ran": true,
+        "command": "python -m pytest -q tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_idea_accept.py tests/test_idea_sections.py tests/test_idea_talk.py tests/test_goal_phase.py tests/test_goal_route.py tests/test_heroes.py tests/test_idea_page.py tests/test_idea_questions.py tests/test_lens_rubrics.py tests/test_roles.py tests/test_seat_frames.py tests/test_spec_sections.py tests/test_seat_rule_outputs.py",
+        "exit": 0
+      },
+      "diff": {
+        "files": 36,
+        "added": 677,
+        "removed": 451
+      },
+      "shot": null,
+      "round": 1,
+      "conflict": "",
+      "why": "",
+      "base": "ba18ff7b79166899e5384af51757d39c99a68d99",
+      "ran_tier": "warrior",
+      "effort": "low",
+      "sees": [],
+      "subjects": [
+        "Extract shared seat rules into realm"
+      ]
+    }
+  ],
+  "missing": [],
+  "passed_by": "person",
+  "start_at": null,
+  "accepts": {
+    "1": {
+      "round": 1,
+      "verdict": "accepted",
+      "at": "2026-11-08T11:16:03",
+      "done_when": [
+        {
+          "n": 1,
+          "met": "unseen",
+          "why": "Dev moves shared rule entry points into realm; the four-file limit prevents verifying their transitive dependencies."
+        },
+        {
+          "n": 2,
+          "met": "unseen",
+          "why": "The four inspected files do not establish architecture-test coverage, including lazy imports."
+        },
+        {
+          "n": 3,
+          "met": "unseen",
+          "why": "Before-and-after fixtures and their coverage were outside the four inspected files."
+        },
+        {
+          "n": 4,
+          "met": "unseen",
+          "why": "Core rule entry points remain exported and the reported gate passed 307 tests; critical and affected test coverage is not shown."
+        },
+        {
+          "n": 5,
+          "met": "unseen",
+          "why": "No blocking finding in the inspected dev changes; review coverage of the remaining changed files is not established."
+        }
+      ],
+      "back": [],
+      "cost": null
+    }
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "idea": "the-checks-into-main-and-a-red-from-before",
+  "made_at": "2026-11-08T11:47:30",
+  "passed_at": "2026-11-08T11:48:05",
+  "estimate": {
+    "tasks": 4,
+    "usd_low": 0.95,
+    "usd_high": 2.85
+  },
+  "todos": [],
+  "tasks": [
+    {
+      "id": "k1",
+      "title": "Explain failures and enforce main eligibility",
+      "short": "Explain main failures",
+      "brief": "Implement this goal as one cohesive backend and page change. Start with the listed files; read spec 149 E before implementation. Limit changes to main-check execution and diagnostics, check records and merge eligibility, discard/portal/check controls, their directly affected tests, and any focused helpers extracted from those modules. Inspect portal.js and discard.js before changing them. Keep realm independent of gui, imports one way, and split any module before it exceeds about 600 lines. Record the settled architecture in the commit message, or .ork-commit.md when committing is unavailable.\n\nReuse gate_rerun's diagnostic machinery with an explicit exact-main-base mode while preserving existing task-gate policy. Retry only named pytest failures in the candidate, then compare remaining identities on the exact checked main base, not a moving branch or task merge-base. Initial execution and diagnostics must share the remaining timeout; cancellation, exceptions and concurrent checks must safely clean up their temporary worktrees. Preserve every reported failed identity and its flaky, pre-existing, new or unresolved classification in structured check records and snapshots. Explain inherited and flaky failures even when nonblocking. Missing identities, incomplete summaries, collection errors, unavailable diagnostics and exhausted budgets must never imply a pass.\n\nBind each result to the actual candidate commits and main base checked. Prevent a changed candidate, changed main, superseded worker or stale page response from authorizing a merge; validate the binding at the merge boundary, extending only the directly involved merge entry point if needed. After blocking red, retain the reason and failed identities across discard close/reopen and revoke readiness for that candidate. Update backend readiness and the discard, portal and To main controls consistently. Keep the failed goal accessible with its explanation and an explicit Test again action showing progress. Opening or selecting the goal and pressing To main must not silently retry red checks; only the explicit retry action requests another run. Preserve existing explicit skip policy without expanding it; do not redesign Release or the discard.\n\nUpdate affected tests in this task, including tests/test_main_checks.py and tests/test_gate_rerun.py plus existing service and page tests for these flows. Cover mixed classifications, equal failure counts with different identities, incomplete diagnostics, budget exhaustion, cleanup/cancellation, stale results and merge races, reopening red results, disabled readiness/merge controls, and explicit retry progress followed by success. Run relevant non-browser tests and repository critical checks: tests/test_architecture.py, tests/test_board_alone.py and tests/test_updates.py. Do not start a browser or local server; leave browser execution to the gate.",
+      "kind": "code",
+      "tier": "elder",
+      "after": [],
+      "state": "merged",
+      "branch": "idea/the-checks-into-main-and-a-red-from-before/k1",
+      "commit": "3f9ba98228fd5656a1eee274835aa21aaf8b4615",
+      "session": "01a1bac5-cfc9-7b61-a2a4-b25d9559ed8b",
+      "cost": null,
+      "tokens": 4673785,
+      "started": "2026-11-08T11:48:05",
+      "finished": "2026-11-08T12:05:30",
+      "error": "",
+      "note": "",
+      "files": [
+        "orkboard/realm/main_checks.py",
+        "orkboard/realm/gate_rerun.py",
+        "orkboard/gui/ideas_gate.py",
+        "orkboard/gui/static/js/table/checks.js",
+        "orkboard/gui/static/js/table/tomain.js",
+        "CLAUDE.md"
+      ],
+      "role": "grunt",
+      "step": 1,
+      "party": "tech",
+      "craft": "tech",
+      "leader": "architect",
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "session_total": null,
+      "last_tokens": 1065971,
+      "look": "",
+      "same_as_before": false,
+      "tests": {
+        "passed": 289,
+        "failed": 0,
+        "skipped": 3,
+        "failing": [],
+        "tail": "$ python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_table_by_phase_browser.py tests/test_table_desktop_browser.py tests/test_table_edge_browser.py tests/test_discard_table_browser.py tests/test_portal_browser.py tests/test_gate_rerun.py tests/test_goal_main.py tests/test_main_checks.py tests/test_idea_gate.py tests/test_to_main_browser.py\nbringing up nodes...\nbringing up nodes...\n\n............................................................s.s......... [ 24%]\n.......................................................s................ [ 49%]\n........................................................................ [ 73%]\n........................................................................ [ 98%]\n....                                                                     [100%]\n=========================== short test summary info ============================\nSKIPPED [2] tests/test_table_desktop_browser.py:704: the line's drag lived in the first lane's cascade; at the wide width the column's In analysis has Next (spec 128 B.3, tests/test_column_browser.py), at the narrow a touch screen scrolls the lane and its moves are the list's arrows\nSKIPPED [1] tests/test_table_desktop_browser.py:1067: the potions lie in the hand at the wide width; the narrow width's tabs are heads only\n289 passed, 3 skipped in 110.54s (0:01:50)",
+        "green": true,
+        "ran": true,
+        "command": "python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_table_by_phase_browser.py tests/test_table_desktop_browser.py tests/test_table_edge_browser.py tests/test_discard_table_browser.py tests/test_portal_browser.py tests/test_gate_rerun.py tests/test_goal_main.py tests/test_main_checks.py tests/test_idea_gate.py tests/test_to_main_browser.py",
+        "exit": 0
+      },
+      "diff": {
+        "files": 12,
+        "added": 371,
+        "removed": 44
+      },
+      "shot": {
+        "none": true
+      },
+      "round": 1,
+      "conflict": "",
+      "why": "",
+      "base": "dad57146505f800e1cdc5b56cf5cd89f313e8e6d",
+      "ran_tier": "warrior",
+      "effort": "medium",
+      "sees": [
+        "orkboard/gui/static/js/table/checks.js",
+        "orkboard/gui/static/js/table/discard.js",
+        "orkboard/gui/static/js/table/portal.js",
+        "orkboard/gui/static/js/table/tomain.js"
+      ],
+      "subjects": [
+        "Explain failures and enforce main eligibility",
+        "Explain failures and enforce main eligibility"
+      ]
+    },
+    {
+      "id": "k2",
+      "title": "Review failure handling before merge",
+      "short": "Review main safety",
+      "brief": "Review k1 against this goal and spec 149 E before merge. List concrete findings worst first, with file references and what breaks. Focus on identity-based classification, conservative handling of incomplete diagnostics, shared timeout and worktree cleanup, unchanged task-gate policy, candidate/main binding through the merge boundary, stale worker responses, retained failure explanations, revoked readiness and explicit retry behavior. Check module responsibilities, one-way imports and the roughly 600-line limit. Fix small findings only within k1's implementation and directly affected tests, adding regression coverage where useful; return larger blocking findings for correction and re-review. Run the relevant non-browser checks after fixes, inspect the gate record, and leave no blocking finding unresolved. Do not launch a browser or local server, repair unrelated failures, or merge automatically. Record review conclusions and any settled architecture in the commit message or .ork-commit.md.",
+      "kind": "review",
+      "tier": "elder",
+      "after": [
+        "k1"
+      ],
+      "state": "merged",
+      "branch": "idea/the-checks-into-main-and-a-red-from-before/k2",
+      "commit": "dc685e0a73ce02017e67a9ebe3f96b959c4a7020",
+      "session": "01a1bad5-c8cd-7b00-9960-0a35420375b1",
+      "cost": null,
+      "tokens": 1649835,
+      "started": "2026-11-08T12:05:34",
+      "finished": "2026-11-08T12:11:47",
+      "error": "",
+      "note": "",
+      "files": [
+        "CLAUDE.md",
+        "orkboard/realm/main_checks.py",
+        "orkboard/realm/gate_rerun.py",
+        "orkboard/gui/ideas_gate.py",
+        "orkboard/gui/static/js/table/checks.js",
+        "orkboard/gui/static/js/table/tomain.js"
+      ],
+      "role": "reviewer",
+      "step": 1,
+      "party": "tech",
+      "craft": "tech",
+      "leader": "architect",
+      "tool": "codex",
+      "model": "gpt-6-astra",
+      "session_total": null,
+      "last_tokens": 1649835,
+      "look": "",
+      "same_as_before": false,
+      "tests": {
+        "passed": 68,
+        "failed": 0,
+        "skipped": 0,
+        "failing": [],
+        "tail": "$ python -m pytest -q tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_gate_rerun.py\n....................................................................     [100%]\n68 passed in 24.77s",
+        "green": true,
+        "ran": true,
+        "command": "python -m pytest -q tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_gate_rerun.py",
+        "exit": 0
+      },
+      "diff": {
+        "files": 2,
+        "added": 57,
+        "removed": 7
+      },
+      "shot": null,
+      "round": 1,
+      "conflict": "",
+      "why": "",
+      "base": "3f9ba98228fd5656a1eee274835aa21aaf8b4615",
+      "ran_tier": "elder",
+      "effort": "medium",
+      "findings": [
+        {
+          "where": "orkboard/realm/gate_rerun.py:80,166",
+          "what": "Abnormal pytest exits with a complete-looking summary could be excused as flaky or pre-existing, authorizing incomplete checks; require exit code 1 for initial failed runs and strict failed reruns, leaving other exits unresolved.",
+          "fixed": true,
+          "kind": "code"
+        },
+        {
+          "where": "orkboard/realm/gate_rerun.py:41",
+          "what": "Splitting every failure identity at the first ' - ' truncates parameterized node IDs and prevents exact reruns; preserve separators inside parameter brackets and strip ANSI formatting before parsing.",
+          "fixed": true,
+          "kind": "code"
+        }
+      ],
+      "sees": [],
+      "subjects": [
+        "Review failure handling before merge"
+      ]
+    },
+    {
+      "id": "k3",
+      "title": "Fix: On reopening discard after red, show the retained reason and failed tests…",
+      "short": "Fix",
+      "brief": "On reopening discard after red, show the retained reason and failed tests, remove Ready for main eligibility, and disable To main for that candidate.\nWhere: orkboard/gui/static/js/table/discard.js; orkboard/gui/static/js/table/portal.js\nThe Done when line it fails: After a blocking red, reopening the discard shows its reason and failed tests; Ready for main and To main no longer appear enabled for the failed candidate.",
+      "kind": "code",
+      "tier": "elder",
+      "after": [],
+      "state": "merged",
+      "branch": "idea/the-checks-into-main-and-a-red-from-before/k3",
+      "commit": "b52e4a58e2a729a180bcecad455e3c991f294eac",
+      "session": "01a1badb-f015-7f53-8ca4-052024f0fea6",
+      "cost": null,
+      "tokens": 418474,
+      "started": "2026-11-08T12:12:17",
+      "finished": "2026-11-08T12:14:43",
+      "error": "",
+      "note": "",
+      "role": "grunt",
+      "step": 1,
+      "party": "tech",
+      "craft": "tech",
+      "leader": "architect",
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "session_total": null,
+      "last_tokens": 418474,
+      "look": "",
+      "same_as_before": false,
+      "tests": {
+        "passed": 186,
+        "failed": 0,
+        "skipped": 3,
+        "failing": [],
+        "tail": "$ python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_discard_table_browser.py tests/test_table_by_phase_browser.py tests/test_table_desktop_browser.py tests/test_table_edge_browser.py tests/test_portal_browser.py\nbringing up nodes...\nbringing up nodes...\n\n........................................................................ [ 38%]\n............s........................s........................s......... [ 76%]\n.............................................                            [100%]\n=========================== short test summary info ============================\nSKIPPED [2] tests/test_table_desktop_browser.py:704: the line's drag lived in the first lane's cascade; at the wide width the column's In analysis has Next (spec 128 B.3, tests/test_column_browser.py), at the narrow a touch screen scrolls the lane and its moves are the list's arrows\nSKIPPED [1] tests/test_table_desktop_browser.py:1067: the potions lie in the hand at the wide width; the narrow width's tabs are heads only\n186 passed, 3 skipped in 53.07s",
+        "green": true,
+        "ran": true,
+        "command": "python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_discard_table_browser.py tests/test_table_by_phase_browser.py tests/test_table_desktop_browser.py tests/test_table_edge_browser.py tests/test_portal_browser.py",
+        "exit": 0
+      },
+      "diff": {
+        "files": 2,
+        "added": 13,
+        "removed": 9
+      },
+      "shot": {
+        "none": true
+      },
+      "round": 1,
+      "conflict": "",
+      "why": "",
+      "base": "3325eedad8e4af8718bad6c09431b95d0a8b1270",
+      "ran_tier": "warrior",
+      "effort": "medium",
+      "sees": [
+        "orkboard/gui/static/js/table/discard.js",
+        "orkboard/gui/static/js/table/portal.js"
+      ],
+      "subjects": [
+        "Fix: On reopening discard after red, show the retained reason and failed tests…"
+      ]
+    },
+    {
+      "id": "k4",
+      "title": "Fix: Separate reading checks from retrying: only an explicit Test again action…",
+      "short": "Fix",
+      "brief": "Separate reading checks from retrying: only an explicit Test again action may send again:true, with visible progress; choosing a goal or pressing To main must preserve red.\nWhere: orkboard/gui/static/js/table/checks.js; orkboard/gui/static/js/table/portal.js\nThe Done when line it fails: To main never silently retries a failed check; an explicit Test again action shows progress, and passing results authorize only the unchanged candidate and main base.",
+      "kind": "code",
+      "tier": "elder",
+      "after": [],
+      "state": "merged",
+      "branch": "idea/the-checks-into-main-and-a-red-from-before/k4",
+      "commit": "91fa85577e2e8095ff345a163f9385f62ab2ff08",
+      "session": "01a1bade-349e-74e2-b376-77dabae4615c",
+      "cost": null,
+      "tokens": 578599,
+      "started": "2026-11-08T12:14:46",
+      "finished": "2026-11-08T12:18:04",
+      "error": "",
+      "note": "",
+      "role": "grunt",
+      "step": 1,
+      "party": "tech",
+      "craft": "tech",
+      "leader": "architect",
+      "tool": "codex",
+      "model": "gpt-6.1-sol",
+      "session_total": null,
+      "last_tokens": 578599,
+      "look": "",
+      "same_as_before": false,
+      "tests": {
+        "passed": 173,
+        "failed": 0,
+        "skipped": 3,
+        "failing": [],
+        "tail": "$ python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_table_by_phase_browser.py tests/test_table_desktop_browser.py tests/test_table_edge_browser.py tests/test_portal_browser.py\nbringing up nodes...\nbringing up nodes...\n\n........................................................................ [ 40%]\n.......................s..s..............s.............................. [ 81%]\n................................                                         [100%]\n=========================== short test summary info ============================\nSKIPPED [2] tests/test_table_desktop_browser.py:704: the line's drag lived in the first lane's cascade; at the wide width the column's In analysis has Next (spec 128 B.3, tests/test_column_browser.py), at the narrow a touch screen scrolls the lane and its moves are the list's arrows\nSKIPPED [1] tests/test_table_desktop_browser.py:1067: the potions lie in the hand at the wide width; the narrow width's tabs are heads only\n173 passed, 3 skipped in 47.59s",
+        "green": true,
+        "ran": true,
+        "command": "python -m pytest -q -n 6 tests/test_architecture.py tests/test_board_alone.py tests/test_updates.py tests/test_table_by_phase_browser.py tests/test_table_desktop_browser.py tests/test_table_edge_browser.py tests/test_portal_browser.py",
+        "exit": 0
+      },
+      "diff": {
+        "files": 2,
+        "added": 24,
+        "removed": 6
+      },
+      "shot": {
+        "none": true
+      },
+      "round": 1,
+      "conflict": "",
+      "why": "",
+      "base": "b52e4a58e2a729a180bcecad455e3c991f294eac",
+      "ran_tier": "warrior",
+      "effort": "medium",
+      "sees": [
+        "orkboard/gui/static/js/table/checks.js",
+        "orkboard/gui/static/js/table/portal.js"
+      ],
+      "subjects": [
+        "Fix: Separate reading checks from retrying: only an explicit Test again action…"
+      ]
+    }
+  ],
+  "missing": [
+    {
+      "kind": "review",
+      "agent": "reviewer"
+    }
+  ],
+  "passed_by": "person",
+  "start_at": null,
+  "accepts": {
+    "1": {
+      "round": 2,
+      "verdict": "gone_on",
+      "at": "2026-11-08T12:18:40",
+      "done_when": [],
+      "back": [],
+      "cost": null
+    }
+  }
+}
