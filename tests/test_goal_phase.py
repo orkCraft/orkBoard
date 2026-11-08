@@ -384,6 +384,31 @@ def test_a_done_page_new_to_this_machine_is_seen_in_history_and_makes_no_commit_
     assert ideas.state(sd, "spec-before")["seen_at"] == ""
 
 
+def test_a_tools_route_gate_and_question_are_kept_by_a_write_until_the_board_has_its_own(host):
+    """Trial 152 E, F2 (trial 160 F1.3): a page an AI tool routed, gated and left asking keeps `route`, `gate` and `asks` when the Board writes it with nothing of
+    its own to say; a question whose choices no card can hold still waits. The Board's own gate replaces the tool's, and an answered question takes `asks` away."""
+    root, slug = _goal(host)
+    sd = host.ideas.state_dir
+    long = "a way said in far more words than a card's choice can hold"
+    page = _page(root, slug)
+    page.set("route", "design, tech")
+    page.set("gate", "1234567 · 9 files · green")
+    page.set("asks", "person")
+    page.set_section("Open questions", f"- Which way? (**{long}** / {long}, the other) — why")
+    ideas._write(Path(root) / IDEAS / f"{slug}.md", page.text())
+    ideas.save_state(sd, slug, state="ready")
+    host.ideas.tree_flush(force=True)
+    page = _page(root, slug)
+    assert [page.get(k) for k in ("phase", "route", "gate", "asks")] == ["work", "design, tech", "1234567 · 9 files · green", "person"]
+    ideas.save_plan(sd, slug, {"tasks": [{"id": "t1", "state": "merged", "commit": "abcdef0123", "diff": {"files": 2}, "finished": "2026-11-01T10:00:00",
+                                         "tests": {"green": True, "ran": True}}]})
+    page.set_section("Open questions", f"- Which way? (**{long}** / {long}, the other) — why\n  - Answered: the first (the person, 2026-11-08)")
+    ideas._write(Path(root) / IDEAS / f"{slug}.md", page.text())
+    host.ideas.tree_flush(force=True)
+    page = _page(root, slug)
+    assert page.get("gate") == "abcdef0 · 2 files · green" and page.get("route") == "design, tech" and "asks" not in dict(page.meta)
+
+
 def test_a_question_with_lines_is_an_outside_card_with_them_and_a_talk_card_with_lines_is_written_to_the_page_whole(host):
     """Spec 159 B: the ways' lines travel to the page's outside cards, and a Talk card the page lacks is written with them."""
     root, slug = _goal(host)

@@ -32,6 +32,7 @@ STATE_PHASE = {"raw": "new", "reading": "new", "asks": "new", "proposed": "new",
 FIRST = {"new": "raw", "talk": "routed", "spec": "decided", "work": "ready", "done": "done"}
 WORDS = {"talk": "Talk", "spec": "Spec", "work": "Work", "done": "Done"}      # a phase in a word, as `board_ask` says it to the Orkmaster; a goal in `new` is an "Idea"
 MANAGED = ("phase", "route", "queue", "asks", "gate", "by", "schema")          # the keys the Board writes (`spec` is a tool's: only read)
+KEPT = ("route", "gate")                            # a page's own, kept while the Board's state has none to write (an AI tool routed it or ran its gate: trial 152 E, F2)
 PERSON = "person"
 OUTSIDE_ID = "page-"                                # the id of a card made of a page's question: `page-<index of the question>`
 
@@ -139,12 +140,15 @@ def mirror(root: Path, state_dir: Path, needs: Callable | None = None, only: str
                 asking = bool(needs(i, st, plan, ideas.items(page.section("Open questions"))))
             except Exception:                  # a row that cannot be read leaves `asks` as it was written
                 asking = page.get("asks") == PERSON
+            asking = asking or (page.get("asks") == PERSON and bool(idea_questions.open_of(page.section("Open questions"))))      # a question no card can show still waits
             want = keys(st, gate_of(plan), asking, by)
             before = page.text()
             schema = page.get("schema") if any(k == "schema" for k, _v in page.meta) else None
             for k in MANAGED:
                 if k in want:
                     page.set(k, want[k])
+                elif k in KEPT and page.get(k):
+                    continue
                 elif k != "by":
                     page.meta = [(mk, mv) for mk, mv in page.meta if mk != k]
             if page.text() != before and _more_than_schema(page, before, schema):
