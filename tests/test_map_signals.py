@@ -261,6 +261,26 @@ def test_at_most_twenty_signals(repo, tmp_path):
     assert len(map_signals.signals(tmp_path / "state", repo, "design")) == map_signals.MAX_SIGNALS
 
 
+def test_limit_none_gives_every_hint_and_the_default_keeps_the_cut(repo, tmp_path):
+    routes = "".join(f'<Route path="/p{n}" element={{<P />}} />' for n in range(40))
+    put(repo, {"src/App.jsx": f'import {{ Routes, Route }} from "react-router-dom";\nexport default () => <Routes>{routes}</Routes>;\n',
+               **{f"src/p{n}.jsx": "export default () => null;\n" for n in range(40)}, "package.json": json.dumps({"dependencies": {"react-router-dom": "6"}})})
+    state = tmp_path / "state"
+    assert len(map_signals.signals(state, repo, "design", limit=None)) > map_signals.MAX_SIGNALS
+    assert len(map_signals.signals(state, repo, "design")) == map_signals.MAX_SIGNALS
+
+
+def test_tested_is_the_rule_the_hints_use(repo, tmp_path):
+    from orkboard.realm import gate_config
+    put(repo, {"cool/engine.py": "n = 0\n", "tests/test_engine.py": "def test_x():\n    pass\n", "calm/calm.py": "n = 0\n"})
+    gate = gate_config.Gate() if hasattr(gate_config, "Gate") else None
+    tracked = {"cool/engine.py", "tests/test_engine.py", "calm/calm.py"}
+    assert map_signals.tested("cool", ["engine.py"], tracked, gate, repo)
+    assert not map_signals.tested("calm", ["calm.py"], tracked, gate, repo)
+    assert map_signals.tested("tests", ["x.py"], tracked, gate, repo)
+    assert not hasattr(map_signals, "_tested")
+
+
 def test_the_pictures_of_the_screens_kept_since_a_look(repo, tmp_path):
     put(repo, APP)
     state = repo / ".orkcraft"
