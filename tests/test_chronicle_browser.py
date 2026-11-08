@@ -57,7 +57,15 @@ class PastHost(RoadHost):
             new = {**NEW, "goals": self.deck[0], "decisions": self.deck[1]} if self.deck else NEW
             return {"kind": "tag", "earlier": {"kind": "tag", "name": "v0.4", "day": "2026-11-02"}, "chapters": [new, OLD], "unreleased": UNRELEASED}
         if name == "ideas.chronicle_chapter":
-            return OLD_FULL
+            return {**NEW, "goals": self.deck[0], "decisions": self.deck[1]} if self.deck and a["id"] == "v:0.4" else OLD_FULL
+        if name == "ideas.chronicle_find":
+            want = a["query"].lower().split()
+            gs, ds = (self.deck or (NEW["goals"], NEW["decisions"]))
+            hit = lambda s: all(w in s.lower() for w in want)  # noqa: E731
+            mine = {"id": a["id"], "kind": "tag", "name": "v0.4", "day": "2026-11-02",
+                    "goals": [{"idea": g["idea"], "title": g["title"], "in": ["title"]} for g in gs if hit(g["title"])],
+                    "decisions": [{"number": d["number"], "title": d["title"], "day": d["day"], "in": ["decision"]} for d in ds if hit(d["title"])]}
+            return {"query": a["query"], "found": 0, "more": 0, "chapters": [mine] if mine["goals"] or mine["decisions"] else [], "unreleased": None}
         if name == "ideas.chronicle_goal":
             return {**NEW["goals"][0], "spec": {"asked": "A seat that stays.", "gist": "Keep the seat for a minute.", "sections": [{"party": "design", "title": "Design", "parts": {"Will": "Show the seat held."}}]},
                     "decision": DECISIONS[238], "changed_by": [{"number": 241, "title": "A later word", "day": "2026-11-05", "points": [2]}], "how_now": [{"capability": "seat", "title": "The kept seat"}],
@@ -222,11 +230,81 @@ def test_a_deck_of_more_than_seven_deals_its_newest_seven_by_day_then_all_search
     text = pg.locator(".release-lane__past").inner_text().lower()
     assert "of 9" not in text and "more" not in text and "cards" not in text, "no count of the deck"
     shot(pg, "past-lane-seven-all.png")
-    pg.evaluate("() => { window.__deckAll = []; addEventListener('orkboard:deck-all', (e) => window.__deckAll.push(e.detail)); }")
     all_.focus()                                                                                               # a button: Tab reaches it, Enter presses it
     pg.keyboard.press("Enter")
-    assert pg.evaluate("() => window.__deckAll") == [{"deck": {"id": "v:0.4", "name": "v0.4"}, "party": "design"}], "told to the page, for the view of stage I"
-    assert sig(pg, "frame/state.js", "over") is None, "this stage opens nothing over the pane"
+    assert sig(pg, "frame/state.js", "over")["kind"] == "chronicle", "stage I: the deck opens over the pane"
+    finish(pg, log)
+
+
+def open_all(pg, id_="v:0.4"):
+    if deck(pg, id_).get_attribute("aria-pressed") != "true":
+        deck(pg, id_).click()
+    all_ = pg.locator(f'.release-lane__deal[data-deck="{id_}"] [data-deck-all]')
+    all_.wait_for(timeout=WAIT_MS)
+    all_.focus()
+    pg.keyboard.press("Enter")
+    pg.locator(".chr-deck-all .chr-search input").wait_for(timeout=WAIT_MS)
+    return all_
+
+
+def shown(pg):
+    return [c.get_attribute("data-goal") or "d" + c.get_attribute("data-decision-row") for c in pg.locator(".chr-deck-all .chr-deal > .chr-card-wrap").all()]
+
+
+def test_all_search_opens_the_whole_deck_over_the_pane_under_its_name_with_its_search_focused_words_narrow_it_and_esc_gives_the_lane_back(gui):
+    pg, host, log = open_past(gui, host=PastHost(deck=cards(9)))
+    open_all(pg)
+    o = sig(pg, "frame/state.js", "over")
+    assert o["kind"] == "chronicle" and o["props"]["deck"]["id"] == "v:0.4" and pg.locator("[data-title]").text_content().strip().endswith("v0.4 · through Design")
+    assert pg.evaluate("() => document.activeElement.matches('.chr-search input')"), "its search field focused"
+    pg.wait_for_function("() => document.querySelectorAll('.chr-deck-all .chr-card-wrap').length === 9", timeout=WAIT_MS)
+    assert shown(pg) == ["g1", "d302", "g3", "d304", "g5", "d306", "g7", "d308", "g9"], "the whole deck by day, newest first"
+    assert {"id": "v:0.4", "party": "design"} in asked(host, "ideas.chronicle_chapter")
+    shot(pg, "past-deck-over-pane.png")
+    pg.keyboard.type("goal 5")
+    pg.wait_for_function("() => document.querySelectorAll('.chr-deck-all .chr-card-wrap').length === 1", timeout=WAIT_MS)
+    assert shown(pg) == ["g5"] and asked(host, "ideas.chronicle_find")[-1] == {"query": "goal 5", "id": "v:0.4", "party": "design"}
+    assert "in its name" in pg.locator(".chr-deck-all .chr-card__day").inner_text()
+    pg.keyboard.press("Control+a")
+    pg.keyboard.type("zzz")
+    pg.locator(".chr-none").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".chr-none").inner_text() == "Nothing in v0.4 has those words." and shown(pg) == []
+    pg.keyboard.press("Escape")                                                                             # typing in the field: Esc gives the lane back
+    pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value === null)", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.activeElement?.matches('[data-deck-all=\"v:0.4\"]')", timeout=WAIT_MS)
+    assert pg.locator('.release-lane__deal[data-deck="v:0.4"]').count() == 1, "the lane as it was"
+    finish(pg, log)
+
+
+def test_the_deck_over_the_pane_goes_back_by_the_arrow_too_and_a_goal_card_picks_the_goal_a_decision_card_opens_its_entry(gui):
+    pg, host, log = open_past(gui, host=PastHost(deck=cards(9)))
+    open_all(pg)
+    pg.locator('.chr-deck-all .chr-card-wrap[data-goal="g9"]').wait_for(timeout=WAIT_MS)
+    pg.locator(".table-title__back").click()
+    pg.wait_for_function("() => document.activeElement?.matches('[data-deck-all=\"v:0.4\"]')", timeout=WAIT_MS)
+    assert sig(pg, "frame/state.js", "over") is None
+    all_ = open_all(pg)
+    pg.locator('.chr-deck-all .chr-card-wrap[data-goal="g9"] .chr-card').click()
+    assert sig(pg, "frame/state.js", "picked") == "g9" and sig(pg, "frame/state.js", "over") is None, "closed, and the goal picked"
+    pg.keyboard.press("Escape")
+    open_all(pg)
+    pg.locator('.chr-deck-all .chr-card-wrap[data-decision-row="308"] .chr-card').click()
+    assert sig(pg, "frame/state.js", "over")["props"] == {"decision": 308}, "a decision opens its entry"
+    pg.locator(".chr-err, .chr-decision-page").first.wait_for(timeout=WAIT_MS)
+    del all_
+    finish(pg, log)
+
+
+def test_a_week_deck_dealt_on_the_orkmasters_tab_at_1366_by_768_for_the_eye(gui):
+    pg, host, log = open_past(gui, tab="orkmaster", host=PastHost(deck=cards(9)))
+    pg.set_viewport_size({"width": 1366, "height": 768})
+    pg.wait_for_timeout(300)
+    deck(pg, "v:0.4").click()
+    pg.locator('.release-lane__deal[data-deck="v:0.4"] .table-lstrip--all').wait_for(timeout=WAIT_MS)
+    shot(pg, "past-orkmaster-week-deck-1366.png")
+    pg.locator('.release-lane__deal[data-deck="v:0.4"] .table-lstrip--all').click()
+    pg.locator(".chr-deck-all .chr-card-wrap").first.wait_for(timeout=WAIT_MS)
+    shot(pg, "past-orkmaster-deck-over-pane-1366.png")
     finish(pg, log)
 
 
