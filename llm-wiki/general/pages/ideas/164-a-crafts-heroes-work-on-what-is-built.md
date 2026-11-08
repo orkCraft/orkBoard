@@ -224,3 +224,10 @@ Build decisions §278 and §279 (the owner, 8 November; first taken on 7 Novembe
 - A kind locks only what §279.5 names: Scene Shaman outside a game; Design's three in a backend, data, code, a wiki or texts; Store Gnome outside a mobile, web app or game.
 - The star reads `project_kind` only (§278.5's lists are by kind; the stage adds none); kinds with no list get no star.
 - *Said once* is kept in `<state>/heroes_cut.json` (`{party: hero id}`); Run's rubric has no signals, as it has no map.
+
+### Accepted
+- met: When the catalog is read, then it holds §278.2's and §279.1–2's heroes, Pillar Knight once at Product and Game design, six at most a craft, one default each but LiveOps, Run's Lantern Imp.
+- met: When a party's page keeps a cut hero (uni-lean, dry-diamond, dry-atom, sh-ddd, sh-fit, imp-slo), then its first stall open names it cut and why, a second (a restart too) does not, its page and table unwritten.
+- met: When a web app's Tech stall is asked to take Scene Shaman, then it is refused with the lock's why and the page keeps its hero; in a game it is a ware starred, and no star writes a `hero` key.
+- met: When a Game design party takes Pillar Knight, then `hero_of` gives `uni-pillar` there as at Product, and the table it lays has Pillar Knight's four places, in order.
+- met: When a LiveOps party's stall opens as a person first meets it, then it shows no hero card and no shelf, and Back to default is refused in words, not by an error.
