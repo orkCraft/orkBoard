@@ -56,9 +56,9 @@ def test_a_missing_place_is_empty_and_a_foreign_one_is_dropped(party):
 def test_a_table_of_another_hero_is_stale(party):
     root, slug = party
     hero_table.write(root, slug, "sh-xp", {"Red": [{"title": "A", "line": "b"}]})
-    goal_team.set_hero(root, slug, "sh-fit")
+    goal_team.set_hero(root, slug, "sh-c4")
     got = hero_table.read(root, slug)
-    assert got["stale"] is True and got["hero"] == "sh-fit" and [p["name"] for p in got["places"]] == [n for n, _a in heroes.get("sh-fit").places]
+    assert got["stale"] is True and got["hero"] == "sh-c4" and got["places"] == []
     assert all(p["cards"] == [] for p in got["places"])                      # none of the old places is the new hero's here
 
 

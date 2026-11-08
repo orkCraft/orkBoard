@@ -1,6 +1,6 @@
 """The heroes (docs/specs/157-the-inventory-a-merchants-stall.md §A; decisions §266.3, §267.2): the school a party's leader looks by, one set each. No face, no model.
 
-    HEROES                          # {id: Hero} in the spec's order: seventeen, one default a craft (Release Night King is Release's, fixed)
+    HEROES                          # {id: Hero} in the spec's order: eleven, one default a craft (Release Night King is Release's, fixed)
     of("tech")                      # the heroes of a craft, in order
     get("sh-xp")                    # one hero by its id; None for none
     default("tech")                 # the craft's default hero (the one whose frame is `lens_rubrics.RUBRICS[craft]`); None for a craft with none
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from orkboard.realm.seat_hero_rules import SIZES, LAYOUTS, _FRAME, Hero, _p, _a, _default, HEROES, of, get, default
+from orkboard.realm.seat_hero_rules import SIZES, LAYOUTS, _FRAME, CUT, Hero, _p, _a, _default, HEROES, of, get, default
 
 
 def head(hero: Hero) -> dict:

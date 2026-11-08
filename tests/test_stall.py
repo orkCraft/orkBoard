@@ -109,7 +109,7 @@ def test_a_tech_partys_chair_has_its_heroes_its_tool_and_its_tiers(host):
     got = stall(host, party)
     assert got["chair"] == party and [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier"]
     assert shelf(got, "hero")["kind"] == "heroes" and shelf(got, "tool")["kind"] == "small"
-    assert [w["id"] for w in shelf(got, "hero")["wares"]] == ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"]
+    assert [w["id"] for w in shelf(got, "hero")["wares"]] == ["sh-c4", "sh-xp"]
     xp = ware(got, "hero", "sh-xp")
     assert xp["word"] == "Spike Shaman" and xp["stats"] == {"school": "Extreme programming", "flow": "test → code → refactor", "size": "standard", "decides": 3, "says_no": 2}
     assert xp["head"]["tier"] == "elder" and xp["head"]["race"] and xp["price"] == {"word": "one pass"}
@@ -140,7 +140,7 @@ def test_a_hero_is_taken_undone_and_put_back(host):
     assert "Red" in got["stall"]["say"]
     host.command("ideas.stall_take", {"chair": party, **got["undo"]})
     assert goal_team.hero_of(root, party).id == "sh-c4"
-    host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "sh-fit"})
+    host.command("ideas.stall_take", {"chair": party, "slot": "hero", "value": "sh-xp"})
     host.command("ideas.stall_back", {"chair": party, "slot": "hero"})
     assert goal_team.hero_of(root, party).id == "sh-c4" and "hero" not in dict(ideas.track_page(root, party).meta)
 
@@ -195,7 +195,7 @@ def test_what_cannot_be_taken_is_refused_in_plain_words(host):
                         ({"chair": "", "slot": "hero", "value": "sh-xp"}, "no hero to take"),
                         ({"chair": "", "slot": "target"}, "value is missing"),
                         ({"chair": "nowhere", "slot": "target", "value": "thrift"}, "That party is gone"),
-                        ({"chair": party, "slot": "hero", "value": "dry-atom"}, "not a ware"),
+                        ({"chair": party, "slot": "hero", "value": "dry-sprint"}, "not a ware"),
                         ({"chair": party, "slot": "hero", "value": "release"}, "not a ware"),
                         ({"chair": party, "slot": "tier", "value": "king"}, "not a ware"),
                         ({"chair": party, "slot": "target", "value": "thrift"}, "no target to take")):

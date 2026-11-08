@@ -123,7 +123,7 @@ def test_a_stale_table_says_lay_the_partys_table_and_without_the_goal_it_is_plai
 
 
 def test_the_rows_layout_is_a_row_a_place(gui):
-    pg, host, log = open_table(gui, HeroHost(table("dry-atom", "rows", ATOM, {"Atoms": [{"title": "Button", "line": "one press", "goal": "", "state": ""}]})))
+    pg, host, log = open_table(gui, HeroHost(table("sh-xp", "rows", ATOM, {"Atoms": [{"title": "Button", "line": "one press", "goal": "", "state": ""}]})))
     try:
         pg.locator(".hm.is-rows").wait_for(timeout=WAIT_MS)
         boxes = [pg.locator(f'[data-place="{n}"]').bounding_box() for n, _ in ATOM]

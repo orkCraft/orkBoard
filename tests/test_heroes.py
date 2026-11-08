@@ -19,11 +19,13 @@ def _party(root, craft):
     return slug
 
 
-def test_the_catalog_is_the_specs_seventeen_in_order():
-    assert list(heroes.HEROES) == ["uni-ost", "uni-jtbd", "uni-lean", "uni-shape", "dry-heur", "dry-diamond", "dry-atom", "dry-sprint", "sh-c4", "sh-ddd", "sh-xp", "sh-fit",
-                                   "imp-slo", "imp-obs", "fairy-aarrr", "fairy-aso", "release"]
-    assert len(heroes.HEROES) == 17 and all(k == h.id for k, h in heroes.HEROES.items())
-    assert [h.id for h in heroes.of("tech")] == ["sh-c4", "sh-ddd", "sh-xp", "sh-fit"] and heroes.of("nowhere") == []
+def test_the_catalog_is_the_specs_eleven_in_order_and_the_cut_six_are_said():
+    assert list(heroes.HEROES) == ["uni-ost", "uni-jtbd", "uni-shape", "dry-heur", "dry-sprint", "sh-c4", "sh-xp", "imp-obs", "fairy-aarrr", "fairy-aso", "release"]
+    assert len(heroes.HEROES) == 11 and all(k == h.id for k, h in heroes.HEROES.items())
+    assert set(heroes.CUT) == {"uni-lean", "dry-diamond", "dry-atom", "sh-ddd", "sh-fit", "imp-slo"} and not set(heroes.CUT) & set(heroes.HEROES)
+    assert heroes.CUT["uni-lean"][0] == "Pivot Knight" and all(n and w for n, w in heroes.CUT.values())
+    assert heroes.default("run").name == "Lantern Imp" and heroes.default("run").places == ()
+    assert [h.id for h in heroes.of("tech")] == ["sh-c4", "sh-xp"] and heroes.of("nowhere") == []
     assert heroes.get("sh-xp").name == "Spike Shaman" and heroes.get("nowhere") is None and heroes.get("") is None
 
 
@@ -33,7 +35,7 @@ def test_one_default_a_craft_and_places_only_on_the_others():
     for craft in crafts:
         assert [h.default for h in heroes.of(craft)].count(True) == 1 and heroes.default(craft).craft == craft
     assert heroes.default("liveops") is None
-    assert {h.id for h in heroes.HEROES.values() if h.default} == {"uni-ost", "dry-heur", "sh-c4", "imp-slo", "fairy-aarrr", "release"}
+    assert {h.id for h in heroes.HEROES.values() if h.default} == {"uni-ost", "dry-heur", "sh-c4", "imp-obs", "fairy-aarrr", "release"}
     for h in heroes.HEROES.values():
         assert h.size in heroes.SIZES and h.layout in heroes.LAYOUTS and 1 <= h.decides <= 3 and 1 <= h.says_no <= 3
         assert h.name and h.school and h.flow
@@ -47,7 +49,7 @@ def test_one_default_a_craft_and_places_only_on_the_others():
             assert len(set(ids)) == len(ids)
             for a in h.aspects:
                 assert re.fullmatch(r"[a-z][a-z_]*", a["id"]) and a["name"] and a["ask"].endswith("?") and "signals" not in a
-    assert heroes.get("sh-xp").places[0] == ("Red", "Which test fails, written before its code?") and heroes.get("dry-atom").layout == "rows"
+    assert heroes.get("sh-xp").places[0] == ("Red", "Which test fails, written before its code?") and heroes.get("dry-sprint").places[-1][0] == "Test"
 
 
 def test_a_default_heros_frame_is_its_crafts_rubric_read_at_call_time(monkeypatch):
@@ -89,7 +91,7 @@ def test_taking_a_hero_keeps_every_other_key(root):
 def test_set_hero_refuses_a_hero_of_another_craft_an_unknown_one_and_releases(root):
     tech, release = _party(root, "tech"), _party(root, "release")
     with pytest.raises(ValueError):
-        goal_team.set_hero(root, tech, "dry-atom")
+        goal_team.set_hero(root, tech, "dry-sprint")
     with pytest.raises(ValueError):
         goal_team.set_hero(root, tech, "release")
     with pytest.raises(ValueError):
@@ -104,7 +106,7 @@ def test_set_hero_refuses_a_hero_of_another_craft_an_unknown_one_and_releases(ro
 def test_a_kept_hero_of_another_craft_reads_as_the_default(root):
     slug = _party(root, "tech")
     page = ideas.track_page(root, slug)
-    page.set("hero", "dry-atom")
+    page.set("hero", "dry-sprint")
     ideas._write(root / ideas.TRACKS / f"{slug}.md", page.text())
     assert goal_team.hero_of(root, slug).id == "sh-c4"
     page.set("hero", "gone")
@@ -121,7 +123,7 @@ def test_the_rubric_follows_the_hero_and_today_s_callers_are_unchanged():
     r = lens_rubrics.rubric("tech", xp)
     assert r["framework"] == xp.framework and r["short"] == xp.short and [a["id"] for a in r["aspects"]] == [a["id"] for a in xp.aspects]
     assert all(a["signals"] == () for a in r["aspects"]) and lens_rubrics.rubric("tech", "sh-xp") == r
-    for same in (None, heroes.get("sh-c4"), "sh-c4", heroes.get("dry-atom"), "nowhere"):             # none, the default, another craft's, unknown: today's
+    for same in (None, heroes.get("sh-c4"), "sh-c4", heroes.get("dry-sprint"), "nowhere"):             # none, the default, another craft's, unknown: today's
         assert lens_rubrics.rubric("tech", same) is lens_rubrics.RUBRICS["tech"]
     assert lens_rubrics.rubric("tech") is lens_rubrics.RUBRICS["tech"] and lens_rubrics.rubric("", xp) is None
     assert lens_rubrics.prompt_lines("tech") == lens_rubrics.prompt_lines("tech", heroes.get("sh-c4"))
