@@ -217,3 +217,196 @@ def test_the_page_draws_the_turn_the_wait_the_give_and_the_play_arrow_with_orkui
     js = "\n".join(p.read_text(encoding="utf-8") for p in (STATIC / "js").rglob("*.js"))
     assert "is-turned-up" not in js and "ork-gives" in js and "ork-turn" in js
     assert '"play"' in (STATIC / "js" / "hand" / "playdie.js").read_text(encoding="utf-8")
+
+
+# ---- spec 160 C (decisions §268, §269, §275, §276): orkUI 0.35.0, the table's colours and their contrast ----------------------
+
+def test_the_copy_is_orkui_0_35_0_with_the_felts_steps_plate_bronze_pennant_chain_backpack_and_leather():
+    stamp = orkui.stamp()
+    assert tuple(int(n) for n in stamp["version"].split(".")) >= (0, 35, 0) and len(stamp["commit"]) == 40
+    tok = (orkui.ROOT / "tokens.css").read_text(encoding="utf-8")
+    for race in ("ork", "knight", "elf", "undead", "goblin", "gnome", "orkmaster"):
+        assert f"--ork-party-{race}:" in tok, race
+        assert all(f"--ork-felt-{race}-{n}:" in tok for n in ("1", "2", "3", "4", "5", "out", "rim")), race
+        assert f"--ork-plate-{race}:" in tok, race
+    for name in ("plate", "plaque", "bronze", "bronze-hi", "bronze-lo", "gilt", "gilt-hi", "leather", "leather-hi", "leather-lo", "leather-edge", "stitch"):
+        assert f"--ork-{name}:" in tok, name
+    css = (orkui.ROOT / "components.css").read_text(encoding="utf-8")
+    for piece in (".ork-table[data-party]", ".ork-table[data-party].is-out", ".ork-plate {", ".ork-plaque {", ".ork-pennant {", ".ork-pennant.is-open",
+                  ".ork-chain {", ".ork-chain.is-pulled", ".ork-pack {", ".ork-pack.is-open", ".ork-leather"):
+        assert piece in css, piece
+    for folder in ("pennant", "chain", "pack", "leather"):
+        assert (orkui.ROOT / folder).is_dir() and any(n.startswith(f"{folder}/") for n in stamp["files"]), folder
+
+
+# sRGB colour maths on the hex values of the copy's `tokens.json`: WCAG 2.x contrast, and CIE Lab (D65) for the rings' lead.
+def _rgb(h: str) -> list[int]:
+    h = h.lstrip("#")
+    return [int(h[i:i + 2], 16) for i in (0, 2, 4)]
+
+
+def _lin(c: int) -> float:
+    c /= 255
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def _lum(h: str) -> float:
+    r, g, b = map(_lin, _rgb(h))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _contrast(a: str, b: str) -> float:
+    hi, lo = sorted((_lum(a), _lum(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def _lab(h: str) -> tuple[float, float]:
+    """(L, chroma) in CIE Lab."""
+    import math
+    r, g, b = map(_lin, _rgb(h))
+    x, y, z = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047, _lum(h), (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883
+    f = lambda v: v ** (1 / 3) if v > 216 / 24389 else (24389 / 27 * v + 16) / 116   # noqa: E731
+    fx, fy, fz = f(x), f(y), f(z)
+    return 116 * fy - 16, math.hypot(500 * (fx - fy), 200 * (fy - fz))
+
+
+def _hex(parts) -> str:
+    return "#" + "".join(f"{int(round(v)):02x}" for v in parts)
+
+
+def _tokens() -> dict:
+    import json
+    return json.loads((orkui.ROOT / "tokens.json").read_text(encoding="utf-8"))
+
+
+def _grounds() -> dict[str, dict[str, str]]:
+    """Each party's grounds as orkUI makes them from `felt` (lamp, felt): the five steps, the felt out and the flat plate."""
+    tok = _tokens()
+    grounds = {}
+    for race, f in tok["felt"].items():
+        lamp, felt = _rgb(f["lamp"]), _rgb(f["felt"])
+        steps = [_hex(c + (l - c) * s for l, c in zip(lamp, felt)) for s in tok["felt_steps"]]
+        grounds[race] = {**{f"step {i + 1}": h for i, h in enumerate(steps)},
+                         "out": _hex(c * tok["felt_out"] for c in felt), "plate": _hex(c * tok["felt_plate"] for c in felt)}
+    return grounds
+
+
+def test_the_grounds_made_here_from_tokens_json_are_the_ones_orkui_wrote_in_tokens_css():
+    tok_css = (orkui.ROOT / "tokens.css").read_text(encoding="utf-8")
+    grounds = _grounds()
+    assert set(grounds) == set(re.findall(r"--ork-party-([\w-]+):", tok_css)) and len(grounds) == 7
+    for race, made in grounds.items():
+        written = {f"step {n}": re.search(rf"--ork-felt-{race}-{n}: (#\w+);", tok_css).group(1) for n in range(1, 6)}
+        written["out"] = re.search(rf"--ork-felt-{race}-out: (#\w+);", tok_css).group(1)
+        written["plate"] = re.search(rf"--ork-plate-{race}: (#\w+);", tok_css).group(1)
+        for name, h in made.items():
+            assert max(abs(a - b) for a, b in zip(_rgb(h), _rgb(written[name]))) <= 1, (race, name, h, written[name])
+
+
+def test_every_text_token_holds_4_5_to_1_on_each_partys_plate_and_each_felt_out():
+    """Decisions §275.1, §275.2: text keeps 4.5:1 on every felt, lit or out; words lie on a flat plate."""
+    tok = _tokens()
+    texts = sorted({a for a, _b in tok["text_pairs"]} - {"on-ink", "action"})
+    assert {"ink", "ink-muted", "ink-faint", "danger", "alert", "success"} <= set(texts)
+    for race, grounds in _grounds().items():
+        for name in ("plate", "out"):
+            for text in texts:
+                assert _contrast(tok["color"][text], grounds[name]) >= 4.5, (race, name, text)
+
+
+def test_the_rings_danger_and_alert_are_seen_3_to_1_on_every_ground_and_lead_every_party_and_element_colour():
+    """Decisions §268.2, §276.1: a ring is a failure's (danger) or a question's (alert), the brightest on the table, by a lead a person sees:
+    5 in Lab L or 10 in Lab chroma over each party's and each element's colour. Success is no ring (§276.2): 3:1 on every ground, no lead."""
+    tok = _tokens()
+    col = tok["color"]
+    for race, grounds in _grounds().items():
+        assert len(grounds) == 7                                  # five steps, the felt out, the plate
+        for ring in ("danger", "alert", "success"):
+            for name, ground in grounds.items():
+                assert _contrast(col[ring], ground) >= 3, (race, ring, name)
+    others = {**{f"party {r}": h for r, h in tok["party"].items()}, **{k: v for k, v in col.items() if k.startswith("elem-")}}
+    assert len(others) >= 12
+    for ring in ("danger", "alert"):
+        ring_l, ring_c = _lab(col[ring])
+        for name, h in others.items():
+            l, c = _lab(h)
+            assert ring_l - l >= 5 or ring_c - c >= 10, (ring, name, round(ring_l - l, 1), round(ring_c - c, 1))
+
+
+# No smooth gradient and no blurred shadow or glow (decisions §269.1): hard pixel rings and hard-stop dithers only.
+# These sheets still hold soft ones (the scroll cues' and the opened card's fade masks, the lifted card's cast shadow); a later stage of
+# spec 160 takes each out and removes its file here. A file not listed must hold none, so a new one is caught.
+SOFT_KNOWN = {"page.css", "js/hand/openedcard.css", "js/hand/hand.css"}
+
+
+def _top_split(text: str) -> list[str]:
+    parts, depth, cur = [], 0, ""
+    for ch in text:
+        depth += ch == "("
+        depth -= ch == ")"
+        if ch == "," and depth == 0:
+            parts.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    return parts + [cur.strip()]
+
+
+def _calls(css: str, name: str) -> list[str]:
+    """The argument text of every `name(...)` in `css`, parentheses balanced."""
+    found = []
+    for m in re.finditer(rf"(?<![\w-]){name}\(", css):
+        depth, i = 1, m.end()
+        while i < len(css) and depth:
+            depth += (css[i] == "(") - (css[i] == ")")
+            i += 1
+        found.append(css[m.end():i - 1])
+    return found
+
+
+def _blurred(shadow: str) -> bool:
+    """True when a shadow's third length (its blur) is not a plain zero."""
+    bare = re.sub(r"\b(?:rgba?|hsla?|color-mix|var)\((?:[^()]|\([^()]*\))*\)", "C", shadow.replace("inset", ""))
+    lengths = re.findall(r"(?<![\w#.-])-?[\d.]+(?:px|em|rem)?(?![\w#])", bare)
+    return len(lengths) >= 3 and float(re.match(r"-?[\d.]+", lengths[2]).group(0)) != 0
+
+
+def _soft_things(css: str) -> list[str]:
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    soft = []
+    for fn in ("linear-gradient", "radial-gradient", "conic-gradient"):
+        for args in _calls(css, fn):
+            stops = [s for s in _top_split(args) if not re.match(r"^(to |-?[\d.]+(deg|turn|rad)|at |circle|ellipse|closest|farthest|from )", s)]
+            flat = len({re.sub(r"(\s+(calc\(.*\)|-?[\d.]+\S*))+$", "", s) for s in stops}) == 1     # one colour: no fade
+            # a hard stop gives its colour two places (`red 0 2px`) and the next begins where it ends; a stop with one place or none fades
+            places = [len(re.findall(r"(?:^|\s)(?:calc\(.*\)|-?[\d.]+[\w%]*)(?=\s|$)", re.sub(r"\((?:[^()]|\([^()]*\))*\)", "C", s))) for s in stops]
+            if not flat and min(places) < 2:
+                soft.append(f"{fn}({args[:60]})")
+    for args in _calls(css, "blur") + [a for a in _calls(css, "drop-shadow") if _blurred(a)]:
+        soft.append(f"blur/drop-shadow({args[:40]})")
+    for m in re.finditer(r"(?<![\w-])box-shadow:\s*([^;}]+)", css):
+        soft += [f"box-shadow: {one[:50]}" for one in _top_split(m.group(1)) if _blurred(one)]
+    return soft
+
+
+def test_no_sheet_adds_a_smooth_gradient_a_blurred_shadow_or_a_blur():
+    """The desktop's and the phone's own sheets (`gui/static/**/*.css`, not the vendored xterm.css): none has a soft gradient, a blurred
+    `box-shadow`, `filter: blur` or `drop-shadow` but those of `SOFT_KNOWN`."""
+    sheets = {p.relative_to(STATIC).as_posix(): p for p in STATIC.rglob("*.css") if "vendor" not in p.relative_to(STATIC).parts}
+    assert SOFT_KNOWN <= set(sheets), SOFT_KNOWN - set(sheets)
+    found = {name: _soft_things(p.read_text(encoding="utf-8")) for name, p in sheets.items()}
+    new = {name: things for name, things in found.items() if things and name not in SOFT_KNOWN}
+    assert not new, f"soft gradients or blurs added (decisions §269.1: hard pixel rings and dithers only): {new}"
+    assert all(found[name] for name in SOFT_KNOWN), f"a file of SOFT_KNOWN holds none now: remove it from the list ({[n for n in SOFT_KNOWN if not found[n]]})"
+
+
+def test_the_soft_check_tells_a_hard_stop_from_a_fade():
+    assert _soft_things(".a { background: linear-gradient(45deg, var(--ork-raised) 0 2px, var(--ork-panel) 2px 4px); }") == []
+    assert _soft_things(".a { background: linear-gradient(105deg, transparent 0 30%, color-mix(in srgb, red 70%, transparent) 30% 70%, transparent 70% 100%); }") == []
+    assert _soft_things(".a { background: linear-gradient(var(--ork-ink) 0 0); box-shadow: 0 0 0 2px red, inset 0 1px 0 3px blue; }") == []
+    assert _soft_things(".a { filter: drop-shadow(1px 0 0 red) drop-shadow(0 1px 0 red); }") == []
+    assert _soft_things(".a { background: linear-gradient(to bottom, red, blue); }")
+    assert _soft_things(".a { background: linear-gradient(to bottom, black calc(100% - 40px), transparent); }")
+    assert _soft_things(".a { background: radial-gradient(circle, red 0, blue 100%); }")
+    assert _soft_things(".a { box-shadow: 0 0 0 1px red, -14px 10px 30px var(--ork-scrim); }")
+    assert _soft_things(".a { filter: blur(2px); }") and _soft_things(".a { filter: drop-shadow(0 0 4px red); }")
