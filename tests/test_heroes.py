@@ -197,3 +197,14 @@ def test_a_role_file_says_where_a_hero_is_offered_spec_164_e():
     assert "Offered in: a game." in text and "Not offered" not in text
     from orkboard.realm import project_kind
     assert agent_rules_text.KIND_WORDS == project_kind.WORDS
+
+
+def test_every_hero_a_kind_offers_has_its_head_in_orkuis_copy_spec_164_h():
+    from orkboard.design import orkui
+    from orkboard.realm import roles
+    wanted = {h.id for h in heroes.HEROES.values() if not h.default and h.kinds} | {"uni-mda", "dry-sprite"}
+    missing = sorted(i for i in wanted if not (roles.RACE_FILES / f"hero-{i}-elder.png").is_file())
+    assert not missing, f"no hero-<id>-elder.png in orkUI's copy for {missing}"
+    stamped = orkui.stamp()["files"]
+    assert all(f"races/hero-{i}-elder.png" in stamped for i in wanted)
+    assert "signs/pick.svg" in stamped and not orkui.problems()
