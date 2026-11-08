@@ -1,5 +1,5 @@
-"""The Release column (docs/specs/156-one-pick-and-the-release-column.md D, decisions §261.7–§261.10; before it the table's edge, spec 150 D), in a real browser: at 760 px and up there is no edge column (no `.frame-edge`); Live's and Release's are
-tabs at the row's end (Live, then Release last, their heads asleep or awake by the corners' old rules), and the discard is Release's lane under Release's tab, beside the pane, flush with the window's right edge, on every tab, its label *Discard* or
+"""The discard's column (docs/specs/160-the-tables-look-and-the-rooms-things.md D, decisions §273; before it Release's lane, spec 156 D, decisions §261.7–§261.10; before it the table's edge, spec 150 D), in a real browser: at 760 px and up there is no edge column (no `.frame-edge`); Live's tab is at the row's end and Release's stands in the
+leaders' row in the route's order (their heads asleep or awake by the corners' old rules), and the discard is the window's right column beside the table, outside it, at a lane's width and its gutter, flush with the window's right edge, on every tab, its head a row for the room's things over its label *Discard* or
 *<party>'s discard*; the die and the potions stand at the hand's right end, as they do under 760 px; a project without a Release party has a headless *Discard* lane; in a 1366 x 768 window the ready card and the first goal not yet seen are in view;
 under 760 px the narrow page is as it was (the table's end, the hand's end). Screenshots to $TABLE_EDGE_SHOTS when it is set."""
 from __future__ import annotations
@@ -19,6 +19,9 @@ pytestmark = pytest.mark.browser
 
 SHOTS = Path(os.environ["TABLE_EDGE_SHOTS"]) if os.environ.get("TABLE_EDGE_SHOTS") else None
 SIZES = {"1280x800": {"viewport": {"width": 1280, "height": 800}}, "1366x768": {"viewport": {"width": 1366, "height": 768}}}
+
+
+RELEASE_IN_ROW = ["tech", "design", "product", "release", "live"]
 
 
 class LaneHost(RoadHost):
@@ -57,30 +60,45 @@ def box(pg, selector):
     return b
 
 
-def test_there_is_no_edge_the_table_spans_to_the_windows_right_and_the_lane_is_its_last_column(gui):
+def lane_width(pg):
+    """A lane's width and its gutter, as the page's tokens say them (`--col-w` + `--ork-4`)."""
+    return pg.evaluate("() => { const f = document.querySelector('.frame'), r = document.createElement('div'); r.style.width = 'calc(var(--col-w) + var(--ork-4))'; f.append(r); const w = r.getBoundingClientRect().width; r.remove(); return w; }")
+
+
+def test_there_is_no_edge_the_discard_is_the_windows_right_column_beside_the_table_at_its_old_width(gui):
     pg, log = open_at(gui, LaneHost())
     try:
         assert pg.locator(".frame-edge").count() == 0 and pg.evaluate("() => document.querySelector('.frame').dataset.edge") is None, "no edge"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.frame')).gridTemplateColumns.split(' ').length") == 2, "the Orkmaster's column and the table"
-        table, lane, pane = box(pg, ".frame-table"), box(pg, ".table-under > .release-lane"), box(pg, ".table-under > .table-pane")
-        assert round(table["x"] + table["width"]) == 1280 and round(lane["x"] + lane["width"]) == 1280, "the table and its lane reach the window's right edge"
-        assert round(pane["x"] + pane["width"]) == round(lane["x"]), "the pane ends where the lane begins"
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.frame')).gridTemplateColumns.split(' ').length") == 3, "the Orkmaster's column, the table and the discard"
+        table, lane, pane = box(pg, ".frame-table"), box(pg, ".frame > .release-lane"), box(pg, ".table-under > .table-pane")
+        assert pg.locator(".frame-table .release-lane, .table-under .release-lane").count() == 0, "the discard is outside the table"
+        assert round(lane["x"] + lane["width"]) == 1280 and round(table["x"] + table["width"]) == round(lane["x"]), "the table ends where the discard begins, the discard at the window's right edge"
+        assert round(pane["x"] + pane["width"]) == round(table["x"] + table["width"]), "the pane is the table's"
+        want = lane_width(pg)
+        assert round(lane["width"]) == round(want), "at its old width: a lane's and its gutter"
+        assert pg.locator(".release-lane > .release-lane__head").count() == 1 and pg.locator(".release-lane__head + .release-lane__label").count() == 1, "its head, a row for the room's things, over the label"
+        assert box(pg, ".release-lane__head")["y"] < box(pg, ".release-lane__label")["y"] and round(box(pg, ".release-lane__head")["x"]) >= round(lane["x"])
         assert pg.locator(".table-end").count() == 0, "no end at the foot of the lanes"
         assert pg.locator(".frame-hand .hand-end .hand-die").count() == 1 and pg.locator(".frame-hand .hand-end .hand-mana").count() == 1, "the die and the potions at the hand's right end"
         shot(pg, "column-1280x800")
+        pg.locator('.table-tab[data-tab="tech"]').click()
+        pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(500)
+        shot(pg, "column-tech-1280x800")
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_live_and_release_are_tabs_at_the_rows_end_release_last_and_its_lane_stands_under_its_tab(gui):
+def test_release_is_a_tab_in_the_leaders_row_in_the_routes_order_and_live_stands_at_its_end(gui):
     pg, log = open_at(gui, LaneHost())
     try:
         tabs = pg.evaluate("() => [...document.querySelectorAll('.table-tab[data-tab]')].map((e) => e.dataset.tab)")
-        assert tabs == ["tech", "design", "product", "live", "release"], "Live before Release, Release last"
+        assert tabs == RELEASE_IN_ROW, "Release in the leaders' row in the route's order, Live at the row's end"
         live, release, lane = box(pg, '[data-cell="live"]'), box(pg, '[data-cell="release"]'), box(pg, ".release-lane")
-        assert release["x"] > live["x"] and round(release["x"]) == round(lane["x"]), "Release's tab stands over the lane"
-        assert round(release["x"] + release["width"]) <= 1280 - 7, "the gutter at the right"
+        product = box(pg, '[data-cell="product"]')
+        assert release["x"] > product["x"] and release["x"] < live["x"], "Release's tab stands among the leaders', before Live's"
+        assert round(live["x"] + live["width"]) <= round(lane["x"]), "no tab stands over the discard: it is beside the table"
         assert pg.locator(".ork-portal-ring__before, .ork-portal-ring__after, .portal__past, .pyramid").count() == 0, "their heads have left the ring; no past line, no pyramid"
         assert round(box(pg, '.table-board [data-live]')["x"]) == round(live["x"]), "Live's lane under Live's tab"
         pg.locator('.table-tab[data-tab="release"]').click()
@@ -114,6 +132,9 @@ def test_the_discard_lane_is_on_every_tab_through_its_eyes(gui, tab, label):
             pg.locator(f'.table-tab[data-tab="{tab}"]').click()
             pg.locator(f'.table-tab[data-tab="{tab}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
         assert pg.locator(".release-lane__label").text_content() == label and pg.locator(".release-lane").get_attribute("aria-label") == label
+        lane, table = box(pg, ".release-lane"), box(pg, ".frame-table")
+        assert pg.locator(".frame > .release-lane").count() == 1 and round(lane["x"] + lane["width"]) == 1280 and round(lane["x"]) == round(table["x"] + table["width"]), f"on {tab}'s tab the discard is the column outside the table"
+        assert round(lane["width"]) == round(lane_width(pg)), f"on {tab}'s tab at its old width"
         slugs = pg.evaluate("() => [...document.querySelectorAll('.release-lane [data-slug], .release-lane [data-portal-card]')].map((e) => e.dataset.slug || e.dataset.portalCard)")
         want = {"orkmaster": ["music", "codes"], "tech": ["music"], "design": ["codes"], "live": ["music", "codes"], "release": ["music", "codes"]}[tab]
         assert slugs == want, f"on {tab}'s tab: {slugs}"

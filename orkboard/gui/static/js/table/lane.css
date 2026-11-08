@@ -1,22 +1,23 @@
-/* Release's lane (docs/specs/156-one-pick-and-the-release-column.md D, decisions §261.7–§261.10; table/lane.js, ring.js, pastlane.js, tomain.js, checksview.js): layout and orkUI's tokens only, no colour, face or corner of its own.
-   At 760 px and up the table is the tabs over `.table-under`: the pane and, at its right, the lane, as wide as a lane (`--col-w`) and the gutter, as tall as the pane, flush with the window's right edge. The Board's grid reads `--board-cols` (frame.css): the lanes, the tabs'
-   end and Live's lane, the same tracks as the tabs less Release's, which is the lane itself. Under 760 px there is no lane (the pile is `.table-end`: discard.css). */
+/* The discard's column (docs/specs/160-the-tables-look-and-the-rooms-things.md D, decisions §273; before it Release's lane: docs/specs/156-one-pick-and-the-release-column.md D, decisions §261.7–§261.10; table/lane.js, ring.js, pastlane.js, tomain.js, checksview.js): layout and orkUI's tokens only, no colour, face or corner of its own.
+   At 760 px and up the discard is the frame's right column beside the table (frame.css), as wide as a lane (`--col-w`) and the gutter, as tall as the table, flush with the window's right edge; the table is the tabs over `.table-under`, the pane alone. The Board's grid reads `--board-cols` (frame.css): the lanes, the tabs'
+   end and Live's lane, the same tracks as the tabs. Under 760 px there is no lane (the pile is `.table-end`: discard.css). */
 
 .table-under { flex: 1; min-height: 0; min-width: 0; display: flex; }
 .table-under > .table-pane { flex: 1 1 0; min-width: 0; }
 
 @media (min-width: 760px) {
   .table-board { grid-template-columns: var(--board-cols, var(--cols)); }
-  .table[data-lane] .table-board { padding-right: 0; }                                              /* the lane's frame line is the Board's right edge */
   .table-lane--free { order: 1; }
   .table-lane[data-live] { order: 2; }                                                              /* Live's lane stands after the tabs' end, under Live's tab */
   .table-tabcell, .table-tabs__end { grid-row: 1; }
   .table-tabs__end { grid-column: calc(var(--lanes, 5) + 1); }                                      /* the tabs' end stands in its own track of the one row, whatever the order the cells of Live and Release were placed in */
 }
 
-.release-lane { flex: none; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); width: calc(var(--col-w) + var(--ork-4)); min-height: 0; padding: var(--ork-4) var(--ork-4) 0 0;
+.release-lane { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); width: calc(var(--col-w) + var(--ork-4)); min-width: 0; min-height: 0; padding: 0 var(--ork-4) 0 0;
   background: var(--ork-room); border-left: var(--ork-line) solid var(--ork-frame); }
-.release-lane__label { flex: none; align-self: center; }
+/* the head: a row for the room's things, the backpack at its left and the lamp's chain at its right (spec 160 G, H); as tall as the tabs' row, under the same rim */
+.release-lane__head { flex: none; align-self: stretch; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); min-height: 62px; margin-right: calc(var(--ork-4) * -1); padding: 0 var(--ork-4); border-bottom: 3px solid var(--ork-table-rim); }
+.release-lane__label { flex: none; align-self: center; margin-top: var(--ork-3); }
 .release-lane.is-headless .release-lane__label { text-align: center; }
 /* the lane scrolls with the table: only the table scrolls (spec 150 B.2, decisions §254.2); a hand card rises over its foot */
 .release-lane__scroll { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); padding: var(--ork-3) 0 var(--ork-6); overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }

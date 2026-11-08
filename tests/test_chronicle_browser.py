@@ -176,6 +176,7 @@ def test_a_decision_named_by_the_conflict_or_the_bubble_opens_its_entry(gui):
 
 def test_a_decision_newer_than_the_partys_last_look_is_a_muted_dot_on_its_tab_gone_once_the_lane_is_scrolled_to_the_past(gui):
     pg, host, log = open_past(gui, tab="orkmaster", host=PastHost(newest=241), seen=240)
+    pg.set_viewport_size({"width": 1440, "height": 900})                                                       # the discard is a column beside the table: five tracks keep their names (not compact) from this width
     pg.locator('.table-tab[data-tab="design"] .table-tab__new').wait_for(timeout=WAIT_MS)
     dot = pg.locator('.table-tab[data-tab="design"] .table-tab__new')
     assert dot.get_attribute("aria-label") == "A decision is newer than your last look at this party's past" and pg.locator('.table-tab[data-tab="tech"] .table-tab__new').count() == 0, "Design's tab only"

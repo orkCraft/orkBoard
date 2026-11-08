@@ -1,7 +1,8 @@
 // The window as two parts (docs/specs/98-the-table-and-the-hand.md §7, decisions §145.1): the table (js/table/table.js `Table`) over the hand (js/hand/hand.js `Hand`), the page's only window. The top bar,
-// the left column, the right column and the dialogs are gone: what was a dialog lies over the pane (frame/place.js), what was the drawer is the pane's one thing (frame/kinds.js). Nothing is drawn beside them. The table spans to the window's right edge: the discard is Release's lane inside it (table/lane.js, spec 156 D), there is no edge column.
+// the left column, the right column and the dialogs are gone: what was a dialog lies over the pane (frame/place.js), what was the drawer is the pane's one thing (frame/kinds.js). Nothing is drawn beside them. The discard is the window's right column beside the table, on every tab (table/lane.js, spec 160 D, decisions §273); there is no edge column.
 import { html } from "../html.js";
 import { Table } from "../table/table.js";
+import { DiscardColumn, laneShown } from "../table/lane.js";
 import { Hand } from "../hand/hand.js";
 import { Column } from "../table/column.js";
 import { columnOn, lanesBeforeEnd, roadParties } from "../table/data.js";
@@ -36,9 +37,10 @@ export function Frame() {
       <${Room} /><${SetupWatch} /><${CrashNote} /><${ReportPanel} />
     </div>`;
   }
-  return html`<div class="frame" data-frame="1" data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-live=${live ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && over.value ? "1" : undefined} style=${`--lanes:${lanesBeforeEnd() + (column ? 0 : 1)}`}>
+  return html`<div class="frame" data-frame="1" data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-discard=${column && laneShown() ? "1" : undefined} data-live=${live ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && over.value ? "1" : undefined} style=${`--lanes:${lanesBeforeEnd() + (column ? 0 : 1)}`}>
     ${column && html`<aside class="frame-column" aria-label="The Orkmaster's goals"><${Column} /></aside>`}
     <div class="frame-table"><${Table} column=${column} /></div>
+    <${DiscardColumn} />
     <div class="frame-hand"><${Hand} /></div>
     <${SetupWatch} /><${FirstGoal} /><${CrashNote} /><${ReportPanel} />
   </div>`;

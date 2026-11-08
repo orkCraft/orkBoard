@@ -8,7 +8,7 @@
 // At the end: **New party**, the empty chair (chairs.js, where *+ Party* was) and the person's door, **Here** or **Away** (presence.js, spec 139 C.2, decisions §246.4; small with its word alone under 760 px): *Stop all* is the die's front face (hand/playdie.js) and the bug is *Report a problem…* in the Orkmaster's **…** (docs/specs/139-the-die-the-door-and-the-bug.md A.4–A.5, decisions §246); the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B).
 // The dark edges (table.css): the row and the hand on orkUI's room, a rim under the tabs and over the hand, no line between the tabs. Under 760 px the tabs are a row of heads (the open one at 36 with its marks), the chair and the door small, and the limits are in the Orkmaster's **…**
 // as chips (pane.js) and in the hand as small potions. The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. While a goal is picked a party's tab its route does not pass is grey (`is-off`: its head asleep, its name muted; pressed it puts the pick away and opens that tab: spec 156 B.5, decisions §261.3).
-// At the wide width Live's and Release's tabs are the row's last two, after the tabs' end (spec 156 D.2, decisions §261.7): their heads sleep and wake by the corners' old rules (road.js); `parties` is the tabs' (data.js `tabsNow`). A decision newer than a party's last look is a muted dot on its tab (pastdot.js).
+// At the wide width Live's tab is the row's last, after the tabs' end (spec 156 D.2, decisions §261.7), and Release's stands among the leaders' in the route's order (spec 160 D, decisions §273.2): their heads sleep and wake by the corners' old rules (road.js); `parties` is the tabs' (data.js `tabsNow`). A decision newer than a party's last look is a muted dot on its tab (pastdot.js).
 // **With the Orkmaster's column pinned (spec 128 B, the wide width) the row is the leaders' alone**: the Orkmaster's tab is the column's head (table/column.js), the project's name and its ▾ with it. The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -17,7 +17,7 @@ import { toast } from "../link.js";
 import { ORKMASTER, openTab, openOver, picked } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { levelOf, windowOf } from "../arena/limits.js";
-import { nameOf, onRoute, MARKED, markSrc, mapName, isLive, isRelease, wide } from "./data.js";
+import { nameOf, onRoute, MARKED, markSrc, mapName, isLive, wide } from "./data.js";
 import { onRoad, roadAwake } from "./road.js";
 import { chosenSlug } from "./portal.js";
 import { checksOf, pending } from "./checks.js";
@@ -108,7 +108,7 @@ export function Tabs({ parties, all = parties, current, narrow, compact, column 
   const off = (slug) => !!picked.value && !!route && slug !== ORKMASTER && !route.has(slug);                 // a party the picked goal's route does not pass (spec 156 B.5)
   const leave = (slug) => { if (off(slug)) picked.value = ""; openTab(slug); };                              // a grey tab pressed puts the pick away and opens that tab: no dead press
   const checking = !!chosenSlug() && (pending.value === chosenSlug() || checksOf(chosenSlug()).some((c) => c.state !== "passed"));      // the checks of the goal chosen for main are not over: Release's tab is awake
-  const place = (g) => (!wide.value ? undefined : isLive(g) ? "grid-column: -3 / -2" : isRelease(g) ? "grid-column: -2 / -1" : undefined);      // Live's and Release's tabs stand after the tabs' end, the last two tracks of `--cols` (spec 156 D.1–D.2)
+  const place = (g) => (!wide.value ? undefined : isLive(g) ? "grid-column: -2 / -1" : undefined);      // Live's tab stands after the tabs' end, the last track of `--cols` (spec 156 D.2); Release's stands in the row in the route's order (spec 160 D, decisions §273.2)
   const slugs = [ORKMASTER, ...parties.map((g) => g.slug)], first = column ? 1 : 0;       // with the Orkmaster's column pinned its tab is the column's head (column.js), outside this row: the row is the leaders'
   const keys = (e) => {
     if (e.target.getAttribute?.("role") !== "tab") return;           // the head's and the marks' buttons beside a tab take their own keys
