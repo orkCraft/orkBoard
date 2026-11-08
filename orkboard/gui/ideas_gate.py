@@ -7,7 +7,7 @@ no gate. Split from ideas.py to keep it under ~600 lines.
 
 The checks on the way into main (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.2, realm/main_checks.py): `ideas.to_main_checks {idea}` starts
 them in the background, one run at a time for a goal, and publishes each step on the bus (`main.check`, `{idea, checks}`: the face draws the snapshot's
-`main_checks` again); their last results are kept per goal until the goal's plan changes (a new commit in it, or main moving), and `ideas.to_main` refuses
+`main_checks` again); their last results are kept per goal until the goal's plan changes (a new commit in it, or main moving), and `ideas.to_main` refuses a goal whose checks were never run or passed for another head of main, and
 while any of them is not passed.
 """
 from __future__ import annotations
@@ -122,6 +122,7 @@ class GateMixin:
                 held = []
             if held:                            # nothing reaches main half made by a press that does not say so (spec 149 G.2, decisions §253.7)
                 raise IdeasError(self._half_made(held, main))
+        self._merge_tested(git, into, main)
         try:
             got = idea_gate.merge(git, into, main, push)
         except RuntimeError as e:               # a refusal (GateRefused) or git's own words
@@ -132,6 +133,22 @@ class GateMixin:
         self._flag_after_gate(brought, got["commit"], git, main)
         self.changed("")
         return {"ok": True, "commit": got["commit"], "note": got["note"]}
+
+    def _merge_tested(self, git: IdeaGit, into: str, main: str) -> None:
+        """Nothing reaches main untested (decisions §274.2): the checks after *The merge* run on what main would become, here and now, and a red stops the
+        press with main as it was, naming the test (realm/main_checks.py `verify`; the trial worktree is gone). Nothing waiting is the merge's own refusal."""
+        if idea_gate.same(into, main) or not idea_gate.waiting_by_patch(git, into, main)[0]:
+            return
+        try:
+            tip = idea_gate.tip(git, into, main)
+            base = _git(Path(self.host.repo_root), "rev-parse", "--verify", "-q", f"refs/heads/{main}").stdout.strip()
+            ok, name, words = main_checks.verify(Path(self.host.repo_root), tip, base)
+        except idea_gate.GateRefused as e:
+            raise IdeasError(" ".join(str(e).split())[:300]) from None
+        except RuntimeError as e:
+            raise IdeasError(" ".join(str(e).split())[:300] or "The tests could not run") from None
+        if not ok:
+            raise IdeasError(f"Sealed: {name} is red: {words}")
 
     @staticmethod
     def _half_made(held: list[dict], main: str) -> str:
@@ -193,16 +210,20 @@ class GateMixin:
         return hashlib.sha1(json.dumps([plan["commits"], head]).encode()).hexdigest()[:16], plan["sealed"] or ""
 
     def _checks_refusal(self, slug: str, where: dict) -> str:
-        """Why the goal may not go to main yet for its checks, in words; "" when none stands (a goal whose checks were never asked goes as before)."""
+        """Why the goal may not go to main yet for its checks, in words; "" when it may (decisions §274.2: the checks passed against main as it is now).
+        A goal whose checks were never run is refused too, saying to run them."""
+        key, sealed = self._checks_key(slug, where)
+        if sealed:                               # a reason no check owns (not done, in main already, a pick that conflicts) is the first thing said
+            return sealed
         with self._main_lock:
             got = self._main_checks.get(slug)
             if got is None:
-                return ""
-            checks, running, key = list(got["checks"]), got["running"], got["key"]
+                return "Its checks have not been run: run the checks on the way into main first"
+            checks, running, kept = list(got["checks"]), got["running"], got["key"]
         if running:
             return "Checking the way into main"
-        if self._checks_key(slug, where)[0] != key:
-            return "The way into main changed: choose the goal again"
+        if kept != key:
+            return "The way into main changed since its checks passed (a new commit, or main moved): run the checks again"
         for c in checks:
             if c["state"] != "passed":
                 return f"Sealed: {c['name']} is red: {c['words']}" if c["state"] == "failed" else "Checking the way into main"
