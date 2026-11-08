@@ -875,3 +875,15 @@ def test_a_round_answered_with_none_is_open_again_when_the_new_round_could_not_b
     again = idea_pick.reopen(state, "g", said)
     assert not idea_pick.answered(again) and "note" not in again and "asked_at" not in again and again["at"] == pick["at"]
     assert idea_pick.load(state, "g", "sketch-r1") == again
+
+
+def test_maker_pick_row_reads_receipt_from_pick_json(host, tmp_path):
+    slug = waiting_pick(host, tmp_path / 's')
+    path = idea_pick.folder_of(host.ideas.state_dir, slug, 'k1-r1') / 'pick.json'
+    data = json.loads(path.read_text())
+    data.update(tool='openai-images', cost={'amount': '0.12', 'currency': 'USD', 'estimate': True},
+                cap={'amount': '1', 'currency': 'USD'})
+    path.write_text(json.dumps(data))
+    [row] = pick_rows(host)
+    assert row['maker'] == {'id': 'openai-images', 'word': 'Picture maker',
+                            'cost': data['cost'], 'cap': data['cap']}

@@ -1,3 +1,4 @@
+import { MakerStop } from "../arena/makerreceipt.js";
 // **Spec 147 C (decisions §251.5): the hand's card is 144 x 202, cut under its title by the hand's rim (handcard.css). Its top is the corners' (table/corners.js): the goal's rune at the left, the kind's sign at the right in its signal's colour, then the title in three whole
 // lines; under the cut why it is asked (the question or the line, up to three lines) and the foot's corners: who asks (the head) and the card's cost. Not on the face at rest: the asker's head at the top, the party's label, the gem. Hovered or focused the card rises and shows it all.
 // **Spec 147 D.1 (decisions §251.6): the lifted card (below) is on the desktop the opened card, 404 x 566 (hand/openedcard.css): its corners large (the goal's rune and name, the kind's word and sign; the asker and the cost of the way picked at its foot, waycost.js), the title, a body that scrolls (the window of spec 148 B.5 at its top, 160 px),
@@ -111,6 +112,7 @@ function Body({ s }) {
     ${s.kind !== "pick" && html`<${Said} key=${s.key} title=${title} lines=${[s.text, s.why]} tag="body hand-lifted__text" />`}
     ${s.kind === "plan" && (s.row?.missing || []).length > 0 && html`<p class="cap hand-lifted__why">${missingWords(s.row.missing)}</p>`}
     ${s.kind === "plan" && !(s.row?.missing || []).length && s.node?.start_at === "night" && html`<p class="cap hand-lifted__why" data-night="waits">${nightWordsOf().waits}</p>`}
+    <${MakerStop} stop=${s.task?.craft_stop} />
     ${s.kind === "pick" && html`<p class="body hand-lifted__text">${s.text}</p><${Tiles} row=${s.row} />`}`;
 }
 

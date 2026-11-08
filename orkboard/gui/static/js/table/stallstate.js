@@ -7,6 +7,7 @@ import { town } from "../link.js";
 import { hatched } from "../hand/state.js";
 import { carried } from "../frame/state.js";
 
+export const makerPlate = signal("");        // a cap-stopped pick opens this maker
 export const stall = signal(null);          // the host's answer for the chair open: {chair, whose, say, shelves, hand}
 export const hover = signal(null);          // {slot, id}: the ware under the pointer or the focus
 export const receipt = signal(null);        // {text, undo: {slot, value} | null}: the line under the table

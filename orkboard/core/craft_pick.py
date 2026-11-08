@@ -58,9 +58,13 @@ def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, s
         raise InterruptedError("stopped")
     idea_pick.discard(path)
     spend = craft_spend.Spend(runner.state_dir, slug, tid, tool_id, row["cap"])
+    runner._set_task(slug, tid, craft_stop=None)
     try:
         files = maker(spend=spend).make(ask["ask"] + ("\n" + task["why"] if task.get("why") else ""),
                                        path / idea_pick.PICK_DIR, count=ask["n"])
+    except craft_spend.CapStopped as exc:
+        runner._set_task(slug, tid, craft_stop={**exc.details, "party": party})
+        raise
     finally:
         task.update(craft_cost=spend.cost(), craft_cap=row["cap"])
         runner._set_task(slug, tid, craft_cost=task["craft_cost"], craft_cap=task["craft_cap"])

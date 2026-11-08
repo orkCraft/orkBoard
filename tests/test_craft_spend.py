@@ -162,3 +162,17 @@ def test_fake_key_only_read_at_request_and_absent_from_artifacts(setup, monkeypa
     artifacts += [p.read_bytes() for p in runner.state_dir.rglob('*.json')]
     artifacts += [json.dumps(events).encode(), json.dumps(logs).encode(), plan.encode(), prompt.encode()]
     assert all(key.encode() not in artifact for artifact in artifacts)
+
+
+def test_cap_stop_keeps_price_cap_party_and_maker_for_its_plate(setup, monkeypatch):
+    cap(setup, '0.01')
+    monkeypatch.setattr('orkboard.core.craft_run.https_transport', lambda **kw: pytest.fail('request sent'))
+    with pytest.raises(craft_spend.CapStopped):
+        run(setup)
+    runner, slug, _, _, saved = setup
+    stop = saved['craft_stop']
+    assert stop == {'tool': 'openai-images', 'party': ideas.idea_page(runner.repo_root, slug).get('track'),
+                    'price': {'amount': '0.061455', 'currency': 'USD', 'estimate': True, 'dated': '2026-11-08'},
+                    'cap': {'amount': '0.01', 'currency': 'USD'}}
+    from orkboard.realm.board_map import _run_of
+    assert _run_of(saved)['craft_stop'] == stop

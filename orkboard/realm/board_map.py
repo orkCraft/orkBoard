@@ -320,7 +320,8 @@ def _run_of(t: dict) -> dict:
     """What a task's run left, for its card (spec 49 §2.4): the failure as the runner wrote it (cut), a hold's or a stop's
     note, the round, what it cost (usd; None before it ran), when it started (ISO, "" before) and `why`, a hold by the reserve or the week in words."""
     cost = t.get("cost")
-    return {"error": str(t.get("error") or "")[:ERROR_CHARS], "note": str(t.get("note") or ""), "round": int(t.get("round") or 1),
+    return {**({"craft_stop": t["craft_stop"]} if t.get("craft_stop") else {}),
+            "error": str(t.get("error") or "")[:ERROR_CHARS], "note": str(t.get("note") or ""), "round": int(t.get("round") or 1),
             "cost": cost if isinstance(cost, (int, float)) and not isinstance(cost, bool) else None,
             "started": str(t.get("started") or ""),
             **({"why": str(t["held_why"])} if t.get("state") == "held" and t.get("held_why") else {})}

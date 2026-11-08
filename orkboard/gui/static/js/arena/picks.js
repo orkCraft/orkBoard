@@ -5,9 +5,11 @@
 // one wears a double ink line, and the *check* sign closes its strip. A sound's and a clip's *Play*/*Pause* are a target of their own, apart from the strip: playing never picks.
 // Nothing plays by itself (no `autoplay`, `play()` only on a press), a clip's sound is off until the person turns it on, and one plays at a time on the
 // whole page (the others pause when one starts). Nothing here animates: the bar only says where the media is.
+import { Fragment } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
+import { MakerReceipt } from "./makerreceipt.js";
 import { Sign } from "../orkui.js";
 import { groupWords, isCapped, isPixel, labelOf, lengthWords, UPSCALE_MAX, variantOf } from "./pickwords.js";
 
@@ -109,7 +111,7 @@ export function Tiles({ row, big = false }) {
     pick(next);
     e.currentTarget.querySelector(`[role=radio][data-variant="${next}"]`)?.focus();
   };
-  return html`<div class=${cls("pick-tiles", big ? "is-large" : keys.length > 4 ? "is-small is-three" : keys.length === 2 ? "is-small is-one" : "is-small")} role="radiogroup" aria-label=${groupWords(row)} onKeyDown=${move}>
+  return html`<${Fragment}><div class=${cls("pick-tiles", big ? "is-large" : keys.length > 4 ? "is-small is-three" : keys.length === 2 ? "is-small is-one" : "is-small")} role="radiogroup" aria-label=${groupWords(row)} onKeyDown=${move}>
     ${row.variants.map((v, i) => html`<${Tile} key=${`${row.round || 1}/${v.key}`} row=${row} v=${v} big=${big} on=${v.key === on} tab=${v.key === on || (!on && i === 0)} onPick=${pick} />`)}
-  </div>`;
+  </div><${MakerReceipt} maker=${row.maker} /><//>`;
 }

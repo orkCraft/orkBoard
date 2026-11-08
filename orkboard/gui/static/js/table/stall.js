@@ -9,7 +9,7 @@ import { openPlace } from "../frame/place.js";
 import { board } from "../board/store.js";
 import { carried, inventory } from "../frame/state.js";
 import { HeroFace, Relic, Plate } from "./stallfaces.js";
-import { cardOf, dragging, giveBack, hover, load, pleased, pointAt, receipt, reset, service, stall, take, undo, wareOf } from "./stallstate.js";
+import { makerPlate, cardOf, dragging, giveBack, hover, load, pleased, pointAt, receipt, reset, service, stall, take, undo, wareOf } from "./stallstate.js";
 
 if (typeof document !== "undefined") {
   const href = new URL("./stall.css", import.meta.url).href;
@@ -42,6 +42,13 @@ function Ware({ shelf, w, chair, head }) {
   const mine = !!w.price?.mine, locked = !!w.price?.locked || (shelf.kind === "makers" && w.here === false), heroes = shelf.kind === "heroes", on = hover.value?.slot === shelf.slot && hover.value?.id === w.id;
   const [editing, setEditing] = useState(false), [amount, setAmount] = useState(""), [error, setError] = useState(""), [saving, setSaving] = useState(false);
   const input = useRef(null), trigger = useRef(null), restoreFocus = useRef(false);
+  useLayoutEffect(() => {
+    if (shelf.kind === "makers" && makerPlate.value === w.id) {
+      trigger.current?.scrollIntoView({ block: "nearest" });
+      trigger.current?.focus();
+      makerPlate.value = "";
+    }
+  }, [w.id, makerPlate.value]);
   const currency = w.prices?.[0]?.currency || w.cap?.currency;
   const fieldId = `maker-cap-${w.id}`, whyId = `maker-why-${w.id}`;
   // Focus after the form has been inserted or removed, before the redraw is painted.

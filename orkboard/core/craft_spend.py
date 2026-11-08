@@ -18,6 +18,14 @@ from uuid import uuid4
 from orkboard.realm import craft_tools, ideas
 
 
+class CapStopped(ValueError):
+    """A priced request refused before transport, safe for the pick face."""
+
+    def __init__(self, message, tool, price, cap):
+        super().__init__(message)
+        self.details = dict(tool=tool, price=price, cap=cap)
+
+
 def price(tool_id: str, payload: dict) -> dict:
     tool = craft_tools.get(tool_id)
     rates = tool.prices
@@ -83,9 +91,9 @@ class Spend:
                     e['price']['currency'] != quote['currency'] for e in self.entries(data)):
                 raise ValueError('The maker price and the cap need the same currency')
             if self.total(data) + Decimal(quote['amount']) > Decimal(self.cap['amount']):
-                raise ValueError(f"The {craft_tools.get(self.tool_id).maker}'s next request costs about {quote['amount']} {quote['currency']}; "
+                raise CapStopped(f"The {craft_tools.get(self.tool_id).maker}'s next request costs about {quote['amount']} {quote['currency']}; "
                                  f"with {self.total(data)} {quote['currency']} already held, "
-                                 f"it exceeds the {self.cap['amount']} {self.cap['currency']} cap")
+                                 f"it exceeds the {self.cap['amount']} {self.cap['currency']} cap", self.tool_id, quote, self.cap)
             token = uuid4().hex
             self.entries(data).append(dict(id=token, tool=self.tool_id, price=quote, status='reserved'))
             self.write(data)
