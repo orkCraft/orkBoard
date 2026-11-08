@@ -25,6 +25,8 @@ def art(tmp_path, monkeypatch):
 def test_chair_reports_missing_keys_then_here_without_exposing_keys(art, monkeypatch):
     root, party = art
     rows = tools.for_party(root, party, "codex")
+    assert [(r["maker"], r["title"]) for r in rows] == [
+        ("Picture maker", "OpenAI Images"), ("Sound maker", "ElevenLabs Sound Effects")]
     assert {r["id"] for r in rows} == {"openai-images", "elevenlabs-sound"}
     assert all(not r["here"] and r["why"] == "no key on this computer" for r in rows)
     assert all(not r["taken"] and r["cap"] is None for r in rows)
@@ -39,7 +41,7 @@ def test_chair_reports_harness_and_unofficial_api_reasons(art, monkeypatch):
     root, party = art
     original = tools.REGISTRY["openai-images"]
     monkeypatch.setitem(tools.REGISTRY, original.id, replace(original, kind="code", key_env="", needs=("pictures",)))
-    assert tools.for_party(root, party, "codex")[0]["why"] == "its harness cannot make it"
+    assert tools.for_party(root, party, "codex")[0]["why"] == "its AI tool cannot make it"
     assert tools.for_party(root, party, "missing")[0]["here"] is False
     assert tools.for_party(root, party, "agy")[0]["here"] is True
     monkeypatch.setitem(tools.REGISTRY, original.id, replace(original, official_api=False))
@@ -115,3 +117,49 @@ def test_registry_is_art_only_official_dated_and_in_money(art):
         tools.set_taken(root, other, {"openai-images": {"cap": {"amount": "1", "currency": "USD"}}})
     with pytest.raises(ValueError, match="No party"):
         tools.set_taken(root, "missing", {})
+
+
+def test_host_words_cover_every_reason_error_refusal_and_stop(art, monkeypatch):
+    """Audit every host message template, including rarely reached safety errors.
+
+    Availability whys are fragments displayed beside the row's maker name;
+    exceptions and cap stops are complete messages displayed on their own.
+    """
+    import ast
+    import inspect
+    from orkboard.core import craft_pick, craft_run, craft_spend
+
+    root, party = art
+    messages = []
+    for module in (tools, craft_run, craft_pick, craft_spend):
+        tree = ast.parse(inspect.getsource(module))
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Raise) and isinstance(node.exc, ast.Call)
+                    and isinstance(node.exc.func, ast.Name)
+                    and node.exc.func.id in ('ValueError', 'MakerError')):
+                template = node.exc.args[0]
+                if isinstance(template, ast.JoinedStr):
+                    # Render named maker expressions; other values cannot change
+                    # the template's vocabulary and need no credentials or I/O.
+                    text = ''.join(part.value if isinstance(part, ast.Constant)
+                                   else 'Picture maker' if ast.unparse(part.value) in (
+                                       'word', 'self.word', 'row[\'maker\']',
+                                       'craft_tools.get(self.tool_id).maker') else '<value>'
+                                   for part in template.values)
+                else:
+                    text = ast.literal_eval(template)
+                messages.append(text)
+    original = tools.get('openai-images')
+    for changed, why in (
+        (original, 'no key on this computer'),
+        (replace(original, needs=('pictures',)), 'its AI tool cannot make it'),
+        (replace(original, official_api=False), 'no official API'),
+    ):
+        monkeypatch.setitem(tools.REGISTRY, original.id, changed)
+        row = tools.for_party(root, party, 'codex')[0]
+        assert not row['here'] and row['why'] == why
+        messages.append(f"{row['maker']}: {row['why']}")
+    assert messages
+    for message in messages:
+        assert 'maker' in message or 'AI tool' in message, message
+        assert 'harness' not in message.lower(), message

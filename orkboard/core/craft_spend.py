@@ -31,7 +31,7 @@ def price(tool_id: str, payload: dict) -> dict:
     elif tool_id == 'elevenlabs-sound':
         amount = Decimal(rates[0].amount) * Decimal(str(payload['duration_seconds'])) / 60
     else:
-        raise ValueError('That tool has no request price')
+        raise ValueError('That maker has no request price')
     return dict(amount=format(amount, 'f'), currency=rates[0].currency,
                 estimate=True, dated=max(p.dated for p in rates))
 
@@ -81,9 +81,9 @@ class Spend:
             # Count all earlier requests, including unsettled and other tool IDs.
             if quote['currency'] != self.cap['currency'] or any(
                     e['price']['currency'] != quote['currency'] for e in self.entries(data)):
-                raise ValueError('The tool price and the cap need the same currency')
+                raise ValueError('The maker price and the cap need the same currency')
             if self.total(data) + Decimal(quote['amount']) > Decimal(self.cap['amount']):
-                raise ValueError(f"The next request costs an estimated {quote['amount']} {quote['currency']}; "
+                raise ValueError(f"The {craft_tools.get(self.tool_id).maker}'s next request costs about {quote['amount']} {quote['currency']}; "
                                  f"with {self.total(data)} {quote['currency']} already held, "
                                  f"it exceeds the {self.cap['amount']} {self.cap['currency']} cap")
             token = uuid4().hex

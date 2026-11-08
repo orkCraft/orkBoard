@@ -36,7 +36,7 @@ def test_next_variant_over_cap_is_not_sent_and_receipt_counts_first(setup, monke
         return picture()
 
     monkeypatch.setattr('orkboard.core.craft_run.https_transport', fake)
-    with pytest.raises(ValueError, match=r'estimated .* USD.*0.10 USD cap'):
+    with pytest.raises(ValueError, match=r"The Picture maker's next request costs about .* USD.*0.10 USD cap"):
         run(setup)
     assert len(calls) == 1
     assert setup[-1]['craft_cost']['amount'] == '0.061455'

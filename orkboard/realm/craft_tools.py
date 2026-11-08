@@ -36,6 +36,7 @@ class Tool:
     host: str
     official_api: bool
     prices: tuple[Price, ...]
+    maker: str
     key_env: str = ""
     needs: tuple[str, ...] = ()   # harness capabilities, only when the harness runs it
     leaves: str = ""
@@ -50,11 +51,11 @@ REGISTRY = {
               for amount, unit in (("2.50", "gpt-image-2 text input / 1M tokens"),
                                    ("4.00", "gpt-image-2 image input / 1M tokens"),
                                    ("15.00", "gpt-image-2 image output / 1M tokens"))),
-        "OPENAI_API_KEY", leaves="The picture prompt is sent to OpenAI."),
+        "Picture maker", "OPENAI_API_KEY", leaves="The picture prompt is sent to OpenAI."),
     "elevenlabs-sound": Tool(
         "elevenlabs-sound", "ElevenLabs Sound Effects", ("art",), "sound", "api", "api.elevenlabs.io", True,
         (Price("2026-11-08", "0.12", "USD", "minute of sound", "https://elevenlabs.io/pricing/api", True),),
-        "ELEVENLABS_API_KEY", leaves="The sound prompt is sent to ElevenLabs."),
+        "Sound maker", "ELEVENLABS_API_KEY", leaves="The sound prompt is sent to ElevenLabs."),
 }
 
 
@@ -88,7 +89,7 @@ def availability(tool: Tool, harness: str, *, check_key: bool = True) -> tuple[b
         return False, "no official API"
     h = harnesses.get(harness)
     if tool.needs and (h is None or not set(tool.needs).issubset(h.makes)):
-        return False, "its harness cannot make it"
+        return False, "its AI tool cannot make it"
     if check_key and tool.key_env and key(tool.id) is None:
         return False, "no key on this computer"
     return True, ""
@@ -96,13 +97,13 @@ def availability(tool: Tool, harness: str, *, check_key: bool = True) -> tuple[b
 
 def _cap(raw: object, currency: str) -> dict:
     if not isinstance(raw, dict) or raw.get("currency") != currency or isinstance(raw.get("amount"), bool):
-        raise ValueError(f"Set a cap as an amount in {currency}")
+        raise ValueError(f"Set a maker's cap as an amount in {currency}")
     try:
         amount = Decimal(str(raw.get("amount")))
     except InvalidOperation:
-        raise ValueError(f"Set a cap as an amount in {currency}") from None
+        raise ValueError(f"Set a maker's cap as an amount in {currency}") from None
     if not amount.is_finite() or amount <= 0:
-        raise ValueError(f"Set a positive cap in {currency}")
+        raise ValueError(f"Set a positive maker cap in {currency}")
     return {"amount": format(amount, "f"), "currency": currency}
 
 
@@ -136,14 +137,14 @@ def set_taken(root: Path, party: str, tools: dict) -> None:
     """Replace taken tools; paid tools require a positive cap, with no default."""
     kept = clean_taken(tools)
     if not isinstance(tools, dict) or len(kept) != len(tools):
-        raise ValueError("Each tool needs a known name and a positive cap in its currency")
+        raise ValueError("Each maker needs a known name and a positive cap in its currency")
     with ideas.LOCK:
         page = ideas.track_page(root, party)
         if page is None:
-            raise ValueError(f"No party {party!r}")
+            raise ValueError(f"No party {party!r} to take makers")
         craft = party_recipes.craft_of(page.get("recipe"), page.get("leader"))
         if any(craft not in REGISTRY[t].crafts for t in kept):
-            raise ValueError("That tool is not for this party's craft")
+            raise ValueError("That maker is not for this party's craft")
         page.set("craft_tools", json.dumps(kept) if kept else "")
         ideas._write(Path(root) / ideas.TRACKS / f"{party}.md", page.text())
 
@@ -160,7 +161,7 @@ def for_party(root: Path, party: str, harness: str, *, check_key: bool = True) -
         if craft not in tool.crafts:
             continue
         here, why = availability(tool, harness, check_key=check_key)
-        rows.append({"id": tool.id, "title": tool.title, "kind": tool.kind, "makes": tool.makes,
+        rows.append({"id": tool.id, "title": tool.title, "maker": tool.maker, "kind": tool.kind, "makes": tool.makes,
                      "official_api": tool.official_api, "prices": [asdict(p) for p in tool.prices],
                      "here": here, "why": why, "taken": tool.id in allowed,
                      "cap": allowed.get(tool.id, {}).get("cap"), "leaves": tool.leaves})

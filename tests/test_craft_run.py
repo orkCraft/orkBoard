@@ -64,6 +64,7 @@ def test_invalid_answers_fail_in_words_and_remove_files(tmp_path, maker, answer,
     destination = tmp_path / "assets"
     with pytest.raises(run.MakerError, match=why) as error:
         maker(lambda **kwargs: answer).make("prompt", destination)
+    assert run.craft_tools.get(maker.tool_id).maker in str(error.value)
     assert "secret" not in str(error.value)
     assert not destination.exists()
 

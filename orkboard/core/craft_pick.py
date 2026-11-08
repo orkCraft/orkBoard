@@ -16,7 +16,7 @@ def available(root: Path, party: str, harness: str = "") -> dict:
 
 def plan_lines(root: Path, party: str) -> str:
     rows = available(root, party)
-    return ("\nCraft tools available for pick.tool (use only these ids, with image or audio picks): "
+    return ("\nCraft makers available for pick.tool (use only these ids, with image or audio picks): "
             + json.dumps([{k: r[k] for k in ("id", "makes", "cap")} for r in rows.values()]) + "\n")
 
 
@@ -33,7 +33,7 @@ def board_root(runner, slug: str) -> Path:
     for base in (runner.state_dir / "board", runner.repo_root):
         if rel and (base / rel).is_file():
             return (base / rel).parent.parent.parent
-    raise ValueError("The tool's party could not be read from the Board")
+    raise ValueError("The maker's party could not be read from the Board")
 
 
 def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, spent, effort):
@@ -47,13 +47,13 @@ def session(runner, slug, tid, task, path, cancel, model, env, prompt, resume, s
     rows = {r["id"]: r for r in craft_tools.for_party(root, party, runner.tool_of(slug, task), check_key=False)}
     row = rows.get(tool_id)
     if not row or not row["taken"]:
-        raise ValueError("The party has not taken that tool")
+        raise ValueError("The party has not taken that maker")
     if not row["here"]:
-        raise ValueError(f"{row['title']} is not here: {row['why']}")
+        raise ValueError(f"{row['maker']} is not here: {row['why']}")
     makers = {"openai-images": ("image", craft_run.PictureMaker), "elevenlabs-sound": ("audio", craft_run.SoundMaker)}
     kind, maker = makers.get(tool_id, (None, None))
     if kind != ask["kind"] or maker is None:
-        raise ValueError("That tool cannot make this pick's kind")
+        raise ValueError("That maker cannot make this pick's kind")
     if cancel.is_set():
         raise InterruptedError("stopped")
     idea_pick.discard(path)
