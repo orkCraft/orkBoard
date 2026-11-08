@@ -7553,3 +7553,114 @@ the conductor's. So:
 6. **Product's tab shows its past now**; its jobs and the product's direction (Product's tree) wait for a goal of their own.
 
 The owner's call.
+
+
+## 278. A craft's heroes are only those that work on what is built: fifteen, no least number; the Orkmaster's star by the project (8 November 2026, the owner; taken on 7 November as §267 on a branch that never reached main)
+
+Changes: 266 (its point 3: *three to six a craft*). Restores the owner's call of 7 November, whose number §267 main gave to the stall.
+
+Why: the owner asked for each craft's heroes with their framework, flow and team, then for each to be weighed against the
+product (the indie game developer with a day job, §218.2; a solo maker of a web or mobile app, H1; the day's three jobs,
+§199), against what the window can show (its craft's map and aspects, spec 109) and against what is gathered by itself (the
+hints of code, Play's signals, the brief, the mana's record). A hero whose framework has no map, no data or a cost the person
+cannot carry is words the leader cannot stand on; the owner: *keep only the heroes that will surely work well; the least
+number goes*. So:
+1. **A craft's heroes are those that work on what is built today**: its framework has its craft's map and aspects, and what
+   it judges by is gathered by code, Play, the brief or the mana's record. **No least number**: a craft has as many as work,
+   six at most; a craft with one shows it with no choice; a hero is added when the map and the data it stands on are built.
+2. **The heroes**, each with its school and its flow:
+   - **Product**: *Angel Invest Knight* (the opportunity solution tree; outcome → jobs → goals), *Jobwise Knight* (jobs to be
+     done; job → struggle → goal), *Appetite Knight* (Shape Up; shape → bet → build in the appetite, on the mana's record; the
+     bet stays the person's), *Pillar Knight* (design pillars and what it leaves out; pillars → the goal against them → keep
+     or cut, on the brief's *pillars* and *leaves_out*).
+   - **Design**: *Pixel-Perfect Dryad* (Nielsen's heuristics; walk → the ten rules → fix), *Sprint Dryad* (the design sprint;
+     map → sketch → decide → test: §199.3's sketches, picked on the phone, tried in Play), *Inclusive Dryad* (WCAG 2.2;
+     barriers → contrast and keys → fix: `a11y` today, the controller, the Deck and the focus path once §209.3–4 are built).
+   - **Tech**: *Sh.man* (C4 and hotspots; containers → parts → hotspots), *Spike Shaman* (extreme programming; test → code →
+     refactor; the dearest of the three), *Scene Shaman* (an engine's scenes; scene → autoloads → coupling, on Godot, Unity
+     and Unreal as System reads them).
+   - **Run**: *Lantern Imp* (observability first; trace → read → fix, on Play's errors, failed requests and slow places).
+   - **Marketing**: *Store Gnome* (the store page first; title → shots → test), *Growth Hack Gnome* (AARRR; acquire →
+     activate → retain, by its hints, not numbers), *Position Gnome* (positioning; the alternatives → what only it does →
+     who cares, on the brief's *why this, not what they use now*).
+   - **Release**: *Release Night King*, not traded (as §266).
+3. **Not taken, and why**: *Pivot Knight* (no measure to pivot by: the project's analytics are not read), *Diamond Dryad*
+   (Full and dear, research there is none of, and its four steps are a goal's phases again, which §266.3 forbids), *Atom
+   Dryad* (only for a project with a component library of its own, and Consistency has no hint), *Domain Shaman* (an indie
+   game's architecture is rewritten in an evening, §208), *Fitness Shaman* (fitness functions as records are later, spec 109
+   §5), *Uptime Imp* (no server and no SLO: nothing gathered). Talked of and dropped: a story map's, an API contract's,
+   chaos', the cloud bill's and building in public's heroes, each needing a map or a source there is none of.
+4. **Later**, when what they stand on is built: *Pivot Knight* with the project's analytics (spec 115's later part), *Uptime
+   Imp* with Run's map (§215), *Atom Dryad* with a hint of a part made outside the project's library, a *Wishlist Gnome*
+   (the Steam page → the demo's end → Next Fest) with §214.2 and §211.2.
+5. **The Orkmaster's star by the project**, read from its kind and its stage (`project_kind`, `project_stage`), never fixed:
+   for a game, *Jobwise Knight*, *Sprint Dryad*, *Scene Shaman*, *Position Gnome* (cheap, decided in a minute on the phone);
+   for a web or mobile app, *Angel Invest Knight*, *Pixel-Perfect Dryad*, *Spike Shaman*, *Store Gnome*.
+6. **The new faces**: *Pillar Knight*, *Inclusive Dryad*, *Scene Shaman* and *Position Gnome* are drawn in orkUI before they
+   are used (§266.4); the mockup's heroes follow with the first spec.
+7. **The words**: the heroes' names are words of the interface (§164.3), in `TERMS` with the first spec.
+The owner's call.
+
+## 279. A game's heroes: Game design's and Art's, LiveOps' chair empty until its map; the game's star mended (8 November 2026, the owner; taken on 7 November as §268 on a branch that never reached main)
+
+Changes: 278 (its point 5: a game's star). Restores the owner's call of 7 November, whose number §268 main gave to colour.
+
+Why: the owner asked whether §278's heroes fit every kind of project there is. Weighed against the parties each kind is
+given (`party_recipes.RECIPES`: nine kinds take Product, Design, Tech, Release, Run and Marketing; a game takes Game design,
+Tech, Art, Release, LiveOps and Marketing) and against what System reads (Python and JS/TS, Godot, Unity and Unreal): a web
+app takes all fifteen; a mobile app most, React Native and Expo best (Flutter and native apps have no System, and Play is the
+web client); a backend and code or data work take Tech, Product and Release, with Design empty and Run in part; a designer's
+folder, a wiki, texts and an empty folder take mostly the heroes that stand on the brief or the sketches. **A game had no
+hero at Game design, Art or LiveOps**, and §278.5 starred Jobwise Knight and Sprint Dryad for a game, whose chairs a game does
+not have. So, by §278.1's rule (a hero works on what is built today):
+1. **Game design's heroes** (the Loop map and its hints are built): *Dungeon Master Knight* (MDA and the loops; loop →
+   reward → hook, on `no_reward`, `unfed`, `flat`, `spike`, `no_hook`), *Economy Knight* (sources and sinks; currency →
+   source → sink, on `no_source`, `pile_up`), and *Pillar Knight* seated here too (the pillars over the loop are Game
+   design's, §211.3), as at Product.
+2. **Art's hero** (the Assets map and its hints are built): *Sprite Dryad* (an art bible, its pipeline and a budget; style →
+   pipeline → budget, on `mixed_sizes`, `naming`, `unused`, `heavy`).
+3. **LiveOps' chair stays empty** until its map (§215) is built: no map and no hint, so no hero; *Event Imp* comes with it.
+4. **A game's star** (this replaces §278.5's for a game): *Dungeon Master Knight*, *Sprite Dryad*, *Scene Shaman*, *Position
+   Gnome*. An app's stays as §278.5 says.
+5. **What each kind takes is said, not hidden**: a hero with nothing to stand on in the project's kind (Scene Shaman outside a
+   game, Design's heroes in a backend, a wiki or texts, Store Gnome with no store) is not offered there; a chair whose craft
+   has no hero for the kind is an empty chair. That a wiki or texts is given a Design chair at all is the parties' recipe's
+   question, not the heroes': later.
+6. **The new faces**: *Dungeon Master Knight*, *Economy Knight* and *Sprite Dryad* are drawn in orkUI before they are used
+   (§266.4), with §278.6's four; their names in `TERMS` with the first spec (§278.7).
+The owner's call.
+
+## 280. Each leader's map takes a board game's shape: heat on its parts, a goal's reach before it starts (8 November 2026, the owner; taken on 31 October as §195 on a branch, lost in a merge)
+
+Restores the owner's call of 31 October (main's §195 is the phone's menu). Since then §206.4 shows a goal picked as each leader's view of what it changes (`js/table/goalmap.js`) and goal 161 laid the table's felt, light and frames: the reach below grows from the first, the maps' shapes lie on the second.
+
+Why: the owner, after the lands (*style the leaders' tabs as the maps of their races' lands, with storytelling*) were turned
+down as a skin (§50.5, spec 40's *an accent, never a picture*, and colours the elements already hold): *we refer to board
+games everywhere: give each tab the right picture, a nod to some game.* A game earns a map when its loop is the map's work
+(§50.4), and only its shape is taken (§50.5). The mockup of Tech's System (`docs/mockups/tech-reach/`) showed it: a network
+game with outbreaks gives two rules that are the work, the heat of what code saw on a part and how far a change spreads
+through what uses it, so a person compares goals by their spread before either starts. The owner: *the direction is right;
+do it for every lens.* So:
+1. **Two rules on every map, one grammar.** **Heat**: the hints code finds on a part (`map_signals`, every craft's) drawn on
+   it, a hollow square a kind, three at most, beside the leader's concern's mark; until now they reached only the leader's
+   prompt and the strip's chips. **Reach** (`TERMS`): a goal under the pointer in the hand, or picked, lights on the open
+   tab's map the parts its section's *Will be* and its marks name (a solid edge in its element), what they reach by the map's
+   own relation one step out (dashed) and two (dotted), and dims the rest; the strip says it in a line. Where the map knows
+   what checks a part (System: a test), each reached part says so. Read by code, no call.
+2. **A map's shape is its work's game**, its cards unchanged (one deck, a layout a map):
+   - **System**, a network game: the columns as built (never a diagram); a link lights when a reach crosses it.
+   - **Screens**, a dungeon's rooms: each screen's doors in and out on its sides, a wall where there is none (a dead end, a
+     screen nothing leads to); a link back to an earlier step is a door too.
+   - **The tree**, a tech tree: as built; the hypotheses (spec 116) are its parts when they are built.
+   - **The loop**, a rondel: the ring closes, last step to first; what a step gives and takes lies on it as tokens.
+   - **Art's assets**, an inventory: a card's width is its weight (light, normal, heavy), a lane's foot its total against
+     the project's budget when one is set (`orkcraft.toml` `[art] budget_mb`); an asset nothing names lies faint.
+   - **Dev and main**, a train and push your luck: the goals as cars, oldest first, each its age; past the eighth car the
+     batch is big, marked where it starts; a goal's reach is the goals it must take to main with it (`goal_main.plan`).
+   - **The way in** keeps its columns: no game fits it until people's numbers are read (§193.4); heat only.
+3. **Not taken**: a free graph, an outbreak that spreads by itself, a timer, a score or a percentage of risk, the games'
+   names or words in the interface (*changes*, *reaches*, *no test* say what happens), a new colour, a reach for a goal whose
+   spec does not yet say what will change, the lands' pictures (Orkline Camp's, §50.1), a lore of the leaders.
+4. **The rule of the line holds** (§50.5): no count of what waits, no streak; the reach is shown, Start stays the person's.
+5. Its spec built by the cheaper model, each part reviewed; Tech's mockup (`docs/mockups/tech-reach/` on the branch `claude/tech-reach-mockup`) the only one.
+The owner's call.
