@@ -166,3 +166,9 @@ A way's own line: each way of a leader's question carries one line of what it le
 - A way's line is at most 80 characters (Design's limit), kept only when every way has one; else the card has no lines and today's fallback stands.
 - `lines` rides in the card in talk.json and in _asked as it is; the face already reads q.lines, so the host changes no route.
 - goal_answered and its from "hand" are unchanged: Product's signal needs no new event.
+### Accepted
+- met: When a leader's Talk answer gives a question with a line for each way, then its card keeps `lines`, and line() then parse() gives back the same ask, ways, pick, why and lines.
+- met: When a question line written before this goal, or BOARD.md's example, is parsed, then it gives the same ask, ways, pick and why as today and no lines.
+- met: When a new line with ways' lines is read by today's pattern (the regex of before), then its ask, ways and pick are unchanged and the lines fall into its why.
+- met: When Talk keeps a waiting card, or a page that asks the person lays its question outside, with ways' lines, then the hand's row carries `lines`, one a way, in the ways' order.
+- met: When a leader gives a line over 80 characters, or lines for only some ways, then the card keeps no lines and its ways read as today.
