@@ -98,7 +98,7 @@ def test_the_gate_counts_what_dev_holds_and_lists_the_ideas_by_their_tasks_commi
     got = host.command("ideas.gate")
     assert reads.count("rev-list") == 1                                                      # one read for all the ideas
     assert got == {"into": "dev", "main": "main", "same": False, "commits": 2, "files": 2,
-                   "ideas": [{"slug": first, "title": "Sync the queue", "goal": "first-goal", "tasks": 2}]}
+                   "ideas": [{"slug": first, "title": "Sync the queue", "goal": "first-goal", "tasks": 2, "main_ready": True, "main_reason": ""}]}
     assert host.command("ideas.gate") == got and BoardPhone.allowed(host, "ideas.gate", {}) and BoardPhone.allowed(host, "ideas.gate_merge", {})
     assert git(repo, "rev-list", "main..dev").split() == [c2, c1]
 

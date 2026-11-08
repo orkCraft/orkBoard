@@ -25,12 +25,15 @@ export function checksOf(slug) {
 export const isRed = (list) => list.some((c) => c.state === "failed");
 
 /** Asks the host to run (or to answer the last results of) the checks of the goal; `again` after a red one. */
-export function startChecks(slug) {
-  const was = JSON.stringify(snap(slug)), again = isRed(checksOf(slug));
+const requests = {};
+export function startChecks(slug, again = false) {
+  const request = requests[slug] = (requests[slug] || 0) + 1;
+  const was = JSON.stringify(snap(slug));
+  if (again) told.value = { ...told.value, [slug]: { checks: checksOf(slug).map((c) => ({ ...c, state: "waiting", words: "Checking…" })), was } };
   pending.value = slug;
   asked = ask("ideas.to_main_checks", { idea: slug, ...(again ? { again: true } : {}) }).then((got) => {
-    if (got && Array.isArray(got.checks) && got.checks.length) told.value = { ...told.value, [slug]: { checks: got.checks, was } };
-  }).finally(() => { if (pending.value === slug) pending.value = ""; });
+    if (requests[slug] === request && got && Array.isArray(got.checks) && got.checks.length) told.value = { ...told.value, [slug]: { checks: got.checks, was } };
+  }).finally(() => { if (requests[slug] === request && pending.value === slug) pending.value = ""; });
   return asked;
 }
 
@@ -40,7 +43,7 @@ export const whenAsked = () => asked;
 /** Forgets what the command answered (the choice was dropped). */
 export function forgetChecks() {
   pending.value = "";
-  told.value = {};
+  // Keep explanations when the discard closes.
 }
 
 const STATE = { failed: 3, running: 2, waiting: 1, passed: 0 };

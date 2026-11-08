@@ -33,7 +33,7 @@ export const RITE_MS = 1200;
 export const woke = signal(false);                                       // the ring's first waking has played: its class comes off, so the ring opening and closing again (the checks) does not play it again
 export const stopped = signal(null);                              // what stopped the goal on its way into main, in words: {slug, words, none}; `none` when the project has no tests (the card then offers *To main without the tests*)
 export const echo = signal(0);                                    // a press on a sealed portal says its reason again
-let planning = Promise.resolve(), said = false;
+let planning = Promise.resolve(), said = false, selection = 0;
 
 const readSeen = () => { try { return !!localStorage.getItem(SEEN_KEY); } catch { return false; } };
 const writeSeen = () => { try { localStorage.setItem(SEEN_KEY, "1"); } catch { /* it is said once on this page instead */ } };
@@ -64,12 +64,13 @@ export const reasonOf = (p) => (p?.state === "fail" ? "What goes to main could n
 export function choose(slug) {
   if (!slug || chosen.value === slug) return;
   if (!chosen.value) openedOnce();
+  const request = ++selection;
   chosen.value = slug;
   taking.value = false;
   plan.value = { slug, state: "wait" };
   stopped.value = null;
   planning = ask("ideas.to_main_plan", { idea: slug }).then((p) => {
-    if (chosen.value !== slug) return;
+    if (chosen.value !== slug || request !== selection) return;
     plan.value = p ? { ...p, slug, state: "ok", sealed: p.sealed || "" } : { slug, state: "fail" };
     if (p && wide.value && (!p.sealed || p.conflict)) startChecks(slug);                    // the way into main is checked (a seal no check owns is not: it keeps its X)
   });
@@ -80,6 +81,7 @@ const checkedOpen = (slug) => pending.value === slug || checksOf(slug).some((c) 
 
 /** Closes the portal and drops the choice. */
 export function close() {
+  selection += 1;
   chosen.value = ""; plan.value = null; stopped.value = null; taking.value = false; first.value = false; going.value = "";
   forgetChecks();
 }
@@ -216,20 +218,20 @@ function PortalDoor() {
   }, [slug]);
   const open = !!slug && here;
   if (!open) return null;
-  const main = r?.main || "main", sealed = p?.state === "fail" || !!p?.sealed, reason = sealed ? reasonOf(p) : "", said = html`<span key=${echo.value}>Sealed: ${reason}</span>`;
+  const main = r?.main || "main", red = isRed(checksOf(slug)), sealed = red || p?.state === "fail" || !!p?.sealed, reason = red ? sealedWords(checksOf(slug)) : sealed ? reasonOf(p) : "", said = html`<span key=${echo.value}>Sealed: ${reason}</span>`;
   const held = (e) => { if (!chosen.value) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move"; taking.value = true; };
   const left = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) taking.value = false; };
   const drop = (e) => { e.preventDefault(); taking.value = false; play(); };
   const state = p?.state === "ok" ? (sealed ? "sealed" : "open") : p?.state || "wait";
   const line = p?.state === "ok" ? lineOf(p, slug, main) : p?.state === "fail" ? `Into ${main}: ${titleOf(slug, p)}` : `Checking ${titleOf(slug, p)}…`;
   const button = html`<button type="button" ref=${door} class=${cls("ork-portal small", { "is-taking": taking.value, "is-sealed": sealed, "is-new": first.value })}
-      aria-label=${labelOf(p, slug, main)} aria-disabled=${p?.state === "wait" ? "true" : undefined} onClick=${play}
+      aria-label=${labelOf(p, slug, main)} disabled=${red || checkedOpen(slug)} aria-disabled=${p?.state === "wait" ? "true" : undefined} onClick=${play}
       onDragEnter=${held} onDragOver=${held} onDragLeave=${left} onDrop=${drop}></button>`;
   const hint = first.value && !sealed && html`<p class="portal__hint">Tap the portal to send it to main</p>`;
   return html`<div class=${cls("portal-host", { "is-new": first.value })} data-portal=${state}>
     <p class="portal__line">${line}</p>
     <span class="portal__label">${main === "main" ? "Main" : main}</span>
-    ${button}${hint}<p class="portal__sealed" role="status" aria-live="polite">${sealed && said}</p><${Stopped} slug=${slug} />
+    ${button}${hint}${red && html`<button type="button" class="ork-btn" onClick=${() => startChecks(slug, true)}>Test again</button>`}<p class="portal__sealed" role="status" aria-live="polite">${sealed && said}</p><${Stopped} slug=${slug} />
   </div>`;
 }
 
@@ -248,7 +250,7 @@ export function ReadyCards({ goals, main, onPress = null, on: picked = "" }) {
       <span class="hand-card__head"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="hand-card__name">${g.title}</span></span>
       <span class="hand-card__window"><span class="hand-card__act"><span class="hand-mark is-ok"><${Sign} name="check" big=${true} label="Done" /></span></span></span>
       <span class="hand-card__label"><span class="hand-card__party">Done</span></span>
-      <span class="hand-card__foot">Ready for ${main}</span>
+      <span class="hand-card__foot">${g.main_ready === false || isRed(checksOf(g.slug)) ? "Checks failed" : `Ready for ${main}`}</span>
     </button></li>`;
   })}</ul>`;
 }

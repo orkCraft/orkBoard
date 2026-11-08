@@ -223,7 +223,7 @@ def test_to_main_is_refused_while_the_checks_run_and_after_one_is_red_and_goes_w
     assert host.command("ideas.to_main", {"idea": lobby})["ok"] is True
 
 
-def test_a_red_check_seals_the_way_in_words_and_choosing_the_goal_anew_runs_the_checks_again(host, repo, work):
+def test_a_red_check_seals_the_way_and_only_explicit_retry_runs_again(host, repo, work):
     lobby, *_ = work
     toml(repo, '[gate.main]\nchecks = [{name = "Regression", run = "echo 2 tests fail; exit 1"}]\n')
     host.command("ideas.to_main_checks", {"idea": lobby})
@@ -233,6 +233,10 @@ def test_a_red_check_seals_the_way_in_words_and_choosing_the_goal_anew_runs_the_
     assert worktrees(repo) == [] and git(repo, "log", "-1", "--format=%s", "main") == "edit old.txt"
     kept = host.command("ideas.to_main_checks", {"idea": lobby})                         # asked again: the kept red result
     assert kept["running"] is False and kept["checks"][-1]["state"] == "failed"
+    row = next(r for r in host.command("ideas.gate")["ideas"] if r["slug"] == lobby)
+    assert row["main_ready"] is False and "2 tests fail" in row["main_reason"]
+    with pytest.raises(CommandError, match="Test again"):
+        host.command("ideas.gate_merge")
     toml(repo, '[gate.main]\nchecks = [{name = "Regression", run = "true"}]\n')
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "fixed")
@@ -312,3 +316,55 @@ def test_a_seal_no_check_owns_is_answered_without_running_anything(host, repo, w
     got = host.command("ideas.to_main_checks", {"idea": lobby})
     assert got["checks"] == [] and got["sealed"] == f"{short(host, chat)} is not done yet" and got["running"] is False
     assert host.ideas.snapshot()["main_checks"] == {} and worktrees(repo) == []
+
+
+def test_checked_records_every_classification(monkeypatch, tmp_path):
+    from orkboard.realm import gate_rerun
+    from orkboard.realm.idea_git import GateRun
+    ids = [f"tests/t.py::test_{n}" for n in range(4)]
+    out = "\n".join(f"FAILED {i} - x" for i in ids) + "\n=== 4 failed in 1s ==="
+    def gate(*args):
+        args[-1]["run"] = GateRun(False, out)
+        return False, "4 failed"
+    monkeypatch.setattr(main_checks, "_gate", gate)
+    monkeypatch.setattr(gate_rerun, "sort_out", lambda *a, **kw: gate_rerun.Sorted((ids[0],), (ids[1],), (ids[2],), 0, (ids[3],)))
+    ok, words, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30)
+    assert not ok
+    assert [f["classification"] for f in record["failures"]] == ["flaky", "pre-existing", "new", "unresolved"]
+    assert all(i in words for i in ids)
+
+
+def test_merge_boundary_refuses_unbound_and_superseded_results(host):
+    from orkboard.gui.ideas_args import IdeasError
+    with pytest.raises(IdeasError, match="changed"):
+        host.ideas._validate_checks("missing", ["candidate"], "main-sha")
+
+
+def test_diagnostic_exception_retains_unresolved_identity(monkeypatch, tmp_path):
+    from orkboard.realm import gate_rerun
+    from orkboard.realm.idea_git import GateRun
+    def gate(*args):
+        args[-1]["run"] = GateRun(False, "FAILED tests/t.py::test_x - x\n=== 1 failed in 1s ===")
+        return False, "red"
+    def unavailable(*args, **kwargs):
+        raise OSError("unavailable")
+    monkeypatch.setattr(main_checks, "_gate", gate)
+    monkeypatch.setattr(gate_rerun, "sort_out", unavailable)
+    ok, _, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30)
+    assert not ok and record["failures"] == [{"id": "tests/t.py::test_x", "classification": "unresolved"}]
+
+
+def test_main_moving_during_pick_cannot_use_the_old_green_result(host, repo, work, monkeypatch):
+    lobby, *_ = work
+    host.command("ideas.to_main_checks", {"idea": lobby})
+    wait_done(host, lobby)
+    pick = goal_main._pick
+    def raced(*args, **kwargs):
+        result = pick(*args, **kwargs)
+        commit_in(repo, "raced.txt", "main moved during the pick\n")
+        return result
+    monkeypatch.setattr(goal_main, "_pick", raced)
+    with pytest.raises(CommandError, match="changed"):
+        host.command("ideas.to_main", {"idea": lobby})
+    assert git(repo, "log", "-1", "--format=%s", "main") == "edit raced.txt"
+    assert not (repo / "lobby/room.ts").exists()

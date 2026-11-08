@@ -4,6 +4,7 @@ card offers *To main without the tests*, the only press that sends `untested: tr
 from __future__ import annotations
 
 import pytest
+import time
 
 pytest.importorskip("playwright.sync_api")
 
@@ -28,10 +29,13 @@ class NoReleaseHost(PortalHost):
         self.checked = False
         self.red = False
         self.no_tests = False
+        self.retry_delay = 0
 
     def handle(self, name, a):
         if name == "ideas.to_main_checks":
             self.log.append((name, a))
+            if a.get("again"):
+                time.sleep(self.retry_delay)
             self.checked = True
             tests = {"name": "Tests", "state": "failed", "words": "tests/test_player.py::test_lobby_opens failed (1 of 12)"} if self.red else {"name": "Tests", "state": "passed", "words": ""}
             return {"idea": a["idea"], "running": False, "checks": [{"name": "The merge", "state": "passed", "words": ""}, tests]}
@@ -113,7 +117,10 @@ def test_a_red_check_names_the_test_and_nothing_is_sent(gui, width):
     host.red = True
     pg, host, log = open_lane(gui, host) if width == "wide" else narrow_view(gui, host)
     try:
-        press_to_main(pg, width)
+        if width == "wide":
+            lane_card(pg, "music").click()
+        else:
+            press_to_main(pg, width)
         where = tomain(pg) if width == "wide" else pg.locator(".portal-host")
         where.get_by_text("tests/test_player.py::test_lobby_opens failed").first.wait_for(timeout=WAIT_MS)
         assert "Tests is red" in where.text_content()
@@ -159,3 +166,32 @@ def test_the_merge_of_dev_says_the_tests_run_while_they_do_and_a_red_in_words(gu
     finally:
         pg.close()
     assert all("Tests is red" in m for m in log), "\n".join(log)
+
+
+def test_red_survives_reselection_and_only_test_again_retries(gui):
+    host = NoReleaseHost()
+    host.red = True
+    pg, host, log = open_lane(gui, host)
+    try:
+        lane_card(pg, "music").click()
+        retry = tomain(pg).get_by_role("button", name="Test again", exact=True)
+        retry.wait_for(timeout=WAIT_MS)
+        assert tomain(pg).locator("[data-to-main]").is_disabled()
+        count = names(host).count("ideas.to_main_checks")
+        pg.evaluate("async () => { const p = await import('/static/js/table/portal.js'); p.close(); p.choose('music'); }")
+        retry.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        assert not any(a.get("again") for n, a in host.log if n == "ideas.to_main_checks")
+        assert "ideas.to_main" not in names(host)
+        host.red = False
+        host.retry_delay = 0.5
+        retry.click()
+        tomain(pg).get_by_text("Checking the way into main", exact=True).wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => !document.querySelector('[data-tomain] [data-to-main]')?.disabled", timeout=WAIT_MS)
+        assert any(a.get("again") is True for n, a in host.log if n == "ideas.to_main_checks")
+        assert names(host).count("ideas.to_main_checks") > count
+        tomain(pg).locator("[data-to-main]").click()
+        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

@@ -17,6 +17,7 @@ import { DEAL_MS, leans } from "../hand/motion.js";
 import { nightFirst, nightMoons } from "../hand/nightcard.js";
 import { backDrop } from "./stalldrop.js";              // a card of what you carry dropped on the discard goes back to its default (spec 157 D.4)
 import { Portal, ReadyCards, chosenSlug, toMain } from "./portal.js";
+import { checksOf, isRed, pending, startChecks, sealedWords } from "./checks.js";
 import { noGate } from "./data.js";
 import { CornerTop, CornerFoot, muchOf, secondsBetween, IN_MAIN } from "./corners.js";             // the card is read by its four corners (spec 147 A.3, decisions §251)
 import { CardWindow, lastMade, windowOf } from "./cardwindow.js";
@@ -124,12 +125,17 @@ export function DiscardView() {
     setBusy(true);
     try { if (ready?.goals.length) await toMain(chosenSlug() || ready.goals[0].slug); else await mergeGate(e); } finally { setBusy(false); }
   };
+  const selected = chosenSlug() || ready?.goals[0]?.slug, red = selected && isRed(checksOf(selected));
+  const checking = pending.value === selected || checksOf(selected).some((c) => c.state === "waiting" || c.state === "running");
   return html`<div class="hand-discardview">
     ${!done.length && !ready && html`<p class="ok-tone-muted">Nothing is done and waiting, and nothing waits for main.</p>`}
     ${ready && html`<section class="hand-part" aria-label="Ready for main">
       <div class="hand-part__head"><${Head} race=${lichOf().race} tier=${lichOf().tier} /><h2 class="ork-label hand-part__title">Ready for ${ready.main}</h2>
-        <button type="button" class="ork-btn primary" data-to-main disabled=${busy}
+        <button type="button" class="ork-btn primary" data-to-main disabled=${busy || red || checking}
           title=${ready.goals.length > 0 ? `Sends the goal chosen, or the first one ready, through the portal to ${ready.main}: its checks run first, nothing reaches ${ready.main} without you` : `Merges ${ready.into} into ${ready.main}: nothing reaches ${ready.main} without you`} onClick=${merge}>To ${ready.main}</button></div>
+      ${red && html`<p role="status">Sealed: ${sealedWords(checksOf(selected))}</p><button type="button" class="ork-btn" onClick=${() => startChecks(selected, true)}>Test again</button>`}
+      ${checksOf(selected).filter((c) => c.state === "passed" && c.failures?.length).map((c) => html`<p role="status">${c.words}</p>`)}
+      ${checking && html`<p role="status">Checking the way into main…</p>`}
       ${ready.goals.length > 0 ? html`<${ReadyCards} goals=${ready.goals} main=${ready.main} />`
         : html`<p class="cap">${readyWords(ready)}: commits that belong to no goal.</p>`}
       <p class="cap">Nothing reaches ${ready.main} without you.</p>

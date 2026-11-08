@@ -12,6 +12,8 @@ while any of them is not passed.
 """
 from __future__ import annotations
 
+from contextlib import nullcontext
+
 import hashlib
 import json
 import threading
@@ -98,7 +100,9 @@ class GateMixin:
         for r in rows:
             plan = ideas.plan(self.state_dir, r["slug"]) or {}
             if not any(t.get("state") in self.NOT_YET and not goal_types.is_dropped(t) for t in plan.get("tasks") or []):
-                out.append(r)
+                got = self._main_checks.get(r["slug"]) or {}
+                red = any(c["state"] == "failed" for c in got.get("checks", []))
+                out.append({**r, "main_ready": not red, "main_reason": next((c["words"] for c in got.get("checks", []) if c["state"] == "failed"), "")})
         return out
 
     def _release_reads(self) -> None:
@@ -118,14 +122,21 @@ class GateMixin:
         push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
         if not idea_gate.same(into, main):
             try:
-                held = self._pile(git, into, main)["held"]
+                pile = self._pile(git, into, main)
+                held = pile["held"]
+                red = next((r for r in pile["ready"] if r.get("main_ready") is False), None)
+                if red:
+                    raise IdeasError(f"Sealed: {red['main_reason']}. Use Test again on the goal first")
+            except IdeasError:
+                raise
             except Exception:                   # a repository git cannot read: the merge says so itself
                 held = []
             if held:                            # nothing reaches main half made by a press that does not say so (spec 149 G.2, decisions §253.7)
                 raise IdeasError(self._half_made(held, main))
-        self._merge_tested(git, into, main)
         try:
-            got = idea_gate.merge(git, into, main, push)
+            with git.lock:
+                self._merge_tested(git, into, main)
+                got = idea_gate.merge(git, into, main, push)
         except RuntimeError as e:               # a refusal (GateRefused) or git's own words
             raise IdeasError(" ".join(str(e).split())[:300] or "The merge failed") from None
         brought = self._gate_ideas(got["commits"])
@@ -189,7 +200,9 @@ class GateMixin:
         push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
         git = IdeaGit(Path(self.host.repo_root))
         try:
-            got = goal_main.merge(Path(self.host.repo_root), self.state_dir, slug, push, **where)
+            with git.lock, self._main_lock:
+                got = goal_main.merge(Path(self.host.repo_root), self.state_dir, slug, push, **where,
+                                      validate=None if untested else lambda commits, base: self._validate_checks(slug, commits, base, locked=True))
         except RuntimeError as e:               # a refusal (GoalRefused) or git's own words
             raise IdeasError(" ".join(str(e).split())[:300] or "The merge failed") from None
         self._ev(event_log.GOAL_TO_MAIN, args, idea=slug, goals=got["goals"], commits=len(got["commits"]), files=got["files"],
@@ -216,6 +229,15 @@ class GateMixin:
         plan = goal_main.plan(Path(self.host.repo_root), self.state_dir, slug, **where, pick=False)
         head = _git(Path(self.host.repo_root), "rev-parse", "--verify", "-q", f"refs/heads/{where['main']}").stdout.strip()
         return hashlib.sha1(json.dumps([plan["commits"], head]).encode()).hexdigest()[:16], plan["sealed"] or ""
+
+    def _validate_checks(self, slug, commits, base, *, locked=False):
+        key = hashlib.sha1(json.dumps([commits, base]).encode()).hexdigest()[:16]
+        with nullcontext() if locked else self._main_lock:
+            got = self._main_checks.get(slug) or {}
+            if (got.get("key") != key or got.get("binding") != [commits, base]
+                    or got.get("running", True) or not got.get("checks")
+                    or any(c["state"] != "passed" for c in got["checks"])):
+                raise IdeasError("The way into main changed: run the checks again")
 
     def _untested_refusal(self, slug: str, where: dict) -> str:
         """The skip still stops at a reason no check owns (not done, in main already, a pick that conflicts)."""
@@ -267,7 +289,8 @@ class GateMixin:
             return {"idea": slug, "checks": [], "running": False, "sealed": sealed}
         with self._main_lock:
             got = self._main_checks.get(slug)
-            if got and got["key"] == key and (got["running"] or not (args.get("again") and any(c["state"] != "passed" for c in got["checks"]))):
+            if got and ((any(c["state"] == "failed" for c in got["checks"]) and args.get("again") is not True)
+                        or (got["key"] == key and (got["running"] or args.get("again") is not True))):
                 return {"idea": slug, "checks": list(got["checks"]), "running": got["running"]}
             if got:
                 got["stop"].set()                                   # an older run of this goal ends, its worktree gone
@@ -284,12 +307,17 @@ class GateMixin:
         def step(steps: list[dict]) -> None:
             with self._main_lock:
                 if self._main_checks.get(slug) is entry:
-                    entry["checks"] = steps
+                    binding = entry.get("binding")
+                    entry["checks"] = [{**s, **({"candidate": list(binding[0]), "main_base": binding[1]} if binding else {})} for s in steps]
             self._checks_said(slug, entry)
+
+        def binding(commits, base):
+            with self._main_lock:
+                entry["binding"] = [commits, base]
 
         try:
             main_checks.run(Path(self.host.repo_root), self.state_dir, slug, root=where["root"], into=where["into"], main=where["main"],
-                            on_step=step, cancel=entry["stop"])
+                            on_step=step, cancel=entry["stop"], on_binding=binding)
         except InterruptedError:
             with self._main_lock:
                 if self._main_checks.get(slug) is entry:
@@ -311,7 +339,12 @@ class GateMixin:
             if self._main_checks.get(slug) is not entry:                # an older run of the goal ended: its steps say nothing now
                 return
             checks = [dict(c) for c in entry["checks"]]
-        self.host.call(lambda: self.host.publish(bus.MAIN_CHECK, idea=slug, checks=checks))
+        def publish():
+            with self._main_lock:
+                if self._main_checks.get(slug) is not entry:
+                    return
+            self.host.publish(bus.MAIN_CHECK, idea=slug, checks=checks)
+        self.host.call(publish)
 
     def main_checks_now(self) -> dict[str, list[dict]]:
         """The last results of the checks, by goal, for the snapshot (the face follows them there): `{slug: [{name, state, words}]}`."""

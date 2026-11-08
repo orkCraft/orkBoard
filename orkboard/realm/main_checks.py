@@ -17,14 +17,15 @@ from __future__ import annotations
 
 import os
 import subprocess
+import time
 import threading
 import uuid
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import gate_config, goal_main, jobs, worktrees
+from orkboard.realm import gate_config, gate_rerun, goal_main, jobs, worktrees
 from orkboard.realm.gate_config import Check
-from orkboard.realm.idea_git import IdeaGit, _git, _ok
+from orkboard.realm.idea_git import GateRun, IdeaGit, _git, _ok
 
 WORDS_MAX = 160
 
@@ -57,7 +58,7 @@ def failed_test(out: str) -> str:
     return ""
 
 
-def _command(path: Path, line: str, cancel: threading.Event, timeout_s: int) -> tuple[bool, str]:
+def _command(path: Path, line: str, cancel: threading.Event, timeout_s: int, details: dict | None = None) -> tuple[bool, str]:
     """(passed, words) of one written command run in the trial worktree, as the gate runs its own: words, or `sh -c` when it needs a shell."""
     argv = gate_config.test_argv(line)
     if not argv:
@@ -74,20 +75,26 @@ def _command(path: Path, line: str, cancel: threading.Event, timeout_s: int) -> 
         jobs._wait(proc, cancel, timeout_s, "ideas/main-check")
     except RuntimeError:                                       # the time is up (a stop is an InterruptedError, the caller's)
         reader.join(5)
+        if details is not None:
+            details["run"] = GateRun(False, box[0] if box else "", timed_out=True)
         return False, _long(timeout_s)
     reader.join(5)
     out = box[0] if box else ""
+    if details is not None:
+        details["run"] = GateRun(proc.returncode == 0, out, True, line, proc.returncode)
     if proc.returncode == 0:
         return True, ""
     return False, last_line(out) or f"It ended with exit code {proc.returncode}"
 
 
-def _gate(git: IdeaGit, path: Path, old: str, cancel: threading.Event, timeout_s: int) -> tuple[bool, str]:
+def _gate(git: IdeaGit, path: Path, old: str, cancel: threading.Event, timeout_s: int, details: dict | None = None) -> tuple[bool, str]:
     """(passed, words) of the gate's own run on what the picks touched, as a task's result runs it."""
     try:
         run = git.gate_run(path, old, cancel, timeout_s, whole=True)         # the browser folders whole: what a task's gate left runs here (spec 149 C.3)
     except RuntimeError:
         return False, _long(timeout_s)
+    if details is not None:
+        details["run"] = run
     if not run.ran:
         return True, last_line(run.out.split("\n! ")[0]) or "No tests to run"
     if run.ok:
@@ -96,6 +103,33 @@ def _gate(git: IdeaGit, path: Path, old: str, cancel: threading.Event, timeout_s
         return False, run.env
     name, said = failed_test(run.out), last_line(run.out) or f"It ended with exit code {run.code}"
     return False, f"{name} failed ({said})"[:WORDS_MAX * 2] if name else said
+
+
+def _checked(git, path, base, check, cancel, timeout):
+    began = time.monotonic()
+    details = {}
+    ok, words = (_gate(git, path, base, cancel, timeout, details) if check.gate
+                 else _command(path, check.run, cancel, timeout, details))
+    run = details.get("run")
+    record = {}
+    if not ok and run is not None:
+        ids = gate_rerun.ids_failing(run.out)
+        try:
+            found = gate_rerun.sort_out(git, path, base, "", run, cancel,
+                                        timeout - (time.monotonic() - began), exact_main_base=True)
+        except InterruptedError:
+            raise
+        except Exception:
+            found = None
+        record = {"failures": [{"id": i, "classification":
+                   "flaky" if found and i in found.flaky else
+                   "pre-existing" if found and i in found.red_before else
+                   "new" if found and i in found.left else "unresolved"} for i in ids]} if ids else {}
+        ok = bool(ids and found and not found.left and not found.unresolved
+                  and gate_rerun._complete(run.out, ids))
+        if ids:
+            words += "; " + "; ".join(f"{f['classification']}: {f['id']}" for f in record["failures"])
+    return ok, words, record
 
 
 def verify(repo: Path, tip: str, base: str, cancel: threading.Event | None = None, timeout_s: int | None = None) -> tuple[bool, str, str]:
@@ -111,7 +145,7 @@ def verify(repo: Path, tip: str, base: str, cancel: threading.Event | None = Non
             path.parent.mkdir(parents=True, exist_ok=True)
             _ok(_git(git.root, "worktree", "add", "--detach", str(path), tip))
         for check in gate_config.main_checks(Path(repo))[1:]:
-            ok, words = _gate(git, path, base, cancel, timeout) if check.gate else _command(path, check.run, cancel, timeout)
+            ok, words, _ = _checked(git, path, base, check, cancel, timeout)
             if not ok:
                 return False, check.name, words
         return True, "", ""
@@ -121,7 +155,7 @@ def verify(repo: Path, tip: str, base: str, cancel: threading.Event | None = Non
 
 def run(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, into: str = "dev", main: str = "",
         on_step: Callable[[list[dict[str, str]]], Any] | None = None, cancel: threading.Event | None = None,
-        timeout_s: int | None = None) -> list[dict[str, str]]:
+        timeout_s: int | None = None, on_binding: Callable | None = None) -> list[dict[str, str]]:
     """Runs the checks (module docstring) and returns the last steps. A stop (`cancel` set) raises InterruptedError, the worktree gone."""
     cancel = cancel or threading.Event()
     gate = gate_config.read(Path(repo))
@@ -144,12 +178,18 @@ def run(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, int
         if t.path is None:
             say(0, "failed", (t.words or "Nothing applies to main")[:WORDS_MAX * 2])
             return steps
+        if on_binding is not None:
+            on_binding(t.plan["commits"], t.old)
         n = len(t.plan["commits"])
         say(0, "passed", f"{n} {'commit applies' if n == 1 else 'commits apply'} to {main or 'main'}")
         for at, check in enumerate(checks[1:], 1):
             say(at, "running")
-            ok, words = _gate(git, t.path, t.old, cancel, timeout) if check.gate else _command(t.path, check.run, cancel, timeout)
+            ok, words, record = _checked(git, t.path, t.old, check, cancel, timeout)
             say(at, "passed" if ok else "failed", words)
+            if record:
+                steps[at].update(record)
+                if on_step is not None:
+                    on_step([dict(s) for s in steps])
             if not ok:
                 break
     return steps

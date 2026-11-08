@@ -103,3 +103,70 @@ def test_a_task_whose_only_red_was_there_before_it_is_green_and_no_session_is_se
     assert log.count("== the gate, try") == 1 and "== red before this task: tests/test_red.py::test_before" in log
     (ran,) = events_of(town, "gate_ran")
     assert ran["verdict"] == "green" and ran["red_before"] == ["tests/test_red.py::test_before"] and ran["flaky"] == []
+
+
+def test_exact_main_uses_checked_sha_and_preserves_mixed_identities(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    base = tmp_path / "base"
+    (base / "tests").mkdir(parents=True)
+    (base / "tests/test_red.py").touch()
+    removed, forks = [], []
+    g = SimpleNamespace(python=lambda: "python", remove=removed.append)
+    ids = [f"tests/test_red.py::{n}" for n in ("flaky", "before", "new")]
+    answers = iter([{ids[1], ids[2]}, {ids[1]}])
+    monkeypatch.setattr(gate_rerun, "run_ids", lambda *a: next(answers))
+    monkeypatch.setattr(gate_rerun, "_base_tree", lambda git, sha: forks.append(sha) or base)
+    found = gate_rerun.sort_out(g, tmp_path, "exact-sha", "moving-main", GateRun(False, red_output("flaky", "before", "new")), threading.Event(), 30, exact_main_base=True)
+    assert found.flaky == (ids[0],) and found.red_before == (ids[1],) and found.left == (ids[2],)
+    assert forks == ["exact-sha"] and removed == [base]
+
+
+def test_exact_mode_incomplete_budget_and_different_identity_are_unresolved(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    g = SimpleNamespace(python=lambda: "python")
+    output = red_output("before")
+    key = "tests/test_red.py::before"
+    for out, budget in [(output, 0), (output.replace("1 failed", "2 failed"), 30)]:
+        found = gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, out), threading.Event(), budget, exact_main_base=True)
+        assert found.unresolved == (key,)
+    monkeypatch.setattr(gate_rerun, "run_ids", lambda *a: {"tests/test_other.py::other"})
+    assert gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, output), threading.Event(), 30, exact_main_base=True).unresolved == (key,)
+
+
+def test_all_reported_identities_are_kept():
+    assert len(gate_rerun.ids_failing(red_output(*(f"test_{n}" for n in range(31))))) == 31
+
+
+def test_exact_cancel_removes_base_tree(tmp_path, monkeypatch):
+    import pytest
+    from types import SimpleNamespace
+    base = tmp_path / "base"
+    (base / "tests").mkdir(parents=True)
+    (base / "tests/test_red.py").touch()
+    removed = []
+    g = SimpleNamespace(python=lambda: "python", remove=removed.append)
+    key = "tests/test_red.py::before"
+    def rerun(python, cwd, *args):
+        if cwd == base:
+            raise InterruptedError("stopped")
+        return {key}
+    monkeypatch.setattr(gate_rerun, "run_ids", rerun)
+    monkeypatch.setattr(gate_rerun, "_base_tree", lambda *a: base)
+    with pytest.raises(InterruptedError):
+        gate_rerun.sort_out(g, tmp_path, "sha", "main", GateRun(False, red_output("before")), threading.Event(), 30, exact_main_base=True)
+    assert removed == [base]
+
+
+def test_same_base_diagnostics_own_distinct_worktrees(town):
+    g, _, start = task_with(town, {"x.txt": "x"})
+    first = second = None
+    try:
+        first = gate_rerun._base_tree(g, start)
+        second = gate_rerun._base_tree(g, start)
+        assert first is not None and second is not None and first != second
+        g.remove(first)
+        assert second.is_dir()
+    finally:
+        for path in (first, second):
+            if path is not None:
+                g.remove(path)

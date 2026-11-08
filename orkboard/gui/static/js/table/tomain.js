@@ -5,21 +5,23 @@ import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { picked } from "../frame/state.js";
 import { readyOf } from "../hand/data.js";
-import { CHECKING, checksOf, isRed, pending, sealedWords } from "./checks.js";
+import { CHECKING, checksOf, isRed, pending, sealedWords, startChecks } from "./checks.js";
 import { chosenSlug, echo, lineOf, plan, reasonOf, toMain, Stopped } from "./portal.js";
 
 export function ToMain() {
   const slug = picked.value, r = readyOf(), [busy, setBusy] = useState(false);
   if (!slug || !r || !r.goals.some((g) => g.slug === slug)) return null;
   const main = r.main || "main", mine = chosenSlug() === slug, p = mine ? plan.value : null;
-  const list = p?.state === "ok" && (!p.sealed || p.conflict) ? checksOf(slug) : [], asking = mine && pending.value === slug && !list.length, red = isRed(list), checking = !red && (asking || list.some((c) => c.state !== "passed"));
+  const list = checksOf(slug), asking = mine && pending.value === slug && !list.length, red = isRed(list), checking = !red && (asking || list.some((c) => c.state !== "passed"));
   const sealed = p?.state === "fail" || (!!p?.sealed && !(p.conflict && (list.length > 0 || asking))), reason = sealed ? reasonOf(p) : red ? sealedWords(list) : "";
   const line = !p || p.state === "wait" ? "" : checking ? CHECKING : p.state === "ok" ? lineOf(p, slug, main) : `Into ${main}`;
   const go = async () => { setBusy(true); try { await toMain(slug); } finally { setBusy(false); } };
   return html`<div class=${cls("table-tomain", { "is-sealed": !!reason })} data-tomain=${slug} data-portal=${reason ? "sealed" : checking ? "check" : "open"}>
-    <button type="button" class="ork-btn primary" data-to-main disabled=${busy} aria-disabled=${checking || !p || p.state === "wait" ? "true" : undefined}
+    <button type="button" class="ork-btn primary" data-to-main disabled=${busy || red || checking} aria-disabled=${checking || !p || p.state === "wait" ? "true" : undefined}
       title=${`Sends the goal through the portal to ${main}: its checks run first, nothing reaches ${main} without you`} onClick=${go}>To ${main}</button>
+    ${red && html`<button type="button" class="ork-btn" onClick=${() => startChecks(slug, true)}>Test again</button>`}
     <span class="table-tomain__line" role="status" aria-live="polite">${reason ? html`<span key=${echo.value} class="table-tomain__sealed">Sealed: ${reason}</span>` : line}</span>
+    ${list.filter((c) => c.state === "passed" && c.failures?.length).map((c) => html`<span role="status">${c.words}</span>`)}
     ${!reason && html`<${Stopped} slug=${slug} tone="table-tomain__sealed" />`}
   </div>`;
 }

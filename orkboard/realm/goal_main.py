@@ -245,7 +245,7 @@ def trial(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, i
 
 
 def merge(repo: Path, state_dir: Path, slug: str, push: bool = False, *, root: Path | None = None, into: str = "dev",
-          main: str = "") -> dict[str, Any]:
+          main: str = "", validate=None) -> dict[str, Any]:
     """The plan's commits cherry-picked in order onto main in the `gate-main` worktree, main fast-forwarded to the result (a root checkout
     on main moves with it, and is refused with its files when they are changed), then pushed when asked: `{commit, goals, commits, files,
     note, pushed}`. Raises GoalRefused in plain words when the plan is sealed or a pick does not apply; RuntimeError when git cannot
@@ -257,9 +257,14 @@ def merge(repo: Path, state_dir: Path, slug: str, push: bool = False, *, root: P
         if got["sealed"]:
             raise GoalRefused(got["sealed"])
         old = _ok(_git(git.root, "rev-parse", f"refs/heads/{main}"))
+        if validate is not None:
+            validate(got["commits"], old)
         tip, hit = _pick(git, WORKTREE, old, got["commits"])
         if hit:
             raise GoalRefused(_conflict(got, slug, hit))
+        if validate is not None:
+            validate(_compose(git, Path(state_dir), slug, root, into, main)["commits"],
+                     _ok(_git(git.root, "rev-parse", f"refs/heads/{main}")))
         git._fast_forward(main, old, tip)
         note = git.push(main) if push else ""
         pushed = bool(push and not note and "origin" in _git(git.root, "remote").stdout.split())

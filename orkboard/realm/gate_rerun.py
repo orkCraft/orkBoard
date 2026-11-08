@@ -10,6 +10,8 @@ A run that does not finish, or says nothing a test can be told by, counts its te
 from __future__ import annotations
 
 import os
+import re
+import uuid
 import subprocess
 import threading
 import time
@@ -28,6 +30,7 @@ class Sorted(NamedTuple):
     red_before: tuple[str, ...]      # still red alone, and red on the base the task started from
     left: tuple[str, ...]            # the task's: still red alone and green (or absent, or not run) on the base
     seconds: float = 0.0
+    unresolved: tuple[str, ...] = ()
 
 
 def node_key(name: str) -> str:
@@ -36,12 +39,14 @@ def node_key(name: str) -> str:
 
 
 def ids_failing(output: str) -> list[str]:
-    return list(dict.fromkeys(node_key(n) for n in parse_tests(output)["failing"]))
+    return list(dict.fromkeys(m.group(1).split(" - ", 1)[0].strip() for line in output.splitlines() if (m := re.match(r"^(?:FAILED|ERROR)\s+(.+)", line.strip()))))
 
 
-def run_ids(python: str, cwd: Path, ids: list[str], cancel: threading.Event, timeout_s: float) -> set[str] | None:
+def run_ids(python: str, cwd: Path, ids: list[str], cancel: threading.Event, timeout_s: float, strict: bool = False) -> set[str] | None:
     """The ids that are red when `ids` run in `cwd`: an empty set when all are green, None when the run said nothing a test can be told by or
     did not finish in `timeout_s` (the caller counts those tests as the task's). A stop raises InterruptedError."""
+    if strict and timeout_s < 1:
+        return None
     argv = [python, "-m", "pytest", "-q", "-rfE", "-p", "no:cacheprovider", *ids]
     try:
         proc = subprocess.Popen(argv, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True,
@@ -58,17 +63,22 @@ def run_ids(python: str, cwd: Path, ids: list[str], cancel: threading.Event, tim
     reader.join(5)
     out = box[0] if box else ""
     if proc.returncode == 0:
-        return set()
-    names = ids_failing(out)
-    return set(names) if names and has_summary(out) else None
+        return set() if not strict or (has_summary(out) and parse_tests(out)["passed"] >= len(ids)) else None
+    names = ids_failing(out) if strict else list(dict.fromkeys(node_key(n) for n in parse_tests(out)["failing"]))
+    counts = parse_tests(out)
+    if strict and counts["passed"] + counts["failed"] < len(ids):
+        return None
+    return set(names) if names and (not strict and has_summary(out) or strict and _complete(out, names) and set(names).issubset(set(ids))) else None
 
 
-def sort_out(git: IdeaGit, path: Path, start_sha: str, into: str, run: GateRun, cancel: threading.Event, budget_s: float) -> Sorted | None:
+def sort_out(git: IdeaGit, path: Path, start_sha: str, into: str, run: GateRun, cancel: threading.Event, budget_s: float, *, exact_main_base: bool = False) -> Sorted | None:
     """The red tests of `run` sorted into flaky, red before and the task's; None when there is nothing to sort (no summary, more failures than
     names, no clock left, no Python to run them with)."""
+    if exact_main_base:
+        return _exact(git, path, start_sha, run, cancel, budget_s)
     began = time.monotonic()
     summary = parse_tests(run.out)
-    ids = ids_failing(run.out)
+    ids = list(dict.fromkeys(node_key(n) for n in summary["failing"]))
     if run.ok or not ids or not has_summary(run.out) or summary["failed"] > len(summary["failing"]) or budget_s < MIN_BUDGET_S:
         return None
     left_s = lambda: budget_s - (time.monotonic() - began)                  # noqa: E731
@@ -95,14 +105,19 @@ def sort_out(git: IdeaGit, path: Path, start_sha: str, into: str, run: GateRun, 
 def _base_tree(git: IdeaGit, sha: str) -> Path | None:
     """A throwaway worktree at `sha` (detached, the main checkout's dependencies linked in); None when git cannot make one. The caller removes it."""
     with git.lock:
-        path = worktrees.worktree_path(git.root, f"red-before-{sha[:10]}")
+        path = worktrees.worktree_path(git.root, f"red-before-{sha[:10]}-{uuid.uuid4().hex[:8]}")
         git.remove(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         try:
             _ok(_git(git.root, "worktree", "add", "--detach", str(path), sha))
         except RuntimeError:
+            git.remove(path)
             return None
-        dep_links.link(git.root, path)
+        try:
+            dep_links.link(git.root, path)
+        except BaseException:
+            git.remove(path)
+            raise
     return path
 
 
@@ -122,3 +137,38 @@ def told(found: Sorted, output: str) -> str:
     return (f"The tests failed. These are yours to mend:\n{names}\nRun them with `python -m pytest -q {' '.join(found.left)}`."
             + (f"\n({len(found.red_before)} more were red before your task and are left alone.)" if found.red_before else "")
             + (f"\n\n{output[-3000:]}" if not found.red_before else ""))
+
+
+def _complete(output: str, ids: list[str]) -> bool:
+    return (has_summary(output) and parse_tests(output)["failed"] == len(ids)
+            and "ERROR collecting" not in output and "Interrupted:" not in output)
+
+
+def _exact(git, path, base, run, cancel, budget_s):
+    """Main policy preserves all identities and blocks uncertainty."""
+    began = time.monotonic()
+    ids = ids_failing(run.out)
+    if not ids or run.env or run.timed_out or not _complete(run.out, ids) or budget_s < MIN_BUDGET_S:
+        return Sorted((), (), (), 0, tuple(ids))
+    left_s = lambda: budget_s - (time.monotonic() - began)
+    again = run_ids(git.python(), path, ids, cancel, left_s(), True)
+    if left_s() <= 0 or again is None or not again.issubset(set(ids)):
+        return Sorted((), (), (), 0, tuple(ids))
+    flaky = tuple(i for i in ids if i not in again)
+    still = [i for i in ids if i in again]
+    if not still:
+        return Sorted(flaky, (), ())
+    if left_s() < MIN_BUDGET_S:
+        return Sorted(flaky, (), (), 0, tuple(still))
+    tree = _base_tree(git, base)
+    try:
+        if tree is None:
+            return Sorted(flaky, (), (), 0, tuple(still))
+        there = [i for i in still if (tree / i.split("::", 1)[0]).is_file()]
+        red = run_ids(git.python(), tree, there, cancel, left_s(), True) if there else set()
+        if left_s() <= 0 or red is None or not red.issubset(set(there)):
+            return Sorted(flaky, (), (), 0, tuple(still))
+        return Sorted(flaky, tuple(i for i in still if i in red), tuple(i for i in still if i not in red))
+    finally:
+        if tree is not None:
+            git.remove(tree)
