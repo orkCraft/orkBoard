@@ -131,6 +131,12 @@ What I expect:
 - A page with several decisions: is dated by the newest of them.
 - The day it was laid is the laying commit's day (20d880cf, 8 November 2026) for a page with no §N at all.
 - The Orkmaster's tab is the past read with no party (chronicle.read with party "").
+### Accepted
+- met: When a fresh Orkboard reads this repository after the route backfill, then Product's past holds goal 116 in the week of 26 October 2026 (§194's day), with §194 under it.
+- met: When a fresh Orkboard first reads this repository, then every done page but a release goal is in the whole project's past and none in the discard, with no model call and no journal line.
+- met: When a done page carries no decisions:, then it is dated by the latest §N its spec names, else by the day it was laid; a second read and a phase moved back keep that day and the flag.
+- met: When a party's past is read, then a decision no done goal carries is on no party's tab and stands whole in the past read with no party (the Orkmaster's tab).
+- cannot see: When the owner reads the one backfill commit, then each history page's route: names the parties that shaped it, and Product's tab holds the goals Product shaped.
 
 ## Design
 ### Talk
