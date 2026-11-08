@@ -380,7 +380,8 @@ def _soft_things(css: str) -> list[str]:
             flat = len({re.sub(r"(\s+(calc\(.*\)|-?[\d.]+\S*))+$", "", s) for s in stops}) == 1     # one colour: no fade
             # a hard stop gives its colour two places (`red 0 2px`) and the next begins where it ends; a stop with one place or none fades
             places = [len(re.findall(r"(?:^|\s)(?:calc\(.*\)|-?[\d.]+[\w%]*)(?=\s|$)", re.sub(r"\((?:[^()]|\([^()]*\))*\)", "C", s))) for s in stops]
-            if not flat and min(places) < 2:
+            # the last stop may give one place, where the one before it ends (`… 4px 40%, c 40%`): it fills on, it does not fade
+            if not flat and (min(places[:-1] or [2]) < 2 or places[-1] < 1):
                 soft.append(f"{fn}({args[:60]})")
     for args in _calls(css, "blur") + [a for a in _calls(css, "drop-shadow") if _blurred(a)]:
         soft.append(f"blur/drop-shadow({args[:40]})")
@@ -402,6 +403,8 @@ def test_no_sheet_adds_a_smooth_gradient_a_blurred_shadow_or_a_blur():
 
 def test_the_soft_check_tells_a_hard_stop_from_a_fade():
     assert _soft_things(".a { background: linear-gradient(45deg, var(--ork-raised) 0 2px, var(--ork-panel) 2px 4px); }") == []
+    assert _soft_things(".a { background: linear-gradient(90deg, red 0 4px, color-mix(in srgb, red 22%, blue) 4px 40%, blue 40%); }") == []
+    assert _soft_things(".a { background: linear-gradient(90deg, red 0 4px, blue); }") != []
     assert _soft_things(".a { background: linear-gradient(105deg, transparent 0 30%, color-mix(in srgb, red 70%, transparent) 30% 70%, transparent 70% 100%); }") == []
     assert _soft_things(".a { background: linear-gradient(var(--ork-ink) 0 0); box-shadow: 0 0 0 2px red, inset 0 1px 0 3px blue; }") == []
     assert _soft_things(".a { filter: drop-shadow(1px 0 0 red) drop-shadow(0 1px 0 red); }") == []
