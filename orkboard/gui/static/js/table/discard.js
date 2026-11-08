@@ -125,15 +125,18 @@ export function DiscardView() {
     setBusy(true);
     try { if (ready?.goals.length) await toMain(chosenSlug() || ready.goals[0].slug); else await mergeGate(e); } finally { setBusy(false); }
   };
-  const selected = chosenSlug() || ready?.goals[0]?.slug, red = selected && isRed(checksOf(selected));
+  const selected = chosenSlug() || ready?.goals[0]?.slug, candidate = ready?.goals.find((g) => g.slug === selected);
+  const checks = checksOf(selected), red = candidate?.main_ready === false || isRed(checks);
+  const reason = sealedWords(checks) || candidate?.main_reason || "Checks failed";
   const checking = pending.value === selected || checksOf(selected).some((c) => c.state === "waiting" || c.state === "running");
   return html`<div class="hand-discardview">
     ${!done.length && !ready && html`<p class="ok-tone-muted">Nothing is done and waiting, and nothing waits for main.</p>`}
-    ${ready && html`<section class="hand-part" aria-label="Ready for main">
-      <div class="hand-part__head"><${Head} race=${lichOf().race} tier=${lichOf().tier} /><h2 class="ork-label hand-part__title">Ready for ${ready.main}</h2>
+    ${ready && html`<section class="hand-part" aria-label=${red ? "Checks before main" : "Ready for main"}>
+      <div class="hand-part__head"><${Head} race=${lichOf().race} tier=${lichOf().tier} /><h2 class="ork-label hand-part__title">${red ? "Checks before main" : `Ready for ${ready.main}`}</h2>
         <button type="button" class="ork-btn primary" data-to-main disabled=${busy || red || checking}
           title=${ready.goals.length > 0 ? `Sends the goal chosen, or the first one ready, through the portal to ${ready.main}: its checks run first, nothing reaches ${ready.main} without you` : `Merges ${ready.into} into ${ready.main}: nothing reaches ${ready.main} without you`} onClick=${merge}>To ${ready.main}</button></div>
-      ${red && html`<p role="status">Sealed: ${sealedWords(checksOf(selected))}</p><button type="button" class="ork-btn" onClick=${() => startChecks(selected, true)}>Test again</button>`}
+      ${red && html`<p role="status">Sealed: ${reason}</p><button type="button" class="ork-btn" onClick=${() => startChecks(selected, true)}>Test again</button>`}
+      ${checks.filter((c) => c.state === "failed" && c.failures?.length).map((c) => html`<ul aria-label="Failed tests">${c.failures.map((f) => html`<li>${f.id}${f.classification ? `: ${f.classification}` : ""}</li>`)}</ul>`)}
       ${checksOf(selected).filter((c) => c.state === "passed" && c.failures?.length).map((c) => html`<p role="status">${c.words}</p>`)}
       ${checking && html`<p role="status">Checking the way into main…</p>`}
       ${ready.goals.length > 0 ? html`<${ReadyCards} goals=${ready.goals} main=${ready.main} />`
