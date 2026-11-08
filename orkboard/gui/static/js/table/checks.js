@@ -26,14 +26,31 @@ export const isRed = (list) => list.some((c) => c.state === "failed");
 
 /** Asks the host to run (or to answer the last results of) the checks of the goal; `again` after a red one. */
 const requests = {};
+const active = new Map();
+
+/** Reads current results or starts the first run; never retries a red check. */
+export const readChecks = (slug) => startChecks(slug);
 export function startChecks(slug, again = false) {
+  if (active.has(slug)) {
+    pending.value = slug;
+    asked = active.get(slug);
+    return asked;
+  }
   const request = requests[slug] = (requests[slug] || 0) + 1;
   const was = JSON.stringify(snap(slug));
-  if (again) told.value = { ...told.value, [slug]: { checks: checksOf(slug).map((c) => ({ ...c, state: "waiting", words: "Checking…" })), was } };
+  if (again) {
+    const previous = checksOf(slug);
+    const progress = previous.length ? previous : [{ name: "Checks before main" }];
+    told.value = { ...told.value, [slug]: { checks: progress.map((c) => ({ ...c, state: "waiting", words: "Checking…" })), was } };
+  }
   pending.value = slug;
   asked = ask("ideas.to_main_checks", { idea: slug, ...(again ? { again: true } : {}) }).then((got) => {
     if (requests[slug] === request && got && Array.isArray(got.checks) && got.checks.length) told.value = { ...told.value, [slug]: { checks: got.checks, was } };
-  }).finally(() => { if (requests[slug] === request && pending.value === slug) pending.value = ""; });
+  }).finally(() => {
+    active.delete(slug);
+    if (requests[slug] === request && pending.value === slug) pending.value = "";
+  });
+  active.set(slug, asked);
   return asked;
 }
 

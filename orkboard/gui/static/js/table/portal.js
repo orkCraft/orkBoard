@@ -17,7 +17,7 @@ import { uprightNow } from "../frame/upright.js";
 import { readyOf } from "../hand/data.js";
 import { reduced, leans } from "../hand/motion.js";
 import { wide } from "./data.js";
-import { CHECKING, checksOf, forgetChecks, isRed, pending, sealedWords, startChecks, whenAsked } from "./checks.js";
+import { CHECKING, checksOf, forgetChecks, isRed, pending, readChecks, sealedWords, startChecks, whenAsked } from "./checks.js";
 
 const SEEN_KEY = "orkboard.portal.seen";
 const NARROW = "(max-width: 759.98px)";
@@ -72,7 +72,7 @@ export function choose(slug) {
   planning = ask("ideas.to_main_plan", { idea: slug }).then((p) => {
     if (chosen.value !== slug || request !== selection) return;
     plan.value = p ? { ...p, slug, state: "ok", sealed: p.sealed || "" } : { slug, state: "fail" };
-    if (p && wide.value && (!p.sealed || p.conflict)) startChecks(slug);                    // the way into main is checked (a seal no check owns is not: it keeps its X)
+    if (p && wide.value && (!p.sealed || p.conflict)) readChecks(slug);                    // the way into main is checked (a seal no check owns is not: it keeps its X)
   });
 }
 
@@ -100,7 +100,7 @@ export async function play() {
   let asked = false;
   if (owned && !checksOf(slug).length && pending.value !== slug) {                          // the checks come first, on every width: nothing is sent that was not checked (decisions §274.2)
     asked = true;
-    await startChecks(slug);
+    await readChecks(slug);
     while (chosen.value === slug && (pending.value === slug || checksOf(slug).some((c) => c.state === "waiting" || c.state === "running"))) await wait(150);
     if (chosen.value !== slug) return;
   }
@@ -219,6 +219,7 @@ function PortalDoor() {
   const open = !!slug && here;
   if (!open) return null;
   const candidate = r?.goals.find((g) => g.slug === slug);
+  const checking = pending.value === slug || checksOf(slug).some((c) => c.state === "waiting" || c.state === "running");
   const main = r?.main || "main", red = candidate?.main_ready === false || isRed(checksOf(slug)), sealed = red || p?.state === "fail" || !!p?.sealed, reason = red ? sealedWords(checksOf(slug)) || candidate?.main_reason || "Checks failed" : sealed ? reasonOf(p) : "", said = html`<span key=${echo.value}>Sealed: ${reason}</span>`;
   const held = (e) => { if (!chosen.value) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move"; taking.value = true; };
   const left = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) taking.value = false; };
@@ -232,7 +233,7 @@ function PortalDoor() {
   return html`<div class=${cls("portal-host", { "is-new": first.value })} data-portal=${state}>
     <p class="portal__line">${line}</p>
     <span class="portal__label">${main === "main" ? "Main" : main}</span>
-    ${button}${hint}${red && html`<button type="button" class="ork-btn" onClick=${() => startChecks(slug, true)}>Test again</button>`}<p class="portal__sealed" role="status" aria-live="polite">${sealed && said}</p><${Stopped} slug=${slug} />
+    ${button}${hint}${red && html`<button type="button" class="ork-btn" disabled=${checking} onClick=${() => startChecks(slug, true)}>Test again</button>`}<p class="portal__sealed" role="status" aria-live="polite">${checking ? CHECKING : sealed && said}</p><${Stopped} slug=${slug} />
   </div>`;
 }
 
