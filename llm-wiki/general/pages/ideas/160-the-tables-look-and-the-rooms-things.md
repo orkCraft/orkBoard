@@ -173,10 +173,10 @@ orkUI first (§269.9): A and B are done in orkUI (/home/user/orkui), released as
 - Release stays seated and locked as today; only its tab moves into the leaders' row (§274 is out).
 ### Accepted
 - met: When the page opens at 1280 × 800 on the Orkmaster's tab and on Tech's with the person Here, then the discard is the window's right column outside the table at its old width, Release's tab in the leaders' row in route order.
-- cannot see: When the person pulls the lamp's chain at 1280 × 800 with the person Here, then one `presence.set {here: false}` is sent, and after the snapshot the chain reads *Away · until …*, the cards and signal rings unchanged.
-- cannot see: When the person presses the new chair, then a craft's card, at 1280 × 800, then the craft is seated by `ideas.goal_save` and the backpack opens on its chair; *Put it back* sends no command and seats nothing.
-- cannot see: When the person presses the kind or the stage in the Orkmaster's header at 1280 × 800, then the hand deals its choices, the present one marked; a card sends `ideas.project_kind_set` or `ideas.stage_set` once.
-- cannot see: When the phone opens `/app/` at 390 × 844 with the person Here, then the lamp's chain stands in its top row where the door stood, a press sends `presence.set`, its words in `aria-label` and `title` only.
+- met: When the person pulls the lamp's chain at 1280 × 800 with the person Here, then one `presence.set {here: false}` is sent, and after the snapshot the chain reads *Away · until …*, the cards and signal rings unchanged.
+- met: When the person presses the new chair, then a craft's card, at 1280 × 800, then the craft is seated by `ideas.goal_save` and the backpack opens on its chair; *Put it back* sends no command and seats nothing.
+- met: When the person presses the kind or the stage in the Orkmaster's header at 1280 × 800, then the hand deals its choices, the present one marked; a card sends `ideas.project_kind_set` or `ideas.stage_set` once.
+- met: When the phone opens `/app/` at 390 × 844 with the person Here, then the lamp's chain stands in its top row where the door stood, a press sends `presence.set`, its words in `aria-label` and `title` only.
 
 ## Decisions
 §268, §269, §271, §272, §273, §275. Mockups: docs/mockups/table-look/, docs/mockups/room-things/.
