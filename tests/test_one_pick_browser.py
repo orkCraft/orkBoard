@@ -181,7 +181,8 @@ def test_a_hands_card_lifted_picks_its_goal_and_its_lowering_leaves_the_pick_and
         card = stack.locator(".hand-card").first
         assert "ork-picked" in card.get_attribute("class").split(), "the picked goal's cards in the hand wear the ink edge"
         assert card.evaluate("e => getComputedStyle(e).borderTopColor") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-ink)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
-        stack.locator(".hand-card").first.click()                                       # lowered
+        pg.get_by_role("button", name="Put it back").click()                            # lowered (the lifted card is the table's now, decisions §270.1: it is put back by its button, not pressed again)
+        pg.locator(".hand-lifted").wait_for(state="detached", timeout=WAIT_MS)
         assert picked(pg) == "timer", "its lowering leaves the pick"
         assert pg.locator(".hand-stack.is-picked").count() >= 1
     finally:

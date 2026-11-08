@@ -4,7 +4,7 @@ against a stub host that is the maps' (`ConcernHost`: Tech and Game design with 
 The open head is 48 x 44 and the others 36 x 33 (36 at the narrow width), the open tab has no fill and no bar, its head 3 px lower over the rim, its name in the ink and the leader's own name under it (the project's: *the Orkmaster*), the others'
 names muted; the party's header has no *Leads*, the sword and the shield with their tools, a role under each head; the open head is a button of its own in the tab's cell (no button holds a button): pressed it opens the bubble, the field focused,
 Enter asks, the answer and *Make it a goal*, Esc closes it and the head has the focus; its marks (the alert sign, the dot) are buttons stepping through the marked parts; the faces by mood (a party's tasks at work focused, an alert worried,
-a spent tool asleep, a hearing's drop no, a goal done while the page was open pleased and none for what was found there); a chair under each head at the wide width and none under 760 px; the empty chair opens the parties' place and is gone when
+a spent tool asleep, a hearing's drop no, a goal done while the page was open pleased and none for what was found there); a chair under each head at the wide width and none under 760 px; the empty chair deals its crafts to the hand on the wide page (decisions §272; the narrow one opens the parties' place) and is gone when
 every craft is at the table, and stays when the host gives no list; the die's front face halts (spec 139 A, decisions §246: no door in the top row), says *Stopped* (`aria-disabled`), refuses a second press and goes back when a task runs or a goal is started; the tabs' row and the hand on the room's
 colour with a 3 px rim, no divider between the tabs (the lanes keep theirs); no sideways scroll; under reduced motion nothing is pulled out. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
@@ -159,14 +159,17 @@ def test_the_open_head_is_large_the_others_36_the_open_tab_has_no_fill_and_the_l
     assert abs(box("game")["y"] + box("game")["height"] - (nav["y"] + nav["height"] - 3)) <= 1, "the others stand on the rim"
     assert nav["height"] >= (60 if big else 52) and nav["height"] <= (70 if big else 62)
     open_tab_box = tab(pg, "tech")
-    assert open_tab_box.evaluate("e => [getComputedStyle(e).backgroundColor, getComputedStyle(e).boxShadow]") == ["rgba(0, 0, 0, 0)", "none"], "no fill and no bar on the open tab"
+    fill, rule = open_tab_box.evaluate("e => [getComputedStyle(e).backgroundColor, getComputedStyle(e).boxShadow]")
+    assert fill == "rgba(0, 0, 0, 0)" and (not big or "0px -3px 0px 0px inset" in rule), "no fill on the open tab, its party's colour is the rule under it (decisions §268.1, §275.1)"
+    assert not big or tab(pg, "game").evaluate("e => getComputedStyle(e).boxShadow") != "none", "a closed tab has the thin rule of its party under it"
     if big:
         assert cell(pg, "tech").locator(".table-tab__who").text_content() == "Architect" and cell(pg, "game").locator(".table-tab__who").count() == 0
         assert open_tab_box.locator(".table-tab__main").evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink")
-        assert tab(pg, "game").locator(".table-tab__main").evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted")
+        assert tab(pg, "game").locator(".table-tab__main").evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink"), "a tab's name is the light ink, open or closed (decisions §275.1)"
         assert open_tab_box.locator(".table-tab__who").evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted")
         go(pg, "orkmaster")
-        assert "the orkmaster" in cell(pg, "orkmaster").text_content().lower() and cell(pg, "orkmaster").evaluate("e => !!e.closest('.frame-column')")      # the column's head, in the room's colour: no fill but the underline
+        # the column's head says the project (its name), not "The Orkmaster": the head's aria-label/title still name it (decisions §272.5)
+        assert cell(pg, "orkmaster").evaluate("e => !!e.closest('.frame-column')") and cell(pg, "orkmaster").get_attribute("aria-label") == "The Orkmaster"
         assert tab(pg, "orkmaster").evaluate("e => getComputedStyle(e).backgroundColor") == "rgba(0, 0, 0, 0)"
     shot(pg, f"leaders-tabs-{w}.png")
 
@@ -376,10 +379,11 @@ def test_the_empty_chair_opens_the_parties_place_lit_by_hover_and_by_focus_and_i
     assert chair.locator(".ork-chair").evaluate("e => e.classList.contains('is-lit')"), "lit by the focus"
     shot(pg, "leaders-empty-chair-wide.png")
     chair.click()
-    pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · Parties" and ("ideas.party_presets", {}) in host.log
-    pg.get_by_role("button", name="Back").click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator('[data-chair-deal="question"]').wait_for(timeout=WAIT_MS)                                                  # the wide page deals the crafts to the hand (decisions §272.2); the narrow page opens the parties' place
+    assert pg.locator('.table-over[data-kind="parties"]').count() == 0 and ("ideas.party_presets", {}) in host.log
+    assert pg.locator(".hand-crafts .hand-craft").count() >= 1 and chair.get_attribute("aria-pressed") == "true"
+    pg.get_by_role("button", name="Put it back").click()
+    pg.locator('[data-chair-deal="question"]').wait_for(state="detached", timeout=WAIT_MS)
     run = party("run", len(host.parties))                                                                                 # the last craft sits down: nothing is left to offer
     run["leader"] = {**run["leader"], "head": HEAD("goblin", "elder", "data")}
     RACES["run"], CRAFT["run"] = "imp", "data"
@@ -462,6 +466,6 @@ def test_the_tabs_row_the_hand_and_the_frame_lie_on_the_room_with_a_rim_and_no_d
     assert pg.locator(".table-tab").evaluate_all("els => els.map((e) => getComputedStyle(e).borderLeftWidth + getComputedStyle(e).borderRightWidth)") == ["0px0px"] * pg.locator(".table-tab").count(), "no divider between the tabs"
     assert pg.locator(".table-tabs__end").evaluate("e => getComputedStyle(e).borderLeftWidth") == "0px"
     assert pg.locator(".table-lane").first.evaluate("e => getComputedStyle(e).borderLeftWidth") == "1px", "the lanes keep theirs"
-    assert pg.locator(".table-pane").evaluate("e => getComputedStyle(e).backgroundColor") == paint(pg, "--ork-table", "backgroundColor"), "the table as it is"
+    assert pg.locator(".table-pane").evaluate("e => [e.classList.contains('ork-table'), getComputedStyle(e).backgroundImage !== 'none' || getComputedStyle(e).backgroundColor !== 'rgba(0, 0, 0, 0)']") == [True, True], "the table lies on its leader's felt (decisions §269.2)"
     assert pg.locator(".table-tabs__end .table-logs, .table-tabs__end .table-door").count() == 0, "the top row's end has neither the bug nor the door"
     shot(pg, f"leaders-room-{w}.png")

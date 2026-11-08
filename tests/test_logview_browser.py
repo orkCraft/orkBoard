@@ -36,7 +36,7 @@ def test_a_failed_tasks_log_is_sections_with_the_round_folded_and_the_gate_open_
     pg, host, log = open_hand(gui, host=LogHost())
     try:
         _press(pg, "timer")
-        pg.locator(".hand-lifted").get_by_role("button", name="Open…").click()
+        pg.locator(".hand-ways-row, .hand-lifted").get_by_role("button", name="Open…").click()
         box = pane(pg)
         view = box.locator(".shell-logview")
         view.wait_for(timeout=WAIT_MS)
