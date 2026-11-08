@@ -41,7 +41,7 @@ def test_the_aspects_are_the_specs_in_its_order():
     assert ids["art"] == ["style", "pipeline", "budget", "sound"]
     assert ids["release"] == ["batch", "lead_time", "readiness", "failure"]
     assert ids["marketing"] == ["acquisition", "store", "activation", "retention", "referral", "revenue"]
-    assert ids["run"] == ["slo", "signals", "runbooks"] and ids["liveops"] == ["calendar", "kpis", "config"]
+    assert ids["run"] == ["traces", "errors", "slow"] and ids["liveops"] == ["calendar", "kpis", "config"]
     assert [a["name"] for a in rubrics.RUBRICS["tech"]["aspects"]][-1] == "Security and reliability"
 
 
@@ -113,7 +113,7 @@ def test_the_lens_in_talk_ends_with_the_framework_of_a_craft_that_has_a_rubric()
     for craft in CRAFTS:
         assert idea_objections.lens(craft).endswith(f", as a senior of it would: by {rubrics.RUBRICS[craft]['framework']}"), craft
     assert idea_objections.lens("tech").startswith("the architecture on your map: ") and "C4's containers and parts" in idea_objections.lens("tech") and "hotspots" in idea_objections.lens("tech")
-    assert idea_objections.lens("run").startswith("what is live:") and "SLOs and error budgets" in idea_objections.lens("run")
+    assert idea_objections.lens("run").startswith("what is live:") and "Observability first" in idea_objections.lens("run")
     assert idea_objections.lens("product").startswith("the goals in line and the product's aim: is this worth doing before them, now, and the open hypotheses: is this goal built on one no one has tested?")
     assert rubrics.aspect_of("product", "untested") == "evidence" and rubrics.aspect_of("product", "no_evidence") == "evidence", "Evidence holds both"
     assert idea_objections.lens("nowhere") == "what your party keeps" and idea_objections.lens("") == "what your party keeps", "a craft with no rubric is as it was"

@@ -46,9 +46,7 @@ KEEPER = [("target", "How deep", "How much the orks spend on a goal", [("thrift"
           ("push", "Push after merging", "Whether a merge into the work branch is pushed", [("on", "On", "Results are pushed after they merge"), ("off", "Off", "Results stay on this computer")])]
 PRICE = {("target", "thrift"): {"word": "lighter"}, ("target", "quality"): {"word": "heavier"}}
 HEROES = [("sh-c4", "Sh.man", "C4 and hotspots", stats("C4 and hotspots", "containers → parts → hotspots", "standard", 2, 2)),
-          ("sh-ddd", "Domain Shaman", "Domain-driven design", stats("Domain-driven design", "words → borders → code", "full", 1, 3)),
-          ("sh-xp", "Spike Shaman", "Extreme programming", stats("Extreme programming", "test → code → refactor", "standard", 3, 2)),
-          ("sh-fit", "Fitness Shaman", "Evolutionary architecture", stats("Evolutionary architecture", "fitness → change → check", "full", 2, 3))]
+          ("sh-xp", "Spike Shaman", "Extreme programming", stats("Extreme programming", "test → code → refactor", "standard", 3, 2))]
 TIERS = [("laborer", "Laborer", "The lightest model of its tool", {"share": -2}), ("warrior", "Warrior", "The middle model", None), ("elder", "Elder", "The strongest model", {"share": 3})]
 TOOLS = [("", "Main tool", "The potions' order: the first AI tool in your hand that has mana", None), ("claude", "Claude", "Every seat works on Claude", {"money": "up to $2 a night"}), ("codex", "Codex", "Signed out", {"locked": "Codex is signed out"})]
 
@@ -187,14 +185,14 @@ def test_a_leaders_rug_has_its_heroes_on_top_its_small_things_below_and_every_fo
     try:
         assert ("ideas.stall", {"chair": "tech"}) in host.log
         assert pg.locator(".stall-title").inner_text() == "Inventory"
-        assert pg.locator(".stall-shelf.is-heroes .stall-hero").count() == 4
+        assert pg.locator(".stall-shelf.is-heroes .stall-hero").count() == 2
         sh = pg.locator('.stall-ware[data-ware="sh-xp"]')
         assert "Spike Shaman" in sh.inner_text() and "Extreme programming" in sh.inner_text() and "test → code → refactor" in sh.inner_text()
         assert sh.locator(".stall-pips").count() == 2 and sh.locator(".stall-pips i.on").count() == 3 + 2       # the stats' bars: decides 3, says no 2
         assert sh.locator(".ork-race__head").count() == 1
         top, low = pg.locator(".stall-shelf.is-heroes").bounding_box(), pg.locator(".stall-low").bounding_box()
         assert top["y"] + top["height"] <= low["y"] + 1                                           # the heroes on the top shelf, the small things below
-        assert plate(pg, "hero", "sh-c4").inner_text() == "in your hand" and plate(pg, "hero", "sh-ddd").inner_text() == "one pass"
+        assert plate(pg, "hero", "sh-c4").inner_text() == "in your hand" and plate(pg, "hero", "sh-xp").inner_text() == "one pass"
         share = plate(pg, "tier", "elder")
         assert share.inner_text().strip() == "+3%" and share.locator(".ork-potion.size-vial").count() == 1
         less = plate(pg, "tier", "laborer")
