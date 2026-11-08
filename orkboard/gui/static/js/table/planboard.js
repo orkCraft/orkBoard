@@ -2,6 +2,7 @@
 // `party`, else the goal's own), every other goal's out of sight; **planned ones faint, done ones grey, the one at work glowing** (the task card's own flame), and **arrows** from each task to the tasks that wait for it (planarrows.js). The tasks lie in
 // each lane in the order the plan runs them (the wave they wait in, then as written). A goal with no plan yet, still in Talk, lays in each leader's lane what that leader said (its verdict, its lines) and the open question with its ways in the asking leader's lane (decisions §270.4; read-only); with nothing said yet it says *Its tasks are dealt to the leaders when it is agreed* in the lanes' place. Only with the column pinned (the wide width): the narrow
 // width keeps the Board as it is. Nothing here changes a task: a press lifts it (card.js), as on the Board.
+import { raceOf } from "./felt.js";
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { isLive, nameOf, partiesNow, wide } from "./data.js";
@@ -49,7 +50,7 @@ export function PlanBoard({ n }) {
   const talked = lanes.some((g) => said(g).length);
   const mine = (g) => order.filter((t) => laneOf(n, t, lanes) === g.slug);
   return html`<div class="table-board table-board--plan" ref=${host} data-picked=${n.slug} data-plan=${n.slug} data-tokens="false">
-    ${lanes.map((g) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} data-live=${wide.value && isLive(g) ? "1" : undefined} role="group" aria-label=${nameOf(g)}>
+    ${lanes.map((g) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} data-live=${wide.value && isLive(g) ? "1" : undefined} role="group" aria-label=${nameOf(g)} data-race=${raceOf(g) || undefined}>
       ${tasks.length === 0 && said(g).map((st) => html`<${Said} key=${st.party} st=${st} />`)}
       ${mine(g).map((t) => html`<div key=${t.id} class=${cls("plan-slot", `is-${planPhase(t)}`)} data-plan-task=${t.id} data-phase=${planPhase(t)}><${TaskCard} n=${n} t=${t} /></div>`)}
       ${tasks.length > 0 && mine(g).length === 0 && html`<p class="table-board__none plan-none" data-none=${g.slug}>Nothing for ${nameOf(g)}</p>`}

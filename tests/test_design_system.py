@@ -158,6 +158,7 @@ def test_orkboards_own_sheets_carry_no_colour_no_font_and_no_corner_of_their_own
         legacy -= {"--up-h", "--up-rise"}   # spec 147 F: the phone's opened card as tall as the screen leaves while the keyboard is up, and how far a pressed card of the hand's row rises (hand/upright.css, stopcard.js)
         legacy -= {"--hc-lap", "--hc-ways", "--hc-wleft", "--hc-sunk-s"}   # spec 158 F: the sunk hand's shrink beside the ways row; spec 150 A: how far past its box a card laid over the column lets its shadow fall (hand/hand.css, the field and the lifted card); spec 158 F: where the answer cards lie, from the hand's foot and from its left (hand/openedcard.css)
         legacy -= {"--dash"}   # spec 130 B.1: the empty slot's dashes in the edge or the ink (hand/mana.css), until orkUI draws `.ork-potion.is-empty`
+        legacy -= {"--party-hue", "--_plate"}   # spec 160 E: the colour of the race a cell, lane or head names (table/look.css `data-race`), and the plate orkUI's felt gives what lies in it (design-system/orkui `.ork-table[data-party]`)
         legacy -= {"--edge-w"}   # spec 150 D.1: the width of the table's edge, the frame's third column (frame/frame.css)
         assert not legacy, (path.name, legacy)
 

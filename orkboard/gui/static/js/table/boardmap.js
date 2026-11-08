@@ -10,7 +10,11 @@ import { mapData } from "../shell/store.js";
 import { isLive, laneOf, lineNow, nameOf, ownOf, partiesNow, wide } from "./data.js";
 import { GoalBlock, Line, OwnBlock } from "./cascade.js";
 import { PlanBoard } from "./planboard.js";
+import { raceOf } from "./felt.js";
 import "./line.js";
+
+/** An empty lane says whose it is, on a flat plate (spec 160 E, decisions §275.2): *Release is free · throw a goal here or @Release*. */
+const freeWords = (g) => `${nameOf(g)} is free · throw a goal here or @${nameOf(g)}`;
 
 const CARD_W = 144;                                                 // a card (frame.css `--card-w`); a lane whose room is narrower than this lays tokens
 
@@ -44,9 +48,10 @@ export function BoardMap({ parties, narrow, column = false }) {
       ${own.map(({ n, stage }) => html`<${OwnBlock} key=${n.slug} n=${n} stage=${stage} tokens=${tokens} />`)}
       <${Line} line=${line} tokens=${tokens} />
     </div>`}
-    ${lanes.map(({ g, goals }) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} data-live=${wide.value && isLive(g) ? "1" : undefined} role="group" aria-label=${nameOf(g)}>
+    ${lanes.map(({ g, goals }) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} data-live=${wide.value && isLive(g) ? "1" : undefined} role="group" aria-label=${nameOf(g)} data-race=${raceOf(g) || undefined} data-empty=${goals.length ? undefined : ""}>
+      ${!goals.length && html`<p class="table-lane__free ork-plate" data-free=${g.slug}>${freeWords(g)}</p>`}
       ${goals.map(({ n, tasks }) => html`<${GoalBlock} key=${n.slug} n=${n} tasks=${tasks} tokens=${tokens} />`)}
     </div>`)}
-    <div class="table-lane table-lane--free">${none && html`<p class="table-board__none">Nothing is at work</p>`}</div>
+    <div class="table-lane table-lane--free">${none && html`<p class="table-board__none"><span class="ork-plate">Nothing is at work</span></p>`}</div>
   </div>`;
 }

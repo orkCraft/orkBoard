@@ -45,7 +45,7 @@ export function ReleaseLane({ tab, parties }) {
   const merge = (e) => mergeGate(e);
   return html`<aside class=${cls("release-lane", { "is-headless": headless })} aria-label=${label} data-lane="release" data-through=${party || undefined} ...${backDrop()}>
     <div class="release-lane__head" data-room-things="discard"></div>
-    <span class="table-end__label release-lane__label">${label}</span>
+    <span class="table-end__label release-lane__label ork-plaque">${label}</span>
     <div class="release-lane__scroll" ref=${scroll}>
       ${(top || sending.value) && html`<${RingAround} slug=${top?.slug || null}>${top && html`<${ReadyCards} goals=${[top]} main=${ready.main} on=${now} onPress=${press} />`}<//>`}
       ${goals.length > 1 && html`<${ReadyCards} goals=${goals.slice(1)} main=${ready.main} on=${now} onPress=${press} />`}

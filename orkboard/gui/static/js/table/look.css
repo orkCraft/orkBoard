@@ -1,0 +1,43 @@
+/* The table's look on the desktop (docs/specs/160-the-tables-look-and-the-rooms-things.md E, decisions §268, §269, §275; mockup docs/mockups/table-look/): the open party's felt under the pane, bronze frames, plaques, pennants, a lane's light in three steps. Layout and orkUI's tokens only, no colour of its own:
+   the felt, its five steps, the plate, the plaque and the pennant are orkUI's (`.ork-table[data-party]`, `.ork-plate`, `.ork-plaque`, `.ork-pennant`; the pane's `data-party` is felt.js'), the bronze and the party colours its tokens. No smooth gradient and no blurred shadow or glow: a step is a hard inset ring, a glow is
+   two rings. **A party's colour is only a rule, a pennant and a glow, never a tab's name, never a ring round a card** (§275.1, §268.2). `--party-hue` is the colour of the race the cell, the lane or the head names (`data-race`, felt.js `raceOf`); `--_plate` is the plate orkUI's felt gives what lies in it.
+   The lamp out (the person away, stage G) is orkUI's `.ork-table.is-out`: the felt flat and darker; the lanes' light then goes with it (`.table-pane.is-out`), their rules stay. */
+
+[data-race="ork"] { --party-hue: var(--ork-party-ork); }
+[data-race="knight"] { --party-hue: var(--ork-party-knight); }
+[data-race="elf"] { --party-hue: var(--ork-party-elf); }
+[data-race="undead"] { --party-hue: var(--ork-party-undead); }
+[data-race="goblin"] { --party-hue: var(--ork-party-goblin); }
+[data-race="gnome"] { --party-hue: var(--ork-party-gnome); }
+[data-race="orkmaster"] { --party-hue: var(--ork-party-orkmaster); }
+
+@media (min-width: 760px) {
+  /* the pane: its content lies inside orkUI's bronze frame (7 px), the board still as wide as the tabs' row so a tab stands over its lane */
+  .table-pane.ork-table[data-party] { padding: 7px; }
+  .table-pane.ork-table[data-party] .table-board { margin: 0 -7px; }
+  .table-pane.ork-table[data-party] .table-title:not(.is-bare) { background: var(--_plate); }          /* the title row's words lie on the plate, not on the steps */
+  .table-board__none .ork-plate { color: var(--ork-ink); font: var(--ork-type-caption); }
+  .table-lane__free { box-sizing: border-box; max-width: 100%; margin: 0; text-align: center; font: var(--ork-type-caption); color: var(--ork-ink); overflow-wrap: anywhere; }
+
+  /* a lane's light, in three steps down from its tab: three hard bands, each a ring of the party's colour in a few percent */
+  .table-lane[data-race] { box-shadow: inset 0 24px 0 color-mix(in srgb, var(--party-hue) 16%, transparent), inset 0 48px 0 color-mix(in srgb, var(--party-hue) 12%, transparent), inset 0 72px 0 color-mix(in srgb, var(--party-hue) 8%, transparent); }
+  .table-pane.is-out .table-lane[data-race] { box-shadow: none; }
+
+  /* bronze frames round the Orkmaster's column, the discard and the hand: hard rings, a lit corner (orkUI's table's, at the same steps) */
+  .col, .release-lane, .hand { box-shadow: inset 0 0 0 1px var(--ork-bronze-lo), inset 0 0 0 3px var(--ork-bronze), inset 2px 2px 0 3px var(--ork-bronze-hi), inset 0 0 0 5px var(--ork-bronze-lo); }
+  .release-lane { position: relative; }
+
+  /* the headings on bronze plaques (orkUI's, in the pixel face) */
+  .col-plab__t.ork-plaque, .release-lane__label.ork-plaque { padding: var(--ork-1) var(--ork-3); white-space: normal; }
+  .col-plab { padding-left: var(--ork-4); }
+
+  /* a pennant over each leader, the open one tallest, clear of the window's top edge */
+  .table-tabcell > .ork-pennant, .col-head > .ork-pennant { position: absolute; z-index: 2; top: 6px; left: var(--ork-2); pointer-events: none; }
+  .col-head > .ork-pennant { left: var(--ork-2); }
+  .ork-tab.col-head__tab { padding-left: var(--ork-5); }
+
+  /* a tab's name in the light ink (§275.1): its party's colour only in the rule under it, its pennant and its glow (two hard rings); a grey tab (a goal's route does not pass it) keeps its grey */
+  .table-tab:not(.is-off) .table-tab__main, .col-head__tab .col-head__nm { color: var(--ork-ink); }
+  .table-tabcell[data-race] > .table-tab:not([aria-selected="true"], .is-off) { box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--party-hue) 60%, transparent); }
+  .table-tabcell[data-race] > .table-tab[aria-selected="true"]:not(:focus-visible), .col-head[data-race] > .col-head__tab[aria-selected="true"]:not(:focus-visible) { box-shadow: inset 0 -3px 0 var(--party-hue), inset 0 -5px 0 color-mix(in srgb, var(--party-hue) 35%, transparent); }
+}
