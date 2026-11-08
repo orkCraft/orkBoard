@@ -149,3 +149,29 @@ model, tokens: no prompt, no answer), `spend.txt`, `spend.json`, `events.jsonl` 
 Not here, on the owner's computer in the session's scratch until it is cleaned: every picture of each stage (`shots/`, a picture every four minutes
 and at each stage, phone and desktop), the clones with each call's whole prompt and answer (`.orkcraft/logs/<day>/`), the servers' logs, and the
 by-hand test runs (`verify/`).
+
+## 8. After the run: the owner's yes, and the review of B
+
+The owner read §6 and said: fix, and take the work into main.
+
+- **F1 and F2** were fixed first (`8b4c9f45`): a goal done before this machine read it no longer seals To main (`goal_main._done` reads the
+  goal's state or its page when there is no plan here); a write keeps a tool's `route`, `gate` and its `asks` while a question it wrote waits.
+- **A** went into main as Codex wrote it (`14d463f2`), rebased onto that day's main: the critical tests and those of the modules it touches
+  passed (363), and the fixture keeps every prompt, role text and agent frame unchanged by a character. Its page is done (`0ecd4d4e`).
+- **B** was reviewed first, by an agent that saw the code and the goal's page and not this report's view, then on the page against the trial
+  clone, with a test on the clone's main that only B's picks turn red: the red named the test and called it *new*, To main and the merge of dev
+  were refused by the host, main did not move, and the red stood after a reload. The review found, and the person's fix then mended:
+
+| | Found | Mended |
+|---|---|---|
+| R1 | **A check passed with part of its command red**: a written check (`pytest … && ruff check .`, or `;`) whose tests named a flaky or an old red was let through, the lint failed or never run (reproduced) | only the gate's own pytest may excuse a red (`main_checks._alone`); any other command's tests are *unresolved* and it stays red |
+| R2 | **A green *Test again* left the goal sealed** in the discard and on its card: they read the gate's row (`main_ready`), read with the Board and not again when a check ends (seen on the page) | the seal follows the checks the page follows (`checks.redOf`), the row only before any is followed; a browser test |
+| R3 | The merge of dev held the repository's lock through its tests (up to 30 minutes), To main the checks' lock through the push | the tests run with the repository free and the merge refuses a main or dev that moved meanwhile (`idea_gate.merge(tested=)`); the checks' record is read under its lock briefly |
+| R4 | *Test again* pressed while a read was out did nothing | it goes after the read |
+| R5 | A red's words named every failed test, uncapped | three, the rest counted; the record keeps them all |
+| R6 | A page kept a red the host had forgotten (a restart) | what the command answered stands only until the snapshot moves, an emptied one too |
+| R7 | B broke three of `test_road_browser` (its gate never ran them: `road.js` was not touched): To main was `disabled` while checking and on red, so a press could not wait for the checks or say why; choosing a red goal anew ran nothing again, as B's own Done when wants | the button is `aria-disabled`, a press waits or says why; the test of choosing again now asks for *Test again* |
+
+Not mended: the phone has no *Test again*, so a red kept for a goal stops the phone's merge of dev until the desktop tests it again; the review's
+*wrong refusal text* after a red and a new commit (*changed since its checks passed*). After the fixes, the same red, main mended, *Test again*:
+green, the card *Ready for main*, To main open.
