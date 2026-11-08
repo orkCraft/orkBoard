@@ -215,13 +215,13 @@ Tech's stages first (the registry, the makers, the pick and the cap: what the fa
 
 ## Open questions
 - Art only, or one frame for all? (**one shape for every craft, only Art's tools in it** / Art only, a shape of its own / every craft's tools at once) — one shape costs little more and §256.6's code tools fit it later; tools no party asked for wait
-  - Answered: every craft's tools at once (the person, 2026-11-08)
+  - Answered: one shape for every craft, only Art's tools in it (the person, 2026-11-08; it replaces their first answer, every craft's tools at once)
 - Own money gateway now or later? (**later: a cap a run in code first** / the gateway now) — Orkboard runs the step itself, so it prices each call before making it; a gateway pays only once an agent's MCP spends
   - Answered: later: a cap a run in code first (the person, 2026-11-08)
 - Suno: official API or a wrapper? (**ElevenLabs's official API first, Suno once official** / Suno through a wrapper, experimental / wait for Suno's API, no sound till then) — a wrapper on the person's key repeats agy's ban risk
   - Answered: ElevenLabs's official API first, Suno once official (the person, 2026-11-08)
 - Which word, beside "AI tool"? (**maker: Harness.makes' word, a Picture maker, a Sound maker** / hands, the Gist's word / tool, and the AI tool renamed harness) — a leader's rug already says "Its AI tool"; a second "tool" beside it reads as the same ware
-  - Answered: tool, and the AI tool renamed harness (the person, 2026-11-08)
+  - Answered: maker: Harness.makes' word, a Picture maker, a Sound maker (the person, 2026-11-08; it replaces their first answer, tool and the AI tool renamed harness)
 - Where is a paid run's money agreed? (**its cap on the stall's plate, each run's cost in its receipt line** / a Choice card before every paid run / the cap in Settings' … beside the key) — §266.5 locks money above what was agreed from Silent; a card a picture adds a step to every pick
   - Answered: its cap on the stall's plate, each run's cost in its receipt line (the person, 2026-11-08)
 - Where does a tool's run sit? (**in a pick task: the tool makes its variants** / the recipes' `tool` step first, §256.7's engine) — the pick reads files from any maker; the engine is §256.9's fourth spec, not begun
