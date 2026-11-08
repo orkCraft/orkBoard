@@ -36,6 +36,7 @@ def repo(tmp_path: Path) -> Path:
     git(r, "config", "user.email", "t@x")
     git(r, "config", "user.name", "T")
     (r / ".gitignore").write_text(".orkcraft/\n")
+    (r / "orkcraft.toml").write_text("[gate]\nrun = \"true\"\n")          # a gate with tests (the `true` command), as the checks need one (spec 158 B)
     (r / "a.txt").write_text("a\n")
     git(r, "add", "-A")
     git(r, "commit", "-q", "-m", "start")
@@ -475,3 +476,48 @@ def test_a_commit_by_the_board_under_either_name_is_no_pile(tmp_path):
         shas.append(run("rev-parse", "HEAD"))
     kept, files = idea_gate.without_board_pages(IdeaGit(tmp_path), shas, 3)
     assert kept == shas[2:] and files == 1
+
+
+# -- the one named skip (spec 158 B, decisions §274.3) -------------------------------------------------------------
+
+def test_a_normal_send_logs_the_tests_as_run_with_the_checks_time(host, repo, work):
+    lobby, *_ = work
+    to_main(host, lobby)
+    (e,) = events(host, "goal_to_main")
+    assert e["tests"] == "run" and isinstance(e["checks_s"], float) and e["checks_s"] >= 0
+
+
+def test_untested_true_sends_without_asking_the_checks_and_logs_skipped(host, repo, work):
+    lobby, *_ = work
+    got = host.command("ideas.to_main", {"idea": lobby, "untested": True})
+    assert got["ok"] is True and git(repo, "rev-parse", "main") == got["commit"]
+    (e,) = events(host, "goal_to_main")
+    assert e["tests"] == "skipped" and "checks_s" not in e
+
+
+@pytest.mark.parametrize("value", ["yes", 1, "true", "True", [True], {"a": 1}, None])
+def test_nothing_truthy_but_true_skips_the_checks(host, repo, work, value):
+    lobby, *_ = work
+    before = git(repo, "rev-parse", "main")
+    with pytest.raises(CommandError, match="checks have not been run"):
+        host.command("ideas.to_main", {"idea": lobby, "untested": value})
+    assert git(repo, "rev-parse", "main") == before and events(host, "goal_to_main") == []
+
+
+def test_a_sealed_goal_is_refused_even_with_the_skip(host, repo, work):
+    lobby, *_ = work
+    unfinished(host, lobby)
+    with pytest.raises(CommandError, match="is not done yet"):
+        host.command("ideas.to_main", {"idea": lobby, "untested": True})
+
+
+def test_a_project_with_no_tests_is_refused_in_words_and_only_the_skip_sends_it(host, repo, work, monkeypatch):
+    from orkboard.realm import gate_config
+    lobby, *_ = work
+    monkeypatch.setattr(gate_config, "read", lambda root: gate_config.Gate(always=(), none=True, derived=True))
+    before = git(repo, "rev-parse", "main")
+    with pytest.raises(CommandError, match="has no tests.*To main without the tests"):
+        to_main(host, lobby)
+    assert git(repo, "rev-parse", "main") == before and events(host, "goal_to_main") == []
+    got = host.command("ideas.to_main", {"idea": lobby, "untested": True})
+    assert got["ok"] is True and events(host, "goal_to_main")[0]["tests"] == "skipped"

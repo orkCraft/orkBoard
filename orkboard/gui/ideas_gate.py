@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -174,11 +175,15 @@ class GateMixin:
 
     def to_main(self, args: dict) -> dict:
         """`{idea}`: the goal's commits (and its dependencies') cherry-picked onto main, pushed when the project pushes after merging.
-        `{ok, commit, goals, note}`; a sealed goal is refused in words, and so is one whose checks (`to_main_checks`) are running or not passed."""
+        `{ok, commit, goals, note}`; a sealed goal is refused in words, and so is one whose checks (`to_main_checks`) are running or not passed.
+        `untested: true` (a literal boolean; nothing else skips the checks, decisions §274.3) sends it without the tests; a project whose gate has no tests
+        is refused unless it is given. The event says `tests: "run"` (and `checks_s`, the checks' seconds) or `"skipped"`."""
         slug, where = self._to_main_args(args)
-        refused = self._checks_refusal(slug, where)
+        untested = args.get("untested") is True                # the one named skip (decisions §274.3): a literal true, nothing truthy else
+        refused = self._untested_refusal(slug, where) if untested else self._no_tests_refusal(slug, where) or self._checks_refusal(slug, where)
         if refused:
             raise IdeasError(refused)
+        took = None if untested else self._checks_took(slug)
         push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
         git = IdeaGit(Path(self.host.repo_root))
         try:
@@ -186,7 +191,8 @@ class GateMixin:
         except RuntimeError as e:               # a refusal (GoalRefused) or git's own words
             raise IdeasError(" ".join(str(e).split())[:300] or "The merge failed") from None
         self._ev(event_log.GOAL_TO_MAIN, args, idea=slug, goals=got["goals"], commits=len(got["commits"]), files=got["files"],
-                 pushed=got["pushed"], into=where["into"], main=where["main"])
+                 pushed=got["pushed"], into=where["into"], main=where["main"],
+                 tests="skipped" if untested else "run", **({} if took is None else {"checks_s": took}))
         self._flag_after_goal(got["goals"], got["commit"], git, where["into"], where["main"])
         self._gather_verdict(got["goals"])
         self.changed("")
@@ -208,6 +214,24 @@ class GateMixin:
         plan = goal_main.plan(Path(self.host.repo_root), self.state_dir, slug, **where, pick=False)
         head = _git(Path(self.host.repo_root), "rev-parse", "--verify", "-q", f"refs/heads/{where['main']}").stdout.strip()
         return hashlib.sha1(json.dumps([plan["commits"], head]).encode()).hexdigest()[:16], plan["sealed"] or ""
+
+    def _untested_refusal(self, slug: str, where: dict) -> str:
+        """The skip still stops at a reason no check owns (not done, in main already, a pick that conflicts)."""
+        return self._checks_key(slug, where)[1]
+
+    def _no_tests_refusal(self, slug: str, where: dict) -> str:
+        """A project whose gate has no tests cannot show a green: it is refused in words, naming the one way out (decisions §274.3)."""
+        sealed = self._checks_key(slug, where)[1]
+        if sealed:
+            return sealed
+        if gate_config.read(Path(self.host.repo_root)).none:
+            return "This project has no tests, so nothing can show the goal is safe for main: send it with To main without the tests"
+        return ""
+
+    def _checks_took(self, slug: str) -> float | None:
+        """The seconds the goal's last checks took; None when they did not finish."""
+        with self._main_lock:
+            return (self._main_checks.get(slug) or {}).get("took")
 
     def _checks_refusal(self, slug: str, where: dict) -> str:
         """Why the goal may not go to main yet for its checks, in words; "" when it may (decisions §274.2: the checks passed against main as it is now).
@@ -244,7 +268,7 @@ class GateMixin:
             if got:
                 got["stop"].set()                                   # an older run of this goal ends, its worktree gone
             entry = {"key": key, "checks": [{"name": c.name, "state": "waiting", "words": ""} for c in gate_config.main_checks(Path(self.host.repo_root))],
-                     "running": True, "stop": threading.Event()}
+                     "running": True, "stop": threading.Event(), "began": time.monotonic(), "took": None}
             self._main_checks[slug] = entry
         threading.Thread(target=self._checks_run, args=(slug, where, entry), name=f"main-checks-{slug}", daemon=True).start()
         self._checks_said(slug, entry)
@@ -274,6 +298,7 @@ class GateMixin:
         finally:
             with self._main_lock:
                 entry["running"] = False
+                entry["took"] = round(time.monotonic() - entry["began"], 1)
             self._checks_said(slug, entry)
 
     def _checks_said(self, slug: str, entry: dict) -> None:
