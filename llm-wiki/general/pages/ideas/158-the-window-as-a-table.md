@@ -12,6 +12,7 @@ spec: docs/specs/158-the-window-as-a-table.md
 decisions: 270, 274
 by: claude-code
 schema: 3
+gate: ee0737d · 127 files · green
 ---
 # Answers as cards in the hand, To main from the discard after the gate's tests
 
@@ -196,6 +197,12 @@ schema: 3
 - The skip is one argument, untested: true, on ideas.to_main; the page names it *To main without the tests*; nothing else reads it.
 - The answer's source is a field from on idea_answered (hand or open), not a new event.
 - The hero is the default (Sh.man): Tech keeps no table page for this goal.
+### Accepted
+- met: When ideas.to_main is called for a goal in dev whose checks were never run or not passed for main's head now, then it is refused in words and main's head is unchanged.
+- met: When the gate's Tests check is red on a goal's way to main, then main is unchanged, the worktree is gone, and the refusal names the test that failed.
+- not met: When a project's gate has no tests, then To main is refused in words; only ideas.to_main with untested: true sends it, and its goal_to_main event says tests: skipped. — gate_merge still sends dev to main untested: _merge_tested passes a no-tests gate (main_checks._gate "No tests to run"); releasemap.js To main, arena/gate.js, pwa/shell-gate.js reach it
+- met: When the person removes the Release party, then it is removed with no refusal, and a goal in dev still reaches main by ideas.to_main after the gate's tests.
+- met: When the person answers a goal's open question from a hand way card or after Open…, then its idea_answered event carries from: hand or from: open.
 
 ## Decisions
 §270, §274 (this goal, the person's split of 8 November); §268, §269, §271, §272, §273 a goal of their own, after.
