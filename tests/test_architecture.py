@@ -257,3 +257,12 @@ def test_seat_dependency_check_catches_lazy_and_indirect_imports(tmp_path, state
     helper.write_text('def lazy():\n    ' + statement + '\n')
     bad = core_dependencies(['orkboard.realm.consumer'], modules(root))
     assert bad and all('orkboard.realm.consumer -> orkboard.realm.helper -> orkboard.core' in x for x in bad)
+
+
+def test_heat_and_reach_are_served_by_a_mixin_of_their_own():
+    """Spec 165 F: the reach modules stay under 600 lines; gui/ideas.py only imports the mixin, takes it as a base and adds its commands."""
+    for rel in ("realm/map_reach.py", "realm/map_reach_crafts.py", "gui/ideas_reach.py"):
+        assert len((ROOT / rel).read_text().splitlines()) < 600, rel
+    text = (ROOT / "gui/ideas.py").read_text()
+    assert "from orkboard.gui.ideas_reach import ReachMixin, reach_commands" in text and "class Ideas(ReachMixin," in text and "**reach_commands(self)" in text
+    assert "map_reach" not in text and text.count("ideas_reach") == 1
