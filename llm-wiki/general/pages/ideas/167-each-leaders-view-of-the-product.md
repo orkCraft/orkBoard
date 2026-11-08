@@ -8,7 +8,6 @@ priority: normal
 short: A leader's view
 phase: talk
 route: product, design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -31,13 +30,20 @@ I want to open Orkboard and read, from Product, Tech and Design each, where the 
 
 ## Open questions
 - What is a leader's view? (**Its journal's digest, shown** / A view file of its own / Its concerns, in words) — spec 125 D's digest is already what a lens knows of the product, mirrored to journals/ by spec 151 B.1 · Its journal's digest, shown: No new file: the digest says works, hurts, next and tops the tab · A view file of its own: A new file a party, a second summary to keep beside the digest · Its concerns, in words: The map's look said in lines; kept in .orkcraft/, no clone reads it
+  - Answered: The product as the leader's framework sees it (its hero's places), with its journal's digest and its concerns, in the window; the face agreed on mockups (the person, 2026-11-08)
 - When is a view written again? (**After a goal lands** / After a landing or a map change / Only when you press) — one cheaper call a party on the landed goal's route is a cost you can see; the maps change with every commit · After a goal lands: A call for each party on its route, when its gate is green · After a landing or a map change: Fresher, but a commit moving a map's heat starts calls on each tab · Only when you press: No spend unasked; a view goes stale until you ask for it
+  - Answered: When a goal closes, when the person asks, and when Orkboard analyses the project by itself (the person, 2026-11-08)
 - What feeds a view made in a skill? (**The passes write journal lines** / The call reads pages and log / Only Orkboard's own calls) — here every Talk and Accept ran as a skill and wrote no journal line, so a digest has nothing to read · The passes write journal lines: Talk's verdict, Accept's learned land in journals/<party>.md, read in · The call reads pages and log: Each call reads done goals and decisions; dearer, nothing kept between · Only Orkboard's own calls: The views stay empty here until goals run in Orkboard's window
+  - Answered: The call reads pages and log (the person, 2026-11-08)
 - Where does a leader's view lie? (**At the top of the leader's bubble** / A plate atop the pane, over the map / Over the pane from the party's …) — the bubble (ask.js) already opens itself once a day with the evening line; the strip over the map was taken off (spec 123 §4) · At the top of the leader's bubble: Pressing the open head reads it; the map and the lanes keep their place · A plate atop the pane, over the map: Read without a press; the map and the first lane slide down a block · Over the pane from the party's …: One more press through a menu; the map hidden while it is read
+  - Answered: Two or three mockups first, the person picks among them; the use cases talked of here lie on Product's table (goal 163) (the person, 2026-11-08)
 - Where is the view under 760 px and on the phone? (**The party's … opens it; the phone its own goal** / The party's … and the phone, in this goal) — no bubble opens under 760 px or on touch, so a narrow window needs a way in (WCAG 1.4.10); §281.5 gave reach's phone its own goal · The party's … opens it; the phone its own goal: Narrow windows read it over the pane; the phone waits for its goal · The party's … and the phone, in this goal: One goal wider: the phone's party page shows it under its header
+  - Answered: No phone for now: a goal of its own (the person, 2026-11-08)
 - Who writes the view in skills? (**The leader's Accept pass, in the tree** / Orkboard's call, on the window's next goal / A command the conductor runs) — here every pass is a skill, and Orkboard's digest call runs only when a goal is added in its window · The leader's Accept pass, in the tree: No new call: the pass rewrites digest: from its journal, read back on open · Orkboard's call, on the window's next goal: One writer; a skill-only project's view waits for the window · A command the conductor runs: orkboard journal digest: a new CLI command and a call outside the pass
+  - Answered: The leader's Accept pass, in the tree (the person, 2026-11-08)
 
 ## Decisions
+- §282: the person's answers in Talk (8 November 2026)
 
 ## Product
 ### Talk

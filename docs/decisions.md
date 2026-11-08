@@ -7683,3 +7683,18 @@ also asked that, now that decisions are taken through the Board, its leaders wor
    Orkmaster reads the decisions** its goal names and the log's newest before it routes (a goal of its own).
 
 The owner's call.
+
+## 282. A leader's view is the product as its framework sees it, with its digest and its concerns; written again when a goal closes, when asked and when Orkboard analyses the project; its face chosen on mockups (8 November 2026, the owner)
+
+Why: goal 167's Talk. The leaders found half of it built (a party's journal digest, copied into `journals/<party>.md`) and empty
+here, as the brief was never answered and the leaders' skill passes write no journal line. The owner:
+1. **A leader's view** is the product as the leader's framework sees it (its hero's places), with its journal's digest and its
+   concerns on its map, shown in the window.
+2. **It is written again** when a goal closes, when the person asks, and when Orkboard analyses the project by itself.
+3. **Its call reads the goal pages and the decisions log**, not only its party's journal.
+4. **Its face is chosen on mockups**: two or three, the owner picks one. The use cases talked of in these goals lie on
+   Product's table (goal 163).
+5. **No phone for now**: the view on the phone is a goal of its own.
+6. **In an AI tool's skill, the leader's Accept pass writes it**, in the tree.
+
+The owner's call.
