@@ -17,7 +17,8 @@ import weakref
 from pathlib import Path
 
 from orkboard.gui.ideas_args import IdeasError
-from orkboard.realm import event_log, goal_phase, goal_take, idea_questions, ideas, read_in, write_out, write_out_bank
+from orkboard.realm import (chronicle_decisions, event_log, goal_phase, goal_take, history_day, idea_flag, idea_questions, ideas, read_in,
+                            write_out, write_out_bank)
 
 PHASE_READ_S = 5.0           # how often the clock looks for a page moved outside
 rules_written = goal_take.rules_written      # the Board's rules are written (spec 151 C.4): one test of it, realm/goal_take.py's
@@ -109,6 +110,7 @@ class PhaseMixin:
         if sig == getattr(self, "_phase_sig", None):
             return
         self._phase_sig = sig
+        quiet: list[tuple[str, str, str]] = []                  # (slug, commit, which day): the pages read done, flagged after the loop (spec 162 C)
         for m in goal_phase.moved(root, self.state_dir):
             commit, author = tree.last_change(folder / f"{m['slug']}.md")
             by = m["by"] if m["by"] not in ("", goal_phase.PERSON) else author or ""       # who moved it, as far as the Board can tell: the tool that laid it, else the commit's author; the page's `by` (who laid it) is never changed
@@ -116,6 +118,8 @@ class PhaseMixin:
                 self.phase_stop(m["slug"], m["to"])
             goal_phase.move_to(self.state_dir, m["slug"], m["to"])
             history = m["new"] and m["to"] == "done"             # done before this machine read it: seen at once, history and not news (spec 155 G.2)
+            if m["to"] == "done":
+                quiet.append((m["slug"], commit, "laid" if m["new"] else "moved"))
             if history:
                 ideas.save_state(self.state_dir, m["slug"], seen_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
             self._ev(event_log.GOAL_MOVED_OUTSIDE, slug=m["slug"], to=m["to"], commit=commit, **{"from": m["was"]})
@@ -126,6 +130,49 @@ class PhaseMixin:
                 continue
             self._what[m["slug"]] = "moved"
             self.changed(m["slug"])
+        if not getattr(self, "_quiet_caught", False):           # once per Ideas: a Board read before this change has done goals with no flag
+            self._quiet_caught = True
+            have = {q[0] for q in quiet}
+            quiet += [(slug, "", "laid") for slug in self._done_without_flag(root) if slug not in have]
+        self.quiet_flags(tree, quiet)
+
+    def _done_without_flag(self, root) -> list[str]:
+        """The goals whose state is done with no flag (spec 162 C.2)."""
+        found, _pages = ideas.ideas_and_pages(root)
+        return [i["slug"] for i in found if ideas.state(self.state_dir, i["slug"]).get("state") == "done" and idea_flag.flag_of(self.state_dir, i["slug"]) is None]
+
+    def quiet_flags(self, tree, quiet: list[tuple[str, str, str]]) -> None:
+        """The quiet flag of each goal read done (spec 162 C; decisions §277.2, §277.5): `by: done`, dated by `history_day` (its `decisions:` in the log, else the highest §N its spec names that the
+        log holds, else the day the tree's history gives: the commit that laid the page, or, for a page moved to done after it was read, the one that moved it). No keeper fold, no journal line, no
+        `idea_flagged` event, no `collide_released`: the gate's `_raise_flag` does those. A goal with a plan waits for the gate, which flags it. The days and the log are read once for the pass, from
+        the Board's own tree (`[board] in_code` or not, it is a checkout of the repository's work branch), and no lock is held while the flags are raised (`raise_flag` takes it for each one)."""
+        todo = [q for q in quiet if idea_flag.flag_of(self.state_dir, q[0]) is None and ideas.plan(self.state_dir, q[0]) is None]
+        if not todo:
+            return
+        try:
+            laid, moved = tree.laid_days(), tree.moved_days()
+        except Exception:
+            laid = moved = {}
+        try:
+            rows = chronicle_decisions.read(self.keeper._log_text())
+        except Exception:
+            rows = []
+        root = tree.root()
+        for slug, commit, which in todo:
+            try:
+                page = ideas.idea_page(root, slug)
+                if page is None:
+                    continue
+                spec, text = str(page.get("spec") or "").strip(), ""
+                for base in (tree.path, Path(self.host.repo_root)):
+                    if spec and (base / spec).is_file():
+                        text = (base / spec).read_text("utf-8", errors="replace")
+                        break
+                first, second = (moved, laid) if which == "moved" else (laid, moved)
+                day = history_day.day(page, text, rows, first.get(slug) or second.get(slug) or "")
+                idea_flag.raise_flag(root, self.state_dir, slug, "done", commit, at=day or None)
+            except Exception:                                   # a flag that cannot be raised never stops the Board
+                pass
 
     def phase_stop(self, slug: str, phase: str) -> bool:
         """What runs on a goal moved from outside stops as *Stop* stops it (`ideas.stop`: its running tasks, the plan stopped for the person; `ideas.read_stop`: the keeper's call). True when

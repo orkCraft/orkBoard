@@ -3,6 +3,7 @@ outside followed (the state moved, a run stopped, the line said, the event logge
 No model is ever called: the tools are fakes."""
 from __future__ import annotations
 
+import os
 import re
 import json
 import subprocess
@@ -11,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import board_ask, event_log, goal_phase, idea_page, idea_questions, ideas, spec_sections
+from orkboard.realm import board_ask, event_log, goal_phase, idea_flag, idea_page, idea_questions, ideas, journals, spec_sections
 
 IDEAS = "pages/ideas"
 
@@ -430,3 +431,108 @@ def test_a_question_with_lines_is_an_outside_card_with_them_and_a_talk_card_with
     assert idea_questions.questions_of(text) == ["Which week? (**this** / next) — soon · this: Now · next: Later", "Which size?"]
     assert idea_questions.parse(idea_questions.questions_of(text)[0])["lines"] == ["Now", "Later"]
     assert idea_questions.answers(text) == ["next", "S"]
+
+
+# -- the quiet flag of a goal read done (spec 162 C; decisions §277) ----------------------------------------------------------------
+
+LOG = "# Decisions\n\n## 5. Early (3 November 2026, the person and Orkboard)\n\nA.\n\n## 6. Later (5 November 2026, the person and Orkboard)\n\nB.\n"
+
+
+def _commit_files(host, files: dict, day: str = "2026-11-08T12:00:00", who="Claude Code"):
+    """What an AI tool does without Orkboard: files (from the repository's root) written on the work branch and committed as itself on a given day."""
+    repo = Path(host.repo_root)
+    work = repo.parent / "tool"
+    if not work.exists():
+        git(repo, "worktree", "add", "--detach", str(work), "dev")
+    git(work, "checkout", "-q", "--detach", "dev")
+    for rel, text in files.items():
+        (work / rel).parent.mkdir(parents=True, exist_ok=True)
+        (work / rel).write_text(text, encoding="utf-8")
+    git(work, "add", "-A")
+    subprocess.run(["git", "-c", f"user.name={who}", "-c", "user.email=t@x", "commit", "-qm", "tool: laid goals"], cwd=work, check=True, capture_output=True,
+                   env={**os.environ, "GIT_COMMITTER_DATE": day, "GIT_AUTHOR_DATE": day})
+    git(repo, "update-ref", "refs/heads/dev", git(work, "rev-parse", "HEAD"))
+    host.ideas._phase_at = 0.0
+
+
+def _done_page(extra="", title="Old", phase="done"):
+    return f"---\nowner: board\nkind: idea\ntrack: general\norder: 8\nphase: {phase}\n{extra}by: Cursor\n---\n# {title}\n\n## Gist\nOld.\n"
+
+
+def _no_keeper(host):
+    def fail(*a, **k):
+        raise AssertionError("the keeper is not called")
+    for name in ("fold", "ask", "decide", "talk_answer"):
+        setattr(host.ideas.keeper, name, fail)
+
+
+def _moved(host):
+    tree = host.ideas._board_tree
+    with tree.git.lock:
+        tree.follow()
+    host.ideas.phase_moved(tree)
+
+
+def _journal_lines(sd):
+    return [e.get("text") for e in journals.read(sd, journals.PROJECT)]
+
+
+def test_a_page_read_done_gets_a_quiet_flag_at_its_decisions_day_with_no_fold_no_journal_line_and_no_event(host):
+    """Spec 162 C.1: a history page is flagged by done at the day history_day gives (its decisions: in the log, else the day laid), seen at once, and nothing else is written."""
+    _goal(host)
+    host.ideas.tree_flush(force=True)
+    sd = host.ideas.state_dir
+    (Path(host.repo_root) / "docs").mkdir(exist_ok=True)
+    (Path(host.repo_root) / "docs/decisions.md").write_text(LOG, encoding="utf-8")                # the project's log in its working copy
+    _commit_files(host, {"docs/decisions.md": LOG, "llm-wiki/general/pages/ideas/dated.md": _done_page("decisions: 5, 6\n", "Dated"),
+                         "llm-wiki/general/pages/ideas/plain.md": _done_page("", "Plain")})
+    _no_keeper(host)
+    before = _journal_lines(sd)
+    _moved(host)
+    flag = idea_flag.flag_of(sd, "dated")
+    assert flag["by"] == "done" and flag["at"].startswith("2026-11-05")
+    assert idea_flag.flag_of(sd, "plain")["at"].startswith("2026-11-08")                        # no decision: the day it was laid
+    assert re.fullmatch(r"\d{4}-\d\d-\d\dT.*", ideas.state(sd, "dated")["seen_at"])             # history: never in the discard
+    kinds = [r["event"] for r in event_log.read(Path(host.repo_root))]
+    assert "idea_flagged" not in kinds and kinds.count("goal_moved_outside") == 2
+    assert _journal_lines(sd) == before
+    host.ideas._phase_sig = None
+    _moved(host)
+    assert idea_flag.flag_of(sd, "dated") == flag                                              # once
+
+
+def test_a_page_moved_to_done_after_it_was_read_is_flagged_at_the_day_it_was_moved_and_stays_in_the_discard_until_seen(host):
+    _goal(host)
+    host.ideas.tree_flush(force=True)
+    sd = host.ideas.state_dir
+    _commit_files(host, {"llm-wiki/general/pages/ideas/later.md": _done_page("", "Later", "spec")}, "2026-11-01T12:00:00")
+    _moved(host)
+    assert idea_flag.flag_of(sd, "later") is None
+    _commit_files(host, {"llm-wiki/general/pages/ideas/later.md": _done_page("", "Later")}, "2026-11-06T12:00:00")
+    _no_keeper(host)
+    _moved(host)
+    assert idea_flag.flag_of(sd, "later")["at"].startswith("2026-11-06") and ideas.state(sd, "later")["seen_at"] == ""
+    assert "idea_flagged" not in [r["event"] for r in event_log.read(Path(host.repo_root))]
+
+
+def test_a_board_read_before_gets_the_quiet_flag_once_for_each_done_goal_with_no_plan_and_no_flag(host):
+    """Spec 162 C.2: the catch-up, once per Ideas; a done goal with a plan waits for the gate, one with a flag keeps it."""
+    root, a = _goal(host, "alpha")
+    _, b = _goal(host, "beta")
+    _, c = _goal(host, "gamma")
+    host.ideas.tree_flush(force=True)
+    sd = host.ideas.state_dir
+    for slug in (a, b, c):
+        ideas.save_state(sd, slug, state="done")
+    ideas.save_plan(sd, b, {"tasks": [{"id": "t1", "state": "merged", "commit": "abcdef0123"}]})
+    idea_flag.raise_flag(root, sd, c, "gate", "feed")
+    _no_keeper(host)
+    host.ideas._quiet_caught = False                                                             # an Ideas that has not made its catch-up
+    host.ideas._phase_sig = None
+    host.ideas.phase_moved(host.ideas._board_tree)
+    assert idea_flag.flag_of(sd, a)["by"] == "done" and idea_flag.flag_of(sd, b) is None and idea_flag.flag_of(sd, c)["by"] == "gate"
+    assert "idea_flagged" not in [r["event"] for r in event_log.read(Path(host.repo_root))]
+    (ideas.state_folder(sd, b) / "plan.json").unlink()
+    host.ideas._phase_sig = None                                                                 # a second look: the catch-up is not made again
+    host.ideas.phase_moved(host.ideas._board_tree)
+    assert idea_flag.flag_of(sd, b) is None
