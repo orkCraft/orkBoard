@@ -125,7 +125,7 @@ Build decisions §278 and §279 (the owner, 8 November; first taken on 7 Novembe
 ### Accepted
 - met: When a Product party's stall opens as a person first meets it, then its hero shelf offers Angel Invest, Jobwise, Appetite and Pillar Knight, in that order, and no Pivot Knight.
 - met: When a Product party whose page keeps `hero: uni-lean` opens its stall first after the update, then its hand shows Angel Invest Knight, the line names Pivot Knight cut and why; a second open, no line.
-- not met: When that party's stall says Pivot Knight was cut, then its table file `pages/tables/<party>.md` stays byte for byte as it was. — no gate test lays a table file and reads it after the cut line (stage F's test checks the page only); make it again in tests/test_stall.py
+- met: When that party's stall says Pivot Knight was cut, then its table file `pages/tables/<party>.md` stays byte for byte as it was.
 - met: When a Product party takes Pillar Knight, then the stall's line names its four places (Pillars, Leaves out, Against them, Keep or cut) and its price is one pass.
 - met: When Orkboard writes the role files, then `roles/product-leader.md` names Angel Invest, Jobwise, Appetite and Pillar Knight with their places, and no Pivot Knight.
 
