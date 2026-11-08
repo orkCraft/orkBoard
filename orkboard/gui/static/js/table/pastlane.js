@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { pick, picked } from "../frame/state.js";
+import { Icon } from "../orkui.js";
 import { Card, Deck, ask } from "./chronicleparts.js";
 import { UNRELEASED, chapterName, dayWord } from "./chroniclewords.js";
 import { openChronicle } from "./chronicle.js";
@@ -17,6 +18,15 @@ export const itemsOf = (c) => [
   ...(c?.goals || []).map((g) => ({ type: "goal", id: g.idea, title: g.title, element: g.element, hue: g.hue, day: g.day, decision: g.decision, in: g.in })),
   ...(c?.decisions || []).map((d) => ({ type: "decision", id: d.number, title: d.title, element: "", hue: "", day: d.day, decision: 0, in: d.in })),
 ];
+
+/** A deck's cards by day, newest first, across goals and decisions (on one day goals before decisions: the sort is stable and `itemsOf` lists goals first). */
+export const byDay = (c) => itemsOf(c).sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0));
+
+/** How many cards a deck deals before *All · search* (the line's seven, decisions §277.5). */
+export const DEAL = 7;
+
+/** *All · search* pressed on a deck: told to the page as `orkboard:deck-all` with `{deck: {id, name}, party}` (stage I of spec 162 answers it: the whole deck over the pane, with a search). */
+export const openDeck = (deck, party) => window.dispatchEvent(new CustomEvent("orkboard:deck-all", { detail: { deck: { id: deck.id, name: deck.name }, party } }));
 
 export function PastDecks({ party = "", seeing = null }) {
   const [d, setD] = useState(null), [open, setOpen] = useState([]), [loaded, setLoaded] = useState({}), host = useRef();
@@ -48,7 +58,16 @@ export function PastDecks({ party = "", seeing = null }) {
   return html`<section class="release-lane__past" ref=${host} aria-label="The past" data-past=${party || "orkmaster"}>
     ${decks.map((x) => html`<div key=${x.id} class="release-lane__deck" data-version=${x.id}>
       <${Deck} deck=${x} on=${open.includes(x.id)} onPress=${() => press(x)} />
-      ${open.includes(x.id) && html`<ul class="release-lane__deal" data-deck=${x.id}>${itemsOf(full(x.id)).map((it) => html`<${Card} key=${`${it.type}/${it.id}`} item=${it} version=${x.name} lit=${it.type === "goal" && picked.value === it.id} onOpen=${open_} onDecision=${(n) => openChronicle({ decision: n })} />`)}</ul>`}
+      ${open.includes(x.id) && html`<${DealtDeck} x=${x} party=${party} items=${byDay(full(x.id))} lit=${picked.value} open_=${open_} />`}
     </div>`)}
   </section>`;
+}
+
+/** A deck dealt in place: its newest seven, and past seven an eighth card, *All · search*, in the line's face (cascade.js `table-lstrip--all`). */
+function DealtDeck({ x, party, items, lit, open_ }) {
+  const more = items.length > DEAL;
+  return html`<ul class="release-lane__deal" data-deck=${x.id}>
+    ${items.slice(0, DEAL).map((it) => html`<${Card} key=${`${it.type}/${it.id}`} item=${it} version=${x.name} lit=${it.type === "goal" && lit === it.id} onOpen=${open_} onDecision=${(n) => openChronicle({ decision: n })} />`)}
+    ${more && html`<li class="release-lane__all"><button type="button" class="ork-card table-gstrip table-lstrip table-lstrip--all" data-deck-all=${x.id} aria-label=${`All of ${x.name}, with a search`} onClick=${() => openDeck(x, party)}><${Icon} name="search" /><span class="table-gstrip__nm">All · search</span></button></li>`}
+  </ul>`;
 }
