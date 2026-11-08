@@ -199,7 +199,7 @@ def outside_cards(page: Page | None) -> list[dict]:
         got = idea_questions.parse(q)
         if not got["choices"]:
             continue
-        card = idea_questions.card({"q": got["ask"], "choices": got["choices"], "pick": got["pick"] if got["pick"] is not None else 0, "why": got["why"]},
+        card = idea_questions.card({"q": got["ask"], "choices": got["choices"], "pick": got["pick"] if got["pick"] is not None else 0, "why": got["why"], "lines": got.get("lines")},
                                    id=f"{OUTSIDE_ID}{n}", by=by, leader="")
         if card:
             out.append(card)

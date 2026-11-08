@@ -329,6 +329,10 @@ def test_asked_says_who_asks_and_results_wait_on_their_idea(host):
     n = {x["slug"]: x for x in host.command("ideas.map", {})["nodes"]}
     assert n[asks]["asked"][0]["ask"] == "Which store first?" and n[asks]["asked"][0]["by"]["slug"] == "taskmaster"     # the leader's: no `asks_by`
     assert (n[asks]["asked"][0]["choices"], n[asks]["asked"][0]["pick"], n[asks]["asked"][0]["why"]) == (["App Store", "Google Play"], 0, "iPhone first")
+    assert "lines" not in n[asks]["asked"][0]                                                    # no lines: as before
+    ideas.set_section(root, asks, "Open questions", "- Which store first? (**App Store** / Google Play) — iPhone first · App Store: Ships in a week · Google Play: Ships in a month")
+    n = {x["slug"]: x for x in host.command("ideas.map", {})["nodes"]}
+    assert n[asks]["asked"][0]["lines"] == ["Ships in a week", "Ships in a month"] and n[asks]["asked"][0]["why"] == "iPhone first"        # spec 159 B
     assert n[other]["asked"] == [] and n[asks]["results"] == []
     review = _idea(root, state, g, "In review", "working")
     _plan(state, review, [{**_t("k1", "review"), "tests": {"passed": 20, "failed": 0, "failing": [], "tail": ""}, "cost": 0.42,

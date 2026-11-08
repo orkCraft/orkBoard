@@ -111,3 +111,17 @@ def test_ways_with_a_colon_or_a_dot_in_their_name_keep_their_lines():
     assert q["lines"] == ["small: fast", "big · slow"]
     assert iq.parse(iq.line(q)) == q
     assert "lines" not in iq.of({"ask": "A?", "choices": ["x", "y"], "lines": ["a · y: b", "c"]})
+
+
+def test_a_card_and_its_talk_read_keep_the_lines_and_a_card_without_lines_is_as_before(tmp_path):
+    """Spec 159 B: `lines` travel with the card into talk.json and the Talk read; the page line of a card is whole only with lines."""
+    raw = {"q": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone", "lines": ["Ships in a week", "Ships in a month"]}
+    c = iq.card(raw, id="c1", by="tech", leader="ork")
+    assert c["lines"] == ["Ships in a week", "Ships in a month"]
+    assert "lines" not in iq.card({**raw, "lines": ["only one"]}, id="c1", by="tech", leader="ork")
+    plain = iq.card({k: v for k, v in raw.items() if k != "lines"}, id="c2", by="tech", leader="ork")
+    assert "lines" not in plain and iq.card_line(plain) == "Which store first?"
+    assert iq.parse(iq.card_line(c))["lines"] == c["lines"] and iq.card_line(c).startswith("Which store first? (**App Store** / Google Play) — iPhone · App Store: Ships")
+    iq.save_record(tmp_path, "g", {"mode": "talk", "round": 1, "waiting": [c, plain], "stances": []})
+    qs = iq.talk_of(tmp_path, "g")["stances"][0]["questions"]
+    assert qs[0]["lines"] == c["lines"] and "lines" not in qs[1]

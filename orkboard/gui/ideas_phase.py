@@ -153,7 +153,7 @@ class PhaseMixin:
         waiting = {c["id"]: c for c in idea_questions.record(self.state_dir, slug).get("waiting") or [] if isinstance(c, dict) and "id" in c} if slug else {}
         got = super().talk_answer(args)
         if waiting:
-            self.answers_written(slug, [(c["q"], *(idea_questions.answer_of(c, next((a for a in answers or [] if isinstance(a, dict) and a.get("id") == i), None))
+            self.answers_written(slug, [(idea_questions.card_line(c), *(idea_questions.answer_of(c, next((a for a in answers or [] if isinstance(a, dict) and a.get("id") == i), None))
                                                   or (idea_questions.default_of(c), "decide"))) for i, c in waiting.items()])
         return got
 

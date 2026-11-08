@@ -229,6 +229,13 @@ def with_answer(lines: object, ask: str | int, answer: str, day: str, who: str =
     return "\n".join(ln for row in rows for ln in row if ln)
 
 
+def card_line(c: dict) -> str:
+    """A card as its whole page line, the way lines in it (spec 159); just its question where it has no lines."""
+    if not _lines_of(c.get("lines"), c.get("choices") or []):
+        return str(c.get("q") or "")
+    return line({"ask": c["q"], "choices": c["choices"], "pick": c.get("pick"), "why": c.get("why") or "", "lines": c["lines"]})
+
+
 def open_of(lines: object) -> list[tuple[int, str]]:
     """The questions with no answer yet, `(index, question)`."""
     return [(n, q) for n, (q, (_l, a)) in enumerate(zip(questions_of(lines), _rows(lines))) if not a]
@@ -260,6 +267,8 @@ def card(raw: object, *, id: str, by: str, leader: str, project: bool = False) -
         return None
     out = {"id": str(id), "by": str(by), "leader": str(leader), "q": q, "choices": choices, "pick": pick,
            "why": _plain(raw.get("why"), WHY_CHARS), "project": bool(project)}
+    if (lines := _lines_of(raw.get("lines"), choices)):
+        out["lines"] = lines                              # a way's own line (spec 159): kept only when every way has one
     if (to := for_of(raw)) != PERSON:
         out["for"] = to                                   # a party that may answer it (spec 128 D.1): kept only when it is one; no `for` is the person's
     return out
@@ -324,6 +333,8 @@ def _asked(c: dict, state: str) -> dict:
     pick = c.get("pick")
     out = {"id": str(c.get("id") or ""), "q": str(c.get("q") or ""), "choices": [str(x) for x in c.get("choices") or []],
            "pick": pick if isinstance(pick, int) and not isinstance(pick, bool) else None, "why": str(c.get("why") or ""), "project": bool(c.get("project")), "state": state}
+    if lines := _lines_of(c.get("lines"), out["choices"]):
+        out["lines"] = lines
     if state != "waiting":
         out["answer"] = str(c.get("answer") or "")
         out["round"] = 2 if c.get("round") == 2 else 1
