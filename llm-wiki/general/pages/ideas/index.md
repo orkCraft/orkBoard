@@ -130,5 +130,6 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [What a trial with real tools found](143-what-a-trial-with-real-tools-found.md) — What a trial with real tools found
 - [A hypothesis on the page](146-a-hypothesis-on-the-page.md) — A hypothesis on the page
 - [A way's own line: each way of a question says what it leads to, on its card](159-a-ways-own-line.md) — A way's own line: each way of a leader's question carries one line of what it leads to, written by the leader to fit the card (decisions §270.2, §270.5); the Board's question format holds it, the host
-- [The past from history on the parties' tables](162-the-past-from-history-on-the-parties-tables.md) — I want to run everything through Orkboard from now on and see on the Board what was done before: the past on the parties' tables
+- [The past from history on the parties' tables](162-the-past-from-history-on-the-parties-tables.md) — I want to run everything through Orkboard from now on and see on the Board what was done before: the goals and decisions of past days in the discard column's past, and on the Product and Design tabs a
+- [Product's tree on the Board](163-products-tree-on-the-board.md) — I want to keep the product's direction and the closed use cases on Product's table
 - [Release keeps the chronicle](134-release-keeps-the-chronicle.md) — Release keeps the chronicle
