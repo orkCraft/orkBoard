@@ -233,8 +233,9 @@ def with_answer(lines: object, ask: str | int, answer: str, day: str, who: str =
 
 
 def card_line(c: dict) -> str:
-    """A card as its whole page line, the way lines in it (spec 159); just its question where it has no lines."""
-    if not _lines_of(c.get("lines"), c.get("choices") or []):
+    """A card as its whole page line, the way lines in it (spec 159); just its question where it has no lines, or where a way is longer than `parse` reads (CHOICE_CHARS): what is written always reads back."""
+    choices = c.get("choices") or []
+    if not _lines_of(c.get("lines"), choices) or not all(0 < len(x) <= CHOICE_CHARS for x in choices):
         return str(c.get("q") or "")
     return line({"ask": c["q"], "choices": c["choices"], "pick": c.get("pick"), "why": c.get("why") or "", "lines": c["lines"]})
 

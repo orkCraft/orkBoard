@@ -125,3 +125,16 @@ def test_a_card_and_its_talk_read_keep_the_lines_and_a_card_without_lines_is_as_
     iq.save_record(tmp_path, "g", {"mode": "talk", "round": 1, "waiting": [c, plain], "stances": []})
     qs = iq.talk_of(tmp_path, "g")["stances"][0]["questions"]
     assert qs[0]["lines"] == c["lines"] and "lines" not in qs[1]
+
+
+def test_a_card_with_a_way_longer_than_a_page_line_reads_is_written_as_its_question_alone_and_an_old_line_is_unchanged():
+    """Spec 159 A: a card's way may be 60 characters, a page line's 40; what is written always reads back (never ways and lines lost into the ask)."""
+    long = "A" * 50
+    c = iq.card({"q": "Which container?", "choices": [long, "Docker"], "pick": 0, "why": "x", "lines": ["Fast to set up", "Slow to set up"]}, id="c1", by="tech", leader="ork")
+    assert c and c["choices"][0] == long and c["lines"]
+    written = iq.card_line(c)
+    assert written == "Which container?" and iq.parse(written)["ask"] == "Which container?"
+    short = iq.card({"q": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone", "lines": ["Ships in a week", "Ships in a month"]}, id="c2", by="tech", leader="ork")
+    old = iq.card_line(short)
+    assert old == "Which store first? (**App Store** / Google Play) — iPhone · App Store: Ships in a week · Google Play: Ships in a month"
+    assert iq.parse(old)["lines"] == short["lines"]
