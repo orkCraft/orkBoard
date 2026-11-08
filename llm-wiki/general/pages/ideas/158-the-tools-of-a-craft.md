@@ -166,6 +166,12 @@ Tech's stages first (the registry, the makers, the pick and the cap: what the fa
 - A plate is named by what it makes, *Picture maker* or *Sound maker*, its service (OpenAI Images, ElevenLabs Sound Effects) under it; a paid maker is taken only with a cap, in the API's currency.
 - A plate's why is a visible line on focus and hover in the face's words: *no key on this computer*, *its AI tool cannot make it*, *no official API*, never a `title` alone.
 - The receipt line reads *Made by the <maker> · <cost> of a <cap> cap* (*about* before an estimate); a pick the cap stopped says the price and the cap and opens that party's plate.
+### Accepted
+- met: When the person opens the inventory on Art's chair, as first met, then the rug lays a shelf *Its makers* (a Picture maker, a Sound maker) apart from *Its AI tool*; another craft's chair lays none.
+- met: When a paid maker's ware lies on Art's rug with no cap, as first met, then its plate reads *Set a cap*; pressed or Enter, a labelled money field opens, and no take is sent until a cap is given.
+- met: When a maker has no key on this computer or its AI tool cannot run it, then its plate reads *not here*, its why in words seen on focus and on hover, never a title alone, and never says "harness".
+- met: When a pick a maker made opens in the hand, as first met, then a receipt line under its variants names the maker and its cost of its cap in money; a pick the cap stopped opens that plate in one press.
+- met: When the stall is drawn on Art's chair at 1280 × 800, then the makers' shelf fits the rug in orkUI's tokens, money in the warning colour with its words, and nothing overflows the table.
 
 ## Tech
 ### Talk
