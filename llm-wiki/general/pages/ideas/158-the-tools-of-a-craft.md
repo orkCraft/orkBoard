@@ -211,11 +211,11 @@ Tech's stages first (the registry, the makers, the pick and the cap: what the fa
 - A party's taken makers and their caps lie on its page under `craft_tools` (the Board, shared); a key and a host stay on the machine; `pick.tool` names the maker's id.
 - The modules keep their names (`realm/craft_tools.py`, `core/craft_*.py`); only what a person reads says *maker*; the cap is one round's of a pick task.
 ### Accepted
-- met: When a pick task names a tool its party has taken, then Orkboard runs that tool's maker instead of a harness session, the pick opens as today's, and pick.json keeps the tool, the round's cost and its cap in money.
-- met: When a tool's next request would bring the round's spend above its cap, then no request leaves the computer and the task stops with the price and the cap in words.
-- met: When a tool's task is run again after a crash or a send back, then the spend reserved before each earlier request is still counted, so the round never pays above its cap.
-- met: When the gate runs the suite, then no test reaches a paid tool's host: each maker is faked, and a test fails when a real endpoint is called.
-- met: When a party's tools are read for its chair, then each says here or not here with its why (no key on this computer, its harness cannot make it, no official API), and the runner refuses a pick with a tool not here.
+- met: When a pick task names a maker its party has taken, then Orkboard runs that maker instead of an AI tool's session, the pick opens as today's, and pick.json keeps the maker, the round's cost and its cap in money.
+- met: When a maker's next request would bring the round's spend above its cap, then no request leaves the computer and the task stops with the price and the cap in words.
+- met: When a maker's task is run again after a crash or a send back, then the spend reserved before each earlier request is still counted, so the round never pays above its cap.
+- met: When the gate runs the suite, then no test reaches a paid maker's host: each maker is faked, and a test fails when a real endpoint is called.
+- met: When a party's makers are read for its chair, then only Art's lays any (a Picture maker, a Sound maker), each here or not here with its why (no key on this computer, its AI tool cannot make it, no official API), and the runner refuses a maker not here.
 
 ## Open questions
 - Art only, or one frame for all? (**one shape for every craft, only Art's tools in it** / Art only, a shape of its own / every craft's tools at once) — one shape costs little more and §256.6's code tools fit it later; tools no party asked for wait
