@@ -49,9 +49,11 @@ export function gateScreen(g, core, act) {
   const actions = waits ? [h("button", { class: "ork-btn primary big", type: "button", "data-act": "gate-merge",
     onclick: async (e) => {
       gatePress.press(e.currentTarget);                // before the button is disabled and the screen redrawn: the flags raised travel from here
-      e.currentTarget.disabled = true;
+      const btn = e.currentTarget, was = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Running the tests…";            // the host runs the tests before it merges, and a red comes back in words
       const r = await act("ideas.gate_merge", {}, `Merged: ${g.main} has every goal of ${g.into}.`);
-      if (!r) gatePress.drop();
+      if (!r) { gatePress.drop(); btn.textContent = was; btn.disabled = false; }
       else if (r.note) core.flash(r.note);
     } },
   `Merge ${g.into} into ${g.main}`)] : [];

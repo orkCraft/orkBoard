@@ -59,7 +59,7 @@ export function ReleaseMap({ g, narrow }) {
           <span class="ork-label"><${Sign} name="flag" /> Into ${main}</span>
           <div class="ork-frame mp-tomain__box">
             <div class="mp-tomain__go"><button type="button" class="ork-btn primary" disabled=${busy || !waits} onClick=${merge}>To ${main}</button>
-              <span class="mp-cap">${waits ? `Merges ${into} into ${main} whole: ${countWords(goals.length, "goal", "goals")}, nothing reaches ${main} without you` : `Nothing to take to ${main}`}</span></div>
+              <span class="mp-cap" role=${busy ? "status" : undefined}>${busy ? "Running the tests…" : waits ? `Merges ${into} into ${main} whole: ${countWords(goals.length, "goal", "goals")}, nothing reaches ${main} without you` : `Nothing to take to ${main}`}</span></div>
             <ul class="mp-checks">
               ${waits && html`<li><span class="mp-ok"><${Sign} name="check" /></span>${countWords(d.commits, "commit", "commits")} to take, ${countWords(d.files, "file", "files")} changed</li>`}
               ${refused && html`<li class="mp-bad" role="alert"><${Sign} name="cross" />${refused}</li>`}

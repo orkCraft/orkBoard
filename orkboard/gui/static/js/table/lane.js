@@ -7,7 +7,7 @@
 import { useEffect, useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { act } from "../shell/store.js";
-import { mergeGate } from "../arena/gate.js";
+import { TESTING, mergeGate, testing } from "../arena/gate.js";
 import { ORKMASTER, over, pick, picked } from "../frame/state.js";
 import { readyOf, readyWords } from "../hand/data.js";
 import { nightMoons } from "../hand/nightcard.js";
@@ -48,7 +48,7 @@ export function ReleaseLane({ tab, parties }) {
     <div class="release-lane__scroll" ref=${scroll}>
       ${(top || sending.value) && html`<${RingAround} slug=${top?.slug || null}>${top && html`<${ReadyCards} goals=${[top]} main=${ready.main} on=${now} onPress=${press} />`}<//>`}
       ${goals.length > 1 && html`<${ReadyCards} goals=${goals.slice(1)} main=${ready.main} on=${now} onPress=${press} />`}
-      ${own && html`<p class="release-lane__own cap">${readyWords(ready)}: commits that belong to no goal.<button type="button" class="ork-btn" data-to-main onClick=${merge}>To ${ready.main}</button></p>`}
+      ${own && html`<p class="release-lane__own cap">${readyWords(ready)}: commits that belong to no goal.<button type="button" class="ork-btn" data-to-main disabled=${testing.value} onClick=${merge}>To ${ready.main}</button>${testing.value && html` <span role="status" data-testing>${TESTING}</span>`}</p>`}
       ${done.length > 0 && html`<ul class="release-lane__done" aria-label="Done, not yet seen">${done.map((x) => html`<li key=${x.slug}><${DoneFace} g=${x} picked=${now === x.slug} dealing=${dealing === x.slug ? dealing : ""} moon=${moons.has(x.slug)}
         line=${mainLine(x)} label=${`${x.full}, done`} onPress=${() => press(x.slug)} /></li>`)}</ul>`}
       <${PastDecks} party=${party} seeing=${scroll} />
