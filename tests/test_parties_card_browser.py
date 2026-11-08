@@ -95,11 +95,15 @@ def test_a_partys_line_its_heads_and_its_shadows_and_the_size_changes_them_at_on
     assert not d.errors, d.errors
 
 
-def test_a_shadow_is_not_pressed_and_release_is_ticked_and_locked_at_lean(desk, game):
+def test_a_shadow_is_not_pressed_and_release_is_a_craft_as_any(desk, game):
+    """Decisions §274.1: Release is offered as any craft, ticked where its stage is reached, and can be unticked."""
     d, pg = open_first(desk, game)
     r = row(pg, "release")
-    assert r.get_attribute("data-locked") == "true" and r.locator('[role="checkbox"]').get_attribute("aria-disabled") == "true"
-    assert r.locator('[data-size="standard"]').is_disabled() and "in every project" in r.inner_text()
+    box = r.locator('[role="checkbox"]')
+    assert r.get_attribute("data-locked") == "false" and box.get_attribute("aria-disabled") != "true"
+    assert box.get_attribute("aria-checked") == "true" and "in every project" not in r.inner_text()
+    box.click()
+    pg.wait_for_function("() => document.querySelector('.pc-row[data-party=release] [role=checkbox]').getAttribute('aria-checked') === 'false'", timeout=WAIT_MS)
     assert pg.locator("button.pc-hd.is-empty").count() == 0
     assert not d.errors, d.errors
 
