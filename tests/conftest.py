@@ -224,3 +224,52 @@ def _nothing_watches_the_tools():
     from orkboard.realm import tool_errors
     tool_errors._WATCHERS.clear()
     tool_errors._OK_WATCHERS.clear()
+
+
+@pytest.fixture(autouse=True)
+def no_paid_tool_connections(monkeypatch):
+    """Paid providers are always faked; keep the Board's localhost servers usable.
+
+    Check before HTTP (including a proxy tunnel) and before DNS/socket connection,
+    so a forgotten fake fails with the host's name before it can send a key.
+    """
+    import http.client
+    import socket
+    from orkboard.realm import craft_tools
+
+    hosts = {tool.host.lower().rstrip('.') for tool in craft_tools.REGISTRY.values() if tool.kind == "api"}
+
+    def check(host):
+        if isinstance(host, bytes):
+            host = host.decode("ascii", errors="replace")
+        if isinstance(host, str) and host.lower().rstrip('.').split(':')[0] in hosts:
+            pytest.fail(f"A test reached paid tool host {host}; inject a fake transport", pytrace=False)
+
+    request = http.client.HTTPConnection.request
+    resolve = socket.getaddrinfo
+    connect = socket.socket.connect
+    connect_ex = socket.socket.connect_ex
+
+    def guarded_request(self, *args, **kwargs):
+        check(self.host)
+        check(getattr(self, "_tunnel_host", None))
+        return request(self, *args, **kwargs)
+
+    def guarded_resolve(host, *args, **kwargs):
+        check(host)
+        return resolve(host, *args, **kwargs)
+
+    def guarded_connect(self, address):
+        if isinstance(address, tuple):
+            check(address[0])
+        return connect(self, address)
+
+    def guarded_connect_ex(self, address):
+        if isinstance(address, tuple):
+            check(address[0])
+        return connect_ex(self, address)
+
+    monkeypatch.setattr(http.client.HTTPConnection, "request", guarded_request)
+    monkeypatch.setattr(socket, "getaddrinfo", guarded_resolve)
+    monkeypatch.setattr(socket.socket, "connect", guarded_connect)
+    monkeypatch.setattr(socket.socket, "connect_ex", guarded_connect_ex)
