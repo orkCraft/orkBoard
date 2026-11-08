@@ -272,3 +272,19 @@ def test_maker_plates_say_the_agreed_cap_in_money_and_about_an_estimate(host):
     got = stall(host, art)
     assert ware(got, "craft_tools", "openai-images")["price"] == {"money": "1.25 USD cap"}
     assert ware(got, "craft_tools", "elevenlabs-sound")["price"] == {"money": "about 1.25 USD cap"}
+
+
+def test_maker_host_strings_shown_on_the_rug_never_say_harness(host, monkeypatch):
+    from dataclasses import replace
+    from orkboard.realm import craft_tools
+
+    monkeypatch.setattr(craft_tools, "key", lambda _: None)
+    art = _party(host, "art")
+    tool = craft_tools.get("openai-images")
+    reasons = []
+    for changed in (tool, replace(tool, needs=("unavailable-making",)), replace(tool, official_api=False)):
+        monkeypatch.setitem(craft_tools.REGISTRY, tool.id, changed)
+        got = stall(host, art)
+        reasons.append(ware(got, "craft_tools", tool.id)["why"])
+        assert "harness" not in json.dumps(got).lower()
+    assert reasons == ["no key on this computer", "its AI tool cannot make it", "no official API"]

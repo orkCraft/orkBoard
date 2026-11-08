@@ -110,3 +110,8 @@
 .stall-maker__service, .stall-maker__leaves { font: var(--ork-type-caption); color: var(--ork-ink-read); overflow-wrap: anywhere; }
 .stall-maker__leaves { text-align: center; }
 .stall-maker__leaves b { display: block; font-weight: 600; }
+
+/* Keep the reason on the rug, including while its Settings link has focus. */
+.stall-maker__why { visibility: hidden; color: var(--ork-ink-read); font: var(--ork-type-caption); text-align: center; overflow-wrap: anywhere; }
+.is-makers .stall-ware:hover .stall-maker__why, .is-makers .stall-ware:focus-within .stall-maker__why { visibility: visible; }
+.is-makers .stall-price.is-same { color: var(--ork-ink-read); }

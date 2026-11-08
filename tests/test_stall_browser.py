@@ -449,3 +449,51 @@ def test_art_lays_makers_after_its_ai_tool_and_tier_with_money_and_disclosures(g
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("why", ["no key on this computer", "its AI tool cannot make it", "no official API"])
+def test_unavailable_maker_says_why_on_focus_and_hover_without_harness(gui, why):
+    class MissingMakerHost(MakerShelfHost):
+        def shelves(self, chair):
+            shelves = super().shelves(chair)
+            for s in shelves:
+                if s["slot"] == "craft_tools":
+                    s["wares"][0].update(here=False, why=why)
+            return shelves
+
+    pg, host, log = opened(gui, "art", host=MissingMakerHost())
+    try:
+        w = pg.locator('[data-slot="craft_tools"][data-ware="openai-images"]')
+        reason = w.locator(".stall-maker__why")
+        assert w.locator(".stall-price").inner_text().strip() == "not here"
+        press = w.locator(".stall-ware__press")
+        press.focus()
+        assert reason.is_visible() and why in reason.inner_text()
+        assert press.get_attribute("aria-describedby") == reason.get_attribute("id")
+        pg.locator(".stall-pack").first.focus()
+        w.hover()
+        assert reason.is_visible() and why in reason.inner_text()
+        # Test the computed reading ink against the rug's token background.
+        contrast = reason.evaluate('''e => {
+          const s = getComputedStyle(e), root = getComputedStyle(document.documentElement);
+          const lum = c => { const rgb = c.match(/[\\d.]+/g).slice(0,3).map(Number).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return rgb[0]*.2126 + rgb[1]*.7152 + rgb[2]*.0722; };
+          const probe = document.createElement('span'); e.append(probe);
+          probe.style.color = root.getPropertyValue('--ork-panel');
+          const a = lum(s.color), b = lum(getComputedStyle(probe).color); probe.remove();
+          return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+        }''')
+        assert contrast >= 4.5
+        assert "harness" not in pg.locator(".stall").inner_text().lower()
+        # Scan words a reader receives; orkUI's image src filenames keep their names.
+        reader_attributes = pg.locator(".stall").evaluate('''e =>
+          [e, ...e.querySelectorAll('*')].flatMap(node =>
+            ['aria-label', 'title', 'alt'].map(name => node.getAttribute(name) || '')
+          ).join(' ')
+        ''')
+        assert "harness" not in reader_attributes.lower()
+        if why == "no key on this computer":
+            reason.get_by_role("button", name="Settings · sign-ins").click()
+            assert pg.locator('[data-place][aria-label="Settings"]').is_visible()
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

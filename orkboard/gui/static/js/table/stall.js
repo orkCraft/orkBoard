@@ -5,6 +5,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head } from "../orkui.js";
+import { openPlace } from "../frame/place.js";
 import { board } from "../board/store.js";
 import { carried, inventory } from "../frame/state.js";
 import { HeroFace, Relic, Plate } from "./stallfaces.js";
@@ -38,7 +39,8 @@ export function fly(from, slot) {
 }
 
 function Ware({ shelf, w, chair, head }) {
-  const mine = !!w.price?.mine, locked = !!w.price?.locked, heroes = shelf.kind === "heroes", on = hover.value?.slot === shelf.slot && hover.value?.id === w.id;
+  const mine = !!w.price?.mine, locked = !!w.price?.locked || (shelf.kind === "makers" && w.here === false), heroes = shelf.kind === "heroes", on = hover.value?.slot === shelf.slot && hover.value?.id === w.id;
+  const whyId = `maker-why-${w.id}`;
   const press = (e) => {
     if (mine || locked || shelf.kind === "makers") return;
     fly(e.currentTarget.querySelector(".stall-face"), shelf.slot);
@@ -47,10 +49,13 @@ function Ware({ shelf, w, chair, head }) {
   };
   const point = () => pointAt(mine || locked ? null : shelf.slot, w.id, w.price), leave = () => pointAt(null);
   return html`<div class=${cls("stall-ware", { "is-mine": mine, "is-locked": locked, "is-on": on })} data-ware=${w.id} data-slot=${shelf.slot} onMouseEnter=${point} onMouseLeave=${leave} onFocusIn=${point} onFocusOut=${leave}>
-    <button type="button" class="stall-ware__press" aria-disabled=${mine || locked ? "true" : undefined} title=${locked ? w.price.locked : w.line || undefined} aria-label=${`${shelf.label}: ${w.word}`} onClick=${press}>
+    <button type="button" class="stall-ware__press" aria-describedby=${shelf.kind === "makers" && locked ? whyId : undefined} aria-disabled=${mine || locked ? "true" : undefined} title=${locked ? w.price.locked : w.line || undefined} aria-label=${`${shelf.label}: ${w.word}`} onClick=${press}>
       ${heroes ? html`<${HeroFace} w=${w} fallback=${head} />` : html`<${Relic} w=${w} slot=${shelf.slot} race=${head?.race} />`}
     </button>
-    <${Plate} price=${w.price} />
+    <${Plate} price=${shelf.kind === "makers" && locked ? { locked: w.why } : w.price} />
+    ${shelf.kind === "makers" && locked && html`<p class="stall-maker__why" id=${whyId}>${w.why}
+      ${w.why === "no key on this computer" && html`<button type="button" class="ork-btn quiet" onClick=${() => openPlace("settings", {}, "Settings")}>Settings · sign-ins</button>`}
+    </p>`}
     ${shelf.kind === "makers" && html`<p class="stall-maker__leaves"><b>What leaves this computer</b>${w.leaves}</p>`}
     ${w.before && !mine && html`<small class="stall-ware__before">Yours before</small>`}
   </div>`;
