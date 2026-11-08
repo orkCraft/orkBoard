@@ -20,6 +20,16 @@ import { Row } from "./uprow.js";
 import { Top } from "./uptop.js";
 import { feltOf } from "../table/felt.js";
 import { presenceNow } from "../table/presence.js";
+import { partiesAll } from "../table/data.js";
+import { routeOf } from "./upway.js";
+
+/** The felt the phone's table wears (spec 160 K, decisions §275.3): the party shown, the party of the goal shown (the one at work in its route, else its first, else the goal's own) or of the card's leader; the Orkmaster's wood when none is. */
+function feltOfLook(look) {
+  if (look.kind === "party") return feltOf(look.g);
+  const legs = look.node ? routeOf(look.node) : [], at = legs.find((r) => r.state === "now") || legs[0], stop = look.entry?.stops?.[0];
+  const slug = at?.slug || look.node?.goal || stop?.row?.goal || stop?.row?.party || "";
+  return (slug && feltOf(partiesAll().find((g) => g.slug === slug))) || "orkmaster";
+}
 
 /** The hand on a phone. `root`: the hand's element ref (the keys), `stacks`: data.js `stacksOf`, `plus`: opens the field. */
 export function Upright({ root, stacks, plus }) {
@@ -31,7 +41,7 @@ export function Upright({ root, stacks, plus }) {
     else if (look.kind === "goal" && had.current === look.slug && picked.value === look.slug) { had.current = ""; picked.value = ""; if (tab.value !== ORKMASTER) openTab(ORKMASTER); }       // its last card was answered: the next entry comes
     else had.current = "";
   }, [look.kind, look.slug, look.entry?.key]);
-  return html`<footer ref=${root} class=${cls("hand hand-up ork-table", { "is-out": presenceNow()?.here === false })} data-party=${look.kind === "party" ? feltOf(look.g) : "orkmaster"} aria-label="The hand" data-upright="1" data-empty=${look.kind === "none" ? "1" : undefined} data-typing=${typing ? "1" : undefined}>
+  return html`<footer ref=${root} class=${cls("hand hand-up ork-table", { "is-out": presenceNow()?.here === false })} data-party=${feltOfLook(look)} aria-label="The hand" data-upright="1" data-empty=${look.kind === "none" ? "1" : undefined} data-typing=${typing ? "1" : undefined}>
     <${Notice} />
     <${Top} />
     <${Look} look=${look} entries=${entries} typing=${typing} />

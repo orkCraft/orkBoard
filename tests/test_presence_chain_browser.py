@@ -26,8 +26,8 @@ AWAY = {"here": False, "until": "2026-11-05T19:00", "held": False}
 class DoorHost(HandHost):
     """The hand's host with the presence: `presence` in the snapshot (none as an older host), and `presence.set` turning it as the real host does (the press holds the other state)."""
 
-    def __init__(self, presence=HERE):
-        super().__init__()
+    def __init__(self, presence=HERE, **kw):
+        super().__init__(**kw)
         self.presence = copy.deepcopy(presence)
 
     def snapshot(self):
@@ -217,11 +217,11 @@ def test_the_phones_table_wears_the_felt_and_away_puts_it_out(gui):
         hand = pg.locator(".hand-up")
         hand.wait_for(timeout=WAIT_MS)
         cls = hand.get_attribute("class")
-        assert "ork-table" in cls and "is-out" not in cls and hand.get_attribute("data-party") == "orkmaster"
+        assert "ork-table" in cls and "is-out" not in cls and hand.get_attribute("data-party") == "ork", "the first goal shown is Tech's"
         assert "radial-gradient" in hand.evaluate("e => getComputedStyle(e).backgroundImage"), "the felt's light is orkUI's steps"
         pg.locator(".up-top .presence-chain").click()
         pg.wait_for_function("() => document.querySelector('.hand-up').classList.contains('is-out')", timeout=WAIT_MS)
-        flat = pg.evaluate("() => { const e = document.createElement('i'); e.style.backgroundColor = 'var(--ork-felt-orkmaster-out)'; document.body.append(e); const c = getComputedStyle(e).backgroundColor; e.remove(); return c; }")
+        flat = pg.evaluate("() => { const e = document.createElement('i'); e.style.backgroundColor = 'var(--ork-felt-ork-out)'; document.body.append(e); const c = getComputedStyle(e).backgroundColor; e.remove(); return c; }")
         assert hand.evaluate("e => getComputedStyle(e).backgroundImage") == "none" and hand.evaluate("e => getComputedStyle(e).backgroundColor") == flat, "away: the felt flat and darker"
     finally:
         pg.context.close()
@@ -246,3 +246,40 @@ def test_the_phones_backpack_opens_the_stall_over_the_hand_and_the_way_back_clos
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
+
+
+def test_the_phones_table_wears_the_shown_goals_party_felt_and_the_wood_when_nothing_is_shown(gui):
+    """Spec 160 K (decisions §275.3): a Tech goal shown -> Tech's race (ork); nothing shown -> the Orkmaster's wood."""
+    pg, errors = start(gui, "phone", DoorHost(HERE))
+    try:
+        pg.locator('.up-look[data-look="goal"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator(".up-look").get_attribute("data-goal") == "timer", "the hand's first goal is Tech's"
+        assert pg.locator(".hand-up").get_attribute("data-party") == "ork"
+    finally:
+        pg.context.close()
+    assert not errors, "\n".join(errors)
+    pg, errors = start(gui, "phone", DoorHost(HERE, empty=True))
+    try:
+        pg.locator(".up-none").wait_for(timeout=WAIT_MS)
+        assert pg.locator(".hand-up").get_attribute("data-party") == "orkmaster"
+    finally:
+        pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_the_stalls_title_lies_below_the_leathers_straps_on_the_phone_and_the_desktop(gui):
+    for width, opener in (("phone", ".up-top .stall-pack"), ("wide", "[data-backpack]")):
+        pg, errors = start(gui, width, DoorHost(HERE))
+        try:
+            pg.locator(opener).first.click()
+            pg.locator(".stall-merchant").wait_for(state="visible", timeout=WAIT_MS)
+            pg.wait_for_timeout(300)
+            pane = pg.locator(".table-pane.ork-leather").bounding_box()
+            title = pg.locator(".stall-title").first.bounding_box()
+            if title is None:
+                assert width == "wide", "the phone's head shows its title"          # on the desktop a bare head (nothing picked) shows no title, only the menu in the corner
+                continue
+            assert title["y"] >= pane["y"] + 40, (width, title, pane)
+        finally:
+            pg.context.close()
+        assert not errors, "\n".join(errors)
