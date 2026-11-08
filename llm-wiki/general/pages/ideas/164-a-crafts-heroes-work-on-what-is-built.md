@@ -8,7 +8,6 @@ priority: normal
 short: A craft's heroes
 phase: talk
 route: product, design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -31,10 +30,14 @@ Build decisions §278 and §279 (the owner, 8 November; first taken on 7 Novembe
 
 ## Open questions
 - Does the star seat its hero? (**Marks the ware only** / Seats new parties / Seats every unchosen party) — Spike Shaman (the dearest) and Store Gnome lay frames, a model's pass each; a cost moved by itself is the person's (§57.3) · Marks the ware only: Nothing changes by itself; each craft's default stays until taken · Seats new parties: A new app's Tech starts on Spike Shaman, the dearest; old parties keep theirs · Seats every unchosen party: Projects on update switch heroes; each new frame laid in a pass
+  - Answered: Marks the ware only (the person, 2026-11-08)
 - When a party's hero is cut? (**Default seated, said once** / Default seated silently / Kept until another is taken) — the person took it and the hand marks it Yours (§266.1); a swap unseen breaks H1 · Default seated, said once: The stall's line names the cut hero and why; its table file stays as was · Default seated silently: As goal_team.hero_of does today; the hand shows another hero unasked · Kept until another is taken: The cut hero still works for who carries it; the shelf marks it retired
+  - Answered: Default seated, said once (the person, 2026-11-08)
 - How does Lantern Imp sit at Run? (**Run's default, no table** / Its own table, a pass) — Run has no map to lay, and no pass is spent by itself (§57.3); its rubric then says what Play gathers · Run's default, no table: Run's rubric becomes traces, errors and slow places; no model's pass · Its own table, a pass: Every Run party lays Lantern's four places in a model's pass on update
+  - Answered: Run's default, no table (the person, 2026-11-08)
 
 ## Decisions
+- §281: the person's answers in Talk (8 November 2026)
 
 ## Product
 ### Talk

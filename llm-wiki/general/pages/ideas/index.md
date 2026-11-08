@@ -113,6 +113,7 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [Break the realm and core import cycle](cut-the-import-cycle-between-realm-and-core.md) — Move shared seat rules into pure realm modules so realm no longer imports core.
 - [What trial 152 found](155-what-trial-152-found.md) — What trial 152 found: one bad page never stops the Board; a step that changed what people see is looked at or said unlooked; a doubt the code settles is checked and a question a reference settles answ
 - [Main checks explain and remember failures](the-checks-into-main-and-a-red-from-before.md) — Main checks distinguish old failures and show what blocks main.
+- [The Orkmaster reads the decisions](166-the-orkmaster-reads-the-decisions.md) — The Orkmaster reads the decisions
 - [Orkboard in orkUI](40-design-system.md) — Orkboard in orkUI
 - [OrkUI 0.15.x copied](96-orkui-0-15-0-copied.md) — OrkUI 0.15.x copied
 - [One card picked, on either side](156-one-pick-and-the-release-column.md) — У нас сейчас очень сложный интерфейс стола (переключатели lifecycle цели - talk, spec, work, done, крест для перехода на чистый стол и ещё выделение карт из сброса показывает совершенно другой стол, к
@@ -120,7 +121,7 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [Answers as cards in the hand, To main from the discard after the gate's tests](158-the-window-as-a-table.md) — Окно в облике стола: цвет — партия, стихия, сигнал; у каждого лидера своё сукно, свет от верхнего края ступенями, бронзовые рамы, вымпелы. Без большой карты: вопрос поднимается на стол, ответы — карты
 - [Хочу ввести инструменты специализаций: то, чем пользуется каждая партия,…](160-the-tools-of-a-craft.md) — Хочу ввести инструменты специализаций: то, чем пользуется каждая партия, причём у одного харнеса инструмент может быть, у другого нет. Начать с art: сейчас картинки умеет делать только agy (и он exper
 - [The table's look and the room's things: colour by party, felt and light, the lamp, the backpack and the chair, the discard beside the table](161-the-tables-look-and-the-rooms-things.md) — The person, 8 November 2026: давай сделаем все решения по столу, желательно имплементация на моделях попроще.
-- [Each leader's map takes a board game's shape](165-each-leaders-map-a-board-games-shape.md) — Each leader's map takes a board game's shape
+- [Each leader's map takes a board game's shape](165-each-leaders-map-a-board-games-shape.md) — Build decision §280 (the owner, 8 November; first taken on 31 October as §195 on the branch claude/spec-117, lost in a merge; that branch holds its first spec, docs/specs/117-each-lens-a-games-shape.m
 - [A goal's party, measured](43-party-measured.md) — A goal's party, measured
 - [What the first look said](90-what-the-first-look-said.md) — What the first look said
 - [The owner's list of 26 October](91-the-owners-list.md) — The owner's list of 26 October
@@ -133,5 +134,5 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [A way's own line: each way of a question says what it leads to, on its card](159-a-ways-own-line.md) — A way's own line: each way of a leader's question carries one line of what it leads to, written by the leader to fit the card (decisions §270.2, §270.5); the Board's question format holds it, the host
 - [The past from history on the parties' tables](162-the-past-from-history-on-the-parties-tables.md) — I want to run everything through Orkboard from now on and see on the Board what was done before: the goals and decisions of past days in the discard column's past, and on the Product and Design tabs a
 - [Product's tree on the Board](163-products-tree-on-the-board.md) — I want to keep the product's direction and the closed use cases on Product's table: the outcome the project means to move, the users' jobs under it, which goals served each job (the done ones are the 
-- [A craft's heroes work on what is built](164-a-crafts-heroes-work-on-what-is-built.md) — A craft's heroes work on what is built
+- [A craft's heroes work on what is built](164-a-crafts-heroes-work-on-what-is-built.md) — Build decisions §278 and §279 (the owner, 8 November; first taken on 7 November on the branch claude/class-leaders-frameworks-nw3xxx, which never reached main): a craft keeps only the heroes whose fra
 - [Release keeps the chronicle](134-release-keeps-the-chronicle.md) — Release keeps the chronicle

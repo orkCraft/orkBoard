@@ -7664,3 +7664,22 @@ do it for every lens.* So:
 4. **The rule of the line holds** (§50.5): no count of what waits, no streak; the reach is shown, Start stays the person's.
 5. Its spec built by the cheaper model, each part reviewed; Tech's mockup (`docs/mockups/tech-reach/` on the branch `claude/tech-reach-mockup`) the only one.
 The owner's call.
+
+## 281. The heroes and the maps as the leaders recommended; the leaders' rules follow the decisions, and the Orkmaster reads them (8 November 2026, the owner)
+
+Changes: 278.5 (the star seats nothing), 280 (its order of work and the phone).
+
+Why: goals 164 and 165's Talk left six questions no decision settled; the owner took each leader's recommended way. The owner
+also asked that, now that decisions are taken through the Board, its leaders work by every one of them: the role files carried
+§266's heroes after §278 cut some, and the Orkmaster's role read no decision at all. So:
+1. **The Orkmaster's star marks a hero on the stall's shelf only**; it seats no hero by itself (a hero not the craft's default
+   costs a pass, §57.3).
+2. **A party whose hero is cut gets its craft's default, said once** to the person.
+3. **Lantern Imp is Run's default, with no table of its own.**
+4. **Heat and reach come first, on the maps as they are**; each map's shape then comes as a stage of its own, seen in a picture.
+5. **Reach on the desktop now**; the phone's in a goal of its own.
+6. **Dev and main's reach on hover reads the plan kept**, without git's trial run.
+7. **The leaders' rules follow the decisions**: the role files Orkboard writes say today's heroes (goal 164), and **the
+   Orkmaster reads the decisions** its goal names and the log's newest before it routes (a goal of its own).
+
+The owner's call.

@@ -8,7 +8,6 @@ priority: normal
 short: A board game's shape
 phase: talk
 route: design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -31,13 +30,16 @@ Build decision §280 (the owner, 8 November; first taken on 31 October as §195 
 
 ## Open questions
 - Heat and reach before the shapes? (**Heat and reach first, shapes after** / All of §280 at once) — a person learns the one grammar on maps they know before every tab's layout moves · Heat and reach first, shapes after: The maps keep their layouts; each shape then lands and is looked at alone · All of §280 at once: Every tab's map changes in one goal, looked at in one pass
+  - Answered: Heat and reach first, shapes after (the person, 2026-11-08)
 - Reach on the phone in this goal? (**Desktop now, the phone after** / The phone in this goal) — the phone has no pointer to hover and one column (§226); its slice (§222) needs a look of its own · Desktop now, the phone after: The phone's slices stay as they are until a goal of their own · The phone in this goal: Heat and reach on the phone's slices on a pick, drawn once for both
+  - Answered: Desktop now, the phone after (the person, 2026-11-08)
 - Dev and main's reach on hover? (**The plan kept, without its trial** / The full plan, on a pick only) — goal_main.plan takes the git lock and may make a worktree; a hover must not wait on git · The plan kept, without its trial: Hover lights the goals it takes along; a conflict shows only at To main · The full plan, on a pick only: Hover lights nothing on Dev and main; a pick waits for git's trial
+  - Answered: The plan kept, without its trial (the person, 2026-11-08)
 
 ## Decisions
+- §281: the person's answers in Talk (8 November 2026)
 
 ## Design
-
 ### Talk
 - verdict: doubt — every tab's map changes at once on the cheaper model; go if heat and reach land first on today's layouts, then each shape a stage of its own, looked at in a picture
 - stance: Design holds the look of every map here; heat and reach serve choosing between goals, if each square names its kind and dimming keeps names readable
@@ -47,7 +49,6 @@ Build decision §280 (the owner, 8 November; first taken on 31 October as §195 
 - assumes: a person compares goals by their reach before Start — shown by: goals picked or hovered on a map before their Start, over a week of use
 
 ## Tech
-
 ### Talk
 - verdict: doubt — go if heat and reach are read once per Board change in a realm module and served by a mixin of their own, not per hover through ideas.page nor added to gui/ideas.py (769 lines)
 - stance: Tech builds heat and reach on System and Screens on their maps as built, from data code already reads; each other map's relation and shape is a stage of its own, looked at alone
