@@ -113,7 +113,7 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [Break the realm and core import cycle](cut-the-import-cycle-between-realm-and-core.md) — Move shared seat rules into pure realm modules so realm no longer imports core.
 - [What trial 152 found](155-what-trial-152-found.md) — What trial 152 found: one bad page never stops the Board; a step that changed what people see is looked at or said unlooked; a doubt the code settles is checked and a question a reference settles answ
 - [Main checks explain and remember failures](the-checks-into-main-and-a-red-from-before.md) — Main checks distinguish old failures and show what blocks main.
-- [The Orkmaster reads the decisions](166-the-orkmaster-reads-the-decisions.md) — The Orkmaster reads the decisions
+- [The Orkmaster reads the decisions](166-the-orkmaster-reads-the-decisions.md) — Build decision §281.7: the Orkmaster's role (llm-wiki/general/roles/orkmaster.md, written by Orkboard from its package's rules, as each seat's role is) reads no decision today: it routes from the goal
 - [Orkboard in orkUI](40-design-system.md) — Orkboard in orkUI
 - [OrkUI 0.15.x copied](96-orkui-0-15-0-copied.md) — OrkUI 0.15.x copied
 - [One card picked, on either side](156-one-pick-and-the-release-column.md) — У нас сейчас очень сложный интерфейс стола (переключатели lifecycle цели - talk, spec, work, done, крест для перехода на чистый стол и ещё выделение карт из сброса показывает совершенно другой стол, к
@@ -135,4 +135,5 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [The past from history on the parties' tables](162-the-past-from-history-on-the-parties-tables.md) — I want to run everything through Orkboard from now on and see on the Board what was done before: the goals and decisions of past days in the discard column's past, and on the Product and Design tabs a
 - [Product's tree on the Board](163-products-tree-on-the-board.md) — I want to keep the product's direction and the closed use cases on Product's table: the outcome the project means to move, the users' jobs under it, which goals served each job (the done ones are the 
 - [A craft's heroes work on what is built](164-a-crafts-heroes-work-on-what-is-built.md) — Build decisions §278 and §279 (the owner, 8 November; first taken on 7 November on the branch claude/class-leaders-frameworks-nw3xxx, which never reached main): a craft keeps only the heroes whose fra
+- [Each leader's view of the product, on its tab](167-each-leaders-view-of-the-product.md) — Each leader's view of the product, on its tab
 - [Release keeps the chronicle](134-release-keeps-the-chronicle.md) — Release keeps the chronicle
