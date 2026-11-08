@@ -1,0 +1,19 @@
+{
+  "note": "The source of the chain's block in office/components.css (python tools/build_things.py). The lamp's chain (Orkboard's decisions §271.1, §271.4): bronze links hung from the window's top edge and a bead to pull, 6 x 29 cells, 2 px a cell (12 x 58). A state is `rows`, a letter a cell, `.` nothing; `H` the bronze's light, `B` the bronze, `L` its shade. At rest 18 rows of links (three of a six-row period: an edge-on link through a ring) and the bead (7 rows) under them; pulled, four rows longer, the bead lower. The box is as tall as the pulled chain, so a pull moves nothing but the bead.",
+  "w": 6, "h": 29,
+  "legend": {"H": "var(--ork-bronze-hi)", "B": "var(--ork-bronze)", "L": "var(--ork-bronze-lo)"},
+  "states": [
+    {"selector": ".ork-chain::before", "rows": [
+      "..HB..", "..HB..", ".HHBB.", ".H..B.", ".H..L.", ".BLLL.",
+      "..HB..", "..HB..", ".HHBB.", ".H..B.", ".H..L.", ".BLLL.",
+      "..HB..", "..HB..", ".HHBB.", ".H..B.", ".H..L.", ".BLLL.",
+      ".HHHH.", "HHBBBB", "HBBBBL", "HBBBBL", "BBBBBL", "BBBBLL", ".LLLL.",
+      "......", "......", "......", "......"]},
+    {"selector": ".ork-chain.is-pulled::before", "rows": [
+      "..HB..", "..HB..", ".HHBB.", ".H..B.", ".H..L.", ".BLLL.",
+      "..HB..", "..HB..", ".HHBB.", ".H..B.", ".H..L.", ".BLLL.",
+      "..HB..", "..HB..", ".HHBB.", ".H..B.", ".H..L.", ".BLLL.",
+      "..HB..", "..HB..", ".HHBB.", ".H..B.",
+      ".HHHH.", "HHBBBB", "HBBBBL", "HBBBBL", "BBBBBL", "BBBBLL", ".LLLL."]}
+  ]
+}

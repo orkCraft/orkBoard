@@ -1,0 +1,15 @@
+{
+  "note": "The source of the pennant's block in office/components.css (python tools/build_things.py). A swallowtail pennant on a pole (Orkboard's decisions §269.4), 7 cells wide, 2 px a cell: `G` the pole's gilt finial, `P` the pole (bronze), `F` the flag in its party's colour (`--_flag`), `h` its light edge (top and hoist) and `d` its shade (bottom and the tail's inner edge). At rest 17 rows (the flag 8 high), `.is-open` 23 (the flag 11 high, the pole longer): the open leader's, taller and clear of the window's top edge. The flag's colour is the party's (`--_party`), from the `data-party` of the pennant or of the table it stands in. The box is as tall as the state, its foot at the box's foot.",
+  "w": 7, "h": 23,
+  "legend": {"G": "var(--ork-gilt)", "P": "var(--ork-bronze)", "F": "var(--_flag)", "h": "var(--_flag-hi)", "d": "var(--_flag-lo)"},
+  "states": [
+    {"selector": ".ork-pennant::before", "rows": [
+      "G......",
+      "Phhhhhh", "PhFFFFF", "PhFFFF.", "PhFFd..", "PhFFd..", "PhFFFF.", "PhFFFFF", "Pdddddd",
+      "P......", "P......", "P......", "P......", "P......", "P......", "P......", "P......"]},
+    {"selector": ".ork-pennant.is-open::before", "rows": [
+      "G......",
+      "Phhhhhh", "PhFFFFF", "PhFFFFF", "PhFFFF.", "PhFFd..", "PhFd...", "PhFFd..", "PhFFFF.", "PhFFFFF", "PhFFFFF", "Pdddddd",
+      "P......", "P......", "P......", "P......", "P......", "P......", "P......", "P......", "P......", "P......", "P......"]}
+  ]
+}

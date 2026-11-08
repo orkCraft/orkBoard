@@ -1390,3 +1390,261 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   .ork-gem { height: 24px; }
   .ork-read { padding: var(--ork-5) var(--ork-6); }
 }
+
+/* --- The table's look (0.35.0; Orkboard's decisions §268 to §275). Colour is three layers told apart by their form: the PARTY (its race: a rule, a pennant, the light and the felt of its table), the goal's
+   ELEMENT (the face of its cards) and a SIGNAL (the brightest, a ring and an icon). Everything here reads tokens.css (the party colours, each felt's five light steps, the felt out, its rim and plate, the bronze,
+   the gilt and the leather); no colour of its own. NO SMOOTH GRADIENT and NO BLURRED SHADOW OR GLOW anywhere below: a gradient is bands with hard stops, a band's edge dithered by a 2 px checker; a shadow or a
+   glow is hard pixel rings (`tests/test_orkui.py` reads this section and says so). `data-party` on a part names its party by the race (ork, knight, elf, undead, goblin, gnome, orkmaster) or by the party the race
+   leads (tech; game, product; design, art; release; run, liveops; market, marketing), `tokens.json` `parties`. ------------------------------------------------------------------------------------------ */
+:is(.ork-table, .ork-pennant, .ork-plate):is([data-party="ork"], [data-party="tech"]) { --_party: var(--ork-party-ork);
+  --_s1: var(--ork-felt-ork-1); --_s2: var(--ork-felt-ork-2); --_s3: var(--ork-felt-ork-3); --_s4: var(--ork-felt-ork-4); --_s5: var(--ork-felt-ork-5);
+  --_out: var(--ork-felt-ork-out); --_rim: var(--ork-felt-ork-rim); --_plate: var(--ork-plate-ork); }
+:is(.ork-table, .ork-pennant, .ork-plate):is([data-party="knight"], [data-party="game"], [data-party="product"]) { --_party: var(--ork-party-knight);
+  --_s1: var(--ork-felt-knight-1); --_s2: var(--ork-felt-knight-2); --_s3: var(--ork-felt-knight-3); --_s4: var(--ork-felt-knight-4); --_s5: var(--ork-felt-knight-5);
+  --_out: var(--ork-felt-knight-out); --_rim: var(--ork-felt-knight-rim); --_plate: var(--ork-plate-knight); }
+:is(.ork-table, .ork-pennant, .ork-plate):is([data-party="elf"], [data-party="design"], [data-party="art"]) { --_party: var(--ork-party-elf);
+  --_s1: var(--ork-felt-elf-1); --_s2: var(--ork-felt-elf-2); --_s3: var(--ork-felt-elf-3); --_s4: var(--ork-felt-elf-4); --_s5: var(--ork-felt-elf-5);
+  --_out: var(--ork-felt-elf-out); --_rim: var(--ork-felt-elf-rim); --_plate: var(--ork-plate-elf); }
+:is(.ork-table, .ork-pennant, .ork-plate):is([data-party="undead"], [data-party="release"]) { --_party: var(--ork-party-undead);
+  --_s1: var(--ork-felt-undead-1); --_s2: var(--ork-felt-undead-2); --_s3: var(--ork-felt-undead-3); --_s4: var(--ork-felt-undead-4); --_s5: var(--ork-felt-undead-5);
+  --_out: var(--ork-felt-undead-out); --_rim: var(--ork-felt-undead-rim); --_plate: var(--ork-plate-undead); }
+:is(.ork-table, .ork-pennant, .ork-plate):is([data-party="goblin"], [data-party="run"], [data-party="liveops"]) { --_party: var(--ork-party-goblin);
+  --_s1: var(--ork-felt-goblin-1); --_s2: var(--ork-felt-goblin-2); --_s3: var(--ork-felt-goblin-3); --_s4: var(--ork-felt-goblin-4); --_s5: var(--ork-felt-goblin-5);
+  --_out: var(--ork-felt-goblin-out); --_rim: var(--ork-felt-goblin-rim); --_plate: var(--ork-plate-goblin); }
+:is(.ork-table, .ork-pennant, .ork-plate):is([data-party="gnome"], [data-party="market"], [data-party="marketing"]) { --_party: var(--ork-party-gnome);
+  --_s1: var(--ork-felt-gnome-1); --_s2: var(--ork-felt-gnome-2); --_s3: var(--ork-felt-gnome-3); --_s4: var(--ork-felt-gnome-4); --_s5: var(--ork-felt-gnome-5);
+  --_out: var(--ork-felt-gnome-out); --_rim: var(--ork-felt-gnome-rim); --_plate: var(--ork-plate-gnome); }
+:is(.ork-table, .ork-pennant, .ork-plate)[data-party="orkmaster"] { --_party: var(--ork-party-orkmaster);
+  --_s1: var(--ork-felt-orkmaster-1); --_s2: var(--ork-felt-orkmaster-2); --_s3: var(--ork-felt-orkmaster-3); --_s4: var(--ork-felt-orkmaster-4); --_s5: var(--ork-felt-orkmaster-5);
+  --_out: var(--ork-felt-orkmaster-out); --_rim: var(--ork-felt-orkmaster-rim); --_plate: var(--ork-plate-orkmaster); }
+
+/* The felt (`.ork-table[data-party]`): the lamp's light from the table's top edge in five steps, half rings (a circle centred on the top edge), every step a band with hard stops (--_s1 the centre, --_s5 the felt);
+   ::before (inside the 7 px frame) dithers each step's edge, a 2 px checker in the next step's colour over the 4 px inside the edge. Round it a bronze frame: rings of hard shadow, a lit corner, the party's rim inside, a vignette in three
+   steps; ::after four rivets (flat squares, three tones). `.is-out` (the lamp out, the person away): the felt flat and darker (--_out), no steps and no dither; the frame as it was. Words never lie on the steps: they
+   lie on `.ork-plate`. The table is `position: relative` (zero specificity) and its own stacking context, so the dither lies under what is on the table. */
+:where(.ork-table[data-party]) { position: relative; }
+.ork-table[data-party] { isolation: isolate;
+  background: radial-gradient(circle farthest-side at 50% 0, var(--_s1) 0 24%, var(--_s2) 24% 40%, var(--_s3) 40% 56%, var(--_s4) 56% 74%, var(--_s5) 74%);
+  box-shadow: inset 0 0 0 1px var(--ork-bronze-lo), inset 0 0 0 3px var(--ork-bronze), inset 2px 2px 0 3px var(--ork-bronze-hi), inset 0 0 0 5px var(--ork-bronze-lo), inset 0 0 0 7px var(--_rim),
+    inset 0 0 0 14px color-mix(in srgb, var(--ork-room) 22%, transparent), inset 0 0 0 22px color-mix(in srgb, var(--ork-room) 14%, transparent), inset 0 0 0 30px color-mix(in srgb, var(--ork-room) 7%, transparent); }
+.ork-table[data-party]::before { content: ""; position: absolute; inset: 7px; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle farthest-side at 50% 0,
+    transparent 0 calc(24% - 4px), var(--_s2) calc(24% - 4px) 24%, transparent 24% calc(40% - 4px), var(--_s3) calc(40% - 4px) 40%,
+    transparent 40% calc(56% - 4px), var(--_s4) calc(56% - 4px) 56%, transparent 56% calc(74% - 4px), var(--_s5) calc(74% - 4px) 74%, transparent 74%);
+  -webkit-mask: repeating-conic-gradient(var(--ork-ink) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
+  mask: repeating-conic-gradient(var(--ork-ink) 0 25%, transparent 0 50%) 0 0 / 4px 4px; }
+.ork-table[data-party]::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background:
+    linear-gradient(var(--ork-bronze-hi), var(--ork-bronze-hi)) left 2px top 2px / 2px 2px no-repeat, linear-gradient(var(--ork-bronze), var(--ork-bronze)) left 2px top 2px / 4px 4px no-repeat,
+    linear-gradient(var(--ork-bronze-lo), var(--ork-bronze-lo)) left 1px top 1px / 6px 6px no-repeat,
+    linear-gradient(var(--ork-bronze-hi), var(--ork-bronze-hi)) right 4px top 2px / 2px 2px no-repeat, linear-gradient(var(--ork-bronze), var(--ork-bronze)) right 2px top 2px / 4px 4px no-repeat,
+    linear-gradient(var(--ork-bronze-lo), var(--ork-bronze-lo)) right 1px top 1px / 6px 6px no-repeat,
+    linear-gradient(var(--ork-bronze-hi), var(--ork-bronze-hi)) left 2px bottom 4px / 2px 2px no-repeat, linear-gradient(var(--ork-bronze), var(--ork-bronze)) left 2px bottom 2px / 4px 4px no-repeat,
+    linear-gradient(var(--ork-bronze-lo), var(--ork-bronze-lo)) left 1px bottom 1px / 6px 6px no-repeat,
+    linear-gradient(var(--ork-bronze-hi), var(--ork-bronze-hi)) right 4px bottom 4px / 2px 2px no-repeat, linear-gradient(var(--ork-bronze), var(--ork-bronze)) right 2px bottom 2px / 4px 4px no-repeat,
+    linear-gradient(var(--ork-bronze-lo), var(--ork-bronze-lo)) right 1px bottom 1px / 6px 6px no-repeat; }
+.ork-table[data-party].is-out { background: var(--_out); }
+.ork-table[data-party].is-out::before { display: none; }
+
+/* The plate (`.ork-plate`): words on a table lie on a flat plate of one colour, the felt's darkest, so every word's contrast is one number (decisions §275.2); the steps show between the plates. In a table
+   with a `data-party` it takes that party's; alone, the neutral --ork-plate. A bronze line round it. */
+.ork-plate { display: inline-block; box-sizing: border-box; padding: var(--ork-1) var(--ork-3); background: var(--_plate, var(--ork-plate)); color: var(--ork-ink);
+  box-shadow: inset 0 0 0 1px var(--ork-bronze-lo); }
+
+/* The plaque (`.ork-plaque`): a heading on a bronze plate, in the pixel face (the heading's token), the gilt's light on the dark plate, a hard shadow under the letters and the plate (decisions §269.3). */
+.ork-plaque { display: inline-block; box-sizing: border-box; padding: var(--ork-1) var(--ork-4); background: var(--ork-plaque); color: var(--ork-gilt-hi);
+  font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); text-shadow: 2px 2px 0 var(--ork-room);
+  box-shadow: inset 0 0 0 1px var(--ork-bronze), inset 1px 1px 0 1px var(--ork-bronze-hi), 0 2px 0 var(--ork-room); }
+
+/* --- The pennant (`.ork-pennant`, pennant/pennant.json, 0.35.0): a swallowtail pennant on a bronze pole under a gilt finial, in its party's colour (`--_party`, from its own `data-party` or the table's it stands in; the
+   edge grey without one); 2 px a cell (14 x 34), `.is-open` 14 x 46 (the open leader's, taller), `.small` 1 px. Pixels in `box-shadow` as the portal is; no words inside, the caller says whose it is. --------- */
+.ork-pennant { --_n: 2; --_flag: var(--_party, var(--ork-edge)); --_flag-hi: color-mix(in srgb, var(--_flag) 70%, var(--ork-ink)); --_flag-lo: color-mix(in srgb, var(--_flag) 62%, var(--ork-room));
+  position: relative; display: inline-block; flex: none; box-sizing: border-box; vertical-align: bottom; width: calc(7px * var(--_n)); height: calc(17px * var(--_n)); }
+.ork-pennant.is-open { height: calc(23px * var(--_n)); }
+.ork-pennant.small { --_n: 1; }
+.ork-pennant::before { content: ""; position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-origin: 0 0; transform: scale(var(--_n)); box-shadow: var(--_cells); }
+/* pennant:begin (generated by tools/build_things.py from pennant/pennant.json; do not edit by hand) */
+.ork-pennant::before { --_cells:
+    0px 0px var(--ork-gilt),
+    0px 1px var(--ork-bronze), 1px 1px var(--_flag-hi), 2px 1px var(--_flag-hi), 3px 1px var(--_flag-hi), 4px 1px var(--_flag-hi), 5px 1px var(--_flag-hi), 6px 1px var(--_flag-hi),
+    0px 2px var(--ork-bronze), 1px 2px var(--_flag-hi), 2px 2px var(--_flag), 3px 2px var(--_flag), 4px 2px var(--_flag), 5px 2px var(--_flag), 6px 2px var(--_flag),
+    0px 3px var(--ork-bronze), 1px 3px var(--_flag-hi), 2px 3px var(--_flag), 3px 3px var(--_flag), 4px 3px var(--_flag), 5px 3px var(--_flag),
+    0px 4px var(--ork-bronze), 1px 4px var(--_flag-hi), 2px 4px var(--_flag), 3px 4px var(--_flag), 4px 4px var(--_flag-lo),
+    0px 5px var(--ork-bronze), 1px 5px var(--_flag-hi), 2px 5px var(--_flag), 3px 5px var(--_flag), 4px 5px var(--_flag-lo),
+    0px 6px var(--ork-bronze), 1px 6px var(--_flag-hi), 2px 6px var(--_flag), 3px 6px var(--_flag), 4px 6px var(--_flag), 5px 6px var(--_flag),
+    0px 7px var(--ork-bronze), 1px 7px var(--_flag-hi), 2px 7px var(--_flag), 3px 7px var(--_flag), 4px 7px var(--_flag), 5px 7px var(--_flag), 6px 7px var(--_flag),
+    0px 8px var(--ork-bronze), 1px 8px var(--_flag-lo), 2px 8px var(--_flag-lo), 3px 8px var(--_flag-lo), 4px 8px var(--_flag-lo), 5px 8px var(--_flag-lo), 6px 8px var(--_flag-lo),
+    0px 9px var(--ork-bronze),
+    0px 10px var(--ork-bronze),
+    0px 11px var(--ork-bronze),
+    0px 12px var(--ork-bronze),
+    0px 13px var(--ork-bronze),
+    0px 14px var(--ork-bronze),
+    0px 15px var(--ork-bronze),
+    0px 16px var(--ork-bronze); }
+.ork-pennant.is-open::before { --_cells:
+    0px 0px var(--ork-gilt),
+    0px 1px var(--ork-bronze), 1px 1px var(--_flag-hi), 2px 1px var(--_flag-hi), 3px 1px var(--_flag-hi), 4px 1px var(--_flag-hi), 5px 1px var(--_flag-hi), 6px 1px var(--_flag-hi),
+    0px 2px var(--ork-bronze), 1px 2px var(--_flag-hi), 2px 2px var(--_flag), 3px 2px var(--_flag), 4px 2px var(--_flag), 5px 2px var(--_flag), 6px 2px var(--_flag),
+    0px 3px var(--ork-bronze), 1px 3px var(--_flag-hi), 2px 3px var(--_flag), 3px 3px var(--_flag), 4px 3px var(--_flag), 5px 3px var(--_flag), 6px 3px var(--_flag),
+    0px 4px var(--ork-bronze), 1px 4px var(--_flag-hi), 2px 4px var(--_flag), 3px 4px var(--_flag), 4px 4px var(--_flag), 5px 4px var(--_flag),
+    0px 5px var(--ork-bronze), 1px 5px var(--_flag-hi), 2px 5px var(--_flag), 3px 5px var(--_flag), 4px 5px var(--_flag-lo),
+    0px 6px var(--ork-bronze), 1px 6px var(--_flag-hi), 2px 6px var(--_flag), 3px 6px var(--_flag-lo),
+    0px 7px var(--ork-bronze), 1px 7px var(--_flag-hi), 2px 7px var(--_flag), 3px 7px var(--_flag), 4px 7px var(--_flag-lo),
+    0px 8px var(--ork-bronze), 1px 8px var(--_flag-hi), 2px 8px var(--_flag), 3px 8px var(--_flag), 4px 8px var(--_flag), 5px 8px var(--_flag),
+    0px 9px var(--ork-bronze), 1px 9px var(--_flag-hi), 2px 9px var(--_flag), 3px 9px var(--_flag), 4px 9px var(--_flag), 5px 9px var(--_flag), 6px 9px var(--_flag),
+    0px 10px var(--ork-bronze), 1px 10px var(--_flag-hi), 2px 10px var(--_flag), 3px 10px var(--_flag), 4px 10px var(--_flag), 5px 10px var(--_flag), 6px 10px var(--_flag),
+    0px 11px var(--ork-bronze), 1px 11px var(--_flag-lo), 2px 11px var(--_flag-lo), 3px 11px var(--_flag-lo), 4px 11px var(--_flag-lo), 5px 11px var(--_flag-lo), 6px 11px var(--_flag-lo),
+    0px 12px var(--ork-bronze),
+    0px 13px var(--ork-bronze),
+    0px 14px var(--ork-bronze),
+    0px 15px var(--ork-bronze),
+    0px 16px var(--ork-bronze),
+    0px 17px var(--ork-bronze),
+    0px 18px var(--ork-bronze),
+    0px 19px var(--ork-bronze),
+    0px 20px var(--ork-bronze),
+    0px 21px var(--ork-bronze),
+    0px 22px var(--ork-bronze); }
+/* pennant:end */
+
+/* --- The lamp's chain (`.ork-chain`, chain/chain.json, 0.35.0; Orkboard's decisions §271): bronze links hung from the window's top edge and a bead to pull, in place of the door. 12 x 58, `.small` 6 x 29; at rest,
+   `.is-pulled` four rows longer. `.is-tugging` is the beat of a pull, once (the page adds it, and `.is-pulled`, on a press and takes it off at the animationend `ork-chain-tug`): the chain drops a rise and is back;
+   under reduced motion nothing moves, the state is at once. No words inside: the caller says Here or Away, in words beside it and in `aria-label` and `title`. ----------------------------------------------- */
+.ork-chain { --_n: 2; position: relative; display: inline-block; flex: none; box-sizing: border-box; vertical-align: top; width: calc(6px * var(--_n)); height: calc(29px * var(--_n)); }
+.ork-chain.small { --_n: 1; }
+.ork-chain::before { content: ""; position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-origin: 0 0; transform: scale(var(--_n)); box-shadow: var(--_cells); }
+@media (prefers-reduced-motion: no-preference) {
+  .ork-chain.is-tugging { animation: ork-chain-tug var(--ork-motion-base) steps(1, jump-start) 1; } }
+@keyframes ork-chain-tug { 50% { transform: translateY(var(--ork-motion-rise)); } }
+/* chain:begin (generated by tools/build_things.py from chain/chain.json; do not edit by hand) */
+.ork-chain::before { --_cells:
+    2px 0px var(--ork-bronze-hi), 3px 0px var(--ork-bronze),
+    2px 1px var(--ork-bronze-hi), 3px 1px var(--ork-bronze),
+    1px 2px var(--ork-bronze-hi), 2px 2px var(--ork-bronze-hi), 3px 2px var(--ork-bronze), 4px 2px var(--ork-bronze),
+    1px 3px var(--ork-bronze-hi), 4px 3px var(--ork-bronze),
+    1px 4px var(--ork-bronze-hi), 4px 4px var(--ork-bronze-lo),
+    1px 5px var(--ork-bronze), 2px 5px var(--ork-bronze-lo), 3px 5px var(--ork-bronze-lo), 4px 5px var(--ork-bronze-lo),
+    2px 6px var(--ork-bronze-hi), 3px 6px var(--ork-bronze),
+    2px 7px var(--ork-bronze-hi), 3px 7px var(--ork-bronze),
+    1px 8px var(--ork-bronze-hi), 2px 8px var(--ork-bronze-hi), 3px 8px var(--ork-bronze), 4px 8px var(--ork-bronze),
+    1px 9px var(--ork-bronze-hi), 4px 9px var(--ork-bronze),
+    1px 10px var(--ork-bronze-hi), 4px 10px var(--ork-bronze-lo),
+    1px 11px var(--ork-bronze), 2px 11px var(--ork-bronze-lo), 3px 11px var(--ork-bronze-lo), 4px 11px var(--ork-bronze-lo),
+    2px 12px var(--ork-bronze-hi), 3px 12px var(--ork-bronze),
+    2px 13px var(--ork-bronze-hi), 3px 13px var(--ork-bronze),
+    1px 14px var(--ork-bronze-hi), 2px 14px var(--ork-bronze-hi), 3px 14px var(--ork-bronze), 4px 14px var(--ork-bronze),
+    1px 15px var(--ork-bronze-hi), 4px 15px var(--ork-bronze),
+    1px 16px var(--ork-bronze-hi), 4px 16px var(--ork-bronze-lo),
+    1px 17px var(--ork-bronze), 2px 17px var(--ork-bronze-lo), 3px 17px var(--ork-bronze-lo), 4px 17px var(--ork-bronze-lo),
+    1px 18px var(--ork-bronze-hi), 2px 18px var(--ork-bronze-hi), 3px 18px var(--ork-bronze-hi), 4px 18px var(--ork-bronze-hi),
+    0px 19px var(--ork-bronze-hi), 1px 19px var(--ork-bronze-hi), 2px 19px var(--ork-bronze), 3px 19px var(--ork-bronze), 4px 19px var(--ork-bronze), 5px 19px var(--ork-bronze),
+    0px 20px var(--ork-bronze-hi), 1px 20px var(--ork-bronze), 2px 20px var(--ork-bronze), 3px 20px var(--ork-bronze), 4px 20px var(--ork-bronze), 5px 20px var(--ork-bronze-lo),
+    0px 21px var(--ork-bronze-hi), 1px 21px var(--ork-bronze), 2px 21px var(--ork-bronze), 3px 21px var(--ork-bronze), 4px 21px var(--ork-bronze), 5px 21px var(--ork-bronze-lo),
+    0px 22px var(--ork-bronze), 1px 22px var(--ork-bronze), 2px 22px var(--ork-bronze), 3px 22px var(--ork-bronze), 4px 22px var(--ork-bronze), 5px 22px var(--ork-bronze-lo),
+    0px 23px var(--ork-bronze), 1px 23px var(--ork-bronze), 2px 23px var(--ork-bronze), 3px 23px var(--ork-bronze), 4px 23px var(--ork-bronze-lo), 5px 23px var(--ork-bronze-lo),
+    1px 24px var(--ork-bronze-lo), 2px 24px var(--ork-bronze-lo), 3px 24px var(--ork-bronze-lo), 4px 24px var(--ork-bronze-lo); }
+.ork-chain.is-pulled::before { --_cells:
+    2px 0px var(--ork-bronze-hi), 3px 0px var(--ork-bronze),
+    2px 1px var(--ork-bronze-hi), 3px 1px var(--ork-bronze),
+    1px 2px var(--ork-bronze-hi), 2px 2px var(--ork-bronze-hi), 3px 2px var(--ork-bronze), 4px 2px var(--ork-bronze),
+    1px 3px var(--ork-bronze-hi), 4px 3px var(--ork-bronze),
+    1px 4px var(--ork-bronze-hi), 4px 4px var(--ork-bronze-lo),
+    1px 5px var(--ork-bronze), 2px 5px var(--ork-bronze-lo), 3px 5px var(--ork-bronze-lo), 4px 5px var(--ork-bronze-lo),
+    2px 6px var(--ork-bronze-hi), 3px 6px var(--ork-bronze),
+    2px 7px var(--ork-bronze-hi), 3px 7px var(--ork-bronze),
+    1px 8px var(--ork-bronze-hi), 2px 8px var(--ork-bronze-hi), 3px 8px var(--ork-bronze), 4px 8px var(--ork-bronze),
+    1px 9px var(--ork-bronze-hi), 4px 9px var(--ork-bronze),
+    1px 10px var(--ork-bronze-hi), 4px 10px var(--ork-bronze-lo),
+    1px 11px var(--ork-bronze), 2px 11px var(--ork-bronze-lo), 3px 11px var(--ork-bronze-lo), 4px 11px var(--ork-bronze-lo),
+    2px 12px var(--ork-bronze-hi), 3px 12px var(--ork-bronze),
+    2px 13px var(--ork-bronze-hi), 3px 13px var(--ork-bronze),
+    1px 14px var(--ork-bronze-hi), 2px 14px var(--ork-bronze-hi), 3px 14px var(--ork-bronze), 4px 14px var(--ork-bronze),
+    1px 15px var(--ork-bronze-hi), 4px 15px var(--ork-bronze),
+    1px 16px var(--ork-bronze-hi), 4px 16px var(--ork-bronze-lo),
+    1px 17px var(--ork-bronze), 2px 17px var(--ork-bronze-lo), 3px 17px var(--ork-bronze-lo), 4px 17px var(--ork-bronze-lo),
+    2px 18px var(--ork-bronze-hi), 3px 18px var(--ork-bronze),
+    2px 19px var(--ork-bronze-hi), 3px 19px var(--ork-bronze),
+    1px 20px var(--ork-bronze-hi), 2px 20px var(--ork-bronze-hi), 3px 20px var(--ork-bronze), 4px 20px var(--ork-bronze),
+    1px 21px var(--ork-bronze-hi), 4px 21px var(--ork-bronze),
+    1px 22px var(--ork-bronze-hi), 2px 22px var(--ork-bronze-hi), 3px 22px var(--ork-bronze-hi), 4px 22px var(--ork-bronze-hi),
+    0px 23px var(--ork-bronze-hi), 1px 23px var(--ork-bronze-hi), 2px 23px var(--ork-bronze), 3px 23px var(--ork-bronze), 4px 23px var(--ork-bronze), 5px 23px var(--ork-bronze),
+    0px 24px var(--ork-bronze-hi), 1px 24px var(--ork-bronze), 2px 24px var(--ork-bronze), 3px 24px var(--ork-bronze), 4px 24px var(--ork-bronze), 5px 24px var(--ork-bronze-lo),
+    0px 25px var(--ork-bronze-hi), 1px 25px var(--ork-bronze), 2px 25px var(--ork-bronze), 3px 25px var(--ork-bronze), 4px 25px var(--ork-bronze), 5px 25px var(--ork-bronze-lo),
+    0px 26px var(--ork-bronze), 1px 26px var(--ork-bronze), 2px 26px var(--ork-bronze), 3px 26px var(--ork-bronze), 4px 26px var(--ork-bronze), 5px 26px var(--ork-bronze-lo),
+    0px 27px var(--ork-bronze), 1px 27px var(--ork-bronze), 2px 27px var(--ork-bronze), 3px 27px var(--ork-bronze), 4px 27px var(--ork-bronze-lo), 5px 27px var(--ork-bronze-lo),
+    1px 28px var(--ork-bronze-lo), 2px 28px var(--ork-bronze-lo), 3px 28px var(--ork-bronze-lo), 4px 28px var(--ork-bronze-lo); }
+/* chain:end */
+
+/* --- The backpack (`.ork-pack`, pack/pack.json, 0.35.0; Orkboard's decisions §272.1): a leather backpack in pixels, shut (the flap folded over and buckled) and `.is-open` (the flap thrown back, a card in its mouth).
+   14 x 18 cells, 2 px a cell (28 x 36), `.small` 1 px. No words inside. ------------------------------------------------------------------------------------------------------------------------- */
+.ork-pack { --_n: 2; position: relative; display: inline-block; flex: none; box-sizing: border-box; vertical-align: bottom; width: calc(14px * var(--_n)); height: calc(18px * var(--_n)); }
+.ork-pack.small { --_n: 1; }
+.ork-pack::before { content: ""; position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-origin: 0 0; transform: scale(var(--_n)); box-shadow: var(--_cells); }
+/* pack:begin (generated by tools/build_things.py from pack/pack.json; do not edit by hand) */
+.ork-pack::before { --_cells:
+    4px 2px var(--ork-leather-lo), 5px 2px var(--ork-leather-lo), 6px 2px var(--ork-leather-lo), 7px 2px var(--ork-leather-lo), 8px 2px var(--ork-leather-lo), 9px 2px var(--ork-leather-lo),
+    3px 3px var(--ork-leather-lo), 10px 3px var(--ork-leather-lo),
+    3px 4px var(--ork-leather-lo), 10px 4px var(--ork-leather-lo),
+    2px 5px var(--ork-leather-hi), 3px 5px var(--ork-leather-hi), 4px 5px var(--ork-leather-hi), 5px 5px var(--ork-leather-hi), 6px 5px var(--ork-leather-hi), 7px 5px var(--ork-leather-hi), 8px 5px var(--ork-leather-hi), 9px 5px var(--ork-leather-hi), 10px 5px var(--ork-leather-hi), 11px 5px var(--ork-leather-hi),
+    2px 6px var(--ork-leather-hi), 3px 6px var(--ork-leather-hi), 4px 6px var(--ork-leather-hi), 5px 6px var(--ork-leather-hi), 6px 6px var(--ork-leather-hi), 7px 6px var(--ork-leather-hi), 8px 6px var(--ork-leather-hi), 9px 6px var(--ork-leather-hi), 10px 6px var(--ork-leather-hi), 11px 6px var(--ork-leather-hi),
+    1px 7px var(--ork-leather-lo), 2px 7px var(--ork-leather-hi), 3px 7px var(--ork-leather-hi), 4px 7px var(--ork-leather-hi), 5px 7px var(--ork-leather-hi), 6px 7px var(--ork-leather-hi), 7px 7px var(--ork-leather-hi), 8px 7px var(--ork-leather-hi), 9px 7px var(--ork-leather-hi), 10px 7px var(--ork-leather-hi), 11px 7px var(--ork-leather-hi), 12px 7px var(--ork-leather-lo),
+    1px 8px var(--ork-leather-lo), 2px 8px var(--ork-leather-hi), 3px 8px var(--ork-leather-hi), 4px 8px var(--ork-leather-hi), 5px 8px var(--ork-leather-hi), 6px 8px var(--ork-leather-hi), 7px 8px var(--ork-leather-hi), 8px 8px var(--ork-leather-hi), 9px 8px var(--ork-leather-hi), 10px 8px var(--ork-leather-hi), 11px 8px var(--ork-leather-hi), 12px 8px var(--ork-leather-lo),
+    1px 9px var(--ork-leather-lo), 2px 9px var(--ork-leather-hi), 3px 9px var(--ork-leather-hi), 4px 9px var(--ork-leather-hi), 5px 9px var(--ork-leather-hi), 6px 9px var(--ork-leather-hi), 7px 9px var(--ork-leather-hi), 8px 9px var(--ork-leather-hi), 9px 9px var(--ork-leather-hi), 10px 9px var(--ork-leather-hi), 11px 9px var(--ork-leather-hi), 12px 9px var(--ork-leather-lo),
+    1px 10px var(--ork-leather-lo), 2px 10px var(--ork-leather-hi), 3px 10px var(--ork-leather-hi), 4px 10px var(--ork-leather-hi), 5px 10px var(--ork-leather-hi), 6px 10px var(--ork-gilt), 7px 10px var(--ork-gilt), 8px 10px var(--ork-leather-hi), 9px 10px var(--ork-leather-hi), 10px 10px var(--ork-leather-hi), 11px 10px var(--ork-leather-hi), 12px 10px var(--ork-leather-lo),
+    1px 11px var(--ork-leather-lo), 2px 11px var(--ork-leather-edge), 3px 11px var(--ork-leather-edge), 4px 11px var(--ork-leather-edge), 5px 11px var(--ork-leather-edge), 6px 11px var(--ork-leather-edge), 7px 11px var(--ork-leather-edge), 8px 11px var(--ork-leather-edge), 9px 11px var(--ork-leather-edge), 10px 11px var(--ork-leather-edge), 11px 11px var(--ork-leather-edge), 12px 11px var(--ork-leather-lo),
+    1px 12px var(--ork-leather-lo), 2px 12px var(--ork-leather), 3px 12px var(--ork-leather), 4px 12px var(--ork-leather), 5px 12px var(--ork-leather), 6px 12px var(--ork-gilt), 7px 12px var(--ork-gilt), 8px 12px var(--ork-leather), 9px 12px var(--ork-leather), 10px 12px var(--ork-leather), 11px 12px var(--ork-leather), 12px 12px var(--ork-leather-lo),
+    1px 13px var(--ork-leather-lo), 2px 13px var(--ork-leather), 3px 13px var(--ork-stitch), 4px 13px var(--ork-leather), 5px 13px var(--ork-leather), 6px 13px var(--ork-leather), 7px 13px var(--ork-leather), 8px 13px var(--ork-leather), 9px 13px var(--ork-leather), 10px 13px var(--ork-stitch), 11px 13px var(--ork-leather), 12px 13px var(--ork-leather-lo),
+    1px 14px var(--ork-leather-lo), 2px 14px var(--ork-leather), 3px 14px var(--ork-stitch), 4px 14px var(--ork-leather-lo), 5px 14px var(--ork-leather-lo), 6px 14px var(--ork-leather-lo), 7px 14px var(--ork-leather-lo), 8px 14px var(--ork-leather-lo), 9px 14px var(--ork-leather-lo), 10px 14px var(--ork-stitch), 11px 14px var(--ork-leather), 12px 14px var(--ork-leather-lo),
+    1px 15px var(--ork-leather-lo), 2px 15px var(--ork-leather), 3px 15px var(--ork-stitch), 4px 15px var(--ork-leather-lo), 5px 15px var(--ork-leather-lo), 6px 15px var(--ork-leather-lo), 7px 15px var(--ork-leather-lo), 8px 15px var(--ork-leather-lo), 9px 15px var(--ork-leather-lo), 10px 15px var(--ork-stitch), 11px 15px var(--ork-leather), 12px 15px var(--ork-leather-lo),
+    2px 16px var(--ork-leather), 3px 16px var(--ork-leather), 4px 16px var(--ork-leather), 5px 16px var(--ork-leather), 6px 16px var(--ork-leather), 7px 16px var(--ork-leather), 8px 16px var(--ork-leather), 9px 16px var(--ork-leather), 10px 16px var(--ork-leather), 11px 16px var(--ork-leather),
+    2px 17px var(--ork-leather-lo), 3px 17px var(--ork-leather-lo), 4px 17px var(--ork-leather-lo), 5px 17px var(--ork-leather-lo), 6px 17px var(--ork-leather-lo), 7px 17px var(--ork-leather-lo), 8px 17px var(--ork-leather-lo), 9px 17px var(--ork-leather-lo), 10px 17px var(--ork-leather-lo), 11px 17px var(--ork-leather-lo); }
+.ork-pack.is-open::before { --_cells:
+    2px 1px var(--ork-leather-lo), 3px 1px var(--ork-leather-lo), 4px 1px var(--ork-leather-lo), 5px 1px var(--ork-leather-lo), 6px 1px var(--ork-gilt), 7px 1px var(--ork-gilt), 8px 1px var(--ork-leather-lo), 9px 1px var(--ork-leather-lo), 10px 1px var(--ork-leather-lo), 11px 1px var(--ork-leather-lo),
+    2px 2px var(--ork-leather-hi), 3px 2px var(--ork-leather-hi), 4px 2px var(--ork-leather-hi), 5px 2px var(--ork-leather-hi), 6px 2px var(--ork-gilt), 7px 2px var(--ork-gilt), 8px 2px var(--ork-leather-hi), 9px 2px var(--ork-leather-hi), 10px 2px var(--ork-leather-hi), 11px 2px var(--ork-leather-hi),
+    2px 3px var(--ork-leather-hi), 3px 3px var(--ork-leather-hi), 4px 3px var(--ork-leather-hi), 5px 3px var(--ork-leather-hi), 6px 3px var(--ork-leather-hi), 7px 3px var(--ork-leather-hi), 8px 3px var(--ork-leather-hi), 9px 3px var(--ork-leather-hi), 10px 3px var(--ork-leather-hi), 11px 3px var(--ork-leather-hi),
+    2px 4px var(--ork-leather-hi), 3px 4px var(--ork-leather-hi), 4px 4px var(--ork-leather-hi), 5px 4px var(--ork-leather-hi), 6px 4px var(--ork-leather-hi), 7px 4px var(--ork-leather-hi), 8px 4px var(--ork-leather-hi), 9px 4px var(--ork-leather-hi), 10px 4px var(--ork-leather-hi), 11px 4px var(--ork-leather-hi),
+    2px 5px var(--ork-leather-edge), 3px 5px var(--ork-leather-edge), 4px 5px var(--ork-leather-edge), 5px 5px var(--ork-leather-edge), 6px 5px var(--ork-leather-edge), 7px 5px var(--ork-leather-edge), 8px 5px var(--ork-leather-edge), 9px 5px var(--ork-leather-edge), 10px 5px var(--ork-leather-edge), 11px 5px var(--ork-leather-edge),
+    4px 6px var(--ork-ink), 5px 6px var(--ork-ink), 6px 6px var(--ork-ink),
+    2px 7px var(--ork-room), 3px 7px var(--ork-room), 4px 7px var(--ork-ink), 5px 7px var(--ork-ink), 6px 7px var(--ork-ink), 7px 7px var(--ork-room), 8px 7px var(--ork-room), 9px 7px var(--ork-room), 10px 7px var(--ork-room), 11px 7px var(--ork-room),
+    1px 8px var(--ork-leather-lo), 2px 8px var(--ork-room), 3px 8px var(--ork-room), 4px 8px var(--ork-ink), 5px 8px var(--ork-ink), 6px 8px var(--ork-ink), 7px 8px var(--ork-room), 8px 8px var(--ork-room), 9px 8px var(--ork-room), 10px 8px var(--ork-room), 11px 8px var(--ork-room), 12px 8px var(--ork-leather-lo),
+    1px 9px var(--ork-leather-lo), 2px 9px var(--ork-room), 3px 9px var(--ork-room), 4px 9px var(--ork-room), 5px 9px var(--ork-room), 6px 9px var(--ork-room), 7px 9px var(--ork-room), 8px 9px var(--ork-room), 9px 9px var(--ork-room), 10px 9px var(--ork-room), 11px 9px var(--ork-room), 12px 9px var(--ork-leather-lo),
+    1px 10px var(--ork-leather-lo), 2px 10px var(--ork-leather), 3px 10px var(--ork-leather), 4px 10px var(--ork-leather), 5px 10px var(--ork-leather), 6px 10px var(--ork-leather), 7px 10px var(--ork-leather), 8px 10px var(--ork-leather), 9px 10px var(--ork-leather), 10px 10px var(--ork-leather), 11px 10px var(--ork-leather), 12px 10px var(--ork-leather-lo),
+    1px 11px var(--ork-leather-lo), 2px 11px var(--ork-leather), 3px 11px var(--ork-leather), 4px 11px var(--ork-leather), 5px 11px var(--ork-leather), 6px 11px var(--ork-leather), 7px 11px var(--ork-leather), 8px 11px var(--ork-leather), 9px 11px var(--ork-leather), 10px 11px var(--ork-leather), 11px 11px var(--ork-leather), 12px 11px var(--ork-leather-lo),
+    1px 12px var(--ork-leather-lo), 2px 12px var(--ork-leather), 3px 12px var(--ork-stitch), 4px 12px var(--ork-leather), 5px 12px var(--ork-leather), 6px 12px var(--ork-leather), 7px 12px var(--ork-leather), 8px 12px var(--ork-leather), 9px 12px var(--ork-leather), 10px 12px var(--ork-stitch), 11px 12px var(--ork-leather), 12px 12px var(--ork-leather-lo),
+    1px 13px var(--ork-leather-lo), 2px 13px var(--ork-leather), 3px 13px var(--ork-stitch), 4px 13px var(--ork-leather-lo), 5px 13px var(--ork-leather-lo), 6px 13px var(--ork-leather-lo), 7px 13px var(--ork-leather-lo), 8px 13px var(--ork-leather-lo), 9px 13px var(--ork-leather-lo), 10px 13px var(--ork-stitch), 11px 13px var(--ork-leather), 12px 13px var(--ork-leather-lo),
+    1px 14px var(--ork-leather-lo), 2px 14px var(--ork-leather), 3px 14px var(--ork-stitch), 4px 14px var(--ork-leather-lo), 5px 14px var(--ork-leather-lo), 6px 14px var(--ork-leather-lo), 7px 14px var(--ork-leather-lo), 8px 14px var(--ork-leather-lo), 9px 14px var(--ork-leather-lo), 10px 14px var(--ork-stitch), 11px 14px var(--ork-leather), 12px 14px var(--ork-leather-lo),
+    1px 15px var(--ork-leather-lo), 2px 15px var(--ork-leather), 3px 15px var(--ork-leather), 4px 15px var(--ork-leather), 5px 15px var(--ork-leather), 6px 15px var(--ork-leather), 7px 15px var(--ork-leather), 8px 15px var(--ork-leather), 9px 15px var(--ork-leather), 10px 15px var(--ork-leather), 11px 15px var(--ork-leather), 12px 15px var(--ork-leather-lo),
+    2px 16px var(--ork-leather), 3px 16px var(--ork-leather), 4px 16px var(--ork-leather), 5px 16px var(--ork-leather), 6px 16px var(--ork-leather), 7px 16px var(--ork-leather), 8px 16px var(--ork-leather), 9px 16px var(--ork-leather), 10px 16px var(--ork-leather), 11px 16px var(--ork-leather),
+    2px 17px var(--ork-leather-lo), 3px 17px var(--ork-leather-lo), 4px 17px var(--ork-leather-lo), 5px 17px var(--ork-leather-lo), 6px 17px var(--ork-leather-lo), 7px 17px var(--ork-leather-lo), 8px 17px var(--ork-leather-lo), 9px 17px var(--ork-leather-lo), 10px 17px var(--ork-leather-lo), 11px 17px var(--ork-leather-lo); }
+/* pack:end */
+
+/* --- The leather (`.ork-leather`, leather/leather.json, 0.35.0; Orkboard's decisions §272.1): the open backpack's frame, in place of the bronze: rings of leather (an edge, the hide, its lit top, an edge), stitches
+   (a dashed outline, 2 px dashes) and, from ::after, two straps with gilt buckles over the top edge; no rivets. On a `.ork-table[data-party]` it replaces the bronze frame and the rivets, the felt and its light
+   stay. The straps are generated into the block below. ------------------------------------------------------------------------------------------------------------------------------------------------ */
+:where(.ork-leather) { position: relative; }
+.ork-leather, .ork-table[data-party].ork-leather { border-color: transparent; outline: 2px dashed var(--ork-stitch); outline-offset: -6px;
+  box-shadow: inset 0 0 0 2px var(--ork-leather-edge), inset 0 0 0 9px var(--ork-leather), inset 0 2px 0 9px var(--ork-leather-hi), inset 0 0 0 11px var(--ork-leather-edge),
+    inset 0 0 0 20px color-mix(in srgb, var(--ork-room) 18%, transparent), inset 0 0 0 30px color-mix(in srgb, var(--ork-room) 9%, transparent); }
+.ork-leather::after, .ork-table[data-party].ork-leather::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+/* leather:begin (generated by tools/build_things.py from leather/leather.json; do not edit by hand) */
+.ork-leather::after, .ork-table[data-party].ork-leather::after { background:
+    linear-gradient(var(--ork-leather-lo), var(--ork-leather-lo)) calc(22% - 4px) 34px / 8px 2px no-repeat,
+    linear-gradient(var(--ork-gilt), var(--ork-gilt)) calc(22% - 2px) 20px / 4px 12px no-repeat,
+    linear-gradient(var(--ork-leather-lo), var(--ork-leather-lo)) calc(22% - 6px) 20px / 12px 10px no-repeat,
+    linear-gradient(var(--ork-gilt), var(--ork-gilt)) calc(22% - 8px) 18px / 16px 14px no-repeat,
+    linear-gradient(var(--ork-stitch), var(--ork-stitch)) calc(22% + 2px) 4px / 2px 2px no-repeat,
+    linear-gradient(var(--ork-stitch), var(--ork-stitch)) calc(22% - 4px) 4px / 2px 2px no-repeat,
+    linear-gradient(var(--ork-leather-hi), var(--ork-leather-hi)) calc(22% - 8px) 0px / 2px 38px no-repeat,
+    linear-gradient(var(--ork-leather), var(--ork-leather)) calc(22% - 8px) 0px / 16px 38px no-repeat,
+    linear-gradient(var(--ork-leather-edge), var(--ork-leather-edge)) calc(22% - 10px) 0px / 20px 40px no-repeat,
+    linear-gradient(var(--ork-leather-lo), var(--ork-leather-lo)) calc(78% - 4px) 34px / 8px 2px no-repeat,
+    linear-gradient(var(--ork-gilt), var(--ork-gilt)) calc(78% - 2px) 20px / 4px 12px no-repeat,
+    linear-gradient(var(--ork-leather-lo), var(--ork-leather-lo)) calc(78% - 6px) 20px / 12px 10px no-repeat,
+    linear-gradient(var(--ork-gilt), var(--ork-gilt)) calc(78% - 8px) 18px / 16px 14px no-repeat,
+    linear-gradient(var(--ork-stitch), var(--ork-stitch)) calc(78% + 2px) 4px / 2px 2px no-repeat,
+    linear-gradient(var(--ork-stitch), var(--ork-stitch)) calc(78% - 4px) 4px / 2px 2px no-repeat,
+    linear-gradient(var(--ork-leather-hi), var(--ork-leather-hi)) calc(78% - 8px) 0px / 2px 38px no-repeat,
+    linear-gradient(var(--ork-leather), var(--ork-leather)) calc(78% - 8px) 0px / 16px 38px no-repeat,
+    linear-gradient(var(--ork-leather-edge), var(--ork-leather-edge)) calc(78% - 10px) 0px / 20px 40px no-repeat; }
+/* leather:end */

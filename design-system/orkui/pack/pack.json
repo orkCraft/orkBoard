@@ -1,0 +1,19 @@
+{
+  "note": "The source of the backpack's block in office/components.css (python tools/build_things.py). The backpack (Orkboard's decisions §272.1), shut and open, 14 x 18 cells, 2 px a cell (28 x 36). Drawn from the rectangles of Orkboard's mockup docs/mockups/room-things/room.js (`px(x, y, w, h, colour)`, a 20 x 20 grid), painted in order, the later over the earlier; `origin` is the corner of the 14 x 18 window taken from it (viewBox `3 1 14 18`). Shut: the body, its handle, the flap folded over with a buckle, stitches and a pocket. Open: the flap thrown back, its buckle loose, and a card in the dark mouth. Letters: `L` leather, `D` its shade, `K` its edge, `F` the flap (leather's light), `S` stitching, `B` the buckle's gilt, `I` the mouth (the room's dark), `C` the card (ink) and `M` its element mark (meadow).",
+  "w": 14, "h": 18, "origin": [3, 1],
+  "legend": {"L": "var(--ork-leather)", "D": "var(--ork-leather-lo)", "K": "var(--ork-leather-edge)", "F": "var(--ork-leather-hi)", "S": "var(--ork-stitch)", "B": "var(--ork-gilt)", "I": "var(--ork-room)", "C": "var(--ork-ink)", "M": "var(--ork-elem-meadow)"},
+  "states": [
+    {"selector": ".ork-pack::before", "rects": [
+      [5, 6, 10, 12, "L"], [4, 8, 1, 9, "D"], [15, 8, 1, 9, "D"], [5, 18, 10, 1, "D"],
+      [7, 3, 6, 1, "D"], [6, 4, 1, 2, "D"], [13, 4, 1, 2, "D"],
+      [5, 6, 10, 6, "F"], [5, 12, 10, 1, "K"],
+      [9, 11, 2, 3, "B"], [9, 12, 2, 1, "K"],
+      [6, 14, 1, 3, "S"], [13, 14, 1, 3, "S"], [7, 15, 6, 2, "D"]]},
+    {"selector": ".ork-pack.is-open::before", "rects": [
+      [5, 8, 10, 10, "L"], [4, 9, 1, 8, "D"], [15, 9, 1, 8, "D"], [5, 18, 10, 1, "D"],
+      [5, 8, 10, 3, "I"], [7, 6, 3, 4, "C"], [7, 6, 3, 1, "M"],
+      [5, 2, 10, 5, "F"], [5, 2, 10, 1, "D"], [5, 6, 10, 1, "K"],
+      [9, 2, 2, 2, "B"],
+      [6, 13, 1, 3, "S"], [13, 13, 1, 3, "S"], [7, 14, 6, 2, "D"]]}
+  ]
+}

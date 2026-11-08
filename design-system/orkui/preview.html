@@ -236,6 +236,17 @@
   .boxdemo { position: relative; display: flex; gap: var(--ork-6); padding: var(--ork-6); width: fit-content; background: var(--ork-table); border: var(--ork-line) solid var(--ork-frame); }
   .boxdemo .cdemo { width: 128px; height: 100px; padding: var(--ork-4); display: grid; align-content: start; gap: var(--ork-2); font: var(--ork-type-caption); }
   .boxdemo .ork-box { z-index: 5; }
+  .looks { display: flex; flex-wrap: wrap; gap: var(--ork-4); align-items: flex-end; }
+  .looks .chip { display: block; width: 48px; height: 32px; box-sizing: border-box; border: 1px solid var(--ork-frame); }
+  .looks.parties figure { width: 136px; }
+  .looks.steps { display: grid; gap: var(--ork-2); justify-items: start; }
+  .looks .steprow { display: flex; align-items: center; gap: 0; } .looks .stepname { width: 96px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+  .looks.tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--ork-6); }
+  .looks .ork-table { min-height: 200px; padding: var(--ork-8) var(--ork-8) var(--ork-6); display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-4); }
+  .looks .ork-table .ork-pennant { position: absolute; left: var(--ork-6); top: 0; }
+  .looks .ork-table .ork-plaque { margin-left: var(--ork-8); }
+  .looks.things { background: var(--ork-room); padding: var(--ork-5); border: 1px solid var(--ork-frame); gap: var(--ork-6); }
+  .looks.things figure { width: auto; min-width: 72px; }
 </style>
 </head>
 <body>
@@ -426,6 +437,61 @@
   <div class="room"><figure><span class="ork-chair" aria-hidden="true"></span><figcaption>back 22 x 12</figcaption></figure><figure><span class="ork-chair big" aria-hidden="true"></span><figcaption>.big 26 x 14</figcaption></figure><figure><span class="ork-chair is-empty" aria-hidden="true"></span><figcaption>empty, at rest</figcaption></figure><figure><span class="ork-chair is-empty is-lit" aria-hidden="true"></span><figcaption>empty, .is-lit</figcaption></figure><figure><span class="ork-chair is-empty small" aria-hidden="true"></span><figcaption>.small 18 x 18</figcaption></figure><figure><span class="ork-chair is-empty small is-lit" aria-hidden="true"></span><figcaption>.small, .is-lit</figcaption></figure><figure><button type="button" class="tabby"><span class="ork-chair is-empty" aria-hidden="true"></span><span>New party</span></button><figcaption>hover or focus it</figcaption></figure></div>
   <div class="room"><figure><span class="ork-door" aria-hidden="true"></span><figcaption>shut 14 x 20</figcaption></figure><figure><span class="ork-door is-open" aria-hidden="true"></span><figcaption>.is-open</figcaption></figure><figure><span class="ork-door small" aria-hidden="true"></span><figcaption>.small 14 x 20</figcaption></figure><figure><span class="ork-door is-open small" aria-hidden="true"></span><figcaption>.is-open .small</figcaption></figure><figure><span class="ork-door is-lit" aria-hidden="true"></span><figcaption>shut, .is-lit</figcaption></figure><figure><button type="button" class="door-btn" title="Stop every ork, script and browser at once"><span class="ork-door" aria-hidden="true"></span><span>Stop all</span></button><figcaption>Stop all, shut</figcaption></figure><figure><button type="button" class="door-btn is-open" aria-disabled="true" title="All stopped: the door shuts when work starts again"><span class="ork-door is-open" aria-hidden="true"></span><span>All stopped</span></button><figcaption>All stopped, open</figcaption></figure></div>
   <div class="ork-label">the leaders sit on chairs in the dark room at the table's rim, the open one larger; the empty chair is New party and is pulled out a little when it is lit, hovered or focused (only when motion is allowed); the door is shut at rest and open once everything is stopped: two states, nothing swings</div></section>
+
+<section><h2>The look of the table (0.35.0: colour by party, a felt lit from its top edge in five steps, bronze, a plaque, a pennant, the lamp's chain, the backpack and its leather; no smooth gradient, no blur)</h2>
+  <div class="looks parties" id="look-parties">
+    <figure><span class="chip" style="background:var(--ork-party-knight)"></span><figcaption>knight · Game design, Product<br>--ork-party-knight</figcaption></figure>
+    <figure><span class="chip" style="background:var(--ork-party-ork)"></span><figcaption>ork · Tech<br>--ork-party-ork</figcaption></figure>
+    <figure><span class="chip" style="background:var(--ork-party-elf)"></span><figcaption>elf · Design, Art<br>--ork-party-elf</figcaption></figure>
+    <figure><span class="chip" style="background:var(--ork-party-undead)"></span><figcaption>undead · Release<br>--ork-party-undead</figcaption></figure>
+    <figure><span class="chip" style="background:var(--ork-party-goblin)"></span><figcaption>goblin · Run, LiveOps<br>--ork-party-goblin</figcaption></figure>
+    <figure><span class="chip" style="background:var(--ork-party-gnome)"></span><figcaption>gnome · Marketing<br>--ork-party-gnome</figcaption></figure>
+    <figure><span class="chip" style="background:var(--ork-party-orkmaster)"></span><figcaption>the Orkmaster's warm wood<br>--ork-party-orkmaster</figcaption></figure>
+    <figure><span class="chip signal" style="box-shadow:inset 0 0 0 2px var(--ork-danger)"></span><figcaption>a signal ring is brighter<br>--ork-danger</figcaption></figure>
+    <figure><span class="chip signal" style="box-shadow:inset 0 0 0 2px var(--ork-alert)"></span><figcaption>and the alert<br>--ork-alert</figcaption></figure>
+  </div>
+  <div class="looks steps" id="look-steps">
+    <div class="steprow"><span class="stepname">ork</span><span class="chip" style="background:var(--ork-felt-ork-1)"></span><span class="chip" style="background:var(--ork-felt-ork-2)"></span><span class="chip" style="background:var(--ork-felt-ork-3)"></span><span class="chip" style="background:var(--ork-felt-ork-4)"></span><span class="chip" style="background:var(--ork-felt-ork-5)"></span><span class="chip" style="background:var(--ork-felt-ork-out)"></span><span class="chip" style="background:var(--ork-plate-ork)"></span></div>
+    <div class="steprow"><span class="stepname">knight</span><span class="chip" style="background:var(--ork-felt-knight-1)"></span><span class="chip" style="background:var(--ork-felt-knight-2)"></span><span class="chip" style="background:var(--ork-felt-knight-3)"></span><span class="chip" style="background:var(--ork-felt-knight-4)"></span><span class="chip" style="background:var(--ork-felt-knight-5)"></span><span class="chip" style="background:var(--ork-felt-knight-out)"></span><span class="chip" style="background:var(--ork-plate-knight)"></span></div>
+    <div class="steprow"><span class="stepname">elf</span><span class="chip" style="background:var(--ork-felt-elf-1)"></span><span class="chip" style="background:var(--ork-felt-elf-2)"></span><span class="chip" style="background:var(--ork-felt-elf-3)"></span><span class="chip" style="background:var(--ork-felt-elf-4)"></span><span class="chip" style="background:var(--ork-felt-elf-5)"></span><span class="chip" style="background:var(--ork-felt-elf-out)"></span><span class="chip" style="background:var(--ork-plate-elf)"></span></div>
+    <div class="steprow"><span class="stepname">undead</span><span class="chip" style="background:var(--ork-felt-undead-1)"></span><span class="chip" style="background:var(--ork-felt-undead-2)"></span><span class="chip" style="background:var(--ork-felt-undead-3)"></span><span class="chip" style="background:var(--ork-felt-undead-4)"></span><span class="chip" style="background:var(--ork-felt-undead-5)"></span><span class="chip" style="background:var(--ork-felt-undead-out)"></span><span class="chip" style="background:var(--ork-plate-undead)"></span></div>
+    <div class="steprow"><span class="stepname">goblin</span><span class="chip" style="background:var(--ork-felt-goblin-1)"></span><span class="chip" style="background:var(--ork-felt-goblin-2)"></span><span class="chip" style="background:var(--ork-felt-goblin-3)"></span><span class="chip" style="background:var(--ork-felt-goblin-4)"></span><span class="chip" style="background:var(--ork-felt-goblin-5)"></span><span class="chip" style="background:var(--ork-felt-goblin-out)"></span><span class="chip" style="background:var(--ork-plate-goblin)"></span></div>
+    <div class="steprow"><span class="stepname">gnome</span><span class="chip" style="background:var(--ork-felt-gnome-1)"></span><span class="chip" style="background:var(--ork-felt-gnome-2)"></span><span class="chip" style="background:var(--ork-felt-gnome-3)"></span><span class="chip" style="background:var(--ork-felt-gnome-4)"></span><span class="chip" style="background:var(--ork-felt-gnome-5)"></span><span class="chip" style="background:var(--ork-felt-gnome-out)"></span><span class="chip" style="background:var(--ork-plate-gnome)"></span></div>
+    <div class="steprow"><span class="stepname">orkmaster</span><span class="chip" style="background:var(--ork-felt-orkmaster-1)"></span><span class="chip" style="background:var(--ork-felt-orkmaster-2)"></span><span class="chip" style="background:var(--ork-felt-orkmaster-3)"></span><span class="chip" style="background:var(--ork-felt-orkmaster-4)"></span><span class="chip" style="background:var(--ork-felt-orkmaster-5)"></span><span class="chip" style="background:var(--ork-felt-orkmaster-out)"></span><span class="chip" style="background:var(--ork-plate-orkmaster)"></span></div>
+    <div class="ork-label">each felt: the light's five steps from its top edge (1 to 5), the felt out, the flat plate under words</div>
+  </div>
+  <div class="looks tables" id="look-tables">
+    <div class="ork-table" data-party="orkmaster"><span class="ork-pennant is-open" aria-hidden="true"></span><span class="ork-plaque">The Orkmaster</span><span class="ork-plate">Party game · Being made</span></div>
+    <div class="ork-table" data-party="tech"><span class="ork-pennant is-open" aria-hidden="true"></span><span class="ork-plaque">Tech</span><span class="ork-plate">Fix the build</span><span class="chip signal" style="box-shadow:inset 0 0 0 2px var(--ork-danger)"></span></div>
+    <div class="ork-table" data-party="game"><span class="ork-pennant" aria-hidden="true"></span><span class="ork-plaque">Game design</span><span class="ork-plate">The first level</span></div>
+    <div class="ork-table" data-party="design"><span class="ork-pennant" aria-hidden="true"></span><span class="ork-plaque">Design</span><span class="ork-plate">The table's look</span><span class="chip signal" style="box-shadow:inset 0 0 0 2px var(--ork-alert)"></span></div>
+    <div class="ork-table" data-party="release"><span class="ork-pennant" aria-hidden="true"></span><span class="ork-plaque">Release</span><span class="ork-plate">Release is free</span></div>
+    <div class="ork-table" data-party="run"><span class="ork-pennant" aria-hidden="true"></span><span class="ork-plaque">Run</span><span class="ork-plate">Events this week</span></div>
+    <div class="ork-table" data-party="marketing"><span class="ork-pennant" aria-hidden="true"></span><span class="ork-plaque">Marketing</span><span class="ork-plate">The store page</span></div>
+    <div class="ork-table is-out" data-party="tech"><span class="ork-pennant" aria-hidden="true"></span><span class="ork-plaque">Tech · lamp out</span><span class="ork-plate">Away until 19:00</span></div>
+    <div class="ork-table is-out" data-party="knight"><span class="ork-pennant" aria-hidden="true"></span><span class="ork-plaque">Product · lamp out</span><span class="ork-plate">Away until 19:00</span></div>
+    <div class="ork-table ork-leather" data-party="tech"><span class="ork-pennant" aria-hidden="true"></span><span class="ork-plaque">Tech · the backpack open</span><span class="ork-plate">Its heroes on the rug</span></div>
+  </div>
+  <div class="looks things" id="look-things">
+    <figure><span class="ork-pennant" data-party="ork" aria-hidden="true"></span><figcaption>pennant 14 x 34</figcaption></figure>
+    <figure><span class="ork-pennant is-open" data-party="ork" aria-hidden="true"></span><figcaption>.is-open 14 x 46</figcaption></figure>
+    <figure><span class="ork-pennant is-open" data-party="knight" aria-hidden="true"></span><figcaption>knight</figcaption></figure>
+    <figure><span class="ork-pennant is-open" data-party="elf" aria-hidden="true"></span><figcaption>elf</figcaption></figure>
+    <figure><span class="ork-pennant is-open" data-party="undead" aria-hidden="true"></span><figcaption>undead</figcaption></figure>
+    <figure><span class="ork-pennant is-open" data-party="goblin" aria-hidden="true"></span><figcaption>goblin</figcaption></figure>
+    <figure><span class="ork-pennant is-open" data-party="gnome" aria-hidden="true"></span><figcaption>gnome</figcaption></figure>
+    <figure><span class="ork-pennant small" data-party="ork" aria-hidden="true"></span><figcaption>.small 7 x 17</figcaption></figure>
+    <figure><span class="ork-chain" aria-hidden="true"></span><figcaption>chain 12 x 58</figcaption></figure>
+    <figure><span class="ork-chain is-pulled" aria-hidden="true"></span><figcaption>.is-pulled</figcaption></figure>
+    <figure><span class="ork-chain" id="chain-demo" aria-hidden="true"></span><figcaption><button class="ork-btn quiet" id="chain-btn" type="button">Pull</button></figcaption></figure>
+    <figure><span class="ork-chain small" aria-hidden="true"></span><figcaption>.small 6 x 29</figcaption></figure>
+    <figure><span class="ork-pack" aria-hidden="true"></span><figcaption>backpack 28 x 36</figcaption></figure>
+    <figure><span class="ork-pack is-open" aria-hidden="true"></span><figcaption>.is-open</figcaption></figure>
+    <figure><span class="ork-pack small" aria-hidden="true"></span><figcaption>.small 14 x 18</figcaption></figure>
+    <figure><span class="ork-pack is-open small" aria-hidden="true"></span><figcaption>open, .small</figcaption></figure>
+  </div>
+  <div class="row"><span class="ork-plaque">A plaque</span><span class="ork-plaque">Discard</span><span class="ork-plate">a plate: words lie on it, the steps show between</span></div>
+</section>
 
 <section><h2>Frame (the double frame of a raised thing)</h2><div class="row" style="align-items:start">
   <div class="ork-frame" style="width:156px;padding:var(--ork-3);display:grid;gap:var(--ork-2)"><span class="ork-gem alert" style="justify-self:start">$1&ndash;2</span><b>Plan ready</b><span style="color:var(--ork-ink-muted)">2 tasks, 1 check</span></div>
@@ -796,6 +862,9 @@ python -m pytest</code></pre>
   const give = document.getElementById("gives-demo");
   document.getElementById("gives-btn").addEventListener("click", () => { give.classList.remove("ork-gives"); void give.offsetWidth; give.classList.add("ork-gives"); });
   give.addEventListener("animationend", (e) => { if (e.animationName === "ork-give") give.classList.remove("ork-gives"); });
+  const chain = document.getElementById("chain-demo");     // a pull: the chain is pulled or let go, with the beat of a tug once (none under reduced motion)
+  document.getElementById("chain-btn").addEventListener("click", () => { chain.classList.remove("is-tugging"); void chain.offsetWidth; chain.classList.add("is-tugging"); chain.classList.toggle("is-pulled"); });
+  chain.addEventListener("animationend", (e) => { if (e.animationName === "ork-chain-tug") chain.classList.remove("is-tugging"); });
 </script>
 </body>
 </html>

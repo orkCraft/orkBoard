@@ -1,0 +1,9 @@
+{
+  "note": "The source of the leather's block in office/components.css (python tools/build_things.py). The open backpack's frame (Orkboard's decisions §272.1): the table lies in stitched leather, two straps with buckles over its top edge and no rivets. The frame itself (rings of leather, the stitches as a dashed outline) is CSS; the straps are drawn here: one strap of 10 x 20 cells, 2 px a cell, rectangles `[x, y, width, height, letter]` painted in order, laid centred on two places along the frame's top edge (`at`, percent of its width). Letters: `K` the strap's edge, `L` leather, `F` its light along the hoist, `S` a stitch, `B` the buckle's gilt, `D` the strap's shade through the buckle.",
+  "selector": ".ork-leather::after, .ork-table[data-party].ork-leather::after",
+  "w": 10, "h": 20, "cell": 2, "at": [22, 78],
+  "legend": {"K": "var(--ork-leather-edge)", "L": "var(--ork-leather)", "F": "var(--ork-leather-hi)", "S": "var(--ork-stitch)", "B": "var(--ork-gilt)", "D": "var(--ork-leather-lo)"},
+  "rects": [
+    [0, 0, 10, 20, "K"], [1, 0, 8, 19, "L"], [1, 0, 1, 19, "F"], [3, 2, 1, 1, "S"], [6, 2, 1, 1, "S"],
+    [1, 9, 8, 7, "B"], [2, 10, 6, 5, "D"], [4, 10, 2, 6, "B"], [3, 17, 4, 1, "D"]]
+}
