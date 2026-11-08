@@ -14,8 +14,8 @@ const RACES = { product: ["knight", "unicorn"], "game-design": ["knight", "unico
   liveops: ["goblin", "imp"], marketing: ["gnome", "fairy"], release: ["skeleton", "lich"] };
 
 /** The leaders' names of their own (decisions §164): said on the leader's seat and nowhere else. */
-export const LEADERS = { product: "Angel Invest Knight", "game-design": "Dungeon Master Knight", tech: "Sh.man", design: "Pixel-Perfect Dryad", art: "Sprite Dryad", run: "Uptime Imp",
-  liveops: "Event Imp", marketing: "Growth Hack Gnome", release: "Release Night King" };
+export const LEADERS = { product: "Angel Invest Knight", "game-design": "Dungeon Master Knight", tech: "Sh.man", design: "Pixel-Perfect Dryad", art: "Sprite Dryad", run: "Lantern Imp",
+  marketing: "Growth Hack Gnome", release: "Release Night King" };
 
 export const SIZES = [["lean", "Lean"], ["standard", "Standard"], ["full", "Full"]];
 export const LEAN_LINE = "Lean: one does it, the leader accepts it";
