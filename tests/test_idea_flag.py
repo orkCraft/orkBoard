@@ -36,6 +36,7 @@ def repo(tmp_path: Path) -> Path:
     git(r, "config", "user.email", "t@x")
     git(r, "config", "user.name", "T")
     (r / ".gitignore").write_text(".orkcraft/\n")
+    (r / "orkcraft.toml").write_text("[gate]\nrun = \"true\"\n")          # a gate with tests: a project with none is refused its way to main (decisions §274.3)
     (r / "a.txt").write_text("a\n")
     git(r, "add", "-A")
     git(r, "commit", "-m", "start")
