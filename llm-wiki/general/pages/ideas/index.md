@@ -111,9 +111,13 @@ The board's ideas: each a spec under discussion, kept by the board.
 - [A task is a whole session](153-a-task-is-a-whole-session.md) — A task is a whole session
 - [A leader is a skill in Claude Code](154-a-leader-is-a-skill-in-claude-code.md) — A leader is a skill in Claude Code
 - [Cut the import cycle between realm and core: realm/seat_frames.py and…](cut-the-import-cycle-between-realm-and-core.md) — Cut the import cycle between realm and core: realm/seat_frames.py and realm/agent_rules_text.py import core/idea_talk, idea_sections and idea_accept, which import realm, a cycle hidden by lazy imports
+- [What trial 152 found](155-what-trial-152-found.md) — What trial 152 found: one bad page never stops the Board; a step that changed what people see is looked at or said unlooked; a doubt the code settles is checked and a question a reference settles answ
+- [The checks into main and a red from before](the-checks-into-main-and-a-red-from-before.md) — The checks into main tell a red from before as a task's gate does (spec 149 E), keep which tests failed and not only their count, and the page says a red: the discard's Ready for main and To main do n
 - [Orkboard in orkUI](40-design-system.md) — Orkboard in orkUI
 - [OrkUI 0.15.x copied](96-orkui-0-15-0-copied.md) — OrkUI 0.15.x copied
-- [One card picked, on either side](156-one-pick-and-the-release-column.md) — One card picked, on either side
+- [One card picked, on either side](156-one-pick-and-the-release-column.md) — У нас сейчас очень сложный интерфейс стола (переключатели lifecycle цели - talk, spec, work, done, крест для перехода на чистый стол и ещё выделение карт из сброса показывает совершенно другой стол, к
+- [The inventory, a merchant's stall; a hero lays its table](157-the-inventory-a-merchants-stall.md) — Давай макет мерчанта сделаем более похожим на мерчанта из slay the spire и сделаем скрины как будут выглядеть столы всех 18 согласованных лидеров. Давай делаем спеку и имплементацию на моделях попроще
+- [Хочу ввести инструменты специализаций: то, чем пользуется каждая партия,…](158-the-tools-of-a-craft.md) — Хочу ввести инструменты специализаций: то, чем пользуется каждая партия, причём у одного харнеса инструмент может быть, у другого нет. Начать с art: сейчас картинки умеет делать только agy (и он exper
 - [A goal's party, measured](43-party-measured.md) — A goal's party, measured
 - [What the first look said](90-what-the-first-look-said.md) — What the first look said
 - [The owner's list of 26 October](91-the-owners-list.md) — The owner's list of 26 October
