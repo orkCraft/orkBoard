@@ -11,6 +11,7 @@ route: product, design, tech
 spec: docs/specs/158-the-tools-of-a-craft.md
 by: claude-code
 schema: 3
+gate: 8640590 · 38 files · red
 ---
 # Хочу ввести инструменты специализаций: то, чем пользуется каждая партия,…
 
