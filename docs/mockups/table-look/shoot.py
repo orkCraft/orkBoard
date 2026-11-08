@@ -21,6 +21,9 @@ SCALE = int(os.environ.get("MOCK_SCALE", "1"))
 
 TREE = """(root) => { const rows=[]; const walk=(e,d)=>{ if(d>16) return; const r=e.getBoundingClientRect(); if(r.width>20&&r.height>10){ const cs=getComputedStyle(e); rows.push('  '.repeat(d)+e.tagName.toLowerCase()+(typeof e.className==='string'&&e.className?'.'+e.className.trim().split(/\\s+/).join('.'):'')+Object.entries(e.dataset).map(([k,v])=>`[${k}=${String(v).slice(0,24)}]`).join('')+` ${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.width)}x${Math.round(r.height)} bg=${cs.backgroundColor} fs=${cs.fontSize}`+(e.children.length===0&&e.innerText?` "${e.innerText.trim().slice(0,30)}"`:''));} for(const c of e.children) walk(c,d+1); }; walk(document.querySelector(root),0); return rows.join('\\n'); }"""
 
+PROBE = """() => [...document.querySelectorAll('.hand-lifted')].map(e => { const cs = getComputedStyle(e);
+  return `${e.className} | border=${cs.borderTopColor} ${cs.borderTopWidth} | shadow=${cs.boxShadow.slice(0, 120)}`; })"""
+
 
 def host():
     h = WindowHost()
@@ -83,6 +86,9 @@ def test_shots(gui, width):
     # a hand card lifted
     try:
         pg.locator(".hand-card").nth(1).click(timeout=3000); pg.wait_for_timeout(1500)
+        pg.mouse.move(1300, 400); pg.wait_for_timeout(300)
         pg.screenshot(path=str(OUT / "hand-lifted.png"))
+        if DUMP:
+            print("PROBE", pg.evaluate(PROBE))
     except Exception as e:
         print("fail lift", str(e).splitlines()[0])

@@ -210,16 +210,16 @@ img.ork-race__head { image-rendering: pixelated; }
 .table-tabcell, .col-head { position: relative; }
 .table-seatbox { position: relative; }
 .table-seatbox::before {
-  content: ""; position: absolute; left: -9px; top: -22px; width: 12px; height: 30px; z-index: 0;
+  content: ""; position: absolute; left: -9px; top: -12px; width: 12px; height: 20px; z-index: 0;
   background: linear-gradient(90deg, rgba(255,255,255,.18) 0 2px, transparent 2px), var(--party, #888);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.4);
   filter: saturate(.85) brightness(.9);
 }
 .table-seatbox::after {                                   /* the pole */
-  content: ""; position: absolute; left: -11px; top: -24px; width: 2px; height: 46px; background: linear-gradient(var(--vb-bronze-hi), var(--vb-bronze-lo));
+  content: ""; position: absolute; left: -11px; top: -14px; width: 2px; height: 38px; background: linear-gradient(var(--vb-bronze-hi), var(--vb-bronze-lo));
 }
-.table-tabcell.is-open .table-seatbox::before { filter: none; height: 36px; box-shadow: 0 0 10px color-mix(in srgb, var(--party) 60%, transparent); }
+.table-tabcell.is-open .table-seatbox::before { filter: none; height: 24px; box-shadow: 0 0 10px color-mix(in srgb, var(--party) 60%, transparent); }
 
 /* ---- 4. a card framed like a playing card: a thick frame, a gilt inner line, a bevelled window -------------- */
 .table-card, .hand-card--face, .hand-card--stop, .col-card--up, .hand-card {
@@ -243,8 +243,10 @@ img.ork-race__head { image-rendering: pixelated; }
 .ork-card.asks, .hand-card.asks   { box-shadow: inset 0 0 0 2px var(--ork-alert),  inset 0 0 0 4px rgba(0,0,0,.45), inset 0 0 22px -4px color-mix(in srgb, var(--ork-alert) 50%, transparent) !important; }
 
 /* ---- 5. the hand as a hand: a slight fan, a card lifts toward you ------------------------------------------- */
+@media (min-width: 900px) {
 .hand-lane:nth-child(2n) .hand-slot:not(.is-behind) .hand-card { rotate: -2deg; }
 .hand-lane:nth-child(2n+1) .hand-slot:not(.is-behind) .hand-card { rotate: 2deg; }
+}
 .hand .hand-slot:not(.is-plus):hover .hand-card { rotate: 0deg; translate: 0 -18px; scale: 1.04; transition: translate 180ms var(--ork-motion-spring), scale 180ms var(--ork-motion-spring), rotate 180ms; }
 
 /* ---- 6. the gold of a count: percentages and costs as coins -------------------------------------------------- */
@@ -331,15 +333,17 @@ img.ork-race__head { image-rendering: pixelated; }
 .table-tabcell.is-open .table-seatbox::before { box-shadow: none !important; }
 .table-card__nm, .hand-card__name, .col-plab__t, .release-lane__label, .hand-pot__share { text-shadow: 2px 2px 0 #000 !important; }
 
-/* ---- signals: rings, not a glow ---------------------------------------------------------------------------- */
-.ork-card.fails, .hand-card.fails {
-  box-shadow: inset 0 0 0 2px var(--ork-danger), inset 0 0 0 4px color-mix(in srgb, var(--ork-danger) 40%, transparent),
-              inset 0 0 0 6px color-mix(in srgb, var(--ork-danger) 18%, transparent) !important;
+/* ---- signals: one ring and a faint second, not a glow ------------------------------------------------------- */
+.ork-card.fails, .hand-card.fails, .hand-lifted.danger {
+  border-color: var(--ork-danger) !important;
+  box-shadow: inset 0 0 0 1px var(--ork-danger), inset 0 0 0 3px color-mix(in srgb, var(--ork-danger) 22%, transparent) !important;
 }
-.ork-card.asks, .hand-card.asks {
-  box-shadow: inset 0 0 0 2px var(--ork-alert), inset 0 0 0 4px color-mix(in srgb, var(--ork-alert) 40%, transparent),
-              inset 0 0 0 6px color-mix(in srgb, var(--ork-alert) 18%, transparent) !important;
+.ork-card.asks, .hand-card.asks, .hand-lifted.alert {
+  border-color: var(--ork-alert) !important;
+  box-shadow: inset 0 0 0 1px var(--ork-alert), inset 0 0 0 3px color-mix(in srgb, var(--ork-alert) 22%, transparent) !important;
 }
+/* the column's stacked rows show a strip of the card: its border alone is the signal's, the icon says the rest */
+.col-card--up.fails, .col-card--up.asks { box-shadow: none !important; }
 .table-thrown { background: repeating-linear-gradient(135deg, rgba(245, 128, 110, .08) 0 4px, transparent 4px 8px) !important; }
 
 /* ---- the edge: the portal in rings, the hand's rail in bands, a coin with two tones ---------------------------- */

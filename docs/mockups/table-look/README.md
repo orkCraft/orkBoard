@@ -35,12 +35,18 @@ Colour has three layers, told apart by their form, so they never mix:
 
 ## Known problems
 
-- The pennants touch the window's top edge; the pole hardly shows. A margin or a shorter pennant.
-- The column's failed rows have a heavy double red frame; thinner.
-- The lifted asking card does not get its yellow frame (it did not before either): to check against the product.
+Fixed on 8 November 2026: the pennants stand clear of the window's top edge on a visible pole (a 20 px pennant, 24 px
+when open); a signal is one ring and a faint second, and the column's stacked rows show it by their border alone (the
+icon says the rest); the fan is only at the desktop's width (on the phone the hand is a stack); the phone is shot with
+every layer; the camera moves the pointer off the lifted card before the shot.
+
+- **The lifted card loses its signal in the product** (a bug, not the mockup's): `gui/static/js/hand/stopcard.js`, the
+  lifted card calls `cls(base, tone, {asks, fails})`, but `cls` takes two arguments, so with a tone the flags are
+  dropped: the lifted question never has `asks`, the lifted failure never `fails`. The mockup rings `.hand-lifted.alert`
+  and `.hand-lifted.danger` to show what it should be; the fix is in `gui/`, the owner's call.
 - On the stub, Game design's, Art's and Release's tables are empty; the felt was not checked under real screens and assets.
 - The fan and the lift of the hand are motion; the shots do not show them.
-- The phone was shot once with the colour layers, not with the frames and the steps.
+- On the phone the open leader's pennant sits at the screen's left edge.
 
 ## Files
 
