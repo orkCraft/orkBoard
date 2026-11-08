@@ -1,7 +1,7 @@
 // The new chair deals its crafts (docs/specs/160-the-tables-look-and-the-rooms-things.md stage I, decisions §272, §274.1, §160.6; the mockup docs/mockups/room-things/ mode `chair`). On the desktop (760 px and over) the chair at the tabs' end,
 // pressed, is lit and the Orkmaster's question rises onto the table as the 144 x 202 card of a question (*A new chair at the table · Which craft sits in it?*, hand/answercards.js' mechanism and classes, not bent): the hand holds a card for each craft
 // of the project's kind not seated yet (`ideas.party_presets` of group `stage`, the stage's reached first, Release among them while it is not seated): its race's head as its sign, its name (the pixel face), its whole line, and its price in the
-// corner and in words (`ideas.party_price`, said as every card's cost: hand/waycost.js; with no price the card says so). The Orkmaster's pick, when a preset says one (`pick`, `recommended` or `default`), is starred and named in words; the host
+// corner and in words (`ideas.party_price`, said as every card's cost: hand/waycost.js; with no price the card says so). The Orkmaster's pick, when a preset says one (`pick`, `recommended` or `default`), else the first craft not seated whose stage is reached (Release last), is starred and named in words; the host
 // says none today, so none is starred and none invented. The rest of the hand sinks (hand.js). A craft's card pressed seats it by `ideas.goal_save` as the parties' place does (table/parties.js), then the backpack opens on its chair; *Put it back*,
 // Esc and any tab pressed send nothing. The narrow page and the phone keep the parties' place (*New party*).
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -21,6 +21,7 @@ import { wayCostOf } from "./waycost.js";
 /** Whether the chair's deal is up. */
 export const dealing = signal(false);
 export const QUESTION = "A new chair at the table", QUESTION_LINE = "Which craft sits in it?", PICK_WORDS = "the Orkmaster's pick", NO_PRICE = "no price yet";
+const isRelease = (p) => /release/i.test(`${p.id} ${p.craft || ""}`);
 const STAGES = ["idea", "being_made", "live"];
 
 /** Opens the deal, or puts it away. */
@@ -43,6 +44,8 @@ function useCrafts() {
   const open = got ? got.presets.filter((p) => !madeFrom(p, tracks)) : null;
   const reached = open && got.stage ? open.filter((p) => STAGES.indexOf(p.stage) <= STAGES.indexOf(got.stage)) : open;
   const crafts = open && (reached.length ? reached : open), sig = (crafts || []).map((p) => p.id).join("|");
+  const says = !!open && open.some(pickOf), ranked = reached ? [...reached.filter((p) => !isRelease(p)), ...reached.filter(isRelease)] : [];     // no preset says a pick: the Orkmaster's is the first unseated craft whose stage is reached, in the presets' order, Release last
+  const picked = open && !says && ranked.length ? ranked[0].id : "";
   useEffect(() => {
     if (!crafts) return undefined;
     let live = true;
@@ -53,7 +56,7 @@ function useCrafts() {
     }
     return () => { live = false; };
   }, [sig]);
-  return { crafts, price };
+  return { crafts, price, picked };
 }
 
 /** The right edge of `el` from the left of `root`, by layout and not by paint: the sunk hand is scaled, and a rect measured while it shrinks would move the cards. */
@@ -64,8 +67,8 @@ function rightIn(el, root) {
 }
 
 /** One craft as a hand card: its race's head at the top right, its name, its whole line, its price in words and in the corner, and, when it is the Orkmaster's pick, a star and the words. */
-function CraftCard({ p, price, orkmaster, onSeat }) {
-  const head = headOf({ p }, p.leader, p.size), pick = pickOf(p), cost = price ? wayCostOf({ usd_low: price.low, usd_high: price.high }) : null;
+function CraftCard({ p, price, orkmaster, onSeat, chosen }) {
+  const head = headOf({ p }, p.leader, p.size), pick = pickOf(p) || chosen, cost = price ? wayCostOf({ usd_low: price.low, usd_high: price.high }) : null;
   const much = cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null, said = price === undefined ? "" : cost ? cost.words : NO_PRICE;
   return html`<button type="button" class=${cls("ork-card hand-ans hand-craft", { "is-pick": pick })} data-craft=${p.id} data-pick=${pick ? "1" : undefined} data-price=${cost ? cost.gem : price === undefined ? undefined : "none"}
       aria-label=${`${p.name}${pick ? `, ${PICK_WORDS}` : ""}: ${p.line}${said ? `. ${said}` : ""}`} title=${p.line} onClick=${() => onSeat(p)}>
@@ -80,7 +83,7 @@ function CraftCard({ p, price, orkmaster, onSeat }) {
 
 /** The deal: the Orkmaster's question risen over the ways' row, and the crafts in the hand's row. */
 export function ChairDeal() {
-  const box = useRef(), row = useRef(), busy = useRef(false), [at, setAt] = useState(null), { crafts, price } = useCrafts(), orkmaster = { race: "peon", tier: "crown" };
+  const box = useRef(), row = useRef(), busy = useRef(false), [at, setAt] = useState(null), { crafts, price, picked } = useCrafts(), orkmaster = { race: "peon", tier: "crown" };
   const was = useRef([tab.peek(), inventory.peek(), over.peek()]);
   useLayoutEffect(() => {                                              // the question over the first craft; the sunk hand shrinks into the strip right of the row
     const place = () => {
@@ -125,7 +128,7 @@ export function ChairDeal() {
   </aside>
   <div ref=${row} class="hand-ways-row hand-crafts" role="group" aria-label="Crafts" data-chair-deal="crafts" style=${at ? `--hc-wleft:${at.ways}px` : undefined}>
     <div class="hand-ways-cards">
-      ${crafts === null ? html`<p class="hand-crafts__wait ok-tone-muted">Looking at the table…</p>` : crafts.map((p) => html`<${CraftCard} key=${p.id} p=${p} price=${price[p.id]} orkmaster=${orkmaster} onSeat=${seat} />`)}
+      ${crafts === null ? html`<p class="hand-crafts__wait ok-tone-muted">Looking at the table…</p>` : crafts.map((p) => html`<${CraftCard} key=${p.id} p=${p} price=${price[p.id]} chosen=${p.id === picked} orkmaster=${orkmaster} onSeat=${seat} />`)}
       ${crafts && !crafts.length && html`<p class="hand-crafts__wait ok-tone-muted">Every craft sits at the table.</p>`}
     </div>
     <div class="hand-ways-acts"><button type="button" class="ork-btn hand-put" data-act="put" onClick=${() => dealCrafts(false)}>Put it back</button></div>

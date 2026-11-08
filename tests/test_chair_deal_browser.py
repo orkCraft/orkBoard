@@ -32,8 +32,9 @@ def preset(id, name, line, leader, stage, **more):
 class ChairHost(StallHost):
     """The stall's host with the chair's three crafts unseated (LiveOps, Marketing with the Orkmaster's pick, Release, which has no price) and a `ideas.goal_save` that seats the craft sent."""
 
-    def __init__(self, pick=True, **more):
+    def __init__(self, pick=True, stage="live", **more):
         super().__init__(**more)
+        self.stage = stage
         self.presets = [preset("liveops", "LiveOps", LIVEOPS, "event-imp", "live"), preset("marketing", "Marketing", MARKETING, "growth-hack-gnome", "idea", **({"recommended": True} if pick else {})),
                         preset("release", "Release", RELEASE, "release-night-king", "being_made")]
         self.saved = []
@@ -44,7 +45,7 @@ class ChairHost(StallHost):
             return {"kind": {"id": "game", "words": "a game", "how": ""}, "presets": self.presets}
         if name == "ideas.stage":
             self.log.append((name, a))
-            return {"stage": "live", "read": "live", "kind": "game", "offered": {}}
+            return {"stage": self.stage, "read": self.stage, "kind": "game", "offered": {}}
         if name == "ideas.party_price":
             self.log.append((name, a))
             if a["leader"] == "release-night-king":
@@ -110,12 +111,25 @@ def test_the_chair_deals_a_card_for_each_craft_not_seated_with_head_line_price_a
         pg.close()
 
 
-def test_with_no_pick_in_the_presets_no_craft_is_starred(gui):
+def test_with_no_pick_in_the_presets_the_first_reached_unseated_craft_is_the_orkmasters_pick(gui):
+    """Spec 160 I: no preset says a pick, so the Orkmaster's is the first unseated craft whose stage is reached, in the presets' order."""
     pg, host, log = open_hand(gui, host=ChairHost(pick=False))
     try:
         press_chair(pg)
-        assert pg.locator(".hand-craft").count() == 3 and pg.locator("[data-star]").count() == 0 and pg.locator('.hand-craft[data-pick="1"]').count() == 0
+        assert pg.locator(".hand-craft").count() == 3 and pg.locator("[data-star]").count() == 1
+        pick = pg.locator('.hand-craft[data-pick="1"]')
+        assert pick.count() == 1 and pick.get_attribute("data-craft") == "liveops" and pick.locator("[data-pick-words]").inner_text() == "the Orkmaster's pick"
         assert not log, log
+    finally:
+        pg.close()
+
+
+def test_the_first_pick_skips_a_craft_whose_stage_is_not_reached(gui):
+    pg, host, log = open_hand(gui, host=ChairHost(pick=False, stage="being_made"))
+    try:
+        press_chair(pg)
+        assert pg.locator(".hand-craft").count() == 2 and pg.locator('.hand-craft[data-pick="1"]').get_attribute("data-craft") == "marketing"
+        assert pg.locator("[data-star]").count() == 1
     finally:
         pg.close()
 

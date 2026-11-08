@@ -226,3 +226,23 @@ def test_the_phones_table_wears_the_felt_and_away_puts_it_out(gui):
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
+
+
+def test_the_phones_backpack_opens_the_stall_over_the_hand_and_the_way_back_closes_it(gui):
+    """Spec 160 K: on the phone the backpack shows the inventory's stall over the hand; ← closes it."""
+    host = DoorHost(HERE)
+    pg, errors = start(gui, "phone", host)
+    try:
+        pack = pg.locator(".up-top .stall-pack")
+        assert pg.locator(".stall-merchant").count() == 0
+        pack.click()
+        pg.locator(".stall-merchant").wait_for(state="visible", timeout=WAIT_MS)
+        assert pg.locator(".stall-rug").is_visible() and pg.locator(".frame[data-over]").count() == 1
+        assert pg.locator(".stall-pack").first.get_attribute("aria-pressed") == "true" and pg.locator(".up-top .stall-pack .ork-pack.is-open").count() == 1
+        pg.locator("[data-stall-back]").click()
+        pg.locator(".up-top").wait_for(state="visible", timeout=WAIT_MS)
+        assert pg.locator(".stall-merchant").count() == 0 and pg.locator(".frame[data-over]").count() == 0
+        assert pg.locator(".up-top .stall-pack .ork-pack.is-open").count() == 0
+    finally:
+        pg.context.close()
+    assert not errors, "\n".join(errors)
