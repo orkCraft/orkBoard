@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A party removed
 phase: done
+route: design, tech
 spec: docs/specs/80-a-party-removed.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A card's window where it
 phase: done
+route: design, tech
 spec: docs/specs/142-a-cards-window-where-it-has-something-to-show.md
 decisions: 249
 by: person

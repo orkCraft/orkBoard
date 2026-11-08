@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The field is a game
 phase: done
+route: design, tech
 spec: docs/specs/77-the-field-a-table.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The owner's list of 26
 phase: done
+route: product, design, tech
 spec: docs/specs/91-the-owners-list.md
 decisions:
 by: person

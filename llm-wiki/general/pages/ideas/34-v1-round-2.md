@@ -7,6 +7,7 @@ size:
 priority: normal
 short: V1, round 2
 phase: done
+route: design, tech
 spec: docs/specs/34-v1-round-2.md
 decisions:
 by: person

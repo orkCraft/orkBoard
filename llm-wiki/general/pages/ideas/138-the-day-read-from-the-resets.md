@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The day read
 phase: done
+route: design, tech
 spec: docs/specs/138-the-day-read-from-the-resets.md
 decisions: 245, 246
 by: person

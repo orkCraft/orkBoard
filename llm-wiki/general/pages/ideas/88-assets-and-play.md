@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Assets and Play
 phase: done
+route: design, tech
 spec: docs/specs/88-assets-and-play.md
 decisions:
 by: person

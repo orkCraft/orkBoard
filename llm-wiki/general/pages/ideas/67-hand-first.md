@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The hand first
 phase: done
+route: design, tech
 spec: docs/specs/67-hand-first.md
 decisions:
 by: person

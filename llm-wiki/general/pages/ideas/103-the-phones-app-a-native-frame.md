@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The phone's app a native
 phase: done
+route: design, tech
 spec: docs/specs/103-the-phones-app-a-native-frame.md
 decisions:
 by: person

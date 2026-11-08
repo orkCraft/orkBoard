@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A window on every card
 phase: done
+route: design, tech
 spec: docs/specs/148-a-window-on-every-card.md
 decisions: 252
 by: person

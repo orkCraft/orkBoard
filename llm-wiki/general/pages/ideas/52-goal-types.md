@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Goal types
 phase: done
+route: design, tech
 spec: docs/specs/52-goal-types.md
 decisions:
 by: person

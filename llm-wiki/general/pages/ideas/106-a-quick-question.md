@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A quick question
 phase: done
+route: design, tech
 spec: docs/specs/106-a-quick-question.md
 decisions: 181
 by: person

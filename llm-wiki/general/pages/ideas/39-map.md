@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Map
 phase: done
+route: design, tech
 spec: docs/specs/39-map.md
 decisions:
 by: person

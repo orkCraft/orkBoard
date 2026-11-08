@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A spec's wait is one
 phase: done
+route: design, tech
 spec: docs/specs/144-a-specs-wait-and-a-change-through-the-orkmaster.md
 decisions: 224, 225, 222
 by: person

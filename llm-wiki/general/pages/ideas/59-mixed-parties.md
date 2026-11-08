@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Mixed parties
 phase: done
+route: design, tech
 spec: docs/specs/59-mixed-parties.md
 decisions:
 by: person

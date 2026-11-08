@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Your own goal, first
 phase: done
+route: design, tech
 spec: docs/specs/61-your-own-goal.md
 decisions:
 by: person

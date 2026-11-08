@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A lighter column
 phase: done
+route: design, tech
 spec: docs/specs/73-a-lighter-column.md
 decisions:
 by: person

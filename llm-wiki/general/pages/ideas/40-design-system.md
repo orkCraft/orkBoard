@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Orkboard in orkUI
 phase: done
+route: design, tech
 spec: docs/specs/40-design-system.md
 decisions:
 by: person

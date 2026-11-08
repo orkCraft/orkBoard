@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Orkmaster is crowned
 phase: done
+route: design, tech
 spec: docs/specs/76-the-orkmaster-crowned.md
 decisions:
 by: person

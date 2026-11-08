@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The flags raised
 phase: done
+route: design, tech
 spec: docs/specs/64-flags-raised.md
 decisions:
 by: person

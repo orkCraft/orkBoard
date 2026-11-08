@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The window made lighter
 phase: done
+route: design, tech
 spec: docs/specs/140-the-window-made-lighter.md
 decisions: 247
 by: person

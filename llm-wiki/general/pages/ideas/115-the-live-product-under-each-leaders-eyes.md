@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The live product under
 phase: done
+route: design, tech
 spec: docs/specs/115-the-live-product-under-each-leaders-eyes.md
 decisions: 193
 by: person

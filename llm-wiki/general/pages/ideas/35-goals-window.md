@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Board
 phase: done
+route: design, tech
 spec: docs/specs/35-goals-window.md
 decisions:
 by: person

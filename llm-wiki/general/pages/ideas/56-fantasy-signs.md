@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Fantasy signs
 phase: done
+route: design, tech
 spec: docs/specs/56-fantasy-signs.md
 decisions:
 by: person

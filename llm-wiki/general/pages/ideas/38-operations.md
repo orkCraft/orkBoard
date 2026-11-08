@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Operations
 phase: done
+route: design, tech
 spec: docs/specs/38-operations.md
 decisions:
 by: person

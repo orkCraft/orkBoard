@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The field at a glance
 phase: done
+route: design, tech
 spec: docs/specs/82-the-field-at-a-glance.md
 decisions:
 by: person

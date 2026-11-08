@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The other maps
 phase: done
+route: product, design, tech
 spec: docs/specs/102-the-other-maps-and-picking-on-them.md
 decisions:
 by: person

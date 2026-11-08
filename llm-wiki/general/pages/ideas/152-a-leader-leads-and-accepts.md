@@ -7,6 +7,7 @@ size:
 priority: normal
 short: A leader leads
 phase: work
+route: tech
 spec: docs/specs/152-a-leader-leads-and-accepts.md
 decisions: 256, 257
 by: person

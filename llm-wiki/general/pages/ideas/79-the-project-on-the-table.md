@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The project's level is
 phase: done
+route: design, tech
 spec: docs/specs/79-the-project-on-the-table.md
 decisions:
 by: person

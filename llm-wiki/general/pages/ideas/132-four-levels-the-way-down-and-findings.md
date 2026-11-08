@@ -7,6 +7,7 @@ size:
 priority: normal
 short: Four levels
 phase: done
+route: design, tech
 spec: docs/specs/132-four-levels-the-way-down-and-findings.md
 decisions: 234, 237
 by: person

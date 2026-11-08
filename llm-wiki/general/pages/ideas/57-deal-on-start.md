@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The deal on Start
 phase: done
+route: design, tech
 spec: docs/specs/57-deal-on-start.md
 decisions:
 by: person

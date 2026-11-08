@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Orkmaster keeps
 phase: done
+route: design, tech
 spec: docs/specs/71-orkmaster-keeps-parties-apart.md
 decisions:
 by: person

@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The Map shows one goal
 phase: done
+route: design, tech
 spec: docs/specs/48-map-ideas.md
 decisions:
 by: person

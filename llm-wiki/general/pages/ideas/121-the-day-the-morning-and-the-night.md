@@ -7,6 +7,7 @@ size:
 priority: normal
 short: The day, the morning
 phase: done
+route: product, design, tech
 spec: docs/specs/121-the-day-the-morning-and-the-night.md
 decisions: 199
 by: person

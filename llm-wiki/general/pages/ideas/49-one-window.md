@@ -7,6 +7,7 @@ size:
 priority: normal
 short: One window
 phase: done
+route: design, tech
 spec: docs/specs/49-one-window.md
 decisions:
 by: person
