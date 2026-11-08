@@ -175,3 +175,25 @@ def test_the_leaders_of_the_party_seats_name_each_crafts_default_spec_164_c():
         else:
             assert named[craft] == d.name
     assert named["run"] == "Lantern Imp"
+
+
+def test_a_project_with_no_kind_locks_no_hero_and_stars_none_spec_164_e(tmp_path, monkeypatch):
+    root, state = tmp_path / "wiki", tmp_path / "state"
+    state.mkdir()
+    monkeypatch.setattr(heroes, "_kind", lambda root, state_dir: "")
+    for craft in ("design", "marketing", "tech"):
+        offered = heroes.offer(root, state, craft)
+        assert [h.id for h, _ in offered] == [h.id for h in heroes.of(craft)] and all(why == "" for _, why in offered)
+        assert heroes.star(root, state, craft) == ""
+    monkeypatch.undo()
+    from orkboard.realm import project_kind
+    project_kind.keep(state, "web")
+    assert dict((h.id, why) for h, why in heroes.offer(root, state, "tech"))["sh-scene"] != ""
+
+
+def test_a_role_file_says_where_a_hero_is_offered_spec_164_e():
+    from orkboard.realm import agent_rules_text
+    text = agent_rules_text.table_text("tech", "wiki")
+    assert "Offered in: a game." in text and "Not offered" not in text
+    from orkboard.realm import project_kind
+    assert agent_rules_text.KIND_WORDS == project_kind.WORDS
