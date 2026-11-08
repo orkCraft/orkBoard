@@ -240,3 +240,35 @@ def test_the_new_commands_are_in_the_hosts_table_and_the_projects(host):
     for name in ("ideas.stall", "ideas.stall_take", "ideas.stall_back", "ideas.hero_table"):
         assert name in host.commands and name in _board_commands()
     json.dumps(stall(host))
+
+
+def test_only_arts_chair_lays_its_makers_after_the_ai_tool_and_tier(host, monkeypatch):
+    from orkboard.realm import craft_tools
+
+    monkeypatch.setattr(craft_tools, "key", lambda _: None)
+    art = _party(host, "art")
+    got = stall(host, art)
+    assert [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier", "craft_tools"]
+    makers = shelf(got, "craft_tools")
+    assert makers["label"] == "Its makers"
+    assert makers["sub"] == "Run in Orkboard on your key"
+    assert [w["word"] for w in makers["wares"]] == ["Picture maker", "Sound maker"]
+    for w in makers["wares"]:
+        assert w["line"] == craft_tools.get(w["id"]).title
+        assert w["leaves"] == craft_tools.get(w["id"]).leaves
+        assert not w["here"] and w["why"] == "no key on this computer"
+        assert w["cap"] is None and w["price"] == {"word": "Set a cap"}
+    for chair in ("", _party(host, "tech")):
+        assert not any(s["slot"] == "craft_tools" for s in stall(host, chair)["shelves"])
+
+
+def test_maker_plates_say_the_agreed_cap_in_money_and_about_an_estimate(host):
+    from orkboard.realm import craft_tools
+
+    art = _party(host, "art")
+    craft_tools.set_taken(host.ideas.root(), art, {
+        tid: {"cap": {"amount": "1.25", "currency": "USD"}} for tid in craft_tools.REGISTRY
+    })
+    got = stall(host, art)
+    assert ware(got, "craft_tools", "openai-images")["price"] == {"money": "1.25 USD cap"}
+    assert ware(got, "craft_tools", "elevenlabs-sound")["price"] == {"money": "about 1.25 USD cap"}

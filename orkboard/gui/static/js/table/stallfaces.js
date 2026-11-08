@@ -56,5 +56,6 @@ export function Mark({ slot, id, race }) {
 
 /** A relic: a small ware, its mark above its word; its line is its title. */
 export function Relic({ w, slot, race }) {
+  if (slot === "craft_tools") return html`<div class="stall-face stall-relic stall-maker"><${Sign} name=${w.makes === "pictures" ? "picture" : "sound"} /><span class="stall-relic__word">${w.word}</span><span class="stall-maker__service">${w.title}</span></div>`;
   return html`<div class="stall-face stall-relic" title=${w.line || undefined}><${Mark} slot=${slot} id=${w.id} race=${race} /><span class="stall-relic__word">${w.word}</span></div>`;
 }

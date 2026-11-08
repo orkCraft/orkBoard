@@ -401,3 +401,51 @@ def test_a_tech_party_with_a_non_default_hero_shows_its_heros_table_not_the_syst
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+class MakerShelfHost(StallHost):
+    """Art's maker data on the existing chair fixture; Tech retains its own shelves."""
+
+    def __init__(self):
+        super().__init__()
+        self.carry["art"] = copy.deepcopy(self.carry["tech"])
+        self.parties.append({**copy.deepcopy(next(p for p in self.parties if p["slug"] == "tech")), "slug": "art", "title": "Art party"})
+
+    def shelves(self, chair):
+        shelves = super().shelves(chair)
+        if chair == "art":
+            shelves.append({"id": "craft_tools", "slot": "craft_tools", "kind": "makers", "label": "Its makers",
+                            "sub": "Run in Orkboard on your key", "wares": [
+                ware("openai-images", "Picture maker", "OpenAI Images", {"money": "1.25 USD cap"},
+                     title="OpenAI Images", makes="pictures", leaves="The picture prompt is sent to OpenAI."),
+                ware("elevenlabs-sound", "Sound maker", "ElevenLabs Sound Effects", {"money": "about 1.25 USD cap"},
+                     title="ElevenLabs Sound Effects", makes="sound", leaves="The sound prompt is sent to ElevenLabs.")
+            ]})
+        return shelves
+
+
+def test_art_lays_makers_after_its_ai_tool_and_tier_with_money_and_disclosures(gui):
+    pg, host, log = opened(gui, "art", host=MakerShelfHost())
+    try:
+        assert pg.locator(".stall-shelf").evaluate_all("els => els.map(e => e.dataset.shelf)") == ["hero", "tool", "tier", "craft_tools"]
+        makers = pg.locator('[data-shelf="craft_tools"]')
+        assert makers.locator(".stall-shelf__lab b").inner_text().lower() == "its makers"
+        assert makers.locator(".stall-relic__word").all_inner_texts() == ["Picture maker", "Sound maker"]
+        assert makers.locator(".stall-maker__service").all_inner_texts() == ["OpenAI Images", "ElevenLabs Sound Effects"]
+        assert makers.locator(".ork-sign.picture, .ork-sign.sound").count() == 2
+        assert makers.locator(".stall-price").all_inner_texts() == ["1.25 USD cap", "about 1.25 USD cap"]
+        assert makers.locator(".stall-maker__leaves").count() == 2
+        assert "What leaves this computer" in makers.inner_text()
+        assert makers.locator(".stall-price").first.evaluate("e => getComputedStyle(e).color") == pg.locator('.stall-price.is-money').first.evaluate("e => getComputedStyle(e).color")
+        tier = pg.locator('.stall-ware[data-slot="tier"]').last.locator("button")
+        tier.focus()
+        pg.keyboard.press("Tab")
+        assert pg.locator(":focus").get_attribute("aria-label") == "Its makers: Picture maker"
+        pg.keyboard.press("Tab")
+        assert pg.locator(":focus").get_attribute("aria-label") == "Its makers: Sound maker"
+        open_tab(pg, "tech")
+        pg.wait_for_function("() => document.querySelector('.stall')?.dataset.stall === 'tech'", timeout=WAIT_MS)
+        assert pg.locator('[data-shelf="craft_tools"]').count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

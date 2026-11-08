@@ -40,7 +40,7 @@ export function fly(from, slot) {
 function Ware({ shelf, w, chair, head }) {
   const mine = !!w.price?.mine, locked = !!w.price?.locked, heroes = shelf.kind === "heroes", on = hover.value?.slot === shelf.slot && hover.value?.id === w.id;
   const press = (e) => {
-    if (mine || locked) return;
+    if (mine || locked || shelf.kind === "makers") return;
     fly(e.currentTarget.querySelector(".stall-face"), shelf.slot);
     pointAt(null);
     take(chair, shelf.slot, w.id);
@@ -51,6 +51,7 @@ function Ware({ shelf, w, chair, head }) {
       ${heroes ? html`<${HeroFace} w=${w} fallback=${head} />` : html`<${Relic} w=${w} slot=${shelf.slot} race=${head?.race} />`}
     </button>
     <${Plate} price=${w.price} />
+    ${shelf.kind === "makers" && html`<p class="stall-maker__leaves"><b>What leaves this computer</b>${w.leaves}</p>`}
     ${w.before && !mine && html`<small class="stall-ware__before">Yours before</small>`}
   </div>`;
 }

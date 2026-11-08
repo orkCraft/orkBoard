@@ -101,3 +101,12 @@
   .stall-face, .stall-service__card { transition: none; }
   .stall-ware:not(.is-mine):not(.is-locked):hover .stall-face, .stall-ware:not(.is-mine):not(.is-locked):focus-within .stall-face, .stall-service:hover .stall-service__card, .stall-service.is-over .stall-service__card { transform: none; }
 }
+
+/* Makers follow the AI tool and tier in both reading and keyboard order. */
+.stall-shelf.is-makers { flex-basis: 100%; min-width: 0; }
+.stall-shelf.is-makers .stall-wares { align-items: flex-start; }
+.stall-shelf.is-makers .stall-ware { width: 180px; max-width: 100%; }
+.stall-maker { width: 166px; max-width: 100%; height: auto; min-height: 76px; box-sizing: border-box; }
+.stall-maker__service, .stall-maker__leaves { font: var(--ork-type-caption); color: var(--ork-ink-read); overflow-wrap: anywhere; }
+.stall-maker__leaves { text-align: center; }
+.stall-maker__leaves b { display: block; font-weight: 600; }
