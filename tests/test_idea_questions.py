@@ -6,7 +6,7 @@ from orkboard.realm import idea_questions as iq
 
 def test_a_question_from_the_model_is_taken_strictly():
     q = iq.of({"ask": " Which store  first? ", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first"})
-    assert q == {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first"}
+    assert q == {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first", "kinds": ["other", "other"]}
     assert iq.of({"ask": "A?", "choices": ["x", "y"], "pick": "Y"})["pick"] == 1               # a pick by its words
     assert iq.of({"ask": "A?", "choices": ["x", "y"], "pick": 2})["pick"] is None              # out of range
     assert iq.of({"ask": "A?", "choices": ["x", "y"], "pick": True})["pick"] is None
@@ -14,20 +14,20 @@ def test_a_question_from_the_model_is_taken_strictly():
         assert iq.of({"ask": "A?", "choices": bad, "pick": 0, "why": "w"}) == {"ask": "A?", "choices": [], "pick": None, "why": ""}
     assert iq.of({"ask": "", "choices": ["x", "y"]}) is None and iq.of(3) is None and iq.of(None) is None
     assert len(iq.of({"ask": "A?", "choices": ["x", "y"], "why": "w " * 200})["why"]) <= iq.WHY_CHARS
-    assert iq.of("Which week? (this / next)") == {"ask": "Which week?", "choices": ["this", "next"], "pick": None, "why": ""}
+    assert iq.of("Which week? (this / next)") == {"ask": "Which week?", "choices": ["this", "next"], "pick": None, "why": "", "kinds": ["other", "other"]}
     assert iq.all_of([{"ask": "A?"}, 5, "B?", "C?"], 2) == [{"ask": "A?", "choices": [], "pick": None, "why": ""},
                                                           {"ask": "B?", "choices": [], "pick": None, "why": ""}]
     assert iq.all_of("not a list", 3) == []
 
 
 def test_the_pages_line_says_the_pick_in_bold_and_reads_back():
-    q = {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first"}
+    q = {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first", "kinds": ["other", "other"]}
     line = iq.line(q)
     assert line == "Which store first? (**App Store** / Google Play) — iPhone first"
     assert iq.parse(line) == q
     assert iq.line({"ask": "Why?", "choices": [], "pick": None, "why": ""}) == "Why?"
     assert iq.parse("Which store first (App Store / Google Play)?") == {
-        "ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": None, "why": ""}   # a line of before
+        "ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": None, "why": "", "kinds": ["other", "other"]}   # a line of before
     assert iq.parse("Pick one (a / b / c / d / e)")["choices"] == []
     assert iq.parse("Both bold (**a** / **b**)")["pick"] is None
     assert iq.parse("") == {"ask": "", "choices": [], "pick": None, "why": ""}
@@ -38,7 +38,7 @@ def test_a_card_is_a_question_of_two_to_four_real_choices_with_a_pick_and_its_wh
     c = iq.card({"ask": " Where does it  run? ", "choices": ["A VPS", "server/lobby.ts", "A phone (iOS)"], "pick": "a vps", "why": "its README says so"},
                 id="p-tech-runs_on", by="tech", leader="architect", project=True)
     assert c == {"id": "p-tech-runs_on", "by": "tech", "leader": "architect", "q": "Where does it run?", "choices": ["A VPS", "server/lobby.ts", "A phone (iOS)"],
-                 "pick": 0, "why": "its README says so", "project": True}
+                 "pick": 0, "why": "its README says so", "project": True, "kinds": ["other"] * 3}
     assert iq.card({"q": "Which?", "choices": ["a", "b"], "pick": 1}, id="x", by="t", leader="l")["q"] == "Which?"           # `q` or `ask`
     assert iq.CHOICES == (2, 4) and iq.card({"ask": "A?", "choices": ["x" * 61, "y"], "pick": 0}, id="x", by="t", leader="l") is None
     assert iq.card({"ask": "A?", "choices": ["x", "y"], "pick": 0, "why": "w " * 200}, id="x", by="t", leader="l")["why"].endswith("…")

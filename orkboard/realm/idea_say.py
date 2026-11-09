@@ -23,7 +23,7 @@ from __future__ import annotations
 import datetime as dt
 from pathlib import Path
 
-from orkboard.realm import idea_questions, ideas
+from orkboard.realm import idea_questions, ideas, way_kinds
 
 FILE = "say.json"
 MAX_JUDGED = 2                    # the leaders judge again twice at most, then a hearing (decisions §283.25)
@@ -78,19 +78,21 @@ def _legacy(talk: dict, party: str) -> list[dict]:
     for c in talk.get("waiting") or []:
         if isinstance(c, dict) and c.get("by") == party:
             lines = c.get("lines") if isinstance(c.get("lines"), list) and len(c.get("lines")) == len(c.get("choices") or []) else [""] * len(c.get("choices") or [])
+            kinds = way_kinds.of_card(c)
             out.append({"id": c["id"], "kind": "question", "line": c.get("why") or c.get("q") or "", "title": c.get("q") or "", "rests_on": "", "legacy": True, "state": "open", "way": None,
-                        "ways": [{"name": str(ch), "line": str(ln)} for ch, ln in zip(c.get("choices") or [], lines)], "pick": c.get("pick"), "blocks": False})
+                        "ways": [{"name": str(ch), "line": str(ln), "way_kind": k} for ch, ln, k in zip(c.get("choices") or [], lines, kinds)], "pick": c.get("pick"), "blocks": False})
     for key, state in (("answers", "taken"), ("defaults", "left")):
         for a in talk.get(key) or []:
             if isinstance(a, dict) and a.get("by") == party and a.get("id"):
                 out.append({"id": a["id"], "kind": "question", "line": a.get("why") or a.get("q") or "", "title": a.get("q") or "", "rests_on": "", "legacy": True, "state": state, "way": 0,
-                            "ways": [{"name": str(a.get("answer") or ""), "line": ""}], "pick": None, "blocks": False})
+                            "ways": [{"name": str(a.get("answer") or ""), "line": "", "way_kind": way_kinds.OTHER}], "pick": None, "blocks": False})
     return out
 
 
 def _row(it: dict, say: dict) -> dict:
     a = say["answers"].get(it["id"]) or {}
-    return {**it, "legacy": False, "state": a.get("state") or "open", "way": a.get("way"), "written": a.get("written") is True}
+    ways = [{**w, "way_kind": way_kinds.clean(w.get("way_kind"))} for w in it["ways"] if isinstance(w, dict)] if isinstance(it.get("ways"), list) else None     # an old need's ways have no kind: `other`
+    return {**it, **({"ways": ways} if ways is not None else {}), "legacy": False, "state": a.get("state") or "open", "way": a.get("way"), "written": a.get("written") is True}
 
 
 def leaders(state_dir: Path, slug: str) -> list[dict]:

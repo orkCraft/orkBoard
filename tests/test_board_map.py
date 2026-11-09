@@ -158,7 +158,7 @@ def test_needs_you_names_the_kind(host):
     ideas.set_section(root, asks, "Open questions", "- Which store first? (**App Store** / Google Play) — iPhone first")
     row = next(r for r in host.command("ideas.board")["needs_you"] if r.get("idea") == asks)
     assert row["text"] == "Which store first?" and row["asked"] == [
-        {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first", "look": False}]
+        {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "kinds": ["other", "other"], "pick": 0, "why": "iPhone first", "look": False}]
 
 
 def test_a_dropped_task_is_not_a_failure_in_the_hand_and_not_a_task_to_do(host):
@@ -428,7 +428,7 @@ def test_a_question_says_its_recommended_choice_and_why_spec_49(host):
         ("Which store first?", ["App Store", "Google Play"], 0, "iPhone first"),
         ("Which store after?", ["App Store", "Google Play"], None, ""),               # no pick: null
         ("Anything else to know?", [], None, "")]                                    # no choices: the person writes
-    assert all(set(q) == {"ask", "choices", "pick", "why", "by", "look"} and q["look"] is False for q in asked)
+    assert all(set(q) == {"ask", "choices", "kinds", "pick", "why", "by", "look"} and q["look"] is False for q in asked)
 
 
 def test_a_node_has_its_element_and_its_flag_and_a_party_its_flags_waits_and_brief_spec_50(host):
@@ -743,7 +743,7 @@ def test_a_node_says_agreed_for_a_spec_the_leaders_made_and_not_for_the_orkmaste
 
 
 def _cards(party, n=3):
-    return [{"id": f"r1-{party}-{k}", "by": party, "leader": "taskmaster", "q": f"Question {k}?", "choices": ["A", "B"], "pick": 0, "why": "because", "project": False}
+    return [{"id": f"r1-{party}-{k}", "by": party, "leader": "taskmaster", "q": f"Question {k}?", "choices": ["A", "B"], "pick": 0, "why": "because", "project": False, "kinds": ["other", "other"]}
             for k in range(1, n + 1)]
 
 

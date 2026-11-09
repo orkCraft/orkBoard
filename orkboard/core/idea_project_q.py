@@ -22,7 +22,7 @@ the brief's other half (why this and not what they use now, what it must always 
 from __future__ import annotations
 
 from orkboard.core import idea_slices
-from orkboard.realm import goal_team, idea_target, ideas, project_facts, project_questions
+from orkboard.realm import goal_team, idea_target, ideas, project_facts, project_questions, way_kinds
 
 
 def _kw():
@@ -92,10 +92,10 @@ Rules:
 - Each is a card for the person: two to four real choices, never padded to fill four, `pick` the index of the one you recommend and `why` one line saying why.
 - Where the files above already say it, set `said` to true and make the choice you pick what they say, in their words: the person only confirms it. Where they do not, `said` is false and the \
 choices are what the project holds (a feature, a screen, a user it names), never what is common to every project.
-- Ask nothing the facts above already answer.
+- Ask nothing the facts above already answer. {way_kinds.KINDS_RULE}
 
 Answer with one JSON object and nothing else:
-{{"questions": [{{"key": "{(project_questions.keys_of(sitting, known) or project_questions.KEYS)[0]}", "ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", \
+{{"questions": [{{"key": "{(project_questions.keys_of(sitting, known) or project_questions.KEYS)[0]}", "ask": "…", "choices": ["…", "…"], "kinds": ["…", "…"], "pick": 0, "why": "…", \
 "said": false}}]}}"""
 
     def project_run(self, party: str, sitting: int = 1) -> None:

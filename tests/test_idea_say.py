@@ -35,8 +35,8 @@ def test_a_reply_with_needs_and_better_is_parsed_and_limited():
     needs, better = got["needs"], got["better"]
     assert [n["id"] for n in needs] == ["n-tech-1", "n-tech-2", "n-tech-3"] and [n["kind"] for n in needs] == ["risk", "conflict", "question"]       # an unknown kind and an empty line are dropped; three at most
     assert len(needs[0]["line"]) <= 200 and needs[0]["line"].endswith("…") and needs[0]["rests_on"] == "§283.23" and needs[1]["rests_on"] == "dark-mode"
-    assert [w["name"] for w in needs[0]["ways"]] == ["way 0", "way 1", "way 2"] and needs[0]["ways"][1] == {"name": "way 1", "line": "does 1"}      # three ways at most
-    assert needs[2]["rests_on"] == "" and needs[2]["ways"] == [{"name": "a", "line": ""}]                     # a root that is none reads empty; the same name once; no name, no way
+    assert [w["name"] for w in needs[0]["ways"]] == ["way 0", "way 1", "way 2"] and needs[0]["ways"][1] == {"name": "way 1", "line": "does 1", "way_kind": "other"}      # three ways at most
+    assert needs[2]["rests_on"] == "" and needs[2]["ways"] == [{"name": "a", "line": "", "way_kind": "other"}]                     # a root that is none reads empty; the same name once; no name, no way
     assert [(b["id"], b["weight"]) for b in better] == [("b-tech-1", "lighter"), ("b-tech-2", "heavier"), ("b-tech-3", "same")] and len(better[2]["line"]) <= 200      # an unknown weight is dropped
     assert clean_needs("nonsense") == [] and clean_better({"line": "x"}) == [] and clean_needs([None, 3, "x"]) == []
 
@@ -79,7 +79,7 @@ def test_a_leaders_say_is_kept_and_the_old_questions_read_as_needs_of_the_kind_q
     tech = next(r for r in say["leaders"] if r["party"] == parties["tech"])
     assert tech["verdict"] == "doubt" and tech["why"] == "it breaks the theme"
     own = [n for n in tech["needs"] if not n["legacy"]]
-    assert own[0]["id"] == "n-" + parties["tech"] + "-1" and own[0]["state"] == "open" and own[0]["ways"] == [{"name": "Fork it", "line": "a copy"}]
+    assert own[0]["id"] == "n-" + parties["tech"] + "-1" and own[0]["state"] == "open" and own[0]["ways"] == [{"name": "Fork it", "line": "a copy", "way_kind": "other"}]
     questions = [n for n in tech["needs"] if n["legacy"]]
     assert questions and all(q["kind"] == "question" and q["state"] == "open" and q["ways"] and q["rests_on"] == "" for q in questions)       # today's cards, read as needs
     assert [b["state"] for b in tech["better"]] == ["open"] and tech["better"][0]["weight"] == "lighter"

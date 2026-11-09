@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from orkboard.hooks.warder import is_secret
-from orkboard.realm import idea_questions, project_facts
+from orkboard.realm import idea_questions, project_facts, way_kinds
 
 MAX_CARDS = 3                      # a round's questions: the goal's three, the leaders' and the project's together (§121.2, §153.3)
 PRIORITIES = ("high", "normal", "low")       # Product's word on how the goal stands against the goals in line (spec 120 §3.1)
@@ -132,12 +132,12 @@ def clean_assumes(value: object) -> dict:
 
 
 def _ways(raw: object) -> list[dict]:
-    """The ways out of a need, strictly: at most `MAX_WAYS`, each `{name, line}` with a name (`WAY_NAME` characters) and a line (`LINE`, may be empty); the same name once."""
+    """The ways out of a need, strictly: at most `MAX_WAYS`, each `{name, line, way_kind}` (`way_kind` one of `way_kinds.KINDS`, else `other`) with a name (`WAY_NAME` characters) and a line (`LINE`, may be empty); the same name once."""
     out: list[dict] = []
     for w in raw if isinstance(raw, list) else []:
         name = _line(w.get("name"), WAY_NAME) if isinstance(w, dict) else ""
         if name and len(out) < MAX_WAYS and all(o["name"].lower() != name.lower() for o in out):
-            out.append({"name": name, "line": _line(w.get("line"))})
+            out.append({"name": name, "line": _line(w.get("line")), "way_kind": way_kinds.clean(w.get("way_kind"))})
     return out
 
 

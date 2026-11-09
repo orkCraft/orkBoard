@@ -58,7 +58,7 @@ fetched. {self.reads(step, list(dict.fromkeys(paths)))}
  "short": "its name in two or three words, 24 characters at most",
  "summary": "5 to 12 lines: what the goal means for this repository, the modules and files it touches (as repository paths), what exists already, the constraints",
  "links": ["at most 8 repository paths or Wiki pages you read and found relevant"],
- "questions": [{"ask": "zero to three questions the person must answer to make the goal clear, all at once: only what changes it, never what the repository already answers", "choices": ["two to four likely answers, each at most 40 characters"], "pick": "the index of the one you recommend", "why": "one line: why that one"}],
+ "questions": [{"ask": "zero to three questions the person must answer to make the goal clear, all at once: only what changes it, never what the repository already answers", "choices": ["two to four likely answers, each at most 40 characters"], "kinds": ["the kind of each answer, one of: replace, keep, smaller, later, drop, split, go_on, mitigate, accept_risk, ask_more, leader_decides, start_again, take, not_a_problem, make_it_a_goal or other"], "pick": "the index of the one you recommend", "why": "one line: why that one"}],
  "reply": "one short line to the person (only when they said something)"}
 """
 

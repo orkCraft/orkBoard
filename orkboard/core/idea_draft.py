@@ -152,7 +152,7 @@ class DraftMixin:
         seen = idea_look.visual(self.state_dir, root, slug)                                  # a goal that changes what people see is asked of its look (spec 85 §1)
         asker = idea_look.asker(self.state_dir, root, slug)
         look = idea_look.draft_lines(seen, (roles.role(self.state_dir, asker) or {}).get("name", "") if asker else "")
-        look_json = ',\n "look": [{"ask": "…", "choices": ["…"], "pick": 0, "why": "…"}]' if seen else ""
+        look_json = ',\n "look": [{"ask": "…", "choices": ["…"], "kinds": ["…"], "pick": 0, "why": "…"}]' if seen else ""
         return f"""You are the keeper of this project's Task board. A person wrote an idea under the goal
 {(g or {}).get('title', track)}: write its spec straight away. You may read the repository (read only).
 {self.reads("draft", links)}
