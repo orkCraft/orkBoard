@@ -249,6 +249,9 @@ Tile 17, Store Gnome: no band and no visor; a small paper price tag on a string 
 
 ## The cartoon (decision §289)
 
+**Every sheet's prompt, whole and ready to copy (the style said in each): `docs/pictures-cartoon.md`.** What follows is the first two
+sheets as they were first written, with the style block apart.
+
 The look's pictures are a humorous flat cartoon, the heads first. Attach the owner's test sheet of six
 (`docs/mockups/table-template/heads/cartoon/test-sheet-six.jpg`) as the style to match. What the test showed at the window's sizes:
 the eyes read even at 16 px on a phone; the dryad and the knight came with shoulders and the lich with a body (a head only, please);
