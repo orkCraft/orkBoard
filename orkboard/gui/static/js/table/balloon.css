@@ -1,0 +1,7 @@
+/* The Orkmaster's balloon (docs/specs/168 A6, decisions §283.9; mockup docs/mockups/table-template/): from the column's right edge over the start of the tabs, at most about 420 px, a tail pointing left to the crown. Layout only: the plate, the
+   face and the colours are orkUI's (`.ork-frame`, `.ork-btn`, the tokens). */
+.table-balloon { position: absolute; pointer-events: none; left: calc(100% + var(--ork-2)); top: var(--ork-2); z-index: 9; display: flex; align-items: center; gap: var(--ork-2); box-sizing: border-box; width: max-content; max-width: min(420px, calc(100vw - var(--column-w) - var(--ork-4))); padding: var(--ork-2) var(--ork-2) var(--ork-2) var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink); }
+.table-balloon::before { content: ""; position: absolute; left: calc(var(--ork-2) * -1 - 1px); top: var(--ork-4); border: var(--ork-1) solid transparent; border-right-color: var(--ork-frame); }
+/* the balloon lies over the first tabs: a press passes through its words to the tab under them; only its × takes a press */
+.table-balloon__line { margin: 0; flex: 1; min-width: 0; font: var(--ork-type-caption); }
+.table-balloon__x { flex: none; pointer-events: auto; }
