@@ -102,7 +102,8 @@ def test_the_empty_chair_is_pulled_out_on_hover_and_not_under_reduced_motion(gui
     assert not errors, "\n".join(errors)
 
 
-# -- Stop all in words, under the die (spec 156 E.2–E.3, decisions §261.12; it was the die's front face, spec 139 A, decisions §246) ------------------------------------------------
+# -- Stop all (spec 168 A4, decisions §285.2: from 760 px up under the lamp's chain in the right column's head, `.rh-stop`, so it can be pressed while a card is lifted; under 760 px, where there is no such column, still in words under the die, spec 156 E.2–E.3,
+# decisions §261.12; it was the die's front face, spec 139 A, decisions §246) ------------------------------------------------
 
 STOP_WORDS = "Stop all: stop every run of this project's orks"
 
@@ -113,6 +114,11 @@ def token(pg, name):
 
 def paint(pg, c):
     return pg.evaluate("(c) => { const i = document.createElement('i'); i.style.color = c; document.body.append(i); const v = getComputedStyle(i).color; i.remove(); return v; }", c)
+
+
+def stop_of(pg):
+    """The Stop all button: the right column's head's at the wide width, the die's under 760 px."""
+    return pg.locator(".release-lane__head .rh-stop" if pg.viewport_size["width"] >= 760 else ".hand-die__stop")
 
 
 def nothing_runs(host):
@@ -138,23 +144,31 @@ def test_the_die_is_orkuis_small_die_whole_and_wears_no_stop_marks(gui):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_stop_all_is_a_button_under_the_word_play_in_the_dangers_colour_only_while_a_task_runs(gui, width):
+def test_stop_all_is_a_button_in_the_dangers_colour_only_while_a_task_runs_under_the_chain_at_the_wide_width_under_the_die_at_the_narrow_one(gui, width):
     host = Host(n=3)
     pg, errors = window(gui, host, {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
     d = die(pg)
     pg.wait_for_function("() => document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)                     # tech and game have a task at work
-    stop = d.locator(".hand-die__stop")
+    stop = stop_of(pg)
     assert stop.evaluate("e => e.tagName") == "BUTTON" and stop.inner_text() == "Stop all" and stop.get_attribute("aria-label") == STOP_WORDS and stop.get_attribute("title") == STOP_WORDS
-    assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator("button").count() == 2
+    assert d.locator(".hand-die__word").inner_text() == "Play"
     assert stop.evaluate("e => getComputedStyle(e).color") == paint(pg, token(pg, "--ork-danger"))
-    word, hit, box = d.locator(".hand-die__word").bounding_box(), stop.bounding_box(), d.locator(".ork-die").bounding_box()
-    assert word["y"] >= box["y"] + 40 and hit["y"] >= box["y"] + 40, "under the die"
     if width == "wide":
-        assert hit["y"] >= word["y"] + word["height"] - 1, "Stop all under the word Play"
+        assert d.locator("button").count() == 1 and d.locator(".hand-die__stop").count() == 0, "the die's word is Play alone, nothing under it"
+        head = pg.locator(".release-lane__head").bounding_box()
+        hit = stop.bounding_box()
+        assert head["y"] <= hit["y"] and hit["y"] + hit["height"] <= head["y"] + head["height"] + 1 and hit["x"] >= head["x"], "in the right column's head, not the hand"
+        assert pg.locator(".hand .rh-stop").count() == 0
+        chain = pg.locator(".release-lane__head .presence-chain")
+        if chain.count():
+            assert hit["y"] >= chain.bounding_box()["y"] + chain.bounding_box()["height"] - 1, "under the chain"
+    else:
+        word, hit, box = d.locator(".hand-die__word").bounding_box(), stop.bounding_box(), d.locator(".ork-die").bounding_box()
+        assert d.locator("button").count() == 2 and word["y"] >= box["y"] + 40 and hit["y"] >= box["y"] + 40, "under the die"
     shot(pg, "e156-die-running.png")
     nothing_runs(host)
     pg.wait_for_function("() => !document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
-    assert d.locator(".hand-die__stop").count() == 0 and d.locator("button").count() == 1, "no run, no button"
+    assert stop_of(pg).count() == 0 and d.locator(".hand-die__stop").count() == 0 and d.locator("button").count() == 1, "no run, no button"
     assert d.locator(".hand-die__word").inner_text() == "Play"
     shot(pg, "e156-die-idle.png")
     finish(pg, errors)
@@ -165,13 +179,13 @@ def test_a_press_on_stop_all_sends_halt_and_the_button_is_gone_until_work_starts
     pg, errors = window(gui, host)
     d = die(pg)
     pg.wait_for_function("() => document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
-    d.locator(".hand-die__stop").click()
+    stop_of(pg).click()
     pg.wait_for_function("() => !document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
     assert [c for c in host.log if c[0] == "halt"] == [("halt", {})]
     assert pg.locator('.table-over[data-kind="play"]').count() == 0, "Stop all is not Play"
     nothing_runs(host)                                                                                                       # the map is seen with none at work ...
     pg.wait_for_timeout(300)
-    assert d.locator(".hand-die__stop:not(.is-resume)").count() == 0, "no Stop all while stopped"
+    assert pg.locator(".rh-stop:not(.is-resume)").count() == 0 and d.locator(".hand-die__stop:not(.is-resume)").count() == 0, "no Stop all while stopped"
     pg.evaluate("() => import('/static/js/board/store.js').then((m) => m.ask('ideas.add', { text: 'A new goal' }))")                  # a goal is started from this page: Stopped goes
     pg.wait_for_function("() => !document.querySelector('.hand-die__stopped') && !document.querySelector('.hand-die.is-orks-stopped')", timeout=WAIT_MS)
     finish(pg, errors)
@@ -185,7 +199,7 @@ def test_the_play_press_does_not_halt_and_the_stop_press_opens_no_preview(gui):
     assert not [c for c in host.log if c[0] == "halt"]
     die(pg).locator(".hand-die__play").click()
     pg.wait_for_selector(".table-over", state="detached", timeout=WAIT_MS)
-    die(pg).locator(".hand-die__stop").click()
+    stop_of(pg).click()
     pg.wait_for_function("() => !document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
     assert pg.locator(".table-over").count() == 0
     finish(pg, errors)
@@ -194,16 +208,17 @@ def test_the_play_press_does_not_halt_and_the_stop_press_opens_no_preview(gui):
 # -- the die in the hand ------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_die_lies_in_the_hand_left_of_the_potions_with_its_word_under_it_askew(gui, width):
+def test_the_die_lies_in_the_hands_right_end_with_its_word_play_under_it_askew(gui, width):
     pg, errors = window(gui, Host(), {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
     d = die(pg)
-    pg.locator(".hand-mana .hand-pot, .hand-mana__rest").first.wait_for(state="attached", timeout=WAIT_MS)
+    pg.locator(":is(.hand-mana, .pots__all) .hand-pot").first.wait_for(state="attached", timeout=WAIT_MS)
     assert d.evaluate("e => e.closest(%r) !== null" % ".hand") and d.locator(".hand-die__play").get_attribute("aria-label") == "Play: the project's preview of dev" and d.locator(".hand-die__play").get_attribute("title") == d.locator(".hand-die__play").get_attribute("aria-label")
     assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator(".ork-die").get_attribute("aria-hidden") == "true"
-    box, mana, word = d.locator(".ork-die").bounding_box(), pg.locator(".hand-mana").bounding_box(), d.locator(".hand-die__word").bounding_box()
+    box, word = d.locator(".ork-die").bounding_box(), d.locator(".hand-die__word").bounding_box()
+    mana = pg.locator(".hand-mana").bounding_box() if width == "narrow" else None
     if width == "wide":
         assert 46 <= box["width"] <= 60 and 58 <= box["height"] <= 72                                                      # 48 x 60 (2 px a cell, orkUI's .small; spec 156 E.2), turned a little
-        assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 1 and box["x"] < mana["x"]               # left of the drum, side by side in the hand's last track
+        assert pg.locator(".hand .hand-mana, .hand .pots").count() == 0 and d.bounding_box()["x"] + d.bounding_box()["width"] <= pg.viewport_size["width"]      # the potions are the right column's (spec 168 A4); the die lies at the hand's right end
     else:
         assert 70 <= box["width"] <= 86 and 86 <= box["height"] <= 100                                                     # the narrow width keeps 72 x 90 (3 px a cell)
         assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 7 and box["x"] < mana["x"]
@@ -744,10 +759,10 @@ def test_the_button_says_resume_while_stopped_sends_resume_and_goes_back_to_stop
     host = StopHost(n=3)
     pg, errors = window(gui, host)
     d = die(pg)
-    stop = d.locator(".hand-die__stop")
+    stop = stop_of(pg)
     assert stop.inner_text() == "Stop all" and stop.get_attribute("aria-label").startswith("Stop all")
     stop.click()
-    pg.wait_for_function("() => document.querySelector('.hand-die__stop')?.textContent === 'Resume'", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.rh-stop')?.textContent === 'Resume'", timeout=WAIT_MS)
     cls = d.locator(".ork-die").get_attribute("class")
     assert "front-stop" not in cls and "front-resume" not in cls and "is-turning" not in cls, "a die's face again: no mark, no turn"
     assert stop.get_attribute("aria-label") == "Resume: the orks go back to work" and stop.get_attribute("aria-disabled") is None and stop.evaluate("e => e.tagName") == "BUTTON"
@@ -756,7 +771,7 @@ def test_the_button_says_resume_while_stopped_sends_resume_and_goes_back_to_stop
     stop.click()
     pg.wait_for_function("() => !document.querySelector('.hand-die.is-orks-stopped')", timeout=WAIT_MS)             # the stub's halt took the tasks and its resume gives none back: Resume is gone and no Stop all stands for a run
     assert [c[0] for c in host.log if c[0] in ("halt", "resume")] == ["halt", "resume"]
-    assert d.locator(".hand-die__stop").count() == 0
+    assert stop_of(pg).count() == 0 and d.locator(".hand-die__stop").count() == 0
     finish(pg, errors)
 
 
@@ -764,5 +779,23 @@ def test_a_stopped_host_at_the_first_snapshot_shows_resume_at_once(gui):
     host = StopHost(n=3)
     host.stopped = True
     pg, errors = window(gui, host)
-    assert die(pg).locator(".hand-die__stop").inner_text() == "Resume" and pg.locator(".hand-die .ork-die").get_attribute("class").count("front") == 0
+    assert pg.locator(".release-lane__head .rh-stop").inner_text() == "Resume" and pg.locator(".hand-die .ork-die").get_attribute("class").count("front") == 0
+    finish(pg, errors)
+
+
+def test_stop_all_can_be_pressed_while_a_card_is_lifted_and_the_hand_is_inert(gui):
+    """Spec 168 A4 (decisions §285.2): Stop all is the right column's, not the hand's: a failure lifted sinks the hand's row (`inert`), Stop all stays live."""
+    host = Host(n=3)
+    pg, errors = window(gui, host)
+    pg.wait_for_function("() => document.querySelector('.hand-die.is-orks-running')", timeout=WAIT_MS)
+    pg.locator('.hand-card[data-kind="failed"]').first.click(position={"x": 10, "y": 24})                                      # a failure: it rises and the rest of the hand sinks
+    pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".hand-row").get_attribute("inert") is not None, "the hand's row is inert while a card is lifted"
+    assert pg.locator(".rh-stop").evaluate("e => e.closest('[inert]') === null"), "Stop all is outside it"
+    pg.locator(".rh-stop").click()
+    for _ in range(40):
+        if ("halt", {}) in host.log:
+            break
+        pg.wait_for_timeout(50)
+    assert ("halt", {}) in host.log
     finish(pg, errors)

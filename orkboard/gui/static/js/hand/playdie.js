@@ -12,7 +12,7 @@
 // unfinished landing out.
 // **The die in a goal's rune** (spec 128 F.3, decisions §206.8): with a goal done or at work picked, the die wears its rune's colour (`data-elem`: mana.css gives the pips and the edge orkUI's element token), its `title` and `aria-label` say *Play: <goal>* (the rest of
 // the words keep their order: *Close the preview* while it is open, *Nothing to play yet* asleep), and pressed it plays dev with that goal in it (`ideas.play {idea}`).
-// **Stop all in words** (spec 156 E.3, decisions §261.12; before it the die's front face, spec 139 A, decisions §246.1–§246.3, §254.4): the die is orkUI's `.small` (48 x 60) and a die's faces again, no stop marks on its front, no quarter turn. The whole die is the Play press (`hand-die__play`). Under it its word, *Play* (*Playing*);
+// **Stop all** (spec 168 A4, decisions §285.2: from 760 px up it is the right column's head's, table/stopall.js, and the die's word is *Play* alone; under 760 px, where there is no such column, it stays under the die as below). (spec 156 E.3, decisions §261.12; before it the die's front face, spec 139 A, decisions §246.1–§246.3, §254.4): the die is orkUI's `.small` (48 x 60) and a die's faces again, no stop marks on its front, no quarter turn. The whole die is the Play press (`hand-die__play`). Under it its word, *Play* (*Playing*);
 // and, **while `useOrks` says a task runs, the button *Stop all*** (`hand-die__stop`, in the danger's colour, `aria-label` *Stop all: stop every run of this project's orks*; pressed it asks the host to stop everything, `halt`, door.js). **While the snapshot says `stopped`, the button *Resume*** (*Resume: the orks go back to work*; pressed it sends `resume`). Else (idle) there is no button;
 // a halt from an older host, which does not send `stopped`, keeps the word *Stopped* (muted, not a button). §246.2 holds: the Board turns the die, never the person. At the narrow width (under 760 px) the die keeps its 3 px a cell and the words lie side by side (mana.css).
 // The seam with the play view (arena/play.js): three signals and the die's rectangle. `thrown`: the die is out on the pane (it flew from here and rolls), so this one is hidden (kept in its place: `visibility`) until the frame rises or the failure
@@ -27,6 +27,7 @@ import { litKey } from "../table/card.js";
 import { mapName, partiesAll } from "../table/data.js";
 import { nodeOf, playable } from "../table/goalmap.js";
 import { halt, resume, useOrks } from "../table/door.js";
+import { columnOn } from "../table/data.js";
 
 export const thrown = signal(false);          // the die is out on the pane: this one is hidden
 export const playing = signal(false);         // the play view is open and its build plays
@@ -78,7 +79,7 @@ export function pressPlay(goal = null) {
 
 export function PlayDie() {
   const [wob, setWob] = useState({ key: 0, left: 0 }), [land, setLand] = useState(false), box = useRef(null);
-  const asleep = asleepNow(), open = over.value?.kind === "play", glow = open && playing.value && !asleep, gone = thrown.value, face = faceNow(), known = !!town.value, orks = useOrks(), toResume = orks.resumable && orks.stopped;
+  const asleep = asleepNow(), open = over.value?.kind === "play", glow = open && playing.value && !asleep, gone = thrown.value, face = faceNow(), known = !!town.value, orks = useOrks(), toResume = orks.resumable && orks.stopped, wide = columnOn();
   const news = newCount(), goal = asleep ? null : runeGoal(), said = goal ? goalPlayWords(goal) : face === "no" ? FAILED_WORDS : news ? newGoalsWords(news) : face === "new" ? NEW_WORDS : PLAY_WORDS, words = open ? CLOSE_WORDS : said;
   useEffect(() => {
     rectOf = () => box.current?.querySelector(".ork-die")?.getBoundingClientRect() || null;
@@ -103,7 +104,7 @@ export function PlayDie() {
       <button type="button" class="hand-die__play" aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words} onClick=${() => pressPlay(goal)} onPointerEnter=${hover}></button>
     </span>
     <span class="hand-die__words"><span class="hand-die__word" onClick=${() => pressPlay(goal)}>${glow ? PLAYING : PLAY}</span>
-      ${toResume ? html`<button type="button" class="hand-die__stop is-resume" aria-label=${RESUME_WORDS} title=${RESUME_WORDS} onClick=${resume}>${RESUME}</button>`
+      ${wide ? null : toResume ? html`<button type="button" class="hand-die__stop is-resume" aria-label=${RESUME_WORDS} title=${RESUME_WORDS} onClick=${resume}>${RESUME}</button>`
         : orks.running ? html`<button type="button" class="hand-die__stop" aria-label=${STOP_WORDS} title=${STOP_WORDS} onClick=${halt}>${STOP}</button>`
         : orks.stopped ? html`<span class="hand-die__stopped">${STOPPED}</span>` : null}</span>
   </div>`;

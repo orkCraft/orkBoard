@@ -1,0 +1,2 @@
+/* The places at the hand's right end (docs/specs/168 A4 and A5, decisions §285.3): the backpack, the die and the book, the places that change the table. Layout only. */
+.hand-end .stall-pack { pointer-events: auto; }

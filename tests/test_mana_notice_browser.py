@@ -122,7 +122,7 @@ def test_a_press_on_the_close_button_puts_it_away_and_a_newer_move_shows_again(g
 def test_a_day_after_the_move_the_line_is_gone(gui):
     pg, host, log = open_notice(gui, moved(ago(hours=25)))
     try:
-        pg.wait_for_selector(".hand-mana", timeout=WAIT_MS)
+        pg.wait_for_selector(":is(.hand-mana, .pots)", timeout=WAIT_MS)
         pg.wait_for_timeout(300)
         assert pg.locator(".table-balloon").count() == 0                                                                          # a day and an hour: gone
         say(pg, host, moved(ago(hours=23, minutes=50)))
@@ -154,7 +154,7 @@ def test_it_goes_by_itself_when_the_day_runs_out_while_the_page_is_open(gui):
 def test_no_line_no_strip_and_no_move_no_strip(gui):
     pg, host, log = open_notice(gui, moved(ago(minutes=5), line="", to=None))
     try:
-        pg.wait_for_selector(".hand-mana", timeout=WAIT_MS)
+        pg.wait_for_selector(":is(.hand-mana, .pots)", timeout=WAIT_MS)
         pg.wait_for_timeout(300)
         assert pg.locator(".table-balloon").count() == 0                                                                          # every tool out: the card asks instead, the line has no words
         host.mana = mana_of("claude", "claude")

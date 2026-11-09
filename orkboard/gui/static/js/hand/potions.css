@@ -1,0 +1,22 @@
+/* The potions in a row (hand/potionrow.js, docs/specs/168 A4, decisions §285.1): layout only; the bottle, its liquid and the blue are orkUI's (`.ork-potion.small`, 2 px a cell, `size-*`), the share's colours the signals' tokens.
+   Three bottles at most, their tops on one line (`align-items: flex-start`); under each its 5 hours' share, under a bottle smaller than the large the week's share as well, in the room its size leaves. */
+.pots { flex: none; min-width: 0; pointer-events: auto; }
+.pots__row { display: flex; align-items: flex-start; gap: var(--ork-1); padding-top: var(--ork-2); }
+.pot-s { appearance: none; margin: 0; padding: var(--ork-1) 0; width: 36px; border: 0; background: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
+.pot-s:hover { background: var(--ork-raised); }
+.pot-s:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.pot-s .ork-potion { flex: none; }
+.pot-s__none { display: flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 36px; opacity: 0.5; }                  /* a tool whose limits were not read, or billed by its API: its mark where a bottle would stand */
+.pot-s__cap { display: flex; flex-direction: column; align-items: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pot-s__cap > * { font-size: 11px; line-height: 13px; font-weight: 400; }
+.pot-s__week { font-size: 10px !important; line-height: 11px !important; color: var(--ork-ink-muted); }
+.pot-s.is-front .pot-s__five { color: var(--ork-ink); font-weight: 600; }                                                                    /* the tool the work goes to: its share in the ink */
+.pot-s.is-warn .pot-s__five { color: var(--ork-alert); }
+.pot-s.is-danger .pot-s__five { color: var(--ork-danger); }
+/* hovered or focused, every tool lies in a list under the head, the empty slot at its end */
+.pots__all { display: none; position: absolute; left: auto; right: 0; top: 100%; z-index: 40; box-sizing: border-box; width: max-content; max-width: min(340px, calc(100vw - var(--ork-8))); flex-wrap: wrap; justify-content: flex-end; align-items: flex-start; padding: var(--ork-1); background: var(--ork-panel); border: var(--ork-1) solid var(--ork-edge); }
+.pots[data-open] .pots__all { display: flex; }
+/* the list lies under the right column's head (lane.css: the head is its box), anchored at its right edge and reaching left over the pane as far as it needs; where there is no such head (the hand's, the first open's) it hangs from the row itself */
+.pots[data-above], .fo-place .pots { position: relative; }
+.pots[data-above] .pots__all { top: auto; bottom: 100%; }
+@media (pointer: coarse) { .pot-s { min-width: var(--ork-tap); } }

@@ -333,7 +333,7 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_no_stop_all_in_the_r
     assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
     assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"                      # and its name, said also when only the head is drawn, with its sword and shield's words (spec 111 §3.4)
     assert tab(pg, "tech").get_attribute("title") == tab(pg, "tech").get_attribute("aria-label")
-    assert pg.get_by_role("button", name="New party").count() == 1 and pg.locator(".table-tabs").get_by_role("button", name="Stop all").count() == 0 and pg.locator(".hand-die").get_by_role("button", name="Stop all").count() == 1       # Stop all is the die's front face (spec 139 A)
+    assert pg.get_by_role("button", name="New party").count() == 1 and pg.locator(".table-tabs").get_by_role("button", name="Stop all").count() == 0 and (pg.locator(".release-lane__head") if wide(w) else pg.locator(".hand-die")).get_by_role("button", name="Stop all").count() == 1       # Stop all: in the right column's head at the wide width (spec 168 A4), the die's under 760 px (spec 139 A)
     chair = pg.locator(".table-tabs__end .table-chair")
     assert " ".join(chair.text_content().split()) == ("New party" if wide(w) else "") and "primary" not in chair.get_attribute("class")           # spec 123 §7.5: the empty chair, green is New goal's
     assert pg.get_by_role("button", name="Switch project").count() == 1                                                  # the ▾ after the project's name, its own button
@@ -1081,8 +1081,8 @@ def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_
     assert pg.locator('.table-tab[data-tab="game"]').evaluate("e => [getComputedStyle(e).outlineStyle, getComputedStyle(e).backgroundColor]")[0] == "none"      # lit as a tab hovered is, not by a 1 px outline
     pg.mouse.move(5, 300)
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
-    pg.locator(".hand-mana__drum").focus()                                                                                   # the focus unrolls the row, and lights too
-    pg.locator(".hand-mana[data-open]").wait_for(timeout=WAIT_MS)
+    pg.locator(".pots__row .pot-s").first.focus()                                                                                   # the focus unrolls the row, and lights too
+    pg.locator(".pots[data-open]").wait_for(timeout=WAIT_MS)
     codex.focus()
     pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
     assert lit() == ["release", "tech"]
@@ -1317,7 +1317,7 @@ def test_a_form_over_the_pane_keeps_the_discards_column_and_the_hand(gui):
         pg.get_by_role("menuitem", name="Settings").click()
         pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
         assert pg.locator(".table-end").count() == 0 and pg.locator(".release-lane").count() == 1 and pg.locator('.table-body[data-end="form"]').count() == 1, "the discard's column stays beside a form (spec 168 A3, decisions §283.5)"
-        assert pg.locator(".hand-end > .hand-die, .hand-end > .hand-mana").count() == 2, "the die and the potions stay: they are the hand's"
+        assert pg.locator(".hand-end > .hand-die").count() == 1 and pg.locator(".release-lane__head .pots").count() == 1, "the die stays in the hand, the potions in the column's head"
         assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
         pg.keyboard.press("Escape")
         pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
