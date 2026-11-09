@@ -1,4 +1,4 @@
-/* The mana (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, decisions §176.2): the AI tools' potions at the hand's right end, flush against the window's edge. Layout only: the bottle, its liquid and
+/* The mana (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, decisions §176.2): the AI tools' potions: at the narrow width at the hand's right end, flush against the window's edge; from 760 px up the row in the right column's head (hand/potionrow.js, potions.css), whose list unrolled still draws `.hand-pot`. Layout only: the bottle, its liquid and
    the blue are orkUI's (`.ork-potion`, `--ork-mana`); the share's colour is the signals' tokens.
    Spec 114 B (decisions §192): every bottle, whatever its size (`size-medium|small|vial`), stands on its floor in a slot of the large bottle's size (14 x 18 cells), so the row never moves; under it the now share in bold, the week's muted. One to three potions in one row, four in two rows of two, five or six in two rows of three (the small size), the narrow width's all small. */
 
@@ -50,7 +50,7 @@
    the discard keeps clear of the pane's head); at the narrow width they stand over each other (the room is down, not across: a potion is no wider than its share) and the hand grows by the second line, one row of potions too (spec 114 B). */
 .hand { --hc-die: calc(var(--ork-1) * 3 + 90px + var(--hc-cap)); --hc-potw: calc(var(--ork-1) * 6 + 16px + 54px + 2 * var(--hc-cap)); --hc-cap: 16px; --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap))); --hc-pot1: calc(var(--ork-1) * 6 + 16px + 36px + 2 * var(--hc-cap)); }
 @media (max-width: 1023px) { .hand { --hc-cap: 18px; } }
-@media (min-width: 760px) { .hand { --hc-die: 0px; --hc-potw: 0px; } }                 /* the die (48 x 60, its word and the button under it: 98 px at most) and the drum (90 px) each lie in the hand's shown height, so they ask the hand for no more than its rim (spec 156 E.1) */
+@media (min-width: 760px) { .hand { --hc-die: 0px; --hc-potw: 0px; } }                 /* the die (48 x 60, its word and the button under it: 98 px at most) lies in the hand's shown height, so it asks the hand for no more than its rim (spec 156 E.1) */
 .hand:has(.hand-mana[data-rows="2"][data-paid]) { --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap)) + var(--hc-cap) + var(--ork-1)); }      /* the paid slot's price is a second line under *API* */
 .hand:has(.hand-mana[data-rows="2"]) { --hc-potw: var(--hc-pots); }                                                                                         /* two rows: the hand grows to hold them (handcard.css reads `--hc-ends`, the most the die and the potions need) */
 .hand-pot__shares { display: flex; flex-direction: column; align-items: center; }
@@ -66,7 +66,8 @@
 /* the potions' row at the narrow width (hand/mana.js): `.hand-mana__row` is no box and the potions lie in `.hand-mana`'s rows. From 760 px up the potions are the right column's row (hand/potionrow.js, potions.css; the drum went, decisions §285). */
 .hand-mana__row { display: contents; }
 
-/* the Play die (spec 112 §3.3, decisions §190.2, hand/playdie.js; spec 156 E.2–E.3, decisions §261.11–§261.12): orkUI's `.ork-die.small` (a cube in CSS 3D, a box of 48 x 60, 2 px a cell) lying in the hand's last track, left of the drum, turned by the lean token, its word under it and, while the orks work, the button *Stop all* under that (*Resume* once stopped).
+/* the Play die (spec 112 §3.3, decisions §190.2, hand/playdie.js; spec 156 E.2–E.3, decisions §261.11–§261.12; spec 168 A4–A5, decisions §285): orkUI's `.ork-die.small` (a cube in CSS 3D, a box of 48 x 60, 2 px a cell) lying in the places at the hand's right end beside the backpack and the book, turned by the lean token, its word *Play* under it.
+   (The drum is gone: from 760 px up the potions are the row in the right column's head, hand/potionrow.js; *Stop all* is under the lamp's chain there, table/stopall.js, so it stays pressable while a card is lifted. The `.hand-die__stop*` rules below serve the narrow width only, where the words lie under the die.)
    Hovered or focused it stays lifted by the rise token (the wobble itself is orkUI's `.is-wobbling`, put on at pointer enter); thrown onto the pane it is hidden, kept in its place. The whole die is the Play press. At the narrow width it keeps its 3 px a cell and its words lie side by side. */
 .hand-die { position: relative; z-index: 1; flex: none; pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); margin: 0; padding: var(--ork-1) 0;
   color: var(--ork-ink); font: var(--ork-type-caption); }
