@@ -3,18 +3,17 @@
 // Orkmaster's, Live's and Release's the project's —, its cards whole at the hand's size, **top to bottom**: the goal ready for main (with the portal's ring round the top one, ring.js, only while one is ready, checked or going in), the goals done and not yet seen
 // (newest first; the moon of a night's goal as before), then the past (pastlane.js: *Unreleased* and a deck a version). **Each card is picked** (part B, frame/state.js `pick`); a goal done and not seen is told to the host as seen when it is picked (`ideas.seen`) and then lies
 // with its version in the past. To main is the picked ready card's act on the table (tomain.js). The lane scrolls with the table (only the table scrolls: §254.2). A project with no Release party seated has the column all the same (Release is a craft as any, decisions §274.1) with the word *Discard* on every tab; with no gate
-// (`noGate`) there is no portal and no goal ready for main. A form over the whole table leaves the lane out, as it left the end. Layout only: lane.css, discard.css (the card's anatomy is the hand's).
+// (`noGate`) there is no portal and no goal ready for main. A form over the pane leaves the lane drawn (decisions §283.5). Layout only: lane.css, discard.css (the card's anatomy is the hand's).
 import { useEffect, useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { act } from "../shell/store.js";
 import { TESTING, mergeGate, testing } from "../arena/gate.js";
-import { ORKMASTER, over, pick, picked, tab } from "../frame/state.js";
+import { ORKMASTER, pick, picked, tab } from "../frame/state.js";
 import { readyOf, readyWords } from "../hand/data.js";
 import { nightMoons } from "../hand/nightcard.js";
 import { DoneFace, mainLine, shownDone, useNightDeal } from "./discard.js";
 import { columnOn, isLive, isRelease, nameOf, noGate, openTabOf, partiesAll, roadParties, routeParties } from "./data.js";
 import { laidNow } from "./laying.js";
-import { isForm } from "./over.js";
 import { PastDecks } from "./pastlane.js";
 import { discardLabel } from "./chroniclewords.js";
 import { ReadyCards, choose, chosenSlug, close, sending } from "./portal.js";
@@ -23,8 +22,8 @@ import { Backpack } from "./backpack.js";
 import { PresenceChain } from "./presence.js";
 import { backDrop } from "./stalldrop.js";                   // a card of what you carry dropped here goes back to its default while the inventory is open (spec 157 D.4)
 
-/** Whether the lane is drawn: the table is laid and no form covers it. */
-export const laneShown = () => laidNow() && !isForm(over.value);
+/** Whether the lane is drawn: the table is laid. A form over the pane leaves it, nothing changes size by what is open (decisions §283.5). */
+export const laneShown = () => laidNow();
 
 /** The party whose eyes the lane looks through: a leader's slug on its own tab, "" on the Orkmaster's, Live's and Release's (the project's). */
 const eyesOf = (g) => (g && !isRelease(g) && !isLive(g) ? g.slug : "");
@@ -59,7 +58,7 @@ export function ReleaseLane({ tab, parties }) {
   </aside>`;
 }
 
-/** The column at the window's right (frame.js): the discard beside the table on the open tab, or nothing under 760 px, before the table is laid and while a form covers it. */
+/** The column at the window's right (frame.js): the discard beside the table on the open tab, or nothing under 760 px, before the table is laid. */
 export function DiscardColumn() {
   const parties = partiesAll();
   return columnOn() && laneShown() ? html`<${ReleaseLane} tab=${openTabOf(tab.value, parties)} parties=${parties} />` : null;

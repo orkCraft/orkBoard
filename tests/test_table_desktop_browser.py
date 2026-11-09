@@ -1308,7 +1308,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
 
 # -- spec 130 C.5–C.6: nothing of the table lies beside a form; the window not yet laid, and the laying (decisions §232.1, §232.2, §247.1) -----------------------------------------
 
-def test_a_form_over_the_pane_covers_the_tables_end_and_the_column_and_the_hand_stay(gui):
+def test_a_form_over_the_pane_keeps_the_discards_column_and_the_hand(gui):
     from tests.test_discard_table_browser import open_maps
     pg, host, log = open_maps(gui, "wide")
     try:
@@ -1316,7 +1316,7 @@ def test_a_form_over_the_pane_covers_the_tables_end_and_the_column_and_the_hand_
         pg.get_by_role("button", name="The Orkmaster's menu").click()
         pg.get_by_role("menuitem", name="Settings").click()
         pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-end, .ork-portal-ring, .release-lane").count() == 0 and pg.locator('.table-body[data-end="form"]').count() == 1, "no ring and no discard lane beside a form"
+        assert pg.locator(".table-end").count() == 0 and pg.locator(".release-lane").count() == 1 and pg.locator('.table-body[data-end="form"]').count() == 1, "the discard's column stays beside a form (spec 168 A3, decisions §283.5)"
         assert pg.locator(".hand-end > .hand-die, .hand-end > .hand-mana").count() == 2, "the die and the potions stay: they are the hand's"
         assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
         pg.keyboard.press("Escape")

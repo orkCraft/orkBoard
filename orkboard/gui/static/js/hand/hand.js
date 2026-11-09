@@ -98,7 +98,7 @@ export function Hand() {
   const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
-    ${carrying && html`<div class="hand-carrying"><${Carry} /><div class="hand-end"><${PlayDie} /><${Mana} lifted=${s} /></div></div>`}
+    ${carrying && html`<div class="hand-places"><div class="hand-row is-carrying" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}><${Carry} /><div class="hand-end"><${PlayDie} /><${Mana} lifted=${s} /></div></div></div>`}
     ${!middle && !carrying && html`<div class="hand-places"><div class=${cards || deal || chair ? "hand-row is-sunk" : "hand-row"} inert=${cards || deal || chair ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
       <div class="hand-end">${!bare && html`<${PlayDie} />`}<${Mana} lifted=${s} /></div>
