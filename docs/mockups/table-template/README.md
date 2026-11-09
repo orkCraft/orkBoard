@@ -23,6 +23,9 @@ Pictures: `shots/`, made by `shoot.py`, each at 1366 × 768 (the laptop the deci
 | `7-ask-tech` | `?scene=ask` | **The card in play at the table's foot** (19): Tech's conflict lifted to the table's foot at the left, its slot left dashed in its group; its ways are the hand, each a card cut by the rim (one risen, Tech's pick marked by its head), *Tech decides*, *Your own words…*, then *Open…* and *Put it back*. The rest of the hand sinks and goes grey, the places too; *Stop all*, in the right column's head, is not in the hand and stays live (§285.2). |
 | `8-tech-project` | `?scene=leader` | **A leader's project** (16.2): the header's three groups (*At work*: ideas and specs face down, implementation face up; *Concerns*: one on a goal, one new with a +; *Ask*: the ? card), and under it the scheme, a concern marked on its part (rooms.ts) and a goal's reach (lobby.ts solid, timer.ts dashed). |
 | `9-small-face-b` | `&small=b` | **The small card's second face**: a kind's pip at the top right, the dots centred along the foot. Not taken: the owner picked the first face, `a`, with the dots at the bottom left (§284.2). |
+| `10-ask-tech-pictures` | `?scene=ask&pics=1` | **The ways with the owner's pictures** (§283.34, the first sheet of `docs/pictures-wanted.md`, cut into `pictures/`): Tech's conflict lifted, its ways *The new one replaces §208*, *Keep §208* (risen, Tech's pick), *Tech decides*, *Your own words…*, each read **picture first**: its corners, the picture, then its name and its line, so the rim shows the picture and the first words of the name at rest. |
+| `11-ask-risk-pictures` | `&card=risk` | The risk lifted: *Keep the last answer only* (mitigate, Tech's pick), *Accept the risk* (risen), *Do the smaller one*, *Later*, *Your own words…*. |
+| `12-ways-pictures` | `?scene=pictures` | The sheet's sixteen ways as cards on the table at the size they are played (1440 × 900), each with its `way_kind`. |
 
 ## What it found
 
@@ -39,6 +42,14 @@ Pictures: `shots/`, made by `shoot.py`, each at 1366 × 768 (the laptop the deci
 - **The book is the mockup's own drawing** (a closed book in leather and gilt): orkUI has no book yet (§283.A, orkUI first), shut and open as the backpack is.
 - **The + card's seal shows only if the card rises 20 px over the hand's top**, over the column's foot, as the product
   does today.
+
+- **The ways' pictures fit the big card's window as they are**: the sheet's tiles are wider than tall (about 3 : 2), as the
+  window of a 144 × 202 card is; a way lives only in the hand at that size, so it needs no small picture. Read picture first,
+  a way is told apart before its name is read. Two tiles of the first sheet are weak: *mitigate* (the barrel cut at the tile's
+  edge, the bandage apart from it) and *not a problem* (its feather reads as the quill of *your own words*); *accept the risk*
+  and *the leader decides* share a red cushion.
+- **The pictures came as a JPEG** whose pixels are not on one grid: for the mockup they are halved with nearest neighbour and
+  laid on 48 colours; orkUI takes them in only once each is snapped to its grid and its palette.
 
 ## Left for the product
 

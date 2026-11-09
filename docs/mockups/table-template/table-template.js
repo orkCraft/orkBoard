@@ -12,6 +12,7 @@
 const Q = new URLSearchParams(location.search);
 const scene = Q.get("scene") || "project", layout = Q.get("layout") || "groups", face = Q.get("small") || "a";
 const balloon = Q.get("balloon") === "1", hover = Q.get("hover") === "1";
+const pics = Q.get("pics") === "1", card = Q.get("card") || "conflict";   // &pics=1: the ways with the owner's pictures (docs/pictures-wanted.md, sheet 1); &card=risk: the risk lifted
 const O = "../../../design-system/orkui/";
 
 const head = (f, cls = "") => `<img class="ork-race__head ${cls}" src="${O}races/${f}.png" srcset="${O}races/${f}@2x.png 2x" alt="">`;
@@ -150,7 +151,7 @@ const TECH = {   // Tech's say on the idea (§283.23): its verdict, what needs y
   ],
 };
 function ideaLeaderTable(lifted) {   // §283.16.4
-  const group = (label, cards, cls = "") => `<section class="grp ${cls}"><p class="band">${label}</p><div class="grp-cards">${cards.map((c, i) => (lifted && label.startsWith("Needs") && i === 0) ? `<div class="bc-slot"></div>` : c()).join("")}</div></section>`;
+  const group = (label, cards, cls = "") => `<section class="grp ${cls}"><p class="band">${label}</p><div class="grp-cards">${cards.map((c, i) => (lifted !== false && label.startsWith("Needs") && i === lifted) ? `<div class="bc-slot"></div>` : c()).join("")}</div></section>`;
   return `<div class="idea-${layout}">${group("Its verdict", [TECH.verdict], "is-one")}${group("Needs your answer", TECH.needs)}${group("Could be better", TECH.better)}</div>`;
 }
 
@@ -207,6 +208,40 @@ const WAYS = `<div class="ways">
   <article class="hc way is-pen" data-el="dust"><div class="bc-top">${rune("results")}${sign("text")}</div><p class="bc-t">Your own words…</p><div class="way-win">${pic("pen", "picture: the pen", sign("text", "big"))}</div></article>
   <div class="way-acts"><button class="ork-btn quiet" type="button">Open…</button><button class="ork-btn quiet" type="button">Put it back</button></div></div>`;
 
+// ---- the ways with pictures (§283.34, the owner's first sheet: docs/mockups/table-template/pictures/) ----------------------
+// A way's card is read picture first: its corners, the picture, then its name and its line, so that at rest, cut by the hand's
+// rim, it shows its picture and the first words of its name.
+const PIC = {
+  "replace": ["The new one replaces §208", "Each phone picks; §208's slices change.", "restructure"],
+  "keep": ["Keep §208", "The server picks the best answer; the idea is talked again within §208.", "shield"],
+  "smaller": ["Do the smaller one", "Keep only the last round's best answer.", "tune"],
+  "later": ["Later", "After the round timer is on every phone.", "moon"],
+  "drop": ["Drop it", "The results screen stays as it is.", "cross"],
+  "split": ["Split it", "The screen now, the kept answers a goal of their own.", "restructure"],
+  "go-on": ["Go on anyway", "Every answer kept; Tech's doubt written in the decision.", "play"],
+  "mitigate": ["Keep the last answer only", "Each phone's answer is dropped when the round ends.", "shield"],
+  "accept-risk": ["Accept the risk", "64 answers in memory for a room of eight; said in the decision.", "alert"],
+  "ask-more": ["Ask more", "How many rounds does a room play?", "question"],
+  "leader-decides": ["Tech decides", "Tech's pick, said in its line.", "pick"],
+  "own-words": ["Your own words…", "", "text"],
+  "start-again": ["Start again", "The task runs again from the last green commit.", "work"],
+  "take": ["Take", "The proposed goal goes in line.", "check"],
+  "not-a-problem": ["Not a problem", "The concern is not raised again until its part changes.", "check"],
+  "make-it-a-goal": ["Make it a goal", "The + card opens with these words.", "feature"],
+};
+function wayCard(id, { up = false, pick = false, g = "results" } = {}) {
+  const [name, line, kind] = PIC[id];
+  return `<article class="hc way pic-way${up ? " is-up" : ""}${pick ? " is-pick" : ""}${id === "own-words" ? " is-pen" : ""}" data-el="${G[g].el}">
+    <div class="bc-top">${rune(g)}${sign(kind)}</div><div class="way-pic"><img src="pictures/${id}.png" alt=""></div>
+    <p class="bc-t">${name}</p>${line ? `<p class="way-line">${line}</p>` : ""}${pick ? `<span class="pick-head" title="Tech's pick">${head(L.tech.head, "hd16")}</span>` : ""}</article>`;
+}
+const acts = `<div class="way-acts"><button class="ork-btn quiet" type="button">Open…</button><button class="ork-btn quiet" type="button">Put it back</button></div>`;
+const WAYS_CONFLICT = `<div class="ways">${wayCard("replace")}${wayCard("keep", { up: true, pick: true })}${wayCard("leader-decides")}${wayCard("own-words")}${acts}</div>`;
+const WAYS_RISK = `<div class="ways">${wayCard("mitigate", { pick: true })}${wayCard("accept-risk", { up: true })}${wayCard("smaller")}${wayCard("later")}${wayCard("own-words")}${acts}</div>`;
+function gallery() {   // every way of the first sheet as a card on the table, at the size it is played
+  return `<div class="gallery">${Object.keys(PIC).map((id) => `<figure>${wayCard(id)}<figcaption>${id}</figcaption></figure>`).join("")}</div>`;
+}
+
 const BALLOON = `<div class="balloon ork-frame" role="status">${head("peon-crown", "hd16")}<p>Claude Code is out until Thu 18:00: the work goes on with Codex.</p><button class="ork-btn quiet" type="button">Show</button><button class="ork-btn quiet x" type="button" aria-label="Close">${icon("close")}</button></div>`;
 
 // ---- the window -----------------------------------------------------------------------------------------------------------
@@ -215,10 +250,12 @@ function win() {
   if (scene === "project") body = projectTable();
   if (scene === "idea-om") { picked = "results"; off = ["mkt"]; ttl = title("results", "the Orkmaster", "Idea"); body = ideaOmTable(); }
   if (scene === "idea-leader" || scene === "ask") {
-    picked = "results"; open = "tech"; off = ["mkt"]; party = "tech"; ttl = title("results", "Tech", "Idea"); body = ideaLeaderTable(scene === "ask");
-    if (scene === "ask") { lifted = `<div class="lifted">${TECH.needs[0]()}</div>`; ways = WAYS; }
+    picked = "results"; open = "tech"; off = ["mkt"]; party = "tech"; ttl = title("results", "Tech", "Idea"); const which = card === "risk" ? 1 : 0;
+    body = ideaLeaderTable(scene === "ask" ? which : false);
+    if (scene === "ask") { lifted = `<div class="lifted">${TECH.needs[which]()}</div>`; ways = pics ? (which ? WAYS_RISK : WAYS_CONFLICT) : WAYS; }
   }
   if (scene === "leader") { open = "tech"; party = "tech"; body = leaderTable(); }
+  if (scene === "pictures") { open = "tech"; party = "tech"; body = gallery(); }
   return `<div class="win" data-scene="${scene}">
     ${column(picked)}
     <main class="table"><div class="table-top">${tabs(open, off)}</div>
