@@ -19,7 +19,7 @@ import { backDrop } from "./stalldrop.js";              // a card of what you ca
 import { Portal, ReadyCards, chosenSlug, toMain } from "./portal.js";
 import { checksOf, pending, redOf, startChecks, sealedWords } from "./checks.js";
 import { noGate } from "./data.js";
-import { CornerTop, CornerFoot, muchOf, secondsBetween, IN_MAIN } from "./corners.js";             // the card is read by its four corners (spec 147 A.3, decisions §251)
+import { CornerTop, CornerFoot, muchOf, spendOfTasks, timeWords, secondsBetween, IN_MAIN } from "./corners.js";             // the card is read by its four corners (spec 147 A.3, decisions §251)
 import { CardWindow, lastMade, windowOf } from "./cardwindow.js";
 
 const LICH = { race: "lich", tier: "elder" };
@@ -93,12 +93,12 @@ export const hasDiscard = () => shownDone().length > 0 || !!readyOf();
 export function DoneFace({ g, on = false, picked = false, dealing = "", moon = false, line = "", label, onPress }) {
   const made = lastMade(g.tasks), windowed = windowOf({ made, picture: g.picture }).kind !== "none";       // its window between the name and the foot: the last made, else the goal's picture, else its line (spec 148 B.3)
   return html`<button key=${dealing ? g.slug : "top"} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-card--corners hand-done${g.element ? ` el-${g.hue || g.element}` : ""}`, { "is-on": on, "ork-picked": picked, "ork-deal": !!dealing })} data-slug=${g.slug} data-moon=${moon ? "1" : undefined} data-dealt=${dealing || undefined}
-      aria-label=${label} aria-expanded=${picked ? undefined : on ? "true" : "false"} aria-pressed=${picked ? "true" : undefined} onClick=${onPress} ...${leans}>
+      title=${timeWords({ done: true, took: tookOf(g.tasks) }) || undefined} aria-label=${label} aria-expanded=${picked ? undefined : on ? "true" : "false"} aria-pressed=${picked ? "true" : undefined} onClick=${onPress} ...${leans}>
       <${CornerTop} rune=${{ name: g.element, hue: g.hue, dim: !g.element }} kind="check" signal="success" />
       <span class="hand-done__name" title=${g.title}>${g.title}</span>
       ${windowed ? html`<${CardWindow} of=${{ made, picture: g.picture, name: g.title }} />` : line && html`<span class="hand-done__line" title=${line}>${line}</span>`}
       ${moon && html`<span class="hand-done__moon" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
-      <${CornerFoot} who=${{ heads: headsOf(g.tasks) }} much=${muchOf({ done: true, took: tookOf(g.tasks) })} />
+      <${CornerFoot} who=${{ heads: headsOf(g.tasks) }} much=${muchOf({ spend: spendOfTasks(g.tasks) })} />
     </button>`;
 }
 

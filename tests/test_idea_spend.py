@@ -202,3 +202,41 @@ def test_task_session_takes_the_newest_twenty_and_says_no_dollars_when_none_is_p
     rows = [_line("task", None, f"k{i}", 1, "grunt", f"2026-11-01T09:{i:02d}:00", tokens=idea_spend.tokens_of(None, 1000 if i < 5 else 50)) for i in range(25)]
     _calls(tmp_path, rows)
     assert idea_spend.task_session(tmp_path) == {"tokens": 50, "usd": None, "n": 20}       # the five oldest, of 1000, are left out
+
+
+def _party_task(tid, state, party, kind="code"):
+    return {**_task(tid, state, finished="2026-10-20T10:00:00"), "party": party, "kind": kind}
+
+
+def _spent(state, tid, tool, cost, tokens):
+    idea_spend.append(state, idea_spend.line("task", "grunt", tool, "m", "warrior", "", idea_spend.tokens_of(None, tokens), cost, tid, 1), idea="a")
+
+
+def test_the_average_by_party_and_kind_is_over_merged_tasks_and_has_money_only_when_every_one_was_priced_spec_168_c5(tmp_path):
+    idea_spend.forget()
+    _plan(tmp_path, "a", [_party_task("m1", "merged", "tech"), _party_task("m2", "merged", "tech"), _party_task("m3", "merged", "tech", "bug"), _party_task("x1", "failed", "tech"),
+                          _party_task("c1", "merged", "design"), _party_task("c2", "merged", "design"), _party_task("w1", "running", "tech")])
+    _spent(tmp_path, "m1", "claude", 0.2, 1000)
+    _spent(tmp_path, "m1", "claude", 0.1, 1000)                       # m1: two lines, 2000 tokens, $0.30
+    _spent(tmp_path, "m2", "claude", 0.5, 4000)                       # m2: 4000 tokens, $0.50
+    _spent(tmp_path, "m3", "claude", 9.0, 90000)                      # another kind: not in the average of code
+    _spent(tmp_path, "x1", "claude", 7.0, 70000)                      # failed: not in it
+    _spent(tmp_path, "w1", "claude", 0.4, 400)                        # still at work: not in it
+    _spent(tmp_path, "c1", "codex", None, 6000)
+    _spent(tmp_path, "c2", "codex", None, 10000)
+    assert idea_spend.average(tmp_path, "tech", "code") == {"tokens": 3000, "usd": 0.4, "tool": "claude", "n": 2}
+    assert idea_spend.average(tmp_path, "tech", "bug")["usd"] == 9.0
+    assert idea_spend.average(tmp_path, "design", "code") == {"tokens": 8000, "usd": None, "tool": "codex", "n": 2}, "Codex has no price: tokens, no money"
+    assert idea_spend.average(tmp_path, "art", "code") is None, "nothing finished of it: no average"
+
+
+def test_a_cards_spend_is_what_it_spent_so_far_or_in_all_and_ahead_its_partys_average_spec_168_c5(tmp_path):
+    idea_spend.forget()
+    _plan(tmp_path, "a", [_party_task("m1", "merged", "tech"), _party_task("r1", "running", "tech"), _party_task("n1", "waiting", "tech"), _party_task("f1", "merged", "tech", "bug")])
+    _spent(tmp_path, "m1", "claude", 0.5, 4000)
+    _spent(tmp_path, "r1", "claude", 0.2, 1500)
+    task = lambda tid, state, kind="code": {"id": tid, "state": state, "party": "tech", "kind": kind}  # noqa: E731
+    assert idea_spend.card_of(tmp_path, "a", task("r1", "running")) == {"spend": {"tokens": 1500, "usd": 0.2, "tool": "claude"}}, "at work: so far"
+    assert idea_spend.card_of(tmp_path, "a", task("m1", "merged")) == {"spend": {"tokens": 4000, "usd": 0.5, "tool": "claude"}}, "done: in all"
+    assert idea_spend.card_of(tmp_path, "a", task("n1", "waiting")) == {"spend_est": {"tokens": 4000, "usd": 0.5, "tool": "claude", "n": 1}}, "ahead: its party's average for its kind"
+    assert idea_spend.card_of(tmp_path, "a", task("n2", "waiting", "sound")) == {} and idea_spend.card_of(tmp_path, "a", task("f1", "merged", "bug")) == {}, "nothing known: nothing"

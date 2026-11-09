@@ -526,7 +526,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                                "head": roles.task_head(state_dir, t, target, read, tiers),
                                "by": _by(t, read), "band": "check" if map_stage.is_check(t) else "build", "wave": waves[str(t.get("id"))],
                                "row": rows[str(t.get("id"))],
-                               **_run_of(t), **steps_of(state_dir, slug, t), "pick": idea_pick.map_of(t), "shot": idea_shots.map_of(t), "made": made_of(t),
+                               **_run_of(t), **idea_spend.card_of(state_dir, slug, t), **steps_of(state_dir, slug, t), "pick": idea_pick.map_of(t), "shot": idea_shots.map_of(t), "made": made_of(t),
                                "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND])} for t in tasks],
                     "checks": idea_checks.status(idea_checks.kept(list_of_dicts(page.get("checks")) if page else [], checks),
                                                  checks, tasks) if checks else [],

@@ -178,10 +178,10 @@ def test_a_task_without_steps_keeps_todays_label_with_the_time_in_it(gui):
     try:
         c = card(pg, "plain", "e1")
         c.wait_for(timeout=WAIT_MS)
-        text = c.locator(".corner__much").inner_text().strip()
-        assert re.fullmatch(r"worked 1 m \d+ s", text.lower()), text                                                    # the time worked is the foot's figure (spec 147 A)
+        assert c.locator(".corner__much").count() == 0, "the foot's figure is the spend now (spec 168 C5, decisions §283.17): none known, nothing drawn"
+        assert re.fullmatch(r"A plain goal · worked 1 m \d+ s", c.get_attribute("title")), c.get_attribute("title")        # the time worked left the foot for the tooltip
         assert c.locator(".table-pips").count() == 0 and c.locator(".table-win__now").count() == 0
-        assert c.get_attribute("aria-label") == "Plain work, A plain goal: Doing" and c.get_attribute("title") == "A plain goal"
+        assert c.get_attribute("aria-label") == "Plain work, A plain goal: Doing"
     finally:
         pg.close()
     assert not log, "\n".join(log)
