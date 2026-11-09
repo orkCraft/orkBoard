@@ -51,9 +51,9 @@ Pictures: `shots/`, made by `shoot.py`, each at 1366 × 768 (the laptop the deci
 - **The owner's second sheet** (the pictures now in `pictures/`): every object stands on one wooden table edge, the palette is
   muted (no signal yellow, no bright green, the cushions purple), one object a tile, a margin to the frame; *mitigate* is whole.
   Its tiles are about 1.9 : 1, the window of a way's card exactly (130 × 68), so a picture fills it with nothing cut. Its
-  objects stand smaller in the tile than the first sheet's, so a little less of each reads at a glance. Left: *the leader
-  decides* still on a cushion as *accept the risk*; *not a problem* still a feather (a duster now), near the quill of *your own
-  words*; *take* two hands tearing at a card, which reads as a scuffle.
+  objects stand smaller in the tile than the first sheet's, so a little less of each reads at a glance. Its third take mends
+  the three weak tiles: *the leader decides* a crown on a gavel on a sound block, *take* one hand catching a falling card, *not
+  a problem* a fly in a deckchair under an umbrella beside an unused swatter.
 - **The pictures came as a JPEG** whose pixels are not on one grid: for the mockup they are halved with nearest neighbour and
   laid on 48 colours; orkUI takes them in only once each is snapped to its grid and its palette.
 
