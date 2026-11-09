@@ -178,6 +178,18 @@ turned down), pleased (a wide smile), asleep (eyes closed, a small tilt). Rows: 
 ```
 H4 is the same with three rows: 1 the imp, 2 the gnome fairy, 3 the Orkmaster.
 
+**Sheets T1 and T2, the tiers** (the gear each race wears; orkUI takes the gear from the difference between a tier's tile and
+the bare one, then lays it by code over every mood and hero of that race, §288.3). The tiers as orkUI has them: *laborer* the race
+as it is; *warrior* iron on the head; *elder* a pointed violet hood (the knight is iron already: its tiers are its plume).
+```
+A 3x6 grid of 18 tiles: each row is one head from the attached approved set, kept EXACTLY the same face, eyes, colours and
+position in all three columns; only the gear on the head changes, left to right: 1 bare (as it is), 2 a dark iron cap
+fitted to the head, 3 a pointed violet hood over the head. Horns, antlers, wings and ears stay visible through or beside the
+gear. Rows: 1 the ork shaman, 2 the elf dryad, 3 the golden unicorn knight (its tiers: 1 no plume, 2 a short iron-grey plume,
+3 a tall violet plume), 4 the lich, 5 the imp, 6 the gnome fairy.
+```
+T2 is the same with the six members of sheet H2 as its rows (the ork, the elf, the goblin, the gnome, the knight, the skeleton).
+
 **Sheets H5–H6, the heroes' portraits** (18; each its leader's race and party colours, calm; three a row in 6 × 3):
 ```
 A 6x3 grid of 18 tiles, left to right, top to bottom, each a hero: its leader's head from the attached set, changed as said.
