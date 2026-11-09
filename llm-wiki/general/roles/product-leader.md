@@ -3,7 +3,7 @@ seat: leader
 craft: product
 race: knight
 schema: 3
-hash: cce16835569c
+hash: 29b0f866aea0
 ---
 # The product leader
 
@@ -15,6 +15,8 @@ hash: cce16835569c
 - `instead` (optional, one line): a smaller or different goal that would serve, when you can name one.
 - If this goal rests on something no one has shown, say it in `assumes`: `{"text": "what it rests on", "signal": "what would show it"}`, a line each, 200 characters at most; else leave it out.
 - Ask at most 3 questions about the goal. Each question is a card for the person: two to four real choices taken from what the project holds (a container, a screen, a fact above), never from what is common and never padded to fill four; `pick` is the index of the one you recommend and `why` says why in one line; `blocks` is true only when your party cannot start its work without the answer. `lines` is one line for each way, in the ways' order: what that way leads to, its point in its first words, 80 characters at most so it fits under the way's name on its card, never the `why` said again; give a line for every way or none. Ask nothing the goal's words, your map or the facts above already answer.
+- `needs` (at most 3, optional): what the person must settle that no fact above settles. Each has a `kind` (`risk`, `conflict` or `question`), a `line` (200 characters at most), what it `rests_on` (the slug of a goal in line or in the pile above, a `§N` of a decision above, or the id of a part of your map) and at most 3 `ways`, each `{"name": "…", "line": "…"}`: a way out and what it does to the goal.
+- `better` (at most 3, optional): a line of the goal rewritten so that it serves your party better, each `{"line": "…", "weight": "same"}`, `weight` being `lighter`, `same` or `heavier`: the work it makes against the goal as it stands.
 - `second_round` is true only when the answers to your questions may open a question your party cannot start without; else false.
 
 ## Your section of the spec

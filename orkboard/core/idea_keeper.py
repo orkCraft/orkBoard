@@ -54,6 +54,7 @@ from orkboard.core.idea_sketch import SketchMixin
 from orkboard.core.idea_objection import ObjectionMixin
 from orkboard.core.idea_talk import TalkMixin
 from orkboard.core.idea_verdict import VerdictMixin
+from orkboard.core.idea_rewrite import RewriteMixin
 from orkboard.core.idea_project_q import ProjectQMixin
 from orkboard.core.idea_ask import AskMixin
 from orkboard.core.idea_pass import PassMixin
@@ -121,7 +122,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SpecChangeMixin, LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, HypothesisValuesMixin, ConcernsMixin, JournalMixin, SlicesMixin, CascadeMixin, GroupsMixin, AcceptMixin, FindingsMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SpecChangeMixin, LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, RewriteMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, HypothesisValuesMixin, ConcernsMixin, JournalMixin, SlicesMixin, CascadeMixin, GroupsMixin, AcceptMixin, FindingsMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,

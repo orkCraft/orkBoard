@@ -47,7 +47,7 @@ from orkboard.core import idea_journal
 from orkboard.core.idea_diagnose import DiagnoseMixin
 from orkboard.core.idea_ground import GroundMixin
 from orkboard.core import idea_slices
-from orkboard.realm import concerns, event_log, goal_line, goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
+from orkboard.realm import concerns, event_log, goal_line, goal_match, goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
 from orkboard.realm.idea_talk_parse import LINE, MAX_GOAL, MAX_PROJECT, clean_round, fact_text, pick_three, said_lines, total
 from orkboard.realm.idea_words import CARD_RULE
 from orkboard.realm import journal_notes
@@ -64,7 +64,7 @@ def _kw():
 # -- what a leader is told in Talk: the fixed text, one function (spec 151 C.3) ------------------------------------------------------------------
 
 CONTEXT_NOTE = ("(The context follows here in the prompt: the goal in the person's words, what is known of the project, what the leader holds of the decisions, its own journal and the "
-                "project's, how the product works now, the goals in line (Product's leader only), its party's map and its concerns on it.)\n\n")
+                "project's, how the product works now, the goals in line and the goals of the pile this one looks like, its party's map and its concerns on it.)\n\n")
 NO_FILE = "Read no file: answer from what is here."
 
 
@@ -93,6 +93,8 @@ know of the person before it can be decided. {reads} The goal is the person's wo
 Answer with one JSON object and nothing else:
 {{"stance": "…", "for": "…", "against": "…", "verdict": "go", "why": "", "check": "", "instead": ""{after[1]},
  "questions": [{{"ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "lines": ["…", "…"], "blocks": false, "for": "person"}}],
+ "needs": [{{"kind": "question", "line": "…", "rests_on": "…", "ways": [{{"name": "…", "line": "…"}}]}}],
+ "better": [{{"line": "…", "weight": "same"}}],
  "second_round": false{weight[1]}{project[1]}{prop[1]}}}"""
 
 
@@ -255,6 +257,20 @@ class TalkMixin(GroundMixin, DiagnoseMixin):
         except Exception:                            # a line that cannot be read never stops a Talk
             return []
 
+    def say_parts(self, slug: str, party: str, line: list[dict]) -> list[tuple[str, str]]:
+        """What code gives a leader to say its needs from (spec 168 C1, decisions §283.23), in the context before the map: the goals in line (Product's `line`, else every leader is told the same
+        goals but may not wait a goal for them) and the goals of the pile this one looks like (§242). A read that fails gives nothing: Talk never stops for it."""
+        out: list[tuple[str, str]] = []
+        try:
+            goals = line or goal_line.line(self.wiki_root(), self.state_dir)
+            if goals:
+                out.append(("The goals in line, in order", "\n".join(f"- {g['slug']}: {g['title']} ({g['party_title']})" for g in goals if g["slug"] != slug)))
+            if alike := goal_match.like(self.wiki_root(), self.state_dir, slug):
+                out.append(("Goals in the pile this one looks like", "\n".join(f"- {g['idea']}: {g['title']}" for g in alike)))
+        except Exception:
+            pass
+        return [(h, t) for h, t in out if t]
+
     def concerns_text(self, party: str) -> str:
         """The concerns the party's leader has on its own map (spec 108 A, `realm/concerns.py`), as the text a round adds to its context (*Your concerns on your map*); "" with none."""
         try:
@@ -280,7 +296,9 @@ class TalkMixin(GroundMixin, DiagnoseMixin):
         parts += idea_slices.parts(self.state_dir, party)                                 # what the leader holds of the decisions (spec 131 §A.4)
         parts += idea_journal.parts(self.state_dir, self.repo_root, party, slug)          # the leader's own journal and the project's (spec 125 §C), before the map
         parts += idea_fold.parts(root, party)                                             # how the product works now (spec 127 §C.3), after the journals
-        if line:                                     # before the map, which is the part that is cut when the context is full
+        if rnd == 1 or entry.get("rejudge"):         # what code knows, for a need to rest on (spec 168 C1): the goals in line, every leader's, and the pile's look-alikes
+            parts += self.say_parts(slug, party, line)
+        elif line:
             parts.append(("The goals in line, in order", "\n".join(f"- {g['slug']}: {g['title']} ({g['party_title']})" for g in line)))
         if self.map_in_prompt() and (text := self._map(party)):                  # in the system prompt instead when core/idea_verdict.py's switch is on
             parts.append(("Your party's map", text))
