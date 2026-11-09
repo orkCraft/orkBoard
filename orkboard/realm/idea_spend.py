@@ -401,3 +401,64 @@ def over(cost: object, estimate: dict) -> float | None:
     """`cost / high`, to one place, when the cost is over the estimate's high end; else None."""
     cost, high = _num(cost), _num(estimate.get("high"))
     return round(cost / high, 1) if cost is not None and high and cost > high else None
+
+
+# -- a card's figure (spec 168 C5, decisions §283.17) ---------------------------------------------------
+
+def _spent(rows: list[dict]) -> dict:
+    """What a task's lines add up to: `tokens`, `usd` (only when every line has a price, else None), `tool` (the newest line's)."""
+    newest = max(rows, key=lambda r: str(r.get("at") or ""))
+    return {"tokens": _tokens(rows), "usd": usd(rows) if all(_num(r.get("cost")) is not None for r in rows) else None, "tool": str(newest.get("tool") or "")}
+
+
+def _by_task(state_dir: Path, slug: str) -> dict[str, list[dict]]:
+    out: dict[str, list[dict]] = {}
+    path = ledger(state_dir, idea=slug)
+    for r in read(path) if path else []:
+        if r.get("task"):
+            out.setdefault(str(r["task"]), []).append(r)
+    return out
+
+
+def _averages(state_dir: Path) -> dict[tuple[str, str], dict]:
+    """{(party, kind): {tokens, usd, tool, n}} over the merged tasks of every plan that have lines; cached for 60 s."""
+    key, now = (str(Path(state_dir).resolve()), -1), time.monotonic()
+    with _LOCK:
+        hit = _CACHE.get(key)
+    if hit is not None and now - hit[0] < CACHE_S:
+        return hit[1]
+    groups: dict[tuple[str, str], list[dict]] = {}
+    for path in sorted((Path(state_dir) / "ideas").glob("*/plan.json")):
+        lines = _by_task(state_dir, path.parent.name)
+        for tid, t in _tasks(_plan(state_dir, path.parent.name)).items():
+            if t.get("state") == "merged" and lines.get(tid):
+                groups.setdefault((str(t.get("party") or ""), str(t.get("kind") or "")), []).append(_spent(lines[tid]))
+    out = {}
+    for k, got in groups.items():
+        tokens = [g["tokens"] for g in got if g["tokens"] > 0]
+        prices = [g["usd"] for g in got]
+        tools = [g["tool"] for g in got if g["tool"]]
+        out[k] = {"tokens": int(statistics.mean(tokens)) if tokens else None,
+                  "usd": round(statistics.mean(prices), 4) if all(p is not None for p in prices) else None,
+                  "tool": max(set(tools), key=tools.count) if tools else "", "n": len(got)}
+    with _LOCK:
+        _CACHE[key] = (now, out)
+    return out
+
+
+def average(state_dir: Path, party: str, kind: str) -> dict | None:
+    """What a task of this party and kind costs on average over the merged ones: `{tokens, usd, tool, n}`; `usd` only when every one of them was priced
+    (None otherwise, as for Codex); None when no such task has finished. A card ahead says it as an estimate (≈). Cached for 60 s (`forget` clears it)."""
+    return _averages(state_dir).get((str(party or ""), str(kind or "")))
+
+
+def card_of(state_dir: Path, slug: str, task: dict) -> dict:
+    """The spend a task's card shows (decisions §283.17): `{"spend": {tokens, usd, tool}}` once it has lines (so far at work, in all when ended),
+    else, a task not yet ended, `{"spend_est": {tokens, usd, tool, n}}` (its party's average for its kind); `{}` with nothing known."""
+    own = _by_task(state_dir, slug).get(str(task.get("id") or ""))
+    if own:
+        return {"spend": _spent(own)}
+    if task.get("state") in ENDED:
+        return {}
+    est = average(state_dir, str(task.get("party") or ""), str(task.get("kind") or ""))
+    return {"spend_est": est} if est else {}

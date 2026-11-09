@@ -19,8 +19,8 @@ export function dotsOf(parties = [], done = []) {
 }
 
 /** The small card of goal `n`. `parties`/`done`: its route and the parties done; `signal`: "alert", "danger" or ""; `picture`: an element (vnode) for its middle in place of the goal's own picture or its kind's sign; `onPress`: with it the card is a button, else a
- *  focusable box; `preview`: false puts the preview off; `extra`: more attributes (a data id, a class). */
-export function SmallCard({ n, parties = [], done = [], signal = "", picture = null, onPress = null, preview = true, extra = {} }) {
+ *  focusable box; `preview`: false puts the preview off; `extra`: more attributes (a data id, a class); `time`, `much`: the card's time in words and its spend, shown in its preview only (the small card has no room for them: decisions §283.17). */
+export function SmallCard({ n, parties = [], done = [], signal = "", picture = null, onPress = null, preview = true, extra = {}, time = "", much = "" }) {
   const el = n.element || "", hue = n.hue || el, name = n.title || n.short || "", dots = dotsOf(parties, done), url = typeof n.picture === "string" ? n.picture.trim() : "", kind = n.type?.sign || "";
   const face = html`
     <span class="sm-tl" aria-hidden="true"><${Elem} name=${el} hue=${hue} dim=${!el} /></span>
@@ -28,6 +28,6 @@ export function SmallCard({ n, parties = [], done = [], signal = "", picture = n
     <span class="sm-dots" aria-hidden="true">${dots.map((d, i) => html`<i key=${d.slug || i} class=${cls("sm-dot", { "is-done": d.done })} data-race=${d.race || undefined} data-party=${d.slug}></i>`)}</span>`;
   const { class: more, ...rest } = extra;
   const props = { ...rest, class: cls("ork-card sm", { [`el-${hue}`]: !!hue, [`is-${signal}`]: !!signal, [more || ""]: !!more }), "data-goal": n.slug, "data-signal": signal || undefined, "aria-label": name };
-  const on = preview ? withPreview(props, () => ({ mode: "face", name, element: el, hue, kind, signal, picture: url, node: picture })) : props;
+  const on = preview ? withPreview(props, () => ({ mode: "face", name, element: el, hue, kind, signal, picture: url, node: picture, time, much })) : props;
   return onPress ? html`<button type="button" ...${on} onClick=${onPress}>${face}</button>` : html`<span tabindex="0" role="group" ...${on}>${face}</span>`;
 }

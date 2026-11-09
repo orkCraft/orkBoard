@@ -19,7 +19,7 @@ import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
 import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
 import { Pips, StepsList, StepsWindow, WaitingWindow, FailedWindow, labelWords, countWords, showsSteps, stepsOf, seatWords } from "./steps.js";       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
-import { CornerTop, CornerFoot, muchOf, secondsBetween } from "./corners.js";                 // a card is read by its four corners (spec 147 A, decisions §251)
+import { CornerTop, CornerFoot, muchOf, figureOf, timeWords, secondsBetween } from "./corners.js";                 // a card is read by its four corners (spec 147 A, decisions §251)
 import { CardWindow, windowOf } from "./cardwindow.js";                // a window never empty: the goal's picture, else words (spec 148)
 import { MadeWindow, madeOf } from "./made.js";                           // what a task done or at Review made, by its craft (spec 142 D)
 import { BackFace, Turning, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
@@ -86,9 +86,10 @@ export function TaskCard({ n, t }) {
   const said = st ? `${t.title}, ${n.short || n.title}: ${labelWords(t)}${bad ? ", failed" : ""}${time && `, ${time}`}` : `${t.title}, ${n.short || n.title}: ${footWords(t)}`;
   if (away) return html`<${ThrownPlace} n=${n} t=${t} h=${away.h} />`;
   const kind = typeSignOf(n, t), sign = kind.startsWith("tool:") ? n.type?.sign || "" : kind, signal = bad ? "danger" : asks ? "alert" : done ? "success" : "";
-  const much = muchOf({ asks, done, took: secondsBetween(t.started, t.finished), left: Number(t.left ?? NaN), worked: alive && !st ? worked : NaN, cost: gem });                 // spec 147 A.2: the foot's one figure
+  const much = muchOf({ asks, spend: figureOf(t.spend), est: figureOf(t.spend_est), cost: gem });                 // spec 168 C5, decisions §283.17: the foot's one figure is the spend (the time is in the tooltip and the small card's preview)
+  const timed = timeWords({ done, took: secondsBetween(t.started, t.finished), left: Number(t.left ?? NaN), worked: alive && !st ? worked : NaN });
   return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--task", { [`el-${n.hue || n.element}`]: !!(n.hue || n.element), fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-changed": changed })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
-    data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${time ? `${n.title} · ${time}` : n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
+    data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${time || timed ? `${n.title} · ${time || timed}` : n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <${CornerTop} rune=${{ name: n.element, hue: n.hue, dim: !n.element, glowing: alive, still: !movesOn(n.slug) }} kind=${sign} signal=${signal} />
     <span class="table-card__head"><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
     <${TaskWin} n=${n} t=${t} st=${st} alive=${alive} />

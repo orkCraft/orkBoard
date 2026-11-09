@@ -49,7 +49,7 @@ function leave(el) {
   if (anchor === el) hide();
 }
 
-/** The attributes of a card (`props`) with the preview's four handlers wrapped around its own; `spec()` gives what to show: `{mode: "back", name, line}` or `{mode: "face", name, element, hue, kind (a sign's name), signal, picture (a URL), node (an element)}`. */
+/** The attributes of a card (`props`) with the preview's four handlers wrapped around its own; `spec()` gives what to show: `{mode: "back", name, line}` or `{mode: "face", name, element, hue, kind (a sign's name), signal, picture (a URL), node (an element), time (words: *4 min left*, *took 18 min*: the time leaves the corner, decisions §283.17), much (words: the spend)}`. */
 export function withPreview(props, spec) {
   const call = (k, e) => { try { props[k]?.(e); } catch (err) { console.error(err); } };
   return { ...props,
@@ -84,5 +84,6 @@ export function Preview() {
   return html`<div class=${cls("ork-card pv pv--face", { [`el-${s.hue}`]: !!s.hue, [`is-${s.signal}`]: !!s.signal })} style=${style} data-preview="face" aria-hidden="true">
     <${CornerTop} rune=${{ name: s.element, hue: s.hue, dim: !s.element }} kind=${s.kind} signal=${s.signal} />
     <span class="pv-nm">${s.name}</span>
-    <span class="pv-pic">${s.node ? s.node : s.picture ? html`<img class="sm-pic__img" src=${s.picture} alt="" />` : s.kind && html`<${Sign} name=${s.kind} big=${true} />`}</span></div>`;
+    <span class="pv-pic">${s.node ? s.node : s.picture ? html`<img class="sm-pic__img" src=${s.picture} alt="" />` : s.kind && html`<${Sign} name=${s.kind} big=${true} />`}</span>
+    ${(s.time || s.much) && html`<span class="pv-time" data-preview-time=${s.time || undefined}>${s.time && html`<span class="pv-time__t">${s.time}</span>`}${s.much && html`<span class="pv-time__m">${s.much}</span>`}</span>`}</div>`;
 }

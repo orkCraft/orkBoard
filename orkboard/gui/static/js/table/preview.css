@@ -9,3 +9,7 @@
 .pv-pic .ork-sign.big { color: var(--ork-ink-muted); }
 .ork-card.pv.is-alert { border-color: var(--ork-alert); box-shadow: inset 0 0 0 2px var(--ork-alert), -4px 4px 0 var(--ork-scrim); }
 .ork-card.pv.is-danger { border-color: var(--ork-danger); box-shadow: inset 0 0 0 2px var(--ork-danger), -4px 4px 0 var(--ork-scrim); }
+/* the small card's time and spend, which it has no room for (spec 168 C5, decisions §283.17): one foot row of the preview, the time at the left, the figure at the right */
+.pv-time { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-height: 20px; font: var(--ork-type-caption); color: var(--ork-ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pv-time__t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pv-time__m { margin-left: auto; flex: none; }
