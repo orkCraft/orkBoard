@@ -8007,3 +8007,26 @@ context (§270.4), and nothing changes size (§283.5). So:
 4. Built by spec 168 D1 and D2.
 
 The owner's call.
+
+## 287. The cards' pictures as the owner's first sheet drew them: a way's card read picture first, the pictures in the heads' colours, a wide tile on one table edge (9 November 2026, the owner)
+
+Changes: 283.35 (the palette and the two sizes), 252.3 (the window below the hand's cut, for a way's card).
+
+Why: the owner's first sheet of pictures (`docs/pictures-wanted.md`, sheet 1), made in Gemini in three takes and laid on the
+mockup's cards (`docs/mockups/table-template/`, shots 10–12): the pictures say most when they are seen at rest in the hand, they
+are drawn in the colours of the leaders' heads they stand beside, and the third take's wide tiles on one wooden table edge read as
+one set and fill a way's window exactly. The owner: *yes*. So:
+1. **A way's card is read picture first**: its corners, its picture, then its name and its line; so in the hand, cut by the rim,
+   it shows its picture and the first words of its name at rest, and a way is told before it is read. Every other card keeps its
+   window under its title (§252).
+2. **The pictures are drawn in the leaders' heads' colours** (orkUI's races), muted and earthy, with no large area of a signal's
+   colour (the alert's yellow, the danger's red, the action's green) and no rainbow; the card's frame carries the element's colour.
+   This changes §283.35's *its greys and the element's colour*.
+3. **A tile is wide, about 1.9 : 1**, the window of a way's card (130 × 68); **every object stands on one wooden table edge** along
+   its foot, one object and at most one small joke, filling about 70% of the tile's height, a black outline, light from the top
+   left, no text. A way lives only on a big card, so it has one size; a small card's middle keeps its kind's sign, a head or what
+   is attached (§283.3). A human hand in a picture is the person's act; the orks' own act is an ork's green hand.
+4. **The sheets keep to the first**: the approved sheet is attached to every later prompt beside the heads, and `docs/pictures-
+   wanted.md` says the rules. Spec 168 J2 builds the place for them.
+
+The owner's call.

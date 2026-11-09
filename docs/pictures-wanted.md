@@ -7,6 +7,14 @@ in (`office/pictures/<id>.png`, listed in `pictures/pictures.json`), and Orkboar
 
 **A picture never carries a card's meaning alone**: the card's words stay under it. So the tiles have no text.
 
+**The rules the first sheet set** (decision §287): a tile is wide, about 1.9 : 1, the window of a way's card (130 × 68); every
+object stands on one wooden table edge along the tile's foot; one object and at most one small joke, filling about 70% of the
+tile's height; the leaders' heads' colours, muted, with no large area of a signal's colour; a black outline, light from the top
+left. A human hand is the person's act, an ork's green hand the orks'. **Attach the approved first sheet beside the heads** to
+every later prompt: it is the set's reference.
+
+**Sheet 1 is made** (its third take): `docs/mockups/table-template/pictures/` holds its sixteen tiles as the mockup cut them.
+
 **After Gemini**, for each tile: crop it, bring it down to its 32 × 32 grid with nearest neighbour (never smooth), lay it on
 orkUI's palette, look at its filled silhouette at 24 px beside its sheet's neighbours. It is drawn at 2 px a cell in a big card's
 window (64 × 64) and at 1 px in a small card's middle (32 × 32). A tile that loses its idea at 32 × 32 is drawn again, simpler.
@@ -14,8 +22,11 @@ window (64 × 64) and at 1 px in a small card's middle (32 × 32). A tile that l
 ## The style, said first in every prompt
 
 ```
-Pixel-art item cards for a comedic fantasy card game, in exactly the pixel style of the attached reference image
-(fantasy leader heads: an ork shaman, a dryad, a golden knight, a lich, an imp, a gnome). Each tile is a chunky 32x32
+Pixel-art item cards for a comedic fantasy card game. Two attached references: the leader heads (an ork shaman, a dryad,
+a golden knight, a lich, an imp, a gnome) for the pixel style and the colours, and an approved sheet of sixteen item
+tiles: match that sheet EXACTLY in tile shape (wide, about 1.9:1), pixel size, outline, palette, the dark slate
+background, the wooden table edge along every tile's foot and the grey-brown frames. Every object stands on that table
+edge and fills about 70% of the tile's height; light from the top left. Each tile is a chunky 32x32
 pixel grid scaled up with nearest-neighbour: square pixels only, no anti-aliasing, no blur, no gradients, no soft
 shadows, no dithering. Bold one-pixel black outline, two or three flat tones per colour plus a single highlight, a muted
 earthy palette (moss green, bone, bronze, leather brown, slate grey, dusty purple) with one bright accent per tile. Dark
