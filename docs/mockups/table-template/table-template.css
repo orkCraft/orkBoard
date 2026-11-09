@@ -1,0 +1,197 @@
+/* The table's template (decision §283), a mockup. Nothing here is in the product. Layout only: every colour, font and corner is
+   orkUI's (../../../design-system/orkui), read through its tokens and classes; the sizes are the decision's (two card sizes, 144 x 202
+   and 56 x 78; the column 160 px, the right column 188 px, the hand 111 px). */
+html, body { margin: 0; height: 100%; background: var(--ork-room); color: var(--ork-ink); font: var(--ork-type-body); }
+* { box-sizing: border-box; }
+p { margin: 0; }
+.win { --colw: 160px; --rw: 188px; --hand: 111px; --tabs: 62px; --cw: 144px; --ch: 202px; --sw: 56px; --sh: 78px;
+  position: relative; display: grid; grid-template-columns: var(--colw) minmax(0, 1fr) var(--rw); grid-template-rows: minmax(0, 1fr) var(--hand);
+  width: 100vw; height: 100vh; overflow: hidden; background: var(--ork-room); }
+.bronze { box-shadow: inset 0 0 0 1px var(--ork-bronze-lo), inset 0 0 0 3px var(--ork-bronze), inset 2px 2px 0 3px var(--ork-bronze-hi), inset 0 0 0 5px var(--ork-bronze-lo); }
+.hd16 { width: 16px; height: 15px; }
+.lanes-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* ---- cards: the big one, 144 x 202, its element in a band on top and a tint; the small one, 56 x 78 ---- */
+.bc, .hc { position: relative; flex: none; display: flex; flex-direction: column; width: var(--cw); height: var(--ch); padding: 6px 7px 6px;
+  background: color-mix(in srgb, var(--_el) 10%, var(--ork-card)); border: var(--ork-line) solid var(--ork-card-frame); border-top: 4px solid var(--_el);
+  clip-path: var(--ork-notch); color: var(--ork-ink); }
+[data-el="meadow"] { --_el: var(--ork-elem-meadow); } [data-el="ice"] { --_el: var(--ork-elem-ice); } [data-el="dust"] { --_el: var(--ork-elem-dust); }
+[data-el="void"] { --_el: var(--ork-elem-void); } [data-el="lava"] { --_el: var(--ork-elem-lava); }
+.bc-top { display: flex; justify-content: space-between; align-items: center; height: 16px; }
+.bc-t { margin-top: 4px; font: var(--ork-type-label); line-height: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.bc-win { flex: 1; min-height: 0; margin: 6px 0; display: grid; place-items: center; background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
+.bc-win .words { padding: 6px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.bc-foot { display: flex; justify-content: space-between; align-items: center; height: 16px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.bc-foot .bc-much { color: var(--ork-ink); }
+.sig-alert { outline: 2px solid var(--ork-alert); outline-offset: 1px; box-shadow: 0 0 0 5px color-mix(in srgb, var(--ork-alert) 30%, transparent); clip-path: none; }
+.sig-alert .bc-much { color: var(--ork-alert); }
+.is-working .bc-much::before { content: "●"; margin-right: 3px; color: var(--ork-success); }
+.bb { width: var(--cw); height: var(--ch); }
+.bb.is-writing::after { content: "writing"; position: absolute; bottom: 30px; left: 50%; translate: -50% 0; padding: 1px 6px; background: var(--ork-plate); text-align: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.sm-back { width: var(--sw); height: var(--sh); flex: none; }
+.sm-back.is-thinking { outline: 1px dashed var(--ork-ink-faint); outline-offset: 2px; }
+.sm-back.is-new .ork-icon { width: 14px; height: 14px; color: var(--ork-action); }
+.sm-back.sig-alert-back { outline: 2px solid var(--ork-alert); outline-offset: 1px; }
+.sm { position: relative; flex: none; width: var(--sw); height: var(--sh); background: color-mix(in srgb, var(--_el) 12%, var(--ork-card));
+  border: var(--ork-line) solid var(--ork-card-frame); border-top: 3px solid var(--_el); }
+.sm-tl { position: absolute; left: 3px; top: 2px; line-height: 0; }
+.sm-tl .ork-rune { width: 7px; height: 10px; }
+.sm-tr { position: absolute; right: 3px; top: 2px; line-height: 0; color: var(--ork-ink-muted); }
+.sm-tr .ork-sign { width: 9px; height: 9px; }
+.sm-pic { position: absolute; inset: 14px 6px 14px; display: grid; place-items: center; }
+.sm-pic .ork-sign.big { width: 24px; height: 24px; }
+.sm-pic .ork-sign.ok { color: var(--ork-success); }
+.sm-pic .verdict { font: var(--ork-type-heading); font-size: 22px; line-height: 1; color: var(--ork-ink); }
+.sm-dots { position: absolute; left: 4px; bottom: 4px; display: flex; gap: 2px; }
+.sm.is-b .sm-dots { left: 0; right: 0; justify-content: center; }
+.dot { width: 5px; height: 5px; box-shadow: inset 0 0 0 1px var(--c); }
+.dot.is-done { background: var(--c); }
+.sm.ask { display: grid; place-items: center; background: var(--ork-card); border: 1px dashed var(--ork-edge); color: var(--ork-ink); }
+.sm.ask .ask-hand { position: absolute; right: 3px; bottom: 3px; } .sm.ask .ask-hand .ork-icon { width: 12px; height: 12px; }
+.pic { display: grid; place-items: center; gap: 4px; width: 100%; height: 100%; padding: 4px; border: 1px dashed var(--ork-ink-faint); color: var(--ork-ink-muted); text-align: center; }
+.pic em { font: var(--ork-type-caption); font-size: 10px; line-height: 12px; font-style: normal; color: var(--ork-ink-faint); }
+.strip { display: flex; align-items: center; gap: 5px; width: var(--cw); height: 22px; padding: 0 6px; background: var(--ork-plate); border-left: 3px solid var(--_el); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.strip span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.edges { position: relative; width: var(--cw); height: 0; }
+.edges i { position: absolute; left: calc(var(--i) * 3px + 3px); right: calc(var(--i) * -3px - 3px); top: calc(-6px - var(--i) * 4px); height: 12px; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); }
+
+/* ---- the Orkmaster's column: 160 px, three piles, never scrolls ---- */
+.col { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 6px; padding: 7px 8px 0; overflow: hidden; }
+.col-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px; min-height: 52px; }
+.col-name { display: grid; min-width: 0; }
+.col-name b { font: var(--ork-type-label); line-height: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.col-name span { font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col-switch { width: 12px; height: 12px; color: var(--ork-ink-muted); }
+.pile .ork-plaque { font: var(--ork-type-heading); font-size: 12px; }
+.pile-line { margin: 2px 0 4px; font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pile-line b { color: var(--ork-ink); font-weight: 600; }
+.fan { position: relative; height: 92px; }
+.fan-card { position: absolute; bottom: 2px; left: calc(10px + var(--i) * 15px); transform-origin: 50% 150%; transform: rotate(calc(var(--d) * 6deg)); }
+.fan-card.is-picked { transform: rotate(calc(var(--d) * 6deg)) translateY(-12px); }
+.fan-card.is-picked .sm-back { outline: 2px solid var(--ork-ink); outline-offset: 1px; }
+.sm-back.is-play::after { content: ""; position: absolute; inset: 0; margin: auto; width: 10px; height: 10px; background: var(--ork-ink);
+  -webkit-mask: url(../../../design-system/orkui/signs/play.svg) center / 100% no-repeat; mask: url(../../../design-system/orkui/signs/play.svg) center / 100% no-repeat; }
+.deck { position: relative; height: 66px; }
+.lie { position: absolute; left: calc(var(--i) * 7px); top: calc(var(--i) * 4px); width: var(--sh); height: var(--sw); }
+.lie .sm-back { position: absolute; left: 11px; top: -11px; transform: rotate(90deg); }
+.impl { display: grid; gap: 3px; }
+.impl .bc { width: var(--cw); }
+.foot-strip { display: flex; align-items: center; gap: 4px; width: var(--cw); height: 24px; padding: 0 6px; background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); border-top: 3px solid var(--_el); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.foot-strip em { flex: 1; display: flex; gap: 2px; align-items: center; font-style: normal; white-space: nowrap; overflow: hidden; }
+.foot-strip b { font-weight: 600; color: var(--ork-ink); }
+
+/* ---- the table: the tabs, the pane on its leader's felt ---- */
+.table { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; min-width: 0; }
+.table-top { height: var(--tabs); border-bottom: 3px solid var(--ork-bronze); }
+.tabs { height: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)) 124px; }
+.tab { appearance: none; position: relative; display: flex; align-items: flex-end; gap: 6px; padding: 0 8px 4px 18px; background: none; border: 0; color: var(--ork-ink); text-align: left; font: inherit; cursor: pointer; }
+.tab .ork-pennant { position: absolute; left: 4px; top: 0; }
+.tab::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 0; height: 2px; background: color-mix(in srgb, var(--c, var(--ork-edge)) 45%, transparent); }
+.tab.is-open::after { height: 3px; background: var(--c); }
+.tab-words { display: grid; min-width: 0; padding-bottom: 2px; }
+.tab-words b { font: var(--ork-type-heading); font-size: 12px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab-words span { font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; }
+.tab.is-off { opacity: 0.4; filter: grayscale(1); }
+.tab.chair { color: var(--ork-ink-muted); align-items: center; }
+.pane { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 7px; }
+.pane-body { position: relative; flex: 1; min-height: 0; overflow: auto; overflow-x: hidden; }
+.pane-title { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; margin-bottom: 6px; font: var(--ork-type-label); }
+.pane-title .through { color: var(--ork-ink-muted); font-weight: 400; }
+.phases { margin-left: auto; display: flex; gap: 6px; font: var(--ork-type-caption); color: var(--ork-ink-faint); }
+.phases [aria-current] { color: var(--ork-ink); font-weight: 600; }
+.lanes { min-height: 100%; }
+.lane { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 8px 10px 16px; min-width: 0;
+  box-shadow: inset 0 24px 0 color-mix(in srgb, var(--c, transparent) 14%, transparent), inset 0 48px 0 color-mix(in srgb, var(--c, transparent) 10%, transparent), inset 0 72px 0 color-mix(in srgb, var(--c, transparent) 6%, transparent); }
+.lane + .lane { border-left: 1px solid color-mix(in srgb, var(--ork-ink) 8%, transparent); }
+.lane.is-off { opacity: 0.45; }
+.band { font: var(--ork-type-caption); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ork-ink-muted); }
+.row-sm { display: flex; flex-wrap: wrap; gap: 6px; }
+.cascade { display: grid; gap: 10px; }
+.none { font: var(--ork-type-caption); color: var(--ork-ink-faint); font-style: normal; }
+.free { margin: 40px auto 0; max-width: 170px; text-align: center; font: var(--ork-type-caption); padding: 6px 8px; }
+
+/* an idea through the Orkmaster: the route on a plate, a small card under each leader */
+.om-route { display: flex; align-items: center; gap: 6px; padding: 6px 10px; margin-bottom: 8px; font: var(--ork-type-caption); }
+.om-route span { color: var(--ork-ink-muted); }
+.om-route .ork-btn { margin-left: auto; }
+.say { position: relative; display: flex; gap: 10px; align-items: flex-start; }
+.say p { display: grid; gap: 2px; padding-top: 4px; }
+.say p b { font: var(--ork-type-label); }
+.say p span { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.preview { position: absolute; left: 64px; top: -8px; z-index: 5; filter: drop-shadow(4px 6px 0 var(--ork-room)); }
+
+/* an idea through a leader: three groups in a row (groups) or three rows (rows) */
+.idea-groups { display: flex; gap: 18px; align-items: flex-start; padding: 6px 8px; }
+.idea-rows { display: grid; gap: 10px; padding: 6px 8px; }
+.grp { display: grid; gap: 6px; }
+.grp-cards { display: flex; gap: 10px; }
+.bc-slot { width: var(--cw); height: var(--ch); border: 1px dashed var(--ork-alert); }
+.lifted { position: absolute; left: 18px; bottom: 18px; z-index: 6; }
+.lifted .bc { box-shadow: 0 0 0 5px color-mix(in srgb, var(--ork-alert) 30%, transparent), 6px 8px 0 var(--ork-room); }
+
+/* a leader's project: the header of small cards, the scheme under it */
+.lheader { position: sticky; top: 0; z-index: 3; display: flex; gap: 22px; align-items: flex-start; padding: 8px 10px 10px; background: var(--_plate, var(--ork-plate)); border-bottom: 1px solid var(--ork-frame); }
+.hgrp { display: grid; gap: 4px; }
+.hcards { display: flex; gap: 6px; }
+.hgrp:first-child .hcards > * + * { margin-left: -22px; }
+.lheader .more { margin-left: auto; }
+.scheme { display: flex; gap: 24px; align-items: flex-start; padding: 18px 14px; }
+.sch-col { display: grid; gap: 10px; width: 260px; }
+.sch-h { font: var(--ork-type-label); border-bottom: 1px solid var(--ork-edge); padding-bottom: 4px; }
+.sch-h span { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.sch-link { align-self: center; padding: 3px 8px; border: 1px dashed var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.tile { display: grid; gap: 2px; padding: 8px 10px; background: color-mix(in srgb, var(--ork-ink) 6%, transparent); border: 1px solid var(--ork-frame); }
+.tile b { font: var(--ork-type-label); }
+.tile span { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.tile.is-hot { border-color: var(--ork-alert); }
+.tile.is-reach { border: 2px solid var(--ork-elem-void); }
+.tile.is-reach2 { border: 2px dashed var(--ork-elem-void); }
+
+/* ---- the right column: its head what never changes the table; the discard's two piles ---- */
+.right { grid-column: 3; grid-row: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 0 8px 8px; overflow: hidden; }
+.rhead { flex: none; position: relative; align-self: stretch; display: flex; justify-content: space-between; min-height: 84px; padding: 6px 6px 4px 8px; border-bottom: 1px solid var(--ork-frame); }
+.rh-power { display: grid; justify-items: start; gap: 3px; }
+.rh-share { font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-muted); }
+.ork-btn.stop { color: var(--ork-danger); padding: 0 6px; height: 22px; }
+.rh-lamp { display: flex; gap: 4px; align-items: flex-start; margin-top: -8px; }
+.rh-here { padding-top: 14px; font: var(--ork-type-caption); font-size: 11px; line-height: 13px; text-align: right; color: var(--ork-ink-muted); }
+.disc { font: var(--ork-type-heading); font-size: 12px; }
+.pile2 { flex: none; display: grid; justify-items: center; gap: 3px; }
+.branch { display: inline-flex; align-items: center; gap: 4px; font: var(--ork-type-label); padding: 2px 8px; border: 0; cursor: pointer; color: var(--ork-ink); }
+.branch .ork-icon { width: 12px; height: 12px; }
+.pile2-line { font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-muted); }
+.pile2-cards { margin-top: 4px; }
+
+/* ---- the hand: 111 px whatever is open; its cards cut by the rim; the places at its right end ---- */
+.hand { grid-column: 1 / 4; grid-row: 2; position: relative; display: grid; grid-template-columns: var(--colw) minmax(0, 1fr) var(--rw); overflow: visible; background: var(--ork-room); }
+.h-plus { position: relative; z-index: 4; height: var(--hand); }
+.h-plus > .ork-card.ork-plus.hplus { position: absolute; left: 8px; bottom: -72px; width: var(--cw); height: var(--ch); transform: rotate(-6deg); color: var(--ork-action); border-color: var(--ork-action); }
+.hand { clip-path: inset(-260px 0 0 0); }
+.h-lanes { position: relative; height: var(--hand); overflow: hidden; }
+.stack { position: relative; padding: 12px 10px 0; }
+.stack .edges { margin-top: 2px; }
+.hc .hc-who { margin-top: auto; }
+.h-end { grid-column: 3; display: flex; justify-content: space-around; align-items: flex-end; padding: 0 6px 10px; }
+.h-end figure { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.h-end figcaption { font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-muted); }
+.book { display: grid; place-items: center; width: 28px; height: 36px; border: 1px dashed var(--ork-ink-faint); color: var(--ork-gilt); }
+.book .ork-sign.big { width: 20px; height: 20px; }
+.is-sunk { filter: grayscale(1); opacity: 0.45; }
+.hand.has-ways .h-lanes.is-sunk { transform: scale(0.3); transform-origin: 100% 100%; }
+.ways { position: absolute; left: 170px; bottom: 0; height: 160px; display: flex; gap: 10px; align-items: flex-start; z-index: 7; }
+.way { top: 52px; }
+.way.is-up { top: -50px; z-index: 2; }
+.way.is-pick { box-shadow: 0 0 0 2px var(--ork-ink); }
+.way-win { height: 54px; margin: 6px 0 4px; }
+.way-line { font: var(--ork-type-caption); font-size: 11px; line-height: 14px; color: var(--ork-ink-muted); }
+.way.is-pen { border-style: dashed; }
+.pick-head { position: absolute; right: 6px; bottom: 6px; }
+.way-acts { display: grid; gap: 6px; padding-top: 60px; }
+
+/* ---- the Orkmaster's news, a balloon from its crown over the start of the tabs ---- */
+.balloon { position: absolute; left: 172px; top: 8px; z-index: 9; display: flex; align-items: center; gap: 8px; width: 420px; padding: 8px 8px 8px 10px; font: var(--ork-type-caption); }
+.balloon p { flex: 1; }
+.balloon::before { content: ""; position: absolute; left: -9px; top: 18px; border: 5px solid transparent; border-right-color: var(--ork-edge); }
+.balloon .x .ork-icon { width: 12px; height: 12px; }
+/* a back's notch would clip the ring that says it is picked, thinking or alerting: those backs lose the notch */
+.fan-card.is-picked .sm-back, .sm-back.is-thinking, .sm-back.sig-alert-back { clip-path: none; }
