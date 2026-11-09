@@ -5,3 +5,6 @@
 /* the balloon lies over the first tabs: a press passes through its words to the tab under them; only its × takes a press */
 .table-balloon__line { margin: 0; flex: 1; min-width: 0; font: var(--ork-type-caption); }
 .table-balloon__x { flex: none; pointer-events: auto; }
+/* A tab's seat and pennant (table.css, look.css: z-index 1 and 2 over the root's layer) would stand over the column's layer and run over the balloon's words (a head's or a flag's pixels behind them keep no 4.5:1, decisions §275.1): while the balloon is up each tab is a layer of its own at 0,
+   under the column's, so the plate covers what it lies over. */
+.frame:has(.table-balloon) .table-tabcell { z-index: 0; }
