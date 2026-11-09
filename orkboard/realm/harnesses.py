@@ -11,6 +11,7 @@
     h.outcome(stdout, before, model)         # … priced from `model` when the tool prints tokens, no price
     harnesses.main(enabled, chosen, order)   # the tool decisions run on: the chosen one, else the first on in the person's order (`machine.tool_order`), else the registry's
     harnesses.for_party(installed, signed_out, main_id)   # the list a party's tool is picked from (spec 81 §1.4)
+    harnesses.can("codex", ["git"])          # whether a tool's working agent can do what a step needs (spec 168 C4): "browser", "git" (its index), "network", "command:<name>" (on the path)
     harnesses.model_on("agy", "haiku")       # a model or tier of any tool, on this one
     h.pick("elder")                          # … the model a run of it names: the newest of the family
 
@@ -29,6 +30,7 @@ theirs is re-exported here, so callers keep importing `harnesses`.
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable
@@ -156,6 +158,7 @@ class Harness:
     env_cmd: Callable[["Harness", str, str], dict] | None = None   # (h, ask|read|work, workdir) → variables
     commits: bool = True             # its working agent can run git in its sandbox (Codex's `workspace-write` cannot write git's index: spec 149 F.1)
     browsers: bool = True            # … and start a browser (Chromium aborts in Codex's sandbox)
+    network: bool = True             # … and reach the network (Codex's `workspace-write` sandbox has none: a step that fetches fails there, spec 168 C4)
     priced: bool = False             # its answers say what they cost
     model_priced: bool = False       # its result is priced from the model it ran on: result(stdout, before, model)
     # (h, prompt, workdir, model, allow) → argv: an agent allowed exactly the MCP tools in `allow` and
@@ -336,7 +339,7 @@ register(Harness(
     lambda h, p, w, m, web: codex_exec(h, "read-only", m, web),
     lambda h, p, w, m, r: codex_exec(h, "workspace-write", m, resume=r),
     result=codex_result, error=codex_error, resumable=True, stdin_prompt=True, deploys=True, web=True,
-    model_priced=True, commits=False, browsers=False, mark="⌬", color="bold #10a37f",
+    model_priced=True, commits=False, browsers=False, network=False, mark="⌬", color="bold #10a37f",
     # the catalog refreshed with its login, else the one its binary ships with
     models_cmd=lambda h: [[h.bin, "debug", "models"], [h.bin, "debug", "models", "--bundled"]],
     parse_models=model_families.parse_codex,
@@ -465,3 +468,31 @@ def model_on(harness_id: str, model: str) -> str:
         tier = tier_of_model(model)
         return h.models.get(tier, "") if tier else ""
     return model
+
+
+# -- what a step needs, and whether a tool can do it (spec 168 C4, decisions §283.16.6) ---------------------------------------------------
+
+NEEDS = ("browser", "git", "network")        # beside "command:<name>": a command on the machine's path
+
+
+def lacking(harness_id: str, needs: Iterable[str] | str, which: Callable[[str], str | None] = shutil.which) -> list[str]:
+    """The needs (in the order given) that a working agent of the tool cannot meet: `browser` (Codex's sandbox aborts Chromium), `git` (its sandbox cannot write git's index), `network` (it has
+    none), `command:<name>` (the command is not on the machine's path, whatever the tool). A tool the registry does not know, or none (the Main tool, not resolved yet), lacks nothing of the
+    first three: nothing is said of what is not known. ValueError for a need that is none of these."""
+    h = REGISTRY.get(harness_id) if harness_id else None
+    out: list[str] = []
+    for need in [needs] if isinstance(needs, str) else list(needs):
+        if need.startswith("command:") and need[8:]:
+            ok = which(need[8:]) is not None
+        elif need in NEEDS:
+            ok = h is None or {"browser": h.browsers, "git": h.commits, "network": h.network}[need]
+        else:
+            raise ValueError(f"A step needs one of {', '.join(NEEDS)} or command:<name>, not {need!r}")
+        if not ok and need not in out:
+            out.append(need)
+    return out
+
+
+def can(harness_id: str, needs: Iterable[str] | str, which: Callable[[str], str | None] = shutil.which) -> bool:
+    """Whether a working agent of the tool can do everything a step needs (see `lacking`)."""
+    return not lacking(harness_id, needs, which)

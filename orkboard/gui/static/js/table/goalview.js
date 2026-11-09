@@ -19,7 +19,7 @@ const SIGN_OF = (l) => (l.startsWith("+") ? "is-add" : l.startsWith("~") ? "is-c
 const Lines = ({ lines }) => html`<ul class="gv-lines">${lines.map((l, i) => html`<li key=${i} class=${SIGN_OF(l)}>${l}</li>`)}</ul>`;
 
 /** Design's screen, now and as it will be: the picture of the screen as it is (none for a new one), then a wireframe for the one that will be. */
-function Pair({ part, info }) {
+export function Pair({ part, info }) {
   const p = partFor(info, part.id), src = usePicture(p?.picture || null);
   return html`<div class="gv-pair"><figure><span class=${cls("gv-ph", { "is-none": !src })}>${src ? html`<img src=${src} alt=${`${part.name}, as it is now`} draggable="false" />` : html`<em>${part.kind === "new" ? "none" : "no picture yet"}</em>`}</span><figcaption>Now</figcaption></figure>
     <span class="gv-pair__arrow"><${Icon} name="arrow-right" /></span>

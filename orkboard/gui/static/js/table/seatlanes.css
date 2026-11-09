@@ -1,0 +1,17 @@
+/* The implementation through a leader (docs/specs/168 C4, decisions §283.16.8; seatlanes.js): lanes by its seats, left to right with an arrow between each. A lane's card is the lane card of the table's own (`.table-card--task`, 5 : 7 at the card
+   width); nothing here makes a size of its own. Layout only. */
+.seat-lanes { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-3); padding: var(--ork-3) var(--ork-2); }
+.seat-lane { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.seat-lane__hd { display: flex; flex-direction: column; gap: var(--ork-2); min-height: 40px; }
+.seat-lane__seats { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
+.seat-lane__seat { display: inline-flex; align-items: center; gap: var(--ork-1); color: var(--ork-ink-muted); }
+.seat-lane__seat .ork-race__head { width: auto; height: 16px; flex: none; }
+.seat-lane__cards { display: flex; flex-direction: column; gap: var(--ork-3); }
+.seat-lane__card { width: min(var(--card-w, 144px), 100%); flex: none; }
+.seat-lane__none { margin: 0; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.seat-arrow { align-self: center; display: inline-flex; margin-top: var(--ork-8); color: var(--ork-ink-muted); }
+.seat-arrow .ork-icon { width: 21px; height: 21px; }
+.seat-accept { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); margin: 0; padding: var(--ork-3); width: min(var(--card-w, 144px), 100%); box-sizing: border-box; text-align: center; border: var(--ork-line) solid var(--ork-frame); }
+.seat-accept.is-now { border-color: var(--ork-ink); }
+.seat-accept.is-done { border-color: var(--ork-success); }
+.seat-accept .cap { color: var(--ork-ink-muted); }

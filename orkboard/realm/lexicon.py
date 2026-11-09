@@ -374,6 +374,15 @@ TERMS: tuple[Term, ...] = (
     _t("judge_again", "Judge again now"),                          # the Orkmaster's table of an idea: the leaders that doubted, said no, were turned down or were touched judge it again (spec 168 C2, decisions §283.25)
     _t("say_needs", "Needs your answer"),                          # a leader's table of an idea: what its risks, conflicts and questions ask of the person (spec 168 C1, decisions §283.23)
     _t("say_better", "Could be better"),                           # … and its improvements, each a line of the goal rewritten (spec 168 C1)
+    _t("say_verdict", "Its verdict"),                              # a leader's table of an idea: the group that holds the leader's own card, its sign (spec 168 C4, decisions §284.1)
+    _t("say_undo", "Undo"),                                        # the Orkmaster's rewrite of the goal's words, put back exactly as they were (spec 168 C4, decisions §283.24)
+    _t("step_lacks", "its tool cannot do what this step needs"),    # a seat marked ! on a spec's header of steps (spec 168 C4, decisions §283.16.6)
+    _t("spec_now", "Now"),                                         # a spec's part as it is, and ...
+    _t("spec_will", "As it will be"),                              # ... as the goal will leave it (spec 168 C4, decisions §283.16.6)
+    _t("lane_makes", "Those who make"),                            # the implementation's lanes by seats: who makes, ... (spec 168 C4, decisions §283.16.8)
+    _t("lane_checks", "Those who check"),                          # ... who checks, ...
+    _t("lane_accepts", "Acceptance"),                              # ... the leader's acceptance of the step ...
+    _t("lane_sent_back", "Sent back"),                             # ... and the tasks sent back after it
     _t("hearing", "hearing", "hearings"),                         # a goal's card in the middle and the sides its leaders argue, thrown to the one the person takes (spec 120 §1); not a fork, which stays two sections that disagree, nor a council, the Review board's
     _t("sketch", "sketch", "sketches"),                            # a goal's throwaway variants, made by its craft's leader before its spec is written, touched and one picked (spec 121 §1); not a pick, which a task makes inside the work, nor a mockup, the word of the docs' own drawings
     _t("out_of_contract", "out of the contract"),                 # a task whose work goes past what its section promised: it waits for the person
