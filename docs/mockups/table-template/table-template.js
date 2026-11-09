@@ -197,7 +197,7 @@ function hand(ways) {
   const die = `<span class="ork-die small face-play" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span>`;
   const book = `<span class="book" aria-hidden="true"></span>`;   // a closed book; orkUI draws it (and open, while the history is on the table)
   // the places, one size, each changing the table (§285.3): Play, the inventory, the history
-  const end = `<div class="h-end${ways ? " is-lifting" : ""}"><figure><span class="place">${die}</span><figcaption>Play</figcaption></figure><figure><span class="place"><span class="ork-pack" aria-hidden="true"></span></span><figcaption>Inventory</figcaption></figure><figure><span class="place">${book}</span><figcaption>History</figcaption></figure></div>`;
+  const end = `<div class="h-end${ways && scene !== "inventory" ? " is-lifting" : ""}"><figure><span class="place">${die}</span><figcaption>Play</figcaption></figure><figure><span class="place"><span class="ork-pack${scene === "inventory" ? " is-open" : ""}" aria-hidden="true"></span></span><figcaption>Inventory</figcaption></figure><figure><span class="place">${book}</span><figcaption>History</figcaption></figure></div>`;
   const row = `<div class="h-lanes lanes-grid${ways ? " is-sunk" : ""}">${ORDER.map((p) => `<div class="stack">${stacks[p] ? edges(p === "tech" ? 2 : 1) + stacks[p] : ""}</div>`).join("")}</div>`;
   return `<footer class="hand bronze${ways ? " has-ways" : ""}" aria-label="The hand"><div class="h-plus${ways ? " is-sunk" : ""}">${plus}</div>${row}${ways || ""}${end}</footer>`;
 }
@@ -242,6 +242,59 @@ function gallery() {   // every way of the first sheet as a card on the table, a
   return `<div class="gallery">${Object.keys(PIC).map((id) => `<figure>${wayCard(id)}<figcaption>${id}</figcaption></figure>`).join("")}</div>`;
 }
 
+// ---- the inventory as slots (§283.30–31, H1–H2), with the owner's second sheet (pictures/settings/) ----------------------
+const SLOTS = [
+  { key: "deep", label: "How deep", at: 1, ways: [
+    ["thrift", "Thrift", "Every step on the cheaper tier; a spec reads less.", "−4% a week"],
+    ["balance", "Balance", "Each step on its usual tier.", "Yours"],
+    ["quality", "Quality", "Specs and acceptances on the elder tier.", "+6% a week"]], cheaper: true, star: 1 },
+  { key: "start", label: "The build starts", at: 2, ways: [
+    ["at-once", "At once", "A spec agreed starts its build with no wait.", "same"],
+    ["in-30-min", "In 30 min", "A spec waits half an hour for your look.", "same"],
+    ["in-2-hours", "In 2 hours", "A spec waits 2 hours for your look, then starts.", "Yours"],
+    ["tonight", "Tonight", "Specs agreed by day are built in the night's window.", "−2% a week"],
+    ["by-hand", "By hand", "Nothing is built until you press Start.", "same"]], cheaper: true, star: 3 },
+  { key: "night", label: "The night", at: 1, ways: [
+    ["night-off", "Off", "Nothing runs at night.", "−3% a week"],
+    ["night-ideas", "Ideas and specs", "Talk and specs of the goals in line; nothing built.", "Yours"],
+    ["night-builds", "And the builds", "What was agreed by day is built at night.", "+5% a week"],
+    ["night-proposals", "And proposals", "The leaders you pick may propose a goal each, to a ready spec.", "+7% a week"]], star: 2 },
+  { key: "lands", label: "Lands in dev by itself", at: 0, ways: [
+    ["lands-on", "On", "A green result goes into dev with no press.", "Yours"],
+    ["lands-off", "Off", "A green result waits in the discard for your press.", "same"]], star: 0 },
+  { key: "push", label: "Push", at: 1, ways: [
+    ["push-no", "No", "Nothing leaves this computer.", "same"],
+    ["push-main", "Main only", "Main is pushed after To main; dev stays here.", "Yours"],
+    ["push-both", "Dev and main", "Dev and main are pushed after each merge.", "same"]], star: 1 },
+  { key: "parallel", label: "Goals at once", at: 0, ways: [
+    ["goals-one", "One", "One goal's work at a time.", "Yours"],
+    ["goals-few", "Three", "Up to three goals' work side by side.", "+8% a week"],
+    ["goals-many", "Eight", "Up to eight goals at once, while the limits hold.", "+20% a week"]], star: 0 },
+];
+const pips = (n, at) => `<span class="pips">${Array.from({ length: n }, (_, i) => `<i class="${i === at ? "is-on" : ""}"></i>`).join("")}</span>`;
+function slotCard(sl, pressed) {
+  const [id, name, line, price] = sl.ways[sl.at];
+  return `<figure class="slot${pressed ? " is-pressed" : ""}"><span class="ork-plaque slot-label">${sl.label}</span>
+    <article class="hc way pic-way slot-card${pressed ? " sig-alert" : ""}" data-el="meadow"><div class="bc-top">${pips(sl.ways.length, sl.at)}${sl.cheaper ? `<span class="cheaper" title="A cheaper way exists">${icon("coins")}</span>` : ""}</div>
+    <div class="way-pic"><img src="pictures/settings/${id}.png" alt=""></div><p class="bc-t">${name}</p><p class="way-line">${line}</p>
+    <div class="bc-foot"><span></span><span class="bc-much">${price === "Yours" ? "as set" : price}</span></div></article></figure>`;
+}
+function invWay(sl, i, up) {
+  const [id, name, line, price] = sl.ways[i];
+  const yours = i === sl.at, star = i === sl.star;
+  return `<article class="hc way pic-way${up ? " is-up" : ""}${yours ? " is-yours" : ""}" data-el="meadow"><div class="bc-top"><span class="yours">${yours ? "Yours" : ""}</span>${star ? `<span class="star" title="The Orkmaster's pick">${sign("pick")}</span>` : ""}</div>
+    <div class="way-pic"><img src="pictures/settings/${id}.png" alt=""></div><p class="bc-t">${name}</p><p class="way-line">${line}</p>
+    <div class="bc-foot inv-foot"><span></span><span class="bc-much">${yours ? "" : price}</span></div></article>`;
+}
+function inventory() {
+  const key = Q.get("slot") || "deep";
+  const row = `<div class="slots">${SLOTS.map((sl) => slotCard(sl, sl.key === key)).join("")}</div>`;
+  const sl = SLOTS.find((x) => x.key === key);
+  const up = sl.ways.findIndex((w, i) => i !== sl.at);
+  const hand = `<div class="ways inv-ways">${sl.ways.map((w, i) => invWay(sl, i, i === up)).join("")}<div class="way-acts"><button class="ork-btn quiet" type="button">Undo</button><button class="ork-btn quiet" type="button">Put it back</button></div></div>`;
+  return { row, hand };
+}
+
 const BALLOON = `<div class="balloon ork-frame" role="status">${head("peon-crown", "hd16")}<p>Claude Code is out until Thu 18:00: the work goes on with Codex.</p><button class="ork-btn quiet" type="button">Show</button><button class="ork-btn quiet x" type="button" aria-label="Close">${icon("close")}</button></div>`;
 
 // ---- the window -----------------------------------------------------------------------------------------------------------
@@ -256,10 +309,11 @@ function win() {
   }
   if (scene === "leader") { open = "tech"; party = "tech"; body = leaderTable(); }
   if (scene === "pictures") { open = "tech"; party = "tech"; body = gallery(); }
+  if (scene === "inventory") { const inv = inventory(); body = inv.row; ways = inv.hand; ttl = `<div class="pane-title ork-plate"><b>Inventory</b><span class="through">· how the project is set · the whole project</span></div>`; }
   return `<div class="win" data-scene="${scene}">
     ${column(picked)}
     <main class="table"><div class="table-top">${tabs(open, off)}</div>
-      <div class="pane ork-table" data-party="${party}">${ttl}<div class="pane-body">${body}</div>${lifted}</div></main>
+      <div class="pane ork-table${scene === "inventory" ? " ork-leather" : ""}" data-party="${party}">${ttl}<div class="pane-body">${body}</div>${lifted}</div></main>
     ${rightColumn()}
     ${hand(ways)}
     ${balloon ? BALLOON : ""}

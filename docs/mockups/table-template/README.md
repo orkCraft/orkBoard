@@ -26,6 +26,7 @@ Pictures: `shots/`, made by `shoot.py`, each at 1366 × 768 (the laptop the deci
 | `10-ask-tech-pictures` | `?scene=ask&pics=1` | **The ways with the owner's pictures** (§283.34, the first sheet of `docs/pictures-wanted.md`, cut into `pictures/`): Tech's conflict lifted, its ways *The new one replaces §208*, *Keep §208* (risen, Tech's pick), *Tech decides*, *Your own words…*, each read **picture first**: its corners, the picture, then its name and its line, so the rim shows the picture and the first words of the name at rest. |
 | `11-ask-risk-pictures` | `&card=risk` | The risk lifted: *Keep the last answer only* (mitigate, Tech's pick), *Accept the risk* (risen), *Do the smaller one*, *Later*, *Your own words…*. |
 | `12-ways-pictures` | `?scene=pictures` | The sheet's sixteen ways as cards on the table at the size they are played (1440 × 900), each with its `way_kind`. |
+| `13-inventory-deep`, `14-inventory-start` | `?scene=inventory&slot=deep\|start` | **The Orkmaster's inventory as slots** (§283.30–31) with the owner's second sheet (`pictures/settings/`): the table in its leather, a row of six slots, each its chosen way as a card read picture first under its label (*How deep*, *The build starts*, *The night*, *Lands in dev by itself*, *Push*, *Goals at once*), its ways' pips, a coin where a cheaper way exists; the slot pressed is ringed and its ways are the hand, *Yours* marked, the Orkmaster's pick starred, each with what it changes in the week, *Undo* and *Put it back*. The backpack drawn open. |
 
 ## What it found
 
