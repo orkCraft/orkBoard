@@ -5,6 +5,7 @@ words against the titles and words of the goals lying face down before their spe
     goal_match.candidates(root, state_dir)                  # the goals face down before their spec, in the Orkmaster's order: [{slug, title, party, state}]
     goal_match.fits(root, state_dir, slug, text, parties)   # joining `text` into goal `slug` stays small: at most one party added to its route, its words under JOIN_CHARS
     goal_match.match(root, state_dir, text, route, marks=(), home="")   # the best candidate: {idea, title, party, state, shared, score, why, adds}, None for none
+    goal_match.like(root, state_dir, slug, limit=3)         # the goals of the pile that look like goal `slug`: [{idea, title, party, score}], what a leader is told in Talk (spec 168 C1)
 
 The score is Dice's over the two sets of words (`2·|shared| / (|A| + |B|)`); the bar it must reach falls where the routes name the same parties and where both point at the same
 place of a map. One match at most. Where a goal is offered is `candidates`' rule: before its sections (`goal_refine.in_analysis`), never a pitch, a release, or a decision put off.
@@ -66,6 +67,30 @@ def candidates(root: Path, state_dir: Path) -> list[dict]:
             continue
         out.append({"slug": i["slug"], "title": i["title"], "party": i["track"], "state": st["state"], "_at": order.get(i["slug"], len(order) + 1)})
     return [{k: v for k, v in c.items() if k != "_at"} for c in sorted(out, key=lambda c: c["_at"])]
+
+
+def like(root: Path, state_dir: Path, slug: str, limit: int = 3) -> list[dict]:
+    """The goals of the face-down pile that look like goal `slug` (decisions §242.1, §283.23), the same words and bars as `match`, the goal itself left out and no `fits` asked: a leader is told
+    them so that it can say a goal rests on another. `[{idea, title, party, score}]`, the best first, at most `limit`; none for a goal that is gone or says too little."""
+    page = ideas.idea_page(root, slug)
+    if page is None:
+        return []
+    mine = words(f"{page.title} {page.section('Gist')}")
+    parties = _route_parties(state_dir, slug, str(page.get("track") or ""))
+    found = []
+    for n, c in enumerate(candidates(root, state_dir)):
+        other = ideas.idea_page(root, c["slug"]) if c["slug"] != slug else None
+        if other is None:
+            continue
+        theirs = words(f"{c['title']} {other.section('Gist')}")
+        shared = mine & theirs
+        if len(shared) < MIN_SHARED:
+            continue
+        score = 2 * len(shared) / (len(mine) + len(theirs))
+        same_route = bool(parties) and set(parties) == set(_route_parties(state_dir, c["slug"], c["party"]))
+        if score >= (BAR_ROUTE if same_route else BAR):
+            found.append((-score, n, {"idea": c["slug"], "title": c["title"], "party": c["party"], "score": round(score, 3)}))
+    return [f[2] for f in sorted(found, key=lambda f: (f[0], f[1]))[:limit]]
 
 
 def _route_parties(state_dir: Path, slug: str, home: str) -> list[str]:

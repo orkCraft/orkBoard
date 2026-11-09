@@ -265,7 +265,7 @@ def test_the_row_is_the_stances_and_the_cards(host, parties, model):
     row = _row(host, slug, "talk")
     assert row["round"] == 1 and [s["party"] for s in row["stances"]] == [parties["product"], parties["tech"]]
     assert row["stances"][0] == {"party": parties["product"], "leader": "product-manager", "stance": "product stance", "for": "product for", "against": "product against",
-                                 "verdict": "go", "why": "", "instead": "", "after": "", "craft": "product", "weigher": False, "priority": "", "risk": "", "check": ""}      # no verdict in the answer reads as go (spec 108 §4.1)
+                                 "verdict": "go", "why": "", "instead": "", "after": "", "craft": "product", "weigher": False, "priority": "", "risk": "", "check": "", "needs": [], "better": []}      # no verdict in the answer reads as go (spec 108 §4.1)
     first = row["questions"][0]
     assert first == {"id": f"r1-{parties['product']}-1", "by": parties["product"], "leader": "product-manager", "q": "product question 0", "choices": ["A", "B"], "pick": 0,
                      "why": "because", "project": False}
@@ -764,7 +764,7 @@ def test_not_now_is_offered_for_a_product_no_that_names_a_goal_in_line_and_the_g
     slug = _talk(host, parties, ["product", "tech"], "add a dark mode option")
     by = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
     assert first in by[parties["product"]] and "add a lobby for the party game" in by[parties["product"]] and "The goals in line" in by[parties["product"]]
-    assert first not in by[parties["tech"]] and "The goals in line" not in by[parties["tech"]]                        # only Product weighs the goal against the line
+    assert first in by[parties["tech"]] and "`after` (with a `no` only" not in by[parties["tech"]]                  # every leader is told the goals in line (spec 168 C1), only Product weighs the goal against them (the `after` rule)
     assert slug not in by[parties["product"]].split("The goals in line")[1].split("Rules:")[0]                       # the goal itself is not in line
     (row,) = _objections(host, slug)
     side = next(x for x in row["sides"] if x["kind"] == "later")
@@ -881,7 +881,7 @@ def test_each_assumes_is_kept_as_a_proposed_hypothesis_of_the_leader_that_rests_
         "Founders want a sketch first", "five of five ask for it", "proposed", "leader", parties["product"], [slug], [])
     assert (second["text"], second["state"], second["by"], second["party"], second["rests"]) == ("The canvas holds a thousand shapes", "proposed", "leader", parties["tech"], [slug])
     row = _row(host, slug, "talk")
-    assert [set(s) for s in row["stances"]] == [{"party", "leader", "craft", "weigher", "stance", "for", "against", "verdict", "why", "instead", "after", "priority", "risk", "check"}] * 3         # Talk's row is as it was, and says whose weight a stance has
+    assert [set(s) for s in row["stances"]] == [{"party", "leader", "craft", "weigher", "stance", "for", "against", "verdict", "why", "instead", "after", "priority", "risk", "check", "needs", "better"}] * 3         # Talk's row is as it was, and says whose weight a stance has
 
 
 def test_a_bare_line_is_kept_with_a_signal_of_its_own_words_for_when_none_was_given(host, parties, model):

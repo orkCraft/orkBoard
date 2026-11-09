@@ -16,6 +16,7 @@ from typing import Any, Callable
 
 from orkboard.realm import (board_back, board_in_code, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_phase, goal_place, goal_route, goal_take, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, lexicon, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
+from orkboard.realm import idea_say
 from orkboard.realm.idea_words import CARD_LINE_CHARS, short_of
 
 NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "conflict", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change", "spec_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
@@ -502,6 +503,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "element": st.get("element") or "", "hue": idea_element.hue_in(st), "flag": (flag := flag_of(state_dir, slug, held)), "type": type_of(st),
                     "route": idea_route.route(root, state_dir, slug, page=page, st=st, plan=plan, held=held, flag=flag),
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,
+                    "say": idea_say.node(root, state_dir, slug),          # each leader of the route: its verdict, its needs and its better, taken or not; the rewrite, the fork, the judging again (spec 168 C1, C2)
                     "release": release_of(releasing.get(slug)), "back": board_back.of(root, state_dir, slug, st, settings),         # the goal's card face down at the Orkmaster (spec 120 §6.3)
                     "held_until": r["held_until"], **({"held_for": r["held_for"]} if r.get("held_for") else {}),
                     **({"busy": st["busy"]} if st.get("busy") == "accepting" and r["state"] == "working" else {}),      # its leader accepts the step now (spec 152 B.5): a busy run the host knows, its `state` stays `working`
