@@ -207,8 +207,8 @@ def test_the_worker_keeps_every_file_it_lists_and_with_the_computer_away_the_app
     pg = app.open()
     app.ready()
     pg.evaluate("() => navigator.serviceWorker.ready.then(() => true)")
-    pg.wait_for_function("async () => (await caches.keys()).includes('orkcraft-app-v105') && (await (await caches.open('orkcraft-app-v105')).keys()).length > 200", timeout=WAIT_MS * 3)
-    kept = pg.evaluate("async () => (await (await caches.open('orkcraft-app-v105')).keys()).map((r) => new URL(r.url).pathname)")
+    pg.wait_for_function("async () => (await caches.keys()).includes('orkcraft-app-v106') && (await (await caches.open('orkcraft-app-v106')).keys()).length > 200", timeout=WAIT_MS * 3)
+    kept = pg.evaluate("async () => (await (await caches.open('orkcraft-app-v106')).keys()).map((r) => new URL(r.url).pathname)")
     have = set(kept)
     assert {f"/app/{name}" for name in pwa.page_shell()} <= have                 # the page's files, as sw.js was told them
     assert {"/app/", "/app/frame.js", "/app/frame.css", "/app/old.html", "/app/board-app.js"} <= have

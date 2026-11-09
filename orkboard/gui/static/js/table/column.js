@@ -15,7 +15,7 @@ import { askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { GoalMenu } from "./dropgoal.js";
 import { liftDecision } from "../hand/state.js";
 import { Said } from "../hand/sayonce.js";
-import { Pile, PILES, WORK_SHOWN, lookAt, nextWords, pilesOf, underOf } from "./piles.js";
+import { Pile, PILES, WORK_SHOWN, atWorkWords, lookAt, nextWords, pilesOf, underOf, writing, writingWords } from "./piles.js";
 import { giveWay } from "./giveway.js";
 import { useColumnMotion } from "./colmotion.js";
 import { moodOf } from "./moods.js";
@@ -79,6 +79,13 @@ function Acts({ n, off, pile, place, close }) {
       <h3 class="col-lift__t"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} />${title}</h3>
       ${!holdWords(n) && !offWords(n) && html`<p class="col-lift__cap">Face down: its spec is not written yet.</p>`}${holdWords(n) && html`<p class="col-lift__cap" data-hold=${n.slug}>${holdWords(n)}</p>`}${offWords(n) && html`<p class="col-lift__cap" data-off=${n.slug}>${offWords(n)}</p>`}
       <div class="col-lift__acts">${waitRuns(n) && html`<${Agreed} n=${n} close=${close} />`}${n.held_for === "hold" && html`<${Talk} n=${n} close=${close} />`}<${GoalMenu} slug=${n.slug} where="inline" /></div>
+    </div>`;
+  }
+  if (pile === "review" && writing(n)) {                                      // its spec is being written (Specs): nothing to start or hold yet, only its menu
+    return html`<div class="ork-frame col-lift col-acts" role="dialog" aria-label=${`${n.title}: its spec`} data-lift="acts" data-goal=${n.slug} style=${place}>
+      <h3 class="col-lift__t"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} />${title}</h3>
+      <p class="col-lift__cap" data-writing=${n.slug}>${n.state === "planning" ? "The Orkmaster is writing its spec." : "Its leaders are writing its spec."}</p>
+      <div class="col-lift__acts"><${GoalMenu} slug=${n.slug} where="inline" /></div>
     </div>`;
   }
   const cap = off === "held" ? "Held: nothing starts it until you press Start now." : off === "night" ? `Later, tonight ${String(board.value?.night || "01:00-07:00").split("-")[0]}: it starts by itself in the night's window.`
@@ -154,11 +161,12 @@ export function Column() {
   }, []);
   const place = useBeside(root, `${lift?.kind}:${lift?.slug}`, `.col-card[data-goal="${lift?.slug}"]`);
   const behind = piles.analysis.find(({ n }) => askedWords(n.slug));                                          // a goal asked of another leader: its line is the pile's (a back of the hand has no room to say it)
-  const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: nextWords(piles.review), work: "" }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
+  const wrote = writingWords(piles.review), next = nextWords(piles.review);                                  // Specs: what is being written, then (a second line) the next to start by itself
+  const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: wrote || next, work: atWorkWords(piles.work) }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
   return html`<div class="col" ref=${root} data-col="1">
     <${Top} parties=${parties} all=${all} />
     <${SetupBubble} />
-    ${laid && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : ""} onPress=${press} way=${id === "work" ? way : null} />`)}</div>`}
+    ${laid && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : id === "review" && wrote ? next : ""} onPress=${press} way=${id === "work" ? way : null} />`)}</div>`}
     <${Passing} />
     ${item && !gone && html`<${Acts} n=${item} off=${lift.off} pile=${lift.pile} place=${place} close=${() => setLift(null)} />`}
   </div>`;

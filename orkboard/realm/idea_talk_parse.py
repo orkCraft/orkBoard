@@ -4,6 +4,7 @@ round or a bug's diagnosis keeps is what these functions let through. Pure code,
     clean_round(answer, party, leader, rnd, first, known, line, craft="", again=False)     # {stance, for, against, verdict, why, instead, after, priority, risk, assumes, cards: [(card, blocks, key)], more, rejudged}, or None; the second round has no stance, verdict or assumes (unless `again`)
     clean_judgement(answer, craft, line)                      # a verdict alone, after the answers or from Product weighing a goal: {verdict, why, instead, after, priority, risk}, or None (spec 120 §3)
     clean_assumes(value)                                      # what a leader assumes about a goal: {text, signal} (a line each, 200 characters) or {} (spec 116 §3)
+    clean_needs(value, party) / clean_better(value, party)    # a leader's say beside its verdict (spec 168 C1, decisions §283.23): at most three needs {id, kind, line, rests_on, ways}, at most three better {id, line, weight}
     pick_three(pool)                                          # the Orkmaster's rule for the three of all the leaders' cards: (chosen, closed)
     clean_diagnosis(answer, party, leader, root, first, known, again=False)    # a bug's {cause, where: [path], cards}, or None
     touched(root, text, limit) / failure_lines(text)          # the files a report names; its failure's lines
@@ -11,7 +12,7 @@ round or a bug's diagnosis keeps is what these functions let through. Pure code,
 """
 from __future__ import annotations
 
-from orkboard.realm.seat_talk_limits_rules import LINE, MAX_GOAL, MAX_PROJECT
+from orkboard.realm.seat_talk_limits_rules import LINE, MAX_BETTER, MAX_GOAL, MAX_NEEDS, MAX_PROJECT, MAX_WAYS, NEED_KINDS, WEIGHTS
 
 import re
 from pathlib import Path
@@ -31,6 +32,8 @@ FAILURE_LINES, FAILURE_CHARS = 12, 1500
 FACT_ROOM = 20                     # the least of a question kept with its answer as a fact
 _KEY = re.compile(r"[a-z0-9_]{1,40}")
 _FAIL = re.compile(r"Traceback \(most recent call last\)|^\s*at\s+\S.*:\d+|\bFAILED\b|\b\w*Error:|File \".*\", line \d+", re.M)
+_ROOT = re.compile(r"§\s?\d+(?:\.\d+)*|[A-Za-z0-9][\w.:/-]{0,79}")      # what a need rests on: a §N, a goal's slug or a part's id
+WAY_NAME = 60                      # a way's name, at most
 _PATH = re.compile(r"(?<![\w.-])(/?(?:[\w.-]+/)*[\w.-]+\.[A-Za-z0-9]{1,8})(?::\d+)?")
 
 
@@ -128,18 +131,59 @@ def clean_assumes(value: object) -> dict:
     return {"text": text, "signal": _line(value.get("signal"))} if text else {}
 
 
+def _ways(raw: object) -> list[dict]:
+    """The ways out of a need, strictly: at most `MAX_WAYS`, each `{name, line}` with a name (`WAY_NAME` characters) and a line (`LINE`, may be empty); the same name once."""
+    out: list[dict] = []
+    for w in raw if isinstance(raw, list) else []:
+        name = _line(w.get("name"), WAY_NAME) if isinstance(w, dict) else ""
+        if name and len(out) < MAX_WAYS and all(o["name"].lower() != name.lower() for o in out):
+            out.append({"name": name, "line": _line(w.get("line"))})
+    return out
+
+
+def clean_needs(raw: object, party: str = "") -> list[dict]:
+    """What a leader says needs the person's answer (decisions §283.23), strictly: at most `MAX_NEEDS` of `{id, kind, line, rests_on, ways}`. A need of a kind out of `NEED_KINDS`, with no line,
+    or past the bound is dropped; `line` is cut at `LINE`; `rests_on` is a §N, a slug or a part's id (what is none reads ""); `ways` as `_ways`. `id` is code's: `n-<party>-<k>`."""
+    out: list[dict] = []
+    for item in raw if isinstance(raw, list) else []:
+        if not isinstance(item, dict) or len(out) >= MAX_NEEDS:
+            continue
+        kind = str(item.get("kind") or "").strip().lower()
+        line = _line(item.get("line"))
+        if kind not in NEED_KINDS or not line:
+            continue
+        on = " ".join(str(item.get("rests_on") or "").split())
+        out.append({"id": f"n-{party}-{len(out) + 1}", "kind": kind, "line": line, "rests_on": on if _ROOT.fullmatch(on) else "", "ways": _ways(item.get("ways"))})
+    return out
+
+
+def clean_better(raw: object, party: str = "") -> list[dict]:
+    """What a leader says would make the goal better (decisions §283.23), strictly: at most `MAX_BETTER` of `{id, line, weight}`, a line of the goal rewritten (cut at `LINE`) and how it weighs
+    (`WEIGHTS`). One with no line or a weight out of the set is dropped. `id` is code's: `b-<party>-<k>`."""
+    out: list[dict] = []
+    for item in raw if isinstance(raw, list) else []:
+        if not isinstance(item, dict) or len(out) >= MAX_BETTER:
+            continue
+        weight = str(item.get("weight") or "").strip().lower()
+        line = _line(item.get("line"))
+        if weight in WEIGHTS and line and all(o["line"].lower() != line.lower() for o in out):
+            out.append({"id": f"b-{party}-{len(out) + 1}", "line": line, "weight": weight})
+    return out
+
+
 def clean_round(answer: object, party: str, leader: str, rnd: int, first: bool, known: set[str], line: Iterable[str] = (), craft: str = "", again: bool = False) -> dict | None:
-    """One leader's answer to a round, strictly: `{stance, for, against, verdict, why, instead, after, priority, risk, assumes, cards: [(card, blocks, key)], more, rejudged}`; None when it is no object, or says no
+    """One leader's answer to a round, strictly: `{stance, for, against, verdict, why, instead, after, priority, risk, assumes, needs, better, cards: [(card, blocks, key)], more, rejudged}`; None when it is no object, or says no
     stance in the first round. `assumes` is `{text, signal}` or `{}` (`clean_assumes`). The second round has no stance, no verdict and no question about the project, unless it was asked to judge
     again (`again`: its verdict is then taken and `rejudged` is true; spec 120 §3.2); `more` is the leader asking for a second round (the first round's).
     `line`: the slugs of the goals in line the leader was given (a `no` may name one as `after`). `craft`: the leader's party's craft, which says whether it gives a `priority` or a `risk` (`clean_weight`)."""
     if not isinstance(answer, dict):
         return None
-    out: dict[str, Any] = {"stance": "", "for": "", "against": "", "verdict": "go", "why": "", "instead": "", "after": "", "priority": "", "risk": "", "assumes": {},
+    out: dict[str, Any] = {"stance": "", "for": "", "against": "", "verdict": "go", "why": "", "instead": "", "after": "", "priority": "", "risk": "", "assumes": {}, "needs": [], "better": [],
                            "more": rnd == 1 and answer.get("second_round") is True, "rejudged": rnd == 2 and again}
     if rnd == 1:
         out.update({"stance": _line(answer.get("stance")), "for": _line(answer.get("for")), "against": _line(answer.get("against")), **clean_verdict(answer, line),
-                    **clean_weight(answer, craft), "assumes": clean_assumes(answer.get("assumes"))})
+                    **clean_weight(answer, craft), "assumes": clean_assumes(answer.get("assumes")),
+                    "needs": clean_needs(answer.get("needs"), party), "better": clean_better(answer.get("better"), party)})
         if not out["stance"]:
             return None
     elif again:

@@ -29,7 +29,7 @@ export function waitTool(n, dflt = defaultTool(), now = Date.now()) {
 /** The goal that moves when none is picked: the first at work in the column's order (`pilesOf`): in In analysis the one the Orkmaster or its leaders are on (`ACTIVE`: reading, writing, in Talk), then the ones at work (not put off). */
 export function firstAtWork(nodes) {
   const piles = pilesOf(nodes);
-  return (piles.analysis.find((x) => ACTIVE.includes(x.n.state)) || piles.work.find((x) => !x.off))?.n.slug || "";
+  return ([...piles.analysis, ...piles.review].find((x) => ACTIVE.includes(x.n.state)) || piles.work.find((x) => !x.off))?.n.slug || "";
 }
 
 const mover = computed(() => picked.value || firstAtWork(mapData.value?.nodes));

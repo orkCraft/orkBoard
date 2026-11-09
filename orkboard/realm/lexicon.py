@@ -349,6 +349,12 @@ TERMS: tuple[Term, ...] = (
     _t("column_reading", "reading"),                                # the goal the Orkmaster or its leaders are on, under *In analysis*
     _t("next_in", "next in"),                                       # the next to start by itself and the time left, under *To review*
     _t("next_at", "next at"),                                       # the same for a spec that waits for its look: the clock time it starts at
+    # the Orkmaster's piles are the goal's stages (spec 168 B1, decisions §283.11–§283.12; table/stages.js `PILES`); the phone's menu keeps the old three (table/oldpiles.js)
+    _t("pile_ideas", "Ideas", "", "In analysis"),                    # the goals the Orkmaster reads and routes, in Talk, an agreed decision's wait: the fan of small backs
+    _t("pile_specs", "Specs", "", "To review"),                     # the sections being written, the plan, the look's wait: a squared deck of small backs on their side
+    _t("pile_implementation", "Implementation", "", "At work · later"),   # the goals at work (held after the spec or waiting for the night at the foot): the cascade of standing cards
+    _t("column_writing", "writing"),                                # the spec being written, under *Specs*: *writing: Round timer*
+    _t("column_at_work", "at work"),                                # the goal at work, under *Implementation*: *at work: Round timer*
     # a party's tab greyed while a goal is picked that its route does not pass (spec 156 B.5, decisions §261.3, §261.15; table/tabs.js): *Product is not on this goal. Press to leave it and look at Product's table.*
     _t("tab_off_is", "is not on this goal"),
     _t("tab_off_press", "Press to leave it and look at"),
@@ -365,7 +371,10 @@ TERMS: tuple[Term, ...] = (
     _t("my_hours", "When I am at the computer"),                  # Settings: the person's days and hours (spec 138 B.1, decisions §245.5); empty, nothing changes
     _t("not_before", "not before"),                                # a goal put off, on its row: *not before 14:05* (spec 138 B.5, decisions §245.4)
     _t("work_goes_on", "the work goes on at"),                     # a goal at work held by a spent window, on its row: *the work goes on at 14:00* (spec 138 B.5)
-    _t("hearing", "hearing", "hearings"),                          # a goal's card in the middle and the sides its leaders argue, thrown to the one the person takes (spec 120 §1); not a fork, which stays two sections that disagree, nor a council, the Review board's
+    _t("judge_again", "Judge again now"),                          # the Orkmaster's table of an idea: the leaders that doubted, said no, were turned down or were touched judge it again (spec 168 C2, decisions §283.25)
+    _t("say_needs", "Needs your answer"),                          # a leader's table of an idea: what its risks, conflicts and questions ask of the person (spec 168 C1, decisions §283.23)
+    _t("say_better", "Could be better"),                           # … and its improvements, each a line of the goal rewritten (spec 168 C1)
+    _t("hearing", "hearing", "hearings"),                         # a goal's card in the middle and the sides its leaders argue, thrown to the one the person takes (spec 120 §1); not a fork, which stays two sections that disagree, nor a council, the Review board's
     _t("sketch", "sketch", "sketches"),                            # a goal's throwaway variants, made by its craft's leader before its spec is written, touched and one picked (spec 121 §1); not a pick, which a task makes inside the work, nor a mockup, the word of the docs' own drawings
     _t("out_of_contract", "out of the contract"),                 # a task whose work goes past what its section promised: it waits for the person
     _t("release_version", "Release a version"),                    # the Release party's act: a version goes out (not a step of a route)

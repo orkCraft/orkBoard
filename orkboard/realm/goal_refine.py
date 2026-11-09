@@ -4,12 +4,15 @@ decision is confirmed and the sections are written. Pure code, no model, no face
     goal_refine.in_analysis(state_dir, slug)             # True while the goal is `raw`, `routed`, `talk`, or `decided` with its entry not confirmed
     goal_refine.words(page)                              # the goal's own words: its *Asked* section when it has one, else its Gist
     goal_refine.added(text)                              # the line a person's added words are kept as: `Added: <text>`
+    goal_refine.split(gist)                              # (the person's words, the added words): the added words from the first `Added: ` paragraph to the end (spec 168 C2)
+    goal_refine.rewritten(gist, base)                    # the Gist with `base` for the person's words and the added words as they were; '' for no words
     goal_refine.in_answer(root, state_dir, sources)      # the slug of the first goal in analysis a quick question's sources name by its title, "" for none
     goal_refine.add_record(state_dir, slug, text, element="", via="")   # one row of the goal's added words (spec 135 §A.3): <state>/ideas/<slug>/added.json
     goal_refine.added_rows(state_dir, slug)              # those rows, oldest first: [{at, text, element, via}]; a broken file reads [] (the file is `{"rows": [...]}`)
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from orkboard.realm import ideas, spec_sections
@@ -67,3 +70,20 @@ def add_record(state_dir: Path, slug: str, text: str, element: str = "", via: st
         rows.append({"at": ideas._now(), "text": str(text).strip(), "element": element, "via": via if via in VIAS else ""})
         ideas._write_json(ideas.state_folder(state_dir, slug) / FILE, {"rows": rows})
     return rows
+
+
+# -- a Gist rewritten with its added words kept (spec 168 C2, decisions §283.24) ------------------------------------------------------------
+
+def split(gist: str) -> tuple[str, str]:
+    """A Gist as `(the person's words, the added words)`: the added words are everything from the first paragraph that begins `Added: ` to the end (`add_words` only ever appends them), kept byte for byte."""
+    m = re.search(r"(?m)^" + re.escape(ADDED.rstrip()) + r" ", gist or "")
+    return ((gist[:m.start()].rstrip(), gist[m.start():]) if m else ((gist or "").rstrip(), ""))
+
+
+def rewritten(gist: str, base: str) -> str:
+    """The Gist with its words `base` in place of the person's and every *Added:* line as it was; '' where `base` says nothing."""
+    base = str(base or "").strip()
+    _was, tail = split(gist)
+    if not base:
+        return ""
+    return f"{base}\n\n{tail}" if tail else base

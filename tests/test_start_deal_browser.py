@@ -136,7 +136,7 @@ def test_a_goal_that_asks_you_has_its_card_come_to_the_hand_from_its_back_in_to_
         pg.evaluate(WATCH)
         asking_review(host)
         host.bump({})
-        pg.wait_for_selector('.col-card--deck[data-goal="ask1"].asks', timeout=WAIT_MS)
+        pg.wait_for_selector('.col-card--spec[data-goal="ask1"].asks', timeout=WAIT_MS)
         pg.wait_for_function("() => window.__fly.some((x) => x.fly === 'hand' && x.ups === 1)", timeout=WAIT_MS)
         flown = pg.evaluate("() => window.__fly.filter((x) => x.fly === 'hand').map((x) => [x.turn, x.ups])")
         assert flown == [[True, 1]], "its back lifts and turns up on its way (orkUI's .ork-turn)"
@@ -145,7 +145,7 @@ def test_a_goal_that_asks_you_has_its_card_come_to_the_hand_from_its_back_in_to_
         assert card.first.evaluate("e => [e.style.visibility, e.classList.contains('ork-deal')]") == ["hidden", False], "hidden while the copy flies, not the old deal"
         settled(pg)
         assert card.first.evaluate("e => getComputedStyle(e).visibility") == "visible", "it lands in the hand, under the asking leader's lane"
-        assert pg.locator('.col-card--deck[data-goal="ask1"]').count() == 1, "its back stays in the deck"
+        assert pg.locator('.col-card--spec[data-goal="ask1"]').count() == 1, "its back stays in the deck"
     finally:
         pg.close()
     assert not log, "\n".join(log)

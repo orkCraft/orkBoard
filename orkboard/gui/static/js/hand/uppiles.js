@@ -5,15 +5,15 @@ import { html } from "../html.js";
 import { mapData } from "../shell/store.js";
 import { waitsWords } from "../table/holdwords.js";
 import { askedWords } from "../table/passing.js";
-import { PILES, Pile, nextWords, pilesOf, underOf } from "../table/piles.js";
+import { PILES_OLD, Pile, nextWords, pilesOfOld, underOf } from "../table/piles.js";
 
 /** The piles of the project's goals, as the column draws them; nothing when no goal lies in any of them. `onPress(n)`: a card pressed. */
 export function Piles({ onPress }) {
-  const piles = pilesOf(mapData.value?.nodes || []);
-  if (!PILES.some(([id]) => piles[id].length)) return null;
+  const piles = pilesOfOld(mapData.value?.nodes || []);
+  if (!PILES_OLD.some(([id]) => piles[id].length)) return null;
   const behind = piles.analysis.find(({ n }) => askedWords(n.slug));
   const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: nextWords(piles.review), work: "" };
   return html`<section class="up-piles" aria-label="The Orkmaster's piles" data-piles="1">
-    ${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : ""} onPress=${(n) => onPress(n)} open=${false} way=${null} />`)}
+    ${PILES_OLD.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : ""} onPress=${(n) => onPress(n)} open=${false} way=${null} legacy=${true} />`)}
   </section>`;
 }

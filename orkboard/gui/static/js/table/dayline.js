@@ -14,7 +14,7 @@ import { board } from "../board/store.js";
 import { pick, picked } from "../frame/state.js";
 import { spanOf } from "../hand/windows.js";
 import { waitTool, defaultTool } from "./lit.js";
-import { kindOf } from "./piles.js";
+import { kindOf, writing } from "./piles.js";
 
 const HOUR = 3600000, DAY = 24 * HOUR, MARKED = ["claude", "codex", "agy", "cursor", "hermes", "pi"];
 const two = (n) => String(n).padStart(2, "0");
@@ -74,7 +74,7 @@ export function bandsOf(hours, day) {
 export function stepWord(n) {
   const k = kindOf(n);
   if (n.state === "talk") return "Talk";
-  return k && k.pile === "analysis" ? "spec" : "work";
+  return k && (k.pile === "analysis" || (k.pile === "review" && writing(n))) ? "spec" : "work";
 }
 
 /** The goals waiting for one tool, each with the moment it waits for: `[{n, at}]`. Its `held_until` when it has one (then the first reset at or after it, within a minute, when the tool has one: the reset it waits for),

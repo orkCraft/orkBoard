@@ -425,3 +425,9 @@ def summary(root: Path, since: str = "", until: str = "") -> dict[str, Any]:
     return {"counts": {e: c.get(e, 0) for e in EVENTS}, "answer_wait_median_s": median,
             "tasks_with_questions_or_assumptions": len(runs), "first": rows[0]["at"] if rows else "",
             "last": rows[-1]["at"] if rows else ""}
+GOAL_REWRITTEN = "goal_rewritten"      # spec 168 C2, decisions §283.24: a goal's words rewritten with what the person took from its leaders: idea, taken (how many), changed, chars, cost
+REWRITE_UNDONE = "rewrite_undone"      # … put back as it was: idea, taken
+REWRITE_FORKED = "rewrite_forked"      # … what was taken disagrees, one card of choices instead: idea, ids
+SAY_ANSWERED = "say_answered"          # a leader's better or need taken or turned down (spec 168 C1): idea, party, what ("better" · "need"), how ("taken" · "left"), weight, kind
+JUDGED_AGAIN = "judged_again"          # the leaders judged again after the person's answers or at *Judge again now* (spec 168 C2, §283.25): idea, parties, round, now (pressed), hearing (the second round ended in a hearing)
+EVENTS += (GOAL_REWRITTEN, REWRITE_UNDONE, REWRITE_FORKED, SAY_ANSWERED, JUDGED_AGAIN)
