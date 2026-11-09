@@ -12,6 +12,7 @@ import { SeatPop } from "./seatpop.js";
 import { openParties } from "./parties.js";
 import { Menu } from "./menu.js";
 import { Aspects, askAgain, hasMap, lookOf, recordOf, theLeader } from "./concerns.js";
+import { ConcernCards } from "./concernrow.js";
 
 const SIDE_SIGN = { build: "sword", check: "shield" };
 
@@ -55,6 +56,7 @@ export function Header({ g, from }) {
     })}</div>
     ${size && html`<span class="ork-chip table-size" title=${sizeTip(g)}>${size}</span>`}
     <span class="table-grow"></span>
+    <${ConcernCards} g=${g} />
     <${Aspects} g=${g} />
     <${Menu} label=${`${name}'s menu`} items=${items} />
     ${seat && html`<${SeatPop} g=${g} slug=${seat} from=${from} onClose=${() => setSeat("")} />`}

@@ -26,6 +26,7 @@ import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
 import { SayLifted } from "./sayplay.js";
 import { ConflictPlay } from "./conflictcard.js";                          // a decision's conflict in play: its ways the hand (spec 168 D1)
+import { ConcernPlay } from "./concernplay.js";                          // a concern in play: its ways the hand (spec 168 D4)
 import { LiftedWide } from "./liftedwide.js";                  // any other card lifted on the desktop: the 144 x 202 card and a body in the hand's place (spec 168 D1)
 import { ProjectDeal, dealt as headerDeal } from "../table/projectdeal.js";                       // the header's kind or stage dealt to the hand (spec 161 J)
 import { ChairDeal, dealing } from "./chairdeal.js";                                     // the new chair deals its crafts (spec 161 I)
@@ -93,7 +94,7 @@ export function Hand() {
   useKeys(root);
   useNight();
   const wide = useWide();
-  const all = stopsOfProject(map, needs, open), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
+  const all = stopsOfProject(map, needs, open).filter((x) => wide || x.kind !== "concern"), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map && !isToolKey(key)) lower(); }, [key, !s]);   // the stop was answered: the card goes with it (a tool's card is no stop: it goes by its own)
   useEffect(() => { liftedStop.value = s || null; }, [s]);                                // the right column's potions hatch the share the lifted card takes (potionrow.js)
   useEffect(() => () => { liftedStop.value = null; }, []);
@@ -127,7 +128,7 @@ export function Hand() {
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
-    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
+    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
     ${sayOn && html`<${SayLifted} />`}
     ${deal && html`<${ProjectDeal} which=${deal} />`}
     ${key === ADD_TOOL && html`<${AddTool} />`}
