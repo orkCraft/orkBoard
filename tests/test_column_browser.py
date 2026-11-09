@@ -671,23 +671,21 @@ def test_a_goal_another_tool_holds_says_taken_by_and_a_goal_kept_off_says_so_on_
     assert not log, "\n".join(log)
 
 
-def test_a_card_laid_over_the_column_covers_it_whole_in_its_shadow_and_the_column_is_not_cut_at_its_edge(gui):
-    """Spec 150 A.2 (decisions §254.10): the field open over the column at 1280 x 800, the At work card under it keeps its full width, and the field's shadow is drawn (orkUI's notch clip once cut it at the box)."""
+def test_the_new_goals_card_at_the_tables_foot_leaves_the_column_whole_and_uncut(gui):
+    """Spec 150 A.2 (decisions §254.10), changed by spec 168 D2 (§286): the field was a card laid over the column; now the card stands at the table's foot at its left, beside the column, and the field lies in the hand's place: the At work card keeps its full width and is covered by neither."""
     pg, host, log = open_column(gui)
     try:
         pg.set_viewport_size({"width": 1280, "height": 800})
         pg.wait_for_selector(".col-sec[data-pile=work] .col-card--up", timeout=WAIT_MS)
         pg.locator(".hand .hand-plus").click()
-        pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
-        pg.wait_for_function("() => !document.querySelector('.hand-field.is-turning, .hand-field.is-growing')", timeout=WAIT_MS)
-        pg.wait_for_timeout(700)                                                                        # the field's turn and growth played (fieldturn.js)
+        pg.locator(".hand-field__card").wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.hand-field__card').getAnimations().every((a) => a.playState === 'finished')", timeout=WAIT_MS)
         got = pg.evaluate("""() => {
-          const f = document.querySelector('.hand-field'), c = document.querySelector('.col-sec[data-pile=work] .col-card--up'), r = c.getBoundingClientRect(), fr = f.getBoundingClientRect();
-          return {w: r.width, over: fr.left < r.right && fr.right > r.left, shadow: getComputedStyle(f).boxShadow};
+          const f = document.querySelector('.hand-field__card'), x = document.querySelector('.hand-fieldbox'), c = document.querySelector('.col-sec[data-pile=work] .col-card--up'), r = c.getBoundingClientRect(), fr = f.getBoundingClientRect(), xr = x.getBoundingClientRect();
+          return {w: r.width, cardOver: fr.left < r.right && fr.right > r.left && fr.top < r.bottom && fr.bottom > r.top, fieldOver: xr.left < r.right && xr.right > r.left && xr.top < r.bottom && xr.bottom > r.top};
         }""")
-        assert got["over"], f"the field lies over the column: {got}"
+        assert not got["cardOver"] and not got["fieldOver"], f"the column is covered by neither the card nor the field: {got}"
         assert abs(got["w"] - 144) <= 0.5, f"the At work card keeps its full width: {got}"
-        assert got["shadow"] != "none", f"the field's shadow falls on the column: {got}"
     finally:
         pg.close()
     assert not log, "\n".join(log)

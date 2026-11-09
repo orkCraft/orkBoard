@@ -143,7 +143,7 @@ def test_lifted_the_decision_says_why_and_its_numbered_points_and_has_one_button
         press(pg, "chat")
         lifted(pg).wait_for(timeout=WAIT_MS)
         card = lifted(pg)
-        assert "Players chat in the lobby, one room each" in card.locator(".hand-lifted__title").inner_text()
+        assert "Players chat in the lobby, one room each" in card.locator(".hand-card__name").inner_text()
         assert card.locator(".hand-way__why .body").inner_text().startswith("Players talk before a round starts")
         pts = card.locator(".hand-way__points li")
         assert pts.count() == 3 and pts.first.inner_text().startswith("The lobby has one chat room"), "the points numbered, the Orkmaster's words"

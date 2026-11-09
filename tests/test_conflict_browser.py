@@ -81,25 +81,27 @@ def test_the_conflict_is_a_card_under_the_first_lane_before_the_decision_and_the
     assert not log, "\n".join(log)
 
 
-def test_lifted_it_is_two_cards_side_by_side_the_new_side_with_three_choices_and_the_earlier_out_of_the_portal(gui):
+def test_lifted_it_is_two_cards_side_by_side_its_ways_the_hand_and_the_earlier_out_of_the_portal(gui):
+    """Spec 168 D1 (before: spec 150 E2.1, two cards of 288 wide): the new goal's side is the 144 x 202 card in play at the table's foot, its three choices the hand's ways (*Other…* the Pen), the earlier decision a second 144 x 202 card beside it."""
     pg, host, log = open_conflict(gui)
     try:
         card = lift(pg)
-        assert card.locator(".hand-lifted__title").inner_text().strip() == "Round timer on the client"
-        assert card.locator(".hand-way__why .body").inner_text().startswith("Players on a slow line see the timer jump")
-        assert " ".join(card.locator(".hand-way__goes").inner_text().split()) == f"Goes against §212: {POINT}"
-        assert [b.inner_text().strip() for b in card.locator(".hand-answers .ork-btn").all()] == ["The new one replaces §212", "Keep §212", "Other…"]
+        assert card.locator(".hand-card__name").inner_text().strip() == "Round timer on the client"
+        assert card.locator(".hand-card__foot").inner_text().strip() == "Goes against §212"
+        ways = pg.locator(".hand-ways-row .hand-ans")
+        assert [w.locator(".hand-ans__name").inner_text().strip() for w in ways.all()] == ["The new one replaces §212", "Keep §212", "Other…"]
         earlier = pg.locator('.hand-earlier[data-earlier="212"]')
         earlier.wait_for(timeout=WAIT_MS)
         assert "is-out" in earlier.get_attribute("class"), "it comes out of the portal, once"
         pg.wait_for_function("() => !document.querySelector('.hand-earlier').classList.contains('is-out')", timeout=WAIT_MS)
-        assert earlier.locator(".hand-lifted__title").inner_text().strip() == "The server owns every clock"
-        assert "cheated in the first playtest" in earlier.locator(".hand-way__why").inner_text()
+        assert earlier.locator(".hand-card__name").inner_text().strip() == "The server owns every clock"
+        assert "cheated in the first playtest" in earlier.locator(".hand-card__foot").inner_text()
         assert earlier.get_by_role("button", name="Open in the past").count() == 1
         a, b = card.bounding_box(), earlier.bounding_box()
-        assert b["x"] >= a["x"] + a["width"] - 4 and abs(b["width"] - a["width"]) < 2 and abs((b["y"] + b["height"]) - (a["y"] + a["height"])) < 24, "side by side, the same size, their feet on one line"
+        assert [round(a["width"]), round(a["height"]), round(b["width"]), round(b["height"])] == [144, 202, 144, 202], "two cards of the one size"
+        assert b["x"] >= a["x"] + a["width"] - 4 and abs((b["y"] + b["height"]) - (a["y"] + a["height"])) < 24, "side by side, their feet on one line"
         shot(pg, "conflict-lifted")
-        card.get_by_role("button", name="The new one replaces §212").click()
+        ways.first.click(position={"x": 20, "y": 30})
         got = _calls(pg, host, "ideas.conflict")
         assert got == [{"idea": "timer", "number": 212, "choice": "replace"}], got
         pg.wait_for_function("() => !document.querySelector('.hand-card[data-kind=\"conflict\"]') && !document.querySelector('.hand-earlier')", timeout=WAIT_MS)
@@ -134,12 +136,12 @@ def test_keep_and_other_send_their_choice_other_with_the_persons_words_and_under
         earlier.wait_for(timeout=WAIT_MS)
         assert "is-out" not in earlier.get_attribute("class"), "reduced motion: it lies in its place"
         if choice == "keep":
-            card.get_by_role("button", name="Keep §212").click()
+            pg.locator(".hand-ways-row [data-way=keep]").click(position={"x": 20, "y": 30})
             want = {"idea": "timer", "number": 212, "choice": "keep"}
         else:
-            card.get_by_role("button", name="Other…").click()
-            card.get_by_role("textbox", name="Say it in your own words").fill("The client counts, the server owns the end only")
-            card.get_by_role("button", name="Send").click()
+            pg.locator(".hand-ways-row .hand-ans--pen").click(position={"x": 20, "y": 30})
+            pg.get_by_role("textbox", name="Your words to the Orkmaster").fill("The client counts, the server owns the end only")
+            pg.keyboard.press("Enter")
             want = {"idea": "timer", "number": 212, "choice": "other", "text": "The client counts, the server owns the end only"}
         got = _calls(pg, host, "ideas.conflict")
         assert got == [want], got

@@ -126,7 +126,8 @@ def fits(pg):
     narrow.no_sideways(pg)
     box, size = pg.locator(".hand-lifted").bounding_box(), pg.viewport_size
     assert box["x"] >= -1 and box["x"] + box["width"] <= size["width"] + 1 and box["y"] >= -1, "the lifted card lies within the window"
-    assert pg.locator(".hand-lifted").evaluate("e => e.scrollWidth <= e.clientWidth + 1"), "nothing sideways inside it"
+    inside = pg.locator(".hand-lifted .hand-body")                  # wide (spec 168 D1): the body lies in the hand's place, a child of the card in play; the card itself is 144 x 202
+    assert (inside if inside.count() else pg.locator(".hand-lifted")).evaluate("e => e.scrollWidth <= e.clientWidth + 1"), "nothing sideways inside it"
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)

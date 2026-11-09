@@ -51,7 +51,7 @@ def lift(pg, kind):
     return card
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])      # the wide width has no opened card of 404 x 566 any more (spec 168 D1): its card in play is below
 def test_the_opened_card_is_404_by_566_with_its_corners_large_its_body_between_them_and_its_answers_above_the_foot(gui, width):
     """Spec 147 D.1, decisions §251.6: the hand card opened is 5 : 7 (404 x 566 at the wide width, the screen's width less a gutter a side at the narrow one), turned a degree or two, its foot on the hand's line."""
     pg, host, log = open_hand(gui, width=width)
@@ -90,6 +90,29 @@ def test_the_opened_card_is_404_by_566_with_its_corners_large_its_body_between_t
         assert card.evaluate("e => getComputedStyle(e).zIndex") == "60"
         narrow.no_sideways(pg)
         shot(pg, f"{width}-lifted-short")
+        pg.keyboard.press("Escape")
+        assert pg.locator(".hand-lifted").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_at_the_wide_width_the_opened_card_is_the_card_in_play_and_its_body_lies_in_the_hands_place(gui):
+    """Spec 168 D1, decisions §283.19, §286 (replacing spec 147 D.1's 404 x 566 at the wide width): the card lifted is 144 x 202 at the table's foot at its left, its body (what it says and its answers, *Put it back*) a child of the dialog as large as the hand."""
+    pg, host, log = open_hand(gui, width="wide")
+    try:
+        card = lift(pg, "plan")
+        assert card.get_attribute("role") == "dialog" and card.get_attribute("data-kind") == "plan" and card.get_attribute("data-key") == "plan/export/"
+        assert {"ork-card", "hand-card", "hand-lifted", "hand-lifted--asked", "is-play"} <= set(card.get_attribute("class").split()) and "hand-lifted--card" not in card.get_attribute("class").split()
+        assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [144, 202]
+        children = card.evaluate("e => [...e.children].map((c) => c.className.split(' ')[0])")
+        assert children == ["corner", "hand-card__name", "hand-card__foot", "corner", "hand-body"], children
+        body, hand = card.locator(".hand-body"), pg.locator(".hand")
+        assert abs(body.evaluate("e => e.offsetHeight") - hand.evaluate("e => e.clientHeight")) <= 2
+        acts = body.locator(".hand-lifted__acts")
+        assert acts.get_by_role("button", name="Start the work").count() == 1 and acts.get_by_role("button", name="Put it back").count() == 1 and acts.locator(".hand-spend").count() == 1
+        assert card.evaluate("e => e.getBoundingClientRect().bottom") <= hand.evaluate("e => e.getBoundingClientRect().top") + 1, "on the hand, over the table's foot"
+        narrow.no_sideways(pg)
         pg.keyboard.press("Escape")
         assert pg.locator(".hand-lifted").count() == 0
     finally:
@@ -232,17 +255,16 @@ class PictureHost(HandHost):
                 n["picture"] = DOT
 
 
-def test_the_opened_card_has_its_window_at_the_top_of_its_body_160_px_high(gui):
-    """Spec 148 B.5, decisions §252.3: the goal's picture, 160 px high, first in the body that scrolls; the card stays 404 x 566. Without a picture the body is its question."""
+def test_the_opened_card_has_its_window_at_the_top_of_its_body(gui):
+    """Spec 148 B.5, decisions §252.3 (spec 168 D1: the body lies in the hand's place, so the window is 72 px high, not 160, and the card is 144 x 202): the goal's picture first in the body that scrolls. Without a picture the body is its question."""
     pg, host, log = open_hand(gui, host=PictureHost(), width="wide")
     try:
         card = lift(pg, "plan")
         win = card.locator(".hand-lifted__body > .hand-lifted__win .card-win")
         assert win.count() == 1 and win.get_attribute("data-window") == "card-picture" and win.locator("img").get_attribute("src") == DOT
-        assert win.evaluate("e => e.offsetHeight") == 160, "160 px high"
+        assert win.evaluate("e => e.offsetHeight") <= 72, "the window fits the hand's place"
         assert card.evaluate("e => e.querySelector('.hand-lifted__body').firstElementChild.classList.contains('hand-lifted__win')"), "at the top of its body"
-        m = card.evaluate(MEASURE)
-        assert m["width"] == 404 and abs(m["height"] - 566) <= 1, "the card stays 404 x 566"
+        assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [144, 202], "the card is 144 x 202"
         shot(pg, "wide-lifted-window")
         card.get_by_role("button", name="Put it back").click()
         card = lift(pg, "failed")

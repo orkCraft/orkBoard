@@ -252,7 +252,8 @@ def test_the_route_card_lifted_has_the_menu_and_asks_inside_the_card(gui, width)
     try:
         lifted = lift(pg)
         ask = ask_drop(lifted)
-        assert ask.bounding_box()["x"] >= lifted.bounding_box()["x"] - 1 and ask.bounding_box()["x"] + ask.bounding_box()["width"] <= lifted.bounding_box()["x"] + lifted.bounding_box()["width"] + 1, "asked in the card"
+        card = lifted.locator(".hand-body") if lifted.locator(".hand-body").count() else lifted               # wide: the body in the hand's place is the card's inside (spec 168 D1)
+        assert ask.bounding_box()["x"] >= card.bounding_box()["x"] - 1 and ask.bounding_box()["x"] + ask.bounding_box()["width"] <= card.bounding_box()["x"] + card.bounding_box()["width"] + 1, "asked in the card"
         ask.get_by_role("button", name="Keep it").click()
         assert not [n for n, _ in host.log if n == "ideas.drop"]
         ask = ask_drop(lifted)

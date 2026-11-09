@@ -90,7 +90,7 @@ def test_lifted_it_says_the_reset_the_tool_and_its_cost_and_has_two_answers(gui,
         front(pg).click(position={"x": 10, "y": 24})
         lifted(pg).wait_for(timeout=WAIT_MS)
         card = lifted(pg)
-        assert "Go on paid?" in card.locator(".hand-lifted__title").inner_text()
+        assert "Go on paid?" in card.locator(".hand-card__name").inner_text()
         assert card.locator(".hand-way__words").inner_text().strip() == BODY
         assert [b.inner_text().strip() for b in card.locator(".hand-answers .ork-btn").all()] == ["Go on, paid", "Wait for Thu 18:00"]
         assert card.locator(".hand-answers .ork-btn.primary").count() == 1

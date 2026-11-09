@@ -137,6 +137,17 @@ if (typeof addEventListener === "function") {
   });
 }
 
+/** A card in play (docs/specs/168 D1, decisions §283.19): the tab of the one who asks is opened (the Orkmaster's for what it plays) and the card's goal is picked, so the table is the context it is asked in (a lifted card of the hand did not move the table before). */
+export function playAt(slug, goal) {
+  if (slug && tab.peek() !== slug) openTab(slug);
+  if (goal && goals.known(goal) && picked.peek() !== goal) picked.value = goal;      // a goal the snapshot does not have is not picked (as the address's is not: settleAddress)
+}
+
+/** A card in play that is no stop of the hand's (a leader's risk, conflict, better or fork of the say, table/sayask.js): its key in `lifted` and what it is about in `playing`, `{source, idea, id, from}`; the hand draws it (hand/sayplay.js) as it draws a question. */
+export const PLAY = "play:say";
+export const playing = signal(null);
+export function playCard(detail) { playing.value = detail; lifted.value = PLAY; }
+
 /** A card lifted where it lies (§120.1), one at a time on the table and in the hand. */
 export function lift(key) { lifted.value = key || ""; }
 export function lower() { lifted.value = ""; }
