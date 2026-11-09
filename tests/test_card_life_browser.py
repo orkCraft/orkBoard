@@ -94,8 +94,8 @@ def test_the_plus_card_turns_over_into_a_card_with_the_field_focused_in_the_pres
         field.wait_for(timeout=WAIT_MS)
         pg.wait_for_function("() => document.activeElement && document.activeElement.classList.contains('hand-field__text')", timeout=WAIT_MS)
         assert pg.locator(".hand-field__proxy").count() == 0, "the field the press focused is gone when the real one has the focus"
-        pg.wait_for_function("() => document.querySelector('.hand-field').getAnimations().length === 0", timeout=WAIT_MS)
-        box = field.bounding_box()
+        pg.wait_for_function("() => document.querySelector('.hand-field__card').getAnimations().every((a) => a.playState === 'finished')", timeout=WAIT_MS)
+        box = pg.locator(".hand-field__card").bounding_box()
         assert abs(box["width"] / box["height"] - 5 / 7) < 0.02, f"a card, 5 : 7: {box}"
         rune = field.locator(".hand-field__rune")
         top = field.locator(".corner--top").bounding_box()
@@ -103,16 +103,15 @@ def test_the_plus_card_turns_over_into_a_card_with_the_field_focused_in_the_pres
         assert rune.locator(".ork-elem").count() == 1 and rune.get_attribute("aria-expanded") == "false"
         assert rune.get_attribute("aria-label").startswith("Its rune: ") or rune.get_attribute("aria-label") == "Its rune: none yet, choose one"
         assert field.locator(".hand-field__runes").count() == 0, "the five stand in a row only when the rune is pressed"
-        assert field.get_by_role("button", name="Now", exact=True).count() == 1 and field.get_by_role("button", name="Later", exact=True).count() == 1 and field.get_by_role("textbox", name="Write a goal").count() == 1
+        assert field.locator("[data-corner=go]").count() == 1 and field.get_by_role("textbox", name="Write a goal").count() == 1      # *Now or Later* is a corner (spec 168 D2)
         assert field.evaluate("e => getComputedStyle(e.querySelector('textarea')).fontFamily").lower().find("pixel") < 0, "the person's words are never in the pixel face"
         shot(pg, "field-card")
         rune.click()
-        group = field.get_by_role("radiogroup", name="Its rune")
+        group = pg.locator(".hand-dealt[data-open=rune]")
         group.wait_for(timeout=WAIT_MS)
-        assert rune.get_attribute("aria-expanded") == "true" and group.get_by_role("radio").count() == 5
-        assert group.get_by_role("radio").first.bounding_box()["width"] >= 39, "40 px each"
-        group.get_by_role("radio", name="Rune 4").click()
-        assert field.locator(".hand-field__runes").count() == 0, "a rune chosen closes the row"
+        assert rune.get_attribute("aria-expanded") == "true" and group.get_by_role("menuitemradio").count() == 5, "the five dealt to the hand (spec 168 D2)"
+        group.get_by_role("menuitemradio", name="Rune 4").click(position={"x": 20, "y": 30})
+        assert pg.locator(".hand-dealt").count() == 0, "a rune chosen puts the row back"
         assert rune.get_attribute("aria-label") == "Its rune: Rune 4, change it"
     finally:
         pg.close()
@@ -128,7 +127,7 @@ def test_esc_or_a_press_away_turns_the_card_back_into_the_plus_card_keeping_its_
         field.wait_for(timeout=WAIT_MS)
         field.get_by_role("textbox", name="Write a goal").fill("Players see who answered first")
         field.locator(".hand-field__rune").click()
-        field.get_by_role("radio", name="Rune 5").click()
+        pg.locator(".hand-dealt[data-open=rune]").get_by_role("menuitemradio", name="Rune 5").click(position={"x": 20, "y": 30})
         pg.keyboard.press("Escape")                                              # the focus is on the rune button, not in the text: Esc is the card's
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
         assert pg.locator(".hand-ghost").count() >= 0                            # the copy that turns back may be in the air a moment

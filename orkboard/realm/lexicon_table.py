@@ -152,7 +152,12 @@ WINDOW: tuple[Term, ...] = (
     _t("now", "Now"),                                               # a new goal's primary: sent, and Talk starts at once when the limits allow and it costs no more than agreed (spec 150 F.2; `ideas.add` `now`)
     _t("slot_much", "how much: after its estimate"),                # its bottom right, until the goal is estimated
     _t("attach_hint", "Drop pictures or files here, or paste a picture"),     # a new goal's window while nothing is attached
-    _t("opened_leader", "leader"),                                  # the opened card's foot: *the Tech leader asks*
+    # the card in play (spec 168 D1, D2; decisions §283.19, §286; hand/fielddeal.js, hand/answercards.js): what the words field says of its keys, and what *Now* and *Later* are when they are dealt as cards
+    _t("field_now_line", "The Orkmaster talks it over at once, as far as the limits allow."),      # the card *Now*, dealt by a new goal's last corner
+    _t("field_later_line", "It lies in line and talks by itself at the hour the Board says."),      # the card *Later*
+    _t("field_keys_now", "Enter is Now · Shift+Enter a new line"),                                   # a new goal's field: its keys
+    _t("pen_keys", "Enter sends · Shift+Enter a new line"),                                          # *Your own words…*: its keys
+    _t("opened_leader", "leader"),                                 # the opened card's foot: *the Tech leader asks*
     _t("opened_asks", "asks"),                                      # the same, and *the Orkmaster asks*
     _t("look_wait", "Give me time to look"),                    # Settings: the wait of every spec made before its plan is passed by itself, 30 min · 2 h · until tonight · do not wait (spec 144 B, decisions §225.1)
     _t("my_hours", "When I am at the computer"),                  # Settings: the person's days and hours (spec 138 B.1, decisions §245.5); empty, nothing changes

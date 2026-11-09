@@ -40,6 +40,11 @@ import { ATTACH_HINT, LATER, NOW } from "./openwords.js";
 import { mapData } from "../shell/store.js";
 import { Elem } from "../orkui.js";
 import { useNarrow } from "../table/portal.js";
+import { useWide } from "./answercards.js";
+import { clearSpan, handSpan, setSpan, SUNK } from "./handplace.js";
+import { Dealt, GoCorner } from "./fielddeal.js";
+
+const DEALT = ["rune", "type", "to", "go", "files"];                       // the corners whose choices are dealt to the hand in the field's place (fielddeal.js)
 
 const FREE_PLACES = ["at-90", "at-270", "at-180", "at-45"];                  // the seal's band, in the order the free runes use it (orkUI 0.21.0)
 const DECO = [["at-135", "eye"], ["at-225", "key"], ["at-315", "hourglass"]];     // the three places left, held by orkUI's own runes (spec 128 A.4; hand.css gives their places)
@@ -68,6 +73,12 @@ function Seal({ narrow, play, shown, hue, frees }) {
   return html`<span class=${cls("ork-sigil", { small: narrow, "is-summoning": !!play, [`rite-${play}`]: !!play })} aria-hidden="true"><span class="ork-sigil__seal">${shown && html`<${Elem} name=${shown} hue=${hue} />`}</span>${!narrow && frees.map((e, i) => html`<span key=${e} class=${`ork-sigil__free ${FREE_PLACES[i]}`}><${Elem} name=${e} /></span>`)}${!narrow && frees.length > 0 && DECO.map(([at, name]) => html`<span key=${at} class=${`ork-sigil__free ${at} hand-deco`}><span class=${`ork-rune ${name}`}></span></span>`)}</span>`;
 }
 
+/** The card's box on the page (wide), measured from its layout, not its turn: while it turns in, its rect is edge-on and has no width. */
+function boxOf(el) {
+  const p = el?.offsetParent?.getBoundingClientRect();
+  return p ? { left: p.left + el.offsetLeft, top: p.top + el.offsetTop, width: el.offsetWidth, height: el.offsetHeight } : null;
+}
+
 /** Pictures pasted or chosen: shrunk as the old form shrank them, at most four. */
 async function addPictures(files) {
   const got = [];
@@ -82,7 +93,7 @@ export const useAddress = addressNow;
 
 /** Esc or a press away: the card turns back into the + card where it lay, its text, rune, address and files kept (fieldturn.js). */
 export function closeField() {
-  const box = fieldOpen.value ? document.querySelector(".hand-field")?.getBoundingClientRect() : null;
+  const box = fieldOpen.value ? document.querySelector(".hand-field__card, .hand-field")?.getBoundingClientRect() : null;      // wide: the card (the field itself has no box of its own)
   fieldOpen.value = false;
   fieldRow.value = "";
   releaseProxy();
@@ -95,26 +106,44 @@ export function openField(first = "") {
 
 /** The field the + card grew into. `middle`: it grows in the pane's middle (no goal at all) or in the phone's deck, else it lies where the + card lay (placeField). */
 export function Field({ middle = false }) {
-  const root = useRef(), area = useRef(), file = useRef(), [busy, setBusy] = useState(false), [match, setMatch] = useState(null), address = useAddress(), runes = runesOf(address);
+  const root = useRef(), area = useRef(), file = useRef(), card = useRef(), [busy, setBusy] = useState(false), [match, setMatch] = useState(null), [at, setAt] = useState(null), address = useAddress(), runes = runesOf(address);
+  const wide = useWide() && !middle, dealt = wide && DEALT.includes(fieldRow.value);                  // wide: the card at the table's foot and the field as large as the hand (spec 168 D2, decisions §286)
   const parties = partiesOf(mapData.value).map((g) => ({ ...partyCard(g), types: g.types || [] }));
   const mention = useMention(area, parties);
   const taken = fieldType.value && fieldType.value.party === address.party ? fieldType.value : null;     // the type taken with @ or the *Type* square stays the goal's while it goes to the party it was taken from
   useLayoutEffect(() => {
+    if (wide) {                                                                       // the card at the table's foot at its left, the field as large as the hand in its place (handplace.js)
+      const hand = root.current?.parentElement, set = () => {
+        const span = handSpan(hand), h = hand.getBoundingClientRect();
+        setSpan(hand, span);
+        hand.style.setProperty("--hc-sunk-s", String(SUNK));
+        setAt({ left: span.left, right: h.width - span.right });
+      };
+      set();
+      growFrom(card.current);                                                         // the + card turns over and grows into the card (fieldturn.js)
+      window.addEventListener("resize", set);
+      return () => { window.removeEventListener("resize", set); clearSpan(hand); };
+    }
     if (!middle) placeField(root.current);                                           // its left edge on the + card's, its foot under the window's edge
     growFrom(root.current);                                                          // the + card turns over and grows into it (fieldturn.js)
     if (middle) return undefined;
     const set = () => placeField(root.current);
     window.addEventListener("resize", set);
     return () => window.removeEventListener("resize", set);
-  }, []);
-  useEffect(() => {                                                                   // opened: the caret at the end of what was kept
+  }, [wide]);
+  const focusWords = () => {
     const el = area.current;
     if (!el) return;
-    fieldRow.value = "";
     el.focus({ preventScroll: true });
-    releaseProxy();                                                                   // the focus the press gave moves here: the phone's keyboard stays up
     el.setSelectionRange(el.value.length, el.value.length);
+  };
+  useEffect(() => {                                                                   // opened: the caret at the end of what was kept
+    if (!area.current) return;
+    fieldRow.value = "";
+    focusWords();
+    releaseProxy();                                                                   // the focus the press gave moves here: the phone's keyboard stays up
   }, []);
+  useEffect(() => { if (wide && !dealt) focusWords(); }, [dealt]);                    // a corner's choice played, or Esc: the field comes back with its words, focused
   const wordsOf = () => {
     const words = withoutAddress(fieldText.value, address.by === "text" ? address.name : "");
     return { words, text: fieldFiles.value.length ? `${words} ${fieldFiles.value.map((f) => `@${f.path}`).join(" ")}` : words };     // a file of the project is written as the @ list writes it (the host turns it into the path)
@@ -133,7 +162,7 @@ export function Field({ middle = false }) {
     setBusy(false);
     if (!got) return;                                                                 // refused: the host said why in a toast, the words stay
     if (got.match) { setMatch(got.match); return; }                                   // it looks like part of another: nothing was added, the words, the rune and the files stay
-    const box = root.current?.getBoundingClientRect(), goal = { slug: got.slug || "", element: got.element || chosen || runes.shown, hue: got.hue || "", name: words.replace(/\s+/g, " ").slice(0, 60) };
+    const box = boxOf(card.current) || root.current?.getBoundingClientRect(), goal = { slug: got.slug || "", element: got.element || chosen || runes.shown, hue: got.hue || "", name: words.replace(/\s+/g, " ").slice(0, 60) };
     emptied();
     summon(got.hue || got.element || chosen);                                                    // the seal fills from the goal's rune (decisions §187.4)
     plusDealt.value = true;                                                           // a new + card is dealt at the lane's end, its rune the next goal's
@@ -171,6 +200,35 @@ export function Field({ middle = false }) {
   };
   const attached = fieldPhotos.value.length + fieldFiles.value.length > 0, who = address.party ? parties.find((g) => g.slug === address.party) : null;
   const drop = (e) => { e.preventDefault(); e.stopPropagation(); addPictures([...(e.dataTransfer?.files || [])]); };
+  if (wide) {                                                                          // the card at the table's foot (four corners to press) and the field as large as the hand; a corner pressed deals its choices in the field's place
+    const chips = (address.name || taken || marks.value.length > 0) && html`<div class="hand-field__chips">
+      ${address.name && html`<span class="ork-chip hand-chip" data-by=${address.by}><${Icon} name="arrow-right" />${address.name}
+        <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Take off ${address.name}`} title=${`Take off ${address.name}`} onClick=${off}><${Icon} name="close" /></button></span>`}
+      ${taken && html`<span class="ork-chip hand-chip" data-type=${taken.id}><${Sign} name=${taken.sign} />${taken.name}
+        <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Take ${taken.name} off`} title=${`Take ${taken.name} off`} onClick=${() => { fieldType.value = null; area.current?.focus(); }}><${Icon} name="close" /></button></span>`}
+      <${MarkChips} /></div>`;
+    return html`<div ref=${root} class=${cls("hand-field is-wide", { "has-match": !!match })} role="group" aria-label="The new goal’s card, grown into the field" onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => e.preventDefault()}>
+      <div ref=${card} class=${cls("ork-card hand-card hand-card--stop hand-card--face hand-lifted--asked is-play hand-field__card", runes.shown && `el-${runes.hue || runes.shown}`)} data-card="new-goal">
+        <${CornerTop} runeNode=${html`<${RuneCorner} runes=${runes} />`} kindNode=${html`<${KindCorner} taken=${taken} />`} />
+        <div class="table-card__win is-window card-win hand-field__win" data-window=${attached ? "attached" : "hint"} onDragOver=${(e) => e.preventDefault()} onDrop=${drop}>
+          ${attached ? html`<${FileChips} />` : html`<span class="card-win__words hand-field__attach">${ATTACH_HINT}</span>`}</div>
+        <${CornerFoot} whoNode=${html`<${WhoCorner} who=${who} address=${address} />`} muchNode=${html`<${GoCorner} open=${fieldRow.value === "go"} />`} />
+      </div>
+      ${dealt ? html`<${Dealt} open=${fieldRow.value} runes=${runes} address=${address} parties=${parties} taken=${taken} send=${send} empty=${!fieldText.value.trim() || busy} pick=${() => file.current?.click()} style=${at ? `left:${at.left}px;right:${at.right}px` : undefined} />`
+        : html`<div class="hand-fieldbox" style=${at ? `left:${at.left}px;right:${at.right}px` : undefined} onDragOver=${(e) => e.preventDefault()} onDrop=${drop}>
+          <textarea ref=${area} class="ork-field hand-field__text" aria-label="Write a goal" placeholder="Write a goal…" rows="5" value=${fieldText.value}
+            onInput=${(e) => { fieldText.value = e.currentTarget.value; if (match) setMatch(null); mention.look(); }} onKeyDown=${key} onKeyUp=${mention.look} onClick=${mention.look} onFocus=${mention.look} onPaste=${paste}></textarea>
+          <${MentionList} ...${mention} />
+          <div class="hand-fieldbox__side">
+            <div class="hand-field__top"><${Squares} />${chips}</div>
+            ${match && html`<${MatchLine} match=${match} busy=${busy} onAdd=${addTo} onApart=${() => send({ apart: true, with: match.idea })} />`}
+            <span class="cap hand-field__hint">Enter is Now · Shift+Enter a new line</span>
+            ${town.value?.keep_off_offered && html`<button type="button" role="switch" class=${cls("ork-btn quiet hand-field__off", { "is-on": fieldKeepOff.value })} aria-checked=${String(fieldKeepOff.value)} data-keep-off=${fieldKeepOff.value ? "1" : "0"}
+              title="This goal's page and files stay on this computer: they are not committed or pushed to the repository" onClick=${() => { fieldKeepOff.value = !fieldKeepOff.value; }}>${fieldKeepOff.value && html`<${Sign} name="check" />`}Keep off the repository</button>`}
+          </div></div>`}
+      <input ref=${file} type="file" accept=${PICTURE_TYPES.join(",")} multiple hidden onChange=${(e) => { addPictures([...e.currentTarget.files]); e.currentTarget.value = ""; }} />
+    </div>`;
+  }
   return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle, "has-row": fieldRow.value === "files", "is-picking": !!pickFor.value, "has-match": !!match })} role="group" aria-label="The new goal’s card, grown into the field"
       onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => e.preventDefault()}>
     <${CornerTop} large=${true} runeNode=${html`<${RuneCorner} runes=${runes} />`} kindNode=${html`<${KindCorner} taken=${taken} />`} />
