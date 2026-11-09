@@ -226,7 +226,7 @@ def test_the_words_of_spec_132_d6_are_in_the_glossary_and_the_mines_finding_keep
             "or_say_change": "Or say what to change", "cause_in_code": "The cause is in the code", "cause_in_spec": "The cause is in the spec", "cause_in_decision": "The cause is in the decision"}
     for key, word in said.items():
         assert lexicon.term(key) == word, key
-    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    lines = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines()
     for key in ("level", "finding", "quality_record"):
         assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
 
