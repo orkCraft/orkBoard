@@ -1,7 +1,7 @@
 // The app's worker (gui/pwa.py): the shell opens without the network, the town never does. Every file is
 // asked of the town first, so a new version arrives the next time it is reachable; the cache is only for
 // when it is not. The socket is never cached: what the town is comes live or not at all.
-const CACHE = "orkcraft-app-v105";
+const CACHE = "orkcraft-app-v106";
 // The app (docs/specs/117-the-phone-a-menu-of-the-leaders.md §2) is the desktop's page: `./` (index.html), the frame, and `PAGE`, the page's own files
 // (page/board.js, page/js/**, page/vendor/, page/page.css, roles.css) and orkUI's faces, heads, marks and pictures, which gui/pwa.py writes in when it serves this
 // file: that list is the page's, not a copy kept here. SHELL is the rest: the frame's files, orkUI's styles and faces (docs/specs/40-design-system.md; its race heads are kept as they are drawn) and the old
@@ -17,7 +17,7 @@ const SHELL = ["./", "frame.js", "frame.css", "old.html", "board-app.js", "util.
   "signs/feature.svg", "signs/bug.svg", "signs/bug-squashed.svg", "signs/tidy.svg", "signs/screen.svg", "signs/picture.svg", "signs/logo.svg",
   "signs/target.svg", "signs/flask.svg", "signs/horn.svg", "signs/chart.svg", "signs/page.svg",
   "signs/restructure.svg", "signs/abtest.svg", "signs/landing.svg", "signs/post.svg", "signs/tagline.svg",
-  "signs/mechanic.svg", "signs/level.svg", "signs/balance.svg", "signs/character.svg", "signs/release.svg", "signs/store.svg", "signs/tune.svg",
+  "signs/mechanic.svg", "signs/level.svg", "signs/balance.svg", "signs/character.svg", "signs/release.svg", "signs/store.svg", "signs/tune.svg", "signs/pick.svg",
   "icons/icons.svg", "app.css", "party.css", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png",
   "fonts/ibm-plex-mono-latin-400-normal.woff2", "fonts/ibm-plex-mono-latin-600-normal.woff2", "fonts/pixelify-sans-latin-500-normal.woff2"];
 const CACHE_PREFIXES = ["fonts/"];
