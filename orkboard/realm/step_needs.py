@@ -1,9 +1,9 @@
 """What each step of a goal's route needs of its seats' tools, and which seat's tool cannot (docs/specs/168 C4, decisions §283.16.6). Pure code, no model, no face: the Board's map reads it into each idea's `steps`.
 
-    step_needs.of_kinds(["tests", "code"])             # ["git", "browser"]: what the work of those kinds needs, in a stable order
+    step_needs.of_kinds(["research", "playtest"])     # ["browser", "network"]: what the work of those kinds needs of the tool, in a stable order
     step_needs.steps(node, goals)                      # [{party, leader, own, needs, seats: [{slug, name, head, tool, needs, lacks, marked}], marked}] for the route's steps
 
-A task's kind decides what it needs: work that changes files commits (git's index), a test or a look at a screen starts a browser, finding out or publishing reaches the network. A step with no task yet
+A task's kind decides what it needs: a look at a screen starts a browser, finding out or publishing reaches the network; git's index is never a kind's need (the host commits for a tool that cannot). A step with no task yet
 (a spec's steps) takes the kinds its party's craft makes. `lacks` is what the seat's tool cannot do (`harnesses.lacking`); `marked` says the page draws a **!** on the seat. A seat on the Main tool (no tool
 named yet) lacks nothing: nothing is said of what is not known.
 """
@@ -11,9 +11,11 @@ from __future__ import annotations
 
 from orkboard.realm import harnesses, roles
 
-NEEDS_OF = {"code": ("git",), "tests": ("git", "browser"), "docs": ("git",), "text": ("git",), "art": ("git",), "design": ("git", "browser"), "uikit": ("git", "browser"),
-            "a11y": ("browser",), "playtest": ("browser",), "artcheck": ("browser",), "research": ("network",), "seo": ("network",), "aso": ("network",), "campaign": ("network",),
-            "community": ("network",), "experiment": ("network",), "metrics": ("network",)}
+# What a kind of work needs of the tool itself. Not git: a tool that cannot write git's index is told *do not commit; what you leave is committed for you*
+# (spec 149 F.1, core/idea_task.py), so code, docs and art are made on any tool; not a browser for tests: the gate runs the browser tests. A browser only for the
+# work that looks at a screen itself, the network only for the work that finds out or publishes.
+NEEDS_OF = {"a11y": ("browser",), "playtest": ("browser",), "artcheck": ("browser",), "research": ("network",), "seo": ("network",), "aso": ("network",),
+            "campaign": ("network",), "community": ("network",), "experiment": ("network",), "metrics": ("network",)}
 CRAFT_KINDS = {"engineering": ("code", "tests"), "design": ("design",), "art": ("art",), "data": ("data", "query"), "marketing": ("campaign",), "product": ("docs",)}
 ORDER = ("git", "browser", "network")
 _KIND_OF = {label: kind for kind, label in roles.KIND_LABELS.items()}       # a task row carries its kind's label (`tag`)

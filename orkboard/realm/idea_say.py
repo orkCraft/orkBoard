@@ -50,8 +50,12 @@ def save(state_dir: Path, slug: str, rec: dict) -> None:
     ideas._write_json(ideas.state_folder(state_dir, slug) / FILE, rec)
 
 
+def _stances_of(talk: dict) -> list[dict]:
+    return [s for s in talk.get("stances") or [] if isinstance(s, dict) and s.get("party")]
+
+
 def _stances(state_dir: Path, slug: str) -> list[dict]:
-    return [s for s in idea_questions.record(state_dir, slug).get("stances") or [] if isinstance(s, dict) and s.get("party")]
+    return _stances_of(idea_questions.record(state_dir, slug))
 
 
 def items(state_dir: Path, slug: str) -> dict[str, dict]:
@@ -92,9 +96,12 @@ def _row(it: dict, say: dict) -> dict:
 def leaders(state_dir: Path, slug: str) -> list[dict]:
     """Per leader that has spoken (the route's order; Product weighing a goal it is not routed on, `weigher`, speaks too): `{party, leader, craft, weigher, verdict, why, instead, after, priority,
     risk, needs: [need], better: [better]}`. A need is `{id, kind, line, rests_on, ways, legacy, state, way}`, a better `{id, line, weight, state, written}`, `state` "open" · "taken" · "left"."""
-    talk, say = idea_questions.record(state_dir, slug), record(state_dir, slug)
-    out = []
-    for s in _stances(state_dir, slug):
+    talk = idea_questions.record(state_dir, slug)
+    stances = _stances_of(talk)
+    if not stances:                                         # no leader has spoken: the Board's map asks this of every goal, so read nothing more
+        return []
+    say, out = record(state_dir, slug), []
+    for s in stances:
         out.append({"party": s["party"], "leader": s.get("leader") or "", "craft": s.get("craft") or "", "weigher": s.get("weigher") is True, "verdict": s.get("verdict") or "go",
                     "why": s.get("why") or "", "instead": s.get("instead") or "", "after": s.get("after") or "", "priority": s.get("priority") or "", "risk": s.get("risk") or "",
                     "needs": [_row(n, say) for n in s.get("needs") or [] if isinstance(n, dict) and n.get("id")] + _legacy(talk, s["party"]),

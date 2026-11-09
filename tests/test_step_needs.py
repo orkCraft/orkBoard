@@ -34,8 +34,9 @@ def test_the_main_tool_and_an_unknown_one_lack_nothing_that_is_not_known_and_a_b
 
 
 def test_the_work_of_a_kind_says_what_it_needs():
-    assert step_needs.of_kinds(["tests", "code"]) == ["git", "browser"]
+    assert step_needs.of_kinds(["tests", "code", "art"]) == []                  # the host commits for a tool that cannot, the gate runs the browser tests (spec 149 F.1)
     assert step_needs.of_kinds(["research"]) == ["network"]
+    assert step_needs.of_kinds(["research", "playtest"]) == ["browser", "network"]
     assert step_needs.of_kinds(["review"]) == []
 
 
@@ -49,15 +50,16 @@ def _party(slug, tool="", tools=None, craft="engineering"):
 def test_a_seat_whose_tool_cannot_do_its_step_is_marked_and_the_others_are_not():
     goals = [_party("tech", tool="claude", tools={"tester": "codex"}), _party("art", tool="codex", craft="art")]
     node = {"slug": "x", "goal": "tech", "route": [{"step": "party", "party": "tech"}, {"step": "party", "party": "art"}, {"step": "moved", "party": "web"}],
-            "tasks": [{"id": "1", "tag": "Code", "party": "tech", "state": "running", "by": {"slug": "grunt"}}, {"id": "2", "tag": "Tests", "party": "tech", "state": "waiting", "by": {"slug": "tester"}}]}
+            "tasks": [{"id": "1", "tag": "Code", "party": "tech", "state": "running", "by": {"slug": "grunt"}}, {"id": "2", "tag": "Tests", "party": "tech", "state": "waiting", "by": {"slug": "tester"}},
+                      {"id": "3", "tag": "Research", "party": "tech", "state": "waiting", "by": {"slug": "tester"}}]}
     steps = step_needs.steps(node, goals)
     assert [s["party"] for s in steps] == ["tech", "art"] and steps[0]["own"] and not steps[1]["own"]
     tech = {s["slug"]: s for s in steps[0]["seats"]}
-    assert tech["grunt"]["lacks"] == [] and not tech["grunt"]["marked"]                                    # Claude Code: code needs git, it has it
-    assert tech["tester"]["lacks"] == ["git", "browser"] and tech["tester"]["marked"] and tech["tester"]["tool_name"] == "Codex"
+    assert tech["grunt"]["lacks"] == [] and not tech["grunt"]["marked"]                                    # Claude Code: code needs nothing of the tool
+    assert tech["tester"]["lacks"] == ["network"] and tech["tester"]["marked"] and tech["tester"]["tool_name"] == "Codex"     # its tests are made on Codex; its research is not
     assert steps[0]["marked"] is True
-    art = steps[1]                                                                                           # no task yet: its craft's kind (pixel art commits)
-    assert art["needs"] == ["git"] and art["marked"] and all(s["lacks"] == ["git"] for s in art["seats"])
+    art = steps[1]                                                                                           # no task yet: its craft's kind; pixel art is made on Codex, its commit by the host
+    assert art["needs"] == [] and not art["marked"] and all(s["lacks"] == [] for s in art["seats"])
 
 
 def test_a_goal_with_no_route_is_one_step_of_its_own_party():

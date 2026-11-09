@@ -50,7 +50,7 @@ class LeaderHost(WayHost):
         self.seat = next(n for n in self.nodes if n["slug"] == "seat")
         self.seat["say"] = copy.deepcopy(SAY)
         self.seat["tasks"] = [task("s1", "Keep the seat when a socket reconnects", "running", party="tech"), task("s3", "Check the seat", "running", "reviewer", "check", tag="Review of a change", party="tech"),
-                              task("s4", "Test the seat", "waiting", "tester", tag="Tests", party="tech"), task("s2", "Reset the round timer when a player rejoins", "failed", "tester", party="tech", round=2, error="3 checks failed")]
+                              task("s4", "Test the seat", "waiting", "tester", tag="Tests", party="tech"), task("s5", "Read how the socket library reconnects", "waiting", "tester", tag="Research", party="tech"), task("s2", "Reset the round timer when a player rejoins", "failed", "tester", party="tech", round=2, error="3 checks failed")]
 
     def handle(self, name, a):
         if name == "ideas.map":
@@ -171,10 +171,10 @@ def test_a_spec_through_a_leader_has_the_steps_header_with_the_seat_that_cannot_
     for c in pg.locator(".spec-step .ork-card.sm").all():
         assert size(c) == (56, 78), "the small card"
     tester = pg.locator('.spec-step[data-step="tech"] .spec-seat[data-seat="tester"]')
-    assert tester.get_attribute("data-tool") == "codex" and tester.get_attribute("data-lacks") == "git browser"
+    assert tester.get_attribute("data-tool") == "codex" and tester.get_attribute("data-lacks") == "network"       # its tests are made on Codex (the host commits, the gate runs the browser); its research is not
     assert tester.locator(".spec-seat__lack").count() == 1 and "Codex" in tester.inner_text()
-    assert pg.locator('.spec-step[data-step="tech"] .spec-seat[data-seat="grunt"] .spec-seat__lack').count() == 0, "Claude Code has git"
-    assert pg.locator('.spec-step[data-step="art"][data-marked="1"]').count() == 1
+    assert pg.locator('.spec-step[data-step="tech"] .spec-seat[data-seat="grunt"] .spec-seat__lack').count() == 0, "code needs nothing of the tool"
+    assert pg.locator('.spec-step[data-step="art"][data-marked="1"]').count() == 0, "pixel art is made on Codex: its commit is the host's"
     pg.locator('.spec-parts .spec-part').first.wait_for(timeout=WAIT_MS)
     part = pg.locator('.spec-part[data-kind="changed"]')
     assert part.locator('[data-side="now"]').count() == 1 and part.locator('[data-side="will"]').count() == 1
@@ -190,7 +190,7 @@ def test_the_implementation_through_a_leader_is_lanes_by_its_seats_with_arrows_a
     pg, host, errors = start(gui, "working")
     pg.locator('[data-view="seats"] .seat-lane').first.wait_for(timeout=WAIT_MS)
     assert [l.get_attribute("data-lane") for l in pg.locator(".seat-lane").all()] == ["make", "check", "accept", "back"]
-    assert pg.locator('.seat-lane[data-lane="make"] [data-task]').count() == 2 and pg.locator('.seat-lane[data-lane="check"] [data-task="s3"]').count() == 1
+    assert pg.locator('.seat-lane[data-lane="make"] [data-task]').count() == 3 and pg.locator('.seat-lane[data-lane="check"] [data-task="s3"]').count() == 1
     assert pg.locator('.seat-lane[data-lane="back"] [data-task="s2"]').count() == 1, "a task of round 2 runs again after the acceptance"
     assert pg.locator('.seat-lane[data-lane="make"] [data-task="s2"]').count() == 0
     assert pg.locator(".seat-arrow").count() == 3
