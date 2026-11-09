@@ -7698,3 +7698,291 @@ here, as the brief was never answered and the leaders' skill passes write no jou
 6. **In an AI tool's skill, the leader's Accept pass writes it**, in the tree.
 
 The owner's call.
+
+## 283. The window played as a card game's table: two sizes, a goal dealt to its leaders at every stage, a table for every stage and eye, the card in play at the table's foot, a goal's own branch and the discard's two piles, the history book, the inventory as slots, pictures on the cards (9 November 2026, the owner)
+
+Changes: 101 (a task lands in dev), 177.2 (the Orkmaster's line under the pane's title), 181.1 and 181.3 (a quick question), 183.5
+(where a concern lies), 198.3 (when the leaders judge again), 199.4 and spec 99 §3 (the night), 206.3, 206.8 (the branches seen),
+225.1, 240.1, 241 (the heads in the ring), 247.2 (where a goal put off lies), 251.1–251.4, 251.7, 252.2, 254.8 (the release branch),
+254.12a, 261.3, 261.7, 261.9, 261.11, 261.13, 266.2, 266.5, 267.1, 270.1, 270.6, 272.1, 273.2, 273.3, 277.5; CLAUDE.md's *One look*
+and *The frame*.
+
+Why: the owner, as designer and product manager, for the desktop alone (the phone is talked of apart): a proposal for the whole
+window and for how it should work, talked through point by point with Claude the same day against the decisions, the page as built
+(`main` at 9dcf841) and the trials on Codex (specs 143, 149, 155; trials 152, 152-e, 160). What the reading found: the desktop draws
+about seventeen card sizes where §270.7 decided two; the hand grows to 214 px while the inventory is open (`hand/carry.css`) and a
+form over the pane drops the discard's column (`table/lane.js`); a goal in analysis has an empty table (`docs/mockups/answer-cards/`
+found it), since its leaders get cards only at work (§241, §251.7); a goal's spec is written while its card still lies in the fan;
+*Stop all* lies in the hand's row, which is inert while a card is lifted; a lifted card never opens the tab of the leader who asks,
+and its answers are drawn whole and do not rise; a goal dropped at work leaves its landed tasks in dev; Talk reads no file, so a
+doubt is often one search away (trial 152 F6); a result says *ok* where the acceptance said *unseen* (trial 152-e F4); Codex has no
+prices, so a task's money cannot be said; and a later party's step is planned only once the step before is accepted. The owner took
+every recommendation, and on pictures: *yes, an explicit decision: the window has already turned more of a game (colour is no
+longer a signal alone, §268), and now its cards get pictures*. So:
+
+**The frame**
+1. **Two card sizes on the desktop, and only two**: the big card, 144 × 202 (the hand, the table, the column's *Implementation*,
+   the discard), and the small card, 56 × 78. Every other size goes: the new goal's field and the card opened with more than one
+   question (404 × 566), the first open's cards (288 × 403) and its fan, the large + card, the passing card, the stall's wares, the
+   carried cards, the deck's backs (112 × 157 on their side). Words a card cannot hold are cut; a choice is split into its question,
+   a card on the table, and its ways, cards in the hand (§270).
+2. **A scheme's parts are the board, never cards**: a part of a leader's scheme has no 5 : 7 and no four corners, so it is never
+   taken for a card, and it keeps its own size (Art's width is its weight, §280.2).
+3. **A small card is an index, with no words**: its back is the rune in its ring; its face has the rune in its top left corner as a
+   pixel glyph, its shape and its colour (two goals of one colour differ by their shape alone, §206.10), a dot in its bottom left for
+   each party in that party's colour (filled when done, hollow when ahead), a signal as the card's own frame (§268.1, §276), and in
+   its middle a small picture: what is attached to its goal, else its kind's (a verdict's sign, a concern's aspect, a seat's head).
+   This changes §252.2 for the small card, whose words do not fit.
+4. **A small card hovered or focused shows itself**: a face-up card as the same card at 144 × 202 beside it, a back as its goal's
+   name and its state's line; after about 300 ms, one at a time, put away by Esc, from the column to its right over the table.
+5. **Nothing changes size by what is picked or opened**: the column, the table, the discard's column and the hand keep their sizes
+   with a goal picked, a card lifted, or the inventory, the history, the launch table or a form open. The carried cards' taller hand
+   and the column dropped under a form are bugs.
+6. **What lies left and right and is a place changes the table**: a card of the column or of the discard, the die (the launch
+   table: Play, as today), the backpack (the inventory), the book (the history). **What is not a place never changes it**: the
+   potions, *Stop all* and *Resume*, *Here* and *Away*.
+7. **The right column's head holds what does not change the table**: the lamp's chain at its right edge (§271 unchanged), the drum of
+   potions left of it, unrolling down over the discard when hovered, and *Stop all* or *Resume* in words under the drum, which can
+   be pressed while a card is lifted. **The hand's right end holds the places**: the die, the backpack and the book, about 48 to 56 px
+   each, each drawn open while its table is on; they sink with the hand while a card is lifted. This changes §261.11, §261.13,
+   §272.1 and §273.3; §266.10 is kept.
+8. **The tabs say through whose eyes**: the Orkmaster's tab shows the order of the work between the leaders, a leader's tab its own
+   view of what is picked, or of the whole project when nothing is. Nothing picked on the Orkmaster's tab is the project's table,
+   the window at rest.
+9. **The Orkmaster's news is a balloon**: what it says unasked (the work moved to another tool, the limits running low, what the
+   night did, Orkboard mended) rises from its crown over the start of the tabs, at most about 420 px wide, one at a time (a newer one
+   replaces it, the older ones go to the Orkmaster's journal), until × or until it is no longer so, a day at most. Its only act is
+   *Show*, which picks the goal it is about; it is a polite live region and never takes the focus. A toast stays the answer to a
+   press, where it was pressed; a decision stays in the hand (*Go on paid?*). This changes §177.2's line under the pane's title.
+10. **One place moves** (§247.8 kept): only the picked goal's cards, its tasks at work as one place; orkUI's working step or a rune's
+    glow of 2 s or slower; nothing flashes; nothing moves under reduced motion.
+
+**The Orkmaster's column**
+11. **Its piles are the goal's stages** (`TERMS`, the old names in `was`): **Ideas**, the small cards' fan; **Specs**, small cards on
+    their side in a squared deck (this replaces §251.3–4's backs of 112 × 157; §236's tuck is kept); **Implementation**, the big
+    cards' cascade.
+12. **A goal lies where what happens to it next** (this changes §206.3's and §247.2's places): in *Ideas* while the Orkmaster reads
+    and routes it, in Talk, and while an agreed decision waits (§241.2's play and ring); in *Specs* while its sections are written
+    (§241.3's filling ring moves here), while it is planned and while it waits for the look; in *Implementation* at work. **Held or
+    later before Talk**, at the fan's end with a pause or a clock on its back; **held after its spec, or waiting for the night's
+    build**, at the cascade's foot (as *At work · later* today); **held at work**, in the cascade with a pause. A failure stays in its
+    stage's pile in the danger's ring, and its card is thrown into the hand (§206.7).
+13. **The fan is denser and turned like a hand's**: 4 to 6° a card on an arc, 12 to 16 px apart, seven within 160 px, tighter after
+    that, never a count. **The column keeps its 160 px**; the project's name in its head takes two lines, then is cut, whole on hover.
+14. **One card through a goal's life, led by the Orkmaster** (§198.8 kept), **and at each stage's start the Orkmaster deals every
+    leader of the route its card for that stage**: an assessment card at *Ideas*, a section card at *Specs*, a step card at
+    *Implementation*, its tasks laid under it when the step is planned. A later party's step is a placeholder until the step before
+    it is accepted, since the engine plans it only then. This changes §241 (the heads in the ring) and §251.7 (dealt only at the
+    start).
+
+**The tables**
+15. **One template**: a header of small cards in groups, held while the table scrolls; a body (the leaders' lanes on the
+    Orkmaster's tables, the hero's scheme on a leader's, a grid for the history and the inventory, a log for a seat's work); and the
+    table's foot at the left, kept for the card in play (19).
+16. **The tables, by the stage picked and the open tab** (§261.4 made whole):
+    1. **The Orkmaster's project** (nothing picked): a lane for each leader; in it a row of small cards for the ideas it is
+       assessing now, then two cascades, its spec cards and its implementation cards. A card pressed picks its goal and opens that
+       leader's table for that stage.
+    2. **A leader's project**: its header in three groups: **at work** (its ideas and specs face down, its implementation face up,
+       as in the column; pressed, the goal is picked and this leader's table for its stage opens), **concerns** (face down, with the
+       rune of the goal it is about, or a + for a new one; pressed, it is lifted: *Not a problem*, *Later*, *Make it a goal*), and
+       **ask** (a small ? card with a hand that takes parts of the scheme: 20). Under the header, the hero's scheme in its board
+       game's shape (§280), its concerns marked on their parts as well.
+    3. **An idea, through the Orkmaster**: a small card under each leader of the route, face down while it assesses, face up with
+       its verdict once done (✓ go, ! doubt, ✗ no); Product's weighing is a card in Product's lane when Product is off the route.
+       Pressed, the next table.
+    4. **An idea, through a leader**: three rows of big cards: **its verdict** (its picture, how far it agrees); **needs your
+       answer** (at most three: a risk, a conflict with a goal or a decision, a question, each with what it rests on and its ways);
+       **could be better** (at most three improvements, each a line of the idea rewritten, said to be lighter, the same or heavier).
+       Each is lifted and answered as any question (19).
+    5. **A spec, through the Orkmaster**: a big card under each leader of the route, face up once its section is written, face
+       down while it is being written. Pressed, the next table.
+    6. **A spec, through a leader**: its header holds the small cards of its steps as fans, with their seats' heads and tools; **a
+       seat whose tool cannot do what its step needs is marked !** (a browser for its tests, git's index, the network, a command
+       not on the path: what trials 149, 152-e and 160 hit). Under the header, the parts of its scheme the spec changes, enlarged,
+       **now and as they will be**: what is new as a ghost, what changes outlined, what goes struck through, and Design's sketch
+       where one was made.
+    7. **The implementation, through the Orkmaster**: the work from top to bottom, a lane for each leader, its task cards with
+       arrows between them, a later step as a placeholder. Pressed, the next table.
+    8. **The implementation, through a leader**: its header is its party (heads, tools) with an edit mark that opens its inventory;
+       its lanes are **its seats**: those who make, those who check, and its acceptance, with the arrows task → check →
+       acceptance → the tasks sent back (four at most, two rounds, §256). Pressed, a seat's work.
+    9. **A seat's work**: its header holds its head, its tier and its tool, with an edit mark to the leader's inventory; its body is
+       the session's log, read only, in a terminal's face, its tail live, its steps over it (§207), the values of the goal's secrets
+       masked. A task run in the person's own AI tool (a skill, §258) says so instead.
+    10. **The result, through the Orkmaster**: what the spec planned against what was built, a lane for each leader, each
+        leader's problems lit.
+    11. **The result, through a leader**: planned against built on its scheme, **before and after** where the code keeps both
+        (Tech's System by commit, Design's screens' shots), elsewhere the parts touched; every error of the goal's work (a try that
+        failed, a red gate, a step sent back, a finding).
+    12. **The Orkmaster's inventory** (30–32).
+    13. **A leader's inventory** (30, 33).
+    14. **The project's history**: a grid of goal cards that scrolls, a row a day, a day's many cards as a cascade lying across;
+        dated by when they were **agreed** (by default), **done** or **in main**, a switch in its header; a version's plate on the
+        day it was released; **a search** over the titles, the gists and the decisions, the cards found lit and the rest dim.
+        Pressed, the Orkmaster's result.
+    15. **A leader's history**: the same, with the goals its party worked on. Pressed, its result.
+    16. **The launch table**: Play, as today (the word is new).
+17. **A card's bottom right is one figure, with its unit beside it** (this changes §251.2's *time*): **the share of its tool's
+    window** where that can be measured, else **tokens**, and money only where a price is known (Codex has none); at work, what it
+    has spent so far; done, what it spent in all; ahead, **≈** its party's average for its kind. The time is in its preview.
+18. **The verdicts by their signs**: ✓ in the success colour, with no ring; ! and ✗ in the ink; red only for a call that failed;
+    the alert's ring only where a question waits for the person.
+
+**Asking and answering**
+19. **The card in play lies at the table's foot, at its left**: a question, a failure, a concern or a conflict, lifted, rises there
+    at 144 × 202 and leaves room over the hand for its answers; **its goal is picked in the column and the asking leader's tab
+    opens** (the Orkmaster's, for its own question). This changes §261.3 for a lifted card and §270.1's place. Its answers are the
+    hand: cut by the rim and rising when hovered (§270.2, not so today), the rest of the hand sunk.
+20. **A new goal is that card**: the + card stays in the hand; pressed, a card of 144 × 202 rises at the table's foot, its words
+    written in a field beside it on the table, and its corners' choices (its rune; its kind, **?** among them; who; *Now* or
+    *Later*) are dealt to the hand. This changes §270.6's place. **A quick question is the card of the kind ?**: it goes through the
+    Orkmaster to whoever knows (the open tab's leader; on the Orkmaster's tab the Orkmaster itself, or one hop), one call on the
+    cheaper tier, no file, no rune, no place in the column, and **comes back as a card in the hand**: its answer on the table, its
+    ways *Make it a goal*, *Ask more* and *Got it*. It is kept in the leader's journal (`asked`) and not shown. This changes §181.1
+    and §181.3; §181.4–7 are kept.
+21. **A concern at the alert's level is also in the hand**, one stack for each leader under its lane; the card in the hand, the one
+    in the header and the mark on the scheme are one thing: one hovered or picked lights the others, and it is answered once. A
+    note stays on the scheme and in the header. *Later* lays it face down in the header, out of the hand, until the leader's next
+    look finds it again. This changes §183.5.
+22. **A leader that decides by itself says so with a card that can be overruled**: muted (no alert's ring; its head; a sign of
+    *decided*), its ways *Accepted* (as it stands) and *Replay* (back as a question with its ways); it leaves the hand by itself
+    when its goal moves to its next stage. Never for §266.5's locks (going into main, money above what was agreed, dropping or
+    holding a goal, a decision against an earlier one). This changes §240.1 for this card and §266.5's *in its evening line*.
+
+**An idea's assessment**
+23. **A leader's say in Talk** (`seat_talk_rules`): its verdict; at most three things that need an answer, each with what it rests
+    on (a goal, a §, a part) and at most three ways, each way with its kind (34); at most three improvements, each a line of the
+    idea rewritten, lighter, the same or heavier. **Code gives it what code knows**: the goals in the pile the idea looks like
+    (§242), the decisions' slices (§233), the goals in line, its map's text. It reads no file, and a doubt code can settle is
+    grounded (spec 155 D). About a minute of the machine's time, the person's answers and the agreed wait aside.
+24. **The Orkmaster rewrites the idea** with what the person took, shown as a change to the person's own words (the Gist and its
+    *Added:* lines) and undone by a press; improvements taken that contradict each other come back as one fork.
+25. **The leaders judge again once all their cards are answered**, or at *Judge again now* on the Orkmaster's table of the idea:
+    those that doubted or said no, whose proposal was turned down, or whose part the rewrite touches (§198.3); twice at most, then
+    a hearing. No timer, except for a leader whose way of answering is a Choice with a wait (§266.5).
+
+**A goal's branch, the discard, main**
+26. **A goal's code has a branch of its own** (`goal/<slug>`; its tasks' branches stay `idea/<slug>/<task>`): its tasks land there
+    (this changes §101's *in dev*), a later party's step starts from it, dev is merged into it as each step starts, and **it goes
+    into dev once**, when its last step is accepted and the gate is green on dev with it. The Board's pages (the goal, its spec,
+    the journals) land where the Board lives, as today: a page on another branch is not seen (trial 160 F1). **A goal dropped
+    before dev loses its branch, and nothing is reverted.**
+27. **The discard is two piles**, through the open tab's eyes: **the lower one, done on its branch and waiting for dev**, drawn only
+    while *Lands in dev by itself* (today's `review`) is off; **the upper one, in dev and waiting for main**. Over each pile, **its
+    branch's plate** (*dev*, *main*); pressed, the branches are dealt to the hand: for the lower pile any branch or a new one from
+    dev, for the upper main or dev; a card warns first when goals are at work; `orkboard/*`, `goal/*` and `idea/*` are never
+    offered. It is the project's setting (`merge_into`, the release branch; this changes §254.8's *chosen at the first open* and
+    §206.8's *dev and main only*), never a view.
+28. **To main** is a card's act, the goals it takes along lit (`goal_main.plan`), or the upper pile's: the gate's main tests run, a
+    red one is named, and *To main without the tests* is in the card's menu (§274.3); its cards dissolve into the portal's ring of
+    runes (nothing moves under reduced motion). **The past leaves the discard for the history book** (16.14; this changes §261.9
+    and §277.5's place; §277's dates are kept).
+29. **Release and Live wait**: their chairs are not offered; a Release already seated keeps its page, with no tab and its checks
+    off; the versions are read from the tags and the changelog. This changes §261.7 and §273.2.
+
+**The inventory**
+30. **Both inventories work one way** (this changes §267.1's stall): a row of slots on the table, each showing its chosen way as a
+    big card, with its label over it (what the setting is), its picture and what it does, the pips of its ways, and a mark when a
+    cheaper way exists. Pressed, its ways are dealt to the hand, each with what it does and its price in its bottom right (what it
+    changes in the share of the week), the Orkmaster's pick starred, *Yours* and *Yours before* marked; *Default* is a way among
+    them; *Undo* is on the table's line.
+31. **The Orkmaster's slots** (this changes §266.2 and §225.1's two settings): **How deep** (`target`: the default of the leaders'
+    tiers); **The build starts** (*at once*, *in 30 min*, *in 2 h*, *tonight*, *by hand*: `autostart` and `look_wait` as one);
+    **The night** (32); **Lands in dev by itself** (`review`); **Push** (*no*, *main only*, *dev and main*); **Goals at once**
+    (`max_parallel`). The hours belong to the lamp's chain (a long pull); the reserves stay in Settings.
+32. **The night is a ladder** (this changes §199.4 and spec 99 §3's *the night is gone*): *Off*; *Ideas and specs* (Talk and the
+    specs of the goals in line, nothing built); *and the builds* of the goals agreed (today's `work_at_night`); *and the leaders'
+    proposals*, the leaders picked as cards in the hand: one for each leader and three a night at most, each taken to a ready spec
+    at most and never built without a press, in the morning in *Specs* marked *proposed* with a card in the hand, *Take* or
+    *Drop*, all within the night's reserve. The night's window is chosen on its card.
+33. **A leader's slots**: **its hero** (shown with no choice where its craft has one, §278.1); **its AI tool**; **its tier**, for
+    its own calls (Talk, its section, its acceptance), over *How deep*'s default; **its party's size** (*lean*, *standard*,
+    *full*: its seats' cells and how many work at once; no longer a Target of its own, as `realm/idea_target.py` has it); **how it
+    answers**: *Pen* (your words, each time), *Choice* (its ways), *Fork* (its ways worked out, with their gains, costs and risks,
+    drawn where it can, one more call a question at the elder tier, its price on the card), *Silent* (it decides: 22), with
+    §266.5's locks kept. Under them, **its seats' grid**: each seat's head and name, its tool and its tier as small cards. The
+    engine of the ways of answering (§267.5's *later*) is built with these slots.
+
+**Pictures**
+34. **Cards carry pictures** (this changes §252.2's *no picture for its own sake* and CLAUDE.md's *One look*): a way's kind
+    (`way_kind`, about twelve, returned by every call that offers ways), an inventory's way, a question's kind where orkUI's signs
+    do not say it; the heroes and the races as drawn. An idea's window keeps what is attached to it, and a task's what it made
+    (§252.2 kept).
+35. **Made with Gemini, laid on orkUI's grid in its palette** (its greys and the element's colour), taken into orkUI and copied,
+    with a line in `NOTICE`; each in two sizes, a big card's window and a small card's middle. **A picture never carries the
+    meaning alone**: the way's line stays under it, in the body face.
+36. **Measured**: the time to answer and how often *Put it back* is pressed, in the owner's week (§262.3).
+
+**The words** (`TERMS`, with each part's spec): *Ideas*, *Specs*, *Implementation* (*In analysis*, *To review*, *At work · later*
+in `was`); the tables' names; *the launch table*; *History*; *Judge again now*; *Ask more*, *Got it*; *Accepted*, *Replay*;
+*Lands in dev by itself*; *The build starts*; *The night*; *proposed*; *Take*, *Drop*.
+
+**Not now**: the phone and the window under 760 px, each a goal of its own; Release's and Live's tabs; a branch chosen for a single
+goal; the log read as the tool's events rather than its text; the lich's seal at *To main*.
+
+**Built** by goals, in this order, each spec written by its leaders: **A.** the frame (1–10: the two sizes, the small card's face,
+the preview, the geometry, the right column, the balloon), orkUI first (the small face, the book, the drum at the column's head);
+**B.** the column (11–14); **C.** the idea, spec and implementation tables with the assessment's engine (16.1, 16.3–16.8, 17, 18,
+23–25); **D.** asking and answering (19–22); **E.** the leader's project (16.2); **F.** the goal's branch and the discard (26–29);
+**G.** honest results first (a Done when line is *ok* only where the acceptance said *met*, *unseen* says *not checked*, a craft
+whose map has no file touch says *landed, not compared*, a finding told reaches the hand: trials 152-e F4, 160 F4), then the result
+tables and the history (16.10, 16.11, 16.14, 16.15); **H.** the inventory (30–33); **I.** a seat's work (16.9); **J.** the pictures
+(34–36), their list made once 23's ways have their kinds. **Drawn first**: `docs/mockups/table-template/`, the template with the
+Orkmaster's project, an idea through the Orkmaster and through a leader, and the right column; the owner's pick.
+
+The owner's call.
+
+## 284. The table's template as the owner picked it: an idea through a leader in one row, the small card's first face, the potions in a row again, Stop all the die's word, the places of one size (9 November 2026, the owner)
+
+Changes: 283.7 (the right column's head and the hand's right end), 283.16.4 (three rows); 261.13 (the drum), 266.10 (Stop all
+above the potions); 261.12 is taken again.
+
+Why: the owner, on the mockup §283 asked to be drawn first (`docs/mockups/table-template/`): an idea through a leader in three
+rows does not fit a 1366 × 768 window (its third row falls under the hand, shot 6), while one row of three groups fits with room
+to spare (shot 5); and with the drum, *Stop all* and the chain in the right column's head, the discard's lower pile was cut. The
+owner: *one row; the first face; let us leave the drum and go back to a row of bottles, now there is room, so the chain and its
+words can move further right; the die, the inventory and the history of one size; and Stop all down, so there is more room up
+top for the discard*. So:
+1. **An idea through a leader is one row of three groups** (this changes §283.16.4's three rows): its verdict; *needs your
+   answer*; *could be better*, each group's cards side by side, at most three a group; the table scrolls only past that.
+2. **The small card's face is the first one**: the rune in its top left corner, the dots of its parties in its bottom left, its
+   picture in its middle (§283.3); no kind's pip.
+3. **The potions stand in a row again** at the right column's head (this changes §283.7 and §261.13's drum): a bottle for each AI
+   tool, its size the week and its liquid the 5 hours (§192), its share now under it (§247.3), a tool at the warn or the danger
+   level in that level's colour with its words (*out*, §262.1); the tool the open tab's work goes to is the one whose share is
+   said in the ink. **Three at most stand in the row**: the one the work goes to now, then any at the warn or the danger level,
+   then the person's order; hovered or focused, the row shows them all with *back 14:00* and the empty slot at its end (§232.4).
+   Nothing the person does reorders it. **The lamp's chain stands at the head's right edge**, its words beside it (§271.1).
+4. **Stop all is the die's word again** (§261.12 taken again; this changes §266.10 and §283.7): under the die, *Stop all* while
+   the orks work, *Resume* after it, else nothing (the die is Play's). **It stays lit and can be pressed while a card is lifted**,
+   when the rest of the hand and the places sink (§270.3): the one thing in the hand that never sinks, since it is safety.
+5. **The places are of one size**: the die, the backpack and the book each stand in a box of 48 × 60 at the hand's right end, the
+   die at orkUI's `.small`, the backpack at 3 px a cell, the book drawn in orkUI at the same; each with its word under it but the
+   die, whose word is 4's.
+6. The mockup shows it (`docs/mockups/table-template/`, its shots made again).
+
+The owner's call.
+
+## 285. The right column's head as the owner drew it: the potions' tops on one line and the week said under a smaller bottle; the chain half as tall, Stop all under it; the places only what changes the table, the history a book (9 November 2026, the owner)
+
+Changes: 284.3 (the potions' words), 284.4 (Stop all the die's word), 284.5 (the die's word); 283.7's *Stop all* at the head is
+taken again; 247.3 (the week's words only while the week runs out first) for the row.
+
+Why: the owner, on §284's mockup: *three bottles at most in a row, aligned at the top, so their tops are one line: under the large
+bottle no "Week", only the percent; the smaller a bottle gets, the more room under it, so "Week" and the week's percent can stand
+there. The chain and "Here" half as tall, about half the large bottle, and Stop all under them; then the three below, the die, the
+history and the inventory, stay only for changing the table, with "Play" under the die, all three one size; and the history a book,
+not a scroll*. A bottle's size is the week's share (§192), and its meaning was the row's hardest thing to read (§247): said under
+the bottles that have shrunk, the week explains their size where it matters, and nowhere else. So:
+1. **The potions' tops are on one line** (three at most, chosen as §284.3 says): under each its 5 hours' share (*62%*, *out*);
+   **under a bottle smaller than the large, the week's share as well** (*week*, *30%*), in the room its smaller size leaves; the
+   large bottle says the 5 hours alone. This changes §247.3 for the row: the week is said wherever its bottle has shrunk.
+2. **The lamp's chain is half as tall** (orkUI's `.small`, 6 × 29), at the head's right edge, *Here* or *Away* and its hours beside
+   it (§271), and **Stop all stands under it** (*Resume* after it; nothing while no ork works; this takes §283.7's place again and
+   changes §284.4). In the right column, not the hand, it never sinks while a card is lifted.
+3. **The hand's right end holds only what changes the table**, the three at one size: the die with *Play* under it (this changes
+   §284.4–5), the backpack, and **the history drawn as a book**, shut and open as the backpack is, drawn in orkUI.
+4. The mockup shows it (`docs/mockups/table-template/`, its shots made again).
+
+The owner's call.

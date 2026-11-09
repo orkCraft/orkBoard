@@ -16,13 +16,15 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   of a project, and switching between them loses nothing: `~/.config/orkcraft/`, `<project>/.orkcraft/`,
   `.orkcraft.json`, `orkcraft.toml`, the `ORKCRAFT_*` variables, the keychain's `orkcraft-ideas`, the phone's
   `orkcraft.v1` and its `orkcraft-app-v*` cache. Only the package is `orkboard`.
-- **One look, orkUI's office** (dark, monochrome, colour a signal; its only pictures the races' heads, small: an accent,
-  never a picture): the page and the phone are always drawn in it (docs/specs/40-design-system.md). The pixel face is for
-  headings and buttons, never for a person's words.
+- **One look, orkUI's office** (dark; colour is the party, the element and a signal, decisions §268; its pictures are orkUI's
+  own: the races' heads, the heroes and a card's picture of its kind, decisions §283, never the only thing that says what a card
+  means): the page and the phone are always drawn in it (docs/specs/40-design-system.md). The pixel face is for headings and
+  buttons, never for a person's words.
 - **The frame** (decisions §104.0, §145): the window is two parts, the table (the leaders' tabs and the pane: *what and
   why*, through whose eyes, the goals in line in its first lane) and the hand (*what the person decides*, under the
-  lanes, with the AI tools' mana at its right); the discard of goals done stands beside the table, at the window's right, its head the backpack and the lamp's
-  chain (decisions §273); a goal is on the table, in the hand or in the discard (decisions §167, §176); Release is a craft as any,
+  lanes, with the places at its right, each opening a table: the die, the backpack, the history book); the discard of goals
+  done stands beside the table, at the window's right, in two piles (for dev, for main), its head what never changes the
+  table: the AI tools' mana in a row, the lamp's chain and Stop all (decisions §273, §283, §285); a goal is on the table, in the hand or in the discard (decisions §167, §176); Release is a craft as any,
   To main the person's act from the discard after the gate's tests (decisions §274). The Orkmaster says what and who, a
   party's leader how, what changes and why, a member does (and asks only its leader). New faces keep to it: no list
   column (the Orkmaster's column is the first lane pinned, whole cards: decisions §206), no drawer, no count of what waits, no
