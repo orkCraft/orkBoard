@@ -76,6 +76,8 @@ def test_the_empty_slot_is_lit_and_the_card_comes_up_while_the_orkmaster_asks_fo
     pg.wait_for_selector(ADD, timeout=WAIT_MS)
     assert "is-lit" in pg.locator(SLOT).get_attribute("class")
     assert "Which AI tool shall the orks think with?" in pg.locator(".fo-bubble").inner_text()
+    box = pg.locator(ADD).evaluate("e => [e.offsetWidth, e.offsetHeight]")          # its layout box: the card leans, so its bounding box is wider
+    assert box == [144, 202], f"Add an AI tool is a card, 144 x 202 (spec 168 A1): {box}"
     assert not d.errors, d.errors
 
 
@@ -177,6 +179,8 @@ def test_a_potions_card_orders_with_the_arrows_and_by_dragging(desk, project):
     pg.locator('.hand-pot[data-provider="codex"]').click()
     card = pg.locator('[data-lift="tool"][data-tool="codex"]')
     card.wait_for(timeout=WAIT_MS)
+    tb = card.evaluate("e => [e.offsetWidth, e.offsetHeight]")
+    assert tb == [144, 202], f"the tool's card, 144 x 202 (spec 168 A1): {tb}"
     card.locator('[data-left="1"]').click()
     pg.wait_for_function("() => document.querySelector('.hand-pot').dataset.provider === 'codex'", timeout=WAIT_MS)
     assert order_of(d.host) == ["codex", "claude", "agy"] and d.host.machine.main_tool == "codex", "the first is the main tool"

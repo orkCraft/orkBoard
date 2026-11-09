@@ -16,13 +16,13 @@
 .fo-fan { appearance: none; display: flex; margin: 0; padding: 0 0 0 var(--ork-3); border: 0; background: none; cursor: pointer; }
 .fo-fan:disabled { cursor: default; }
 .fo-fan:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
-.fo-fan > .ork-card-back { width: 40px; margin-left: calc(var(--ork-3) * -1); }
+.fo-fan > .ork-card-back { width: 56px; height: 78px; aspect-ratio: auto; margin-left: calc(var(--ork-3) * -1); }
 .fo-fan > .ork-card-back:nth-child(1) { transform: rotate(-6deg); }
 .fo-fan > .ork-card-back:nth-child(2) { transform: rotate(-2deg) translateY(-2px); }
 .fo-fan > .ork-card-back:nth-child(3) { transform: rotate(2deg) translateY(-2px); }
 .fo-fan > .ork-card-back:nth-child(4) { transform: rotate(6deg); }
 .fo-stage.is-out .fo-om > .fo-fan { position: absolute; left: 56px; top: 6px; }
-.fo-stage.is-out .fo-fan > .ork-card-back { width: 28px; }
+.fo-stage.is-out .fo-fan > .ork-card-back { width: 56px; height: 78px; }
 
 /* a place, unseen until its card lands; then it appears (no motion under reduced motion) */
 .fo-place:not(.is-landed), .fo-table:not(.is-landed) { visibility: hidden; }

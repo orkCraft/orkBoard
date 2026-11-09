@@ -534,7 +534,7 @@ def test_with_no_goal_at_all_the_plus_card_lies_large_in_the_panes_middle(gui):
         assert pg.locator(".hand-lane").count() == 0 and pg.locator(".hand-end").count() == 0
         table, card = pg.locator(".frame-table").bounding_box(), big.bounding_box()
         assert abs((card["x"] + card["width"] / 2) - (table["x"] + table["width"] / 2)) <= 4 and abs((card["y"] + card["height"] / 2) - (table["y"] + table["height"] / 2)) <= 4
-        assert card["width"] > 120
+        assert big.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [144, 202], "the large + card, 144 x 202 (spec 168 A1)"
         shot(pg, "wide-large-plus")
         big.click()
         field, area = _field(pg)
