@@ -9,10 +9,13 @@ import { Card, ask, whose } from "./chronicleparts.js";
 import { byDay } from "./chroniclewords.js";
 import { openChronicle } from "./chronicle.js";
 
+const ALL = "all";                                                                            // the book's deck (hand/book.js): the whole past, every version and what is not released yet
+const joined = (decks) => ({ goals: decks.flatMap((c) => c?.goals || []), decisions: decks.flatMap((c) => c?.decisions || []) });
+
 const withParty = (args, party) => (party ? { ...args, party } : args);
 
 /** What a search found in the one deck, as the deck's own shape: `{goals, decisions}` (found cards say where the words are, not their day). */
-const foundIn = (r, id) => (id === "unreleased" ? r.unreleased : (r.chapters || []).find((c) => c.id === id)) || { goals: [], decisions: [] };
+const foundIn = (r, id) => (id === ALL ? joined([r.unreleased, ...(r.chapters || [])]) : id === "unreleased" ? r.unreleased : (r.chapters || []).find((c) => c.id === id)) || { goals: [], decisions: [] };
 
 export function PastDeck({ deck }) {
   const { party } = whose(), [all, setAll] = useState(null), [query, setQuery] = useState(""), [found, setFound] = useState(null), [err, setErr] = useState(""), field = useRef();
@@ -22,7 +25,12 @@ export function PastDeck({ deck }) {
   }, []);
   useEffect(() => {                                                                             // the whole deck, read once
     let live = true;
-    const read = deck.id === "unreleased" ? ask("ideas.chronicle", withParty({}, party)).then(([r, e]) => [r && (r.unreleased || { goals: [], decisions: [] }), e])
+    const read = deck.id === ALL ? ask("ideas.chronicle", withParty({}, party)).then(async ([r, e]) => {            // the whole past: the unreleased and every chapter (the first comes whole, the others one by one)
+      if (!r) return [null, e];
+      const more = await Promise.all((r.chapters || []).map((c) => (c.goals || c.decisions ? [c] : ask("ideas.chronicle_chapter", withParty({ id: c.id }, party)).then(([x]) => [x]))));
+      return [joined([r.unreleased, ...more.map(([c]) => c)]), ""];
+    })
+      : deck.id === "unreleased" ? ask("ideas.chronicle", withParty({}, party)).then(([r, e]) => [r && (r.unreleased || { goals: [], decisions: [] }), e])
       : ask("ideas.chronicle_chapter", withParty({ id: deck.id }, party));
     read.then(([r, e]) => { if (live) { setAll(r || { goals: [], decisions: [] }); setErr(r ? "" : e); } });
     return () => { live = false; };
@@ -31,7 +39,7 @@ export function PastDeck({ deck }) {
   useEffect(() => {                                                                             // the words asked of the host, a breath after the last key
     if (!words) { setFound(null); return undefined; }
     let live = true;
-    const t = setTimeout(() => ask("ideas.chronicle_find", withParty({ query: words, id: deck.id }, party)).then(([r, e]) => { if (live) { setFound(r ? { ...foundIn(r, deck.id), more: r.more || 0 } : { goals: [], decisions: [], more: 0 }); setErr(r ? "" : e); } }), 180);
+    const t = setTimeout(() => ask("ideas.chronicle_find", withParty(deck.id === ALL ? { query: words } : { query: words, id: deck.id }, party)).then(([r, e]) => { if (live) { setFound(r ? { ...foundIn(r, deck.id), more: r.more || 0 } : { goals: [], decisions: [], more: 0 }); setErr(r ? "" : e); } }), 180);
     return () => { live = false; clearTimeout(t); };
   }, [words, deck.id, party]);
   const shown = words ? found : all, items = shown ? byDay(shown) : [];

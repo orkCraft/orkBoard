@@ -1,2 +1,12 @@
-/* The places at the hand's right end (docs/specs/168 A4 and A5, decisions §285.3): the backpack, the die and the book, the places that change the table. Layout only. */
-.hand-end .stall-pack { pointer-events: auto; }
+/* The places at the hand's right end (docs/specs/168 A4 and A5, decisions §285.3): the die, the backpack and the book, the places that change the table, **one size**: each picture in a box of 48 × 60 (the die at orkUI's `.small`, the backpack at 3 px a cell, the book at 2),
+   its word under it; each drawn open while its table is on. They sink with the hand's row while a card is lifted. Layout only: the pictures are orkUI's (`.ork-die`, `.ork-pack`, `.ork-book`). */
+.place-box { display: contents; }                                                                    /* no box of its own where the backpack lies small (the tabs' end, the phone's top row) */
+.hand-end .place-box { display: flex; align-items: flex-end; justify-content: center; flex: none; width: 48px; height: 60px; }
+.hand-end .ork-pack { --_n: 3; }                                                                       /* 42 x 54 */
+.hand-end .stall-pack, .hand-end .hand-book { appearance: none; position: relative; z-index: 1; flex: none; box-sizing: border-box; width: 56px; margin: 0; padding: var(--ork-1) 0; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1);
+  background: none; border: 0; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; pointer-events: auto; }
+.hand-end .stall-pack__word, .hand-book__word { font-weight: 600; line-height: 16px; white-space: nowrap; }
+.hand-end .stall-pack:hover, .hand-end .stall-pack.is-open, .hand-end .hand-book:hover, .hand-end .hand-book.is-open { color: var(--ork-ink); }
+.hand-book:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hand-end .hand-die { width: 56px; }                                                                   /* the die's box is the same as the other two's: 56 px with its word */
+@media (min-width: 760px) { .hand-row .hand-end { justify-content: space-around; gap: 0; } }

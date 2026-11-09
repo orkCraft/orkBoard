@@ -17,6 +17,7 @@ import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
 import { Mana } from "./mana.js";
 import { PotionRow, liftedStop } from "./potionrow.js";
 import { Backpack } from "../table/backpack.js";
+import { Book } from "./book.js";
 import { useNight } from "./nightcard.js";                       // the night's record: its goals done go to the discard under a moon (spec 128 C.3; no card of the morning's)
 import { useThrown } from "../table/flight.js";                   // a failure is thrown to the hand from its lane's card, which leaves a place (spec 128 C.2)
 import { PlayDie } from "./playdie.js";
@@ -109,14 +110,14 @@ export function Hand() {
   useEffect(() => { if ((key || fieldOpen.value || !wide) && headerDeal.value) headerDeal.value = ""; }, [key, fieldOpen.value, wide]);
   const chair = dealing.value && wide && !carrying && !middle && !bare && !s;                                   // the new chair pressed: its crafts are the hand (spec 161 I)
   const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
-  const backpack = columnOn() && !bare ? html`<${Backpack} />` : null;
+  const places = columnOn() && !bare ? html`<${Backpack} /><${Book} />` : null;                                // the places that change the table: the die, the backpack, the book (spec 168 A5)
   const pots = !columnOn() ? html`<${Mana} lifted=${s} />` : bare ? html`<${PotionRow} above=${true} />` : null;
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
-    ${carrying && html`<div class="hand-places"><div class="hand-row is-carrying" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}><${Carry} /><div class="hand-end">${backpack}<${PlayDie} />${pots}</div></div></div>`}
+    ${carrying && html`<div class="hand-places"><div class="hand-row is-carrying" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}><${Carry} /><div class="hand-end"><${PlayDie} />${places}${pots}</div></div></div>`}
     ${!middle && !carrying && html`<div class="hand-places"><div class=${cards || deal || chair ? "hand-row is-sunk" : "hand-row"} inert=${cards || deal || chair ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
-      <div class="hand-end">${backpack}${!bare && html`<${PlayDie} />`}${pots}</div>
+      <div class="hand-end">${!bare && html`<${PlayDie} />`}${places}${pots}</div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
@@ -126,7 +127,7 @@ export function Hand() {
     ${key.startsWith(TOOL) && html`<${ToolCard} tool=${key.slice(TOOL.length)} />`}
     <${SetupCard} />
     ${!columnOn() && html`<${SetupBubble} />`}
-    ${middle && html`<div class="hand-mana-only">${backpack}<${PlayDie} />${pots}</div>`}
+    ${middle && html`<div class="hand-mana-only"><${PlayDie} />${places}${pots}</div>`}
     <span class="hand-live" role="status" aria-live="polite">${said.value}</span>
     ${middle && html`<${Middle}>${fieldOpen.value ? html`<${Field} middle=${true} />` : html`<${PlusCard} large=${true} onPress=${plus} />`}<//>`}
   </footer>`;
