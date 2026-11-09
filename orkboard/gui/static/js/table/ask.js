@@ -1,3 +1,6 @@
+// **The quick question is the card of the kind ?** (docs/specs/168 D3, decisions §283.20, which changes §181.1 and §181.3): the host routes it (the open tab's leader; on the Orkmaster's tab the Orkmaster, or one hop to the leader whose part
+// it is: the record's `party` answers, its `tab` is where it was asked) and it comes back as a card in the hand (hand/askcard.js) with its answer on the table and three ways, `ASK_WAYS`: **Make it a goal** (`make_it_a_goal`), **Ask more**
+// (`ask_more`) and **Got it** (`take`, `ideas.ask_clear {got_it: true}`). This module owns the ways' words and acts (`askActs`), so the bubble's answer and the hand's card are one thing; the bubble below is where it is asked.
 // The quick question as the open leader's bubble (docs/specs/123-the-leaders-at-the-table.md §6, which changes docs/specs/106-a-quick-question.md §3 and docs/specs/121-the-day-the-morning-and-the-night.md §6; decisions §181, §201):
 // the person presses the open leader's head (tabs.js draws it as a button carrying `data-ask-head="<tab>"`, and opens the bubble with `openAsk(tab)`), and a bubble stands under it on orkUI's raised panel, its tail under the head's centre, at most 440 px
 // wide and kept inside the window. Its states are the line's that was: **asking** (the field focused; Enter sends `ideas.ask {party, q}`, party "" on the Orkmaster's tab; the field is kept when the bubble is closed), **reading** (the question
@@ -18,7 +21,7 @@ import { Elem, Head, Icon, TIER_WORDS } from "../orkui.js";
 import { command, toast, town } from "../link.js";
 import { spendWords } from "../hand/costline.js";
 import { mapData } from "../shell/store.js";
-import { ORKMASTER, over, picked } from "../frame/state.js";
+import { ORKMASTER, openTab, over, picked } from "../frame/state.js";
 import { fieldText } from "../hand/state.js";
 import { openField } from "../hand/pluscard.js";
 import { WHOLE, groupsOf, mapName, toolOf, wide } from "./data.js";
@@ -56,6 +59,21 @@ export function openAsk(tab, part = null, words = "") {
   askOpen.value = keyOf(tab);
 }
 export const closeAsk = () => { askOpen.value = null; askPart.value = null; };
+
+/** The answer card's three ways: the kind of each (as realm/way_kinds.py `KINDS`, and the record's `ways`) and its word (realm/lexicon_table.py `ask_card_*`). */
+export const ASK_WAYS = [{ kind: "make_it_a_goal", name: "Make it a goal" }, { kind: "ask_more", name: "Ask more" }, { kind: "take", name: "Got it" }];
+/** The tab a record was asked on: `tab` (a record written before the card has only `party`). */
+export const askedOn = (ask) => (ask && ask.tab !== undefined ? ask.tab : ask?.party) || "";
+
+/** What the three ways do for an answered record `ask`, whoever draws them: `goal` tells the host and opens the new goal's field with the line the answer suggests (else the question's own words);
+ *  `more` puts the answer away and opens the bubble of the tab it was asked on, ready for the next question; `got` puts the card away (`ideas.ask_clear {got_it: true}`, measured). `done`: called after each. */
+export function askActs(ask, done = () => {}) {
+  return {
+    goal: () => { command("ideas.ask_goal", {}).catch(() => {}); done(); fieldText.value = ask.goal || ask.q; openField(); },
+    more: () => { const tab = askedOn(ask); command("ideas.ask_clear", {}).catch(() => {}); done(); openTab(tab || ORKMASTER); setTimeout(() => openAsk(tab || ORKMASTER), 0); },
+    got: () => { command("ideas.ask_clear", { got_it: true }).catch(() => {}); done(); },
+  };
+}
 
 /** What the field kept when its bubble was closed, a party's (the Orkmaster's under ""). */
 const drafts = {};
@@ -97,7 +115,7 @@ function Bubble({ tab, party, g, parties, look }) {
   const box = useRef(), field = useRef(), pop = useRef();
   const [q, setQ] = useState(drafts[party] || ""), [sending, setSending] = useState(false), [more, setMore] = useState(false), [seat, setSeat] = useState(false);
   const ask = town.value?.ask || null, here = askerOf(party, parties);
-  const reading = ask?.status === "asking", readBy = reading ? askerOf(ask.party || "", parties) : null, mine = !!ask && (ask.party || "") === party;
+  const reading = ask?.status === "asking", readBy = reading ? askerOf(ask.party || "", parties) : null, mine = !!ask && askedOn(ask) === party;
   const state = reading && mine ? "reading" : mine && !reading && !more ? (ask.status === "failed" ? "failed" : "answered") : "asking";
   const goalNode = picked.value ? (mapData.value?.nodes || []).find((x) => x.slug === picked.value) || null : null, part = askPart.value;
   const aboutGoal = goalNode ? goalNode.short || goalNode.title || WHOLE : WHOLE, canChange = !!goalNode && !!party && AGREED.includes(goalNode.state), canGoal = !goalNode || goalNode.state === "done";
@@ -221,8 +239,9 @@ function Bubble({ tab, party, g, parties, look }) {
           <p class="table-ask__text"><${Linked} text=${ask.answer} /></p>
           ${sources.length > 0 && html`<ul class="table-ask__srcs" aria-label="Where it is said">${sources.map((s) => html`<li key=${s} class="ork-chip table-ask__src"><${Linked} text=${s} /></li>`)}</ul>`}
           <div class="table-ask__acts">${analysis && html`<button type="button" class="ork-btn primary" data-act="add" disabled=${sending} title=${`Your words are kept as written in ${analysis.short || analysis.title || "the goal"}; if its decision is worded already, the Orkmaster words it again`} onClick=${addTo}>Add to the goal</button>`}${canChange && html`<button type="button" class="ork-btn primary" disabled=${sending} title=${`${here.name} replans its part of ${aboutGoal} from your words; you decide in the hand`} onClick=${change}>Make it a change</button>`}
-            ${canGoal && ask.goal && html`<button type="button" class="ork-btn primary" title=${ask.goal} onClick=${goal}>Make it a goal</button>`}<span class="table-ask__grow"></span>
-            <button type="button" class="ork-btn quiet" onClick=${() => setMore(true)}>Ask more</button></div>`}
+            ${canGoal && ask.goal && html`<button type="button" class="ork-btn primary" data-way-kind="make_it_a_goal" title=${ask.goal} onClick=${goal}>Make it a goal</button>`}<span class="table-ask__grow"></span>
+            <button type="button" class="ork-btn quiet" data-way-kind="ask_more" onClick=${() => setMore(true)}>Ask more</button>
+            <button type="button" class="ork-btn quiet" data-way-kind="take" title="Takes the answer in; nothing changes" onClick=${() => { askActs(ask).got(); close(true); }}>Got it</button></div>`}
         ${state === "failed" && html`<p class="table-ask__q">${ask.q}</p><p class="table-ask__err" role="alert">${ask.error || "No answer came: ask again"}</p>
           <div class="table-ask__acts"><span class="table-ask__grow"></span><button type="button" class="ork-btn quiet" onClick=${() => setMore(true)}>Ask again</button></div>`}
         ${seatOf && tool && html`<div class="table-ask__seat"><span>Its seat:</span><${ToolMark} id=${tool.id} /><span>${[tool.name, tier].filter(Boolean).join(" · ")}</span>

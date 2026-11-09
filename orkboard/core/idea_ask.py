@@ -1,18 +1,20 @@
-"""A quick question (docs/specs/106-a-quick-question.md §1.3; decisions §181): asked on the open tab in one line and answered once by whom the tab looks through,
-the Orkmaster on its tab, a party's leader on the party's. A read, not a card: the call has no tools and reads no file, so nothing is changed. A mixin of `IdeaKeeper`,
+"""A quick question (docs/specs/106-a-quick-question.md §1.3, docs/specs/168 D3; decisions §181, §283.20): the card of the kind **?**, asked on the open tab and answered once by
+whom the tab looks through, the Orkmaster on its tab (or, when the question names one party, one hop to that party's leader: `board_ask.route`), a party's leader on the party's.
+It comes back as a card in the hand with its answer on the table and three ways (*Make it a goal*, *Ask more*, *Got it*: `board_ask.WAYS`), is kept in the answering leader's journal
+(`asked`) and is shown nowhere on the Board. No goal, no file, no rune: a read, not a goal: the call has no tools and reads no file, so nothing is changed. A mixin of `IdeaKeeper`,
 as `idea_project_q.py`'s `ProjectQMixin` is.
 
-    keeper.board_ask(party, q)      # begins the call in the background; "" for the Orkmaster's tab, else a party's slug. KeeperError, in plain words, when it cannot
+    keeper.board_ask(party, q)      # begins the call in the background; `party`: "" for the Orkmaster's tab, else the open tab's party. KeeperError, in plain words, when it cannot
     keeper.board_ask_stop()         # the question being answered is stopped (its record is cleared by the caller)
 
-- **The call** (step `ask`, the cheaper tier as Talk's round, **no tools, READS 0**): for a party its leader, as its own step (`goal:<party>`: its tool, its size's Target, its
+- **The call** (step `ask`, **one call on the cheaper tier** as `route` and `rewrite` choose theirs: `idea_target.pick("ask", …)`, **no tools, READS 0**): for a party its leader, as its own step (`goal:<party>`: its tool, its size's Target, its
   voice, its cost in the party's ledger), given its map as text, its party's goals, the project's facts and the decisions' last ten headings; for the Orkmaster the Board as
   text (`realm/board_ask.py`), the common facts and the headings, its cost in the Board's own line. It answers one JSON object (answer, sources, a goal it suggests).
 - **Refused**, in plain words, in this order: an empty question, a party that is gone, the demo or the day's cap, a spent window, a question being answered already (one
   for the whole Board: the busy key `ask`).
 - **Kept** in `ask.json` (`board_ask.record`): `asking` at once, then `answered` or `failed` (an answer that is not the JSON asked for, twice: *No answer came: ask again*).
   `goal_in_analysis` (spec 132 A): the slug of the goal in analysis the answer's sources name by its title (`realm/goal_refine.py`), "" for none: the bubble offers *Add to the goal* on it (data only).
-  A stop (Stop all, or the person's ×) clears it. Each question is measured (`event_log.BOARD_ASKED`).
+  A stop (Stop all, or the person's ×) clears it. Each question is measured (`event_log.BOARD_ASKED`); an answer is also written in the answering leader's journal (`journal_notes.asked`).
 
 `self` has the keeper's `ask`, `_start`, `_may_run`, `refuse_spent`, `role_as`, `wiki_root`, `state_dir`, `repo_root`, `publish`, `_ev`, `measure`, `_tls`, `_map`, `_log_text`.
 """
@@ -23,7 +25,7 @@ import time
 from orkboard.core import idea_cascade
 from orkboard.core import idea_journal
 from orkboard.core import idea_slices
-from orkboard.realm import board_ask, decisions_log, goal_refine, event_log, goal_team, idea_target, ideas, orkmaster, project_facts
+from orkboard.realm import board_ask, decisions_log, goal_refine, event_log, goal_team, idea_target, ideas, journal_notes, orkmaster, project_facts
 
 KEY = "ask"                      # the busy key: one question at a time for the whole Board
 TRIES = 2                        # an answer that is not the JSON asked for is asked once more
@@ -51,11 +53,14 @@ class AskMixin:
         busy = kw.KeeperError("A question is being answered: a moment")
         if self.busy(KEY):
             raise busy
+        tab = party
+        party, hop = board_ask.route(self.wiki_root(), tab, q)                  # whoever knows: the open tab's leader, the Orkmaster, or one hop to the leader whose part it is
         before = board_ask.record(self.state_dir)
-        board_ask.save(self.state_dir, {"status": "asking", "party": party, "q": q, "answer": "", "sources": [], "goal": "", "goal_in_analysis": "", "at": ideas._now(), "error": ""})
+        board_ask.save(self.state_dir, {"status": "asking", "party": party, "tab": tab, "hop": hop, "ways": list(board_ask.WAYS), "q": q, "answer": "", "sources": [], "goal": "",
+                                        "goal_in_analysis": "", "at": ideas._now(), "error": ""})
         self.publish("")
         try:
-            self._start(KEY, "asking", lambda: self.ask_run(party, q), key=KEY)
+            self._start(KEY, "asking", lambda: self.ask_run(party, q, tab, hop), key=KEY)
         except kw.KeeperError:                                   # nothing was begun (a second press won the key): what lay there stays
             board_ask.save(self.state_dir, before) if before else board_ask.clear(self.state_dir)
             raise busy from None
@@ -102,11 +107,12 @@ Answer with one JSON object and nothing else:
 
     # -- the run ---------------------------------------------------------------------------------------------------------------------
 
-    def ask_run(self, party: str, q: str) -> None:
+    def ask_run(self, party: str, q: str, tab: str | None = None, hop: bool = False) -> None:
         """The call, on this thread: the answer kept (`answered`), or why not (`failed`); a stop keeps nothing."""
         kw = _kw()
         started = time.monotonic()
-        rec = {"status": "failed", "party": party, "q": q, "answer": "", "sources": [], "goal": "", "goal_in_analysis": "", "at": ideas._now(), "error": NO_ANSWER}
+        tab = party if tab is None else tab
+        rec = {"status": "failed", "party": party, "tab": tab, "hop": hop, "ways": list(board_ask.WAYS), "q": q, "answer": "", "sources": [], "goal": "", "goal_in_analysis": "", "at": ideas._now(), "error": NO_ANSWER}
         try:
             if party:
                 self._tls.key = f"goal:{party}"                    # the party's own step: its leader, its tool and its ledger
@@ -129,5 +135,7 @@ Answer with one JSON object and nothing else:
             rec["error"] = kw._why(e)
         measure = self.measure()
         board_ask.save(self.state_dir, rec)
-        self._ev(event_log.BOARD_ASKED, party=party or "orkmaster", chars=len(q), text=q[:300], ok=rec["status"] == "answered", seconds=round(time.monotonic() - started, 1), **measure)
+        if rec["status"] == "answered":
+            journal_notes.asked(self.state_dir, party, q, rec["answer"])            # the answering leader's journal (the project's for the Orkmaster), not the Board
+        self._ev(event_log.BOARD_ASKED, party=party or "orkmaster", tab=tab or "orkmaster", hop=hop, chars=len(q), text=q[:300], ok=rec["status"] == "answered", seconds=round(time.monotonic() - started, 1), **measure)
         self.publish("")

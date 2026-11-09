@@ -2,10 +2,10 @@
 by. The record itself (`realm/board_ask.py`) is the snapshot's `ask`, read at each snapshot.
 
     ideas.ask {party: ""|<slug>, q}    # begins the call (core/idea_ask.py); "" is the Orkmaster's tab; a refusal is an IdeasError in the keeper's words
-    ideas.ask_clear {}                 # × : the call being answered is stopped and the record removed
+    ideas.ask_clear {got_it?}          # × or *Got it* (`got_it: true`, recorded as `ask_got_it`): the call being answered is stopped and the record removed
     ideas.ask_goal {}                  # *Make it a goal* pressed under an answer: `ask_made_goal` recorded, nothing else (the page opens the new goal's field)
 
-All answer `{"ok": true}`. The snapshot's `ask` is `{status: "asking"|"answered"|"failed", party, q, answer, sources, goal, at, error}`, or None. The host returns keys and data,
+All answer `{"ok": true}`. The snapshot's `ask` is `{status: "asking"|"answered"|"failed", party (who answers), tab (where it was asked), hop, ways (the kinds of the card's three ways), q, answer, sources, goal, at, error}`, or None. The host returns keys and data,
 never interface words (the keeper's refusals are plain words already).
 """
 from __future__ import annotations
@@ -30,6 +30,8 @@ class AskMixin:
         return {"ok": True}
 
     def ask_clear(self, args: dict) -> dict:
+        if args.get("got_it") is True and (rec := board_ask.record(self.state_dir)):
+            self._ev(event_log.ASK_GOT_IT, args, party=rec.get("party", ""), tab=rec.get("tab", rec.get("party", "")))
         self.keeper.board_ask_stop()
         board_ask.clear(self.state_dir)
         self.changed("")
