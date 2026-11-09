@@ -26,7 +26,8 @@ Pixel-art item cards for a comedic fantasy card game. Two attached references: t
 a golden knight, a lich, an imp, a gnome) for the pixel style and the colours, and an approved sheet of sixteen item
 tiles: match that sheet EXACTLY in tile shape (wide, about 1.9:1), pixel size, outline, palette, the dark slate
 background, the wooden table edge along every tile's foot and the grey-brown frames. Every object stands on that table
-edge and fills about 70% of the tile's height; light from the top left. Each tile is a chunky 32x32
+edge and fills about 70% of the tile's height, wholly inside its own tile's frame (nothing pokes out into a neighbour);
+every tile keeps the approved sheet's shape, about 1.9:1, never wider; light from the top left. Each tile is a chunky 32x32
 pixel grid scaled up with nearest-neighbour: square pixels only, no anti-aliasing, no blur, no gradients, no soft
 shadows, no dithering. Bold one-pixel black outline, two or three flat tones per colour plus a single highlight, a muted
 earthy palette (moss green, bone, bronze, leather brown, slate grey, dusty purple) with one bright accent per tile. Dark
@@ -95,17 +96,17 @@ A 4x5 grid of 20 wide tiles (four across, five down), left to right, top to bott
 Spec 168 H4: its party's size, how it answers, its tier for its own calls. The heroes and the tiers' heads are drawn already.
 
 ```
-A 5x2 grid of 10 tiles, left to right, top to bottom:
-1 party size, lean: a single hammer.
+A 5x2 grid of 10 wide tiles (five across, two down), left to right, top to bottom, each object on the table edge:
+1 party size, lean: a single hammer lying on the table, looking a little proud of itself.
 2 party size, standard: a hammer and a magnifying glass crossed like swords.
-3 party size, full: a tool belt overflowing with hammers, magnifiers and a checklist.
+3 party size, full: a tool belt overflowing with hammers, magnifying glasses and a rolled checklist.
 4 answers with the pen: a blank parchment and a quill waiting, an ink pot tapping its little foot.
-5 answers with a choice: a signpost with two arrows pointing opposite ways.
-6 answers with a fork: a dinner fork with three prongs, each prong holding a tiny different map.
+5 answers with a choice: a small signpost with two arrows pointing opposite ways.
+6 answers with a fork: a dinner fork standing upright, each of its three prongs spearing a tiny different map.
 7 answers silently: a sealed envelope with a zipper across its flap.
-8 tier for its calls, novice: a wooden club with a bandage on it.
-9 tier for its calls, seasoned: an iron axe with a few honest notches.
-10 tier for its calls, veteran: a great axe engraved with glowing runes and a laurel wreath hung on it.
+8 tier for its calls, novice: a wooden club with a bandage wrapped round it.
+9 tier for its calls, seasoned: an iron axe with a few honest notches in its blade.
+10 tier for its calls, veteran: a great axe engraved with softly glowing runes, a laurel wreath hung on its handle.
 ```
 
 ## Sheet 4: the kinds of a question (8, a 4 × 2 grid)
