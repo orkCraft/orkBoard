@@ -90,6 +90,37 @@ def test_the_header_says_the_projects_name_then_its_kind_and_stage_and_the_orkma
     assert not log, "\n".join(log)
 
 
+LONG = "The long-running party game for twelve friends who all play across three time zones every Friday"
+
+
+class LongHost(ProjectHost):
+    """The project has a very long name (spec 168 B3)."""
+
+    def snapshot(self):
+        doc = super().snapshot()
+        doc["state"]["projects"] = {"current": "/p/long", "open": [{"path": "/p/long", "name": LONG, "needs_you": 0, "working": 0}], "recent": []}
+        return doc
+
+
+def test_a_long_projects_name_takes_two_lines_then_is_cut_whole_in_its_title_and_the_kind_and_stage_stay_on_one_line(gui):
+    """Spec 168 B3 (decisions §283.13): the column keeps its 160 px; the name in its head takes two lines, then is cut with an ellipsis, whole in its `title`; *Game · Being made* is one line, cut."""
+    pg, host, log = open_hand(gui, host=LongHost(), width="wide")
+    try:
+        pg.locator(".col-head__sub").wait_for(timeout=WAIT_MS)
+        name, sub, head = pg.locator(".col-head__nm"), pg.locator(".col-head__sub"), pg.locator(".col-head")
+        assert name.get_attribute("title") == LONG, "whole in its title (and so on hover)"
+        lines = name.evaluate("e => { const s = getComputedStyle(e); return [Math.round(e.getBoundingClientRect().height / parseFloat(s.lineHeight)), s.webkitLineClamp || s.lineClamp, e.scrollHeight > e.clientHeight + 1]; }")
+        assert lines[0] == 2 and str(lines[1]) == "2" and lines[2] is True, f"two lines, then cut ({lines})"
+        assert pg.locator(".frame-column").bounding_box()["width"] == 160, "the column keeps its 160 px"
+        a, b, box = name.bounding_box(), sub.bounding_box(), head.bounding_box()
+        assert b["y"] >= a["y"] + a["height"] - 2 and b["y"] + b["height"] <= box["y"] + box["height"], "the kind and stage under the two lines, inside the head"
+        assert sub.evaluate("e => [getComputedStyle(e).whiteSpace, getComputedStyle(e).overflowX, Math.round(e.getBoundingClientRect().height)]")[:2] == ["nowrap", "hidden"] and b["height"] <= 16, "one line, cut"
+        shot(pg, "header-long")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
 def test_the_stage_pressed_deals_three_cards_the_present_marked_and_a_card_sends_stage_set_once(gui):
     pg, host, log = opened(gui)
     try:
