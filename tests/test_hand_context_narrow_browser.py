@@ -688,7 +688,7 @@ def test_a_narrow_window_with_a_fine_pointer_and_the_wide_desktop_are_unchanged(
         try:
             assert pg.locator(".frame").get_attribute("data-upright") is None and pg.locator(".hand-up").count() == 0 and pg.locator(".up-ctx").count() == 0
             assert pg.locator(".frame-table").is_visible() and pg.locator(".table-tabs").is_visible() and pg.locator(".hand-places").count() == 1
-            assert pg.locator(".hand-mana__row .ork-potion").count() == 4 and pg.locator(".up-pot, .up-top, .up-row, .up-crown").count() == 0, "the potions, as before: no crown, no row"
+            assert pg.locator(".hand-mana__row .ork-potion, .pots__all .ork-potion").count() == 4 and pg.locator(".up-pot, .up-top, .up-row, .up-crown").count() == 0, "the potions, as before: no crown, no row"
             assert pg.locator(".hand-plus").count() == 1 and pg.locator(".hand-lifted").count() == 0 and pg.locator(".up-card, .up-plus").count() == 0 and pg.locator(".hand-ready").count() == 0
             assert pg.locator(".table-menu__btn").count() >= 1 and pg.get_by_role("button", name="The leaders and their goals").count() == 0, "no crown"
             shot(pg, f"{kind}-unchanged")

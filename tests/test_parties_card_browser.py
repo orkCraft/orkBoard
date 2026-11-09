@@ -61,7 +61,7 @@ def test_the_card_is_large_says_what_the_project_is_and_never_covers_the_potions
     assert "The parties for skyhop".upper() in pg.locator(".pc-title").inner_text().upper()
     assert pg.locator(".pc-kind select").input_value() == "game"
     assert pg.locator('[data-how="1"]').inner_text().startswith("read from ")
-    pot = pg.locator(".hand-mana").bounding_box()                                                                      # the drum (the potions lie in a row only while it is unrolled)
+    pot = pg.locator(".pots__row").bounding_box()                                                                      # the row of potions in the right column's head
     assert box["x"] + box["width"] <= pot["x"] or box["y"] + box["height"] <= pot["y"]
     assert pg.locator(".parties__left, .parties__right").count() == 0, "its half-and-half layout is gone"
     assert not d.errors, d.errors

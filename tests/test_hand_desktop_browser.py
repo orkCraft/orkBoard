@@ -303,8 +303,8 @@ def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_s
             assert len(cols) == 7 and cols[0] == 160 and len(set(cols[1:5])) == 1 and 144 <= cols[1] <= 180 and cols[6] == 180, f"the first under the Orkmaster's column (its own width, spec 130 E.1; 160 px, spec 147 B.1), every lane one width, a card and a quarter at most, then the tabs' end and Release's track (Live has none here), the Release column's width (spec 156 D.1): {cols}"
             boxes = [lane(pg, i).bounding_box() for i in range(5)]
             assert all(abs(boxes[i + 1]["x"] - (boxes[i]["x"] + boxes[i]["width"])) <= 1 for i in range(4)), "the lanes are side by side on the grid"
-            mana = pg.locator(".hand-mana").bounding_box()
-            assert mana["x"] + mana["width"] <= size["width"] + 1 and pg.locator(".hand .hand-done, .hand .table-discard").count() == 0, "the potions at the hand's right end, no discard in the hand (it is Release's lane)"
+            mana = pg.locator(".release-lane__head .pots__row").bounding_box()
+            assert mana["x"] + mana["width"] <= size["width"] + 1 and pg.locator(".hand .hand-done, .hand .table-discard, .hand .pots").count() == 0, "the potions in the right column's head (spec 168 A4), no discard in the hand (it is Release's lane)"
             done, lane_box = pg.locator(".release-lane [data-portal-card]").first.bounding_box(), pg.locator(".release-lane").bounding_box()
             assert done["x"] >= boxes[4]["x"] + boxes[4]["width"] - 1 and lane_box["x"] <= done["x"] and done["y"] + done["height"] <= hand["y"] + 1, "the discard's card in Release's lane, right of the lanes, over the hand"
         else:

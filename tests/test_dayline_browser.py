@@ -48,7 +48,7 @@ class DayHost(HandHost):
 def open_line(gui, host, width="wide", provider="claude"):
     pg, host, log = open_hand(gui, host, width)
     pots(pg)
-    pg.locator(f'.hand-mana .hand-pot[data-provider="{provider}"]').click()
+    pg.locator(f':is(.hand-mana, .pots) .hand-pot[data-provider="{provider}"]').click()
     pg.locator('.table-over[data-kind="limits"] .dayline').wait_for(timeout=WAIT_MS)
     return pg, host, log
 
