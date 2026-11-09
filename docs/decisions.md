@@ -7932,3 +7932,34 @@ tables and the history (16.10, 16.11, 16.14, 16.15); **H.** the inventory (30–
 Orkmaster's project, an idea through the Orkmaster and through a leader, and the right column; the owner's pick.
 
 The owner's call.
+
+## 284. The table's template as the owner picked it: an idea through a leader in one row, the small card's first face, the potions in a row again, Stop all the die's word, the places of one size (9 November 2026, the owner)
+
+Changes: 283.7 (the right column's head and the hand's right end), 283.16.4 (three rows); 261.13 (the drum), 266.10 (Stop all
+above the potions); 261.12 is taken again.
+
+Why: the owner, on the mockup §283 asked to be drawn first (`docs/mockups/table-template/`): an idea through a leader in three
+rows does not fit a 1366 × 768 window (its third row falls under the hand, shot 6), while one row of three groups fits with room
+to spare (shot 5); and with the drum, *Stop all* and the chain in the right column's head, the discard's lower pile was cut. The
+owner: *one row; the first face; let us leave the drum and go back to a row of bottles, now there is room, so the chain and its
+words can move further right; the die, the inventory and the history of one size; and Stop all down, so there is more room up
+top for the discard*. So:
+1. **An idea through a leader is one row of three groups** (this changes §283.16.4's three rows): its verdict; *needs your
+   answer*; *could be better*, each group's cards side by side, at most three a group; the table scrolls only past that.
+2. **The small card's face is the first one**: the rune in its top left corner, the dots of its parties in its bottom left, its
+   picture in its middle (§283.3); no kind's pip.
+3. **The potions stand in a row again** at the right column's head (this changes §283.7 and §261.13's drum): a bottle for each AI
+   tool, its size the week and its liquid the 5 hours (§192), its share now under it (§247.3), a tool at the warn or the danger
+   level in that level's colour with its words (*out*, §262.1); the tool the open tab's work goes to is the one whose share is
+   said in the ink. **Three at most stand in the row**: the one the work goes to now, then any at the warn or the danger level,
+   then the person's order; hovered or focused, the row shows them all with *back 14:00* and the empty slot at its end (§232.4).
+   Nothing the person does reorders it. **The lamp's chain stands at the head's right edge**, its words beside it (§271.1).
+4. **Stop all is the die's word again** (§261.12 taken again; this changes §266.10 and §283.7): under the die, *Stop all* while
+   the orks work, *Resume* after it, else nothing (the die is Play's). **It stays lit and can be pressed while a card is lifted**,
+   when the rest of the hand and the places sink (§270.3): the one thing in the hand that never sinks, since it is safety.
+5. **The places are of one size**: the die, the backpack and the book each stand in a box of 48 × 60 at the hand's right end, the
+   die at orkUI's `.small`, the backpack at 3 px a cell, the book drawn in orkUI at the same; each with its word under it but the
+   die, whose word is 4's.
+6. The mockup shows it (`docs/mockups/table-template/`, its shots made again).
+
+The owner's call.

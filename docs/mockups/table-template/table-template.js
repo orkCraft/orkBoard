@@ -170,10 +170,11 @@ function leaderTable() {   // §283.16.2: Tech's project: the header in three gr
 
 // ---- the right column (§283.7, §283.27): the head what never changes the table, then the discard's two piles ------------
 function rightColumn() {
-  const drum = `<span class="ork-drum" style="--ork-drum-front:0" aria-hidden="true"><span class="ork-potion" style="--ork-drum-at:0;--ork-potion-left:0.62"></span><span class="ork-potion size-medium is-warn" style="--ork-drum-at:1;--ork-potion-left:0.18"></span><span class="ork-potion size-small" style="--ork-drum-at:2;--ork-potion-left:0.8"></span></span>`;
+  // a row of potions again (§284.3): the bottle's size the week, its liquid the 5 hours (§192), its share now under it; three at most
+  const pot = (tool, left, share, cls = "") => `<figure class="pot${cls.includes("is-front") ? " is-front" : ""}" title="${tool}: ${share}"><span class="ork-potion small ${cls}" style="--ork-potion-left:${left}" aria-hidden="true"></span><figcaption>${share}</figcaption></figure>`;
+  const pots = `<div class="pots">${pot("Codex, where the work goes now", 0.62, "62%", "is-front")}${pot("Claude Code, back Thu 18:00", 0.02, "out", "size-medium is-danger")}${pot("Antigravity", 0.8, "80%", "size-small")}</div>`;
   return `<aside class="right bronze" aria-label="The discard">
-    <div class="rhead"><div class="rh-power">${drum}<span class="rh-share">Codex · 62%</span><button class="ork-btn stop" type="button">Stop all</button></div>
-      <div class="rh-lamp"><span class="ork-chain" aria-hidden="true"></span><span class="rh-here">Here<br>until 23:00</span></div></div>
+    <div class="rhead">${pots}<div class="rh-lamp"><span class="rh-here">Here<br>until 23:00</span><span class="ork-chain" aria-hidden="true"></span></div></div>
     <span class="ork-plaque disc">Discard</span>
     <div class="pile2"><button class="ork-plate branch" type="button" title="Where it goes: press to choose the branch">${icon("git-merge")}main</button><span class="pile2-line">in dev · waits for main</span>
       <div class="pile2-cards">${edges(1)}${big("sound", { kind: "check", title: G.sound.t, win: pic("sound", "what the work made: the sound"), who: head(L.art.head, "hd16"), much: "12 min" })}</div></div>
@@ -194,7 +195,8 @@ function hand(ways) {
   const plus = `<button class="ork-card ork-plus hplus" aria-label="New goal" title="New goal"><span class="ork-sigil" aria-hidden="true"><span class="ork-sigil__seal"><span class="ork-elem meadow" aria-hidden="true"></span></span></span>${icon("plus")}</button>`;
   const die = `<span class="ork-die small face-play" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span>`;
   const book = `<span class="book" aria-hidden="true">${sign("page", "big")}</span>`;
-  const end = `<div class="h-end"><figure>${die}<figcaption>Play</figcaption></figure><figure><span class="ork-pack" aria-hidden="true"></span><figcaption>Inventory</figcaption></figure><figure>${book}<figcaption>History</figcaption></figure></div>`;
+  // the places, one size (§284.5); the die's word is Stop all while the orks work, live even while a card is lifted (§284.4)
+  const end = `<div class="h-end${ways ? " is-lifting" : ""}"><figure><span class="place">${die}</span><button class="ork-btn stop" type="button" title="Stop every run of this project's orks">Stop all</button></figure><figure><span class="place"><span class="ork-pack" aria-hidden="true"></span></span><figcaption>Inventory</figcaption></figure><figure><span class="place">${book}</span><figcaption>History</figcaption></figure></div>`;
   const row = `<div class="h-lanes lanes-grid${ways ? " is-sunk" : ""}">${ORDER.map((p) => `<div class="stack">${stacks[p] ? edges(p === "tech" ? 2 : 1) + stacks[p] : ""}</div>`).join("")}</div>`;
   return `<footer class="hand bronze${ways ? " has-ways" : ""}" aria-label="The hand"><div class="h-plus${ways ? " is-sunk" : ""}">${plus}</div>${row}${ways || ""}${end}</footer>`;
 }

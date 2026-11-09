@@ -22,9 +22,9 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   buttons, never for a person's words.
 - **The frame** (decisions §104.0, §145): the window is two parts, the table (the leaders' tabs and the pane: *what and
   why*, through whose eyes, the goals in line in its first lane) and the hand (*what the person decides*, under the
-  lanes, with the places at its right: the die, the backpack, the history book); the discard of goals done stands beside the
-  table, at the window's right, in two piles (for dev, for main), its head what never changes the table: the lamp's chain, the
-  AI tools' mana, Stop all (decisions §273, §283); a goal is on the table, in the hand or in the discard (decisions §167, §176); Release is a craft as any,
+  lanes, with the places at its right: the die, its word *Stop all* while the orks work, the backpack, the history book); the
+  discard of goals done stands beside the table, at the window's right, in two piles (for dev, for main), its head what never
+  changes the table: the AI tools' mana in a row and the lamp's chain (decisions §273, §283, §284); a goal is on the table, in the hand or in the discard (decisions §167, §176); Release is a craft as any,
   To main the person's act from the discard after the gate's tests (decisions §274). The Orkmaster says what and who, a
   party's leader how, what changes and why, a member does (and asks only its leader). New faces keep to it: no list
   column (the Orkmaster's column is the first lane pinned, whole cards: decisions §206), no drawer, no count of what waits, no
