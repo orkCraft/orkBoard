@@ -10,7 +10,7 @@ import { html } from "../html.js";
 import { board } from "../board/store.js";
 import { mapData } from "../shell/store.js";
 import { drawn } from "../frame/kinds.js";
-import { inventory, lift, lifted, lower, tab } from "../frame/state.js";
+import { PLAY, inventory, lift, lifted, lower, tab } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
 import { lanesBeforeEnd } from "../table/data.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
@@ -24,6 +24,9 @@ import { PlayDie } from "./playdie.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
 import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
+import { SayLifted } from "./sayplay.js";
+import { ConflictPlay } from "./conflictcard.js";                          // a decision's conflict in play: its ways the hand (spec 168 D1)
+import { LiftedWide } from "./liftedwide.js";                  // any other card lifted on the desktop: the 144 x 202 card and a body in the hand's place (spec 168 D1)
 import { ProjectDeal, dealt as headerDeal } from "../table/projectdeal.js";                       // the header's kind or stage dealt to the hand (spec 161 J)
 import { ChairDeal, dealing } from "./chairdeal.js";                                     // the new chair deals its crafts (spec 161 I)
 import { AnswerLifted, answerSet, useWide } from "./answercards.js";           // a lifted question or failure stays a hand card, its ways the hand (spec 158 F, decisions §270)
@@ -62,13 +65,13 @@ function useKeys(root) {
     const away = (e) => {
       const t = e.target;
       if (!root.current || aloud(t)) return;
-      if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
-      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card, .hand-ways-row, .hand-pen, .hand-tool, .hand-pot, .pot-s, .pots__all, .rh-stop")) lower();
+      if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .hand-fieldbox, .hand-dealt, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
+      if ((stopKeyOf(lifted.value) || lifted.value === PLAY) && !t.closest?.(".hand-lifted, .hand-body, .hand-card, .hand-ways-row, .hand-pen, .hand-tool, .hand-pot, .pot-s, .pots__all, .rh-stop")) lower();
     };
     const key = (e) => {
       if (e.key === "Escape" && !e.defaultPrevented && !aloud(document.activeElement)) {
         if (fieldOpen.value) { closeField(); e.preventDefault(); }
-        else if (stopKeyOf(lifted.value)) { lower(); e.preventDefault(); }
+        else if (stopKeyOf(lifted.value) || lifted.value === PLAY) { lower(); e.preventDefault(); }
         return;
       }
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1 || e.key === " ") return;
@@ -98,7 +101,7 @@ export function Hand() {
   useEffect(() => { if (asks === "tools") lift(liftKey(ADD_TOOL)); }, [asks]);          // the Orkmaster asks for a tool: the adding card comes up by itself (spec 130 B.4)
   const want = liftDecision.value, dealt = want ? stops.find((x) => x.kind === "decision" && x.row?.idea === want) : null;
   useEffect(() => { if (dealt) { liftDecision.value = ""; lift(liftKey(dealt.key)); } }, [dealt?.key]);        // *Change…* in the column: the decision's card, dealt now its wait is held, comes up (decisions §240.2)
-  useEffect(() => { if (key) fieldOpen.value = false; }, [key]);
+  useEffect(() => { if (key || lifted.value === PLAY) fieldOpen.value = false; }, [key, lifted.value === PLAY]);
   const bare = !laidNow();                                                              // not laid yet: only the Orkmaster's cards and the AI tools (spec 130 C.6)
   useEffect(() => { if (layLine.value && (fieldOpen.value || (map?.nodes || []).length)) layLine.value = ""; }, [fieldOpen.value, (map?.nodes || []).length]);      // the laid table's line goes with the first goal
   if (!map && !bare) return null;
@@ -110,18 +113,22 @@ export function Hand() {
   useEffect(() => { if ((key || fieldOpen.value || !wide) && headerDeal.value) headerDeal.value = ""; }, [key, fieldOpen.value, wide]);
   const chair = dealing.value && wide && !carrying && !middle && !bare && !s;                                   // the new chair pressed: its crafts are the hand (spec 161 I)
   const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
+  const sayOn = wide && lifted.value === PLAY;                                                                  // a leader's card of the say in play: its ways are the hand (sayplay.js)
+  const fieldWide = fieldOpen.value && wide && !middle;                                                   // the new goal's field lies in the hand's place (spec 168 D2)
+  const sunk = !!(cards || deal || chair || (s && wide) || fieldWide || sayOn);                                    // what the person plays lies in the hand's place: the hand's own cards sink (spec 168 D1, D2)
   const places = columnOn() && !bare ? html`<${Backpack} /><${Book} />` : null;                                // the places that change the table: the die, the backpack, the book (spec 168 A5)
   const pots = !columnOn() ? html`<${Mana} lifted=${s} />` : bare ? html`<${PotionRow} above=${true} />` : null;
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${carrying && html`<div class="hand-places"><div class="hand-row is-carrying" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}><${Carry} /><div class="hand-end"><${PlayDie} />${places}${pots}</div></div></div>`}
-    ${!middle && !carrying && html`<div class="hand-places"><div class=${cards || deal || chair ? "hand-row is-sunk" : "hand-row"} inert=${cards || deal || chair ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
+    ${!middle && !carrying && html`<div class="hand-places"><div class=${sunk ? "hand-row is-sunk" : "hand-row"} inert=${sunk ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
       <div class="hand-end">${!bare && html`<${PlayDie} />`}${places}${pots}</div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
-    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : html`<${Lifted} s=${s} anchor=${anchor} />`)}
+    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
+    ${sayOn && html`<${SayLifted} />`}
     ${deal && html`<${ProjectDeal} which=${deal} />`}
     ${key === ADD_TOOL && html`<${AddTool} />`}
     ${key.startsWith(TOOL) && html`<${ToolCard} tool=${key.slice(TOOL.length)} />`}

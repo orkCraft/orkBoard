@@ -623,7 +623,7 @@ def test_the_large_plus_card_keeps_the_full_seal_and_the_first_partys_rune(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])      # wide: the card in play and the field as large as the hand (tests/test_new_goal_card_browser.py)
 def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_esc_keeps_the_words(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
@@ -664,11 +664,12 @@ def _frees(pg):
 
 
 def _radios(pg):
-    """The five runes of the field: they stand in a row once the card's rune is pressed (spec 120 §6.1), so the row is opened when it is not."""
-    if pg.locator(".hand-field").count() and not pg.locator(".hand-field .hand-field__runes").count():
-        pg.locator(".hand-field .hand-field__rune").click()
-        pg.locator(".hand-field .hand-field__runes").wait_for(timeout=WAIT_MS)
-    return pg.locator(".hand-field .hand-field__runes [role=radio]")
+    """The five runes of the field: they stand in a row once the card's rune is pressed (spec 120 §6.1; wide: dealt to the hand in the field's place, spec 168 D2), so the row is opened when it is not."""
+    row = ".hand-field .hand-field__runes, .hand-dealt[data-open=rune]"
+    if pg.locator(".hand-field").count() and not pg.locator(row).count():
+        pg.locator(".hand-field .hand-field__rune").first.click()
+        pg.locator(row).first.wait_for(timeout=WAIT_MS)
+    return pg.locator(".hand-field .hand-field__runes [role=radio], .hand-dealt[data-open=rune] [data-rune]")
 
 
 def _checked(pg):
@@ -720,7 +721,7 @@ def test_the_narrow_seal_is_small_and_holds_no_free_rune(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("width", ["narrow"])      # wide: the runes are dealt to the hand (tests/test_new_goal_card_browser.py)
 def test_the_field_holds_a_row_of_five_runes_the_default_checked_the_used_faint_arrows_move_it_and_the_seal_follows(gui, width):
     pg, host, log = open_hand(gui, width=width)
     try:
@@ -777,19 +778,24 @@ def test_the_field_holds_a_row_of_five_runes_the_default_checked_the_used_faint_
     assert not log, "\n".join(log)
 
 
-def test_with_no_party_addressed_the_first_partys_rune_is_checked_the_arrows_move_it_and_the_choice_is_sent(gui):
+def test_with_no_party_addressed_the_first_partys_rune_is_checked_the_arrows_move_the_focus_and_the_choice_is_sent(gui):
+    """Spec 168 D2 (before: the arrows chose in a row of radios): the five runes are dealt to the hand; the first party's default is checked and its used ones faint; the arrows move the focus, a press or Enter plays one and the field comes back."""
     pg, host, log = open_hand(gui)
     try:
         _plus(pg).wait_for(timeout=WAIT_MS)
         _plus(pg).click()
         field, area = _field(pg)
-        assert _checked(pg) == ["ice"] and [r.get_attribute("tabindex") for r in _radios(pg).all()] == ["-1", "0", "-1", "-1", "-1"], "the first party's default is checked (§253.10)"
-        assert pg.locator(".hand-rune.is-used").count() == 2, "the first party's used runes (meadow, dust) are faint"
+        assert _checked(pg) == ["ice"], "the first party's default is checked (§253.10)"
+        assert pg.locator(".hand-dealt .hand-deal.is-faint").count() == 2, "the first party's used runes (meadow, dust) are faint"
         _radios(pg).nth(1).focus()
         pg.keyboard.press("ArrowRight")
-        assert _checked(pg) == ["dust"] and _seal(pg) == "dust"
+        assert _radios(pg).nth(2).evaluate("e => e === document.activeElement") and _checked(pg) == ["ice"], "the arrows move the focus"
+        pg.keyboard.press("Enter")
+        assert _seal(pg) == "dust", "Enter plays it: the seal follows and the field comes back"
+        area.wait_for(timeout=WAIT_MS)
         area.fill("A general goal in lava")
         _radios(pg).nth(4).click()
+        area.fill("A general goal in lava")
         area.press("Enter")
         assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "A general goal in lava", "element": "lava"}))
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
@@ -806,11 +812,14 @@ def test_a_party_named_in_the_text_changes_the_default_and_the_used_runes_and_al
         field, area = _field(pg)
         area.fill("@Design ")
         _radios(pg)
-        pg.wait_for_function("() => document.querySelector('.hand-rune[aria-checked=\"true\"][data-rune=\"dust\"]')", timeout=WAIT_MS)
-        assert [r.get_attribute("data-rune") for r in pg.locator(".hand-rune.is-used").all()] == ["meadow", "ice", "void"]       # Design's free runes are dust and lava
+        pg.wait_for_function("() => document.querySelector('.hand-dealt [data-rune=\"dust\"][aria-checked=\"true\"]')", timeout=WAIT_MS)
+        assert [r.get_attribute("data-rune") for r in pg.locator(".hand-dealt .hand-deal.is-faint").all()] == ["meadow", "ice", "void"]       # Design's free runes are dust and lava
+        pg.keyboard.press("Escape")                                                                                         # the row put back: the words with it
+        area.wait_for(timeout=WAIT_MS)
         area.fill("@Release ")
-        pg.wait_for_function("() => document.querySelector('.hand-rune[aria-checked=\"true\"][data-rune=\"lava\"]')", timeout=WAIT_MS)
-        assert pg.locator(".hand-rune.is-used").count() == 0, "all five used: nothing tells them apart"
+        _radios(pg)
+        pg.wait_for_function("() => document.querySelector('.hand-dealt [data-rune=\"lava\"][aria-checked=\"true\"]')", timeout=WAIT_MS)
+        assert pg.locator(".hand-dealt .hand-deal.is-faint").count() == 0, "all five used: nothing tells them apart"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1377,7 +1386,8 @@ def test_edit_the_party_on_a_plan_that_misses_a_member_opens_the_one_place_of_th
         pg.locator('.hand-card[data-kind="plan"]').first.click(position={"x": 10, "y": 24}, force=True)
         pg.locator(".hand-lifted").get_by_role("button", name="Edit the party").click()
         pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
-        assert " ".join(pg.locator(".table-title__pt").text_content().split()) == "Board · Parties" and pg.locator(".place").count() == 0
+        want = "Tech's table · Parties" if width == "wide" else "Board · Parties"        # wide: the card in play opened its asker's tab (spec 168 D1); the narrow page keeps the tab it had
+        assert " ".join(pg.locator(".table-title__pt").text_content().split()) == want and pg.locator(".place").count() == 0
         narrow.no_sideways(pg)
     finally:
         pg.close()

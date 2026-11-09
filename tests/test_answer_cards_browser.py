@@ -56,6 +56,11 @@ def shot(pg, name):
         pg.screenshot(path=str(SHOTS / f"{name}.png"))
 
 
+def press(loc):
+    """Presses a way where the hand's rim leaves it showing: the card's middle is under the rim until it rises."""
+    loc.click(position={"x": 20, "y": 30})
+
+
 def size(loc):
     return loc.evaluate("e => [e.offsetWidth, e.offsetHeight]")
 
@@ -93,9 +98,8 @@ def test_a_lifted_question_stays_a_hand_card_in_its_ring_and_its_ways_are_cards_
         assert row.evaluate("e => e.inert") and "is-sunk" in row.get_attribute("class").split(), "the rest of the hand sinks and is inert"
         assert row.evaluate("e => getComputedStyle(e).filter") == "grayscale(1)", "grey"
         top, hand = card.bounding_box(), pg.locator(".hand").bounding_box()
-        assert top["y"] + top["height"] < pg.locator(".hand-ways-row").bounding_box()["y"] + 1, "the question stands on the table's foot over its ways"
-        wr = pg.locator(".hand-ways-row").bounding_box()
-        assert abs(top["x"] + top["width"] - (wr["x"] + wr["width"])) <= 2, "at the right end of the ways row, over its acts"
+        assert top["y"] + top["height"] <= hand["y"] + 1, "the question stands on the table's foot over the hand"
+        assert abs(top["x"] - ways.nth(0).bounding_box()["x"]) <= 2, "at the left, over the first way: the place is the table's foot at its left (spec 168 D1)"
         assert top["y"] >= 0 and hand["y"] > 0
         narrow.no_sideways(pg)
         shot(pg, "question")
@@ -127,12 +131,12 @@ def test_pressing_a_way_answers_at_once_from_the_hand_and_the_leader_decides_the
     pg, host, log = open_hand(gui, host=WaysHost())
     try:
         lift(pg, "asks", "phones")
-        pg.locator(".hand-ways-row .hand-ans").nth(1).click()
+        press(pg.locator(".hand-ways-row .hand-ans").nth(1))
         got = _calls(pg, host, "ideas.answer")
         assert got and got[0]["slug"] == "phones" and got[0]["answers"] == ["Each phone counts down alone"] and got[0]["from"] == "hand", got
         pg.wait_for_selector(".hand-lifted", state="detached", timeout=WAIT_MS)
         lift(pg, "asks", "words")
-        pg.locator(".hand-ways-row .hand-ans:not(.hand-ans--pen)").last.click()
+        press(pg.locator(".hand-ways-row .hand-ans:not(.hand-ans--pen)").last)
         got = _calls(pg, host, "ideas.answer", at_least=2)
         assert got[-1]["slug"] == "words" and got[-1]["decide"] is True and got[-1]["from"] == "hand", got
     finally:
@@ -165,7 +169,7 @@ def test_a_failure_stays_a_hand_card_in_its_ring_and_start_again_is_a_priced_way
         assert ways.first.locator(".corner__much .ork-gem").count() == 1, "its cost in its corner"
         assert pg.locator(".hand-row").evaluate("e => e.inert")
         shot(pg, "failure")
-        ways.first.click()
+        press(ways.first)
         got = _calls(pg, host, "ideas.start")
         assert got and got[0]["slug"] == "timer" and got[0]["via"] == "hand", got
     finally:
@@ -236,13 +240,12 @@ def test_your_own_words_opens_a_focused_field_beside_the_question_and_sends_the_
         assert own.locator(".hand-ans__name").inner_text().strip() == "Your own words…"
         assert own.evaluate("e => getComputedStyle(e).borderStyle") == "dashed", "dashed until pressed"
         assert pg.locator(".hand-pen").count() == 0
-        own.click()
+        press(own)
         field = pg.locator(".hand-pen textarea")
         field.wait_for(timeout=WAIT_MS)
         assert field.evaluate("e => e === document.activeElement"), "focused"
-        assert own.evaluate("e => getComputedStyle(e).borderStyle") == "solid"
-        box, q = pg.locator(".hand-pen").bounding_box(), card.bounding_box()
-        assert abs(box["y"] + box["height"] - (q["y"] + q["height"])) <= 2 and box["x"] + box["width"] <= q["x"], (box, q)      # left of the question: the right of it is the table's empty foot and the discard
+        box, hand = pg.locator(".hand-pen").bounding_box(), pg.locator(".hand").bounding_box()
+        assert abs(box["y"] - hand["y"]) <= 4 and abs(box["height"] - hand["height"]) <= 4, (box, hand)      # a field as large as the hand, in the ways' place (spec 168 D1, decisions §286)
         send = pg.get_by_role("button", name="Send to ")
         assert send.inner_text().strip().startswith("Send to ")
         shot(pg, "pen")
@@ -252,8 +255,8 @@ def test_your_own_words_opens_a_focused_field_beside_the_question_and_sends_the_
         field.fill("  Phones count alone and check back.  ")
         pg.keyboard.press("Escape")
         assert pg.locator(".hand-pen").count() == 0 and pg.locator(".hand-lifted").count() == 1, "Escape closes the field first"
-        assert pg.evaluate("() => document.activeElement.dataset.way") == "own"
-        own.click()
+        pg.wait_for_function("() => document.activeElement.dataset.way === 'own'", timeout=WAIT_MS)
+        press(own)
         pg.locator(".hand-pen textarea").fill("  Phones count alone and check back.  ")
         pg.get_by_role("button", name="Send to ").click()
         got = _calls(pg, host, "ideas.answer")
@@ -289,18 +292,17 @@ class TalkHost(WaysHost):
         return super().handle(name, a)
 
 
-def test_a_goal_in_talk_lifted_lays_a_card_with_its_verdict_under_each_leader_on_the_table(gui):
-    """Spec 168 C3, decisions §283.16.3 (before: spec 158 H, §270.4): lifted at 1280 x 800, the Orkmaster's table of a goal still in Talk has, under each leader of its route, a small card with its verdict's sign (the question waits for the person on that card's frame; it is answered at the leader's table)."""
+def test_a_goal_in_talk_lifted_opens_its_askers_tab_with_its_verdict_and_its_question_on_the_table(gui):
+    """Spec 168 D1, decisions §283.19 (before: C3 and spec 158 H, §270.4, when the Orkmaster's table of the goal showed under a question lifted): the question of Design's lifted opens Design's tab and picks its goal, so the table is that leader's say of the goal: its verdict and the question waiting for the person (the card in play is that question)."""
     pg, host, log = open_hand(gui, host=TalkHost())
     try:
         lift(pg, "asks", "phones")
-        board = pg.locator(".sb--idea")
-        board.wait_for(timeout=WAIT_MS)
-        tech, design = board.locator('.table-lane[data-party="tech"]'), board.locator('.table-lane[data-party="design"]')
-        assert tech.locator(".verdict.is-go").count() == 1 and design.locator(".verdict.is-doubt").count() == 1
-        assert design.locator('.ork-card.sm[data-signal="alert"]').count() == 1 and tech.locator('.ork-card.sm[data-signal="alert"]').count() == 0, "the question lies on its asker's card"
-        assert "The server owns the clock" in tech.inner_text() and "Phones must agree on the second" in design.inner_text()
-        assert board.locator(".plan-wait").count() == 0 and board.locator(".plan-talk").count() == 0
+        row = pg.locator('.say-row[data-goal="phones"]')
+        row.wait_for(timeout=WAIT_MS)
+        assert row.get_attribute("data-party") == "design", "through the asking leader"
+        assert row.locator('.say-group[data-group="verdict"] [data-verdict="doubt"]').count() == 1
+        assert row.locator('.say-card[data-group="needs"].is-alert').count() == 1, "the question waits for the person on its card"
+        assert "Phones must agree on the second" in row.inner_text()
         shot(pg, "talk-table")
     finally:
         pg.close()
@@ -308,13 +310,13 @@ def test_a_goal_in_talk_lifted_lays_a_card_with_its_verdict_under_each_leader_on
 
 
 def test_the_risen_question_covers_no_leaders_card_and_the_sunk_hand_can_be_seen(gui):
-    """Spec 158 H, Design's Done when 5: at 1280 x 800 the risen question stands right of the ways, over no leader's card of the table; the sunk hand shows beside the ways row, grey and inert."""
+    """Spec 158 H, Design's Done when 5 (spec 168 D1: the question now stands at the left): at 1280 x 800 the risen question lies over no leader's card of the table; the sunk hand shows beside the ways row, grey and inert."""
     pg, host, log = open_hand(gui, host=TalkHost())
     try:
         card = lift(pg, "asks", "phones")
-        pg.locator(".sb-said").first.wait_for(timeout=WAIT_MS)
+        pg.locator(".say-card").first.wait_for(timeout=WAIT_MS)
         q = card.bounding_box()
-        for part in pg.locator(".sb-said, .sb-said > *").all():
+        for part in pg.locator(".say-card").all():
             b = part.bounding_box()
             if not b or not b["width"]:
                 continue
@@ -367,7 +369,7 @@ def test_a_way_of_eighty_characters_shows_it_whole_and_its_accessible_name_reads
             want = f"{name}{', its pick' if i == 0 else ''}, {line}"
             assert label.startswith(want) and ask in label[len(want):], label
         shot(pg, "question-lines")
-        ways.nth(1).click()
+        press(ways.nth(1))
         got = _calls(pg, host, "ideas.answer")
         assert got and got[0]["slug"] == "phones" and got[0]["from"] == "hand", got
     finally:

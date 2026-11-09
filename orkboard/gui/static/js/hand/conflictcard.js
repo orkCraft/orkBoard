@@ -18,6 +18,8 @@ import { bodyOf } from "./decisioncard.js";
 import { spendWords } from "./costline.js";
 import { orkHead } from "./routecard.js";
 import { way } from "./ways.js";
+import { ORKMASTER, lower } from "../frame/state.js";
+import { PlayWays } from "./sayplay.js";
 
 if (typeof document !== "undefined") {                                  // the sheet, once, as the hand's are linked
   const href = new URL("./conflictcard.css", import.meta.url).href;
@@ -57,14 +59,11 @@ function Earlier({ row, anchor }) {
     const t = setTimeout(() => el.classList.remove("is-out"), FLY_MS + 80);
     return () => clearTimeout(t);
   }, [row.number]);
-  return html`<aside ref=${box} class="ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--card hand-earlier" role="region" aria-label=${`The earlier decision, §${row.number}`} data-earlier=${row.number}>
-    <${CornerTop} large=${true} rune=${{ name: "", dim: true }} name=${`§${row.number}`} kind="page" word="Earlier" kindClass="hand-lifted__kind" />
-    <span class="hand-card__name hand-lifted__title">${row.title_then || `§${row.number}`}</span>
-    <div class="hand-lifted__body">
-      ${row.why_then && html`<div class="hand-way__why"><span class="ork-label">Why</span><p class="body">${row.why_then}</p></div>`}
-    </div>
-    <div class="hand-lifted__acts"><button type="button" class="ork-btn quiet" data-answer="past" onClick=${() => openChronicle({ decision: row.number })}>Open in the past</button></div>
-    <${CornerFoot} large=${true} who=${{ heads: [], word: `§${row.number}` }} />
+  return html`<aside ref=${box} class="ork-card hand-card hand-card--stop hand-card--face hand-lifted hand-lifted--asked hand-earlier" role="region" aria-label=${`The earlier decision, §${row.number}`} data-earlier=${row.number}>
+    <${CornerTop} rune=${{ name: "", dim: true }} kind="page" />
+    <span class="hand-card__name" title=${row.title_then || ""}>${row.title_then || `§${row.number}`}</span>
+    <span class="hand-card__foot" title=${row.why_then || ""}>${row.why_then || ""}</span>
+    <${CornerFoot} who=${{ heads: [], word: `§${row.number}` }} muchNode=${html`<button type="button" class="ork-btn quiet hand-earlier__open" data-answer="past" onClick=${() => openChronicle({ decision: row.number })}>Open in the past</button>`} />
   </aside>`;
 }
 
@@ -90,6 +89,29 @@ function useEarlier(row, anchor) {
   }, [anchor, row.number, row.title_then, row.why_then]);
 }
 
+/** A choice of the conflict sent (`ideas.conflict`): the Orkmaster words the decision again when it was replaced or the person's words were given; the card goes back (`close`) once it is answered. */
+async function conflictChoose(row, choice, words, close) {
+  const got = await act("ideas.conflict", { idea: row.idea, number: row.number, choice, ...(words ? { text: words } : {}) });
+  if (!got) return;
+  const price = got.reworded && got.cost ? spendWords(got.cost.usd_high) : "";
+  if (got.reworded) toast(`The Orkmaster words the decision again${price ? `: ${price}` : ""}`, "information");
+  close?.();
+}
+
+/** The conflict as a card in play on the desktop (spec 168 D1): its ways are the hand's row, *Other…* the Pen (sayplay.js `PlayWays`), the earlier decision a second card beside it. */
+export function ConflictPlay({ s }) {
+  const row = s.row || {}, n = row.number, [box, setBox] = useState(null);
+  useLayoutEffect(() => { setBox(document.querySelector(`.hand-lifted[data-key="${CSS.escape(s.key)}"]`)); }, [s.key]);
+  useEarlier(row, box);
+  const card = {
+    title: s.title || s.full, foot: goesAgainst(n), sign: "conflict", element: s.node?.element || "", hue: s.node?.hue || "", head: orkHead(s), tab: ORKMASTER,
+    ways: [{ id: "replace", name: replacesWords(n), line: "The decision says it changes the earlier one, and its slices replace the earlier one's.", pick: false, kind: "", run: () => conflictChoose(row, "replace", "", lower) },
+      { id: "keep", name: keepWords(n), line: "The goal is talked again within the earlier decision.", pick: false, kind: "", run: () => conflictChoose(row, "keep", "", lower) }],
+    pen: { name: OTHER, who: "the Orkmaster", send: (text) => conflictChoose(row, "other", text, lower) },
+  };
+  return html`<${PlayWays} card=${card} id=${s.key} idea=${row.idea || ""} kind="conflict" />`;
+}
+
 export function ConflictLifted({ s, close }) {
   const row = s.row || {}, n = row.number, why = whyOf(row), [other, setOther] = useState(false), [text, setText] = useState(""), [busy, setBusy] = useState(false), [box, setBox] = useState(null), field = useRef();
   useLayoutEffect(() => { setBox(document.querySelector(`.hand-lifted[data-key="${CSS.escape(s.key)}"]`)); }, [s.key]);
@@ -97,14 +119,7 @@ export function ConflictLifted({ s, close }) {
   useEffect(() => { if (other) field.current?.focus({ preventScroll: true }); }, [other]);
   const choose = async (choice, words = "") => {
     setBusy(true);
-    try {
-      const got = await act("ideas.conflict", { idea: row.idea, number: n, choice, ...(words ? { text: words } : {}) });
-      if (got) {
-        const price = got.reworded && got.cost ? spendWords(got.cost.usd_high) : "";
-        if (got.reworded) toast(`The Orkmaster words the decision again${price ? `: ${price}` : ""}`, "information");
-        close?.();
-      }
-    } finally { setBusy(false); }
+    try { await conflictChoose(row, choice, words, close); } finally { setBusy(false); }
   };
   const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setOther(false); } };
   return html`<div class="hand-way hand-way--conflict" data-conflict=${n}>
