@@ -10,7 +10,7 @@ from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_column_browser import ColumnHost, open_column  # noqa: E402
 
 pytestmark = pytest.mark.browser
-DOWN = '.col-sec[data-pile="review"] .col-card--deck'
+DOWN = '.col-sec[data-pile="review"] .col-card--spec'
 
 
 def px(pg, name):
@@ -47,9 +47,9 @@ def test_a_back_of_the_deck_is_cut_by_the_windows_edge_and_its_seal_is_whole_in_
         rest(pg)
         tuck = px(pg, "--column-tuck")
         box = settled(pg, DOWN)
-        assert abs(box["x"] + tuck) <= 1 and abs(box["width"] - 157) <= 1 and abs(box["height"] - 112) <= 1, box
+        assert abs(box["x"] + tuck) <= 1 and abs(box["width"] - 78) <= 1 and abs(box["height"] - 56) <= 1, box      # a small back on its side (spec 168 B2)
         shown = box["x"] + box["width"]
-        assert abs(shown - (157 - tuck)) <= 1 and abs(shown - 144) <= 1, "what shows of it: the card's 144"
+        assert abs(shown - (78 - tuck)) <= 1, "what shows of it: 65 px"
         seal = pg.locator(f"{DOWN} .col-sigil").first.bounding_box()
         assert abs(seal["x"] + seal["width"] / 2 - shown / 2) <= 1.5, (seal, shown)
         assert seal["x"] >= 0 and seal["x"] + seal["width"] <= shown, "the ring is inside the window, under no edge"
@@ -68,7 +68,7 @@ def test_a_back_of_the_deck_slides_out_whole_on_hover_and_on_focus_and_goes_back
         pg.hover(DOWN, position={"x": 60, "y": 50})
         out = settled(pg, DOWN)
         assert abs(out["x"]) <= 1, out
-        seen = pg.evaluate("""(sel) => { const c = document.querySelector(sel).getBoundingClientRect(); const hit = document.elementFromPoint(c.right - 4, c.top + c.height / 2); return hit?.closest?.('.col-card--deck') != null; }""", DOWN)
+        seen = pg.evaluate("""(sel) => { const c = document.querySelector(sel).getBoundingClientRect(); const hit = document.elementFromPoint(c.right - 4, c.top + c.height / 2); return hit?.closest?.('.col-card--spec') != null; }""", DOWN)
         assert seen, "its right end lies over the table, not clipped by the pile's box"
         rest(pg)
         assert abs(settled(pg, DOWN)["x"] + tuck) <= 1, "back when left"
@@ -105,12 +105,12 @@ def test_the_deck_and_the_standing_cards_share_one_right_edge_the_hand_lies_insi
     try:
         rest(pg)
         ends = {}
-        for pile, sel in (("review", ".col-card--deck"), ("work", ".col-card--up")):
+        for pile, sel in (("review", ".col-card--spec"), ("work", ".col-card--up")):
             box = settled(pg, f'.col-sec[data-pile="{pile}"] {sel}')
             ends[pile] = box["x"] + box["width"]
             if sel.endswith("up"):
                 assert abs(box["width"] - 144) <= 1 and abs(box["height"] - 202) <= 1, box
-        assert max(ends.values()) - min(ends.values()) <= 1 and abs(ends["review"] - 144) <= 1, ends
+        assert abs(ends["review"] - (78 - 13)) <= 1 and abs(ends["work"] - 144) <= 1, ends      # Specs' small backs show 65 px of their 78, Implementation's cards 144
         fan = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => e.offsetLeft + e.offsetWidth)")
         assert fan and max(fan) <= 144, "the hand is never wider than 144 px"
     finally:

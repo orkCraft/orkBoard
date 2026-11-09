@@ -102,7 +102,7 @@ def test_the_fan_and_the_deck_backs_are_previewed_with_their_goals_name_and_have
         fan = pg.locator(".col-card--fan")
         label = fan.nth(2).get_attribute("aria-label")
         assert label.startswith("Kick a player from the lobby"), label
-        fan.nth(2).hover(position={"x": 18, "y": 50})
+        fan.nth(2).hover(position={"x": 6, "y": 50})
         pg.wait_for_selector("[data-preview=back]", timeout=WAIT_MS)
         said = pg.locator("[data-preview=back]")
         assert said.bounding_box()["width"] == 144 and said.bounding_box()["height"] == 202
@@ -116,7 +116,7 @@ def test_the_fan_and_the_deck_backs_are_previewed_with_their_goals_name_and_have
         pg.wait_for_selector("[data-preview=back]", timeout=WAIT_MS)
         assert "Host can skip a round" in pg.locator("[data-preview=back]").inner_text()
         assert pg.evaluate("() => document.activeElement.getAttribute('data-goal')") == "raw2", "focus stays on the back"
-        deck = pg.locator(".col-card--deck").first
+        deck = pg.locator(".col-card--spec").first
         deck.focus()
         pg.wait_for_selector("[data-preview=back]:has-text('Round timer on phones')", timeout=WAIT_MS)
         assert pg.locator("[data-preview]").count() == 1

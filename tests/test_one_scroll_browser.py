@@ -60,7 +60,7 @@ def test_nothing_outside_the_table_scrolls(gui, size):
         assert pg.evaluate("() => document.documentElement.scrollHeight - document.documentElement.clientHeight") <= 0, "the page does not scroll"
         for sel in (".frame-column .col-card", ".frame-hand .hand-card"):         # a card lifted: its body alone may scroll
             if pg.locator(sel).count():
-                pg.locator(sel).first.click()
+                pg.locator(sel).first.dispatch_event("click")                       # the first back of a fan has the next one over its middle: pressed where the page hears it
                 pg.wait_for_timeout(400)
                 assert pg.evaluate(SCROLLS) == [], f"after a press on {sel}"
                 pg.keyboard.press("Escape")

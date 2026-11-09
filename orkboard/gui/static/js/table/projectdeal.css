@@ -3,8 +3,8 @@
 @media (min-width: 760px) {
   .ork-tab.col-head__tab { align-items: center; padding-top: 0; padding-bottom: 0; padding-right: 22px; }
   .ork-tab.col-head__tab .ork-race__head { align-self: center; }
-  .ork-tab.col-head__tab .col-head__nm { flex: 1; min-width: 0; align-self: flex-start; margin-top: var(--ork-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .col-head__sub { position: absolute; left: calc(var(--ork-5) + 24px + var(--ork-2)); right: var(--ork-1); bottom: var(--ork-2); z-index: 2; display: flex; align-items: baseline; min-width: 0; white-space: nowrap; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+  .ork-tab.col-head__tab .col-head__nm { flex: 1; min-width: 0; align-self: flex-start; margin-top: var(--ork-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; white-space: normal; text-overflow: ellipsis; }      /* the project's name takes two lines, then is cut with an ellipsis; whole in its `title` (decisions §283.13) */
+  .col-head__sub { position: absolute; left: calc(var(--ork-5) + 24px + var(--ork-2)); right: var(--ork-1); bottom: var(--ork-2); z-index: 2; display: flex; align-items: baseline; min-width: 0; white-space: nowrap; overflow: hidden; font: var(--ork-type-caption); color: var(--ork-ink-read); }      /* *Game · Being made*: one line, cut */
   .col-head__pick { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
   .col-head__pick:hover, .col-head__pick[aria-expanded="true"] { color: var(--ork-ink); text-decoration-style: solid; }
   .col-head__pick:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
