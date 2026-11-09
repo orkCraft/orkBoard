@@ -15,6 +15,7 @@ A leader's say is in its stance (`ideas/<slug>/talk.json`): `needs` (`{id, kind,
     idea_say.take(state_dir, slug, ident, way=None) / leave(state_dir, slug, ident)     # one need's way or one better taken, or turned down; ValueError in plain words
     idea_say.waiting(state_dir, slug)          # what is taken and not written into the goal yet: the items a rewrite is given (a fork answered stands in place of the ones it settled)
     idea_say.written(state_dir, slug, ids, before, after) / forked(...) / fork_answer(...) / undo(...)   # what a rewrite did
+    idea_say.holding(state_dir, slug)          # Talk waits for the leaders' cards: a need open, a taken one not written, a fork open (spec 168 D0)
     idea_say.to_judge(state_dir, slug)         # the parties to judge again, in the stances' order; idea_say.judged(state_dir, slug) counts one more round and clears who was waiting
     idea_say.told(state_dir, slug, party)      # what the person took and turned down, as the leader judged again is told it
 """
@@ -54,14 +55,14 @@ def _stances_of(talk: dict) -> list[dict]:
     return [s for s in talk.get("stances") or [] if isinstance(s, dict) and s.get("party")]
 
 
-def _stances(state_dir: Path, slug: str) -> list[dict]:
-    return _stances_of(idea_questions.record(state_dir, slug))
+def _stances(state_dir: Path, slug: str, talk: dict | None = None) -> list[dict]:
+    return _stances_of(talk if talk is not None else idea_questions.record(state_dir, slug))
 
 
-def items(state_dir: Path, slug: str) -> dict[str, dict]:
-    """Every need and better the leaders said, by id: the item with `type` ("need" | "better"), its `party` and `leader`."""
+def items(state_dir: Path, slug: str, talk: dict | None = None) -> dict[str, dict]:
+    """Every need and better the leaders said, by id: the item with `type` ("need" | "better"), its `party` and `leader`. `talk`: the Talk's record when the caller holds it unsaved."""
     out: dict[str, dict] = {}
-    for s in _stances(state_dir, slug):
+    for s in _stances(state_dir, slug, talk):
         for kind, key in (("need", "needs"), ("better", "better")):
             for it in s.get(key) or []:
                 if isinstance(it, dict) and it.get("id"):
@@ -111,10 +112,10 @@ def leaders(state_dir: Path, slug: str) -> list[dict]:
     return out
 
 
-def waiting(state_dir: Path, slug: str) -> list[dict]:
+def waiting(state_dir: Path, slug: str, talk: dict | None = None) -> list[dict]:
     """What a rewrite is given: the items taken and not written yet, in the order they were said, each `{id, type, party, leader, line, weight?|kind?, way?: {name, line}}`. The items a fork
     answered settled are one item in their place: `{id: <fork id>, type: "fork", line: <the choice>, ids}`. None while a fork is open: the person's answer comes first (`[]`)."""
-    say, every = record(state_dir, slug), items(state_dir, slug)
+    say, every = record(state_dir, slug), items(state_dir, slug, talk)
     fork = say["fork"]
     if fork and fork.get("answer") is None:
         return []
@@ -154,6 +155,20 @@ def answered(state_dir: Path, slug: str) -> bool:
     return bool(every) and all((say["answers"].get(i) or {}).get("state") in ("taken", "left") for i in every)
 
 
+def holding(state_dir: Path, slug: str, talk: dict | None = None) -> bool:
+    """Whether Talk waits for the person's cards before its decision (spec 168 D0, decisions §283.25): a leader's `need` not yet taken or turned down, a taken one (or a taken `better`) not yet
+    written into the goal's words, the rewrite itself running (its items stay unwritten until it is done) or a fork open. A `better` left open does not hold: it is an offer, not a question. The
+    old questions (kind question, `legacy`) are not counted: they hold Talk by their own flow (`waiting`). A goal with no say record holds nothing, as before.
+    There is no timer: a leader whose way of answering is a Choice with a wait (decisions §266.5) is not in the engine yet, so nothing here goes on by itself when the person is away."""
+    every = items(state_dir, slug, talk)
+    if not every:
+        return False
+    say = record(state_dir, slug)
+    if say["fork"] and say["fork"].get("answer") is None:
+        return True
+    if any(it["type"] == "need" and (say["answers"].get(i) or {}).get("state") not in ("taken", "left") for i, it in every.items()):
+        return True
+    return bool(waiting(state_dir, slug, talk))
 
 
 def describe(it: dict, you: str = "") -> str:
