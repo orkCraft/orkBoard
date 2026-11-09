@@ -1,7 +1,7 @@
 /* The lamp's chain as the person (presence.js, spec 139 C.2 and 160 G): layout only; every colour, face and size is orkUI's. */
 /* the lamp's chain (presence.js PresenceChain, spec 161 G): orkUI's chain hung at the right of the discard column's head, its words to its left. Layout only. */
 .presence-chain { appearance: none; flex: none; display: flex; align-items: flex-start; justify-content: flex-end; gap: var(--ork-2); align-self: flex-start; margin: 0; padding: 0 var(--ork-1); border: 0; background: none; color: var(--ork-ink); cursor: pointer; text-align: right; }
-.presence-chain:focus-visible { outline: 2px solid var(--ork-ink); }
+.presence-chain:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }                                     /* orkUI's focus look, as every control's; inside the box, so the head's edge never cuts it */
 .presence-chain__words { display: flex; flex-direction: column; align-items: flex-end; padding-top: var(--ork-3); font: var(--ork-type-caption); }
 .presence-chain__word { font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
 .presence-chain__line { color: var(--ork-ink-muted); white-space: nowrap; }
