@@ -130,12 +130,12 @@ def test_in_analysis_is_the_orkmasters_hand_a_fan_of_small_backs_each_rune_in_it
             assert (card.get_attribute("aria-label") or "").startswith(["Players see", "A sound when", "Kick a player", "Host can skip", "Mute a noisy"][i]) and card.get_attribute("title") is None, "its goal's name in its label, no native title (the preview, spec 168 A2)"
         assert fan.evaluate("e => e.offsetWidth") <= 144
         step = cards.evaluate_all("els => els.map((e) => e.offsetLeft)")
-        assert [b - a for a, b in zip(step, step[1:])] == [22] * 4, f"five backs: 88 / 4 = 22 px apart ({step})"
+        assert [b - a for a, b in zip(step, step[1:])] == [16] * 4, f"five backs: 16 px apart ({step})"
         turns = cards.evaluate_all("els => els.map((e) => e.style.getPropertyValue('--r'))")
-        assert turns == ["-3deg", "-1.5deg", "0deg", "1.5deg", "3deg"], "1.5 degrees apart about the middle one"
+        assert turns == ["-10deg", "-5deg", "0deg", "5deg", "10deg"], "5 degrees a card about the middle one"
         reading = pg.locator(".col-card--fan.is-reading")
         assert reading.count() == 1 and reading.get_attribute("data-goal") == "reading", "the one the Orkmaster reads"
-        lift = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => { const m = new DOMMatrix(getComputedStyle(e).transform); return Math.round(m.f); })")
+        lift = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => { const m = new DOMMatrix(getComputedStyle(e).transform); return Math.round(m.f - parseFloat(e.style.getPropertyValue('--sink'))); })")
         assert lift[0] == -12 and lift[1:] == [0, 0, 0, 0], "lifted 12 px out of the fan"
         assert reading.locator(".ork-elem.is-glowing").count() == 1 and cards.nth(1).locator(".is-glowing").count() == 0, "its rune glows"
         assert pg.locator(".col-card--down.col-card--fan .col-sigil").count() == 0 and pg.locator(".col-card--fan .col-mid, .col-card--fan .col-play").count() == 0
@@ -372,7 +372,7 @@ def test_each_state_lies_in_its_stage_pile_and_a_goal_put_off_lies_where_what_ha
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
         ideas, specs, work = goals(pg, "analysis"), goals(pg, "review"), goals(pg, "work")
         assert ideas[:6] == ["reading", "talk", "raw", "asks", "routed", "decided"] and ideas[6:] == ["heldidea", "lateidea"], f"Ideas: read, Talk, the decision's wait; held or later before Talk at the fan's end: {ideas}"
-        assert pg.locator('.col-card[data-goal="heldidea"] .col-fan__held .ork-sign.pause').count() == 1, "a pause on a held back"
+        assert pg.locator('.col-card[data-goal="heldidea"] .col-fan__held .ork-sign.pause').count() == 1 and pg.locator('.col-card[data-goal="lateidea"][data-mark="later"] .col-fan__held .ork-sign.moon').count() == 1, "a pause on a held back, a moon on one put off to a later hour"
         assert specs == ["sketch", "sections", "draft", "ready", "planned"], f"Specs (the front and four behind): the sections written first, then the wait that ends first: {specs}"
         assert work[:3] == ["work", "heldwork", "failed"] or sorted(work[:3]) == ["failed", "heldwork", "work"], work
         assert work[3:] == ["heldspec", "heldwait", "night"], f"held after its spec (a decision held too), then the night's, at the cascade's foot: {work}"
@@ -454,7 +454,7 @@ def test_an_agreed_decision_whose_wait_runs_is_not_in_the_hand_and_the_column_sa
         agreed = pg.locator('.col-lift[data-lift="acts"][data-goal="agreed"]')
         agreed.wait_for(timeout=WAIT_MS)
         assert agreed.get_by_role("button", name="Change…").count() == 1 and agreed.get_by_role("button", name="Start now").count() == 1 and agreed.locator(".table-dropper").count() == 1
-        pg.locator('.col-card[data-goal="doubt"]').click()
+        pg.locator('.col-card[data-goal="doubt"]').click(position={"x": 50, "y": 40})      # its right end: the first back, risen, lies over the rest (16 px apart)
         other = pg.locator('.col-lift[data-lift="acts"][data-goal="doubt"]')
         other.wait_for(timeout=WAIT_MS)
         assert other.get_by_role("button", name="Change…").count() == 0 and other.get_by_role("button", name="Start now").count() == 0, "a decision with no wait is in the hand, not agreed"

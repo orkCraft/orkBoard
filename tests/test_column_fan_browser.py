@@ -46,20 +46,22 @@ def test_the_fan_of_eight_is_no_wider_than_144_px_each_back_a_step_apart_and_the
         cards = pg.locator(".col-card--fan")
         assert cards.count() == 8
         left = cards.evaluate_all("els => els.map((e) => e.offsetLeft)")
-        assert [b - a for a, b in zip(left, left[1:])] == [12] * 7, f"floor(88 / 7) = 12 px apart ({left})"
+        assert [b - a for a, b in zip(left, left[1:])] == [12] * 7, f"floor(88 / 7) = 12 px apart ({left}): 12 to 16, tighter after seven"
         assert max(x + 56 for x in left) <= 144 and pg.locator(".col-fan").evaluate("e => e.offsetWidth") <= 144, "never wider than 144 px"
         assert cards.evaluate_all("els => els.map((e) => [e.offsetWidth, e.offsetHeight])") == [[56, 78]] * 8
-        assert cards.evaluate_all("els => els.map((e) => e.style.getPropertyValue('--r'))") == ["-5.25deg", "-3.75deg", "-2.25deg", "-0.75deg", "0.75deg", "2.25deg", "3.75deg", "5.25deg"]
+        assert cards.evaluate_all("els => els.map((e) => e.style.getPropertyValue('--r'))") == ["-14deg", "-10deg", "-6deg", "-2deg", "2deg", "6deg", "10deg", "14deg"], "4 degrees a card past seven, about the middle"
+        sink = cards.evaluate_all("els => els.map((e) => parseFloat(e.style.getPropertyValue('--sink')))")
+        assert sink[:4] == sorted(sink[:4], reverse=True) and sink[4:] == sorted(sink[4:]) and sink[0] == sink[7] > sink[3] == sink[4], f"an arc: the ends lie lower than the middle ({sink})"
         z = cards.evaluate_all("els => els.map((e) => Number(getComputedStyle(e).zIndex))")
         assert z[1:] == sorted(z[1:]) and z[1] < z[2], "the later back over the earlier"
-        lifted = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => Math.round(new DOMMatrix(getComputedStyle(e).transform).f))")
+        lifted = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => Math.round(new DOMMatrix(getComputedStyle(e).transform).f - parseFloat(e.style.getPropertyValue('--sink'))))")
         assert lifted == [-12] + [0] * 7, "the goal being read stands 12 px out of the fan"
         under = pg.locator('[data-under="analysis"]')
         assert under.inner_text() == "reading: Goal in analysis 0" and under.bounding_box()["y"] < pg.locator(".col-fan").bounding_box()["y"], "named under the title, over the hand"
         assert pg.locator(".col-fan").bounding_box()["height"] == 92, "the fan is about 90 px tall whatever it holds"
         pg.locator(".col-card--fan").nth(6).hover(position={"x": 5, "y": 50})                 # its left 12 px: the next back lies over the rest
         pg.wait_for_timeout(100)
-        assert pg.evaluate("() => Math.round(new DOMMatrix(getComputedStyle(document.querySelectorAll('.col-card--fan')[6]).transform).f)") == -10, "a back hovered rises 10 px"
+        assert pg.evaluate("() => { const e = document.querySelectorAll('.col-card--fan')[6]; return Math.round(new DOMMatrix(getComputedStyle(e).transform).f - parseFloat(e.style.getPropertyValue('--sink'))); }") == -10, "a back hovered rises 10 px"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -68,11 +70,12 @@ def test_the_fan_of_eight_is_no_wider_than_144_px_each_back_a_step_apart_and_the
 def test_the_step_and_the_turn_of_a_fan_by_how_many_it_holds(gui):
     pg, host, log = open_column(gui, host=FanHost(analysis=1, work=1))
     try:
-        got = [call(pg, "table/fan.js", "stepOf", n) for n in (0, 1, 2, 3, 4, 8, 9, 12, 30)]
-        assert got == [0, 0, 44, 44, 29, 12, 11, 10, 10], "44 while few, 88 / (n - 1) as they grow, never under 10"
-        assert [call(pg, "table/fan.js", "turnOf", i, 4) for i in range(4)] == [-2.25, -0.75, 0.75, 2.25] and call(pg, "table/fan.js", "turnOf", 1, 3) == 0
-        few = [call(pg, "table/fan.js", "stepOf", n) for n in (2, 3)]
-        assert few == [44, 44], "usually one to three, 44 px apart"
+        got = [call(pg, "table/fan.js", "stepOf", n) for n in (0, 1, 2, 3, 4, 6, 7, 8, 9, 12, 30)]
+        assert got == [0, 0, 16, 16, 16, 16, 14, 12, 11, 8, 6], "16 while few, 14 at seven (seven within the column's 160 px), 88 / (n - 1) as they grow, never under 6, never a count"
+        assert all(56 + (n - 1) * call(pg, "table/fan.js", "stepOf", n) <= 144 for n in range(2, 8)), "up to seven within 144 px"
+        assert [call(pg, "table/fan.js", "turnStep", n) for n in (2, 4, 5, 7, 8, 12)] == [6, 6, 5, 5, 4, 4], "4 to 6 degrees a card"
+        assert [call(pg, "table/fan.js", "turnOf", i, 4) for i in range(4)] == [-9, -3, 3, 9] and call(pg, "table/fan.js", "turnOf", 1, 3) == 0
+        assert [call(pg, "table/fan.js", "stepOf", n, True) for n in (2, 3, 4, 9)] == [44, 44, 29, 11] and call(pg, "table/fan.js", "turnOf", 0, 3, True) == -1.5, "the phone's menu keeps the fan it had"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -234,3 +237,42 @@ def test_the_pages_column_words_are_the_glossarys():
     assert got == {"READING": lexicon.term("column_reading"), "WRITING": lexicon.term("column_writing"), "AT_WORK": lexicon.term("column_at_work"), "NEXT_IN": lexicon.term("next_in"), "NEXT_AT": lexicon.term("next_at")}
     titles = re.search(r"export const PILES = (\[.*?\]);", js).group(1)
     assert re.findall(r'"([^"]+)"\]', titles) == [lexicon.term("pile_ideas"), lexicon.term("pile_specs"), lexicon.term("pile_implementation")]
+
+
+def test_seven_backs_lie_within_the_columns_160_px_and_a_picked_back_rises_with_its_ring(gui):
+    """Spec 168 B2 (decisions §283.13): seven backs 14 px apart, 5 degrees a card, within 160 px, never a count; the picked back risen, its back `.is-ringed`."""
+    pg, host, log = open_column(gui, host=FanHost(analysis=7))
+    try:
+        pg.wait_for_selector(".col-card--fan", timeout=WAIT_MS)
+        pg.emulate_media(reduced_motion="reduce")
+        cards = pg.locator(".col-card--fan")
+        assert cards.count() == 7
+        left = cards.evaluate_all("els => els.map((e) => e.offsetLeft)")
+        assert [b - a for a, b in zip(left, left[1:])] == [14] * 6 and max(x + 56 for x in left) <= 144 <= 160, left
+        assert cards.evaluate_all("els => els.map((e) => e.style.getPropertyValue('--r'))") == ["-15deg", "-10deg", "-5deg", "0deg", "5deg", "10deg", "15deg"]
+        assert not any(ch.isdigit() for ch in pg.locator(".col-sec[data-pile=analysis] .col-plab").inner_text()), "never a count"
+        assert pg.locator(".col-fan .is-ringed").count() == 0
+        cards.nth(3).click(position={"x": 8, "y": 50})
+        pg.wait_for_selector(".col-card--fan.ork-picked", timeout=WAIT_MS)
+        picked = pg.locator(".col-card--fan.ork-picked")
+        assert picked.get_attribute("data-goal") == "a3" and picked.locator(".ork-card-back.is-ringed").count() == 1, "the picked back wears the ring"
+        assert pg.evaluate("() => { const e = document.querySelector('.col-card--fan.ork-picked'); return Math.round(new DOMMatrix(getComputedStyle(e).transform).f - parseFloat(e.style.getPropertyValue('--sink'))); }") == -10, "and rises"
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--fan.ork-picked .ork-card-back')).clipPath") == "none", "orkUI 0.37.0: the ringed back loses the notch's clip"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_column_never_scrolls_at_1366_by_768_with_the_new_piles(gui):
+    """Spec 168 B2: Ideas' fan, Specs' small deck and Implementation's cascade fit the table's height at the common laptop screen; only Implementation gives way."""
+    pg, host, log = open_column(gui, host=FanHost())
+    try:
+        pg.set_viewport_size({"width": 1366, "height": 768})
+        pg.mouse.move(700, 300)
+        pg.wait_for_timeout(300)
+        got = pg.evaluate("""() => { const s = document.querySelector('.col-scroll'), c = document.querySelector('.col'); return {scroll: [s.scrollHeight, s.clientHeight, getComputedStyle(s).overflowY], col: [c.scrollHeight, c.clientHeight]}; }""")
+        assert got["scroll"][0] <= got["scroll"][1] and got["scroll"][2] == "hidden" and got["col"][0] <= got["col"][1], got
+        assert pg.locator(".col-sec[data-pile=review] .col-card--spec").first.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [78, 56], "Specs' cards lie on their side, 78 x 56"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

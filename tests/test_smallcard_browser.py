@@ -102,7 +102,7 @@ def test_the_fan_and_the_deck_backs_are_previewed_with_their_goals_name_and_have
         fan = pg.locator(".col-card--fan")
         label = fan.nth(2).get_attribute("aria-label")
         assert label.startswith("Kick a player from the lobby"), label
-        fan.nth(2).hover(position={"x": 18, "y": 50})
+        fan.nth(2).hover(position={"x": 6, "y": 50})
         pg.wait_for_selector("[data-preview=back]", timeout=WAIT_MS)
         said = pg.locator("[data-preview=back]")
         assert said.bounding_box()["width"] == 144 and said.bounding_box()["height"] == 202
