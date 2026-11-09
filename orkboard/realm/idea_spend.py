@@ -346,9 +346,10 @@ def by_role(state_dir: Path, days: int = 7) -> dict[str, dict]:
 
 
 def forget() -> None:
-    """The cache of `by_role` cleared (a test, or a change the person should see at once)."""
+    """The caches cleared: `by_role`'s and the averages, and the ledgers read by task (a test, or a change the person should see at once)."""
     with _LOCK:
         _CACHE.clear()
+        _BY_TASK.clear()
 
 
 # -- the estimate that learns (§6) and Review's cost against it (§4) -----------------------------------
@@ -411,12 +412,29 @@ def _spent(rows: list[dict]) -> dict:
     return {"tokens": _tokens(rows), "usd": usd(rows) if all(_num(r.get("cost")) is not None for r in rows) else None, "tool": str(newest.get("tool") or "")}
 
 
+_BY_TASK: dict[str, tuple[tuple[int, int], dict[str, list[dict]]]] = {}
+
+
 def _by_task(state_dir: Path, slug: str) -> dict[str, list[dict]]:
-    out: dict[str, list[dict]] = {}
+    """A goal's ledger lines by task, read once while the ledger is unchanged (the map asks for every task of the goal on every build)."""
     path = ledger(state_dir, idea=slug)
-    for r in read(path) if path else []:
+    if not path:
+        return {}
+    try:
+        st = path.stat()
+        stamp = (st.st_mtime_ns, st.st_size)
+    except OSError:
+        return {}
+    with _LOCK:
+        hit = _BY_TASK.get(str(path))
+    if hit is not None and hit[0] == stamp:
+        return hit[1]
+    out: dict[str, list[dict]] = {}
+    for r in read(path):
         if r.get("task"):
             out.setdefault(str(r["task"]), []).append(r)
+    with _LOCK:
+        _BY_TASK[str(path)] = (stamp, out)
     return out
 
 
