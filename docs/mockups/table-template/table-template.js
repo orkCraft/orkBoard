@@ -197,7 +197,7 @@ function hand(ways) {
   const die = `<span class="ork-die small face-play" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span>`;
   const book = `<span class="book" aria-hidden="true"></span>`;   // a closed book; orkUI draws it (and open, while the history is on the table)
   // the places, one size, each changing the table (§285.3): Play, the inventory, the history
-  const end = `<div class="h-end${ways && scene !== "inventory" ? " is-lifting" : ""}"><figure><span class="place">${die}</span><figcaption>Play</figcaption></figure><figure><span class="place"><span class="ork-pack${scene === "inventory" ? " is-open" : ""}" aria-hidden="true"></span></span><figcaption>Inventory</figcaption></figure><figure><span class="place">${book}</span><figcaption>History</figcaption></figure></div>`;
+  const end = `<div class="h-end${ways && !scene.endsWith("inventory") ? " is-lifting" : ""}"><figure><span class="place">${die}</span><figcaption>Play</figcaption></figure><figure><span class="place"><span class="ork-pack${scene.endsWith("inventory") ? " is-open" : ""}" aria-hidden="true"></span></span><figcaption>Inventory</figcaption></figure><figure><span class="place">${book}</span><figcaption>History</figcaption></figure></div>`;
   const row = `<div class="h-lanes lanes-grid${ways ? " is-sunk" : ""}">${ORDER.map((p) => `<div class="stack">${stacks[p] ? edges(p === "tech" ? 2 : 1) + stacks[p] : ""}</div>`).join("")}</div>`;
   return `<footer class="hand bronze${ways ? " has-ways" : ""}" aria-label="The hand"><div class="h-plus${ways ? " is-sunk" : ""}">${plus}</div>${row}${ways || ""}${end}</footer>`;
 }
@@ -271,19 +271,54 @@ const SLOTS = [
     ["goals-few", "Three", "Up to three goals' work side by side.", "+8% a week"],
     ["goals-many", "Eight", "Up to eight goals at once, while the limits hold.", "+20% a week"]], star: 0 },
 ];
+const picOf = (sl, id) => id.startsWith("hero:") ? `<span class="hero-pic">${head(id.slice(5), "big")}</span>` : id.startsWith("tool:") ? `<span class="tool-pic">${id.slice(5)}</span>` : `<img src="pictures/${sl.dir || "settings"}/${id}.png" alt="">`;
+// a leader's slots (§283.33, H4), with the owner's third sheet (pictures/leader/)
+const LEADER_SLOTS = [
+  { key: "hero", label: "Its hero", at: 0, ways: [
+    ["hero:hero-sh-scene-elder", "Scene Shaman", "An engine's scenes: scene, autoloads, coupling.", "Yours"],
+    ["hero:shaman-elder", "Sh.man", "C4 and hotspots: containers, parts, hotspots.", "same"],
+    ["hero:hero-sh-xp-elder", "Spike Shaman", "Test, code, refactor; the dearest of the three.", "+4% a week"]], star: 0 },
+  { key: "tool", label: "Its AI tool", at: 0, ways: [
+    ["tool:Codex", "Codex", "Its seats run on Codex; no git index, no browser in its sandbox.", "Yours"],
+    ["tool:Claude Code", "Claude Code", "Its seats run on Claude Code (back Thu 18:00).", "same"],
+    ["tool:Main tool", "The project's", "Its seats follow the project's main tool.", "same"]], star: 2 },
+  { key: "tier", label: "Its tier", dir: "leader", at: 1, ways: [
+    ["tier-novice", "Novice", "Its Talk, sections and acceptances on the cheapest tier.", "−2% a week"],
+    ["tier-seasoned", "Seasoned", "Its own calls on the middle tier.", "Yours"],
+    ["tier-veteran", "Veteran", "Its own calls on the elder tier: deeper, dearer.", "+5% a week"]], cheaper: true, star: 1 },
+  { key: "size", label: "Its party's size", dir: "leader", at: 1, ways: [
+    ["size-lean", "Lean", "One who makes; one task at a time; no checker.", "−3% a week"],
+    ["size-standard", "Standard", "One who makes and one who checks; two at a time.", "Yours"],
+    ["size-full", "Full", "Every checker of its craft; three at a time.", "+6% a week"]], cheaper: true, star: 1 },
+  { key: "answers", label: "How it answers", dir: "leader", at: 1, ways: [
+    ["answers-pen", "Pen", "It asks, and you answer in your own words each time.", "same"],
+    ["answers-choice", "Choice", "It offers its ways; you pick one.", "Yours"],
+    ["answers-fork", "Fork", "Its ways worked out, with their gains, costs and risks; one more call a question.", "+3% a week"],
+    ["answers-silent", "Silent", "It decides and lays a card you can overrule; never for main, money or a decision.", "−1% a week"]], star: 1 },
+];
+const SEATS = [["peon-warrior", "Grunt", "makes", "Codex", "seasoned"], ["goblin-warrior", "Tester", "checks", "Codex", "novice"], ["peon-laborer", "Reviewer", "checks", "Claude Code", "seasoned"]];
+function leaderInventory() {
+  const key = Q.get("slot") || "answers";
+  const row = `<div class="slots">${LEADER_SLOTS.map((sl) => slotCard(sl, sl.key === key)).join("")}</div>`;
+  const seats = `<div class="seats"><span class="ork-plaque slot-label">Its seats</span><div class="seat-grid">${SEATS.map(([h, name, does, tool, tier]) => `<figure class="seat"><span class="sm seat-head">${head(h, "big")}</span><span class="sm seat-tool" title="Its AI tool">${tool}</span><span class="sm seat-tier" title="Its tier"><img src="pictures/leader/tier-${tier}.png" alt=""></span><figcaption><b>${name}</b> ${does}</figcaption></figure>`).join("")}</div></div>`;
+  const sl = LEADER_SLOTS.find((x) => x.key === key);
+  const up = sl.ways.findIndex((w, i) => i !== sl.at);
+  const hand = `<div class="ways inv-ways">${sl.ways.map((w, i) => invWay(sl, i, i === up)).join("")}<div class="way-acts"><button class="ork-btn quiet" type="button">Undo</button><button class="ork-btn quiet" type="button">Put it back</button></div></div>`;
+  return { row: row + seats, hand };
+}
 const pips = (n, at) => `<span class="pips">${Array.from({ length: n }, (_, i) => `<i class="${i === at ? "is-on" : ""}"></i>`).join("")}</span>`;
 function slotCard(sl, pressed) {
   const [id, name, line, price] = sl.ways[sl.at];
   return `<figure class="slot${pressed ? " is-pressed" : ""}"><span class="ork-plaque slot-label">${sl.label}</span>
     <article class="hc way pic-way slot-card${pressed ? " sig-alert" : ""}" data-el="meadow"><div class="bc-top">${pips(sl.ways.length, sl.at)}${sl.cheaper ? `<span class="cheaper" title="A cheaper way exists">${icon("coins")}</span>` : ""}</div>
-    <div class="way-pic"><img src="pictures/settings/${id}.png" alt=""></div><p class="bc-t">${name}</p><p class="way-line">${line}</p>
+    <div class="way-pic">${picOf(sl, id)}</div><p class="bc-t">${name}</p><p class="way-line">${line}</p>
     <div class="bc-foot"><span></span><span class="bc-much">${price === "Yours" ? "as set" : price}</span></div></article></figure>`;
 }
 function invWay(sl, i, up) {
   const [id, name, line, price] = sl.ways[i];
   const yours = i === sl.at, star = i === sl.star;
   return `<article class="hc way pic-way${up ? " is-up" : ""}${yours ? " is-yours" : ""}" data-el="meadow"><div class="bc-top"><span class="yours">${yours ? "Yours" : ""}</span>${star ? `<span class="star" title="The Orkmaster's pick">${sign("pick")}</span>` : ""}</div>
-    <div class="way-pic"><img src="pictures/settings/${id}.png" alt=""></div><p class="bc-t">${name}</p><p class="way-line">${line}</p>
+    <div class="way-pic">${picOf(sl, id)}</div><p class="bc-t">${name}</p><p class="way-line">${line}</p>
     <div class="bc-foot inv-foot"><span></span><span class="bc-much">${yours ? "" : price}</span></div></article>`;
 }
 function inventory() {
@@ -309,11 +344,12 @@ function win() {
   }
   if (scene === "leader") { open = "tech"; party = "tech"; body = leaderTable(); }
   if (scene === "pictures") { open = "tech"; party = "tech"; body = gallery(); }
+  if (scene === "leader-inventory") { const inv = leaderInventory(); open = "tech"; party = "tech"; body = inv.row; ways = inv.hand; ttl = `<div class="pane-title ork-plate"><b>Inventory</b><span class="through">· how Tech is set</span></div>`; }
   if (scene === "inventory") { const inv = inventory(); body = inv.row; ways = inv.hand; ttl = `<div class="pane-title ork-plate"><b>Inventory</b><span class="through">· how the project is set · the whole project</span></div>`; }
   return `<div class="win" data-scene="${scene}">
     ${column(picked)}
     <main class="table"><div class="table-top">${tabs(open, off)}</div>
-      <div class="pane ork-table${scene === "inventory" ? " ork-leather" : ""}" data-party="${party}">${ttl}<div class="pane-body">${body}</div>${lifted}</div></main>
+      <div class="pane ork-table${scene.endsWith("inventory") ? " ork-leather" : ""}" data-party="${party}">${ttl}<div class="pane-body">${body}</div>${lifted}</div></main>
     ${rightColumn()}
     ${hand(ways)}
     ${balloon ? BALLOON : ""}
