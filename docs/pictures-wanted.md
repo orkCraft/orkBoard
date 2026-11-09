@@ -246,3 +246,43 @@ Tile 16, Lantern Imp: the imp of the attached reference, the same face, ears and
 tip of its right horn.
 Tile 17, Store Gnome: no band and no visor; a small paper price tag on a string hanging from one of its wings.
 ```
+
+## The cartoon (decision §289)
+
+The look's pictures are a humorous flat cartoon, the heads first. Attach the owner's test sheet of six
+(`docs/mockups/table-template/heads/cartoon/test-sheet-six.jpg`) as the style to match. What the test showed at the window's sizes:
+the eyes read even at 16 px on a phone; the dryad and the knight came with shoulders and the lich with a body (a head only, please);
+the lich's dark hood is lost on the dark room and the gnome wore a hat (the bare head: gear is laid by code); a 16 px head on a plain
+screen blurs (sheet K2 draws it simpler).
+
+**The style, said first in every cartoon prompt:**
+
+```
+Fantasy head portraits for a card-game interface, matching EXACTLY the attached test sheet in line, colour, shading and humour:
+a humorous flat cartoon, thick even dark outlines, flat colours with one shade each, no texture, no gradients, big expressive
+eyes, comic proportions. A HEAD ONLY, no neck, no shoulders, no body; front-facing; every head the same height with its eyes on
+the same line in every tile, wholly inside its tile with a clear margin (horns, antlers and wings stay inside). Bare heads: no hood,
+no hat, no cap, no helmet unless the helm is the race's own face (the knight). Every head reads on a very dark background: no dark
+mass without a light rim. A flat mid-grey background (#3a3a3a) in every tile, a thin grey-brown frame around each tile. No text.
+```
+
+**Sheet K1, the bare set of eight** (a 4 × 2 grid, calm):
+```
+A 4x2 grid of 8 tiles, left to right, top to bottom:
+1 the ork shaman: olive-green skin, tusks, ram's horns curling down the sides, the ork's own face (as in the test sheet).
+2 the elf dryad: pale skin, long plum #c47fc0 hair cut short at the jaw so no shoulders show, stag antlers.
+3 the golden unicorn knight: a closed brass-gold helm, its eyes seen in the visor's slit, one unicorn horn, small white wings
+  at the helm's sides; the helm ends at the chin, no shoulders, no armour.
+4 the lich: a bare skull in light night blue #7f93e6 with glowing pale-blue eyes and a light rim, no hood, no body.
+5 the imp: rust-red skin, small black horns, wide pointed ears, a wide toothy grin (as in the test sheet).
+6 the gnome fairy: bald head, a big white beard, a round nose, small sea-green #5cc8c0 wings close beside the head; no hat.
+7 the Orkmaster: an older ork, olive-green skin, heavy brows, tusks, a small brass crown with three points; a head only.
+8 a Grunt: a young ork, olive-green skin, small tusks, ears out at the sides, a plain eager face; no cap.
+```
+
+**Sheet K2, the same eight at 16 pixels** (attach K1; a 4 × 2 grid): *The same eight heads, kept the same characters and colours,
+redrawn simpler to read at 16 pixels: only the face, the eyes and the race's mark (horns, antlers, the horn and wings, the crown);
+outlines twice as thick, the eyes a little bigger, no strands of hair, no small teeth, no wrinkles.*
+
+Then, from K1 as the reference: the tiers' gear (T1–T2 again: bare, a dark iron cap with a light rim, a pointed violet hood), the
+members (H2 again), the heroes (H5–H6 again) and the moods (H3–H4, H7–H11 again), with this style block in place of the pixel one.
