@@ -277,6 +277,10 @@ class TalkHost(WaysHost):
         for n in self.nodes:
             if n["slug"] == "phones":
                 n["state"] = "talk"
+                n["say"] = {"leaders": [{"party": "tech", "leader": "Architect", "craft": "engineering", "weigher": False, "verdict": "go", "why": "The server owns the clock", "needs": [], "better": []},
+                                        {"party": "design", "leader": "Design lead", "craft": "design", "weigher": False, "verdict": "doubt", "why": "Phones must agree on the second",
+                                         "needs": [{"id": "q1", "kind": "question", "line": "Where does the timer run?", "rests_on": "", "ways": [], "state": "open"}], "better": []}],
+                            "rewrite": None, "fork": None, "judged": 0, "judge_left": 2, "answered": [], "waiting": [], "to_judge": []}
 
     def handle(self, name, a):
         if name == "ideas.talk_read":
@@ -285,46 +289,37 @@ class TalkHost(WaysHost):
         return super().handle(name, a)
 
 
-def test_a_goal_in_talk_lifted_lays_its_leaders_talk_and_its_question_on_the_table(gui):
-    """Spec 158 H, decisions §270.4: lifted at 1280 x 800, the table of a goal still in Talk shows in each leader's lane its verdict and its lines, and in the asking leader's lane the question with its ways."""
+def test_a_goal_in_talk_lifted_lays_a_card_with_its_verdict_under_each_leader_on_the_table(gui):
+    """Spec 168 C3, decisions §283.16.3 (before: spec 158 H, §270.4): lifted at 1280 x 800, the Orkmaster's table of a goal still in Talk has, under each leader of its route, a small card with its verdict's sign (the question waits for the person on that card's frame; it is answered at the leader's table)."""
     pg, host, log = open_hand(gui, host=TalkHost())
     try:
         lift(pg, "asks", "phones")
-        board = pg.locator(".table-board--plan")
+        board = pg.locator(".sb--idea")
         board.wait_for(timeout=WAIT_MS)
-        pg.locator(".plan-talk").first.wait_for(timeout=WAIT_MS)
-        tech, design = board.locator('.table-lane[data-party="tech"] .plan-talk'), board.locator('.table-lane[data-party="design"] .plan-talk')
-        assert tech.count() == 1 and design.count() == 1
-        assert tech.locator(".plan-talk__verdict").inner_text().strip().lower() == "go" and design.locator(".plan-talk__verdict").inner_text().strip().lower() == "doubt"
-        text = tech.inner_text()
-        assert "The server owns the clock" in text and "One place to reset" in text and "Every round trip adds delay" in text
-        assert "Phones must agree on the second" in design.inner_text() and "A phone offline shows a stale time" in design.inner_text()
-        assert tech.locator(".plan-talk__ask").count() == 0, "the question lies in its asker's lane only"
-        ask = design.locator(".plan-talk__ask")
-        assert ask.count() == 1 and ask.locator(".plan-talk__q").inner_text().strip() == "Where does the timer run?"
-        assert ask.locator(".plan-talk__ways li").all_inner_texts() == ["\u25cf Server counts, phones show it", "Each phone counts down alone"]
-        assert pg.locator(".plan-wait").count() == 0, "something was said: not the empty line"
-        assert board.locator(".plan-talk button, .plan-talk input").count() == 0, "read-only: nothing to press"
+        tech, design = board.locator('.table-lane[data-party="tech"]'), board.locator('.table-lane[data-party="design"]')
+        assert tech.locator(".verdict.is-go").count() == 1 and design.locator(".verdict.is-doubt").count() == 1
+        assert design.locator('.ork-card.sm[data-signal="alert"]').count() == 1 and tech.locator('.ork-card.sm[data-signal="alert"]').count() == 0, "the question lies on its asker's card"
+        assert "The server owns the clock" in tech.inner_text() and "Phones must agree on the second" in design.inner_text()
+        assert board.locator(".plan-wait").count() == 0 and board.locator(".plan-talk").count() == 0
         shot(pg, "talk-table")
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_the_risen_question_covers_no_lanes_talk_and_the_sunk_hand_can_be_seen(gui):
-    """Spec 158 H, Design's Done when 5: at 1280 x 800 the risen question stands right of the ways, over no lane's Talk or question; the sunk hand shows beside the ways row, grey and inert."""
+def test_the_risen_question_covers_no_leaders_card_and_the_sunk_hand_can_be_seen(gui):
+    """Spec 158 H, Design's Done when 5: at 1280 x 800 the risen question stands right of the ways, over no leader's card of the table; the sunk hand shows beside the ways row, grey and inert."""
     pg, host, log = open_hand(gui, host=TalkHost())
     try:
         card = lift(pg, "asks", "phones")
-        pg.locator(".plan-talk").first.wait_for(timeout=WAIT_MS)
+        pg.locator(".sb-said").first.wait_for(timeout=WAIT_MS)
         q = card.bounding_box()
-        for lane in pg.locator(".plan-talk").all():
-            for part in lane.locator(":scope > *, .plan-talk__ask > *").all():
-                b = part.bounding_box()
-                if not b or not b["width"]:
-                    continue
-                apart = q["x"] >= b["x"] + b["width"] or q["x"] + q["width"] <= b["x"] or q["y"] >= b["y"] + b["height"] or q["y"] + q["height"] <= b["y"]
-                assert apart, ("the question covers Talk", q, b)
+        for part in pg.locator(".sb-said, .sb-said > *").all():
+            b = part.bounding_box()
+            if not b or not b["width"]:
+                continue
+            apart = q["x"] >= b["x"] + b["width"] or q["x"] + q["width"] <= b["x"] or q["y"] >= b["y"] + b["height"] or q["y"] + q["height"] <= b["y"]
+            assert apart, ("the question covers a leader's card", q, b)
         row, ways = pg.locator(".hand-row.is-sunk"), pg.locator(".hand-ways-row").bounding_box()
         assert row.evaluate("e => e.inert") and row.evaluate("e => getComputedStyle(e).filter") == "grayscale(1)"
         r = row.bounding_box()

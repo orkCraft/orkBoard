@@ -372,7 +372,10 @@ TERMS: tuple[Term, ...] = (
     _t("not_before", "not before"),                                # a goal put off, on its row: *not before 14:05* (spec 138 B.5, decisions §245.4)
     _t("work_goes_on", "the work goes on at"),                     # a goal at work held by a spent window, on its row: *the work goes on at 14:00* (spec 138 B.5)
     _t("judge_again", "Judge again now"),                          # the Orkmaster's table of an idea: the leaders that doubted, said no, were turned down or were touched judge it again (spec 168 C2, decisions §283.25)
-    _t("say_needs", "Needs your answer"),                          # a leader's table of an idea: what its risks, conflicts and questions ask of the person (spec 168 C1, decisions §283.23)
+    _t("stage_assessing", "Assessing…"),                           # the Orkmaster's table of an idea: a leader that has not said its verdict yet, beside its back (spec 168 C3, decisions §283.16.3)
+    _t("stage_later_step", "Its step comes when the step before it is accepted"),     # the Orkmaster's table of the implementation: a later leader's step, a placeholder until the step before it is accepted (spec 168 C3, decisions §283.14)
+    _t("stage_part", "part"),                                      # the Orkmaster's table of a spec: a leader's section as a card, *Tech's part* (spec 168 C3)
+    _t("say_needs", "Needs your answer"),                         # a leader's table of an idea: what its risks, conflicts and questions ask of the person (spec 168 C1, decisions §283.23)
     _t("say_better", "Could be better"),                           # … and its improvements, each a line of the goal rewritten (spec 168 C1)
     _t("hearing", "hearing", "hearings"),                         # a goal's card in the middle and the sides its leaders argue, thrown to the one the person takes (spec 120 §1); not a fork, which stays two sections that disagree, nor a council, the Review board's
     _t("sketch", "sketch", "sketches"),                            # a goal's throwaway variants, made by its craft's leader before its spec is written, touched and one picked (spec 121 §1); not a pick, which a task makes inside the work, nor a mockup, the word of the docs' own drawings
