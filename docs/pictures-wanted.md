@@ -130,3 +130,74 @@ A 4x2 grid of 8 tiles, left to right, top to bottom:
 Ask again for the tiles that drift from the reference (*keep exactly the palette, outline and pixel size of the reference;
 redo tiles 4 and 9 only*). Keep the order: a tile's number is its id's place in the lists above. A picture made by Gemini is
 written in orkUI's `NOTICE` with the tool and the date it was made.
+
+## The heads (decision §288)
+
+Every head the window draws, made in the same way as the cards' pictures, with **the owner's first set of eight heads attached**
+beside the old reference. A head is drawn **bare** (no hood, no band, no cap: orkUI lays each tier's gear over it by code), on a
+tile of **12 : 11**, front-facing, the same height and its eyes on one line across every sheet, wholly inside its tile, in its party's
+colour, on a flat mid-grey (#3a3a3a) to be cut out. No text.
+
+The party colours: Tech moss `#8fbf4a` (orks), Product and Game design muted brass gold `#d9b45c` with deep oxblood (knights),
+Design and Art plum `#c47fc0` (elves), Release night blue `#7f93e6` (the undead), Run and LiveOps rust `#e08a4a` (goblins),
+Marketing sea `#5cc8c0` (gnomes), the Orkmaster warm wood `#a9825a`.
+
+**The style, said first in every heads' prompt:**
+
+```
+Fantasy head portraits for a card-game interface, matching EXACTLY the attached approved set of eight heads in pixel size,
+outline, shading, palette, framing and proportions. Each head on a tile of 12:11 (slightly wider than tall), front-facing,
+the same height, its eyes on the same line in every tile, wholly inside its tile with a one-pixel margin (horns, antlers,
+wings stay inside). Crisp square pixels scaled with nearest-neighbour: no anti-aliasing, no blur, no gradients, no soft
+shadows. Bold one-pixel black outline, two or three flat tones per colour plus one highlight, light from the top left.
+Bare heads: no hood, cap, band or helmet unless it is part of the race's own face (the knight's helm). A flat mid-grey
+background (#3a3a3a) in every tile, a thin grey-brown frame around each tile. No text, letters, numbers or captions.
+```
+
+**Sheet H1, fixes to the approved set** (attach the set itself): *Keep this sheet exactly as it is. Redraw only tile 3 (the knight)
+with its cape in deep oxblood red-brown instead of blue, tile 5 (the imp) with its collar in dark rust brown instead of teal, and
+tile 8 (the Grunt) bare-headed, no cap. Nothing else changes.*
+
+**Sheet H2, the members** (a 3 × 2 grid, bare heads, calm):
+```
+A 3x2 grid of 6 tiles, left to right, top to bottom:
+1 an ork member: olive-green skin, small tusks, ears out at the sides, a plain young face (Tech, moss #8fbf4a).
+2 an elf member: pale skin, long pointed ears, long plum #c47fc0 hair.
+3 a goblin member: rust #e08a4a skin, wide flat ears, a wide toothy grin.
+4 a gnome member: a round nose, a big white beard, a small sea-green #5cc8c0 scarf at the collar.
+5 a knight member: a plain closed helm in muted brass with a visor slit and breath holes, no horn, no wings.
+6 a skeleton member: a bare skull on a short jaw in night blue #7f93e6 and slate.
+```
+
+**Sheets H3 and H4, the moods** (the leaders and the Orkmaster: five columns of moods, a row a head):
+```
+A 5x4 grid of 20 tiles: each row is the same head as in the attached approved set, kept exactly; the five columns are its
+moods, left to right: focused (narrowed eyes, a firm mouth), worried (raised brows, a bead of sweat), no (a frown, the mouth
+turned down), pleased (a wide smile), asleep (eyes closed, a small tilt). Rows: 1 the ork shaman, 2 the elf dryad,
+3 the golden unicorn knight (its mood shown by the visor's eye-glow and a small tilt), 4 the lich (its mood by its eye-lights).
+```
+H4 is the same with three rows: 1 the imp, 2 the gnome fairy, 3 the Orkmaster.
+
+**Sheets H5–H6, the heroes' portraits** (18; each its leader's race and party colours, calm; three a row in 6 × 3):
+```
+A 6x3 grid of 18 tiles, left to right, top to bottom, each a hero: its leader's head from the attached set, changed as said.
+1 Scene Shaman: the ork shaman with a small clapperboard tucked between its horns.
+2 Spike Shaman: the ork shaman with a spiky crest of hair and two thin war-paint stripes.
+3 Domain Shaman: the ork shaman with boundary-stone beads hanging from its horns.
+4 Fitness Shaman: the ork shaman with a sweatband across its brow.
+5 Jobwise Knight: the unicorn knight's helm with a quill-feather plume.
+6 Pivot Knight: the unicorn knight's helm in silver with a compass rose on its brow.
+7 Appetite Knight: the unicorn knight's helm in copper with a fork-and-knife crest.
+8 Pillar Knight: the unicorn knight's helm in stone grey, its crest shaped like a column's capital.
+9 Economy Knight: the unicorn knight's helm in gold with a coin-slot visor.
+10 Dungeon Master Knight: the unicorn knight's helm in dark iron with a many-sided die as its crest.
+11 Diamond Dryad: the dryad with a small diamond hanging between her antlers.
+12 Atom Dryad: the dryad with tiny dots circling her antlers like orbits.
+13 Sprint Dryad: the dryad with wind-swept hair and a thin sweatband.
+14 Inclusive Dryad: the dryad wearing a large round monocle lens.
+15 Sprite Dryad: the dryad with two paintbrushes tucked in her antlers and a dab of paint on her cheek.
+16 Lantern Imp: the imp with a small lantern hanging from one horn.
+17 Store Gnome: the gnome fairy with a shopkeeper's visor cap pushed back.
+18 Position Gnome: the gnome fairy with a dart stuck in its cap and a tiny target on its scarf.
+```
+**Sheets H7–H11, the heroes' moods**: as H3, four heroes a sheet (rows), the five moods (columns); the last sheet two heroes.

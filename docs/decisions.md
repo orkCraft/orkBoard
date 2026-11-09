@@ -8030,3 +8030,30 @@ one set and fill a way's window exactly. The owner: *yes*. So:
    wanted.md` says the rules. Spec 168 J2 builds the place for them.
 
 The owner's call.
+
+## 288. The heads everywhere are the owner's set: drawn in Gemini, fitted to orkUI's sizes; the tiers' gear laid by code; every hero its own portrait; five moods each (9 November 2026, the owner)
+
+Changes: 266.4 (a hero's face its race's higher form with a few things changed: now a portrait of its own), 287 (the pictures were
+the cards'; the heads are now the owner's too); orkUI's `races/` (the 12 × 11 grids written by `tools/build_races.py`, after §161).
+
+Why: the owner's set of eight heads (the shaman, the dryad, the unicorn knight, the lich, the imp, the gnome fairy, the Orkmaster, a
+Grunt), made in Gemini in the party colours, beside orkUI's at the window's sizes (`docs/mockups/table-template/heads/compare.png`):
+richer and told apart at 48 and 36 px, darker at 16 px. Offered the new heads as portraits and orkUI's as the 16 px icons, the owner:
+*no, the new heads everywhere*; then, of the ways offered, the tiers' gear laid by code, a portrait of its own for every hero, and
+five moods each made in Gemini. So:
+1. **Every head the window draws is the owner's set**, at every size (16, 24, 36, 48 px): the leaders, the crowned Orkmaster, each
+   race's member, every hero. orkUI keeps its file names and sizes (`races/<race>-<tier>[-<mood>].png` at 24 × 22 and `@2x` at
+   48 × 44, `hero-<id>-<tier>[-<mood>]`), so Orkboard's code changes nothing; what changes is how orkUI makes them.
+2. **A head is drawn once, bare**, in Gemini, on a tile of 12 : 11, front-facing, every head the same height and its eyes on one
+   line, whole inside its tile, in its party's colours (§268), on a flat grey to be cut out; orkUI cuts it, lays it on that line,
+   brings it to 48 × 44 and 24 × 22 and to its palette.
+3. **A tier is its gear laid by code** over the bare head (the hood, the band, the circlet: the gear the 12 × 11 heads wear), at
+   the line every head shares; a mark (horns, antlers, wings) is never covered by more than a cell or two of it.
+4. **Every hero is a portrait of its own**: its leader's race and party colours with what its school says (a detail, a colour of
+   its helm or hair), drawn in Gemini as the leaders are; its tiers by 3, its moods by 5.
+5. **The leaders, the Orkmaster and every hero have five moods** (focused, worried, no, pleased, asleep), each made in Gemini from
+   its calm face, kept as one face; the members keep one face (as today, §201's states are the leaders').
+6. **The sheets** are in `docs/pictures-wanted.md` (*The heads*); orkUI takes them in by a tool of its own and releases them; spec
+   168 J3 builds it. Until a head is made, orkUI's 12 × 11 head stands for it.
+
+The owner's call.
