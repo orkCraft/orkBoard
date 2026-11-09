@@ -48,7 +48,10 @@ def test_the_plus_card_raises_a_whole_card_at_the_tables_foot_and_a_field_as_lar
         assert [card["width"], card["height"]] == [144, 202], "whole: all four corners show"
         assert card["y"] + card["height"] <= hand["y"] + 1 and pane["x"] <= card["x"] <= pane["x"] + 60, "at the table's foot, at its left"
         assert abs(field["y"] - hand["y"]) <= 4 and abs(field["height"] - hand["height"]) <= 4, "the field's box is the hand's"
-        assert abs(field["x"] - card["x"]) <= 2 and field["x"] + field["width"] < VIEW["width"] - 150, "from the card's left edge to the strip the sunk hand keeps"
+        end = box(pg.locator(".hand-end"))
+        assert abs(field["x"] - card["x"]) <= 2 and end["x"] - 40 <= field["x"] + field["width"] <= end["x"], ("from the card's left edge to the places", field, end)
+        sizes = [(round(b["width"]), round(b["height"])) for b in (e.bounding_box() for e in pg.locator(".hand-end .place-box").all()) if b]
+        assert sizes and all(x == (48, 60) for x in sizes), ("the places keep their one size and their place (decisions §283.5, §284.4)", sizes)
         assert pg.locator(".hand-fieldbox textarea").evaluate("e => e === document.activeElement"), "focused at once"
         row = pg.locator(".hand-row")
         assert "is-sunk" in row.get_attribute("class").split() and row.evaluate("e => e.inert"), "the hand's cards sink"

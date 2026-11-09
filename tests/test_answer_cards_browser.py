@@ -324,9 +324,11 @@ def test_the_risen_question_covers_no_leaders_card_and_the_sunk_hand_can_be_seen
             assert apart, ("the question covers a leader's card", q, b)
         row, ways = pg.locator(".hand-row.is-sunk"), pg.locator(".hand-ways-row").bounding_box()
         assert row.evaluate("e => e.inert") and row.evaluate("e => getComputedStyle(e).filter") == "grayscale(1)"
-        r = row.bounding_box()
-        assert r["x"] >= ways["x"] + ways["width"] - 2 and r["width"] > 100, ("the sunk hand beside the ways, not under them", r, ways)
-        assert row.locator(".hand-card, .hand-slot").count() > 0
+        assert row.locator(".hand-card, .hand-slot").count() > 0 and all(not c.is_visible() for c in row.locator(".hand-card").all()), "the hand's cards lie under what is played"
+        end = pg.locator(".hand-row.is-sunk .hand-end").bounding_box()
+        assert end["x"] >= ways["x"] + ways["width"] - 2, ("the places beside the ways, not under them", end, ways)
+        sizes = [(round(b["width"]), round(b["height"])) for b in (e.bounding_box() for e in pg.locator(".hand-end .place-box").all()) if b]
+        assert sizes and all(s == (48, 60) for s in sizes), ("the places keep their one size while a card is played (decisions §283.5, §284.4)", sizes)
         shot(pg, "product-talk")
     finally:
         pg.close()

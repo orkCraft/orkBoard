@@ -1,6 +1,6 @@
 // Where a card in play and the hand's own place lie on the desktop (docs/specs/168 D1, D2; decisions §283.19, §286): the card stands at the table's foot at the left, 144 x 202, over the hand; what the person plays or writes lies in the hand's place, from the
 // column's right edge to the sunk hand at the right, as tall as the hand. Everything is measured from the hand's box, so the card, the ways and the field share one left edge. The ways are cut by the hand's rim: `cutOf` is how much of a 202 px card the rim hides.
-// The hand's cards, sunk, shrink into the strip at the right (hand.css `is-sunk`, `--hc-sunk-s`): the strip is where the places, the potions and the stacks lie small.
+// The hand's cards, sunk, lie hidden under what is played; the places at the hand's right end stay at their size and in their place (openedcard.css `is-sunk`; decisions §283.5, §284.4), and what is played reaches them.
 
 import { useLayoutEffect, useState } from "preact/hooks";
 
@@ -12,7 +12,8 @@ export function handSpan(hand, sunk = SUNK) {
   const h = hand.getBoundingClientRect(), pane = hand.closest(".frame")?.querySelector(".frame-table")?.getBoundingClientRect();
   const left = Math.max(0, Math.round((pane ? pane.left - h.left : 160) + 32));
   const card = parseFloat(getComputedStyle(hand).getPropertyValue("--hc-h")) || 202;
-  return { left, right: Math.round(h.width * (1 - sunk)) - 16, height: h.height, cut: Math.max(0, Math.round(card - (h.height - RIM))) };
+  const end = hand.querySelector(".hand-end")?.getBoundingClientRect(), stop = end && end.width ? end.left - h.left : h.width * (1 - sunk);      // the places stay where they are: what is played reaches them
+  return { left, right: Math.round(stop) - 16, height: h.height, cut: Math.max(0, Math.round(card - (h.height - RIM))) };
 }
 
 /** Sets `--hc-ways` (the ways' bottom: negative, so the rim cuts them) and `--hc-wleft` (their left) on the hand. */
