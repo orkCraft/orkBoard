@@ -22,7 +22,7 @@
 .sb-spec__lines { margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); overflow-wrap: anywhere; }
 .sb-spec--back .ork-card-back { width: 100%; }
 .sb-spec--back:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 1px; }
-.sb-spec__say { position: absolute; left: 0; right: 0; bottom: var(--ork-3); text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); pointer-events: none; }
+.sb-spec__say { position: absolute; left: 0; right: 0; top: 100%; margin-top: var(--ork-1); text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); pointer-events: none; }      /* under the back, not on its ring */
 /* the project's lane: a row of small cards for each stage over the cascade */
 .sb-rows { display: flex; flex-direction: column; gap: var(--ork-3); align-self: stretch; }
 .sb-row { display: flex; flex-direction: column; gap: var(--ork-1); }
