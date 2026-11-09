@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 from orkboard.realm import (board_back, board_in_code, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_phase, goal_place, goal_route, goal_take, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, lexicon, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
-from orkboard.realm import idea_say
+from orkboard.realm import idea_say, step_needs
 from orkboard.realm.idea_words import CARD_LINE_CHARS, short_of
 
 NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "conflict", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change", "spec_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
@@ -551,6 +551,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
         goals[-1].update(party=map_party.party_of(goals[-1], mine_nodes), today={"merged": len(today_tasks), "usd": round(cost, 2)},
                          flags=sum(1 for n in mine_nodes if n["flag"]),
                          waits_main=sum(1 for n in mine_nodes if n["state"] == "done" and not n["flag"]))
+    [n.update(steps=step_needs.steps(n, goals)) for n in nodes]       # each step of its route: its seats, their tools, what the work needs and what a tool lacks (spec 168 C4)
     return {"goals": goals, "nodes": nodes, "edges": edges, "rows": board_rows.rows(state_dir, root), "rev": rev}      # the stacks of no goal's, laid after the goals' own (spec 99 §8.2; the hypotheses judged, spec 116 §4.1)
 
 
