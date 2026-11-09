@@ -19,7 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 
-from orkboard.realm import idea_spend, ideas, library, roles
+from orkboard.realm import idea_spend, ideas, library, roles, way_kinds
 
 DIRS = ("right", "left", "up")                  # → ← ↑ : a side's place; down is no side
 DECIDED = "This was decided already"            # a throw of a hearing that is no longer open
@@ -61,7 +61,7 @@ def _joined(names: list[str]) -> str:
 
 def _side(kind: str, group: list[dict], name_of: Callable[[str], str], line: str, outcome: str, **more) -> dict:
     names = [name_of(s["leader"]) for s in group]
-    return {"dir": "", "kind": kind, "leaders": [s["party"] for s in group], "names": names, "also": names[1:], "line": line, "outcome": outcome, **more}
+    return {"dir": "", "kind": kind, "leaders": [s["party"] for s in group], "names": names, "also": names[1:], "line": line, "outcome": outcome, "way_kind": way_kinds.of_side(kind), **more}
 
 
 def of_talk(rec: dict, name_of: Callable[[str], str]) -> dict:
@@ -119,8 +119,8 @@ def of_fork(fork: dict, name_of: Callable[[str], str] | None = None) -> dict:
     sides = []
     for s, d in zip(given, DIRS):
         who = name(s.get("leader") or s["party"])
-        sides.append({"dir": d, "kind": "side", "party": s["party"], "leaders": [s["party"]], "names": [who], "also": [], "line": _s(s.get("why")), "outcome": _s(s.get("says"))})
-    left_out = [{"kind": "side", "party": s["party"], "leaders": [s["party"]], "line": _s(s.get("why")), "outcome": _s(s.get("says"))} for s in given[len(DIRS):]]
+        sides.append({"dir": d, "kind": "side", "party": s["party"], "leaders": [s["party"]], "names": [who], "also": [], "line": _s(s.get("why")), "outcome": _s(s.get("says")), "way_kind": way_kinds.clean(s.get("way_kind"))})
+    left_out = [{"kind": "side", "party": s["party"], "leaders": [s["party"]], "line": _s(s.get("why")), "outcome": _s(s.get("says")), "way_kind": way_kinds.clean(s.get("way_kind"))} for s in given[len(DIRS):]]
     leaders = list(dict.fromkeys(x for s in sides for x in s["names"]))
     about = _s(fork.get("about"))
     title = f"{_joined(leaders)} disagree" if len(leaders) > 1 and name_of else about

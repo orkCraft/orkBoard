@@ -1,4 +1,4 @@
-<!-- orkboard:file schema=3 hash=dbd6b39adf0c -->
+<!-- orkboard:file schema=3 hash=b0a8deee8393 -->
 # The Board's rules (Orkboard's file)
 
 Orkboard writes this file from its package; a change by hand is written back. This project's own rules go in `AGENTS.md` and `CLAUDE.md`, and they win: where they conflict
@@ -60,7 +60,7 @@ A leader's question is one list line under `## Open questions`, its choices in b
 
     - Which store first? (**App Store** / Google Play) — most of its users are on iPhone · App Store: Reaches most of its users first; review takes days · Google Play: Android users wait; the review is quicker
 
-`lines` is one line for each way, in the ways' order: what that way leads to, its point in its first words, 80 characters at most so it fits under the way's name on its card, never the `why` said again; give a line for every way or none. A question with no lines is as valid as before.
+`lines` is one line for each way, in the ways' order: what that way leads to, its point in its first words, 80 characters at most so it fits under the way's name on its card, never the `why` said again; give a line for every way or none. `kinds` is one word for each way, in the ways' order, the kind it is: replace, keep, smaller, later, drop, split, go_on, mitigate, accept_risk, ask_more, leader_decides, start_again, take, not_a_problem, make_it_a_goal or other (none of these); name only what the way really is. A question with no lines is as valid as before.
 
 Set `asks: person` and stop. The person's answer is the line under it, written by whoever hears it (Orkboard writes it too when the person answers in its hand):
 

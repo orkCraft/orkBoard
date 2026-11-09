@@ -547,6 +547,23 @@ TERMS: tuple[Term, ...] = (
     _t("hero.uni-econ", "Economy Knight"),
     _t("hero.dry-sprite", "Sprite Dryad"),
     _t("hero.release", "Release Night King"),
+    # -- a way's kind (spec 168 J1, realm/way_kinds.py): the owner's picture of it is `pictures/<kind>.png` --------
+    _t("way_kind.replace", "Replace"),
+    _t("way_kind.keep", "Keep"),
+    _t("way_kind.smaller", "Smaller"),
+    _t("way_kind.later", "Later"),
+    _t("way_kind.drop", "Drop"),
+    _t("way_kind.split", "Split"),
+    _t("way_kind.go_on", "Go on"),
+    _t("way_kind.mitigate", "Mitigate"),
+    _t("way_kind.accept_risk", "Accept the risk"),
+    _t("way_kind.ask_more", "Ask more"),
+    _t("way_kind.leader_decides", "The leader decides"),
+    _t("way_kind.start_again", "Start again"),
+    _t("way_kind.take", "Take"),
+    _t("way_kind.not_a_problem", "Not a problem"),
+    _t("way_kind.make_it_a_goal", "Make it a goal"),
+    _t("way_kind.other", "Your own words"),
 )
 
 # Short names the interface uses for a building as well as its full title.

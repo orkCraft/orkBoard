@@ -29,6 +29,8 @@ import re
 
 from orkboard.realm.seat_page_rules import ANSWERED
 
+from orkboard.realm import way_kinds
+
 ASK_CHARS = 300
 CHOICES = (2, 4)                 # a question's choices: at least, at most
 CHOICE_CHARS = 40
@@ -67,6 +69,8 @@ def of(raw: object) -> dict | None:
     q = {"ask": ask, "choices": choices, "pick": pick, "why": _plain(raw.get("why"), WHY_CHARS) if choices else ""}
     if (lines := _lines_of(raw.get("lines"), choices)):
         q["lines"] = lines
+    if choices:
+        q["kinds"] = way_kinds.of(raw.get("kinds"), len(choices))     # each way's kind (spec 168 J1); the page's line does not hold them: a question read back from it reads `other`
     return q
 
 
@@ -93,6 +97,7 @@ def parse(text: str) -> dict:
     why, lines = _split(q["why"], choices)
     if lines:
         q["why"], q["lines"] = why, lines
+    q["kinds"] = way_kinds.of(None, len(choices))              # the page's line does not hold a way's kind (spec 168 J1): a question read back from it reads `other`
     return q
 
 
@@ -212,6 +217,7 @@ def card(raw: object, *, id: str, by: str, leader: str, project: bool = False) -
            "why": _plain(raw.get("why"), WHY_CHARS), "project": bool(project)}
     if (lines := _lines_of(raw.get("lines"), choices)):
         out["lines"] = lines                              # a way's own line (spec 159): kept only when every way has one
+    out["kinds"] = way_kinds.of(raw.get("kinds"), len(choices))      # each way's kind (spec 168 J1): one of `way_kinds.KINDS`, `other` where the leader named none or an unknown one
     if (to := for_of(raw)) != PERSON:
         out["for"] = to                                   # a party that may answer it (spec 128 D.1): kept only when it is one; no `for` is the person's
     return out
@@ -278,6 +284,7 @@ def _asked(c: dict, state: str) -> dict:
            "pick": pick if isinstance(pick, int) and not isinstance(pick, bool) else None, "why": str(c.get("why") or ""), "project": bool(c.get("project")), "state": state}
     if lines := _lines_of(c.get("lines"), out["choices"]):
         out["lines"] = lines
+    out["kinds"] = way_kinds.of_card(out | {"kinds": c.get("kinds")})      # an old record has none: every way reads `other`
     if state != "waiting":
         out["answer"] = str(c.get("answer") or "")
         out["round"] = 2 if c.get("round") == 2 else 1

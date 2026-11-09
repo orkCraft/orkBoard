@@ -268,7 +268,7 @@ def test_the_row_is_the_stances_and_the_cards(host, parties, model):
                                  "verdict": "go", "why": "", "instead": "", "after": "", "craft": "product", "weigher": False, "priority": "", "risk": "", "check": "", "needs": [], "better": []}      # no verdict in the answer reads as go (spec 108 §4.1)
     first = row["questions"][0]
     assert first == {"id": f"r1-{parties['product']}-1", "by": parties["product"], "leader": "product-manager", "q": "product question 0", "choices": ["A", "B"], "pick": 0,
-                     "why": "because", "project": False}
+                     "why": "because", "project": False, "kinds": ["other", "other"]}
     node = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == slug)
     assert node["place"] == "table" and node["asks_you"] is True and node["state"] == "talk"                         # on the table, asking: in the hand too
     last = ideas.talk(host.ideas.state_dir, slug)[-1]
@@ -277,7 +277,7 @@ def test_the_row_is_the_stances_and_the_cards(host, parties, model):
 
 def test_a_card_is_parsed_strictly():
     ok = idea_questions.card({"ask": "Which?", "choices": ["a", "b", "c", "d"], "pick": "c", "why": "it is"}, id="x", by="tech", leader="architect")
-    assert ok == {"id": "x", "by": "tech", "leader": "architect", "q": "Which?", "choices": ["a", "b", "c", "d"], "pick": 2, "why": "it is", "project": False}
+    assert ok == {"id": "x", "by": "tech", "leader": "architect", "q": "Which?", "choices": ["a", "b", "c", "d"], "pick": 2, "why": "it is", "project": False, "kinds": ["other"] * 4}
     for bad in ({"ask": "Which?", "choices": ["only"], "pick": 0}, {"ask": "Which?", "choices": list("abcde"), "pick": 0},          # one choice; five: never more than four
                 {"ask": "Which?", "choices": ["a", "A"], "pick": 0}, {"ask": "Which?", "choices": ["a", ""], "pick": 0},               # the same twice; padded
                 {"ask": "Which?", "choices": ["a", "b"], "pick": 2}, {"ask": "Which?", "choices": ["a", "b"]},                         # a pick that is none; no pick

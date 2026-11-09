@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 from orkboard.realm import (board_back, board_in_code, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_phase, goal_place, goal_route, goal_take, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, lexicon, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
-from orkboard.realm import idea_say
+from orkboard.realm import idea_say, way_kinds
 from orkboard.realm.idea_words import CARD_LINE_CHARS, short_of
 
 NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "conflict", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change", "spec_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
@@ -68,7 +68,7 @@ def talk_rows(state_dir: Path, slug: str) -> list[dict]:
 
     `card` is `idea_questions.card`'s `{id, by, leader, q, choices, pick, why, project}`. None while the leaders are being heard (nothing waits then)."""
     rec = idea_questions.record(state_dir, slug)
-    cards = [c for c in rec.get("waiting") or [] if isinstance(c, dict)]
+    cards = [way_kinds.with_kinds(c) for c in rec.get("waiting") or [] if isinstance(c, dict)]
     cause = rec.get("cause") if isinstance(rec.get("cause"), dict) else {}
     if rec.get("mode") == "bug":
         if not cause.get("pending"):
@@ -299,7 +299,7 @@ def _asked(st: dict, asks: list[str], by_slug: dict, lead: dict | None, target: 
     for n, q in enumerate(idea_questions.parse(a) for a in asks[:5]):
         r = by_slug.get(who[n]) if n < len(who) and isinstance(who[n], str) else None
         r = r or lead
-        out.append({"ask": q["ask"], "choices": q.get("choices") or [], "pick": q.get("pick"), "why": q.get("why") or "", "look": n < looks,
+        out.append({"ask": q["ask"], "choices": q.get("choices") or [], "kinds": way_kinds.of_card(q), "pick": q.get("pick"), "why": q.get("why") or "", "look": n < looks,
                     **({"lines": q["lines"]} if q.get("lines") else {}), "by": {"slug": r["slug"], "name": r["name"], "head": roles.head(r, target)} if r else None})
     return out
 
