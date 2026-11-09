@@ -198,6 +198,7 @@ BOARD_ASKED = "board_asked"       # party (its slug, or "orkmaster"), chars, tex
 LEADER_CHANGE_ASKED = "leader_change_asked"   # idea, party, shape ("plan" · "looks"), chars (the person's words), ok (the leader answered), changed_n (its tasks it changes), step, prompt_chars, tokens, cost
 LEADER_CHANGE_ANSWERED = "leader_change_answered"   # idea, party, take (Accept) or kept (Keep the spec, Talk more), look (the look's key taken, "" for a plan), added, changed_n, dropped, via, device
 ASK_MADE_GOAL = "ask_made_goal"   # party ("" for the Orkmaster's tab), device: *Make it a goal* pressed under an answer
+ASK_GOT_IT = "ask_got_it"         # party (who answered), tab (where it was asked), device: *Got it* pressed on a quick question's answer card (spec 168 D3)
 
 # Spec 107 §2 (decisions §182.2): what the logs lacked of a day. A command the host refused, and an error the person was shown.
 COMMAND_REFUSED = "command_refused"   # command, error (cut at TEXT_MAX), device (desktop · phone), kind ("refused": the host said no · "broken": it raised); never the arguments
@@ -253,7 +254,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,
-          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED, HEARING_THROWN, TALK_HEARD, TALK_GROUND, TALK_VERDICT, RIPE_STARTED, ROUTE_HELD, RIPE_HELD, RIPE_DONE)
+          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, ASK_GOT_IT, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED, HEARING_THROWN, TALK_HEARD, TALK_GROUND, TALK_VERDICT, RIPE_STARTED, ROUTE_HELD, RIPE_HELD, RIPE_DONE)
 EVENTS += (NIGHT_HELD, NIGHT_STARTED, BUILT_NOW)       # spec 121 C
 EVENTS += (NIGHT_CARD_OPENED, PLAY_AT_PATH)       # spec 121 D
 EVENTS += (SKETCH_MADE, SKETCH_ANSWERED, SKETCH_SKIPPED)       # spec 121 A

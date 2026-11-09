@@ -8,14 +8,20 @@ the page's commands and shows the record in the snapshot (`town.ask`).
     board_ask.board_text(root, state_dir)  # the Orkmaster's context: the parties and the goals in line, as plain text, about 3,000 characters
     board_ask.goal_lines(root, state_dir, party)   # a party's goals as lines (the whole Board's with no party)
 
-The record is `{status: "asking"|"answered"|"failed", party: ""|<party slug>, q, answer, sources: [..], goal, goal_in_analysis, at, error}`: one question at a time, no
-history. `party` is `ORKMASTER` ("") for a question asked on the Orkmaster's tab. A question is a read: it is no goal, has no phase and is never in the hand.
+    board_ask.route(root, tab, q)          # who answers a question asked on `tab` (spec 168 D3, decisions §283.20): `(party, hop)`; the tab's own, or on the Orkmaster's tab the one party named in it
+    board_ask.WAYS                         # the answer card's ways as their `way_kind`s (realm/way_kinds.py): *Make it a goal*, *Ask more*, *Got it*
+
+The record is `{status: "asking"|"answered"|"failed", party: ""|<party slug>, tab, hop, ways, q, answer, sources: [..], goal, goal_in_analysis, at, error}`: one question at a time, no
+history. `tab` is where it was asked (`ORKMASTER` "" for the Orkmaster's tab), `party` who answers it (the same, unless the Orkmaster passed it on: `hop`). `ways` are the kinds of the
+three ways of the card it comes back as in the hand (its answer on the table); the words are the page's. A quick question is the card of the kind **?** (decisions §283.20): no goal, no
+phase, no file, no rune and no place in the column; it is kept in the answering leader's journal (`asked`, `journal_notes.asked`) and not shown on the Board.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
-from orkboard.realm import goal_phase, goal_team, ideas, map_text, roles
+from orkboard.realm import goal_phase, goal_team, ideas, map_text, roles, way_kinds
 
 FILE = "ask.json"
 ORKMASTER = ""                    # the `party` of a question asked on the Orkmaster's tab
@@ -27,6 +33,7 @@ GOAL_CHARS = 200                  # the goal the answer suggests
 BOARD_CHARS = 3000                # the Board as text, at most
 PARTIES_CHARS = 1000              # of BOARD_CHARS, the parties' lines at most
 TITLE_CHARS = 60
+WAYS = ("make_it_a_goal", "ask_more", "take")          # *Make it a goal*, *Ask more*, *Got it* (a thing taken in: `take`), as realm/way_kinds.py `KINDS` has them
 PHASES = goal_phase.words()          # a fine state in the word of its phase (realm/goal_phase.py: the one table)
 
 
@@ -54,6 +61,17 @@ def clear(state_dir: Path) -> None:
 
 def _line(v: object, n: int) -> str:
     return " ".join(v.split())[:n] if isinstance(v, str) else ""
+
+
+def route(root: Path, tab: str, q: str) -> tuple[str, bool]:
+    """Who answers a question asked on `tab` (decisions §283.20), `(party, hop)`, by code, with no call: on a party's tab its leader; on the Orkmaster's tab the Orkmaster, unless the question
+    names one party (its slug or its title as words), whose part it is: one hop to that party's leader. Two named, or none, stay with the Orkmaster."""
+    if tab:
+        return tab, False
+    text = " " + " ".join(str(q or "").lower().split()) + " "
+    named = [t["slug"] for t in ideas.tracks(root, make=False) if t["slug"] != ideas.GENERAL
+             and any(re.search(rf"(?<![a-z0-9]){re.escape(w)}(?![a-z0-9])", text) for w in {str(t["slug"]).lower(), " ".join(str(t.get("title") or "").lower().split())} if w)]
+    return (named[0], True) if len(named) == 1 else (ORKMASTER, False)
 
 
 def clean(got: dict | None) -> dict | None:

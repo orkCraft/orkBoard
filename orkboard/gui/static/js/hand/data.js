@@ -3,12 +3,14 @@
 // Pure functions over `ideas.map`, `ideas.board` and `ideas.gate`, so that a face and a test read the same lists; the faces are the neighbouring modules.
 // A node's `place` is the host's (realm/goal_place.py); nothing here decides where a goal lies.
 import { board, goalList } from "../board/store.js";
+import { town } from "../link.js";
 import { gateData, mapData } from "../shell/store.js";
 import { byUrgency, gateOf, goalsOf, nodesOf, paidStopsOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { inCodeStopsOf } from "../arena/incodewords.js";
 import { ORKMASTER } from "../frame/state.js";
 import { partiesNow, roadSlugs, waitRuns } from "../table/data.js";
 import { groupsStops } from "./groupscard.js";
+import { askStops } from "./askcard.js";
 import { hypothesisStops } from "./hypothesiscard.js";
 import { cascadeStops } from "./cascadecard.js";
 import { projectStops, questionStops } from "./questions.js";
@@ -46,7 +48,7 @@ export function readyWords(r) {
 /** Every stop of the project, the most urgent first, a to-do last of all: each Needs you row, a failed task and a pick, a result to look at, the tools' sign-ins
  *  (arenawords.js, as the old hand read them). `open`: the tab that is open: a party's slug, or "orkmaster" for the Board's (every party at once, so no card says its party:
  *  its leader's head does). On a party's tab a stop of another party says its party. */
-export function stopsOfProject(map = mapData.value, rows = board.value?.needs_you || [], open = "") {
+export function stopsOfProject(map = mapData.value, rows = board.value?.needs_you || [], open = "", ask = town.value?.ask || null) {
   const running = new Set((map?.nodes || []).filter(waitRuns).map((n) => n.slug));                       // a decision all the leaders agreed on, its wait running: it goes on by itself, no card in the hand (decisions §240); it lies in the column
   const needs = rows.filter((r) => !(r.kind === "decision" && running.has(r.idea))), out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
   for (const g of partiesOf(map)) {
@@ -57,7 +59,7 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork), ...inCodeStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
+  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 
 /** The goal a stop belongs to ("" for a stop of no goal), and the stack it lies in: a goal's; a party's own question (`party:<slug>`); a sign-in alone. */

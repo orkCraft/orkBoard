@@ -245,15 +245,40 @@ Answer with one JSON object and nothing else:
         return {"ok": True, "parties": parties}
 
     def judge_auto(self, slug: str) -> None:
-        """All of the leaders' cards are answered (every better and need taken or turned down, the old questions done): they judge again, unless it was done twice, a fork waits or nobody has
-        anything to judge. Never fails: a refusal (a spent window, the keeper busy) leaves it to *Judge again now*."""
+        """A card of the leaders' was answered (spec 168 D0, decisions §283.25). While a need is open, a taken one is not written or a fork waits (`idea_say.holding`), Talk waits: nothing here.
+        With none holding and every better and need taken or turned down (the old questions done), the leaders judge again, unless it was done twice or nobody has anything to judge; the
+        decision (or, after two rounds, the hearing) comes when that is over (`judge_run`). With a better left open (an offer, which holds nothing) the leaders are not judged and the decision
+        comes at once (`say_release`). Never fails: a refusal (a spent window, the keeper busy) leaves it to *Judge again now*."""
         kw = _kw()
         try:
-            if idea_questions.record(self.state_dir, slug).get("waiting") or not idea_say.answered(self.state_dir, slug):
+            if idea_questions.record(self.state_dir, slug).get("waiting") or idea_say.holding(self.state_dir, slug):
                 return
-            self.judge_again(slug)
+            if (idea_say.answered(self.state_dir, slug) and idea_say.record(self.state_dir, slug)["judged"] < idea_say.MAX_JUDGED
+                    and idea_say.to_judge(self.state_dir, slug)):
+                self.judge_again(slug)
+                return
+            self.say_release(slug)
         except kw.KeeperError:
             pass
+
+    def say_release(self, slug: str) -> None:
+        """Talk waited for the leaders' cards (spec 168 D0) and they are answered: the decision goes on, or the hearing opens on a doubt or a no left (`_held`). Nothing when the goal is not at
+        Talk, a question of the round still waits, a card still holds it, or the goal never waited (an old record)."""
+        if ideas.state(self.state_dir, slug)["state"] != "talk":
+            return
+        with ideas.LOCK:
+            rec = idea_questions.record(self.state_dir, slug)
+            if rec.get("mode") != "talk" or rec.get("done") is not True or rec.get("waiting") or rec.get("passing") or idea_say.holding(self.state_dir, slug):
+                return
+            judged = idea_say.record(self.state_dir, slug)["judged"]
+            if 0 < judged < idea_say.MAX_JUDGED and any(isinstance(x, dict) and not x.get("weigher") and x.get("verdict") in ("doubt", "no") for x in rec.get("stances") or []):
+                return                                    # judged once and a leader still doubts: the second time is the person's (*Judge again now*), the hearing after it
+            held = self._held(rec)
+            idea_questions.save_record(self.state_dir, slug, rec)
+        if held:
+            self.publish(slug)
+        else:
+            self._on(slug, "decide")
 
     def judge_run(self, slug: str, after: list, now: bool = False) -> None:
         """`judge_again`'s work, on this thread: the waiting words written (a fork that comes back, or a rewrite that fails, ends it there), then the parties heard again and the round counted."""
@@ -277,6 +302,7 @@ Answer with one JSON object and nothing else:
                 hearing = rec.get("hearing") is True or bool(idea_objections.pending(rec))
             idea_questions.save_record(self.state_dir, slug, rec)
         self._ev(event_log.JUDGED_AGAIN, idea=slug, parties=parties, round=n, now=now, hearing=hearing)
+        after.append("say_release")                       # the cards are answered and judged again: the decision, or the hearing (spec 168 D0)
 
     def verdict_run(self, slug: str, after: list) -> None:
         """The leaders heard again, on this thread, when no second round follows the answers: those the record's `again` names, one call each; then the Talk is whole (`done`) and, with no
@@ -292,7 +318,7 @@ Answer with one JSON object and nothing else:
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             rec.update(done=True, waiting=[], again=[])
-            held = self._held(rec)                 # a no unanswered, or a doubt alone: the hearing (core/idea_talk.py `_held`)
+            held = self._held(rec, idea_say.holding(self.state_dir, slug))                 # a no unanswered, or a doubt alone: the hearing (core/idea_talk.py `_held`)
             idea_questions.save_record(self.state_dir, slug, rec)
         if not held:
             after.append("decide")

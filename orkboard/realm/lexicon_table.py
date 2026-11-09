@@ -162,6 +162,9 @@ WINDOW: tuple[Term, ...] = (
     _t("stage_assessing", "Assessing…"),                           # the Orkmaster's table of an idea: a leader that has not said its verdict yet, beside its back (spec 168 C3, decisions §283.16.3)
     _t("stage_later_step", "Its step comes when the step before it is accepted"),     # the Orkmaster's table of the implementation: a later leader's step, a placeholder until the step before it is accepted (spec 168 C3, decisions §283.14)
     _t("stage_part", "part"),                                      # the Orkmaster's table of a spec: a leader's section as a card, *Tech's part* (spec 168 C3)
+    _t("ask_card_goal", "Make it a goal"),                         # a quick question's answer card (the card of the kind ?, spec 168 D3, decisions §283.20): its way that opens the new goal's field with the suggested line
+    _t("ask_card_more", "Ask more"),                               # … its way that asks the same leader again, the words kept
+    _t("ask_card_got_it", "Got it"),                               # … its way that puts the card away: the answer is taken in and nothing changes (the way's kind is `take`)
     _t("say_needs", "Needs your answer"),                         # a leader's table of an idea: what its risks, conflicts and questions ask of the person (spec 168 C1, decisions §283.23)
     _t("say_better", "Could be better"),                           # … and its improvements, each a line of the goal rewritten (spec 168 C1)
     _t("say_verdict", "Its verdict"),                              # a leader's table of an idea: the group that holds the leader's own card, its sign (spec 168 C4, decisions §284.1)
