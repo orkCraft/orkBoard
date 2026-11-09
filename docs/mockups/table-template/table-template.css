@@ -149,14 +149,17 @@ p { margin: 0; }
 
 /* ---- the right column: its head what never changes the table; the discard's two piles ---- */
 .right { grid-column: 3; grid-row: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 0 8px 8px; overflow: hidden; }
-.rhead { flex: none; position: relative; align-self: stretch; display: flex; justify-content: space-between; align-items: flex-start; min-height: 68px; padding: 6px 4px 4px 8px; border-bottom: 1px solid var(--ork-frame); }
-.pots { display: flex; gap: 6px; align-items: flex-end; padding-top: 4px; }
-.pot { margin: 0; display: grid; justify-items: center; gap: 2px; }
-.pot figcaption { font: var(--ork-type-caption); font-size: 11px; line-height: 13px; color: var(--ork-ink-muted); }
-.pot.is-front figcaption { color: var(--ork-ink); font-weight: 600; }
-.pot .is-danger + figcaption, .pot:has(.is-danger) figcaption { color: var(--ork-danger); }
+.rhead { flex: none; position: relative; align-self: stretch; display: flex; justify-content: space-between; align-items: flex-start; min-height: 64px; padding: 6px 2px 4px 4px; border-bottom: 1px solid var(--ork-frame); }
+.pots { display: flex; gap: 4px; align-items: flex-start; padding-top: 2px; }
+.pot { margin: 0; display: grid; justify-items: center; gap: 2px; width: 32px; }
+.pot figcaption { display: grid; justify-items: center; font: var(--ork-type-caption); font-size: 11px; line-height: 13px; color: var(--ork-ink-muted); }
+.pot figcaption b { font-weight: 400; }
+.pot figcaption span { font-size: 10px; line-height: 11px; color: var(--ork-ink-muted); white-space: nowrap; }
+.pot.is-front figcaption b { color: var(--ork-ink); font-weight: 600; }
+.pot:has(.is-danger) figcaption b { color: var(--ork-danger); }
+.rh-side { display: grid; justify-items: end; gap: 4px; }
 .rh-lamp { display: flex; gap: 4px; align-items: flex-start; margin-top: -6px; }
-.rh-here { padding: 6px 0 0 10px; font: var(--ork-type-caption); font-size: 11px; line-height: 13px; text-align: right; color: var(--ork-ink-muted); }
+.rh-here { padding-top: 6px; font: var(--ork-type-caption); font-size: 10px; line-height: 12px; white-space: nowrap; text-align: right; color: var(--ork-ink-muted); }
 .disc { font: var(--ork-type-heading); font-size: 12px; }
 .pile2 { flex: none; display: grid; justify-items: center; gap: 3px; }
 .branch { display: inline-flex; align-items: center; gap: 4px; font: var(--ork-type-label); padding: 2px 8px; border: 0; cursor: pointer; color: var(--ork-ink); }
@@ -179,9 +182,10 @@ p { margin: 0; }
 .place { display: grid; place-items: end center; width: 48px; height: 60px; }
 .place .ork-pack { --_n: 3; }
 .ork-btn.stop { color: var(--ork-danger); padding: 0 6px; height: 20px; font-size: 11px; }
-.h-end.is-lifting .place, .h-end.is-lifting figcaption { filter: grayscale(1); opacity: 0.45; }
-.book { display: grid; place-items: center; width: 42px; height: 54px; border: 1px dashed var(--ork-ink-faint); color: var(--ork-gilt); }
-.book .ork-sign.big { width: 28px; height: 28px; }
+.h-end.is-lifting { filter: grayscale(1); opacity: 0.45; }
+.book { position: relative; width: 38px; height: 50px; background: var(--ork-leather); box-shadow: inset 5px 0 0 var(--ork-leather-lo), inset 0 0 0 2px var(--ork-leather-edge); }
+.book::before { content: ""; position: absolute; left: 12px; right: 7px; top: 10px; height: 2px; background: var(--ork-gilt); box-shadow: 0 5px 0 var(--ork-gilt), 0 24px 0 var(--ork-gilt-hi); }
+.book::after { content: ""; position: absolute; right: -3px; top: 3px; bottom: 3px; width: 3px; background: var(--ork-paper); box-shadow: inset 0 0 0 1px var(--ork-leather-edge); }
 .is-sunk { filter: grayscale(1); opacity: 0.45; }
 .hand.has-ways .h-lanes.is-sunk { transform: scale(0.3); transform-origin: 100% 100%; }
 .ways { position: absolute; left: 170px; bottom: 0; height: 160px; display: flex; gap: 10px; align-items: flex-start; z-index: 7; }

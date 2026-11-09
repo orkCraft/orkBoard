@@ -7963,3 +7963,26 @@ top for the discard*. So:
 6. The mockup shows it (`docs/mockups/table-template/`, its shots made again).
 
 The owner's call.
+
+## 285. The right column's head as the owner drew it: the potions' tops on one line and the week said under a smaller bottle; the chain half as tall, Stop all under it; the places only what changes the table, the history a book (9 November 2026, the owner)
+
+Changes: 284.3 (the potions' words), 284.4 (Stop all the die's word), 284.5 (the die's word); 283.7's *Stop all* at the head is
+taken again; 247.3 (the week's words only while the week runs out first) for the row.
+
+Why: the owner, on §284's mockup: *three bottles at most in a row, aligned at the top, so their tops are one line: under the large
+bottle no "Week", only the percent; the smaller a bottle gets, the more room under it, so "Week" and the week's percent can stand
+there. The chain and "Here" half as tall, about half the large bottle, and Stop all under them; then the three below, the die, the
+history and the inventory, stay only for changing the table, with "Play" under the die, all three one size; and the history a book,
+not a scroll*. A bottle's size is the week's share (§192), and its meaning was the row's hardest thing to read (§247): said under
+the bottles that have shrunk, the week explains their size where it matters, and nowhere else. So:
+1. **The potions' tops are on one line** (three at most, chosen as §284.3 says): under each its 5 hours' share (*62%*, *out*);
+   **under a bottle smaller than the large, the week's share as well** (*week*, *30%*), in the room its smaller size leaves; the
+   large bottle says the 5 hours alone. This changes §247.3 for the row: the week is said wherever its bottle has shrunk.
+2. **The lamp's chain is half as tall** (orkUI's `.small`, 6 × 29), at the head's right edge, *Here* or *Away* and its hours beside
+   it (§271), and **Stop all stands under it** (*Resume* after it; nothing while no ork works; this takes §283.7's place again and
+   changes §284.4). In the right column, not the hand, it never sinks while a card is lifted.
+3. **The hand's right end holds only what changes the table**, the three at one size: the die with *Play* under it (this changes
+   §284.4–5), the backpack, and **the history drawn as a book**, shut and open as the backpack is, drawn in orkUI.
+4. The mockup shows it (`docs/mockups/table-template/`, its shots made again).
+
+The owner's call.
