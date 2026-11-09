@@ -342,6 +342,8 @@ TERMS: tuple[Term, ...] = (
     _t("corner_left", "left"),                                      # the time a task at work has left: *4 min left*
     _t("corner_took", "took"),                                      # the time a task or a goal done took: *took 18 min*
     _t("corner_worked", "worked"),                                  # a task at work with no estimate: the time it has worked, as it did before
+    _t("corner_tokens", "tok"),                                     # the bottom right's unit when a tool's window cannot be measured: *18k tok* (spec 168 C5, decisions §283.17)
+    _t("corner_estimate", "≈"),                                     # before the figure of a card ahead: its party's average for its kind, an estimate
     _t("corner_in_main", "in main since"),                          # the discard's card: *3 tasks, in main since 11:40*
     # the words under the Orkmaster's piles (spec 147 B, decisions §251.10; table/piles.js): *reading: <goal>* under In analysis, *next in 2 min: <goal>* (a decision's wait) or *next at 13:40: <goal>* (a spec's look) under To review
     _t("column_reading", "reading"),                                # the goal the Orkmaster or its leaders are on, under *In analysis*

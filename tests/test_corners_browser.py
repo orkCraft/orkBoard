@@ -1,5 +1,5 @@
 """A card's four corners (docs/specs/147-one-card-four-corners.md part A, decisions §251.2), in a real browser: a lane's card and the discard's card have one top row (the goal's rune first, the kind's sign last) and one foot row (who, how much);
-a sign is 14 px and a head 16 on every card; a lane's card is 5 : 7 at the frame's card width. The bottom right's one figure (`muchOf`) and the words of the corners (realm/lexicon.py `corner_*`) are kept here too."""
+a sign is 14 px and a head 16 on every card; a lane's card is 5 : 7 at the frame's card width. The bottom right's one figure (`muchOf`: the spend, decisions §283.17, which changes §251.2's time; the time is in the preview and the tooltip) and the words of the corners (realm/lexicon.py `corner_*`) are kept here too."""
 from __future__ import annotations
 
 import re
@@ -71,12 +71,18 @@ def test_the_figure_at_the_foots_right_is_the_one_the_state_gives(table):
     assert failed.locator(".corner--foot .corner__much .ork-gem").inner_text().strip() == "$1", "a retry spends: its cost"
     working = pg.locator('[data-lkey="t:task:rules/r1"]')
     much = working.locator(".corner--foot .corner__much")
-    assert much.count() == 0, "at work with steps, the time worked is in the card's words, not on its foot (spec 129 H2.1): nothing known draws nothing"
+    assert much.count() == 0, "at work with steps and no spend known: nothing known draws nothing (the time is not on the foot: §283.17)"
     got = pg.evaluate("""async () => { const c = await import('/static/js/table/corners.js');
-      return [c.muchOf({ asks: true, cost: '$1' }), c.muchOf({ done: true, took: 1080 }), c.muchOf({ left: 240 }), c.muchOf({ left: 240, worked: 30 }), c.muchOf({ worked: 30 }), c.muchOf({ cost: '$2' }), c.muchOf({}), c.muchOf({ done: true })]; }""")
-    assert got[0] == {"kind": "ask", "text": "asks you"} and got[1] == {"kind": "time", "text": "took 18 min"} and got[2] == {"kind": "time", "text": "4 min left"}
-    assert got[3] == got[2], "the time left before the time worked"
-    assert got[4]["text"] == "worked 30 s" and got[5] == {"kind": "gem", "text": "$2"} and got[6] is None and got[7] is None, "nothing known draws nothing"
+      const tok = { tokens: 18000, usd: null, tool: 'codex' }, paid = { tokens: 5000, usd: 0.42, tool: 'claude' };
+      return [c.muchOf({ asks: true, spend: c.figureOf(tok), cost: '$1' }), c.muchOf({ spend: c.figureOf(tok) }), c.muchOf({ spend: c.figureOf(paid) }), c.muchOf({ est: c.figureOf(tok) }), c.muchOf({ est: c.figureOf(paid) }),
+              c.muchOf({ cost: '$2' }), c.muchOf({}), c.muchOf({ spend: c.figureOf({ tokens: 0, usd: null }) }),
+              c.timeWords({ done: true, took: 1080 }), c.timeWords({ left: 240 }), c.timeWords({ left: 240, worked: 30 }), c.timeWords({ worked: 30 }), c.timeWords({ done: true })]; }""")
+    assert got[0] == {"kind": "ask", "text": "asks you"}, "asks you still wins while a question waits"
+    assert got[1] == {"kind": "spend", "unit": "tokens", "text": "18k tok", "est": False}, "a tool with no price (Codex): tokens, no money"
+    assert got[2] == {"kind": "spend", "unit": "usd", "text": "$0.42", "est": False}, "a priced spend with no window measured: money"
+    assert got[3] == {"kind": "spend", "unit": "tokens", "text": "≈ 18k tok", "est": True} and got[4]["text"] == "≈ $0.42" and got[4]["est"] is True, "ahead: an estimate, after ≈"
+    assert got[5] == {"kind": "gem", "text": "$2"} and got[6] is None and got[7] is None, "nothing known draws nothing"
+    assert got[8] == "took 18 min" and got[9] == "4 min left" and got[10] == got[9] and got[11] == "worked 30 s" and got[12] == "", "the time, now in the preview and the tooltip (§283.17), keeps its words"
 
 
 @pytest.mark.browser
@@ -84,7 +90,7 @@ def test_the_discards_card_has_a_top_row_and_a_foot_row(gui):
     server, browser = gui
     pg, host, log = open_maps(gui, "wide", done=False)
     try:
-        done = lambda tid, who: task(tid, f"Task {tid}", "merged", who=who, started="2026-10-20T10:00:00", finished="2026-10-20T10:18:00")      # noqa: E731
+        done = lambda tid, who: task(tid, f"Task {tid}", "merged", who=who, started="2026-10-20T10:00:00", finished="2026-10-20T10:18:00", spend={"tokens": 9000, "usd": None, "tool": "codex"})      # noqa: E731
         host.nodes.append(node("music", "tech", "Lobby music loop with a very long name that goes on and on for more than four lines of the card", "done", element="void", place="discard", updated="2026-10-20T12:00:00",
                                tasks=[done("m1", "grunt"), done("m2", "artist")]))
         host.push()
@@ -100,7 +106,8 @@ def test_the_discards_card_has_a_top_row_and_a_foot_row(gui):
         name = card.locator(".hand-done__name")
         assert name.evaluate("e => getComputedStyle(e).webkitLineClamp") == "3" and name.bounding_box()["height"] <= 61, "the name in three lines at most (spec 150 C.4)"
         assert card.locator(".corner--foot .ork-race__head").count() == 2, "the heads that did it"
-        assert card.locator(".corner--foot .corner__much").inner_text().strip() == "took 18 min", "the time it took"
+        assert card.locator(".corner--foot .corner__much").inner_text().strip() == "18k tok", "what it spent in all (decisions §283.17): two tasks of 9k tokens, no price"
+        assert card.get_attribute("title") == "took 18 min", "the time it took is in its tooltip, not on its foot"
         assert card.locator(".hand-done__line").count() == 0, "no line of main: the snapshot has no time for it"
         host.nodes[-1]["in_main"] = "2026-10-20T11:40:00"
         host.push()
@@ -116,4 +123,4 @@ def test_the_discards_card_has_a_top_row_and_a_foot_row(gui):
 def test_the_pages_corner_words_are_the_glossarys():
     js = CORNERS_JS.read_text(encoding="utf-8")
     got = dict(re.findall(r'(\w+) = "([^"]+)"', re.search(r"export const (ASKS = .*?);", js).group(1).replace(", ", ";\n")))
-    assert got == {"ASKS": lexicon.term("corner_asks"), "LEFT": lexicon.term("corner_left"), "TOOK": lexicon.term("corner_took"), "WORKED": lexicon.term("corner_worked"), "IN_MAIN": lexicon.term("corner_in_main")}
+    assert got == {"ASKS": lexicon.term("corner_asks"), "LEFT": lexicon.term("corner_left"), "TOOK": lexicon.term("corner_took"), "WORKED": lexicon.term("corner_worked"), "IN_MAIN": lexicon.term("corner_in_main"), "TOK": lexicon.term("corner_tokens"), "ESTIMATE": lexicon.term("corner_estimate")}

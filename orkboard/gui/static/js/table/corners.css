@@ -25,3 +25,9 @@
 .hand-done__line { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); color: var(--ork-ink-read); }
 :is(.table-end, .release-lane) .hand-done.hand-card--corners > .card-win { flex: 1 1 28px; min-height: 28px; width: 100%; height: auto; }          /* its window between the name and the foot (spec 148 B.3) */
 :is(.table-end, .release-lane) .hand-done.hand-card--corners .hand-done__moon { top: calc(var(--ork-3) + var(--ork-1)); right: calc(var(--ork-3) + var(--ork-6)); }          /* the moon of a goal done in the night lies left of the kind's sign */
+
+/* a verdict's sign (spec 168 C5, decisions §283.18; corners.js `Verdict`): ✓ in the success colour with no ring; ! and ✗ in the ink; red only for a call that failed; the alert's ring only where a question waits for the person */
+.verdict { display: inline-flex; align-items: center; justify-content: center; flex: none; color: var(--ork-ink); }
+.verdict.is-go { color: var(--ork-success); }
+.verdict.is-failed { color: var(--ork-danger); }
+.verdict.is-waiting { box-shadow: 0 0 0 2px var(--ork-alert); }
