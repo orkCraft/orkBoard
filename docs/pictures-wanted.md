@@ -213,3 +213,36 @@ A 6x3 grid of 18 tiles, left to right, top to bottom, each a hero: its leader's 
 18 Position Gnome: the gnome fairy with a dart stuck in its cap and a tiny target on its scarf.
 ```
 **Sheets H7–H11, the heroes' moods**: as H3, four heroes a sheet (rows), the five moods (columns); the last sheet two heroes.
+
+**When T1 and H5 came back** (the first take, 9 November 2026; the look in `docs/mockups/table-template/heads/README.md`). From
+now on **T1's first column is the reference** for every later sheet (the moods H3–H4, the members T2, the heroes' moods H7–H11):
+attach it instead of the first set, so the imp, the lich and the gnome fairy stay one face each.
+
+T1, two rows again (attach T1 and the approved set):
+```
+Keep this sheet exactly as it is. Redraw only two rows, keeping every other row untouched.
+Row 3, the golden unicorn knight: keep its golden horn with the blue ring at its base in all three tiles, exactly as in the
+first tile. Tile 2 adds a short iron-grey plume and tile 3 a tall violet plume, each springing from the BACK of the helm,
+behind the horn, never covering it. A short deep oxblood red-brown cape at the shoulders in all three, the same in each.
+Row 6, the gnome fairy: redraw all three tiles from the gnome fairy of the attached approved set, its face, beard and small
+sea-green wings kept exactly, the wings close beside its head as there, not spread to the tile's edges; then the same three
+gears as the other rows: 1 bare, 2 the dark iron cap, 3 the pointed violet hood. Both rows wholly inside their tiles with
+a clear margin: nothing touches the frame.
+```
+
+H5, seven tiles again (attach H5 and T1's first column as the reference; if Gemini changes more than it is asked, send it in two
+halves: 3, 6, 9 and the capes, then 13, 16, 17):
+```
+Keep this sheet exactly as it is. Redraw only the tiles named here, each keeping its head exactly as the attached reference
+draws it; every other tile stays untouched.
+Tiles 5 to 10, the six knights: each cape at the shoulders in deep oxblood red-brown instead of blue; nothing else changes.
+Tile 3, Domain Shaman: three large square boundary stones on a cord hanging from each horn, big enough to read at 16 pixels.
+Tile 6, Pivot Knight: the silver helm with a large compass needle as its crest in place of the horn (a long diamond-shaped
+arrow, its upper tip red), big enough to read at 16 pixels.
+Tile 9, Economy Knight: the gold helm with a large gold coin standing on its edge as its crest in place of the horn, and a
+coin slot cut across its brow.
+Tile 13, Sprint Dryad: no band; a small round stopwatch hanging from one antler, her hair swept back by the wind.
+Tile 16, Lantern Imp: the imp of the attached reference, the same face, ears and horns, a small lit lantern hanging from the
+tip of its right horn.
+Tile 17, Store Gnome: no band and no visor; a small paper price tag on a string hanging from one of its wings.
+```
