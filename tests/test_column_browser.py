@@ -126,7 +126,7 @@ def test_in_analysis_is_the_orkmasters_hand_a_fan_of_small_backs_each_rune_in_it
             assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [56, 78], "56 x 78"
             rune, box = card.locator(".ork-elem").bounding_box(), card.evaluate("e => { const r = e.getBoundingClientRect(); return {x: r.x, y: r.y, w: r.width, h: r.height}; }")
             assert abs(rune["x"] + rune["width"] / 2 - (box["x"] + box["w"] / 2)) <= 4 and abs(rune["y"] + rune["height"] / 2 - (box["y"] + box["h"] / 2)) <= 8, "the rune in the back's middle"
-            assert (card.get_attribute("title") or "").startswith(["Players see", "A sound when", "Kick a player", "Host can skip", "Mute a noisy"][i]) and card.get_attribute("aria-label") == card.get_attribute("title"), "its goal's name"
+            assert (card.get_attribute("aria-label") or "").startswith(["Players see", "A sound when", "Kick a player", "Host can skip", "Mute a noisy"][i]) and card.get_attribute("title") is None, "its goal's name in its label, no native title (the preview, spec 168 A2)"
         assert fan.evaluate("e => e.offsetWidth") <= 144
         step = cards.evaluate_all("els => els.map((e) => e.offsetLeft)")
         assert [b - a for a, b in zip(step, step[1:])] == [22] * 4, f"five backs: 88 / 4 = 22 px apart ({step})"

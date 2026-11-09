@@ -15,6 +15,7 @@ import { waitRuns } from "./data.js";
 import { CornerFoot, CornerTop, muchOf } from "./corners.js";
 import { CardWindow, lastMade, windowOf } from "./cardwindow.js";                       // the window where *now* was: what the work made, else the goal's picture (spec 148 B.2)
 import { Fan } from "./fan.js";
+import { backSpec, withPreview } from "./preview.js";
 import { FOOT } from "./giveway.js";
 import { litTool, hatched } from "../hand/state.js";
 import { cardCost } from "../hand/cost.js";
@@ -155,8 +156,8 @@ function DeckCard({ n, i, first, onPress }) {
   const el = n.element || "", hue = n.hue || el, on = picked.value === n.slug, asks = waitsYou(n) || (!!n.asks_you && !failed(n)), ripe = n.back?.ripe, running = !!ripe && !ripe.by && !ripe.held && !n.changing && !lookAt(n), own = lit(n);
   everBack.add(n.slug);
   const share = asks ? 1 : running ? shareOf(ripe) : 0;
-  return html`<button type="button" class=${cls("ork-card col-card col-card--down col-card--deck", { "ork-picked": on, asks, "is-dim": own.dim })} ...${own.hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="review" data-down="1" data-changing=${n.changing ? "1" : undefined} data-look=${lookAt(n) || undefined} style=${`--i:${i}`}
-    aria-pressed=${String(on)} aria-label=${`${n.title}: ${sayOf(n, "review", "", first)}`} title=${n.title} onClick=${() => onPress(n, "review", "")}>
+  return html`<button type="button" class=${cls("ork-card col-card col-card--down col-card--deck", { "ork-picked": on, asks, "is-dim": own.dim })} ...${withPreview(own.hatch, backSpec(n.title, sayOf(n, "review", "", first), n))} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="review" data-down="1" data-changing=${n.changing ? "1" : undefined} data-look=${lookAt(n) || undefined} style=${`--i:${i}`}
+    aria-pressed=${String(on)} aria-label=${`${n.title}: ${sayOf(n, "review", "", first)}`} onClick=${() => onPress(n, "review", "")}>
     <span class="ork-card-back col-deck__back" aria-hidden="true"></span>
     <span class=${cls(`ork-sigil table-back-sigil col-sigil is-waiting${el && !asks ? ` is-${hue}` : ""}`, { "col-stopped": asks })} style=${`--ork-sigil-share:${share}`} data-share=${share} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} hue=${hue} dim=${!el} /></span></span>
   </button>`;
@@ -192,7 +193,7 @@ export function Pile({ id, title, items, under = "", asked = "", onPress, way = 
     <${Under} id=${id} text=${under} asks=${under === "waits for you"} />${asked && html`<${Under} id=${id} text=${asked} extra=${true} />`}`;
   if (id === "analysis") {
     const reads = ACTIVE.includes(items[0].n.state), said = (n) => `${n.title}: ${sayOf(n, "analysis")}`;
-    return html`<section class="col-sec" data-pile=${id} aria-label=${title}>${head}<${Fan} items=${items} reads=${reads} said=${said} own=${lit} waits=${waitsYou} picked=${picked.value} onPress=${onPress} /></section>`;
+    return html`<section class="col-sec" data-pile=${id} aria-label=${title}>${head}<${Fan} items=${items} reads=${reads} said=${said} line=${(n) => sayOf(n, "analysis")} own=${lit} waits=${waitsYou} picked=${picked.value} onPress=${onPress} /></section>`;
   }
   if (id === "review") {
     const shown = items.slice(0, DECK_SHOWN);
