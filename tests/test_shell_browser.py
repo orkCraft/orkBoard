@@ -256,6 +256,9 @@ class StubHost:
             return self.bump({"ok": True, "commit": "abc", "note": ""})
         if name == "ideas.today":
             return {"events": copy.deepcopy(self.today_events)}
+        if name == "ideas.chronicle_goal":                                           # a card lifted picks its goal (spec 168 D1): a goal that went through the portal is then read in the table
+            return {"idea": a["idea"], "title": a["idea"], "element": "", "hue": "", "day": "2026-10-30", "changed_by": [], "spec": {"asked": "", "gist": "", "sections": []},
+                    "decision": None, "how_now": [], "quality": {"findings": []}}
         if name == "ideas.board":
             ideas = [i | {"thesis": "Gist in one line", "progress": {"done": 1, "total": 5} if i["slug"] == "sync" else {"done": 0, "total": 0}}
                      for i in self.ideas.values()]

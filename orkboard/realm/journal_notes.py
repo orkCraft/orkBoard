@@ -8,6 +8,7 @@ fails what it records**: every function here swallows what goes wrong (a scope t
     journal_notes.at_review(state_dir, root, slug, decision, why)             # the parties that doubted or said no · came_back | went_through, once a goal
     journal_notes.accepted(...) / sent_back(...)                              # a leader accepted its step, or sent it back (spec 152 B.3)
     journal_notes.concern_goal(...) / concern_dismissed(...) / since(...)     # a leader's concerns and its evening line
+    journal_notes.asked(state_dir, party, q, answer)                          # the answering leader's journal (the project's for the Orkmaster) · asked: a quick question and its answer
     journal_notes.done(...) / dropped(...) / hypothesis(...) / pitch_passed(...) / brief(...)   # the project's own
 
 The words are the product's (a goal is "a goal"), the second person in a leader's journal, the third in the project's.
@@ -213,5 +214,15 @@ def sent_back(state_dir: Path, root: Path, slug: str, party: str, n: int) -> Non
     """A leader sent its step back (spec 152 B.3): `You sent back 2 things of <party>'s step of “<goal>”`."""
     try:
         note(state_dir, party, "sent_back", f"You sent back {n} thing{'' if n == 1 else 's'} of {_step_of(root, slug, party)}", idea=slug, on=marks_of(state_dir, slug))
+    except Exception:
+        pass
+
+
+def asked(state_dir: Path, party: str, q: str, answer: str) -> None:
+    """A quick question answered (spec 168 D3, decisions §283.20): `Asked: <question> — <answer>` in the answering leader's journal, in the project's when the Orkmaster answered itself
+    (`party` ""). Not a goal and not shown on the Board; the next calls of that leader read it."""
+    try:
+        head = f"Asked: {_fit(q, 100)} — "
+        note(state_dir, party or journals.PROJECT, "asked", head + _fit(answer, journals.TEXT_CHARS - len(head)))
     except Exception:
         pass

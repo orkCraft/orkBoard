@@ -1,24 +1,28 @@
-// A lifted card stays a hand card and its ways are the hand (docs/specs/158-the-window-as-a-table.md part F, decisions §270; the mockup docs/mockups/answer-cards/). On the desktop a card with one open question, or a failure, is
+// **Spec 168 D1 (decisions §283.19, §286): the card in play stands at the table's foot at its left, 144 x 202 (openedcard.css `is-play`, handplace.js), its goal picked and its asker's tab opened (frame/state.js `playAt`); its ways are the hand's row from the same left edge,
+// cut by the hand's rim and rising when hovered (each carries `data-way-kind`, the leader's kind of it, J1, for the pictures to come); *Your own words…* lays a field as large as the hand in the ways' place; a goal of several questions asks them one after another, each its own card.**
+// A lifted card stays a hand card and its ways are the hand (docs/specs/158-the-window-as-a-table.md part F, decisions §270; the mockup docs/mockups/answer-cards/). On the desktop a card with open questions, or a failure, is
 // not opened at 404 x 566: it rises out of its slot onto the table's foot as the 144 x 202 hand card it was, in its signal's ring (orkUI's `asks` and `fails`); its goal's card in the Orkmaster's column is ringed the same.
 // Its answers are the hand: each way a card of the same size where the hand's cards lie, its name (the pixel face) and its whole line (the body face) at rest, the leader's pick marked by its head and by its words, a priced way's cost
 // in its corner; pressing a way answers at once (`from: "hand"`). Then *<Leader> decides* (a way as any), and *Open…* (today's form, askform.js) and *Put it back* at the row's end. The rest of the hand sinks, grey and inert
-// (hand.js). Under reduced motion nothing rises. The narrow page and the phone keep the inline lifted card (stopcard.js `Lifted`, decisions §270.7). A goal with more than one question keeps *Send the picks* there.
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+// (hand.js). Under reduced motion nothing rises. The narrow page and the phone keep the inline lifted card (stopcard.js `Lifted`, decisions §270.7).
+import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head, headWords } from "../orkui.js";
 import { CornerFoot, CornerTop, muchOf } from "../table/corners.js";
-import { lower } from "../frame/state.js";
+import { ORKMASTER, lower, playAt } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
 import { PICTURES } from "../arena/arenawords.js";
 import { askedInfo, againWords, decideStop, openStop, sendAnswers, startAgain } from "./answers.js";
 import { costOf } from "./cost.js";
 import { wayCostOf } from "./waycost.js";
 import { named } from "./todoform.js";
-import { actionOf, footOf, headOf, labelOf, signalOf } from "./stopcard.js";
+import { actionOf, askerOf, footOf, headOf, labelOf, signalOf } from "./stopcard.js";
+import { usePlace } from "./handplace.js";
+import { PenField } from "./penfield.js";
 import { useAbout } from "./about.js";
 
-// Stage G: after *<Leader> decides* comes *Your own words…* (the Pen, dashed until pressed): a field opens on the table beside the question, its bottom on the question's, focused, with *Send to <leader>* under it (an empty field sends nothing; Esc closes
-// it and gives the focus back to the card). Tab runs the ways, *<Leader> decides*, *Your own words…*, *Open…*, *Put it back*; Esc and *Put it back* lower the card and give the focus back to the hand card it rose from.
+// The Pen (stage G, now §286): after *<Leader> decides* comes *Your own words…* (dashed until pressed): a field as large as the hand lies in the ways' place, focused, with *Send to <leader>* beside it (an empty field sends nothing; Enter sends, Shift+Enter is a new line;
+// Esc closes it and gives the focus back to the way it came from). Tab runs the ways, *<Leader> decides*, *Your own words…*, *Open…*, *Put it back*; Esc and *Put it back* lower the card and give the focus back to the hand card it rose from.
 export const OWN_WORDS = "Your own words…", OWN_LINE = "Write it what you want; it reads it and goes on.";
 export const ITS_PICK = "its pick", NO_LINE = "Answers with this.", PICK_LINE = "What its leader recommends.", DECIDE_LINE = "It answers with what it recommends.";
 
@@ -37,22 +41,38 @@ export function useWide() {
 
 /** The line a way says of itself: the leader's own (`lines[i]`, written to fit the card), else the question's why for the pick, else a plain one. */
 const lineOf = (q, i) => String(q.lines?.[i] || q.hints?.[i] || (i === q.pick ? q.why || PICK_LINE : NO_LINE));
+const pickOf = (q) => (q.pick != null ? q.choices?.[q.pick] || "" : "");
 
-/** The ways of a stop `s` as cards, or null when the stop is not one this draws (a goal with more than one question, any other kind): `{tone, ways, decide, open}`. A way is `{id, name, line, own (the line is the leader's own), pick, cost, sign, run}`. */
+/** The ways of one question `q` as cards; `run(choice, i)` plays one. A way is `{id, name, line, own (the line is the leader's own), pick, cost, sign, kind (the leader's kind of it: realm/way_kinds.py), run}`. */
+function waysOf(q, run) {
+  return (q.choices || []).map((c, i) => ({ id: `way-${i}`, name: c, line: lineOf(q, i), own: !!q.lines?.[i], pick: i === q.pick, cost: wayCostOf(q.costs?.[i]), sign: "compass", kind: q.kinds?.[i] || "", run: () => run(c, i) }));
+}
+
+/** The ways of a stop `s` as cards, or null when the stop is not one this draws (any other kind): `{tone, ways, decide, open, asked}`. A goal of several questions asks them one after another: `asked` is all of them, `ways` the first's, and AnswerLifted steps through them (`stepWays`). */
 export function answerSet(s) {
   if (s.kind === "failed") {
-    return { tone: "fails", ways: [{ id: "again", name: "Start again", line: againWords(s), pick: false, cost: costOf(s), sign: "play", run: () => startAgain(s) }], decide: null, open: () => openStop(s) };
+    return { tone: "fails", ways: [{ id: "again", name: "Start again", line: againWords(s), pick: false, cost: costOf(s), sign: "play", kind: "", run: () => startAgain(s) }], decide: null, open: () => openStop(s), asked: [] };
   }
   if (s.kind !== "asks" && s.kind !== "goal") return null;
   const { asked, name } = askedInfo(s);
-  if (asked.length !== 1) return null;
-  const q = asked[0], picks = [q.pick != null ? q.choices?.[q.pick] || "" : ""];
-  const ways = (q.choices || []).map((c, i) => ({ id: `way-${i}`, name: c, line: lineOf(q, i), own: !!q.lines?.[i], pick: i === q.pick, cost: wayCostOf(q.costs?.[i]), sign: "compass", run: () => (c === PICTURES ? openStop(s, { picks: [c] }) : sendAnswers(s, [c])) }));
-  return { tone: "asks", ways, decide: { id: "decide", name: `${named(name)} decides`, line: DECIDE_LINE, run: () => decideStop(s) }, open: () => openStop(s, { picks }) };
+  if (!asked.length) return null;
+  const picks = asked.map(pickOf), ways = waysOf(asked[0], (c) => (c === PICTURES ? openStop(s, { picks: [c] }) : sendAnswers(s, [c])));
+  return { tone: "asks", ways: asked.length === 1 ? ways : [], decide: { id: "decide", name: `${named(name)} decides`, line: DECIDE_LINE, run: () => decideStop(s) }, open: () => openStop(s, { picks }), asked };
+}
+
+/** The ways of question `i` of several: pressing one keeps it (`keep(all)`) and asks the next; the last sends them all, in the order asked. `kept`: what was picked before. */
+function stepWays(s, asked, i, kept, keep) {
+  const last = i === asked.length - 1;
+  return waysOf(asked[i], (c) => {
+    const all = [...kept.slice(0, i), c];
+    if (c === PICTURES) openStop(s, { picks: [...all, ...asked.slice(i + 1).map(pickOf)] });
+    else if (last) sendAnswers(s, all);
+    else keep(all);
+  });
 }
 
 /** Rings the goal's card in the Orkmaster's column in the lifted card's signal while the card is up (`data-ringed`, table/column.css). */
-function useRing(goal, tone) {
+export function useRing(goal, tone) {
   useEffect(() => {
     if (!goal) return undefined;
     const column = document.querySelector(".frame-column");
@@ -66,10 +86,10 @@ function useRing(goal, tone) {
 }
 
 /** One way as a hand card: its goal's rune and the way's sign at the top, its name (the pixel face), its whole line, and at the foot who (its pick) and what it costs. */
-function WayCard({ w, s, head, rune, btn = null, on = undefined }) {
+export function WayCard({ w, s, head, rune, btn = null, on = undefined }) {
   const cost = w.cost, much = cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null, leader = w.id === "decide";
   const kind = leader && head ? html`<${Head} race=${head.race} tier=${head.tier} title=${headWords(head)} />` : null;
-  return html`<button type="button" ref=${btn} class=${cls(`ork-card hand-ans el-${rune.hue}`, { "is-pick": w.pick, "is-decide": leader, "hand-ans--pen": w.id === "own" })} aria-expanded=${on === undefined ? undefined : String(on)} data-way=${w.id} data-pick=${w.pick ? "1" : undefined} data-cost=${cost?.gem || undefined}
+  return html`<button type="button" ref=${btn} class=${cls(`ork-card hand-ans el-${rune.hue}`, { "is-pick": w.pick, "is-decide": leader, "hand-ans--pen": w.id === "own" })} aria-expanded=${on === undefined ? undefined : String(on)} data-way=${w.id} data-way-kind=${w.kind || undefined} data-pick=${w.pick ? "1" : undefined} data-cost=${cost?.gem || undefined}
       aria-label=${`${w.name}${w.pick ? `, ${ITS_PICK}` : ""}${w.own ? `, ${w.line}` : ""}: ${s.full}`} title=${w.line} onClick=${w.run}>
     <${CornerTop} rune=${rune} kind=${w.sign} kindNode=${kind} />
     <span class="hand-ans__name">${w.name}</span>
@@ -78,62 +98,52 @@ function WayCard({ w, s, head, rune, btn = null, on = undefined }) {
   </button>`;
 }
 
-/** The lifted question or failure: the hand card it was, 144 x 202, risen onto the table's foot over the slot it left, in its signal's ring; and under it, in the hand's row, its ways (`set`: `answerSet`). */
+/** Whose tab a card in play opens (§283.19): the asking leader's, the Orkmaster's for what the Orkmaster plays (stopcard.js `askerOf`). */
+export const tabOf = (s) => (askerOf(s) === "the Orkmaster" ? ORKMASTER : s.party?.slug || ORKMASTER);
+
+/** A card in play (§283.19): its goal picked and its asker's tab opened, once for each card lifted. */
+export function usePlay(s) {
+  useEffect(() => { playAt(tabOf(s), s.node?.slug || s.row?.idea || s.row?.goal || ""); }, [s.key]);
+}
+
+/** The lifted question or failure: the hand card it was, 144 x 202, risen onto the table's foot at its left, in its signal's ring; and under it, in the hand's row from the same left edge, its ways (`set`: `answerSet`), cut by the hand's rim. */
 export function AnswerLifted({ s, anchor, set }) {
-  const box = useRef(), row = useRef(), [at, setAt] = useState(null), element = s.node?.element || "", hue = s.node?.hue || element, head = headOf(s);
+  const box = useRef(), row = useRef(), element = s.node?.element || "", hue = s.node?.hue || element, head = headOf(s);
   const rune = { name: element, hue, dim: !element }, goal = s.node?.slug || s.row?.idea || "";
+  const [step, setStep] = useState(0), [kept, setKept] = useState([]), [pen, setPen] = useState(false), penBtn = useRef(), from = useRef(null), wasPen = useRef(false);
   useAbout(s);
+  usePlay(s);
   useRing(goal, set.tone === "fails" ? "fails" : "asks");
-  useLayoutEffect(() => {                                              // risen at the right end of the ways row, over its acts (never over a lane's Talk or question); the sunk hand shrinks into the strip right of the ways
-    const place = () => {
-      const hand = box.current?.parentElement, r = row.current?.getBoundingClientRect();
-      if (!hand) { setAt(null); return; }
-      const h = hand.getBoundingClientRect(), plus = hand.querySelector(".hand-plus")?.getBoundingClientRect(), ways = Math.max(0, plus ? plus.right - h.left + 28 : 200);
-      const end = r && r.width ? r.right - h.left : h.width, left = Math.max(0, Math.min(end - 144, h.width - 144 - 12));
-      hand.style.setProperty("--hc-sunk-s", String(Math.max(0.2, Math.min(0.5, (h.width - end - 16) / h.width))));
-      setAt({ left, ways });
-    };
-    place();
-    const watch = typeof ResizeObserver === "function" && row.current ? new ResizeObserver(place) : null;
-    watch?.observe(row.current);
-    window.addEventListener("resize", place);
-    return () => { watch?.disconnect(); window.removeEventListener("resize", place); box.current?.parentElement?.style.removeProperty("--hc-sunk-s"); };
-  }, [s.key, anchor]);
+  const at = usePlace(box, row, [s.key, anchor], pen);                  // the card and the ways from the table's left edge; the ways cut by the hand's rim; the sunk hand shrinks into the strip right of the ways (or of the field)
   useEffect(() => { box.current?.focus({ preventScroll: true }); }, [s.key]);
-  const { ways, decide } = set, tone = set.tone, asking = tone === "asks", own = asking ? askedInfo(s).name : "";
-  const [pen, setPen] = useState(false), [words, setWords] = useState(""), penBtn = useRef(), field = useRef(), from = useRef(null);
+  const { decide } = set, tone = set.tone, asking = tone === "asks", own = asking ? askedInfo(s).name : "", many = set.asked.length > 1, q = many ? set.asked[Math.min(step, set.asked.length - 1)] : set.asked[0] || null;
+  const ways = many ? stepWays(s, set.asked, step, kept, (all) => { setKept(all); setStep(step + 1); }) : set.ways;
   if (anchor?.isConnected) from.current = anchor;
-  useEffect(() => { setPen(false); setWords(""); }, [s.key]);
-  useEffect(() => { if (pen) field.current?.focus({ preventScroll: true }); }, [pen]);
+  useEffect(() => { setPen(false); setStep(0); setKept([]); }, [s.key]);
+  useEffect(() => { if (wasPen.current && !pen) penBtn.current?.focus({ preventScroll: true }); wasPen.current = pen; }, [pen]);                // the field closed: the focus goes back to the way it came from
   useEffect(() => () => {                                              // lowered: the focus goes back to the hand card it rose from (answered, that card is gone)
     const key = s.key;
     setTimeout(() => { const back = from.current?.isConnected ? from.current : document.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`); if (back && !document.querySelector(".hand-lifted")) back.focus({ preventScroll: true }); }, 0);
   }, [s.key]);
-  const send = () => { const text = words.trim(); if (text) sendAnswers(s, [text]); };
-  const fieldKey = (e) => {
-    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setPen(false); penBtn.current?.focus({ preventScroll: true }); }
-    else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); send(); }
-  };
-  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--face hand-lifted hand-lifted--asked${element ? ` el-${hue}` : ""}`, { asks: tone === "asks", fails: tone === "fails" })}
-      role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind} style=${at ? `left:${at.left}px` : undefined}>
+  const opens = () => (many ? openStop(s, { picks: set.asked.map((x, i) => (i < step ? kept[i] : pickOf(x))) }) : set.open());
+  const foot = many && q ? `${step + 1}/${set.asked.length} · ${q.ask}` : footOf(s);
+  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--face hand-lifted hand-lifted--asked is-play${element ? ` el-${hue}` : ""}`, { asks: tone === "asks", fails: tone === "fails" })}
+      role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind} data-step=${many ? String(step) : undefined} style=${at ? `left:${at.left}px` : undefined}>
     <${CornerTop} rune=${rune} kind=${actionOf(s).sign} signal=${signalOf(s)} />
     <span class="hand-card__name" title=${s.full || s.title}>${s.title || s.full}</span>
-    <span class="hand-card__foot">${footOf(s)}</span>
+    <span class="hand-card__foot">${foot}</span>
     <${CornerFoot} who=${head ? { heads: [head], word: "" } : null} much=${set.tone === "fails" && ways[0]?.cost ? { ...muchOf({ cost: ways[0].cost.gem }), share: !!ways[0].cost.share } : null} />
   </aside>
-  <div ref=${row} class="hand-ways-row" role="group" aria-label="Answers" style=${at ? `--hc-wleft:${at.ways}px` : undefined}>
+  <div ref=${row} class=${cls("hand-ways-row is-play", { "is-writing": pen })} role="group" aria-label="Answers">
     <div class="hand-ways-cards">
-      ${ways.map((w) => html`<${WayCard} key=${w.id} w=${w} s=${s} head=${head} rune=${rune} />`)}
+      ${ways.map((w) => html`<${WayCard} key=${`${step}:${w.id}`} w=${w} s=${s} head=${head} rune=${rune} />`)}
       ${decide && html`<${WayCard} key=${decide.id} w=${{ ...decide, sign: "compass", pick: false, cost: null }} s=${s} head=${head} rune=${rune} />`}
       ${asking && html`<${WayCard} key="own" w=${{ id: "own", name: OWN_WORDS, line: OWN_LINE, sign: "text", pick: false, cost: null, run: () => setPen(!pen) }} s=${s} head=${head} rune=${rune} btn=${penBtn} on=${pen} />`}
     </div>
     <div class="hand-ways-acts">
-      <button type="button" class="ork-btn quiet" data-act="open" onClick=${set.open}>Open…</button>
+      <button type="button" class="ork-btn quiet" data-act="open" onClick=${opens}>Open…</button>
       <button type="button" class="ork-btn hand-put" data-act="put" onClick=${lower}>Put it back</button>
     </div>
   </div>
-  ${pen && html`<div class="hand-pen" role="group" aria-label="Your own words" style=${at ? `left:${Math.max(0, at.left - 16 - 360)}px;width:${Math.min(360, at.left - 16)}px` : undefined}>
-    <textarea ref=${field} class="ork-field hand-pen__text" rows="4" aria-label=${`Your words to ${named(own)}`} placeholder=${`Your words to ${named(own)}…`} value=${words} onInput=${(e) => setWords(e.currentTarget.value)} onKeyDown=${fieldKey}></textarea>
-    <button type="button" class="ork-btn primary" data-act="send-words" onClick=${send}>${`Send to ${named(own)}`}</button>
-  </div>`}`;
+  ${pen && html`<${PenField} at=${at} who=${named(own)} close=${() => setPen(false)} send=${(text) => (many ? sendAnswers(s, [...kept.slice(0, step), text, ...set.asked.slice(step + 1).map(pickOf)]) : sendAnswers(s, [text]))} />`}`;
 }

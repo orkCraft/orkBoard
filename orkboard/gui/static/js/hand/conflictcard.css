@@ -4,7 +4,8 @@
 .hand-way__goes { margin: 0; overflow-wrap: anywhere; }
 .hand-earlier-host { position: absolute; top: 0; height: 0; z-index: 59; pointer-events: none; }
 .hand-earlier-host > .hand-earlier { pointer-events: auto; }
-.hand .hand-earlier-host .hand-card.hand-lifted--card { left: 0; width: 100%; rotate: calc(var(--hc-lean, 1) * var(--ork-motion-lean) * -0.25); }
+.hand .hand-earlier-host .hand-card.hand-earlier { left: 0; bottom: var(--ork-3); box-shadow: -8px 8px 0 var(--ork-scrim); }      /* 144 x 202 beside the lifted card (spec 168 D1) */
+.hand-earlier .hand-earlier__open { max-width: 100%; padding: 0 var(--ork-2); min-height: 22px; font: var(--ork-type-caption); }
 .hand-earlier.is-out { animation: conflict-out 420ms var(--ork-motion-ease, ease-out) both; }
 @keyframes conflict-out { from { transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.12); opacity: 0; } 60% { opacity: 1; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .hand-earlier.is-out { animation: none; } }

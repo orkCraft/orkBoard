@@ -44,6 +44,20 @@ export function WhoCorner({ who, address }) {
   return html`<${Pick} id="to" set=${!!who} open=${open} label=${`To: ${address.name || "the Orkmaster"}, change it`}>${who?.head ? html`<${Head} race=${who.head.race} tier=${who.head.tier} />` : html`<${Head} race=${CROWN.race} tier=${CROWN.tier} />`}<span class="hand-corner__say" data-slot=${who ? undefined : "who"}>${who ? address.name : SLOT_WHO}</span><//>`;
 }
 
+/** The kind `t` taken for the goal being written (null: the Orkmaster reads it). */
+export const chooseType = (t, address) => { fieldType.value = t ? { id: t.id, name: t.name, sign: t.sign, party: address.party } : null; };
+
+/** Who gets the goal: a party's slug, or "ork" for the Orkmaster; a *@Tech* in the text goes with the choice, and a type stays only where the party chosen offers it too. */
+export function chooseTo(slug, address, parties) {
+  if (address.by === "text") fieldText.value = withoutAddress(fieldText.value, address.name);
+  fieldTo.value = slug;
+  const to = parties.find((g) => g.slug === slug);
+  if (fieldType.value && fieldType.value.party !== (slug === "ork" ? "" : slug)) {                 // a type belongs to its party: it stays when the one chosen offers it too
+    const same = to?.types?.find((t) => t.id === fieldType.value.id);
+    fieldType.value = same ? { id: same.id, name: same.name, sign: same.sign, party: slug } : null;
+  }
+}
+
 /** Closes the open list and gives the focus back to its corner (the words when `to` is "text"). */
 function closeList(to = "corner") {
   const was = fieldRow.value;
@@ -82,20 +96,11 @@ export function CornerList({ open, runes, address, parties, taken }) {
     const kinds = kindsOf(parties, address);
     items = [
       ...kinds.map((t) => html`<${Item} key=${t.id} checked=${taken?.id === t.id} label=${t.name} note=${t.id === "bug" ? "the short way" : ""} data=${{ "data-type": t.id }}
-        onPick=${() => { fieldType.value = { id: t.id, name: t.name, sign: t.sign, party: address.party }; done(); }}><${Sign} name=${t.sign} /><//>`),
-      html`<${Item} key="read" checked=${!taken} label=${SLOT_KIND} note="default" data=${{ "data-type": "" }} onPick=${() => { fieldType.value = null; done(); }}><${Icon} name="close" /><//>`,
+        onPick=${() => { chooseType(t, address); done(); }}><${Sign} name=${t.sign} /><//>`),
+      html`<${Item} key="read" checked=${!taken} label=${SLOT_KIND} note="default" data=${{ "data-type": "" }} onPick=${() => { chooseType(null, address); done(); }}><${Icon} name="close" /><//>`,
     ];
   } else if (open === "to") {
-    const pick = (slug) => {
-      if (address.by === "text") fieldText.value = withoutAddress(fieldText.value, address.name);
-      fieldTo.value = slug;
-      const to = parties.find((g) => g.slug === slug);
-      if (fieldType.value && fieldType.value.party !== (slug === "ork" ? "" : slug)) {                 // a type belongs to its party: it stays when the one chosen offers it too
-        const same = to?.types?.find((t) => t.id === fieldType.value.id);
-        fieldType.value = same ? { id: same.id, name: same.name, sign: same.sign, party: slug } : null;
-      }
-      done();
-    };
+    const pick = (slug) => { chooseTo(slug, address, parties); done(); };
     items = [
       html`<${Item} key="ork" checked=${!address.party} label=${SLOT_WHO} note="default" data=${{ "data-to": "ork" }} onPick=${() => pick("ork")}><${Head} race=${CROWN.race} tier=${CROWN.tier} /><//>`,
       ...parties.map((g) => html`<${Item} key=${g.slug} checked=${address.party === g.slug} label=${g.name} data=${{ "data-to": g.slug }} onPick=${() => pick(g.slug)}>${g.head && html`<${Head} race=${g.head.race} tier=${g.head.tier} />`}<//>`),

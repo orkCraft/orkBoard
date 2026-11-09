@@ -8057,3 +8057,31 @@ five moods each made in Gemini. So:
    168 J3 builds it. Until a head is made, orkUI's 12 × 11 head stands for it.
 
 The owner's call.
+
+## 289. The look's pictures are a humorous flat cartoon, not pixels: the heads first (9 November 2026, the owner)
+
+Changes: 288.2 (a head drawn in pixels and brought to orkUI's palette: now a flat cartoon, kept smooth), 283.34–36 and 287 (the
+cards' pictures in the heads' pixel manner: now the cartoon), 268 (one look: its pictures are the cartoon; colour is still the
+party, the element and a signal); orkUI's `races/` and `pictures/`.
+
+Why: the owner, weighing a redraw against the pixel heads just taken in (§288), was offered two looks, a humorous flat cartoon and
+a muted storybook illustration, and took the cartoon from a sheet of six leaders (`docs/mockups/table-template/heads/cartoon/`).
+Seen at the window's sizes beside the pixel heads (`compare-phone-dpr3.png`, `compare-desktop-dpr1-x3.png`): on a phone (DPR 3)
+it is sharper and says more at every size, 16 px included, where the pixels are blocks; its eyes carry the five moods (§288.5) as a
+12 × 11 grid could not; its tone is the product's (orks, a card game's humour). Against it: at DPR 1 a 16 px cartoon head blurs, and
+the lich's dark hood is lost on the dark room.
+
+1. **The look's pictures are a humorous flat cartoon** (the owner's call): thick even dark outlines, flat colours with one shade,
+   big expressive eyes, comic proportions; drawn in Gemini as before, described by these traits and never by a show's name, and
+   never a show's own characters or manner copied.
+
+How, as proposed with it from the comparison (the owner may change any of it):
+2. **The order**: the heads (the leaders, the crowned Orkmaster, the members, the heroes, the tiers' gear, the moods) first; then
+   the cards' pictures (§287's sheets again); then the objects (the potions, the die, the backpack, the book, the chair, the
+   backs). The signs, the runes and the pixel face of the headings and buttons stay as they are until the heads and pictures are
+   seen together in the window, and are decided then. Until a picture is redrawn, today's stands.
+3. **A head is kept smooth** (no pixel grid, no palette cut, soft edges): orkUI writes today's names and sizes, and `@3x` for
+   phones; **a 16 px head is its own simpler drawing** (the face, the eyes, the mark, a thicker outline), not the big one shrunk.
+4. **Every head reads on the dark room**: no dark hood or dark helm without a light rim; its party's colour carries it.
+5. **§288's way holds**: a head drawn bare (no hood, no cap, no hat: the tiers' gear is laid by code), the heroes' own portraits,
+   five moods each, the sheets taken in by orkUI's tool (`races/art/sheets.json`), re-run for every new take.

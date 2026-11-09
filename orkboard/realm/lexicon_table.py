@@ -152,7 +152,12 @@ WINDOW: tuple[Term, ...] = (
     _t("now", "Now"),                                               # a new goal's primary: sent, and Talk starts at once when the limits allow and it costs no more than agreed (spec 150 F.2; `ideas.add` `now`)
     _t("slot_much", "how much: after its estimate"),                # its bottom right, until the goal is estimated
     _t("attach_hint", "Drop pictures or files here, or paste a picture"),     # a new goal's window while nothing is attached
-    _t("opened_leader", "leader"),                                  # the opened card's foot: *the Tech leader asks*
+    # the card in play (spec 168 D1, D2; decisions §283.19, §286; hand/fielddeal.js, hand/answercards.js): what the words field says of its keys, and what *Now* and *Later* are when they are dealt as cards
+    _t("field_now_line", "The Orkmaster talks it over at once, as far as the limits allow."),      # the card *Now*, dealt by a new goal's last corner
+    _t("field_later_line", "It lies in line and talks by itself at the hour the Board says."),      # the card *Later*
+    _t("field_keys_now", "Enter is Now · Shift+Enter a new line"),                                   # a new goal's field: its keys
+    _t("pen_keys", "Enter sends · Shift+Enter a new line"),                                          # *Your own words…*: its keys
+    _t("opened_leader", "leader"),                                 # the opened card's foot: *the Tech leader asks*
     _t("opened_asks", "asks"),                                      # the same, and *the Orkmaster asks*
     _t("look_wait", "Give me time to look"),                    # Settings: the wait of every spec made before its plan is passed by itself, 30 min · 2 h · until tonight · do not wait (spec 144 B, decisions §225.1)
     _t("my_hours", "When I am at the computer"),                  # Settings: the person's days and hours (spec 138 B.1, decisions §245.5); empty, nothing changes
@@ -162,6 +167,9 @@ WINDOW: tuple[Term, ...] = (
     _t("stage_assessing", "Assessing…"),                           # the Orkmaster's table of an idea: a leader that has not said its verdict yet, beside its back (spec 168 C3, decisions §283.16.3)
     _t("stage_later_step", "Its step comes when the step before it is accepted"),     # the Orkmaster's table of the implementation: a later leader's step, a placeholder until the step before it is accepted (spec 168 C3, decisions §283.14)
     _t("stage_part", "part"),                                      # the Orkmaster's table of a spec: a leader's section as a card, *Tech's part* (spec 168 C3)
+    _t("ask_card_goal", "Make it a goal"),                         # a quick question's answer card (the card of the kind ?, spec 168 D3, decisions §283.20): its way that opens the new goal's field with the suggested line
+    _t("ask_card_more", "Ask more"),                               # … its way that asks the same leader again, the words kept
+    _t("ask_card_got_it", "Got it"),                               # … its way that puts the card away: the answer is taken in and nothing changes (the way's kind is `take`)
     _t("say_needs", "Needs your answer"),                         # a leader's table of an idea: what its risks, conflicts and questions ask of the person (spec 168 C1, decisions §283.23)
     _t("say_better", "Could be better"),                           # … and its improvements, each a line of the goal rewritten (spec 168 C1)
     _t("say_verdict", "Its verdict"),                              # a leader's table of an idea: the group that holds the leader's own card, its sign (spec 168 C4, decisions §284.1)

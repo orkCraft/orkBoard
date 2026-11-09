@@ -129,7 +129,7 @@ def test_an_idea_through_a_leader_is_one_row_of_three_groups_of_big_cards_that_f
 def test_a_better_is_taken_and_a_way_is_taken_through_the_commands_and_the_rewrite_is_undone(gui):
     pg, host, errors = start(gui, "talk")
     pg.locator('.say-card[data-say="b1"]').click()
-    pg.locator('.q-choose [data-choice="take"]').click()
+    pg.locator('.hand-ways-row [data-way="take"]').click(position={"x": 20, "y": 30})
     pg.locator('.say-card[data-say="b1"][data-state="answered"]').wait_for(timeout=WAIT_MS)
     assert ("ideas.take_better", {"idea": "seat", "id": "b1"}) in host.log
     assert "taken" in pg.locator('.say-card[data-say="b1"]').inner_text() and pg.locator(".table-over").count() == 0
@@ -137,7 +137,7 @@ def test_a_better_is_taken_and_a_way_is_taken_through_the_commands_and_the_rewri
     pg.locator('[data-act="undo-rewrite"]').wait_for(state="detached", timeout=WAIT_MS)
     assert ("ideas.undo_rewrite", {"idea": "seat"}) in host.log
     pg.locator('.say-card[data-say="n1"]').click()
-    pg.locator('.q-choose [data-choice="1"]').click()
+    pg.locator('.hand-ways-row [data-way="way-1"]').click(position={"x": 20, "y": 30})
     pg.locator('.say-card[data-say="n1"][data-state="answered"]').wait_for(timeout=WAIT_MS)
     assert ("ideas.take_way", {"idea": "seat", "id": "n1", "way": 1}) in host.log
     pg.locator('.say-card[data-say="n2"]').click()
@@ -156,7 +156,7 @@ def test_an_open_fork_lies_first_among_the_needs_and_its_choice_answers_it(gui):
     assert pg.locator('.say-group[data-group="needs"] .say-card').first.get_attribute("data-say") == "fork-1"
     assert pg.locator('.say-group[data-group="needs"] .say-card').count() == 3, "three a group at most"
     pg.locator('.say-card[data-say="fork-1"]').click()
-    pg.locator('.q-choose [data-choice="1"]').click()
+    pg.locator('.hand-ways-row [data-way="way-1"]').click(position={"x": 20, "y": 30})
     pg.locator('.say-card[data-say="fork-1"]').wait_for(state="detached", timeout=WAIT_MS)
     assert ("ideas.say_fork", {"idea": "seat", "pick": 1}) in host.log
     finish(pg, errors)

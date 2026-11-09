@@ -12,5 +12,6 @@ import "./hearing.js";
 import "./paidcard.js";
 import "./incodecard.js";
 import "./hypothesiscard.js";
+import "./askcard.js";
 import "./qualitycard.js";
 import "./cascadecard.js";

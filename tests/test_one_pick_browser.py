@@ -177,7 +177,7 @@ def test_a_hands_card_lifted_picks_its_goal_and_its_lowering_leaves_the_pick_and
         stack.locator(".hand-card").first.click()
         wait_picked(pg, "timer")
         assert hash_of(pg) == "#goal=timer"
-        assert sig(pg, STATE, "tab") == "orkmaster", "Design is not on its route: the Orkmaster's tab"
+        assert sig(pg, STATE, "tab") == "tech", "the failure is Tech's: the card in play opens its asker's tab (spec 168 D1, decisions §283.19), as the pick leaves it"
         card = stack.locator(".hand-card").first
         assert "ork-picked" in card.get_attribute("class").split(), "the picked goal's cards in the hand wear the ink edge"
         assert card.evaluate("e => getComputedStyle(e).borderTopColor") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-ink)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")

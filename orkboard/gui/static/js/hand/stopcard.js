@@ -1,6 +1,7 @@
 import { MakerStop } from "../arena/makerreceipt.js";
 // **Spec 147 C (decisions §251.5): the hand's card is 144 x 202, cut under its title by the hand's rim (handcard.css). Its top is the corners' (table/corners.js): the goal's rune at the left, the kind's sign at the right in its signal's colour, then the title in three whole
 // lines; under the cut why it is asked (the question or the line, up to three lines) and the foot's corners: who asks (the head) and the card's cost. Not on the face at rest: the asker's head at the top, the party's label, the gem. Hovered or focused the card rises and shows it all.
+// **Spec 168 D1 (decisions §283.19): on the desktop there is no opened card of 404 x 566 any more: a lifted card is the 144 x 202 card at the table's foot and its body lies in the hand's place (liftedwide.js, answercards.js); the card below is the narrow page's and the phone's only.**
 // **Spec 147 D.1 (decisions §251.6): the lifted card (below) is on the desktop the opened card, 404 x 566 (hand/openedcard.css): its corners large (the goal's rune and name, the kind's word and sign; the asker and the cost of the way picked at its foot, waycost.js), the title, a body that scrolls (the window of spec 148 B.5 at its top, 160 px),
 // the answers above the foot. The phone's inline card is the same card, 5 : 7 at the screen's width (spec 147 F.3, upright.css); while the keyboard is up it gives up 5 : 7 and keeps its top corners and a title in two lines, then the field, as tall as the screen leaves.**
 // A stop as one card of the hand (docs/specs/101 §4.5, decisions §167.1; docs/specs/98 §4.2, §4.4, decisions §160.6; docs/specs/142 part B, decisions §249.2): the card of a card game's anatomy, one size, **with no window**. Its
@@ -106,7 +107,7 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
 export const upName = (s) => (s.card ? s.full : s.title || s.full);
 
 /** The stop's own lines on a lifted card: its text and what it waits for as one sentence (a line that repeats the title is not drawn, the rest behind its **…**: sayonce.js), the goals of a collision, the pick's tiles. */
-function Body({ s }) {
+export function Body({ s }) {
   const title = [s.title, s.full];
   return html`${s.kind === "collide" && html`<ul class="hand-goals" aria-label="The goals">${goalsOfRow(s.row).map((g) => html`<li key=${g.idea}>${goalLine(g)}</li>`)}</ul>`}
     ${s.kind !== "pick" && html`<${Said} key=${s.key} title=${title} lines=${[s.text, s.why]} tag="body hand-lifted__text" />`}
