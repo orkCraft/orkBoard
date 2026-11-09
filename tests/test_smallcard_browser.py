@@ -116,7 +116,7 @@ def test_the_fan_and_the_deck_backs_are_previewed_with_their_goals_name_and_have
         pg.wait_for_selector("[data-preview=back]", timeout=WAIT_MS)
         assert "Host can skip a round" in pg.locator("[data-preview=back]").inner_text()
         assert pg.evaluate("() => document.activeElement.getAttribute('data-goal')") == "raw2", "focus stays on the back"
-        deck = pg.locator(".col-card--deck").first
+        deck = pg.locator(".col-card--spec").first
         deck.focus()
         pg.wait_for_selector("[data-preview=back]:has-text('Round timer on phones')", timeout=WAIT_MS)
         assert pg.locator("[data-preview]").count() == 1

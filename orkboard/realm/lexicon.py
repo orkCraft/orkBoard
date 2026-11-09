@@ -347,6 +347,12 @@ TERMS: tuple[Term, ...] = (
     _t("column_reading", "reading"),                                # the goal the Orkmaster or its leaders are on, under *In analysis*
     _t("next_in", "next in"),                                       # the next to start by itself and the time left, under *To review*
     _t("next_at", "next at"),                                       # the same for a spec that waits for its look: the clock time it starts at
+    # the Orkmaster's piles are the goal's stages (spec 168 B1, decisions §283.11–§283.12; table/stages.js `PILES`); the phone's menu keeps the old three (table/oldpiles.js)
+    _t("pile_ideas", "Ideas", "", "In analysis"),                    # the goals the Orkmaster reads and routes, in Talk, an agreed decision's wait: the fan of small backs
+    _t("pile_specs", "Specs", "", "To review"),                     # the sections being written, the plan, the look's wait: a squared deck of small backs on their side
+    _t("pile_implementation", "Implementation", "", "At work · later"),   # the goals at work (held after the spec or waiting for the night at the foot): the cascade of standing cards
+    _t("column_writing", "writing"),                                # the spec being written, under *Specs*: *writing: Round timer*
+    _t("column_at_work", "at work"),                                # the goal at work, under *Implementation*: *at work: Round timer*
     # a party's tab greyed while a goal is picked that its route does not pass (spec 156 B.5, decisions §261.3, §261.15; table/tabs.js): *Product is not on this goal. Press to leave it and look at Product's table.*
     _t("tab_off_is", "is not on this goal"),
     _t("tab_off_press", "Press to leave it and look at"),

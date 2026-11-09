@@ -35,15 +35,15 @@
 
 /* -- In analysis, the Orkmaster's hand: a near-straight fan of small backs held back to the person, spread while they are few, tighter as they grow (fan.js). Each back's seal and its goal's rune in its middle; the goal being read lifted ---------------------------- */
 .col-fan { position: relative; width: 144px; height: 92px; flex: none; margin-left: var(--ork-2); }
-.col-card--fan.ork-card { bottom: 2px; left: calc(var(--i) * var(--step, 44px)); width: 56px; height: 78px; transform-origin: 50% 100%; transform: rotate(var(--r, 0deg)); z-index: var(--z, 1); }
+.col-card--fan.ork-card { bottom: 2px; left: calc(var(--i) * var(--step, 44px)); width: 56px; height: 78px; transform-origin: 50% 100%; transform: translateY(calc(var(--sink, 0px) + var(--lift, 0px))) rotate(var(--r, 0deg)); z-index: var(--z, 1); }      /* turned like a hand's (fan.js): its turn about its foot, the arc's ends lower (--sink), a card risen by --lift */
 .col-fan__back { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
 .col-fan__seal { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; color: var(--ork-ink-faint); pointer-events: none; }
 .col-fan__seal .ork-sigil.small { width: 44px; height: 44px; }
 .col-fan__seal .ork-elem { position: relative; z-index: 1; }
 .col-fan__held { position: absolute; z-index: 1; right: var(--ork-1); bottom: var(--ork-1); display: inline-flex; color: var(--ork-ink-muted); }      /* a goal the person holds: its back says so by the sign, its name is in its label */
-.col-card--fan.ork-card.is-reading { transform: translateY(-12px) rotate(var(--r, 0deg)); z-index: 20; }
-.col-card--fan.ork-card:is(:hover, :focus-visible) { transform: translateY(-10px) rotate(var(--r, 0deg)); z-index: 30; outline: 0; box-shadow: -4px 4px 0 var(--ork-scrim); }
-.col-card--fan.ork-card.is-reading:is(:hover, :focus-visible) { transform: translateY(-14px) rotate(var(--r, 0deg)); }
+.col-card--fan.ork-card.is-reading { --lift: -12px; z-index: 20; }
+.col-card--fan.ork-card:is(:hover, :focus-visible) { --lift: -10px; z-index: 30; outline: 0; box-shadow: -4px 4px 0 var(--ork-scrim); }
+.col-card--fan.ork-card.is-reading:is(:hover, :focus-visible) { --lift: -14px; }
 .col-card--fan.ork-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink), -4px 4px 0 var(--ork-scrim); }
 .col-card--fan.ork-card.asks { border-color: var(--ork-alert); }
 
@@ -62,7 +62,22 @@
 .col-sigil.is-waiting.is-void::after { color: var(--ork-elem-void); }
 .col-sigil.is-waiting.is-lava::after { color: var(--ork-elem-lava); }
 
-/* -- At work · later, standing: 144 x 202 read by its four corners (corners.css). The pile's room is whatever the fan and the deck leave, clipped at its foot: the cards behind lie `--y` lower (a foot of 26 px, an edge of 3), or when the pile sinks
+/* -- Specs, a squared deck of small backs on their side (78 x 56), 13 px under the window's left edge, the cards behind 4 px lower, unturned (speccard.js; decisions §283.11). The ring in the middle of the part that shows, the goal's rune in it; the ring is the spec being written, or the wait ------------- */
+.col-card--spec.ork-card { left: calc(var(--column-tuck) * -1); top: calc(var(--i) * var(--step)); z-index: calc(10 - var(--i)); width: 78px; height: 56px; }
+.col-card--spec.ork-card:is(:hover, :focus-visible) { z-index: 40; transform: translateX(var(--column-tuck)); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* slid out whole, over the table */
+.col-card--spec.ork-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink), -4px 4px 0 var(--ork-scrim); }
+.col-card--spec.ork-card.asks { border-color: var(--ork-alert); }
+.col-card--spec.ork-card.fails { border-color: var(--ork-danger); }      /* a failure stays in its stage's pile in the danger's ring */
+.col-spec__back { position: absolute; left: 50%; top: 50%; width: 56px; height: 78px; transform: translate(-50%, -50%) rotate(90deg); aspect-ratio: auto; }      /* orkUI's small back turned on its side, one middle with the ring (decisions §263.2) */
+.col-spec__back::before { display: none; }      /* orkUI draws a ring of runes on every back: Specs' own ring (the spec written, or the wait, in eighths) stands there instead */
+.col-card--spec .table-back-sigil.ork-sigil.col-spec__ring { top: 50%; left: calc(var(--column-tuck) + (78px - var(--column-tuck)) / 2); right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.46); transform-origin: 50% 50%; color: var(--ork-ink-faint); }      /* the 112 px ring at 52 px, in the part that shows */
+.col-card--spec .table-back-sigil > .ork-sigil__seal { display: none; }
+.col-spec__rune { position: absolute; z-index: 1; top: 50%; left: calc(var(--column-tuck) + (78px - var(--column-tuck)) / 2); transform: translate(-50%, -50%); display: grid; place-items: center; color: var(--ork-ink-faint); pointer-events: none; }
+.col-pile.is-specs:is(:hover, :focus-within) .col-card--spec.ork-card { top: calc(var(--i) * 22px); transition: top var(--ork-motion-base) var(--ork-motion-ease), transform var(--ork-motion-base) var(--ork-motion-ease); }
+.col-card--spec.ork-card.ork-picked { transform: translateX(var(--column-tuck)); }
+@media (prefers-reduced-motion: reduce) { .col-pile.is-specs:is(:hover, :focus-within) .col-card--spec.ork-card { transition: none; } }
+
+/* -- Implementation (before: At work · later), standing: 144 x 202 read by its four corners (corners.css). The pile's room is whatever the fan and the deck leave, clipped at its foot: the cards behind lie `--y` lower (a foot of 26 px, an edge of 3), or when the pile sinks
       under the hand's rim `--x` to the right, 3 px each (giveway.js, column.js) ----------------------------------------------------------------------------------------------------------------------------- */
 .col-room { flex: 1 1 0; min-height: 0; overflow: hidden; margin-right: calc(var(--col-out) * -1); padding-right: var(--col-out); }      /* clipped at its foot (and so never makes the column scroll); its right end is free for a card slid out */
 .col-pile.is-up { height: calc(var(--col-edge) * 7 / 5 + var(--behind, 0px)); }
@@ -91,9 +106,9 @@
 
 /* a card of the hand lifted raises the cards of the goal it is about (hand/about.js `.is-about`): a little, and by its edge under reduced motion */
 .frame-column .col-card.is-about { transform: translateX(8px); box-shadow: -4px 4px 0 var(--ork-scrim); }
-.frame-column .col-card--fan.is-about { transform: translateY(-6px) rotate(var(--r, 0deg)); }
+.frame-column .col-card--fan.is-about { --lift: -6px; }
 .frame-column .col-card--up.is-about { transform: translateX(calc(var(--x, 0px) + 8px)); }
-@media (prefers-reduced-motion: reduce) { .frame-column .col-card.is-about { transform: none; box-shadow: inset 0 0 0 2px var(--ork-ink); } .frame-column .col-card--fan.is-about { transform: rotate(var(--r, 0deg)); } .frame-column .col-card--up.is-about { transform: translateX(var(--x, 0px)); } }
+@media (prefers-reduced-motion: reduce) { .frame-column .col-card.is-about { transform: none; box-shadow: inset 0 0 0 2px var(--ork-ink); } .frame-column .col-card--fan.is-about { --lift: 0px; transform: translateY(var(--sink, 0px)) rotate(var(--r, 0deg)); } .frame-column .col-card--up.is-about { transform: translateX(var(--x, 0px)); } }
 
 /* what a picked card lifts beside the column (never over the pane): its choices */
 .col-lift { position: absolute; z-index: 20; display: flex; flex-direction: column; gap: var(--ork-3); width: 280px; max-height: calc(100% - var(--ork-4)); overflow-y: auto; padding: var(--ork-4); }
@@ -118,7 +133,7 @@
 
 /* One pick (spec 156 B.2, decisions §261.1): the picked card is risen as a hovered one is and its edge is in the ink, the frame line's width doubled; nothing else is dimmed. A pile of To review hovered or focused fans its backs so each is reached. */
 .col-card.ork-card.ork-picked { border-color: var(--ork-ink); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-ink); }
-.col-card--fan.ork-card.ork-picked { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+.col-card--fan.ork-card.ork-picked { --lift: -10px; }      /* the picked card risen with its ring (fan.js `.is-ringed`) */
 .col-card--deck.ork-card.ork-picked { transform: translateX(var(--column-tuck)); }
 .col-card--up.ork-card.ork-picked { transform: translate(calc(var(--x, 0px) + 36px), 0) rotate(2deg); }
 .col-pile.is-down:is(:hover, :focus-within) .col-card--deck.ork-card { top: calc(var(--i) * 36px); transition: top var(--ork-motion-base) var(--ork-motion-ease), transform var(--ork-motion-base) var(--ork-motion-ease); }

@@ -4,6 +4,7 @@ To review a squared deck of backs on their side, its ring the wait, the next to 
 To review lifts Start now and Hold, a put-off one Start now and Back to review), the foot of each card behind the front one, a column that never scrolls and gives way to a short window (giveWay), the moves between piles, and the phone (under 760 px: no column, the Orkmaster's tab and lane as they were)."""
 from __future__ import annotations
 
+import datetime as dt
 import re
 from pathlib import Path
 
@@ -96,13 +97,13 @@ def test_the_three_piles_hold_the_goals_by_their_states_and_a_goal_lies_in_one(g
     pg, host, log = open_column(gui)
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
-        assert [t.strip() for t in pg.eval_on_selector_all(".col-plab__t", "els => els.map((e) => e.textContent)")] == ["In analysis", "To review", "At work · later"]
+        assert [t.strip() for t in pg.eval_on_selector_all(".col-plab__t", "els => els.map((e) => e.textContent)")] == [lexicon.term("pile_ideas"), lexicon.term("pile_specs"), lexicon.term("pile_implementation")] == ["Ideas", "Specs", "Implementation"]
         assert goals(pg, "analysis") == ["reading", "talk", "raw1", "raw2", "raw3"], "the one the Orkmaster reads first, then Talk, then the rest in its order: every goal of the pile is a back of the hand"
         assert goals(pg, "review") == ["timer", "scoring"], "agreed, the wait that ends first in front"
         assert goals(pg, "work") == ["music", "held", "late"], "at work, then held, then the night's"
         every = goals(pg, "analysis") + goals(pg, "review") + goals(pg, "work")
         assert len(every) == len(set(every)) and "old" not in every, "a goal in one pile; a goal done is the discard's"
-        assert pg.locator(".col-card--fan").count() == 5 and pg.locator(".col-card--deck").count() == 2 and pg.locator(".col-card--up").count() == 3, "the hand, the deck and the standing cards"
+        assert pg.locator(".col-card--fan").count() == 5 and pg.locator(".col-card--spec").count() == 2 and pg.locator(".col-card--up").count() == 3, "the hand, the deck and the standing cards"
         assert pg.locator(".col-sec .col-plab").all_inner_texts() and pg.locator('[data-under="analysis"]').inner_text() == "reading: Players see who answered first"
         assert pg.locator('[data-under="review"]').inner_text() == "next in 2 min: Round timer on phones", "the next to start, its time and its name"
     finally:
@@ -246,12 +247,12 @@ def test_the_deck_is_squared_three_pixels_apart_and_standing_cards_show_the_foot
     pg, host, log = open_column(gui, host=host)
     try:
         pg.set_viewport_size({"width": 1280, "height": 1200})
-        pg.wait_for_selector(".col-card--deck", timeout=WAIT_MS)
+        pg.wait_for_selector(".col-card--spec", timeout=WAIT_MS)
         deck = pg.locator('.col-sec[data-pile="review"] .col-card')
         assert deck.count() == 5, "the front and four behind, no count"
         boxes = [deck.nth(i).bounding_box() for i in range(5)]
-        assert all(abs(b["width"] - 157) <= 1 and abs(b["height"] - 112) <= 1 for b in boxes), f"on their side, 157 x 112: {boxes[0]}"
-        assert [round(b["y"] - boxes[0]["y"]) for b in boxes] == [0, 3, 6, 9, 12], "a squared deck: 3 px apart"
+        assert all(abs(b["width"] - 78) <= 1 and abs(b["height"] - 56) <= 1 for b in boxes), f"small backs on their side, 78 x 56: {boxes[0]}"
+        assert [round(b["y"] - boxes[0]["y"]) for b in boxes] == [0, 4, 8, 12, 16], "a squared deck: 4 px apart"
         assert len({round(b["x"]) for b in boxes}) == 1, "unturned, one above another"
         assert deck.evaluate_all("els => els.map((e) => getComputedStyle(e).transform)") == ["none"] * 5
         work = pg.locator('.col-sec[data-pile="work"] .col-card')
@@ -259,7 +260,7 @@ def test_the_deck_is_squared_three_pixels_apart_and_standing_cards_show_the_foot
         assert work.count() == 6, "the front and five behind"
         wb = [work.nth(i).bounding_box() for i in range(work.count())]
         assert all(abs(b["width"] - 144) <= 1 and abs(b["height"] - 202) <= 1 for b in wb), f"standing, 144 x 202: {wb[0]}"
-        assert all(abs(b["x"] + b["width"] - 144) <= 1 for b in wb[:1]) and abs(boxes[0]["x"] + boxes[0]["width"] - 144) <= 1, "the deck and the standing cards share one right edge"
+        assert all(abs(b["x"] + b["width"] - 144) <= 1 for b in wb[:1]) and abs(boxes[0]["x"] + 13) <= 1, "the deck lies 13 px under the window's edge (decisions §236)"
         assert pg.locator(".col-sec .col-plab").first.inner_text() and "More" not in pg.locator(".col-scroll").inner_text()
         before = work.nth(1).bounding_box()
         assert [round(wb[i + 1]["y"] - wb[i]["y"]) for i in range(5)] == [26] * 5, "the foot of each, 26 px"
@@ -277,7 +278,7 @@ def test_a_goal_agreed_moves_from_in_analysis_to_to_review_and_its_wait_over_to_
         host.nodes[2].update(state="ready", agreed=True, back=back(ripe=ripe(60)))
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.col-sec[data-pile=review] [data-goal=raw1]')", timeout=WAIT_MS)
-        assert "raw1" not in goals(pg, "analysis") and pg.locator('.col-card[data-goal="raw1"]').get_attribute("class").count("col-card--deck") == 1, "a back of the deck now: it waits for its start, face down"
+        assert "raw1" not in goals(pg, "analysis") and pg.locator('.col-card[data-goal="raw1"]').get_attribute("class").count("col-card--spec") == 1, "a back of the deck now: its sections are written, face down"
         host.nodes[2].update(state="working", stage="implementation", back=back(ripe=ripe(0, by="leaders")), tasks=[task("r1", "Kick it", "running")])
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.col-sec[data-pile=work] [data-goal=raw1]')", timeout=WAIT_MS)
@@ -292,7 +293,7 @@ def test_a_goal_agreed_moves_from_in_analysis_to_to_review_and_its_wait_over_to_
 
 
 class SortHost(ColumnHost):
-    """Decisions §224: the idea, Talk, the decision and the spec being written lie face down; a spec made lies face up in To review; held is put off."""
+    """Decisions §283.12: the idea, Talk and the agreed decision lie in Ideas; the spec being written and the spec made in Specs; held after the spec is put off at Implementation's foot."""
 
     def __init__(self):
         super().__init__()
@@ -310,12 +311,13 @@ def test_a_decision_and_a_spec_being_written_are_backs_of_the_hand_and_a_spec_ma
     pg, host, log = open_column(gui, host=SortHost())
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
-        assert sorted(goals(pg, "analysis")) == ["decide", "draft", "sect", "sketch"], "decided, sections, sketch and the Orkmaster's own planning: face down"
-        assert goals(pg, "review") == ["made"], "a spec made by its leaders (agreed) waits in To review, face up"
+        assert goals(pg, "analysis") == ["decide"], "the agreed decision's wait is in Ideas (decisions §283.12)"
+        assert goals(pg, "review") == ["sect", "sketch", "draft", "made"], "sections, sketch and the Orkmaster's own planning are Specs' (written first), a spec made by its leaders (agreed) after them"
         assert goals(pg, "work") == ["heldd"], "a decided goal held stays put off"
-        assert pg.locator('.col-card[data-goal="made"]').get_attribute("class").count("col-card--deck") == 1
-        assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") and pg.locator(".col-card--fan").first.locator(".ork-elem.is-glowing").count() == 1, "the leaders writing its spec: the front back lifted with its rune glowing and the title says it"
-        pg.locator('.col-sec[data-pile="analysis"] .col-card--down').first.click()
+        assert pg.locator('.col-card[data-goal="made"]').get_attribute("class").count("col-card--spec") == 1
+        assert pg.locator('[data-under="review"]').inner_text().startswith("writing: ") and pg.locator(".col-card--spec").first.locator(".ork-elem.is-glowing").count() == 1, "the leaders writing its spec: the front back with its rune glowing and the title says it"
+        assert pg.locator('[data-under="analysis"]').inner_text() == "waits for you", "Ideas says only what it waits for"
+        pg.locator('.col-sec[data-pile="review"] .col-card--down').first.click()
         assert sig(pg, "frame/state.js", "picked") != "" and pg.locator(".col-list").count() == 0, "a face-down card is picked, with no list"
         pg.keyboard.press("Escape")                                   # the card's choices beside the column go first, then the pick
         pg.wait_for_selector(".col-lift", state="detached", timeout=WAIT_MS)
@@ -324,10 +326,73 @@ def test_a_decision_and_a_spec_being_written_are_backs_of_the_hand_and_a_spec_ma
         for n in host.nodes[1:4]:
             n.update(state="done", folded=True)
         host.bump({})
-        pg.wait_for_function("() => document.querySelectorAll('.col-sec[data-pile=analysis] .col-card').length === 1", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.col-sec[data-pile=review] .col-card').length === 1", timeout=WAIT_MS)
         card = pg.locator('.col-card[data-goal="decide"]')
         assert "its decision waits for your word" in card.get_attribute("aria-label") and "waits for you" in pg.locator('[data-under="analysis"]').inner_text()
         assert "asks" in card.get_attribute("class").split() and card.locator(".is-glowing").count() == 0, "its frame in the alert and nothing glowing: it waits for the person"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class StagesHost(ColumnHost):
+    """Spec 168 B1 (decisions §283.12): a goal in every state, and the ones put off at each stage."""
+
+    def __init__(self):
+        super().__init__()
+        later = (dt.datetime.now() + dt.timedelta(hours=3)).isoformat(timespec="seconds")
+        self.nodes = [
+            node("raw", "tech", "Raw idea", "deck", state="raw", element="ice"),
+            node("reading", "tech", "Being read", "deck", state="reading", element="ice"),
+            node("asks", "tech", "Asks a question", "deck", state="asks", element="ice"),
+            node("routed", "tech", "Routed idea", "deck", state="routed", element="ice"),
+            node("talk", "tech", "In Talk", "deck", state="talk", element="ice", back=back()),
+            node("decided", "tech", "Decision waits", "table", state="decided", element="ice", back=back(ripe=ripe(300))),
+            node("heldidea", "tech", "Held before Talk", "deck", state="routed", element="dust", held_for="hold"),
+            node("lateidea", "tech", "Later before Talk", "deck", state="routed", element="lava", held_until=later),
+            node("sketch", "design", "Sketching", "table", state="sketch", element="meadow"),
+            node("sections", "design", "Sections written", "table", state="sections", element="meadow"),
+            node("draft", "tech", "The Orkmaster's draft", "table", state="planning", element="dust"),
+            node("planned", "tech", "Planned", "table", state="planning", agreed=True, element="dust", back=back(ripe=ripe(200))),
+            node("ready", "tech", "Spec made", "table", state="ready", agreed=True, element="void", back=back(ripe=ripe(100))),
+            node("plan", "tech", "Plan made", "table", state="plan", agreed=True, element="void", back=back(ripe=ripe(400))),
+            node("heldspec", "tech", "Held after its spec", "table", state="ready", agreed=True, element="lava", held_for="hold", back=back(ripe=ripe(0, held=True))),
+            node("heldwait", "tech", "Held decision", "table", state="decided", element="void", back=back(ripe=ripe(0, held=True))),
+            node("night", "tech", "For the night", "table", state="plan", element="lava", start_at="night", waits={"kind": "night", "ref": "", "title": "", "until": ""}),
+            node("work", "tech", "At work", "table", state="working", element="meadow", stage="implementation", tasks=[task("w1", "Do it", "running")]),
+            node("heldwork", "tech", "Held at work", "table", state="working", element="ice", stage="implementation", held_for="hold", tasks=[task("w2", "Wait", "running")]),
+            node("failed", "tech", "A task failed", "table", state="working", element="dust", stage="implementation", tasks=[task("f1", "Broke", "failed")]),
+        ]
+
+
+def test_each_state_lies_in_its_stage_pile_and_a_goal_put_off_lies_where_what_happens_to_it_next(gui):
+    pg, host, log = open_column(gui, host=StagesHost())
+    try:
+        pg.set_viewport_size({"width": 1280, "height": 1200})
+        pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+        ideas, specs, work = goals(pg, "analysis"), goals(pg, "review"), goals(pg, "work")
+        assert ideas[:6] == ["reading", "talk", "raw", "asks", "routed", "decided"] and ideas[6:] == ["heldidea", "lateidea"], f"Ideas: read, Talk, the decision's wait; held or later before Talk at the fan's end: {ideas}"
+        assert pg.locator('.col-card[data-goal="heldidea"] .col-fan__held .ork-sign.pause').count() == 1, "a pause on a held back"
+        assert specs == ["sketch", "sections", "draft", "ready", "planned"], f"Specs (the front and four behind): the sections written first, then the wait that ends first: {specs}"
+        assert work[:3] == ["work", "heldwork", "failed"] or sorted(work[:3]) == ["failed", "heldwork", "work"], work
+        assert work[3:] == ["heldspec", "heldwait", "night"], f"held after its spec (a decision held too), then the night's, at the cascade's foot: {work}"
+        held = pg.locator('.col-card[data-goal="heldwork"]')
+        assert held.get_attribute("data-off") is None and held.locator(".ork-sign.pause").count() == 1 and "at work: held" in held.get_attribute("aria-label"), "held at work: in the cascade with a pause"
+        assert pg.locator('.col-card[data-goal="failed"]').get_attribute("class").count("fails") == 1, "a failure stays at work in the danger's ring"
+        assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") and pg.locator('[data-under="review"]').inner_text() == "writing: Sketching"
+        assert pg.locator('[data-under-asked="review"]').inner_text().startswith("next in "), "the next to start by itself, under the writing"
+        assert pg.locator('[data-under="work"]').inner_text() == "at work: At work"
+        # a card of Specs being written offers no Start now: only its menu
+        pg.locator('.col-card[data-goal="sketch"]').click(position={"x": 40, "y": 28})
+        pg.locator('.col-lift[data-goal="sketch"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator('.col-lift[data-goal="sketch"] [data-now]').count() == 0 and "writing its spec" in pg.locator('.col-lift[data-goal="sketch"]').inner_text()
+        pg.keyboard.press("Escape")
+        pg.keyboard.press("Escape")
+        # held after its spec: Start now and Back to review, on the cascade's foot
+        pg.locator('.col-card[data-goal="heldspec"]').click(position={"x": 30, "y": 196})
+        row = pg.locator('.col-lift[data-goal="heldspec"]')
+        row.wait_for(timeout=WAIT_MS)
+        assert row.get_by_role("button", name="Start now").count() == 1 and row.get_by_role("button", name="Back to review").count() == 1
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -427,7 +492,7 @@ def test_change_on_an_agreed_decision_holds_its_wait_and_brings_its_card_into_th
         assert pg.locator(".hand-lifted .hand-way--decision").count() == 1 and pg.locator(".col-lift").count() == 0
         assert pg.locator(".hand-lifted").get_by_role("button", name="Start", exact=True).count() == 1, "held: its one button says Start"
         assert decisions_in_hand(pg) == ["decision/agreed/", "decision/doubt/", "decision/held/"]
-        assert "agreed" in goals(pg, "work"), "held, the goal lies put off in At work · later until the person starts it"
+        assert "agreed" in goals(pg, "work"), "held, the goal lies put off at Implementation's foot until the person starts it"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -455,7 +520,7 @@ class RingHost(ColumnHost):
 
 def ring_card(gui, **kw):
     pg, host, log = open_column(gui, host=RingHost(**kw))
-    pg.wait_for_selector('.col-card--fan[data-goal="g"]', timeout=WAIT_MS)
+    pg.wait_for_selector('.col-card[data-goal="g"]', timeout=WAIT_MS)
     return pg, host, log
 
 
@@ -463,11 +528,16 @@ def test_a_goal_the_orkmaster_or_its_leaders_are_on_is_lifted_with_its_rune_glow
     for state, reads in (("reading", True), ("talk", True), ("sections", True), ("routed", False), ("raw", False)):
         pg, host, log = ring_card(gui, state=state, bk=leaders(2) if state in ("talk", "sections", "routed") else None)
         try:
+            if state == "sections":                                                                 # the spec being written lies in Specs (decisions §283.12): its rune glows on the deck's front card, the pile says *writing: …*
+                card = pg.locator('.col-card--spec[data-goal="g"]')
+                assert card.locator(".ork-elem.is-glowing").count() == 1 and pg.locator('[data-under="review"]').inner_text().startswith("writing: "), state
+                assert pg.locator(".col-card--fan").count() == 0, "nothing of it left in Ideas"
+                continue
             card = pg.locator('.col-card--fan[data-goal="g"]')
             assert ("is-reading" in card.get_attribute("class").split()) == reads, state
             assert card.locator(".ork-elem.is-glowing").count() == int(reads), state
             assert card.locator(".col-sigil, .col-mid, .col-play").count() == 0, "no ring, no heads, no play on a back of the hand"
-            assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") == (state in ("reading", "sections")), state
+            assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") == (state == "reading"), state
         finally:
             pg.close()
         assert not log, "\n".join(log)

@@ -119,7 +119,7 @@ export function useHanded(items) {
       came.forEach((c, i) => {
         const where = flying < FLY_MAX ? fromWhere(c) : null;
         if (where) flying++;
-        live.current[c.key] = { i, ...(where ? { el: where.el, head: headAt(where, c), ...(where.el.matches?.(".col-card--deck") ? { back: true } : {}) } : {}), ...(hold ? { hold: true } : {}) };
+        live.current[c.key] = { i, ...(where ? { el: where.el, head: headAt(where, c), ...(where.el.matches?.(".col-card--deck, .col-card--spec") ? { back: true } : {}) } : {}), ...(hold ? { hold: true } : {}) };
       });
       const begin = (drawing = false) => {                                    // the deal begins (while this very draw, or when the pointer is up)
         if (begun) return;

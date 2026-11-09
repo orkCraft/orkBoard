@@ -16,7 +16,7 @@ from tests.test_column_browser import ColumnHost, back, open_column, ripe  # noq
 from tests.test_hand_desktop_browser import call, node, task  # noqa: E402
 
 pytestmark = pytest.mark.browser
-PILES_JS = Path(__file__).resolve().parents[1] / "orkboard" / "gui" / "static" / "js" / "table" / "piles.js"
+PILES_JS = Path(__file__).resolve().parents[1] / "orkboard" / "gui" / "static" / "js" / "table" / "stages.js"
 
 
 class FanHost(ColumnHost):
@@ -165,8 +165,8 @@ def test_to_review_names_the_next_to_start_under_its_title_and_a_goal_that_asks_
     try:
         under = pg.locator('[data-under="review"]')
         assert under.inner_text() == "next in 2 min: Round timer on phones", "its time and its name"
-        assert under.locator("b").inner_text() == "Round timer on phones" and under.bounding_box()["y"] < pg.locator(".col-card--deck").first.bounding_box()["y"], "named under the title, over the deck"
-        assert [c.get_attribute("data-goal") for c in pg.locator(".col-card--deck").all()] == ["soon", "asking"], "the one that starts first in front"
+        assert under.locator("b").inner_text() == "Round timer on phones" and under.bounding_box()["y"] < pg.locator(".col-card--spec").first.bounding_box()["y"], "named under the title, over the deck"
+        assert [c.get_attribute("data-goal") for c in pg.locator(".col-card--spec").all()] == ["soon", "asking"], "the one that starts first in front"
         by = {n["slug"]: n for n in host.nodes}
         by["soon"].update(asks_you=True, back=back(ripe=None))                                  # now the timer asks the person ...
         by["asking"].update(asks_you=False, back=back(ripe=ripe(30, seconds=240)))              # ... and the other one's wait runs
@@ -183,22 +183,22 @@ def test_to_review_names_the_next_to_start_under_its_title_and_a_goal_that_asks_
 def test_a_back_of_the_deck_fills_its_ring_by_the_share_of_the_wait_and_a_goal_that_asks_has_the_ring_and_the_frame_in_the_alert(gui):
     pg, host, log = open_column(gui, host=FanHost())
     try:
-        pg.wait_for_selector(".col-card--deck", timeout=WAIT_MS)
+        pg.wait_for_selector(".col-card--spec", timeout=WAIT_MS)
         pg.emulate_media(reduced_motion="reduce")
-        soon, asking = pg.locator('.col-card--deck[data-goal="soon"]'), pg.locator('.col-card--deck[data-goal="asking"]')
+        soon, asking = pg.locator('.col-card--spec[data-goal="soon"]'), pg.locator('.col-card--spec[data-goal="asking"]')
         ring = soon.locator(".ork-sigil.is-waiting")
         assert ring.count() == 1 and float(ring.get_attribute("data-share")) == pytest.approx(0.5), "120 of 240 s left: half of the ring"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--deck[data-goal=soon] .ork-sigil'), '::after').getPropertyValue('--_arc')").strip() == "180deg", "four places of eight"
-        assert soon.locator(".ork-sigil__seal .ork-elem").count() == 1 and soon.locator(".corner").count() == 0, "its seal is the rune: no corners"
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=soon] .ork-sigil'), '::after').getPropertyValue('--_arc')").strip() == "180deg", "four places of eight"
+        assert soon.locator(".col-spec__rune .ork-elem").count() == 1 and soon.locator(".corner").count() == 0, "its ring holds the rune: no corners"
         ice, alert = pg.evaluate("() => [getComputedStyle(document.documentElement).getPropertyValue('--ork-elem-ice').trim(), getComputedStyle(document.documentElement).getPropertyValue('--ork-alert').trim()]")
         paint = lambda c: pg.evaluate("(c) => { const s = document.createElement('i'); s.style.color = c; document.body.append(s); const v = getComputedStyle(s).color; s.remove(); return v; }", c)  # noqa: E731
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--deck[data-goal=soon] .ork-sigil'), '::after').color") == paint(ice), "its ring in the goal's colour"
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=soon] .ork-sigil'), '::after').color") == paint(ice), "its ring in the goal's colour"
         assert "asks" in asking.get_attribute("class").split() and asking.locator(".ork-sigil.col-stopped").count() == 1
         assert float(asking.locator(".ork-sigil").get_attribute("data-share")) == 1 and asking.locator(".ork-sigil").evaluate("e => e.classList.contains('col-busy')") is False, "the ring full and still"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--deck[data-goal=asking] .ork-sigil'), '::after').color") == paint(alert), "in the alert"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--deck[data-goal=asking]')).borderTopColor") == paint(alert), "and its frame"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--deck[data-goal=soon]')).borderTopColor") != paint(alert)
-        asking.click(position={"x": 80, "y": 110})                                              # its 3 px under the front back
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=asking] .ork-sigil'), '::after').color") == paint(alert), "in the alert"
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=asking]')).borderTopColor") == paint(alert), "and its frame"
+        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=soon]')).borderTopColor") != paint(alert)
+        asking.click(position={"x": 40, "y": 54})                                               # its 4 px under the front back
         assert pg.evaluate("() => import('/static/js/frame/state.js').then((x) => x.picked.value)") == "asking", "a back pressed picks its goal"
     finally:
         pg.close()
@@ -231,4 +231,6 @@ def test_giveway_feet_then_edges_the_furthest_first_then_the_pile_sinks_to_a_lin
 def test_the_pages_column_words_are_the_glossarys():
     js = PILES_JS.read_text(encoding="utf-8")
     got = dict(re.findall(r'(\w+) = "([^"]+)"', re.search(r"export const (READING = .*?);", js).group(1).replace(", ", ";\n")))
-    assert got == {"READING": lexicon.term("column_reading"), "NEXT_IN": lexicon.term("next_in"), "NEXT_AT": lexicon.term("next_at")}
+    assert got == {"READING": lexicon.term("column_reading"), "WRITING": lexicon.term("column_writing"), "AT_WORK": lexicon.term("column_at_work"), "NEXT_IN": lexicon.term("next_in"), "NEXT_AT": lexicon.term("next_at")}
+    titles = re.search(r"export const PILES = (\[.*?\]);", js).group(1)
+    assert re.findall(r'"([^"]+)"\]', titles) == [lexicon.term("pile_ideas"), lexicon.term("pile_specs"), lexicon.term("pile_implementation")]
