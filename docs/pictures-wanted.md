@@ -67,27 +67,27 @@ A 4x4 grid of 16 tiles, left to right, top to bottom:
 Spec 168 H2–H3: *How deep*, *The build starts*, *The night*, *Lands in dev by itself*, *Push*, *Goals at once*.
 
 ```
-A 4x5 grid of 20 tiles, left to right, top to bottom:
-1 how deep, thrift: a coin purse tied with three knots, a moth flying out of it.
-2 how deep, balance: brass scales holding a feather and an anvil, somehow perfectly level.
-3 how deep, quality: a gem on an anvil polished to a blinding sparkle, a pair of tiny sunglasses beside it.
-4 the build starts, at once: a rocket strapped to a card, its fuse already sparking.
-5 the build starts, in 30 minutes: a candle a third burnt down, a snail racing it.
-6 the build starts, in 2 hours: a very tall fresh candle, a cobweb starting at its base.
-7 the build starts, tonight: a crescent moon in a nightcap above a forge chimney.
-8 the build starts, by hand: a big wooden lever with a red knob and a leather glove resting on it.
-9 the night, off: a blacksmith's hammer tucked into a tiny bed with a nightcap.
-10 the night, ideas and specs: a scroll by candlelight with spectacles resting on it.
-11 the night, builds: an anvil glowing under the stars, a hammer swinging all by itself.
-12 the night, proposals: a lantern and an open sack spilling glowing lightbulb-like ideas, little tiptoe footprints.
-13 lands in dev by itself, on: a mine cart rolling down its track all alone, a card waving from it like a flag.
-14 lands in dev by itself, off: the same mine cart stopped by a brick and a wheel clamp.
+A 4x5 grid of 20 wide tiles (four across, five down), left to right, top to bottom, each object on the table edge:
+1 how deep, thrift: a coin purse tied with three knots, a moth fluttering out of it.
+2 how deep, balance: brass scales with a feather on one pan and an anvil on the other, somehow perfectly level.
+3 how deep, quality: a gem on a small anvil polished to a blinding sparkle, tiny sunglasses lying beside it.
+4 the build starts, at once: a small rocket strapped to a playing card, its fuse already sparking.
+5 the build starts, in 30 minutes: a candle a third burnt down, a snail racing it along the table.
+6 the build starts, in 2 hours: a very tall fresh candle, a spider just starting a web at its base.
+7 the build starts, tonight: a little forge on the table, a crescent moon in a nightcap hanging above its chimney.
+8 the build starts, by hand: a human hand pulling a big wooden lever with a small red knob.
+9 the night, off: a blacksmith's hammer tucked into a tiny bed under a blanket, wearing a nightcap.
+10 the night, ideas and specs: a scroll beside a lit candle, round spectacles resting on the scroll.
+11 the night, builds: an anvil glowing under a few stars, a hammer swinging all by itself mid-strike.
+12 the night, proposals: a lantern beside an open sack spilling small glowing lightbulb-shaped ideas, tiny tiptoe footprints leading away.
+13 lands in dev by itself, on: a little mine cart rolling down a short track on its own, a playing card riding in it like a passenger.
+14 lands in dev by itself, off: the same mine cart stopped by a brick, a clamp on its wheel.
 15 push, no: a wooden chest with an absurd number of padlocks.
-16 push, main only: one determined carrier pigeon with one sealed letter.
-17 push, dev and main: two carrier pigeons tangled together with two letters.
+16 push, main only: one determined carrier pigeon standing on the table with one sealed letter.
+17 push, dev and main: two carrier pigeons tangled together with two sealed letters.
 18 goals at once, one: one crate on a tiny hand cart.
 19 goals at once, a few: three crates stacked neatly.
-20 goals at once, many: an absurdly tall tower of crates wobbling.
+20 goals at once, many: an absurdly tall tower of crates, wobbling.
 ```
 
 ## Sheet 3: a leader's settings (10, a 5 × 2 grid)
