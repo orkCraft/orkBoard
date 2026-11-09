@@ -33,7 +33,7 @@ def test_with_nothing_picked_the_board_is_as_it_was_and_a_goal_picked_draws_its_
         assert placed == {"m1": "tech", "m2": "design", "m3": "tech", "m4": "product"}, "each task stands in the lane of the leader whose work it is"
         assert pg.locator('.table-card[data-goal="timer"]').count() == 0, "another goal's tasks are not drawn"
         assert pg.locator(".table-lane--first").count() == 0 and pg.locator(".table-goal").count() == 0, "its tasks, no strips of other goals"
-        assert [p for p in pg.locator('.table-lane[data-party="release"]').all_inner_texts()] == ["Nothing for Release"]
+        assert [p for p in pg.locator('.table-lane[data-party="release"]').all_inner_texts()] == ["Its step comes when the step before it is accepted"], "Release is on the route and has no task yet: its step is a placeholder (spec 168 C3)"
         order = pg.eval_on_selector_all('.table-lane[data-party="tech"] [data-plan-task]', "els => els.map((e) => e.dataset.planTask)")
         assert order == ["m1", "m3"], "the order the plan runs them"
     finally:
