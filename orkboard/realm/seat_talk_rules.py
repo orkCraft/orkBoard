@@ -2,6 +2,7 @@
 from orkboard.realm import seat_question_rules as idea_questions, seat_lens_rules as idea_objections
 from orkboard.realm.seat_talk_limits_rules import LINE, MAX_BETTER, MAX_GOAL, MAX_NEEDS, MAX_PROJECT, MAX_WAYS
 from orkboard.realm.idea_words import CARD_RULE
+from orkboard.realm import way_kinds
 
 CARDS = ("Each question is a card for the person: two to four real choices taken from what the project holds (a container, a screen, a fact above), never from what is "
          "common and never padded to fill four; `pick` is the index of the one you recommend and `why` says why in one line; `blocks` is true only when your party "
@@ -16,7 +17,7 @@ def project_rules(tail: str = "") -> tuple[str, str]:
     return (f"\n- This is your party's first goal in this project: also ask at most {MAX_PROJECT} questions about the project itself that your party cannot work "
             f"without and no fact above answers (`project_questions`: each with a `key`, a lowercase name of one to forty letters, digits and underscores, e.g. "
             f"stack or runs_on).{tail}",
-            ',\n "project_questions": [{"key": "stack", "ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "lines": ["…", "…"], "blocks": false}]')
+            ',\n "project_questions": [{"key": "stack", "ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "lines": ["…", "…"], "kinds": ["…", "…"], "blocks": false}]')
 
 
 def rules(craft: str = "", *, mine: str = "your party", second: bool = False, for_rule: str = "", project: tuple[str, str] = ("", ""), after: tuple[str, str] = ("", ""),
@@ -38,7 +39,7 @@ A worse thing than a needless goal is one you let through in silence.
 - If this goal rests on something no one has shown, say it in `assumes`: `{{"text": "what it rests on", "signal": "what would show it"}}`, a line each, {LINE} characters at most; else leave it out.
 - Ask at most {MAX_GOAL} questions about the goal. {cards}{project[0]}{weight[0]}{prop[0]}
 - `needs` (at most {MAX_NEEDS}, optional): what the person must settle that no fact above settles. Each has a `kind` (`risk`, `conflict` or `question`), a `line` ({LINE} characters at most), what it \
-`rests_on` (the slug of a goal in line or in the pile above, a `§N` of a decision above, or the id of a part of your map) and at most {MAX_WAYS} `ways`, each `{{"name": "…", "line": "…"}}`: a way out and what it does to the goal.
+`rests_on` (the slug of a goal in line or in the pile above, a `§N` of a decision above, or the id of a part of your map) and at most {MAX_WAYS} `ways`, each `{{"name": "…", "line": "…", "way_kind": "…"}}`: a way out and what it does to the goal; `way_kind` is its kind ({", ".join(way_kinds.KINDS)}).
 - `better` (at most {MAX_BETTER}, optional): a line of the goal rewritten so that it serves your party better, each `{{"line": "…", "weight": "same"}}`, `weight` being `lighter`, `same` or `heavier`: the work it makes against the goal as it stands.
 - `second_round` is true only when the answers to your questions may open a question your party cannot start without; else false."""
 

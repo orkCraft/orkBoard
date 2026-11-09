@@ -23,7 +23,7 @@ from __future__ import annotations
 import datetime as dt
 from pathlib import Path
 
-from orkboard.realm import idea_questions, ideas
+from orkboard.realm import idea_questions, ideas, way_kinds
 
 FILE = "say.json"
 MAX_JUDGED = 2                    # the leaders judge again twice at most, then a hearing (decisions §283.25)
@@ -50,8 +50,12 @@ def save(state_dir: Path, slug: str, rec: dict) -> None:
     ideas._write_json(ideas.state_folder(state_dir, slug) / FILE, rec)
 
 
+def _stances_of(talk: dict) -> list[dict]:
+    return [s for s in talk.get("stances") or [] if isinstance(s, dict) and s.get("party")]
+
+
 def _stances(state_dir: Path, slug: str) -> list[dict]:
-    return [s for s in idea_questions.record(state_dir, slug).get("stances") or [] if isinstance(s, dict) and s.get("party")]
+    return _stances_of(idea_questions.record(state_dir, slug))
 
 
 def items(state_dir: Path, slug: str) -> dict[str, dict]:
@@ -74,27 +78,32 @@ def _legacy(talk: dict, party: str) -> list[dict]:
     for c in talk.get("waiting") or []:
         if isinstance(c, dict) and c.get("by") == party:
             lines = c.get("lines") if isinstance(c.get("lines"), list) and len(c.get("lines")) == len(c.get("choices") or []) else [""] * len(c.get("choices") or [])
+            kinds = way_kinds.of_card(c)
             out.append({"id": c["id"], "kind": "question", "line": c.get("why") or c.get("q") or "", "title": c.get("q") or "", "rests_on": "", "legacy": True, "state": "open", "way": None,
-                        "ways": [{"name": str(ch), "line": str(ln)} for ch, ln in zip(c.get("choices") or [], lines)], "pick": c.get("pick"), "blocks": False})
+                        "ways": [{"name": str(ch), "line": str(ln), "way_kind": k} for ch, ln, k in zip(c.get("choices") or [], lines, kinds)], "pick": c.get("pick"), "blocks": False})
     for key, state in (("answers", "taken"), ("defaults", "left")):
         for a in talk.get(key) or []:
             if isinstance(a, dict) and a.get("by") == party and a.get("id"):
                 out.append({"id": a["id"], "kind": "question", "line": a.get("why") or a.get("q") or "", "title": a.get("q") or "", "rests_on": "", "legacy": True, "state": state, "way": 0,
-                            "ways": [{"name": str(a.get("answer") or ""), "line": ""}], "pick": None, "blocks": False})
+                            "ways": [{"name": str(a.get("answer") or ""), "line": "", "way_kind": way_kinds.OTHER}], "pick": None, "blocks": False})
     return out
 
 
 def _row(it: dict, say: dict) -> dict:
     a = say["answers"].get(it["id"]) or {}
-    return {**it, "legacy": False, "state": a.get("state") or "open", "way": a.get("way"), "written": a.get("written") is True}
+    ways = [{**w, "way_kind": way_kinds.clean(w.get("way_kind"))} for w in it["ways"] if isinstance(w, dict)] if isinstance(it.get("ways"), list) else None     # an old need's ways have no kind: `other`
+    return {**it, **({"ways": ways} if ways is not None else {}), "legacy": False, "state": a.get("state") or "open", "way": a.get("way"), "written": a.get("written") is True}
 
 
 def leaders(state_dir: Path, slug: str) -> list[dict]:
     """Per leader that has spoken (the route's order; Product weighing a goal it is not routed on, `weigher`, speaks too): `{party, leader, craft, weigher, verdict, why, instead, after, priority,
     risk, needs: [need], better: [better]}`. A need is `{id, kind, line, rests_on, ways, legacy, state, way}`, a better `{id, line, weight, state, written}`, `state` "open" · "taken" · "left"."""
-    talk, say = idea_questions.record(state_dir, slug), record(state_dir, slug)
-    out = []
-    for s in _stances(state_dir, slug):
+    talk = idea_questions.record(state_dir, slug)
+    stances = _stances_of(talk)
+    if not stances:                                         # no leader has spoken: the Board's map asks this of every goal, so read nothing more
+        return []
+    say, out = record(state_dir, slug), []
+    for s in stances:
         out.append({"party": s["party"], "leader": s.get("leader") or "", "craft": s.get("craft") or "", "weigher": s.get("weigher") is True, "verdict": s.get("verdict") or "go",
                     "why": s.get("why") or "", "instead": s.get("instead") or "", "after": s.get("after") or "", "priority": s.get("priority") or "", "risk": s.get("risk") or "",
                     "needs": [_row(n, say) for n in s.get("needs") or [] if isinstance(n, dict) and n.get("id")] + _legacy(talk, s["party"]),

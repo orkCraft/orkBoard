@@ -1,6 +1,6 @@
 // The Orkmaster's tab with a goal picked (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md F.1, decisions §206.4): the Board shows **that goal's plan alone**, its tasks in their leaders' lanes (the party a task is the work of: the snapshot's task
 // `party`, else the goal's own), every other goal's out of sight; **planned ones faint, done ones grey, the one at work glowing** (the task card's own flame), and **arrows** from each task to the tasks that wait for it (planarrows.js). The tasks lie in
-// each lane in the order the plan runs them (the wave they wait in, then as written). A goal with no plan yet, still in Talk, lays in each leader's lane what that leader said (its verdict, its lines) and the open question with its ways in the asking leader's lane (decisions §270.4; read-only); with nothing said yet it says *Its tasks are dealt to the leaders when it is agreed* in the lanes' place. Only with the column pinned (the wide width): the narrow
+// each lane in the order the plan runs them (the wave they wait in, then as written). **A leader of the route whose step has no tasks yet lays a placeholder** (*Its step comes when the step before it is accepted*: the engine plans a later party's step only then, decisions §283.14); a goal with no plan yet says *Its tasks are dealt to the leaders when it is agreed* in the lanes' place. A goal still in Talk or in its spec has the Orkmaster's tables of stageboard.js. Only with the column pinned (the wide width): the narrow
 // width keeps the Board as it is. Nothing here changes a task: a press lifts it (card.js), as on the Board.
 import { raceOf } from "./felt.js";
 import { useRef } from "preact/hooks";
@@ -8,10 +8,10 @@ import { html, cls } from "../html.js";
 import { isLive, nameOf, partiesNow, wide } from "./data.js";
 import { TaskCard } from "./card.js";
 import { PlanArrows } from "./planarrows.js";
-import { board } from "../board/store.js";
-import { useKept, standing } from "./talkpage.js";
+import { leadersOf } from "./stageboard.js";
 
 export const NONE_YET = "Its tasks are dealt to the leaders when it is agreed";
+export const LATER = "Its step comes when the step before it is accepted";      // a later leader's step: the engine plans it when the step before it is accepted (decisions §283.14)
 
 /** How far a task of the plan is: *done* (merged), *work* (started and not merged, or asking), else *planned* (it waits for its turn). */
 export const planPhase = (t) => (t.state === "merged" ? "done" : ["running", "testing", "review", "picking", "failed"].includes(t.state) ? "work" : "planned");
@@ -22,41 +22,20 @@ function laneOf(n, t, lanes) {
   return has(t.party) ? t.party : has(n.goal) ? n.goal : lanes[0]?.slug || "";
 }
 
-const VERDICT = { go: "Go", doubt: "Doubt", no: "No" };
-
-/** One leader's say in Talk, read-only, in its lane: its verdict, its stance, *For* and *Against* as it wrote them, and its questions with their ways (the leader's pick marked). */
-function Said({ st }) {
-  return html`<section class="plan-talk" data-said=${st.party} aria-label="What the leader said">
-    ${st.verdict && html`<span class="ork-label plan-talk__verdict" data-verdict=${st.verdict}>${VERDICT[st.verdict]}</span>`}
-    ${st.stance && html`<p class="body plan-talk__line">${st.stance}</p>`}
-    ${st.for && html`<p class="plan-talk__side"><span class="ork-label">For</span> ${st.for}</p>`}
-    ${st.against && html`<p class="plan-talk__side"><span class="ork-label">Against</span> ${st.against}</p>`}
-    ${(st.questions || []).map((c) => html`<div key=${c.id + c.q} class="plan-talk__ask" data-ask=${c.id} data-state=${c.state || "waiting"}>
-      <p class="body plan-talk__q">${c.q}</p>
-      <ul class="plan-talk__ways">${c.choices.map((x, i) => html`<li key=${x} data-pick=${i === c.pick ? "1" : undefined}>${i === c.pick ? "● " : ""}${x}</li>`)}</ul>
-      ${c.why && html`<p class="cap plan-talk__why">${c.why}</p>`}
-      ${c.state && c.state !== "waiting" && html`<p class="cap">${standing(c)}</p>`}
-    </div>`)}
-  </section>`;
-}
-
 /** The goal `n`'s plan over the lanes. */
 export function PlanBoard({ n }) {
   const host = useRef(), lanes = partiesNow(), tasks = (n.tasks || []).filter((t) => t.state !== "dropped");
   const order = [...tasks].map((t, i) => ({ t, i })).sort((a, b) => (a.t.wave || 1) - (b.t.wave || 1) || a.i - b.i).map(({ t }) => t);
-  const row = (board.value?.needs_you || []).find((r) => r.kind === "talk" && r.idea === n.slug);
-  const kept = useKept(tasks.length === 0 ? n.slug : "", row ? (row.questions || []).map((c) => c.id).join("|") : "");
-  const said = (g) => (kept?.stances || []).filter((s) => s.party === g.slug && (s.verdict || s.stance || s.for || s.against || (s.questions || []).length));
-  const talked = lanes.some((g) => said(g).length);
-  const mine = (g) => order.filter((t) => laneOf(n, t, lanes) === g.slug);
+  const mine = (g) => order.filter((t) => laneOf(n, t, lanes) === g.slug), route = leadersOf(n);
   return html`<div class="table-board table-board--plan" ref=${host} data-picked=${n.slug} data-plan=${n.slug} data-tokens="false">
     ${lanes.map((g) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} data-live=${wide.value && isLive(g) ? "1" : undefined} role="group" aria-label=${nameOf(g)} data-race=${raceOf(g) || undefined}>
-      ${tasks.length === 0 && said(g).map((st) => html`<${Said} key=${st.party} st=${st} />`)}
       ${mine(g).map((t) => html`<div key=${t.id} class=${cls("plan-slot", `is-${planPhase(t)}`)} data-plan-task=${t.id} data-phase=${planPhase(t)}><${TaskCard} n=${n} t=${t} /></div>`)}
-      ${tasks.length > 0 && mine(g).length === 0 && html`<p class="table-board__none plan-none" data-none=${g.slug}>Nothing for ${nameOf(g)}</p>`}
+      ${tasks.length > 0 && mine(g).length === 0 && (route.includes(g.slug)
+        ? html`<p class="sb-later" data-later=${g.slug}>${LATER}</p>`
+        : html`<p class="table-board__none plan-none" data-none=${g.slug}>Nothing for ${nameOf(g)}</p>`)}
     </div>`)}
     <div class="table-lane table-lane--free"></div>
-    ${tasks.length === 0 && !talked && html`<p class="table-board__none plan-wait" data-state=${n.state}>${NONE_YET}</p>`}
+    ${tasks.length === 0 && html`<p class="table-board__none plan-wait" data-state=${n.state}>${NONE_YET}</p>`}
     ${tasks.length > 0 && html`<${PlanArrows} host=${host} tasks=${order} />`}
   </div>`;
 }

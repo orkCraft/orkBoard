@@ -104,7 +104,7 @@ def test_a_goal_type_is_what_kind_of_goal_a_leader_deals_spec_52():
 def test_the_lines_of_stage_and_goal_type_say_what_the_leader_and_the_team_decide_spec_59():
     """Spec 59 §0: a stage is worded by its leader; a goal type is what a party's team can take on. (The glossary's lines are the comments of `TERMS`.)"""
     from pathlib import Path
-    source = Path(lexicon.__file__).read_text(encoding="utf-8")
+    source = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES)
     stage = next(l for l in source.splitlines() if l.lstrip().startswith('_t("stage"'))
     goal_type = next(l for l in source.splitlines() if l.lstrip().startswith('_t("goal_type"'))
     assert "its leader words them" in stage and "Concept, Build, Playtest" in stage and "Planning, Implementation, Checking" in stage
@@ -117,7 +117,7 @@ def test_a_plan_change_is_the_leaders_re_plan_of_what_is_left_spec_62():
     assert lexicon.term("plan_change") == "plan change" and lexicon.term("plan_change", many=True) == "plan changes"
     assert {key: (word, was) for key, word, was in lexicon.glossary()}["plan_change"] == ("plan change", "")
     from pathlib import Path
-    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("plan_change"'))
+    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("plan_change"'))
     assert "spec 62" in line and "Take the new plan" in line and "plan_change.json" in line
     assert lexicon.words("Take the new plan") == "Take the new plan" and lexicon.words("The plan changes · +2") == "The plan changes · +2"
 
@@ -130,7 +130,7 @@ def test_a_route_a_release_and_out_are_the_words_of_spec_67_and_the_skeleton_is_
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
     assert all(rows[k][1] == "" for k in ("idea_route", "release", "release_out", "race.skeleton"))
     from pathlib import Path
-    lines = {k: next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith(f'_t("{k}"'))
+    lines = {k: next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith(f'_t("{k}"'))
              for k in ("idea_route", "release", "release_out", "race.skeleton")}
     assert all("spec 68" in line for line in lines.values()) and "orkUI 0.5.0" in lines["race.skeleton"]
 
@@ -141,7 +141,7 @@ def test_the_orkmaster_and_the_projects_level_are_the_words_of_spec_70():
     assert lexicon.term("orkmaster") == "Orkmaster" and lexicon.term("project_level") == "The project"
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
     assert rows["orkmaster"] == ("Orkmaster", "") and rows["project_level"] == ("The project", "")
-    lines = {k: next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith(f'_t("{k}"'))
+    lines = {k: next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith(f'_t("{k}"'))
              for k in ("orkmaster", "project_level")}
     assert all("spec 70" in line for line in lines.values()) and "plans nothing" in lines["orkmaster"]
 
@@ -150,7 +150,7 @@ def test_a_collision_is_the_word_of_spec_71():
     """Spec 71 §0: two goals of different parties that change the same thing."""
     from pathlib import Path
     assert lexicon.term("collide") == "collision" and lexicon.term("collide", many=True) == "collisions"
-    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("collide"'))
+    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("collide"'))
     assert "spec 71" in line and "same thing" in line
 
 
@@ -160,7 +160,7 @@ def test_a_partys_size_and_what_the_project_is_are_the_words_of_spec_75():
     assert (lexicon.term("party_size"), lexicon.term("party_size", many=True)) == ("size", "sizes") and lexicon.term("project_kind") == "what the project is"
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
     assert rows["party_size"][1] == "" and rows["project_kind"][1] == ""
-    lines = {k: next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith(f'_t("{k}"'))
+    lines = {k: next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith(f'_t("{k}"'))
              for k in ("party_size", "project_kind")}
     assert all("spec 75" in line for line in lines.values())
     assert lexicon.words("Its size: Lean, Standard or Full") == "Its size: Lean, Standard or Full"
@@ -171,7 +171,7 @@ def test_an_asset_is_the_word_of_spec_88():
     from pathlib import Path
     assert (lexicon.term("asset"), lexicon.term("asset", many=True)) == ("asset", "assets")
     assert {key: (word, was) for key, word, was in lexicon.glossary()}["asset"] == ("asset", "")
-    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("asset"'))
+    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("asset"'))
     assert "spec 88" in line and "see or hear" in line
     assert lexicon.words("Assets · Art and icons") == "Assets · Art and icons"
 
@@ -181,7 +181,7 @@ def test_a_view_is_one_map_of_a_leaders_lens_the_word_of_spec_89():
     from pathlib import Path
     assert (lexicon.term("lens_view"), lexicon.term("lens_view", many=True)) == ("view", "views")
     assert {key: (word, was) for key, word, was in lexicon.glossary()}["lens_view"] == ("view", "")
-    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("lens_view"'))
+    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("lens_view"'))
     assert "spec 89" in line and "System" in line
     assert lexicon.words("System · Board · Since your last look") == "System · Board · Since your last look"
 
@@ -191,7 +191,7 @@ def test_a_container_is_a_part_that_runs_on_its_own_the_word_of_spec_90():
     from pathlib import Path
     assert (lexicon.term("container"), lexicon.term("container", many=True)) == ("container", "containers")
     assert {key: (word, was) for key, word, was in lexicon.glossary()}["container"] == ("container", "")
-    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("container"'))
+    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("container"'))
     assert "spec 90" in line and "runs on its own" in line
     assert lexicon.words("Shared · Ways in · HTTP: 3 routes · socket: 2 events") == "Shared · Ways in · HTTP: 3 routes · socket: 2 events"
 
@@ -210,7 +210,7 @@ def test_the_table_and_the_hand_are_the_words_of_spec_98():
     assert lexicon.words("a lens, a view, a pitch_view") == "a lens, a view, a pitch_view"
     assert lexicon.term("lane", many=True) == "lanes"
     from pathlib import Path
-    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    lines = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines()
     for key in (*keys, "map"):
         line = next(l for l in lines if l.lstrip().startswith(f'_t("{key}"'))
         assert "#" in line, key
@@ -224,7 +224,7 @@ def test_the_deck_is_in_line_and_a_goals_tasks_are_a_cascade_spec_101():
     assert lexicon.term("cascade", many=True) == "cascades"
     assert lexicon.words("the deck") == "the in line" and lexicon.words("Deck") == "In line"          # an old spelling is said in today's word
     from pathlib import Path
-    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    lines = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines()
     for key in ("in_line", "cascade"):
         assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
 
@@ -244,7 +244,7 @@ def test_the_route_and_the_phases_are_the_words_of_spec_99_c():
     assert lexicon.term("route", many=True) == "routes" and lexicon.term("step", many=True) == "steps" and lexicon.term("fork", many=True) == "forks"
     assert lexicon.term("stage") == "stage" and lexicon.term("project_stage") == "stage"          # a party's stage (spec 48) and the project's (spec 99 §1) are two concepts
     from pathlib import Path
-    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    lines = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines()
     for key in keys:
         assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
     assert lexicon.words("the route, Talk, Spec, Work and Done") == "the route, Talk, Spec, Work and Done"      # nothing changes: these have no old spelling
@@ -262,7 +262,7 @@ def test_the_inbox_and_the_taken_are_the_words_of_spec_136():
     assert lexicon.words("a lens, a view, a pitch_view") == "a lens, a view, a pitch_view"
     assert lexicon.term("inbox", many=True) == "inboxes"
     from pathlib import Path
-    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    lines = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines()
     for key in keys:
         assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
 

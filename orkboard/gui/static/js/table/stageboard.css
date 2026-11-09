@@ -1,0 +1,32 @@
+/* The Orkmaster's tables by stage (spec 168 C3, decisions §283.16; stageboard.js): two card sizes only, 144 x 202 and 56 x 78. Layout only: the faces, frames, colours and signs are orkUI's and the party's colour is look.css'. */
+.sb { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.sb > .table-board { flex: 1; }
+.sb-plate { flex: none; display: flex; align-items: center; gap: var(--ork-4); box-sizing: border-box; margin: 0 var(--ork-4) var(--ork-2); padding: var(--ork-2) var(--ork-4); }
+.sb-plate__steps { display: flex; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; }
+.sb-plate__steps li { display: flex; line-height: 0; }
+.sb-plate .phase-route__words { margin: 0; }
+.sb-plate__cost { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.sb-said { display: flex; align-items: flex-start; gap: var(--ork-3); width: 100%; min-width: 0; }
+.sb-said__words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-1); overflow-wrap: anywhere; }
+.sb-said__verdict { font: var(--ork-type-caption); font-weight: 600; }
+.sb-said__why { color: var(--ork-ink-muted); font: var(--ork-type-caption); display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.ork-card.sb-back { position: relative; flex: none; box-sizing: border-box; width: 56px; height: 78px; padding: 0; overflow: hidden; cursor: pointer; background: none; border: 0; }
+.sb-back .ork-card-back { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
+.sb-back:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 1px; }
+.sm-pic .verdict { transform: scale(2); }                         /* the verdict's 14 px sign at 28 px: a whole step up */
+.sb-slot { width: min(var(--card-w, 144px), 100%); flex: none; }
+.sb-spec { display: flex; flex-direction: column; box-sizing: border-box; width: 100%; text-align: left; position: relative; cursor: pointer; }
+.sb-spec.sb-spec--back { padding: 0; background: none; border: 0; }
+.sb-spec.table-card.ork-card { height: 202px; aspect-ratio: auto; overflow: hidden; }
+.sb-spec__win.table-card__win { flex: 1; min-height: 0; height: auto; align-items: flex-start; justify-content: flex-start; padding: var(--ork-2); overflow: hidden; }
+.sb-spec__lines { margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.sb-spec--back .ork-card-back { width: 100%; }
+.sb-spec--back:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 1px; }
+.sb-spec__say { position: absolute; left: 0; right: 0; top: 100%; margin-top: var(--ork-1); text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); pointer-events: none; }      /* under the back, not on its ring */
+/* the project's lane: a row of small cards for each stage over the cascade */
+.sb-rows { display: flex; flex-direction: column; gap: var(--ork-3); align-self: stretch; }
+.sb-row { display: flex; flex-direction: column; gap: var(--ork-1); }
+.sb-row__label { color: var(--ork-ink-muted); }
+.sb-row__cards { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+/* a later leader's step on the plan, until the step before it is accepted */
+.sb-later { box-sizing: border-box; width: min(var(--card-w, 144px), 100%); aspect-ratio: 5 / 7; display: grid; place-items: center; padding: var(--ork-3); margin: 0; border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; overflow-wrap: anywhere; }

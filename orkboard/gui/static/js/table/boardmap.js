@@ -10,6 +10,7 @@ import { mapData } from "../shell/store.js";
 import { isLive, laneOf, lineNow, nameOf, ownOf, partiesNow, wide } from "./data.js";
 import { GoalBlock, Line, OwnBlock } from "./cascade.js";
 import { PlanBoard } from "./planboard.js";
+import { StageRows, hasRows } from "./stageboard.js";
 import { raceOf } from "./felt.js";
 import "./line.js";
 
@@ -49,7 +50,8 @@ export function BoardMap({ parties, narrow, column = false }) {
       <${Line} line=${line} tokens=${tokens} />
     </div>`}
     ${lanes.map(({ g, goals }) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} data-live=${wide.value && isLive(g) ? "1" : undefined} role="group" aria-label=${nameOf(g)} data-race=${raceOf(g) || undefined} data-empty=${goals.length ? undefined : ""}>
-      ${!goals.length && html`<p class="table-lane__free ork-plate" data-free=${g.slug}>${freeWords(g)}</p>`}
+      ${column && html`<${StageRows} g=${g} />`}
+      ${!goals.length && !(column && hasRows(g)) && html`<p class="table-lane__free ork-plate" data-free=${g.slug}>${freeWords(g)}</p>`}
       ${goals.map(({ n, tasks }) => html`<${GoalBlock} key=${n.slug} n=${n} tasks=${tasks} tokens=${tokens} />`)}
     </div>`)}
     <div class="table-lane table-lane--free">${none && html`<p class="table-board__none"><span class="ork-plate">Nothing is at work</span></p>`}</div>

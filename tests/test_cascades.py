@@ -152,7 +152,7 @@ def test_the_words_of_b_are_kept_in_the_lexicon_and_the_step_has_its_tables():
                       ("answer_the_fork_first", "Answer the fork first")):
         assert rows[key] == (word, ""), key
     from pathlib import Path
-    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    lines = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines()
     for key in ("cascade", "proposes", "agrees", "disagrees", "stopped_after_steps", "agree_line", "answer_the_fork_first"):
         assert "#" in next(line for line in lines if line.lstrip().startswith(f'_t("{key}"')), key
     for target in idea_target.TARGETS:

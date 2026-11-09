@@ -39,7 +39,7 @@ export function rowOf(limits, wanted, levelOf, max = ROW_MAX) {
 /** The 5 hours' share a bottle says under it: *out* while a window is at 0, else the share. */
 export const fiveOf = (p) => (p.dry ? "out" : p.share);
 
-/** One bottle of the row: orkUI's small potion in its size, its shares under it (the week's too under a bottle smaller than the large). */
+/** One bottle of the row: orkUI's small potion in its size, its tool's mark on its neck as its cork (as the drum's front wore it, §261.13), its shares under it (the week's too under a bottle smaller than the large). */
 function Bottle({ l, p, front, from, tools }) {
   const small = p.size !== "large" && p.weekShare, style = `--ork-potion-left:${p.liquid}${p.took ? `;--ork-potion-spend:${p.spend}` : ""}`;
   const mark = () => { markedTool.value = l.provider; markedDefault.value = front; litTool.value = l.provider; };
@@ -47,7 +47,7 @@ function Bottle({ l, p, front, from, tools }) {
   return html`<button type="button" class=${cls(`pot-s is-${p.level}`, { "is-front": front, "is-dry": p.dry })} data-provider=${l.provider} data-level=${p.level} data-size=${p.size} data-front=${front ? "1" : undefined}
       title=${p.words} aria-label=${p.words} onClick=${tools ? () => toggleLift(`${TOOL}${l.provider}`) : () => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}
       onPointerEnter=${mark} onPointerLeave=${unmark} onFocus=${mark} onBlur=${unmark}>
-    ${p.read ? html`<span class=${cls("ork-potion small", { [`size-${p.size}`]: p.size !== "large", "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${style} aria-hidden="true"></span>`
+    ${p.read ? html`<span class="pot-s__bottle" aria-hidden="true"><span class="pot-s__cork"><${Who} l=${l} /></span><span class=${cls("ork-potion small", { [`size-${p.size}`]: p.size !== "large", "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${style}></span></span>`
       : html`<span class="pot-s__none" aria-hidden="true"><${Who} l=${l} /></span>`}
     <span class="pot-s__cap"><b class="pot-s__five">${p.read ? fiveOf(p) : ""}</b>${small && html`<span class="pot-s__week">week</span><span class="pot-s__week">${p.weekShare}</span>`}</span>
   </button>`;

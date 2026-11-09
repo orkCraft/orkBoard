@@ -152,7 +152,7 @@ def test_the_row_is_the_leaders_stack_of_two_or_three_cards_where_the_files_say_
     assert row["kind"] == "project_q" and row["party"] == product and row["leader"] == "product-manager" and len(row["questions"]) == 3
     c = row["questions"][0]
     assert c == {"id": "project-for_whom", "by": product, "leader": "product-manager", "q": "Question for_whom?", "choices": ["Friends at one TV", "Players online"], "pick": 0,
-                 "why": "because", "project": True}
+                 "why": "because", "project": True, "kinds": ["other", "other"]}
     assert [q["id"] for q in row["questions"]] == ["project-for_whom", "project-hurts", "project-leaves_out"] and all(2 <= len(q["choices"]) <= 4 for q in row["questions"])
     assert row["blocks"] is False and "idea" not in row and row["text"] == "Question for_whom?"
 

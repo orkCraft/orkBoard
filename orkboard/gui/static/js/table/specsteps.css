@@ -1,0 +1,24 @@
+/* A spec through a leader (docs/specs/168 C4, decisions §283.16.6; specsteps.js): the header of its steps' small cards with their seats, a seat whose tool cannot do what the step needs marked !, then the parts it changes, now and as they
+   will be. Layout only: every colour, face and size of a card or a sign is orkUI's; the small card is 56 x 78 (smallcard.css), no other size is made here. */
+.spec-steps { display: flex; flex-wrap: wrap; gap: var(--ork-4) var(--ork-6); list-style: none; margin: 0 0 var(--ork-5); padding: 0; }
+.spec-step { display: flex; align-items: flex-start; gap: var(--ork-3); min-width: 0; }
+.spec-step.is-mine .spec-step__nm { color: var(--ork-ink); }
+.spec-step__who { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.spec-step__nm { font: var(--ork-type-body); font-weight: 600; color: var(--ork-ink-read); }
+.spec-step__seats { display: flex; flex-direction: column; gap: var(--ork-1); list-style: none; margin: 0; padding: 0; }
+.spec-seat { display: inline-flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; }
+.spec-seat .ork-race__head { width: auto; height: 16px; flex: none; }
+.spec-seat__lack { display: inline-flex; color: var(--ork-ink); }
+.spec-seat.is-lacking .spec-seat__tool { text-decoration: underline dotted; }
+.spec-parts { margin-bottom: var(--ork-5); }
+.spec-parts__hd { display: grid; grid-template-columns: 1fr 32px 1fr; gap: var(--ork-3); margin-bottom: var(--ork-2); }
+.spec-parts__hd .ork-label:last-child { grid-column: 3; }
+.spec-parts__list { display: flex; flex-direction: column; gap: var(--ork-3); list-style: none; margin: 0; padding: 0; }
+.spec-part { display: grid; grid-template-columns: 1fr 32px 1fr; align-items: center; gap: var(--ork-3); }
+.spec-part > .gv-pair { grid-column: 2; }
+.spec-part__now, .spec-part__will { display: flex; flex-direction: column; gap: var(--ork-1); box-sizing: border-box; min-width: 0; padding: var(--ork-3); border: var(--ork-line) solid var(--ork-frame); overflow-wrap: anywhere; }
+.spec-part__arrow { text-align: center; color: var(--ork-ink-muted); }
+.spec-part.is-new .spec-part__will { border-style: dashed; color: var(--ork-ink-muted); }          /* a ghost: it is not there yet */
+.spec-part.is-changed .spec-part__will { border-color: var(--ork-ink); }                            /* outlined: it changes */
+.spec-part.is-gone .spec-part__will { color: var(--ork-ink-faint); }                                 /* struck through: it goes */
+.spec-part.is-gone .spec-part__nm s { text-decoration-thickness: 2px; }

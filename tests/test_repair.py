@@ -470,7 +470,7 @@ def test_the_machines_command_is_a_setting_with_a_default_that_survives_a_round_
 
 def test_the_glossary_has_the_fix():
     assert lexicon.term("fix") == "Fix" and lexicon.term("fix", many=True) == "Fixes"
-    assert "Claude Code" in Path(lexicon.__file__).read_text(encoding="utf-8").split('_t("fix"')[1].splitlines()[0]
+    assert "Claude Code" in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).split('_t("fix"')[1].splitlines()[0]
 
 
 # -- the host (§3.1 to §3.3) ------------------------------------------------------------------------------------

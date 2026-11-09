@@ -200,6 +200,10 @@ def test_three_bottles_at_most_stand_in_the_row_tops_on_one_line_and_hovered_eve
         assert seen[1:] == [t for t in tools if t != front][: len(seen) - 1], "then the person's order (none is at the warn or the danger level)"
         tops = pg.locator(".pots__row .ork-potion").evaluate_all("els => els.map((e) => e.getBoundingClientRect().top)")
         assert len(set(tops)) == 1, tops                                                                                       # their tops are on one line
+        bottles = pg.locator(".pots__row .pot-s").all()
+        assert all(b.locator(".pot-s__cork .ork-mark, .pot-s__cork .hand-pot__initial").count() == 1 for b in bottles), "each bottle wears its tool's mark as its cork"
+        corks = pg.locator(".pots__row .pot-s__cork").evaluate_all("els => els.map((e) => e.getBoundingClientRect().top)")
+        assert len(set(corks)) == 1, corks                                                                                     # the corks on one line, as the tops
         assert pg.locator(".pots__row .ork-potion").evaluate_all("els => els.every((e) => e.offsetWidth <= 28 && e.offsetHeight <= 36)")      # orkUI's .small: 2 px a cell, 28 × 36 at most
         assert pg.locator(".pots").evaluate("e => e.closest('.release-lane__head') !== null")
         b = pg.locator(".pots__row").bounding_box()
