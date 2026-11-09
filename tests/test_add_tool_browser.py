@@ -31,10 +31,10 @@ def fill_hand(host, *ids):
 
 def unroll(pg):
     """The wide width's tools lie in the row the drum unrolls into (spec 156 E.5): the pointer rests on the drum."""
-    pg.locator(".hand-mana__drum").wait_for(timeout=WAIT_MS)
-    b = pg.locator(".hand-mana__drum").bounding_box()
+    pg.locator(".pots__row").wait_for(timeout=WAIT_MS)
+    b = pg.locator(".pots__row").bounding_box()
     pg.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
-    pg.locator(".hand-mana[data-open]").wait_for(timeout=WAIT_MS)
+    pg.locator(".pots[data-open]").wait_for(timeout=WAIT_MS)
 
 
 def order_of(host):
@@ -63,7 +63,7 @@ def test_the_empty_slot_is_faint_at_rest_lit_when_the_orkmaster_asks_and_gone_at
     slot = pg.locator(SLOT)
     assert slot.get_attribute("aria-label") == "Add an AI tool" and "is-lit" not in slot.get_attribute("class")
     assert pg.locator(".hand-pot").first.get_attribute("data-provider") == "claude"
-    assert pg.locator(".hand-mana__row > .hand-pot").last.get_attribute("data-empty-slot") == "1", "the row ends with it"
+    assert pg.locator(".pots__all > .hand-pot").last.get_attribute("data-empty-slot") == "1", "the row ends with it"
     fill_hand(d.host, *[t for t in ("codex", "agy", "cursor", "pi", "hermes")])
     pg.wait_for_function("(s) => !document.querySelector(s)", arg=SLOT, timeout=WAIT_MS)
     assert not d.errors, d.errors
@@ -76,6 +76,8 @@ def test_the_empty_slot_is_lit_and_the_card_comes_up_while_the_orkmaster_asks_fo
     pg.wait_for_selector(ADD, timeout=WAIT_MS)
     assert "is-lit" in pg.locator(SLOT).get_attribute("class")
     assert "Which AI tool shall the orks think with?" in pg.locator(".fo-bubble").inner_text()
+    box = pg.locator(ADD).evaluate("e => [e.offsetWidth, e.offsetHeight]")          # its layout box: the card leans, so its bounding box is wider
+    assert box == [144, 202], f"Add an AI tool is a card, 144 x 202 (spec 168 A1): {box}"
     assert not d.errors, d.errors
 
 
@@ -136,7 +138,7 @@ def test_test_and_add_turns_the_card_and_go_on_leaves_the_first_potion_framed(de
     assert d.asked == ["claude"] and "Claude Code is in your hand. Add another AI tool?" in turned.inner_text()
     pot = pg.locator('.hand-pot[data-provider="claude"]')
     pot.wait_for(state="attached", timeout=WAIT_MS)
-    assert pg.locator('.ork-drum > .ork-potion[data-provider="claude"]').count() == 1 and pg.locator(".hand-mana__label.is-front").get_attribute("data-provider") == "claude", "the first tool is the main tool: in front of the drum"
+    assert pg.locator('.pot-s[data-provider="claude"]').count() == 1 and pg.locator(".pot-s.is-front").get_attribute("data-provider") == "claude", "the first tool is the main tool: in front of the drum"
     turned.get_by_role("button", name="Add another").click()
     pg.locator(TEST).wait_for(timeout=WAIT_MS)
     pg.wait_for_function("(s) => document.querySelector(s).value === 'codex'", arg=f"{ADD} select[name=tool]", timeout=WAIT_MS)
@@ -177,10 +179,12 @@ def test_a_potions_card_orders_with_the_arrows_and_by_dragging(desk, project):
     pg.locator('.hand-pot[data-provider="codex"]').click()
     card = pg.locator('[data-lift="tool"][data-tool="codex"]')
     card.wait_for(timeout=WAIT_MS)
+    tb = card.evaluate("e => [e.offsetWidth, e.offsetHeight]")
+    assert tb == [144, 202], f"the tool's card, 144 x 202 (spec 168 A1): {tb}"
     card.locator('[data-left="1"]').click()
     pg.wait_for_function("() => document.querySelector('.hand-pot').dataset.provider === 'codex'", timeout=WAIT_MS)
     assert order_of(d.host) == ["codex", "claude", "agy"] and d.host.machine.main_tool == "codex", "the first is the main tool"
-    assert pg.locator(".hand-mana__label.is-front").get_attribute("data-provider") == "codex"
+    assert pg.locator(".pot-s.is-front").get_attribute("data-provider") == "codex"
     pg.keyboard.press("Escape")
     card.wait_for(state="detached", timeout=WAIT_MS)
     unroll(pg)

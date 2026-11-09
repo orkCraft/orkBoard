@@ -7986,3 +7986,47 @@ the bottles that have shrunk, the week explains their size where it matters, and
 4. The mockup shows it (`docs/mockups/table-template/`, its shots made again).
 
 The owner's call.
+
+## 286. Words are written in the hand's place: the card at the table's foot at the left, the field as large as the hand at its right (9 November 2026, the owner)
+
+Changes: 283.20 (the new goal's field beside its card on the table), 270.2 (the Pen's field on the table beside the question).
+
+Why: the owner, on spec 168's D: *the text field could stand in place of the hand's cards: at the left the new goal's card, at
+the right a text field the size of the hand*. While the person writes, the hand holds nothing to play: its cards would only
+sink; a field as large as the hand gives the words the room of five lines without covering the table, which stays the
+context (§270.4), and nothing changes size (§283.5). So:
+1. **Whenever the person writes words, the field takes the hand's place**: the hand's cards sink as for a lifted card (§270.3),
+   and **a field as large as the hand** (its height, from the column's right edge to the places) lies where they lay, focused at
+   once. **Its card stands whole at the table's foot, at its left** (§283.19's place), so all four of its corners show and can be
+   pressed. It holds for **a new goal** (the + card pressed: §283.20), **a quick question** (the card of the kind **?**) and
+   **the Pen** (*Your own words…* on a lifted card).
+2. **A corner pressed deals its choices to the hand in the field's place** (the rune, the kind, who, *Now* or *Later*); one
+   played, the field comes back with its words as they were.
+3. **Enter sends** (Shift+Enter a new line); **Esc** lays the card back and keeps its words as a draft; a picture or a file
+   dropped on the field is attached, and the card's window shows it (§252.4).
+4. Built by spec 168 D1 and D2.
+
+The owner's call.
+
+## 287. The cards' pictures as the owner's first sheet drew them: a way's card read picture first, the pictures in the heads' colours, a wide tile on one table edge (9 November 2026, the owner)
+
+Changes: 283.35 (the palette and the two sizes), 252.3 (the window below the hand's cut, for a way's card).
+
+Why: the owner's first sheet of pictures (`docs/pictures-wanted.md`, sheet 1), made in Gemini in three takes and laid on the
+mockup's cards (`docs/mockups/table-template/`, shots 10–12): the pictures say most when they are seen at rest in the hand, they
+are drawn in the colours of the leaders' heads they stand beside, and the third take's wide tiles on one wooden table edge read as
+one set and fill a way's window exactly. The owner: *yes*. So:
+1. **A way's card is read picture first**: its corners, its picture, then its name and its line; so in the hand, cut by the rim,
+   it shows its picture and the first words of its name at rest, and a way is told before it is read. Every other card keeps its
+   window under its title (§252).
+2. **The pictures are drawn in the leaders' heads' colours** (orkUI's races), muted and earthy, with no large area of a signal's
+   colour (the alert's yellow, the danger's red, the action's green) and no rainbow; the card's frame carries the element's colour.
+   This changes §283.35's *its greys and the element's colour*.
+3. **A tile is wide, about 1.9 : 1**, the window of a way's card (130 × 68); **every object stands on one wooden table edge** along
+   its foot, one object and at most one small joke, filling about 70% of the tile's height, a black outline, light from the top
+   left, no text. A way lives only on a big card, so it has one size; a small card's middle keeps its kind's sign, a head or what
+   is attached (§283.3). A human hand in a picture is the person's act; the orks' own act is an ork's green hand.
+4. **The sheets keep to the first**: the approved sheet is attached to every later prompt beside the heads, and `docs/pictures-
+   wanted.md` says the rules. Spec 168 J2 builds the place for them.
+
+The owner's call.

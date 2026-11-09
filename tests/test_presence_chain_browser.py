@@ -69,7 +69,8 @@ def paint(pg, token):
     return pg.evaluate("t => { const e = document.createElement('i'); e.style.color = `var(${t})`; document.body.appendChild(e); const c = getComputedStyle(e).color; e.remove(); return c; }", token)
 
 
-def test_the_head_holds_the_backpack_and_the_chain_over_discard_on_both_tabs(gui):
+def test_the_head_holds_the_potions_and_the_chain_over_discard_on_both_tabs(gui):
+    """Spec 168 A4 (decisions §285): the right column's head holds the potions at its left and the lamp's chain at its right edge (the backpack went to the hand's right end, A5)."""
     pg, errors = start(gui, "wide", DoorHost(HERE))
     try:
         for tab in ("", "tech"):
@@ -77,9 +78,11 @@ def test_the_head_holds_the_backpack_and_the_chain_over_discard_on_both_tabs(gui
                 pg.locator(f'.table-tab[data-tab="{tab}"]').click()
             head = pg.locator('.release-lane__head[data-room-things="discard"]')
             head.locator(".presence-chain").wait_for(timeout=WAIT_MS)
-            a, b, label = head.locator("[data-backpack]").bounding_box(), head.locator(".presence-chain").bounding_box(), pg.locator(".release-lane__label").bounding_box()
-            assert a["x"] < b["x"] and a["x"] > pg.viewport_size["width"] * 0.8, "the backpack at the left, the chain at the right of the column's head"
+            a, b, label = head.locator(".pots__row").bounding_box(), head.locator(".presence-chain").bounding_box(), pg.locator(".release-lane__label").bounding_box()
+            lane = pg.locator(".release-lane").bounding_box()
+            assert a["x"] < b["x"] and b["x"] + b["width"] <= lane["x"] + lane["width"] and b["x"] > pg.viewport_size["width"] * 0.9, "the potions at the left, the chain at the right edge of the column's head"
             assert max(a["y"] + a["height"], b["y"] + b["height"]) <= label["y"] + 8
+            assert head.locator("[data-backpack]").count() == 0 and pg.locator(".hand-end [data-backpack]").count() == 1
             assert pg.locator(".table-tabs__end .presence-chain, .table-tabs__end .stall-pack").count() == 0
             assert "Discard" in pg.locator(".release-lane__label").text_content()
     finally:
@@ -95,7 +98,7 @@ def test_the_lit_chain_says_here_and_its_line(gui):
         assert d.get_attribute("aria-pressed") == "true" and "is-pulled" not in d.locator(".ork-chain").get_attribute("class")
         assert d.locator(".presence-chain__word").text_content() == "Here" and d.locator(".presence-chain__line").text_content() == "until 23:00"
         assert d.get_attribute("title") == "You are here: questions come as they arise. Press to be away. (until 23:00)"
-        assert d.locator(".ork-chain").evaluate("e => e.offsetWidth") == 12, "the chain at its own size, 12 wide"
+        assert d.locator(".ork-chain").evaluate("e => [e.offsetWidth, e.offsetHeight]") == [6, 29], "the chain at orkUI's .small, 6 × 29 (spec 168 A4)"
         assert d.locator(".presence-chain__word").evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink")
         assert not pg.locator(".table-pane").evaluate("e => e.classList.contains('is-out')")
     finally:

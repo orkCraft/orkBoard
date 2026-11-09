@@ -24,7 +24,7 @@ import { Menu } from "../table/menu.js";
 import { openReport } from "../hand/logsbtn.js";
 import { columnOn } from "../table/data.js";
 import { laidNow, layLine, laying } from "../table/laying.js";
-import { Mana } from "../hand/mana.js";
+import { PotionRow } from "../hand/potionrow.js";
 import { AddTool } from "../hand/addtool.js";
 import { ADD_TOOL, fieldOpen, liftKey } from "../hand/state.js";
 import { reading, setupNow, SetupCard } from "../hand/setupcards.js";
@@ -238,7 +238,7 @@ export function Room() {
     </div>
     <aside class=${cls("fo-edge", { "is-landed": at(0) || at(1) })} aria-label="The table's edge">
       <div class=${cls("fo-place", { "is-landed": at(1) })} data-place="ring">${at(1) && html`<${RingAsleep} />`}</div>
-      <div class=${cls("fo-place fo-place--potions", { "is-landed": at(0) })} data-place="potions">${at(0) && html`<${Mana} lifted=${null} />`}</div>
+      <div class=${cls("fo-place fo-place--potions", { "is-landed": at(0) })} data-place="potions">${at(0) && html`<${PotionRow} />`}</div>
     </aside>
     <div class=${cls("fo-place fo-place--hand", { "is-landed": at(3) })} data-place="hand" aria-hidden="true"></div>
     <div class="fo-om">

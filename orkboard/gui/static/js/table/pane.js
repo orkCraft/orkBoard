@@ -117,7 +117,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
   const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), past = !o && !bare && !!picked.value && !picks && !!mapData.value && !narrow, kind = !o && !bare && picks ? phaseKind(tab === ORKMASTER ? null : g, picks) : "";     // a goal picked: what the table shows by its phase at this tab (phaseview.js)
   return html`<section class=${cls("table-pane ork-table", { "is-out": presenceNow()?.here === false, "ork-leather": stalled })} id="table-pane" data-party=${feltOf(g) || undefined} role="tabpanel" aria-labelledby=${`tab-${tab}`} data-stall=${stalled ? "open" : undefined}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
-    ${!o && !bare && !stalled && html`<${Notice} />`}
+    ${!o && !bare && !stalled && !column && html`<${Notice} />`}
     ${!o && !bare && !stalled && html`<${ToMain} />`}
     ${!o && !bare && !stalled && g && isRelease(g) && html`<${ChecksView} />`}
     <div class="table-body" ref=${body} data-end=${form ? "form" : o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>

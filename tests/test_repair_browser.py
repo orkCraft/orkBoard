@@ -151,7 +151,7 @@ def alert_colour(pg):
 
 
 def fixing_line(pg):
-    return pg.locator(".table-notice[data-fixing] .table-notice__line")
+    return pg.locator(".table-balloon[data-balloon=fixing] .table-balloon__line")
 
 
 # -- the way in: the Orkmaster's … and a crash (spec 139 A.5) ---------------------------------------------------------------------------------------
@@ -234,11 +234,11 @@ def test_fix_it_sends_the_line_and_the_pages_state_closes_the_panel_and_the_orkm
     assert panel(pg).count() == 0
     fixing_line(pg).wait_for(timeout=WAIT_MS)                                                                           # the reply (and the next snapshot) says it
     assert words(fixing_line(pg)) == "Fixing Orkboard: The timer froze"
-    assert pg.locator(".table-notice[data-fixing]").locator(".ork-race__head").count() == 1, "the Orkmaster's crowned head says it"
+    assert pg.locator(".table-balloon[data-balloon=fixing]").count() == 1 and pg.locator(".table-notice").count() == 0, "the Orkmaster says it in the balloon, none in the pane"
     assert not [n for n, _a in host.log if n == "logs.save"], "Fix it saves nothing by itself"
     shot(pg, "s139-fixing-line.png")
     host.say(state="idle", started_at=None)                                                                             # the fix is stopped: the line goes
-    pg.wait_for_function("() => !document.querySelector('.table-notice[data-fixing]')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.table-balloon[data-balloon=fixing]')", timeout=WAIT_MS)
     finish(pg, errors)
 
 
@@ -248,9 +248,9 @@ def test_the_orkmasters_line_while_a_fix_runs_with_no_line_of_the_persons_says_w
     fixing_line(pg).wait_for(timeout=WAIT_MS)
     assert words(fixing_line(pg)) == "Fixing Orkboard: Claude is on it in the Claude app"
     host.say(**UPDATING)
-    pg.wait_for_function("() => document.querySelector('.table-notice[data-fixing] .table-notice__line')?.textContent === 'Fixing Orkboard: updating with the fix'", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.table-balloon[data-balloon=fixing] .table-balloon__line')?.textContent === 'Fixing Orkboard: updating with the fix'", timeout=WAIT_MS)
     host.say(**READY)
-    pg.wait_for_function("() => !document.querySelector('.table-notice[data-fixing]')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.table-balloon[data-balloon=fixing]')", timeout=WAIT_MS)
     finish(pg, errors)
 
 
@@ -258,26 +258,26 @@ def test_a_fix_that_is_in_has_the_orkmasters_line_restart_to_take_it_until_it_is
     """Spec 139 A.5: the host sends no card for a fix that is in, so the Orkmaster's line says *Orkboard was fixed: restart to take it*, until the viewer puts it away (a newer fix shows again)."""
     host = RepairHost(WORKING)
     pg, errors = window(gui, host)
-    solved = pg.locator(".table-notice[data-solved]")
+    solved = pg.locator(".table-balloon[data-balloon=solved]")
     assert solved.count() == 0, "a fix that runs says it is being fixed, not that it was"
     host.say(**READY)
     solved.wait_for(timeout=WAIT_MS)
-    assert words(solved.locator(".table-notice__line")) == "Orkboard was fixed: restart to take it" and solved.get_attribute("role") == "status"
-    assert solved.locator(".ork-race__head").count() == 1 and pg.locator(".table-notice[data-fixing]").count() == 0
+    assert words(solved.locator(".table-balloon__line")) == "Orkboard was fixed: restart to take it" and solved.get_attribute("aria-live") == "polite"
+    assert pg.locator(".table-balloon[data-balloon=fixing]").count() == 0
     shot(pg, "s139-fixed-line.png")
     host.say(**UPDATING)                                                                                                    # the restart is on its way: the line of the fix running says so, this one is not asked
-    pg.wait_for_function("() => document.querySelector('.table-notice[data-fixing]')", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.table-balloon[data-balloon=fixing]')", timeout=WAIT_MS)
     host.say(**READY)
     solved.wait_for(timeout=WAIT_MS)
     solved.get_by_role("button", name="Dismiss").click()
-    pg.wait_for_function("() => !document.querySelector('.table-notice[data-solved]')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.table-balloon[data-balloon=solved]')", timeout=WAIT_MS)
     host.say(**READY)                                                                                                      # the same fix again: still put away
     pg.wait_for_timeout(200)
     assert solved.count() == 0
     host.say(started_at=1_761_999_999.0)                                                                                   # a newer fix shows again
     solved.wait_for(timeout=WAIT_MS)
     host.say(state="idle", started_at=None)
-    pg.wait_for_function("() => !document.querySelector('.table-notice[data-solved]')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.table-balloon[data-balloon=solved]')", timeout=WAIT_MS)
     finish(pg, errors)
 
 
@@ -328,7 +328,7 @@ def test_working_says_where_to_follow_it_and_since_when_and_stop_the_fix_stops_i
     shot(pg, "d119-working.png")
     p.get_by_role("button", name="Stop the fix").click()
     assert calls(pg, host, "repair.stop") == [{}]
-    pg.wait_for_function("() => !document.querySelector('.table-notice[data-fixing]')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.table-balloon[data-balloon=fixing]')", timeout=WAIT_MS)
     finish(pg, errors)
 
 
@@ -395,7 +395,7 @@ def test_failed_says_the_error_as_it_is_try_again_sends_the_line_last_sent_and_s
     panel(pg).get_by_role("button", name="Fix it").click()
     calls(pg, host, "repair.start")
     host.say(**FAILED)
-    pg.wait_for_function("() => !document.querySelector('.table-notice[data-fixing]')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.table-balloon[data-balloon=fixing]')", timeout=WAIT_MS)
     p = opened(pg)
     state_is(pg, "failed")
     assert head(pg) == TITLES["failed"]

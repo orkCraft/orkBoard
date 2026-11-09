@@ -1,0 +1,13 @@
+/* The small face-up card (docs/specs/168 A2, decisions §283.3, §284.2; smallcard.js): 56 x 78, its rune top left, a dot for each party of its route bottom left, a small picture in its middle, no words. Layout only: the face, the frame, the colours and the signs are orkUI's;
+   a party's colour is `--party-hue` (look.css `data-race`). A signal is the frame itself: an inset ring in the alert or the danger (decisions §268.1). */
+.ork-card.sm { position: relative; flex: none; box-sizing: border-box; width: 56px; height: 78px; padding: 0; overflow: hidden; text-align: left; }
+.sm-tl { position: absolute; left: 3px; top: 3px; line-height: 0; }
+.sm-pic { position: absolute; inset: 20px 6px 14px; display: grid; place-items: center; overflow: hidden; }
+.sm-pic__img { display: block; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.sm-pic .ork-sign.big { width: 28px; height: 28px; color: var(--ork-ink-muted); }
+.sm-dots { position: absolute; left: 4px; bottom: 4px; display: flex; gap: 2px; }
+.sm-dot { display: block; width: 5px; height: 5px; box-shadow: inset 0 0 0 1px var(--party-hue, var(--ork-ink-faint)); }
+.sm-dot.is-done { background: var(--party-hue, var(--ork-ink-faint)); }
+.ork-card.sm.is-alert { border-color: var(--ork-alert); box-shadow: inset 0 0 0 2px var(--ork-alert); }
+.ork-card.sm.is-danger { border-color: var(--ork-danger); box-shadow: inset 0 0 0 2px var(--ork-danger); }
+.ork-card.sm:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 1px; }

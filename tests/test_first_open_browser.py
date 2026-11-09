@@ -47,6 +47,7 @@ def test_from_an_empty_folder_to_the_laid_table(desk, dialog, tmp_path):
     pg = d.open()
     pg.locator(f"{ROOM} .fo-fan").wait_for(timeout=WAIT_MS)
     assert pg.locator(".fo-fan > .ork-card-back").count() == 4, "four backs held"
+    assert set(map(tuple, pg.locator(".fo-fan > .ork-card-back").evaluate_all("els => els.map((e) => [e.offsetWidth, e.offsetHeight])"))) == {(56, 78)}, "the fan's backs, 56 x 78 (spec 168 A1)"
     assert "I'm the Orkmaster. Four cards, and we start." in pg.locator(".fo-room-bubble").inner_text()
     assert pg.locator('.fo-om img.ork-race__head.big').count() == 1, "the Orkmaster in the room's middle, 48 x 44"
     assert pg.locator(".hand-plus, .table-tabcell, .col-sec, .ork-die, .table-chair, .frame-table, .frame-hand").count() == 0, "the room dark: no table, no hand"
@@ -64,6 +65,8 @@ def test_from_an_empty_folder_to_the_laid_table(desk, dialog, tmp_path):
     use = pg.locator('[data-test-add="1"]')
     pg.wait_for_function("(s) => document.querySelector(s) && !document.querySelector(s).disabled", arg='[data-test-add="1"]', timeout=WAIT_MS)
     assert use.inner_text().strip().upper() == "USE CLAUDE CODE", "a ready tool is one press"
+    fb = add.evaluate("e => [e.offsetWidth, e.offsetHeight]")
+    assert fb == [144, 202], f"the first open's card, 144 x 202 (spec 168 A1): {fb}"
     shot(pg, "1-to-the-potions")
     use.click()
     pg.locator(f'{ADD} [data-turned="1"]').wait_for(timeout=WAIT_MS)

@@ -79,7 +79,7 @@ def test_there_is_no_edge_the_discard_is_the_windows_right_column_beside_the_tab
         assert pg.locator(".release-lane > .release-lane__head").count() == 1 and pg.locator(".release-lane__head + .release-lane__label").count() == 1, "its head, a row for the room's things, over the label"
         assert box(pg, ".release-lane__head")["y"] < box(pg, ".release-lane__label")["y"] and round(box(pg, ".release-lane__head")["x"]) >= round(lane["x"])
         assert pg.locator(".table-end").count() == 0, "no end at the foot of the lanes"
-        assert pg.locator(".frame-hand .hand-end .hand-die").count() == 1 and pg.locator(".frame-hand .hand-end .hand-mana").count() == 1, "the die and the potions at the hand's right end"
+        assert pg.locator(".frame-hand .hand-end .hand-die").count() == 1 and pg.locator(".release-lane__head .pots").count() == 1 and pg.locator(".frame-hand .hand-mana").count() == 0, "the die at the hand's right end, the potions in the right column's head"
         shot(pg, "column-1280x800")
         pg.locator('.table-tab[data-tab="tech"]').click()
         pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)

@@ -36,6 +36,12 @@ SHOTS = [
     ("7-ask-tech", "scene=ask", (1366, 768)),
     ("8-tech-project", "scene=leader", (1366, 768)),
     ("9-small-face-b", "scene=idea-om&small=b", (1366, 768)),
+    ("10-ask-tech-pictures", "scene=ask&pics=1", (1366, 768)),
+    ("11-ask-risk-pictures", "scene=ask&pics=1&card=risk", (1366, 768)),
+    ("12-ways-pictures", "scene=pictures", (1440, 900)),
+    ("13-inventory-deep", "scene=inventory&slot=deep", (1366, 768)),
+    ("14-inventory-start", "scene=inventory&slot=start", (1366, 768)),
+    ("15-leader-inventory", "scene=leader-inventory&slot=answers", (1366, 768)),
 ]
 
 with sync_playwright() as p:

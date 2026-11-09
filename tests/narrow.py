@@ -34,10 +34,10 @@ def no_sideways(pg) -> None:
 
 
 def unroll_drum(pg, timeout: int = 10000) -> None:
-    """At the wide width the AI tools lie in a row only while the drum is unrolled (spec 156 E.5, hover or focus): the pointer goes onto the drum and stays. Under 760 px the potions always lie in their rows: nothing to do."""
+    """At the wide width the AI tools lie in the right column's row, three at most; every tool lies in the list under it only while it is unrolled (spec 168 A4, decisions §285.1; hover or focus): the pointer goes onto the row and stays. Under 760 px the potions always lie in their rows: nothing to do."""
     if pg.viewport_size["width"] < 760:
         return
-    pg.locator(".hand-mana__drum").wait_for(timeout=timeout)
-    b = pg.locator(".hand-mana__drum").bounding_box()
+    pg.locator(".pots__row").wait_for(timeout=timeout)
+    b = pg.locator(".pots__row").bounding_box()
     pg.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
-    pg.locator(".hand-mana[data-open]").wait_for(timeout=timeout)
+    pg.locator(".pots[data-open]").wait_for(timeout=timeout)

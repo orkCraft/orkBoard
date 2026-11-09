@@ -111,7 +111,7 @@
 @media (min-width: 760px) { .hand { --hc-cut: 32px; }      /* the + card sits 32 px lower, its foot (the lower moon) under the window's edge, its seal whole: the column's last pile has that much more room (decisions §265) */
   .hand .hand-plus { height: var(--hc-big); } .hand-slot.is-plus { margin: calc(var(--hc-seen, var(--hc-shown)) - var(--hc-big) - var(--ork-4) + var(--hc-cut)) 0 0 var(--ork-1); } }
 .hand .hand-plus::after, .hand-ghost.ork-plus::after { content: none; }      /* the corner brackets gave way to the back's corners, which orkUI draws on the + card (orkUI 0.33.0, decisions §264) */
-.hand .hand-plus.is-large { width: 180px; height: auto; aspect-ratio: 5 / 7; }
+.hand .hand-plus.is-large { width: var(--hc-w); height: auto; aspect-ratio: 5 / 7; }      /* a card's size, 144 x 202 (spec 168 A1, decisions §283.1) */
 .hand .hand-plus.is-large > .ork-icon { width: 56px; height: 56px; }
 
 /* the field the + card grows into */
@@ -293,7 +293,9 @@
 
 /* the card that adds a tool, a tool's own card (spec 130 B.2–B.3) and the Orkmaster's setup cards (B.4; mockup docs/mockups/setup/): lifted as every hand card is, standing on the hand's line by the potions or over the hand's middle. Layout only */
 .hand .hand-tool { position: absolute; left: auto; right: var(--ork-8); bottom: calc(100% - var(--hc-seen, var(--hc-shown))); z-index: 60; display: flex; flex-direction: column; gap: var(--ork-3); min-height: 0; height: auto; padding: var(--ork-4); overflow-y: auto; text-align: left; }
-.hand .fo-card { left: calc(50% - var(--hc-w)); right: auto; bottom: var(--ork-2); }
+.hand .fo-card { left: calc(50% - var(--hc-w) / 2); right: auto; bottom: var(--ork-2); }
+/* the tool's card, *Add an AI tool* and the first open's cards are a card's size, 144 x 202 (spec 168 A1, decisions §283.1): what does not fit scrolls inside, whole where it is lifted */
+.hand .hand-card--big.hand-tool { width: var(--hc-w); height: var(--hc-big); min-height: 0; max-height: var(--hc-big); box-sizing: border-box; gap: var(--ork-2); padding: var(--ork-2); overflow-x: hidden; }
 .hand-tool:focus-visible { outline: 0; }
 .hand-tool__top { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-height: 14px; }
 .hand-tool__field { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-2); min-width: 0; }

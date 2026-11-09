@@ -15,6 +15,9 @@ import { uprightNow } from "../frame/upright.js";
 import { lanesBeforeEnd } from "../table/data.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
 import { Mana } from "./mana.js";
+import { PotionRow, liftedStop } from "./potionrow.js";
+import { Backpack } from "../table/backpack.js";
+import { Book } from "./book.js";
 import { useNight } from "./nightcard.js";                       // the night's record: its goals done go to the discard under a moon (spec 128 C.3; no card of the morning's)
 import { useThrown } from "../table/flight.js";                   // a failure is thrown to the hand from its lane's card, which leaves a place (spec 128 C.2)
 import { PlayDie } from "./playdie.js";
@@ -35,6 +38,15 @@ import { SetupBubble, SetupCard, setupNow } from "./setupcards.js";
 import { columnOn } from "../table/data.js";
 import { laidNow, layLine } from "../table/laying.js";
 import { said } from "./motion.js";
+if (typeof document !== "undefined") {                         // the places' sheet (places.css), as carry.js loads its own
+  const href = new URL("./places.css", import.meta.url).href;
+  if (!document.querySelector(`link[href="${href}"]`)) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+}
 import "./wayparts.js";                                   // the goal's way's cards (spec 100)
 
 // The faces of what the hand opens over the pane; the table draws whichever `faceOf(kind)` has.
@@ -51,7 +63,7 @@ function useKeys(root) {
       const t = e.target;
       if (!root.current || aloud(t)) return;
       if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
-      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card, .hand-ways-row, .hand-pen, .hand-tool, .hand-pot")) lower();
+      if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card, .hand-ways-row, .hand-pen, .hand-tool, .hand-pot, .pot-s, .pots__all, .rh-stop")) lower();
     };
     const key = (e) => {
       if (e.key === "Escape" && !e.defaultPrevented && !aloud(document.activeElement)) {
@@ -80,6 +92,8 @@ export function Hand() {
   const wide = useWide();
   const all = stopsOfProject(map, needs, open), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map && !isToolKey(key)) lower(); }, [key, !s]);   // the stop was answered: the card goes with it (a tool's card is no stop: it goes by its own)
+  useEffect(() => { liftedStop.value = s || null; }, [s]);                                // the right column's potions hatch the share the lifted card takes (potionrow.js)
+  useEffect(() => () => { liftedStop.value = null; }, []);
   const asks = setupNow.value?.step;
   useEffect(() => { if (asks === "tools") lift(liftKey(ADD_TOOL)); }, [asks]);          // the Orkmaster asks for a tool: the adding card comes up by itself (spec 130 B.4)
   const want = liftDecision.value, dealt = want ? stops.find((x) => x.kind === "decision" && x.row?.idea === want) : null;
@@ -96,12 +110,14 @@ export function Hand() {
   useEffect(() => { if ((key || fieldOpen.value || !wide) && headerDeal.value) headerDeal.value = ""; }, [key, fieldOpen.value, wide]);
   const chair = dealing.value && wide && !carrying && !middle && !bare && !s;                                   // the new chair pressed: its crafts are the hand (spec 161 I)
   const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
+  const places = columnOn() && !bare ? html`<${Backpack} /><${Book} />` : null;                                // the places that change the table: the die, the backpack, the book (spec 168 A5)
+  const pots = !columnOn() ? html`<${Mana} lifted=${s} />` : bare ? html`<${PotionRow} above=${true} />` : null;
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
-    ${carrying && html`<div class="hand-carrying"><${Carry} /><div class="hand-end"><${PlayDie} /><${Mana} lifted=${s} /></div></div>`}
+    ${carrying && html`<div class="hand-places"><div class="hand-row is-carrying" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}><${Carry} /><div class="hand-end"><${PlayDie} />${places}${pots}</div></div></div>`}
     ${!middle && !carrying && html`<div class="hand-places"><div class=${cards || deal || chair ? "hand-row is-sunk" : "hand-row"} inert=${cards || deal || chair ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
-      <div class="hand-end">${!bare && html`<${PlayDie} />`}<${Mana} lifted=${s} /></div>
+      <div class="hand-end">${!bare && html`<${PlayDie} />`}${places}${pots}</div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
@@ -111,7 +127,7 @@ export function Hand() {
     ${key.startsWith(TOOL) && html`<${ToolCard} tool=${key.slice(TOOL.length)} />`}
     <${SetupCard} />
     ${!columnOn() && html`<${SetupBubble} />`}
-    ${middle && html`<div class="hand-mana-only"><${PlayDie} /><${Mana} /></div>`}
+    ${middle && html`<div class="hand-mana-only"><${PlayDie} />${places}${pots}</div>`}
     <span class="hand-live" role="status" aria-live="polite">${said.value}</span>
     ${middle && html`<${Middle}>${fieldOpen.value ? html`<${Field} middle=${true} />` : html`<${PlusCard} large=${true} onPress=${plus} />`}<//>`}
   </footer>`;

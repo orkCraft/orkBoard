@@ -79,6 +79,7 @@ def test_a_question_passing_is_a_small_card_over_the_columns_foot_with_its_rune_
         c, col, hand = card.bounding_box(), pg.locator(".frame-column").bounding_box(), pg.locator(".frame-hand").bounding_box()
         assert col["x"] <= c["x"] and c["x"] + c["width"] <= col["x"] + col["width"] and c["y"] + c["height"] <= hand["y"] + 1, "inside the column, over its foot"
         assert pg.locator(".col-pass .ork-btn").count() == 0, "its choices are shown when it is pressed"
+        assert abs(c["width"] - 144) <= 1 and abs(c["height"] - 202) <= 1, f"a card, 144 x 202 (spec 168 A1): {c}"
         shot(pg, "passing")
         pg.wait_for_timeout(2300)
         assert int(card.locator(".col-pass__left").get_attribute("data-left")) <= 4, "the seconds count down between snapshots"

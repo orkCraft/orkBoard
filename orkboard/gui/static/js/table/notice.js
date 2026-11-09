@@ -40,8 +40,9 @@ export function dismiss(project, at) {
   try { localStorage.setItem(KEPT, JSON.stringify(seen.value)); } catch { /* this run only */ }
 }
 
-export function Notice() {
-  const moved = town.value?.mana?.moved || null, project = currentProject.value?.path || "";
+/** The Orkmaster's unasked news now, in the order shown (a fix running, a fix in and waiting, a move): `[{key, kind, text, at, put}]`, `put` puts one away. Both faces read it; a move's day runs out by itself. */
+export function useNotes() {
+  const moved =town.value?.mana?.moved || null, project = currentProject.value?.path || "";
   const [, again] = useState(0), at = moved?.at ? new Date(moved.at).getTime() : NaN;
   useEffect(() => {                                              // a day after `at` the line goes by itself
     const left = at + DAY_MS - Date.now();
@@ -51,19 +52,20 @@ export function Notice() {
   }, [at]);
   const line = lineOf(moved, seen.value[project]), fixing = fixingLine(), solved = solvedLine(), solvedAt = repairOf().started_at;
   const putAway = () => { solvedSeen.value = String(solvedAt ?? ""); try { localStorage.setItem(SOLVED_KEPT, solvedSeen.value); } catch { /* this run only */ } };
-  if (!line && !fixing && !solved) return null;
-  return html`${fixing && html`<div class="table-notice" role="status" data-fixing="1">
+  const notes = [];
+  if (fixing) notes.push({ key: "fixing", kind: "fixing", text: fixing, at: "", put: null });
+  if (solved) notes.push({ key: "solved", kind: "solved", text: solved, at: "", put: putAway });
+  if (line) notes.push({ key: "moved", kind: "moved", text: line, at: moved.at, put: () => dismiss(project, moved.at) });
+  return notes;
+}
+
+/** The strip under the pane's title, for where the Orkmaster's column is not drawn (the narrow width); the wide page has the balloon (balloon.js). */
+export function Notice() {
+  const notes = useNotes();
+  if (!notes.length) return null;
+  return html`${notes.map((n) => html`<div class="table-notice" role="status" key=${n.key} data-fixing=${n.kind === "fixing" ? "1" : undefined} data-solved=${n.kind === "solved" ? "1" : undefined} data-at=${n.at || undefined}>
       <${Head} race="peon" tier="crown" />
-      <p class="table-notice__line">${fixing}</p>
-    </div>`}
-    ${solved && html`<div class="table-notice" role="status" data-solved="1">
-      <${Head} race="peon" tier="crown" />
-      <p class="table-notice__line">${solved}</p>
-      <button type="button" class="ork-btn quiet table-notice__x" aria-label="Dismiss" title="Dismiss" onClick=${putAway}><${Icon} name="close" /></button>
-    </div>`}
-    ${line && html`<div class="table-notice" role="status" data-at=${moved.at}>
-      <${Head} race="peon" tier="crown" />
-      <p class="table-notice__line">${line}</p>
-      <button type="button" class="ork-btn quiet table-notice__x" aria-label="Dismiss" title="Dismiss" onClick=${() => dismiss(project, moved.at)}><${Icon} name="close" /></button>
-    </div>`}`;
+      <p class="table-notice__line">${n.text}</p>
+      ${n.put && html`<button type="button" class="ork-btn quiet table-notice__x" aria-label="Dismiss" title="Dismiss" onClick=${n.put}><${Icon} name="close" /></button>`}
+    </div>`)}`;
 }
