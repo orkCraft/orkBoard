@@ -1,7 +1,8 @@
 # The pictures the cards want (decision §283.34–36, spec 168 J2)
 
-The owner makes them with Gemini, a sheet at a time, in the style of orkUI's leaders' heads (the shaman, the dryad, the knight,
-the lich, the imp, the gnome): attach a picture of those heads to every prompt as the style's reference. Then orkUI takes them
+The owner makes them with Gemini, a sheet at a time, in the pixel style of orkUI's leaders' heads (the shaman, the dryad, the
+knight, the lich, the imp, the gnome): attach a picture of those heads to every prompt as the style's reference. Each tile is an
+item card's picture: an object or an action with a joke in it, not a character (the owner, on the first sheet). Then orkUI takes them
 in (`office/pictures/<id>.png`, listed in `pictures/pictures.json`), and Orkboard copies orkUI as it does today.
 
 **A picture never carries a card's meaning alone**: the card's words stay under it. So the tiles have no text.
@@ -13,15 +14,17 @@ window (64 × 64) and at 1 px in a small card's middle (32 × 32). A tile that l
 ## The style, said first in every prompt
 
 ```
-Pixel-art icon sheet in exactly the style of the attached reference image (fantasy leader heads: an ork shaman, a dryad,
-a golden knight, a lich, an imp, a gnome). Each tile is a chunky 32x32 pixel grid scaled up with nearest-neighbour:
-square pixels only, no anti-aliasing, no blur, no gradients, no soft shadows, no dithering. Bold one-pixel black outline,
-two or three flat tones per colour plus a single highlight, a muted earthy palette (moss green, bone, bronze, leather
-brown, slate grey, dusty purple) with one bright accent per tile. Dark charcoal background (#1a1816) inside a thin
-grey-brown frame, the tiles in a regular grid with equal gaps. One subject per tile, centred, big, readable as a
-silhouette. Tone: a cosy tavern card game with gentle humour: small orks, goblins, gnomes and imps doing the thing
-literally, visual puns and expressive faces; never gross, never violent, no real brands. Absolutely no text, letters,
-numbers or logos anywhere.
+Pixel-art item cards for a comedic fantasy card game, in exactly the pixel style of the attached reference image
+(fantasy leader heads: an ork shaman, a dryad, a golden knight, a lich, an imp, a gnome). Each tile is a chunky 32x32
+pixel grid scaled up with nearest-neighbour: square pixels only, no anti-aliasing, no blur, no gradients, no soft
+shadows, no dithering. Bold one-pixel black outline, two or three flat tones per colour plus a single highlight, a muted
+earthy palette (moss green, bone, bronze, leather brown, slate grey, dusty purple) with one bright accent per tile. Dark
+charcoal background (#1a1816) inside a thin grey-brown frame, the tiles in a regular grid with equal gaps.
+THE HERO OF EVERY TILE IS AN OBJECT OR AN ACTION, NOT A CHARACTER: an item, a tool, a contraption caught in the middle
+of what it does. No full figures; at most a hand, a boot or a tiny cameo at the edge. The humour is in the object: absurd
+exaggeration, a visual pun, a silly detail (a bandage, a tiny party hat, too many padlocks, a smug fly), the kind of
+joke an item card makes in a funny tabletop game. One subject per tile, centred, big, readable as a silhouette at 32x32.
+Never gross, never violent, no real brands. Absolutely no text, letters, numbers or logos anywhere (no "zzz" either).
 ```
 
 ## Sheet 1: the ways of answering a card (16, a 4 × 4 grid)
@@ -30,22 +33,22 @@ The `way_kind` every call returns (spec 168 J1), and the ways the hand often hol
 
 ```
 A 4x4 grid of 16 tiles, left to right, top to bottom:
-1 replace: an ork swaps an old cracked stone tablet for a shiny new one, the old one slipping from under his arm.
-2 keep: a stubborn ork hugs an old stone tablet, a little shield strapped to it.
-3 smaller: a goblin with pliers shrinks a huge battle axe into a tiny hatchet, looking proud.
-4 later: a snail carries a sealed card on its shell, a small ork asleep leaning on it.
-5 drop: an ork tosses a crumpled scroll over his shoulder into a barrel, not looking.
-6 split: an axe splits one card cleanly into two halves that fly apart.
-7 go on: an ork charges forward with a torch, stepping right past a wobbly warning sign.
-8 mitigate: a gnome puts a bucket under a leaking barrel and pats it.
-9 accept the risk: an ork shrugs, sitting calmly next to a bomb with a short lit fuse.
-10 ask more: a gnome holds an enormous ear trumpet towards the viewer.
-11 the leader decides: a little throne with a crown resting on it and a gavel on the seat.
-12 your own words: a quill pen writing on a parchment, a tiny ink pot beside it.
-13 start again: an ork dusts himself off beside a toppled tower of blocks, rebuilding it.
-14 take: a goblin catches a falling card in both hands, delighted.
-15 not a problem: an ork waves away a tiny buzzing fly, unbothered.
-16 make it a goal: a sealed card with a green glowing seal pops out of a top hat.
+1 replace: a shiny new stone tablet shoving an old cracked one off its pedestal, a puff of dust.
+2 keep: an old stone tablet chained to its pedestal with far too many padlocks.
+3 smaller: a huge battle axe and the same axe shrunk to toothpick size beside it, a pair of pliers between them.
+4 later: a sealed letter riding on a snail's shell, the snail wearing a tiny nightcap.
+5 drop: a crumpled scroll in mid-air above a barrel, a fly already circling it.
+6 split: a playing card cut cleanly in two, the axe still stuck in the table between the halves.
+7 go on: a boot stepping over a knocked-down warning sign, a torch held high.
+8 mitigate: a leaking barrel with a cork jammed in, a bandage taped over the crack and a bucket under it.
+9 accept the risk: a round bomb with a short lit fuse, wearing a tiny party hat, sitting on a velvet cushion.
+10 ask more: an enormous brass ear trumpet pointed straight at the viewer.
+11 the leader decides: a crown resting on a gavel on a velvet cushion.
+12 your own words: a quill dancing over a parchment, an ink pot on little legs beside it.
+13 start again: a toppled tower of toy blocks, one block being set back on top by a hand.
+14 take: a hand bursting out of the frame to snatch a falling card.
+15 not a problem: a tiny smug fly being waved away by a huge feather fan.
+16 make it a goal: a card springing out of a magician's top hat in a burst of sparkles.
 ```
 
 ## Sheet 2: the Orkmaster's settings (20, a 4 × 5 grid)
@@ -54,26 +57,26 @@ Spec 168 H2–H3: *How deep*, *The build starts*, *The night*, *Lands in dev by 
 
 ```
 A 4x5 grid of 20 tiles, left to right, top to bottom:
-1 how deep, thrift: an ork counts three copper coins in his palm, squinting.
-2 how deep, balance: a pair of brass scales, one card on each pan, level.
-3 how deep, quality: a dwarf-style anvil with a glowing gem being hammered on it.
-4 the build starts, at once: a small rocket with its fuse already sparking.
-5 the build starts, in 30 minutes: a short candle burning, a third gone.
-6 the build starts, in 2 hours: a tall candle just lit.
-7 the build starts, tonight: a crescent moon over a little forge chimney.
-8 the build starts, by hand: a hand pulling a big wooden lever.
-9 the night, off: an ork asleep in a tiny bed, nightcap on, a candle snuffed.
-10 the night, ideas and specs: an owl in spectacles reading a scroll by candlelight.
-11 the night, builds: a forge glowing under a starry sky, a hammer mid-swing.
-12 the night, proposals: a goblin tiptoes with a lantern and a sack of lightbulb-like ideas.
-13 lands in dev by itself, on: a mine cart rolling down a little track on its own.
-14 lands in dev by itself, off: the same mine cart stopped by a wooden chock.
-15 push, no: a wooden chest with a big padlock.
-16 push, main only: one carrier pigeon with a single sealed letter.
-17 push, dev and main: two carrier pigeons each carrying a letter, one a little clumsy.
-18 goals at once, one: one ork carrying one crate.
-19 goals at once, a few: three orks in a line, each with a crate.
-20 goals at once, many: a heap of crates with many small ork legs under it.
+1 how deep, thrift: a coin purse tied with three knots, a moth flying out of it.
+2 how deep, balance: brass scales holding a feather and an anvil, somehow perfectly level.
+3 how deep, quality: a gem on an anvil polished to a blinding sparkle, a pair of tiny sunglasses beside it.
+4 the build starts, at once: a rocket strapped to a card, its fuse already sparking.
+5 the build starts, in 30 minutes: a candle a third burnt down, a snail racing it.
+6 the build starts, in 2 hours: a very tall fresh candle, a cobweb starting at its base.
+7 the build starts, tonight: a crescent moon in a nightcap above a forge chimney.
+8 the build starts, by hand: a big wooden lever with a red knob and a leather glove resting on it.
+9 the night, off: a blacksmith's hammer tucked into a tiny bed with a nightcap.
+10 the night, ideas and specs: a scroll by candlelight with spectacles resting on it.
+11 the night, builds: an anvil glowing under the stars, a hammer swinging all by itself.
+12 the night, proposals: a lantern and an open sack spilling glowing lightbulb-like ideas, little tiptoe footprints.
+13 lands in dev by itself, on: a mine cart rolling down its track all alone, a card waving from it like a flag.
+14 lands in dev by itself, off: the same mine cart stopped by a brick and a wheel clamp.
+15 push, no: a wooden chest with an absurd number of padlocks.
+16 push, main only: one determined carrier pigeon with one sealed letter.
+17 push, dev and main: two carrier pigeons tangled together with two letters.
+18 goals at once, one: one crate on a tiny hand cart.
+19 goals at once, a few: three crates stacked neatly.
+20 goals at once, many: an absurdly tall tower of crates wobbling.
 ```
 
 ## Sheet 3: a leader's settings (10, a 5 × 2 grid)
@@ -82,16 +85,16 @@ Spec 168 H4: its party's size, how it answers, its tier for its own calls. The h
 
 ```
 A 5x2 grid of 10 tiles, left to right, top to bottom:
-1 party size, lean: one ork with a hammer, sleeves rolled up.
-2 party size, standard: an ork with a hammer and a goblin with a magnifying glass checking his work.
-3 party size, full: a busy little crowd of orks, a goblin with a magnifier and a gnome with a checklist.
-4 answers with the pen: a blank parchment and a quill waiting, an expectant ork face peeking.
-5 answers with a choice: a signpost with two arrows pointing different ways.
-6 answers with a fork: a road splitting into three paths, each ending at a tiny different hut.
-7 answers silently: an ork with a finger on his lips, a sealed envelope in the other hand.
-8 tier for its calls, novice: a wooden club.
-9 tier for its calls, seasoned: an iron axe.
-10 tier for its calls, veteran: a great axe engraved with glowing runes.
+1 party size, lean: a single hammer.
+2 party size, standard: a hammer and a magnifying glass crossed like swords.
+3 party size, full: a tool belt overflowing with hammers, magnifiers and a checklist.
+4 answers with the pen: a blank parchment and a quill waiting, an ink pot tapping its little foot.
+5 answers with a choice: a signpost with two arrows pointing opposite ways.
+6 answers with a fork: a dinner fork with three prongs, each prong holding a tiny different map.
+7 answers silently: a sealed envelope with a zipper across its flap.
+8 tier for its calls, novice: a wooden club with a bandage on it.
+9 tier for its calls, seasoned: an iron axe with a few honest notches.
+10 tier for its calls, veteran: a great axe engraved with glowing runes and a laurel wreath hung on it.
 ```
 
 ## Sheet 4: the kinds of a question (8, a 4 × 2 grid)
@@ -100,14 +103,14 @@ Only where orkUI's signs do not say it already.
 
 ```
 A 4x2 grid of 8 tiles, left to right, top to bottom:
-1 a question: a goblin scratching his head under a floating question mark made of smoke.
-2 a fork: a road splitting in two, a confused ork at the junction holding two maps.
-3 a conflict with a decision: two stone tablets butting heads like rams.
-4 a risk: a rickety rope bridge over a gap, one plank missing.
-5 a concern: a small crack in a wall with a worried gnome pointing at it.
-6 a failure: a sword snapped in two, a little ork holding the hilt, baffled.
-7 the cost grew: a coin purse swelling and bursting at its seams.
-8 a hypothesis: a gnome with a flask, a bubbling potion and a hopeful face.
+1 a question: a treasure chest whose keyhole is shaped like a question mark.
+2 a fork: a map torn in two, each half showing a different road.
+3 a conflict with a decision: two stone tablets butting heads like rams, sparks flying.
+4 a risk: a rickety rope bridge with one plank missing.
+5 a concern: a crack in a stone wall with a small bandage stuck over it.
+6 a failure: a sword snapped in two, its halves tied back together with a bow.
+7 the cost grew: a coin purse bursting at its seams, coins popping out.
+8 a hypothesis: a bubbling flask with a tiny glowing lightbulb floating inside.
 ```
 
 ## When a sheet comes back
