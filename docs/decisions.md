@@ -7986,3 +7986,24 @@ the bottles that have shrunk, the week explains their size where it matters, and
 4. The mockup shows it (`docs/mockups/table-template/`, its shots made again).
 
 The owner's call.
+
+## 286. Words are written in the hand's place: the card at the table's foot at the left, the field as large as the hand at its right (9 November 2026, the owner)
+
+Changes: 283.20 (the new goal's field beside its card on the table), 270.2 (the Pen's field on the table beside the question).
+
+Why: the owner, on spec 168's D: *the text field could stand in place of the hand's cards: at the left the new goal's card, at
+the right a text field the size of the hand*. While the person writes, the hand holds nothing to play: its cards would only
+sink; a field as large as the hand gives the words the room of five lines without covering the table, which stays the
+context (§270.4), and nothing changes size (§283.5). So:
+1. **Whenever the person writes words, the field takes the hand's place**: the hand's cards sink as for a lifted card (§270.3),
+   and **a field as large as the hand** (its height, from the column's right edge to the places) lies where they lay, focused at
+   once. **Its card stands whole at the table's foot, at its left** (§283.19's place), so all four of its corners show and can be
+   pressed. It holds for **a new goal** (the + card pressed: §283.20), **a quick question** (the card of the kind **?**) and
+   **the Pen** (*Your own words…* on a lifted card).
+2. **A corner pressed deals its choices to the hand in the field's place** (the rune, the kind, who, *Now* or *Later*); one
+   played, the field comes back with its words as they were.
+3. **Enter sends** (Shift+Enter a new line); **Esc** lays the card back and keeps its words as a draft; a picture or a file
+   dropped on the field is attached, and the card's window shows it (§252.4).
+4. Built by spec 168 D1 and D2.
+
+The owner's call.
