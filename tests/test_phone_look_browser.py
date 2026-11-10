@@ -200,8 +200,8 @@ def test_a_party_picked_shows_its_header_squad_tools_goals_at_work_and_concerns(
         hd = box(h.locator("img").first)
         assert "/races/shaman-elder" in h.locator("img").first.get_attribute("src") and round(hd["width"]) == 48 and round(hd["height"]) == 44, "its leader's head, 48 x 44"
         assert h.locator(".up-ph__name").text_content().strip() == "Tech" and h.locator(".up-ph__brief").inner_text().strip() == "How it is built, and what it costs to change." and h.locator(".up-ph__size").inner_text().strip() == "Standard"
-        faces = pg.evaluate("() => [getComputedStyle(document.querySelector('.up-ph__name')).fontFamily, getComputedStyle(document.querySelector('.up-ph__brief')).fontFamily]")
-        assert faces[0] != faces[1], "its name in the heading face"
+        faces = pg.evaluate("() => [getComputedStyle(document.querySelector('.up-ph__name')).fontWeight, getComputedStyle(document.querySelector('.up-ph__brief')).fontWeight]")
+        assert faces[0] != faces[1], "its name in the heading weight (one face, Rubik, decisions §291)"
         cols = pg.locator(".up-squad__col")
         assert [c.locator(".up-lab").inner_text().strip().lower() for c in cols.all()] == ["leads", "does", "checks"], "Leads, Does (the Grunt of its tasks), Checks"
         seats = pg.locator(".up-squad .table-seat")
@@ -332,3 +332,38 @@ def test_a_card_of_no_goal_is_its_context_and_its_card_and_the_ready_goal_has_it
         shot(pg, "phone-look-ready")
     finally:
         pg.close()
+
+
+READABLE = """() => {
+  const rgb = (s) => { const m = s.match(/rgba?\\(([^)]+)\\)/); const p = m[1].split(/[ ,\\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+  const lum = ({ r, g, b }) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+  const bgOf = (el) => { for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c.a > 0.5) return c; if (e.classList.contains("ork-btn")) { const q = rgb(getComputedStyle(e, "::before").backgroundColor); if (q.a > 0.5) return q; } } return { r: 0, g: 0, b: 0, a: 1 }; };
+  const sizes = [], low = [], small = [];
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if (!n.textContent.trim()) continue;
+    const el = n.parentElement, cs = getComputedStyle(el), r = el.getBoundingClientRect();
+    if (!r.width || !r.height || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0 || el.closest("script,style,noscript,[hidden]")) continue;
+    const size = parseFloat(cs.fontSize); sizes.push(size); if (size < 14) small.push(`${el.tagName}.${el.className} ${size}px ${n.textContent.trim().slice(0, 20)}`);
+    const f = rgb(cs.color), b = bgOf(el), a = f.a;
+    const mix = { r: f.r * a + b.r * (1 - a), g: f.g * a + b.g * (1 - a), b: f.b * a + b.b * (1 - a) };
+    const l1 = lum(mix), l2 = lum(b), ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    if (ratio < 4.5) low.push(`${el.tagName}.${el.className} ${n.textContent.trim().slice(0, 30)} ${ratio.toFixed(2)} fg=${cs.color} bg=${JSON.stringify(b)} dis=${el.disabled}`);
+  }
+  return { body: getComputedStyle(document.body).fontSize, min: Math.min(...sizes), count: sizes.length, low, small };
+}"""
+
+
+def test_the_hand_page_text_is_17_px_nothing_under_14_and_every_text_reads_at_4_5_to_1(gui):
+    pg, host, log = open_up(gui, host=LookHost())
+    try:
+        got = pg.evaluate(READABLE)
+        assert got["count"] > 5
+        assert got["body"] == "17px", "the body's text is 17 px"
+        assert got["min"] >= 14, f"nothing under 14 px: {got['small']}"
+        assert got["low"] == [], "every visible text reads at 4.5:1 against its background"
+        card = pg.locator(".hand-up .up-card").first
+        assert card.evaluate("(e) => [getComputedStyle(e).backgroundColor, getComputedStyle(e).borderTopColor]") == ["rgb(51, 55, 58)", "rgb(76, 82, 87)"], "a card on the lifted card colours"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

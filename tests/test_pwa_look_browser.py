@@ -199,3 +199,21 @@ def test_the_service_worker_is_v95_and_the_look_sheet_has_no_colour_of_its_own()
     css = (Path(__file__).resolve().parents[1] / "orkboard" / "gui" / "static" / "pwa" / "app.css").read_text(encoding="utf-8")
     block = css[css.index("What the elf asks and shows (spec 85 C)"):]
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|border-radius", block)
+
+
+@pytest.mark.asyncio
+async def test_the_paired_phones_text_is_17_px_nothing_under_14_cards_lifted_and_every_text_reads_at_4_5_to_1(fake_repo, monkeypatch):
+    """(stage C of goal 169; tests/test_phone_look_browser.py has the same for the hand page)"""
+    from tests.test_phone_look_browser import READABLE
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        await page.locator(".gbar").wait_for(timeout=WAIT_MS)
+        await page.wait_for_timeout(500)
+        got = await page.evaluate(READABLE)
+        assert got["count"] > 5
+        assert got["body"] == "17px", "the body's text is 17 px"
+        assert got["min"] >= 14, f"nothing under 14 px: {got['small']}"
+        assert got["low"] == [], "every visible text reads at 4.5:1 against its background"
+        plain = await page.evaluate("""() => { const e = document.createElement("div"); e.className = "tcard"; document.body.append(e);
+            const c = getComputedStyle(e); const r = [c.backgroundColor, c.borderTopColor]; e.remove(); return r; }""")
+        assert plain == ["rgb(51, 55, 58)", "rgb(76, 82, 87)"], "a card on the lifted card colours"
+        assert await page.locator(".tcard").first.evaluate("(e) => getComputedStyle(e).backgroundColor") == "rgb(51, 55, 58)", "the card at work too: its state is its edge, not its shade"
