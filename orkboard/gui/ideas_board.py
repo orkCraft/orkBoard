@@ -15,7 +15,7 @@ from orkboard import settings
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _from, _opt, _text, _via
 from orkboard.realm import (board_in_code, board_map, board_rows, collide, event_log, findings, goal_take, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas,
-                            look_wait, night_order, way_down)
+                            look_wait, night_order, night_slot, way_down)
 from orkboard.realm.idea_git import BoardTree
 
 NEEDS_IDEA = ("asks", "plan", "failed", "proposed")
@@ -113,6 +113,8 @@ class BoardMixin:
                 "night_low": s.get("night_low") if isinstance(s.get("night_low"), bool) else None,      # None: not asked yet (spec 83)
                 "work_at_night": s.get("work_at_night") is True,                                         # spec 121 §4.1
                 "look_wait": look_wait.clean(s.get("look_wait")),                                        # spec 144 A.1: Give me time to look
+                "build_start": look_wait.build_start(s.get("autostart", True), s.get("look_wait")),      # spec 168 H2: *The build starts*, autostart and the look's wait as one
+                "night_way": night_slot.way(s), "max_parallel": int(s.get("max_parallel") or settings.IDEAS["max_parallel"]),
                 "hours": list(s.get("hours") or [])}                                                     # spec 138 B.1: When I am at the computer
 
     def night_allow(self, args: dict) -> dict:
@@ -129,6 +131,21 @@ class BoardMixin:
         if args.get("review_notice") is False and getattr(getattr(self.host, "machine", None), "review_notice", False):      # said once (spec 84 §1)
             self.host.machine.review_notice = False
             settings.save(self.host.machine)
+        if "build_start" in args:                            # spec 168 H2: the one setting writes the two keys the Board keeps (Orkline reads them)
+            keys = look_wait.build_start_keys(args["build_start"], mine.get("look_wait"))
+            if not keys:
+                raise IdeasError(look_wait.BUILD_REFUSED)
+            mine.update(keys)
+        if "night_way" in args:
+            try:
+                mine.update(night_slot.keys(args["night_way"]))
+            except ValueError as e:
+                raise IdeasError(str(e)) from None
+        if "max_parallel" in args:
+            got = settings.clean_ideas({"max_parallel": args["max_parallel"]})["max_parallel"]
+            if isinstance(args["max_parallel"], bool) or got != args["max_parallel"]:
+                raise IdeasError("Goals at once is a number from 1 to 8")
+            mine["max_parallel"] = got
         for key in ("target", "autostart", "night", "review", "work_at_night", "look_wait"):
             if key not in args:
                 continue
