@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 
 /** `who`: the name of whom the words go to (*Design lead*); `send(text)`: sends the trimmed words; `close()`: Esc. */
-export function PenField({ at, who, send, close }) {
+export function PenField({ at, who, send, close, ask = null }) {
   const field = useRef(), [words, setWords] = useState("");
   useEffect(() => { field.current?.focus({ preventScroll: true }); }, []);
   const go = () => { const text = words.trim(); if (text) send(text); };
@@ -13,8 +13,8 @@ export function PenField({ at, who, send, close }) {
     else if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); go(); }
   };
   return html`<div class="hand-pen is-play" role="group" aria-label="Your own words" style=${at ? `left:${at.left}px;right:${at.right}px` : undefined}>
-    <textarea ref=${field} class="ork-field hand-pen__text" rows="4" aria-label=${`Your words to ${who}`} placeholder=${`Your words to ${who}…`} value=${words} onInput=${(e) => setWords(e.currentTarget.value)} onKeyDown=${key}></textarea>
-    <div class="hand-pen__side"><span class="cap hand-pen__hint">Enter sends · Shift+Enter a new line</span>
-      <button type="button" class="ork-btn primary" data-act="send-words" onClick=${go}>${`Send to ${who}`}</button></div>
+    <textarea ref=${field} class="ork-field hand-pen__text" rows=${ask?.rows || 4} aria-label=${ask?.label || `Your words to ${who}`} placeholder=${ask?.hold || `Your words to ${who}…`} value=${words} onInput=${(e) => setWords(e.currentTarget.value)} onKeyDown=${key}></textarea>
+    <div class="hand-pen__side"><span class="cap hand-pen__hint">${ask?.note || "Enter sends · Shift+Enter a new line"}</span>
+      <button type="button" class="ork-btn primary" data-act="send-words" onClick=${go}>${ask?.button || `Send to ${who}`}</button></div>
   </div>`;
 }

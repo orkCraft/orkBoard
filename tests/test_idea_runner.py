@@ -169,11 +169,11 @@ def plan_of(town, tasks: list[dict], todos: list[dict] | None = None, slug: str 
     (d / "state.json").write_text(json.dumps({"state": "plan"}))
 
 
-def runner_of(town, limits=None, **ideas) -> tuple[IdeaRunner, list]:
+def runner_of(town, limits=None, goal_branches=True, **ideas) -> tuple[IdeaRunner, list]:
     events = []
     bus = SimpleNamespace(publish=lambda topic, **data: events.append((topic, data)))
     settings = SimpleNamespace(ideas={"max_parallel": 1, "merge_into": "main", "push": True, "review": False, **ideas})
-    return IdeaRunner(town.repo, town.state, settings, bus, limits=limits or (lambda: [])), events
+    return IdeaRunner(town.repo, town.state, settings, bus, limits=limits or (lambda: []), goal_branches=goal_branches), events
 
 
 def wait_idle(runner: IdeaRunner, slug: str = "demo", timeout: float = 90) -> dict:
@@ -298,10 +298,73 @@ def test_a_rebase_conflict_fails_and_main_keeps_its_own_line(town, monkeypatch):
     runner, _ = runner_of(town)
     runner.start("demo")
     state = wait_idle(runner)
-    assert state["state"] == "failed"
-    assert "conflict" in tasks_of(town)["k1"]["error"] and "shared.txt" in tasks_of(town)["k1"]["error"]
+    # docs/specs/168 F1: the task lands on the goal's own branch, which main's change does not touch; the conflict is met one level up, when the goal
+    # goes into main: it stops there without forcing, says so on the goal, and main keeps its own line.
+    assert state["state"] == "done" and tasks_of(town)["k1"]["state"] == "merged"
+    why = json.loads((town.state / "ideas" / "demo" / "goal_branch.json").read_text())["blocked"]
+    assert "conflict" in why and "shared.txt" in why
     assert git(town.repo, "show", "main:shared.txt") == "main's line"
     assert git(town.repo, "log", "-1", "--format=%s", "main") == "main moved"
+    assert git(town.repo, "show", "goal/demo:shared.txt") == "the task's line"
+
+
+def test_tasks_land_on_the_goals_branch_and_the_goal_goes_into_main_by_itself_once(town):
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
+    runner, _ = runner_of(town)
+    runner.start("demo")
+    assert wait_idle(runner)["state"] == "done"
+    tasks = tasks_of(town)
+    assert tasks["k1"]["branch"] == "idea/demo/k1" and all(t["state"] == "merged" for t in tasks.values())
+    assert tasks["k2"]["commit"] == git(town.repo, "rev-parse", "main")      # main was moved to the goal's tip, by fast-forward
+    assert (town.repo / "k1.txt").exists() and (town.repo / "k2.txt").exists()
+    assert not git(town.repo, "branch", "--list", "goal/demo")              # in main: the branch is gone
+    assert git(town.origin, "rev-parse", "main") == git(town.repo, "rev-parse", "main")
+    assert json.loads((town.state / "ideas" / "demo" / "goal_branch.json").read_text())["merged"] == git(town.repo, "rev-parse", "main")
+
+
+def test_with_review_on_the_goal_waits_on_its_branch_for_main_and_the_person_sends_it(town):
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
+    runner, events = runner_of(town, review=True)
+    main = git(town.repo, "rev-parse", "main")
+    runner.start("demo")
+    assert wait_idle(runner)["state"] == "done"
+    assert all(t["state"] == "merged" for t in tasks_of(town).values())      # a task is not asked about: the look is the goal's, one level up
+    assert git(town.repo, "rev-parse", "main") == main and not (town.repo / "k1.txt").exists()
+    assert git(town.repo, "show", "goal/demo:k2.txt") == "done by k2"
+    from orkboard.realm import goal_branch
+    assert goal_branch.row(town.state, "demo", True)["waits_for_dev"] is True
+    got = runner.goal_to_dev("demo")
+    assert got["commit"] == git(town.repo, "rev-parse", "main") and (town.repo / "k2.txt").exists()
+    assert goal_branch.row(town.state, "demo") == {}
+    with pytest.raises(idea_runner.RunnerError, match="no branch waiting"):
+        runner.goal_to_dev("demo")
+
+
+def test_a_goal_that_is_not_done_is_not_sent_to_main(town, monkeypatch):
+    monkeypatch.setenv("STUB_SLEEP", "2")
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = runner_of(town, review=True)
+    runner.start("demo")
+    end = time.time() + 30
+    while time.time() < end and not (town.state / "ideas" / "demo" / "goal_branch.json").exists():
+        time.sleep(0.05)
+    with pytest.raises(idea_runner.RunnerError, match="still has a task running|not done"):
+        runner.goal_to_dev("demo")
+    assert wait_idle(runner)["state"] == "done"
+
+
+def test_a_goal_already_at_work_in_main_lands_there_as_before(town):
+    plan_of(town, [{"id": "k0"}, {"id": "k1", "after": ["k0"]}])
+    plan = json.loads((town.state / "ideas" / "demo" / "plan.json").read_text())
+    plan["tasks"][0].update(state="merged", commit="abc123", subjects=["k0: before"])        # a task of it landed in main before goals had branches
+    (town.state / "ideas" / "demo" / "plan.json").write_text(json.dumps(plan))
+    runner, _ = runner_of(town)
+    runner.start("demo")
+    assert wait_idle(runner)["state"] == "done"
+    tasks = tasks_of(town)
+    assert tasks["k1"]["state"] == "merged" and tasks["k1"]["commit"] == git(town.repo, "rev-parse", "main")      # landed in main by itself, on no branch
+    assert not (town.state / "ideas" / "demo" / "goal_branch.json").exists() and not git(town.repo, "branch", "--list", "goal/demo")
+    assert git(town.repo, "show", "main:k1.txt") == "done by k1"
 
 
 def test_main_not_checked_out_moves_by_its_ref_only(town):
@@ -427,7 +490,8 @@ from orkboard.core.idea_runner import RunnerError
 
 
 def reviewing(town, **ideas):
-    return runner_of(town, review=True, merge_into="dev", push=False, **ideas)
+    """The Review mechanics of a goal that lands in dev task by task: a goal at work before goals had branches (docs/specs/168 F1), so no goal is given one here."""
+    return runner_of(town, goal_branches=False, review=True, merge_into="dev", push=False, **ideas)
 
 
 def wait_task(runner: IdeaRunner, tid: str, state: str, slug: str = "demo", timeout: float = 90) -> dict:
@@ -478,7 +542,7 @@ def test_merge_lands_into_dev_made_from_main_and_does_not_push_by_default(town):
 
 def test_merge_pushes_only_when_asked(town):
     plan_of(town, [{"id": "k1"}])
-    runner, _ = runner_of(town, review=True, merge_into="dev", push=True)
+    runner, _ = runner_of(town, goal_branches=False, review=True, merge_into="dev", push=True)
     runner.start("demo")
     wait_task(runner, "k1", "review")
     commit = runner.merge("demo", "k1")

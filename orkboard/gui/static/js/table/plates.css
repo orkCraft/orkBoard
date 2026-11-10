@@ -1,0 +1,9 @@
+/* The discard's plates and the lower pile (docs/specs/168 F2, decisions §283.27; table/plates.js): layout only. A plate is orkUI's plaque (`.ork-plaque`: the pixel face on the bronze plate) made a button; the cards are the hand's, at the hand's size
+   (`--hc-w` x `--hc-h`), as the upper pile's are. Nothing changes size by what is open (decisions §283.5): a plate is one line of the lane's width, a pile's cards keep the card's size. */
+.discard-plate { appearance: none; margin: 0; border: 0; flex: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; cursor: pointer; }
+.discard-plate:hover { color: var(--ork-ink); }
+.discard-plate:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.discard-plate.is-on { color: var(--ork-ink); box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.discard-pile { display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); width: 100%; padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); }
+.discard-pile__cards { display: flex; flex-direction: column; gap: var(--ork-4); margin: 0; padding: 0; list-style: none; }
+.discard-pile__cards > li { width: var(--hc-w); height: var(--hc-h); flex: none; }

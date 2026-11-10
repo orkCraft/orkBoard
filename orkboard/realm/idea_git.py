@@ -283,9 +283,9 @@ class IdeaGit:
     # -- the branch results merge into ------------------------------------------------------------
 
     def branches(self) -> list[str]:
-        """The local branches, the task branches (idea/…) left out."""
+        """The local branches, the task branches (idea/…) and the goals' (goal/…, docs/specs/168 F1) left out."""
         out = _git(self.root, "for-each-ref", "--format=%(refname:short)", "refs/heads").stdout.split()
-        return [b for b in out if not b.startswith("idea/")]
+        return [b for b in out if not b.startswith(("idea/", "goal/"))]
 
     def default_branch(self) -> str:
         """The repository's default branch: origin's HEAD, else main or master, else the one checked out."""

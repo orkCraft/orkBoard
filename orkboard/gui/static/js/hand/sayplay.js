@@ -1,6 +1,6 @@
 // A card in play whose ways are not a question's (docs/specs/168 D1, C4; decisions §283.16.4, §283.19, §286): a leader's risk, conflict, better or the open fork of the say (table/sayask.js), and a decision's conflict (conflictcard.js), rise at the table's foot at their left as the 144 x 202 card
 // they were; their goal is picked and their asker's tab opened (frame/state.js `playAt`); their ways are the hand's row from the same left edge, cut by the rim and rising when hovered (answercards.js `WayCard`, `data-way-kind` of each: the way's kind, J1); a card with its own words (a conflict's *Other…*)
-// lays the Pen, a field as large as the hand (penfield.js). `PlayWays` draws a descriptor `{title, foot, sign, element, hue, head, tab, ways, leave, pen}` (a way is `{id, name, line, pick, kind, run}`; `pen`: `{name, who, send(text)}`, drawn as a way of its own). The commands are the callers': C4's
+// lays the Pen, a field as large as the hand (penfield.js). `PlayWays` draws a descriptor `{title, foot, sign, element, hue, head, tab, ways, leave, pen}` (a way is `{id, name, line, pick, kind, run}`; `pen`: `{name, line?, who, send(text), ask?}`, drawn as a way of its own, `ask` the field's own words: penfield.js; `acts`: `[{id, name, line, run}]`, the card's menu, quiet buttons beside *Put it back*: spec 168 F2). The commands are the callers': C4's
 // `ideas.take_way {idea, id, way}`, `ideas.leave_say {idea, id}`, `ideas.take_better {idea, id}`, `ideas.say_fork {idea, pick}`, and `ideas.conflict {idea, number, choice, text?}`; a refusal is the keeper's plain words (a toast) and the card stays; answered, the card goes back. Wide only: the narrow page keeps the choice over the pane.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
@@ -39,12 +39,13 @@ export function PlayWays({ card: c, id, idea, kind }) {
   <div ref=${row} class=${`hand-ways-row is-play${pen ? " is-writing" : ""}`} role="group" aria-label="Answers">
     <div class="hand-ways-cards">
       ${c.ways.map((w) => html`<${WayCard} key=${w.id} w=${w} s=${s} head=${c.head} rune=${rune} />`)}
-      ${c.pen && html`<${WayCard} key="own" w=${{ id: "own", name: c.pen.name, line: OWN_LINE, sign: "text", pick: false, cost: null, run: () => setPen(!pen) }} s=${s} head=${c.head} rune=${rune} btn=${penBtn} on=${pen} />`}
+      ${c.pen && html`<${WayCard} key="own" w=${{ id: "own", name: c.pen.name, line: c.pen.line || OWN_LINE, sign: "text", pick: false, cost: null, run: () => setPen(!pen) }} s=${s} head=${c.head} rune=${rune} btn=${penBtn} on=${pen} />`}
     </div>
     <div class="hand-ways-acts">
       ${c.leave && html`<button type="button" class="ork-btn quiet" data-act="leave" onClick=${c.leave}>Leave it</button>`}
+      ${(c.acts || []).map((a) => html`<button key=${a.id} type="button" class="ork-btn quiet" data-act=${a.id} title=${a.line || undefined} onClick=${a.run}>${a.name}</button>`)}
       <button type="button" class="ork-btn hand-put" data-act="put" onClick=${lower}>Put it back</button>
     </div>
   </div>
-  ${pen && c.pen && html`<${PenField} at=${at} who=${c.pen.who} close=${() => setPen(false)} send=${c.pen.send} />`}`;
+  ${pen && c.pen && html`<${PenField} at=${at} who=${c.pen.who} close=${() => setPen(false)} send=${c.pen.send} ask=${c.pen.ask} />`}`;
 }

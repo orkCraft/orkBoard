@@ -297,6 +297,7 @@ class Ideas(ReachMixin, PhaseMixin,LookMixin, SpecChangeFace, RefineMixin, HaltM
                                           rank=self.rank, size_of=self.size_of_idea, party_of=self.party_of_idea,
                                           sign_ins=getattr(self.host, "sign_ins", None), follow=self.follow)
                 self._runner.board_held = lambda: self.board_held
+                self._runner.on_dev = lambda slug: self.host.call(lambda: self._dev_landed(slug))
             except ImportError:
                 self._runner_error = "The runner is not in this build yet: plans cannot start"
             except Exception as e:              # a runner that cannot start never stops the board
@@ -696,6 +697,7 @@ class Ideas(ReachMixin, PhaseMixin,LookMixin, SpecChangeFace, RefineMixin, HaltM
             self._runner.stop(slug)
         secrets = [t["id"] for t in plan.get("todos") or [] if t.get("kind") == "secret" and t.get("id")]
         journal_notes.dropped(self.state_dir, self.root(), slug, args.get("why") if isinstance(args.get("why"), str) else "")     # the project's journal, before the page is gone (spec 125 B)
+        self._drop_branch(slug)                # dropped before dev: its branch goes, dev is as it was (decisions §283.26)
         ideas.drop(self.root(), slug, self.state_dir)
         idea_secrets.forget(self.state_dir, slug, secrets)
         idea_secrets.forget_files(self.state_dir, slug)
@@ -750,7 +752,7 @@ class Ideas(ReachMixin, PhaseMixin,LookMixin, SpecChangeFace, RefineMixin, HaltM
                  "ideas.stop": self.stop, "ideas.review_list": self.review_list, "ideas.diff": self.diff,
                  "ideas.merge": self.merge, "ideas.back": self.back, "ideas.regate": self.regate, "ideas.drop_task": self.drop_task,
                  "ideas.stop_task": self.stop_task, "ideas.agents": self.agents, "ideas.task": self.task,
-                 "ideas.into": self.into, "ideas.log": self.log, "ideas.logs": self.logs, "ideas.goal_save": self.goal_save,
+                 "ideas.into": self.into, "ideas.branch_set": self.branch_set, "ideas.log": self.log, "ideas.logs": self.logs, "ideas.goal_save": self.goal_save,
                  "ideas.words": self.words, "ideas.goal_accept": self.goal_accept,
                  "ideas.goal": self.goal, "ideas.read_now": self.read_now, "ideas.doc": self.doc, "ideas.roles": self.roles,
                  "ideas.role_save": self.role_save, "ideas.role_add": self.role_add, "ideas.role_drop": self.role_drop,

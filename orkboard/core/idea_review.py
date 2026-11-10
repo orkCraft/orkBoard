@@ -17,7 +17,7 @@ from pathlib import Path
 
 from orkboard.core.idea_plan import _task, estimate
 from orkboard.core.idea_task import is_check
-from orkboard.realm import idea_change, idea_spend, idea_target, project_map
+from orkboard.realm import goal_branch, idea_change, idea_spend, idea_target, project_map, worktrees
 from orkboard.realm.goal_types import DROPPED
 from orkboard.realm.idea_git import plain
 
@@ -87,14 +87,15 @@ class ReviewMixin:
             if task.get("conflict"):
                 raise RunnerError(f"{task['conflict']}: send it back to fix the conflict, or drop it")
             self._runs[(slug, tid)] = _r().Run(threading.current_thread(), threading.Event())   # held while it lands
-        base = str(_r().setting(self.settings, "merge_into") or "dev")
+        base = self._landing(slug)                                  # the goal's branch while its work is on it, else dev (docs/specs/168 F1)
         if is_check(task) and (task.get("diff") or {}).get("files") == 0 and not task.get("commit"):
             return self._leave(slug, tid, task, device, base)       # a check that changed no file: *Leave them* lands nothing
         try:
-            self.git.ensure_branch(base)
+            self.git.ensure_branch(self._dev())                       # dev is made when missing; a goal's own branch never is (it would start from the wrong place)
+            if base != self._dev() and not worktrees.branch_exists(self.repo_root, base):
+                raise RuntimeError(f"The goal's branch {base} is gone")
             path = self.git.reopen(slug, tid)
-            commit, subjects, note = self.git.land(path, str(task.get("branch") or f"idea/{slug}/{tid}"), base,
-                                                   bool(_r().setting(self.settings, "push")))
+            commit, subjects, note = self.git.land(path, str(task.get("branch") or f"idea/{slug}/{tid}"), base, self._pushes_into(base))
         except _Conflict() as e:
             self._set_task(slug, tid, conflict=str(e))
             raise RunnerError(str(e)) from None
@@ -103,10 +104,12 @@ class ReviewMixin:
         finally:
             with self._lock:
                 self._runs.pop((slug, tid), None)
-        self._decided(slug, task, "merge", device, into=base, pushed=bool(_r().setting(self.settings, "push")) and not note)
+        self._decided(slug, task, "merge", device, into=base, pushed=self._pushes_into(base) and not note)
         self._set_task(slug, tid, state="merged", commit=commit, subjects=subjects, note=note, finished=_r().now_iso(),
                        error="", conflict="", look="")
         self._log(slug, tid, f"== merged into {base} · {commit[:10]}\n")
+        if tests.get("ran") is False and base != self._dev():                  # a project with no test: the person's Merge was the one yes a goal is asked for (docs/specs/168 F2): the goal goes into dev on it
+            goal_branch.accepted_untested(self.state_dir, self.git.root, slug)
         project_map.landed(self.state_dir, self.repo_root, path, commit, self.events)      # the System's parts at the new head (spec 89 §1)
         self._remove_worktree(slug, tid)
         self._settle_idea(slug)
@@ -143,6 +146,7 @@ class ReviewMixin:
         if plan and slug not in self._active and all(t.get("state") in ("merged", "dropped") for t in plan["tasks"]) \
                 and any(t.get("state") == "merged" for t in plan["tasks"]):
             self._set_idea(slug, "done")
+            self._goal_finished(slug)
             self._changed(slug)
 
     def back(self, slug: str, tid: str, why: str, device: str = "desktop", suggested: bool = False) -> None:
@@ -155,7 +159,7 @@ class ReviewMixin:
             task = self._task(slug, tid)
             if task.get("state") != "review" or (slug, tid) in self._runs:
                 raise RunnerError("That result is not waiting at Review")
-            base = str(_r().setting(self.settings, "merge_into") or "dev")
+            base = self._landing(slug)
             files: list[str] = []
             if task.get("conflict"):
                 try:
@@ -181,7 +185,7 @@ class ReviewMixin:
             task = self._task(slug, tid)
             if task.get("state") != "review" or (slug, tid) in self._runs or not (task.get("tests") or {}).get("env"):
                 raise RunnerError("That result is not waiting for its tests")
-            self._decided(slug, task, "install" if install else "test again", device, into=str(_r().setting(self.settings, "merge_into") or "dev"))
+            self._decided(slug, task, "install" if install else "test again", device, into=self._landing(slug))
             self._set_task(slug, tid, state="running", conflict="", error="", note="", finished="", look="")
             if slug not in self._active:
                 self._active.append(slug)
@@ -199,7 +203,7 @@ class ReviewMixin:
             if task.get("state") not in ("review", "failed", "ready", "waiting", "held", "picking") or (slug, tid) in self._runs:
                 raise RunnerError("That task cannot be dropped now")
             if task.get("state") == "review":
-                self._decided(slug, task, "drop", device, into=str(_r().setting(self.settings, "merge_into") or "dev"))
+                self._decided(slug, task, "drop", device, into=self._landing(slug))
             self._set_task(slug, tid, state="dropped", error=DROPPED, finished=_r().now_iso(), conflict="")
             plan = self.plan(slug) or {"tasks": []}
             self._retire_dropped(plan["tasks"])

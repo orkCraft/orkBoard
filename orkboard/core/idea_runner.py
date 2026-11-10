@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard.core import craft_pick
+from orkboard.core.idea_goal_dev import GoalDevMixin
 from orkboard.core.idea_handover import HandoverMixin
 from orkboard.core.idea_holds import Held, HoldsMixin  # noqa: F401  (Held: the runner's, raised by its session)
 from orkboard.core.idea_landing import LandingMixin
@@ -42,7 +43,7 @@ from orkboard.core.idea_resume import STOPPED_BY, ResumeMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin, seen_files
 from orkboard.core.idea_task import FINDINGS_ASK, NO_BROWSER, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_route, idea_target, project_map, roles, status, tool_errors, tool_now
+from orkboard.realm import goal_branch, task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_route, idea_target, project_map, roles, status, tool_errors, tool_now
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
@@ -108,12 +109,13 @@ class Run:
     role: str = ""                 # the role it runs as (spec 34 §3): its `max_parallel` is held
 
 
-class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
+class IdeaRunner(GoalDevMixin, HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
     def __init__(self, repo_root: Path, state_dir: Path, settings: Any, bus: Any = None, *,
                  limits: Callable[[], list] | None = None, events: bool = True,
                  on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,
                  size_of: Callable[[str], str] | None = None, sign_ins: Any = None,
-                 party_of: Callable[[str], dict] | None = None, follow: Callable[[], str | None] | None = None) -> None:
+                 party_of: Callable[[str], dict] | None = None, follow: Callable[[], str | None] | None = None,
+                 goal_branches: bool = True) -> None:
         """`limits`: the quota readers' last read (the town's `limits`); without it the runner reads it itself.
         `events`: write the task's events to the local event log (spec 33 §9); `on_held`: a task was held (the limits are read);
         `rank(slug)`: the idea's place (its priority, then the person's order): the ideas are served in that order.
@@ -121,8 +123,10 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
         `sign_ins`: the host's sign-ins (core/sign_ins.py): a task whose tool is not signed in is held for it, not failed.
         `party_of(slug)`: the idea's party's `{"tool", "tiers"}` (spec 81): the tool its tasks run on (none: the Main tool) and the tiers its size gave its seats.
         `follow(reserve=)`: the tool now (spec 105 §2, realm/tool_now.py): where a task that follows the Main tool goes when the Main tool is out (`reserve` True for a plan the
-        Board started by itself, decisions §177.10); None, or no `follow`: the Main tool."""
+        Board started by itself, decisions §177.10); None, or no `follow`: the Main tool.
+        `goal_branches` (docs/specs/168 F1): a goal begun now has a branch of its own; False keeps every goal landing in dev, as a goal at work before the branch does."""
         self.repo_root, self.state_dir = Path(repo_root), Path(state_dir)
+        self.goal_branches = goal_branches                  # False: no goal is given a branch, every task lands in dev as the goals at work before did (docs/specs/168 F1)
         self.settings, self.bus = settings, bus
         self.git = IdeaGit(self.repo_root)
         self._limits_fn = limits
@@ -140,6 +144,7 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
         self._since: dict[tuple[str, str], float] = {}     # when a task entered the state it is in (the event log)
         self._tls = threading.local()                       # Merge's `dear`, on the thread that merges
         self._resume_working()
+        self.resume_dev()
 
     # -- files -----------------------------------------------------------------------------------
 
@@ -234,6 +239,7 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
                 self._until.pop((slug, t.get("id")), None)
             self._save_tasks(slug, plan["tasks"])
             self._set_idea(slug, "working")
+            goal_branch.ready(self.state_dir, slug, False)           # at work again: it is not waiting for dev
             if slug not in self._active:
                 self._active.append(slug)
         self._changed(slug)
@@ -271,7 +277,7 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
 
     def busy(self) -> bool:
         with self._lock:
-            return bool(self._runs)
+            return bool(self._runs) or self.dev_busy()
 
     # -- the tick --------------------------------------------------------------------------------
 
@@ -481,7 +487,7 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
         try:
             plan = self.plan(slug) or {"tasks": []}
             task = next(t for t in plan["tasks"] if t.get("id") == tid)
-            base = str(setting(self.settings, "merge_into") or "dev")
+            base = self._landing(slug)                   # a goal's own branch while its work is on it (docs/specs/168 F1), else dev
             env = self._env(slug, tid, plan)
             tool = self.tool_of(slug, task)
             h = harnesses.need(tool)
@@ -489,7 +495,7 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
             model = h.pick(run)                          # the role's model, else the tier the Target gives
             rnd, sent_from = int(task.get("round") or 1), ""
             if again is None:
-                self.git.ensure_branch(base)
+                base = self._begin_goal(slug, plan, task)     # the goal's branch made on its first start; dev merged into it as a step starts
                 path, branch = self.git.prepare(slug, tid, base)
                 start_sha = self.git.head(path)
                 self._set_task(slug, tid, base=start_sha)
@@ -573,7 +579,7 @@ class IdeaRunner(HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMi
                                error="" if problem is None else "the tests could not run" if tests.get("env") else "the tests are red", note=note)
                 self._log(slug, tid, f"== at Review · {now_iso()}\n", env)
                 return
-            commit, subjects, note = self.git.land(path, branch, base, bool(setting(self.settings, "push")))
+            commit, subjects, note = self.git.land(path, branch, base, self._pushes_into(base))
             self._set_task(slug, tid, state="merged", commit=commit, subjects=subjects, note=note, tests=tests,
                            diff=diff, finished=now_iso(), error="", look="")
             project_map.landed(self.state_dir, self.repo_root, path, commit, self.events)   # the System's parts at dev's new head (spec 89 §1)

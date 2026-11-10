@@ -11,7 +11,7 @@ from pathlib import Path
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _device, _text
-from orkboard.realm import event_log, idea_checks, idea_spend, ideas, journal_notes, library, roles
+from orkboard.realm import branch_offer, event_log, first_open, idea_checks, idea_spend, ideas, journal_notes, library, roles
 from orkboard.realm.idea_git import IdeaGit
 
 _NO_TESTS = {"passed": 0, "failed": 0, "failing": [], "tail": ""}
@@ -83,7 +83,8 @@ class ReviewMixin:
         except Exception:                       # not a git folder yet: the picker offers only the current branch
             branches = []
         into = self._into()
-        return {"into": into, "push": bool(m.get("push", settings.IDEAS["push"])),
+        way = settings.push_way(m.get("push", settings.IDEAS["push"]))
+        return {"into": into, "push": way != "no", "push_way": way,
                 "branches": branches if into in branches else [into, *branches], "results": self.results()}
 
     def _task(self, args: dict) -> tuple[str, str, dict, dict]:
@@ -189,9 +190,9 @@ class ReviewMixin:
                 "after": task.get("after") or [], "round": int(task.get("round") or 1)}
 
     def into(self, args: dict) -> dict:
-        """The branch results merge into (made from the default branch when missing) and whether it is pushed."""
-        branch, push = args.get("branch"), args.get("push")
-        if branch is None and not isinstance(push, bool):
+        """The branch results merge into (made from the default branch when missing) and how it is pushed (`push`: a boolean, or "no", "main" for main only, "both" for dev and main)."""
+        branch, push = args.get("branch"), settings.clean_push_way(args.get("push"))      # a boolean, or "no" / "main" / "both" (spec 168 F3)
+        if branch is None and push is None:
             raise IdeasError("branch is missing")
         mine = dict(self.settings_now())
         if branch is not None:
@@ -203,9 +204,64 @@ class ReviewMixin:
             except RuntimeError as e:
                 raise IdeasError(str(e)) from None
             mine["merge_into"] = name
-        if isinstance(push, bool):
+        if push is not None:
             mine["push"] = push
         kept = self.save_settings(mine)
         self._ev(event_log.INTO_CHANGED, args, branch=kept["merge_into"], push=kept["push"])
         self.changed("")
         return {"ok": True}
+
+    # -- the discard's plates (docs/specs/168 F2, decisions §283.27) ---------------------------------------------------
+
+    def _main_of(self, repo: IdeaGit) -> str:
+        """The release branch the project keeps (realm/first_open.py), else the default branch: what the upper pile's plate says."""
+        try:
+            return first_open.release_branch(self.state_dir, repo.branches(), repo.default_branch())
+        except Exception:                                         # not a repository yet
+            return ""
+
+    def _at_work(self) -> int:
+        """How many goals have a task running or testing now: the warning a plate's branches are dealt behind."""
+        return sum(1 for _slug, _title, plan in self._plans() if any(t.get("state") in ("running", "testing") for t in plan.get("tasks") or []))
+
+    def branch_set(self, args: dict) -> dict:
+        """`{which: "dev" | "main"}`: the plate's branches, `{which, now, branches, from, at_work}`: `now` the branch the plate stands for (dev: where goals land, `merge_into`; main: where they
+        are sent, the release branch), `branches` what it offers (realm/branch_offer.py: never `orkboard/*`, `goal/*`, `idea/*`; the lower any local branch, the upper main or dev), `from` the
+        branch a new one starts from (dev's), `at_work` the goals with a task running. `{which, branch}` sets it for the project; `{which: "dev", new}` makes the branch from dev first. Refused in words:
+        a branch not on offer, a name that is none, a new one that is there already."""
+        which = args.get("which")
+        if which not in branch_offer.WHICH:
+            raise IdeasError("which is dev or main")
+        repo = IdeaGit(Path(self.host.repo_root))
+        dev, main = self._into(), self._main_of(repo)
+        try:
+            offer = branch_offer.offered(repo, which, dev, main)
+        except Exception:                                         # not a repository yet: nothing to choose among
+            offer = []
+        now = dev if which == "dev" else main
+        if args.get("branch") is None and args.get("new") is None:
+            return {"which": which, "now": now, "branches": offer, "from": dev, "at_work": self._at_work()}
+        if args.get("new") is not None:
+            if which != "dev":
+                raise IdeasError("A new branch starts from dev: only the lower pile makes one")
+            name = _text(args, "new", 100)
+            try:
+                if not branch_offer.make_from(repo, name, dev):
+                    raise IdeasError(f"{name} is a branch here already: choose it among the branches")
+            except RuntimeError as e:
+                raise IdeasError(str(e)) from None
+            want = name
+        else:
+            want = _text(args, "branch", 100)
+            if want not in offer:
+                raise IdeasError(f"{want} is not a branch this pile can use")
+        if want != now:
+            if which == "dev":
+                mine = dict(self.settings_now())
+                mine["merge_into"] = want
+                self.save_settings(mine)
+            else:
+                first_open.keep_release_branch(self.state_dir, want)
+            self._ev(event_log.BRANCH_SET, args, which=which, branch=want, was=now)
+            self.changed("")
+        return {"ok": True, "which": which, "branch": want}

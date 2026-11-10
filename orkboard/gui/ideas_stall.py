@@ -61,7 +61,7 @@ class StallMixin:
             s = self.settings_now()
             return {"target": str(s.get("target") or settings.IDEAS["target"]), "look_wait": look_wait.clean(s.get("look_wait")),
                     "autostart": _onoff(s.get("autostart", True)), "work_at_night": _onoff(s.get("work_at_night") is True),
-                    "push": _onoff(s.get("push") is True)}[slot]
+                    "push": _onoff(settings.push_way(s.get("push")) != "no")}[slot]
         if slot == "hero":
             h = goal_team.hero_of(root, chair)
             return h.id if h is not None else ""

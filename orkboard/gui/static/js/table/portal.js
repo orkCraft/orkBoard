@@ -31,6 +31,8 @@ export const first = signal(false);                               // the first t
 export const sending = signal("");                                // the element of the goal that went in: the ring plays its rite (`is-sending rite-<element>`) for RITE_MS
 export const RITE_MS = 1200;
 export const woke = signal(false);                                       // the ring's first waking has played: its class comes off, so the ring opening and closing again (the checks) does not play it again
+export const dissolving = signal([]);                              // the cards of the goals that went through the portal, dissolving into its ring of runes while the rite plays (spec 168 F3; none under reduced motion)
+export const DISSOLVE_MS = 640;
 export const stopped = signal(null);                              // what stopped the goal on its way into main, in words: {slug, words, none}; `none` when the project has no tests (the card then offers *To main without the tests*)
 export const echo = signal(0);                                    // a press on a sealed portal says its reason again
 let planning = Promise.resolve(), said = false, selection = 0;
@@ -78,6 +80,9 @@ export function choose(slug) {
 
 /** Whether a check of the goal still stands in the way (running, waiting or red), or its checks were just asked. */
 const checkedOpen = (slug) => pending.value === slug || checksOf(slug).some((c) => c.state !== "passed");
+
+/** The goals the picked one takes along (`goal_main.plan`: the goal and what it stands on that main lacks), lit on the pile while it is chosen. */
+const alongOf = (slug) => new Set(chosen.value === slug && plan.value?.slug === slug && plan.value.state === "ok" ? (plan.value.goals || []).filter((s) => s !== slug) : []);
 
 /** Closes the portal and drops the choice. */
 export function close() {
@@ -132,7 +137,13 @@ async function enter(slug, untested) {
   got = got || {};
   if (got.note) toast(got.note, "warning");
   const sent = (mapData.value?.nodes || []).find((n) => n.slug === slug), element = sent?.hue || sent?.element || "";
-  if (element && !reduced() && document.querySelector(".portal-host.is-ring")) sending.value = element;       // the rite in the ring, in the goal's colour
+  const ring = !!document.querySelector(".portal-host.is-ring"), still = reduced();
+  if (element && !still && ring) sending.value = element;       // the rite in the ring, in the goal's colour
+  if (ring && !still) {                                                                    // the cards it took dissolve into the ring of runes, then leave (decisions §283.28); under reduced motion nothing moves
+    dissolving.value = [...new Set([slug, ...(got.goals || []), ...(plan.value?.slug === slug ? plan.value.goals || [] : [])])];
+    await wait(DISSOLVE_MS);
+    dissolving.value = [];
+  }
   const card = document.querySelector(`[data-portal-card="${CSS.escape(slug)}"]`), door = document.querySelector(".portal-host .ork-portal");      // no door at the wide width: the card stays in its ring while the rite plays
   if (card && door && !reduced()) {
     const a = card.getBoundingClientRect(), b = door.getBoundingClientRect();
@@ -152,10 +163,10 @@ function stoppedBy(slug, words) {
 }
 
 /** What stopped the chosen goal and, for a project with no tests, the one way on: *To main without the tests*. */
-export function Stopped({ slug, tone = "portal__sealed" }) {
+export function Stopped({ slug, tone = "portal__sealed", button = true }) {
   const s = stopped.value;
   if (!s || s.slug !== slug) return null;
-  return html`<p class=${tone} role="status" aria-live="polite" data-stopped=${slug}>${s.words}</p>${s.none && html`<button type="button" class="ork-btn quiet" data-to-main-untested
+  return html`<p class=${tone} role="status" aria-live="polite" data-stopped=${slug}>${s.words}</p>${s.none && button && html`<button type="button" class="ork-btn quiet" data-to-main-untested
     title="Sends the goal to main with no test run: nothing has shown it is safe" onClick=${() => playUntested(slug)}>To main without the tests</button>`}`;
 }
 
@@ -242,9 +253,9 @@ export function ReadyCards({ goals, main, onPress = null, on: picked = "" }) {
   const nodes = Object.fromEntries((mapData.value?.nodes || []).map((n) => [n.slug, n]));
   const held = onPress ? picked : chosen.value;
   return html`<ul class="portal-cards" aria-label=${goals.some((g) => redOf(g.slug, g)) ? "Goals awaiting checks before main" : `Goals ready for ${main}`}>${goals.map((g) => {
-    const n = nodes[g.slug] || {}, on = held === g.slug, gone = going.value === g.slug, red = redOf(g.slug, g);
+    const n = nodes[g.slug] || {}, on = held === g.slug, gone = going.value === g.slug, red = redOf(g.slug, g), along = !!held && !on && alongOf(held).has(g.slug), melting = dissolving.value.includes(g.slug);
     return html`<li key=${g.slug}><button type="button" data-portal-card=${g.slug} draggable=${onPress ? undefined : "true"} aria-pressed=${on ? "true" : "false"}
-        class=${cls(`ork-card ork-leans hand-card hand-card--stop${n.element ? ` el-${n.hue || n.element}` : ""}`, { "ork-picked": on, "is-going": gone })}
+        class=${cls(`ork-card ork-leans hand-card hand-card--stop${n.element ? ` el-${n.hue || n.element}` : ""}`, { "ork-picked": on, "is-going": gone, "is-along": along, "is-dissolving": melting })} data-along=${along ? "1" : undefined}
         aria-label=${`${g.title}, ${red ? "checks failed" : `ready for ${main}`}`}
         onClick=${() => { if (onPress) onPress(g.slug); else if (!on) choose(g.slug); else document.querySelector(".portal-host .ork-portal")?.focus(); }}
         onDragStart=${(e) => { if (onPress) { e.preventDefault(); return; } choose(g.slug); if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", g.slug); } }}
