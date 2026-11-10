@@ -25,7 +25,7 @@ import "./chronicle.js";                                                        
 import { Play } from "../arena/play.js";
 import { drawn } from "../frame/kinds.js";
 import { openOver, over } from "../frame/state.js";
-import { town } from "../link.js";
+import { command, town } from "../link.js";
 import { readTask } from "./data.js";
 
 // -- a file, a diff, a task ----------------------------------------------------------------------------------------------------------
@@ -56,17 +56,24 @@ function DiffFace({ props }) {
   </div>`;
 }
 
-/** A task: shell/preview.js's view of it, read again every 5 s while it runs. `log`: the log first (a failure's lines). */
+const TAIL_MS = 1500;                                                              // the terminal's tail is read this often while its task runs
+
+/** A task: shell/preview.js's view of it (its seat's header, its steps, its log in a terminal's face). While it runs its tail is read again every 1.5 s (`ideas.task_log`: the log masked, the steps, the state) and the whole task every 5 s.
+ *  `log`: the log first (a failure's lines). */
 function TaskFace({ props, log = false }) {
   const [t, setT] = useState(null);
   const read = () => readTask(props.slug, props.task).then((r) => r && setT(r));
+  const tail = () => command("ideas.task_log", { slug: props.slug, task: props.task }, true).then((r) => {
+    if (r && !r.error) setT((was) => (was ? { ...was, state: r.state || was.state, log: r.log, own_tool: r.own_tool, steps: r.steps } : was));      // a task without steps now has none shown
+  }).catch(() => {});
   useEffect(() => { setT(null); read(); }, [props.slug, props.task]);
   const live = t && (t.state === "running" || t.state === "testing");
   useEffect(() => {
     if (!live) return undefined;
-    const id = setInterval(read, 5000);
+    let n = 0;
+    const id = setInterval(() => { n += 1; if (n % 3 === 0) read(); else tail(); }, TAIL_MS);
     return () => clearInterval(id);
-  }, [live]);
+  }, [live, props.slug, props.task]);
   return html`<div class="table-over__task"><${Task} d=${t && { task: { ...t, idea: t.idea || props.slug, id: t.id || props.task } }} log=${log} /></div>`;
 }
 

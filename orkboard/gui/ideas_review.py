@@ -11,8 +11,14 @@ from pathlib import Path
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _device, _text
-from orkboard.realm import branch_offer, event_log, first_open, idea_checks, idea_spend, ideas, journal_notes, library, roles
+from orkboard.realm import board_map, branch_offer, event_log, first_open, idea_checks, idea_spend, ideas, journal_notes, library, log_mask, roles
 from orkboard.realm.idea_git import IdeaGit
+
+
+def own_tool(task: dict) -> bool:
+    """Whether the task was run in the person's own AI tool (a skill, decisions §258): marked `own_tool`, or `ran_in: "own"`."""
+    return bool(task.get("own_tool")) or task.get("ran_in") == "own"
+
 
 _NO_TESTS = {"passed": 0, "failed": 0, "failing": [], "tail": ""}
 
@@ -180,14 +186,28 @@ class ReviewMixin:
         self.changed(slug)
         return {"ok": True}
 
+    def _masked_log(self, slug: str, plan: dict, tid: str, task: dict) -> str:
+        """The task's log, last lines, the values of the goal's secrets masked before it leaves the host (spec 168 I1, realm/log_mask.py). A task run in the
+        person's own AI tool (`own_tool`, or `ran_in: "own"`) has no log here: the host never saw its session."""
+        runner = self._runner
+        if runner is None or own_tool(task):
+            return ""
+        return log_mask.mask(runner.log(slug, tid), log_mask.known(self.state_dir, self.host.repo_root, slug, plan))
+
     def task(self, args: dict) -> dict:
         slug, tid, task, plan = self._task(args)
         page = ideas.idea_page(self.root(), slug)
-        runner = self._runner
+        party = (page.get("track") if page is not None else "") or ideas.GENERAL
         return {**task, "idea": slug, "holds_commits": task.get("state") == "failed" and self._holds_commits(task), "idea_title": (page.title if page else "") or slug,
                 "head": roles.task_head(self.state_dir, task, self.target_of_idea(slug), None, self.tiers_of_idea(slug)),
-                "log": runner.log(slug, tid) if runner is not None else "",
+                "log": self._masked_log(slug, plan, tid, task), "party": party, "own_tool": own_tool(task),
+                **board_map.steps_of(self.state_dir, slug, task),
                 "after": task.get("after") or [], "round": int(task.get("round") or 1)}
+
+    def task_log(self, args: dict) -> dict:
+        """`ideas.task_log {slug, task}`: what the terminal in the pane reads while its task runs, light and often: `{state, log, steps?, own_tool}`, the log masked as `ideas.task` has it."""
+        slug, tid, task, plan = self._task(args)
+        return {"state": task.get("state") or "", "log": self._masked_log(slug, plan, tid, task), "own_tool": own_tool(task), **board_map.steps_of(self.state_dir, slug, task)}
 
     def into(self, args: dict) -> dict:
         """The branch results merge into (made from the default branch when missing) and how it is pushed (`push`: a boolean, or "no", "main" for main only, "both" for dev and main)."""

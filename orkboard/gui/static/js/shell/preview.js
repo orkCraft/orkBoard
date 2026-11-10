@@ -4,11 +4,15 @@ import { useState } from "preact/hooks";
 import { html } from "../html.js";
 import { Who } from "../orkui.js";
 import { ErrorLine } from "./errors.js";
-import { LogView } from "./logview.js";
+import { LogTerm, LogView } from "./logview.js";
+import { wide } from "../table/data.js";
 import { holdWords, heldByYou } from "../board/store.js";
 import { TASK_STATE } from "../board/maplayout.js";
 import { act } from "./store.js";
-import { closeOver, openOver, over } from "../frame/state.js";
+import { closeOver, openInventory, openOver, over } from "../frame/state.js";
+import { StepsList, stepsOf } from "../table/steps.js";
+import { toolName } from "../table/tabmarks.js";
+import { town } from "../link.js";
 import { pctOf, pctShort } from "../spend.js";
 
 /** A failed task's way on: run its goal's tasks again, or drop it (asked first, in the card). */
@@ -20,6 +24,19 @@ function FailedActions({ t }) {
     ${sure ? html`<span>Drop this task? Its worktree goes; its branch stays.</span>
       <button class="ork-btn danger" onClick=${drop}>Drop it</button><button class="ork-btn" onClick=${() => setSure(false)}>Keep it</button>`
       : html`<button class="shell-quiet" onClick=${() => setSure(true)}>Drop…</button>`}</div>`;
+}
+
+const OWN_TOOL = "This task was run in your own AI tool, so Orkboard has no log of it. What it made is in its branch and its commits.";
+
+/** A seat's work, its header (spec 168 I1, decisions §283.16.9): the seat's head with its tier, race and craft, the AI tool it runs on, and an edit mark that opens its leader's inventory. */
+function SeatHeader({ t }) {
+  const tool = t.tool || town.value?.mana?.main || "";
+  const edit = () => { closeOver(); openInventory(t.party); };
+  return html`<header class="shell-seat" data-seat>
+    ${t.head ? html`<${Who} head=${t.head} />` : html`<span class="shell-seat__tier">${t.tier}</span>`}
+    ${tool && html`<span class="shell-seat__tool" data-tool=${tool}><span class="ork-label">Tool</span> ${toolName(tool)}</span>`}
+    <button type="button" class="ork-btn quiet shell-seat__edit" data-edit-inventory aria-label="Edit its leader's inventory" title="Opens its leader's inventory: its tool and its tier" onClick=${edit}>Edit</button>
+  </header>`;
 }
 
 /** A task: its state, its goal, who does it, its brief and its log (`d.task`, `ideas.task`; the caller reads it again while it runs). `log`: the log first (a failure's lines). */
@@ -35,8 +52,13 @@ export function Task({ d, log = false }) {
       <dt>Round</dt><dd>${t.round || 1}</dd>
       <dt>Spend</dt><dd>${t.cost != null ? (pctOf(t.cost) ? `≈${pctOf(t.cost)}` : `$${t.cost.toFixed(2)}`) : "—"}</dd>
     </dl>`;
-  const lines = html`<${LogView} text=${t.log} label="Log" />`;
+  const lines = t.own_tool
+    ? html`<p class="shell-owntool" data-own-tool>${OWN_TOOL}</p>`                       // the host never saw that session: it has no log of it
+    : wide.value ? html`<${LogTerm} text=${t.log} label="Log" />` : html`<${LogView} text=${t.log} label="Log" />`;      // the terminal from 760 px up; the narrow page keeps its log as it was (spec 168, *Every stage keeps*)
+  const steps = stepsOf(t);
   return html`<div class="shell-task" data-kind=${log ? "log" : "task"}>
+    <${SeatHeader} t=${t} />
+    ${steps && html`<div class="shell-task__steps" data-steps><${StepsList} st=${steps} /></div>`}
     ${log ? lines : facts}
     ${t.error && html`<${ErrorLine} text=${t.error} />`}
     ${t.state === "failed" && html`<${FailedActions} t=${t} />`}
