@@ -13,7 +13,9 @@ K5, K7 and K8 stay below as they were written.
 
 **The chairs (10 November 2026)**: O3b taken (`o3b-chairs.jpg`) but tile 5's plus is drawn as a cross, its lower arm longer:
 take tile 5 again (attach the sheet) with *Tile 5 is EXACTLY tile 3's chair; the brass sign on its cord is a PLUS with four EQUAL
-arms, as a + key, never a cross.* O3c (the leaders' backs by race) is the owner's own sheet, taken.
+arms, as a + key, never a cross.* O3c (the leaders' backs by race) is the owner's own sheet, taken. The second take (`o3b-chairs-2.jpg`) drew tile 5 again as a cross, now
+on a cord like a pendant: Gemini keeps it a cross. **The new party's chair is laid by code**: tile 3's empty chair with orkUI's own
+plus (its icon, four equal arms) in brass on its back, as the members' tiers are laid by code (§290.3); tile 5 is not cut.
 
 **The objects' first takes (10 November 2026)**, in `docs/mockups/table-template/objects/cartoon/sheets/`: O1, O2a, O2b, O3a, O4.
 O2a is taken as it is. O1's top row is taken and its bottom row is not needed: the inside's mask is cut by code from the top
