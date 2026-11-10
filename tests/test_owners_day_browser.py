@@ -136,7 +136,7 @@ def ask_drop(box):
 
 def test_a_goal_sent_lies_in_the_orkmasters_lane_at_once_and_in_no_partys(day):
     pg, host, w = day
-    assert pg.locator('.table-lane[data-party] [data-goal="fresh"]').count() == 0, "not drawn in a party's lane too"
+    assert pg.locator('.table-lane[data-party] [data-goal="fresh"]:not([data-assessing])').count() == 0, "not drawn in a party's lane too, but as the back of the leader that is assessing it (spec 168 C3, decisions 283.16.1)"
     if wide(w):
         card = pg.locator('.col-card--down[data-goal="fresh"]')                                                           # a card of the column is picked; no pile list (§261.5)
         card.click()
@@ -330,10 +330,10 @@ def test_a_task_card_at_work_shows_the_flame_and_says_the_time_it_has_worked_and
     assert name == ("none" if still else "ork-glow") and (still or (duration == "2.4s" and timing.startswith("steps(6"))), (name, duration, timing)
     assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none", "the stepping drawing and the dotted line of before are gone"
     assert card.evaluate("e => getComputedStyle(e, '::after').backgroundImage") in ("none", "")
-    words = card.locator(".corner__much").inner_text().strip()
-    assert words.lower().startswith("worked 1 m "), words                                                               # the time worked is the foot's figure (spec 147 A)
-    ticked = card.locator(".corner__much").inner_text()
-    pg.wait_for_function("([sel, was]) => document.querySelector(sel + ' .corner__much').innerText !== was", arg=['.table-card[data-task="r1"]', ticked], timeout=3000)   # it ticks
+    words = card.get_attribute("title").split(" · ", 1)[-1].strip()                                                    # spec 168 C5: the foot's figure is the spend; the time worked is in the card's tooltip
+    assert words.lower().startswith("worked 1 m "), words
+    ticked = card.get_attribute("title")
+    pg.wait_for_function("([sel, was]) => document.querySelector(sel).title !== was", arg=['.table-card[data-task="r1"]', ticked], timeout=3000)   # it ticks
     pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")           # (a failed task's card lies as a place while its failure is in the hand, spec 128 C.2: here it is put back to be looked at)
     waiting = pg.locator('.table-card[data-state="failed"]').first
     assert waiting.locator(".ork-elem.is-glowing").count() == 0 and waiting.locator(".corner--top .ork-elem").count() == 1, "what does not work shows no flame (its rune stands)"
@@ -387,7 +387,7 @@ def test_under_reduced_motion_nothing_moves_the_flame_stands_and_the_time_still_
     flame = card.locator(".corner--top .ork-elem.is-glowing")
     assert anim(flame)[0] == "none" and flame.evaluate("e => getComputedStyle(e).opacity") == "1", "the flame stands, at full strength"
     assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none"
-    was = card.locator(".corner__much").inner_text()
+    was = card.get_attribute("title")
     assert "worked" in was
     for n in host.nodes:
         for t in n["tasks"]:
@@ -397,5 +397,5 @@ def test_under_reduced_motion_nothing_moves_the_flame_stands_and_the_time_still_
     pg.locator('.table-card[data-task="r1"][data-state="testing"]').wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(300)
     assert anim(pg.locator('.table-card[data-task="r1"]'))[0] == "none", "no flash either"
-    pg.wait_for_function("([sel, was]) => document.querySelector(sel + ' .corner__much').innerText !== was", arg=['.table-card[data-task="r1"]', pg.locator('.table-card[data-task="r1"] .corner__much').inner_text()], timeout=3000)
+    pg.wait_for_function("([sel, was]) => document.querySelector(sel).title !== was", arg=['.table-card[data-task="r1"]', was], timeout=3000)
     pg.emulate_media(reduced_motion="no-preference")
