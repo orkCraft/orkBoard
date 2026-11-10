@@ -1,18 +1,17 @@
-// A party's header (docs/specs/123-the-leaders-at-the-table.md §5, docs/specs/98-the-table-and-the-hand.md §3.4): one row of its squad on its lens — *Does* (orkUI's sword, the word, its AI tool's ink mark when the whole side runs on one tool) and its
-// seats, *Checks* (the shield, the word, its tool) and its seats, the size in one word, then at the right the aspects its leader looks at (concerns.js `Aspects`) and the party's **…**. No party name (the tab and the pane's title say it), no *Leads*: the
-// leader sits at the table, in the tabs. A seat is its head with its role under it (the caption face, muted, cut at 76 px), its own tool's mark only when it is not its side's, the busy mark while it works; pressed it opens its popover (seatpop.js:
-// nothing only on hover). The **…** has *Edit* (the one place of the parties, opened at this party: parties.js), *Ask again* (its leader looks at the map again, concerns.js `askAgain`; only for a party with a map whose host has answered with a look) and *Remove party* (the question over the pane).
-// `Seat` is also the phone's (hand/upparty.js), which draws it as it did: the head and its tool's mark, no role under it.
+// A party's header (docs/specs/123-the-leaders-at-the-table.md §5, docs/specs/168 E1). **At the wide width** (760 px and up) a leader's tab with no goal picked has the header of small cards (leaderhead.js: *At work*, *Concerns*, *Ask*), held while the table scrolls, and the seats
+// and tools it showed lie in the leader's inventory (stallseats.js) and the party's **…** is the pane's title's (partymenu.js). **At the narrow width** the header is what it was: one row of its squad on its lens — *Does* (orkUI's sword, the word, its AI tool's ink mark when
+// the whole side runs on one tool) and its seats, *Checks* (the shield, the word, its tool) and its seats, the size in one word, then at the right the aspects its leader looks at (concerns.js `Aspects`) and the party's **…** (*Edit*, *Ask again*, *Remove party*). A seat is its head
+// with its role under it (the caption face, muted, cut at 76 px), its own tool's mark only when it is not its side's, the busy mark while it works; pressed it opens its popover (seatpop.js: nothing only on hover). `Seat` is also the phone's (hand/upparty.js), which draws it as it
+// did: the head and its tool's mark, no role under it.
 import { useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head, Sign, TIER_WORDS } from "../orkui.js";
-import { openOver } from "../frame/state.js";
-import { GENERAL, MARKED, nameOf, markSrc, sizeTip, sizeWord, squadOf, toolOf } from "./data.js";
+import { MARKED, nameOf, wide, markSrc, sizeTip, sizeWord, squadOf, toolOf } from "./data.js";
 import { SeatPop } from "./seatpop.js";
-import { openParties } from "./parties.js";
 import { Menu } from "./menu.js";
-import { Aspects, askAgain, hasMap, lookOf, recordOf, theLeader } from "./concerns.js";
-import { ConcernCards } from "./concernrow.js";
+import { Aspects } from "./concerns.js";
+import { partyItems } from "./partymenu.js";
+import { LeaderHead } from "./leaderhead.js";
 
 const SIDE_SIGN = { build: "sword", check: "shield" };
 
@@ -39,26 +38,27 @@ function sideTool(g, seats) {
   return tools.length && tools.every((t) => t.id === tools[0].id) ? tools[0] : null;
 }
 
-export function Header({ g, from }) {
-  const [seat, setSeat] = useState(""), box = useRef();
-  const squad = squadOf(g), size = sizeWord(g), name = nameOf(g);
-  const edit = () => openParties({ party: g.slug }, from);
-  const remove = () => openOver("party", { slug: g.slug, remove: true }, from, `Remove ${name}`);
-  const again = hasMap(g) && recordOf(g.slug) ? [["Ask again", () => askAgain(g.slug), false, "", `${theLeader(g.leader?.name)} looks at the table again`, lookOf(g.slug).status === "looking"]] : [];
-  const items = [["Edit", edit], ...again, ...(g.slug === GENERAL ? [] : [["Remove party", remove, true]])];
-  return html`<section class="table-head" aria-label=${`${name}: its squad`} data-party=${g.slug} ref=${box}>
-    <div class="table-squad">${squad.map((x) => {
+/** The party's squad: the groups of seats, each side's AI tool and a seat's popover. The narrow header draws it; at the wide width the leader's inventory does (stallseats.js). */
+export function Squad({ g, from }) {
+  const [seat, setSeat] = useState(""), squad = squadOf(g);
+  return html`<div class="table-squad">${squad.map((x) => {
       const tool = sideTool(g, x.seats), said = tool ? `${x.word} on ${tool.name}` : x.word;
       return html`<div key=${x.band} class="table-group" role="group" aria-label=${x.word} data-band=${x.band}>
         <span class="table-side" title=${said} data-tool=${tool?.id || undefined}><${Sign} name=${SIDE_SIGN[x.band]} /><span class="table-side__w">${x.word}</span>${tool && html`<${ToolMark} id=${tool.id} />`}</span>
         <span class="table-seats">${x.seats.map((m) => html`<${Seat} key=${m.slug} g=${g} m=${m} side=${tool?.id || ""} open=${seat === m.slug} onPress=${() => setSeat(seat === m.slug ? "" : m.slug)} />`)}</span>
       </div>`;
-    })}</div>
+    })}${seat && html`<${SeatPop} g=${g} slug=${seat} from=${from} onClose=${() => setSeat("")} />`}</div>`;
+}
+
+/** A leader's tab with no goal picked: at the wide width the header of small cards (leaderhead.js), at the narrow one the squad and its **…** as it was. */
+export function Header({ g, from }) {
+  if (wide.value) return html`<${LeaderHead} g=${g} from=${from} />`;
+  const name = nameOf(g), size = sizeWord(g);
+  return html`<section class="table-head" aria-label=${`${name}: its squad`} data-party=${g.slug}>
+    <${Squad} g=${g} from=${from} />
     ${size && html`<span class="ork-chip table-size" title=${sizeTip(g)}>${size}</span>`}
     <span class="table-grow"></span>
-    <${ConcernCards} g=${g} />
     <${Aspects} g=${g} />
-    <${Menu} label=${`${name}'s menu`} items=${items} />
-    ${seat && html`<${SeatPop} g=${g} slug=${seat} from=${from} onClose=${() => setSeat("")} />`}
+    <${Menu} label=${`${name}'s menu`} items=${partyItems(g, from)} />
   </section>`;
 }

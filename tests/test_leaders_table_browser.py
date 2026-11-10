@@ -177,7 +177,10 @@ def test_the_open_head_is_large_the_others_36_the_open_tab_has_no_fill_and_the_l
 def test_the_header_has_no_leads_the_sword_and_the_shield_with_their_tools_and_a_role_under_each_head(wide):
     pg, host = wide
     go(pg, "tech")
-    head = pg.locator(".table-head")
+    pg.get_by_role("button", name="Tech's menu").click()                                       # the seats and tools lie in the leader's inventory now (spec 168 E1)
+    pg.get_by_role("menuitem", name="Seats and tools").click()
+    head = pg.locator(".stall-seats")
+    head.wait_for(timeout=WAIT_MS)
     assert "Leads" not in head.inner_text() and head.get_by_role("group", name="Leads").count() == 0
     sides = head.locator(".table-side")
     assert sides.count() == 2 and [s.locator(".ork-sign").get_attribute("class").split()[-1] for s in sides.all()] == ["sword", "shield"]
