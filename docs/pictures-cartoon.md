@@ -11,6 +11,10 @@ K5 (the members' tiers are laid by code from the leaders' gear in K3). After the
 *K6, the fixes after the beta* below. After the phone: P1–P4 and O1–O6 (the cards' pictures and the objects stay pixel for the beta).
 K5, K7 and K8 stay below as they were written.
 
+**The chairs (10 November 2026)**: O3b taken (`o3b-chairs.jpg`) but tile 5's plus is drawn as a cross, its lower arm longer:
+take tile 5 again (attach the sheet) with *Tile 5 is EXACTLY tile 3's chair; the brass sign on its cord is a PLUS with four EQUAL
+arms, as a + key, never a cross.* O3c (the leaders' backs by race) is the owner's own sheet, taken.
+
 **The objects' first takes (10 November 2026)**, in `docs/mockups/table-template/objects/cartoon/sheets/`: O1, O2a, O2b, O3a, O4.
 O2a is taken as it is. O1's top row is taken and its bottom row is not needed: the inside's mask is cut by code from the top
 row's flat inside (flood fill, its shine's holes filled); the bottom row drew dark bottles with a level, not masks. To be taken
@@ -236,6 +240,13 @@ the empty chair, the empty chair pulled out (pointed at), the new party's chair 
 ```
 Six wooden chairs for a card-game interface on one sheet, a 3x2 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions, a little chunky, the same warm brown wood, brass and scale as the attached backpack and book. Every chair has a light rim so it reads on a very dark background. Left to right, top to bottom: 1 an occupied chair's BACK only, seen from the front as if from across the table: the top of a high back, two round wooden posts with knobs and a carved top rail between them, and the panel under the rail; nobody drawn, its middle left plain because a head is laid over it later; it fills the tile's lower two thirds and is wider than tall. 2 the same back, a little grander for the leader whose table is open: taller posts, brass caps on the knobs and a small carved crest in the middle of the top rail, the panel's middle still plain. 3 an empty chair, whole, seen front-on and a little from above: the high back, the panel, a red cushion on the seat, four legs, standing straight. 4 the same empty chair pulled out from the table, turned a little to the left and lifted at its front legs as if inviting someone to sit, two short motion lines at its feet. 5 the same empty chair with a small bright brass plus sign hanging on a cord from its top rail: a chair for a new party. 6 the empty chair of tile 3 redrawn SIMPLER so it reads at 18 pixels: the outline twice as thick, only the back, the seat and the legs, no carving, no cushion seam. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
+
+### O3c. The leaders' backs by race (the owner's own sheet, 10 November 2026)
+Taken as the owner made it (`objects/cartoon/sheets/o3c-leaders-backs.jpg`), a 3x2 grid of an occupied chair's back for each race's
+leader, its middle plain for the head: 1 the knights' (a steel-riveted frame, a small heraldic shield), 2 the orks' (rough planks, iron
+bands, tusks and a skull on the top rail), 3 the elves' (living branches, vines and leaves), 4 the gnomes' (stone posts, a hammer on a
+shield, carved bands), 5 the undead's (bones, skulls, cobwebs, torn cloth), 6 the goblins' (a horned imp's face, spikes and lava).
+The gnomes' bands carry glyphs like letters: they are taken as runes (no word is spelled).
 
 ### O4. The lamp's chain (attach K1)
 Taking it again: add *The links are LARGE OPEN OVAL RINGS, each with a clear hole, every other link turned edge-on, as a real metal chain, bronze with one warm shade: never a rope or a braid; about twelve links in tile 1.*
