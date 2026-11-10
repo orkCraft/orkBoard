@@ -6,15 +6,19 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon, Sign } from "../orkui.js";
 import { command } from "../link.js";
-import { mapData } from "../shell/store.js";
-import { nameOf, partiesAll } from "./data.js";
 import { raceOf } from "./felt.js";
 
 const ORKMASTER = "orkmaster";                                                                            // the reader's leader of a post that names no party
 export const ACTS = { change_spec: "Change the spec", start_now: "Start now", to_main: "To main" };       // a wait's acts in words, by the reader's `act`
 export const KINDS = { news: "news", concern: "a concern", change: "a change" };                         // a post's kind in its head's line
 const two = (n) => String(n).padStart(2, "0");
-const orkHeadOf = () => { const o = mapData.value?.project?.orkmaster || null; return { race: o?.race || "peon", tier: o?.tier || "crown" }; };      // the project's Orkmaster, as hand/context.js says it
+const nameOf = (g) => g?.short || g?.title || "";
+
+// What a post needs to know of the Board (the parties, the goals' rows, the Orkmaster), told by the face that draws it: post.js imports none of frame/state, shell/store or pwa/. table/data.js tells it once, as it loads. Each is a function read while a post renders,
+// so a signal it reads redraws the post.
+let world = { parties: () => [], nodes: () => [], orkmaster: () => null };
+export const setPostWorld = (w) => { world = { ...world, ...w }; };
+const orkHeadOf = () => { const o = world.orkmaster(); return { race: o?.race || "peon", tier: o?.tier || "crown" }; };      // the project's Orkmaster, as hand/context.js says it
 
 /** A post's time in words: *12:40* today, *yesterday · 18:05*, else its day and time; "" for none. */
 export function when(at, now = new Date()) {
@@ -28,23 +32,30 @@ export function when(at, now = new Date()) {
 /** Who says a post: the Orkmaster or a party's leader, `{name, head, race, g}` (`race` "" for the Orkmaster, whose colour is its own). */
 export function whoOf(leader) {
   if (leader === ORKMASTER) return { name: "Orkmaster", head: orkHeadOf(), race: "", g: null };
-  const g = partiesAll().find((x) => x.slug === leader) || null;
+  const g = world.parties().find((x) => x.slug === leader) || null;
   return { name: g ? nameOf(g) : leader, head: g?.leader?.head || null, race: g ? raceOf(g) : "", g };
 }
 
 /** A leader's head. */
 export const HeadOf = ({ w, size = "" }) => (w.head ? html`<${Head} race=${w.head.race} tier=${w.head.tier} size=${size} />` : null);
 
-/** A post's head: the leader's round head, its name, the line under it (when, what kind), the dots. */
-export function PostHead({ leader, sub }) {
+export const TAGS = { news: "NEW", change: "CHANGED" };       // a post's label on the desktop (the phone's head says the kind in its line, and hides the label)
+
+/** A post's head: the leader's round head, its name, the line under it (when, what kind), the desktop's label (`tag`), the alert sign of a post that asks, the *Quiet* plate, the dots. Given `onMore`, the dots are a button with its word (the desktop's); else the phone's plain dots. */
+export function PostHead({ leader, sub, tag = "", asks = false, quiet = false, onMore = null }) {
   const w = whoOf(leader);
   return html`<header class="post-card__who"><span class="post-card__av"><${HeadOf} w=${w} /></span>
-    <span class="post-card__by"><b class="post-card__name">${w.name}</b>${sub && html`<small class="post-card__sub">${sub}</small>`}</span><span class="post-card__dots" aria-hidden="true"><${Icon} name="more-horizontal" /></span></header>`;
+    <span class="post-card__by"><b class="post-card__name">${w.name}</b>${sub && html`<small class="post-card__sub">${sub}</small>`}</span>
+    ${tag && html`<span class="post-card__tag" data-label=${tag}>${tag}</span>`}
+    ${asks && html`<span class="post-card__asks"><${Sign} name="alert" /><span>Asks you</span></span>`}
+    ${quiet && html`<span class="post-card__quiet">Quiet</span>`}
+    ${onMore ? html`<button type="button" class="post-card__dots is-button" onClick=${onMore}><${Icon} name="more-horizontal" /><span class="post-card__word">More</span></button>`
+      : html`<span class="post-card__dots" aria-hidden="true"><${Icon} name="more-horizontal" /></span>`}</header>`;
 }
 
 /** A goal named in a post: its rune and short name, a press is `onPick(slug)`; words alone when the Board no longer has it or nothing picks. `small`: under a post's words. */
 export function GoalLine({ slug, name, onPick, sign = "", small = false }) {
-  const n = (mapData.value?.nodes || []).find((x) => x.slug === slug);
+  const n = world.nodes().find((x) => x.slug === slug);
   const face = html`<${Elem} name=${n?.element || ""} hue=${n?.hue || ""} dim=${!n?.element} />${sign && html`<${Sign} name=${sign} />`}<span class="post-card__gname">${name || n?.short || n?.title || slug}</span>`;
   if (!n || !onPick) return html`<p class=${cls("post-card__goal is-gone", { "is-small": small })}>${face}</p>`;
   return html`<button type="button" class=${cls("post-card__goal", { "is-small": small })} data-goal=${slug} onClick=${() => onPick(slug)}>${face}</button>`;
@@ -57,21 +68,22 @@ export function PostBody({ p, onPick }) {
 }
 
 /** The card a post lies on: orkUI's, its party's colour its top edge; reached by the keys (`tabindex`), said by `label`. `kind`: its modifier (news, wait, work, seen). */
-export function PostCard({ leader, kind, label, stacked = false, data = {}, children }) {
+export function PostCard({ leader, kind, label, stacked = false, asks = false, quiet = false, data = {}, children }) {
   const w = whoOf(leader);
-  return html`<article class=${cls(`ork-card post-card post-card--${kind}`, { "is-stacked": stacked })} data-leader=${leader} data-race=${w.race || undefined} tabindex="0" aria-label=${label} ...${data}>${children}</article>`;
+  return html`<article class=${cls(`ork-card post-card post-card--${kind}`, { "is-stacked": stacked, "is-asks": asks, "is-quiet": quiet })} data-asks=${asks ? "true" : undefined} data-quiet=${quiet ? "true" : undefined} data-leader=${leader} data-race=${w.race || undefined} tabindex="0" aria-label=${label} ...${data}>${children}</article>`;
 }
 
 const subOf = (p) => [KINDS[p.kind] || KINDS.news, when(p.at)].filter(Boolean).join(" · ");
 
-/** One post, read whole. */
-export const Post = ({ p, onPick }) => html`<${PostCard} leader=${p.leader} kind="news" label=${`${whoOf(p.leader).name}: ${p.text}`}><${PostHead} leader=${p.leader} sub=${subOf(p)} /><${PostBody} p=${p} onPick=${onPick} /></${PostCard}>`;
+/** One post, read whole. `p.asks`: it asks the person; `p.quiet`: it is quiet. `onMore(p)`: the head's dots as a button. */
+export const Post = ({ p, onPick, onMore = null }) => html`<${PostCard} leader=${p.leader} kind="news" asks=${!!p.asks} quiet=${!!p.quiet} label=${`${whoOf(p.leader).name}: ${p.text}`}>
+  <${PostHead} leader=${p.leader} sub=${subOf(p)} tag=${TAGS[p.kind] || ""} asks=${!!p.asks} quiet=${!!p.quiet} onMore=${onMore && (() => onMore(p))} /><${PostBody} p=${p} onPick=${onPick} /></${PostCard}>`;
 
 /** One leader's posts in a row (`{leader, post, more}`): its newest post, the edges of the rest under its card until *More from <leader>* opens them. */
-export function Stack({ s, onPick }) {
+export function Stack({ s, onPick, onMore = null }) {
   const [open, setOpen] = useState(false), more = s.more || [], w = whoOf(s.leader);
-  return html`<${PostCard} leader=${s.leader} kind="news" stacked=${more.length > 0 && !open} label=${`${w.name}: ${s.post.text}`}>
-    <${PostHead} leader=${s.leader} sub=${subOf(s.post)} />
+  return html`<${PostCard} leader=${s.leader} kind="news" stacked=${more.length > 0 && !open} asks=${!!s.post.asks} quiet=${!!s.post.quiet} label=${`${w.name}: ${s.post.text}`}>
+    <${PostHead} leader=${s.leader} sub=${subOf(s.post)} tag=${TAGS[s.post.kind] || ""} asks=${!!s.post.asks} quiet=${!!s.post.quiet} onMore=${onMore && (() => onMore(s.post))} />
     <${PostBody} p=${s.post} onPick=${onPick} />
     ${open && more.map((p, i) => html`<div key=${i} class="post-card__more"><small class="post-card__sub">${subOf(p)}</small><${PostBody} p=${p} onPick=${onPick} /></div>`)}
     ${more.length > 0 && html`<button type="button" class="post-card__open" aria-expanded=${String(open)} onClick=${() => setOpen(!open)}><${Icon} name=${open ? "chevron-up" : "chevron-down"} /><span>${open ? `Less from ${w.name}` : `More from ${w.name}`}</span></button>`}
@@ -79,7 +91,7 @@ export function Stack({ s, onPick }) {
 }
 
 /** What waits for the person (the reader's `waits`): a spec that starts by itself at a clock time, a goal done and waiting for main; only its own acts, each the command the reader names. `onDone()`: after an act was sent. */
-export function Wait({ w, onPick, onDone = () => {} }) {
+export function Wait({ w, onPick, onDone = () => {}, onMore = null }) {
   const [writing, setWriting] = useState(false), [text, setText] = useState(""), [busy, setBusy] = useState(false), field = useRef();
   const acts = w.acts || [], change = acts.find((a) => a.act === "change_spec"), main = w.kind === "main", ready = w.main_ready !== false;
   useEffect(() => { if (writing) field.current?.focus(); }, [writing]);
@@ -90,8 +102,8 @@ export function Wait({ w, onPick, onDone = () => {} }) {
     setBusy(false);
     onDone();
   };
-  return html`<${PostCard} leader=${w.leader} kind="wait" data=${{ "data-wait": w.kind, "data-goal": w.goal }} label=${`${whoOf(w.leader).name}: ${w.short}${main ? ", waits for main" : ""}`}>
-    <${PostHead} leader=${w.leader} sub=${main ? "done · waits for main" : "the plan"} />
+  return html`<${PostCard} leader=${w.leader} kind="wait" asks=${!!w.asks} quiet=${!!w.quiet} data=${{ "data-wait": w.kind, "data-goal": w.goal }} label=${`${whoOf(w.leader).name}: ${w.short}${main ? ", waits for main" : ""}`}>
+    <${PostHead} leader=${w.leader} sub=${main ? "done · waits for main" : "the plan"} asks=${!!w.asks} quiet=${!!w.quiet} onMore=${onMore && (() => onMore(w))} />
     <${GoalLine} slug=${w.goal} name=${w.short} sign=${main ? "check" : ""} onPick=${onPick} />
     ${w.kind === "starts" && w.at && html`<p class="post-card__clock"><${Icon} name="clock" /><span>Starts by itself at ${when(w.at)}</span></p>`}
     ${main && !ready && w.main_reason && html`<p class="post-card__sub">${w.main_reason}</p>`}

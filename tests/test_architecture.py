@@ -266,3 +266,11 @@ def test_heat_and_reach_are_served_by_a_mixin_of_their_own():
     text = (ROOT / "gui/ideas.py").read_text()
     assert "from orkboard.gui.ideas_reach import ReachMixin, reach_commands" in text and "class Ideas(ReachMixin," in text and "**reach_commands(self)" in text
     assert "map_reach" not in text and text.count("ideas_reach") == 1
+
+
+def test_the_one_post_imports_none_of_the_windows_state_the_store_or_the_phones_frame():
+    """Goal 170 A: table/post.js is drawn by the desktop and the phone alike, so it reaches the Board only through `setPostWorld`."""
+    import re
+    text = (ROOT / "gui/static/js/table/post.js").read_text(encoding="utf-8")
+    mods = re.findall(r'^import .* from "([^"]+)"', text, re.M)
+    assert mods and not [m for m in mods if any(x in m for x in ("frame/", "shell/", "pwa/", "data.js", "board/"))], mods

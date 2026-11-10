@@ -45,3 +45,38 @@
   font: var(--ork-type-caption); font-weight: 600; cursor: pointer; }
 .post-card__open:focus-visible { outline: 0; box-shadow: inset 0 -2px 0 var(--ork-ink); }
 .post-card__open .ork-icon { flex: none; width: 16px; height: 16px; }
+
+/* ---- the desktop's post (goal 170 A; decisions §293): body 15 and caption 13, nothing under 12 px; the phone (a touch pointer, narrow or low: frame/upright.js UPRIGHT) keeps every size above. The head's extras, *NEW* and *CHANGED*, the sign of a post that asks and
+   the *Quiet* plate, are not drawn on the phone. ---- */
+.post-card__tag, .post-card__asks, .post-card__quiet { display: none; }
+.post-card__word { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }      /* the dots' word, read aloud and by name */
+.post-card__dots.is-button { appearance: none; position: relative; box-sizing: border-box; min-width: var(--ork-tap); min-height: var(--ork-tap); margin: calc(var(--ork-3) * -1) calc(var(--ork-3) * -1) calc(var(--ork-3) * -1) 0; padding: 0; align-items: center; justify-content: center; border: 0; background: none; cursor: pointer; }
+
+@media not ((pointer: coarse) and ((max-width: 759.98px) or (max-height: 499.98px))) {
+  .post-card { padding: var(--ork-4) var(--ork-5); gap: var(--ork-3); }
+  .post-card__name { font-size: 14px; line-height: 18px; }
+  .post-card__sub { font-size: 13px; line-height: 18px; }
+  .post-card__text { font-size: 15px; line-height: 21px; }
+  .post-card__goal { min-height: 32px; margin: 0; font-size: 15px; line-height: 20px; }
+  .post-card__goal.is-small { font-size: 13px; line-height: 18px; }
+  .post-card__clock { font-size: 14px; line-height: 18px; }
+  .post-card__link, .post-card__open { min-height: 32px; font-size: 13px; line-height: 18px; }
+  .post-card__open { margin: 0; }
+  .post-card .ork-btn { min-height: 32px; font-size: 13px; }
+  .post-card__dots.is-button { min-width: 32px; min-height: 32px; margin: calc(var(--ork-2) * -1) calc(var(--ork-2) * -1) calc(var(--ork-2) * -1) 0; color: var(--ork-ink-muted); }
+  .post-card__tag { display: inline-block; flex: none; padding: 0 var(--ork-3); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); font-size: 12px; line-height: 18px; color: var(--ork-ink); background: var(--ork-panel); box-shadow: inset 0 0 0 var(--ork-line) var(--party-hue, var(--ork-card-frame)); }
+  .post-card__asks { display: inline-flex; flex: none; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); font-size: 13px; line-height: 18px; font-weight: 700; color: var(--ork-alert); }
+  .post-card__asks .ork-sign { flex: none; }
+  .post-card__quiet { display: inline-block; flex: none; padding: 0 var(--ork-3); font: var(--ork-type-caption); font-size: 12px; line-height: 18px; font-weight: 600; color: var(--ork-ink-muted); background: var(--ork-panel); }
+
+  /* a post that asks: ringed in the alert's yellow, the sign beside the ring (the ring never alone) */
+  .post-card.is-asks { border-color: var(--ork-alert); box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), 0 0 0 var(--ork-line) var(--ork-alert); }
+  /* a quiet post: told by its muted ink and its plate, never by opacity */
+  .post-card.is-quiet, .post-card.is-quiet .post-card__text, .post-card.is-quiet .post-card__goal { color: var(--ork-ink-muted); }
+
+  /* Tab reaches every act, and a focus shows */
+  .post-card:focus-visible { box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), inset 0 0 0 2px var(--ork-ink); }
+  .post-card.is-asks:focus-visible { box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), 0 0 0 var(--ork-line) var(--ork-alert), inset 0 0 0 2px var(--ork-ink); }
+  .post-card .ork-btn:focus-visible, .post-card__dots.is-button:focus-visible, .post-card__open:focus-visible, .post-card__goal:focus-visible, .post-card__link:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+  .post-card__acts { gap: var(--ork-2) var(--ork-3); }
+}
