@@ -4,7 +4,8 @@ import { useState } from "preact/hooks";
 import { html } from "../html.js";
 import { Who } from "../orkui.js";
 import { ErrorLine } from "./errors.js";
-import { LogTerm } from "./logview.js";
+import { LogTerm, LogView } from "./logview.js";
+import { wide } from "../table/data.js";
 import { holdWords, heldByYou } from "../board/store.js";
 import { TASK_STATE } from "../board/maplayout.js";
 import { act } from "./store.js";
@@ -53,7 +54,7 @@ export function Task({ d, log = false }) {
     </dl>`;
   const lines = t.own_tool
     ? html`<p class="shell-owntool" data-own-tool>${OWN_TOOL}</p>`                       // the host never saw that session: it has no log of it
-    : html`<${LogTerm} text=${t.log} label="Log" />`;
+    : wide.value ? html`<${LogTerm} text=${t.log} label="Log" />` : html`<${LogView} text=${t.log} label="Log" />`;      // the terminal from 760 px up; the narrow page keeps its log as it was (spec 168, *Every stage keeps*)
   const steps = stepsOf(t);
   return html`<div class="shell-task" data-kind=${log ? "log" : "task"}>
     <${SeatHeader} t=${t} />
