@@ -318,7 +318,7 @@ def cost(state_dir: Path, route_: list[dict], short: bool, *, root: Path | None 
 
     for step, times, per_party in _calls(len(slugs), short, kind, reproduces):
         for slug in (slugs if per_party else slugs[:1]):
-            got = idea_target.pick(step, target(slug))
+            got = idea_target.own_pick(step, target(slug), goal_team.lead_tier_of(root, slug) if per_party and root is not None and slug else "")      # a leader's own tier for its own calls (spec 168 H4)
             if got is None:
                 continue
             calls += times
@@ -331,7 +331,7 @@ def cost(state_dir: Path, route_: list[dict], short: bool, *, root: Path | None 
                 tier = idea_target.tier_of(idea_target.task_pick("warrior", target(slug))[0])
                 base += TASKS_PER_STEP * costs.get(tier, costs.get("warrior", 0.0))
     if root is not None and (weigher := weigher_party(root, slugs if slugs != [""] else [], short)):      # Product weighs the goal as well (spec 120 §2.4): one more Talk round's call
-        if (got := idea_target.pick("talk_round", target(weigher))) is not None:
+        if (got := idea_target.own_pick("talk_round", target(weigher), goal_team.lead_tier_of(root, weigher))) is not None:
             calls += 1
             if pricing.has_price(tool := party_tool(root, weigher)):
                 base += idea_target.floor(idea_target.tier_of(got[0]), tool)

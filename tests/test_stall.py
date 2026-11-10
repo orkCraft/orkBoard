@@ -68,7 +68,7 @@ def test_no_price_is_a_number_the_host_did_not_estimate(host):
     party = _party(host)
     for chair in ("", party):
         for p in prices(stall(host, chair)):
-            assert set(p) <= {"mine", "locked", "word"}
+            assert set(p) <= {"mine", "locked", "word", "money"}                      # the one money is the Fork's call, its floor to its cap (answer_ways.fork_price), nothing guessed
             assert "word" not in p or p["word"] in ("lighter", "heavier", "one pass", "same cost")
 
 
@@ -122,10 +122,10 @@ def test_stall_back_writes_the_defaults(host):
     assert card(got["stall"], "push")["yours"] == "no"
 
 
-def test_a_tech_partys_chair_has_its_heroes_its_tool_and_its_tiers(host):
+def test_a_tech_partys_chair_has_its_heroes_its_tool_its_tier_its_size_and_how_it_answers(host):
     party = _party(host)
     got = stall(host, party)
-    assert got["chair"] == party and [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier"]
+    assert got["chair"] == party and [s["slot"] for s in got["shelves"]] == ["hero", "tool", "tier", "size", "answers"]
     assert shelf(got, "hero")["kind"] == "heroes" and shelf(got, "tool")["kind"] == "small"
     assert [w["id"] for w in shelf(got, "hero")["wares"]] == ["sh-c4", "sh-xp", "sh-scene"]
     xp = ware(got, "hero", "sh-xp")
@@ -134,7 +134,11 @@ def test_a_tech_partys_chair_has_its_heroes_its_tool_and_its_tiers(host):
     assert "Sh.man" in got["say"] and "C4 and hotspots" in got["say"]
     assert ware(got, "hero", "sh-c4")["price"] == {"mine": True}
     assert card(got, "hero")["yours"] == "sh-c4" and card(got, "hero")["head"] == ware(got, "hero", "sh-c4")["head"]
-    assert [w["id"] for w in shelf(got, "tier")["wares"]] == ["", "laborer", "warrior", "elder"]        # *Default* (the recipe's tiers) is a way among them
+    assert [w["id"] for w in shelf(got, "tier")["wares"]] == ["", "laborer", "warrior", "elder"]        # *Default* (it follows *How deep*) is a way among them
+    assert [w["id"] for w in shelf(got, "size")["wares"]] == ["lean", "standard", "full"] and [w["id"] for w in shelf(got, "answers")["wares"]] == ["pen", "choice", "fork", "silent"]
+    assert [shelf(got, x)["label"] for x in ("tier", "size", "answers")] == ["Its tier", "Its party's size", "How it answers"]
+    assert card(got, "tier")["yours"] == "" and card(got, "size")["yours"] == "standard" and card(got, "answers")["yours"] == "choice"       # a party that said nothing
+    assert ware(got, "answers", "choice")["default"] is True and ware(got, "size", "standard")["default"] is True and ware(got, "tier", "")["default"] is True
     assert card(got, "tool")["yours"] == "" and ware(got, "tool", "")["price"] == {"mine": True}
 
 
@@ -175,19 +179,45 @@ def test_taking_a_hero_calls_the_lay_hook_when_it_exists_and_only_for_a_hero_tha
     assert laid == [party]
 
 
-def test_a_tier_is_taken_for_every_seat_and_put_back_to_the_recipes(host):
+def test_a_leaders_tier_is_taken_for_its_own_calls_and_put_back_to_default(host):
     party, root = _party(host), host.ideas.root()
     team = goal_team.team_of(root, party)
-    assert team
-    start = card(stall(host, party), "tier")["yours"]
+    seats = dict(goal_team.tiers_of(root, party))
     got = host.command("ideas.stall_take", {"chair": party, "slot": "tier", "value": "laborer"})
-    assert {goal_team.tiers_of(root, party)[s] for s in team} == {"laborer"} and card(got["stall"], "tier")["yours"] == "laborer"
-    assert got["undo"] == {"slot": "tier", "value": start}
+    assert goal_team.lead_tier_of(root, party) == "laborer" and card(got["stall"], "tier")["yours"] == "laborer" and card(got["stall"], "tier")["word"] == "Laborer"
+    assert goal_team.tiers_of(root, party) == seats                                                       # its seats' tiers are not its own
+    assert got["undo"] == {"slot": "tier", "value": ""}
     assert ware(got["stall"], "tier", "laborer")["price"] == {"mine": True}
-    assert set(ware(got["stall"], "tier", "elder")["price"]) == {"word"}
+    assert ware(got["stall"], "tier", "elder")["price"] == {"word": "heavier"} and ware(got["stall"], "tier", "")["price"] == {"word": "heavier"}      # Default: balance's Talk tier, warrior
+    assert got["stall"]["shelves"][2]["wares"][0]["price"] == {"word": "heavier"}
     host.command("ideas.stall_back", {"chair": party, "slot": "tier"})
-    recipe = party_recipes.tiers_for(goal_team.leader_of(root, party), team, goal_team.size_of(root, party) or "standard")
+    assert goal_team.lead_tier_of(root, party) == "" and team
+
+
+def test_a_partys_size_is_taken_with_its_seats_tiers_and_no_target_and_how_it_answers_is_taken(host):
+    party, root = _party(host), host.ideas.root()
+    got = host.command("ideas.stall_take", {"chair": party, "slot": "size", "value": "full"})
+    assert goal_team.size_of(root, party) == "full" and card(got["stall"], "size")["yours"] == "full" and got["undo"] == {"slot": "size", "value": "standard"}
+    team = goal_team.team_of(root, party)
+    recipe = party_recipes.tiers_for(goal_team.leader_of(root, party), team, "full")
     assert {s: t for s, t in goal_team.tiers_of(root, party).items() if s in team} == {s: t for s, t in recipe.items() if s in team}
+    assert host.command("ideas.board")["target"] == "balance"                                            # a size is no Target: How deep is as it was
+    assert ware(got["stall"], "size", "lean")["price"] == {"word": "lighter"} and ware(got["stall"], "size", "standard")["price"] == {"word": "lighter"}
+    host.command("ideas.stall_back", {"chair": party, "slot": "size"})
+    assert goal_team.size_of(root, party) == "standard"
+    got = host.command("ideas.stall_take", {"chair": party, "slot": "answers", "value": "fork"})
+    assert goal_team.answers_of(root, party) == "fork" and card(got["stall"], "answers")["word"] == "Fork" and got["undo"] == {"slot": "answers", "value": "choice"}
+    fork_price = ware(got["stall"], "answers", "fork")["price"]
+    assert fork_price == {"mine": True} and all(ware(got["stall"], "answers", w)["price"] == {"word": "lighter"} for w in ("pen", "choice", "silent"))
+    back = host.command("ideas.stall_take", {"chair": party, "slot": "answers", "value": "choice"})
+    money = ware(back["stall"], "answers", "fork")["price"]["money"]
+    assert money.startswith("+$") and "a question" in money and ware(back["stall"], "answers", "silent")["price"] == {"word": "same cost"}
+    host.command("ideas.stall_take", {"chair": party, "slot": "answers", "value": "silent"})
+    assert goal_team.answers_of(root, party) == "silent"
+    host.command("ideas.stall_back", {"chair": party, "slot": "answers"})
+    assert goal_team.answers_of(root, party) == "choice"
+    with pytest.raises(Exception, match="not a ware"):
+        host.command("ideas.stall_take", {"chair": party, "slot": "answers", "value": "shout"})
 
 
 def test_release_has_its_chair_locked(host):
@@ -265,7 +295,7 @@ def test_only_arts_chair_lays_its_makers_after_the_ai_tool_and_tier(host, monkey
     monkeypatch.setattr(craft_tools, "key", lambda _: None)
     art = _party(host, "art")
     got = stall(host, art)
-    assert [s["slot"] for s in got["shelves"]] == ["tool", "tier", "craft_tools"]
+    assert [s["slot"] for s in got["shelves"]] == ["tool", "tier", "size", "answers", "craft_tools"]
     makers = shelf(got, "craft_tools")
     assert makers["label"] == "Its makers"
     assert makers["sub"] == "Run in Orkboard on your key"

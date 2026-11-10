@@ -272,6 +272,46 @@ def set_tiers(root: Path, slug: str, tiers: dict[str, str]) -> None:
         ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
 
 
+def lead_tier_of(root: Path, slug: str) -> str:
+    """The tier a party's leader runs its own calls on (Talk, its section, its acceptance), kept on its page (spec 168 H4, decisions §283.33); "" follows *How deep* (the matrix of `realm/idea_target.py`)."""
+    page = ideas.track_page(root, slug)
+    got = (page.get("lead_tier") or "") if page is not None else ""
+    return got if got in ("laborer", "warrior", "elder") else ""
+
+
+def set_lead_tier(root: Path, slug: str, tier: str) -> None:
+    """The leader's own tier kept ("" follows *How deep*). ValueError for a tier that is none."""
+    if tier not in ("", "laborer", "warrior", "elder"):
+        raise ValueError("A tier is laborer, warrior or elder")
+    with ideas.LOCK:
+        page = ideas.track_page(root, slug)
+        if page is None:
+            raise ValueError(f"No party {slug!r}")
+        page.set("lead_tier", tier)
+        ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
+
+
+def answers_of(root: Path, slug: str) -> str:
+    """How a party's leader answers (`core/idea_ways.py` `WAYS`: pen · choice · fork · silent), kept on its page; a party that has none answers as a Choice."""
+    from orkboard.realm import answer_ways as idea_ways
+    page = ideas.track_page(root, slug)
+    got = (page.get("answer_way") or "") if page is not None else ""
+    return got if got in idea_ways.WAYS else idea_ways.DEFAULT
+
+
+def set_answers(root: Path, slug: str, way: str) -> None:
+    """The leader's way of answering kept. ValueError for a way that is none."""
+    from orkboard.realm import answer_ways as idea_ways
+    if way not in idea_ways.WAYS:
+        raise ValueError("A leader answers by a Pen, a Choice, a Fork or Silent")
+    with ideas.LOCK:
+        page = ideas.track_page(root, slug)
+        if page is None:
+            raise ValueError(f"No party {slug!r}")
+        page.set("answer_way", "" if way == idea_ways.DEFAULT else way)
+        ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
+
+
 def seat_role(r: dict | None, tiers: dict[str, str]) -> dict | None:
     """A role as its party's seat runs it (spec 81 §2): the tier its size gave the seat in place of the library's tier it was installed
     with (or By Target). A model the person set by hand on Agents (not that library tier) keeps it; so does a role the size gave no tier."""

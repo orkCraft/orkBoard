@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from orkboard.realm import idea_target, library
 
-TARGET = idea_target.SIZE_TARGET
 TECH, TECH_LINE = library.TECH, library.TECH_LINE   # the parties the Architect leads (spec 89 §5, decisions §104.1); a party made before keeps its name
 SIZES = idea_target.SIZES
 

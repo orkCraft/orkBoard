@@ -54,7 +54,10 @@ PICKS = {"target": "balance", "build_start": "2h", "night": "ideas", "review": "
 DEFAULTS = {"target": "balance", "build_start": "2h", "night": "off", "review": "on", "push": "no", "max_parallel": "1"}
 HEROES = [("sh-c4", "Sh.man", "C4 and hotspots", stats("C4 and hotspots", "containers → parts → hotspots", "standard", 2, 2)),
           ("sh-xp", "Spike Shaman", "Extreme programming", stats("Extreme programming", "test → code → refactor", "standard", 3, 2))]
-TIERS = [("", "Default", "Each seat on the tier its recipe gives it", None), ("laborer", "Laborer", "The lightest model of its tool", {"share": -2}), ("warrior", "Warrior", "The middle model", None), ("elder", "Elder", "The strongest model", {"share": 3})]
+TIERS = [("", "Default", "Its own calls follow How deep", None), ("laborer", "Laborer", "The lightest model of its tool", {"share": -2}), ("warrior", "Warrior", "The middle model", None), ("elder", "Elder", "The strongest model", {"share": 3})]
+SIZES = [("lean", "Lean", "One doer at a time; no checker, the leader accepts each step", {"word": "lighter"}), ("standard", "Standard", "Two at a time; one checker, then the leader accepts", None), ("full", "Full", "Three at a time; every checker that applies, then the leader accepts", {"word": "heavier"})]
+ANSWERS = [("pen", "Pen", "It asks, and you answer in your own words each time.", None), ("choice", "Choice", "It offers its ways; you pick one.", None), ("fork", "Fork", "Its ways worked out, with their gains, costs and risks: one more call a question, on the elder tier.", {"money": "+$0.25 to $0.38 a question"}),
+         ("silent", "Silent", "It decides and lays a card you can overrule; going into main, money and dropping a goal are still asked.", None)]
 TOOLS = [("", "Main tool", "The potions' order: the first AI tool in your hand that has mana", None), ("claude", "Claude", "Every seat works on Claude", {"money": "up to $2 a night"}), ("codex", "Codex", "Signed out", {"locked": "Codex is signed out"})]
 
 
@@ -63,8 +66,8 @@ class StallHost(HandHost):
 
     def __init__(self, **more):
         super().__init__(bare=True, **more)
-        self.carry = {"": dict(ORKMASTER_NOW), "tech": {"hero": "sh-c4", "tool": "", "tier": "warrior"}}
-        self.defaults = {"": dict(DEFAULTS), "tech": {"hero": "sh-c4", "tool": "", "tier": ""}}
+        self.carry = {"": dict(ORKMASTER_NOW), "tech": {"hero": "sh-c4", "tool": "", "tier": "warrior", "size": "standard", "answers": "choice"}}
+        self.defaults = {"": dict(DEFAULTS), "tech": {"hero": "sh-c4", "tool": "", "tier": "", "size": "standard", "answers": "choice"}}
         self.before = {}
 
     def shelves(self, chair):
@@ -89,7 +92,9 @@ class StallHost(HandHost):
                           [ware("lich-nk", "Release Night King", "DORA's keys, readiness and semver", lock, head={"race": "lich", "tier": "elder"}, stats=stats("DORA's keys", "dev → the gate → main", "standard", 1, 3))])]
         return [shelf("hero", "Its hero", "The school its leader looks by", "heroes", [ware(id, word, line, priced("hero", id, {"word": "one pass"}), head=SH, stats=st) for id, word, line, st in HEROES]),
                 shelf("tool", "Its AI tool", "What runs this party's goals", "small", [ware(id, word, line, priced("tool", id, price or {"word": "same cost"})) for id, word, line, price in TOOLS]),
-                shelf("tier", "Its seats' tier", "The model each seat of the party gets", "small", [ware(id, word, line, priced("tier", id, price or {"word": "same cost"})) for id, word, line, price in TIERS])]
+                shelf("tier", "Its tier", "The model its own calls run on: Talk, its section, its acceptance", "small", [ware(id, word, line, priced("tier", id, price or {"word": "same cost"})) for id, word, line, price in TIERS]),
+                shelf("size", "Its party's size", "Its seats' cells and how many work at once", "small", [ware(id, word, line, priced("size", id, price or {"word": "same cost"})) for id, word, line, price in SIZES]),
+                shelf("answers", "How it answers", "How it asks what it must ask", "small", [ware(id, word, line, priced("answers", id, price or {"word": "same cost"})) for id, word, line, price in ANSWERS])]
 
     def stall(self, chair):
         shelves = self.shelves(chair)
@@ -217,17 +222,21 @@ def test_the_orkmasters_slots_are_a_row_of_six_big_cards_each_its_chosen_way(gui
     assert not log, "\n".join(log)
 
 
-def test_a_leaders_slots_are_its_hero_its_tool_and_its_tier_with_its_seats_under_them(gui):
+def test_a_leaders_slots_are_its_hero_tool_tier_size_and_how_it_answers_with_its_seats_under_them(gui):
     pg, host, log = opened(gui, "tech")
     try:
         assert ("ideas.stall", {"chair": "tech"}) in host.log
         assert pg.locator(".stall-title").inner_text() == "Inventory"
-        assert slot(pg, "hero").evaluate_all("els => els.length") == 1 and pg.locator(".slots .slot-card").evaluate_all("els => els.map((e) => e.dataset.slot)") == ["hero", "tool", "tier"]
+        assert slot(pg, "hero").evaluate_all("els => els.length") == 1 and pg.locator(".slots .slot-card").evaluate_all("els => els.map((e) => e.dataset.slot)") == ["hero", "tool", "tier", "size", "answers"]
+        assert pg.locator(".slots .slot-label").evaluate_all("els => els.map((e) => e.innerText.toLowerCase())") == ["its hero", "its ai tool", "its tier", "its party's size", "how it answers"]
         hero = slot(pg, "hero")
         assert hero.locator(".slot-card__name").inner_text() == "Sh.man" and hero.locator(".slot-pic .ork-race__head").count() == 1 and hero.locator(".slot-pips i").count() == 2     # its head is its picture
         assert slot(pg, "tool").locator(".slot-card__name").inner_text() == "Main tool"
         tier = slot(pg, "tier")
         assert tier.locator(".slot-card__name").inner_text() == "Warrior" and tier.locator(".slot-pips i").count() == 4 and tier.locator(".slot-card__coin").count() == 1
+        size, answers = slot(pg, "size"), slot(pg, "answers")
+        assert size.locator(".slot-card__name").inner_text() == "Standard" and size.locator(".slot-pips i").count() == 3 and size.locator(".slot-card__coin").count() == 1         # a lighter size exists
+        assert answers.locator(".slot-card__name").inner_text() == "Choice" and answers.locator(".slot-pips i").count() == 4 and answers.locator(".slot-card__coin").count() == 0
         seats, row = pg.locator('.stall-seats[data-seats="tech"]'), pg.locator(".slots")
         seats.wait_for(timeout=WAIT_MS)
         assert row.bounding_box()["y"] + row.bounding_box()["height"] <= seats.bounding_box()["y"] + 1               # the seats under the slots
@@ -320,7 +329,7 @@ def test_a_slot_s_default_is_a_way_among_the_others(gui):
     try:
         deal(pg, "tier")
         default = way(pg, "tier", "")
-        assert default.get_attribute("data-default") == "1" and "default" in default.inner_text().lower() and "recipe" in default.inner_text()
+        assert default.get_attribute("data-default") == "1" and "default" in default.inner_text().lower() and "how deep" in default.inner_text().lower()
         default.click()
         assert _sent(pg, host, ("ideas.stall_take", {"chair": "tech", "slot": "tier", "value": ""}))
         pg.wait_for_function("() => document.querySelector('.slots [data-slot=tier]').dataset.way === ''", timeout=WAIT_MS)
@@ -483,7 +492,7 @@ class MakerShelfHost(StallHost):
 def test_art_lays_makers_after_its_ai_tool_and_tier_with_money_and_disclosures(gui):
     pg, host, log = opened(gui, "art", host=MakerShelfHost())
     try:
-        assert pg.locator(".slots .slot-card").evaluate_all("els => els.map(e => e.dataset.slot)") == ["hero", "tool", "tier"]
+        assert pg.locator(".slots .slot-card").evaluate_all("els => els.map(e => e.dataset.slot)") == ["hero", "tool", "tier", "size", "answers"]
         assert pg.locator(".stall-shelf").evaluate_all("els => els.map(e => e.dataset.shelf)") == ["craft_tools"]                 # the makers lie under the slots and the seats
         assert pg.locator(".slots").bounding_box()["y"] < pg.locator('[data-shelf="craft_tools"]').bounding_box()["y"]
         makers = pg.locator('[data-shelf="craft_tools"]')
@@ -731,6 +740,34 @@ def test_a_games_art_has_sprite_dryad_on_its_slot_drawn_by_its_own_head_with_no_
         card.click(force=True)
         pg.wait_for_timeout(300)
         assert pg.locator("[data-slot-ways]").count() == 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_leaders_size_and_how_it_answers_are_taken_each_with_its_price_and_undone(gui):
+    """Spec 168 H4: the size's ways (*Lean*, *Standard*, *Full*) and how a leader answers (*Pen*, *Choice*, *Fork*, *Silent*) are slots like the others: pressed, their ways dealt (the Fork's price in money on its card), played, sent."""
+    pg, host, log = opened(gui, "tech")
+    try:
+        deal(pg, "size")
+        assert [pg.locator('[data-slot-ways="size"] .slot-way').nth(i).get_attribute("data-way") for i in range(3)] == ["lean", "standard", "full"]
+        assert way(pg, "size", "standard").get_attribute("data-yours") == "1" and way(pg, "size", "standard").get_attribute("data-default") == "1"
+        assert "lighter" in way(pg, "size", "lean").inner_text() and "heavier" in way(pg, "size", "full").inner_text()
+        way(pg, "size", "full").click()
+        assert _sent(pg, host, ("ideas.stall_take", {"chair": "tech", "slot": "size", "value": "full"}))
+        assert slot(pg, "size").locator(".slot-card__name").inner_text() == "Full"
+        deal(pg, "answers")
+        assert [pg.locator('[data-slot-ways="answers"] .slot-way').nth(i).get_attribute("data-way") for i in range(4)] == ["pen", "choice", "fork", "silent"]
+        assert "a question" in way(pg, "answers", "fork").inner_text() and "$" in way(pg, "answers", "fork").inner_text()           # the Fork's price, said as money
+        way(pg, "answers", "silent").click()
+        assert _sent(pg, host, ("ideas.stall_take", {"chair": "tech", "slot": "answers", "value": "silent"}))
+        assert slot(pg, "answers").locator(".slot-card__name").inner_text() == "Silent"
+        pg.locator("[data-undo]").click()
+        assert _sent(pg, host, ("ideas.stall_take", {"chair": "tech", "slot": "answers", "value": "choice"}))
+        assert slot(pg, "answers").locator(".slot-card__name").inner_text() == "Choice"
+        pg.set_viewport_size({"width": 1366, "height": 768})                                                          # the laptop the window is fitted to
+        deal(pg, "answers")
+        shot(pg, "h4-leader-inventory")
     finally:
         pg.close()
     assert not log, "\n".join(log)

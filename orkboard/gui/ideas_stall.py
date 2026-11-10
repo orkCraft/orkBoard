@@ -9,9 +9,10 @@ The chair `""` is the Orkmaster's (the project's settings), a party's slug its l
 card of the slot is the way carried (its big card on the table), the shelf's `wares` are its ways, dealt to the hand when it is pressed. `at` is where the way carried lies among the ways (the pips), `cheaper` says a way of the slot is lighter than the one carried
 (the coin), `default` marks the way the slot's *Default* writes, `star` the Orkmaster's pick (a choice, never a price). The Orkmaster's slots (spec 168 H2, decisions §283.31): `target` (How deep), `build_start` (The build starts: `autostart` and `look_wait` as one,
 realm/look_wait.py), `night` (The night: realm/night_slot.py, the one place the ladder's engine plugs in), `review` (Lands in dev by itself: on is `review` false), `push` (*no*, *main*, *both*: `settings.push_way`) and `max_parallel` (Goals at once).
-`yours` in the hand is the id of the value carried ("" when the seats' own tiers differ). **A price is never made up**: `{mine: true}` for what is carried, `{locked: why}`,
+A leader's slots (spec 168 H4, decisions §283.33): `hero`, `tool`, `tier` (its own calls: Talk, its section, its acceptance; "" is *Default*, which follows *How deep*: `goal_team.lead_tier_of`), `size` (*lean*, *standard*, *full*: the seats' cells and how many work at once; no Target of its own) and `answers`
+(how it answers: *Pen*, *Choice*, *Fork*, *Silent*, realm/answer_ways.py); its seats' own tiers are kept in its seats' grid, not a slot. `yours` in the hand is the id of the value carried. **A price is never made up**: `{mine: true}` for what is carried, `{locked: why}`,
 else a `{word}` (`lighter`, `heavier`, `one pass`, `same cost`); a `{share}` is sent only from an estimator that measures the first potion's week, and none does today, so none
-is sent. A tier's word is the difference of `party_price.price` at that tier and now; a setting that takes no model's work is `same cost`. `before` marks the value carried before
+is sent. A tier's word says whether its own calls run lighter or heavier than the tier carried (*Default* is the matrix's tier of Talk at *How deep*); a size's, whether it has more cells; the Fork's is its call's floor to its cap as money (`answer_ways.fork_price`); a setting that takes no model's work is `same cost`. `before` marks the value carried before
 the last take of the slot (kept on the instance, for the run of the host).
 """
 from __future__ import annotations
@@ -22,11 +23,16 @@ from typing import Any
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import craft_tools, goal_team, hero_table, heroes, ideas, lexicon, library, look_wait, map_parts, night_slot, party_price, party_recipes
+from orkboard.realm import answer_ways, craft_tools, event_log, goal_team, hero_table, heroes, ideas, lexicon, library, look_wait, idea_target, map_parts, night_slot, party_recipes
 
 ON_OFF = (("on", "On"), ("off", "Off"))
 TARGETS = (("thrift", "Thrift", "Every step on the cheaper tier; a spec reads less"), ("balance", "Balance", "Each step on its usual tier"), ("quality", "Quality", "Specs and acceptances on the elder tier"))
 TIERS = (("laborer", "Laborer", "The lightest model of its tool"), ("warrior", "Warrior", "The middle model"), ("elder", "Elder", "The strongest model"))
+LEAD_TIERS = (("", "Default", "Its own calls follow How deep"), *((v, w, f"Its own calls (Talk, its section, its acceptance) on {l[0].lower()}{l[1:]}") for v, w, l in TIERS))
+SIZES = tuple((v, w, l) for v, w, l in (("lean", "Lean", "One doer at a time; no checker, the leader accepts each step"),
+                                         ("standard", "Standard", "Two at a time; one checker, then the leader accepts"),
+                                         ("full", "Full", "Three at a time; every checker that applies, then the leader accepts")))
+ANSWERS = tuple((v, answer_ways.WORDS[v], answer_ways.LINES[v]) for v in answer_ways.WAYS)
 BUILD = tuple((v, look_wait.BUILD_LABELS[v], look_wait.BUILD_LINES[v]) for v in look_wait.BUILD_STARTS)
 LANDS = (("on", "On", "A green result goes into dev with no press"), ("off", "Off", "A green result waits in the discard for your press"))
 PUSHES = (("no", "No", "Nothing leaves this computer"), ("main", "Main only", "Main is pushed after To main; dev stays here"), ("both", "Dev and main", "Dev and main are pushed after each merge"))
@@ -41,7 +47,8 @@ ORKMASTER = (       # (slot, label, sub, [(value, word, line)])
 )
 # The Orkmaster's pick on each of its slots (decisions §283.30: starred in the hand): the way it recommends a project that has said nothing. A pick is a choice, never a price.
 PICKS = {"target": "balance", "build_start": "2h", "night": "ideas", "review": "on", "push": "main", "max_parallel": "1"}
-LABELS = {"hero": "Its hero", "tool": "Its AI tool", "tier": "Its seats' tier", "gate": "The gate"}
+LABELS = {"hero": "Its hero", "tool": "Its AI tool", "tier": "Its tier", "size": "Its party's size", "answers": "How it answers", "gate": "The gate"}
+LEADER_SLOTS = ("hero", "tool", "tier", "size", "answers")
 LOCKED_HERO = "Release's hero is fixed"
 LOCKED_GATE = "The gate is set in orkcraft.toml"
 LOCKED_SEATS = "Release's seats are fixed"
@@ -78,8 +85,11 @@ class StallMixin:
         if slot == "tool":
             return goal_team.tool_of(root, chair)
         if slot == "tier":
-            got = {self._seat_tier(root, chair, s) for s in goal_team.team_of(root, chair)}
-            return got.pop() if len(got) == 1 else ""
+            return goal_team.lead_tier_of(root, chair)
+        if slot == "size":
+            return goal_team.size_of(root, chair) or "standard"      # a party made before sizes works as a standard one
+        if slot == "answers":
+            return goal_team.answers_of(root, chair)
         return "gate"
 
     def _recipe_tiers(self, root: Path, chair: str) -> dict[str, str]:
@@ -106,20 +116,9 @@ class StallMixin:
             return [(h.id, lexicon.term(f"hero.{h.id}"), h.flow) for h in heroes.of(map_parts.craft_of(root, chair))]
         if slot == "tool":
             return [("", "Main tool", "The potions' order: the first AI tool in your hand that has mana")] + [(i, n, "Runs this party's goals") for i, n in self._tool_ids()]
-        return [("", "Default", "Each seat on the tier its recipe gives it"), *TIERS]
+        return list({"tier": LEAD_TIERS, "size": SIZES, "answers": ANSWERS}[slot])
 
     # -- the price (never made up) -----------------------------------------------------------------------------
-
-    def _tier_cost(self, root: Path, chair: str, tier: str | None) -> float:
-        team = goal_team.team_of(root, chair)
-        tiers = goal_team.tiers_of(root, chair)
-        if tier == "":                                  # the Default way: the recipe's tier for each seat
-            tiers = {**tiers, **{s: t for s, t in self._recipe_tiers(root, chair).items() if s in team}}
-        elif tier is not None:
-            tiers = {**tiers, **{s: tier for s in team}}
-        got = party_price.price(root, self.state_dir, self.board_settings(), goal_team.leader_of(root, chair), team, goal_team.every_of(root, chair),
-                                goal_team.size_of(root, chair) or None, tiers)
-        return (got["low"] + got["high"]) / 2
 
     def _price(self, chair: str, root: Path, slot: str, value: str, mine: str, cache: dict) -> dict:
         if value == mine:
@@ -130,16 +129,25 @@ class StallMixin:
             order = [v for v, _w, _l in (TARGETS if slot == "target" else night_slot.WAYS)]
             d = order.index(value) - order.index(mine) if mine in order and value in order else 0
             return {"word": "lighter" if d < 0 else "heavier" if d > 0 else "same cost"}
-        if slot == "tier":
-            try:
-                if "now" not in cache:
-                    cache["now"] = self._tier_cost(root, chair, None)
-                if value not in cache:
-                    cache[value] = self._tier_cost(root, chair, value)
-            except Exception:                           # an estimate that cannot be read says no more than that
-                return {"word": "same cost"}
-            return {"word": "lighter" if cache[value] < cache["now"] - 1e-9 else "heavier" if cache[value] > cache["now"] + 1e-9 else "same cost"}
+        if slot == "tier":                              # its own calls on the tier asked for, against the one carried; *Default* is the matrix's tier of Talk at *How deep*
+            order = [v for v, _w, _l in TIERS]
+            want, have = (self._lead_tier(v) for v in (value, mine))
+            d = order.index(want) - order.index(have)
+            return {"word": "lighter" if d < 0 else "heavier" if d > 0 else "same cost"}
+        if slot == "size":                              # a size sets the seats' cells and how many work at once: more of them is heavier
+            order = [v for v, _w, _l in SIZES]
+            d = order.index(value) - order.index(mine)
+            return {"word": "lighter" if d < 0 else "heavier" if d > 0 else "same cost"}
+        if slot == "answers":                           # a Fork's one more call a question is the one way that costs: its price is the call's floor to its cap, said as money
+            if value == "fork":
+                price = answer_ways.fork_price(idea_target.target_of(self.board_settings()))
+                return {"money": f"+${price['low']:.2f} to ${price['high']:.2f} a question"}
+            return {"word": "lighter" if mine == "fork" else "same cost"}
         return {"word": "same cost"}                    # a setting that takes no model's work
+
+    def _lead_tier(self, value: str) -> str:
+        """The tier a leader's own calls run on for a slot's value: its own, or *Default*'s (the matrix's tier of Talk at *How deep*)."""
+        return value or idea_target.pick("talk_round", idea_target.target_of(self.board_settings()))[0]                    # a setting that takes no model's work
 
     # -- ideas.stall ------------------------------------------------------------------------------------------------
 
@@ -159,8 +167,9 @@ class StallMixin:
                 slots.append(("hero", LABELS["hero"], "The school its leader looks by", "heroes"))
             if craft != "release":
                 slots.append(("tool", LABELS["tool"], "What runs this party's goals", "small"))
-                if goal_team.team_of(root, chair):
-                    slots.append(("tier", LABELS["tier"], "The model each seat of the party gets", "small"))
+                slots.append(("tier", LABELS["tier"], "The model its own calls run on: Talk, its section, its acceptance", "small"))
+                slots.append(("size", LABELS["size"], "Its seats' cells and how many work at once", "small"))
+                slots.append(("answers", LABELS["answers"], "How it asks what it must ask", "small"))
             h = goal_team.hero_of(root, chair) if craft else None
             cut = heroes.cut_said(root, self.state_dir, chair, craft) if craft else ""
             if cut:
@@ -200,7 +209,7 @@ class StallMixin:
                 cheaper = any(w["price"].get("word") == "lighter" or (w["price"].get("share") or 0) < 0 for w in wares)
                 shelves.append({"id": slot, "label": label, "sub": sub, "kind": kind, "slot": slot, "wares": wares, "at": at, "cheaper": cheaper})
             have = next((w for w in wares if w["id"] == mine), None)
-            card: dict[str, Any] = {"slot": slot, "label": label, "word": have["word"] if have else "Mixed" if slot == "tier" else "", "yours": mine,
+            card: dict[str, Any] = {"slot": slot, "label": label, "word": have["word"] if have else "", "yours": mine,
                                     "line": have["line"] if have else "", "fixed": craft == "release" and slot == "hero"}
             if have and "head" in have:
                 card["head"] = have["head"]
@@ -243,22 +252,26 @@ class StallMixin:
             goal_team.set_hero(root, chair, value)
         elif slot == "tool":
             goal_team.set_tool(root, chair, value)
+        elif slot == "tier":
+            goal_team.set_lead_tier(root, chair, value)
+        elif slot == "answers":
+            goal_team.set_answers(root, chair, value)
         else:
-            team = goal_team.team_of(root, chair)
-            kept = {s: t for s, t in goal_team.tiers_of(root, chair).items() if s not in team}
-            goal_team.set_tiers(root, chair, {**kept, **({s: value for s in team} if value else {s: t for s, t in self._recipe_tiers(root, chair).items() if s in team})})
+            was = goal_team.size_of(root, chair)
+            goal_team.set_size(root, chair, value)                  # the seats' tiers go with the size, as the party's own editing does (spec 81 §2)
+            goal_team.set_tiers(root, chair, party_recipes.tiers_for(goal_team.leader_of(root, chair), goal_team.team_of(root, chair), value))
+            if was and was != value:
+                self._ev(event_log.PARTY_RESIZED, party=chair, joins=[], leaves=[], **{"from": was, "to": value})
 
     def _slot(self, args: dict, taking: bool) -> tuple[str, Path, str, str, str]:
         chair, root, craft = self._chair(args)
         slot = _text(args, "slot", 40)
-        if slot not in ([s for s, *_ in ORKMASTER] if not chair else ["hero", "tool", "tier", "gate"]):
+        if slot not in ([s for s, *_ in ORKMASTER] if not chair else [*LEADER_SLOTS, "gate"]):
             raise IdeasError(f"There is no {slot} to take here")
         if craft == "release":
             raise IdeasError(LOCKED_GATE if slot == "gate" else LOCKED_HERO if slot == "hero" else LOCKED_SEATS)
         if chair and slot == "hero" and (not craft or heroes.default(craft) is None):
             raise IdeasError("This party has no hero")
-        if chair and slot == "tier" and not goal_team.team_of(root, chair):
-            raise IdeasError("This party has no seats")
         value = ""
         if taking:
             value = args.get("value")
@@ -276,7 +289,7 @@ class StallMixin:
         if not chair:
             return {"build_start": look_wait.build_start(True, settings.IDEAS["look_wait"]), "night": night_slot.way({}), "review": _onoff(not settings.IDEAS["review"]),
                     "push": settings.push_way(settings.IDEAS["push"])}.get(slot) or str(settings.IDEAS[slot])
-        return heroes.default(craft).id if slot == "hero" else ""      # the potions' order (the Main tool) and the recipe's tiers are the empty value
+        return heroes.default(craft).id if slot == "hero" else {"size": "standard", "answers": answer_ways.DEFAULT}.get(slot, "")      # the potions' order (the Main tool) and *Default* tier are the empty value
 
     def _done(self, chair: str, root: Path, slot: str, value: str) -> dict:
         old = self._carried(chair, root, slot)

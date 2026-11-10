@@ -119,10 +119,11 @@ def test_the_reserve_by_day_and_at_night_and_none_without_limits():
     assert idea_target.reserve_held([], s, noon) is None
 
 
-def test_a_partys_size_is_its_target_and_the_kind_step_is_the_cheaper_tier_of_the_judge():
-    """Spec 75 §3, §4.2: `target_for` (a size's Target, else the setting's); the Orkmaster's `kind` step runs as its `collide` judge does."""
-    assert idea_target.SIZES == ("lean", "standard", "full") and idea_target.SIZE_TARGET == {"lean": "thrift", "standard": "balance", "full": "quality"}
-    assert [idea_target.target_for({"target": "thrift"}, {"size": s}) for s in idea_target.SIZES] == ["thrift", "balance", "quality"]
+def test_a_partys_size_is_no_target_of_its_own_and_the_kind_step_is_the_cheaper_tier_of_the_judge():
+    """Spec 168 H4 (decisions §283.33): `target_for` is the setting's, *How deep*, whatever the party's size (an old page with a size reads as the setting says); the Orkmaster's `kind` step runs as its `collide` judge does."""
+    assert idea_target.SIZES == ("lean", "standard", "full") and not hasattr(idea_target, "SIZE_TARGET")
+    assert [idea_target.target_for({"target": "thrift"}, {"size": s}) for s in idea_target.SIZES] == ["thrift"] * 3
+    assert [idea_target.target_for({"target": "quality"}, s) for s in (*idea_target.SIZES, "huge", "")] == ["quality"] * 5
     assert idea_target.target_for({"target": "quality"}, {"size": ""}) == idea_target.target_for({"target": "quality"}, None) == "quality"
     assert idea_target.target_for({}, {"size": "huge"}) == idea_target.DEFAULT
     assert idea_target.pick("kind", "balance") == idea_target.pick("collide", "balance") == ("warrior", "low")
@@ -304,3 +305,32 @@ def test_the_first_reset_inside_the_hours_else_the_hours_start_and_none_with_no_
     assert idea_target.hours_hold(rows, WEEKDAYS, now) == at(19), "a reset at 14:00 on Thursday is not in the hours: the hours' start, today 19:00"
     assert idea_target.hours_hold([], WEEKDAYS, now) == at(19), "no reset read: the hours' start"
     assert idea_target.room([Limit("claude", "", "session", 0.5, None)], {}, now) == pytest.approx(0.2) and idea_target.room([], {}, now) is None
+
+
+# -- a leader's own tier over the matrix (spec 168 H4, decisions §283.33) ------------------------------------------
+
+@pytest.mark.parametrize("step", idea_target.OWN_STEPS)
+@pytest.mark.parametrize("target", idea_target.TARGETS)
+def test_a_leaders_own_tier_replaces_the_matrixs_for_its_own_calls_and_default_follows_how_deep(step, target):
+    """Its own tier is the tier of its own calls (Talk, its section, its acceptance) at every Target; its effort stays the matrix's (none on the laborer tier); *Default* is the matrix."""
+    tier, effort = idea_target.pick(step, target)
+    assert idea_target.own_pick(step, target, "") == idea_target.pick(step, target) == idea_target.own_pick(step, target, "king")
+    assert idea_target.own_pick(step, target, "laborer") == ("laborer", "")
+    assert idea_target.own_pick(step, target, "elder") == ("elder", effort or "low")
+    assert idea_target.own_pick(step, target, "warrior") == ("warrior", effort or "low")
+    assert idea_target.keeper_pick(step, target, "opus", "warrior") == ("warrior", effort or "low")          # its own tier is the more particular word: over the Taskmaster's model
+    assert idea_target.keeper_pick(step, target, "opus", "") == ("opus", effort)
+
+
+def test_a_leaders_own_tier_touches_no_step_but_its_own():
+    """The Orkmaster's steps and the tasks keep the matrix: a leader's tier is for its own calls only."""
+    for step in ("route", "decide", "plan", "task", "collide", "rewrite", "fork"):
+        assert step not in idea_target.OWN_STEPS and idea_target.own_pick(step, "balance", "laborer") == idea_target.pick(step, "balance")
+
+
+def test_the_fork_is_one_call_on_the_elder_tier_at_every_target_with_a_cap_and_a_price():
+    """§283.33: the Fork is one more call a question at the elder tier, no tools, its price said."""
+    from orkboard.realm import answer_ways
+    assert [idea_target.pick("fork", t)[0] for t in idea_target.TARGETS] == ["elder"] * 3 and "fork" in idea_target.STEPS and idea_target.READS["fork"] == 0
+    price = answer_ways.fork_price("balance")
+    assert 0 < price["low"] <= price["high"] and price["high"] >= idea_target.budget("fork", "balance") - 0.01

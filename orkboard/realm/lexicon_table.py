@@ -272,6 +272,14 @@ SLOTS: tuple[Term, ...] = (
     _t("slot.not_here", "not here"),                              # a way the host says cannot be taken, with its why
     _t("slot.put_back", "Put it back"),                           # the ways dealt go back to the table, nothing sent
     _t("slot.build_starts", "The build starts"),                  # `autostart` and `look_wait` as one setting: at once, in 30 min, in 2 h, tonight, by hand
+    # -- a leader's ways of answering (spec 168 H4, decisions §266.5, §283.22, §283.33): one word each, and the veto card's two ways --------------------------
+    _t("way.pen", "Pen"),                                         # the leader asks; the person answers in their own words each time
+    _t("way.choice", "Choice"),                                   # the leader offers its ways; the person picks one
+    _t("way.fork", "Fork"),                                       # its ways worked out (gains, costs, risks) in one more call a question, on the elder tier; its price on the card
+    _t("way.silent", "Silent"),                                   # the leader decides and lays a card the person can overrule; never for going into main, money, dropping or holding a goal, a decision against an earlier one
+    _t("way.accepted", "Accepted"),                               # the veto card's way: the decision stands as it is
+    _t("way.replay", "Replay"),                                   # the veto card's way: the question comes back with its ways
+    _t("way.decided", "decided"),                                 # the sign on the veto card of what a leader decided itself
     _t("hero", "hero", "heroes"),
     _t("hero.yours", "Yours"),
     _t("hero.yours_before", "Yours before"),

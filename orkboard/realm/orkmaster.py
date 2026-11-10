@@ -188,7 +188,7 @@ def proposals(root: Path, state_dir: Path, settings: dict, kind: dict, facts: di
         sizes = {}
         for size in idea_target.SIZES:
             party = party_recipes.sized(recipe, size)
-            target = idea_target.SIZE_TARGET[size]
+            target = idea_target.target_of(settings)
             got = party_price.price(root, state_dir, {**(settings or {}), "target": target}, party["leader"], party["basis"], [], tiers=party["tiers"])
             sizes[size] = {"leader": party["leader"], "team": party["team"], "agents": 1 + len(party["team"]), "target": target,
                            "price": {"low": got["low"], "high": got["high"]},

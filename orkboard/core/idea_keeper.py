@@ -58,6 +58,7 @@ from orkboard.core.idea_rewrite import RewriteMixin
 from orkboard.core.idea_project_q import ProjectQMixin
 from orkboard.core.idea_ask import AskMixin
 from orkboard.core.idea_pass import PassMixin
+from orkboard.core.idea_ways import WaysMixin
 from orkboard.core.idea_leader_change import LeaderChangeMixin
 from orkboard.core.idea_spec_change import SpecChangeMixin
 from orkboard.core.idea_concerns import ConcernsMixin
@@ -122,7 +123,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SpecChangeMixin, LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, RewriteMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, HypothesisValuesMixin, ConcernsMixin, JournalMixin, SlicesMixin, CascadeMixin, GroupsMixin, AcceptMixin, FindingsMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(WaysMixin, SpecChangeMixin, LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, RewriteMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, HypothesisValuesMixin, ConcernsMixin, JournalMixin, SlicesMixin, CascadeMixin, GroupsMixin, AcceptMixin, FindingsMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -213,7 +214,12 @@ class IdeaKeeper(SpecChangeMixin, LeaderChangeMixin, SignInMixin, TalkMixin, Ver
         """The (model or tier, effort) a keeper step runs on: by the Target, its goal's leader's own model (else the
         Taskmaster's) winning."""
         lead = self.leader()
-        return idea_target.keeper_pick(step, self.target(), (lead.get("model") or idea_target.TIER_ROLE) if lead else self.taskmaster())
+        return idea_target.keeper_pick(step, self.target(), (lead.get("model") or idea_target.TIER_ROLE) if lead else self.taskmaster(), self.own_tier() if lead else "")
+
+    def own_tier(self) -> str:
+        """The tier the running step's leader runs its own calls on (spec 168 H4, `goal_team.lead_tier_of`): the party a Talk call speaks for, else the goal's; "" follows the Target."""
+        party = getattr(self._tls, "party", "") or self.goal_of_key(getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or "")
+        return goal_team.lead_tier_of(self.wiki_root(), party) if party else ""
 
     def ask(self, step: str, prompt: str, tools: bool = True, as_role: str = "", reads: int | None = None, work: tuple[Path, dict] | None = None) -> tuple[str, Any, Any, str]:
         """One model call on a step, measured; a run stopped meanwhile (its own cancel or Stop all) raises

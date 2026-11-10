@@ -5,7 +5,8 @@
     pick("op_act", "balance")                      # ("laborer", ""): an operation's action (spec 38 §4)
     keeper_pick("talk", "quality", "haiku")        # ("haiku", "high"): the Taskmaster's own model wins
     task_pick("warrior", "thrift", "")             # ("laborer", "low"): Grunt runs on the shifted tier
-    target_for(settings, party)                    # a party's size's Target (lean thrift, standard balance, full quality), else the setting (spec 75 §3)
+    target_for(settings, party)                    # the Target a party's goals work at: the setting's, *How deep* (spec 168 H4: a size is no Target of its own any more)
+    own_pick("talk_round", "balance", "laborer")   # ("laborer", ""): a leader's own tier for its own calls (Talk, its section, its acceptance) over the matrix
     in_night("01:00-07:00", now)                   # inside the night window (the machine's local time)
     reserve_held(limits, settings, now)            # the reserve left for the person: None, or until when
     week(limits, now), pace(limits, now)           # the Claude week's share left against the share of it still to come (spec 44 §1)
@@ -31,10 +32,11 @@ from orkboard.realm.hours import in_hours, next_edge, next_start      # noqa: F4
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
 EFFORTS = ("low", "medium", "high", "xhigh", "max")      # the Claude CLI's `--effort` levels
-STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "talk_verdict", "diagnose", "ground", "settle", "decide", "section_first", "section", "join",  "rewrite", "project_q", "loop", "tree", "hypotheses", "ask", "concerns", "sketch", "journal", "fold", "slice", "slice_digest", "finding", "finding_level", "cascade", "measure_read", "groups", "accept_step")
+STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "fork", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "talk_verdict", "diagnose", "ground", "settle", "decide", "section_first", "section", "join",  "rewrite", "project_q", "loop", "tree", "hypotheses", "ask", "concerns", "sketch", "journal", "fold", "slice", "slice_digest", "finding", "finding_level", "cascade", "measure_read", "groups", "accept_step")
 PITCH_STEPS = ("pitch_view", "pitch_case", "pitch_decide")   # a pitch's three calls (spec 65 §3, core/idea_judge.py)
-SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its Target, for its goals
-SIZE_TARGET = {"lean": "thrift", "standard": "balance", "full": "quality"}
+SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its seats' cells and how many work at once (realm/goal_team.py `WAY`); no Target of its own (spec 168 H4, decisions §283.33)
+OWN_TIERS = ("laborer", "warrior", "elder")              # a leader's own tier for its own calls; "" follows *How deep*
+OWN_STEPS = ("talk", "talk_round", "talk_verdict", "section_first", "section", "accept", "accept_step")      # a leader's own calls: Talk, its section, its acceptance (spec 168 H4)
 TIER_ROLE = "elder"                                    # the Taskmaster's default: its model is not the person's pick
 
 # step → target → (tier, effort); a task's tier is relative: -1 one lighter, 0 its own, +1 one heavier.
@@ -111,6 +113,8 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "join": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # A goal rewritten with what the person took from its leaders (spec 168 C2, decisions §283.24): one call of the Orkmaster, no tools, on the cheaper tier as its `route` and `join`
     "rewrite": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
+    # A Fork (spec 168 H4, decisions §283.33): one more call a question of a leader whose way of answering is a Fork, to lay out two sides with their gains, costs and risks, no tools, always at the elder tier
+    "fork": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     # A goal's sketch (spec 121 §2.3): its craft's leader makes two or three throwaway pages in one call, no tools (Design's reads the one picture of the screen it changes), on the party's tier as the first section
     # (a page of 60 KB is written whole: the cheaper tier would draw it badly)
     "sketch": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
@@ -128,7 +132,7 @@ OP_STEPS = ("op_prepare", "op_act", "op_learn")
 CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan": 11_200, "accept": 11_200,
            "op_prepare": 12_000, "op_act": 6_000, "op_learn": 6_000,
            "pitch_view": 6_000, "pitch_case": 6_000, "pitch_decide": 8_000, "collide": 3_000, "kind": 1_500, "route": 2_500,
-           "talk_round": 14_700, "talk_verdict": 10_200, "diagnose": 11_200, "ground": 11_200, "settle": 11_200, "decide": 13_500, "section_first": 18_700, "section": 18_700, "join": 8_000, "rewrite": 24_000, "project_q": 13_200, "loop": 13_200, "tree": 13_200, "hypotheses": 13_200, "ask": 12_200, "concerns": 16_200, "sketch": 12_000,
+           "talk_round": 14_700, "talk_verdict": 10_200, "diagnose": 11_200, "ground": 11_200, "settle": 11_200, "decide": 13_500, "section_first": 18_700, "section": 18_700, "join": 8_000, "rewrite": 24_000, "fork": 6_000, "project_q": 13_200, "loop": 13_200, "tree": 13_200, "hypotheses": 13_200, "ask": 12_200, "concerns": 16_200, "sketch": 12_000,
            "journal": 10_000,       # spec 125 §C: the steps that are given the journals (talk_round, talk_verdict, decide, section_first, section, ask, concerns) grew by 3,000 for them; `journal` is the digest's own
            "fold": 12_000,          # spec 127 §C.3: talk_round, section_first and section grew by 2,500 more for the living specs; `fold` is the fold's own
            # spec 131 §A.4: the steps given a leader's slices (talk_round, talk_verdict, diagnose, section_first, section, plan, accept, ask, concerns, tree, hypotheses, loop, project_q) grew by 1,200 for them;
@@ -141,10 +145,10 @@ CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan
            "accept_step": 14_000}     # spec 152 B.2: the section, the promise read by code, each task of the step, the stance in Talk, the slices and the journal
 READS = {"goal": 8, "draft": 6, "plan": 6, "talk": 2, "answer": 2, "accept": 4,
          "pitch_view": 4, "pitch_case": 0, "pitch_decide": 0, "collide": 0, "kind": 0, "route": 0,
-         "talk_round": 0, "talk_verdict": 0, "diagnose": 4, "ground": 4, "settle": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "rewrite": 0, "project_q": 0, "loop": 0, "tree": 0, "hypotheses": 0, "ask": 0, "concerns": 0, "sketch": 0, "journal": 0, "fold": 0, "slice": 0, "slice_digest": 0, "finding": 4, "finding_level": 0, "cascade": 0, "measure_read": 4, "groups": 0, "accept_step": 4}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
+         "talk_round": 0, "talk_verdict": 0, "diagnose": 4, "ground": 4, "settle": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "rewrite": 0, "fork": 0, "project_q": 0, "loop": 0, "tree": 0, "hypotheses": 0, "ask": 0, "concerns": 0, "sketch": 0, "journal": 0, "fold": 0, "slice": 0, "slice_digest": 0, "finding": 4, "finding_level": 0, "cascade": 0, "measure_read": 4, "groups": 0, "accept_step": 4}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
 CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60, "accept": 0.60,
         "op_prepare": 0.30, "op_act": 0.10, "op_learn": 0.10, "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05, "kind": 0.03, "route": 0.03,
-        "talk_round": 0.08, "talk_verdict": 0.06, "diagnose": 0.20, "ground": 0.20, "settle": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "rewrite": 0.08, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "hypotheses": 0.10, "ask": 0.05, "concerns": 0.10, "sketch": 0.40, "journal": 0.05, "fold": 0.05, "slice": 0.05, "slice_digest": 0.05, "finding": 0.20, "finding_level": 0.05, "cascade": 0.05, "measure_read": 0.20, "groups": 0.05, "accept_step": 0.30}
+        "talk_round": 0.08, "talk_verdict": 0.06, "diagnose": 0.20, "ground": 0.20, "settle": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "rewrite": 0.08, "fork": 0.12, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "hypotheses": 0.10, "ask": 0.05, "concerns": 0.10, "sketch": 0.40, "journal": 0.05, "fold": 0.05, "slice": 0.05, "slice_digest": 0.05, "finding": 0.20, "finding_level": 0.05, "cascade": 0.05, "measure_read": 0.20, "groups": 0.05, "accept_step": 0.30}
 READS_FOR = {("concerns", "design"): 4, ("sketch", "design"): 1}                 # a step's reads for a craft that has more: Design's look at its map reads the pictures of the screens changed (spec 108 §2.3)
 BUDGET_SHARE = {"thrift": 0.5, "balance": 1.0, "quality": 2.0}
 
@@ -239,10 +243,9 @@ def target_of(settings: dict | None) -> str:
 
 
 def target_for(settings: dict | None, party: Any = None) -> str:
-    """The Target a party's goals work at (spec 75 §3): its size's (`lean` thrift, `standard` balance, `full` quality), else the setting's
-    (`target_of`: a party made before has no size). `party`: a party's row or page (anything with `.get("size")`) or its size as text."""
-    size = party if isinstance(party, str) else (party.get("size") if party is not None else None)
-    return SIZE_TARGET.get(size) or target_of(settings)
+    """The Target a party's goals work at: the setting's, *How deep* (`target_of`). A party's size is no Target of its own any more (spec 168 H4, decisions §283.33): it sets the
+    seats' cells and how many work at once (`goal_team.WAY`). `party` is kept so that a caller names the party it asks for; a party made before with a size reads as the setting says."""
+    return target_of(settings)
 
 
 def pick(step: str, target: str, tier: str = "warrior") -> tuple[str, str] | None:
@@ -254,9 +257,21 @@ def pick(step: str, target: str, tier: str = "warrior") -> tuple[str, str] | Non
     return (plans.shift(tier, what) if step == "task" else what), effort
 
 
-def keeper_pick(step: str, target: str, taskmaster: str = TIER_ROLE) -> tuple[str, str] | None:
+def own_pick(step: str, target: str, own: str = "") -> tuple[str, str] | None:
+    """A step's (tier, effort) with a leader's own tier over the matrix (spec 168 H4, decisions §283.33): for a leader's own calls (`OWN_STEPS`: Talk, its section, its acceptance) its `own` tier
+    replaces the matrix's tier and the matrix's effort stays (none on the laborer tier, where the CLI takes none; `low` where the matrix gave none for a heavier tier); every other step, and an
+    `own` of "" (*Default*: it follows *How deep*), is the matrix's own answer."""
+    got = pick(step, target)
+    if got is None or step not in OWN_STEPS or own not in OWN_TIERS:
+        return got
+    return own, ("" if own == "laborer" else got[1] or "low")
+
+
+def keeper_pick(step: str, target: str, taskmaster: str = TIER_ROLE, own: str = "") -> tuple[str, str] | None:
     """A keeper step's (model or tier, effort): the Taskmaster's model, when it is not its default elder, replaces
-    the tier; the Target still gives the effort."""
+    the tier; the Target still gives the effort. A leader's own tier (`own`, spec 168 H4) is the more particular word: for its own calls (`OWN_STEPS`) it replaces both."""
+    if own in OWN_TIERS and step in OWN_STEPS:
+        return own_pick(step, target, own)
     got = pick(step, target)
     if got is None:
         return None
