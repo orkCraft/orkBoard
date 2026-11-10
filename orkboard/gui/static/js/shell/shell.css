@@ -70,6 +70,16 @@
 .shell-logview__body { box-sizing: border-box; overflow-anchor: none; max-height: min(60vh, 640px); overflow: auto; padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); color: var(--ork-ink);
   border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-body); font-family: var(--ork-font-code); line-height: 1.5; }
 .shell-logview pre { margin: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* a task's log in a terminal's face (spec 168 I1): xterm's screen on orkUI's panel, read only; the seat's header above it, its steps between */
+.shell-logterm { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.shell-logterm__screen { font-family: var(--ork-font-code); box-sizing: border-box; height: min(52vh, 420px); padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
+.shell-logterm__screen .xterm { height: 100%; }
+.shell-logterm__screen .xterm-viewport { background: transparent !important; }
+.shell-seat { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-4); min-width: 0; }
+.shell-seat__tool { color: var(--ork-ink-muted); }
+.shell-seat__edit { margin-left: auto; }
+.shell-task__steps { min-width: 0; }
+.shell-owntool { margin: 0; padding: var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); }
 .shell-logview__sec + .shell-logview__sec, .shell-logview pre + .shell-logview__sec { margin-top: var(--ork-3); }
 .shell-logview summary { padding: 0 var(--ork-3); background: var(--ork-raised); color: var(--ork-ink-muted); cursor: pointer; overflow-wrap: anywhere; }
 .shell-logview details[open] > summary { color: var(--ork-ink); }

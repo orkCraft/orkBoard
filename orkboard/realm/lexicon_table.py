@@ -252,6 +252,10 @@ WINDOW: tuple[Term, ...] = (
     _t("night_rung_builds", "and the builds"),                     # also builds what was agreed and is ready to build (the old *Work at night*)
     _t("night_rung_proposals", "and the leaders' proposals"),      # also one proposal for each leader picked, three a night at most, to a ready spec, never built without a press
     _t("proposed", "proposed"),                                    # the mark of a night's proposal in *Specs* until the person's Take or Drop
+    # A seat's work (docs/specs/168 I1, decisions §283.16.9)
+    _t("seat_log", "log"),                                         # a task's session output, read only, in a terminal's face over the pane; the values of the goal's secrets are masked in it
+    _t("own_tool_run", "run in your own AI tool"),                 # a task whose session the host did not see (a skill, decisions §258): the pane says so instead of a log
+    _t("secret_mask", "••••"),                                     # what stands in a log in the place of a secret's value
 )
 
 
