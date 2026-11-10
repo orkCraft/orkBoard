@@ -8,7 +8,6 @@ priority: normal
 short: The readable look and the phone's feed
 phase: talk
 route: design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -37,10 +36,13 @@ made in orkUI first, then copied here.
 
 ## Open questions
 - Where is orkUI's change made? (**A pull request to orkUI, then copied** / The person makes it in orkUI) — CLAUDE.md: the look is made in orkUI, never here; the copy waits for it · A pull request to orkUI, then copied: This goal opens orkUI's pull request; the copy waits for its merge · The person makes it in orkUI: This goal waits until a new orkUI is out to copy
+  - Answered: A pull request to orkUI, then copied (the person, 2026-11-10)
 - Seen since when, on the phone? (**Since this phone's last look** / Since the last look anywhere) — the desktop's past dot is already per browser (spec 150 E2.3); one rule for both · Since this phone's last look: Kept on the phone; news read on the desktop shows again · Since the last look anywhere: The host keeps it; read once, seen on every screen
+  - Answered: Since this phone's last look (the person, 2026-11-10)
 - Phone's tabs: gone at once, or kept? (**Gone in the feed's step** / Kept behind a setting a week) — alpha merges fast; two phone layouts double shell-project.js and its browser tests · Gone in the feed's step: One face; the tabs' browser tests are rewritten for the feed · Kept behind a setting a week: A way back while testers try it; two layouts kept and tested
   - Answered: Gone in the feed's step (decided by §291.5, 2026-11-10)
 - Which stages go to simpler models? (**Look's copy and sizes; feed's reader stronger** / Every stage on simpler models) — sizes to tokens is wide but plain; the feed's order and narrowing is new logic · Look's copy and sizes; feed's reader stronger: The cheap, wide work goes cheap; the new reader gets a careful pass · Every stage on simpler models: Cheapest; the feed's order and its tests are more likely sent back
+  - Answered: Look's copy and sizes; feed's reader stronger (the person, 2026-11-10)
 
 ## Decisions
 - §291: Rubik, the colours a step lifted, round corners; the phone a feed of blocks, what waits first, a head narrows it, the seen

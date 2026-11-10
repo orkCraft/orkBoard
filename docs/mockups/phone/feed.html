@@ -177,12 +177,28 @@ img { display: block; }
 .seen-line .sh { display: flex; } .seen-line .sh img { width: 26px; height: auto; margin-right: -8px; filter: saturate(.6) brightness(.85); }
 .seen-line .st { flex: 1; margin-left: 10px; font: 600 15px/18px var(--lk-text); }
 .seen-line .ork-icon { width: 18px; height: 18px; }
+/* 7 (§292): the die, the backpack and the book under one round button; the lamp's chain from the header */
+.hdr { position: relative; z-index: 4 !important; }
+.chainh { position: absolute; right: 22px; top: 52px; width: 22px; display: flex; flex-direction: column; align-items: center; z-index: 4; }
+.chainh img { width: 15px; height: 54px; object-fit: cover; object-position: top; }
+.chainh span { position: absolute; right: -6px; top: 56px; padding: 1px 5px; border-radius: 6px; background: var(--ork-table); font: 700 12px/14px var(--lk-text); color: var(--ork-alert); }
+.fab { position: absolute; right: 12px; bottom: 34px; width: 64px; height: 64px; padding: 6px; border-radius: 50%; clip-path: none;
+  display: grid; place-items: center; background: var(--ork-raised); border: 2px solid var(--ork-ink); box-shadow: 0 6px 14px rgb(0 0 0 / .5); z-index: 7; }
+.fab img { width: 44px; height: auto; }
+.fab.open { background: var(--ork-ink); }
+.scrim7 { position: absolute; inset: 0; z-index: 6; background: rgb(0 0 0 / .55); }
+.sel { position: absolute; right: 12px; bottom: 108px; z-index: 7; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.sel button { clip-path: none; display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 8px 0 16px; border-radius: 28px;
+  border: 1px solid var(--ork-edge); background: var(--ork-card); font: 700 17px/20px var(--lk-head); box-shadow: 0 4px 10px rgb(0 0 0 / .4); }
+.sel button img { width: 40px; height: 40px; object-fit: contain; }
+.sel button small { display: block; font: 400 14px/16px var(--lk-text); color: var(--ork-ink-muted); }
+.sel .t { text-align: right; }
 .note { max-width: 110ch; padding: 0 16px 24px; font: 400 15px/22px var(--lk-text); color: var(--ork-ink-read); }
 .note li { margin-left: 20px; list-style: disc; }
 </style>
 </head>
 <body>
-<p class="mk-bar">Orkboard · the phone · the feed · v2</p>
+<p class="mk-bar">Orkboard · the phone · the feed · v3</p>
 <p class="mk-line">The owner's proposal: the phone's tables broken into blocks and scrolled as a social feed. In place of §223's tabs, one
 screen: the Orkmaster and the leaders as a row of heads on top (a ring = news since your last look, a yellow ! = it asks; never a
 number), under it one feed of blocks, each a post from the one who says it: what waits for you first, then the news, newest first; a block's
@@ -192,6 +208,7 @@ stack; what you have seen is one line, pressed it spreads as a deck. A goal's sc
 §291.9). 390 × 844, a stand-in party game. v2 is the owner's answers to v1 (decisions §291).</p>
 <main class="mk-main" id="m"></main>
 <section class="note">
+<p><b>Decided on v2</b> (decisions §292): the die, the backpack and the book under one round button, the chain in the header (7, 8).</p>
 <p><b>Decided on v1</b> (decisions §291): the cards as in 6 (5 not taken), and</p>
 <ul>
 <li>the feed's order: what waits for you first, then the news;</li>
@@ -274,6 +291,13 @@ const SEEN_LINE = `<button class="seen-line"><span class="sh">${["unicorn-elder"
   <span class="st">Seen since yesterday</span>${icon("chevron-down")}</button>`;
 const SECT = (t) => `<p class="sect">${t}</p>`;
 const WAITS = SECT("Waits for you"), NEWS = SECT("New since your last look · 09:12");
+const PIC = (f) => `feed-pics/${f}.png`;
+const HDR_C = HDR_P().replace('class="hdr"', 'class="hdr chain"').replace('</div>', '</div>') .replace(/(<button class="pot)/, `<span class="chainh"><img src="${PIC("chain")}" alt=""><span>Here</span></span>$1`);
+const FOOT_FAB = (open) => `${open ? '<div class="scrim7"></div>' : ""}<div class="foot low"><button class="plus">${icon("plus")}</button><p class="calm">Nothing to decide</p>
+  </div><button class="fab${open ? " open" : ""}" aria-label="Play, Inventory, History"><img src="${PIC("die")}" alt=""></button>
+  ${open ? `<div class="sel"><button><span class="t">Play<small>start dev's build</small></span><img src="${PIC("die")}" alt=""></button>
+  <button><span class="t">Inventory<small>the Orkmaster's settings</small></span><img src="${PIC("backpack")}" alt=""></button>
+  <button><span class="t">History<small>what was done, by day</small></span><img src="${PIC("book")}" alt=""></button></div>` : ""}`;
 const ST = { tech: "news", art: "news", rel: "news", om: "news", gd: "seen" };
 const SCREENS = [
   ["1 · The project's feed", "The header as today; under it the heads as a feed's stories: a ring in its party's colour says it has news since your last look, never a number. The feed, what waits for you first: the spec that starts by itself at 13:40, the done goal To main; then the news, newest first: Tech's changes as one stack, the goals at work swiped sideways.",
@@ -289,6 +313,10 @@ const SCREENS = [
     phoneDeck(HDR_P(), HEADS(ST), [REVIEW, AT_WORK, TECH_NEWS, ART, CONCERN, DONE], FOOT_CALM)],
   ["6 · A deck only where it says something (taken)", "A block is read whole, as a post is; one leader's posts in a row are one stack (Tech's edges under its card, More from Tech opens them); the seen line pressed spreads as a deck, each card's head showing. The new is read whole; the old is cards.",
     phone(HDR_P(true), "", [WAITS, REVIEW, DONE, NEWS, TECH_STACK, CAUGHT, SEEN], FOOT_CALM, 560)],
+  ["7 · One round button, the chain in the header (§292)", "The die, the backpack and the book under one round button at the foot's right, its face the die in its state; the lamp's chain hangs from the header beside the bottle, lit Here.",
+    phone(HDR_C, HEADS(ST), [WAITS, REVIEW, DONE, NEWS, TECH_STACK], FOOT_FAB(false))],
+  ["8 · The round button pressed", "Pressed, a selector of three rises over the foot, each a picture and its word: Play, Inventory, History; a tap outside or the button again closes it.",
+    phone(HDR_C, HEADS(ST), [WAITS, REVIEW, DONE, NEWS, TECH_STACK], FOOT_FAB(true))],
 ];
 document.getElementById("m").innerHTML = SCREENS.map(([t, d, p]) => `<section class="mk-st"><h2>${t}</h2><p>${d}</p>${p}</section>`).join("");
 </script>

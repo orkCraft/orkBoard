@@ -8162,3 +8162,25 @@ questions (v2 draws the answers). So:
     feed.
 
 The owner's call.
+
+## 292. On a phone the die, the backpack and the book are under one round button; the lamp's chain hangs from the header (10 November 2026, the owner)
+
+Changes: 223.6 and 291.5 (the foot on a phone: *the + card at the left, the hand, the die at the right*; the die is now under
+the round button), 275.3 (the lamp and the backpack drawn on the phone too: where they stand on it), 285 (the places on a phone).
+The desktop is unchanged: its places stay at the hand's right end, its chain in the discard's head (§273, §285).
+
+Why: the owner, looking at the phone's feed (`docs/mockups/phone/feed.html` v2) and the objects' cartoon takes: the book, the
+backpack and the die are hidden under a round button (a FAB, a selector) on a phone, and the chain is put in the header. So:
+1. **One round button at the foot's right**, where the die stood; **its face is the die** in its state (§223.7: faint, white, or
+   in the goal's rune), so the die's signal is never hidden. Pressed, it opens **a selector of three**, rising over the foot, each
+   a picture and its word: **Play** (the die), **Inventory** (the backpack), **History** (the book); a second press or a tap
+   outside closes it. Each opens what it opens today; Play still says plainly what it starts (§223.7).
+2. **The + card stays at the foot's left**, the hand between them, as §223.6.
+3. **The lamp's chain hangs from the header**, at its right beside the bottle: short at rest, pulled it says *Here* or *Away*
+   (§271); what Here and Away do is unchanged (§246.4–5). It stays when the header folds on scroll (§291.5). *Stop all* stays in
+   the header.
+4. **No count** on the button (§223, §291.9); the selector's three are 44 px at least and each has its word, never a picture alone.
+5. The objects are the cartoon takes of `docs/pictures-cartoon.md` (O2b, O3a, O4) when the phone's pictures are redrawn (§290.2);
+   until then today's pictures stand.
+
+The owner's call.
