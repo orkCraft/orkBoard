@@ -76,12 +76,12 @@ def test_an_alert_is_a_card_in_the_hand_one_stack_a_leader_under_its_lane_and_a_
 def test_the_header_holds_a_small_card_for_each_concern_and_the_hand_for_the_alert_only(hand):
     pg, host = hand
     go(pg, "tech")
-    row = pg.locator('.table-head .cn-cards[data-party="tech"] .cn-card')
+    row = pg.locator('.table-head .cn-cards[data-party="tech"] .hd-concern')
     row.first.wait_for(timeout=WAIT_MS)
     assert [row.nth(i).get_attribute("data-concern-id") for i in range(row.count())] == ["tech/c1", "tech/c2", "tech/c3"]
     assert [row.nth(i).get_attribute("data-in-hand") for i in range(row.count())] == ["1", "0", "0"]
-    assert {row.nth(i).get_attribute("data-face") for i in range(row.count())} == {"up"}
-    assert box(row.first) == (28, 39)
+    assert {row.nth(i).get_attribute("data-face") for i in range(row.count())} == {"down"}, "face down, a back with a + for a concern on no goal"
+    assert box(row.first) == (56, 78), "a small card, the header holds no third size"
 
 
 def test_one_hovered_lights_the_others_the_hand_the_header_and_the_mark_on_the_scheme(hand):
@@ -92,12 +92,12 @@ def test_one_hovered_lights_the_others_the_hand_the_header_and_the_mark_on_the_s
     mark.wait_for(timeout=WAIT_MS)
     assert pg.locator("[data-lit]").count() == 0
     pg.locator(f'{CARD}[data-key="concern/tech/c1"]').hover(position={"x": 6, "y": 40}, force=True)      # the tech lane has a failure in front: the concern lies behind it, its left edge shows
-    pg.locator('.cn-card[data-concern-id="tech/c1"].is-lit').wait_for(timeout=WAIT_MS)
+    pg.locator('.hd-concern[data-concern-id="tech/c1"].is-lit').wait_for(timeout=WAIT_MS)
     pg.locator(".cn-mark[data-lit]").first.wait_for(timeout=WAIT_MS)
-    assert pg.locator('.cn-card.is-lit').count() == 1, "only its own"
+    assert pg.locator('.hd-concern.is-lit').count() == 1, "only its own"
     pg.mouse.move(700, 300)
-    pg.wait_for_function("() => !document.querySelector('.cn-card.is-lit, .cn-mark[data-lit]')", timeout=WAIT_MS)
-    pg.locator('.cn-card[data-concern-id="tech/c1"]').hover()                      # the header's card lights the hand's and the scheme's
+    pg.wait_for_function("() => !document.querySelector('.hd-concern.is-lit, .cn-mark[data-lit]')", timeout=WAIT_MS)
+    pg.locator('.hd-concern[data-concern-id="tech/c1"]').hover()                      # the header's card lights the hand's and the scheme's
     pg.locator(f'{CARD}[data-key="concern/tech/c1"][data-lit]').wait_for(timeout=WAIT_MS)
     pg.locator(".cn-mark[data-lit]").first.wait_for(timeout=WAIT_MS)
 
@@ -109,7 +109,7 @@ def test_played_it_rises_at_the_tables_foot_its_leaders_tab_open_its_ways_the_ha
     pg.locator('.table-tab[data-tab="tech"][aria-selected="true"], .col-head__tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
     ways = pg.locator(".hand-ways-cards button[data-way-kind]")
     assert [(ways.nth(i).get_attribute("data-way-kind"), ways.nth(i).locator(".hand-ans__name").inner_text()) for i in range(ways.count())] == list(zip(KINDS, ["Not a problem", "Later", "Make it a goal"]))
-    assert pg.locator(".hand-lifted[data-lit], .cn-card.is-lit").count() >= 1, "the lifted one is lit with the others"
+    assert pg.locator(".hand-lifted[data-lit], .hd-concern.is-lit").count() >= 1, "the lifted one is lit with the others"
     assert pg.locator(".hand-lifted").bounding_box()["x"] < 300, "at the table's foot, at its left"
     pg.keyboard.press("Escape")
     pg.wait_for_function("() => !document.querySelector('.hand-lifted')", timeout=WAIT_MS)
@@ -126,7 +126,7 @@ def test_later_lays_it_face_down_in_the_header_out_of_the_hand_and_its_mark_stay
     pg.locator('.hand-ways-cards button[data-way-kind="later"]').click()
     pg.wait_for_function("() => !document.querySelector('.hand-card[data-key=\"concern/tech/c1\"]')", timeout=WAIT_MS)
     assert host.sent("ideas.concern_later") == [{"party": "tech", "id": "c1"}]
-    down = pg.locator('.cn-card[data-concern-id="tech/c1"][data-face="down"]')
+    down = pg.locator('.hd-concern[data-concern-id="tech/c1"][data-face="down"]')
     down.wait_for(timeout=WAIT_MS)
     assert down.get_attribute("data-in-hand") == "0" and pg.locator(CARD).count() == 1 and pg.locator(".hand-lifted").count() == 0
     assert pg.locator(".cn-mark[data-level='alert']").count() >= 1, "it is still on the scheme"
@@ -162,7 +162,7 @@ def test_pictures_at_1366_by_768(gui):
     play(pg)
     shot(pg, "d4-concern-played.png")
     pg.locator('.hand-ways-cards button[data-way-kind="later"]').click()
-    pg.locator('.cn-card[data-face="down"]').wait_for(timeout=WAIT_MS)
+    pg.locator('.hd-concern[data-later]').wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(1200)                                                          # the played card has flown back
     shot(pg, "d4-concern-laid-later.png")
     pg.context.close()

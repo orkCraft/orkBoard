@@ -821,10 +821,21 @@ def pick(pg, slug):
 
 # -- a party's tab -----------------------------------------------------------------------------------------------------------------------------------
 
+def squad(pg, w):
+    """Where the squad is (spec 168 E1): the narrow header's, or at the wide width the leader's inventory, opened from the pane title's … menu (*Seats and tools*)."""
+    if not wide(w):
+        return pg.locator('.table-head[data-party="tech"]')
+    if not pg.locator(".stall-seats").count():
+        pg.get_by_role("button", name="Tech's menu").click()
+        pg.get_by_role("menuitem", name="Seats and tools").click()
+        pg.locator(".stall-seats").wait_for(timeout=WAIT_MS)
+    return pg.locator('.stall-seats[data-seats="tech"]')
+
+
 def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_each_head_and_a_seat_pressed_opens_its_popover(table):
     pg, host, w = table
     open_tab(pg, "tech")
-    head = pg.locator('.table-head[data-party="tech"]')
+    head = squad(pg, w)
     assert head.locator(".table-head__name, h2").count() == 0, "no party name in the row: the tab and the title say it"
     groups = head.locator(".table-group")
     assert [g.get_attribute("aria-label") for g in groups.all()] == ["Does", "Checks"] and "Leads" not in head.inner_text(), "no Leads: the leader sits at the table"
@@ -844,7 +855,7 @@ def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_
     box, rbox = seat.locator(".ork-race__head").bounding_box(), role.bounding_box()
     assert rbox["y"] >= box["y"] + box["height"] - 1, "under the head"
     assert head.locator(".table-size").inner_text().strip() == "Standard"
-    assert head.get_by_role("button", name="Tech's menu").count() == 1
+    assert pg.get_by_role("button", name="Tech's menu").count() == 1
     shot(pg, f"table-tech-{w}.png")
     seat.click()
     pop = pg.locator(".table-seatpop")
@@ -859,7 +870,7 @@ def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_
     assert said == "GruntsSeasoned · does" or said.endswith("Seasoned · does"), said                                      # its tier and its role, and no word of a race (spec 100 §0)
     assert not any(word in said.lower() for word in ("ork", "elf", "goblin", "gnome", "knight", "lich", "skeleton"))
     assert "ork" not in (seat.get_attribute("aria-label") or "").lower().replace("work", "")
-    pg.get_by_role("button", name="Close").click()
+    pg.get_by_role("button", name="Close", exact=True).click()
     assert pg.locator(".table-seatpop").count() == 0
     seat.click()
     pg.locator(".table-seatpop").wait_for(timeout=WAIT_MS)
@@ -868,9 +879,9 @@ def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_
     seat.click()
     pg.locator(".table-seatpop").get_by_role("button", name="Open", exact=True).click()
     pg.locator('.table-over[data-kind="role"]').wait_for(timeout=WAIT_MS)                                                  # the role's text, over the pane
-    assert title(pg) == "Tech's table · Grunts" and "You are the Grunts." in pg.locator(".table-over").inner_text()
+    assert title(pg) == ("Inventory · Grunts" if wide(w) else "Tech's table · Grunts") and "You are the Grunts." in pg.locator(".table-over").inner_text()
     pg.locator(".table-title__back").click()
-    pg.locator(".table-head").wait_for(timeout=WAIT_MS)
+    pg.locator(".table-head, .stall-seats").first.wait_for(timeout=WAIT_MS)
 
 
 def test_a_side_with_seats_on_several_tools_has_no_tool_of_its_own_and_each_seat_shows_its_mark(table):
@@ -879,7 +890,7 @@ def test_a_side_with_seats_on_several_tools_has_no_tool_of_its_own_and_each_seat
     tech["tools"] = {"tester": "codex"}                                                                                   # one of Does' two seats runs on another tool
     host.push()
     open_tab(pg, "tech")
-    does = pg.locator('.table-head[data-party="tech"] .table-group[data-band="build"]')
+    does = squad(pg, w).locator('.table-group[data-band="build"]')
     does.locator(".table-seat").first.wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => document.querySelector('.table-group[data-band=build] .table-seat .ork-mark')", timeout=WAIT_MS)
     assert does.locator(".table-side .ork-mark").count() == 0 and does.locator(".table-side").get_attribute("title") == "Does"
@@ -896,15 +907,17 @@ def test_the_header_keeps_at_most_six_seats_and_never_the_leader(table):
     tech["team"] = tech["team"] + [{"slug": e["slug"], "name": e["name"], "head": e["head"], "checks": e["band"] == "check", "every": False} for e in extra]
     host.push()
     open_tab(pg, "tech")
-    pg.wait_for_function("() => document.querySelectorAll('.table-head .table-seat').length > 4", timeout=WAIT_MS)
-    assert pg.locator(".table-head .table-seat").count() == 6 and pg.locator('.table-head .table-seat[data-band="lead"]').count() == 0
+    squad(pg, w)
+    pg.wait_for_function("() => document.querySelectorAll('.table-head .table-seat, .stall-seats .table-seat').length > 4", timeout=WAIT_MS)
+    seats = squad(pg, w).locator(".table-seat")
+    assert seats.count() == 6 and squad(pg, w).locator('.table-seat[data-band="lead"]').count() == 0
     narrow.no_sideways(pg)
 
 
 def test_at_the_narrow_width_the_sides_words_go_and_their_signs_stay_every_seat_44_px(table):
     pg, host, w = table
     open_tab(pg, "tech")
-    head = pg.locator('.table-head[data-party="tech"]')
+    head = squad(pg, w)
     head.locator(".table-seat").first.wait_for(timeout=WAIT_MS)
     words = head.locator(".table-side__w")
     assert all(x.is_visible() == wide(w) for x in words.all()), "the words are there at the wide width only"
@@ -919,6 +932,7 @@ def test_at_the_narrow_width_the_sides_words_go_and_their_signs_stay_every_seat_
 def test_a_seat_can_be_taken_off_and_its_tool_set_with_undo(table):
     pg, host, w = table
     open_tab(pg, "tech")
+    squad(pg, w)
     pg.locator('.table-seat[data-seat="tester"]').click()
     pop = pg.locator(".table-seatpop")
     pop.get_by_role("button", name="Take off the seat").click()
@@ -936,7 +950,7 @@ def test_a_party_menu_has_edit_at_that_party_and_remove_party_over_the_pane(tabl
     open_tab(pg, "art")
     assert pg.locator(".table-sys, .table-board").count() == 0                                                           # another party than Tech: its header alone (no map yet)
     pg.get_by_role("button", name="Art's menu").click()
-    assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all()] == ["Edit", "Remove party"]
+    assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all()] == (["Edit", "Seats and tools", "Remove party"] if wide(w) else ["Edit", "Remove party"])
     pg.get_by_role("menuitem", name="Edit").click()
     pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
     assert title(pg) == "Art's table · Parties" and pg.locator('.table-over[data-kind="parties"]').get_attribute("data-owner") == "table"       # the one place of the parties, not today's form
@@ -1292,6 +1306,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     open_tab(pg, "tech")
+    squad(pg, "wide")                                                                                                    # 800 px is the wide width: the seats lie in the leader's inventory (spec 168 E1)
     pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
     for sel in (".table-tab", ".table-chair", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
         for el in pg.locator(sel).all():
