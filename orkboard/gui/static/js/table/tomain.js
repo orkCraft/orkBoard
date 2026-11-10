@@ -1,3 +1,4 @@
+// (spec 168 F3, decisions §283.28: the goals the card takes along are lit on the pile, the gate's main tests run first, a red one is named, and *To main without the tests* is in the card's menu, the only press that skips them: §274.3; the cards dissolve into the ring when it goes.)
 // **To main**, the picked ready card's act (docs/specs/156-one-pick-and-the-release-column.md D.4, decisions §261.8): while the goal picked is ready for main (the gate holds it: hand/data.js `readyOf`), a line under the pane's title says where it goes and what stands in
 // the way, and the button *To main* sends it alone with the goals it stands on through the portal's way (portal.js `toMain`: its plan, its checks, then `ideas.to_main`; a red check or a seal says its reason and nothing is sent). It is shown on every tab, since a
 // ready goal's route is the tabs' that are not grey (part B); the ring and the rite play at the top of Release's lane (ring.js). Nothing here decides for the person: nothing reaches main without this press. Layout only: lane.css.
@@ -6,7 +7,7 @@ import { html, cls } from "../html.js";
 import { picked } from "../frame/state.js";
 import { readyOf } from "../hand/data.js";
 import { CHECKING, checksOf, isRed, pending, sealedWords, startChecks } from "./checks.js";
-import { chosenSlug, echo, lineOf, plan, reasonOf, toMain, Stopped } from "./portal.js";
+import { chosenSlug, echo, lineOf, plan, playUntested, reasonOf, toMain, Stopped } from "./portal.js";
 
 export function ToMain() {
   const slug = picked.value, r = readyOf(), [busy, setBusy] = useState(false);
@@ -20,8 +21,9 @@ export function ToMain() {
     <button type="button" class="ork-btn primary" data-to-main disabled=${busy} aria-disabled=${red || checking || !p || p.state === "wait" ? "true" : undefined}
       title=${`Sends the goal through the portal to ${main}: its checks run first, nothing reaches ${main} without you`} onClick=${go}>To ${main}</button>
     ${red && html`<button type="button" class="ork-btn" onClick=${() => startChecks(slug, true)}>Test again</button>`}
+    <button type="button" class="ork-btn quiet" data-to-main-untested disabled=${busy} title=${`Sends the goal to ${main} with no test run: nothing has shown it is safe`} onClick=${async () => { setBusy(true); try { await playUntested(slug); } finally { setBusy(false); } }}>To main without the tests</button>
     <span class="table-tomain__line" role="status" aria-live="polite">${reason ? html`<span key=${echo.value} class="table-tomain__sealed">Sealed: ${reason}</span>` : line}</span>
     ${list.filter((c) => c.state === "passed" && c.failures?.length).map((c) => html`<span role="status">${c.words}</span>`)}
-    ${!reason && html`<${Stopped} slug=${slug} tone="table-tomain__sealed" />`}
+    ${!reason && html`<${Stopped} slug=${slug} tone="table-tomain__sealed" button=${false} />`}
   </div>`;
 }

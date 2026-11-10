@@ -117,7 +117,7 @@ class GateMixin:
         into = self._into()
         git = IdeaGit(Path(self.host.repo_root))
         main = self._gate_main(git)
-        push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
+        push = settings.pushes_main(self.settings_now().get("push", settings.IDEAS["push"]))
         if not idea_gate.same(into, main):
             try:
                 pile = self._pile(git, into, main)
@@ -239,7 +239,7 @@ class GateMixin:
         if refused:
             raise IdeasError(refused)
         took = None if untested else self._checks_took(slug)
-        push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
+        push = settings.pushes_main(self.settings_now().get("push", settings.IDEAS["push"]))
         git = IdeaGit(Path(self.host.repo_root))
         try:
             with git.lock:                     # the checks' record is read under its own lock, briefly: none is held through the push
