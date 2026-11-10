@@ -184,7 +184,7 @@ def test_a_notification_opens_the_app_logged_and_the_goal_it_names_is_picked(app
     app.ready()
     assert [a for a in _calls(pg, app.host, "ideas.log", 2) if a["what"] == "push"] == [{"event": "opened", "what": "push", "ref": "needs", "device": "phone"}]       # once
     pg.wait_for_function("() => import('./page/js/frame/state.js').then((s) => s.picked.value === 'signin')", timeout=WAIT_MS)
-    assert pg.evaluate("() => location.hash") == ""
+    assert pg.evaluate("() => location.hash") == "#goal=signin"        # the notification's own words are gone from the address; the pick is written there by the page's one writer (frame/state.js)
     assert not app.errors, "\n".join(app.errors)
 
 
