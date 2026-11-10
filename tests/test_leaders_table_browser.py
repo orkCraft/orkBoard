@@ -429,32 +429,36 @@ def test_under_reduced_motion_the_empty_chair_is_lit_and_not_pulled_out(gui):
 
 def test_stop_all_halts_says_stopped_has_no_button_to_press_again_and_comes_back_when_a_task_runs(desk):
     pg, host, w = desk
-    stop = pg.locator(".hand-die__stop")
+    wide = w == "wide"                                   # from 760 px up Stop all is the right column's head's (spec 168 A4, decisions 285.2); under it, it stays under the die
+    sel, said = (".rh-stop", None) if wide else (".hand-die__stop", ".hand-die__stopped")
+    stop = pg.locator(sel)
     assert stop.get_attribute("aria-label") == "Stop all: stop every run of this project's orks" and stop.get_attribute("aria-disabled") is None and stop.inner_text() == "Stop all"
-    assert stop.evaluate("e => e.tagName") == "BUTTON" and stop.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-danger"), "in the danger colour while a task runs"
+    assert stop.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-danger") and stop.evaluate("e => e.tagName") == "BUTTON", "in the danger colour while a task runs"
     shot(pg, f"leaders-die-running-{w}.png")
     stop.click()
-    pg.wait_for_function("() => document.querySelector('.hand-die__stopped')?.textContent === 'Stopped'", timeout=WAIT_MS)
-    word = pg.locator(".hand-die__stopped")
-    assert host.halted == 1 and pg.locator(".hand-die__stop").count() == 0, "nothing to press: a host that does not keep *stopped* has no Resume"
-    assert word.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted"), "Stopped is muted"
+    if said:
+        pg.wait_for_function("() => document.querySelector('.hand-die__stopped')?.textContent === 'Stopped'", timeout=WAIT_MS)
+        assert pg.locator(said).evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted"), "Stopped is muted"
+    else:
+        pg.wait_for_function("() => !document.querySelector('.rh-stop')", timeout=WAIT_MS)             # the head says nothing once stopped
+    assert host.halted == 1 and pg.locator(sel).count() == 0, "nothing to press: a host that does not keep *stopped* has no Resume"
     shot(pg, f"leaders-die-stopped-{w}.png")
     pg.wait_for_function("() => !document.querySelector('.table-lane [data-state=running]')", timeout=WAIT_MS)
     pg.wait_for_timeout(300)
-    assert host.halted == 1 and pg.locator(".hand-die__stopped").count() == 1, "nothing runs: it stays stopped"
+    assert host.halted == 1 and pg.locator(sel).count() == 0 and (not said or pg.locator(said).count() == 1), "nothing runs: it stays stopped"
     seat = next(n for n in host.nodes if n["slug"] == "rules")
     seat["tasks"][0]["state"] = "running"                                                                                # a task runs again
     host.change()
-    pg.wait_for_function("() => document.querySelector('.hand-die__stop')?.textContent === 'Stop all'", timeout=WAIT_MS)
-    assert pg.locator(".hand-die__stopped").count() == 0
+    pg.wait_for_function("s => document.querySelector(s)?.textContent === 'Stop all'", arg=sel, timeout=WAIT_MS)
+    assert not said or pg.locator(said).count() == 0
 
 
 def test_stopped_goes_back_when_a_goal_is_started_from_the_page(wide):
     pg, host = wide
-    pg.locator(".hand-die__stop").click()
-    pg.wait_for_function("() => document.querySelector('.hand-die__stopped')?.textContent === 'Stopped'", timeout=WAIT_MS)
+    pg.locator(".rh-stop").click()                       # at the wide width Stop all is the right column's head's (spec 168 A4)
+    pg.wait_for_function("() => !document.querySelector('.rh-stop')", timeout=WAIT_MS)
     pg.evaluate("() => import('/static/js/board/store.js').then((m) => m.ask('ideas.add', { text: 'A new goal' }))")
-    pg.wait_for_function("() => !document.querySelector('.hand-die__stopped')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !!document.querySelector('.rh-stop')", timeout=WAIT_MS)
 
 
 # -- the dark edges -------------------------------------------------------------------------------------------------------------------------------------

@@ -32,10 +32,10 @@ if (typeof document !== "undefined") {                                  // the s
 /** The route row of a goal that waits for its Talk, null for none. */
 const routeRowOf = (slug) => (board.value?.needs_you || []).find((r) => r.kind === "route" && r.idea === slug) || null;
 
-/** What the table shows for the goal `n` at the tab of `g` (null: the Orkmaster's): `route` (the Orkmaster, not talked yet), `talk`, `spec`, `work`, `done` (a leader), "" for the table as before (the Orkmaster's lanes, a leader's map). */
+/** What the table shows for the goal `n` at the tab of `g` (null: the Orkmaster's): `route` (the Orkmaster, not talked yet), `result` (the Orkmaster, the goal done: resultboard.js), `talk`, `spec`, `work`, `done` (a leader), "" for the table as before (the Orkmaster's lanes, a leader's map). */
 export function phaseKind(g, n) {
   if (!n) return "";
-  if (!g) return n.state === "routed" || routeRowOf(n.slug) ? "route" : "";
+  if (!g) return n.state === "done" ? "result" : n.state === "routed" || routeRowOf(n.slug) ? "route" : "";
   const phase = phaseOf(n.slug);
   if (phase === "talk" || phase === "spec") return phase;
   return (phase === "work" || phase === "done") && viewable(n) ? phase : "";
