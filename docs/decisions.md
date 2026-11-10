@@ -8085,3 +8085,32 @@ How, as proposed with it from the comparison (the owner may change any of it):
 4. **Every head reads on the dark room**: no dark hood or dark helm without a light rim; its party's colour carries it.
 5. **§288's way holds**: a head drawn bare (no hood, no cap, no hat: the tiers' gear is laid by code), the heroes' own portraits,
    five moods each, the sheets taken in by orkUI's tool (`races/art/sheets.json`), re-run for every new take.
+
+## 290. The beta's pictures: the cartoon heads now, the cards' pictures pixel until the phone (10 November 2026, the owner)
+
+Changes: 289.2 (the order: the heads, then the cards' pictures, then the objects: the cards' pictures and the objects wait for the
+phone), 288.3 (a tier's gear taken from the tiers' sheets: now laid by code from the leaders' gear in sheet K3), 288.5 (five moods
+for every head and every hero: the heroes' moods wait until after the beta); `docs/pictures-wanted.md`'s pixel head sheets (H2, T2,
+H3, H4, H7–H11, the T1 and H5 fixes) are dropped.
+
+Why: the owner, with the cartoon sheets made in Gemini (K1 the bare eight, K2 the eight at 16 px, K3 the leaders' tiers, K4 the
+members, K6 the eighteen heroes, and one sheet of eight heads in five moods each in place of K7 and K8) and the pixel card pictures
+(sheets 1 to 4, the fourth in two takes), weighed what the beta needs: the window should not be drawn half in one look and half in
+another, and the cards' pictures, redrawn, are best seen where the work is done. So:
+1. **The heads are the cartoon in the beta**, all at once: the leaders, the members, the Orkmaster, the heroes and the moods, never
+   cartoon and pixel heads side by side. orkUI's pixel heads (0.38.0) stay until orkUI takes the cartoon heads in; the cut is made
+   as a mockup (`docs/mockups/table-template/heads/cartoon/`), then orkUI's own tool (`races/art/`, spec 168 J3), then copied here.
+2. **The cards' pictures stay pixel for the beta** (sheets 1 to 4 of `docs/pictures-wanted.md`; spec 168 J2 takes them). They are
+   redrawn in the cartoon later (P1–P4, then the objects O1–O6 of `docs/pictures-cartoon.md`), when the work moves to the phone, then
+   on the desktop too.
+3. **No more sheets for the beta.** The members' tiers are laid by code from the leaders' gear in K3 (the Grunt from the shaman, the
+   elf from the dryad, the goblin from the imp, the gnome from the gnome fairy, the skeleton from the lich, the knight member from
+   the knight's plume); the frames a head crosses (the dryad's antlers) and the "z" letters drawn in the asleep bubbles are fixed by
+   code when cutting; K5 is not made.
+4. **After the beta**: the heroes' moods (K9–K13; a hero shows its calm face, its state beside it as today) and K6's small faults
+   (the six hero knights lost their small wings, Spike Shaman's horns are not ram's horns). The Orkmaster's focused and no moods
+   are close.
+5. **A lesson for every sheet**: a sheet's whole image stays near square or at most 2 : 1; Gemini squashes the tiles of a wider
+   grid (sheet 4's tiles 1–4 and K4 were drawn again as a 2 × 2 and a 3 × 2 grid).
+
+The owner's call.

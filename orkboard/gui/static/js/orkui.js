@@ -56,14 +56,14 @@ export const MOODS = ["focused", "worried", "no", "pleased", "asleep"];
 /** Whether a head has faces: a leader's race, a hero's head (`hero-<id>`, orkUI 0.34.0, spec 157 B), or the crowned ork. */
 export const hasFaces = (race, tier) => LEADER_RACES.includes(race) || String(race).startsWith("hero-") || (race === "peon" && tier === "crown");
 
-/** A race's head (orkUI races/), pixelated: 24 x 22 (its @2x for a sharp screen), a pixel a cell, an accent in a line of text, `mid` 36 x 33
- *  (a member's head, from the @2x) or `big` 48 x 44 (the leader's); never 12 x 11 (spec 96 §2.1). A head is an accent, never a picture to
+/** A race's head (orkUI races/), smooth cartoon art (orkUI 0.39.0, decisions §289): 24 x 22 (its @2x and @3x for a sharp screen), an accent in a line of text, `mid` 36 x 33
+ *  (a member's head, from the @2x, the @3x at 1.5x) or `big` 48 x 44 (the leader's, the same); never 12 x 11 (spec 96 §2.1). A head is an accent, never a picture to
  *  look at: the smallest that says it. Its word goes beside it. `mood` ("" calm, the plain file; else `focused`, `worried`, `no`, `pleased` or `asleep`): the face of a leader or the crown
  *  (`races/<race>-<tier>-<mood>[@2x].png`); any other head keeps its one face (spec 123 §3). */
 export function Head({ race, tier = "laborer", size = "", title = "", mood = "" }) {
   const sz = size, face = MOODS.includes(mood) && hasFaces(race, tier) ? mood : "", src = `${ORKUI}/races/${race}-${tier}${face ? `-${face}` : ""}`, from2x = sz === "mid" || sz === "big";
   const wide = { mid: 36, big: 48 }[sz] || 24, high = { mid: 33, big: 44 }[sz] || 22;
-  return html`<img class=${`ork-race__head${sz ? ` ${sz}` : ""}`} src=${from2x ? `${src}@2x.png` : `${src}.png`} srcset=${sz || from2x ? undefined : `${src}@2x.png 2x`}
+  return html`<img class=${`ork-race__head${sz ? ` ${sz}` : ""}`} src=${from2x ? `${src}@2x.png` : `${src}.png`} srcset=${from2x ? `${src}@2x.png 1x, ${src}@3x.png 1.5x` : sz ? undefined : `${src}@2x.png 2x, ${src}@3x.png 3x`}
     width=${wide} height=${high} alt="" title=${title || undefined} data-mood=${face || undefined} draggable="false" />`;
 }
 

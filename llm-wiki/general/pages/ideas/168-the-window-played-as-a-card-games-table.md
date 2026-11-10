@@ -60,10 +60,12 @@ The spec's waves, in order: **1** A (A0 orkUI 0.37.0, A1–A6) · **2** B (B1–
 worktree of its own; the parts of a wave sharing no file side by side.
 
 **Where it stands** (10 November 2026): waves **A–I are built and in main**, each merged on the critical tests and its stages' own; J1 (a way's
-kind) and J3 (the heads, orkUI 0.38.0, from the owner's pixel art) are in main. **Waiting for the owner's art**: decision §289 turned the
-pictures into a humorous flat cartoon, so J2 (a picture on a way's, a slot's and a question's card) and the heads again in the cartoon wait for
-the sheets of `docs/pictures-cartoon.md` (K1–K13, P1–P4, O1–O6); the code reads orkUI's `pictures/pictures.json` and the heads by their names,
-so they arrive as files.
+kind) and J3 (the heads, orkUI 0.38.0, from the owner's pixel art) are in main. **The owner's art is made** (decision §290, 10 November 2026): the cartoon heads K1, K2, K3, K4 (a 3x2 grid, the Grunt first), K6 and one sheet of moods
+(8 heads x 5), and the pixel card sheets 1 to 4 (the fourth in two takes). The heads are cut as a mockup (`docs/mockups/table-template/heads/cartoon/`);
+**J3 comes again, in the cartoon**, once orkUI (`races/art/`) takes them in and they are copied here: the members' tiers laid by code from the
+leaders' gear in K3, the heroes showing their calm face (their moods, and K6's small faults, wait until after the beta). **J2 takes the pixel
+pictures for the beta**; the cards' pictures are redrawn in the cartoon later (P1–P4, O1–O6), when the work moves to the phone, then on the
+desktop. The code reads orkUI's `pictures/pictures.json` and the heads by their names, so they arrive as files.
 
 **Not accepted yet** (left from the stages, for their leaders' look or a later goal):
 - D1: a lifted plan, decision or route lies in a hand-high panel, not yet as ways' cards.

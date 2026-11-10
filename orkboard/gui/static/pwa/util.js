@@ -27,11 +27,11 @@ export function icon(name) {
   return svg;
 }
 
-/** A race's head (orkUI races/ beside the app's files), pixelated: 24 x 22 (its @2x for a sharp screen), or `small` 12 x 11, a pixel a
- *  cell, an accent in a line of text. A head is an accent, never a picture to look at. */
+/** A race's head (orkUI races/ beside the app's files), smooth cartoon art (orkUI 0.39.0, decisions §289): 24 x 22 (its @2x and @3x for a sharp screen), or `small` 12 x 11,
+ *  an accent in a line of text. A head is an accent, never a picture to look at. */
 export function head(race, tier = "laborer", { small = false, title = "" } = {}) {
   const src = `races/${race}-${tier}`;
-  return h("img", { class: `ork-race__head${small ? " small" : ""}`, src: `${src}.png`, srcset: small ? null : `${src}@2x.png 2x`,
+  return h("img", { class: `ork-race__head${small ? " small" : ""}`, src: `${src}.png`, srcset: small ? null : `${src}@2x.png 2x, ${src}@3x.png 3x`,
     width: small ? 12 : 24, height: small ? 11 : 22, alt: "", title: title || null, draggable: "false" });
 }
 

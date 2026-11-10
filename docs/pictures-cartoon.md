@@ -5,6 +5,16 @@ Each prompt says its whole style itself. **Attach to every sheet** the owner's t
 heads also takes the sheet it names. The signs, the runes and the tools' marks (their makers' logos) are not redrawn (§289.2).
 The tool cuts the sheets by `races/art/sheets.json` (orkUI); a tile's number is its place in the lists below.
 
+**Where it stands (decision §290, 10 November 2026).** Made: K1, K2, K3, K4 (a 3x2 grid, the Grunt first), K6, and one moods sheet
+(8 heads x 5 moods: the shaman, dryad, knight, lich, imp, gnome fairy, Orkmaster and the Grunt) that replaces K7 and K8. Not needed:
+K5 (the members' tiers are laid by code from the leaders' gear in K3). After the beta: K9–K13 (the heroes' moods) and the fixes of
+*K6, the fixes after the beta* below. After the phone: P1–P4 and O1–O6 (the cards' pictures and the objects stay pixel for the beta).
+K5, K7 and K8 stay below as they were written.
+
+**Lessons.** A sheet's whole image must stay near square or at most 2:1: Gemini squashes the tiles of a wider grid (K4 as a 5x1
+sheet, and sheet 4 of the pixel cards, were drawn again as 3x2 and 2x2). The dryad's antlers cross the frame of their tile; the
+cut fixes it by code. In the asleep bubbles Gemini draws "z" letters; the cut removes them by code.
+
 ## The heads
 
 ### K1. The bare eight (attach the test sheet)
@@ -33,7 +43,7 @@ Eighteen fantasy head portraits on one sheet, a 3x6 grid (three columns, six row
 
 ### K4. The members (attach K1)
 ```
-Five fantasy head portraits on one sheet, a 5x1 grid, in EXACTLY the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, big expressive eyes, comic proportions. These are the plain members of each race: younger, simpler and calmer than the leaders on the attached sheet, the same height, the eyes on the same line. Left to right: 1 an elf: pale skin, long pointed ears, plum hair cut at the jaw. 2 a goblin: rust-orange skin, wide flat ears, a wide toothy grin. 3 a gnome: a round nose, a big white beard, a small blue pointed cap of its own. 4 a knight: a plain closed helm in muted brass with a visor slit, its eyes seen in it, breath holes, no horn, no wings. 5 a skeleton: a bare skull on a short jaw in light night blue and slate, with a light rim. A head only, no shoulders; tiles slightly wider than tall (12:11), a clear margin, a flat mid-grey background (#3a3a3a), a thin grey-brown frame. No text, letters or numbers.
+Six fantasy head portraits on one sheet, a 3x2 grid (three columns, two rows), in EXACTLY the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, big expressive eyes, comic proportions. These are the plain members of each race: younger, simpler and calmer than the leaders on the attached sheet, the same height, the eyes on the same line. Left to right, top to bottom: 1 the Grunt, the young ork of the attached sheet's tile 8, kept EXACTLY as it is. 2 an elf: pale skin, long pointed ears, plum hair cut at the jaw. 3 a goblin: rust-orange skin, wide flat ears, a wide toothy grin. 4 a gnome: a round nose, a big white beard, a small blue pointed cap of its own. 5 a knight: a plain closed helm in muted brass with a visor slit, its eyes seen in it, breath holes, no horn, no wings. 6 a skeleton: a bare skull on a short jaw in light night blue and slate, with a light rim. A head only, no shoulders; tiles slightly wider than tall (12:11), a clear margin, a flat mid-grey background (#3a3a3a), a thin grey-brown frame. No text, letters or numbers.
 ```
 
 ### K5. The members' tiers (attach K1 and K4)
@@ -63,6 +73,15 @@ Eighteen hero head portraits on one sheet, a 6x3 grid, in EXACTLY the humorous f
 17 the gnome fairy with a small paper price tag on a string hanging from one wing.
 18 the gnome fairy wearing a small brown cap with a dart stuck in it.
 A head only, no shoulders; tiles slightly wider than tall (12:11), the eyes on one line in every tile, a clear margin, a flat mid-grey background (#3a3a3a), a thin grey-brown frame. No text, letters or numbers.
+```
+
+### K6, the fixes after the beta (attach K6)
+Two small faults of K6, to be drawn after the beta; each prompt redraws only the heroes it names and keeps the rest of the sheet.
+```
+The attached sheet of eighteen hero heads, kept EXACTLY, with this change to six tiles only (5, 6, 7, 8, 9 and 10): each of these hero knights has the small white wings at the sides of its helm that the golden unicorn knight has, in the same size and style, beside its crest, and nothing else about it changes. Every other tile is unchanged. Same grid, same tile shape, same flat mid-grey background, no text, letters or numbers.
+```
+```
+The attached sheet of eighteen hero heads, kept EXACTLY, with this change to tile 2 only (Spike Shaman): its horns are not ram's horns curling down; they are short straight upright horns growing from the brow, around the spiky crest, and its two red war-paint stripes on each cheek stay. Every other tile is unchanged. Same grid, same tile shape, same flat mid-grey background, no text, letters or numbers.
 ```
 
 ### K7. The moods: shaman, dryad, knight, lich (attach K1)

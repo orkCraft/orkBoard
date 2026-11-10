@@ -1,4 +1,4 @@
-"""Orkboard's mark: the Orkmaster's crowned head (decisions §91, §182.14; docs/specs/107-what-the-owners-day-said.md §12), orkUI's `races/peon-crown@2x.png`, drawn large by whole numbers only, nearest, never smoothed.
+"""Orkboard's mark: the Orkmaster's crowned head (decisions §91, §182.14; docs/specs/107-what-the-owners-day-said.md §12), the pixel head orkUI 0.38.0 drew (`races/peon-crown@2x.png`, kept in `design-system/logo/source/`), drawn large by whole numbers only, nearest, never smoothed.
 The head is a pixel picture: it is read at its own pixel (the @2x is that head twice as large, so the 48 × 44 comes back to 24 × 22) and every icon is that picture at a whole number of times, centred, on a square of the size
 asked: the favicon (32 and 64), the phone's icons, the Dock's, VS Code's. A dev tool, never imported when Orkboard runs (Pillow is a dev extra): the files it writes are committed, and `gui/server.py`, `gui/pwa.py` and
 `design/logo.py` only serve them.
@@ -16,7 +16,9 @@ from pathlib import Path
 
 from orkboard.design import logo, tokens
 
-SOURCE = tokens.ORKUI / "races" / "peon-crown@2x.png"
+# The pixel crowned head as orkUI 0.38.0 drew it, kept here: orkUI 0.39.0's heads are smooth (decisions §289, §290), and the mark
+# stays the pixel head until the owner decides on a mark of the cartoon one.
+SOURCE = logo.ROOT / "source" / "peon-crown@2x.png"
 FILL = (4, 5)                                  # the picture takes at most this much of the square's width: the rest is the icon's margin
 TITLE = "Orkboard"
 UNIT = 10                                      # px a pixel of the picture is in mark.svg's own size

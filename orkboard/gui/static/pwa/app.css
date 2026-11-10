@@ -473,7 +473,7 @@ dialog.sheet.drawer .sheet-foot { margin-top: auto; }
 .craft-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--ork-2); }           /* five crafts and Mixed in one row (spec 41 §6) */
 .craft-tile { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center;
   min-height: var(--ork-tap); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
-.craft-tile .ork-race__head { width: 24px; height: 22px; image-rendering: pixelated; }
+.craft-tile .ork-race__head { width: 24px; height: 22px; }
 .craft-line { margin: 0; }
 .craft-tile[aria-pressed="true"] { background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
 .craft-tile:focus-visible, .team-row:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }

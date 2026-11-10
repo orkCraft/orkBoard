@@ -108,7 +108,7 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .up-cards > * { pointer-events: auto; }
 .up-cards::-webkit-scrollbar { display: none; }
 .up-sep { flex: none; box-sizing: border-box; width: 22px; align-self: stretch; display: flex; justify-content: center; padding-top: var(--ork-2); border-left: var(--ork-line) solid var(--ork-frame); }
-.up-sep .ork-race__head { width: auto; height: 16px; image-rendering: pixelated; }
+.up-sep .ork-race__head { width: auto; height: 16px; }
 /* a card that landed out of the row's view: the cue at that edge brightens once (hand/uprow.js `data-cue`); static under reduced motion */
 .up-row::after { content: ""; position: absolute; top: 0; bottom: 0; width: var(--ork-1); background: var(--ork-ink); opacity: 0; pointer-events: none; z-index: 1; }
 .up-row[data-cue="right"]::after { right: 92px; animation: up-cue calc(var(--ork-motion-base) * 5) ease-out 1; }

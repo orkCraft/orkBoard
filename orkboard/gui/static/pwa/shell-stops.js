@@ -211,7 +211,7 @@ export function makeStops(core, ctx, needs, ops) {
   function collideItem(n, base, lead) {
     const c = n.collide || {}, goals = c.goals || [], answers = c.answers || [], first = c.first || "";
     const o = st.map?.project?.orkmaster;
-    const head = () => (o ? h("img", { class: "ork-race__head mid", src: `races/${o.race}-${o.tier}@2x.png`, width: 36, height: 33, alt: "", title: "Orkmaster", draggable: "false" }) : midHead(lead));
+    const head = () => (o ? h("img", { class: "ork-race__head mid", src: `races/${o.race}-${o.tier}@2x.png`, srcset: `races/${o.race}-${o.tier}@2x.png 1x, races/${o.race}-${o.tier}@3x.png 1.5x`, width: 36, height: 33, alt: "", title: "Orkmaster", draggable: "false" }) : midHead(lead));
     const titleOf = (slug) => goals.find((g) => g.idea === slug)?.title || slug;
     const say = (answer, said) => go("ideas.collide_answer", { id: c.id, answer }, said);
     const openGoal = (g) => () => {

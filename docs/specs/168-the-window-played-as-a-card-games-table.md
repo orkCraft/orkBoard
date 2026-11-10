@@ -97,6 +97,10 @@ no module past ~600 lines (split first); the narrow page (under 760 px) and the 
 
 ## J. Pictures (§283.34–36)
 
+**Where it stands (§290):** the owner's art is made, the cartoon heads (K1–K4, K6, the moods) and the pixel card sheets 1–4. J3 comes again
+in the cartoon when orkUI takes the heads in (its `races/art/` tool), then is copied here; J2 takes the pixel pictures for the beta, and the
+cards' pictures are redrawn in the cartoon when the work moves to the phone.
+
 | Stage | What | Where | Done when |
 |---|---|---|---|
 | **J1. A way's kind** | Every call that offers ways returns each way's `way_kind` from one list of about twelve (*replace*, *keep*, *smaller*, *later*, *drop*, *split*, *go on*, *mitigate*, *accept the risk*, *ask more*, *leader decides*, *other*), carried to the page | `realm/seat_*_rules.py`, the parse modules, `realm/board_map.py` | unit tests: each way has a kind; an unknown one reads as *other* |
