@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Readable look, specimen</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<style>
+/* Each look's faces at the sizes it proposes, Latin and Cyrillic (a person's words are in their own language), on a card. */
+body { margin: 0; padding: 16px; background: var(--ork-canvas); color: var(--ork-ink); font: 400 14px/20px "IBM Plex Sans", sans-serif; }
+main { display: grid; grid-template-columns: repeat(4, 300px); gap: 16px; }
+.look { display: flex; flex-direction: column; gap: 10px; }
+.look > h2 { margin: 0; font: 600 13px/16px "IBM Plex Sans", sans-serif; color: var(--ork-ink-muted); }
+.card { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--card); border: 1px solid var(--frame);
+  border-radius: var(--r); clip-path: var(--clip); box-shadow: inset 0 3px 0 var(--ork-party-ork); }
+.h { margin: 0; font: var(--hw) var(--hs)/1.25 var(--head); text-transform: var(--case); letter-spacing: var(--track); }
+.t { margin: 0; font: 400 var(--bs)/1.45 var(--text); color: var(--read); }
+.c { margin: 0; font: 400 var(--cs)/1.35 var(--text); color: var(--faint); }
+.btn { align-self: start; padding: 6px 12px; border: 1px solid var(--ork-edge); border-radius: var(--rs); font: var(--hw) 14px/18px var(--head); }
+.num { font: 600 var(--bs)/1 var(--text); font-variant-numeric: tabular-nums; }
+.now { --head: "Pixelify Sans"; --hw: 500; --hs: 14px; --case: uppercase; --track: .04em; --text: "IBM Plex Sans"; --bs: 14px; --cs: 12px;
+  --r: 0; --rs: 0; --clip: var(--ork-notch); --card: #2a2e31; --frame: #383d41; --read: #cac7c1; --faint: #98948e; }
+.a, .b, .c2 { --card: #33373a; --frame: #4c5257; --read: #d6d2ca; --faint: #a8a39a; --clip: none; --bs: 15px; --cs: 13px; }
+.a { --head: "Rubik"; --hw: 700; --hs: 16px; --case: none; --track: .01em; --text: "Rubik"; --r: 10px; --rs: 6px; }
+.b { --head: "Unbounded"; --hw: 500; --hs: 15px; --case: none; --track: 0; --text: "Onest"; --r: 8px; --rs: 6px; }
+.c2 { --head: "Alegreya SC"; --hw: 700; --hs: 17px; --case: none; --track: .02em; --text: "Alegreya Sans"; --bs: 16px; --cs: 14px; --r: 6px; --rs: 4px; }
+</style>
+</head>
+<body>
+<main>
+<script>
+const looks = [["now", "Today: Pixelify + IBM Plex Sans"], ["a", "A, the tavern: Rubik"], ["b", "B, the poster: Unbounded + Onest"],
+  ["c2", "C, the tale: Alegreya SC + Alegreya Sans"]];
+document.querySelector("main").innerHTML = looks.map(([k, n]) => `<section class="look ${k}"><h2>${n}</h2>
+  <div class="card"><p class="h">Which sign-in first?</p><p class="t">A new player meets it before the lobby, so it decides what the lobby needs.</p>
+  <p class="c">Recommended: Email link · Grunt waits for your answer</p><span class="btn">Let Tech decide</span></div>
+  <div class="card"><p class="h">Какой вход сначала?</p><p class="t">Новый игрок встречает его до лобби, поэтому он решает, что лобби нужно от игрока.</p>
+  <p class="c">Шаман Теха ждёт ответа · щука, ёж, съешь же ещё этих мягких французских булок</p><span class="btn">Пусть решит Тех</span></div>
+  <div class="card"><p class="h">Release 0.4 · Stop all</p><p class="t"><span class="num">62% · 80% · 41% · 18% · 12 min · $0.40</span></p>
+  <p class="c">Il1 O0 rn m · 1234567890</p></div></section>`).join("");
+</script>
+</main>
+</body>
+</html>

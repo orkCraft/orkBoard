@@ -1,0 +1,7 @@
+/* A, the tavern: Rubik, a soft-cornered grotesque with a card game's weight; its headings heavy, never shouting. */
+:root[data-look="office"] {
+  --lk-head: "Rubik", system-ui, sans-serif; --lk-head-w: 700; --lk-title-w: 800;
+  --lk-text: "Rubik", system-ui, sans-serif;
+  --lk-case: none; --lk-track: 0.01em;
+  --lk-r: 10px; --lk-r-small: 6px;
+}
