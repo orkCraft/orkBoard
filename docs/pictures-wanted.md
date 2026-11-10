@@ -1,5 +1,12 @@
 # The pictures the cards want (decision §283.34–36, spec 168 J2)
 
+**Where it stands (decision §290, 10 November 2026).** The card sheets 1 to 4 are all made; spec 168 J2 takes them for the beta, and
+the cards' pictures stay pixel until the work moves to the phone, when they are redrawn in the cartoon (`docs/pictures-cartoon.md`).
+Sheet 4 came in two takes: a grid whose whole image is wider than about 2 : 1 gets its tiles squashed, so tiles 1–4 were drawn again
+as a 2 x 2 grid of wide tiles and tiles 5–8 kept from the first take. **The pixel heads' sheets below (H2, T2, H3, H4, H7–H11 and
+the T1 and H5 fixes) are dropped**: the heads are the cartoon now (`docs/pictures-cartoon.md`), and orkUI's pixel heads stay only
+until orkUI takes the cartoon in.
+
 The owner makes them with Gemini, a sheet at a time, in the pixel style of orkUI's leaders' heads (the shaman, the dryad, the
 knight, the lich, the imp, the gnome): attach a picture of those heads to every prompt as the style's reference. Each tile is an
 item card's picture: an object or an action with a joke in it, not a character (the owner, on the first sheet). Then orkUI takes them

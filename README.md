@@ -12,8 +12,9 @@ own map, the hand, a goal from the + card to Done, the mana, the discard, the ph
 ## The ideas in one page
 
 **The window is two parts.** *The table* is *what and why, through whose eyes*: a tab a leader, and the pane under the
-tabs showing one map. *The hand* lies under the table's lanes and holds *what you decide*, and nothing else. There is no
-list column, no drawer, no dialog and no count of what waits: what needs you is a card.
+tabs showing one map. *The hand* lies under the table's lanes and holds *what you decide*, and nothing else; at its right stand the places, each
+opening a table of its own: the die (*Play*), the backpack (the inventory) and the history book. There is no list column, no
+drawer, no dialog and no count of what waits: what needs you is a card.
 
 **Who says what.**
 
@@ -49,19 +50,21 @@ write a goal, address it to a party with *@Tech* (or by its open tab), paste a p
    numbered, into the project's `docs/decisions.md`.
 3. **Spec.** Each leader writes its section at once: *Why*, *Done when*, *Checks*, *Will be*, *Out*, *Risks*. What two
    sections disagree on comes to you as a fork, both sides with their why.
-4. **Work.** Each party plans its own step; its orks work in their own worktrees, the checks run, the tasks land in dev.
-   The hand holds only forks and what falls outside the contract.
-5. **Done.** The goal goes to the **discard** on the table, its result promised against made, and waits at the portal
-   until you send it **to main**. Nothing reaches main without you.
+4. **Work.** Each party plans its own step; its orks work in their own worktrees, the checks run, the tasks land on the
+   goal's own branch. The hand holds only forks and what falls outside the contract.
+5. **Done.** The goal goes to the **discard**, beside the table at the window's right, its result promised against made. The
+   discard is two piles: done and waiting for dev, and in dev and waiting for main. You send a goal **to main** from it, after
+   the gate's tests have run. Nothing reaches main without you.
 
 A bug takes the short way: Tech alone, its Talk is its diagnosis, and one that already reproduces starts straight away.
 
-**The mana.** At the hand's right, your AI tools' limits as potions: what is left of each window, and what a goal will
-cost — said in plain words, *about 4% of Claude's week* — before anything spends. When they run low the Orkmaster offers
-the short way, or *Later, by itself*: the goal waits in line for the reset.
+**The mana.** At the head of the discard's column, your AI tools' limits as potions in a row: what is left of each window,
+and what a goal will cost — said in plain words, *about 4% of Claude's week* — before anything spends. When they run low
+the Orkmaster offers the short way, or *Later, by itself*: the goal waits in line for the reset. Beside them hangs the lamp's
+chain, *Here* or *Away*.
 
-**▶ Play** runs the project's preview of dev in the pane, to try what the orks made before it goes to main. **Stop all**
-is a door: one press stops every ork at work, until work starts again.
+**▶ Play**, under the die, runs the project's preview of dev in the pane, to try what the orks made before it goes to main.
+**Stop all**, under the lamp's chain, stops every ork at work with one press; *Resume* takes its place until work starts again.
 
 **Your tools, your code.** The orks are your own AI tools — Claude Code, Codex, Antigravity and others — each seat on the
 tool and tier you choose. Everything lives in your project: the Board in `<project>/.orkcraft/`, the gate's checks in
@@ -98,8 +101,9 @@ From the terminal:
 | `orkboard drive spend [--since DAY] [--goal SLUG]` | What the project's model calls spent, by tool, step and goal, and where tokens went for nothing |
 | `orkboard drive journal [--dry-run] [--now]` | The project's status, events and spend sent to its own remote's `orkboard/journal` branch, only when `[journal]` in `orkcraft.toml` asks for it |
 
-It is drawn in [orkUI](https://github.com/orkCraft/orkUI)'s office look: dark, monochrome, colour a signal, its only
-pictures the races' heads.
+It is drawn in [orkUI](https://github.com/orkCraft/orkUI)'s office look: dark, with colour for the party, the element and a
+signal. Its pictures are the races' heads, being redrawn as a humorous flat cartoon, and the pictures on the cards, which are
+pixel pictures for now.
 
 It shares Orkline's settings (`~/.config/orkcraft/`) and a project's Board (`<project>/.orkcraft/`, `orkcraft.toml`):
 switching between the two loses nothing.
