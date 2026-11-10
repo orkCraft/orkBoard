@@ -10,6 +10,9 @@
                                           # judge again, twice at most, then a hearing; {ok, idea, parties}
     ideas.to_hearing {idea}               # *To the hearing* (spec 168 D5): a leader still doubts or says no after one judging again and nothing of its say is left: the hearing opens now; {ok, idea, parties}
 
+    ideas.decided_accept {idea, id}       # *Accepted* (spec 168 H4, decisions §283.22): a Silent leader's decision stands, its veto card is gone; {ok, idea}
+    ideas.decided_replay {idea, id}       # *Replay*: the question is back as a card with its ways (only while the goal is at Talk); {ok, idea}
+
 A refusal is an `IdeasError` in the keeper's plain words. The faces are told by the goal's change (`changed`), as for every step of the keeper; events: `say_answered`, `goal_rewritten`,
 `rewrite_forked`, `rewrite_undone`, `judged_again`, `to_hearing`.
 """
@@ -72,9 +75,17 @@ class Say:
         got = self._go(self.i.keeper.to_hearing, args)
         return {"ok": True, "idea": got["idea"], "parties": got["parties"]}
 
+    def decided_accept(self, args: dict) -> dict:
+        ident = _text(args, "id", 100)
+        return self._go(lambda slug: self.i.keeper.way_accept(slug, ident), args)
+
+    def decided_replay(self, args: dict) -> dict:
+        ident = _text(args, "id", 100)
+        return self._go(lambda slug: self.i.keeper.way_replay(slug, ident), args)
+
 
 def say_commands(ideas_: Any) -> dict:
     """The say's commands by name (`gui/ideas.py` adds them to its table: `**say_commands(self)`)."""
     s = Say(ideas_)
     return {"ideas.take_better": s.take_better, "ideas.take_way": s.take_way, "ideas.leave_say": s.leave_say, "ideas.undo_rewrite": s.undo_rewrite, "ideas.say_fork": s.say_fork,
-            "ideas.judge_again": s.judge_again, "ideas.to_hearing": s.to_hearing}
+            "ideas.judge_again": s.judge_again, "ideas.to_hearing": s.to_hearing, "ideas.decided_accept": s.decided_accept, "ideas.decided_replay": s.decided_replay}

@@ -87,10 +87,10 @@ def test_the_squad_is_the_same_in_every_size_and_release_is_its_engineer_and_its
     assert party_recipes.sized(tech, "standard")["basis"] == ["grunt", "reviewer"] and party_recipes.sized(tech, "lean")["basis"] == ["grunt"]
 
 
-def test_a_size_that_is_none_is_refused_and_each_size_has_its_target():
+def test_a_size_that_is_none_is_refused_and_a_size_has_no_target_of_its_own():
     with pytest.raises(ValueError, match="lean, standard or full"):
         party_recipes.sized(party_recipes.get("tech"), "huge")
-    assert party_recipes.TARGET == {"lean": "thrift", "standard": "balance", "full": "quality"} == idea_target.SIZE_TARGET
+    assert not hasattr(party_recipes, "TARGET") and not hasattr(idea_target, "SIZE_TARGET")        # spec 168 H4: a size sets the seats' cells and how many work at once, never a Target
 
 
 def test_each_size_gives_its_seats_their_tiers_lean_seasoned_standard_the_leader_veteran_full_the_leader_and_the_checker_veteran():

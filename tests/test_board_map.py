@@ -547,8 +547,8 @@ def test_the_hand_sorts_a_plan_change_as_a_plan_not_last_and_not_blocking_spec_6
         ("failed", "normal", "10"), ("plan", "high", "09"), ("change", "high", "11"), ("change", "high", "12"), ("plan", "low", "10"), ("proposal", "high", "10")]
 
 
-def test_a_party_wears_its_sizes_target_on_the_map_and_one_with_no_size_the_settings_spec_75(host):
-    """Spec 75 §3.2: a task's head is of its party's Target (a Grunt on By Target); `goals[].size` says the size ("" with none)."""
+def test_a_party_wears_the_settings_target_on_the_map_whatever_its_size_spec_168_h4(host):
+    """Spec 168 H4: a size is no Target of its own: a task's head is of *How deep* (a Grunt on By Target) for every party; `goals[].size` still says the size ("" with none)."""
     root, state = _board(host)
     parties = {}
     for size in ("lean", "full", ""):
@@ -561,9 +561,9 @@ def test_a_party_wears_its_sizes_target_on_the_map_and_one_with_no_size_the_sett
     got = board_map.build(root, state, {"target": "balance"}, [], time.time(), rev=0)
     assert {g["slug"]: g["size"] for g in got["goals"] if g["slug"] in {p[0] for p in parties.values()}} == {parties[s][0]: s for s in parties}
     tier = {s: _node(got, parties[s][1])["tasks"][0]["head"]["tier"] for s in parties}
-    assert tier == {"lean": "laborer", "full": "elder", "": "warrior"}
+    assert tier == {"lean": "warrior", "full": "warrior", "": "warrior"}
     again = board_map.build(root, state, {"target": "quality"}, [], time.time(), rev=0)
-    assert _node(again, parties[""][1])["tasks"][0]["head"]["tier"] == "elder" and _node(again, parties["lean"][1])["tasks"][0]["head"]["tier"] == "laborer"
+    assert {_node(again, parties[s][1])["tasks"][0]["head"]["tier"] for s in parties} == {"elder"}
 
 
 def test_a_goal_says_how_far_it_is_and_a_task_merged_says_what_it_made_spec_85(host):

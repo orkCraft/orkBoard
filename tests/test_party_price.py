@@ -192,14 +192,14 @@ def test_a_party_made_before_with_more_than_a_seat_a_stage_is_still_priced_as_it
 
 
 def test_a_size_prices_the_party_at_its_target_and_its_tiers_and_none_at_the_setting(host):
-    """Spec 75 §3.3: `size` (lean · standard · full) is thrift, balance, quality for the price; without it the setting's. Spec 81 §2: the
+    """Spec 168 H4: a size is no Target of its own: it prices the part of the squad it uses at the setting's Target (spec 75 §3.3 before); without it the whole squad. Spec 81 §2: the
     size's tiers (Seasoned all through for Lean, the leader Veteran for Standard…) are what its seats are priced at."""
     from orkboard.realm import goal_team, party_recipes
     team = ("grunt", "tester", "reviewer", "security-reviewer")
 
     def at(size, target):         # a size prices the part of the squad it uses (goal_team.price_team), at its tiers
         return party_price.price(host.ideas.root(), host.ideas.state_dir, {"target": target}, "architect", goal_team.price_team(size, list(team)), [], tiers=party_recipes.tiers_for("architect", list(team), size))
-    by_size = {s: at(s, t) for s, t in (("lean", "thrift"), ("standard", "balance"), ("full", "quality"))}
+    by_size = {s: at(s, "balance") for s in ("lean", "standard", "full")}
     sent = {"leader": "architect", "team": list(team), "every": []}
     for size, want in by_size.items():
         got = host.command("ideas.party_price", {**sent, "size": size})
@@ -209,10 +209,10 @@ def test_a_size_prices_the_party_at_its_target_and_its_tiers_and_none_at_the_set
     assert host.command("ideas.party_price", sent)["high"] == plain["high"]
     host.command("ideas.board_set", {"target": "quality"})
     assert host.command("ideas.party_price", sent)["high"] == price(host, team=team, target="quality")["high"]
-    assert host.command("ideas.party_price", {**sent, "size": "lean"})["high"] == by_size["lean"]["high"]  # a size wins over the setting
+    assert host.command("ideas.party_price", {**sent, "size": "lean"})["high"] == at("lean", "quality")["high"]       # a size does not change the Target: the setting's reaches it
     views = [*library.VIEWS, library.SKEPTIC]
     lean = host.command("ideas.party_price", {"leader": "investor", "team": views, "size": "lean"})
-    assert lean["pitch"] is True and lean["high"] < host.command("ideas.party_price", {"leader": "investor", "team": views, "size": "full"})["high"]
+    assert lean["pitch"] is True and lean["high"] == host.command("ideas.party_price", {"leader": "investor", "team": views, "size": "full"})["high"]      # a pitch is priced at the setting, a size no Target
 
 
 

@@ -9,7 +9,6 @@
     squad_of(recipe)                   # the seats a recipe ticks by default, at most `goal_team.SEATS`
     routines_of("run", "web")          # "web-liveops": the recipe whose recurring goals a running party proposes (`realm/recurring.py`)
     TEAM                               # the Team party's recipe: never offered nor made, a party the project has stays
-    TARGET["lean"]                     # "thrift": the Target a size works at (realm/idea_target.py SIZE_TARGET)
     has(recipe, tracks)                # the project already has this recipe's party
 
 **One craft a party** (§1.1): a game has *Game design*, *Tech*, *Art*, *Release*, *LiveOps* and *Marketing*; an app, a site and any other kind *Product*,
@@ -24,7 +23,6 @@ from __future__ import annotations
 from orkboard.realm import idea_target, library
 from orkboard.realm.party_recipes_before import BEFORE, STAGE_RECIPES, TEAM, TEAM_ID
 
-TARGET = idea_target.SIZE_TARGET
 TECH, TECH_LINE = library.TECH, library.TECH_LINE
 SIZES = idea_target.SIZES
 SQUAD_DOES, SQUAD_CHECKS = 2, 1                     # the default squad: the first two who do and the first who checks (the person ticks the rest)
