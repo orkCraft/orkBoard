@@ -140,7 +140,7 @@ def test_more_opens_the_conditions_and_the_measures_in_the_cards_own_place(more)
     form = open_more(pg)
     assert pg.locator(".hf-form").count() == 1, "nothing opens beside it"
     labels = [x.lower() for x in form.locator(".ork-label").all_text_contents()]
-    for want in ("holds when", "if it holds", "refuted when", "what it would teach", "when", "then", "measures", "what", "from", "whose map"):
+    for want in ("holds when", "if it holds", "refuted when", "what it would teach", "when", "then", "measures", "what", "from", "whose table"):
         assert want in labels, want
     assert form.locator('textarea[name="signal"]').input_value() == "nine of ten join on the first try" and form.locator('textarea[name="if_holds"]').input_value() == "Every room gets a big code."
     assert form.locator(".hf-way").count() == 2 and form.locator('input[name="way-name-0"]').input_value() == "the hook" and form.locator('textarea[name="way-change-0"]').input_value() == "Drop the code."
