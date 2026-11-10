@@ -368,3 +368,20 @@ def test_the_hand_page_text_is_17_px_nothing_under_14_and_every_text_reads_at_4_
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+def test_a_hand_of_three_goals_cards_shows_all_three_whole_at_390_wide_with_text_of_14_px_or_more(gui):
+    """The look's bigger type must not drop or push out a card (goal 169): the stub's hand draws its first three cards whole, side by side in the row (it scrolls sideways past the plus card), the type in them 14 px or more."""
+    pg, host, log = open_up(gui, host=LookHost(calm=False))
+    try:
+        row = cards(pg)
+        assert row.count() >= 3, f"the stub's hand holds at least three cards, {row.count()} drawn"
+        got = pg.evaluate("""() => { const r = document.querySelector('.up-cards'), cs = [...r.querySelectorAll('.up-card')].slice(0, 3); r.scrollLeft = 0;
+            return { right: Math.max(...cs.map(c => c.offsetLeft + c.offsetWidth)), width: r.scrollWidth, sizes: cs.map(c => [c.offsetWidth, c.offsetHeight]),
+                     type: Math.min(...[...r.querySelectorAll('.up-card *')].filter(e => e.childElementCount === 0 && e.textContent.trim()).map(e => parseFloat(getComputedStyle(e).fontSize))) } }""")
+        assert all(w >= 80 and h >= 100 for w, h in got["sizes"]), got
+        assert got["right"] <= got["width"], got
+        assert got["type"] >= 14, got
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
