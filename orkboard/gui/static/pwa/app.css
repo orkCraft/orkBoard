@@ -97,7 +97,7 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .list-row .ork-btn { flex: none; min-width: var(--ork-tap); }
 .pills { display: flex; gap: var(--ork-4); }
 .pill { position: relative; flex: 1 1 0; min-height: var(--ork-tap); display: flex; align-items: center; justify-content: center; cursor: pointer;
-  border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); color: var(--ork-ink-muted); font: var(--ork-type-button-phone); }
+  border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); color: var(--ork-ink-muted); font: var(--ork-type-button-phone); }
 .pill input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .pill.is-on { color: var(--ork-ink); background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
 .pill:focus-within { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
@@ -120,7 +120,7 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .board-spend { flex: 1 0 100%; order: 9; margin: 0; font-variant-numeric: tabular-nums; }
 .board-spend b { color: var(--ork-ink); }
 .limit-chip { all: unset; box-sizing: border-box; cursor: pointer; min-height: var(--ork-tap); padding: 0 var(--ork-4); display: inline-flex; align-items: center;
-  gap: var(--ork-1); font-variant-numeric: tabular-nums; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); color: var(--ork-ink); }
+  gap: var(--ork-1); font-variant-numeric: tabular-nums; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); color: var(--ork-ink); }
 .limit-chip:focus-visible { outline: 2px solid var(--ork-ink); }
 .limit-chip.is-warn, .limit .is-warn, .limit.is-warn > b { color: var(--ork-alert); }
 .limit-chip.is-danger, .limit.is-danger > b { color: var(--ork-danger); font-weight: 600; }
@@ -181,7 +181,7 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .q-form .row { margin-top: 0; }
 .answers { display: flex; flex-wrap: wrap; gap: var(--ork-4); }
 .target-chip { all: unset; box-sizing: border-box; cursor: pointer; min-height: var(--ork-tap); padding: 0 var(--ork-5); display: inline-flex; align-items: center;
-  gap: var(--ork-2); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); font: var(--ork-type-button-phone); }
+  gap: var(--ork-2); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); font: var(--ork-type-button-phone); }
 .target-chip:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .target-switch { display: flex; flex-direction: column; gap: var(--ork-3); }                         /* one switch: Thrift · Balance · Quality as the priority's pills, the picked one's words under it (spec 54 §5) */
 .target-line { margin: 0; color: var(--ork-ink-muted); }
@@ -254,7 +254,7 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .turn p { margin: 0; white-space: pre-wrap; }
 .ask { display: flex; flex-direction: column; gap: var(--ork-3); }
 .about { all: unset; box-sizing: border-box; align-self: flex-start; cursor: pointer; min-height: var(--ork-tap); padding: 0 var(--ork-5); display: inline-flex;
-  align-items: center; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); color: var(--ork-ink); font: var(--ork-type-caption-phone); }
+  align-items: center; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); color: var(--ork-ink); font: var(--ork-type-caption-phone); }
 .ask textarea.ork-field { resize: none; min-height: var(--ork-tap); max-height: 8rem; }
 /* the spec after the start (spec 62): the changed line under a goal's sections with its press (44 px), and the plan change over its plan (rows: + added, ~ changed, − dropped muted and struck) */
 .changed-line { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); padding: var(--ork-4) var(--ork-5); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); }
@@ -420,7 +420,7 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .idea-words { display: flex; gap: var(--ork-3); overflow-x: auto; scrollbar-width: none; padding-bottom: var(--ork-1); }
 .idea-words[hidden], .idea-photos[hidden] { display: none; }
 .word-chip { all: unset; box-sizing: border-box; cursor: pointer; flex: none; min-height: var(--ork-tap); padding: 0 var(--ork-4); display: inline-flex;
-  align-items: center; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); color: var(--ork-ink); font: var(--ork-type-caption-phone);
+  align-items: center; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); color: var(--ork-ink); font: var(--ork-type-caption-phone);
   white-space: nowrap; }
 .word-chip:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .idea-tools { margin-top: 0; }
@@ -472,7 +472,7 @@ dialog.sheet.drawer .sheet-foot { margin-top: auto; }
 /* -- New goal in three steps (shell-goal-new.js): the steps, the craft's tiles, the team's seats and rows ------------------------- */
 .craft-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--ork-2); }           /* five crafts and Mixed in one row (spec 41 §6) */
 .craft-tile { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  min-height: var(--ork-tap); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
+  min-height: var(--ork-tap); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); }
 .craft-tile .ork-race__head { width: 24px; height: 22px; }
 .craft-line { margin: 0; }
 .craft-tile[aria-pressed="true"] { background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
@@ -740,11 +740,11 @@ button.band__face .band__sign { right: 5px; top: 6px; }      /* the head sits 10
 .stack__empty { flex: none; text-align: center; font: var(--ork-type-caption-phone); color: var(--ork-ink-faint); }
 .stack__done { flex: none; font: var(--ork-type-caption-phone); color: var(--ork-ink-muted); }
 .pwr { appearance: none; flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 100%; min-height: 64px; padding: var(--ork-3) var(--ork-2); box-sizing: border-box;
-  border: var(--ork-line) solid var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-raised); color: var(--ork-ink); text-align: center; cursor: pointer; font: inherit; }
+  border: var(--ork-line) solid var(--ork-ink); clip-path: var(--ork-notch-control); background: var(--ork-raised); color: var(--ork-ink); text-align: center; cursor: pointer; font: inherit; }
 .pwr:disabled { border-style: dashed; border-color: var(--ork-ink-faint); color: var(--ork-ink-faint); background: none; cursor: default; }
 .pwr b { font: var(--ork-type-button-phone); }
 .pwr:focus-visible, .newidea:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.newidea { appearance: none; flex: none; width: 100%; min-height: var(--ork-tap); border: var(--ork-line) dashed var(--ork-edge); clip-path: var(--ork-notch); background: none; color: var(--ork-ink-muted);
+.newidea { appearance: none; flex: none; width: 100%; min-height: var(--ork-tap); border: var(--ork-line) dashed var(--ork-edge); clip-path: var(--ork-notch-control); background: none; color: var(--ork-ink-muted);
   font: var(--ork-type-button-phone); cursor: pointer; }
 
 /* a card of the field, a goal of Planning, a card of a spread: 5:7, its goal's element top left and its type top right, in the element's colour (shell-decks.js, spec 55) */
@@ -1020,7 +1020,7 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .newgoal__types { display: flex; gap: var(--ork-3); margin: 0 calc(-1 * var(--ork-6)); padding: 0 var(--ork-6); overflow-x: auto; scrollbar-width: none; }
 .newgoal__types::-webkit-scrollbar { display: none; }
 .newgoal__chip { appearance: none; flex: none; box-sizing: border-box; display: inline-flex; align-items: center; gap: var(--ork-3); min-height: var(--ork-tap); padding: 0 var(--ork-4);
-  background: none; color: var(--ork-ink-muted); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); font: var(--ork-type-button-phone); cursor: pointer; }
+  background: none; color: var(--ork-ink-muted); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); font: var(--ork-type-button-phone); cursor: pointer; }
 .newgoal__chip[aria-checked="true"] { color: var(--ork-ink); background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
 .newgoal__chip.is-blank { border-style: dashed; }
 .newgoal__typeline { margin: 0; font: var(--ork-type-caption-phone); }
@@ -1043,7 +1043,7 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .hrow + .hrow { margin-top: var(--ork-3); }
 .today-list .hrow + .hrow { margin-top: 0; }
 .hrow__mark { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; background: var(--ork-raised); border: var(--ork-line) solid var(--ork-frame);
-  clip-path: var(--ork-notch); font: var(--ork-type-label-phone); }
+  clip-path: var(--ork-notch-control); font: var(--ork-type-label-phone); }
 .hrow__mark.ok { color: var(--ork-success); }
 .hrow__mark.no { color: var(--ork-danger); }
 .hrow__mark.muted { color: var(--ork-ink-muted); }
@@ -1075,7 +1075,7 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .pk__img.is-pixel { image-rendering: pixelated; }
 .pk__media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .pk__on { position: absolute; right: var(--ork-3); top: var(--ork-3); z-index: 2; display: none; align-items: center; justify-content: center; width: 20px; height: 20px; background: var(--ork-ink);
-  color: var(--ork-on-ink); clip-path: var(--ork-notch); }
+  color: var(--ork-on-ink); clip-path: var(--ork-notch-control); }
 .pk.is-on .pk__on { display: flex; }
 .pk__meta { position: absolute; left: var(--ork-3); top: var(--ork-3); z-index: 1; display: inline-flex; align-items: center; gap: var(--ork-2); padding: 1px var(--ork-3); font: var(--ork-type-caption-phone); font-variant-numeric: tabular-nums;
   color: var(--ork-ink); background: color-mix(in srgb, var(--ork-canvas) 80%, transparent); }
@@ -1318,7 +1318,7 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .itsparty__line { margin: 0; font: var(--ork-type-caption-phone); }
 .itsparty__chips { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
 .itsparty__chip { appearance: none; box-sizing: border-box; display: inline-flex; align-items: center; gap: var(--ork-3); min-height: var(--ork-tap); max-width: 100%; padding: var(--ork-1) var(--ork-4);
-  background: none; color: var(--ork-ink-muted); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); font: var(--ork-type-caption-phone); cursor: pointer; text-align: left; }
+  background: none; color: var(--ork-ink-muted); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); font: var(--ork-type-caption-phone); cursor: pointer; text-align: left; }
 .itsparty__chip b { font-weight: 600; }
 .itsparty__chip small { font: var(--ork-type-caption-phone); }
 .itsparty__chip[aria-checked="true"] { color: var(--ork-ink); background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }

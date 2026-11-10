@@ -148,7 +148,7 @@
 /* the files taken, in the row of *Send* */
 .hand-field__files { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: var(--ork-2); min-width: 0; }
 .hand-file__name { max-width: 96px; overflow: hidden; text-overflow: ellipsis; }
-.hand-sq__btn { display: grid; place-items: center; box-sizing: border-box; flex: none; width: 44px; height: 44px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; clip-path: var(--ork-notch); cursor: pointer; }
+.hand-sq__btn { display: grid; place-items: center; box-sizing: border-box; flex: none; width: 44px; height: 44px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; clip-path: var(--ork-notch-control); cursor: pointer; }
 .hand-sq__btn.is-open { border: 2px solid var(--ork-ink); background: var(--ork-panel); }
 .hand-sq__btn:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .hand-field__proxy { position: fixed; left: 0; top: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; font-size: 16px; pointer-events: none; }      /* the field the press focuses before the real one is drawn (fieldturn.js `focusInPress`) */
@@ -174,7 +174,7 @@
 /* the rune chosen (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.2, decisions §187.3): a row of the five runes, each a 40 x 40 radio holding the rune at 28 px (orkUI's `big`), the chosen one in a 2 px ink frame on the panel and at full strength,
    the others a hairline and a little dimmed, a used one faint but possible (mockup docs/mockups/window-runes/ 3) */
 .hand-field__runes { display: flex; align-items: center; gap: var(--ork-2); }
-.hand-rune { display: grid; place-items: center; box-sizing: border-box; flex: none; width: 40px; height: 40px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; clip-path: var(--ork-notch); cursor: pointer; }
+.hand-rune { display: grid; place-items: center; box-sizing: border-box; flex: none; width: 40px; height: 40px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; clip-path: var(--ork-notch-control); cursor: pointer; }
 .hand-rune .ork-elem { opacity: 0.7; }
 .hand-rune[aria-checked="true"] { border: 2px solid var(--ork-ink); background: var(--ork-panel); }
 .hand-rune[aria-checked="true"] .ork-elem { opacity: 1; }
@@ -309,13 +309,13 @@
 .hand-tool__risk { display: flex; align-items: flex-start; gap: var(--ork-2); color: var(--ork-alert); }
 .hand-tool__head { display: flex; align-items: flex-end; gap: var(--ork-4); min-width: 0; }
 .hand-tool__name { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
-.hand-tool__seg { display: inline-flex; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }      /* orkUI first: the small size switch */
+.hand-tool__seg { display: inline-flex; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch-control); }      /* orkUI first: the small size switch */
 .hand-tool__segbtn { appearance: none; border: 0; background: none; margin: 0; padding: var(--ork-1) var(--ork-4); color: var(--ork-ink-muted); font: var(--ork-type-caption); cursor: pointer; }
 .hand-tool__segbtn + .hand-tool__segbtn { border-left: var(--ork-line) solid var(--ork-edge); }
 .hand-tool__segbtn.is-on { background: var(--ork-ink); color: var(--ork-on-ink); }
 .hand-tool__order { display: flex; align-items: center; align-self: stretch; gap: var(--ork-2); }
 .hand-tool__ordermark { display: inline-flex; padding: 2px var(--ork-1); border: 2px solid transparent; }
-.hand-tool__ordermark.is-me { border-color: var(--ork-ink); clip-path: var(--ork-notch); }
+.hand-tool__ordermark.is-me { border-color: var(--ork-ink); clip-path: var(--ork-notch-control); }
 .hand-tool__grow { flex: 1; }
 .fo-q { display: flex; align-items: flex-start; gap: var(--ork-3); }
 .fo-q > p { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
