@@ -12,7 +12,8 @@ K5 (the members' tiers are laid by code from the leaders' gear in K3). After the
 K5, K7 and K8 stay below as they were written.
 
 **Lessons.** A sheet's whole image must stay near square or at most 2:1: Gemini squashes the tiles of a wider grid (K4 as a 5x1
-sheet, and sheet 4 of the pixel cards, were drawn again as 3x2 and 2x2). The dryad's antlers cross the frame of their tile; the
+sheet, and sheet 4 of the pixel cards, were drawn again as 3x2 and 2x2); so O2 is two sheets (the faces 3x3, the die 1x2), O3 two
+(the backpack and the book 2x2, the chair 1x2). The dryad's antlers cross the frame of their tile; the
 cut fixes it by code. In the asleep bubbles Gemini draws "z" letters; the cut removes them by code.
 
 ## The heads
@@ -206,14 +207,24 @@ Left to right, top to bottom:
 Potion bottles for a card-game interface on one sheet, a 4x2 grid of square tiles, in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients. Top row, left to right: 1 a large round-bellied flask, 2 a medium bottle, 3 a small bottle, 4 a thin vial; each upright and front-on, centred in its tile, its neck OPEN with no cork (a small mark is set on the neck later), the glass a pale blue-grey outline with one white shine, the inside EMPTY and flat light grey (#d0d0d0) with nothing drawn in it (the liquid is poured in later). Bottom row: the same four bottles' INSIDE shapes only, each filled solid black, at exactly the same size and place in its tile as the bottle above it. Every bottle has a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
 
-### O2. The die (attach K1)
+### O2a. The die's faces (attach K1)
 ```
-A six-sided die for a card-game interface on one sheet, a 5x2 grid of square tiles, in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, ivory faces with softly rounded corners and dark pips. Tiles 1 to 9 are single FLAT square faces seen straight on, each filling its tile with the same size and the same rounded corners: 1 one pip, 2 two pips, 3 three pips, 4 four pips, 5 five pips, 6 six pips, 7 a bold tick, 8 a bold cross, 9 a bold plus. Tile 10 is the whole die seen in three-quarter view, resting a little tilted, five pips on top, with a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+The faces of a six-sided die for a card-game interface on one sheet, a 3x3 grid of square tiles, in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients. Every tile is one FLAT square face seen straight on, ivory with one warm shade along its lower edge, softly rounded corners, round dark pips, each face filling its tile at the same size with the same rounded corners and the same clear margin. Left to right, top to bottom: 1 one pip, 2 two pips, 3 three pips, 4 four pips, 5 five pips, 6 six pips, 7 a bold tick, 8 a bold cross, 9 a bold plus. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
 
-### O3. The places: backpack, book, chair (attach K1)
+### O2b. The die itself (attach K1 and O2a)
 ```
-Six objects for a card-game interface on one sheet, a 3x2 grid of square tiles, in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions. Each object centred in its tile, the same scale across the sheet, with a light rim so it reads on a very dark background. Left to right, top to bottom: 1 a leather adventurer's backpack, shut, its flap buckled, a bedroll strapped on top. 2 the same backpack open, its flap thrown back, a sword hilt, a scroll and a potion poking out. 3 a thick old history book lying flat, seen in three quarters, shut, brass corners and a clasp. 4 the same book open flat, its pages fanned, a ribbon bookmark hanging out. 5 an empty wooden chair with a high back, a little wobbly, a cushion on its seat, waiting for someone. 6 the same chair with a small brass plus sign hanging on its back. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+The same die as the attached faces, whole, for a card-game interface on one sheet, two square tiles side by side, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, ivory faces with softly rounded corners and round dark pips exactly as in the attached faces. Tile 1: the die at rest in three-quarter view, a little tilted, five pips on top, two pips and three pips on the sides it shows, a small soft shadow under it. Tile 2: the same die tumbling in the air, turned further, two short curved motion lines behind it, no shadow. Each die centred, the same size in both tiles, with a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### O3a. The places: the backpack and the history book (attach K1)
+```
+Four objects for a card-game interface on one sheet, a 2x2 grid of square tiles, in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions, a little chunky. Each object centred in its tile at the same scale across the sheet, front-on or in a slight three-quarter view, with a light rim so it reads on a very dark background. Left to right, top to bottom: 1 the inventory: a plump brown leather adventurer's backpack, shut, its flap buckled with a brass buckle, a rolled bedroll strapped on top, two shoulder straps. 2 the same backpack open, its flap thrown back, a sword hilt, a rolled scroll and a small round potion poking out of it. 3 the history book: a thick old tome lying flat, shut, a dark red leather cover, brass corners and a brass clasp, a ribbon bookmark peeking out at the bottom. 4 the same book open flat, its two pages fanned and a little curled, plain cream pages with a few thin grey lines standing for writing (no letters), the ribbon across them. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### O3b. The place: the chair (attach K1 and O3a)
+```
+Two objects for a card-game interface on one sheet, two square tiles side by side, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions, the same scale and wood colours as the attached backpack and book. Each centred in its tile with a light rim so it reads on a very dark background. 1 an empty wooden chair with a high back, a little wobbly, a red cushion on its seat, waiting for someone. 2 the same chair with a small brass plus sign hanging on its back. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
 
 ### O4. The lamp's chain (attach K1)
