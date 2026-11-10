@@ -98,6 +98,16 @@ def _wait(host, party):
     raise AssertionError("the keeper never finished")
 
 
+def _until(ok, why, s=10.0):
+    """`ok()` comes true within `s` seconds: the look runs on the keeper's thread, which may not have started when the command returns (so `_wait` alone can race it)."""
+    end = time.monotonic() + s
+    while time.monotonic() < end:
+        if ok():
+            return
+        time.sleep(0.02)
+    raise AssertionError(why)
+
+
 def _look(host, party):
     got = host.command("ideas.concerns", {"party": party})
     _wait(host, party)
@@ -470,10 +480,11 @@ def test_a_gone_party_or_concern_is_refused_in_plain_words(host, design, model):
 
 def test_the_partys_row_in_the_map_carries_its_counts_for_its_tab(host, design, model):
     row = lambda: next(g for g in host.command("ideas.map", {})["goals"] if g["slug"] == design)["concerns"]      # noqa: E731
-    assert row() == {"alerts": 0, "notes": 0, "status": ""}
+    assert row() == {"alerts": 0, "notes": 0, "status": "", "list": []}
     model.answer = {"concerns": [concern("cart"), concern("home", "alert", "Two"), concern("about", "note", "Three")]}
     _look(host, design)
-    assert row() == {"alerts": 2, "notes": 1, "status": "ready"}
+    got = row()
+    assert (got["alerts"], got["notes"], got["status"]) == (2, 1, "ready") and [(c["level"], c["in_hand"]) for c in got["list"]] == [("alert", True), ("alert", True), ("note", False)]
     store.save(host.ideas.state_dir, design, status="failed", error="x")
     assert row()["status"] == "failed"
 
@@ -643,3 +654,56 @@ def test_a_party_busy_with_its_maps_look_begins_no_view(host, design, model):
     _look(host, design)                                           # the next opening tries again
     _wait(host, design)
     assert len(_views(model)) >= 1
+
+
+# -- Spec 168 D4: a concern at the alert's level is a card in the hand; Later lays it face down (decisions §283.21) ----------------------------------------
+
+def test_the_open_concerns_are_cards_an_alert_in_the_hand_a_note_never_one_and_a_goal_made_of_one_takes_it_out(tmp_path):
+    store.save(tmp_path, "design", status="ready", concerns=[
+        {"id": "c-1", "on": "cart", "name": "Cart", "level": "alert", "what": "No way back", "why": "People get stuck", "fix": "Add a link", "aspect": "flow"},
+        {"id": "c-2", "on": "home", "name": "Home", "level": "note", "what": "Plain"}, {"id": "c-3", "on": "about", "name": "About", "level": "alert", "what": "Orphan", "idea": "orphan-goal"}])
+    got = store.cards(store.read(tmp_path, "design"))
+    assert [(c["id"], c["level"], c["in_hand"], c["later"]) for c in got] == [("c-1", "alert", True, False), ("c-2", "note", False, False)], "a note stays on the scheme and in the header; a goal made of one is no card"
+    assert got[0]["what"] == "No way back" and got[0]["why"] == "People get stuck" and got[0]["fix"] == "Add a link" and got[0]["aspect"] == "flow" and got[0]["name"] == "Cart"
+
+
+def test_later_lays_the_concern_face_down_out_of_the_hand_and_it_survives_a_reread(tmp_path):
+    store.save(tmp_path, "design", concerns=[{"id": "c-1", "on": "cart", "name": "Cart", "level": "alert", "what": "No way back"}])
+    assert store.lay_later(tmp_path, "design", "c-none") is None
+    assert store.lay_later(tmp_path, "design", "c-1")["later"] is True
+    (card,) = store.cards(store.read(tmp_path, "design"))
+    assert card["later"] is True and card["in_hand"] is False, "face down in the header, not in the hand"
+    assert store.counts(store.read(tmp_path, "design")) == {"alerts": 1, "notes": 0}, "it is still a concern of the scheme"
+    store.save(tmp_path, "design", concerns=[{"id": "c-1", "on": "cart", "name": "Cart", "level": "alert", "what": "No way back", "later": "yes"}])
+    assert "later" not in store.read(tmp_path, "design")["concerns"][0], "only a true mark is kept"
+
+
+def test_the_command_lays_it_later_and_the_partys_row_in_the_map_says_so_and_the_next_look_that_finds_it_again_deals_it_back(host, design, model):
+    row = lambda: next(g for g in host.command("ideas.map", {})["goals"] if g["slug"] == design)["concerns"]["list"]      # noqa: E731
+    model.answer = {"concerns": [concern("cart", what="No way back"), concern("home", "note", "Plain")]}
+    first = _look(host, design) and host.command("ideas.concerns", {"party": design})
+    cid = first["concerns"][0]["id"]
+    assert [(c["id"], c["in_hand"]) for c in row()] == [(cid, True), (first["concerns"][1]["id"], False)]
+    got = host.command("ideas.concern_later", {"party": design, "id": cid})
+    assert got["ok"] and next(c for c in got["concerns"] if c["id"] == cid)["later"] is True
+    assert [(c["id"], c["later"], c["in_hand"]) for c in row()][0] == (cid, True, False)
+    host.command("ideas.concerns_again", {"party": design})
+    _until(lambda: [(c["id"], c["later"], c["in_hand"]) for c in row()][0] == (cid, False, True), "the leader's next look found it again: it is a card in the hand again")
+    model.answer = {"concerns": [concern("home", "note", "Plain")]}
+    host.command("ideas.concerns_again", {"party": design})
+    _until(lambda: [c["id"] for c in row()] == [first["concerns"][1]["id"]], "a look that does not find it again drops it")
+
+
+def test_the_ways_of_a_concern_in_the_hand_each_take_it_out_of_the_hand_and_a_gone_one_is_refused_in_plain_words(host, design, model):
+    model.answer = {"concerns": [concern("cart", what="One"), concern("home", what="Two"), concern("about", what="Three")]}
+    ids = [c["id"] for c in (_look(host, design) and host.command("ideas.concerns", {"party": design}))["concerns"]]
+    row = lambda: [c["id"] for c in next(g for g in host.command("ideas.map", {})["goals"] if g["slug"] == design)["concerns"]["list"] if c["in_hand"]]      # noqa: E731
+    assert row() == ids
+    host.command("ideas.concern_later", {"party": design, "id": ids[0]})
+    host.command("ideas.concern_dismiss", {"party": design, "id": ids[1]})
+    host.command("ideas.concern_goal", {"party": design, "id": ids[2]})
+    assert row() == []
+    with pytest.raises(CommandError, match="gone"):
+        host.command("ideas.concern_later", {"party": design, "id": "c-none"})
+    with pytest.raises(CommandError):
+        host.command("ideas.concern_later", {"party": "nobody", "id": ids[0]})

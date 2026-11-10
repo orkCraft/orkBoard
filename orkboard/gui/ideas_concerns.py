@@ -8,7 +8,8 @@
                                         #    not be made now (a spent window or limit), in plain words; nothing is touched then
     ideas.concerns_again {party}        # a look now → {ok, asked: bool, why?}
     ideas.concern_dismiss {party, id}   # *Not a problem*: the concern is dismissed (not raised again while its part is as it was) → {ok, concerns, alerts, notes}
-    ideas.concern_goal {party, id}      # *Make it a goal*: an `ideas.add` of the party with the concern's what and fix as its words, its part as the goal's mark and the type its map's default
+    ideas.concern_later {party, id}     # *Later* (spec 168 D4, decisions §283.21): the concern is laid face down in the header and leaves the hand until the leader's next look finds it again → {ok, concerns, alerts, notes}
+    ideas.concern_goal {party, id}    # *Make it a goal*: an `ideas.add` of the party with the concern's what and fix as its words, its part as the goal's mark and the type its map's default
                                         #    (System `restructure`, screens `screen`, the loop `balance`; none where the party is not offered it) → {ok, idea, concerns, alerts, notes}
 
 `alerts` and `notes` count the open concerns (no goal was made of them); every command's record carries the `rubric` (spec 109 §2.5). The party's snapshot row (`ideas.map` `goals[]`) carries `concerns: {alerts, notes, status}` for its tab. The host returns keys and data,
@@ -54,12 +55,12 @@ class ConcernsMixin:
                 **rec, "rubric": self._concern_rubric(party, rec), **more}
 
     def concerns_counts(self, party: str) -> dict:
-        """The party's row in the snapshot: `{alerts, notes, status}`."""
+        """The party's row in the snapshot: `{alerts, notes, status, list}`; `list`: the open concerns as the hand and the header draw them (`realm/concerns.py` `cards`, spec 168 D4)."""
         try:
             rec = self._concern_record(party)
         except (OSError, ValueError):
-            return {"alerts": 0, "notes": 0, "status": ""}
-        return {k: rec[k] for k in ("alerts", "notes", "status")}
+            return {"alerts": 0, "notes": 0, "status": "", "list": []}
+        return {**{k: rec[k] for k in ("alerts", "notes", "status")}, "list": store.cards(rec)}
 
     def concerns(self, args: dict) -> dict:
         party = self._concern_party(args)
@@ -110,6 +111,13 @@ class ConcernsMixin:
         self.changed("")
         return self._concern_reply(party, ok=True)
 
+    def concern_later(self, args: dict) -> dict:
+        party, found = self._concern(args)
+        store.lay_later(self.state_dir, party, found["id"])
+        self._ev(event_log.CONCERN_LATER, args, party=party, level=found["level"])
+        self.changed("")
+        return self._concern_reply(party, ok=True)
+
     def concern_goal(self, args: dict) -> dict:
         party, found = self._concern(args)
         root = self.root(make=False)
@@ -130,4 +138,4 @@ class ConcernsMixin:
 def concerns_commands(ideas_: Any) -> dict:
     """A party's concerns by name (`gui/ideas.py` adds them to its table: `**concerns_commands(self)`)."""
     return {"ideas.concerns": ideas_.concerns, "ideas.concerns_again": ideas_.concerns_again,
-            "ideas.concern_dismiss": ideas_.concern_dismiss, "ideas.concern_goal": ideas_.concern_goal}
+            "ideas.concern_dismiss": ideas_.concern_dismiss, "ideas.concern_later": ideas_.concern_later, "ideas.concern_goal": ideas_.concern_goal}

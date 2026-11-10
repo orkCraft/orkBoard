@@ -10,12 +10,13 @@ A leader's say is in its stance (`ideas/<slug>/talk.json`): `needs` (`{id, kind,
      "since": {"taken": [id], "left": [id]},                            # taken and turned down since the leaders last judged: who is judged again (the part a rewrite touched, a proposal turned down) and what they are told
      "judged": <n>}                                                     # the leaders have judged again this many times (`MAX_JUDGED` at most)
 
-    idea_say.node(root, state_dir, slug)       # the Board's row of an idea: {leaders, rewrite, fork, judged, judge_left, answered, waiting, to_judge} or None before any leader spoke
+    idea_say.node(root, state_dir, slug)       # the Board's row of an idea: {leaders, rewrite, fork, judged, judge_left, answered, waiting, to_judge, doubts} or None before any leader spoke
     idea_say.leaders(state_dir, slug)          # per leader: its verdict, `needs` (the old questions among them, kind question) and `better`, each with its state: open · taken · left
     idea_say.take(state_dir, slug, ident, way=None) / leave(state_dir, slug, ident)     # one need's way or one better taken, or turned down; ValueError in plain words
     idea_say.waiting(state_dir, slug)          # what is taken and not written into the goal yet: the items a rewrite is given (a fork answered stands in place of the ones it settled)
     idea_say.written(state_dir, slug, ids, before, after) / forked(...) / fork_answer(...) / undo(...)   # what a rewrite did
     idea_say.holding(state_dir, slug)          # Talk waits for the leaders' cards: a need open, a taken one not written, a fork open (spec 168 D0)
+    idea_say.doubts(state_dir, slug)           # spec 168 D5: the leaders that still doubt or say no when Talk waits for the person (judged once, nothing left to answer, no hearing open): [{party, verdict, why}]
     idea_say.to_judge(state_dir, slug)         # the parties to judge again, in the stances' order; idea_say.judged(state_dir, slug) counts one more round and clears who was waiting
     idea_say.told(state_dir, slug, party)      # what the person took and turned down, as the leader judged again is told it
 """
@@ -24,7 +25,7 @@ from __future__ import annotations
 import datetime as dt
 from pathlib import Path
 
-from orkboard.realm import idea_questions, ideas, way_kinds
+from orkboard.realm import idea_hearing, idea_questions, ideas, way_kinds
 
 FILE = "say.json"
 MAX_JUDGED = 2                    # the leaders judge again twice at most, then a hearing (decisions §283.25)
@@ -300,6 +301,24 @@ def judged(state_dir: Path, slug: str) -> int:
     return rec["judged"]
 
 
+def doubts(state_dir: Path, slug: str, talk: dict | None = None) -> list[dict]:
+    """The leaders whose doubt or no is the person's now (spec 168 D5, decisions §283.25): the goal is at Talk, the leaders have judged again once (`0 < judged < MAX_JUDGED`), nothing of their say is left
+    to answer (the old questions, the cards, a taken one not written, a fork), no hearing is open (a no unanswered is one), and a leader still doubts or says no. `core/idea_verdict.py` `say_release` returns
+    there: Talk waits for *Judge again now* or the hearing. `[{party, verdict, why}]` in the stances' order; none when the goal is not so waiting. The person's card in the hand, one a leader."""
+    try:
+        if ideas.state(state_dir, slug)["state"] != "talk":
+            return []
+    except (OSError, ValueError):
+        return []
+    talk = talk if talk is not None else idea_questions.record(state_dir, slug)
+    if talk.get("mode") != "talk" or talk.get("done") is not True or talk.get("waiting") or talk.get("passing") or idea_hearing.is_open(talk) or holding(state_dir, slug, talk):
+        return []
+    if not 0 < record(state_dir, slug)["judged"] < MAX_JUDGED:
+        return []
+    return [{"party": s["party"], "verdict": s["verdict"], "why": " ".join(str(s.get("why") or "").split())[:300]} for s in _stances_of(talk)
+            if not s.get("weigher") and s.get("verdict") in ("doubt", "no")]
+
+
 def node(root: Path, state_dir: Path, slug: str) -> dict | None:
     """The Board's row of an idea's say, or None before any leader spoke: `{leaders, rewrite, fork, judged, judge_left, answered, waiting, to_judge}`. `rewrite` is the last one not undone,
     `{id, at, ids, parties, before, after, undoable}` (`undoable`: the goal's words are still as it left them); `fork` the open card `{id, at, ids, card}`, else None; `waiting` the ids taken and not
@@ -316,4 +335,4 @@ def node(root: Path, state_dir: Path, slug: str) -> dict | None:
                         "undoable": page is not None and page.section("Gist").strip() == str(last.get("after") or "").strip()} if last else None,
             "fork": {k: fork.get(k) for k in ("id", "at", "ids", "card")} if fork else None,
             "judged": say["judged"], "judge_left": max(MAX_JUDGED - say["judged"], 0), "answered": answered(state_dir, slug), "waiting": [w["id"] for w in waiting(state_dir, slug)],
-            "to_judge": to_judge(state_dir, slug)}
+            "to_judge": to_judge(state_dir, slug), "doubts": doubts(state_dir, slug)}

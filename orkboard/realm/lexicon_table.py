@@ -174,6 +174,9 @@ WINDOW: tuple[Term, ...] = (
     _t("say_better", "Could be better"),                           # … and its improvements, each a line of the goal rewritten (spec 168 C1)
     _t("say_verdict", "Its verdict"),                              # a leader's table of an idea: the group that holds the leader's own card, its sign (spec 168 C4, decisions §284.1)
     _t("say_undo", "Undo"),                                        # the Orkmaster's rewrite of the goal's words, put back exactly as they were (spec 168 C4, decisions §283.24)
+    _t("doubt_still", "still doubts"),                              # a leader's card in the hand after the leaders judged the goal again once: *The Architect still doubts* (spec 168 D5, decisions §283.25); its why at its foot
+    _t("doubt_still_no", "still says no"),                          # … when the leader's verdict is a no
+    _t("to_hearing", "To the hearing"),                             # … its way that takes the goal to its hearing now, with no second judging (`ideas.to_hearing`; the way's kind is `go_on`)
     _t("step_lacks", "its tool cannot do what this step needs"),    # a seat marked ! on a spec's header of steps (spec 168 C4, decisions §283.16.6)
     _t("spec_now", "Now"),                                         # a spec's part as it is, and ...
     _t("spec_will", "As it will be"),                              # ... as the goal will leave it (spec 168 C4, decisions §283.16.6)

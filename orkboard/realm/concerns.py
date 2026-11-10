@@ -8,6 +8,8 @@ what would fix it, kept beside the Board's state. Read, kept and strictly parsed
     concerns.parse(party, answer, parts, dismissed, hashes, signals, craft="")   # the leader's answer, strictly → [{id, on, name, level, what, why, fix, signal, aspect}], at most MAX, an `on` that is no part dropped
     concerns.dismiss(state_dir, party, id, part_hash)    # *Not a problem*: the concern moves to `dismissed` → the concern, or None when it is not there
     concerns.made_goal(state_dir, party, id, idea)       # the concern notes the goal made of it (`idea`: its slug) → the concern, or None
+    concerns.lay_later(state_dir, party, id)             # *Later* (spec 168 D4, decisions §283.21): the concern is laid face down in the header, out of the hand, until the leader's next look finds it again → the concern, or None
+    concerns.cards(rec)                                  # the open concerns as the page draws them: [{id, on, name, level, what, why, fix, aspect, later, in_hand}]; `in_hand`: an alert not laid *Later* (a card in the hand, one stack a leader)
     concerns.counts(rec)                                 # {alerts, notes}: the concerns no goal was made of
     concerns.text(rec, parts)                            # the concerns as lines a leader reads in Talk (*Your concerns on your map*)
     concerns.parse_since(answer)                         # the evening line (spec 121 §6): the leader's `since` strictly → {way, line} or None
@@ -93,7 +95,8 @@ def read(state_dir: Path, party: str) -> dict:
     for r in raw.get("concerns") if isinstance(raw.get("concerns"), list) else []:
         if isinstance(r, dict) and isinstance(r.get("id"), str) and r.get("level") in LEVELS and _line(r.get("on"), 300) and _line(r.get("what")):
             out["concerns"].append({"id": r["id"][:40], "on": _line(r["on"], 300), "name": _line(r.get("name"), 300), "level": r["level"], "what": _line(r["what"]), "why": _line(r.get("why")),
-                                    "fix": _line(r.get("fix")), "signal": _line(r.get("signal"), 40), "aspect": _line(r.get("aspect"), 40), **({"idea": _line(r["idea"], 100)} if _line(r.get("idea"), 100) else {})})
+                                    "fix": _line(r.get("fix")), "signal": _line(r.get("signal"), 40), "aspect": _line(r.get("aspect"), 40), **({"idea": _line(r["idea"], 100)} if _line(r.get("idea"), 100) else {}),
+                                    **({"later": True} if r.get("later") is True else {})})
     for r in raw.get("dismissed") if isinstance(raw.get("dismissed"), list) else []:
         if isinstance(r, dict) and _line(r.get("on"), 300) and _line(r.get("what")):
             out["dismissed"].append({"on": _line(r["on"], 300), "what": _line(r["what"]), "at": _line(r.get("at"), 40), "map_hash": _line(r.get("map_hash"), 40),
@@ -201,6 +204,25 @@ def made_goal(state_dir: Path, party: str, cid: str, idea: str) -> dict | None:
         mine["idea"] = idea
         save(state_dir, party, concerns=rec["concerns"])
         return dict(mine)
+
+
+def lay_later(state_dir: Path, party: str, cid: str) -> dict | None:
+    """*Later* (decisions §283.21): the concern is laid face down in the header and leaves the hand; it stays on the scheme. A new look drops the mark (its concerns are the look's own), so a concern the leader finds again is a card in the hand again.
+    The concern; None when it is not there."""
+    with ideas.LOCK:
+        rec = read(state_dir, party)
+        mine = next((c for c in rec["concerns"] if c["id"] == cid), None)
+        if mine is None:
+            return None
+        mine["later"] = True
+        save(state_dir, party, concerns=rec["concerns"])
+        return dict(mine)
+
+
+def cards(rec: dict) -> list[dict]:
+    """The open concerns (no goal made of them) as the page draws them, alerts first: `{id, on, name, level, what, why, fix, aspect, later, in_hand}`. `in_hand`: an alert that is not laid *Later*."""
+    return [{"id": c["id"], "on": c["on"], "name": c["name"], "level": c["level"], "what": c["what"], "why": c["why"], "fix": c["fix"], "aspect": c["aspect"], "later": bool(c.get("later")),
+             "in_hand": c["level"] == "alert" and not c.get("later")} for c in rec.get("concerns") or [] if not c.get("idea")]
 
 
 def counts(rec: dict) -> dict:

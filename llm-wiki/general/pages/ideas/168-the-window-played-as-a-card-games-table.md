@@ -55,7 +55,7 @@ events; the lich's seal; the pictures themselves (made by the owner from `docs/p
 Decisions §283, §284, §285; orkUI 0.37.0 (the book, the ringed back) before A5.
 
 ## Stages
-The spec's waves, in order: **1** A (A0 orkUI 0.37.0, A1–A6) · **2** B (B1–B3) · **3** C (C1–C5) · **4** D (D1–D4) · **5** E (E1) ·
+The spec's waves, in order: **1** A (A0 orkUI 0.37.0, A1–A6) · **2** B (B1–B3) · **3** C (C1–C5) · **4** D (D1–D5) · **5** E (E1) ·
 **6** F (F1–F4) · **7** G (G1–G3) · **8** H (H1–H4) · **9** I (I1) · **10** J (J1–J2). A stage a Grunt on the simpler model, in a
 worktree of its own; the parts of a wave sharing no file side by side.
 

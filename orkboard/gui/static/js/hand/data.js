@@ -11,6 +11,8 @@ import { ORKMASTER } from "../frame/state.js";
 import { partiesNow, roadSlugs, waitRuns } from "../table/data.js";
 import { groupsStops } from "./groupscard.js";
 import { askStops } from "./askcard.js";
+import { concernStops } from "./concerncard.js";
+import { doubtStops } from "./doubtcard.js";
 import { hypothesisStops } from "./hypothesiscard.js";
 import { cascadeStops } from "./cascadecard.js";
 import { projectStops, questionStops } from "./questions.js";
@@ -59,14 +61,14 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork), ...inCodeStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
+  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 
 /** The goal a stop belongs to ("" for a stop of no goal), and the stack it lies in: a goal's; a party's own question (`party:<slug>`); a sign-in alone. */
 export const goalOfStop = (s) => (s.kind === "sign_in" ? "" : s.node?.slug || s.row?.idea || (s.kind === "pick" ? s.row?.slug : "") || s.result?.idea || "");
 export function stackKey(s) {
   const goal = goalOfStop(s);
-  return goal || (s.kind === "sign_in" ? s.key : s.row?.goal ? `party:${s.row.goal}` : s.key);
+  return goal || (s.kind === "sign_in" ? s.key : s.kind === "concern" ? `concerns:${s.row.goal}` : s.row?.goal ? `party:${s.row.goal}` : s.key);      // a leader's concerns are one stack of their own (spec 168 D4)
 }
 
 /** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, the Orkmaster's collision (docs/specs/101 §4.2) and its *Go on paid?* (docs/specs/105 §3): they lie under the first lane. */
@@ -100,7 +102,7 @@ export function stacksOf(stops, parties = partiesNow()) {
 }
 
 /** A party's own question that blocks nothing (a stack of `party:<slug>`, every card `blocks: false`): in its lane it lies behind a goal's own stack, a result, a stop, a decision (spec 143 E.2, decisions §250.6); what blocks keeps its urgency's place. */
-export const lieBehind = (st) => String(st.key).startsWith("party:") && st.cards.length > 0 && st.cards.every((c) => c.row?.blocks === false);
+export const lieBehind = (st) => /^(party|concerns):/.test(String(st.key)) && st.cards.length > 0 && st.cards.every((c) => c.row?.blocks === false);
 
 /** The card of the hand that a lifted key names (`hand:<stop key>`), null for none. */
 export const stopByKey = (stops, key) => stops.find((s) => s.key === key) || null;
