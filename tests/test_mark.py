@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 
 import pytest
 
-from orkboard.design import logo, tokens
+from orkboard.design import logo, mark, tokens
 from orkboard.gui import mac_app, pwa
 from orkboard.orkget import profile
 
@@ -54,7 +54,7 @@ def test_the_svg_is_a_valid_drawing_titled_orkboard_with_crisp_edges():
 
 def test_nothing_is_smoothed_every_pixel_is_the_heads_or_the_canvas():
     Image = pytest.importorskip("PIL.Image")
-    head = Image.open(tokens.ORKUI / "races" / "peon-crown@2x.png").convert("RGBA")
+    head = Image.open(mark.SOURCE).convert("RGBA")           # the pixel head kept for the mark (§290)
     colours = {p[:3] for _, p in head.getcolors(1000) if p[3] == 255}
     for name in ("icon-512.png", "icon-192.png", "apple-touch-icon.png"):
         image = Image.open(logo.BOARD / name)

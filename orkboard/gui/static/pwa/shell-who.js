@@ -34,7 +34,7 @@ export function goalMark(g, roleList = [], small = false) {
 }
 
 /** A head at 36 × 33 from its @2x image (orkUI's `.ork-race__head.mid`): a member's, and a stop's in its middle. */
-export const midHead = (head) => (head ? h("img", { class: "ork-race__head mid", src: `races/${head.race}-${head.tier}@2x.png`, width: 36, height: 33, alt: "", title: headWords(head), draggable: "false" }) : null);
+export const midHead = (head) => (head ? h("img", { class: "ork-race__head mid", src: `races/${head.race}-${head.tier}@2x.png`, srcset: `races/${head.race}-${head.tier}@2x.png 1x, races/${head.race}-${head.tier}@3x.png 1.5x`, width: 36, height: 33, alt: "", title: headWords(head), draggable: "false" }) : null);
 
 /** One of orkUI's marks (an AI tool's `harness-<id>`, a level's `rank-<n>`) at 16 × 16 from its @2x image, beside a name. */
 export const mark = (name, tip = "", extra = "") => h("img", { class: `ork-mark${extra ? ` ${extra}` : ""}`, src: `marks/${name}.png`, srcset: `marks/${name}@2x.png 2x`, width: 16, height: 16, alt: "", title: tip || null, draggable: "false" });

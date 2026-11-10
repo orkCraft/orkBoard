@@ -50,6 +50,8 @@ one grain a second (six frames, `steps`, never a smooth fall); after the last th
 One per thing at work; never on a control. Pure CSS, no script. The moon stays a goal's progress (`moons/`).
 
 ## The races
+**Since 0.39.0 every head is the owner's smooth cartoon art** (decisions 289, 290), at the names and sizes below and an `@3x` (72 x 66) for phones (`srcset="races/elf-elder@2x.png 2x, races/elf-elder@3x.png 3x"`); the 12 x 11 grids described below are the generator's sources, no longer the pictures; `.ork-race__head` is drawn smooth (`image-rendering: auto`). See `../races/README.md`.
+
 `races/` holds twelve races in three tiers and the Orkmaster's crowned peon, 37 heads (generated; `../races/README.md`), each **one 12 x 11
 grid** as the window always had them (0.15.2 brought them back, decisions §161): 24 x 22 beside a word in a row, 48 x 44 @2x. Seven are
 the old heads, as they were (`peon` the ork, `elf`, `goblin`, `gnome`, `knight`, `lich`, `skeleton`); five are drawn in the same manner:

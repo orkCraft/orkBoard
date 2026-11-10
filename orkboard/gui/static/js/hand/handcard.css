@@ -40,7 +40,7 @@
   .hand .hand-card--face .corner__much, .hand .hand-card--face .corner__who { font-size: 10px; }
   .hand .hand-card--face .corner__much .ork-gem { height: 16px; font-size: 10px; padding: 0 var(--ork-1); }
   .hand-sep { flex: 0 1 22px; min-width: 1px; overflow: hidden; display: flex; justify-content: center; align-self: stretch; box-sizing: border-box; width: 22px; padding-top: var(--ork-2); border-left: var(--ork-line) solid var(--ork-frame); }
-  .hand-sep .ork-race__head { width: auto; height: 16px; image-rendering: pixelated; }
+  .hand-sep .ork-race__head { width: auto; height: 16px; }
 }
 
 /* none of it moves under reduced motion: a card risen shows its whole face at once (hand.css) */

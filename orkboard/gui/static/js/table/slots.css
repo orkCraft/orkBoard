@@ -32,7 +32,7 @@
 .slot-pic .ork-icon { width: 28px; height: 28px; color: var(--ork-ink-muted); }
 .slot-pic .ork-sign { width: 28px; height: 28px; color: var(--ork-ink-muted); }
 .slot-pic .ork-mark { width: 28px; height: 28px; }
-.slot-pic .ork-race__head { max-height: 56px; width: auto; image-rendering: pixelated; }
+.slot-pic .ork-race__head { max-height: 56px; width: auto; }
 
 /* the table's line: what changed, and Undo */
 .slots-line { min-width: 0; margin-left: var(--ork-4); font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
