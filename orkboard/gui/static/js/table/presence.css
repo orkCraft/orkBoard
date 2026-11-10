@@ -12,3 +12,8 @@
 .presence-chain.is-half .presence-chain__words { padding-top: var(--ork-2); }
 .presence-chain.is-half .presence-chain__word { font-size: 11px; line-height: 13px; }
 .presence-chain.is-half .presence-chain__line { font-size: 10px; line-height: 12px; }
+
+/* the person's hours at the chain's long pull (presencehours.js, spec 168 H2, decisions §283.31): a panel hung under the chain, the Settings' field in it. Layout only. */
+.presence-hours { position: fixed; z-index: 90; box-sizing: border-box; width: min(440px, calc(100vw - 16px)); max-height: calc(100dvh - 80px); overflow: auto; display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); padding: var(--ork-4); background: var(--ork-panel); color: var(--ork-ink); text-align: left; }
+.presence-hours:focus-visible { outline: 0; }
+.presence-hours .shell-field { width: 100%; }
