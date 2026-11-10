@@ -362,8 +362,9 @@ def test_the_hand_page_text_is_17_px_nothing_under_14_and_every_text_reads_at_4_
         assert got["body"] == "17px", "the body's text is 17 px"
         assert got["min"] >= 14, f"nothing under 14 px: {got['small']}"
         assert got["low"] == [], "every visible text reads at 4.5:1 against its background"
-        card = pg.locator(".hand-up .up-card").first
-        assert card.evaluate("(e) => [getComputedStyle(e).backgroundColor, getComputedStyle(e).borderTopColor]") == ["rgb(51, 55, 58)", "rgb(76, 82, 87)"], "a card on the lifted card colours"
+        card = pg.locator(".hand-up .up-card").first      # a card's edge may be its state's ring (picked, asking): its ground and the frame token are what is lifted
+        assert card.evaluate("(e) => getComputedStyle(e).backgroundColor") == "rgb(51, 55, 58)", "a card on the lifted card colour"
+        assert pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-card-frame').trim()") == "#4c5257", "the card's frame lifted"
     finally:
         pg.close()
     assert not log, "\n".join(log)
