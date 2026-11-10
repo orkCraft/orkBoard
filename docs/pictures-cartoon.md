@@ -11,6 +11,12 @@ K5 (the members' tiers are laid by code from the leaders' gear in K3). After the
 *K6, the fixes after the beta* below. After the phone: P1–P4 and O1–O6 (the cards' pictures and the objects stay pixel for the beta).
 K5, K7 and K8 stay below as they were written.
 
+**The objects' first takes (10 November 2026)**, in `docs/mockups/table-template/objects/cartoon/sheets/`: O1, O2a, O2b, O3a, O4.
+O2a is taken as it is. O1's top row is taken and its bottom row is not needed: the inside's mask is cut by code from the top
+row's flat inside (flood fill, its shine's holes filled); the bottom row drew dark bottles with a level, not masks. To be taken
+again: O2b's tile 2 (two faces of five side by side), O4 (the links read as a rope, not oval rings), O3a's tile 2 (the open
+backpack lost its flap); the fixes are under each prompt.
+
 **Lessons.** A sheet's whole image must stay near square or at most 2:1: Gemini squashes the tiles of a wider grid (K4 as a 5x1
 sheet, and sheet 4 of the pixel cards, were drawn again as 3x2 and 2x2); so O2 is two sheets (the faces 3x3, the die 1x2), O3 two
 (the backpack and the book 2x2, the chair 1x2). The dryad's antlers cross the frame of their tile; the
@@ -213,11 +219,13 @@ The faces of a six-sided die for a card-game interface on one sheet, a 3x3 grid 
 ```
 
 ### O2b. The die itself (attach K1 and O2a)
+Taking tile 2 again: add *Tile 2 shows the faces 1, 2 and 3 only, never one number twice (a real die: 1 opposite 6, 2 opposite 5, 3 opposite 4).*
 ```
 The same die as the attached faces, whole, for a card-game interface on one sheet, two square tiles side by side, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, ivory faces with softly rounded corners and round dark pips exactly as in the attached faces. Tile 1: the die at rest in three-quarter view, a little tilted, five pips on top, two pips and three pips on the sides it shows, a small soft shadow under it. Tile 2: the same die tumbling in the air, turned further, two short curved motion lines behind it, no shadow. Each die centred, the same size in both tiles, with a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
 
 ### O3a. The places: the backpack and the history book (attach K1)
+Taking tile 2 again (attach the first take): add *Tile 2 is EXACTLY tile 1's backpack, the same shape, straps and bedroll, with its flap thrown back over the top and hanging down its back, the brass buckle seen upside down at the flap's end.*
 ```
 Four objects for a card-game interface on one sheet, a 2x2 grid of square tiles, in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions, a little chunky. Each object centred in its tile at the same scale across the sheet, front-on or in a slight three-quarter view, with a light rim so it reads on a very dark background. Left to right, top to bottom: 1 the inventory: a plump brown leather adventurer's backpack, shut, its flap buckled with a brass buckle, a rolled bedroll strapped on top, two shoulder straps. 2 the same backpack open, its flap thrown back, a sword hilt, a rolled scroll and a small round potion poking out of it. 3 the history book: a thick old tome lying flat, shut, a dark red leather cover, brass corners and a brass clasp, a ribbon bookmark peeking out at the bottom. 4 the same book open flat, its two pages fanned and a little curled, plain cream pages with a few thin grey lines standing for writing (no letters), the ribbon across them. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
@@ -228,6 +236,7 @@ Two objects for a card-game interface on one sheet, two square tiles side by sid
 ```
 
 ### O4. The lamp's chain (attach K1)
+Taking it again: add *The links are LARGE OPEN OVAL RINGS, each with a clear hole, every other link turned edge-on, as a real metal chain, bronze with one warm shade: never a rope or a braid; about twelve links in tile 1.*
 ```
 A lamp's pull chain for a card-game interface on one sheet, two TALL narrow tiles side by side (each about one wide to four tall), in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients. Each chain hangs straight down from the top edge of its tile: bronze oval links and, at its end, a round wooden bead to pull. Tile 1: the chain at rest, ending a little below the middle of the tile. Tile 2: the same chain pulled, longer, its bead near the bottom of the tile, a few small motion lines beside it. A light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
