@@ -9,6 +9,7 @@ import { openPlace } from "../frame/place.js";
 import { board } from "../board/store.js";
 import { carried, inventory } from "../frame/state.js";
 import { HeroFace, Relic, Plate } from "./stallfaces.js";
+import { StallSeats } from "./stallseats.js";
 import { makerPlate, cardOf, dragging, giveBack, hover, load, pleased, pointAt, receipt, reset, service, stall, take, undo, wareOf } from "./stallstate.js";
 
 if (typeof document !== "undefined") {
@@ -138,6 +139,7 @@ export function Stall({ g = null }) {
   const r = receipt.value;
   return html`<div class="stall" data-stall=${chair || "orkmaster"} data-mood=${face || undefined}>
     <p class="stall-bubble" aria-live="polite">${said}</p>
+    ${g && chair && html`<${StallSeats} g=${g} />`}
     <div class="stall-merchant">
       <div class="stall-merchant__who"><${Head} race="peon" tier="crown" size="big" mood=${face} /></div>
       <span class="stall-merchant__name">Orkmaster</span><span class="stall-merchant__role">lays out the wares</span>

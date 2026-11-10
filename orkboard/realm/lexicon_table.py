@@ -141,6 +141,9 @@ WINDOW: tuple[Term, ...] = (
     _t("pile_specs", "Specs", "", "To review"),                     # the sections being written, the plan, the look's wait: a squared deck of small backs on their side
     _t("pile_implementation", "Implementation", "", "At work · later"),   # the goals at work (held after the spec or waiting for the night at the foot): the cascade of standing cards
     _t("column_writing", "writing"),                                # the spec being written, under *Specs*: *writing: Round timer*
+    _t("head_at_work", "at work"),                                  # a leader's header: its goals in flight as small cards (spec 168 E1, decisions §283.16.2)
+    _t("head_concerns", "concerns"),                                # … the header's group of its open concerns as small cards
+    _t("head_ask", "ask"),                                          # … the header's group of the ? card, the quick question to this leader
     _t("column_at_work", "at work"),                                # the goal at work, under *Implementation*: *at work: Round timer*
     # a party's tab greyed while a goal is picked that its route does not pass (spec 156 B.5, decisions §261.3, §261.15; table/tabs.js): *Product is not on this goal. Press to leave it and look at Product's table.*
     _t("tab_off_is", "is not on this goal"),

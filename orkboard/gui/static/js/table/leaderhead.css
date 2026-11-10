@@ -1,0 +1,11 @@
+/* A leader's header of small cards (docs/specs/168 E1, leaderhead.js): held while the table scrolls (sticky), three labelled groups of cards, every card 56 x 78 (the small card's size). Layout only: the faces, the frames and the colours are orkUI's. */
+.table-head.hd { position: sticky; top: 0; z-index: 2; flex: none; align-items: flex-start; flex-wrap: nowrap; gap: var(--ork-2) var(--ork-8); padding: var(--ork-2) calc(var(--ork-bar, 40px) + var(--ork-2)) var(--ork-3) var(--ork-6); background: var(--ork-page, var(--ork-panel)); }
+.hd-group { flex: none; display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.hd-group__label { color: var(--ork-ink-muted); }
+.hd-group__cards { display: flex; align-items: flex-start; gap: var(--ork-2); min-height: 78px; }
+.hd-ask { cursor: pointer; background: none; border: var(--ork-line) dashed var(--ork-edge); }
+.hd-ask .sm-pic { inset: 6px; }
+.hd-ask .sm-pic .ork-sign.big { width: 36px; height: 36px; color: var(--ork-ink); }
+.hd-ask.is-open { border-style: solid; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hd-ask__part { position: absolute; left: 3px; right: 3px; bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.table-head.hd .cn-aspects { flex: 1 1 0; min-width: 0; align-self: center; justify-content: flex-end; margin-left: auto; }      /* the aspects take what the groups leave; the title's … lies in the corner over the header (its right padding) */

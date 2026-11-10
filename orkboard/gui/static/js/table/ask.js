@@ -154,7 +154,7 @@ function Bubble({ tab, party, g, parties, look }) {
     const esc = (e) => { if (e.key === "Escape" && !wasSeat.current && !e.defaultPrevented) { e.preventDefault(); e.stopPropagation(); close(true); } };
     const away = (e) => {
       const t = e.target;
-      if (box.current?.contains(t) || t.closest?.("[data-ask-head], .table-ask__pop, .table-seatpop")) return;
+      if (box.current?.contains(t) || t.closest?.("[data-ask-head], [data-ask-card], .table-ask__pop, .table-seatpop, #table-pane [data-pick-id]")) return;      // the ? card in the header and a part of the scheme (taken into the question: askparts.js) are the question's own
       close(false);
       setTimeout(() => { if (document.activeElement === document.body) headOf(tab)?.focus?.(); }, 0);
     };

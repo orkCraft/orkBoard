@@ -11,7 +11,7 @@ import { town } from "../link.js";
 import { ORKMASTER, closeInventory, closeOver, inventory, lifted, openOver, over, picked } from "../frame/state.js";
 import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
-import { PHASES, isRelease, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
+import { PHASES, isRelease, nameOf, wide, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
 import { BoardMap } from "./boardmap.js";
 import { mapOf } from "./maps.js";
 import "./mapparts.js";                                     // the parties' maps (spec 102)
@@ -30,6 +30,7 @@ import { uprightNow } from "../frame/upright.js";
 import { Stall } from "./stall.js";                          // the inventory: the merchant's stall, drawn instead of the map while it is open (spec 157 D)
 import { stall } from "./stallstate.js";
 import { Menu } from "./menu.js";
+import { partyItems } from "./partymenu.js";
 import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
 import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C), at the narrow width; at the wide one it is Release's lane beside the pane (table/lane.js, spec 156 D.3)
@@ -94,7 +95,7 @@ function Phases({ goal }) {
 /** The pane's title: *The whole project · through Tech*, or ← and *System · server/lobby.ts*. */
 function Title({ parties, tab, narrow }) {
   const stalled = inventory.value !== null, o = over.value, where = o?.from?.title || "", code = o && (o.kind === "file" || (o.kind === "diff" && o.props?.path));
-  const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" };
+  const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" }, party = parties.find((x) => x.slug === tab);
   const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ...(currentProject.value ? [["Files", () => openOver("files", {}, from, "Files"), false, "folder"]] : []),
     ["Report a problem…", () => openReport(), false, "sign:bug"]];     // the bug left the top row (spec 139 A.5, decisions §246.6)   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
   return html`<header class=${cls("ork-head table-title", { "is-bare": !o && !picked.value })}>
@@ -103,6 +104,7 @@ function Title({ parties, tab, narrow }) {
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : stalled ? html`<span class="stall-title">Inventory</span> how the project is set · <b>${tab === ORKMASTER ? "the whole project" : stall.value?.whose || mapName(tab, parties)}</b>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
     ${picked.value && !stalled && html`<${Phases} goal=${picked.value} />`}
     <span class="table-grow"></span>
+    ${!o && tab !== ORKMASTER && wide.value && party && html`<${Menu} label=${`${nameOf(party)}'s menu`} items=${partyItems(party, from, true)} />`}
     ${!o && tab === ORKMASTER && html`<${Menu} label="The Orkmaster's menu" items=${items}
       top=${narrow && limits.length > 0 ? html`<div class="table-menu__limits"><span class="ork-label">Limits</span><div class="table-menu__chips">${limits.map((l) => html`<${LimitChip} key=${l.provider} l=${l} from=${from} />`)}</div></div>` : null} />`}
   </header>`;
@@ -126,7 +128,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
-        : g && kind ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PhaseView} g=${g} n=${picks} kind=${kind} />`
+        : g && kind ? html`${!wide.value && html`<${Header} key=${g.slug} g=${g} from=${from} />`}<${PhaseView} g=${g} n=${picks} kind=${kind} />`
         : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${Heat} key=${g.slug} g=${g}><${Reach} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) && !heroLaid(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//><//><//>` : null}
       ${!o && !bare && !stalled && picks && (tab === ORKMASTER || g) && html`<${Earlier} key=${`${tab}:${picks.slug}`} g=${tab === ORKMASTER ? null : g} n=${picks} />`}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}

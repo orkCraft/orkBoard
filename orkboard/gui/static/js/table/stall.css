@@ -16,6 +16,8 @@
 .stall p { margin: 0; }
 .stall-bubble { grid-column: 1 / -1; position: relative; justify-self: start; margin-left: 58px !important; max-width: 760px; min-height: 36px; box-sizing: border-box; padding: var(--ork-2) var(--ork-3); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-read); }
 .stall-bubble::after { content: ""; position: absolute; left: -1px; bottom: -9px; width: 10px; height: 9px; background: var(--ork-edge); clip-path: polygon(0 0, 100% 0, 0 100%); }
+.stall-seats { grid-column: 1 / -1; position: relative; flex-wrap: wrap; gap: var(--ork-2) var(--ork-5); min-height: 0; padding: var(--ork-1) var(--ork-4); }       /* a leader's seats and tools (stallseats.js): what its header showed */
+.stall-seats__label { color: var(--ork-ink-muted); }
 .stall-merchant { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
 .stall-merchant__who { display: grid; place-items: end center; height: 96px; }
 .stall-merchant__who .ork-race__head { width: 96px; height: 88px; image-rendering: pixelated; }

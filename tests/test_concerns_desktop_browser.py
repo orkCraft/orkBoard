@@ -335,7 +335,7 @@ def test_ask_again_is_in_the_partys_menu_sends_the_command_and_waits_for_the_loo
     system(pg)
     assert pg.locator(".cn-strip__again").count() == 0
     item = menu_item(pg, "Ask again")
-    assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all()] == ["Edit", "Ask again", "Remove party"]
+    assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all() if i.inner_text().strip() != "Seats and tools"] == ["Edit", "Ask again", "Remove party"]      # at the wide width the menu also has *Seats and tools* (spec 168 E1)
     assert item.get_attribute("title") == "The Architect looks at the table again" and item.is_enabled()
     item.click()
     wait_look(pg, status="looking")
@@ -360,7 +360,7 @@ def test_a_party_with_no_record_has_no_ask_again(gui):
         pg.locator(".table-head").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
         pg.get_by_role("button", name="Tech's menu").click()
-        assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all()] == ["Edit", "Remove party"], "a host that does not know the look has nothing to ask again"
+        assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all() if i.inner_text().strip() != "Seats and tools"] == ["Edit", "Remove party"], "a host that does not know the look has nothing to ask again"
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
@@ -572,7 +572,7 @@ def test_the_orkmasters_tab_and_a_party_with_no_map_read_no_record_and_have_no_r
         pg.wait_for_timeout(300)
         assert row(pg).count() == 0 and not [a for n, a in host.log if n == "ideas.concerns" and a["party"] == "ops"]
         pg.get_by_role("button", name="ops's menu").click()
-        assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all()] == ["Edit", "Remove party"], "no map: nothing for its leader to look at again"
+        assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all() if i.inner_text().strip() != "Seats and tools"] == ["Edit", "Remove party"], "no map: nothing for its leader to look at again"
         pg.keyboard.press("Escape")
         go(pg, "orkmaster")
         assert pg.locator(".cn-aspects, .table-head").count() == 0
