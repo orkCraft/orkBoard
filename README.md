@@ -4,10 +4,11 @@ Orkboard is where you think out your product with a table of leaders — product
 who judge each goal against your real code and running product, say no where it hurts, and hand what you decide to your
 own AI tools to build and check. On the desktop, in VS Code and on a paired phone.
 
-[![A tour of Orkboard: the table, the hand, a goal's way](docs/media/orkboard-tour.png)](docs/media/orkboard-tour.mp4)
+![Orkboard's window: the leaders' tabs over the table, Tech's tab open on its System map read from the code; the hand under the lanes with the + card, and the die, the backpack and the history book at its right; Tech's discard at the window's right](docs/media/orkboard-leader.png)
 
 ▶ [Watch the tour](docs/media/orkboard-tour.mp4) (about two and a half minutes): the table and its leaders, the Board, a leader's
-own map, the hand, a goal from the + card to Done, the mana, the discard, the phone.
+own map, the hand, a goal from the + card to Done, the mana, the discard, the phone. The video was recorded with an earlier
+window, so its looks differ from the picture above.
 
 ## The ideas in one page
 
@@ -86,6 +87,10 @@ In VS Code, the [Orkboard extension](vscode/README.md) opens the Board of the wo
 `orkboard --serve`).
 
 On a phone, pair it with the QR code the window shows: the same Board, the hand first.
+
+<img src="docs/media/orkboard-phone.png" alt="Orkboard on a phone: a leader's question as a card, the goal's way (Talk, Spec, Work, Done) under it and the hand along the bottom" width="260">
+
+*The phone: a leader's question, and the hand along the bottom.*
 
 From the terminal:
 
