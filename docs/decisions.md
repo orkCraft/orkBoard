@@ -8184,3 +8184,32 @@ backpack and the die are hidden under a round button (a FAB, a selector) on a ph
    until then today's pictures stand.
 
 The owner's call.
+
+## 293. The desktop in the feed's look: every card a post, the Orkmaster's lane and the discard as drawn (10 November 2026, the owner)
+
+Changes: 291 (the feed was the phone's: its look comes to the desktop's cards), 206 (the Orkmaster's lane: its parts as drawn), 273
+and 285 (the discard's head and piles: as drawn), 290.2 and 292.5 (the places' pictures: the cartoon takes O2b, O3a, O4 now, on
+both faces). The frame is unchanged (§104.0, §145, §273, §285): the leaders' tabs over the table, the Orkmaster's lane first and
+pinned, the hand under the lanes with the places at its right, the discard beside the table in two piles.
+
+Why: the owner, looking at the desktop drawn in the phone feed's look (`docs/mockups/desktop-look/`): *the style is liked, the left
+column and the right discard above all*; the desktop's adaptation is taken into work on simpler models. So:
+1. **Every card on the desktop is a post** as on the phone (§291.5): round (orkUI's card radius), the lifted card ground, its party's
+   colour as its top edge, its head row the leader's round head, its name in the heading face, *when* under it, *···* at its right;
+   a card that asks is ringed in the alert's yellow; a card's own acts only (*Change the spec*, *Start now*, *To main*).
+2. **The Orkmaster's lane, as drawn**: *Waits for you* first (a spec that starts by itself at a clock time, its clock row, its bar and
+   its acts), then *Goals* (the fan, *Being read: <goal>*), then *At work* (each goal at work as a post with its live bar in its
+   party's colour). Whole cards, pinned, never a list (§206).
+3. **A leader's lane**: what it asks first, then *New since your last look · <time>*, newest first; one leader's posts in a row one
+   stack with *More from <leader>*; what was seen one line (*Seen since <when>*, its heads small), pressed it spreads (§291.8).
+4. **The discard, as drawn**: under its head (the potions, *Stop all*, the lamp's chain at the right edge lit *Here*), the plate
+   *main* (*done in dev · waits for main*) over its cards, the one ready for main ringed by the portal with *To main*; then the plate
+   *dev* (*done · waits for dev*) over its cards; each card a post.
+5. **The leaders' tabs as rings**: a tab's head ringed in its party's colour, a dot in that colour beside it for news, a yellow **!**
+   when it asks; its name and its line under it (§275); never a number.
+6. **The places**: the die, the backpack and the book in the cartoon takes (`docs/pictures-cartoon.md` O2b, O3a, O4; the chain O4),
+   with their words; the die lit when something can be run (§223.7).
+7. On the desktop's sizes (§291.1: body 15, caption 13, nothing under 12); orkUI's tokens only; made by a goal of its own, its
+   implementation on simpler models.
+
+The owner's call.
