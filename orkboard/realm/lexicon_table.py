@@ -220,6 +220,10 @@ WINDOW: tuple[Term, ...] = (
     _t("chronicle", "Chronicle"),                                  # Release's past: a chapter a version, the goals that went through the portal in it and the decisions written in its span (spec 134, decisions §238)
     _t("chronicle_earlier", "Earlier"),                            # the lens's one line: *Earlier: v0.3 · 28 Oct ›* (spec 134 B)
     _t("chronicle_week", "The week of"),                           # a chapter of a project with no version yet: *The week of 3 Nov* (spec 134 A.4)
+    _t("history", "History"),                                      # the book's table: the project's past as a grid of goal cards, a row a day (spec 168 G3, decisions §283.16.14)
+    _t("history_agreed", "agreed"),                                # the history dated by the day a goal's decision was agreed (the default)
+    _t("history_done", "done"),                                    # … by the day its work was done
+    _t("history_main", "in main"),                                 # … by the day it went into main
     _t("past", "The past"),                                        # the chronicle read through the open tab, the lich's (spec 150 E2.2, decisions §254.7): its title *The past · through Design · v0.3*
     _t("every_version", "every version"),                          # … no deck picked: every version dealt, newest first
     _t("unreleased", "Unreleased"),                                # … the deck on top: what went through the portal after the last version

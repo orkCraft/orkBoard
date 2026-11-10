@@ -2,6 +2,7 @@
 reads; none writes and none records an event. Keys and data, never words.
 
     ideas.chronicle {party?}            # {kind, earlier, chapters: [{id, kind, name, day, open, goals?, decisions?}], unreleased}: only the newest chapter is open
+    ideas.history {party?}              # {kind, versions: [{id, name, day}], goals: [{idea, title, gist, party, element, hue, decision, dates: {agreed, done, main}}]}: the history book's grid (spec 168 G3), by code
     ideas.chronicle_line {party?}       # {earlier}: Release's lens, one line, nothing else read
     ideas.chronicle_chapter {id, party?} # {id, kind, name, day, goals, decisions}; refused in words for a chapter that is gone
     ideas.chronicle_find {query, party?, id?} # {query, found, more, chapters, unreleased}: the search; `id` (spec 162 E, at most 40 characters) keeps it to one deck: a chapter's id or `unreleased`
@@ -36,6 +37,10 @@ class ChronicleMixin:
         chapters = [{**c, "open": n == 0} if n == 0 else {"id": c["id"], "kind": c["kind"], "name": c["name"], "day": c["day"], "open": False}
                     for n, c in enumerate(got["chapters"])]
         return {"kind": got["kind"], "earlier": chronicle.earlier(state, pages, repo, party), "chapters": chapters, "unreleased": got["unreleased"]}
+
+    def history(self, args: dict) -> dict:
+        state, pages, repo, log = self._chronicle_args()
+        return chronicle.history(state, pages, repo, log, _opt(args, "party"))
 
     def chronicle_line(self, args: dict) -> dict:
         state, pages, repo, _log = self._chronicle_args()
@@ -84,5 +89,5 @@ class ChronicleMixin:
 
 def chronicle_commands(c: Any) -> dict:
     """The chronicle's reads by name (`gui/ideas.py` adds them to its table: `**chronicle_commands(self)`)."""
-    return {"ideas.chronicle": c.chronicle, "ideas.chronicle_line": c.chronicle_line, "ideas.chronicle_chapter": c.chronicle_chapter, "ideas.chronicle_find": c.chronicle_find,
+    return {"ideas.chronicle": c.chronicle, "ideas.history": c.history, "ideas.chronicle_line": c.chronicle_line, "ideas.chronicle_chapter": c.chronicle_chapter, "ideas.chronicle_find": c.chronicle_find,
             "ideas.chronicle_goal": c.chronicle_goal, "ideas.chronicle_decision": c.chronicle_decision, "ideas.chronicle_last": c.chronicle_last}
