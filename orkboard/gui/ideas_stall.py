@@ -9,9 +9,10 @@ The chair `""` is the Orkmaster's (the project's settings), a party's slug its l
 card of the slot is the way carried (its big card on the table), the shelf's `wares` are its ways, dealt to the hand when it is pressed. `at` is where the way carried lies among the ways (the pips), `cheaper` says a way of the slot is lighter than the one carried
 (the coin), `default` marks the way the slot's *Default* writes, `star` the Orkmaster's pick (a choice, never a price). The Orkmaster's slots (spec 168 H2, decisions §283.31): `target` (How deep), `build_start` (The build starts: `autostart` and `look_wait` as one,
 realm/look_wait.py), `night` (The night: realm/night_slot.py, the one place the ladder's engine plugs in), `review` (Lands in dev by itself: on is `review` false), `push` (*no*, *main*, *both*: `settings.push_way`) and `max_parallel` (Goals at once).
-`yours` in the hand is the id of the value carried ("" when the seats' own tiers differ). **A price is never made up**: `{mine: true}` for what is carried, `{locked: why}`,
+A leader's slots (spec 168 H4, decisions §283.33): `hero`, `tool`, `tier` (its own calls: Talk, its section, its acceptance; "" is *Default*, which follows *How deep*: `goal_team.lead_tier_of`), `size` (*lean*, *standard*, *full*: the seats' cells and how many work at once; no Target of its own) and `answers`
+(how it answers: *Pen*, *Choice*, *Fork*, *Silent*, realm/answer_ways.py); its seats' own tiers are kept in its seats' grid, not a slot. `yours` in the hand is the id of the value carried. **A price is never made up**: `{mine: true}` for what is carried, `{locked: why}`,
 else a `{word}` (`lighter`, `heavier`, `one pass`, `same cost`); a `{share}` is sent only from an estimator that measures the first potion's week, and none does today, so none
-is sent. A tier's word is the difference of `party_price.price` at that tier and now; a setting that takes no model's work is `same cost`. `before` marks the value carried before
+is sent. A tier's word says whether its own calls run lighter or heavier than the tier carried (*Default* is the matrix's tier of Talk at *How deep*); a size's, whether it has more cells; the Fork's is its call's floor to its cap as money (`answer_ways.fork_price`); a setting that takes no model's work is `same cost`. `before` marks the value carried before
 the last take of the slot (kept on the instance, for the run of the host).
 """
 from __future__ import annotations

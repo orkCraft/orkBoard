@@ -45,13 +45,15 @@ export function HeroFace({ w, fallback = null }) {
   </div>`;
 }
 
-const ICONS = { target: "sliders", look_wait: "clock", autostart: "play", build_start: "clock", review: "check", max_parallel: "list-box", push: "git-merge", tool: "robot", hero: "flag", tier: "sliders" };
+const ICONS = { target: "sliders", look_wait: "clock", autostart: "play", build_start: "clock", review: "check", max_parallel: "list-box", push: "git-merge", tool: "robot", hero: "flag", tier: "sliders", size: "hammer", answers: "pencil" };
+const WAY_ICONS = { pen: "pencil", choice: "list-box", fork: "git-merge", silent: "mic" };      // a way of answering (spec 168 H4), until orkUI's pictures say it
 
 /** The mark of a small thing: a tier's head in its party's race, a tool's mark, the moon of the night, else the slot's icon. `id` the value (a ware's id, or what a card carries). */
 export function Mark({ slot, id, race }) {
   if (slot === "tier" && race && id) return html`<${Head} race=${race} tier=${id} />`;
   if (slot === "tool" && MARKED.includes(id)) return html`<img class="ork-mark" src=${markSrc(id)} srcset=${`${markSrc(id, true)} 2x`} alt="" draggable="false" />`;
   if (slot === "work_at_night" || slot === "night") return html`<${Sign} name="moon" />`;
+  if (slot === "answers" && WAY_ICONS[id]) return html`<${Icon} name=${WAY_ICONS[id]} />`;
   return html`<${Icon} name=${ICONS[slot] || "sliders"} />`;
 }
 

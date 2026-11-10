@@ -31,10 +31,16 @@ export const guessWords = (text) => (/^i think\b/i.test(String(text || "").trim(
 
 const ownerOf = (ctx, slug, base) => ctx.party(slug) || base.party;
 
+/** What a card says of its leader's way of answering (spec 168 H4): a lock is *always asked* (a Silent leader never decides it), a Fork's price is its one more call, said as money. "" for a plain card. */
+export function waysNote(c) {
+  const money = (n) => `$${Number(n).toFixed(2)}`, fork = c.fork && Number.isFinite(c.fork.low) && Number.isFinite(c.fork.high) ? c.fork : null;
+  return [c.lock && `Always asked: ${c.lock}.`, fork && `Its ways were worked out in one more call, ${money(fork.low)} to ${money(fork.high)}.`].filter(Boolean).join(" ");
+}
+
 /** A question card as a stop of the hand: the row's stop with the card's question as its line, its asker's head and party. `kind` is the row's (`talk`, `cause`). */
 function cardStop(base, c, scope, ctx) {
   const party = ownerOf(ctx, c.by, base);
-  return { ...base, key: `${base.kind}/${scope}/${c.id}`, scope, card: c, ref: base.row, label: "Question", full: c.q, text: c.q, why: "", gem: "?", head: party?.head || base.head || null,
+  return { ...base, key: `${base.kind}/${scope}/${c.id}`, scope, card: c, ref: base.row, label: "Question", full: c.q, text: c.q, why: waysNote(c), gem: "?", head: party?.head || base.head || null,
     party, other: ctx.open !== ORKMASTER && ctx.open !== party?.slug };
 }
 

@@ -37,6 +37,7 @@ import { StopWindow, hasWindow } from "./handwindow.js";
 export function actionOf(s) {
   const w = wayOf(s.kind);
   if (w?.sign) return { sign: w.sign, tone: w.tone || "" };           // a goal's way's card (spec 100): its part's sign
+  if (s.kind === "decided") return { sign: "check", tone: "" };      // a leader decided it itself (spec 168 H4): muted, the sign of a thing decided, no alert's ring
   if (s.kind === "failed") return { sign: "alert", tone: "danger" };
   if (s.kind === "sign_in") return { sign: "alert", tone: "alert" };
   if (s.kind === "result") return { sign: s.gem?.sign || "check", tone: s.gem?.sign === "cross" ? "danger" : "ok" };

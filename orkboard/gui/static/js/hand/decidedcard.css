@@ -1,0 +1,3 @@
+/* What a leader decided by itself, in the hand (docs/specs/168 H4; hand/decidedcard.js): muted at rest, no alert's ring, as a thing already decided; lifted or in play it is a card as any. Layout only: every colour is orkUI's. */
+.hand .hand-card[data-kind="decided"]:not(.hand-lifted) { opacity: 0.72; filter: saturate(0.6); box-shadow: none; }
+.hand .hand-card[data-kind="decided"]:not(.hand-lifted):hover, .hand .hand-card[data-kind="decided"]:not(.hand-lifted):focus-visible { opacity: 1; filter: none; }

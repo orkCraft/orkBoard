@@ -1,6 +1,6 @@
 // The inventory as slots (docs/specs/168 H1, decisions §283.30; the look: docs/mockups/table-template/ scenes `inventory` and `leader-inventory`, shots 13 to 15): the table while the backpack is open, on the desktop. **A row of slots**, each its
 // chosen way as a big card, 144 x 202: its label over it, its picture (the owner's where orkUI has it, else its kind's sign), its way's name and what it does, the pips of its ways, a coin where a cheaper way exists, *as set* at its foot.
-// The Orkmaster's chair has six (How deep, The build starts, The night, Lands in dev by itself, Push, Goals at once), a leader's its hero, its AI tool and its tier; under a leader's slots its seats (stallseats.js), and its makers (slotmakers.js).
+// The Orkmaster's chair has six (How deep, The build starts, The night, Lands in dev by itself, Push, Goals at once), a leader's its hero, its AI tool, its tier (for its own calls), its party's size and how it answers (spec 168 H4); under a leader's slots its seats (stallseats.js), and its makers (slotmakers.js).
 // Pressed, a slot deals its ways to the hand (hand/slotdeal.js: `dealt`, frame/state.js); pressed again, it puts them back. A way played is written by `ideas.stall_take` and Undo, on the table's line (`SlotsLine`, in the pane's title),
 // takes the old one back. The host's data and calls: stallstate.js; the faces: slotface.js; the sheet: slots.css. The narrow page and the phone keep the stall (stall.js).
 import { useEffect } from "preact/hooks";

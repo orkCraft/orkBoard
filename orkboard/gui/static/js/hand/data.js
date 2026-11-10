@@ -13,6 +13,7 @@ import { groupsStops } from "./groupscard.js";
 import { askStops } from "./askcard.js";
 import { concernStops } from "./concerncard.js";
 import { doubtStops } from "./doubtcard.js";
+import { decidedStops } from "./decidedcard.js";
 import { nightProposalStops } from "./nightproposalcard.js";
 import { devStops, waitsForDev } from "./devcard.js";
 import { hypothesisStops } from "./hypothesiscard.js";
@@ -69,7 +70,7 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork), ...inCodeStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...nightProposalStops(needs, { ...after, window: String(board.value?.night || "") }), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
+  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...decidedStops(map, after), ...nightProposalStops(needs, { ...after, window: String(board.value?.night || "") }), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 
 /** The goal a stop belongs to ("" for a stop of no goal), and the stack it lies in: a goal's; a party's own question (`party:<slug>`); a sign-in alone. */
