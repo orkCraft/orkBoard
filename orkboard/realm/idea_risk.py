@@ -150,3 +150,23 @@ def decide(risk: str, priority: str, night: bool = False, held_for_night: bool =
     if held_for_night and what in ("start", "night"):
         return "night"
     return "start" if what == "night" and not night else what
+
+
+# -- the night's ladder (spec 168 H3, decisions §283.32): what each rung may pick up --------------------------------------------------------------
+
+NIGHT_STEPS = {"off": (), "ideas": ("talk", "spec"), "builds": ("talk", "spec", "build"), "proposals": ("talk", "spec", "build", "propose")}
+
+
+def night_allows(rung: str, step: str) -> bool:
+    """Whether the night at `rung` may do `step` ("talk", "spec", "build" or "propose"); each rung does what the one below does, and a rung out of the four is off."""
+    return step in NIGHT_STEPS.get(rung, ())
+
+
+def holds_for_night(rung: str) -> bool:
+    """A plan that would start by itself is held for the night's window (`decide(held_for_night=)`) from the builds up; below them the night builds nothing, so nothing is held for it."""
+    return night_allows(rung, "build")
+
+
+def decide_proposed() -> str:
+    """A leader's night proposal is never built without a press (decisions §283.32): whatever its risk and priority, the board's answer is "wait"."""
+    return "wait"
