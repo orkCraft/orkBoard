@@ -65,16 +65,18 @@ def test_nothing_is_smoothed_every_pixel_is_the_heads_or_the_canvas():
 
 
 def test_the_512_is_the_head_at_a_whole_number_of_times_centred():
-    """The head is drawn on a 12 × 11 grid (the @2x is 48 × 44, four pixels a head pixel): the 512 holds it 34 times as large (the most that leaves a margin of a fifth), each head pixel a square of one colour."""
+    """The head is the owner's art at its own pixel (orkUI's @2x, 48 × 44; decision §288, mark.art() reads it at the coarsest grid it is drawn on): the 512 holds it the most whole times that leaves a margin of a fifth, each head pixel a square of one colour."""
     Image = pytest.importorskip("PIL.Image")
-    head = Image.open(tokens.ORKUI / "races" / "peon-crown@2x.png").convert("RGBA")
-    big, times, (w, h) = Image.open(logo.BOARD / "icon-512.png").convert("RGB"), 34, (12, 11)
+    from orkboard.design import mark
+    head = mark.art()
+    big, (w, h) = Image.open(logo.BOARD / "icon-512.png").convert("RGB"), head.size
+    times = 512 * 4 // 5 // w
     left, top = (512 - w * times) // 2, (512 - h * times) // 2
     for y in range(512):
         for x in range(512):
             ax, ay = (x - left) // times, (y - top) // times
             inside = 0 <= x - left and 0 <= y - top and ax < w and ay < h
-            source = head.getpixel((ax * 4, ay * 4)) if inside else (0, 0, 0, 0)
+            source = head.getpixel((ax, ay)) if inside else (0, 0, 0, 0)
             assert big.getpixel((x, y)) == (source[:3] if source[3] == 255 else _canvas()), (x, y)
 
 
