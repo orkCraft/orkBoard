@@ -1,7 +1,7 @@
 // The discard column: the window's right column, **beside the table** and not in it (docs/specs/161-the-tables-look-and-the-rooms-things.md D, decisions §273; before it Release's lane under its tab, docs/specs/156-one-pick-and-the-release-column.md D.3–D.6, decisions §261.7–§261.10; before it the table's edge, spec 150 D). Its head is a row for what never changes the table (`.release-lane__head`, spec 168 A4, decisions §285): the potions in a row at its left (hand/potionrow.js), the lamp's chain at its right edge with *Stop all* under it, over the label. At 760 px and up, on every tab, as wide as a lane
 // (`--col-w`) and flush with the window's right edge: its label *Discard* (the Orkmaster's tab), *<party>'s discard* (a party's, Live's and Release's), **through the open tab's eyes** — on a party's tab the goals whose route held that party (`routeParties`), on the
 // Orkmaster's, Live's and Release's the project's —, its cards whole at the hand's size, **top to bottom**: the goal ready for main (with the portal's ring round the top one, ring.js, only while one is ready, checked or going in), the goals done and not yet seen
-// (newest first; the moon of a night's goal as before), then the past (pastlane.js: *Unreleased* and a deck a version). **Each card is picked** (part B, frame/state.js `pick`); a goal done and not seen is told to the host as seen when it is picked (`ideas.seen`) and then lies
+// (newest first; the moon of a night's goal as before). **The past is not here**: it lies in the history book (hand/book.js, table/history.js; spec 168 G3, decisions §283.28). **Each card is picked** (part B, frame/state.js `pick`); a goal done and not seen is told to the host as seen when it is picked (`ideas.seen`) and then lies
 // with its version in the past. To main is the picked ready card's act on the table (tomain.js). The lane scrolls with the table (only the table scrolls: §254.2). A project with no Release party seated has the column all the same (Release is a craft as any, decisions §274.1) with the word *Discard* on every tab; with no gate
 // (`noGate`) there is no portal and no goal ready for main. **Two piles** (spec 168 F2, decisions §283.27: table/plates.js): under the *main* plate the upper one, in dev and waiting for main; under the *dev* plate the lower one, done on its own branch and waiting for dev, drawn only while *Lands in dev by itself* is off. A form over the pane leaves the lane drawn (decisions §283.5). Layout only: lane.css, discard.css (the card's anatomy is the hand's).
 import { useEffect, useRef } from "preact/hooks";
@@ -14,7 +14,6 @@ import { nightMoons } from "../hand/nightcard.js";
 import { DoneFace, mainLine, shownDone, useNightDeal } from "./discard.js";
 import { columnOn, isLive, isRelease, nameOf, noGate, openTabOf, partiesAll, roadParties, routeParties } from "./data.js";
 import { laidNow } from "./laying.js";
-import { PastDecks } from "./pastlane.js";
 import { LowerPile, Plate, lowerHeld } from "./plates.js";            // the two piles and the plates over them (spec 168 F2)
 import { discardLabel } from "./chroniclewords.js";
 import { ReadyCards, choose, chosenSlug, close, sending } from "./portal.js";
@@ -58,7 +57,6 @@ export function ReleaseLane({ tab, parties }) {
       ${done.length > 0 && html`<ul class="release-lane__done" aria-label="Done, not yet seen">${done.map((x) => html`<li key=${x.slug}><${DoneFace} g=${x} picked=${now === x.slug} dealing=${dealing === x.slug ? dealing : ""} moon=${moons.has(x.slug)}
         line=${mainLine(x)} label=${`${x.full}, done`} onPress=${() => press(x.slug)} /></li>`)}</ul>`}
       <${LowerPile} goals=${lowerGoals} />
-      <${PastDecks} party=${party} seeing=${scroll} />
     </div>
   </aside>`;
 }

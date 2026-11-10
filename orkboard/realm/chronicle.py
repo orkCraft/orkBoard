@@ -4,6 +4,7 @@
     chronicle.read(state_dir, pages, repo, log, text=False, party="") # {kind, chapters: [{id, kind, name, day, goals, decisions}] newest first, unreleased: {goals, decisions} | None, decisions: {number: row}}
     chronicle.earlier(state_dir, pages, repo, party="")     # {kind, name, day} | None: the last version (or week) for Release's one line
     chronicle.last(state_dir, pages, repo, log, party="", n=3) # the party's last `n` decisions, newest first: [{number, title, element, kind: "decision", parties, version, at}] (spec 150 E1.4)
+    chronicle.history(state_dir, pages, repo, log, party="") # {kind, versions: [{id, name, day}], goals: [{idea, title, gist, party, element, hue, decision, dates: {agreed, done, main}}]}: the history book's grid (spec 168 G3)
     chronicle.goal(state_dir, pages, repo, log, slug)       # a goal as it was: its spec, its decision, what changed what it rests on, its living specs (ValueError: not in the chronicle)
     chronicle.decision(state_dir, pages, log, n)            # {number, title, day, entry, changes, changed_by, goal} | None
 
@@ -25,7 +26,7 @@ import bisect
 import re
 from pathlib import Path
 
-from orkboard.realm import chronicle_decisions, chronicle_versions, decisions_log, idea_element, idea_flag, ideas, living_specs, releases, spec_sections
+from orkboard.realm import chronicle_decisions, chronicle_versions, decisions_log, history_day, idea_element, idea_flag, ideas, living_specs, releases, spec_sections
 
 NOT_IN = "That goal is not in the chronicle"
 LAST_MAX = 10                  # the most decisions `last` gives
@@ -124,6 +125,36 @@ def read(state_dir: Path, pages: Path, repo: Path, log: "str | Path", text: bool
             c["decisions"].append(_row(r, text))
     out = sorted(chapters.values(), key=lambda c: c["day"], reverse=True)
     return {"kind": found["kind"], "chapters": out, "unreleased": unreleased, "decisions": {r["number"]: _row(r, text) for r in rows}}
+
+
+GIST_MAX = 160
+
+
+def _gist(page: object) -> str:
+    """A goal's gist for its card's preview: the first words of its page's *Gist*, one line."""
+    text = " ".join(str(page.section("Gist") if page is not None else "").split())
+    return text if len(text) <= GIST_MAX else text[:GIST_MAX - 1].rstrip() + "…"
+
+
+def history(state_dir: Path, pages: Path, repo: Path, log: "str | Path", party: str = "") -> dict:
+    """See the module: every goal of the chronicle (through `party`'s eyes) with the three days it is dated by (`history_day.dates`), and the versions (tags or changelog; none where the past has only weeks) for the plates on their days."""
+    rows = chronicle_decisions.read(log)
+    by_day = {r["number"]: r["day"] for r in rows}
+    _listed, by_slug = ideas.ideas_and_pages(pages)
+    found = chronicle_versions.read(repo)
+    out = []
+    for g, mine in _all(state_dir, pages, rows):
+        if party and party not in mine:
+            continue
+        slug = g["idea"]
+        decision = spec_sections.record(state_dir, slug).get("decision") or {}
+        finished = [t.get("finished") for t in (ideas.plan(state_dir, slug) or {}).get("tasks") or [] if isinstance(t, dict) and t.get("state") == "merged"]
+        flag = idea_flag.flag_of(state_dir, slug)
+        out.append({"idea": slug, "title": g["title"], "gist": _gist(by_slug.get(slug)), "party": g["party"], "element": g["element"], "hue": g["hue"], "decision": g["decision"],
+                    "dates": history_day.dates(decision.get("confirmed_at") if decision.get("confirmed") else "", by_day.get(g["decision"], "") if g["decision"] else "", finished, flag)})
+    out.sort(key=lambda x: (x["dates"]["main"], x["idea"]), reverse=True)
+    versions = [] if found["kind"] == "week" else [{"id": v["id"], "name": v["name"], "day": v["day"]} for v in found["versions"]]
+    return {"kind": found["kind"], "versions": versions, "goals": out}
 
 
 def earlier(state_dir: Path, pages: Path, repo: Path, party: str = "") -> dict | None:

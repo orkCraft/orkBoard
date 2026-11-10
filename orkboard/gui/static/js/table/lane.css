@@ -36,12 +36,6 @@
 .release-lane .portal-host.is-ring .portal-cards { position: relative; z-index: 1; padding: 0; }
 .release-lane .portal-cards { justify-content: center; flex-direction: column; flex-wrap: nowrap; }
 /* the past: Unreleased, then a deck a version (chronicleparts.js `Deck`, chronicle.css), a deck pressed deals its cards in place */
-.release-lane__past { display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); width: 100%; padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); }
-.release-lane__deck { display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); width: 100%; }
-.release-lane .chr-deck { width: var(--hc-w); }
-.release-lane .chr-deck.is-on { transform: none; border-color: var(--ork-ink); }
-.release-lane__all { width: var(--hc-w); flex: none; }
-.release-lane__deal { display: flex; flex-direction: column; gap: var(--ork-4); margin: 0; padding: 0; list-style: none; }
 
 /* a decision newer than the party's last look: a muted dot on its tab (pastdot.js) */
 .table-tab__new { position: absolute; right: var(--ork-2); bottom: var(--ork-3); width: 6px; height: 6px; background: var(--ork-ink-muted); pointer-events: none; }
