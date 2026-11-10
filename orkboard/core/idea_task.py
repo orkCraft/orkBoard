@@ -280,7 +280,7 @@ class TaskMixin:
         the task's title: its session may edit files but not run git. The Board's pages it touched are put back by code first."""
         self._gate_runs.pop(str(path), None)                 # the run of a try before is not this one's
         self.git.commit_left(path, title)
-        into = str(_r().setting(self.settings, "merge_into") or "dev")
+        into = self._landing(slug) if slug else str(_r().setting(self.settings, "merge_into") or "dev")
         board = [f for f in self.git.touched(path, into) if BOARD_PAGE.search(f)]
         if board:                          # spec 35 §13: the Board's pages are the Board's; put back by code, no session called, no try spent (spec 143 A.4)
             put = self.git.restore_pages(path, into, board)

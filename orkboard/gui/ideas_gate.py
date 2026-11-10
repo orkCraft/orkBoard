@@ -22,7 +22,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import commit_goal, event_log, findings_gather, first_open, gate_config, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
+from orkboard.realm import commit_goal, event_log, findings_gather, first_open, gate_config, goal_branch, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
@@ -171,6 +171,47 @@ class GateMixin:
         first = held[0]
         more = f" Nor would {len(held) - 1} more goal{'s' if len(held) > 2 else ''}." if len(held) > 1 else ""
         return f"{first['title']} is at {first['done']} of {first['of']}: it would reach {main} half made.{more}"
+
+    # -- a goal into dev (docs/specs/168 F1, decisions §283.26) ------------------------------------------------------
+
+    def goal_to_dev(self, args: dict) -> dict:
+        """`{idea, untested?}`: a goal that is done on its branch (`waits_for_dev` on its row) goes into dev, once: dev merged into it, the gate run on dev with it, and only a green gate
+        moves dev (core/idea_goal_dev.py). `{ok, commit, branch, note}`; dev conflicting with the goal, a red gate and a project with no tests are refused in words and dev is as it was
+        (`untested: true`, a literal boolean, goes without the tests, as To main without the tests does)."""
+        slug = _text(args, "idea", 100)
+        runner = self.runner(need=True)
+        try:
+            got = runner.goal_to_dev(slug, untested=args.get("untested") is True)
+        except Exception as e:
+            if type(e).__name__ != "RunnerError":
+                raise
+            raise IdeasError(str(e)) from None
+        self.changed(slug)
+        return {"ok": True, **got}
+
+    def _dev_landed(self, slug: str) -> None:
+        """A goal went into dev (by itself or by the person): the event, and its flag where it has all it needs. Never troubles the merge."""
+        try:
+            self._ev(event_log.GOAL_TO_DEV, None, idea=slug, into=self._into())
+            self._flag_when_done(slug)
+            self.changed(slug)
+        except Exception:
+            pass
+
+    def _drop_branch(self, slug: str) -> None:
+        """A goal dropped before dev loses its branch, and nothing is reverted (docs/specs/168 F1); a goal in dev, or with no branch, is dropped as it always was. A git that cannot be read
+        never stops the drop."""
+        try:
+            goal_branch.drop(IdeaGit(Path(self.host.repo_root)), self.state_dir, slug)
+        except Exception:
+            pass
+
+    def _dev_row(self, slug: str) -> dict:
+        """The goal's branch on its Board row: `{goal_branch, waits_for_dev, dev_why}`; {} for a goal with none (an old goal, or one in dev)."""
+        try:
+            return goal_branch.row(self.state_dir, slug, bool(self.settings_now().get("review", settings.IDEAS["review"])))
+        except Exception:
+            return {}
 
     # -- a goal to main on its own (spec 105 §5) ------------------------------------------------------------
 
@@ -414,6 +455,8 @@ class GateMixin:
         except Exception:                                      # a view never troubles the flag
             pass
         try:
+            if goal_branch.in_use(self.state_dir, slug):       # done on its branch: it is not in dev, so it has nothing to flag yet (docs/specs/168 F1)
+                return
             git = IdeaGit(Path(self.host.repo_root))
             main, commits = self._gate_main(git), idea_flag.commits_of(self.state_dir, slug)
             if idea_gate.same(self._into(), main) or idea_gate.all_in(git, commits, main):
@@ -424,4 +467,5 @@ class GateMixin:
 
 def gate_commands(ideas_: Any) -> dict:
     """The goal-to-main commands by name (`gui/ideas.py` adds them to its table: `**gate_commands(self)`)."""
-    return {"ideas.to_main_plan": ideas_.to_main_plan, "ideas.to_main": ideas_.to_main, "ideas.to_main_checks": ideas_.to_main_checks}
+    return {"ideas.to_main_plan": ideas_.to_main_plan, "ideas.to_main": ideas_.to_main, "ideas.to_main_checks": ideas_.to_main_checks,
+            "ideas.goal_to_dev": ideas_.goal_to_dev}
