@@ -434,3 +434,5 @@ SAY_ANSWERED = "say_answered"          # a leader's better or need taken or turn
 JUDGED_AGAIN = "judged_again"          # the leaders judged again after the person's answers or at *Judge again now* (spec 168 C2, §283.25): idea, parties, round, now (pressed), hearing (the second round ended in a hearing)
 TO_HEARING = "to_hearing"              # the person took a goal to the hearing at once (spec 168 D5, §283.25): idea, parties (the leaders that still doubted or said no)
 EVENTS += (GOAL_REWRITTEN, REWRITE_UNDONE, REWRITE_FORKED, SAY_ANSWERED, JUDGED_AGAIN, TO_HEARING)
+GOAL_TO_DEV = "goal_to_dev"            # a goal went from its own branch into dev (spec 168 F1, §283.26): idea, into
+EVENTS += (GOAL_TO_DEV,)

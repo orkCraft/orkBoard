@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from orkboard.realm import claims, ideas, idea_risk
+from orkboard.realm import claims, goal_branch, ideas, idea_risk
 
 SIZE_SLOTS = {"lean": 1, "standard": 2, "full": 3}
 MEDIA = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".bmp", ".ico", ".svg", ".mp3", ".wav", ".ogg", ".oga", ".flac", ".m4a", ".aac", ".opus",
@@ -119,7 +119,7 @@ class LandingMixin:
             return f"touches {path}"
         if media_in(files) and not looked:
             return PICTURES
-        return ASKED if r.setting(self.settings, "review") else ""
+        return ASKED if r.setting(self.settings, "review") and not goal_branch.in_use(self.state_dir, slug) else ""        # on a goal's branch the look is the goal's, one level up (docs/specs/168 F1)
 
     # -- the slots (spec 84 §2) ----------------------------------------------------------------------
 

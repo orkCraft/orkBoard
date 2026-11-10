@@ -392,10 +392,10 @@ def plan_of(rig, tasks: list[dict], slug: str = "demo") -> None:
     (folder / "state.json").write_text(json.dumps({"state": "plan"}))
 
 
-def runner_of(rig, **ideas) -> IdeaRunner:
+def runner_of(rig, goal_branches=True, **ideas) -> IdeaRunner:
     bus = SimpleNamespace(publish=lambda topic, **data: None)
     settings = SimpleNamespace(ideas={"max_parallel": 1, "merge_into": "main", "push": False, "review": False, **ideas})
-    runner = IdeaRunner(rig.repo, rig.state, settings, bus, limits=lambda: [])
+    runner = IdeaRunner(rig.repo, rig.state, settings, bus, limits=lambda: [], goal_branches=goal_branches)
     rig.runners.append(runner)
     return runner
 
@@ -426,10 +426,10 @@ def calls(rig) -> list[dict]:
 PICK = {"n": 3, "kind": "image", "ask": "A logo for the app", "target": "assets/logo.png"}
 
 
-def start_pick(rig, monkeypatch, mode: str = "pick:3", **ideas) -> IdeaRunner:
+def start_pick(rig, monkeypatch, mode: str = "pick:3", goal_branches=True, **ideas) -> IdeaRunner:
     monkeypatch.setenv("STUB_MODE", f"k1={mode}")
     plan_of(rig, [{"id": "k1", "title": "Draw the logo", "pick": PICK}, {"id": "k2", "title": "Use the logo", "after": ["k1"], "kind": "code"}])
-    runner = runner_of(rig, **ideas)
+    runner = runner_of(rig, goal_branches=goal_branches, **ideas)
     runner.start("demo")
     return runner
 
@@ -534,7 +534,7 @@ def test_a_key_commits_the_picked_file_at_its_target_with_its_message_and_the_ta
 
 
 def test_with_review_on_the_picked_file_waits_at_review_as_any_change_does(rig, monkeypatch):
-    runner = start_pick(rig, monkeypatch, review=True)
+    runner = start_pick(rig, monkeypatch, goal_branches=False, review=True)          # a goal landing in dev task by task: the look at each result is its own (docs/specs/168 F1: on a goal's branch the setting is the goal's)
     wait_for(runner, rig, "k1", ("picking",))
     runner.pick("demo", "k1", "A", "", via="hand")
     task = wait_for(runner, rig, "k1", ("review",))

@@ -3,6 +3,7 @@ reading no secret."""
 from __future__ import annotations
 
 import json
+import time
 import threading
 from pathlib import Path
 
@@ -195,7 +196,13 @@ def test_a_result_with_no_test_to_run_waits_at_review_even_when_review_is_off(to
     assert task["tests"]["ran"] is False and task["tests"]["green"] is True and task["state"] == "review"
     assert git(town.repo, "rev-parse", "main") == before and not (town.repo / "k1.txt").exists()
     assert "no tests ran" in task["tests"]["tail"]
-    assert runner.merge("demo", "k1") and (town.repo / "k1.txt").exists()               # Merge stays the person's press
+    assert runner.merge("demo", "k1")                                                   # Merge stays the person's press; it lands on the goal's own branch (docs/specs/168 F1)
+    while runner.busy():
+        time.sleep(0.05)
+    assert git(town.repo, "rev-parse", "main") == before and not (town.repo / "k1.txt").exists()      # a project with no tests: the goal does not go into main by itself
+    assert "No test ran" in json.loads((town.state / "ideas" / "demo" / "goal_branch.json").read_text())["blocked"]
+    runner.goal_to_dev("demo", untested=True)                                           # … it goes when the person says so
+    assert (town.repo / "k1.txt").exists()
 
 
 def test_a_command_that_is_not_pytest_leaves_null_counts_and_lands_when_review_is_off(town):

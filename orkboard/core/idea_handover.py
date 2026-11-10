@@ -33,7 +33,10 @@ class HandoverMixin:
         self._active.remove(slug)
         if failed is None:
             tasks = (self.plan(slug) or {}).get("tasks") or []
-            self._set_idea(slug, "plan" if tasks and not any(t.get("state") == "merged" for t in tasks) else "done")       # all dropped: nothing landed, nothing to run
+            done = bool(tasks) and any(t.get("state") == "merged" for t in tasks)
+            self._set_idea(slug, "done" if done or not tasks else "plan")       # all dropped: nothing landed, nothing to run
+            if done:
+                self._goal_finished(slug)                  # on its own branch it waits for dev, and goes by itself where that is on (docs/specs/168 F1)
         else:
             why = failed.get("error") or "it failed"
             self._set_idea(slug, "failed", f"{failed.get('title') or failed.get('id')}: {why}")
