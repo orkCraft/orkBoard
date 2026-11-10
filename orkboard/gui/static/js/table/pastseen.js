@@ -1,5 +1,5 @@
 // What a party's past was last looked at (docs/specs/150 E2.3, decisions §254.7): the newest decision number seen, per party (*orkboard.past.seen.<party>*, `orkboard.past.seen.orkmaster` for the whole project's), a per-viewer convenience in this browser's
-// localStorage (it works without it: kept in memory for the page). Never looked at, nothing is new: the tab's dot (pastdot.js) takes the newest as seen the first time it reads. Written when the lane is scrolled to the past (pastlane.js); read by the tab's dot (pastdot.js),
+// localStorage (it works without it: kept in memory for the page). Never looked at, nothing is new: the tab's dot (pastdot.js) takes the newest as seen the first time it reads. Written when the history is opened (history.js); read by the tab's dot (pastdot.js),
 // which marks a decision newer than it (spec 156 D.5).
 import { signal } from "@preact/signals";
 import { ask } from "./chronicleparts.js";
