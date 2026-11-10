@@ -83,6 +83,7 @@ export function sayOf(n, pile, off, first) {
     return n.state === "reading" || n.state === "planning" ? "the Orkmaster is writing its spec" : "waits for the Orkmaster";
   }
   if (pile === "review") {
+    if (n.proposed) return "proposed by a leader in the night: Take or Drop it in your hand";
     if (writing(n)) return n.state === "planning" ? "the Orkmaster is writing its spec" : "its leaders are writing its spec";
     if (n.changing) return "Held while its leaders rewrite";                      // a change to its spec is open (spec 144 D.1): nothing starts it until the person answers
     if (lookAt(n)) return `Starts by itself at ${lookAt(n)}`;
@@ -168,7 +169,7 @@ function specFace(n, first) {
   const asks = waitsYou(n) || (!!n.asks_you && !failed(n)), ripe = n.back?.ripe, w = n.back?.written, wr = writing(n);
   const running = !wr && !!ripe && !ripe.by && !ripe.held && !n.changing && !lookAt(n), share = asks ? 1 : wr ? (Number(w?.total) > 0 ? Math.min(8, Math.round((Number(w.done) / Number(w.total)) * 8)) / 8 : 0) : running ? shareOf(ripe) : 0;
   everBack.add(n.slug);
-  return { say: sayOf(n, "review", "", first), share, asks, writing: wr, look: lookAt(n), glow: wr && movesOn(n.slug), bad: failed(n) };
+  return { say: sayOf(n, "review", "", first), proposed: !!n.proposed, share, asks, writing: wr, look: lookAt(n), glow: wr && movesOn(n.slug), bad: failed(n) };
 }
 
 /** One pile: its title and, under it, what it says (*reading: Round timer*, *next in 2 min: Round timer*), then its cards — the fan of In analysis (every goal a back), the deck of To review (the front and four behind, 3 px apart), the standing cards of At work (the front and five behind; `way`: giveway.js, how far each

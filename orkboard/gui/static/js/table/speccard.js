@@ -9,12 +9,13 @@ export const SPEC_W = 78, SPEC_H = 56;
 
 /** One card of the deck. `say`: its state in words (its label and its preview's line); `share`: the ring (0 to 1, in eighths); `asks`: it waits for the person; `writing`: its spec is being written (its rune glows where `glow`); `look`: the clock time its look ends at; `bad`: a failure;
  *  `own`: its dim and its hatch (piles.js `lit`); `on`: it is the goal picked. */
-export function SpecCard({ n, i, say, share, asks, writing, look, glow, bad, own, on, onPress }) {
+export function SpecCard({ n, i, say, proposed, share, asks, writing, look, glow, bad, own, on, onPress }) {
   const el = n.element || "", hue = n.hue || el;
   return html`<button type="button" class=${cls("ork-card col-card col-card--down col-card--spec", { "ork-picked": on, asks, fails: bad, "is-dim": own.dim })} ...${withPreview(own.hatch, backSpec(n.title, say, n))} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="review" data-down="1"
-    data-changing=${n.changing ? "1" : undefined} data-look=${look || undefined} data-writing=${writing ? "1" : undefined} style=${`--i:${i}`} aria-pressed=${String(on)} aria-label=${`${n.title}: ${say}`} onClick=${() => onPress(n, "review", "")}>
+    data-changing=${n.changing ? "1" : undefined} data-look=${look || undefined} data-writing=${writing ? "1" : undefined} data-proposed=${proposed ? "1" : undefined} style=${`--i:${i}`} aria-pressed=${String(on)} aria-label=${`${n.title}: ${say}`} onClick=${() => onPress(n, "review", "")}>
     <span class=${cls("ork-card-back small col-spec__back", { "is-ringed": on })} aria-hidden="true"></span>
     <span class=${cls(`ork-sigil table-back-sigil col-sigil col-spec__ring is-waiting${el && !asks ? ` is-${hue}` : ""}`, { "col-stopped": asks })} style=${`--ork-sigil-share:${share}`} data-share=${share} aria-hidden="true"></span>
     <span class="col-spec__rune" aria-hidden="true"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${!!glow} still=${false} /></span>
+    ${proposed && html`<span class="col-spec__proposed" aria-hidden="true">proposed</span>`}
   </button>`;
 }

@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 from orkboard.realm import (board_back, board_in_code, chronicle_decisions, decision_conflicts, board_rows, collide, goal_flags, goal_phase, goal_place, goal_route, goal_take, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, spec_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, lexicon, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
-from orkboard.realm import idea_say, step_needs, way_kinds
+from orkboard.realm import idea_say, map_night, step_needs, way_kinds
 from orkboard.realm.idea_words import CARD_LINE_CHARS, short_of
 
 NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "conflict", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change", "spec_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
@@ -510,6 +510,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "start_at": r["start_at"], "night_by": r["night_by"],
                     "changing": any(n["kind"] == "spec_change" and n.get("status") in spec_change.OPEN for n in needs),      # a change to its spec is open: its leaders rewrite or the person has not answered (spec 144 D.1)
                     **({"look_until": r["look_until"]} if r.get("look_until") else {}),      # the look's wait: a clock time (spec 144 A.5)
+                    **map_night.of(state_dir, slug),      # a night's proposal still waiting: `proposed` (spec 168 H3)
                     "place": r["place"], "asks_you": r["asks_you"], "waits_as": r["waits_as"], "seen": r["seen"], "by_pace": bool((plan or {}).get("by_pace")),
                     "priority": r["priority"], "size": r["size"],
                     "risk": r["risk"], "tier": tier[slug], "depends_on": r["depends_on"], "waits_on": r["waits_on"],
