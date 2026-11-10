@@ -10,6 +10,7 @@ phase: work
 route: design, tech
 by: claude-code
 schema: 3
+gate: 13478e2 · 0 files · green
 ---
 # The readable look and the phone's feed: Rubik, lifted colours, round corners; the phone's tables as a feed of blocks
 
@@ -163,3 +164,9 @@ made in orkUI first, then copied here.
 - The last look stays in the phone's orkcraft.v1 and is sent as `since`, as `ideas.recap` takes it today
 - A post with no party in its event is the Orkmaster's; a spec's clock time is read where the Board keeps it today
 - The look's step (copy, sizes, sw cache) lands and is accepted before the feed's step starts
+### Accepted
+- not met: When realm/board_feed reads a Board with a spec set for a clock time, a goal waiting for main and two leaders' news since a look, then waits come first, then posts newest first, each with its leader and time — stage E's, not in this step; nothing sent back
+- not met: When one leader has posts in a row since the look, then the reader gives them as one stack, and what came before the look as the one seen line, never as news — stage E's, not in this step; nothing sent back
+- not met: When the phone opens a project at 390×844, then it asks the host's feed with this phone's own last look and draws its blocks in the reader's order, with no tab of §223 in the page — stage F's, not in this step; nothing sent back
+- not met: When a goal's screen opens on the phone, then its feed is the same reader cut to the goal's route, its heads the route's leaders, and shell-goal.js holds no order of its own — stage G's, not in this step; nothing sent back
+- not met: When the service worker installs, then its cache is a new orkcraft-app-v, it precaches Rubik's files and no pixelify-sans file, and every path it precaches exists in static — sw.js is v107 with Rubik and no Pixelify, but no test in tests/test_pwa.py serves each SHELL path or rejects a pixelify-sans entry: add it (stage A)
