@@ -128,7 +128,7 @@ class FindingsMixin:
 
     def finding_fix_all(self, args: dict) -> dict:
         slug = args.get("idea") if isinstance(args.get("idea"), str) else ""
-        waiting = [f for f in findings.of_goal(self.state_dir, slug) if f["status"] == "sorted"]
+        waiting = [f for f in findings.of_goal(self.state_dir, slug) if f["status"] in ("sorted", "told")]
         if not waiting:
             raise IdeasError("No finding waits for this goal")
         order = {lv: n for n, lv in enumerate(findings.LEVELS)}

@@ -34,7 +34,7 @@ def _verdict_rows(state_dir: Path, root: Path, repo: Path, slug: str, ref: str) 
     tasks = (ideas.plan(state_dir, slug) or {}).get("tasks") or []
     crafts = {t["slug"]: goal_team.craft_of(root, t["slug"]) for t in tracks}
     touch = goal_result.touched(state_dir, repo, slug, ref)
-    got = goal_result.of(sections, tasks, touch, True, crafts, home)
+    got = goal_result.of(sections, tasks, touch, True, crafts, home, (ideas.plan(state_dir, slug) or {}).get("accepts"))
     return [{"party": p["party"], "id": w["id"], "kind": w["kind"], "verdict": w["verdict"], "line": w["line"]} for p in got["parties"] for w in p["parts"]]
 
 

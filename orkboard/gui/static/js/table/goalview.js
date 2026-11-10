@@ -13,7 +13,7 @@ import { partFor, partsOf, useMap, useResult, names } from "./goalmap.js";
 import { TASK_STATE } from "../board/maplayout.js";
 
 export const KIND_WORDS = { new: "New", changed: "Changes", read: "Read only", gone: "Goes" };
-export const VERDICT = { ok: ["✓", "As promised"], differs: ["≠", "Not quite"], extra: ["+", "More than promised"], missing: ["✗", "Not done"] };
+export const VERDICT = { ok: ["✓", "As promised"], landed: ["○", "Landed, not compared"], differs: ["≠", "Not quite"], extra: ["+", "More than promised"], missing: ["✗", "Not done"] };
 const SIGN_OF = (l) => (l.startsWith("+") ? "is-add" : l.startsWith("~") ? "is-chg" : l.startsWith("-") ? "is-del" : l.startsWith("≠") ? "is-dif" : "");
 
 const Lines = ({ lines }) => html`<ul class="gv-lines">${lines.map((l, i) => html`<li key=${i} class=${SIGN_OF(l)}>${l}</li>`)}</ul>`;
@@ -64,7 +64,7 @@ function Side({ g, n, info, will, read, dones, tasks, done }) {
   return html`<aside class="gv-side" aria-label="Where it lies">
     ${info && html`<div class="gv-side__map"><span class="ork-label">Where, on the whole table</span><${Mini} info=${info} will=${will} read=${read} /></div>`}
     ${dones.length > 0 && html`<section class="gv-sec" aria-label="Done when"><h3 class="ork-label">${done ? "Done when, checked" : "Done when"}</h3>
-      <ul class="gv-lines gv-done">${dones.map((x, i) => html`<li key=${i} class=${cls({ "is-ok": x.state === "ok" })} data-state=${x.state || undefined}>${x.state === "ok" ? "✓ " : ""}${x.text}</li>`)}</ul></section>`}
+      <ul class="gv-lines gv-done">${dones.map((x, i) => html`<li key=${i} class=${cls({ "is-ok": x.state === "ok" })} data-state=${x.state || undefined}>${x.state === "ok" ? "✓ " : ""}${x.text}${x.word ? html` <span class="cap gv-word">· ${x.word}</span>` : ""}</li>`)}</ul></section>`}
     <section class="gv-sec" aria-label="Its tasks here"><h3 class="ork-label">Its tasks here</h3>
       ${tasks.length ? html`<ul class="gv-lines gv-tasks">${tasks.map((t) => html`<li key=${t.id} data-task=${t.id} data-state=${t.state}>${t.short || t.title} · ${t.state === "merged" ? "done" : TASK_STATE[t.state] || t.state}</li>`)}</ul>`
         : html`<p class="cap">None for ${nameOf(g)}.</p>`}</section>

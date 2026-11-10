@@ -119,7 +119,7 @@ def test_a_screen_is_promised_by_its_id_its_name_or_its_path_and_a_screen_change
 
 def test_a_craft_whose_map_is_not_read_from_the_files_is_judged_by_its_tasks_alone_and_has_no_more_than_promised():
     will = [{"kind": "new", "id": "Pain: slow rounds", "note": ""}]
-    for states, want in ((["merged", "merged"], "ok"), (["merged", "ready"], "differs"), (["ready"], "missing")):
+    for states, want in ((["merged", "merged"], "landed"), (["merged", "ready"], "differs"), (["ready"], "missing")):
         tasks = [{"id": str(i), "state": s} for i, s in enumerate(states)]
         assert _verdicts(goal_result.judge(will, {"parts": ["src/x"], "screens": [], "files": 1}, tasks, "product")) == {("Pain: slow rounds", want)}
     assert goal_result.judge([], {"parts": ["src/x"], "screens": [], "files": 1}, [], "tech") == [], "nothing promised: nothing to be more than"
@@ -127,20 +127,55 @@ def test_a_craft_whose_map_is_not_read_from_the_files_is_judged_by_its_tasks_alo
 
 # -- the command -----------------------------------------------------------------------------------------------------------------------
 
+def test_a_craft_with_no_file_touch_says_landed_not_compared_never_ok_and_a_tech_part_with_no_commits_to_read_too():
+    will = [{"kind": "new", "id": "Pain: slow rounds", "note": "the leader's words"}]
+    done = [{"id": "a", "state": "merged"}]
+    for craft in ("product", "art", ""):
+        got = goal_result.judge(will, None, done, craft)
+        assert [(w["verdict"], w["line"]) for w in got] == [("landed", "landed, not compared")], craft
+    tech = goal_result.judge([{"kind": "changed", "id": "src/x", "note": ""}], None, done, "tech")
+    assert [w["verdict"] for w in tech] == ["landed"], "no commits to read: nothing was compared"
+    assert [w["verdict"] for w in goal_result.judge([{"kind": "changed", "id": "src/x", "note": ""}], {"parts": ["src/x"], "screens": [], "files": 1}, done, "tech")] == ["ok"], "a touch seen is ok"
+
+
+def _sections(parties):
+    return [spec_sections.Section(party, party, {"Done when": "- [test] A\n- B\n- C\n- D"}) for party in parties]
+
+
+def test_a_done_when_line_is_ok_only_where_the_acceptance_said_met_unseen_and_unlooked_say_not_checked():
+    tasks = [{"id": "k1", "state": "merged", "party": "tech", "step": 1}]
+    accepts = {"1": {"round": 1, "verdict": "accepted", "done_when": [{"n": 1, "met": True, "why": "x"}, {"n": 2, "met": "unseen", "why": "the four-file limit"}, {"n": 3, "met": False, "why": "y"}]}}
+    row = goal_result.of(_sections(["tech"]), tasks, None, True, {"tech": "tech"}, "tech", accepts)["parties"][0]["done_when"]
+    assert [d["state"] for d in row] == ["ok", "unchecked", "unmet", "unchecked"]       # met · unseen · not met · nobody looked
+    assert [d.get("word") for d in row] == [None, "not checked", "not met", "not checked"]
+    assert all(d["landed"] for d in row), "every task landed, which no longer makes a line ok"
+    none = goal_result.of(_sections(["tech"]), tasks, None, True, {"tech": "tech"}, "tech")["parties"][0]["done_when"]
+    assert {d["state"] for d in none} == {"unchecked"}, "all landed, no acceptance: never ok by default"
+    failed = goal_result.of(_sections(["tech"]), tasks, None, True, {"tech": "tech"}, "tech", {"1": {"round": 1, "verdict": "gone_on", "done_when": []}})["parties"][0]["done_when"]
+    assert {d["state"] for d in failed} == {"unchecked"}, "an acceptance whose call failed saw nothing"
+    base = {"1:k1": {"verdict": "accepted", "done_when": [{"n": 4, "met": True, "why": ""}]}}
+    assert [d["state"] for d in goal_result.of(_sections(["tech"]), tasks, None, True, {"tech": "tech"}, "tech", base)["parties"][0]["done_when"]] == ["unchecked"] * 3 + ["ok"], "a base's acceptance counts for its step"
+    other = {"2": accepts["1"]}
+    assert {d["state"] for d in goal_result.of(_sections(["tech"]), tasks, None, True, {"tech": "tech"}, "tech", other)["parties"][0]["done_when"]} == {"unchecked"}, "another party's step is not this party's"
+    notdone = goal_result.of(_sections(["tech"]), tasks, None, False, {"tech": "tech"}, "tech", accepts)["parties"][0]["done_when"]
+    assert {d["state"] for d in notdone} == {"unchecked"}, "a goal not done has no ok line"
+
+
 def test_goal_result_judges_each_partys_section_and_checks_its_done_when_only_when_it_all_landed(host, tech, design, monkeypatch):
     slug = _goal(host, tech, {tech: {"Done when": "- [test] Rounds keep their score\n- The lobby opens", "Will be": "- new src/lobby — a lobby\n- changed src/score"},
                               design: {"Done when": "- The winner shows first", "Will be": "- changed Results — the winner first"}},
                  [("k1", "merged", [], tech), ("k2", "merged", ["k1"], tech), ("k3", "ready", ["k1"], design)], state="done")
     monkeypatch.setattr(goal_result, "touched", lambda *a, **k: {"parts": ["src/lobby", "src/other"], "screens": [], "files": 4})
+    ideas.edit_plan(host.ideas.state_dir, slug, lambda p: p.update(accepts={"1": {"round": 1, "verdict": "accepted", "done_when": [{"n": 1, "met": True, "why": ""}, {"n": 2, "met": "unseen", "why": "no file"}]}}))
     got = host.command("ideas.goal_result", {"idea": slug})
     assert got["idea"] == slug and got["state"] == "done" and got["files"] == 4
     by = {p["party"]: p for p in got["parties"]}
     assert set(by) == {tech, design}
     assert {(p["id"], p["verdict"]) for p in by[tech]["parts"]} == {("src/lobby", "ok"), ("src/score", "differs"), ("src/other", "extra")}
-    assert [(x["text"], x["state"]) for x in by[tech]["done_when"]] == [("Rounds keep their score", "ok"), ("The lobby opens", "ok")], "its tasks all landed and no check left a finding"
+    assert [(x["text"], x["state"]) for x in by[tech]["done_when"]] == [("Rounds keep their score", "ok"), ("The lobby opens", "unchecked")], "the acceptance said met of the first and unseen of the second"
     assert [x["proof"] for x in by[tech]["done_when"]] == ["test", ""], "a line's mark is apart from its words (decisions §257.4)"
     assert [(p["id"], p["verdict"]) for p in by[design]["parts"]] == [("Results", "missing")]
-    assert [x["state"] for x in by[design]["done_when"]] == [""], "its task did not land: nothing says it is met"
+    assert [x["state"] for x in by[design]["done_when"]] == ["unchecked"], "its task did not land and nobody accepted it: nothing says it is met"
     json.dumps(got)
 
 
