@@ -1,0 +1,57 @@
+/* The result tables of a goal done (spec 168 G2, decisions §283.16.11; resultboard.js): two card sizes only, 144 x 202 and 56 x 78. Layout and orkUI's tokens only: no colour, font or corner of its own. */
+.rb-plate { gap: var(--ork-3); }
+.rb-plate__nm { font: var(--ork-type-body); font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.rb-lane { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); width: 100%; min-width: 0; }
+.rb-none { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.rb-card.ork-card.is-alert { border-color: var(--ork-alert); box-shadow: inset 0 0 0 2px var(--ork-alert); }
+.rb-card.ork-card.is-danger { border-color: var(--ork-danger); box-shadow: inset 0 0 0 2px var(--ork-danger); }
+.rb-card__lines { display: flex; flex-direction: column; gap: var(--ork-1); }
+.rb-smalls { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.rb-count { font: var(--ork-type-heading); font-weight: 700; }
+.rb-lines { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); width: 100%; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.rb-lines li { overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.rb-tag { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.rb-tag.is-danger { color: var(--ork-danger); } .rb-tag.is-alert { color: var(--ork-alert); }
+
+/* through a leader: the map with the goal's parts marked, planned against built */
+.rb-scheme__cols { display: flex; flex-wrap: wrap; gap: var(--ork-3); align-items: flex-start; }
+.rb-scheme__col { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.rb-chip { box-sizing: border-box; padding: 0 var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); border: var(--ork-line) solid var(--ork-frame); overflow-wrap: anywhere; }
+.rb-chip.is-planned { color: var(--ork-ink); border-style: dashed; border-color: var(--ork-ink-muted); }
+.rb-chip.is-ok, .rb-chip.is-landed { color: var(--ork-ink); border-style: solid; border-color: var(--ork-action); background: var(--ork-raised); }
+.rb-chip.is-differs { border-style: solid; border-color: var(--ork-alert); color: var(--ork-alert); }
+.rb-chip.is-missing { border-style: dashed; border-color: var(--ork-danger); color: var(--ork-danger); }
+.rb-chip.is-extra { border-style: solid; border-color: var(--ork-elem-ice); color: var(--ork-elem-ice); }
+.rb-scheme__key { margin: 0; display: flex; align-items: center; gap: var(--ork-2); }
+.rb-key { display: inline-block; width: 14px; height: 8px; border: var(--ork-line) solid var(--ork-ink-muted); }
+.rb-key.is-planned { border-style: dashed; } .rb-key.is-built { border-color: var(--ork-action); background: var(--ork-raised); }
+
+/* before and after: Tech's System by commit, Design's pictures */
+.rb-sys { display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); }
+.rb-sys__hd, .rb-sys__row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--ork-3); align-items: baseline; }
+.rb-sys__hd { color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.rb-sys__row { padding: var(--ork-1) 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.rb-sys__cell { min-width: 0; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; gap: var(--ork-1) var(--ork-2); }
+.rb-sys__cell em { color: var(--ork-ink-faint); font-style: normal; }
+.rb-sys__chg { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.rb-sys__chg.is-new { color: var(--ork-action); } .rb-sys__chg.is-gone { color: var(--ork-danger); } .rb-sys__chg.is-changed { color: var(--ork-ink); }
+.rb-use.is-add { color: var(--ork-action-hi); } .rb-use.is-del { color: var(--ork-danger); }
+.rb-shots { display: flex; flex-direction: column; gap: var(--ork-4); }
+.rb-shots__row { display: flex; flex-direction: column; gap: var(--ork-2); }
+.rb-shots__nm { font: var(--ork-type-body); font-weight: 600; }
+.rb-shots__pair { display: flex; gap: var(--ork-4); flex-wrap: wrap; }
+.rb-shot.ork-card { box-sizing: border-box; width: 144px; height: 202px; aspect-ratio: auto; margin: 0; padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+.rb-shot img { flex: 1; min-height: 0; width: 100%; object-fit: contain; background: var(--ork-panel); }
+.rb-shot figcaption { flex: none; padding: var(--ork-1) var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); text-align: center; }
+.rb-shot.is-none { border-style: dashed; }
+.rb-shot.is-none > span { flex: 1; display: grid; place-items: center; color: var(--ork-ink-faint); }
+
+/* a goal done at a leader: its parts as cards of the one size (the part cards of goalview.js, the result's) */
+.gv[data-view="changed"] .gv-grid { display: flex; flex-wrap: wrap; gap: var(--ork-4); }
+.gv[data-view="changed"] .gv-card { box-sizing: border-box; width: 144px; height: 202px; aspect-ratio: auto; overflow: hidden; padding: var(--ork-3); }
+.gv[data-view="changed"] .gv-card .gv-lines { overflow: hidden; }
+.gv[data-view="changed"] .gv-card .gv-card__hd { flex-wrap: wrap; gap: var(--ork-1); }
+.gv[data-view="changed"] .gv-card .gv-kind { margin-left: 0; }
+.gv[data-view="changed"] .gv-kind { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+.gv-side .rb-scheme__cols { max-height: 200px; overflow-y: auto; }
+.sb--result .table-lane { overflow-y: auto; }
