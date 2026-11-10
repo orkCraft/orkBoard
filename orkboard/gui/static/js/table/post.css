@@ -1,0 +1,47 @@
+/* One post of a feed (table/post.js; goal 169 F, goal 170: the phone's feed and the desktop's lanes draw the same post), after the mockup docs/mockups/phone/feed.html v3: orkUI's card, its party's colour its top edge (`data-race`, table/look.css `--party-hue`;
+   the Orkmaster's its own token), its head the leader's round head (a clip, never a corner of its own), its name in the heading face, when under it, the dots at its right; its body, a wait's clock and acts, a stack's edges and *More from <leader>*. Layout only: every
+   colour, face and corner is orkUI's. Nothing under 14 px; every target 44 px at least. */
+
+.post-card[data-leader="orkmaster"] { --party-hue: var(--ork-party-orkmaster); }
+/* the card: orkUI's, read whole, its party's colour its top edge; its head the leader's round head, its name in the heading face, when under it, the dots at its right */
+.post-card { flex: none; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-5); border: var(--ork-line) solid var(--ork-card-frame); color: var(--ork-ink);
+  box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)); }
+.post-card:focus-visible { outline: 0; box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), inset 0 0 0 2px var(--ork-ink); }
+.post-card.is-stacked { margin-bottom: var(--ork-4); box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), 0 5px 0 -2px var(--ork-card), 0 5px 0 -1px var(--ork-card-frame), 0 10px 0 -5px var(--ork-card), 0 10px 0 -4px var(--ork-card-frame); }      /* the edges of the rest under its card */
+.post-card__who { display: flex; align-items: center; gap: var(--ork-4); }
+.post-card__av { flex: none; width: 36px; height: 36px; display: grid; place-items: center; background: var(--ork-panel); clip-path: circle(50%); }
+.post-card__av > img { width: 28px; height: auto; }
+.post-card__by { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.post-card__name { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); font-size: 16px; line-height: 20px; overflow-wrap: anywhere; }
+.post-card__sub { font: var(--ork-type-caption); font-size: 14px; line-height: 18px; color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.post-card__dots { flex: none; display: inline-flex; color: var(--ork-ink-faint); }
+.post-card__dots .ork-icon { width: 20px; height: 20px; }
+.post-card__text { margin: 0; display: flex; align-items: flex-start; gap: var(--ork-3); font: var(--ork-type-body); color: var(--ork-ink-read); overflow-wrap: anywhere; }
+.post-card__text > .ork-sign { flex: none; margin-top: var(--ork-2); color: var(--ork-alert); }
+.post-card__goal { appearance: none; align-self: flex-start; box-sizing: border-box; max-width: 100%; min-height: var(--ork-tap); margin: calc(var(--ork-3) * -1) 0; padding: 0 var(--ork-4) 0 0; display: inline-flex; align-items: center; gap: var(--ork-3);
+  border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-heading); font-size: 17px; line-height: 22px; text-align: left; cursor: pointer; }
+.post-card__goal:focus-visible { outline: 0; box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.post-card__goal .ork-sign { flex: none; color: var(--ork-success); }
+.post-card__goal.is-gone { cursor: default; }
+.post-card__goal.is-small { font: var(--ork-type-caption); font-weight: 600; color: var(--ork-ink-muted); }
+.post-card__gname { min-width: 0; overflow-wrap: anywhere; }
+.post-card__clock { margin: 0; display: flex; align-items: center; gap: var(--ork-4); padding: var(--ork-5); background: var(--ork-canvas); clip-path: var(--ork-notch); font: var(--ork-type-heading); font-size: 16px; line-height: 20px; }      /* the clock on the darker inset */
+.post-card__clock .ork-icon { flex: none; width: 18px; height: 18px; color: var(--ork-ink-muted); }
+
+/* the waits' acts: *Change the spec* outlined with its pencil, *Start now* a link, *To main* the action's green with the merge */
+.post-card__acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-4); }
+.post-card__acts:empty { display: none; }
+.post-card .ork-btn { min-height: var(--ork-tap); padding: 0 var(--ork-5); display: inline-flex; align-items: center; gap: var(--ork-3); }
+.post-card .ork-btn > .ork-icon { flex: none; width: 18px; height: 18px; }
+.post-card__link { appearance: none; box-sizing: border-box; min-height: var(--ork-tap); margin: 0; padding: 0 var(--ork-3); border: 0; background: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.post-card__link:focus-visible { outline: 0; color: var(--ork-ink); box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.post-card__link:disabled { cursor: default; }
+.post-card__write { display: flex; flex-direction: column; gap: var(--ork-4); }
+.post-card__write .ork-field { box-sizing: border-box; width: 100%; min-height: 96px; font: var(--ork-type-body); }
+.post-card__write .ork-btn { align-self: flex-end; }
+.post-card__more { display: flex; flex-direction: column; gap: var(--ork-3); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-card-frame); }
+.post-card__open { appearance: none; align-self: flex-start; box-sizing: border-box; min-height: var(--ork-tap); margin: calc(var(--ork-3) * -1) 0; padding: 0 var(--ork-3) 0 0; display: inline-flex; align-items: center; gap: var(--ork-3); border: 0; background: none; color: var(--ork-ink-muted);
+  font: var(--ork-type-caption); font-weight: 600; cursor: pointer; }
+.post-card__open:focus-visible { outline: 0; box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.post-card__open .ork-icon { flex: none; width: 16px; height: 16px; }

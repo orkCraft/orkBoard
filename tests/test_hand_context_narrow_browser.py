@@ -108,8 +108,9 @@ class UprightHost(HandHost):
         return super().handle(name, a)
 
 
-def open_up(gui, scenario="question", kind="phone", *, ready=".hand-up", host=None, init=None):
-    """The page against the stub: `kind` "phone" (390 × 844 with touch), "side" (844 × 390), "fine" (390 × 844 with a mouse), "wide" (1280 × 800); `init`: a script run in every page before its own (a stand-in for the keyboard's visual viewport, tests/test_phone_cards_browser.py)."""
+def open_up(gui, scenario="question", kind="phone", *, ready=".hand-up", host=None, init=None, first=False):
+    """The page against the stub: `kind` "phone" (390 × 844 with touch), "side" (844 × 390), "fine" (390 × 844 with a mouse), "wide" (1280 × 800); `init`: a script run in every page before its own (a stand-in for the keyboard's visual viewport, tests/test_phone_cards_browser.py).
+    `first`: the first card of the hand's row pressed, so the middle shows it (goal 169 F: with nothing pressed the middle is the project's feed, tests/test_phone_feed_browser.py)."""
     server, browser = gui
     host = host or UprightHost(scenario)
     ctx = {"phone": narrow.NARROW, "side": SIDE, "fine": narrow.FINE, "wide": narrow.WIDE}[kind]
@@ -124,7 +125,17 @@ def open_up(gui, scenario="question", kind="phone", *, ready=".hand-up", host=No
     pg.goto(server.url)
     pg.wait_for_selector(ready, state="attached", timeout=WAIT_MS)
     pg.wait_for_timeout(500)
+    if first:
+        press_first(pg)
     return pg, host, log
+
+
+def press_first(pg):
+    """The first card of the hand's row pressed: its entry is the one the middle shows (goal 169 F)."""
+    pg.locator(".hand-up .up-card").first.click()
+    pg.wait_for_function("() => { const l = document.querySelector('.hand-up .up-look'); return !!l && l.dataset.look !== 'feed'; }", timeout=WAIT_MS)
+    pg.evaluate("() => { document.activeElement?.blur(); const r = document.querySelector('.hand-up .up-cards'); if (r) r.scrollTop = 0; }")      # the press is over; the click's own scroll into view of the row put back
+    pg.wait_for_timeout(200)
 
 
 def box(loc):
@@ -301,7 +312,7 @@ def test_the_discard_is_a_small_pile_that_opens_the_goals_done_and_ready_over_th
 
 
 def test_the_context_says_who_which_goal_why_the_pick_and_who_waits_above_the_card(gui):
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         c = context_of(pg)
         who = c.locator(".up-ctx__who")
@@ -324,7 +335,7 @@ def test_the_context_says_who_which_goal_why_the_pick_and_who_waits_above_the_ca
 
 
 def test_the_middle_scrolls_as_a_whole_and_the_rows_stay(gui):
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         pg.evaluate("() => { const w = document.querySelector('.up-ctx__why'); w.textContent = Array(60).fill('A long reason that goes on and on.').join(' '); }")
         look, row = pg.locator(".up-look"), box(pg.locator(".up-row"))
@@ -339,7 +350,7 @@ def test_the_middle_scrolls_as_a_whole_and_the_rows_stay(gui):
 
 
 def test_the_row_draws_every_entry_upper_part_the_first_picked_and_raised_with_no_count(gui):
-    pg, host, log = open_up(gui, "ready")
+    pg, host, log = open_up(gui, "ready", first=True)
     try:
         c = cards(pg)
         assert c.count() == 4, "Sign-in, the timer, and the two goals ready for main: one card an entry"
@@ -366,7 +377,7 @@ def test_the_row_draws_every_entry_upper_part_the_first_picked_and_raised_with_n
 
 
 def test_a_press_on_another_card_picks_it_and_its_card_and_context_come_to_the_middle(gui):
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         assert name_of(pg) == SIGN_IN_Q
         cards(pg).nth(1).click()
@@ -386,7 +397,7 @@ def test_a_press_on_another_card_picks_it_and_its_card_and_context_come_to_the_m
 
 
 def test_the_card_in_the_middle_is_full_width_less_the_gutters_not_turned_its_choices_two_by_two(gui):
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         card = pg.locator(".hand-up .hand-lifted")
         assert card.count() == 1 and name_of(pg) == SIGN_IN_Q, "the question itself is the card's name"
@@ -408,7 +419,7 @@ def test_the_card_in_the_middle_is_full_width_less_the_gutters_not_turned_its_ch
 
 
 def test_one_tap_on_a_choice_answers_at_once_and_the_next_entry_comes_to_the_middle(gui):
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         pg.locator(".hand-up .hand-lifted .q-card", has_text="Passkey").click()
         assert _calls(pg, host, "ideas.talk_answer") == [{"idea": "signin", "answers": [{"id": "q1", "pick": 1}]}]
@@ -417,7 +428,7 @@ def test_one_tap_on_a_choice_answers_at_once_and_the_next_entry_comes_to_the_mid
         c = context_of(pg)
         assert c.locator(".up-ctx__who").inner_text().strip().lower() == "design" and pg.locator(".up-gh__name").inner_text().strip() == TIMER_Q
         assert c.locator(".up-ctx__rec").inner_text().strip() == "Recommended: Server counts, phones show it" and c.locator(".up-ctx__wait").count() == 0
-        assert pg.locator(".up-look").get_attribute("data-goal") == "phones" and sig(pg, "frame/state.js", "picked") == "", "nothing picked: the next entry is looked at"
+        assert pg.locator(".up-look").get_attribute("data-goal") == "phones" and sig(pg, "frame/state.js", "picked") == "phones", "the next entry is picked and looked at (goal 169 F)"
         shot(pg, "phone-next")
     finally:
         pg.close()
@@ -425,7 +436,7 @@ def test_one_tap_on_a_choice_answers_at_once_and_the_next_entry_comes_to_the_mid
 
 
 def test_a_goals_other_cards_are_not_cards_of_the_row_no_edge_no_count(gui):
-    pg, host, log = open_up(gui, "deep")
+    pg, host, log = open_up(gui, "deep", first=True)
     try:
         assert cards(pg).count() == 2 and name_of(pg) == SIGN_IN_Q, "Sign-in asks two questions: one entry, one card in the row"
         assert pg.locator(".up-edge, .ork-card-back.edge").count() == 0
@@ -441,7 +452,7 @@ def test_a_goals_other_cards_are_not_cards_of_the_row_no_edge_no_count(gui):
 
 
 def test_other_and_let_the_leader_decide_answer_from_the_card(gui):
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         pg.locator(".hand-up .hand-lifted .q-card--blank").click()
         pg.locator(".hand-up .hand-lifted textarea").fill("Magic link or SSO")
@@ -450,7 +461,7 @@ def test_other_and_let_the_leader_decide_answer_from_the_card(gui):
         wait_title(pg, TIMER_Q)
     finally:
         pg.close()
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         pg.get_by_role("button", name="Let Tech lead decide").click()
         assert _calls(pg, host, "ideas.talk_answer") == [{"idea": "signin", "answers": [], "decide": True}]
@@ -459,7 +470,7 @@ def test_other_and_let_the_leader_decide_answer_from_the_card(gui):
 
 
 def test_a_press_on_the_phases_opens_the_goals_page_over_the_pane_and_back_returns_to_the_same_card(gui):
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         pg.locator(".up-phases").click()
         pg.wait_for_selector(".table-over", timeout=WAIT_MS)
@@ -473,7 +484,7 @@ def test_a_press_on_the_phases_opens_the_goals_page_over_the_pane_and_back_retur
 
 
 def test_a_card_of_no_goal_has_no_goal_header_no_way_and_its_card_is_in_the_row(gui):
-    pg, host, log = open_up(gui, "paid")
+    pg, host, log = open_up(gui, "paid", first=True)
     try:
         assert pg.locator(".up-gh, .up-phases, .up-route").count() == 0 and pg.locator(".up-look").get_attribute("data-look") == "card" and cards(pg).count() == 1 and cards(pg).first.get_attribute("aria-pressed") == "true"
         assert cards(pg).first.locator(".up-card__name").inner_text().strip() == "Go on paid?"
@@ -516,9 +527,9 @@ def test_the_plus_card_lies_at_the_rows_right_end_the_cards_pass_under_it_and_it
 def test_with_nothing_in_the_hand_the_line_the_row_of_the_plus_card_alone_and_the_top_row_stay(gui):
     pg, host, log = open_up(gui, "empty")
     try:
-        assert context_of(pg).count() == 0 and cards(pg).count() == 0 and pg.locator(".up-look").count() == 0
-        line, w, h = box(pg.get_by_text("Nothing waits for you.", exact=True)), pg.viewport_size["width"], pg.viewport_size["height"]
-        assert abs(line["x"] + line["width"] / 2 - w / 2) <= 3 and 0.3 * h < line["y"] + line["height"] / 2 < 0.7 * h, "in the middle"
+        assert context_of(pg).count() == 0 and cards(pg).count() == 0 and pg.locator(".up-look").get_attribute("data-look") == "feed", "the middle is the feed (goal 169 F)"
+        line, w = box(pg.get_by_text("Nothing waits for you.", exact=True)), pg.viewport_size["width"]
+        assert abs(line["x"] + line["width"] / 2 - w / 2) <= 3, "the feed says nothing waits"
         assert pots(pg).count() == 4 and crown(pg).count() == 1 and pg.locator(".up-die").count() == 1 and plus(pg).count() == 1 and pg.locator(".up-pile").count() == 0
         shot(pg, "phone-empty")
         plus(pg).click()
@@ -549,7 +560,7 @@ def test_the_work_moved_on_the_line_over_the_top_row_and_the_frame_on_the_tool_n
 
 
 def test_go_on_paid_is_a_card_of_the_row_with_the_orkmasters_context_and_its_two_buttons(gui):
-    pg, host, log = open_up(gui, "paid")
+    pg, host, log = open_up(gui, "paid", first=True)
     try:
         c = context_of(pg)
         assert c.locator(".up-ctx__who").inner_text().strip().lower() == "orkmaster · party game" and "/races/peon-crown" in c.locator("img").get_attribute("src")
@@ -571,7 +582,7 @@ def test_go_on_paid_is_a_card_of_the_row_with_the_orkmasters_context_and_its_two
 
 
 def test_on_its_side_a_phone_shows_the_hand_not_the_table_and_the_goal_stays_picked(gui):
-    pg, host, log = open_up(gui, kind="side")
+    pg, host, log = open_up(gui, kind="side", first=True)
     try:
         assert pg.locator(".frame").get_attribute("data-upright") == "1" and pg.locator(".frame-table").is_hidden() and pg.locator(".hand-up").is_visible()
         assert name_of(pg) == SIGN_IN_Q and crown(pg).count() == 1 and plus(pg).count() == 1 and cards(pg).count() == 2
@@ -658,7 +669,7 @@ def test_a_sealed_goal_says_its_reason_in_danger_and_a_press_sends_nothing(gui):
 def test_later_puts_the_card_back_and_the_next_comes_while_the_goal_stays_ready(gui):
     pg, host, log = open_up(gui, "readyonly")
     try:
-        assert cards(pg).count() == 2 and ready_card(pg).count() == 1, "with only goals ready for main the first is picked"
+        assert cards(pg).count() == 2 and ready_card(pg).count() == 0, "with only goals ready for main: the feed until one is pressed (goal 169 F)"
         to_ready(pg)
         ready_card(pg).get_by_role("button", name="Later").click()
         pg.wait_for_function("() => document.querySelector('.hand-ready .hand-card__name')?.textContent.trim() === 'Reconnect is ready for main'", timeout=WAIT_MS)
@@ -675,8 +686,8 @@ def test_the_first_time_line_is_not_said_again_once_seen(gui):
     try:
         pg.evaluate("() => localStorage.setItem('orkboard.portal.seen', '1')")
         pg.reload()
-        pg.wait_for_selector(".hand-ready", timeout=WAIT_MS)
-        pg.wait_for_function("() => document.querySelector('.hand-ready')?.dataset.portal !== 'wait'", timeout=WAIT_MS)
+        pg.wait_for_selector(".hand-up .up-card", timeout=WAIT_MS)
+        to_ready(pg)
         assert ready_card(pg).locator(".hand-ready__hint").count() == 0 and "is-new" not in ready_card(pg).locator("button.ork-portal").get_attribute("class")
     finally:
         pg.close()

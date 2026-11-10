@@ -12,6 +12,7 @@ import { lichOf } from "../table/discard.js";
 
 export const at = signal("");                      // the key of the entry on the screen
 export const later = signal([]);                   // goals ready for main put back with *Later* (this session's view only; the goal stays ready in the discard)
+export const looking = signal(false);              // the phone looks at the entry `at` names (a card of the row pressed), not at the feed (goal 169 F)
 let was = 0;                                       // the place the entry on the screen held, for when it goes
 
 const goalKey = (s) => { const g = goalOfStop(s); return g && !g.startsWith("party:") ? `goal:${g}` : `card:${s.key}`; };
@@ -51,6 +52,7 @@ export const goalOfEntry = (e) => (e.kind === "ready" ? e.ready.slug : goalOfSto
 /** A press on an entry of the hand's row: it is the one on the screen, and its goal the picked one (a party picked in the menu is let go). */
 export function pickEntry(e) {
   at.value = e.key;
+  looking.value = true;
   picked.value = goalOfEntry(e);
   if (tab.value !== ORKMASTER) openTab(ORKMASTER);
 }
@@ -66,5 +68,13 @@ export function pickGoal(entries, slug) {
 /** A party picked in the menu: its leader's header is what is looked at (`tab` its slug), no goal picked. */
 export function pickParty(slug) {
   picked.value = "";
+  looking.value = false;
   openTab(slug);
+}
+
+/** Back to the feed (goal 169 F): the card looked at pressed again lets it go; no goal picked, no entry looked at, the whole feed. */
+export function toFeed() {
+  picked.value = "";
+  looking.value = false;
+  if (tab.value !== ORKMASTER) openTab(ORKMASTER);
 }

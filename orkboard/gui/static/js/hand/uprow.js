@@ -1,6 +1,6 @@
 // The phone's hand, its row (docs/specs/147-one-card-four-corners.md part F.2, decisions §251.5; before: docs/specs/117-the-phone-a-menu-of-the-leaders.md §3.2, decisions §195.4): one card an entry (entries.js `entriesOf`: a goal's cards one entry, a card of no goal one, a goal ready for main one), **laid by leader**: before each
 // group a 22 px separator with the leader's head (the crown's for the project's lane, then each party's leader, the goals ready for main last under the lich's), in the lanes' order. A card is 80 x 112, **cut at 62** by the row: its rune and kind and its title in two lines show; under the cut why it is asked, who
-// asks and what it costs. **Pressed, a card rises and shows the rest; tapped, it opens** (a press picks it: entries.js `pickEntry`, the middle shows it opened). The picked entry wears the ink's frame. The row scrolls sideways under the + card, which lies at its right end, fixed (a press opens the field: updeck.js `DeckField`).
+// asks and what it costs. **Pressed, a card rises and shows the rest; tapped, it opens** (a press picks it: entries.js `pickEntry`, the middle shows it opened; the one opened, tapped again, goes back to the feed: `toFeed`, goal 169 F). The picked entry wears the ink's frame. The row scrolls sideways under the + card, which lies at its right end, fixed (a press opens the field: updeck.js `DeckField`).
 // No count, and no edge for the rest of a goal's cards. With no entry the row is the + card alone.
 // **A card that lands out of the row's view** (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.9, decisions §198.9) moves no scroll: the row's cue at its edge (scrollcue.js: the fade of what lies beyond) brightens once, at the side the card lies (`data-cue`: a strip at that
 // edge for `CUE_MS`; static under reduced motion), so the person sees that a card came. A card that lands in view says nothing more; a page hidden meanwhile, none (§89.0). Layout only (upright.css); every colour, face and corner is orkUI's.
@@ -15,7 +15,7 @@ import { costOf } from "./cost.js";
 import { laneOf } from "./data.js";
 import { laneHead } from "./stacks.js";
 import { handedName, useFlight, useHanded } from "./motion.js";
-import { pickEntry } from "./entries.js";
+import { pickEntry, toFeed } from "./entries.js";
 import { PlusCard } from "./pluscard.js";
 import { useScrollCue } from "../scrollcue.js";
 
@@ -88,7 +88,7 @@ export function Row({ entries, cur, plus }) {
   return html`<div class="up-row" role="group" aria-label="Cards in the hand" data-cue=${cue || undefined}>
     <div class="up-cards gui-scrolls" ref=${cards}>${groupsOf(entries).flatMap((g) => [
       html`<span key=${`sep:${g.key}`} class="up-sep" data-lane=${g.key} aria-hidden="true">${g.head && html`<${Head} race=${g.head.race} tier=${g.head.tier} />`}</span>`,
-      ...g.entries.map((e) => html`<${Entry} key=${e.key} e=${e} on=${cur?.key === e.key} onPick=${() => pickEntry(e)} dealt=${dealt[e.key] ?? null} />`)])}</div>
+      ...g.entries.map((e) => html`<${Entry} key=${e.key} e=${e} on=${cur?.key === e.key} onPick=${() => (cur?.key === e.key ? toFeed() : pickEntry(e))} dealt=${dealt[e.key] ?? null} />`)])}</div>
     <div class="up-plus"><${PlusCard} onPress=${plus} /></div>
   </div>`;
 }

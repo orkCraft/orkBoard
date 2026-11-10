@@ -138,7 +138,6 @@ button.ork-card.up-card { position: relative; flex: none; box-sizing: border-box
 .up-field .hand-field, .up-field .hand-field.is-middle { position: static; box-sizing: border-box; width: 100%; max-width: none; aspect-ratio: auto; min-height: min(56dvh, 420px); }      /* the screen's width less the gutters; its height what the keyboard leaves (spec 120 §6.1) */
 .up-mic { position: absolute; right: var(--ork-5); top: var(--ork-5); min-width: var(--ork-tap); min-height: var(--ork-tap); display: inline-flex; align-items: center; justify-content: center; }
 .up-mic.is-on { color: var(--ork-alert); }
-.up-mid { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--ork-4); }
 .up-none { margin: 0; text-align: center; font: var(--ork-type-body); color: var(--ork-ink-muted); }
 
 /* the phone's table (spec 161 K, decisions §275.3): the hand's screen wears the open party's felt and light from orkUI's tokens as the desktop's (`.ork-table[data-party]`, the party felt.js names; `.is-out` while the person is away); the top row and

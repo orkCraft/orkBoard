@@ -91,7 +91,7 @@ def test_the_row_cuts_a_card_at_62_and_a_card_pressed_rises_by_what_is_cut_and_s
 
 
 def test_the_opened_card_is_5_to_7_at_the_screens_width_with_its_corners_and_its_body_scrolling(gui):
-    pg, host, log = open_up(gui)
+    pg, host, log = open_up(gui, first=True)
     try:
         b, vw = box(card(pg)), pg.viewport_size["width"]
         assert b["width"] == pytest.approx(vw - 16, abs=3) and b["height"] / b["width"] == pytest.approx(7 / 5, abs=0.02), "5 : 7 at the screen's width"
@@ -108,7 +108,7 @@ def test_the_opened_card_is_5_to_7_at_the_screens_width_with_its_corners_and_its
 
 
 def test_while_the_keyboard_is_up_the_opened_card_keeps_its_top_corners_and_a_title_in_two_lines_then_the_field_and_5_to_7_returns(gui):
-    pg, host, log = open_up(gui, init=KEYBOARD)
+    pg, host, log = open_up(gui, init=KEYBOARD, first=True)
     try:
         assert name_is(pg, SIGN_IN_Q)
         before = box(card(pg))
@@ -142,7 +142,7 @@ def test_while_the_keyboard_is_up_the_opened_card_keeps_its_top_corners_and_a_ti
 
 
 def test_a_viewport_only_a_little_shorter_is_not_a_keyboard(gui):
-    pg, host, log = open_up(gui, init=KEYBOARD)
+    pg, host, log = open_up(gui, init=KEYBOARD, first=True)
     try:
         pg.evaluate("() => window.__keyboard(60)")                                   # a browser's bar, not a keyboard
         pg.wait_for_timeout(250)

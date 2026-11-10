@@ -96,9 +96,11 @@ def front(pg, goal="night"):
 
 
 def lift(pg, goal="night", width="wide"):
-    """The hearing, opened: over the pane (a press on the card), or already in the phone's middle. Returns the hearing."""
+    """The hearing, opened: over the pane (a press on the card), or on the phone in the middle once its card of the hand's row is pressed (goal 169 F: with nothing pressed the middle is the feed). Returns the hearing."""
     if width != "phone":
         front(pg, goal).click(position={"x": 10, "y": 24})
+    else:
+        pg.locator(f'.hand-up .up-card[data-key="goal:{goal}"]').click()
     hr = pg.locator(f'.hr[data-goal="{goal}"]')
     hr.wait_for(timeout=WAIT_MS)
     return hr

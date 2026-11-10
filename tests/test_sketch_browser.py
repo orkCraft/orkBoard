@@ -233,6 +233,7 @@ def test_after_three_rounds_it_says_so_and_offers_no_fourth(gui):
 
 def phone(gui, **kw):
     pg, host, log = window(gui, "phone", **kw)
+    pg.locator(".hand-up .up-card").first.click()                     # goal 169 F: the middle is the feed until a card of the row is pressed
     pg.locator(".hand-lifted--up .hand-way--sketch").wait_for(timeout=WAIT_MS)
     return pg, host, log
 
@@ -317,6 +318,8 @@ def test_a_picture_sketch_is_pick_ones_tiles_with_the_sketchs_answers(gui, width
     try:
         if width == "wide":
             lift(pg)
+        else:
+            pg.locator(".hand-up .up-card").first.click()                 # goal 169 F: the middle is the feed until a card of the row is pressed
         pg.locator(".hand-way--sketch .pick-tiles").wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-way--sketch .pick-tile").count() == 2 and pg.locator("iframe").count() == 0 and pg.locator(".sk-pane").count() == 0
         assert pg.locator('[data-answer="pick"]').is_disabled(), "nothing picked yet"

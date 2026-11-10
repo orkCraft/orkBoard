@@ -219,8 +219,10 @@ def test_the_phones_table_wears_the_felt_and_away_puts_it_out(gui):
     try:
         hand = pg.locator(".hand-up")
         hand.wait_for(timeout=WAIT_MS)
+        pg.locator('.hand-up .up-card[data-key="goal:timer"]').click()      # goal 169 F: the middle is the feed until a card is pressed
+        pg.wait_for_function("() => document.querySelector('.hand-up')?.dataset.party === 'ork'", timeout=WAIT_MS)
         cls = hand.get_attribute("class")
-        assert "ork-table" in cls and "is-out" not in cls and hand.get_attribute("data-party") == "ork", "the first goal shown is Tech's"
+        assert "ork-table" in cls and "is-out" not in cls and hand.get_attribute("data-party") == "ork", "Tech's goal shown"
         assert "radial-gradient" in hand.evaluate("e => getComputedStyle(e).backgroundImage"), "the felt's light is orkUI's steps"
         pg.locator(".up-top .presence-chain").click()
         pg.wait_for_function("() => document.querySelector('.hand-up').classList.contains('is-out')", timeout=WAIT_MS)
@@ -252,18 +254,21 @@ def test_the_phones_backpack_opens_the_stall_over_the_hand_and_the_way_back_clos
 
 
 def test_the_phones_table_wears_the_shown_goals_party_felt_and_the_wood_when_nothing_is_shown(gui):
-    """Spec 161 K (decisions §275.3): a Tech goal shown -> Tech's race (ork); nothing shown -> the Orkmaster's wood."""
+    """Spec 161 K (decisions §275.3): a Tech goal shown -> Tech's race (ork); nothing shown (the feed, goal 169 F) -> the Orkmaster's wood."""
     pg, errors = start(gui, "phone", DoorHost(HERE))
     try:
+        pg.locator('.up-look[data-look="feed"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator(".hand-up").get_attribute("data-party") == "orkmaster", "the whole feed: the Orkmaster's wood"
+        pg.locator('.hand-up .up-card[data-key="goal:timer"]').click()
         pg.locator('.up-look[data-look="goal"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".up-look").get_attribute("data-goal") == "timer", "the hand's first goal is Tech's"
+        assert pg.locator(".up-look").get_attribute("data-goal") == "timer", "Tech's goal pressed"
         assert pg.locator(".hand-up").get_attribute("data-party") == "ork"
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
     pg, errors = start(gui, "phone", DoorHost(HERE, empty=True))
     try:
-        pg.locator(".up-none").wait_for(timeout=WAIT_MS)
+        pg.locator(".up-feed").wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-up").get_attribute("data-party") == "orkmaster"
     finally:
         pg.context.close()
