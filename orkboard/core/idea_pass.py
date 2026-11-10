@@ -25,7 +25,7 @@ import time
 
 from orkboard.core import idea_journal
 from orkboard.core import idea_slices
-from orkboard.realm import board_ask, event_log, goal_team, idea_pass, idea_questions, idea_target, ideas, project_facts
+from orkboard.realm import board_ask, event_log, goal_team, idea_pass, idea_questions, idea_target, ideas, project_facts, seat_talk_rules
 from orkboard.realm.idea_pass import PASS_S
 
 WATCH_S = 0.5                      # how often the watcher looks at the waits
@@ -57,7 +57,14 @@ class PassMixin:
         except Exception:
             others = ""
         return (" Each question says `for` whom: \"person\" for what only the person can choose (the look, money, the direction, anything that cannot be undone); a party's slug "
-                "when that party's map or the code answers it" + (f" ({others})" if others else "") + ": its leader then answers it, not the person. Say \"person\" when unsure.")
+                "when that party's map or the code answers it" + (f" ({others})" if others else "") + ": its leader then answers it, not the person. Say \"person\" when unsure." + self.way_rule_of(party))
+
+    def way_rule_of(self, party: str) -> str:
+        """The line of how this party's leader answers (spec 168 H4, `realm/seat_talk_rules.py` `way_rule`): none for a Choice. A Board that cannot be read leaves it out."""
+        try:
+            return seat_talk_rules.way_rule(goal_team.answers_of(self.wiki_root(), party))
+        except Exception:
+            return ""
 
     def _go_on(self, slug: str) -> None:
         """Every question of the round is answered: a second round when a leader asked for one, the leaders heard again, else the decision."""

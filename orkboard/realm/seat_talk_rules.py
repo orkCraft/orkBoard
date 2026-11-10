@@ -9,6 +9,20 @@ CARDS = ("Each question is a card for the person: two to four real choices taken
          "cannot start its work without the answer. " + idea_questions.LINES_RULE + " Ask nothing the goal's words, your map or the facts above already answer.")
 
 
+# How a leader answers (spec 168 H4, decisions §283.33; `realm/answer_ways.py`): the line a leader whose way is not the Choice is told after its cards' rule. A Choice is the rule above, as it always was, and adds none.
+WAY_RULES = {
+    "pen": " The person answers each question in their own words: ask it plainly and say in `why` what you need to hear; still give your ways and your pick, which stand only where the person writes nothing.",
+    "fork": " Work each way out: its line says what the person gains, what it costs and what it risks, in that order, in one line. Each question is then laid out on two sides, in one more call, on the elder tier.",
+    "silent": " You decide these questions yourself: `pick` is your decision and `why` says why in one line, as one the person may overrule. Ask nothing that is going into main, money above what was agreed, "
+              "dropping or holding a goal, or a decision against an earlier one: those the person answers, whatever your way.",
+}
+
+
+def way_rule(way: str) -> str:
+    """The line of a leader's way of answering (`WAY_RULES`); "" for a Choice or a word that is none: the rule above is its own."""
+    return WAY_RULES.get(way, "")
+
+
 AFTER_RULE = "\n- `after` (with a `no` only, optional): the slug of one goal in line above that this goal should wait for; else leave it out."
 
 

@@ -146,8 +146,12 @@ def test_the_cost_counts_calls_by_rule_and_prices_them_from_the_tiers_they_run_o
     assert short["calls"] == 4 and short["usd_high"] < long_one["usd_high"]                       # the bug's diagnosis, the section, the plan, the acceptance: no decision
     assert goal_route.cost(state, one, True, root=root, kind="bug", reproduces=True)["calls"] == 3    # the report holds the failure: no Talk
     quality = goal_route.cost(state, one, False, root=root, settings={"target": "quality"})
-    goal_team.set_size(root, p["tech"], "lean")                                                    # a party's size is its Target (thrift)
-    assert goal_route.cost(state, one, False, root=root, settings={"target": "quality"})["usd_high"] < quality["usd_high"]
+    goal_team.set_size(root, p["tech"], "lean")                                                    # a party's size is no Target (spec 168 H4): the price is the same
+    assert goal_route.cost(state, one, False, root=root, settings={"target": "quality"}) == quality
+    goal_team.set_lead_tier(root, p["tech"], "laborer")                                            # its leader's own tier prices its own calls (Talk, its section, its acceptance)
+    cheap = goal_route.cost(state, one, False, root=root, settings={"target": "quality"})
+    assert cheap["calls"] == quality["calls"] and cheap["usd_high"] < quality["usd_high"]
+    goal_team.set_lead_tier(root, p["tech"], "")
     assert goal_route.cost(state, [], False)["calls"] == 5                                         # a route not found yet is counted as one party's
 
 

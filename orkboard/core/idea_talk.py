@@ -334,13 +334,17 @@ class TalkMixin(GroundMixin, DiagnoseMixin):
         self.ground(slug, heard)                                 # a doubt the code settles is looked up before the hearing (spec 155 D.3)
         pool, settled, answered = self.settle(slug, 1, [x for _e, got in heard for x in got["cards"]])      # a question a decision or spec settles is closed (spec 155 D.4)
         pool, passed = self.pass_split(slug, 1, pool)       # a question for another party goes through the Orkmaster (spec 128 D)
+        whole = pool
+        pool, silent = self.way_split(self.wiki_root(), pool, 1)        # what a Silent leader decides itself, no lock (spec 168 H4, core/idea_ways.py)
+        pool = self.way_fork(slug, pool)                                # a Fork's one more call
         chosen, closed = pick_three(pool)
+        closed = closed + silent
         stances = [self._stance(e, got) for e, got in heard]
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             rec.update(mode="talk", round=1, stances=stances, objections=idea_objections.made(stances), waiting=[c for c, _b, _k in chosen],
                        second=[e["party"] for e, got in heard if got["more"]], defaults=settled + [self._closed(c, 1) for c, _b, _k in closed],
-                       keys={c["id"]: k for c, _b, k in pool if k}, done=not chosen and not passed, passing=passed)
+                       keys={c["id"]: k for c, _b, k in whole if k}, done=not chosen and not passed, passing=passed, decided=self.way_decided(slug, silent, 1))
             self.reweigh(slug, rec)
             held = self._held(rec, idea_say.holding(self.state_dir, slug, rec)) if not chosen else bool(idea_objections.pending(rec))
             idea_questions.save_record(self.state_dir, slug, rec)
@@ -402,11 +406,14 @@ class TalkMixin(GroundMixin, DiagnoseMixin):
         self.merge_verdicts(slug, heard, False)                          # the verdicts the second round's leaders gave again
         pool, settled, answered = self.settle(slug, 2, [x for _e, got in heard for x in got["cards"]])
         pool, passed = self.pass_split(slug, 2, pool)
+        pool, silent = self.way_split(self.wiki_root(), pool, 2)
+        pool = self.way_fork(slug, pool)
         chosen, closed = pick_three(pool)
+        closed = closed + silent
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             rec.update(round=2, waiting=[c for c, _b, _k in chosen], second=[], again=[], defaults=rec.get("defaults", []) + settled + [self._closed(c, 2) for c, _b, _k in closed],
-                       done=not chosen and not passed, passing=passed)
+                       done=not chosen and not passed, passing=passed, decided=[*(rec.get("decided") or []), *self.way_decided(slug, silent, 2)])
             rec["keys"] = {**rec.get("keys", {}), **{c["id"]: k for c, _b, k in chosen + closed if k}}
             held = self._held(rec, idea_say.holding(self.state_dir, slug, rec)) if not chosen else bool(idea_objections.pending(rec))
             idea_questions.save_record(self.state_dir, slug, rec)

@@ -77,14 +77,14 @@ def track(h, slug):
     return next(t for t in ideas.tracks(h.root, make=False) if t["slug"] == slug)
 
 
-# -- §3: a party's size is its Target ------------------------------------------------------------------------------------------------
+# -- §3: a party's size is no Target of its own (spec 168 H4, decisions §283.33) ------------------------------------------------------------------------------------------------
 
-def test_a_sizes_target_else_the_setting():
-    assert [idea_target.target_for({"target": "quality"}, {"size": s}) for s in ("lean", "standard", "full")] == ["thrift", "balance", "quality"]
+def test_a_size_is_no_target_the_setting_is_the_partys_target_old_pages_with_a_size_read_so():
+    assert [idea_target.target_for({"target": "quality"}, {"size": s}) for s in ("lean", "standard", "full")] == ["quality"] * 3
     assert idea_target.target_for({"target": "quality"}, {"size": ""}) == "quality"             # a party made before has no size
     assert idea_target.target_for({"target": "thrift"}, None) == "thrift" and idea_target.target_for({"target": "x"}, {}) == idea_target.DEFAULT
-    assert idea_target.target_for({"target": "thrift"}, "full") == "quality" and idea_target.target_for({"target": "thrift"}, "huge") == "thrift"
-    assert idea_target.target_for(None, {"size": "lean"}) == "thrift" and idea_target.target_of({"target": "quality"}) == "quality"
+    assert idea_target.target_for({"target": "thrift"}, "full") == "thrift" and idea_target.target_for({"target": "thrift"}, "huge") == "thrift"
+    assert idea_target.target_for(None, {"size": "lean"}) == idea_target.DEFAULT and idea_target.target_of({"target": "quality"}) == "quality"
     assert idea_target.SIZES == ("lean", "standard", "full")
 
 
@@ -147,14 +147,12 @@ def test_a_goals_draft_plan_and_task_pick_their_partys_tier_not_the_settings(hos
         picked[name + "_party"] = (keeper.target(), keeper.pick("goal"))
     keeper._tls.key = keeper._tls.slug = ""
     assert keeper.target() == "balance" and picked["old"][0] == "balance"
-    assert picked["lean"][0] == "thrift" and picked["lean"][1][1] == "low"
-    assert picked["full"][0] == "quality" and picked["full"][1][1] == "high"
-    assert picked["old"][1][1] == "medium"
-    assert picked["lean_party"][0] == "thrift" and picked["lean_party"][1] == idea_target.pick("goal", "thrift")   # (spec 152 A.1: the Lean leader is Veteran, its own: the step's own pick)
-    assert picked["full_party"][1][1] == "xhigh"
-    # the budget of a call follows the party's Target too
+    assert [picked[n][0] for n in ("lean", "full", "old")] == ["balance"] * 3                  # the size is no Target: every party works at *How deep*
+    assert picked["lean"][1:] == picked["full"][1:] == picked["old"][1:] and picked["lean"][1][1] == "medium"
+    assert picked["lean_party"] == picked["full_party"] == ("balance", idea_target.pick("goal", "balance"))
+    h.command("ideas.board_set", {"target": "quality"})
     keeper._tls.key = keeper._tls.slug = ideas.add_idea(h.root, "Another in lean", lean, h.state)
-    assert idea_target.budget("draft", keeper.target()) == idea_target.budget("draft", "thrift") < idea_target.budget("draft", "quality")
+    assert keeper.target() == "quality" and keeper.pick("draft")[1] == "high"
 
 
 def test_the_runner_runs_a_task_on_its_partys_target_and_on_the_setting_for_a_party_with_none(host):
@@ -166,11 +164,10 @@ def test_the_runner_runs_a_task_on_its_partys_target_and_on_the_setting_for_a_pa
     task = {"id": "t1", "tier": "warrior", "kind": "code", "role": "grunt"}
     got = {n: runner.ran_on(task, s) for n, s in ideas_of.items()}
     # the Target gives the effort; the party's size gives its seats' tiers (spec 81 §2: Seasoned all through for Lean and for Full's builders)
-    assert got["lean"] == idea_target.task_pick("warrior", "thrift", "warrior") == ("warrior", "low")
-    assert got["full"] == idea_target.task_pick("warrior", "quality", "warrior") and got["full"][1] == "high"
+    assert got["lean"] == got["full"] == idea_target.task_pick("warrior", "balance", "warrior") == ("warrior", "medium")      # the size gives the seats' tiers, never a Target
     assert got["old"] == idea_target.task_pick("warrior", "balance", "") == runner.ran_on(task)
     h.command("ideas.board_set", {"target": "quality"})
-    assert runner.ran_on(task, ideas_of["old"]) == ("elder", "high") and runner.ran_on(task, ideas_of["lean"]) == ("warrior", "low")
+    assert runner.ran_on(task, ideas_of["old"]) == ("elder", "high") and runner.ran_on(task, ideas_of["lean"]) == ("warrior", "high")
 
 
 def test_a_plans_heads_and_the_map_wear_the_partys_tier(host):
@@ -211,7 +208,7 @@ def test_a_mobile_folder_is_proposed_three_parties_each_in_three_sizes_with_pric
     assert list(first["sizes"]) == ["lean", "standard", "full"]
     for p in got["proposals"]:
         lean, std, full = (p["sizes"][s] for s in ("lean", "standard", "full"))
-        assert [x["target"] for x in (lean, std, full)] == ["thrift", "balance", "quality"]
+        assert [x["target"] for x in (lean, std, full)] == ["balance"] * 3                              # a size is no Target: the setting's
         assert set(lean) == {"leader", "team", "agents", "target", "price", "heads", "tiers"}
         assert set(lean["price"]) == {"low", "high"} and all(isinstance(v, float) for v in lean["price"].values())
         assert lean["price"]["high"] <= std["price"]["high"] <= full["price"]["high"] and lean["price"]["low"] <= std["price"]["low"] <= full["price"]["low"]
