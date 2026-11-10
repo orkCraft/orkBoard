@@ -30,7 +30,7 @@
 @media (max-width: 759.98px) {
   .table-end { right: var(--ork-4); gap: var(--ork-2); }
   :is(.table-end, .release-lane) .hand-back__ready { padding: var(--ork-3) var(--ork-5); gap: var(--ork-1); }          /* the art's window is 12 px in from each side of the 80 px card: the words wrap inside it (spec 149 G.5, decisions §250.7) */
-  :is(.table-end, .release-lane) .hand-back__ready .cap { font-size: 10px; line-height: 12px; }
+  :is(.table-end, .release-lane) .hand-back__ready .cap { font-size: 12px; line-height: 12px; }
   .table-body[data-end="side"]:has(> .table-end) { padding-bottom: var(--table-end-h); }
   .table-body[data-end="over"] > .table-end { display: none; }
 }

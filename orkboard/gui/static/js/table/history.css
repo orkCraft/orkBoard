@@ -12,7 +12,7 @@
 .hist-day { flex: none; box-sizing: border-box; width: 96px; display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-1); }
 .hist-day__nm { font: var(--ork-type-body); font-weight: 600; color: var(--ork-ink); }
 .hist-day__yr { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
-.hist-plate { font-size: 11px; }
+.hist-plate { font-size: 12px; }
 .hist-cards { flex: 1; min-width: 0; display: grid; margin: 0; padding: 0 0 0 0; list-style: none; }
 .hist-card { position: relative; width: 56px; height: 78px; transition: opacity 0.15s linear; }
 .hist-card:hover, .hist-card:focus-within { z-index: 2; }

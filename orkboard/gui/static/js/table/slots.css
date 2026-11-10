@@ -5,7 +5,7 @@
 .slots-empty { margin: 0; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
 .slots { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-3) var(--ork-4); }
 .slot { margin: 0; display: grid; justify-items: center; gap: var(--ork-2); }
-.slot-label { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 144px; height: 40px; overflow: hidden; font: var(--ork-type-heading); font-size: 11px; line-height: 14px; text-align: center; white-space: normal; }      /* two lines at most, so every card of the row lies on one line */
+.slot-label { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 144px; height: 40px; overflow: hidden; font: var(--ork-type-heading); font-size: 12px; line-height: 14px; text-align: center; white-space: normal; }      /* two lines at most, so every card of the row lies on one line */
 
 /* a slot's card: the pips and the coin on top, its picture, its way's name, what it does, *as set* at its foot */
 .slot-card.ork-card { box-sizing: border-box; position: relative; display: flex; flex-direction: column; gap: var(--ork-2); width: 144px; height: 202px; padding: var(--ork-3); text-align: left; cursor: pointer; color: var(--ork-ink);

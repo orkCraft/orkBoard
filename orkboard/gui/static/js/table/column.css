@@ -23,7 +23,7 @@
 .col-plab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--ork-2); min-width: 0; padding-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
 .col-plab__t { flex: none; white-space: nowrap; }
 /* under a pile's title: the goal it is busy with (*reading: …*), or the next to start and when (*next in 2 min: …*), in one line of the caption (its whole words in its title): the fan and the deck keep their heights, so a short window gives the room to At work */
-.col-under { min-width: 0; max-width: 156px; padding-left: var(--ork-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); font-size: 11px; line-height: 14px; text-transform: none; letter-spacing: 0; color: var(--ork-ink-muted); }
+.col-under { min-width: 0; max-width: 156px; padding-left: var(--ork-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); font-size: 12px; line-height: 14px; text-transform: none; letter-spacing: 0; color: var(--ork-ink-muted); }
 .col-under:empty { display: none; }
 .col-under b { color: var(--ork-ink); font-weight: 600; }
 .col-under.is-asks { color: var(--ork-alert); }
@@ -73,7 +73,7 @@
 .col-card--spec .table-back-sigil.ork-sigil.col-spec__ring { top: 50%; left: calc(var(--column-tuck) + (78px - var(--column-tuck)) / 2); right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.46); transform-origin: 50% 50%; color: var(--ork-ink-faint); }      /* the 112 px ring at 52 px, in the part that shows */
 .col-card--spec .table-back-sigil > .ork-sigil__seal { display: none; }
 .col-spec__rune { position: absolute; z-index: 1; top: 50%; left: calc(var(--column-tuck) + (78px - var(--column-tuck)) / 2); transform: translate(-50%, -50%); display: grid; place-items: center; color: var(--ork-ink-faint); pointer-events: none; }
-.col-spec__proposed { position: absolute; z-index: 2; left: 50%; bottom: var(--ork-1); transform: translateX(-50%); padding: 0 var(--ork-1); font: var(--ork-type-caption); font-size: 9px; line-height: 12px; color: var(--ork-ink-read); background: var(--ork-surface, transparent); pointer-events: none; }      /* a night's proposal waiting for Take or Drop (spec 168 H3): the word on its back, with the goal's rune above it */
+.col-spec__proposed { position: absolute; z-index: 2; left: 50%; bottom: var(--ork-1); transform: translateX(-50%); padding: 0 var(--ork-1); font: var(--ork-type-caption); font-size: 12px; line-height: 12px; color: var(--ork-ink-read); background: var(--ork-surface, transparent); pointer-events: none; }      /* a night's proposal waiting for Take or Drop (spec 168 H3): the word on its back, with the goal's rune above it */
 .col-pile.is-specs:is(:hover, :focus-within) .col-card--spec.ork-card { top: calc(var(--i) * 22px); transition: top var(--ork-motion-base) var(--ork-motion-ease), transform var(--ork-motion-base) var(--ork-motion-ease); }
 .col-card--spec.ork-card.ork-picked { transform: translateX(var(--column-tuck)); }
 @media (prefers-reduced-motion: reduce) { .col-pile.is-specs:is(:hover, :focus-within) .col-card--spec.ork-card { transition: none; } }
@@ -88,7 +88,7 @@
 .col-nm { flex: none; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; line-height: 20px; }      /* the name in up to three lines of 20 px (spec 150 C, decisions §254.2) (giveWay's rim falls between them) */
 .col-foot { flex: none; margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
 .col-foot .corner--foot { margin-top: 0; }
-.col-now { display: flex; align-items: flex-start; gap: var(--ork-1); min-height: 28px; color: var(--ork-ink-read); font: var(--ork-type-caption); font-size: 11px; line-height: 14px; }
+.col-now { display: flex; align-items: flex-start; gap: var(--ork-1); min-height: 28px; color: var(--ork-ink-read); font: var(--ork-type-caption); font-size: 12px; line-height: 14px; }
 .col-now .ork-sign { flex: none; margin-top: 1px; }
 .col-now__t { min-width: 0; flex: 1 1 auto; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
 .col-now[data-asked] { color: var(--ork-ink-faint); }
@@ -128,7 +128,7 @@
 .col-pass__q { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; line-clamp: 6; overflow: hidden; overflow-wrap: anywhere; }
 .col-pass.is-open { overflow-y: auto; }
 .col-pass.is-open .col-pass__q { display: block; -webkit-line-clamp: unset; line-clamp: unset; }
-.col-pass__left { color: var(--ork-ink-faint); font-size: 11px; white-space: nowrap; }
+.col-pass__left { color: var(--ork-ink-faint); font-size: 12px; white-space: nowrap; }
 .col-pass__acts { display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-1); padding: 0 var(--ork-2) var(--ork-2); }
 .col-pass__acts .ork-btn { white-space: normal; }
 

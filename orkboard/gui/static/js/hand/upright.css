@@ -20,10 +20,10 @@
 .up-pot.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
 .up-pot:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .up-pot .ork-mark, .up-pot .hand-pot__initial { position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; }
-.up-pot .hand-pot__initial { font-size: 11px; line-height: 12px; }
+.up-pot .hand-pot__initial { font-size: 12px; line-height: 12px; }
 .up-pot__slot { display: flex; flex: none; align-items: flex-end; justify-content: center; width: 28px; height: 36px; }                      /* the large bottle's box at 2 px a cell (14 x 18 cells): every bottle stands on its floor in it */
 .up-pot--paid .up-pot__slot .ork-icon { width: 24px; height: 24px; margin-bottom: var(--ork-1); color: var(--ork-ink-muted); }
-.up-pot__share { color: var(--ork-ink); font: var(--ork-type-caption); font-size: 11px; line-height: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.up-pot__share { color: var(--ork-ink); font: var(--ork-type-caption); font-size: 12px; line-height: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .up-pot.is-warn .up-pot__share { color: var(--ork-alert); }
 .up-pot.is-danger .up-pot__share { color: var(--ork-danger); }
 .up-pot.is-unread .up-pot__share, .up-pot--more .up-pot__initial { color: var(--ork-ink-muted); }
@@ -118,12 +118,12 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 button.ork-card.up-card { position: relative; flex: none; box-sizing: border-box; width: 80px; height: 112px; padding: var(--ork-1) var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-1); overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .up-card > .corner { flex: none; height: 16px; }
 .up-card > .corner--foot { margin-top: auto; }
-.up-card__name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; height: 36px; font: var(--ork-type-caption); font-size: 11px; line-height: 18px; font-weight: 600; }
+.up-card__name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; height: 36px; font: var(--ork-type-caption); font-size: 12px; line-height: 18px; font-weight: 600; }
 .up-card__why { flex: none; box-sizing: border-box; padding-top: var(--ork-1); border-top: var(--ork-line) dashed var(--ork-card-frame); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
-  font: var(--ork-type-caption); font-size: 10px; line-height: 12px; color: var(--ork-ink-read); }
+  font: var(--ork-type-caption); font-size: 12px; line-height: 12px; color: var(--ork-ink-read); }
 .up-card__why:empty { display: none; }
-.up-card .corner__much, .up-card .corner__who { font-size: 10px; }
-.up-card .corner__much .ork-gem { height: 16px; font-size: 10px; padding: 0 var(--ork-1); }
+.up-card .corner__much, .up-card .corner__who { font-size: 12px; }
+.up-card .corner__much .ork-gem { height: 16px; font-size: 12px; padding: 0 var(--ork-1); }
 .up-card:is(:active, :focus-visible) { transform: translateY(calc(var(--up-rise) * -1)); z-index: 5; box-shadow: 0 var(--ork-1) 0 var(--ork-scrim); }      /* pressed: it rises by what the row cuts and shows the rest */
 .up-card.is-picked { transform: translateY(calc(var(--ork-1) * -3)); border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
 .up-card.is-picked:is(:active, :focus-visible) { transform: translateY(calc(var(--up-rise) * -1)); }

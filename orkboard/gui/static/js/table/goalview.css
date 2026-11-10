@@ -53,7 +53,7 @@
 .gv-ph b { display: block; height: 12px; background: var(--c); opacity: 0.7; }
 .gv-ph.is-will { border-color: var(--c); }
 .gv-ph.is-none { padding: 0; }
-.gv-ph em { margin: auto; font-style: normal; font-size: 11px; color: var(--ork-ink-faint); text-align: center; }
+.gv-ph em { margin: auto; font-style: normal; font-size: 12px; color: var(--ork-ink-faint); text-align: center; }
 .gv-ph:has(img) { padding: 0; }
 .gv-sec { display: flex; flex-direction: column; gap: var(--ork-2); }
 .gv-sec h3 { margin: var(--ork-3) 0 0; }

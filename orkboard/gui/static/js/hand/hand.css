@@ -304,7 +304,7 @@
 .hand-tool__stack { display: flex; flex-direction: column; gap: var(--ork-2); }
 .hand-tool__muted { color: var(--ork-ink-muted); }
 .hand-tool__rule { padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
-.ork-btn.hand-tool__small { min-height: 28px; padding: 0 var(--ork-3); font-size: 11px; }
+.ork-btn.hand-tool__small { min-height: 28px; padding: 0 var(--ork-3); font-size: 12px; }
 .ork-btn.hand-tool__link { align-self: flex-start; }
 .hand-tool__risk { display: flex; align-items: flex-start; gap: var(--ork-2); color: var(--ork-alert); }
 .hand-tool__head { display: flex; align-items: flex-end; gap: var(--ork-4); min-width: 0; }

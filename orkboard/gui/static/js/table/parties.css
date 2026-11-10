@@ -63,7 +63,7 @@
 .pc-tier { appearance: none; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); margin: 0; padding: var(--ork-2) 0 var(--ork-1); border: var(--ork-line) solid var(--ork-frame); background: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); cursor: pointer; }
 .pc-tier.is-on { border: 2px solid var(--ork-ink); color: var(--ork-ink); background: var(--ork-panel); clip-path: var(--ork-notch); }
 .pc-tier:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.pc-tier small { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--ork-ink-muted); }
+.pc-tier small { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--ork-ink-muted); }
 .pc-seat__acts { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--ork-3); }
 .parties__facts { display: flex; flex-direction: column; gap: var(--ork-2); }
 .parties__facts ul { display: flex; flex-direction: column; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; }

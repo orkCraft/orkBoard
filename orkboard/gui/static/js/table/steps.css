@@ -28,7 +28,7 @@
 .table-steps__item.is-now, .table-steps__line.is-now { color: var(--ork-ink); }
 .table-steps__item.is-now .table-steps__mark { align-self: center; height: var(--ork-3); background: var(--ork-ink); }
 .table-steps__item.is-next { color: var(--ork-ink-faint); }
-.table-steps__src { color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 11px; }
+.table-steps__src { color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 12px; }
 
 /* -- the Orkmaster's column: a card of a goal at work says its tasks done of all in its line of what it does now (spec 129 H2.3, spec 147 B.4) ---------------------------------------------------------------------------------- */
 .col-now > .col-count { flex: none; margin-left: auto; color: var(--ork-ink-muted); white-space: nowrap; }
