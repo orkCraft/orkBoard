@@ -73,6 +73,7 @@
 .col-card--spec .table-back-sigil.ork-sigil.col-spec__ring { top: 50%; left: calc(var(--column-tuck) + (78px - var(--column-tuck)) / 2); right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.46); transform-origin: 50% 50%; color: var(--ork-ink-faint); }      /* the 112 px ring at 52 px, in the part that shows */
 .col-card--spec .table-back-sigil > .ork-sigil__seal { display: none; }
 .col-spec__rune { position: absolute; z-index: 1; top: 50%; left: calc(var(--column-tuck) + (78px - var(--column-tuck)) / 2); transform: translate(-50%, -50%); display: grid; place-items: center; color: var(--ork-ink-faint); pointer-events: none; }
+.col-spec__proposed { position: absolute; z-index: 2; left: 50%; bottom: var(--ork-1); transform: translateX(-50%); padding: 0 var(--ork-1); font: var(--ork-type-caption); font-size: 9px; line-height: 12px; color: var(--ork-ink-read); background: var(--ork-surface, transparent); pointer-events: none; }      /* a night's proposal waiting for Take or Drop (spec 168 H3): the word on its back, with the goal's rune above it */
 .col-pile.is-specs:is(:hover, :focus-within) .col-card--spec.ork-card { top: calc(var(--i) * 22px); transition: top var(--ork-motion-base) var(--ork-motion-ease), transform var(--ork-motion-base) var(--ork-motion-ease); }
 .col-card--spec.ork-card.ork-picked { transform: translateX(var(--column-tuck)); }
 @media (prefers-reduced-motion: reduce) { .col-pile.is-specs:is(:hover, :focus-within) .col-card--spec.ork-card { transition: none; } }
