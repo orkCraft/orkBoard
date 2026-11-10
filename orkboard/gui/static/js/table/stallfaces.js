@@ -45,13 +45,13 @@ export function HeroFace({ w, fallback = null }) {
   </div>`;
 }
 
-const ICONS = { target: "sliders", look_wait: "clock", autostart: "play", push: "git-merge", tool: "robot" };
+const ICONS = { target: "sliders", look_wait: "clock", autostart: "play", build_start: "clock", review: "check", max_parallel: "list-box", push: "git-merge", tool: "robot", hero: "flag", tier: "sliders" };
 
 /** The mark of a small thing: a tier's head in its party's race, a tool's mark, the moon of the night, else the slot's icon. `id` the value (a ware's id, or what a card carries). */
 export function Mark({ slot, id, race }) {
   if (slot === "tier" && race && id) return html`<${Head} race=${race} tier=${id} />`;
   if (slot === "tool" && MARKED.includes(id)) return html`<img class="ork-mark" src=${markSrc(id)} srcset=${`${markSrc(id, true)} 2x`} alt="" draggable="false" />`;
-  if (slot === "work_at_night") return html`<${Sign} name="moon" />`;
+  if (slot === "work_at_night" || slot === "night") return html`<${Sign} name="moon" />`;
   return html`<${Icon} name=${ICONS[slot] || "sliders"} />`;
 }
 

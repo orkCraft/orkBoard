@@ -112,7 +112,12 @@ def test_an_idea_goes_from_the_phone_through_review_to_a_commit_on_dev(town):
     _until(host, lambda: state(slug) == "done", "the idea is done", seconds=120)
     task = ideas.plan(host.ideas.state_dir, slug)["tasks"][0]
     assert task["state"] == "merged" and task["commit"] == commit
-    assert _git(repo, "rev-parse", "dev") == commit and _git(repo, "log", "-1", "--format=%s", "dev") == "Add the feature"
+    from orkboard.realm import goal_branch                                                           # spec 168 F1 (decisions §283.26): the task landed on the goal's own branch
+    if goal_branch.waits_for_dev(host.ideas.state_dir, slug):                                           # … and, Lands in dev by itself off, the goal waits there for the person's To dev
+        host.command("ideas.goal_to_dev", {"idea": slug})
+    _until(host, lambda: subprocess.run(["git", "merge-base", "--is-ancestor", commit, "dev"], cwd=str(repo), capture_output=True).returncode == 0,
+           "the goal goes into dev once", seconds=120)
+    assert _git(repo, "log", "-1", "--format=%s", commit) == "Add the feature" and (repo / ".git").exists()
     assert _git(repo, "rev-parse", "main") == main and not (repo / "feature.txt").exists()      # main and its files untouched
     assert subprocess.run(["git", "rev-parse", "--verify", "dev"], cwd=str(origin), capture_output=True).returncode != 0   # not pushed
     assert _git(origin, "rev-parse", "main") == pushed

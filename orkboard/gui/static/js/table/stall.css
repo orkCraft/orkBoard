@@ -24,15 +24,6 @@
 .stall-merchant__name { font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink); }
 .stall-merchant__role { font: var(--ork-type-caption); font-size: 10.5px; color: var(--ork-ink-faint); text-align: center; line-height: 13px; }
 
-/* the service at his feet: back to default, free */
-.stall-service { margin-top: var(--ork-4); display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); cursor: pointer; background: none; border: 0; padding: 0; color: inherit; font: inherit; }
-.stall-service__card { box-sizing: border-box; width: 108px; min-height: 126px; display: grid; place-items: center; padding: var(--ork-2); text-align: center; border: 2px dashed var(--ork-frame); font: var(--ork-type-caption); font-size: 10.5px; line-height: 13px; color: var(--ork-ink-faint);
-  transition: border-color var(--ork-motion-quick), transform var(--ork-motion-base) var(--ork-motion-ease); }
-.stall-service__card b { display: block; margin-bottom: var(--ork-1); font-family: var(--ork-font-pixel); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink-muted); }
-.stall-service:hover .stall-service__card, .stall-service:focus-visible .stall-service__card, .stall-service.is-over .stall-service__card { border-color: var(--ork-edge); transform: translateY(-4px); }
-.stall-service.is-over .stall-service__card { border-color: var(--ork-danger); }
-.stall-service.is-can .stall-service__card { border-color: var(--ork-edge); color: var(--ork-ink-muted); }
-.stall-service:focus-visible { outline: 0; }
 
 /* the rug: a stitched mat with the weave faint under the wares */
 .stall-rug { position: relative; isolation: isolate; min-width: 0; padding: var(--ork-4) var(--ork-6) var(--ork-3); background: color-mix(in srgb, var(--ork-panel) 88%, transparent); border: 2px solid var(--ork-frame);
@@ -89,16 +80,13 @@
 .stall-lock { display: inline-block; width: 10px; height: 12px; flex: none; margin-right: 1px; vertical-align: -1px; shape-rendering: crispEdges; }
 .stall-lock__body { fill: var(--ork-ink-muted); } .stall-lock__hole { fill: var(--ork-card); }
 
-/* the receipt under the table, and the clone that flies into the hand */
+/* the receipt under the table */
 .stall-receipt { grid-column: 1 / -1; min-height: 20px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.stall-flying { position: fixed; z-index: 100; pointer-events: none; margin: 0; }
 
-/* the discard takes a card dropped on it while the inventory is open */
-.release-lane.is-over, .table-end.is-over { outline: 2px dashed var(--ork-danger); outline-offset: -4px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .stall-face, .stall-service__card { transition: none; }
-  .stall-ware:not(.is-mine):not(.is-locked):hover .stall-face, .stall-ware:not(.is-mine):not(.is-locked):focus-within .stall-face, .stall-service:hover .stall-service__card, .stall-service.is-over .stall-service__card { transform: none; }
+  .stall-face { transition: none; }
+  .stall-ware:not(.is-mine):not(.is-locked):hover .stall-face, .stall-ware:not(.is-mine):not(.is-locked):focus-within .stall-face { transform: none; }
 }
 
 /* the leather's straps and buckles lie over the pane's top 40 px (orkUI `.ork-leather::after`): the head with the title starts below them, on the phone and the desktop alike (spec 161 K, decisions §272.1) */

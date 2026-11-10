@@ -43,13 +43,15 @@ from pathlib import Path
 
 from orkboard import autonomy as autonomy_
 from orkboard.env import getenv
-from orkboard.realm import harnesses, hours
+from orkboard.realm import harnesses, hours, look_wait
+from orkboard.settings_ways import (PUSH_WAYS, NIGHT_RUNGS, push_way, clean_push_way, pushes_dev, pushes_main,  # noqa: F401  (said from here as before)
+                                    clean_night_leaders, night_rung, night_leaders, night_values)
+from orkboard.settings_clean import (PROFILE_TEXT, PROFILE_LISTS, KEEP_AWAKE, PUSH_KEY, awake_mode, clean_dnd,  # noqa: F401
+                                     clean_phones, clean_push, clean_growth, clean_profile)
 from orkboard.schedule import Span
 
 TOOLS = harnesses.ids()
 BILLINGS = ("subscription", "api")
-PROFILE_TEXT = ("orchestration", "role", "role_other", "industry", "industry_other", "day_other", "kin")
-PROFILE_LISTS = ("day", "mcp")   # mcp: the MCP servers the orks may use (gui/onboarding.py)
 UPDATES = ("auto", "critical", "ask")   # core/updates.py POLICIES
 # Fix it (spec 119 §2.4, core/repair.py): the command that starts Claude Code's Remote Control on Orkboard's own code.
 REPAIR_COMMAND = ("claude", "remote-control", "--name", "Fix Orkboard", "--permission-mode", "auto")
@@ -57,7 +59,6 @@ LOOKS = ("camp", "office", "shift")
 # When the computer is kept from sleeping (Orkboard's gui/keep_awake.py, Orkline's gui/away.py): never, while carts are
 # in work, or also while a phone is
 # paired, so it can reach the town all day (decisions-2026-10 §18). Both only on power.
-KEEP_AWAKE = ("off", "carts", "phone")
 # "shift": Office while the work day lasts, Camp the rest of the day (docs/design/portrait.md §3) — the default.
 SHIFT = (9 * 60, 17 * 60)                # the work day, in minutes from midnight: 09:00–17:00
 
@@ -97,30 +98,6 @@ IDEAS = {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1, "merge_into":
          "look_wait": LOOK_WAIT_DEFAULT,   # spec 144 A: how long a spec made waits for the person's look before its plan is passed by itself (realm/look_wait.py)
          "hours": [], "presence": None}   # spec 138 B.1, spec 139 C.1: the person's hours (realm/hours.py) and the door's hold
 IDEA_TARGETS = ("thrift", "balance", "quality")
-PUSH_WAYS = ("no", "main", "both")        # spec 168 F3 (decisions §283.31): *no*, *main only*, *dev and main*. Stored as a boolean where it can be: False = no, True = both (what the old boolean pushed: dev after a landing, main after To main), "main" = main only
-
-
-def push_way(value: object) -> str:
-    """The way the project pushes: "no", "main" or "both". The old boolean reads as it always did (True = dev and main, False = no); anything else is no."""
-    if value is True or value == "both":
-        return "both"
-    return "main" if value == "main" else "no"
-
-
-def clean_push_way(value: object) -> object:
-    """A push value as it is kept: False, True or "main"; None for a value that is none of the three ways (a boolean, "no", "main", "both")."""
-    if isinstance(value, bool):
-        return value
-    return {"no": False, "both": True, "main": "main"}.get(value) if isinstance(value, str) else None
-
-
-def pushes_dev(value: object) -> bool:
-    return push_way(value) == "both"
-
-
-def pushes_main(value: object) -> bool:
-    return push_way(value) in ("main", "both")
-NIGHT_RUNGS = ("off", "ideas", "builds", "proposals")      # spec 168 H3 (decisions §283.32): the night is a ladder, each rung doing what the one below does
 LOOK_WAITS = ("30m", "2h", "tonight", "none")           # spec 144 A.1: *Give me time to look*
 NIGHT = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$")
 FOCUSES = ("", "board")
@@ -326,6 +303,8 @@ def clean_ideas(raw: object) -> dict:
         out["night_leaders"] = picked
     if raw.get("look_wait") in LOOK_WAITS:          # an unknown value reads as the default, 2 h (spec 144 A.1)
         out["look_wait"] = raw["look_wait"]
+    if raw.get("build_start") in look_wait.BUILD_STARTS:     # spec 168 H2: *The build starts* as one value, read when a file says it; the two keys stay the ones kept (Orkline reads them)
+        out.update(look_wait.build_start_keys(raw["build_start"], out["look_wait"]))
     if isinstance(raw.get("night_low"), bool):       # spec 83: Low work may run at night; None = not asked yet
         out["night_low"] = raw["night_low"]
     night = raw.get("night")
@@ -453,95 +432,6 @@ def save_board(repo_root: Path, values: dict) -> dict:
     return data
 
 
-def awake_mode(raw: object) -> str:
-    """One of KEEP_AWAKE; the old true / false (and nothing) read as "carts" / "off", as they behaved."""
-    if raw in KEEP_AWAKE:
-        return str(raw)
-    return "off" if raw is False else "carts"
-
-
-def clean_dnd(raw: object) -> str:
-    """Do not disturb as stored: "on", an ISO time it ends at, else "" (off)."""
-    if raw == "on":
-        return "on"
-    if isinstance(raw, str) and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d)?", raw):
-        return raw
-    return ""
-
-
-def clean_phones(raw: object) -> list[dict]:
-    """The paired phones that are whole: an id, a name, a token's hash; anything else is dropped (a phone
-    whose entry broke pairs again)."""
-    out: list[dict] = []
-    for p in raw if isinstance(raw, list) else []:
-        if not isinstance(p, dict):
-            continue
-        pid, name, digest = p.get("id"), p.get("name"), p.get("hash")
-        if not (isinstance(pid, str) and re.fullmatch(r"[0-9a-f]{16}", pid) and isinstance(digest, str)
-                and re.fullmatch(r"[0-9a-f]{64}", digest) and isinstance(name, str) and name.strip()):
-            continue
-        if any(o["id"] == pid for o in out):
-            continue
-        entry = {"id": pid, "name": name.strip()[:60], "hash": digest,
-                 "paired": str(p.get("paired") or "")[:32], "seen": str(p.get("seen") or "")[:32]}
-        if (push := clean_push(p.get("push"))) is not None:
-            entry["push"] = push
-        out.append(entry)
-    return out
-
-
-PUSH_KEY = re.compile(r"[A-Za-z0-9_-]{1,200}")
-
-
-def clean_push(raw: object) -> dict | None:
-    """A phone's Web Push subscription (docs/specs/42-coming-back.md §3.3): its push service's endpoint, the two keys, when it
-    was made and the day the morning's push was sent; None for anything else (a bad one drops the whole subscription)."""
-    if not isinstance(raw, dict):
-        return None
-    endpoint, p256dh, auth = raw.get("endpoint"), raw.get("p256dh"), raw.get("auth")
-    morning = raw.get("morning") or ""
-    if not (isinstance(endpoint, str) and re.fullmatch(r"https://[^\s]{1,1016}", endpoint) and len(endpoint) <= 1024
-            and isinstance(p256dh, str) and PUSH_KEY.fullmatch(p256dh) and isinstance(auth, str) and PUSH_KEY.fullmatch(auth)
-            and isinstance(morning, str) and (not morning or re.fullmatch(r"\d{4}-\d\d-\d\d", morning))):
-        return None
-    return {"endpoint": endpoint, "p256dh": p256dh, "auth": auth, "at": str(raw.get("at") or "")[:32], "morning": morning}
-
-
-def clean_growth(raw: object) -> dict:
-    """The mascot's stage (1–4) and the deeds done with their dates; {} for anything else."""
-    if not isinstance(raw, dict):
-        return {}
-    out: dict = {}
-    if isinstance(raw.get("stage"), int) and 1 <= raw["stage"] <= 4:
-        out["stage"] = raw["stage"]
-    deeds = raw.get("deeds")
-    if isinstance(deeds, dict):
-        out["deeds"] = {str(k)[:40]: str(v)[:20] for k, v in list(deeds.items())[:40] if isinstance(v, str)}
-    return out
-
-
-def clean_profile(raw: object) -> dict:
-    """Only the known keys, as strings and lists of strings; {} for anything else."""
-    if not isinstance(raw, dict):
-        return {}
-    out: dict = {k: str(raw[k])[:200] for k in PROFILE_TEXT if isinstance(raw.get(k), str) and raw[k].strip()}
-    for k in PROFILE_LISTS:
-        if isinstance(raw.get(k), list):
-            out[k] = [str(x)[:40] for x in raw[k] if isinstance(x, str)][:20]
-    tools_ = raw.get("ai_tools")
-    if isinstance(tools_, dict):
-        rated = {}
-        for t, r in list(tools_.items())[:20]:
-            if not isinstance(r, dict):
-                continue
-            keep: dict = {k: bool(r.get(k)) for k in ("like", "dislike")}
-            keep.update({k: str(r[k])[:40] for k in ("title", "good", "weak") if isinstance(r.get(k), str) and r[k]})
-            rated[str(t)[:40]] = keep
-        if rated:
-            out["ai_tools"] = rated
-    return out
-
-
 def path() -> Path:
     """`$ORKCRAFT_SETTINGS_FILE`, else `$XDG_CONFIG_HOME/orkcraft/settings.json`."""
     env = getenv("SETTINGS_FILE")
@@ -652,47 +542,3 @@ def save_phones(phones: list[dict], port: int, file: Path | None = None) -> None
     _write(file, raw)
 
 
-# -- the night's ladder (spec 168 H3, decisions §283.32) -----------------------------------------------------------------------------------------
-
-def clean_night_leaders(value: object) -> list[str] | None:
-    """The parties whose leaders the night asks for a proposal (slugs, at most 20, no repeats); None when `value` is no list."""
-    if not isinstance(value, list):
-        return None
-    out: list[str] = []
-    for v in value:
-        if isinstance(v, str) and re.fullmatch(r"[a-z0-9-]{1,100}", v.strip()) and v.strip() not in out:
-            out.append(v.strip())
-    return out[:20]
-
-
-def night_rung(settings: dict | None) -> str:
-    """The rung of the night's ladder: "off" | "ideas" | "builds" | "proposals". The old `work_at_night` is read as it always was: on means the builds
-    (at least); off takes the builds away (a stored "builds" or "proposals" with the old key off reads "ideas": the person turned the builds off by
-    the old key). With neither key set the night is off."""
-    s = settings or {}
-    rung = s.get("night_rung") if s.get("night_rung") in NIGHT_RUNGS else "off"
-    old = s.get("work_at_night") is True
-    if old and rung in ("off", "ideas"):
-        return "builds"
-    if not old and rung in ("builds", "proposals"):
-        return "ideas"
-    return rung
-
-
-def night_leaders(settings: dict | None) -> list[str]:
-    """The parties whose leaders the night asks for a proposal; only the rung "proposals" asks them."""
-    got = clean_night_leaders((settings or {}).get("night_leaders"))
-    return got if got and night_rung(settings) == "proposals" else []
-
-
-def night_values(rung: str, leaders: object = None) -> dict:
-    """The settings one choice of the ladder writes: the rung, the leaders picked, and the old `work_at_night` kept in step (true from "builds" up)."""
-    if rung not in NIGHT_RUNGS:
-        raise ValueError("The night is off, ideas and specs, and the builds, or and the leaders' proposals")
-    out: dict = {"night_rung": rung, "work_at_night": rung in ("builds", "proposals")}
-    if leaders is not None:
-        picked = clean_night_leaders(leaders)
-        if picked is None:
-            raise ValueError("The leaders picked are a list of parties")
-        out["night_leaders"] = picked
-    return out

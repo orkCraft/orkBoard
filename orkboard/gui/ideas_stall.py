@@ -1,11 +1,14 @@
 """The stall's host (docs/specs/157-the-inventory-a-merchants-stall.md §C; decisions §266.2, §267.1): what a chair of the Board carries, what it could take, and the takes.
 
-    ideas.stall {chair}                  # {chair, whose, say, shelves: [{id, label, sub, kind, slot, wares: [{id, word, line, head?, stats?, price, before}]}], hand: [{slot, label, word, line, head?, yours, fixed}]}
+    ideas.stall {chair}                  # {chair, whose, say, shelves: [{id, label, sub, kind, slot, at, cheaper, wares: [{id, word, line, head?, stats?, price, before, default?, star?}]}], hand: [{slot, label, word, line, head?, yours, fixed}]}
     ideas.stall_take {chair, slot, value}   # {stall, undo: {slot, value}}: the slot written through its own writer, `changed` published
     ideas.stall_back {chair, slot}          # the same, the slot's default written (the setting's, the craft's default hero, the potions' order, the recipe's tier)
     ideas.hero_table {party}                # `hero_table.read` and the hero's `layout`, and `elements` {goal slug: element} of the goals its cards name
 
-The chair `""` is the Orkmaster's (the project's settings), a party's slug its leader's, Release's party its locked chair. `kind` is `heroes` (the top shelf) or `small`.
+The chair `""` is the Orkmaster's (the project's settings), a party's slug its leader's, Release's party its locked chair. `kind` is `heroes` or `small`; the page draws each shelf as a **slot** (spec 168 H1, decisions §283.30): the `hand`
+card of the slot is the way carried (its big card on the table), the shelf's `wares` are its ways, dealt to the hand when it is pressed. `at` is where the way carried lies among the ways (the pips), `cheaper` says a way of the slot is lighter than the one carried
+(the coin), `default` marks the way the slot's *Default* writes, `star` the Orkmaster's pick (a choice, never a price). The Orkmaster's slots (spec 168 H2, decisions §283.31): `target` (How deep), `build_start` (The build starts: `autostart` and `look_wait` as one,
+realm/look_wait.py), `night` (The night: realm/night_slot.py, the one place the ladder's engine plugs in), `review` (Lands in dev by itself: on is `review` false), `push` (*no*, *main*, *both*: `settings.push_way`) and `max_parallel` (Goals at once).
 `yours` in the hand is the id of the value carried ("" when the seats' own tiers differ). **A price is never made up**: `{mine: true}` for what is carried, `{locked: why}`,
 else a `{word}` (`lighter`, `heavier`, `one pass`, `same cost`); a `{share}` is sent only from an estimator that measures the first potion's week, and none does today, so none
 is sent. A tier's word is the difference of `party_price.price` at that tier and now; a setting that takes no model's work is `same cost`. `before` marks the value carried before
@@ -19,18 +22,25 @@ from typing import Any
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import craft_tools, goal_team, hero_table, heroes, ideas, lexicon, library, look_wait, map_parts, party_price, party_recipes
+from orkboard.realm import craft_tools, goal_team, hero_table, heroes, ideas, lexicon, library, look_wait, map_parts, night_slot, party_price, party_recipes
 
 ON_OFF = (("on", "On"), ("off", "Off"))
-TARGETS = (("thrift", "Thrift", "Cheaper models, fewer checks"), ("balance", "Balance", "The usual mix"), ("quality", "Quality", "Better models, more checks"))
+TARGETS = (("thrift", "Thrift", "Every step on the cheaper tier; a spec reads less"), ("balance", "Balance", "Each step on its usual tier"), ("quality", "Quality", "Specs and acceptances on the elder tier"))
 TIERS = (("laborer", "Laborer", "The lightest model of its tool"), ("warrior", "Warrior", "The middle model"), ("elder", "Elder", "The strongest model"))
+BUILD = tuple((v, look_wait.BUILD_LABELS[v], look_wait.BUILD_LINES[v]) for v in look_wait.BUILD_STARTS)
+LANDS = (("on", "On", "A green result goes into dev with no press"), ("off", "Off", "A green result waits in the discard for your press"))
+PUSHES = (("no", "No", "Nothing leaves this computer"), ("main", "Main only", "Main is pushed after To main; dev stays here"), ("both", "Dev and main", "Dev and main are pushed after each merge"))
+PARALLEL = ((1, "One", "One goal's work at a time"), (3, "Three", "Up to three goals' work side by side"), (8, "Eight", "Up to eight goals at once, while the limits hold"))
 ORKMASTER = (       # (slot, label, sub, [(value, word, line)])
-    ("target", "How deep", "How much the orks spend on a goal", TARGETS),
-    ("look_wait", "Give me time to look", "How long a spec waits for your look", tuple((c, look_wait.LABELS[c], look_wait.LINES[c]) for c in look_wait.CHOICES)),
-    ("autostart", "Starts by itself", "A safe plan starts without asking", tuple((v, w, "A safe plan starts by itself" if v == "on" else "Every plan waits for you") for v, w in ON_OFF)),
-    ("work_at_night", "Works at night", "Plans that would start by themselves wait for the night", tuple((v, w, "The orks work in the night's hours" if v == "on" else "The orks do not start work at night") for v, w in ON_OFF)),
-    ("push", "Push after merging", "Whether a merge into the work branch is pushed", tuple((v, w, "Results are pushed after they merge" if v == "on" else "Results stay on this computer") for v, w in ON_OFF)),
+    ("target", "How deep", "How much the orks spend on a goal; the leaders' tiers start from it", TARGETS),
+    ("build_start", "The build starts", "When a spec's plan starts by itself", BUILD),
+    ("night", "The night", "What runs in the night's window", tuple(night_slot.WAYS)),
+    ("review", "Lands in dev by itself", "Whether a green result goes into dev with no press", LANDS),
+    ("push", "Push", "What is pushed after a merge", PUSHES),
+    ("max_parallel", "Goals at once", "How many goals the orks work on side by side", tuple((str(n), w, l) for n, w, l in PARALLEL)),
 )
+# The Orkmaster's pick on each of its slots (decisions §283.30: starred in the hand): the way it recommends a project that has said nothing. A pick is a choice, never a price.
+PICKS = {"target": "balance", "build_start": "2h", "night": "ideas", "review": "on", "push": "main", "max_parallel": "1"}
 LABELS = {"hero": "Its hero", "tool": "Its AI tool", "tier": "Its seats' tier", "gate": "The gate"}
 LOCKED_HERO = "Release's hero is fixed"
 LOCKED_GATE = "The gate is set in orkcraft.toml"
@@ -59,9 +69,9 @@ class StallMixin:
     def _carried(self, chair: str, root: Path, slot: str) -> str:
         if not chair:
             s = self.settings_now()
-            return {"target": str(s.get("target") or settings.IDEAS["target"]), "look_wait": look_wait.clean(s.get("look_wait")),
-                    "autostart": _onoff(s.get("autostart", True)), "work_at_night": _onoff(s.get("work_at_night") is True),
-                    "push": _onoff(settings.push_way(s.get("push")) != "no")}[slot]
+            return {"target": str(s.get("target") or settings.IDEAS["target"]), "build_start": look_wait.build_start(s.get("autostart", True), s.get("look_wait")),
+                    "night": night_slot.way(s), "review": _onoff(not s.get("review")), "push": settings.push_way(s.get("push")),
+                    "max_parallel": str(s.get("max_parallel") or settings.IDEAS["max_parallel"])}[slot]
         if slot == "hero":
             h = goal_team.hero_of(root, chair)
             return h.id if h is not None else ""
@@ -86,19 +96,26 @@ class StallMixin:
     def _slot_values(self, chair: str, root: Path, slot: str) -> list[tuple[str, str, str]]:
         """`[(value, word, line)]` a slot can take."""
         if not chair:
-            return list(next(v for s, _l, _s, v in ORKMASTER if s == slot))
+            ways = list(next(v for s, _l, _s, v in ORKMASTER if s == slot))
+            if slot == "max_parallel":                  # a count the person wrote into the file by hand stays a way (the three are the ones offered)
+                now = self._carried(chair, root, slot)
+                if now not in [v for v, _w, _l in ways]:
+                    ways = sorted([*ways, (now, f"{now} goals", f"Up to {now} goals' work side by side")], key=lambda w: int(w[0]))
+            return ways
         if slot == "hero":
             return [(h.id, lexicon.term(f"hero.{h.id}"), h.flow) for h in heroes.of(map_parts.craft_of(root, chair))]
         if slot == "tool":
             return [("", "Main tool", "The potions' order: the first AI tool in your hand that has mana")] + [(i, n, "Runs this party's goals") for i, n in self._tool_ids()]
-        return list(TIERS)
+        return [("", "Default", "Each seat on the tier its recipe gives it"), *TIERS]
 
     # -- the price (never made up) -----------------------------------------------------------------------------
 
     def _tier_cost(self, root: Path, chair: str, tier: str | None) -> float:
         team = goal_team.team_of(root, chair)
         tiers = goal_team.tiers_of(root, chair)
-        if tier is not None:
+        if tier == "":                                  # the Default way: the recipe's tier for each seat
+            tiers = {**tiers, **{s: t for s, t in self._recipe_tiers(root, chair).items() if s in team}}
+        elif tier is not None:
             tiers = {**tiers, **{s: tier for s in team}}
         got = party_price.price(root, self.state_dir, self.board_settings(), goal_team.leader_of(root, chair), team, goal_team.every_of(root, chair),
                                 goal_team.size_of(root, chair) or None, tiers)
@@ -109,9 +126,9 @@ class StallMixin:
             return {"mine": True}
         if slot == "hero":
             return {"word": "one pass"}                 # a hero lays its table in one pass of its leader (spec 157 F)
-        if slot == "target":
-            order = [v for v, _w, _l in TARGETS]
-            d = order.index(value) - order.index(mine) if mine in order else 0
+        if slot in ("target", "night"):                 # a ladder: the way above the one carried does more, the way below less
+            order = [v for v, _w, _l in (TARGETS if slot == "target" else night_slot.WAYS)]
+            d = order.index(value) - order.index(mine) if mine in order and value in order else 0
             return {"word": "lighter" if d < 0 else "heavier" if d > 0 else "same cost"}
         if slot == "tier":
             try:
@@ -173,9 +190,15 @@ class StallMixin:
                 if slot == "hero" and value == star:
                     ware["star"] = True
                 ware["before"] = before.get((chair, slot)) == value and value != mine
+                if slot != "gate" and value == self._default(chair, craft, slot) and (slot != "hero" or heroes.default(craft) is not None):
+                    ware["default"] = True                      # the way the slot's *Default* writes (a way among the others, decisions §283.30)
+                if not chair and PICKS.get(slot) == value:
+                    ware["star"] = True                         # the Orkmaster's pick
                 wares.append(ware)
             if slot != "hero" or sum(1 for h, why in heroes.offer(root, self.state_dir, craft) if not why) >= 2:
-                shelves.append({"id": slot, "label": label, "sub": sub, "kind": kind, "slot": slot, "wares": wares})
+                at = next((i for i, w in enumerate(wares) if w["id"] == mine), -1)      # the slot's pips: where the way carried lies among the ways
+                cheaper = any(w["price"].get("word") == "lighter" or (w["price"].get("share") or 0) < 0 for w in wares)
+                shelves.append({"id": slot, "label": label, "sub": sub, "kind": kind, "slot": slot, "wares": wares, "at": at, "cheaper": cheaper})
             have = next((w for w in wares if w["id"] == mine), None)
             card: dict[str, Any] = {"slot": slot, "label": label, "word": have["word"] if have else "Mixed" if slot == "tier" else "", "yours": mine,
                                     "line": have["line"] if have else "", "fixed": craft == "release" and slot == "hero"}
@@ -206,10 +229,14 @@ class StallMixin:
     def _write(self, chair: str, root: Path, slot: str, value: str) -> None:
         """The slot written through its own writer (`board_set`, `into`, `goal_team`)."""
         if not chair:
-            if slot in ("autostart", "work_at_night"):
-                self.board_set({slot: value == "on"})
+            if slot == "review":
+                self.board_set({"review": value != "on"})               # on = it lands by itself, so `review` is false
             elif slot == "push":
-                self.into({"push": value == "on"})
+                self.into({"push": value})
+            elif slot == "max_parallel":
+                self.board_set({"max_parallel": int(value)})
+            elif slot == "night":
+                self.board_set({"night_rung": value})
             else:
                 self.board_set({slot: value})
         elif slot == "hero":
@@ -247,7 +274,8 @@ class StallMixin:
 
     def _default(self, chair: str, craft: str, slot: str) -> str:
         if not chair:
-            return _onoff(True if slot == "autostart" else settings.IDEAS[slot]) if slot in ("autostart", "work_at_night", "push") else str(settings.IDEAS[slot])
+            return {"build_start": look_wait.build_start(True, settings.IDEAS["look_wait"]), "night": night_slot.way({}), "review": _onoff(not settings.IDEAS["review"]),
+                    "push": settings.push_way(settings.IDEAS["push"])}.get(slot) or str(settings.IDEAS[slot])
         return heroes.default(craft).id if slot == "hero" else ""      # the potions' order (the Main tool) and the recipe's tiers are the empty value
 
     def _done(self, chair: str, root: Path, slot: str, value: str) -> dict:

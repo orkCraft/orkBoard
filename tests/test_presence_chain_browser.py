@@ -97,7 +97,7 @@ def test_the_lit_chain_says_here_and_its_line(gui):
         d.wait_for(timeout=WAIT_MS)
         assert d.get_attribute("aria-pressed") == "true" and "is-pulled" not in d.locator(".ork-chain").get_attribute("class")
         assert d.locator(".presence-chain__word").text_content() == "Here" and d.locator(".presence-chain__line").text_content() == "until 23:00"
-        assert d.get_attribute("title") == "You are here: questions come as they arise. Press to be away. (until 23:00)"
+        assert d.get_attribute("title") == "You are here: questions come as they arise. Press to be away. (until 23:00). Hold to set your hours."      # the desktop's chain says its long pull (spec 168 H2)
         assert d.locator(".ork-chain").evaluate("e => [e.offsetWidth, e.offsetHeight]") == [6, 29], "the chain at orkUI's .small, 6 × 29 (spec 168 A4)"
         assert d.locator(".presence-chain__word").evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink")
         assert not pg.locator(".table-pane").evaluate("e => e.classList.contains('is-out')")
@@ -275,7 +275,7 @@ def test_the_stalls_title_lies_below_the_leathers_straps_on_the_phone_and_the_de
         pg, errors = start(gui, width, DoorHost(HERE))
         try:
             pg.locator(opener).first.click()
-            pg.locator(".stall-merchant").wait_for(state="visible", timeout=WAIT_MS)
+            pg.locator(".stall-merchant" if width == "phone" else ".slots-table").wait_for(state="visible", timeout=WAIT_MS)       # the desktop's table is the slots (spec 168 H1); the phone keeps the stall
             pg.wait_for_timeout(300)
             pane = pg.locator(".table-pane.ork-leather").bounding_box()
             title = pg.locator(".stall-title").first.bounding_box()
@@ -286,3 +286,35 @@ def test_the_stalls_title_lies_below_the_leathers_straps_on_the_phone_and_the_de
         finally:
             pg.context.close()
         assert not errors, "\n".join(errors)
+
+
+def test_the_chain_held_down_opens_the_persons_hours_and_a_short_press_still_turns_it(gui):
+    """Spec 168 H2 (decisions §283.31): the hours belong to the lamp's chain, a long pull; the field is Settings' own (`ideas.board_set {hours}`)."""
+    host = DoorHost(HERE)
+    pg, errors = start(gui, "wide", host)
+    try:
+        d = chain(pg)
+        d.wait_for(timeout=WAIT_MS)
+        d.click()                                                                                       # a short press is Here / Away as before
+        pg.wait_for_function("() => document.querySelector('.presence-chain').dataset.here === 'false'", timeout=WAIT_MS)
+        assert pg.locator("[data-presence-hours]").count() == 0 and len([n for n, _a in host.log if n == "presence.set"]) == 1
+        b = d.bounding_box()
+        pg.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
+        pg.mouse.down()
+        pg.wait_for_timeout(900)
+        pg.mouse.up()
+        panel = pg.locator("[data-presence-hours]")
+        panel.wait_for(timeout=WAIT_MS)
+        assert panel.get_attribute("aria-label") == "When I am at the computer"
+        panel.locator('[data-settings="hours"]').wait_for(timeout=WAIT_MS)
+        assert panel.locator("[data-hours-add]").count() == 1
+        assert len([n for n, _a in host.log if n == "presence.set"]) == 1                              # the long pull is no press of Here / Away
+        pg.keyboard.press("Escape")
+        assert pg.locator("[data-presence-hours]").count() == 0
+        d.click(modifiers=["Shift"])                                                                    # the keyboard's way in: Shift on the chain
+        panel.wait_for(timeout=WAIT_MS)
+        panel.get_by_role("button", name="Done").click()
+        assert pg.locator("[data-presence-hours]").count() == 0
+    finally:
+        pg.context.close()
+    assert not errors, "\n".join(errors)
