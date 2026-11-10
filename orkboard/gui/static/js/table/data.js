@@ -50,9 +50,9 @@ export const roadSlugs = (all = partiesAll()) => new Set(Object.values(roadParti
 export const isRelease = (g) => !!g && g.party_craft === "release";
 export const isLive = (g) => !!g && LIVE_CRAFTS.includes(g.party_craft) && roadParties().live?.slug === g.slug;
 
-/** The parties of the Board's lanes and of the tabs: every party in the Board's order (Release a craft as any, its tab in the leaders' row: spec 161 D, decisions §273.2), but at the wide width Live after the others (its tab and its lane stand after the tabs' end). The discard is no party's lane: it is the window's right column (table/lane.js). */
+/** The parties of the Board's lanes and of the tabs: every party in the Board's order (Release waits: it has no tab nor lane, decisions §283.29, which changes §273.2), but at the wide width Live after the others (its tab and its lane stand after the tabs' end). The discard is no party's lane: it is the window's right column (table/lane.js). */
 export function partiesNow() {
-  const all = partiesAll();
+  const all = partiesAll().filter((g) => !isRelease(g));            // a Release seated keeps its page and has no tab nor lane (decisions §283.29)
   if (!wide.value) return all;
   const { live } = roadParties(all), rest = all.filter((g) => g !== live);
   return live ? [...rest, live] : rest;

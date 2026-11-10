@@ -22,7 +22,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import commit_goal, event_log, findings_gather, first_open, gate_config, goal_branch, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
+from orkboard.realm import commit_goal, event_log, findings_gather, first_open, gate_config, goal_branch, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
@@ -57,8 +57,7 @@ class GateMixin:
             pile = self._pile(git, into, main)
         except Exception:                       # a repository git cannot read: nothing waits that the Board can see
             return out
-        if pile["ready"]:
-            self._release_reads()                # a goal is ready for main: Release has something to ask about (spec 143 E.1)
+        # Release waits (decisions §283.29): a seated Release has no checks, so a goal ready for main asks nothing of it (spec 143 E.1 is off)
         return {**out, "commits": len(pile["shas"]), "files": pile["files"], "ideas": pile["ready"]}
 
     def _pile(self, git: IdeaGit, into: str, main: str) -> dict:
@@ -102,14 +101,6 @@ class GateMixin:
                 red = any(c["state"] == "failed" for c in got.get("checks", []))
                 out.append({**r, "main_ready": not red, "main_reason": next((c["words"] for c in got.get("checks", []) if c["state"] == "failed"), "")})
         return out
-
-    def _release_reads(self) -> None:
-        try:
-            for t in ideas.tracks(self.root(False), make=False):
-                if party_recipes.is_release(t):
-                    self.read_release(t["slug"])
-        except Exception:                        # a reading that cannot start never breaks the gate's count
-            pass
 
     def gate_merge(self, args: dict) -> dict:
         """`{}`: merge dev into main (fast-forward, else a merge commit), pushed when the project pushes after merging.

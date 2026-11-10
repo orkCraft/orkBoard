@@ -52,26 +52,28 @@ def test_the_stage_the_person_set_wins_over_the_one_read(tmp_path):
 
 def test_the_crafts_by_stage_idea_the_concepts_lean_being_made_adds_tech_standard_live_adds_running_and_marketing():
     app = {s: [c["id"] for c in project_stage.crafts("web", s)] for s in project_stage.STAGES}
-    assert app == {"idea": ["product", "design", "release"], "being_made": ["product", "design", "tech", "release"],
-                   "live": ["product", "design", "tech", "release", "run", "marketing"]}
+    assert app == {"idea": ["product", "design"], "being_made": ["product", "design", "tech"],
+                   "live": ["product", "design", "tech", "marketing"]}            # Release and Run wait (decisions §283.29, which changes §274.1)
     game = {s: [c["id"] for c in project_stage.crafts("game", s)] for s in project_stage.STAGES}
-    assert game == {"idea": ["game-design", "art", "release"], "being_made": ["game-design", "tech", "art", "release"],
-                    "live": ["game-design", "tech", "art", "release", "liveops", "marketing"]}
+    assert game == {"idea": ["game-design", "art"], "being_made": ["game-design", "tech", "art"],
+                    "live": ["game-design", "tech", "art", "marketing"]}
     cards = {c["id"]: c for c in project_stage.crafts("web", "live")}
     assert {i: (c["from"], c["size"]) for i, c in cards.items()} == {"product": ("idea", "lean"), "design": ("idea", "lean"), "tech": ("being_made", "standard"),
-                                                                      "release": ("idea", "lean"), "run": ("live", "standard"), "marketing": ("live", "standard")}
+                                                                      "marketing": ("live", "standard")}
     assert project_stage.offered("web") == {s: project_stage.crafts("web", s) for s in project_stage.STAGES}
     with pytest.raises(ValueError, match="idea, being_made or live"):
         project_stage.crafts("web", "late")
 
 
 @pytest.mark.parametrize("kind", project_kind.KINDS)
-def test_release_is_in_every_kind_at_every_stage_locked_lean_its_engineer_and_notes_with_its_leader_on_the_cheaper_tier(kind):
+def test_release_and_live_wait_no_chair_offers_them_but_release_s_card_stays_lean_with_its_engineer_and_notes_and_its_leader_on_the_cheaper_tier(kind):
+    release = project_stage.release_card()                  # §283.29: a Release already seated is read by its card
+    assert (release["locked"], release["size"], release["squad"], release["leader"]) == (False, "lean", ["release-engineer", "release-notes"], "release-manager")
+    assert release["tiers"] == {"release-manager": "warrior", "release-engineer": "warrior", "release-notes": "warrior"}
     for stage in project_stage.STAGES:
-        [release] = [c for c in project_stage.crafts(kind, stage) if c["id"] == "release"]
-        assert (release["locked"], release["size"], release["squad"], release["leader"]) == (False, "lean", ["release-engineer", "release-notes"], "release-manager")
-        assert release["tiers"] == {"release-manager": "warrior", "release-engineer": "warrior", "release-notes": "warrior"}
-        assert not any(c["locked"] for c in project_stage.crafts(kind, stage) if c["id"] != "release")
+        ids = {c["id"] for c in project_stage.crafts(kind, stage)}
+        assert not ids & {"release", "run", "liveops"}
+        assert not any(c["locked"] for c in project_stage.crafts(kind, stage))
     assert project_stage.release_card()["id"] == "release" and project_stage.leader_tier() == "warrior"
 
 
@@ -112,7 +114,15 @@ def test_the_proposals_take_the_stage_and_offer_only_the_crafts_of_the_stages_re
     h = Orkboard(fake_repo)
     kind = {"id": "web", "words": "a web app", "signs": []}
     ids = lambda stage: [p["id"] for p in orkmaster.proposals(h.ideas.root(), h.ideas.state_dir, {}, kind, None, [], stage=stage)]
-    assert ids("idea") == ["product", "design", "release"] and ids("being_made") == ["product", "design", "tech", "release"] and len(ids("live")) == 6 == len(ids(None))
-    release = [p for p in orkmaster.proposals(h.ideas.root(), h.ideas.state_dir, {}, kind, None, [], stage="idea") if p["id"] == "release"][0]
+    assert ids("idea") == ["product", "design"] and ids("being_made") == ["product", "design", "tech"] and ids("live") == ["product", "design", "tech", "marketing"] and len(ids(None)) == 6     # Release and Run wait (§283.29)
+    release = [p for p in orkmaster.proposals(h.ideas.root(), h.ideas.state_dir, {}, kind, None, [], stage=None) if p["id"] == "release"][0]
     assert release["locked"] is False and release["squad"] == ["release-engineer", "release-notes"] and release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}]
-    assert orkmaster.proposal_ids("web", None, [], stage="idea") == ["product", "design", "release"]
+    assert orkmaster.proposal_ids("web", None, [], stage="idea") == ["product", "design"]
+
+
+def test_the_waiting_crafts_are_release_run_and_liveops_and_the_presets_say_so():
+    from orkboard.realm import party_presets
+    assert [c for c in ("release", "run", "liveops", "tech", "marketing", "product") if project_stage.waits(c)] == ["release", "run", "liveops"]
+    for kind in ("web", "game"):
+        rows = {r["id"]: r["waits"] for r in party_presets.listed(kind) if r["group"] == "stage"}
+        assert {i for i, w in rows.items() if w} == ({"release", "liveops"} if kind == "game" else {"release", "run"})

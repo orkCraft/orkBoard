@@ -71,15 +71,14 @@ def test_main_caught_up_waits_for_nothing_and_dev_as_main_is_no_gate(repo, pages
     assert (only["same"], only["goals"]) == (True, [])
 
 
-def test_since_is_the_release_partys_last_version_that_is_out(repo, pages):
-    party = release_party(pages)
-    assert release_map.read(state(repo), repo, pages)["since"] is None
-    for version, out, at in (("1.2", "2026-10-10T09:00:00", "2026-10-09T09:00:00"), ("1.3", "2026-10-20T09:00:00", "2026-10-19T09:00:00"), ("1.4", "", "2026-10-25T09:00:00")):
-        slug = ideas.add_idea(pages, f"Release {version}", party, state(repo))
-        ideas.save_state(state(repo), slug, type="release")
-        ideas._write_json(releases._path(state(repo), slug), {"version": version, "goals": [], "out": out, "at": at})
-    assert release_map.read(state(repo), repo, pages)["since"] == {"version": "1.3", "out": "2026-10-20T09:00:00"}
-    assert release_map.read(state(repo), repo)["since"] is None                         # no pages, no party to ask
+def test_since_is_the_last_version_read_from_the_tags_else_the_changelog_and_none_with_neither(repo, pages):
+    """Decisions §283.29 (it changes spec 102 C's *the Release party's last release out*): the project's own versions, no Release party needed."""
+    assert release_map.read(state(repo), repo, pages)["since"] is None and release_map.read(state(repo), repo)["since"] is None
+    (repo / "CHANGELOG.md").write_text("# Changes\n\n## [1.1.0] - 2026-10-01\n- a\n\n## [1.2.0] - 2026-10-12\n- b\n\n## Unreleased\n", encoding="utf-8")
+    assert release_map.read(state(repo), repo)["since"] == {"version": "1.2.0", "out": "2026-10-12"}
+    git(repo, "tag", "v1.0.0")
+    tagged = release_map.read(state(repo), repo, pages)["since"]
+    assert tagged["version"] == "v1.0.0" and len(tagged["out"]) == 10                  # the tags come first
 
 
 # -- the text -----------------------------------------------------------------------------------------------------------------------
@@ -91,9 +90,7 @@ def test_the_text_names_the_goals_waiting_and_the_last_version(repo, pages):
     assert text == release_map.text(state(repo), repo, "", pages) == release_map.text(state(repo), repo, "abc", pages)
     assert text == "\n".join(["The map of Release: dev against main", "", "Waiting for main (1 goal; 1 commit, 1 file changed):",
                               f'- goal {one} "Dark mode" (commit {sha[:7]})', "", "No version is out yet."])
-    party = release_party(pages)
-    slug = ideas.add_idea(pages, "Release 1.3", party, state(repo))
-    ideas._write_json(releases._path(state(repo), slug), {"version": "1.3", "goals": [], "out": "2026-10-20T09:00:00", "at": "2026-10-19T09:00:00"})
+    (repo / "CHANGELOG.md").write_text("## [1.3] - 2026-10-20\n- c\n", encoding="utf-8")
     assert release_map.text(state(repo), repo, "", pages).endswith("\n\nLast version out: 1.3, 2026-10-20.")
 
 

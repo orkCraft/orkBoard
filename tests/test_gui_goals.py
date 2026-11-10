@@ -413,7 +413,7 @@ def test_a_squad_of_seven_seats_is_kept_whole_with_a_size_and_an_eighth_is_refus
 
 
 def test_release_reads_when_there_is_a_release_not_at_start(host, model, monkeypatch):
-    """Spec 143 E.1: a party of Release is not read at its save (Tech's is); it reads once when a goal is ready for main, or when its lens is opened."""
+    """Spec 143 E.1: a party of Release is not read at its save (Tech's is); it reads once when its lens is opened (a goal ready for main no longer wakes it: decisions §283.29)."""
     tech = host.command("ideas.goal_save", {"about": "Faster tests.", "proposal": "tech"})["slug"]
     rel = host.command("ideas.goal_save", {"about": "A version goes out.", "proposal": "release"})["slug"]
     _wait(host, tech, goal=True)
@@ -429,7 +429,10 @@ def test_release_reads_when_there_is_a_release_not_at_start(host, model, monkeyp
     monkeypatch.setattr(host.ideas, "_gate_ideas", lambda shas: [{"slug": "x", "title": "X", "goal": tech, "tasks": 1}])
     host.command("ideas.gate", {})
     _wait(host, rel, goal=True)
-    assert len(model.seen) == 2 and "A version goes out" in model.seen[1]["prompt"], "a goal ready for main: Release reads"
+    assert len(model.seen) == 1, "a goal ready for main: Release waits (decisions §283.29, which changes spec 143 E.1), it reads nothing"
+    host.command("ideas.lens", {"track": rel})
+    _wait(host, rel, goal=True)
+    assert len(model.seen) == 2 and "A version goes out" in model.seen[1]["prompt"], "its lens still reads it, once"
     host.command("ideas.gate", {})
     host.command("ideas.lens", {"track": rel})
     _wait(host, rel, goal=True)
