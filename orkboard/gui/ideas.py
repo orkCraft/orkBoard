@@ -752,7 +752,7 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
                  "ideas.track_set": self.track_set, "ideas.track_drop": self.track_drop, "ideas.todo": self.todo, "ideas.drop": self.drop,
                  "ideas.stop": self.stop, "ideas.review_list": self.review_list, "ideas.diff": self.diff,
                  "ideas.merge": self.merge, "ideas.back": self.back, "ideas.regate": self.regate, "ideas.drop_task": self.drop_task,
-                 "ideas.stop_task": self.stop_task, "ideas.agents": self.agents, "ideas.task": self.task,
+                 "ideas.stop_task": self.stop_task, "ideas.agents": self.agents, "ideas.task": self.task, "ideas.task_log": self.task_log,
                  "ideas.into": self.into, "ideas.branch_set": self.branch_set, "ideas.log": self.log, "ideas.logs": self.logs, "ideas.goal_save": self.goal_save,
                  "ideas.words": self.words, "ideas.goal_accept": self.goal_accept,
                  "ideas.goal": self.goal, "ideas.read_now": self.read_now, "ideas.doc": self.doc, "ideas.roles": self.roles,
