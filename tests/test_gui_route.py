@@ -350,6 +350,7 @@ def test_the_reserve_still_held_moves_every_goal_put_off_to_the_next_reset(host,
 
 def test_a_goal_whose_next_step_does_not_fit_the_window_waits_for_the_next_reset_and_the_next_in_order_goes(host, parties, calls, went, monkeypatch):
     """Spec 138 B.4 (decisions §245.4): the cost of the next step (the route's estimate) against what the window holds above the reserve; the order never changes."""
+    monkeypatch.setattr("orkboard.realm.idea_target.in_night", lambda spec, now=None: False)                   # the day's reserve, whatever the hour the suite runs at
     first, second, third = _put_off(host, parties)
     host.command("ideas.route_set", {"idea": first, "route": [parties["tech"], parties["design"]]})            # the first goal's route is dearer than the others'
     root, state, settings = host.ideas.root(), host.ideas.state_dir, host.ideas.settings_now()

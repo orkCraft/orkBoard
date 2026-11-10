@@ -313,11 +313,9 @@ def test_a_keeper_call_runs_inside_its_steps_bound_and_its_line_says_when_it_rea
 
 
 def test_the_night_is_gone_the_clock_runs_only_what_the_limits_held_and_a_night_queue_is_never_drafted(keeper):
-    """Spec 99 §3: no night run, refresh, proposal or pace; `tick` runs again an idea the limits held (`held_until`) and nothing else."""
-    import importlib
+    """Spec 99 §3: no night run, refresh or pace on the keeper; `tick` runs again an idea the limits held (`held_until`) and nothing else. The night's
+    ladder (spec 168 H3, decisions §283.32, which brings the leaders' proposals back) lives in core/idea_night.py, read by the route's tick, never the keeper's."""
     from orkboard.realm import idea_target
-    with pytest.raises(ImportError):
-        importlib.import_module("orkboard.core.idea_night")
     for name in ("run_night", "night_tick", "pace_tick", "run_pace", "propose_prompt", "tonight", "night_allowed", "week_is_behind", "start_night"):
         assert not hasattr(keeper, name), name
     assert not {"refresh", "propose"} & set(idea_target.STEPS) and not hasattr(idea_target, "PROPOSALS")
