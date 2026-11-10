@@ -353,7 +353,7 @@ def test_a_chair_stands_under_each_head_at_the_wide_width_and_none_under_760(des
     go(pg, "tech")
     chairs = pg.locator(".table-tabcell .ork-chair:not(.is-empty)")
     if w == "wide":
-        assert chairs.count() == 5 and pg.locator(".ork-chair.big").count() == 1 and cell(pg, "tech").locator(".ork-chair.big").count() == 1       # the open leader's is the large one
+        assert chairs.count() == 4 and pg.locator(".ork-chair.big").count() == 1 and cell(pg, "tech").locator(".ork-chair.big").count() == 1       # the open leader's is the large one; Release, seated, has no tab and so no chair (decisions §283.29)
         box = cell(pg, "game").locator(".ork-chair").bounding_box()
         assert (box["width"], box["height"]) == (44, 24) and (cell(pg, "tech").locator(".ork-chair.big").bounding_box()["width"], cell(pg, "tech").locator(".ork-chair.big").bounding_box()["height"]) == (52, 28)
         head, back = cell(pg, "game").locator("img.ork-race__head").bounding_box(), cell(pg, "game").locator(".ork-chair").bounding_box()

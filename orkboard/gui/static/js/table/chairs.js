@@ -24,7 +24,7 @@ export function useOffer() {
     return () => { live = false; };
   }, [project, placeOpen]);
   if (!presets || !presets.length) return true;
-  return presets.some((p) => !madeFrom(p, tracks));
+  return presets.some((p) => !p.waits && !madeFrom(p, tracks));            // Release and Live wait: their chairs are not offered (decisions §283.29)
 }
 
 /** The empty chair as a button at the tabs' end. `from`: where the pane was (the place says it came from there). */

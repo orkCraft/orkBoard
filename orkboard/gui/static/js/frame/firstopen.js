@@ -142,7 +142,7 @@ function usePresets(key, on) {
     Promise.all([command("ideas.stage", {}, true).catch(() => null), command("ideas.party_presets", {}, true).catch(() => null)]).then(([st, pr]) => {
       if (!live) return;
       const at = STAGES.indexOf(st?.stage || "idea");
-      setGot((pr?.presets || []).filter((p) => p && p.group === "stage" && !p.locked && STAGES.indexOf(p.stage) <= Math.max(0, at)));
+      setGot((pr?.presets || []).filter((p) => p && p.group === "stage" && !p.locked && !p.waits && STAGES.indexOf(p.stage) <= Math.max(0, at)));
     });
     return () => { live = false; };
   }, [key, on]);

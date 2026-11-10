@@ -71,7 +71,8 @@ def test_the_stage_is_marked_and_set_by_a_press_on_anothers_heading(desk, game):
     d, pg = open_first(desk, game)
     here = pg.locator('.pc-stage[data-stage-head="idea"]')
     assert "The project is here" in here.inner_text()
-    assert pg.locator('.pc-later [data-party="liveops"]').count() == 1, "the stages not reached lie in one line"
+    assert pg.locator('.pc-later [data-party="marketing"]').count() == 1, "the stages not reached lie in one line"
+    assert pg.locator('.pc-later [data-party="liveops"]').count() == 0, "LiveOps waits: no chair offers it (decisions §283.29)"
     pg.locator('.pc-stage[data-stage-head="being_made"]').click()
     pg.locator('.pc-stage[data-stage-head="being_made"] .parties__here').wait_for(timeout=WAIT_MS)
     assert project_stage.current(d.host.ideas.state_dir, d.host.repo_root)["stage"] == "being_made"
@@ -101,15 +102,11 @@ def test_a_partys_line_its_heads_and_its_shadows_and_the_size_changes_them_at_on
     assert not d.errors, d.errors
 
 
-def test_a_shadow_is_not_pressed_and_release_is_a_craft_as_any(desk, game):
-    """Decisions §274.1: Release is offered as any craft, ticked where its stage is reached, and can be unticked."""
+def test_a_shadow_is_not_pressed_and_release_and_liveops_wait_so_the_card_offers_neither(desk, game):
+    """Decisions §283.29 (it changes §274.1): Release and Live wait, their chairs are not offered; a Release already seated stays in the card."""
     d, pg = open_first(desk, game)
-    r = row(pg, "release")
-    box = r.locator('[role="checkbox"]')
-    assert r.get_attribute("data-locked") == "false" and box.get_attribute("aria-disabled") != "true"
-    assert box.get_attribute("aria-checked") == "true" and "in every project" not in r.inner_text()
-    box.click()
-    pg.wait_for_function("() => document.querySelector('.pc-row[data-party=release] [role=checkbox]').getAttribute('aria-checked') === 'false'", timeout=WAIT_MS)
+    assert pg.locator('.pc-row[data-party="release"], .pc-row[data-party="liveops"]').count() == 0
+    assert pg.locator('.pc-row[data-party="art"]').count() == 1
     assert pg.locator("button.pc-hd.is-empty").count() == 0
     assert not d.errors, d.errors
 
@@ -173,7 +170,7 @@ def test_its_foot_says_what_they_cost_and_start_makes_the_parties_and_lays_the_t
     pg.locator('.frame[data-laid="1"]').wait_for(timeout=WAIT_MS)
     until(pg, lambda: first_open.kept(d.host.ideas.state_dir))                  # the table is laid as the parties are made; Start's last step (the project's questions) keeps it a moment after
     assert first_open.kept(d.host.ideas.state_dir) is True
-    assert set(p["recipe"] for p in parties_of(d.host).values()) >= {"game-design", "art", "release"}
+    assert set(p["recipe"] for p in parties_of(d.host).values()) >= {"game-design", "art"} and "release" not in set(p["recipe"] for p in parties_of(d.host).values())
     assert not d.errors, d.errors
 
 

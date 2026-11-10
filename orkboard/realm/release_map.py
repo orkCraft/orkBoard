@@ -6,15 +6,15 @@ realm/idea_gate.py). Read from git and the goals' plans, never the working tree.
     release_map.text(state_dir, root, since="", pages=None, into="dev")   # Release's leader's map as text: the goals waiting for main and the last version
 
 `goals` are the goals with a task merged into `into` whose commit `main` lacks, the newest landing first (the order dev holds them, not the Board's: no page is read for it);
-`commit` is the newest of such commits (full); `at` the commit time (epoch seconds) of the oldest of them, from one `git log` for all the goals (None when git cannot tell). `pages` (the Board's pages root) gives a goal its title and drops a goal gone from the Board, and gives `since` its party:
-`releases.since` of the project's Release party; without it a goal's title is its slug and `since` is None. `same` (dev and main are one branch, or main is none) is *no gate*:
+`commit` is the newest of such commits (full); `at` the commit time (epoch seconds) of the oldest of them, from one `git log` for all the goals (None when git cannot tell). `pages` (the Board's pages root) gives a goal its title and drops a goal gone from the Board, ; `since` is the last version out read from the project's git tags, else its changelog
+(`chronicle_versions`, decisions §283.29), None for a project with neither; without `pages` a goal's title is its slug. `same` (dev and main are one branch, or main is none) is *no gate*:
 `goals` is then empty. `since` of `text` is the commit of the party's last call: the map is a state, not a change log, so it is not used.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import first_open, goal_types, idea_element, idea_gate, ideas, releases, worktrees
+from orkboard.realm import chronicle_versions, first_open, idea_element, idea_gate, ideas, worktrees
 from orkboard.realm.idea_git import IdeaGit, _git
 
 SHORT = 7
@@ -73,18 +73,18 @@ def _waiting(state_dir: Path, shas: list[str], pages: Path | None, times: dict[s
     return out
 
 
-def _since(state_dir: Path, pages: Path | None) -> dict | None:
-    if pages is None:
-        return None
-    party = goal_types.release_party(Path(pages))
-    return releases.since(Path(pages), state_dir, party) if party else None
+def _since(root: Path) -> dict | None:
+    """The last version out, read from the project's tags, else its changelog (`chronicle_versions`, decisions §283.29); None for a project with neither."""
+    got = chronicle_versions.read(Path(root))
+    last = got["versions"][-1] if got["kind"] != "week" and got["versions"] else None
+    return {"version": last["name"], "out": last["day"]} if last else None
 
 
 def read(state_dir: Path, root: Path, pages: Path | None = None, into: str = "dev") -> dict:
     """The map (see the module). A repository git cannot read has nothing waiting that the Board can see."""
     git = IdeaGit(Path(root))
     main = _main(git, state_dir)
-    out: dict = {"into": into, "main": main, "same": idea_gate.same(into, main), "commits": 0, "files": 0, "goals": [], "since": _since(state_dir, pages)}
+    out: dict = {"into": into, "main": main, "same": idea_gate.same(into, main), "commits": 0, "files": 0, "goals": [], "since": _since(root)}
     if out["same"]:
         return out
     try:

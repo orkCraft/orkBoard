@@ -198,7 +198,7 @@ def wide(w):
 
 
 def go(pg, slug):
-    if slug == "release" and pg.viewport_size["width"] >= 760:        # at the wide width Release is no tab (docs/specs/111 §4.1) and its lich opens the past (spec 150 E2.2): its view is opened as a tab opens it
+    if slug == "release":        # Release has no tab at any width (decisions §283.29: it waits; before it only at the wide width, docs/specs/111 §4.1): its page is kept, and its view is opened as a tab opens it
         pg.evaluate("() => import('/static/js/frame/state.js').then((m) => m.openTab('release'))")
         pg.locator('.table[data-tab="release"]').wait_for(timeout=WAIT_MS)
         return

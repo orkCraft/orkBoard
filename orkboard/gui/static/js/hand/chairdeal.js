@@ -1,6 +1,6 @@
 // The new chair deals its crafts (docs/specs/161-the-tables-look-and-the-rooms-things.md stage I, decisions §272, §274.1, §160.6; the mockup docs/mockups/room-things/ mode `chair`). On the desktop (760 px and over) the chair at the tabs' end,
 // pressed, is lit and the Orkmaster's question rises onto the table as the 144 x 202 card of a question (*A new chair at the table · Which craft sits in it?*, hand/answercards.js' mechanism and classes, not bent): the hand holds a card for each craft
-// of the project's kind not seated yet (`ideas.party_presets` of group `stage`, the stage's reached first, Release among them while it is not seated): its race's head as its sign, its name (the pixel face), its whole line, and its price in the
+// of the project's kind not seated yet (`ideas.party_presets` of group `stage`, the stage's reached first, Release, Run and LiveOps wait and are not among them: decisions §283.29): its race's head as its sign, its name (the pixel face), its whole line, and its price in the
 // corner and in words (`ideas.party_price`, said as every card's cost: hand/waycost.js; with no price the card says so). The Orkmaster's pick, when a preset says one (`pick`, `recommended` or `default`), else the first craft not seated whose stage is reached (Release last), is starred and named in words; the host
 // says none today, so none is starred and none invented. The rest of the hand sinks (hand.js). A craft's card pressed seats it by `ideas.goal_save` as the parties' place does (table/parties.js), then the backpack opens on its chair; *Put it back*,
 // Esc and any tab pressed send nothing. The narrow page and the phone keep the parties' place (*New party*).
@@ -37,7 +37,7 @@ function useCrafts() {
   useEffect(() => {
     let live = true;
     Promise.all([command("ideas.party_presets", {}, true), command("ideas.stage", {}, true).catch(() => null)]).then(([r, st]) => {
-      if (live) setGot({ presets: (r?.presets || []).filter((p) => p && p.group === "stage"), stage: st?.stage || "" });
+      if (live) setGot({ presets: (r?.presets || []).filter((p) => p && p.group === "stage" && !p.waits), stage: st?.stage || "" });
     }).catch(() => { if (live) setGot({ presets: [], stage: "" }); });
     return () => { live = false; };
   }, [project]);

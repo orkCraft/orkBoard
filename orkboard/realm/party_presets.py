@@ -1,6 +1,6 @@
 """The parties New party offers (docs/specs/99-a-goals-way.md §1, decisions §122.5, §151.5): the crafts of the project's kind, under the stages that offer them.
 
-    listed("game")      # [{id, name, line, group, stage, craft, recipe, whole, leader, build, check, squad, size, locked, sizes, routines, ops, blocked}, …]
+    listed("game")      # [{id, name, line, group, stage, craft, recipe, whole, leader, build, check, squad, size, locked, sizes, routines, ops, blocked, waits}, …]
 
 One row a craft of the kind (`party_recipes.for_kind`: a game's Game design, Tech, Art, Release, LiveOps and Marketing; the rest's Product, Design, Tech, Release, Run and
 Marketing), `group` "stage" and `stage` the stage that offers it (`project_stage.FROM`: `idea`, `being_made` or `live`; a face grouping them under the stages' headings
@@ -8,7 +8,7 @@ ticks the stages the project has reached), then the person's own (`group` "own":
 who do, `check` who check, most needed first), `squad` who is ticked by default, `size` the size it is proposed in, and `sizes`: `lean` · `standard` · `full` →
 `{leader, team, tiers, size, basis}` as `party_recipes.sized` gives them: **the same team in every size** (the squad and the size are apart), so the dialog shows the
 tiers of a size before anything is saved. `recipe` is the id the party keeps (`goal_team.recipe_of`). `locked`: Release, ticked and never unticked (§137.1).
-`routines`: the recurring goals the running party proposes when it is made (`realm/recurring.py`; Run's are its kind's, LiveOps' a game's). General, Team and Ideation
+`waits`: Release, Run and LiveOps wait (`project_stage.WAITS`, decisions §283.29): the row stays (a Release already seated is read by it) but no chair offers it. `routines`: the recurring goals the running party proposes when it is made (`realm/recurring.py`; Run's are its kind's, LiveOps' a game's). General, Team and Ideation
 are not offered (decisions §122); `team_at` and `ops` are kept for the host's call and say nothing now. No face, no model, no write.
 """
 from __future__ import annotations
@@ -23,7 +23,7 @@ def _row(rid: str, name: str, line: str, group: str, leader: str, build: list[st
     asked = {"leader": leader, "build": list(build), "check": list(check), "squad": list(squad or [])}
     return {"id": rid, "name": name, "line": line, "group": group, "stage": stage, "craft": craft, "recipe": recipe, "whole": False,
             "leader": leader, "build": list(build), "check": list(check), "squad": list(squad or []), "size": size, "locked": locked,
-            "routines": recurring.listed(routines or recipe), "ops": False, "blocked": "",
+            "routines": recurring.listed(routines or recipe), "ops": False, "blocked": "", "waits": project_stage.waits(recipe),
             "sizes": {s: party_recipes.sized(asked, s) for s in idea_target.SIZES}}
 
 
