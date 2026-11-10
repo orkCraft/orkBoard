@@ -170,24 +170,33 @@ img { display: block; }
 .seen .post + .post { margin-top: -12px; }
 .seen .post:last-child { max-height: 64px; }
 .seen-h { display: flex; justify-content: space-between; padding: 0 4px 6px; font: 600 14px/18px var(--lk-text); color: var(--ork-ink-muted); }
+.sect { padding: 4px 4px 0; font: 700 12px/16px var(--lk-text); letter-spacing: .06em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.seen-line { clip-path: none; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 12px; border: 1px solid var(--ork-card-frame); border-radius: 14px;
+  background: var(--ork-panel); color: var(--ork-ink-muted); text-align: left;
+  box-shadow: 0 4px 0 -2px var(--ork-raised), 0 4px 0 -1px var(--ork-card-frame); }
+.seen-line .sh { display: flex; } .seen-line .sh img { width: 26px; height: auto; margin-right: -8px; filter: saturate(.6) brightness(.85); }
+.seen-line .st { flex: 1; margin-left: 10px; font: 600 15px/18px var(--lk-text); }
+.seen-line .ork-icon { width: 18px; height: 18px; }
 .note { max-width: 110ch; padding: 0 16px 24px; font: 400 15px/22px var(--lk-text); color: var(--ork-ink-read); }
 .note li { margin-left: 20px; list-style: disc; }
 </style>
 </head>
 <body>
-<p class="mk-bar">Orkboard · the phone · the feed · v1</p>
+<p class="mk-bar">Orkboard · the phone · the feed · v2</p>
 <p class="mk-line">The owner's proposal: the phone's tables broken into blocks and scrolled as a social feed. In place of §223's tabs, one
 screen: the Orkmaster and the leaders as a row of heads on top (a ring = news since your last look, a yellow ! = it asks; never a
-number), under it one feed of blocks, newest first, each a post from the one who says it; a block's own cards swiped sideways; the
-hand at the foot as today. A head pressed narrows the feed to it. A goal's screen is the same feed one level down. Rubik, at
-§226's phone sizes (body 17, captions 15, nothing under 12). 390 × 844, a stand-in party game. Not decided.</p>
+number), under it one feed of blocks, each a post from the one who says it: what waits for you first, then the news, newest first; a block's
+own cards swiped sideways; the hand at the foot as today. A head pressed narrows the feed to it. One leader's posts in a row are one
+stack; what you have seen is one line, pressed it spreads as a deck. A goal's screen is the same feed one level down. Rubik, at
+§226's phone sizes (body 17, captions 15; the 12 px names under the heads are 14 px when built, and a sign joins each ring:
+§291.9). 390 × 844, a stand-in party game. v2 is the owner's answers to v1 (decisions §291).</p>
 <main class="mk-main" id="m"></main>
 <section class="note">
-<p><b>Open</b></p>
+<p><b>Decided on v1</b> (decisions §291): the cards as in 6 (5 not taken), and</p>
 <ul>
-<li>The feed's order: newest first (as here), or what waits for the person first, then the news.</li>
-<li>Whether a pressed head narrows the feed (3) or scrolls to its first post.</li>
-<li>Older posts: dimmed under <i>You have seen everything since 09:12</i> (2), or folded into one line.</li>
+<li>the feed's order: what waits for you first, then the news;</li>
+<li>a pressed head narrows the feed (3);</li>
+<li>what you have seen is folded into one line (2), pressed it spreads as a deck (6).</li>
 </ul>
 </section>
 <script>
@@ -261,21 +270,25 @@ const SEEN = `<div class="seen"><p class="seen-h"><span>Seen</span><span>Tap to 
   ${old("art", "dryad-elder", "Art", "yesterday · 16:40", "The shop's palette.")}
   ${old("tech", "shaman-elder", "Tech", "yesterday · 15:12", "rooms split in two.")}
   ${old("om", "peon-crown", "Orkmaster", "yesterday · 11:00", "Sign-in went to dev.")}</div>`;
+const SEEN_LINE = `<button class="seen-line"><span class="sh">${["unicorn-elder", "dryad-elder", "shaman-elder", "peon-crown"].map(head).join("")}</span>
+  <span class="st">Seen since yesterday</span>${icon("chevron-down")}</button>`;
+const SECT = (t) => `<p class="sect">${t}</p>`;
+const WAITS = SECT("Waits for you"), NEWS = SECT("New since your last look · 09:12");
 const ST = { tech: "news", art: "news", rel: "news", om: "news", gd: "seen" };
 const SCREENS = [
-  ["1 · The project's feed", "The header as today; under it the heads as a feed's stories: a ring in its party's colour says it has news since your last look, never a number. The feed, newest first: the Orkmaster's spec that starts at 13:40 with its acts in the block, the goals at work as a row of cards swiped sideways, Tech's changes.",
-    phone(HDR_P(), HEADS(ST), [REVIEW, AT_WORK, TECH_NEWS, ART], FOOT_CALM)],
-  ["2 · Scrolled", "The heads scroll away and the header folds to one thin row; the hand stays. Art's screens as pictures swiped sideways, Tech's concern with its aspects, Release's done goal with To main in its block; then a line, and what you have seen, dimmed.",
-    phone(HDR_P(true), "", [REVIEW, AT_WORK, TECH_NEWS, ART, CONCERN, DONE, CAUGHT, OLD], FOOT_CALM, 1180)],
+  ["1 · The project's feed", "The header as today; under it the heads as a feed's stories: a ring in its party's colour says it has news since your last look, never a number. The feed, what waits for you first: the spec that starts by itself at 13:40, the done goal To main; then the news, newest first: Tech's changes as one stack, the goals at work swiped sideways.",
+    phone(HDR_P(), HEADS(ST), [WAITS, REVIEW, DONE, NEWS, TECH_STACK, AT_WORK], FOOT_CALM)],
+  ["2 · Scrolled", "The heads scroll away and the header folds to one thin row; the hand stays. Art's screens swiped sideways; then the line that you have seen everything since 09:12, and what you have seen folded into one line, its heads small.",
+    phone(HDR_P(true), "", [WAITS, REVIEW, DONE, NEWS, TECH_STACK, AT_WORK, ART, CAUGHT, SEEN_LINE], FOOT_CALM, 1000)],
   ["3 · A head pressed: Tech", "Tech's head pressed: the feed narrows to Tech's blocks (its news, its concerns, its map made small, §223.1's lens), the other heads faint; pressed again, the whole feed.",
     phone(HDR_P(), HEADS({ ...ST, tech: "seen" }, "tech"), [TECH_NEWS, CONCERN, SYS], FOOT_CALM)],
   ["4 · A goal's feed", "A goal picked is the same feed one level down: its header, its route's heads (Tech asks: yellow, with !), and its blocks: the plan, each leader's slice and section. The question is in the hand, raised, its pick one tap away, as today.",
     phone(HDR_G, HEADS({ tech: "asks", gd: "news" }, null, [["om", "peon-crown", "Plan"], ["gd", "unicorn-elder", "Game design"], ["tech", "shaman-elder", "Tech"], ["art", "dryad-elder", "Art"]]),
       [G_PLAN, G_TECH, G_GD], FOOT_ASK)],
-  ["5 · Every block cut, cards over cards", "The proposal as asked: each block cut at a height and laid over the next, its foot under the one below. More heads at a glance, and it reads as cards; but every block needs a tap to be read, the acts of a cut block (Start now, To main) go under the next, and a pile is what the hand and the Orkmaster's piles already are.",
+  ["5 · Every block cut, cards over cards (not taken)", "The proposal as asked: each block cut at a height and laid over the next, its foot under the one below. More heads at a glance, and it reads as cards; but every block needs a tap to be read, the acts of a cut block (Start now, To main) go under the next, and a pile is what the hand and the Orkmaster's piles already are.",
     phoneDeck(HDR_P(), HEADS(ST), [REVIEW, AT_WORK, TECH_NEWS, ART, CONCERN, DONE], FOOT_CALM)],
-  ["6 · A deck only where it says something", "The proposed middle: a block whole, as a post is read; one leader's posts in a row are one stack (Tech's edges under its card, More from Tech opens them); what you have seen is one deck, each card's head showing, Tap to spread. The new is read whole; the old is cards.",
-    phone(HDR_P(true), "", [REVIEW, TECH_STACK, DONE, CAUGHT, SEEN], FOOT_CALM, 470)],
+  ["6 · A deck only where it says something (taken)", "A block is read whole, as a post is; one leader's posts in a row are one stack (Tech's edges under its card, More from Tech opens them); the seen line pressed spreads as a deck, each card's head showing. The new is read whole; the old is cards.",
+    phone(HDR_P(true), "", [WAITS, REVIEW, DONE, NEWS, TECH_STACK, CAUGHT, SEEN], FOOT_CALM, 560)],
 ];
 document.getElementById("m").innerHTML = SCREENS.map(([t, d, p]) => `<section class="mk-st"><h2>${t}</h2><p>${d}</p>${p}</section>`).join("");
 </script>

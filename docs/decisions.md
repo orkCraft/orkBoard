@@ -8114,3 +8114,51 @@ another, and the cards' pictures, redrawn, are best seen where the work is done.
    grid (sheet 4's tiles 1–4 and K4 were drawn again as a 2 × 2 and a 3 × 2 grid).
 
 The owner's call.
+
+## 291. The look reads: Rubik, the colours a step lifted, round corners; the phone is a feed of blocks, what waits first, a deck only where it says something (10 November 2026, the owner)
+
+Changes: 268 (one look: its type is Rubik, its corners round), 289.2 (the pixel face of the headings and the buttons, left to be
+decided with the pictures: decided now, it goes; the signs and the runes still wait for the pictures), 223.1 and 223.2 (the
+project's and a goal's screen on a phone: the tabs become one feed), 226.2 (the phone's sizes kept, now in Rubik); spec 40; the
+CLAUDE.md line *The pixel face is for headings and buttons* is changed with the spec that builds this.
+
+Why: the owner, the pictures leaving pixels for the cartoon (§289), asked whether the fonts, the colours and the cards' shape could
+change for reading, on a phone above all. Three looks were laid over the table's template and the phone's hand
+(`docs/mockups/readable-look/`: A Rubik, B Unbounded with Onest, C Alegreya SC with Alegreya Sans), with today's beside them and a
+specimen in Latin and Cyrillic: Pixelify's Cyrillic read worst of all (*Пусть* as *Пуcтb*), C's old-style figures and small caps
+read worst for the numbers; the owner liked Rubik best. Then the owner proposed the phone's tables broken into blocks and scrolled
+as a social feed (`docs/mockups/phone/feed.html` v1), and weighed blocks cut at the foot and laid over each other as cards (its
+screen 5) against a deck only where it says something (screen 6); the owner agreed with screen 6 and answered v1's three
+questions (v2 draws the answers). So:
+1. **The type is Rubik** (SIL OFL 1.1), for the headings, the buttons and the text, 400 to 800; **the pixel face goes** from the
+   headings and the buttons; IBM Plex Mono stays for code, paths and ids. On the desktop the body is 15 px, a caption 13, nothing
+   under 12; on a phone §226.2–226.3 hold (body 17, captions 15, labels 14, nothing under 14). A card's name is in the heading face.
+   Today's sheets' own 10–11 px (`orkboard/gui/static`) come to the type tokens.
+2. **The colours a step lifted, the same warm room**: a card `#33373a` (its frame `#4c5257`), the panel `#1f1d1a`, raised
+   `#2e2b27`, the frame `#45423b`, the ink `#ebe7e0`, read `#d6d2ca`, muted `#bbb6ad`, faint `#a8a39a` (measured in the mockup's
+   README); the parties', the elements' and the signals' colours stay (§268). §226.2's phone edges on `edge` hold.
+3. **The corners are round**: orkUI's notch becomes a round corner, a card 10 px, a button and a chip 6 px, a picture's place
+   inside a card 4–6 px; a card's top edge a faint light line.
+4. **Made in orkUI first** (CLAUDE.md, *The design system is orkUI*): the fonts, the tokens and the corners are orkUI's, then
+   copied; Orkboard's sheets still carry no colour, font or corner of their own. The mockup's fonts stay the mockup's.
+5. **The phone is one feed** in place of §223's tabs, on the project's screen and, one level down, on a goal's: **the Orkmaster
+   and the leaders as a row of heads on top** (a goal's: its route's), as a feed's stories; under it **one feed of blocks**, each a
+   post from the one who says it (its head, its name, when), a block's own cards swiped sideways; **the hand at the foot as
+   today** (§223.6), the questions in it, never in the feed. A block carries only the acts it had where it was (*Change the spec*,
+   *Start now*, *To main*). Scrolled, the heads go and the header folds to one thin row.
+6. **What waits for you first, then the news**, newest first (the owner's answer 1): the specs that start by themselves at a
+   clock time, the goals done and waiting for main, then each leader's news since your last look.
+7. **A head pressed narrows the feed to it** (the owner's answer 2): its news, its concerns, its map made small (§223.1's lens),
+   the other heads faint; pressed again, the whole feed.
+8. **A deck only where it says something** (screen 6; screen 5's blocks cut and laid over each other are not taken: every block
+   would need a tap to be read, a cut block's acts would go under the next, and a pile is what the hand and the Orkmaster's piles
+   already are): a block is read whole; **one leader's posts in a row are one stack**, the edges of the rest under its card,
+   *More from <leader>* opens them; **what you have seen is one line** under *You have seen everything since <time>* (the owner's
+   answer 3), its heads small, and pressed it spreads as a deck, each card's head showing.
+9. **No count**: a head's ring says it has news, a yellow ring with **!** that it asks; never a number (§67, §223). The ring is
+   never alone (§226.3): a sign beside it says the news, as the ! says the asking; the mockup's 12 px names under the heads are
+   14 px when built.
+10. **A goal of its own** carries it (`llm-wiki/general/pages/ideas/`), Design's party: the look in orkUI first, then the phone's
+    feed.
+
+The owner's call.
