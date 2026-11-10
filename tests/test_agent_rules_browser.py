@@ -10,7 +10,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from orkboard.realm import agent_rules, first_open, project_kind  # noqa: E402
+from orkboard.realm import agent_rules, agent_rules_text as rules_text, first_open, project_kind  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.first_open_kit import desk, git_repo  # noqa: E402,F401  (fixture)
 from tests.test_add_tool_browser import fill_hand  # noqa: E402
@@ -48,11 +48,11 @@ def test_the_line_is_shown_with_its_words_not_now_leaves_the_yes_alone_and_the_y
     assert box.locator('[data-rules="write"]').count() == 1 and not (root / "AGENTS.md").exists(), "Not now writes nothing and leaves the yes"
     box.locator('[data-rules="write"]').click()
     box.locator('[data-line="on"]').wait_for(timeout=WAIT_MS)
-    assert "The Board's rules are in this project (schema 1)" in box.locator('[data-line="on"]').inner_text() and box.locator('[data-rules="write"]').count() == 0
+    assert f"The Board's rules are in this project (schema {rules_text.SCHEMA})" in box.locator('[data-line="on"]').inner_text() and box.locator('[data-rules="write"]').count() == 0
     board = d.host.ideas.state_dir / "board"
     assert agent_rules.has_rules(board) and agent_rules.check(board, d.host.ideas._decision_tree().wiki_rel) == []
     log = subprocess.run(["git", "log", "-1", "--format=%s"], cwd=board, capture_output=True, text=True, check=True).stdout.strip()
-    assert log == "board: the Board's rules (schema 1)"
+    assert log == f"board: the Board's rules (schema {rules_text.SCHEMA})"
     assert not d.errors, d.errors
 
 

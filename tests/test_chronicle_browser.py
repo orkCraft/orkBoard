@@ -324,6 +324,7 @@ def test_a_deck_of_seven_or_fewer_deals_whole_with_no_all_search_and_on_one_day_
 
 # -- a first open over the real host (spec 162 J; decisions §277): the past from history lies once ---------------------------------------------------
 
+import os  # noqa: E402
 import shutil  # noqa: E402
 import subprocess  # noqa: E402
 from pathlib import Path  # noqa: E402
@@ -362,7 +363,8 @@ def first_open(tmp_path_factory, gui):
     git = ["git", "-c", "user.email=test@orkcraft.local", "-c", "user.name=Test Runner"]
     subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
     subprocess.run([*git, "add", "-A"], cwd=repo, check=True)
-    subprocess.run([*git, "commit", "-qm", "init"], cwd=repo, check=True)
+    when = {**os.environ, "GIT_AUTHOR_DATE": "2026-11-04T10:00:00", "GIT_COMMITTER_DATE": "2026-11-04T10:00:00"}      # a goal with no decision lies on its commit's day: a fixed one, not the day the test runs
+    subprocess.run([*git, "commit", "-qm", "init"], cwd=repo, check=True, env=when)
     from orkboard.gui.board_host import Orkboard
     from orkboard.gui.server import Server
     from orkboard.realm import project_kind
