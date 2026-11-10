@@ -18,6 +18,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from orkboard import settings as settings_mod
 from orkboard.realm import goal_branch, idea_route
 
 
@@ -40,8 +41,8 @@ class GoalDevMixin:
         return goal_branch.in_use(self.state_dir, slug) or self._dev()
 
     def _pushes_into(self, into: str) -> bool:
-        """The project's `push` setting, for a landing in dev; a goal's own branch is never pushed."""
-        return bool(_r().setting(self.settings, "push")) and into == self._dev()
+        """Whether the project's `push` (*no*, *main only*, *dev and main*: settings.push_way) pushes a landing in dev; a goal's own branch is never pushed, and *main only* leaves dev here."""
+        return settings_mod.pushes_dev(_r().setting(self.settings, "push")) and into == self._dev()
 
     def _begin_goal(self, slug: str, plan: dict, task: dict) -> str:
         """A task of the goal is about to be cut: the branch it is cut from and lands on. The goal's branch is made from dev when its first step starts, and dev is merged
@@ -106,15 +107,15 @@ class GoalDevMixin:
         RunnerError = _r().RunnerError
         with self._lock:
             if any(k[0] == slug for k in self._runs):
-                raise RunnerError("That goal still has a task running")
+                raise RunnerError(goal_branch.words("dev_task_running"))
             if not goal_branch.in_use(self.state_dir, slug):
-                raise RunnerError("That goal has no branch waiting for dev")
+                raise RunnerError(goal_branch.words("dev_no_branch", dev=self._dev()))
             if not goal_branch.read(self.state_dir, slug).get("ready"):
-                raise RunnerError("That goal is not done: its last step is not accepted yet")
+                raise RunnerError(goal_branch.words("dev_not_done"))
         dev = self._dev()
         try:
             self.git.ensure_branch(dev)
-            got = goal_branch.to_dev(self.git, self.state_dir, slug, dev, threading.Event(), push=bool(_r().setting(self.settings, "push")), untested=untested)
+            got = goal_branch.to_dev(self.git, self.state_dir, slug, dev, threading.Event(), push=settings_mod.pushes_dev(_r().setting(self.settings, "push")), untested=untested)
         except (goal_branch.GoalConflict, goal_branch.GoalRed) as e:
             self._changed(slug)
             raise RunnerError(" ".join(str(e).split())[:goal_branch.WHY_MAX]) from None

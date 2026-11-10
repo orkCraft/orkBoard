@@ -177,6 +177,29 @@ WINDOW: tuple[Term, ...] = (
     _t("doubt_still", "still doubts"),                              # a leader's card in the hand after the leaders judged the goal again once: *The Architect still doubts* (spec 168 D5, decisions §283.25); its why at its foot
     _t("doubt_still_no", "still says no"),                          # … when the leader's verdict is a no
     _t("to_hearing", "To the hearing"),                             # … its way that takes the goal to its hearing now, with no second judging (`ideas.to_hearing`; the way's kind is `go_on`)
+    # -- a goal's branch, the discard's two piles and To main (spec 168 F2, F3; decisions §283.26–§283.28). <dev> is the project's work branch, <branch> a branch, <n> a count --------
+    _t("to_dev", "To dev"),                                        # the lower pile's card played: the goal goes from its own branch into dev (`ideas.goal_to_dev`; the way's kind is `go_on`)
+    _t("to_dev_untested", "To dev without the tests"),             # … in the card's menu: the gate's tests are not run (`untested: true`; the way's kind is `accept_risk`), as *To main without the tests* is for main (§274.3)
+    _t("try_again", "Try again"),                                  # a goal blocked before dev: the way that asks the gate again (`ideas.goal_to_dev`; the way's kind is `start_again`)
+    _t("waits_dev", "Waiting for dev"),                            # the lower pile's word: goals done on their own branch, not in dev yet; drawn only while *Lands in dev by itself* is off
+    _t("waits_main", "Waiting for main"),                          # the upper pile's word: goals in dev, not in main yet
+    _t("plate_press", "Choose the branch"),                        # a plate's hint (the plate says the branch's name): pressed, the branches are dealt to the hand
+    _t("branch_new", "A new branch from <dev>"),                   # the card of the lower pile's branches that makes one: its name is written in the card's own field
+    _t("branch_warn", "Goals are at work"),                        # the card dealt first when a plate is pressed while goals are at work
+    _t("branch_warn_line", "Changing the branch moves where the work still to come lands and is checked; what is done stays where it is."),      # … its foot
+    _t("branch_go", "Choose a branch anyway"),                     # … its way
+    _t("branch_here", "here now"),                                 # the mark of the branch the plate stands for now
+    _t("dev_blocked", "cannot go into <dev>"),                     # a blocked goal's card in the hand: *Lobby cannot go into dev*, its why at the foot
+    _t("dev_why_off", "Lands in dev by itself is off: it waits for you"),                                  # a goal done on its branch waits because the setting says so
+    _t("dev_no_tests", "This project has no tests, so nothing can show the goal is safe for <dev>: send it with To dev without the tests"),      # no gate to run for the goal
+    _t("dev_no_test_ran", "No test ran on <dev> with the goal: nothing shows it is safe for <dev>"),       # the gate ran and no test touched the goal
+    _t("dev_red", "The tests are red on <dev> with the goal: <tail>"),                                     # the gate is red on dev with the goal
+    _t("dev_could_not_run", "The tests could not run: <why>"),                                              # the gate could not start
+    _t("dev_conflict", "<dev> conflicts with <branch> in <files>"),                                        # dev does not merge into the goal's branch
+    _t("dev_task_running", "That goal still has a task running"),                                          # refused: a task of the goal is at work
+    _t("dev_no_branch", "That goal has no branch waiting for <dev>"),                                      # refused: the goal is in dev already or never had a branch
+    _t("dev_not_done", "That goal is not done: its last step is not accepted yet"),                       # refused: more steps to go
+    _t("to_main_runes", "its goals go through the portal's ring of runes"),                                # what To main does with the cards it takes (nothing moves under reduced motion)
     _t("step_lacks", "its tool cannot do what this step needs"),    # a seat marked ! on a spec's header of steps (spec 168 C4, decisions §283.16.6)
     _t("spec_now", "Now"),                                         # a spec's part as it is, and ...
     _t("spec_will", "As it will be"),                              # ... as the goal will leave it (spec 168 C4, decisions §283.16.6)

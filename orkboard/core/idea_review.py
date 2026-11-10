@@ -17,7 +17,7 @@ from pathlib import Path
 
 from orkboard.core.idea_plan import _task, estimate
 from orkboard.core.idea_task import is_check
-from orkboard.realm import idea_change, idea_spend, idea_target, project_map, worktrees
+from orkboard.realm import goal_branch, idea_change, idea_spend, idea_target, project_map, worktrees
 from orkboard.realm.goal_types import DROPPED
 from orkboard.realm.idea_git import plain
 
@@ -108,6 +108,8 @@ class ReviewMixin:
         self._set_task(slug, tid, state="merged", commit=commit, subjects=subjects, note=note, finished=_r().now_iso(),
                        error="", conflict="", look="")
         self._log(slug, tid, f"== merged into {base} · {commit[:10]}\n")
+        if tests.get("ran") is False and base != self._dev():                  # a project with no test: the person's Merge was the one yes a goal is asked for (docs/specs/168 F2): the goal goes into dev on it
+            goal_branch.accepted_untested(self.state_dir, self.git.root, slug)
         project_map.landed(self.state_dir, self.repo_root, path, commit, self.events)      # the System's parts at the new head (spec 89 §1)
         self._remove_worktree(slug, tid)
         self._settle_idea(slug)

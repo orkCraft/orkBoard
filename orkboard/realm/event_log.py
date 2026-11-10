@@ -436,3 +436,5 @@ TO_HEARING = "to_hearing"              # the person took a goal to the hearing a
 EVENTS += (GOAL_REWRITTEN, REWRITE_UNDONE, REWRITE_FORKED, SAY_ANSWERED, JUDGED_AGAIN, TO_HEARING)
 GOAL_TO_DEV = "goal_to_dev"            # a goal went from its own branch into dev (spec 168 F1, §283.26): idea, into
 EVENTS += (GOAL_TO_DEV,)
+BRANCH_SET = "branch_set"              # a discard plate's branch chosen (spec 168 F2, §283.27): which ("dev" · "main"), branch, was, device
+EVENTS += (BRANCH_SET,)
