@@ -156,11 +156,11 @@ def test_a_crafts_card_seats_it_once_and_the_backpack_opens_on_its_chair(gui):
     try:
         press_chair(pg)
         pg.locator('.hand-craft[data-craft="marketing"]').dblclick()
-        pg.locator(".stall-rug").wait_for(timeout=WAIT_MS)
+        pg.locator(".slots-table").wait_for(timeout=WAIT_MS)
         saved = _calls(pg, host, "ideas.goal_save")
         assert saved == [{"title": "Marketing", "about": MARKETING, "leader": "growth-hack-gnome", "team": ["growth-hack-gnome"], "every": [], "size": "lean", "preset": "marketing"}], saved
         assert pg.locator("[data-backpack]").get_attribute("aria-pressed") == "true"
-        pg.wait_for_function("() => document.querySelector('.stall').dataset.stall === 'marketing'", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.slots-table').dataset.stall === 'marketing'", timeout=WAIT_MS)
         assert pg.locator('.table-tab[data-tab="marketing"]').get_attribute("aria-selected") == "true", "its tab is the open one"
         assert pg.locator('[data-chair-deal]').count() == 0 and ("ideas.stall", {"chair": "marketing"}) in host.log
         assert not log, log

@@ -21,7 +21,6 @@ import { RingAround } from "./ring.js";
 import { PotionRow } from "../hand/potionrow.js";
 import { StopAll } from "./stopall.js";
 import { PresenceChain } from "./presence.js";
-import { backDrop } from "./stalldrop.js";                   // a card of what you carry dropped here goes back to its default while the inventory is open (spec 157 D.4)
 
 /** Whether the lane is drawn: the table is laid. A form over the pane leaves it, nothing changes size by what is open (decisions §283.5). */
 export const laneShown = () => laidNow();
@@ -46,7 +45,7 @@ export function ReleaseLane({ tab, parties }) {
     if (!again && shownDone().some((x) => x.slug === slug)) act("ideas.seen", { idea: slug });
   };
   const merge = (e) => mergeGate(e);
-  return html`<aside class=${cls("release-lane", { "is-headless": headless })} aria-label=${label} data-lane="release" data-through=${party || undefined} ...${backDrop()}>
+  return html`<aside class=${cls("release-lane", { "is-headless": headless })} aria-label=${label} data-lane="release" data-through=${party || undefined}>
     <div class="release-lane__head" data-room-things="discard"><${PotionRow} /><div class="release-lane__side"><${PresenceChain} half=${true} /><${StopAll} /></div></div>
     <span class="table-end__label release-lane__label ork-plaque">${label}</span>
     <div class="release-lane__scroll" ref=${scroll}>

@@ -47,7 +47,7 @@ def test_the_backpack_opens_the_inventory_the_book_the_past_and_each_is_drawn_op
         pg.locator(".hand-book").wait_for(timeout=WAIT_MS)
         assert pg.locator(".ork-pack.is-open, .ork-book.is-open").count() == 0
         pg.locator("[data-backpack]").click()                                                                                      # the inventory
-        pg.locator(".stall").wait_for(timeout=WAIT_MS)
+        pg.locator(".slots-table").wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-end .ork-pack.is-open").count() == 1 and pg.locator(".ork-book.is-open").count() == 0
         pg.locator("[data-book]").click()                                                                                          # the history takes the pane
         pg.locator('.table-over[data-kind="history"]').wait_for(timeout=WAIT_MS)

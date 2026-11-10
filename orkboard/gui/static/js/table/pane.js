@@ -28,7 +28,8 @@ import { IdeaTable, SpecTable, stageKind } from "./stageboard.js";   // the Orkm
 import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
 import { LimitChip } from "./tabs.js";
 import { uprightNow } from "../frame/upright.js";
-import { Stall } from "./stall.js";                          // the inventory: the merchant's stall, drawn instead of the map while it is open (spec 157 D)
+import { Stall } from "./stall.js";
+import { Slots, SlotsLine } from "./slots.js";                // the inventory as slots on the desktop (spec 168 H1); the narrow page and the phone keep the stall (spec 157 D: the merchant's stall, drawn instead of the map while it is open)
 import { stall } from "./stallstate.js";
 import { Menu } from "./menu.js";
 import { partyItems } from "./partymenu.js";
@@ -103,6 +104,7 @@ function Title({ parties, tab, narrow }) {
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     ${!o && stalled && uprightNow.value && html`<button type="button" class="ork-btn quiet table-title__back" data-stall-back aria-label="Close the inventory" title="Close the inventory" onClick=${closeInventory}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : stalled ? html`<span class="stall-title">Inventory</span> how the project is set · <b>${tab === ORKMASTER ? "the whole project" : stall.value?.whose || mapName(tab, parties)}</b>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>
+    ${stalled && !o && !narrow && html`<${SlotsLine} />`}
     ${picked.value && !stalled && html`<${Phases} goal=${picked.value} />`}
     <span class="table-grow"></span>
     ${!o && tab !== ORKMASTER && wide.value && party && html`<${Menu} label=${`${nameOf(party)}'s menu`} items=${partyItems(party, from, true)} />`}
@@ -125,7 +127,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
     ${!o && !bare && !stalled && html`<${ToMain} />`}
     ${!o && !bare && !stalled && g && isRelease(g) && html`<${ChecksView} />`}
     <div class="table-body" ref=${body} data-end=${form ? "form" : o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
-      ${o ? html`<${Over} />` : stalled ? html`<${Stall} g=${g} />` : past ? html`<${PastGoal} idea=${picked.value} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${column && picks && kind === "result" ? html`<${ResultTable} n=${picks} />` : column && picks && stageKind(picks) === "idea" ? html`<${IdeaTable} n=${picks} />` : column && picks && stageKind(picks) === "spec" ? html`<${SpecTable} n=${picks} />` : kind === "route" ? html`<${RouteView} n=${picks} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`}
+      ${o ? html`<${Over} />` : stalled ? (narrow ? html`<${Stall} g=${g} />` : html`<${Slots} g=${g} />`) : past ? html`<${PastGoal} idea=${picked.value} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${column && picks && kind === "result" ? html`<${ResultTable} n=${picks} />` : column && picks && stageKind(picks) === "idea" ? html`<${IdeaTable} n=${picks} />` : column && picks && stageKind(picks) === "spec" ? html`<${SpecTable} n=${picks} />` : kind === "route" ? html`<${RouteView} n=${picks} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`}
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`

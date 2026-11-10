@@ -10,7 +10,7 @@ import { html } from "../html.js";
 import { board } from "../board/store.js";
 import { mapData } from "../shell/store.js";
 import { drawn } from "../frame/kinds.js";
-import { PLAY, inventory, lift, lifted, lower, tab } from "../frame/state.js";
+import { PLAY, dealt as dealtSlot, inventory, lift, lifted, lower, tab } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
 import { lanesBeforeEnd } from "../table/data.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
@@ -35,7 +35,7 @@ import { ChairDeal, dealing } from "./chairdeal.js";                            
 import { AnswerLifted, answerSet, useWide } from "./answercards.js";           // a lifted question or failure stays a hand card, its ways the hand (spec 158 F, decisions §270)
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
-import { Carry } from "./carry.js";                         // the inventory open: what you carry, instead of the stacks (spec 157 D.3)
+import { SlotDeal } from "./slotdeal.js";                  // an inventory slot pressed: its ways are the hand (spec 168 H1)
 import { Upright } from "./upright.js";
 import { ADD_TOOL, TOOL, fieldOpen, isToolKey, liftDecision, liftKey, stopKeyOf } from "./state.js";
 import { AddTool } from "./addtool.js";
@@ -44,7 +44,7 @@ import { SetupBubble, SetupCard, setupNow } from "./setupcards.js";
 import { columnOn } from "../table/data.js";
 import { laidNow, layLine } from "../table/laying.js";
 import { said } from "./motion.js";
-if (typeof document !== "undefined") {                         // the places' sheet (places.css), as carry.js loads its own
+if (typeof document !== "undefined") {                         // the places' sheet (places.css), as every sheet loads its own
   const href = new URL("./places.css", import.meta.url).href;
   if (!document.querySelector(`link[href="${href}"]`)) {
     const link = document.createElement("link");
@@ -108,28 +108,28 @@ export function Hand() {
   const bare = !laidNow();                                                              // not laid yet: only the Orkmaster's cards and the AI tools (spec 130 C.6)
   useEffect(() => { if (layLine.value && (fieldOpen.value || (map?.nodes || []).length)) layLine.value = ""; }, [fieldOpen.value, (map?.nodes || []).length]);      // the laid table's line goes with the first goal
   if (!map && !bare) return null;
-  const carrying = inventory.value !== null && !bare && !uprightNow.value;                  // the inventory open: the hand is what you carry of the chair (carry.js)
-  const none = !(map?.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length && !bare && !layLine.value && !carrying;      // no goal at all and nothing asked: the + card lies large in the pane
+  const invOpen = inventory.value !== null && !bare && !uprightNow.value, slotOn = invOpen && wide && !!dealtSlot.value;      // the inventory open: the hand stays the hand; a slot pressed deals its ways to it (slotdeal.js, spec 168 H1)
+  const none = !(map?.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length && !bare && !layLine.value && !invOpen;      // no goal at all and nothing asked: the + card lies large in the pane
   const plus = () => { lower(); fieldOpen.value = true; };
   if (uprightNow.value) return html`<${Upright} root=${root} stacks=${stacks} plus=${plus} />`;                  // a touch phone upright: the hand is the first screen (upright.js)
-  const deal = wide && !s && !carrying && headerDeal.value ? headerDeal.value : "";                   // the Orkmaster's header pressed: the kinds or the stages are the hand
+  const deal = wide && !s && !invOpen && headerDeal.value ? headerDeal.value : "";                   // the Orkmaster's header pressed: the kinds or the stages are the hand
   useEffect(() => { if ((key || fieldOpen.value || !wide) && headerDeal.value) headerDeal.value = ""; }, [key, fieldOpen.value, wide]);
-  const chair = dealing.value && wide && !carrying && !middle && !bare && !s;                                   // the new chair pressed: its crafts are the hand (spec 161 I)
+  const chair = dealing.value && wide && !invOpen && !middle && !bare && !s;                                   // the new chair pressed: its crafts are the hand (spec 161 I)
   const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
   const sayOn = wide && lifted.value === PLAY;                                                                  // a leader's card of the say in play: its ways are the hand (sayplay.js)
   const fieldWide = fieldOpen.value && wide && !middle;                                                   // the new goal's field lies in the hand's place (spec 168 D2)
-  const sunk = !!(cards || deal || chair || (s && wide) || fieldWide || sayOn);                                    // what the person plays lies in the hand's place: the hand's own cards sink (spec 168 D1, D2)
+  const sunk = !!(slotOn || cards || deal || chair || (s && wide) || fieldWide || sayOn);                                    // what the person plays lies in the hand's place: the hand's own cards sink (spec 168 D1, D2)
   const places = columnOn() && !bare ? html`<${Backpack} /><${Book} />` : null;                                // the places that change the table: the die, the backpack, the book (spec 168 A5)
   const pots = !columnOn() ? html`<${Mana} lifted=${s} />` : bare ? html`<${PotionRow} above=${true} />` : null;
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
-    ${carrying && html`<div class="hand-places"><div class="hand-row is-carrying" style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}><${Carry} /><div class="hand-end"><${PlayDie} />${places}${pots}</div></div></div>`}
-    ${!middle && !carrying && html`<div class="hand-places"><div class=${sunk ? "hand-row is-sunk" : "hand-row"} inert=${sunk ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
+    ${!middle && html`<div class="hand-places"><div class=${sunk ? "hand-row is-sunk" : "hand-row"} inert=${sunk ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
       <div class="hand-end">${!bare && html`<${PlayDie} />`}${places}${pots}</div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
+    ${slotOn && html`<${SlotDeal} />`}
     ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
     ${sayOn && (isDevPlay() ? html`<${DevLifted} />` : html`<${SayLifted} />`)}
     ${deal && html`<${ProjectDeal} which=${deal} />`}
