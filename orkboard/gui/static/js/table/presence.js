@@ -4,6 +4,7 @@
 import { useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { town, command } from "../link.js";
+import { ORKUI } from "../orkui.js";
 import { HOURS_TITLE, HoursPanel, useLongPull } from "./presencehours.js";
 
 /** The presence as the snapshot has it (`{here, until, held}`), or null from a host that does not say. */
@@ -40,12 +41,18 @@ const reduced = () => !!window.matchMedia?.("(prefers-reduced-motion: reduce)").
 /** The lamp's chain (spec 161 G, decisions §271): orkUI's `.ork-chain` at the right of the discard column's head (lane.js; under 760 px, small, at the tabs' end), on one press: `presence.set {here: !here}`.
  *  Here it hangs at rest; Away it is `.is-pulled`. A press moves it once (`.is-tugging`, taken off at its animationend; at once under reduced motion: the class is never set). Its words stand beside it
  *  (*Here*, its line *until 23:00*, *· held*); `small` has no words and `aria-label` and `title` keep them (§271.5). With no `presence` in the snapshot there is no chain.
- *  `half` (the right column's head, spec 168 A4, decisions §285.2): orkUI's `.small` (6 × 29) with its words beside it; held down for a long pull (or pressed with Shift) it opens the person's hours (presencehours.js, spec 168 H2, decisions §283.31). */
-export function PresenceChain({ small = false, half = false }) {
+ *  `half` (the right column's head, spec 168 A4, decisions §285.2): orkUI's `.small` (6 × 29) with its words beside it; held down for a long pull (or pressed with Shift) it opens the person's hours (presencehours.js, spec 168 H2, decisions §283.31).
+ *  `pic` (the phone's header, goal 169 H): orkUI's cartoon chain (`chain/chain-rest.png`, `chain-pulled.png` while away), short at rest, its word (*Here*, *Away*) at its bead; the line in `aria-label` and `title`. */
+export function PresenceChain({ small = false, half = false, pic = false }) {
   const [tug, setTug] = useState(false), [hours, setHours] = useState(false), btn = useRef(null), p = presenceNow(), pull = useLongPull(half, () => setHours(true));
   if (!p) return null;
   const line = presenceLine(p), word = p.here ? "Here" : "Away", title = `${p.here ? HERE_TITLE : AWAY_TITLE}${line ? ` (${line})` : ""}${half ? `. ${HOURS_TITLE}.` : ""}`;
   const press = (e) => { if (pull.held(e)) return; if (!reduced()) setTug(true); pressDoor(); };
+  if (pic) {                                                                 // the phone's header (goal 169 H, decisions §292.3, §293.6): orkUI's cartoon chain hung from its top edge, its word at the bead
+    const src = `${ORKUI}/chain/chain-${p.here ? "rest" : "pulled"}`;
+    return html`<button type="button" class=${cls("presence-chain is-pic", { "is-away": !p.here, "is-tugging": tug })} aria-pressed=${String(p.here)} aria-label=${`${word}${line ? `, ${line}` : ""}`} title=${title} data-here=${String(p.here)} onClick=${press}
+        onAnimationEnd=${() => setTug(false)}><img class="presence-chain__pic" src=${`${src}.png`} srcset=${`${src}@2x.png 2x, ${src}@3x.png 3x`} width="16" height="73" alt="" draggable="false" /><b class="presence-chain__word" aria-hidden="true">${word}</b></button>`;
+  }
   return html`<button ref=${btn} type="button" ...${pull.props} class=${cls("presence-chain", { "is-away": !p.here, "is-small": small, "is-half": half })} aria-pressed=${String(p.here)} aria-label=${`${word}${line ? `, ${line}` : ""}`} title=${title} data-here=${String(p.here)} onClick=${press}>
     ${!small && html`<span class="presence-chain__words"><b class="presence-chain__word">${word}</b>${line && html`<span class="presence-chain__line">${line}</span>`}</span>`}
     <span class=${cls("ork-chain", { small: small || half, "is-pulled": !p.here, "is-tugging": tug })} aria-hidden="true" onAnimationEnd=${() => setTug(false)}></span>

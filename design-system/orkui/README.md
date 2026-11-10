@@ -196,6 +196,26 @@ and `--ork-table-rim` and pulls it out from its foot (up 2 px, turned -4 degrees
 in `--ork-table-rim-hi`, shut the leaf in `--ork-raised` with a knob in `--ork-ink-faint`; `.is-open` the opening in `--ork-ink-faint` at 0.7 and the leaf seen edge on. Shut and
 open are states, nothing swings. Both are masks (generated: `tools/build_chair.py`, `tools/build_door.py`), no colour of their own, no words inside.
 
+## The places' and the chairs' cartoon pictures (0.41.0, Orkboard's decision 293)
+The owner's cartoon takes of the die, the backpack, the history book, the lamp's chain and the chairs (`races/art/cartoon/o*.jpg`, `races/art/places.json`), cut by
+`tools/build_places_from_art.py` (`uv run --with pillow --with numpy python tools/build_places_from_art.py`, `--check`, `--preview <file.png>`) into smooth PNGs with a real alpha (the sheets' flat grey ground and frames
+cut away, the light rim kept) at 1x, `@2x` and `@3x`, **beside** the pixel pictures, which stay: the components still draw those until Orkboard's stage H switches them. One folder's states lie on one canvas, so a thing
+does not jump when it changes state. Used as `<img src="chair/chair-leader-ork.png" srcset="chair/chair-leader-ork@2x.png 2x, chair/chair-leader-ork@3x.png 3x" alt="">`.
+
+| Folder | Pictures (1x size) |
+|---|---|
+| `die/` | `die-rest.png` 31 x 32, `die-tumble.png` 31 x 32 |
+| `pack/` | `pack-open.png` 32 x 32, `pack-shut.png` 32 x 32 |
+| `book/` | `book-open.png` 47 x 40, `book-shut.png` 47 x 40 |
+| `chain/` | `chain-pulled.png` 16 x 73, `chain-rest.png` 16 x 73 |
+| `chair/` | `chair-back.png` 42 x 44, `chair-big.png` 46 x 52, `chair-empty.png` 29 x 36, `chair-leader-elf.png` 36 x 41, `chair-leader-gnome.png` 38 x 43, `chair-leader-goblin.png` 37 x 44, `chair-leader-knight.png` 34 x 40, `chair-leader-ork.png` 38 x 43, `chair-leader-undead.png` 37 x 43, `chair-new-party.png` 29 x 36, `chair-pulled.png` 29 x 36, `chair-simple.png` 24 x 36 |
+
+The die (`die-rest`, `die-tumble`), the backpack (`pack-shut`, `pack-open`), the book (`book-shut`, `book-open`) and the chain (`chain-rest`, `chain-pulled`, hung from the top edge, as tall as the pulled one) are by state.
+The chairs: `chair-back` (an occupied chair's back, the head over it), `chair-big` (the open leader's grander back), `chair-empty`, `chair-pulled` (pulled out, pointed at), `chair-simple` (simplified for 18 px),
+`chair-new-party` (**laid by code, not cut**: the empty chair with orkUI's plus, four equal arms, in brass, a dark line and the light rim; the sheet's tile 5 draws a cross and is not used) and
+`chair-leader-knight`, `-ork`, `-elf`, `-gnome`, `-undead`, `-goblin` (a back for each race's leader, the middle plain for the head; the gnomes' glyphs are runes). A back runs off its foot and the chain off its top:
+they are cut flat there. `races/art/places-made.json` lists the files the tool writes.
+
 ## The icons
 `icons/icons.svg` is the sprite of the window's icons (`icons/README.md`). Fifteen are **orkUI's own** (0.15.0), drawn on the signs' 7 x 7 grid in solid pixels: `arrow-left`, `close` (×),
 `more-horizontal` (…), `plus`, `search`, `mic`, `play`, `stop`, `banner` and `boarded` (0.22.0: a pole with a square banner with a + cut out of it, a pole crossed by two planks), `hammer` (0.26.0: Orkboard's *Fix it*; `.ork-icon.is-striking` raises it one cell and brings it down, 600 ms in two poses, only when motion is allowed) and the four chevrons; at 14, 21 or 28 px (two, three or four pixels a cell) they are whole pixels. The other 22 are

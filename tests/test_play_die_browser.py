@@ -260,16 +260,17 @@ def test_with_no_goal_at_all_the_die_still_lies_in_the_hand(gui):
     finish(pg, errors)
 
 
-def test_the_phones_die_says_play_it_on_the_computer_and_throws_nothing(gui):       # spec 117 B, decisions §195.3: the phone's top row has a small die; Play runs on the computer
+def test_the_phones_die_says_play_it_on_the_computer_and_throws_nothing(gui):       # spec 117 B; goal 169 H, decisions §292.1: the die is the round button's face at the foot's right (was: a small die in the top row), Play one of its three; Play runs on the computer
     server, browser = gui
     errors: list[str] = []
     host = Host()
     pg = narrow.context(browser, "phone").new_page()
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".hand-up .up-die").wait_for(timeout=WAIT_MS)
+    pg.locator(".hand-up .up-round").wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(500)
-    assert pg.locator(".hand-die").count() == 0, "the desktop's die is not drawn"
+    assert pg.locator(".hand-die").count() == 0 and pg.locator(".up-top .up-die").count() == 0, "the desktop's die is not drawn, nor a die in the top row"
+    pg.locator(".hand-up .up-round").click()
     pg.get_by_role("button", name="Play it on the computer").click()
     pg.get_by_text("Play it on the computer", exact=True).wait_for(timeout=WAIT_MS)
     assert pg.locator(".table-over").count() == 0 and pg.locator(".play-throw").count() == 0, "nothing is thrown, no view opens"

@@ -6,6 +6,7 @@ pixels a pixel)."""
 from __future__ import annotations
 
 import datetime as dt
+import json
 import os
 from pathlib import Path
 
@@ -14,7 +15,8 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_context_narrow_browser import box, cards, open_up  # noqa: E402
+from tests import narrow  # noqa: E402
+from tests.test_hand_context_narrow_browser import box, cards, css_colour, open_up, pots  # noqa: E402
 from tests.test_hand_desktop_browser import node, sig, task  # noqa: E402
 from tests.test_phone_look_browser import CONCERN, READABLE, SEAT, LookHost, pick_from_menu  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
@@ -460,5 +462,297 @@ def test_pictures_of_the_feed_for_design(gui):
         pg.locator(".up-gfeed .post-card").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(1200)
         shot(pg, "goal")
+    finally:
+        context.close()
+
+
+# -- the folding header, the round button and the chain (goal 169 H, decisions §292; feed.html v3 screens 7 and 8) ------------------------------------------
+
+PLAY_UP, ROUND = "Play it on the computer", "Play, Inventory, History"
+
+
+class FoldHost(FeedHost):
+    """FeedHost's project with the person here (the lamp's chain lit *Here*, until 23:00) and, `asleep`, no preview to play (the die faint)."""
+
+    def __init__(self, scenario="ready", asleep=False):
+        super().__init__(scenario)
+        self.asleep = asleep
+        self.presence = {"here": True, "until": "2026-11-10T23:00", "held": False}
+
+    def snapshot(self):
+        s = super().snapshot()
+        s["state"]["presence"] = dict(self.presence)
+        if self.asleep:
+            s["state"]["preview"] = ""
+        return s
+
+    def handle(self, name, a):
+        if name == "presence.set":
+            self.log.append((name, a))
+            self.presence = {"here": a["here"], "until": "2026-11-10T19:00", "held": True}
+            self.rev += 1
+            self.ws.send(json.dumps(self.snapshot()))
+            return self.presence
+        return super().handle(name, a)
+
+
+def open_fold(gui, host=None):
+    return open_feed(gui, at_look(), host=host or FoldHost())
+
+
+def top(pg):
+    return pg.locator(".hand-up .up-top")
+
+
+def middle(pg):
+    return pg.locator(".hand-up .up-look")
+
+
+def scroll_feed(pg, y):
+    middle(pg).evaluate("(e, y) => { e.scrollTop = y; e.dispatchEvent(new Event('scroll')); }", y)
+    pg.wait_for_timeout(250)
+
+
+def round_button(pg):
+    return pg.locator(".hand-up .up-round")
+
+
+def options(pg):
+    return pg.locator(".up-sel .up-sel__opt")
+
+
+def focused(pg):
+    return pg.evaluate("() => document.activeElement?.className || ''")
+
+
+def test_the_header_holds_the_crown_the_name_settings_stop_all_the_bottles_and_the_chain_and_no_die_or_backpack(gui):
+    pg, host, log = open_fold(gui)
+    try:
+        t = top(pg)
+        kids = t.evaluate("(e) => [...e.children].filter((c) => getComputedStyle(c).display !== 'none').map((c) => [...c.classList].find((k) => k !== 'up-ico'))")
+        assert kids[0] == "up-crown" and "up-stop" in kids and kids.index("up-stop") < kids.index("up-pots") < kids.index("presence-chain"), kids
+        assert t.locator(".up-die, .stall-pack, .ork-die, .hand-book").count() == 0, "the die and the backpack left the header for the round button"
+        stop = t.get_by_role("button", name="Stop all", exact=True)
+        r = box(stop)
+        assert r["width"] >= 44 and r["height"] >= 44 and stop.evaluate("(e) => getComputedStyle(e).color") == css_colour(pg, "--ork-danger"), "Stop all, 44 px, in the danger colour"
+        chain = t.locator(".presence-chain")
+        assert "/ds/orkui/chain/chain-rest" in chain.locator("img").get_attribute("src") and chain.locator(".presence-chain__word").inner_text() == "Here", "orkUI's chain at rest, lit Here"
+        c, pots = box(chain), box(t.locator(".up-pots"))
+        assert c["x"] >= pots["x"] + pots["width"] - 1 and c["width"] >= 44 and c["height"] >= 44 and c["x"] + c["width"] <= 390, "hung beside the bottles at the header's right"
+        assert box(chain.locator("img"))["y"] <= box(t)["y"] + 1, "it hangs from the header's top edge"
+        stop.click()
+        for _ in range(40):
+            if any(n == "halt" for n, _a in host.log):
+                break
+            pg.wait_for_timeout(50)
+        assert any(n == "halt" for n, _a in host.log), "Stop all sends halt, as the menu's"
+        narrow.no_sideways(pg)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_scrolled_the_heads_go_and_the_header_folds_to_one_thin_row_of_the_bottles_stop_all_and_the_chain(gui):
+    pg, host, log = open_fold(gui)
+    try:
+        t, full = top(pg), box(top(pg))
+        assert round(full["height"]) in (60, 61) and "is-thin" not in t.get_attribute("class")
+        scroll_feed(pg, 600)
+        pg.wait_for_function("() => document.querySelector('.up-top').classList.contains('is-thin')", timeout=WAIT_MS)
+        thin = box(t)
+        assert thin["height"] <= 45 and thin["y"] == full["y"], "one thin row where the header was"
+        assert box(pg.locator(".up-fh"))["y"] + box(pg.locator(".up-fh"))["height"] <= thin["y"] + thin["height"] + 1, "the heads row scrolled away with the feed"
+        for sel in (".up-pots", ".up-stop", ".presence-chain"):
+            assert t.locator(sel).is_visible(), f"{sel} kept in the thin row"
+        for sel in (".up-crown", ".up-name", ".up-set"):
+            assert t.locator(sel).is_hidden(), f"{sel} folded away"
+        assert t.locator(".presence-chain__word").inner_text() == "Here" and pots(pg).count() == 4
+        for b in t.locator(".up-pot, .up-stop, .presence-chain").all():
+            r = box(b)
+            assert r["width"] >= 44 and r["height"] >= 44, r
+        scroll_feed(pg, 0)
+        pg.wait_for_function("() => !document.querySelector('.up-top').classList.contains('is-thin')", timeout=WAIT_MS)
+        assert round(box(t)["height"]) in (60, 61) and t.locator(".up-crown").is_visible()
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_focused_block_is_never_under_the_folded_header(gui):
+    pg, host, log = open_fold(gui)
+    try:
+        scroll_feed(pg, 600)
+        pg.wait_for_function("() => document.querySelector('.up-top').classList.contains('is-thin')", timeout=WAIT_MS)
+        assert middle(pg).evaluate("(e) => getComputedStyle(e).scrollPaddingTop") == "44px", "the middle's scroll-padding-top is the thin row's height"
+        head_of(pg, "orkmaster").focus()
+        walked = 0
+        for _ in range(30):
+            pg.keyboard.press("Tab")
+            pg.wait_for_timeout(60)
+            r = pg.evaluate("() => { const e = document.activeElement; if (!e?.closest('.up-look')) return null; const b = e.getBoundingClientRect(), t = document.querySelector('.up-top').getBoundingClientRect(); return [b.top, b.bottom, t.bottom]; }")
+            if r is None:
+                continue
+            walked += 1
+            assert r[0] >= r[2] - 1, f"the focused block's top {r[0]} lies under the header's foot {r[2]}"
+        assert walked >= 10
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_round_button_lies_at_the_foots_right_its_face_the_die_in_its_state_and_no_count(gui):
+    pg, host, log = open_fold(gui)
+    try:
+        b, plus_card, row = round_button(pg), box(pg.locator(".up-plus .hand-plus")), box(pg.locator(".up-row"))
+        r = box(b)
+        assert r["width"] >= 56 and r["height"] >= 56 and r["x"] + r["width"] >= 390 - 16 and r["y"] >= row["y"] - 8, "round, at the foot's right"
+        assert plus_card["x"] <= 16 and plus_card["x"] + plus_card["width"] < 390 / 2, "the + card at the foot's left"
+        assert b.get_attribute("aria-label") == ROUND and b.get_attribute("aria-expanded") == "false"
+        assert b.get_attribute("data-state") == "white" and "/ds/orkui/die/die-rest" in b.locator("img").get_attribute("src"), "white while dev can be played"
+        assert not any(ch.isdigit() for ch in b.inner_text() + b.get_attribute("aria-label")), "no count on the button"
+        pick_from_menu(pg, "goal", SEAT)
+        pg.wait_for_function("() => document.querySelector('.up-round').dataset.state === 'rune'", timeout=WAIT_MS)
+        elem = next(n for n in host.nodes if n["slug"] == "seat")
+        want = elem.get("hue") or elem.get("element")
+        assert b.get_attribute("data-elem") == want and b.evaluate("(e) => getComputedStyle(e).backgroundColor") == css_colour(pg, f"--ork-elem-{want}"), "in the picked goal's rune"
+        assert "Play: " in b.get_attribute("title")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+    pg, host, log = open_fold(gui, FoldHost(asleep=True))
+    try:
+        b = round_button(pg)
+        assert b.get_attribute("data-state") == "faint" and float(b.locator("img").evaluate("(e) => getComputedStyle(e).opacity")) < 0.6, "faint while nothing can be played"
+        assert b.get_attribute("title") == f"{ROUND} · Nothing to play yet"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_round_buttons_selector_of_three_by_touch_44_px_closes_on_a_second_press_and_outside(gui):
+    pg, host, log = open_fold(gui)
+    try:
+        b = round_button(pg)
+        b.tap()
+        options(pg).first.wait_for(timeout=WAIT_MS)
+        assert b.get_attribute("aria-expanded") == "true" and pg.locator(".up-round__scrim").is_visible()
+        got = [(o.locator(".up-sel__word").inner_text(), o.locator(".up-sel__line").inner_text(), o.locator("img").get_attribute("src")) for o in options(pg).all()]
+        assert [g[0] for g in got] == ["Play", "Inventory", "History"] and all(g[1] for g in got), got
+        assert ["/die/die-rest" in got[0][2], "/pack/pack-shut" in got[1][2], "/book/book-shut" in got[2][2]] == [True] * 3, "each its cartoon picture"
+        rb = box(b)
+        for o in options(pg).all():
+            r = box(o)
+            assert r["width"] >= 44 and r["height"] >= 44 and r["y"] + r["height"] <= rb["y"] + 1 and r["x"] + r["width"] <= 390, ("rising over the foot, 44 px", r)
+        assert not any(ch.isdigit() for ch in pg.locator(".up-sel").inner_text()), "no count"
+        b.tap()
+        pg.locator(".up-sel").wait_for(state="detached", timeout=WAIT_MS)
+        assert b.get_attribute("aria-expanded") == "false", "a second press closes it"
+        b.tap()
+        options(pg).first.wait_for(timeout=WAIT_MS)
+        pg.touchscreen.tap(120, 300)
+        pg.locator(".up-sel").wait_for(state="detached", timeout=WAIT_MS)
+        assert pg.locator(".up-round__scrim").count() == 0 and middle(pg).get_attribute("data-look") == "feed", "a tap outside closes it and presses nothing under it"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_keys_walk_the_round_buttons_three_and_esc_puts_the_focus_back(gui):
+    pg, host, log = open_fold(gui)
+    try:
+        b = round_button(pg)
+        b.focus()
+        pg.keyboard.press("Enter")
+        options(pg).first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.activeElement?.dataset.place === 'play'", timeout=WAIT_MS)
+        pg.keyboard.press("ArrowDown")
+        assert pg.evaluate("() => document.activeElement.dataset.place") == "inventory"
+        pg.keyboard.press("Tab")
+        assert pg.evaluate("() => document.activeElement.dataset.place") == "history"
+        pg.keyboard.press("ArrowDown")
+        assert pg.evaluate("() => document.activeElement.dataset.place") == "play", "the arrows go round"
+        pg.keyboard.press("ArrowUp")
+        assert pg.evaluate("() => document.activeElement.dataset.place") == "history"
+        pg.keyboard.press("Escape")
+        pg.locator(".up-sel").wait_for(state="detached", timeout=WAIT_MS)
+        assert "up-round" in focused(pg), "the focus back on the button"
+        pg.keyboard.press("Space")
+        options(pg).first.wait_for(timeout=WAIT_MS)
+        pg.keyboard.press("ArrowDown")
+        pg.keyboard.press("Enter")
+        pg.locator(".stall-merchant").wait_for(state="visible", timeout=WAIT_MS)
+        assert pg.locator(".up-sel").count() == 0, "Inventory by keys opens the stall"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_play_still_says_it_plays_on_the_computer_inventory_opens_the_stall_and_history_the_book(gui):
+    pg, host, log = open_fold(gui)
+    try:
+        b = round_button(pg)
+        b.tap()
+        pg.get_by_role("button", name=PLAY_UP, exact=True).tap()
+        pg.get_by_text(PLAY_UP, exact=True).wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        assert pg.locator(".up-sel").count() == 0 and pg.locator(".table-over").count() == 0 and pg.locator(".play-throw, .playpane").count() == 0, "nothing thrown, no view opens"
+        assert all("play" not in str(n) for n, _a in host.log)
+        b.tap()
+        options(pg).nth(1).tap()
+        pg.locator(".stall-merchant").wait_for(state="visible", timeout=WAIT_MS)
+        pg.locator("[data-stall-back]").click()
+        pg.locator(".hand-up").wait_for(state="visible", timeout=WAIT_MS)
+        b.tap()
+        options(pg).nth(2).tap()
+        pg.wait_for_selector('.table-over[data-kind="history"]', timeout=WAIT_MS)
+        assert pg.locator(".hand-up").is_hidden(), "the history over the pane, as the book opens it"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_chain_pulled_says_away_and_pulled_again_here(gui):
+    pg, host, log = open_fold(gui)
+    try:
+        chain = top(pg).locator(".presence-chain")
+        assert chain.get_attribute("aria-label") == "Here, until 23:00" and chain.get_attribute("aria-pressed") == "true"
+        chain.tap()
+        pg.wait_for_function("() => document.querySelector('.up-top .presence-chain').dataset.here === 'false'", timeout=WAIT_MS)
+        assert _calls(pg, host, "presence.set") == [{"here": False}]
+        assert chain.locator(".presence-chain__word").inner_text() == "Away" and "/chain/chain-pulled" in chain.locator("img").get_attribute("src")
+        assert chain.get_attribute("aria-label") == "Away, until 19:00 · held" and pg.locator(".hand-up").evaluate("(e) => e.classList.contains('is-out')")
+        scroll_feed(pg, 600)
+        pg.wait_for_function("() => document.querySelector('.up-top').classList.contains('is-thin')", timeout=WAIT_MS)
+        chain.tap()
+        pg.wait_for_function("() => document.querySelector('.up-top .presence-chain').dataset.here === 'true'", timeout=WAIT_MS)
+        assert chain.locator(".presence-chain__word").inner_text() == "Here", "the thin row's chain turns it as well"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.skipif(not SHOTS, reason="pictures for Design: set FEED_SHOTS")
+def test_pictures_of_the_header_and_the_round_button_for_design(gui):
+    """Goal 169 H, beside feed.html v3 screens 7 and 8: the feed's top with the header, scrolled with the header folded, and the round button open, at 390 × 844 and three device pixels a pixel."""
+    server, browser = gui
+    host = FoldHost()
+    context = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, device_scale_factor=3)
+    context.add_init_script(f"localStorage.setItem('orkcraft.looked', JSON.stringify({{ '{PROJECT}': {at_look(95)} }}));")
+    pg = context.new_page()
+    pg.route_web_socket("**/ws*", host.on_socket)
+    try:
+        pg.goto(server.url)
+        pg.locator(".up-feed .post-card").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(800)
+        shot(pg, "h-top")
+        scroll_feed(pg, 640)
+        pg.wait_for_timeout(400)
+        shot(pg, "h-thin")
+        scroll_feed(pg, 0)
+        pg.wait_for_timeout(300)
+        round_button(pg).tap()
+        options(pg).first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(400)
+        shot(pg, "h-round")
     finally:
         context.close()

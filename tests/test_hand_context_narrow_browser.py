@@ -269,14 +269,15 @@ def test_more_than_four_tools_or_the_paid_slot_make_a_plus_n_place(gui):
         pg.close()
 
 
-def test_the_die_says_play_it_on_the_computer_and_throws_nothing(gui):
+def test_the_die_says_play_it_on_the_computer_and_throws_nothing(gui):        # goal 169 H: the die is the round button's face at the foot's right, Play one of its three (was: a small die in the top row)
     pg, host, log = open_up(gui)
     try:
-        die = pg.locator(".hand-up .up-die")
-        r = box(die)
-        assert die.count() == 1 and die.get_attribute("aria-label") == PLAY_UP and r["width"] >= 44 and r["height"] >= 44 and r["x"] > box(pots(pg).last)["x"], "at the right of the potions"
-        assert die.locator(".ork-die").count() == 1 and die.locator(".ork-die").evaluate("(e) => e.offsetWidth") < 69, "orkUI's die, smaller than the desktop's"
+        die = pg.locator(".hand-up .up-round")
+        r, row = box(die), box(pg.locator(".up-row"))
+        assert die.count() == 1 and pg.locator(".up-top .up-die, .up-top .ork-die").count() == 0 and r["width"] >= 44 and r["height"] >= 44 and r["x"] + r["width"] >= pg.viewport_size["width"] - 16 and r["y"] >= row["y"] - 8, "at the foot's right"
+        assert "/ds/orkui/die/die-" in die.locator("img").get_attribute("src"), "orkUI's cartoon die on its face"
         die.click()
+        pg.get_by_role("button", name=PLAY_UP, exact=True).click()
         pg.get_by_text(PLAY_UP, exact=True).wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(300)
         assert pg.locator(".table-over").count() == 0 and pg.locator(".play-throw, .playpane").count() == 0 and all("play" not in str(c[0]) for c in host.log), "nothing thrown, nothing asked"
@@ -296,7 +297,7 @@ def test_the_discard_is_a_small_pile_that_opens_the_goals_done_and_ready_over_th
     try:
         pile = pg.locator(".hand-up .up-pile")
         r, top = box(pile), box(pile.locator(".up-pile__top"))
-        assert pile.count() == 1 and r["width"] >= 44 and r["x"] + r["width"] > pg.viewport_size["width"] - 24 and box(pg.locator(".up-die"))["x"] < r["x"], "at the top row's right end, after the die"
+        assert pile.count() == 1 and r["width"] >= 44 and r["x"] + r["width"] > pg.viewport_size["width"] - 24 and box(pots(pg).last)["x"] < r["x"], "at the top row's right end, after the bottles (goal 169 H: the die left the row)"
         assert round(top["width"]) == 32 and round(top["height"]) == 44, "its top card 32 x 44"
         assert pile.get_attribute("aria-label").startswith("Done: Lobby music loop") and "2 goals ready for main" in pile.get_attribute("aria-label")
         shot(pg, "phone-pile")
@@ -342,7 +343,10 @@ def test_the_middle_scrolls_as_a_whole_and_the_rows_stay(gui):
         assert look.evaluate("(e) => e.scrollHeight > e.clientHeight && ['auto', 'scroll'].includes(getComputedStyle(e).overflowY)")
         top = box(pg.locator(".up-top"))
         look.evaluate("(e) => { e.scrollTop = 200; }")
-        assert box(pg.locator(".up-row")) == row and box(pg.locator(".up-top")) == top, "the top row and the hand's row never move"
+        pg.wait_for_function("() => document.querySelector('.up-top').classList.contains('is-thin')", timeout=WAIT_MS)       # goal 169 H, decisions §292.3: scrolled, the header folds to its thin row in its place (was: it never moved)
+        thin = box(pg.locator(".up-top"))
+        assert box(pg.locator(".up-row")) == row and thin["y"] == top["y"] and thin["height"] <= 45, "the hand's row never moves; the top row folds where it stood"
+        assert box(look)["y"] >= thin["y"] + thin["height"] - 1, "the middle is never under the header"
         narrow.no_sideways(pg)
     finally:
         pg.close()
@@ -492,20 +496,22 @@ def test_a_card_of_no_goal_has_no_goal_header_no_way_and_its_card_is_in_the_row(
         pg.close()
 
 
-def test_the_plus_card_lies_at_the_rows_right_end_the_cards_pass_under_it_and_it_opens_the_field_over_the_keyboard_with_the_microphone(gui):
+def test_the_plus_card_lies_at_the_rows_left_end_the_cards_pass_under_it_and_it_opens_the_field_over_the_keyboard_with_the_microphone(gui):     # goal 169 H, decisions §292.2: the + card at the foot's left (was: its right end)
     pg, host, log = open_up(gui, "ready")
     try:
         p, row, w, h = plus(pg), box(pg.locator(".up-row")), pg.viewport_size["width"], pg.viewport_size["height"]
         r = box(p)
         assert p.count() == 1 and 60 <= r["width"] <= 70 and 58 <= r["height"] <= 68, "about 64 x 62: cut with the cards"
-        assert r["x"] + r["width"] >= w - 20 and r["y"] >= row["y"], "at the row's right end"
+        assert r["x"] <= 20 and r["y"] >= row["y"] and r["x"] + r["width"] < box(pg.locator(".up-round"))["x"], "at the row's left end, the round button at its right"
         assert p.evaluate("(e) => getComputedStyle(e).borderTopColor") == css_colour(pg, "--ork-action") and p.get_attribute("aria-label") == "New goal"
         shot(pg, "phone-plus")
         scroller = pg.locator(".up-cards")
-        assert scroller.evaluate("(e) => e.scrollWidth > e.clientWidth"), "four cards and the room under the + card: the row scrolls sideways"
+        assert scroller.evaluate("(e) => e.scrollWidth > e.clientWidth"), "four cards and the room under the + card and the round button: the row scrolls sideways"
+        first = box(cards(pg).first)
+        assert first["x"] >= r["x"] + r["width"] - 1, "the first card lies clear of the + card"
         scroller.evaluate("(e) => { e.scrollLeft = e.scrollWidth; }")
         last = box(cards(pg).last)
-        assert last["x"] + last["width"] <= r["x"] + 1, "the last card can be brought clear of the + card"
+        assert last["x"] + last["width"] <= box(pg.locator(".up-round"))["x"] + 1, "the last card can be brought clear of the round button"
         p.click()
         area = pg.locator(".up-field textarea")
         area.wait_for(timeout=WAIT_MS)
@@ -530,7 +536,7 @@ def test_with_nothing_in_the_hand_the_line_the_row_of_the_plus_card_alone_and_th
         assert context_of(pg).count() == 0 and cards(pg).count() == 0 and pg.locator(".up-look").get_attribute("data-look") == "feed", "the middle is the feed (goal 169 F)"
         line, w = box(pg.get_by_text("Nothing waits for you.", exact=True)), pg.viewport_size["width"]
         assert abs(line["x"] + line["width"] / 2 - w / 2) <= 3, "the feed says nothing waits"
-        assert pots(pg).count() == 4 and crown(pg).count() == 1 and pg.locator(".up-die").count() == 1 and plus(pg).count() == 1 and pg.locator(".up-pile").count() == 0
+        assert pots(pg).count() == 4 and crown(pg).count() == 1 and pg.locator(".up-round").count() == 1 and plus(pg).count() == 1 and pg.locator(".up-pile").count() == 0
         shot(pg, "phone-empty")
         plus(pg).click()
         pg.locator(".up-field textarea").wait_for(timeout=WAIT_MS)

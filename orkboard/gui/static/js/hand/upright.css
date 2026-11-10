@@ -11,11 +11,36 @@
 
 .hand.hand-up { position: relative; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; box-sizing: border-box; border-top: 0; }
 
-/* the top row (60 px): the crown, the potions as bottles, the die, the discard */
-.up-top { flex: none; box-sizing: border-box; display: flex; align-items: center; gap: var(--ork-2); height: 60px; padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); }
+/* the top row, the header (60 px; goal 169 H, feed.html v3 screen 7): the crown, the project's name, Settings, Stop all, the potions as bottles, the lamp's chain hung from it, the discard; scrolled it folds to one thin row (44 px) of the bottles, Stop all and the chain */
+.up-top { flex: none; position: relative; z-index: 4; box-sizing: border-box; display: flex; align-items: center; gap: var(--ork-1); height: 60px; padding: 0 var(--ork-2); border-bottom: var(--ork-line) solid var(--ork-frame); }
 .hand-up .up-crown { appearance: none; margin: 0; cursor: pointer; color: inherit; box-sizing: border-box; width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); min-height: var(--ork-tap); padding: 0; display: inline-flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); }
-.up-pots { flex: 1 1 auto; min-width: 0; display: flex; gap: 2px; }
-.up-pot { appearance: none; position: relative; box-sizing: border-box; flex: none; width: 48px; height: 56px; margin: 0; padding: 2px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px;
+.up-name { appearance: none; flex: 1 1 0; min-width: 0; height: var(--ork-tap); margin: 0; padding: 0 var(--ork-1); display: flex; align-items: center; border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-heading); font-size: 19px; line-height: 24px; text-align: left; cursor: pointer; }
+.up-name > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.up-ico { appearance: none; flex: none; box-sizing: border-box; width: var(--ork-tap); height: var(--ork-tap); margin: 0; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: var(--ork-ink-muted); cursor: pointer; }
+.up-ico .ork-icon { width: 20px; height: 20px; }
+.up-ico.up-stop { color: var(--ork-danger); }
+:is(.up-name, .up-ico):focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.up-top[data-fit="name"] .up-set, .up-top[data-fit="none"] .up-set, .up-top[data-fit="none"] .up-name { display: none; }
+.up-top[data-fit="none"] .up-pots { margin-left: auto; }
+/* the lamp's chain hung from the header's top edge beside the bottles (table/presence.js `pic`, decisions §292.3): its 44 px press is the row's height, the picture and its word hang below it over the middle and take no press */
+.hand-up .up-top .presence-chain.is-pic { position: relative; flex: none; align-self: stretch; box-sizing: border-box; width: var(--ork-tap); min-height: var(--ork-tap); padding: 0; display: block; }
+.presence-chain.is-pic .presence-chain__pic { position: absolute; left: 50%; top: 0; width: 16px; height: 73px; translate: -50% 0; pointer-events: none; }
+.presence-chain.is-pic .presence-chain__word { position: absolute; left: 50%; top: 70px; translate: -50% 0; padding: 0 var(--ork-1); background: var(--_plate); color: var(--ork-alert); font: var(--ork-type-label); font-size: 14px; line-height: 16px; text-transform: none; letter-spacing: 0; font-weight: 700; pointer-events: none; }
+.presence-chain.is-pic.is-away .presence-chain__word { color: var(--ork-ink-muted); }
+.presence-chain.is-pic.is-tugging .presence-chain__pic { animation: up-tug var(--ork-motion-base) steps(2) 1; }
+@keyframes up-tug { 50% { translate: -50% var(--ork-motion-rise); } }
+@media (prefers-reduced-motion: reduce) { .presence-chain.is-pic.is-tugging .presence-chain__pic { animation: none; } }
+/* folded: one thin row, the bottles' share and mark without the bottle, Stop all and the chain short with its word beside it */
+.up-top.is-thin { height: 44px; }
+.up-top.is-thin > :is(.up-crown, .up-name, .up-set, .up-pile) { display: none; }
+.up-top.is-thin .up-pots { margin-left: auto; }
+.up-top.is-thin .up-pot { height: var(--ork-tap); justify-content: center; }
+.up-top.is-thin .up-pot__slot { display: none; }
+.hand-up .up-top.is-thin .presence-chain.is-pic { width: 76px; }
+.up-top.is-thin .presence-chain.is-pic .presence-chain__pic { left: auto; right: var(--ork-3); translate: none; height: 40px; object-fit: cover; object-position: top; }
+.up-top.is-thin .presence-chain.is-pic .presence-chain__word { left: 0; top: 50%; translate: 0 -50%; background: none; }
+.up-pots { flex: none; min-width: 0; display: flex; gap: 2px; }
+.up-pot { appearance: none; position: relative; box-sizing: border-box; flex: none; width: var(--ork-tap); height: 56px; margin: 0; padding: 2px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px;
   border: 2px solid transparent; background: none; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; }
 .up-pot.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch-control); background: var(--ork-panel); }
 .up-pot:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
@@ -29,10 +54,6 @@
 .up-pot.is-unread .up-pot__share, .up-pot--more .up-pot__initial { color: var(--ork-ink-muted); }
 .up-pot--more { justify-content: center; }
 .up-pot--more .up-pot__initial { position: static; width: auto; height: auto; font: var(--ork-type-caption); font-weight: 600; }
-.up-die { appearance: none; box-sizing: border-box; flex: none; width: 52px; height: 52px; margin: 0; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; cursor: pointer; }
-.up-die:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.up-die .ork-die { --_n: 2; rotate: calc(var(--ork-motion-lean) * -1); }                                                                    /* orkUI's die at two pixels a cell */
-.up-die.is-asleep .ork-die { filter: grayscale(1); opacity: 0.4; }
 .up-pile { appearance: none; position: relative; box-sizing: border-box; flex: none; width: 44px; height: 52px; margin: 0; padding: 0; border: 0; background: none; cursor: pointer; }
 .up-pile:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .up-pile > * { position: absolute; left: 6px; top: 4px; width: 32px; height: 44px; }
@@ -42,7 +63,7 @@
 .up-pile.is-on .up-pile__top { border-color: var(--ork-ink); }
 
 /* the middle: the card's context, the card with its answers, *Spec*; it scrolls as a whole */
-.up-look { flex: 1 1 0; min-height: 0; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-4) var(--ork-4); }
+.up-look { flex: 1 1 0; min-height: 0; box-sizing: border-box; overflow-y: auto; scroll-padding-top: 44px; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-4) var(--ork-4); }
 .up-ctx { flex: none; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-2);
   margin: 0; padding: var(--ork-3) 0 0; border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-body); text-align: left; }
 button.up-ctx { appearance: none; cursor: pointer; }
@@ -100,10 +121,10 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .q-here .q-choose__acts { justify-content: center; }
 .q-here .q-choose__acts .ork-btn { min-height: var(--ork-tap); }
 
-/* the hand's row (spec 147 F.2): laid by leader, a 22 px separator with the leader's head before each group, the cards 80 x 112 cut at 62 by the row's foot; a card pressed rises by what is cut (50 px) and shows the rest, tapped it opens (hand/uprow.js). The row scrolls sideways under the + card,
-   which lies at its right end, over the home bar's safe area. The scroller reaches 50 px above the row so a card can rise out of it; only its cards and separators take the pointer, the middle above stays the middle's. */
+/* the hand's row (spec 147 F.2): laid by leader, a 22 px separator with the leader's head before each group, the cards 80 x 112 cut at 62 by the row's foot; a card pressed rises by what is cut (50 px) and shows the rest, tapped it opens (hand/uprow.js). The row scrolls sideways between the + card,
+   which lies at its left end, and the round button at its right (upround.css, goal 169 H, decisions §292.1–§292.2), over the home bar's safe area. The scroller reaches 50 px above the row so a card can rise out of it; only its cards and separators take the pointer, the middle above stays the middle's. */
 .up-row { --up-rise: 50px; flex: none; position: relative; z-index: 3; box-sizing: content-box; height: calc(var(--ork-4) + 62px); padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 3px solid var(--ork-table-rim); background: var(--ork-room); }
-.up-cards { position: absolute; left: 0; right: 0; top: calc(var(--up-rise) * -1); height: calc(var(--up-rise) + var(--ork-4) + 62px); box-sizing: border-box; display: flex; align-items: flex-start; gap: var(--ork-2); padding: calc(var(--up-rise) + var(--ork-4)) 92px 0 var(--ork-4);
+.up-cards { position: absolute; left: 0; right: 0; top: calc(var(--up-rise) * -1); height: calc(var(--up-rise) + var(--ork-4) + 62px); box-sizing: border-box; display: flex; align-items: flex-start; gap: var(--ork-2); padding: calc(var(--up-rise) + var(--ork-4)) 92px 0 92px;
   overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; pointer-events: none; }
 .up-cards > * { pointer-events: auto; }
 .up-cards::-webkit-scrollbar { display: none; }
@@ -112,7 +133,7 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 /* a card that landed out of the row's view: the cue at that edge brightens once (hand/uprow.js `data-cue`); static under reduced motion */
 .up-row::after { content: ""; position: absolute; top: 0; bottom: 0; width: var(--ork-1); background: var(--ork-ink); opacity: 0; pointer-events: none; z-index: 1; }
 .up-row[data-cue="right"]::after { right: 92px; animation: up-cue calc(var(--ork-motion-base) * 5) ease-out 1; }
-.up-row[data-cue="left"]::after { left: 0; animation: up-cue calc(var(--ork-motion-base) * 5) ease-out 1; }
+.up-row[data-cue="left"]::after { left: 92px; animation: up-cue calc(var(--ork-motion-base) * 5) ease-out 1; }
 @keyframes up-cue { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .up-row[data-cue]::after { animation: none; opacity: 1; } }
 button.ork-card.up-card { position: relative; flex: none; box-sizing: border-box; width: 80px; height: 112px; padding: var(--ork-1) var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-1); overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
@@ -128,7 +149,7 @@ button.ork-card.up-card { position: relative; flex: none; box-sizing: border-box
 .up-card.is-picked { transform: translateY(calc(var(--ork-1) * -3)); border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
 .up-card.is-picked:is(:active, :focus-visible) { transform: translateY(calc(var(--up-rise) * -1)); }
 @media (prefers-reduced-motion: reduce) { button.ork-card.up-card { transition: none; } }
-.up-plus { position: absolute; right: var(--ork-4); top: var(--ork-4); z-index: 2; width: 64px; height: 62px; }
+.up-plus { position: absolute; left: var(--ork-4); top: var(--ork-4); z-index: 2; width: 64px; height: 62px; }
 .hand-up .up-plus .hand-plus { width: 64px; height: 62px; padding: 0; display: flex; align-items: center; justify-content: center; rotate: calc(var(--ork-motion-lean) * 0.5); }
 .hand-up .up-plus .hand-plus > .ork-icon { width: 28px; height: 28px; }
 .hand-up .up-plus .hand-plus .ork-sigil { display: none; }
@@ -141,8 +162,6 @@ button.ork-card.up-card { position: relative; flex: none; box-sizing: border-box
 .up-none { margin: 0; text-align: center; font: var(--ork-type-body); color: var(--ork-ink-muted); }
 
 /* the phone's table (spec 161 K, decisions §275.3): the hand's screen wears the open party's felt and light from orkUI's tokens as the desktop's (`.ork-table[data-party]`, the party felt.js names; `.is-out` while the person is away); the top row and
-   the words in the middle lie on the felt's flat plate, the steps showing between them. The lamp's chain and the backpack stand in the top row, no words. No gradient and no shadow of its own. */
+   the words in the middle lie on the felt's flat plate, the steps showing between them. The lamp's chain hangs from the top row, its word at its bead. No gradient and no shadow of its own. */
 .hand-up .up-top { background: var(--_plate); border-bottom-color: var(--ork-frame); }
-.hand-up .up-top .stall-pack, .hand-up .up-top .presence-chain { min-width: var(--ork-tap); min-height: var(--ork-tap); box-sizing: border-box; justify-content: center; align-items: center; padding: 0; }
-.hand-up .up-top .presence-chain { align-self: stretch; align-items: flex-start; }
 .hand-up .up-none { padding: var(--ork-2) var(--ork-4); background: var(--_plate); }

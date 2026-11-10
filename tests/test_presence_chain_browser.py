@@ -61,6 +61,12 @@ def chain(pg):
     return pg.locator(".presence-chain")
 
 
+def open_inventory(pg):
+    """The phone's backpack (goal 169 H): the round button pressed, then its Inventory."""
+    pg.locator(".hand-up .up-round").click()
+    pg.locator('.up-sel__opt[data-place="inventory"]').click()
+
+
 def signals(pg):
     return pg.evaluate("() => [...document.querySelectorAll('.corner__kind')].map((e) => e.className + getComputedStyle(e).color)")
 
@@ -186,28 +192,25 @@ def test_under_760_the_small_chain_has_no_words_and_the_label_keeps_them(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_the_phones_top_row_has_the_small_chain_where_the_door_stood(gui):
+def test_the_phones_header_has_the_cartoon_chain_beside_the_bottles_where_the_door_stood(gui):
+    """Goal 169 H, decisions §292.3, §293.6 (was: orkUI's small chain with no words and the backpack beside it in the top row): the chain hangs from the header beside the bottles, orkUI's cartoon picture, pulled while away, its word at its bead; the backpack left for the round button."""
     host = DoorHost(AWAY)
     pg, errors = start(gui, "phone", host)
     try:
         d = pg.locator(".up-top .presence-chain")
         d.wait_for(timeout=WAIT_MS)
         assert pg.locator(".presence-door, .ork-door").count() == 0, "the door is gone"
-        assert d.locator(".ork-chain.small.is-pulled").count() == 1 and d.locator(".presence-chain__words").count() == 0, "small, pulled while away, no words"
-        assert not d.evaluate("e => /Here|Away/.test(e.innerText)"), "no visible words"
+        assert "/ds/orkui/chain/chain-pulled" in d.locator("img").get_attribute("src") and d.locator(".presence-chain__word").inner_text() == "Away", "pulled while away, Away at its bead"
         assert d.get_attribute("aria-label") == "Away, until 19:00" and "until 19:00" in d.get_attribute("title")
-        pack = pg.locator(".up-top .stall-pack")
-        assert pack.count() == 1 and pack.locator(".ork-pack.small").count() == 1 and pack.get_attribute("aria-label") and pack.get_attribute("title"), "the backpack beside the chain"
-        assert pack.evaluate("e => getComputedStyle(e.querySelector('.stall-pack__word')).display") == "none", "the backpack's word is in aria-label and title only"
+        assert pg.locator(".up-top .stall-pack, .up-top .up-die").count() == 0, "the backpack and the die are under the round button"
         kids = pg.evaluate("() => [...document.querySelectorAll('.up-top > *')].map((e) => e.className.split(' ')[0])")
-        assert kids.index("stall-pack") + 1 == kids.index("presence-chain") and kids.index("presence-chain") < kids.index("up-die"), kids
+        assert kids.index("up-pots") + 1 == kids.index("presence-chain"), kids
         d.click()
         assert _calls(pg, host, "presence.set") == [{"here": True}], "one press, one presence.set"
         pg.wait_for_function("() => document.querySelector('.up-top .presence-chain').dataset.here === 'true'", timeout=WAIT_MS)
-        assert d.locator(".ork-chain.is-pulled").count() == 0 and d.get_attribute("aria-label").startswith("Here")
-        for el in (d, pack):
-            box = el.bounding_box()
-            assert box["x"] >= 0 and box["x"] + box["width"] <= 390 and box["width"] >= 44 and box["height"] >= 44, box
+        assert "/chain/chain-rest" in d.locator("img").get_attribute("src") and d.locator(".presence-chain__word").inner_text() == "Here" and d.get_attribute("aria-label").startswith("Here")
+        box = d.bounding_box()
+        assert box["x"] >= 0 and box["x"] + box["width"] <= 390 and box["width"] >= 44 and box["height"] >= 44, box
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
@@ -234,20 +237,18 @@ def test_the_phones_table_wears_the_felt_and_away_puts_it_out(gui):
 
 
 def test_the_phones_backpack_opens_the_stall_over_the_hand_and_the_way_back_closes_it(gui):
-    """Spec 161 K: on the phone the backpack shows the inventory's stall over the hand; ← closes it."""
+    """Spec 161 K: on the phone the backpack shows the inventory's stall over the hand; ← closes it. Goal 169 H (decisions §292.1): the backpack is the round button's Inventory (was: the top row's small backpack, drawn open while the stall is)."""
     host = DoorHost(HERE)
     pg, errors = start(gui, "phone", host)
     try:
-        pack = pg.locator(".up-top .stall-pack")
         assert pg.locator(".stall-merchant").count() == 0
-        pack.click()
+        open_inventory(pg)
         pg.locator(".stall-merchant").wait_for(state="visible", timeout=WAIT_MS)
         assert pg.locator(".stall-rug").is_visible() and pg.locator(".frame[data-over]").count() == 1
-        assert pg.locator(".stall-pack").first.get_attribute("aria-pressed") == "true" and pg.locator(".up-top .stall-pack .ork-pack.is-open").count() == 1
         pg.locator("[data-stall-back]").click()
         pg.locator(".up-top").wait_for(state="visible", timeout=WAIT_MS)
         assert pg.locator(".stall-merchant").count() == 0 and pg.locator(".frame[data-over]").count() == 0
-        assert pg.locator(".up-top .stall-pack .ork-pack.is-open").count() == 0
+        assert pg.locator(".up-sel").count() == 0, "the selector closed when Inventory was pressed"
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
@@ -276,10 +277,13 @@ def test_the_phones_table_wears_the_shown_goals_party_felt_and_the_wood_when_not
 
 
 def test_the_stalls_title_lies_below_the_leathers_straps_on_the_phone_and_the_desktop(gui):
-    for width, opener in (("phone", ".up-top .stall-pack"), ("wide", "[data-backpack]")):
+    for width in ("phone", "wide"):           # goal 169 H: the phone's backpack is the round button's Inventory
         pg, errors = start(gui, width, DoorHost(HERE))
         try:
-            pg.locator(opener).first.click()
+            if width == "phone":
+                open_inventory(pg)
+            else:
+                pg.locator("[data-backpack]").first.click()
             pg.locator(".stall-merchant" if width == "phone" else ".slots-table").wait_for(state="visible", timeout=WAIT_MS)       # the desktop's table is the slots (spec 168 H1); the phone keeps the stall
             pg.wait_for_timeout(300)
             pane = pg.locator(".table-pane.ork-leather").bounding_box()
