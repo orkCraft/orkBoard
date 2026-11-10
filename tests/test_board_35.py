@@ -278,7 +278,7 @@ def test_queue_read_stop_and_board_set(host, model, runner):
     assert ideas.state(host.ideas.state_dir, slug)["state"] != "raw"
     got = host.command("ideas.board_set", {"target": "quality", "night": "22:00-05:00", "device": "phone"})
     assert got == {"target": "quality", "autostart": True, "night": "22:00-05:00", "review": False, "review_notice": False, "night_low": True,
-                   "work_at_night": False, "look_wait": "none", "hours": []}      # spec 121 §4.1: off by default; spec 84 §4: review is off by default; spec 144: the tests do not wait to look (tests/conftest.py)
+                   "work_at_night": False, "look_wait": "none", "build_start": "now", "night_rung": "off", "max_parallel": 1, "hours": []}      # spec 168 H2: the build starts as one value, the night's rung and goals at once; spec 121 §4.1: off by default; spec 84 §4: review is off by default; spec 144: the tests do not wait to look (tests/conftest.py)
     board = host.command("ideas.board")
     assert (board["target"], board["autostart"], board["night"]) == ("quality", True, "22:00-05:00")
     with pytest.raises(CommandError, match="thrift, balance or quality"):

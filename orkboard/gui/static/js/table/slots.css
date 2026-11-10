@@ -1,0 +1,60 @@
+/* The inventory as slots (docs/specs/168 H1, decisions §283.30; table/slots.js, hand/slotdeal.js, the look: docs/mockups/table-template/ shots 13 to 15): a row of slots on the table, each its chosen way as a 144 x 202 card under its label; the ways of the one
+   pressed are the hand's, cards of the same size. Layout only: every colour, face, corner and motion is orkUI's (tokens.css, components.css `.ork-card`, `.ork-plaque`, `.ork-leather`); no colour, font or corner of its own. Desktop (760 px and over). */
+
+.slots-table { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-4) var(--ork-5) var(--ork-5); overflow: auto; }
+.slots-empty { margin: 0; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.slots { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-3) var(--ork-4); }
+.slot { margin: 0; display: grid; justify-items: center; gap: var(--ork-2); }
+.slot-label { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 144px; height: 40px; overflow: hidden; font: var(--ork-type-heading); font-size: 11px; line-height: 14px; text-align: center; white-space: normal; }      /* two lines at most, so every card of the row lies on one line */
+
+/* a slot's card: the pips and the coin on top, its picture, its way's name, what it does, *as set* at its foot */
+.slot-card.ork-card { box-sizing: border-box; position: relative; display: flex; flex-direction: column; gap: var(--ork-2); width: 144px; height: 202px; padding: var(--ork-3); text-align: left; cursor: pointer; color: var(--ork-ink);
+  transition: translate var(--ork-motion-base) var(--ork-motion-ease); }
+.slot-card.ork-card:hover { border-color: var(--ork-ink); }
+.slot-card.ork-card:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+.slot-card.ork-card.is-pressed { translate: 0 calc(var(--ork-1) * -1); outline: 2px solid var(--ork-alert); outline-offset: 1px; }
+.slot-card.ork-card.is-fixed { cursor: default; }
+.slot-card__top { flex: none; display: flex; align-items: center; justify-content: space-between; height: 20px; }
+.slot-card__coin { display: inline-flex; color: var(--ork-success); }
+.slot-card__coin .ork-icon { width: 14px; height: 14px; }
+.slot-card__name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-heading); }
+.slot-card__line { flex: 1 1 auto; min-height: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.slot-card__foot { flex: none; text-align: right; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+
+/* the pips of a slot's ways, the one carried lit */
+.slot-pips { display: inline-flex; gap: var(--ork-1); }
+.slot-pips i { width: 9px; height: 7px; box-sizing: border-box; border: var(--ork-line) solid var(--ork-frame); }
+.slot-pips i.is-on { background: var(--ork-ink); border-color: var(--ork-ink); }
+
+/* a way's picture: the owner's where orkUI has it, else its kind's sign, centred in the window */
+.slot-pic { flex: none; display: grid; place-items: center; height: 60px; box-sizing: border-box; overflow: hidden; background: var(--ork-room); border: var(--ork-line) solid var(--ork-card-frame); }
+.slot-pic__img { display: block; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.slot-pic .ork-icon { width: 28px; height: 28px; color: var(--ork-ink-muted); }
+.slot-pic .ork-sign { width: 28px; height: 28px; color: var(--ork-ink-muted); }
+.slot-pic .ork-mark { width: 28px; height: 28px; }
+.slot-pic .ork-race__head { max-height: 56px; width: auto; image-rendering: pixelated; }
+
+/* the table's line: what changed, and Undo */
+.slots-line { min-width: 0; margin-left: var(--ork-4); font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+
+/* a leader's seats under its slots, and its makers under its seats */
+.slots-table .stall-seats { flex: none; }
+.slots-table .stall-shelf.is-makers { flex: none; }
+
+/* -- the ways dealt to the hand (hand/slotdeal.js): the cards are the hand's answer cards (hand/openedcard.css `.hand-ans`), a picture in each -- */
+@media (min-width: 760px) {
+  .hand .slot-way.hand-ans.ork-card { gap: var(--ork-1); }
+  .hand .slot-way .slot-pic { height: 48px; }
+  .hand .slot-way .hand-ans__name { -webkit-line-clamp: 2; line-clamp: 2; }
+  .hand .slot-way .hand-ans__line { -webkit-line-clamp: 3; line-clamp: 3; font: var(--ork-type-caption); }
+  .hand .slot-way .corner__name { color: var(--ork-ink); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+  .hand .slot-way.is-yours { cursor: default; border-color: var(--ork-ink); }
+  .hand .slot-way.is-locked { opacity: .5; cursor: default; }
+  .hand .slot-way .slot-way__star { color: var(--ork-ink); }
+  .hand .slot-price { font: var(--ork-type-caption); color: var(--ork-ink); white-space: nowrap; }
+  .hand .slot-price.is-less { color: var(--ork-success); }
+  .hand .slot-price.is-money { color: var(--ork-warning); }
+  .hand .slot-price.is-same, .hand .slot-price.is-locked { color: var(--ork-ink-muted); }
+}
+
+@media (prefers-reduced-motion: reduce) { .slot-card.ork-card { transition: none; } }

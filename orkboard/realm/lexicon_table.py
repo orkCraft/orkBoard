@@ -262,6 +262,16 @@ WINDOW: tuple[Term, ...] = (
 SLOTS: tuple[Term, ...] = (
     # -- the Inventory (spec 157 A.5) ------------------------------------------------------------------
     _t("inventory", "Inventory"),
+    # -- the inventory as slots (spec 168 H1, H2, decisions §283.30, §283.31): a slot's card and its ways dealt to the hand ---------------------------------
+    _t("slot.as_set", "as set"),                                  # the foot of a slot's card: the way it carries is the one set
+    _t("slot.cheaper", "A cheaper way exists"),                   # the coin on a slot's card
+    _t("slot.fixed", "fixed"),                                    # a slot the project fixes (Release's hero and gate)
+    _t("slot.no_choice", "no choice"),                            # a slot with one way only (a hero its craft has no other for)
+    _t("slot.default", "Default"),                                # a way among the others: what the slot goes back to
+    _t("slot.pick", "The Orkmaster's pick"),                      # the star on a way
+    _t("slot.not_here", "not here"),                              # a way the host says cannot be taken, with its why
+    _t("slot.put_back", "Put it back"),                           # the ways dealt go back to the table, nothing sent
+    _t("slot.build_starts", "The build starts"),                  # `autostart` and `look_wait` as one setting: at once, in 30 min, in 2 h, tonight, by hand
     _t("hero", "hero", "heroes"),
     _t("hero.yours", "Yours"),
     _t("hero.yours_before", "Yours before"),

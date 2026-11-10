@@ -7,6 +7,9 @@ made waits until before its plan is passed by itself. Pure: no file, no model, n
     until(choice, now, night)            # when the look ends, epoch seconds (`now`: epoch seconds; `night`: the night window "01:00-07:00"); None for "none"
     iso(epoch)                           # the clock time as the faces read it, local time, "2026-11-04T13:40:00"
     LINES                                # the line under the setting, for each choice
+    BUILD_STARTS                         # ("now", "30m", "2h", "tonight", "hand"): *The build starts*, `autostart` and `look_wait` as one setting (spec 168 H2, decisions §283.31)
+    build_start(autostart, look)         # the one value the two stored keys say: autostart off is "hand"; on, the look's wait ("none" is "now")
+    build_start_keys(value, look)        # the two stored keys a value writes (the Board keeps `autostart` and `look_wait`, so Orkline reads the same file); "hand" leaves the look as it was
 """
 from __future__ import annotations
 
@@ -51,3 +54,33 @@ def until(choice: object, now: float, night: str = "01:00-07:00") -> float | Non
 
 def iso(epoch: float) -> str:
     return dt.datetime.fromtimestamp(float(epoch)).strftime("%Y-%m-%dT%H:%M:%S")
+
+
+# -- *The build starts*: autostart and the look's wait as one setting (spec 168 H2, decisions §283.31) ----------------------------------------------------------
+BUILD_STARTS = ("now", "30m", "2h", "tonight", "hand")
+BUILD_LABELS = {"now": "At once", "30m": "In 30 min", "2h": "In 2 h", "tonight": "Tonight", "hand": "By hand"}
+BUILD_LINES = {"now": "A plan that may start by itself starts as soon as its spec is made",
+               "30m": "A spec waits 30 minutes for your look, then its plan starts by itself",
+               "2h": "A spec waits 2 hours for your look, then its plan starts by itself",
+               "tonight": "A spec waits until tonight's night window, then its plan starts by itself",
+               "hand": "Nothing is built until you press Start"}
+BUILD_REFUSED = "The build starts at once, in 30 min, in 2 h, tonight or by hand"
+
+
+def build_start(autostart: object = True, look: object = None) -> str:
+    """The value the two stored keys say. `autostart` False is *by hand* whatever the look; else the look's wait, *do not wait* being *at once*."""
+    if autostart is False:
+        return "hand"
+    choice = clean(look)
+    return "now" if choice == "none" else choice
+
+
+def build_start_keys(value: object, look: object = None) -> dict:
+    """The keys a value writes: `{"autostart": bool, "look_wait": str}`. *By hand* turns the start off and keeps the look as it was; an unknown value is None."""
+    if value == "hand":
+        return {"autostart": False, "look_wait": clean(look)}
+    if value == "now":
+        return {"autostart": True, "look_wait": "none"}
+    if value in SECONDS or value == "tonight":
+        return {"autostart": True, "look_wait": value}
+    return {}

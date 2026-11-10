@@ -10,7 +10,7 @@ import pytest
 
 from orkboard import settings
 from orkboard.gui.board_host import CommandError
-from orkboard.realm import goal_team, hero_table, heroes, ideas, party_recipes
+from orkboard.realm import goal_team, hero_table, heroes, ideas, look_wait, party_recipes
 from tests.test_board_35 import host, model, runner  # noqa: F401  (fixtures)
 
 
@@ -43,18 +43,25 @@ def prices(got):
     return [w["price"] for s in got["shelves"] for w in s["wares"]]
 
 
-def test_the_orkmasters_chair_has_its_five_shelves_and_carries_what_is_set(host):
+def test_the_orkmasters_chair_has_its_six_slots_and_carries_what_is_set(host):
+    """Spec 168 H2 (decisions §283.31): the slots are How deep, The build starts, The night, Lands in dev by itself, Push, Goals at once."""
     got = stall(host)
     assert got["chair"] == "" and got["whose"] == "The Orkmaster" and got["say"]
-    assert [s["slot"] for s in got["shelves"]] == ["target", "look_wait", "autostart", "work_at_night", "push"]
+    assert [s["slot"] for s in got["shelves"]] == ["target", "build_start", "night", "review", "push", "max_parallel"]
     assert all(s["kind"] == "small" for s in got["shelves"])
     assert [w["id"] for w in shelf(got, "target")["wares"]] == ["thrift", "balance", "quality"]
-    assert [w["id"] for w in shelf(got, "look_wait")["wares"]] == ["30m", "2h", "tonight", "none"]
-    assert {c["slot"]: c["yours"] for c in got["hand"]} == {"target": "balance", "look_wait": settings.IDEAS["look_wait"], "autostart": "on", "work_at_night": "off", "push": "off"}
+    assert [w["id"] for w in shelf(got, "build_start")["wares"]] == ["now", "30m", "2h", "tonight", "hand"]
+    assert [w["id"] for w in shelf(got, "night")["wares"]] == ["off", "ideas", "builds", "proposals"]
+    assert [w["id"] for w in shelf(got, "push")["wares"]] == ["no", "main", "both"]
+    assert [w["id"] for w in shelf(got, "max_parallel")["wares"]] == ["1", "3", "8"]
+    assert {c["slot"]: c["yours"] for c in got["hand"]} == {"target": "balance", "build_start": look_wait.build_start(True, host.ideas.settings_now().get("look_wait")), "night": "off", "review": "on", "push": "no", "max_parallel": "1"}
     assert all(c["fixed"] is False and c["word"] for c in got["hand"])
     assert ware(got, "target", "balance")["price"] == {"mine": True}
     assert ware(got, "target", "thrift")["price"] == {"word": "lighter"} and ware(got, "target", "quality")["price"] == {"word": "heavier"}
-    assert ware(got, "autostart", "off")["price"] == {"word": "same cost"}
+    assert ware(got, "push", "both")["price"] == {"word": "same cost"}
+    assert shelf(got, "target")["at"] == 1 and shelf(got, "target")["cheaper"] is True and shelf(got, "push")["cheaper"] is False
+    assert ware(got, "target", "balance")["default"] is True and ware(got, "target", "balance")["star"] is True        # the default, and the Orkmaster's pick
+    assert ware(got, "night", "ideas")["star"] is True and "star" not in ware(got, "night", "off")
 
 
 def test_no_price_is_a_number_the_host_did_not_estimate(host):
@@ -79,29 +86,40 @@ def test_a_take_publishes_changed(host):
     seen = []
     real = host.ideas.changed
     host.ideas.changed = lambda slug: (seen.append(slug), real(slug))
-    host.command("ideas.stall_take", {"chair": "", "slot": "push", "value": "on"})
+    host.command("ideas.stall_take", {"chair": "", "slot": "push", "value": "both"})
     assert "" in seen
 
 
 def test_the_other_settings_go_through_their_own_writers(host):
-    host.command("ideas.stall_take", {"chair": "", "slot": "look_wait", "value": "none"})
-    host.command("ideas.stall_take", {"chair": "", "slot": "autostart", "value": "off"})
-    host.command("ideas.stall_take", {"chair": "", "slot": "work_at_night", "value": "on"})
-    got = host.command("ideas.stall_take", {"chair": "", "slot": "push", "value": "on"})["stall"]
+    host.command("ideas.stall_take", {"chair": "", "slot": "build_start", "value": "now"})
+    host.command("ideas.stall_take", {"chair": "", "slot": "night", "value": "builds"})
+    host.command("ideas.stall_take", {"chair": "", "slot": "review", "value": "off"})
+    host.command("ideas.stall_take", {"chair": "", "slot": "max_parallel", "value": "3"})
+    got = host.command("ideas.stall_take", {"chair": "", "slot": "push", "value": "main"})["stall"]
+    b, mine = host.command("ideas.board"), host.ideas.settings_now()
+    assert (b["look_wait"], b["autostart"], b["work_at_night"], b["night_rung"], b["build_start"]) == ("none", True, True, "builds", "now")
+    assert mine["push"] == "main" and mine["review"] is True and mine["max_parallel"] == 3
+    assert {c["slot"]: c["yours"] for c in got["hand"]} == {"target": "balance", "build_start": "now", "night": "builds", "review": "off", "push": "main", "max_parallel": "3"}
+    host.command("ideas.stall_take", {"chair": "", "slot": "build_start", "value": "hand"})
     b = host.command("ideas.board")
-    assert (b["look_wait"], b["autostart"], b["work_at_night"]) == ("none", False, True) and host.ideas.settings_now()["push"] is True
-    assert {c["slot"]: c["yours"] for c in got["hand"]} == {"target": "balance", "look_wait": "none", "autostart": "off", "work_at_night": "on", "push": "on"}
+    assert (b["autostart"], b["look_wait"], b["build_start"]) == (False, "none", "hand")      # by hand turns the start off and leaves the look as it was
+
+
+def test_the_old_slots_are_gone(host):
+    for slot in ("look_wait", "autostart", "work_at_night"):
+        with pytest.raises(CommandError):
+            host.command("ideas.stall_take", {"chair": "", "slot": slot, "value": "on"})
 
 
 def test_stall_back_writes_the_defaults(host):
-    for slot, value in (("target", "thrift"), ("look_wait", "30m"), ("autostart", "off"), ("work_at_night", "on"), ("push", "on")):
+    for slot, value in (("target", "thrift"), ("build_start", "30m"), ("night", "builds"), ("review", "off"), ("push", "both"), ("max_parallel", "8")):
         host.command("ideas.stall_take", {"chair": "", "slot": slot, "value": value})
-    for slot in ("target", "look_wait", "autostart", "work_at_night", "push"):
+    for slot in ("target", "build_start", "night", "review", "push", "max_parallel"):
         got = host.command("ideas.stall_back", {"chair": "", "slot": slot})
-    b = host.command("ideas.board")
+    b, mine = host.command("ideas.board"), host.ideas.settings_now()
     assert (b["target"], b["look_wait"], b["autostart"], b["work_at_night"]) == (settings.IDEAS["target"], settings.IDEAS["look_wait"], True, False)
-    assert host.ideas.settings_now()["push"] is False
-    assert card(got["stall"], "push")["yours"] == "off"
+    assert mine["push"] is False and mine["review"] is False and mine["max_parallel"] == 1
+    assert card(got["stall"], "push")["yours"] == "no"
 
 
 def test_a_tech_partys_chair_has_its_heroes_its_tool_and_its_tiers(host):
@@ -116,7 +134,7 @@ def test_a_tech_partys_chair_has_its_heroes_its_tool_and_its_tiers(host):
     assert "Sh.man" in got["say"] and "C4 and hotspots" in got["say"]
     assert ware(got, "hero", "sh-c4")["price"] == {"mine": True}
     assert card(got, "hero")["yours"] == "sh-c4" and card(got, "hero")["head"] == ware(got, "hero", "sh-c4")["head"]
-    assert [w["id"] for w in shelf(got, "tier")["wares"]] == ["laborer", "warrior", "elder"]
+    assert [w["id"] for w in shelf(got, "tier")["wares"]] == ["", "laborer", "warrior", "elder"]        # *Default* (the recipe's tiers) is a way among them
     assert card(got, "tool")["yours"] == "" and ware(got, "tool", "")["price"] == {"mine": True}
 
 

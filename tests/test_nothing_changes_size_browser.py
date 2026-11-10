@@ -40,12 +40,16 @@ def test_the_four_boxes_are_the_same_whatever_is_open(gui):
         assert boxes(pg) == rest, "a card lifted"
         call(pg, "frame/state.js", "lower")
         pg.locator("[data-backpack]").click()
-        pg.locator(".hand .carry .carry-card").first.wait_for(timeout=WAIT_MS)
+        pg.locator(".slots-table .slot-card").first.wait_for(timeout=WAIT_MS)
         assert boxes(pg) == rest, "the inventory open"
-        card = pg.locator(".hand .carry-card").first.bounding_box(), pg.locator(".hand").bounding_box()
-        assert card[0]["y"] < card[1]["y"] + card[1]["height"], "the carried cards lie in the hand"
+        assert pg.locator(".hand .carry, .hand .carry-card").count() == 0, "no card is carried (spec 168 H1)"
+        pg.locator(".slots-table .slot-card").first.click()                                                      # a slot pressed deals its ways to the hand: the four boxes keep their size
+        pg.locator(".hand .slot-way").first.wait_for(timeout=WAIT_MS)
+        assert boxes(pg) == rest, "a slot's ways dealt"
+        pg.locator('.hand [data-act="put"]').click()                                                             # the hand is sunk while a card is played, its places inert as for every card played: it goes back first
+        pg.locator(".hand .slot-way").first.wait_for(state="detached", timeout=WAIT_MS)
         pg.locator("[data-backpack]").click()
-        pg.locator(".hand .carry").wait_for(state="detached", timeout=WAIT_MS)
+        pg.locator(".slots-table").wait_for(state="detached", timeout=WAIT_MS)
         open_settings(pg)
         assert pg.locator(".release-lane").count() == 1
         assert boxes(pg) == rest, "Settings open"

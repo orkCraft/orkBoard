@@ -43,7 +43,7 @@ from pathlib import Path
 
 from orkboard import autonomy as autonomy_
 from orkboard.env import getenv
-from orkboard.realm import harnesses, hours
+from orkboard.realm import harnesses, hours, look_wait
 from orkboard.schedule import Span
 
 TOOLS = harnesses.ids()
@@ -326,6 +326,8 @@ def clean_ideas(raw: object) -> dict:
         out["night_leaders"] = picked
     if raw.get("look_wait") in LOOK_WAITS:          # an unknown value reads as the default, 2 h (spec 144 A.1)
         out["look_wait"] = raw["look_wait"]
+    if raw.get("build_start") in look_wait.BUILD_STARTS:     # spec 168 H2: *The build starts* as one value, read when a file says it; the two keys stay the ones kept (Orkline reads them)
+        out.update(look_wait.build_start_keys(raw["build_start"], out["look_wait"]))
     if isinstance(raw.get("night_low"), bool):       # spec 83: Low work may run at night; None = not asked yet
         out["night_low"] = raw["night_low"]
     night = raw.get("night")
