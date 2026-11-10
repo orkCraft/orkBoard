@@ -229,7 +229,7 @@ def test_the_cost_of_a_goals_next_step_is_read_against_what_the_window_holds_abo
     mid = (cost["usd_low"] + cost["usd_high"]) / 2
     assert mid > 0
     settings = host.ideas.settings_now()
-    wall = time.time()
+    wall = dt.datetime.now().replace(hour=12, minute=0, second=0, microsecond=0).timestamp()          # midday: the day's reserve, whatever the hour the suite runs at (the night's is another test's)
     monkeypatch.setattr("orkboard.sources.window_rate.shown", lambda machine: {"usd_per_pct": mid / 10})           # the goal costs 10 % of the window
     rows = lambda left: [Limit("claude", "", "session", left, dt.datetime.now() + dt.timedelta(hours=2))]            # noqa: E731
     assert host.ideas.fits_window(slug, st, rows(0.5), settings, wall) is True, "10 % against 20 % above the day's reserve"
