@@ -11,9 +11,10 @@ import { leadsSystem, nameOf, partiesAll } from "./data.js";
 import { openAsk } from "./ask.js";
 import { partFor, partsOf, useMap, useResult, names } from "./goalmap.js";
 import { TASK_STATE } from "../board/maplayout.js";
+import { BeforeAfter, Errors, ResultScheme, VERDICT } from "./resultboard.js";
 
 export const KIND_WORDS = { new: "New", changed: "Changes", read: "Read only", gone: "Goes" };
-export const VERDICT = { ok: ["✓", "As promised"], landed: ["○", "Landed, not compared"], differs: ["≠", "Not quite"], extra: ["+", "More than promised"], missing: ["✗", "Not done"] };
+export { VERDICT };                                                     // the verdicts' marks and words are resultboard.js' (spec 168 G2)
 const SIGN_OF = (l) => (l.startsWith("+") ? "is-add" : l.startsWith("~") ? "is-chg" : l.startsWith("-") ? "is-del" : l.startsWith("≠") ? "is-dif" : "");
 
 const Lines = ({ lines }) => html`<ul class="gv-lines">${lines.map((l, i) => html`<li key=${i} class=${SIGN_OF(l)}>${l}</li>`)}</ul>`;
@@ -59,10 +60,10 @@ function Mini({ info, will, read }) {
   </div>`;
 }
 
-/** The side: the small map, the leader's *Done when* (checked once the goal is done and the host can say it), the goal's tasks here. */
-function Side({ g, n, info, will, read, dones, tasks, done }) {
+/** The side: the small map (a goal done: the map with its parts planned and built, resultboard.js), the leader's *Done when* (checked once the goal is done and the host can say it), the goal's tasks here. */
+function Side({ g, n, info, will, read, dones, tasks, done, cards }) {
   return html`<aside class="gv-side" aria-label="Where it lies">
-    ${info && html`<div class="gv-side__map"><span class="ork-label">Where, on the whole table</span><${Mini} info=${info} will=${will} read=${read} /></div>`}
+    ${done ? html`<${ResultScheme} info=${info} cards=${cards} />` : info && html`<div class="gv-side__map"><span class="ork-label">Where, on the whole table</span><${Mini} info=${info} will=${will} read=${read} /></div>`}
     ${dones.length > 0 && html`<section class="gv-sec" aria-label="Done when"><h3 class="ork-label">${done ? "Done when, checked" : "Done when"}</h3>
       <ul class="gv-lines gv-done">${dones.map((x, i) => html`<li key=${i} class=${cls({ "is-ok": x.state === "ok" })} data-state=${x.state || undefined}>${x.state === "ok" ? "✓ " : ""}${x.text}${x.word ? html` <span class="cap gv-word">· ${x.word}</span>` : ""}</li>`)}</ul></section>`}
     <section class="gv-sec" aria-label="Its tasks here"><h3 class="ork-label">Its tasks here</h3>
@@ -91,8 +92,9 @@ export function GoalView({ g, n }) {
         : html`${cards.length > 0 ? html`<div class="gv-grid">${cards.map((c) => html`<${PartCard} key=${`${c.id}:${c.verdict || c.kind}`} g=${g} part=${c} info=${info} done=${done} />`)}</div>`
           : html`<p class="gv-empty" data-state="no-parts">${nameOf(g)}’s part of the spec does not name a part of its table.</p>`}
           ${!done && leadsSystem(g) && html`<${Contract} will=${will} />`}
+          ${done && html`<${BeforeAfter} data=${res?.before_after?.[g.slug] || null} /><${Errors} errors=${(res?.errors || []).filter((e) => e.party === g.slug)} g=${g} />`}
           ${done && html`<p class="cap gv-play">The die in your hand wears its rune: press it to play the product with this goal in it.</p>`}`}
     </div>
-    <${Side} g=${g} n=${n} info=${info} will=${lit} read=${read} dones=${dones} tasks=${tasks} done=${done} />
+    <${Side} g=${g} n=${n} info=${info} will=${lit} read=${read} dones=${dones} tasks=${tasks} done=${done} cards=${cards} />
   </section>`;
 }

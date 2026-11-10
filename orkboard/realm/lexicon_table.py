@@ -11,6 +11,11 @@ WINDOW: tuple[Term, ...] = (
     _t("not_checked", "not checked"),                              # a goal's *Done when* line nobody looked at, or the acceptance could not see (spec 168 G1, decisions §283.16.10): never *ok* by default
     _t("not_met", "not met"),                                      # a *Done when* line the acceptance looked at and found not met
     _t("landed_not_compared", "landed, not compared"),             # a promised part of a craft whose map has no file touch: its tasks landed, nothing was compared (spec 168 G1)
+    _t("result_built", "built"),                                   # a result table (spec 168 G2, decisions §283.16.11): what the spec planned against what was built
+    _t("result_before", "Before"),                                 # … the code's work before the goal (Tech's System at the commit before it, Design's picture before it)
+    _t("result_after", "After"),                                   # … and after it (the System at its last commit, the picture its task kept)
+    _t("result_sent_back", "sent back"),                           # a task that ran more than one round: one of the goal's errors
+    _t("result_red_test", "red test"),                             # a test red on a task's gate, and not red before the goal: one of the goal's errors
     _t("table", "table"),                                          # the window's upper part: the leaders' tabs and the pane under them (what and why, through whose eyes)
     _t("hand", "hand"),                                            # the window's lower part: what the person decides, under the lanes, with the stacks of stops and the discard
     _t("discard", "discard"),                                      # the goals done and not yet seen, and what is ready for main (read *Done*)

@@ -4,6 +4,9 @@ changed against what its spec promised, by code (realm/goal_result.py), with no 
     ideas.goal_result {idea}      # {idea, state, parties: [{party, title, parts: [{id, kind, verdict, line, note}], done_when: [{text, state}]}], files, screens: [{screen, name, path}], made: [{task, title, files, added, removed, gate}], red_before}
                                   # `verdict`: ok (As promised) · differs (Not quite) · missing (Not done) · extra (More than promised); a *Done when* line `state` "ok" or ""
                                   # `made` (spec 149 H.1): each merged task with the files and lines it changed and its gate in words (*97 passed*), for the result to set beside the *Done when* lines; no model matches them
+                                  # `errors` (spec 168 G2): every error of the goal's work, `[{party, kind: failed | sent_back | test | finding, task, title, line, env?}]` (realm/goal_errors.py); `before_after` (spec 168 G2): `{party: …}` of a goal done, for
+                                  #  Tech `{kind: "parts", before, after: {commit, short, at} | None, parts: [{path, name, before, after, change, uses_new, uses_gone}], none}`, for Design `{kind: "screens", screens: [{screen, name, path,
+                                  #  before, after}]}` a picture `{goal, task, id, file, w, h, at, url}` or None (realm/goal_before_after.py)
                                   # `red_before` (spec 149 E.4): how many tests were red before this goal, its tasks' `tests.red_before` counted once each
 """
 from __future__ import annotations
@@ -11,8 +14,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from orkboard.gui import media
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import goal_result, goal_team, ideas, spec_sections
+from orkboard.realm import goal_before_after, goal_errors, goal_result, goal_team, ideas, spec_sections
 
 
 def gate_words(tests: object) -> str:
@@ -71,7 +75,22 @@ class GoalViewMixin:
         plan = ideas.plan(self.state_dir, slug) or {}
         crafts = {t["slug"]: goal_team.craft_of(root, t["slug"]) for t in tracks}
         touch = goal_result.touched(self.state_dir, Path(self.host.repo_root), slug, self._ref()) if state == "done" else None
-        return {"idea": slug, "state": state, **goal_result.of(sections, plan.get("tasks") or [], touch, state == "done", crafts, home, plan.get("accepts")), "made": made_of(plan), "red_before": red_before_of(plan)}
+        after = self._before_after(slug, state, crafts)
+        return {"idea": slug, "state": state, **goal_result.of(sections, plan.get("tasks") or [], touch, state == "done", crafts, home, plan.get("accepts")), "made": made_of(plan), "red_before": red_before_of(plan),
+                "errors": goal_errors.of(plan.get("tasks") or [], home), "before_after": after}
+
+    def _before_after(self, slug: str, state: str, crafts: dict[str, str]) -> dict:
+        """A goal done's work before and after for the parties whose craft keeps both, a picture with its signed address."""
+        if state != "done":
+            return {}
+        got = goal_before_after.of(self.state_dir, Path(self.host.repo_root), slug, self._ref(), crafts)
+        for row in (got.get(p) or {} for p in got):
+            for s in row.get("screens") or []:
+                for side in ("before", "after"):
+                    pic = s.get(side)
+                    if pic:
+                        s[side] = {**pic, "url": media.url(pic["goal"], pic["id"], pic["file"])}
+        return got
 
 
 def goalview_commands(ideas_: Any) -> dict:
