@@ -8,9 +8,10 @@
     ideas.say_fork {idea, pick}           # the choice on the fork (what was taken disagrees): the rewrite goes on with it; {ok, idea, rewriting, why?}
     ideas.judge_again {idea}              # *Judge again now*: what was taken is written, then the leaders that doubted or said no, whose proposal was turned down or whose part was touched
                                           # judge again, twice at most, then a hearing; {ok, idea, parties}
+    ideas.to_hearing {idea}               # *To the hearing* (spec 168 D5): a leader still doubts or says no after one judging again and nothing of its say is left: the hearing opens now; {ok, idea, parties}
 
 A refusal is an `IdeasError` in the keeper's plain words. The faces are told by the goal's change (`changed`), as for every step of the keeper; events: `say_answered`, `goal_rewritten`,
-`rewrite_forked`, `rewrite_undone`, `judged_again`.
+`rewrite_forked`, `rewrite_undone`, `judged_again`, `to_hearing`.
 """
 from __future__ import annotations
 
@@ -67,9 +68,13 @@ class Say:
         got = self._go(lambda slug: self.i.keeper.judge_again(slug, True), args)
         return {"ok": True, "idea": got["idea"], "parties": got["parties"]}
 
+    def to_hearing(self, args: dict) -> dict:
+        got = self._go(self.i.keeper.to_hearing, args)
+        return {"ok": True, "idea": got["idea"], "parties": got["parties"]}
+
 
 def say_commands(ideas_: Any) -> dict:
     """The say's commands by name (`gui/ideas.py` adds them to its table: `**say_commands(self)`)."""
     s = Say(ideas_)
     return {"ideas.take_better": s.take_better, "ideas.take_way": s.take_way, "ideas.leave_say": s.leave_say, "ideas.undo_rewrite": s.undo_rewrite, "ideas.say_fork": s.say_fork,
-            "ideas.judge_again": s.judge_again}
+            "ideas.judge_again": s.judge_again, "ideas.to_hearing": s.to_hearing}

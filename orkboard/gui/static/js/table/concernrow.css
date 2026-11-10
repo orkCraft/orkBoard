@@ -1,0 +1,18 @@
+/* A party's concerns in its header (docs/specs/168 D4, concernrow.js): small cards 28 x 39, a 56 x 78 card at half, orkUI's pieces only; the lit one (concernlit.js) wears the ink's ring, as the hand's card and the scheme's mark do. */
+.cn-cards { display: inline-flex; align-items: center; gap: var(--ork-2); flex: none; margin-left: auto; }
+.cn-card { position: relative; flex: none; box-sizing: border-box; width: 28px; height: 39px; padding: 0; margin: 0; border: 0; background: none; overflow: visible; cursor: pointer; }
+.cn-card > .ork-card, .cn-card > .ork-card-back { position: absolute; left: 0; top: 0; transform: scale(0.5); transform-origin: 0 0; margin: 0; pointer-events: none; }
+.cn-card__back { width: 56px; height: 78px; }
+.cn-card__face { box-sizing: border-box; width: 56px; height: 78px; display: grid; place-items: center; }
+.cn-card__face .ork-sign.big { width: 28px; height: 28px; color: var(--ork-alert); }
+.cn-card__face .cn-dot { width: 12px; height: 12px; color: var(--ork-ink-muted); }
+.cn-card:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+.cn-card.is-lit { box-shadow: 0 0 0 2px var(--ork-ink); }
+
+/* the same concern lit in the hand and on the scheme */
+[data-key^="concern/"][data-lit] { box-shadow: 0 0 0 2px var(--ork-ink); }
+.cn-mark[data-lit] { box-shadow: 0 0 0 2px var(--ork-ink); }
+
+@media (max-width: 759px) {
+  .cn-cards { margin-left: 0; }
+}

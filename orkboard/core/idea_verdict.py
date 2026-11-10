@@ -6,6 +6,7 @@
     keeper.rejudges(rec, taken)              # the parties to hear again after the person's answers (a doubt, a no, a pick overridden); none when no card was asked
     keeper.verdict_run(slug, after)          # step `talk_verdict`: those parties heard again at once, the stances changed, the Talk finished
     keeper.judge_again(slug, now=False)      # spec 168 C2: what the person took written (core/idea_rewrite.py), then the parties `idea_say.to_judge` names heard once each; twice at most, then the hearing
+    keeper.to_hearing(slug)                  # spec 168 D5: *To the hearing*: a leader still doubts after one judging again and nothing of its say is left: the hearing opens now, as after the second round
     keeper.judge_auto(slug)                  # … by itself once every better and need of the leaders is answered (never fails)
     keeper.merge_verdicts(slug, heard)       # the verdicts given again written into the Talk's record (stances, objections, weight), each change an event
     keeper.ripe_begin(slug)                  # the Talk's verdicts agreed: the wait before the goal starts by itself (`realm/idea_ripe.py`), after the decision is worded
@@ -260,6 +261,25 @@ Answer with one JSON object and nothing else:
             self.say_release(slug)
         except kw.KeeperError:
             pass
+
+    def to_hearing(self, slug: str) -> dict:
+        """*To the hearing* (spec 168 D5, decisions §283.25): the leaders judged the goal again once, a leader still doubts or says no and nothing of their say is left to answer (`idea_say.doubts`): the person
+        takes it to the hearing now, as `_held` does after the second round, not waiting for a second judging. The hearing opens (`rec["hearing"]`, a doubt without its why or a no answered too) and the goal is
+        published, so its card is the person's. A service: it shows nothing. `{ok, parties}`; KeeperError in plain words when the goal is not so waiting."""
+        kw = _kw()
+        if ideas.idea_page(self.wiki_root(), slug) is None:
+            raise kw.KeeperError("That goal is gone")
+        with ideas.LOCK:
+            who = idea_say.doubts(self.state_dir, slug)
+            if not who:
+                raise kw.KeeperError("No leader doubts this goal now: nothing waits for you")
+            rec = idea_questions.record(self.state_dir, slug)
+            if not self._held(rec):
+                rec["hearing"] = True
+            idea_questions.save_record(self.state_dir, slug, rec)
+        self._ev(event_log.TO_HEARING, idea=slug, parties=[d["party"] for d in who])
+        self.publish(slug)
+        return {"ok": True, "parties": [d["party"] for d in who]}
 
     def say_release(self, slug: str) -> None:
         """Talk waited for the leaders' cards (spec 168 D0) and they are answered: the decision goes on, or the hearing opens on a doubt or a no left (`_held`). Nothing when the goal is not at

@@ -22,6 +22,7 @@ import { leadsSystem, wide } from "./data.js";
 import { mapOf } from "./maps.js";
 import { pickFor } from "./picking.js";
 import { cardEl } from "./pickbox.js";
+import { isLit } from "./concernlit.js";
 
 if (typeof document !== "undefined") {
   const href = new URL("./concerns.css", import.meta.url).href;
@@ -83,16 +84,16 @@ const leaderOf = (g) => ({ name: g?.leader?.name || "Taskmaster", head: g?.leade
 
 /** The mark of one card: `list` its concerns, `lead` the party's leader. Made into goals all of them: a link to the first goal, in its element's colour. */
 function Mark({ party, list, lead, nodes, mid }) {
-  const level = levelOf(list), label = concernWords(list.length, lead.name);
+  const level = levelOf(list), label = concernWords(list.length, lead.name), lit = list.some((c) => isLit(party, c.id)) ? "1" : undefined;      // lit with its card in the hand and in the header (concernlit.js)
   const slugs = list.map((c) => goalOf(party, c)), all = slugs.every(Boolean), slug = all ? slugs[0] : "";
   const node = slug ? nodes.find((n) => n.slug === slug) : null;
   const face = html`${level === "alert" ? html`<${Sign} name="alert" />` : html`<i class="cn-dot" aria-hidden="true"></i>`}`;
   if (all) {
     const words = `${label}: made into the goal ${node?.title || slug}`;
-    return html`<button type="button" id=${mid} class="cn-mark is-made" data-level=${level} data-elem=${node?.hue || node?.element || "dust"} data-nopress="" aria-label=${words} title=${`${words}. Pick the goal`}
+    return html`<button type="button" id=${mid} class="cn-mark is-made" data-level=${level} data-lit=${lit} data-elem=${node?.hue || node?.element || "dust"} data-nopress="" aria-label=${words} title=${`${words}. Pick the goal`}
       onClick=${(e) => { e.stopPropagation(); pick(slug); }}>${level === "alert" && lead.head && html`<${Head} race=${lead.head.race} tier=${lead.head.tier} />`}${face}</button>`;
   }
-  return html`<span id=${mid} class="cn-mark" role="img" data-level=${level} data-count=${list.length} aria-label=${label} title=${`${level === "alert" ? "An alert" : "A note"}: ${label}`}>
+  return html`<span id=${mid} class="cn-mark" role="img" data-level=${level} data-lit=${lit} data-count=${list.length} aria-label=${label} title=${`${level === "alert" ? "An alert" : "A note"}: ${label}`}>
     ${level === "alert" && lead.head && html`<${Head} race=${lead.head.race} tier=${lead.head.tier} />`}${face}</span>`;
 }
 
@@ -269,6 +270,21 @@ export const hasMap = (g) => !!g && (leadsSystem(g) || !!mapOf(g));
 
 /** A party's map with its concerns; a party with no map is left as it is. */
 export const Concerns = ({ g, children }) => (hasMap(g) ? html`<${Inner} key=${g.slug} g=${g}>${children}<//>` : children);
+
+// -- the ways of a concern, as the hand plays them (docs/specs/168 D4) ---------------------------------------------------------------------------------------------------------------------------
+
+/** The three ways of a concern by their `way_kind` (realm/way_kinds.py) and the command each sends. Answered, the page keeps the record the host answers with (so the scheme's mark follows) and `then` runs; a refusal is the host's toast and the card stays. */
+export const CONCERN_WAYS = { not_a_problem: "ideas.concern_dismiss", later: "ideas.concern_later", make_it_a_goal: "ideas.concern_goal" };
+export async function answerConcern(kind, party, id, then = null) {
+  const name = CONCERN_WAYS[kind];
+  if (!name) return null;
+  let r = null;
+  try { r = await act(name, { party, id }); } catch { return null; }
+  if (r && Array.isArray(r.concerns)) keep(party, r);
+  if (r?.idea) made.value = { ...made.peek(), [`${party}/${id}`]: r.idea };
+  then?.(r);
+  return r;
+}
 
 // -- the back of a marked card -------------------------------------------------------------------------------------------------------------------------------------------------
 
