@@ -59,6 +59,23 @@ The spec's waves, in order: **1** A (A0 orkUI 0.37.0, A1–A6) · **2** B (B1–
 **6** F (F1–F4) · **7** G (G1–G3) · **8** H (H1–H4) · **9** I (I1) · **10** J (J1–J2). A stage a Grunt on the simpler model, in a
 worktree of its own; the parts of a wave sharing no file side by side.
 
+**Where it stands** (10 November 2026): waves **A–I are built and in main**, each merged on the critical tests and its stages' own; J1 (a way's
+kind) and J3 (the heads, orkUI 0.38.0, from the owner's pixel art) are in main. **Waiting for the owner's art**: decision §289 turned the
+pictures into a humorous flat cartoon, so J2 (a picture on a way's, a slot's and a question's card) and the heads again in the cartoon wait for
+the sheets of `docs/pictures-cartoon.md` (K1–K13, P1–P4, O1–O6); the code reads orkUI's `pictures/pictures.json` and the heads by their names,
+so they arrive as files.
+
+**Not accepted yet** (left from the stages, for their leaders' look or a later goal):
+- D1: a lifted plan, decision or route lies in a hand-high panel, not yet as ways' cards.
+- H4: *Replay* on a Silent leader's veto card works while the goal is still at Talk; Pen has no face of its own; the seats' grid is the stall's.
+- H1–H2: the narrow page and the phone keep the old stall (the spec said the stall goes and the narrow page stays: the narrow page won).
+- I1: a task run in the person's own AI tool must be marked `own_tool` by that run (spec 151, §258) for the log's face to say so.
+- F3: *To main without the tests* is a quiet button in the To main bar, not a menu; the dissolve is a stepped fade, not the portal's runes.
+- The leaders' acceptance passes (Design for the faces, Tech for the engine) after B–I are still to run; each wave was looked at from its
+  pictures and diff and its tests when merged.
+- Old reds not caused by this goal (they failed before wave A): the hand field over a map part in two picking tests, the seal's ring in
+  `test_field_squares_browser`, the plus-party in `test_owners_day_desktop_browser`, the phone's fan sigils, three phone-send tests.
+
 ## Open questions
 
 ## Decisions
