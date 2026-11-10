@@ -174,7 +174,7 @@ def test_the_talk_as_kept_has_each_leaders_stance_for_against_and_its_questions_
     assert [(q["q"], q["state"]) for q in stance["questions"]] == [("Which first?", "waiting"), ("Dark too?", "waiting")]
     card, other = stance["questions"]
     assert card["choices"] == ["Web", "Phone"] and card["pick"] == 1 and card["why"] == "most players are on phones" and card["project"] is False
-    assert "answer" not in card and set(card) == {"id", "q", "choices", "pick", "why", "project", "state"}
+    assert "answer" not in card and set(card) == {"id", "q", "choices", "kinds", "pick", "why", "project", "state"}    # each way's kind (spec 168 J1)
     host.ideas.keeper.decide = lambda s: None                                                              # part E's seam
     host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": card["id"], "text": "Both, phone first"}], "decide": True})
     after = {q["id"]: q for q in host.command("ideas.talk_read", {"idea": slug})["stances"][0]["questions"]}
