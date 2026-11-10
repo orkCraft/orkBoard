@@ -8,11 +8,12 @@ import { gateData, mapData } from "../shell/store.js";
 import { byUrgency, gateOf, goalsOf, nodesOf, paidStopsOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { inCodeStopsOf } from "../arena/incodewords.js";
 import { ORKMASTER } from "../frame/state.js";
-import { partiesNow, roadSlugs, waitRuns } from "../table/data.js";
+import { partiesNow, roadSlugs, waitRuns, wide } from "../table/data.js";
 import { groupsStops } from "./groupscard.js";
 import { askStops } from "./askcard.js";
 import { concernStops } from "./concerncard.js";
 import { doubtStops } from "./doubtcard.js";
+import { devStops, waitsForDev } from "./devcard.js";
 import { hypothesisStops } from "./hypothesiscard.js";
 import { cascadeStops } from "./cascadecard.js";
 import { projectStops, questionStops } from "./questions.js";
@@ -25,11 +26,17 @@ export function partyCard(g) {
   return { slug: g.slug, name: g.short || g.title, head: g.leader?.head || null, lead: g.leader?.name || "Taskmaster" };
 }
 
-/** The goals done and not yet seen, the last one first. */
+const doneFace = (n) => ({ slug: n.slug, title: n.short || n.title, full: n.title, element: n.element || "", hue: n.hue || "", party: n.goal, usd: n.usd, seen: n.seen || "", tasks: n.tasks || [], type: n.type || null, picture: n.picture || "" });
+const newest = (a, b) => String(b.updated || "").localeCompare(String(a.updated || ""));
+
+/** The goals done and not yet seen, the last one first. At the wide width a goal done on its own branch that waits for dev is not among them: it lies in the discard's lower pile (`lowerOf`, spec 168 F2); the narrow page keeps it here, as it was. */
 export function doneOf(map = mapData.value) {
-  const at = (n) => String(n.updated || "");
-  return [...(map?.nodes || [])].filter((n) => n.place === "discard").sort((a, b) => at(b).localeCompare(at(a))).map((n) => ({
-    slug: n.slug, title: n.short || n.title, full: n.title, element: n.element || "", hue: n.hue || "", party: n.goal, usd: n.usd, seen: n.seen || "", tasks: n.tasks || [], type: n.type || null, picture: n.picture || "" }));
+  return [...(map?.nodes || [])].filter((n) => n.place === "discard" && !(wide.value && waitsForDev(n.slug))).sort(newest).map(doneFace);
+}
+
+/** The goals done on their own branch and waiting for dev (the Board's row says `waits_for_dev`), the last one first: the discard's lower pile (table/plates.js). */
+export function lowerOf(map = mapData.value) {
+  return [...(map?.nodes || [])].filter((n) => waitsForDev(n.slug)).sort(newest).map(doneFace);
 }
 
 /** What dev holds that main lacks, said for the discard: `{n, into, main, goals, commits, files, off}`; null with nothing to merge. */
@@ -61,7 +68,7 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork), ...inCodeStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
+  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 
 /** The goal a stop belongs to ("" for a stop of no goal), and the stack it lies in: a goal's; a party's own question (`party:<slug>`); a sign-in alone. */

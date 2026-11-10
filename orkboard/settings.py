@@ -97,6 +97,29 @@ IDEAS = {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1, "merge_into":
          "look_wait": LOOK_WAIT_DEFAULT,   # spec 144 A: how long a spec made waits for the person's look before its plan is passed by itself (realm/look_wait.py)
          "hours": [], "presence": None}   # spec 138 B.1, spec 139 C.1: the person's hours (realm/hours.py) and the door's hold
 IDEA_TARGETS = ("thrift", "balance", "quality")
+PUSH_WAYS = ("no", "main", "both")        # spec 168 F3 (decisions §283.31): *no*, *main only*, *dev and main*. Stored as a boolean where it can be: False = no, True = both (what the old boolean pushed: dev after a landing, main after To main), "main" = main only
+
+
+def push_way(value: object) -> str:
+    """The way the project pushes: "no", "main" or "both". The old boolean reads as it always did (True = dev and main, False = no); anything else is no."""
+    if value is True or value == "both":
+        return "both"
+    return "main" if value == "main" else "no"
+
+
+def clean_push_way(value: object) -> object:
+    """A push value as it is kept: False, True or "main"; None for a value that is none of the three ways (a boolean, "no", "main", "both")."""
+    if isinstance(value, bool):
+        return value
+    return {"no": False, "both": True, "main": "main"}.get(value) if isinstance(value, str) else None
+
+
+def pushes_dev(value: object) -> bool:
+    return push_way(value) == "both"
+
+
+def pushes_main(value: object) -> bool:
+    return push_way(value) in ("main", "both")
 LOOK_WAITS = ("30m", "2h", "tonight", "none")           # spec 144 A.1: *Give me time to look*
 NIGHT = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$")
 FOCUSES = ("", "board")
@@ -289,9 +312,11 @@ def clean_ideas(raw: object) -> dict:
     branch = raw.get("merge_into")
     if isinstance(branch, str) and re.fullmatch(r"[\w./-]{1,100}", branch) and ".." not in branch:
         out["merge_into"] = branch
-    for k in ("push", "review", "autostart", "work_at_night"):
+    for k in ("review", "autostart", "work_at_night"):
         if isinstance(raw.get(k), bool):
             out[k] = raw[k]
+    if (way := clean_push_way(raw.get("push"))) is not None:
+        out["push"] = way
     if raw.get("target") in IDEA_TARGETS:
         out["target"] = raw["target"]
     if raw.get("look_wait") in LOOK_WAITS:          # an unknown value reads as the default, 2 h (spec 144 A.1)

@@ -250,7 +250,7 @@ def test_the_row_says_what_waits_for_dev_and_why(repo, state):
     g = IdeaGit(repo)
     assert goal_branch.row(state, "demo") == {}
     goal_branch.begin(g, state, "demo", {"tasks": []}, "dev", 1)
-    assert goal_branch.row(state, "demo") == {"goal_branch": "goal/demo", "waits_for_dev": False, "dev_why": ""}
+    assert goal_branch.row(state, "demo") == {"goal_branch": "goal/demo", "waits_for_dev": False, "dev_why": "", "dev_blocked": False, "dev_kind": ""}
     goal_branch.ready(state, "demo")
     assert goal_branch.row(state, "demo")["waits_for_dev"] is True and goal_branch.row(state, "demo")["dev_why"] == ""
     assert "off" in goal_branch.row(state, "demo", review=True)["dev_why"]
