@@ -38,7 +38,6 @@
 /* the past: Unreleased, then a deck a version (chronicleparts.js `Deck`, chronicle.css), a deck pressed deals its cards in place */
 
 /* a decision newer than the party's last look: a muted dot on its tab (pastdot.js) */
-.table-tab__new { position: absolute; right: var(--ork-2); bottom: var(--ork-3); width: 6px; height: 6px; background: var(--ork-ink-muted); pointer-events: none; }
 .table-tab.is-asleep .table-tab__main { color: var(--ork-ink-muted); }
 
 /* To main, the picked ready card's act on the table (tomain.js), and Release's checks (checksview.js) */
