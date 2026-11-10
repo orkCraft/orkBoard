@@ -122,6 +122,12 @@ made in orkUI first, then copied here.
 - Rubik's files are orkUI's copy, not the mockup's `fonts/`; the mockup stays the mockup's (§291.4)
 - The 1.52:1 card frame is a card's edge, not a control's: WCAG 1.4.11 is checked on buttons and chips, not on the card
 - The round button and the chain in the header (§292) are part of the feed's step, as feed.html v3 draws them
+### Accepted
+- met: When the desktop's Board opens on its first lane, then headings, buttons and text are Rubik (Plex Mono only for code, paths, ids), nothing under 12 px, a card's corner 10 px
+- met: When the phone opens a project at 390×844, then the body is 17 px, nothing is under 14 px, a card is #33373a framed #4c5257, and every word passes 4.5:1 on its ground
+- not met: When the phone opens a project with a goal waiting for main and news since this phone's last look, then the heads row is on top, what waits comes first, news newest first, the hand at the foot, no tab — stage F's, not in this step; nothing sent back
+- not met: When a person presses a head in the feed, then it is aria-pressed, the others faint, a line says the feed shows only it; pressed again, the whole feed and no line — stage F's, not in this step; nothing sent back
+- cannot see: When the feed is scrolled to its foot at 390×844, then the header is one thin row with Stop all and the chain, a block's sideways cards have a button each way, the seen line spreads as a deck
 
 ## Tech
 ### Talk
@@ -169,4 +175,4 @@ made in orkUI first, then copied here.
 - not met: When one leader has posts in a row since the look, then the reader gives them as one stack, and what came before the look as the one seen line, never as news — stage E's, not in this step; nothing sent back
 - not met: When the phone opens a project at 390×844, then it asks the host's feed with this phone's own last look and draws its blocks in the reader's order, with no tab of §223 in the page — stage F's, not in this step; nothing sent back
 - not met: When a goal's screen opens on the phone, then its feed is the same reader cut to the goal's route, its heads the route's leaders, and shell-goal.js holds no order of its own — stage G's, not in this step; nothing sent back
-- not met: When the service worker installs, then its cache is a new orkcraft-app-v, it precaches Rubik's files and no pixelify-sans file, and every path it precaches exists in static — sw.js is v107 with Rubik and no Pixelify, but no test in tests/test_pwa.py serves each SHELL path or rejects a pixelify-sans entry: add it (stage A)
+- met: When the service worker installs, then its cache is a new orkcraft-app-v, it precaches Rubik's files and no pixelify-sans file, and every path it precaches exists in static
