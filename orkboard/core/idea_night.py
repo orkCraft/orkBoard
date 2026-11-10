@@ -146,7 +146,7 @@ WAYS = (("Take", "take", "The goal goes on as any goal does: Talk, then the spec
 def way_row(row: dict, title_of: str = "") -> dict:
     """The proposal as a Needs-you row for the hand's card: `kind` "night_proposal", its ways *Take* and *Drop* with their `kinds` (`realm/way_kinds.py`)."""
     return {"idea": "", "goal": row.get("goal") or "", "kind": "night_proposal", "proposed": True, "id": row["id"], "by": row["party"],
-            "title": f"Proposed: {row['title']}", "text": row["spec"][:600], "blocks": False, "at": row.get("at") or "",
+            "title": f"Proposed: {row['title']}", "text": row["spec"][:600], "blocks": False, "at": row.get("at") or "", "night": row.get("night") or "",
             "choices": [{"label": w[0], "way": w[1], "text": w[2]} for w in WAYS], "kinds": [w[1] for w in WAYS]}
 
 

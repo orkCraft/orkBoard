@@ -21,11 +21,12 @@ export const failed = (n) => n.state === "failed" || (n.tasks || []).some((t) =>
 const heldFor = (n) => n.held_for === "hold";
 const laterAt = (n) => !n.held_for && Date.parse(n.held_until || "") > Date.now();
 
-/** Where a goal lies in the column: `{pile, off, mark}`; `pile` "analysis" | "review" | "work", `off` "" | "held" | "night" (put off: at the cascade's foot after the ones at work), `mark` "" | "hold" | "later" (a pause, or a moon, on its card: before Talk at the fan's end,
+/** Where a goal lies in the column: `{pile, off, mark}`; `pile` "analysis" | "review" | "work", `off` "" | "held" | "night" (put off: at the cascade's foot after the ones at work), `mark` "" | "hold" | "later" | "proposed" (a pause, or a moon, on its card: before Talk at the fan's end,
  *  at work in the cascade). null for a goal the column does not hold (done, a pitch, one folded away). */
 export function kindOf(n) {
   const s = n.state, ripe = n.back?.ripe || null, hold = heldFor(n), later = laterAt(n);
   if (s === "done" || n.folded) return null;
+  if (n.proposed) return { pile: "review", off: "", mark: "proposed" };      // a night's proposal waits for Take or Drop (spec 168 H3): in Specs, marked *proposed*, whatever its state
   if (s === "decided") return ripe?.held ? { pile: "work", off: "held", mark: "" } : { pile: "analysis", off: "", mark: hold ? "hold" : "" };      // the decision worded waits for the person's word; held (put off until the person starts it): the cascade's foot
   if (n.start_at === "night" || n.waits?.kind === "night") return { pile: "work", off: "night", mark: "" };                                           // waiting for the night's build
   if (WORKING.includes(s) || (n.tasks || []).some((t) => PAST_WAITING.includes(t.state))) return { pile: "work", off: "", mark: hold || later ? "hold" : "" };
@@ -52,7 +53,7 @@ export function pilesOf(nodes) {
   const at = (x) => (ACTIVE.includes(x.n.state) ? 0 : 1);
   out.analysis = out.analysis.map((x, i) => ({ ...x, i })).sort((a, b) => Number(!!a.mark) - Number(!!b.mark) || at(a) - at(b) || a.i - b.i);
   const left = (x) => (lookAt(x.n) ? Number(x.n.look_until) - Date.now() / 1000 : Number.isFinite(Number(x.n.back?.ripe?.left_s)) && !x.n.back?.ripe?.by ? Number(x.n.back.ripe.left_s) : Infinity);
-  out.review = out.review.map((x, i) => ({ ...x, i })).sort((a, b) => Number(writing(b.n)) - Number(writing(a.n)) || left(a) - left(b) || a.i - b.i);
+  out.review = out.review.map((x, i) => ({ ...x, i })).sort((a, b) => Number(writing(b.n)) - Number(writing(a.n)) || Number(!!b.n.proposed) - Number(!!a.n.proposed) || left(a) - left(b) || a.i - b.i);
   const rank = { "": 0, held: 1, night: 2 };
   out.work = out.work.map((x, i) => ({ ...x, i })).sort((a, b) => rank[a.off] - rank[b.off] || a.i - b.i);
   return out;

@@ -28,6 +28,7 @@ import { SayLifted } from "./sayplay.js";
 import { ConflictPlay } from "./conflictcard.js";                          // a decision's conflict in play: its ways the hand (spec 168 D1)
 import { ConcernPlay } from "./concernplay.js";                          // a concern in play: its ways the hand (spec 168 D4)
 import { DoubtPlay } from "./doubtplay.js";
+import { NightProposalPlay } from "./nightproposalplay.js";
 import { DevLifted, DevPlay, isDevPlay } from "./devplay.js";        // a goal's branch in play: the lower pile's card, a blocked goal, a plate's branches (spec 168 F2)                              // a doubt left in play: its ways the hand (spec 168 D5)
 import { LiftedWide } from "./liftedwide.js";                  // any other card lifted on the desktop: the 144 x 202 card and a body in the hand's place (spec 168 D1)
 import { ProjectDeal, dealt as headerDeal } from "../table/projectdeal.js";                       // the header's kind or stage dealt to the hand (spec 161 J)
@@ -96,7 +97,7 @@ export function Hand() {
   useKeys(root);
   useNight();
   const wide = useWide();
-  const all = stopsOfProject(map, needs, open).filter((x) => wide || (x.kind !== "concern" && x.kind !== "doubt" && x.kind !== "dev_blocked")), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
+  const all = stopsOfProject(map, needs, open).filter((x) => wide || (x.kind !== "concern" && x.kind !== "doubt" && x.kind !== "night_proposal" && x.kind !== "dev_blocked")), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map && !isToolKey(key)) lower(); }, [key, !s]);   // the stop was answered: the card goes with it (a tool's card is no stop: it goes by its own)
   useEffect(() => { liftedStop.value = s || null; }, [s]);                                // the right column's potions hatch the share the lifted card takes (potionrow.js)
   useEffect(() => () => { liftedStop.value = null; }, []);
@@ -130,7 +131,7 @@ export function Hand() {
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
-    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
+    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "night_proposal" ? html`<${NightProposalPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
     ${sayOn && (isDevPlay() ? html`<${DevLifted} />` : html`<${SayLifted} />`)}
     ${deal && html`<${ProjectDeal} which=${deal} />`}
     ${key === ADD_TOOL && html`<${AddTool} />`}

@@ -216,6 +216,9 @@ def test_the_leaders_proposals_are_laid_on_hold_marked_proposed_and_take_and_dro
     assert not FakeRunner.started
     needs = [n for n in host.command("ideas.board", {})["needs_you"] if n["kind"] == "night_proposal"]
     assert [(n["goal"], n["proposed"], n["kinds"]) for n in needs] == [(row["goal"], True, ["take", "drop"])]
+    node = next(n for n in host.command("ideas.map", {})["nodes"] if n["slug"] == row["goal"])
+    assert node["proposed"] == row["night"] and node["queue"] == "hold"                      # the map's row says *proposed*: the column lays it in Specs
+    assert all("proposed" not in n for n in host.command("ideas.map", {})["nodes"] if n["slug"] != row["goal"])
     _tick(host)
     assert len(idea_night.read(host.ideas.state_dir)) == 1                                     # one a leader: not asked again tonight
     host.command("ideas.night_answer", {"id": row["id"], "take": False})
