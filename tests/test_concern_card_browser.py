@@ -167,3 +167,93 @@ def test_pictures_at_1366_by_768(gui):
     shot(pg, "d4-concern-laid-later.png")
     pg.context.close()
     assert not errors, "\n".join(errors)
+
+
+# -- Spec 168 D5 (decisions §283.25): a doubt left is a card in the hand --------------------------------------------------------------------------
+
+import json  # noqa: E402
+
+from tests.test_table_desktop_browser import node as board_node  # noqa: E402
+
+DOUBT = '.hand-card[data-kind="doubt"]'
+WHY = "The option is not what was asked"
+
+
+class DoubtHost(CardHost):
+    """The concerns' host with a goal in Talk that the leaders judged again once: its row says the Architect still doubts (`say.doubts`); `ideas.judge_again` and `ideas.to_hearing` clear the doubt as the real host's goal does."""
+
+    def __init__(self):
+        super().__init__()
+        self.nodes.append(board_node("dark-mode", "tech", "Add a dark mode option", "talk", "talk", "ice", "", place="table", say={"doubts": [{"party": "tech", "verdict": "doubt", "why": WHY}], "leaders": [], "judged": 1}))
+
+    def handle(self, name, a):
+        if name in ("ideas.judge_again", "ideas.to_hearing"):
+            self.log.append((name, a))
+            next(n for n in self.nodes if n["slug"] == a["idea"])["say"]["doubts"] = []
+            self.rev += 1
+            self.ws.send(json.dumps(self.snapshot()))
+            return {"ok": True, "idea": a["idea"], "parties": ["tech"]}
+        return super().handle(name, a)
+
+
+@pytest.fixture
+def doubt(gui):
+    pg, host, errors = start(gui, "wide", DoubtHost())
+    pg.locator(DOUBT).first.wait_for(timeout=WAIT_MS)
+    yield pg, host
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def play_doubt(pg):
+    pg.locator(DOUBT).first.dispatch_event("click")
+    lifted = pg.locator('.hand-lifted[data-kind="doubt"]')
+    lifted.wait_for(timeout=WAIT_MS)
+    return lifted
+
+
+def test_a_doubt_left_is_a_card_in_the_doubting_leaders_stack_with_its_why(doubt):
+    pg, host = doubt
+    cards = pg.locator(DOUBT)
+    assert cards.count() == 1 and cards.first.get_attribute("data-key") == "doubt/dark-mode/tech"
+    assert "The Architect still doubts" in cards.first.text_content() and box(cards.first) == (144, 202)
+    lane = pg.locator(f'.hand-lane:has({DOUBT})').get_attribute("data-lane")
+    assert lane not in (None, "0"), "under the doubting leader's lane"
+    assert pg.locator(f'.hand-lane:has({DOUBT}) .hand-stack').count() >= 1
+
+
+def test_played_it_has_the_two_ways_by_their_kinds_and_judge_again_now_sends_the_command(doubt):
+    pg, host = doubt
+    lifted = play_doubt(pg)
+    assert box(lifted) == (144, 202) and WHY in lifted.text_content()
+    ways = pg.locator(".hand-ways-cards button[data-way-kind]")
+    assert [(ways.nth(i).get_attribute("data-way-kind"), ways.nth(i).locator(".hand-ans__name").inner_text()) for i in range(ways.count())] == [("ask_more", "Judge again now"), ("go_on", "To the hearing")]
+    pg.locator('.table-tab[data-tab="tech"][aria-selected="true"], .col-head__tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+    pg.locator('.hand-ways-cards button[data-way-kind="ask_more"]').click()
+    pg.wait_for_function("() => !document.querySelector('.hand-card[data-kind=\"doubt\"], .hand-lifted[data-kind=\"doubt\"]')", timeout=WAIT_MS)
+    assert host.sent("ideas.judge_again") == [{"idea": "dark-mode"}] and host.sent("ideas.to_hearing") == []
+
+
+def test_to_the_hearing_sends_its_command_and_the_card_leaves(doubt):
+    pg, host = doubt
+    play_doubt(pg)
+    pg.locator('.hand-ways-cards button[data-way-kind="go_on"]').click()
+    pg.wait_for_function("() => !document.querySelector('.hand-card[data-kind=\"doubt\"]')", timeout=WAIT_MS)
+    assert host.sent("ideas.to_hearing") == [{"idea": "dark-mode"}] and host.sent("ideas.judge_again") == []
+
+
+def test_the_narrow_page_deals_no_doubt_card(gui):
+    pg, host, errors = start(gui, "narrow", DoubtHost())
+    pg.wait_for_timeout(600)
+    assert pg.locator(DOUBT).count() == 0
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_the_doubt_pictures_at_1366_by_768(gui):
+    pg, host, errors = start(gui, "wide", DoubtHost(), **LIT)
+    pg.locator(DOUBT).first.wait_for(timeout=WAIT_MS)
+    play_doubt(pg)
+    shot(pg, "d5-doubt-played.png")
+    pg.context.close()
+    assert not errors, "\n".join(errors)

@@ -432,4 +432,5 @@ REWRITE_UNDONE = "rewrite_undone"      # … put back as it was: idea, taken
 REWRITE_FORKED = "rewrite_forked"      # … what was taken disagrees, one card of choices instead: idea, ids
 SAY_ANSWERED = "say_answered"          # a leader's better or need taken or turned down (spec 168 C1): idea, party, what ("better" · "need"), how ("taken" · "left"), weight, kind
 JUDGED_AGAIN = "judged_again"          # the leaders judged again after the person's answers or at *Judge again now* (spec 168 C2, §283.25): idea, parties, round, now (pressed), hearing (the second round ended in a hearing)
-EVENTS += (GOAL_REWRITTEN, REWRITE_UNDONE, REWRITE_FORKED, SAY_ANSWERED, JUDGED_AGAIN)
+TO_HEARING = "to_hearing"              # the person took a goal to the hearing at once (spec 168 D5, §283.25): idea, parties (the leaders that still doubted or said no)
+EVENTS += (GOAL_REWRITTEN, REWRITE_UNDONE, REWRITE_FORKED, SAY_ANSWERED, JUDGED_AGAIN, TO_HEARING)
