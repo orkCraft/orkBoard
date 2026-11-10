@@ -156,6 +156,20 @@ img { display: block; }
   border: 1px solid var(--ork-card-frame); border-radius: 8px; background: var(--ork-card); }
 .stub .ork-sign { color: var(--ork-ink-muted); } .stub.asks .ork-sign { color: var(--ork-alert); }
 
+/* 5: every block cut at a height and laid over the next, as cards dealt down the screen */
+.roll.deck { gap: 0; }
+.roll.deck .post { position: relative; max-height: 158px; overflow: hidden; box-shadow: inset 0 3px 0 var(--pc), 0 -8px 16px rgb(0 0 0 / .5); }
+.roll.deck .post + .post { margin-top: -26px; }
+.roll.deck .post:last-child { max-height: none; }
+/* 6: a deck only where it says something: one leader's posts in a row are one stack, what you have seen is one deck */
+.stack { position: relative; margin-bottom: 14px; }
+.stack > .post { box-shadow: inset 0 3px 0 var(--pc), 0 7px 0 -3px var(--ork-raised), 0 7px 0 -2px var(--ork-card-frame), 0 14px 0 -7px var(--ork-panel), 0 14px 0 -6px var(--ork-card-frame); }
+.stack .more-of { align-self: flex-start; font: 600 14px/18px var(--lk-text); color: var(--ork-ink-muted); display: flex; gap: 6px; align-items: center; }
+.seen { display: flex; flex-direction: column; }
+.seen .post { position: relative; max-height: 64px; overflow: hidden; opacity: 1; filter: saturate(.6) brightness(.85); box-shadow: inset 0 3px 0 var(--pc), 0 -6px 12px rgb(0 0 0 / .45); }
+.seen .post + .post { margin-top: -12px; }
+.seen .post:last-child { max-height: 64px; }
+.seen-h { display: flex; justify-content: space-between; padding: 0 4px 6px; font: 600 14px/18px var(--lk-text); color: var(--ork-ink-muted); }
 .note { max-width: 110ch; padding: 0 16px 24px; font: 400 15px/22px var(--lk-text); color: var(--ork-ink-read); }
 .note li { margin-left: 20px; list-style: disc; }
 </style>
@@ -239,6 +253,14 @@ const G_GD = post("gd", "unicorn-elder", "Game design", "its section · done whe
 const G_PLAN = post("om", "peon-crown", "Orkmaster", "the plan", `<p>Game design writes the loop, Tech the physics, Art the jump's dust. Tech waits for one answer: the hand.</p>`);
 
 const phone = (hdr, heads, posts, foot, scroll = 0) => `<div class="ph">${SB}${hdr}${heads}<div class="feed"><div class="roll" style="--scroll:${scroll}">${posts.join("")}</div></div>${foot}${HB}</div>`;
+const phoneDeck = (hdr, heads, posts, foot, scroll = 0) => phone(hdr, heads, posts, foot, scroll).replace('class="roll"', 'class="roll deck"');
+const TECH_STACK = `<div class="stack">${TECH_NEWS.replace("</article>", `<span class="more-of">${icon("chevron-down")}More from Tech: a concern, its map</span></article>`)}</div>`;
+const old = (k, h, who, when, t) => post(k, h, who, when, `<p>${t}</p>`);
+const SEEN = `<div class="seen"><p class="seen-h"><span>Seen</span><span>Tap to spread</span></p>
+  ${old("gd", "unicorn-elder", "Game design", "yesterday · 18:05", "Double jump's loop is written.")}
+  ${old("art", "dryad-elder", "Art", "yesterday · 16:40", "The shop's palette.")}
+  ${old("tech", "shaman-elder", "Tech", "yesterday · 15:12", "rooms split in two.")}
+  ${old("om", "peon-crown", "Orkmaster", "yesterday · 11:00", "Sign-in went to dev.")}</div>`;
 const ST = { tech: "news", art: "news", rel: "news", om: "news", gd: "seen" };
 const SCREENS = [
   ["1 · The project's feed", "The header as today; under it the heads as a feed's stories: a ring in its party's colour says it has news since your last look, never a number. The feed, newest first: the Orkmaster's spec that starts at 13:40 with its acts in the block, the goals at work as a row of cards swiped sideways, Tech's changes.",
@@ -250,6 +272,10 @@ const SCREENS = [
   ["4 · A goal's feed", "A goal picked is the same feed one level down: its header, its route's heads (Tech asks: yellow, with !), and its blocks: the plan, each leader's slice and section. The question is in the hand, raised, its pick one tap away, as today.",
     phone(HDR_G, HEADS({ tech: "asks", gd: "news" }, null, [["om", "peon-crown", "Plan"], ["gd", "unicorn-elder", "Game design"], ["tech", "shaman-elder", "Tech"], ["art", "dryad-elder", "Art"]]),
       [G_PLAN, G_TECH, G_GD], FOOT_ASK)],
+  ["5 · Every block cut, cards over cards", "The proposal as asked: each block cut at a height and laid over the next, its foot under the one below. More heads at a glance, and it reads as cards; but every block needs a tap to be read, the acts of a cut block (Start now, To main) go under the next, and a pile is what the hand and the Orkmaster's piles already are.",
+    phoneDeck(HDR_P(), HEADS(ST), [REVIEW, AT_WORK, TECH_NEWS, ART, CONCERN, DONE], FOOT_CALM)],
+  ["6 · A deck only where it says something", "The proposed middle: a block whole, as a post is read; one leader's posts in a row are one stack (Tech's edges under its card, More from Tech opens them); what you have seen is one deck, each card's head showing, Tap to spread. The new is read whole; the old is cards.",
+    phone(HDR_P(true), "", [REVIEW, TECH_STACK, DONE, CAUGHT, SEEN], FOOT_CALM, 470)],
 ];
 document.getElementById("m").innerHTML = SCREENS.map(([t, d, p]) => `<section class="mk-st"><h2>${t}</h2><p>${d}</p>${p}</section>`).join("");
 </script>
