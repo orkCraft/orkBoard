@@ -1,6 +1,6 @@
 // What the phone's middle looks at (docs/specs/117-the-phone-a-menu-of-the-leaders.md §5, decisions §195.2, §291.5–§291.7, goal 169 F): **a goal** when `picked` names one (a press on a card of the hand's row, a goal of the menu or of the feed, a push's arrival), **a card of no goal** when
 // one was pressed in the row (entries.js `looking`, the entry `at` names), else **the feed** (upfeed.js): narrowed to a party when the person picked one in the menu or pressed its head (`tab` its slug, `picked` empty), the whole feed else. The hand's first entry is no longer
-// looked at by itself. A goal is its header, the context's lines that are not its way and its top card with its answers when it has an entry in the hand (the entry whose goal it is), then its way (upway.js); a card of no goal (*Go on paid?*, a sign-in, a project's question)
+// looked at by itself. A goal is its header, the context's lines that are not its way and its top card with its answers when it has an entry in the hand (the entry whose goal it is), then its phases and its feed (upfeed.js `GoalFeed`: the reader cut to its route, the route's leaders its heads, every block in the reader's order: goal 169 G), its why and its tasks (upway.js), a goal in line its moon in place of the feed; a card of no goal (*Go on paid?*, a sign-in, a project's question)
 // is its context and its card. The hand's row raises the card the middle shows, none while the feed or a goal with no card is looked at. The phone keeps no state of its own beyond `frame/state.js` and `entries.js`.
 import { html } from "../html.js";
 import { ORKMASTER, picked, tab } from "../frame/state.js";
@@ -10,8 +10,8 @@ import { Context } from "./context.js";
 import { goalOfEntry, looking } from "./entries.js";
 import { ReadyCard, readyStop } from "./readycard.js";
 import { Lifted } from "./stopcard.js";
-import { Feed } from "./upfeed.js";
-import { GoalHead, Phases, Route, Tasks, Waits, Why } from "./upway.js";
+import { Feed, GoalFeed } from "./upfeed.js";
+import { GoalHead, Phases, Tasks, Waits, Why } from "./upway.js";
 
 /** What is looked at, `{kind: "goal" | "card" | "party" | "feed", entry, node?, slug?, g?}`: "party" the feed narrowed to the party `g`; `entry` is the card shown (its entry in the hand), null for none. `i`: the place the hand's entry on the screen holds (`placeOf`). */
 export function lookOf(entries, i) {
@@ -33,6 +33,6 @@ export function Look({ look, entries, typing = 0 }) {
   const n = look.node, line = n.place === "deck";
   return html`<div class="up-look" data-look="goal" data-goal=${n.slug} data-entry=${e ? e.key : undefined}>
     <${GoalHead} n=${n} />${stop && html`<${Context} s=${stop} bare=${true} />`}${card}
-    <${Phases} n=${n} />${line ? html`<${Waits} n=${n} />` : html`<${Route} n=${n} />`}<${Why} n=${n} />${!line && html`<${Tasks} n=${n} />`}
+    <${Phases} n=${n} />${line ? html`<${Waits} n=${n} />` : html`<${GoalFeed} key=${n.slug} slug=${n.slug} entries=${entries} />`}<${Why} n=${n} />${!line && html`<${Tasks} n=${n} />`}
   </div>`;
 }

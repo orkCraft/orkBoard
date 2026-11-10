@@ -4,7 +4,7 @@
 // line** (*You have seen everything since <time>*, its small heads; pressed it spreads its cards, each card's head showing). A post, a stack and a wait are table/post.js's, the part the desktop's lanes draw too (goal 170). **A head pressed** is `aria-pressed`, the others faint,
 // a line says the feed shows only it, the feed narrowed to its posts (a party's: its goals at work and its concerns above them, upparty.js); pressed again the whole feed and no line. A party picked in the crown's menu is the same narrowed feed (`tab` its slug); the
 // Orkmaster's narrowing is `onlyOrk`. **The last look** is this device's own (js/linkpaired.js `looked`, by the project's path), asked as `since`, again when the Board's snapshot changes, and written when the person leaves the feed (a goal picked, the project switched, the
-// page hidden), never on its first draw. No count anywhere. Layout only (upfeed.css, table/post.css); every colour, face and corner is orkUI's.
+// page hidden), never on its first draw. **A goal's feed** (`GoalFeed`, goal 169 G, screen 4) is the same reader cut to the goal's route, drawn in uplook.js's goal screen. No count anywhere. Layout only (upfeed.css, table/post.css); every colour, face and corner is orkUI's.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
@@ -26,21 +26,23 @@ export const onlyOrk = signal(false);                        // the Orkmaster's 
 export const atWork = (g = null) => (g ? [g] : partiesAll()).flatMap((p) => workOf(p).map((r) => ({ ...r, g: p })));
 
 /** The reader's answer, asked again when `since` or the Board's snapshot changes: `[feed | null, reload]`; a refusal keeps what was drawn. */
-function useFeed(project, since) {
+function useFeed(project, since, route = "") {
   const [got, setGot] = useState(null), n = useRef(0), snap = town.value;
   const load = () => {
-    const k = ++n.current;
-    command(FEED, since == null ? {} : { since }, true).then((r) => { if (k === n.current) setGot(r || {}); }).catch(() => { if (k === n.current) setGot((x) => x || {}); });
+    const k = ++n.current, args = { ...(since == null ? {} : { since }), ...(route ? { route } : {}) };
+    command(FEED, args, true).then((r) => { if (k === n.current) setGot(r || {}); }).catch(() => { if (k === n.current) setGot((x) => x || {}); });
   };
-  useEffect(() => { load(); }, [project, since, snap]);
+  useEffect(() => { load(); }, [project, since, snap, route]);
   return [got, load];
 }
 
 /** This device's last look at the project, read on the feed's first draw and written when the person leaves it (never on its first draw). */
+const drawn = new Map();                                       // the look each project's feed was last drawn with, by its path: a goal's feed reads it (the look is written when the person leaves the feed)
 function useLook(project) {
   const [since, setSince] = useState(() => looked.get(project));
   useEffect(() => {
     setSince(looked.get(project));
+    drawn.set(project, looked.get(project));
     if (!project) return undefined;
     const hide = () => { if (document.visibilityState === "hidden") looked.set(project); };
     document.addEventListener("visibilitychange", hide);
@@ -129,3 +131,22 @@ export function Feed({ g, entries }) {
 
 /** A party's concerns as a block of its leader's, in the feed narrowed to it. */
 const ConcernsBlock = ({ g }) => html`<div class="up-fd__concerns" data-leader=${g.slug}><${Concerns} slug=${g.slug} /></div>`;
+
+/** A goal's feed (goal 169 G; feed.html v3 screen 4): the same reader cut to the goal's route (`ideas.feed` with `{since, route}`), drawn under the goal's header, its card and its phases (uplook.js): the heads row the reader's heads for the route (the Orkmaster, then the
+ *  route's leaders in route order), then the goal's waits and posts in the reader's order and the seen line; it keeps no order of its own. A head pressed narrows to its posts, the goal staying picked; pressed again the whole goal's feed. Its `since` is the look the
+ *  project's feed was drawn with this visit (written when the person left it), else this device's last look; it writes none. `entries`: the hand's, so a goal named in a post is picked as its card. */
+export function GoalFeed({ slug, entries }) {
+  const project = currentProject.value?.path || "", since = drawn.has(project) ? drawn.get(project) : looked.get(project);
+  const [feed, reload] = useFeed(project, since, slug), [only, setOnly] = useState(""), onPick = (s) => pickGoal(entries, s);
+  const mine = (x) => !only || x.leader === only, heads = feed?.heads || [], waits = (feed?.waits || []).filter(mine), stacks = (feed?.posts || []).filter(mine);
+  const old = feed?.seen ? (feed.seen.posts || []).filter(mine) : [], seen = old.length ? { ...feed.seen, posts: old, leaders: (feed.seen.leaders || []).filter((l) => !only || l === only) } : null;
+  const news = feed?.since ? `New since your last look · ${when(feed.since)}` : "News";
+  if (!heads.length && !waits.length && !stacks.length && !seen) return null;
+  return html`<section class="up-feed up-gfeed" data-route=${slug} data-only=${only || undefined} aria-label="Its feed">
+    <${Heads} heads=${heads} only=${only} press=${(l) => setOnly(l === only ? "" : l)} />
+    ${only && html`<p class="up-fd__only" role="status">The feed shows only ${whoOf(only).name}</p>`}
+    ${waits.length > 0 && html`<p class="up-lab up-fd__lab">Waits for you</p>${waits.map((w) => html`<${Wait} key=${`${w.kind}:${w.goal}`} w=${w} onPick=${onPick} onDone=${reload} />`)}`}
+    ${stacks.length > 0 && html`<p class="up-lab up-fd__lab">${news}</p>${stacks.map((s, i) => html`<${Stack} key=${`${s.leader}:${s.post.at}:${i}`} s=${s} onPick=${onPick} />`)}`}
+    ${seen && html`<${Seen} seen=${seen} onPick=${onPick} />`}
+  </section>`;
+}

@@ -1,4 +1,4 @@
-/* The phone's middle (docs/specs/117-the-phone-a-menu-of-the-leaders.md §5, docs/mockups/phone/sidebar.html A1 and A3; hand/uplook.js, upway.js, upparty.js): a goal's header, phases, route, why and tasks; a party's concerns in the feed
+/* The phone's middle (docs/specs/117-the-phone-a-menu-of-the-leaders.md §5, docs/mockups/phone/sidebar.html A1 and A3; hand/uplook.js, upway.js, upparty.js): a goal's header, phases, why and tasks (its feed between them: upfeed.css); a party's concerns in the feed
    narrowed to it (upfeed.js). Layout only: every colour, face and corner is orkUI's. `.up-look` (upright.css) scrolls as a whole. */
 
 /* a goal's header */
@@ -9,20 +9,13 @@
 .up-gh__type { margin: 0; display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .up-gh__type .ork-sign { flex: none; color: var(--ork-ink-muted); }
 
-/* its phases (one button: a press opens its page), its route, why */
+/* its phases (one button: a press opens its page), why */
 .up-phases { appearance: none; flex: none; box-sizing: border-box; width: 100%; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
 .up-phases:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .up-phase { height: var(--ork-tap); display: flex; align-items: center; justify-content: center; border-top: 3px solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .up-phase.is-past { border-top-color: var(--ork-ink-muted); }
 .up-phase.is-now { border-top-color: var(--ork-ink); color: var(--ork-ink); font-weight: 600; }
 .up-wait { flex: none; margin: 0; display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.up-route { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2); }
-.up-route > .ork-icon { flex: none; width: 14px; height: 14px; color: var(--ork-ink-faint); }
-.up-step { display: inline-flex; align-items: center; gap: var(--ork-2); height: 36px; padding: 0 var(--ork-3) 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
-.up-step .ork-sign { color: var(--ork-ink-muted); }
-.up-step.is-done .ork-sign { color: var(--ork-success); }
-.up-step.is-now { border-color: var(--ork-ink); background: var(--ork-panel); rotate: var(--ork-motion-lean); }
-.up-step.is-next { opacity: 0.55; }
 .up-why { flex: none; margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
 
 /* a section and its label; the tasks of the step at work */

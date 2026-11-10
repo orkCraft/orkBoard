@@ -1,7 +1,8 @@
 """The project's feed on the phone (goal 169 F, decisions §291.5–§291.9; the mockup docs/mockups/phone/feed.html v3, screens 1, 2, 3 and 6), in a real browser against a stub host that feeds `ideas.feed`, with touch at 390 × 844: with no goal picked the phone's
 middle is the feed (hand/upfeed.js), asked with this phone's own last look (js/linkpaired.js `looked`), drawn in the reader's order: the heads row on top, what waits first, then the news newest first, one leader's posts in a row one block, the goals at work as
-sideways cards with a button each way, the one seen line that spreads; the hand's row at the foot unchanged, no card raised, no tab. A head pressed narrows the feed to it and says so; pressed again the whole feed. Pictures for Design to $FEED_SHOTS when it is set
-(at 390 × 844, three device pixels a pixel)."""
+sideways cards with a button each way, the one seen line that spreads; the hand's row at the foot unchanged, no card raised, no tab. A head pressed narrows the feed to it and says so; pressed again the whole feed. A goal's screen (goal 169 G, screen 4) is the
+same reader cut to the goal's route (`ideas.feed` with `route`): its heads the route's leaders, its blocks in the reader's order, the goal's question still in the hand, raised. Pictures for Design to $FEED_SHOTS when it is set (at 390 × 844, three device
+pixels a pixel)."""
 from __future__ import annotations
 
 import datetime as dt
@@ -15,7 +16,7 @@ pytest.importorskip("playwright.sync_api")
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_context_narrow_browser import box, cards, open_up  # noqa: E402
 from tests.test_hand_desktop_browser import node, sig, task  # noqa: E402
-from tests.test_phone_look_browser import CONCERN, READABLE, LookHost, pick_from_menu  # noqa: E402
+from tests.test_phone_look_browser import CONCERN, READABLE, SEAT, LookHost, pick_from_menu  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -45,6 +46,8 @@ class FeedHost(LookHost):
         self.now = dt.datetime.now().astimezone().replace(microsecond=0)
 
     def feed(self, a):
+        if a.get("route"):
+            return {**self.goal_feed(a), "since": iso(dt.datetime.fromtimestamp(a["since"] / 1000)) if a.get("since") else ""}
         now, since_ms = self.now, a.get("since")
         since = dt.datetime.fromtimestamp(since_ms / 1000).astimezone() if since_ms else None
         mins = lambda m: now - dt.timedelta(minutes=m)              # noqa: E731
@@ -358,6 +361,76 @@ def test_with_nothing_picked_nothing_in_the_hand_and_nothing_fed_the_feed_says_n
     assert not log, "\n".join(log)
 
 
+def goal_blocks(pg):
+    """A goal's feed's blocks in the page's order, as `blocks` reads the project's."""
+    return pg.eval_on_selector_all(".up-gfeed > .post-card, .up-gfeed > .up-fd__lab, .up-gfeed > .up-fd__seen",
+                                   "(els) => els.map((e) => e.classList.contains('up-fd__lab') ? ['label', e.textContent.trim()] : e.classList.contains('up-fd__seen') ? ['seen', ''] : [e.dataset.wait ? 'wait' : 'post', e.dataset.wait ? e.dataset.goal : e.dataset.leader])")
+
+
+def goal_heads(pg):
+    return pg.locator(".up-gfeed .up-fh__head")
+
+
+def test_a_goals_screen_asks_the_feed_cut_to_its_route_with_the_look_the_project_was_drawn_with_its_heads_the_routes_leaders(gui):
+    since = at_look()
+    pg, host, log = open_feed(gui, since)
+    try:
+        pick_from_menu(pg, "goal", SEAT)
+        pg.locator(".up-gfeed .post-card").first.wait_for(timeout=WAIT_MS)
+        assert _calls(pg, host, "ideas.feed")[-1] == {"since": since, "route": "seat"}, "the same reader cut to the goal's route, with the look the project's feed was drawn with"
+        assert looked(pg) > since, "leaving the project's feed wrote the look; the goal's feed did not read it"
+        assert [h.get_attribute("data-leader") for h in goal_heads(pg).all()] == ["orkmaster", "design", "tech", "product"], "its heads the route's leaders, in route order"
+        assert pg.locator(".up-route, .up-step").count() == 0 and pg.locator('.up-look[data-look="goal"] > .up-fh').count() == 0, "in place of the route's legs, inside the goal's screen"
+        assert goal_blocks(pg)[0][0] == "label" and goal_blocks(pg)[1:] == [["post", "tech"], ["post", "design"]], "its posts in the reader's order, one leader's in a row one block"
+        ys = [box(pg.locator(s).first)["y"] for s in (".up-gh", ".up-phases", ".up-gfeed .up-fh", ".up-gfeed .post-card", ".up-why", ".up-tasks")]
+        assert ys == sorted(ys) and len(set(ys)) == 6, "the header, the phases, the heads, the blocks, then why and the step's tasks"
+        assert all(box(h)["height"] >= 44 and box(h)["width"] >= 44 for h in goal_heads(pg).all()), "each head 44 px at least"
+        assert not any(ch.isdigit() for ch in pg.locator(".up-gfeed .up-fh").inner_text()), "no count on a head"
+        pg.locator(".up-gfeed .post-card__open").click()
+        assert pg.locator(".up-gfeed .post-card__more").count() == 1, "More from Tech opens the rest of its stack"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_goals_question_stays_in_the_hand_raised_its_pick_one_tap_away_and_its_leader_asks_in_the_heads(gui):
+    pg, host, log = open_feed(gui, at_look())
+    try:
+        pg.locator('.hand-up .up-card[data-key="goal:signin"]').click()
+        pg.locator(".up-gfeed .up-fh__head").first.wait_for(timeout=WAIT_MS)
+        assert _calls(pg, host, "ideas.feed")[-1]["route"] == "signin"
+        assert pg.locator('.hand-up .up-card[aria-pressed="true"]').get_attribute("data-key") == "goal:signin", "its card raised in the hand"
+        assert [h.get_attribute("data-leader") for h in goal_heads(pg).all()] == ["orkmaster", "tech"]
+        tech = pg.locator('.up-gfeed .up-fh__head[data-leader="tech"]')
+        assert "is-asks" in tech.get_attribute("class") and tech.locator(".up-fh__ask").inner_text().strip() == "!", "the leader that asks: the yellow ring and its !"
+        assert box(pg.locator(".hand-up .hand-lifted"))["y"] < box(pg.locator(".up-gfeed"))["y"], "its card with its answers over its feed"
+        pg.locator(".hand-up .hand-lifted .q-card", has_text="Passkey").click()
+        assert _calls(pg, host, "ideas.talk_answer") == [{"idea": "signin", "answers": [{"id": "q1", "pick": 1}]}], "one tap answers"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_head_pressed_in_a_goals_feed_narrows_it_and_the_goal_stays_picked(gui):
+    pg, host, log = open_feed(gui, at_look())
+    try:
+        pick_from_menu(pg, "goal", SEAT)
+        pg.locator(".up-gfeed .post-card").first.wait_for(timeout=WAIT_MS)
+        tech = pg.locator('.up-gfeed .up-fh__head[data-leader="tech"]')
+        tech.click()
+        pg.locator(".up-gfeed .up-fd__only").wait_for(timeout=WAIT_MS)
+        assert tech.get_attribute("aria-pressed") == "true" and pg.locator(".up-gfeed .up-fd__only").inner_text().strip() == "The feed shows only Tech"
+        assert [float(h.evaluate("(e) => getComputedStyle(e).opacity")) < 1 for h in goal_heads(pg).all()] == [True, True, False, True], "the others faint"
+        assert [b for b in goal_blocks(pg) if b[0] == "post"] == [["post", "tech"]], "narrowed to its posts"
+        assert sig(pg, "frame/state.js", "picked") == "seat" and sig(pg, "frame/state.js", "tab") == "orkmaster", "the goal stays picked, no party picked"
+        tech.click()
+        pg.locator(".up-gfeed .up-fd__only").wait_for(state="detached", timeout=WAIT_MS)
+        assert tech.get_attribute("aria-pressed") == "false" and [b for b in goal_blocks(pg) if b[0] == "post"] == [["post", "tech"], ["post", "design"]], "pressed again, the goal's whole feed"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
 def shot(pg, name):
     if SHOTS:
         SHOTS.mkdir(parents=True, exist_ok=True)
@@ -366,7 +439,7 @@ def shot(pg, name):
 
 @pytest.mark.skipif(not SHOTS, reason="pictures for Design: set FEED_SHOTS")
 def test_pictures_of_the_feed_for_design(gui):
-    """The top of the project's feed and Tech's head pressed, at 390 × 844 and three device pixels a pixel (Design's pictures, goal 169 F)."""
+    """The top of the project's feed, Tech's head pressed, and a goal's feed (Keep the seat, picked in the crown's menu), at 390 × 844 and three device pixels a pixel (Design's pictures, goals 169 F and G)."""
     server, browser = gui
     host = FeedHost()
     context = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, device_scale_factor=3)
@@ -382,5 +455,10 @@ def test_pictures_of_the_feed_for_design(gui):
         pg.locator(".up-fd__concerns .up-concern").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(500)
         shot(pg, "tech")
+        head_of(pg, "tech").click()
+        pick_from_menu(pg, "goal", SEAT)
+        pg.locator(".up-gfeed .post-card").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(1200)
+        shot(pg, "goal")
     finally:
         context.close()

@@ -486,7 +486,7 @@ def test_a_press_on_the_phases_opens_the_goals_page_over_the_pane_and_back_retur
 def test_a_card_of_no_goal_has_no_goal_header_no_way_and_its_card_is_in_the_row(gui):
     pg, host, log = open_up(gui, "paid", first=True)
     try:
-        assert pg.locator(".up-gh, .up-phases, .up-route").count() == 0 and pg.locator(".up-look").get_attribute("data-look") == "card" and cards(pg).count() == 1 and cards(pg).first.get_attribute("aria-pressed") == "true"
+        assert pg.locator(".up-gh, .up-phases, .up-gfeed").count() == 0 and pg.locator(".up-look").get_attribute("data-look") == "card" and cards(pg).count() == 1 and cards(pg).first.get_attribute("aria-pressed") == "true"
         assert cards(pg).first.locator(".up-card__name").inner_text().strip() == "Go on paid?"
     finally:
         pg.close()

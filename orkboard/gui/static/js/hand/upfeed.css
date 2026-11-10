@@ -3,6 +3,7 @@
    `--party-hue`), the Orkmaster's its own token. Nothing under 14 px; every target 44 px at least. `.up-look` (upright.css) scrolls as a whole. */
 
 .up-feed { gap: var(--ork-5); }
+.up-gfeed { flex: none; display: flex; flex-direction: column; }            /* a goal's feed (goal 169 G), under its header, its card and its phases */
 .up-feed [data-leader="orkmaster"] { --party-hue: var(--ork-party-orkmaster); }
 
 /* the heads row: the Orkmaster and the leaders, as a feed's stories; it scrolls sideways when they do not fit */

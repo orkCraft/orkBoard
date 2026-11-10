@@ -1,9 +1,11 @@
 """The phone's middle (docs/specs/117-the-phone-a-menu-of-the-leaders.md §5, part D; decisions §195.2; the mockup docs/mockups/phone/sidebar.html A1 and A3), in a real browser against a stub host, with touch at 390 × 844: what is looked at is the goal picked, else the
 party the person picked in the menu, else the goal of the hand's first card (its card on it, answered with one tap), else nothing (*Nothing waits for you.*). A goal: its header, its phases (a press opens its page), its route by its leaders' heads (done, at work,
 next), why and *<Party>'s tasks*; a goal in line: its phases, the moon and its hour. A party: its leader's header, its squad (a head opens its popover as a sheet), the tools of its sword and shield in words, its goals at work and its concerns. Screenshots to
-$UPRIGHT_SHOTS when it is set. Since goal 169 F a party picked is the project's feed narrowed to it and nothing picked is the whole feed: tests/test_phone_feed_browser.py."""
+$UPRIGHT_SHOTS when it is set. Since goal 169 F a party picked is the project's feed narrowed to it and nothing picked is the whole feed: tests/test_phone_feed_browser.py. Since goal 169 G a goal's route is its feed's heads row (the reader cut to
+its route, `ideas.feed` with `route`) in place of its route's legs; its feed's blocks: tests/test_phone_feed_browser.py."""
 from __future__ import annotations
 
+import datetime as dt
 import os
 from pathlib import Path
 
@@ -23,6 +25,7 @@ SEAT_WHY = "A player who loses signal comes back to the seat they had."
 SEAT = "Keep the seat when a socket reconnects"
 CONCERN = {"id": "c1", "level": "alert", "what": "Lobbies live in memory: a restart drops every game.", "why": "", "fix": "", "on": "server/lobby.ts", "aspect": "hotspots"}
 NOTE = {"id": "c2", "level": "note", "what": "The email link has no rate limit.", "why": "", "fix": "", "on": "auth/link.ts", "aspect": "security"}
+ROUTES = {"seat": ["design", "tech", "product"], "signin": ["tech"], "phones": ["design"], "daily": ["design"], "music": ["tech"]}       # each goal's route, as the reader cuts the feed to it (goal 169 G)
 MADE = {"id": "c3", "level": "alert", "what": "Already a goal.", "why": "", "fix": "", "on": "server/rooms.ts", "aspect": "hotspots", "idea": "seat"}
 
 
@@ -52,7 +55,19 @@ class LookHost(UprightHost):
         tech.update(brief="How it is built, and what it costs to change.", size="standard", does_tool="claude", does_default=True, does_mixed=False, checks_tool="codex", checks_default=False, checks_mixed=False, lean=False,
                     party=[{**tech["leader"], "band": "lead", "state": "free", "why": ""}, {"slug": "tester", "name": "Tester", "head": head("peon", tier="laborer"), "band": "check", "state": "free", "why": ""}])
 
+    def goal_feed(self, a):
+        """The reader's feed cut to a goal's route (realm/board_feed.py `route`): the Orkmaster's head, then the route's leaders in route order; Tech asks on Sign-in, Design has news on the seat; the seat's posts, Tech's then Design's."""
+        slug, at = a["route"], dt.datetime.now().astimezone().replace(microsecond=0)
+        heads = [{"leader": "orkmaster", "news": False, "asks": False}] + [{"leader": p, "news": slug == "seat" and p in ("tech", "design"), "asks": slug == "signin" and p == "tech"} for p in ROUTES.get(slug, [])]
+        post = lambda leader, m, text, kind="news": {"leader": leader, "at": (at - dt.timedelta(minutes=m)).isoformat(timespec="seconds"), "kind": kind, "goal": slug, "text": text, "event": "idea.added", "acts": []}  # noqa: E731
+        posts = [{"leader": "tech", "post": post("tech", 6, "Accepted step 1 of Keep the seat"), "more": [post("tech", 11, "Keep the seat's plan changed", "change")]},
+                 {"leader": "design", "post": post("design", 25, "Keep the seat's screen is drawn"), "more": []}] if slug == "seat" else []
+        return {"since": "", "heads": heads, "waits": [], "posts": posts, "seen": None}
+
     def handle(self, name, a):
+        if name == "ideas.feed" and a.get("route"):
+            self.log.append((name, a))
+            return self.goal_feed(a)
         if name == "ideas.concerns":
             self.log.append((name, a))
             return {"status": "done", "error": "", "concerns": [CONCERN, NOTE, MADE] if a.get("party") == "tech" else [], "dismissed": []}
@@ -97,8 +112,9 @@ def test_a_card_of_the_row_pressed_shows_its_goal_its_way_under_its_card_answere
         assert c.locator(".up-ctx__who").inner_text().strip().lower() == "tech" and c.locator(".up-ctx__why").inner_text().strip() == WHY and c.locator(".up-ctx__rec").inner_text().strip() == "Recommended: Email link"
         assert c.locator(".up-ctx__wait").inner_text().strip() == "Grunt waits for your answer" and c.locator(".up-ctx__goal").count() == 0
         assert name_of(pg) == SIGN_IN_Q and raised(pg).get_attribute("data-key") == "goal:signin", "its card, with its answers, and the same card raised in the row"
-        ys = [box(pg.locator(s).first)["y"] for s in (".up-gh", ".up-ctx", ".hand-up .hand-lifted", ".up-phases", ".up-route", ".up-why")]
-        assert ys == sorted(ys) and len(set(ys)) == 6, "the header, the context, the card, the phases, the route, why"
+        pg.locator(".up-gfeed .up-fh").wait_for(timeout=WAIT_MS)
+        ys = [box(pg.locator(s).first)["y"] for s in (".up-gh", ".up-ctx", ".hand-up .hand-lifted", ".up-phases", ".up-gfeed .up-fh", ".up-why")]
+        assert ys == sorted(ys) and len(set(ys)) == 6, "the header, the context, the card, the phases, its feed's heads (goal 169 G: was its route), why"
         assert pg.locator(".up-why").inner_text().strip() == "About signin."
         shot(pg, "phone-look-goal")
         pg.locator(".hand-up .hand-lifted .q-card", has_text="Passkey").click()
@@ -130,7 +146,7 @@ def test_the_phases_the_past_ones_muted_its_own_in_the_ink_and_a_press_opens_the
     assert not log, "\n".join(log)
 
 
-def test_a_goal_picked_from_the_menu_with_no_card_shows_its_way_alone_route_why_and_the_tasks_of_the_step_at_work(gui):
+def test_a_goal_picked_from_the_menu_with_no_card_shows_its_way_alone_its_routes_heads_why_and_the_tasks_of_the_step_at_work(gui):       # goal 169 G: the route's legs are its feed's heads
     pg, host, log = open_up(gui, host=LookHost())
     try:
         pick_from_menu(pg, "goal", SEAT)
@@ -139,12 +155,13 @@ def test_a_goal_picked_from_the_menu_with_no_card_shows_its_way_alone_route_why_
         assert cards(pg).count() == 2, "the hand's cards stay in the row"
         assert sig(pg, "frame/state.js", "picked") == "seat"
         assert pg.locator(".up-gh__name").inner_text().strip() == SEAT and pg.locator(".up-gh__type").inner_text().strip() == "Feature · at work in Tech"
-        steps = pg.locator(".up-route .up-step")
-        assert [s.inner_text().strip() for s in steps.all()] == ["Design", "Tech", "Product"] and [s.get_attribute("class") for s in steps.all()] == ["up-step is-done", "up-step is-now", "up-step is-next"], "the parties in the route's order"
-        assert all("/races/" in s.locator("img").get_attribute("src") for s in steps.all()) and steps.nth(0).locator(".ork-sign.check").count() == 1 and steps.nth(1).locator(".ork-sign.work").count() == 1
-        assert steps.nth(1).evaluate("(e) => getComputedStyle(e).rotate") not in ("none", "0deg"), "the one at work turned"
-        assert float(steps.nth(2).evaluate("(e) => getComputedStyle(e).opacity")) < 1, "the next faint"
-        assert pg.locator(".up-route .ork-icon").count() == 2
+        pg.locator(".up-gfeed .up-fh__head").first.wait_for(timeout=WAIT_MS)
+        assert _calls(pg, host, "ideas.feed")[-1] == {"route": "seat"}, "the feed cut to the goal's route (no look on this phone: no since)"
+        steps = pg.locator(".up-gfeed .up-fh__head")
+        assert [s.get_attribute("data-leader") for s in steps.all()] == ["orkmaster", "design", "tech", "product"], "the Orkmaster, then the route's leaders in the route's order"
+        assert [s.locator(".up-fh__name").inner_text().strip() for s in steps.all()] == ["Orkmaster", "Design", "Tech", "Product"]
+        assert all("/races/" in s.locator("img").get_attribute("src") for s in steps.all()), "each its leader's head"
+        assert pg.locator(".up-route, .up-step").count() == 0, "no route's legs beside it"
         assert pg.locator(".up-why").inner_text().strip() == SEAT_WHY
         assert pg.locator(".up-why").evaluate("(e) => getComputedStyle(e).webkitLineClamp") == "4"
         tasks = pg.locator(".up-tasks .up-task")
@@ -180,7 +197,7 @@ def test_a_task_that_asks_or_failed_is_in_the_alerts_frame_and_the_goals_card_is
     assert not log, "\n".join(log)
 
 
-def test_a_goal_in_line_shows_its_phases_and_why_and_the_moon_with_its_hour_no_route_no_tasks(gui):
+def test_a_goal_in_line_shows_its_phases_and_why_and_the_moon_with_its_hour_no_feed_no_tasks(gui):
     pg, host, log = open_up(gui, host=LookHost())
     try:
         pick_from_menu(pg, "goal", "Chat in the lobby")
@@ -188,7 +205,8 @@ def test_a_goal_in_line_shows_its_phases_and_why_and_the_moon_with_its_hour_no_r
         assert [p.get_attribute("class") for p in pg.locator(".up-phase").all()] == ["up-phase"] * 4, "none past, none its own"
         wait = pg.locator(".up-wait")
         assert wait.locator(".ork-sign.moon").count() == 1 and wait.inner_text().strip() == "Waits for the reset, from 21:40", "the moon and its hour"
-        assert pg.locator(".up-route, .up-tasks").count() == 0 and pg.locator(".up-why").inner_text().strip() == "About chat."
+        assert pg.locator(".up-gfeed, .up-tasks").count() == 0 and pg.locator(".up-why").inner_text().strip() == "About chat."
+        assert not [a for n, a in host.log if n == "ideas.feed" and a.get("route")], "a goal in line asks no feed of its route (goal 169 G)"
         shot(pg, "phone-look-line")
     finally:
         pg.close()
