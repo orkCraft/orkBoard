@@ -18,7 +18,7 @@ The person, 10 November 2026, on the desktop drawn in the phone feed's look (`do
 нравится, в особенности левая колонка и правый сброс давай возьмем адаптацию и десктопа в работу на моделях попроще». Earlier, on
 the phone's feed mockup: «Мне очень понравился макет, надо ориентироваться на него». Then, sending the chairs and a sheet of
 a back for each race's leader (`docs/mockups/table-template/objects/cartoon/sheets/o3b-chairs.jpg`, `o3c-leaders-backs.jpg`): «Стулья
-давай оставим» and «Я ещё добавил разные стили спинок для лидеров».
+давай оставим» and «Я ещё добавил разные стили спинок для лидеров». On the tabs: «Да, все верно - десктоп со стульями, мобила с кольцами».
 
 ## Why
 
@@ -76,6 +76,7 @@ a back for each race's leader (`docs/mockups/table-template/objects/cartoon/shee
 ## Decisions
 - §293: the desktop in the feed's look (every card a post; the Orkmaster's lane and the discard as drawn; the leaders' tabs as rings;
   the places in the cartoon takes). Built on goal 169's look (§291, orkUI 0.40.1).
+- §294: the desktop's tabs stand on their race's chair backs with a sign beside the head, no ring; the phone keeps the rings.
 
 ## Design
 ### Talk

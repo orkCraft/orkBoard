@@ -8213,3 +8213,19 @@ column and the right discard above all*; the desktop's adaptation is taken into 
    implementation on simpler models.
 
 The owner's call.
+
+## 294. The desktop's tabs stand on chairs, the phone's heads in rings (10 November 2026, the owner)
+
+Changes: 293.5 (the leaders' tabs as rings: on the desktop no ring).
+
+Why: the owner asked whether the desktop's tabs need rings when the chairs stay (and each race's leader has a back of its own,
+`docs/pictures-cartoon.md` O3c); a ring round a head that stands on a chair's back under a tab is three frames in a row. *The desktop
+with the chairs, the phone with the rings.* So:
+1. **On the desktop a tab's head stands on its chair's back**, the back of its race's leader (O3c), the open leader's grander; no
+   ring round the head. Beside the head a sign says its state: a dot in its party's colour for news, a yellow round **!** when it
+   asks (§226.3: never a ring or a shade alone); its name and its line under it, its party's colour as its underline (§275).
+2. **On the phone the heads stay in rings** in the feed's row (§291.5, §291.9): a ring in the party's colour with its sign for news,
+   the yellow ring with **!** for asking.
+3. No number on either (§223, §291.9).
+
+The owner's call.
