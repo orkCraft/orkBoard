@@ -157,7 +157,7 @@ def test_the_open_head_is_large_the_others_36_the_open_tab_has_no_fill_and_the_l
     nav, rim = pg.locator(".table-tabs").bounding_box(), pg.locator(".table-tabs").evaluate("e => parseFloat(getComputedStyle(e).borderBottomWidth)")
     assert rim == 3 and abs(box("tech")["y"] + box("tech")["height"] - (nav["y"] + nav["height"])) <= 1, "the open head 3 px lower, over the table's rim"
     assert abs(box("game")["y"] + box("game")["height"] - (nav["y"] + nav["height"] - 3)) <= 1, "the others stand on the rim"
-    assert nav["height"] >= (60 if big else 52) and nav["height"] <= (70 if big else 62)
+    assert nav["height"] >= (60 if big else 52) and nav["height"] <= (72 if big else 62)   # 72: orkUI 0.40's Rubik grew the tab name's line by a pixel (71)
     open_tab_box = tab(pg, "tech")
     fill, rule = open_tab_box.evaluate("e => [getComputedStyle(e).backgroundColor, getComputedStyle(e).boxShadow]")
     assert fill == "rgba(0, 0, 0, 0)" and (not big or "0px -3px 0px 0px inset" in rule), "no fill on the open tab, its party's colour is the rule under it (decisions §268.1, §275.1)"

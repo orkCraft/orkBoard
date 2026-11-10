@@ -473,8 +473,8 @@ def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label
     nm = head.locator(".table-card__nm")
     assert nm.inner_text().strip() == "Reset the round timer when a player rejoins"
     assert nm.evaluate("e => getComputedStyle(e).textAlign") in ("left", "start") and nm.evaluate("e => getComputedStyle(e).webkitLineClamp") == "2"        # left-aligned, two lines at most (spec 147 A.2)
-    pixel = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').split(',')[0].trim().replace(/[\"']/g, '')")
-    assert pixel and pixel not in nm.evaluate("e => getComputedStyle(e).fontFamily")                                      # a person's words: the body face, never the pixel one (CLAUDE.md, the owner)
+    text = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-text').trim()")
+    assert text and nm.evaluate("e => getComputedStyle(e).fontFamily").replace(chr(34), "") == text.replace(chr(34), "")                                           # a person's words: the text face token (orkUI 0.40 draws every face in Rubik, decisions §291, so "not the pixel face" no longer tells)
     win = failed.locator(".table-card__win")
     assert 80 <= win.bounding_box()["height"] <= 92                                                                      # what the corners and the title leave of the card (spec 147 A.2), so a lane's cards line up
     assert win.get_attribute("data-window") == "fail" and win.locator(".ork-sign.alert").count() == 1 and win.locator(".ork-sign").count() == 1      # a failed task: orkUI's alert sign and its reason (spec 142 C, decisions §249.3)
@@ -850,7 +850,7 @@ def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_
     assert seat.locator(".table-seat__role").inner_text() == "Grunts" and seat.get_attribute("aria-label") == "Grunts, runs on Claude", "the role under the head, in the label with its tool"
     assert seat.locator(".ork-busy").count() == 1 and head.locator('.table-seat[data-seat="tester"] .ork-busy').count() == 0, "the busy mark on the one at work"
     role = seat.locator(".table-seat__role")
-    assert role.evaluate("e => getComputedStyle(e).fontFamily") != pg.locator(".table-title__pt").evaluate("e => getComputedStyle(e).fontFamily"), "the body's face, never the pixel face"
+    assert role.evaluate("e => getComputedStyle(e).fontFamily").startswith("Rubik"), "the one face, Rubik (orkUI 0.40, decisions §291): the pixel face is gone"
     assert role.evaluate("e => getComputedStyle(e).color") != seat.evaluate("e => getComputedStyle(e).color"), "muted"
     assert role.evaluate("e => [getComputedStyle(e).textOverflow, getComputedStyle(e).maxWidth]") == ["ellipsis", "76px"]
     box, rbox = seat.locator(".ork-race__head").bounding_box(), role.bounding_box()

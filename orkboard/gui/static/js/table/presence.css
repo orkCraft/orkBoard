@@ -9,7 +9,7 @@
 .presence-chain.is-small { min-width: 44px; justify-content: center; }
 /* the chain at the right column's head (spec 168 A4, decisions §285.2): orkUI's `.small`, half as tall, hung at the head's right edge, its words (*Here*, *until 23:00*) to its left, smaller */
 .presence-chain.is-half { gap: var(--ork-1); padding: 0; }
-.presence-chain.is-half .presence-chain__words { padding-top: var(--ork-2); min-width: 0; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.presence-chain.is-half .presence-chain__words { padding-top: var(--ork-3); min-width: 0; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .presence-chain.is-half .presence-chain__word { font-size: 12px; line-height: 13px; }
 .presence-chain.is-half .presence-chain__line { font-size: 12px; line-height: 12px; }
 
