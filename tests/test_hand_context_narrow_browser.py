@@ -315,7 +315,7 @@ def test_the_context_says_who_which_goal_why_the_pick_and_who_waits_above_the_ca
         assert c.locator(".up-ctx__rec").inner_text().strip() == "Recommended: Email link"
         assert c.locator(".up-ctx__wait").inner_text().strip() == "Grunt waits for your answer"
         faces = pg.evaluate("() => [getComputedStyle(document.querySelector('.up-ctx__why')).fontFamily, getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').trim()]")
-        assert faces[0] != faces[1] and faces[1].startswith('"Pixelify Sans"') and faces[0].startswith('"IBM Plex Sans"'), "the body face, never the pixel face"
+        assert faces[0].startswith('Rubik') and faces[1].startswith('"Rubik"'), "the one face, Rubik, for its words too"
         assert box(c)["y"] + box(c)["height"] <= box(pg.locator(".hand-up .hand-lifted"))["y"] + 1, "above the card"
         assert c.evaluate("(e) => e.tagName") == "DIV", "the way's phases open the goal's page, not the context"
     finally:

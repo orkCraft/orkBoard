@@ -18,8 +18,8 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   `orkcraft.v1` and its `orkcraft-app-v*` cache. Only the package is `orkboard`.
 - **One look, orkUI's office** (dark; colour is the party, the element and a signal, decisions §268; its pictures are orkUI's
   own: the races' heads, the heroes and a card's picture of its kind, decisions §283, never the only thing that says what a card
-  means): the page and the phone are always drawn in it (docs/specs/40-design-system.md). The pixel face is for headings and
-  buttons, never for a person's words.
+  means): the page and the phone are always drawn in it (docs/specs/40-design-system.md). The face is Rubik for headings,
+  buttons and text, IBM Plex Mono for code, paths and ids (decisions §291).
 - **The frame** (decisions §104.0, §145): the window is two parts, the table (the leaders' tabs and the pane: *what and
   why*, through whose eyes, the goals in line in its first lane) and the hand (*what the person decides*, under the
   lanes, with the places at its right, each opening a table: the die, the backpack, the history book); the discard of goals

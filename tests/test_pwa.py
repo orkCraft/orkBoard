@@ -61,7 +61,7 @@ def test_the_app_is_its_own_files_and_nothing_else():
     head, body = _split(pwa.serve("GET", "/app/fonts/ibm-plex-mono-latin-400-normal.woff2"))   # orkUI's faces, as the desktop's
     assert "Content-Type: font/woff2" in head and body[:4] == b"wOF2"
     faces = _split(pwa.serve("GET", "/app/fonts.css"))[1]
-    assert b"IBM Plex Mono" in faces and b"Pixelify Sans" in faces
+    assert b"IBM Plex Mono" in faces and b"Rubik" in faces and b"Pixelify" not in faces
     assert _split(pwa.serve("GET", "/app/fonts/OFL-IBM-Plex-Mono.txt"))[0].startswith("HTTP/1.1 404")
     head, body = _split(pwa.serve("GET", "/app/races/elf-elder.png"))                         # orkUI's race heads
     assert "Content-Type: image/png" in head and body[:8] == b"\x89PNG\r\n\x1a\n"
@@ -474,7 +474,7 @@ def test_the_workers_install_fills_its_cache_past_the_http_cache():
 
 def test_service_worker_names_cache_version_and_cache_first_prefixes():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "orkcraft-app-v106" in sw
+    assert "orkcraft-app-v107" in sw
     prefixes = sw[sw.index("CACHE_PREFIXES = ["):sw.index("];", sw.index("CACHE_PREFIXES = ["))]
     assert set(re.findall(r'"([^"]+)"', prefixes)) == set(pwa.CACHE_PREFIXES) == {"fonts/"}
 
