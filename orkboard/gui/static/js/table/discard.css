@@ -34,3 +34,15 @@
   .table-body[data-end="side"]:has(> .table-end) { padding-bottom: var(--table-end-h); }
   .table-body[data-end="over"] > .table-end { display: none; }
 }
+
+/* The discard's posts (goal 170 B, decisions §293.4; table/donepost.js): each goal a post of post.js, one column of the lane's width. The ready one is ringed in the portal's colour, a picked one in the ink; the goals the portal takes along are dashed. */
+.discard-posts { display: flex; flex-direction: column; gap: var(--ork-4); width: 100%; margin: 0; padding: 0; list-style: none; }
+.discard-posts > li { min-width: 0; }
+.discard-pile__words { margin: calc(var(--ork-2) * -1) 0 0; align-self: stretch; padding: 0 var(--ork-2); font: var(--ork-type-caption); font-size: 13px; line-height: 18px; color: var(--ork-ink-muted); }
+.release-lane .post-card[data-portal] { border-color: var(--ork-portal); box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), 0 0 0 var(--ork-line) var(--ork-portal), 0 0 var(--ork-5) var(--ork-portal-hi); }
+.release-lane .post-card[data-picked] { box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), inset 0 0 0 2px var(--ork-ink); }
+.release-lane .post-card[data-along] { outline: var(--ork-line) dashed var(--ork-portal); outline-offset: 2px; }
+.release-lane .post-card__moon { display: flex; align-items: center; gap: var(--ork-2); }
+.release-lane .post-card[data-melting] { z-index: 3; pointer-events: none; animation: portal-dissolve calc(var(--ork-motion-sure) * 2.5) steps(8, end) forwards; }
+.release-lane .post-card[data-going] { z-index: 3; pointer-events: none; animation: portal-go var(--ork-motion-sure) ease-in forwards; }
+@media (prefers-reduced-motion: reduce) { .release-lane .post-card[data-melting], .release-lane .post-card[data-going] { animation: none; } }

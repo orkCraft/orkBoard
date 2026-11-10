@@ -7,10 +7,12 @@ import { lower, playCard, playing } from "../frame/state.js";
 import { lowerOf } from "../hand/data.js";
 import { devName, lowerOn } from "../hand/devcard.js";
 import { gateData } from "../shell/store.js";
-import { DoneFace } from "./discard.js";
+import { Icon } from "../orkui.js";
+import { DonePost } from "./donepost.js";
 
 /** The word under the lower plate's cards and in a card's foot. */
 const WAITS_DEV = (dev) => `Waiting for ${dev}`, PRESS = "Choose the branch";
+export const PLATE_WORDS = { main: "done in dev · waits for main", dev: "done · waits for dev" };      // the words under a plate (no count: decisions §293.4)
 
 /** The branch a plate stands for now: `dev` the project's work branch, `main` its release branch. */
 export const branchOf = (which) => (which === "dev" ? devName() : gateData.value?.main || "main");
@@ -19,17 +21,17 @@ export const branchOf = (which) => (which === "dev" ? devName() : gateData.value
 export function Plate({ which }) {
   const name = branchOf(which), on = playing.value?.dev === "plate" && playing.value.which === which;
   const press = () => { if (on) lower(); else playCard({ dev: "plate", which }); };
-  return html`<button type="button" class=${cls("ork-plaque discard-plate", { "is-on": on })} data-plate=${which} aria-expanded=${on ? "true" : "false"} aria-label=${`${which === "dev" ? WAITS_DEV(name) : `Sent to ${name}`}. ${PRESS}`} title=${PRESS} onClick=${press}>${name}</button>`;
+  return html`<button type="button" class=${cls("ork-plaque discard-plate", { "is-on": on })} data-plate=${which} aria-expanded=${on ? "true" : "false"} aria-label=${`${which === "dev" ? WAITS_DEV(name) : `Sent to ${name}`}. ${PRESS}`} title=${PRESS} onClick=${press}><${Icon} name="git-merge" /><span>${name}</span></button>`;
 }
 
 /** The goals of the lower pile that the open tab's eyes hold (`held`: lane.js), the last one first; none while *Lands in dev by itself* is on. */
 export const lowerHeld = (held) => (lowerOn() ? lowerOf().filter((g) => held(g.slug)) : []);
 
-/** The lower pile: its plate and its cards, each pressed to be played. */
+/** The lower pile: its plate, the words under it and its posts, each pressed to be played. */
 export function LowerPile({ goals }) {
   if (!goals.length) return null;
   const dev = devName(), now = playing.value?.dev === "card" ? playing.value.slug : "";
-  return html`<section class="discard-pile" data-pile="lower" aria-label=${WAITS_DEV(dev)}><${Plate} which="dev" />
-    <ul class="discard-pile__cards" aria-label=${WAITS_DEV(dev)}>${goals.map((g) => html`<li key=${g.slug}><${DoneFace} g=${g} picked=${now === g.slug} line=${WAITS_DEV(dev)} label=${`${g.full}, ${WAITS_DEV(dev).toLowerCase()}`}
-      onPress=${() => { if (now === g.slug) lower(); else playCard({ dev: "card", slug: g.slug }); }} /></li>`)}</ul></section>`;
+  return html`<section class="discard-pile" data-pile="lower" aria-label=${WAITS_DEV(dev)}><${Plate} which="dev" /><p class="discard-pile__words">${PLATE_WORDS.dev}</p>
+    <ul class="discard-posts" aria-label=${WAITS_DEV(dev)}>${goals.map((g) => html`<li key=${g.slug}><${DonePost} g=${g} kind="lower" sub="done" picked=${now === g.slug} label=${`${g.full}, ${WAITS_DEV(dev).toLowerCase()}`}
+      onPick=${() => { if (now === g.slug) lower(); else playCard({ dev: "card", slug: g.slug }); }} /></li>`)}</ul></section>`;
 }

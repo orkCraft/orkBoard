@@ -2,7 +2,12 @@
 *Lands in dev by itself* is off, under its plate *dev*; the upper (in dev, waiting for main) under *main*. A plate pressed deals the branches to the hand (`ideas.branch_set`: never `orkboard/*`, `goal/*`, `idea/*`; a card warns first when goals are
 at work; the lower plate also a new branch from dev); a card of the lower pile played has *To dev* and, in its menu, *To dev without the tests*; a goal blocked before dev is a card in the hand of its party's stack whatever the setting says, with
 *Try again* and, when no test ran, *To dev without the tests*. To main lights the goals the card takes along, has *To main without the tests* in its menu, and the cards dissolve into the ring (none under reduced motion).
-Pictures to $ORKCRAFT_SHOTS_DIR (or /tmp) when `DISCARD_PILES_SHOTS` is set."""
+Pictures to $ORKCRAFT_SHOTS_DIR (or /tmp) when `DISCARD_PILES_SHOTS` is set.
+
+Goal 170 B (decisions §293.4): every card of the lane is a post drawn by table/post.js (`.post-card`; a goal ready for main carries `data-portal-card`, a goal of the lower pile sits in `[data-pile="lower"]`), its goal's name a button that picks it (or plays it, in the lower
+pile), the ready one ringed by the portal (`data-portal`) with the act *To main*. Cases changed for the posts: the card's 144 x 202 size (hand cards) is now the post's own width, one column of the lane, in test_both_piles_lie_in_the_column_...; a card pressed is the post's goal name
+pressed (`post(pg, slug)`); the cards that dissolve into the ring are posts with `data-melting` (was `.is-dissolving`), checked in test_the_cards_dissolve_into_the_ring_...; **To main on the post** is new in test_to_main_on_the_post_sends_the_goal_the_way_it_went_before
+(the pane's To main, tomain.js, is still held by test_to_main_lights_the_goals_...). No case was dropped here."""
 from __future__ import annotations
 
 import copy
@@ -111,7 +116,12 @@ def open_piles(gui, host=None, **more):
 
 
 def lane_dev(pg, slug):
-    return pg.locator(f'.release-lane [data-pile="lower"] .hand-done[data-slug="{slug}"]')
+    return pg.locator(f'.release-lane [data-pile="lower"] .post-card[data-slug="{slug}"] .post-card__goal')
+
+
+def post(pg, slug):
+    """The goal's name on its post in the lane, the button that picks the goal."""
+    return pg.locator(f'.release-lane .post-card[data-slug="{slug}"] .post-card__goal')
 
 
 def close(pg, log, allowed=()):
@@ -125,12 +135,15 @@ def test_both_piles_lie_in_the_column_each_under_its_plate_the_lower_only_while_
         upper, lower = pg.locator('.release-lane [data-plate="main"]'), pg.locator('.release-lane [data-plate="dev"]')
         assert upper.text_content() == "main" and lower.text_content() == "dev"
         assert upper.evaluate("e => getComputedStyle(e).fontFamily") == lower.evaluate("e => getComputedStyle(e).fontFamily"), "both in the pixel face"
-        order = pg.evaluate("""() => [...document.querySelectorAll('.release-lane__scroll [data-plate], .release-lane__scroll [data-portal-card], .release-lane__scroll [data-pile] .hand-done')].map((e) => e.dataset.plate || e.dataset.portalCard || e.dataset.slug)""")
+        order = pg.evaluate("""() => [...document.querySelectorAll('.release-lane__scroll [data-plate], .release-lane__scroll [data-portal-card], .release-lane__scroll [data-pile] .post-card')].map((e) => e.dataset.plate || e.dataset.portalCard || e.dataset.slug)""")
         assert order.index("main") < order.index("music") < order.index("dev") < order.index("dusk"), "the upper pile first, then the lower"
-        assert [pg.locator('[data-pile="lower"] .hand-done').nth(i).get_attribute("data-slug") for i in range(pg.locator('[data-pile="lower"] .hand-done').count())] == ["dusk", "scores", "chat"]
-        assert pg.locator('.release-lane .release-lane__done .hand-done[data-slug="dusk"]').count() == 0, "a goal waiting for dev is not in the upper pile's done goals"
-        size = pg.evaluate("() => { const e = document.querySelector('[data-pile=\"lower\"] .hand-done'); return [e.offsetWidth, e.offsetHeight]; }")
-        assert size == [144, 202]
+        assert [pg.locator('[data-pile="lower"] .post-card').nth(i).get_attribute("data-slug") for i in range(pg.locator('[data-pile="lower"] .post-card').count())] == ["dusk", "scores", "chat"]
+        assert pg.locator('.release-lane .release-lane__done [data-slug="dusk"]').count() == 0, "a goal waiting for dev is not in the upper pile's done goals"
+        lane_w = pg.evaluate("() => document.querySelector('.release-lane__scroll').clientWidth")
+        size = pg.evaluate("() => { const e = document.querySelector('[data-pile=\"lower\"] .post-card'); return [e.offsetWidth, e.className]; }")
+        assert "ork-card" in size[1] and lane_w - 40 <= size[0] <= lane_w, "a post of the lane's width (post.js), not a hand card"
+        assert pg.locator('.release-lane .plate-count, .release-lane [data-plate] [data-count]').count() == 0 and not any(ch.isdigit() for ch in pg.locator('.release-lane [data-plate]').first.text_content()), "no count on a plate"
+        assert pg.locator('.release-lane [data-pile="lower"] .discard-pile__words').text_content() == "done · waits for dev"
         shot(pg, "piles-upper")
         pg.locator('[data-plate="dev"]').evaluate("e => e.scrollIntoView({ block: 'center' })")                    # the column scrolls: the upper pile's last card above the lower plate and its cards
         pg.wait_for_timeout(200)
@@ -148,7 +161,7 @@ def test_the_lower_pile_is_the_open_tabs_eyes_a_partys_tab_holds_its_goals_only(
     pg, host, log = open_piles(gui)
     try:
         pg.evaluate("() => import('/static/js/frame/state.js').then((m) => m.openTab('design'))")
-        pg.wait_for_function("() => document.querySelectorAll('[data-pile=\"lower\"] .hand-done').length === 1", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('[data-pile=\"lower\"] .post-card').length === 1", timeout=WAIT_MS)
         assert lane_dev(pg, "scores").count() == 1 and lane_dev(pg, "dusk").count() == 0
     finally:
         close(pg, log)
@@ -225,7 +238,7 @@ def test_a_card_of_the_lower_pile_played_has_to_dev_and_in_its_menu_to_dev_witho
         shot(pg, "lower-played")
         ways.first.click()
         assert _sent(pg, host, ("ideas.goal_to_dev", {"idea": "dusk"}))
-        pg.wait_for_function("() => !document.querySelector('[data-pile=\"lower\"] .hand-done[data-slug=\"dusk\"]')", timeout=WAIT_MS)
+        pg.wait_for_function("() => !document.querySelector('[data-pile=\"lower\"] .post-card[data-slug=\"dusk\"]')", timeout=WAIT_MS)
         assert [a for n, a in host.log if n == "ideas.goal_to_dev"] == [{"idea": "dusk"}], "no `untested` from the way"
         pg.evaluate("() => import('/static/js/frame/state.js').then((m) => m.openTab('orkmaster'))")           # playing a card opened its leader's tab: the Orkmaster's sees every pile
         lane_dev(pg, "scores").click()
@@ -286,7 +299,7 @@ def test_a_blocked_goal_whose_tests_ran_has_try_again_alone(gui):
 def test_to_main_lights_the_goals_it_takes_along_and_has_to_main_without_the_tests_in_its_menu(gui):
     pg, host, log = open_piles(gui)
     try:
-        pg.locator('.release-lane [data-portal-card="music"]').click()
+        post(pg, "music").click()
         pg.locator("[data-tomain] [data-to-main]").wait_for(timeout=WAIT_MS)
         pg.locator('.release-lane [data-portal-card="codes"][data-along="1"]').wait_for(timeout=WAIT_MS)
         assert pg.locator("[data-along]").count() == 1, "only the goal Lobby stands on is lit"
@@ -300,13 +313,30 @@ def test_to_main_lights_the_goals_it_takes_along_and_has_to_main_without_the_tes
         close(pg, log)
 
 
+def test_to_main_on_the_post_sends_the_goal_the_way_it_went_before(gui):
+    """Goal 170 B: the ready post ringed by the portal has the act *To main* (a button with its word); it sends what the pane's To main sends: `ideas.to_main` for the goal, tested."""
+    pg, host, log = open_piles(gui)
+    try:
+        top = pg.locator('.release-lane .post-card[data-portal-card="music"]')
+        assert top.get_attribute("data-portal") == "1" and pg.locator(".release-lane .post-card[data-portal]").count() == 1, "the portal rings the top ready post alone"
+        assert pg.locator('.release-lane .post-card[data-portal-card="codes"] [data-act="to_main"]').count() == 0, "the others wait for their turn: no act on them"
+        button = top.locator('[data-act="to_main"]')
+        assert button.inner_text().strip() == "To main"
+        button.focus()
+        pg.keyboard.press("Enter")
+        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music"}], "tested: no `untested`"
+    finally:
+        close(pg, log)
+
+
 def test_the_cards_dissolve_into_the_ring_and_leave_and_under_reduced_motion_nothing_moves(gui):
     pg, host, log = open_piles(gui)
     try:
-        pg.locator('.release-lane [data-portal-card="music"]').click()
+        post(pg, "music").click()
         pg.locator("[data-tomain] [data-to-main]").wait_for(timeout=WAIT_MS)
         pg.locator('[data-along="1"]').wait_for(timeout=WAIT_MS)
-        pg.evaluate("""() => { window.__melt = new Set(); new MutationObserver(() => document.querySelectorAll('.is-dissolving').forEach((e) => window.__melt.add(e.dataset.portalCard))).observe(document.body, { subtree: true, attributes: true, childList: true }); }""")
+        pg.evaluate("""() => { window.__melt = new Set(); new MutationObserver(() => document.querySelectorAll('[data-melting]').forEach((e) => window.__melt.add(e.dataset.slug))).observe(document.body, { subtree: true, attributes: true, childList: true }); }""")
         pg.locator("[data-tomain] [data-to-main]").click()
         pg.wait_for_function("() => window.__melt.size === 2", timeout=WAIT_MS)
         assert sorted(pg.evaluate("() => [...window.__melt]")) == ["codes", "music"], "the goal and the one it stood on"
@@ -324,11 +354,11 @@ def test_the_cards_dissolve_into_the_ring_and_leave_and_under_reduced_motion_not
     try:
         pg.locator('.release-lane [data-portal-card="music"]').wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(300)
-        pg.locator('.release-lane [data-portal-card="music"]').click()
+        post(pg, "music").click()
         pg.locator('[data-along="1"]').wait_for(timeout=WAIT_MS)
         pg.locator("[data-tomain] [data-to-main]").click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
-        assert pg.locator(".is-dissolving").count() == 0, "nothing moves under reduced motion"
+        assert pg.locator("[data-melting]").count() == 0, "nothing moves under reduced motion"
     finally:
         ctx.close()
     assert not log, "\n".join(log)

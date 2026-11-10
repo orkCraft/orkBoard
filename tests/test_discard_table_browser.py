@@ -5,7 +5,11 @@ lanes) at its foot, the hand card's size, with the word *Discard* above it, on t
 a second press closes it; at the narrow width it lies at the lanes' end (80 px wide), none with nothing done and nothing ready for main, and a card lifted from the hand stands over it.
 The table's end at the wide width (docs/specs/110-runes-on-the-table.md §3.2, §3.4, decisions §185): always laid, the portal's ring (asleep with no goal ready for main, open with the portal inside while one is, waking the first time on a device) over the
 word *Discard* and the pile, or a dashed place where the pile will lie, which gives way to the pile when a goal is done; the ring's column holds the pile centred under it and nothing overlaps the hand.
-Screenshots to $DISCARD_SHOTS when it is set."""
+Screenshots to $DISCARD_SHOTS when it is set.
+
+Goal 170 B (decisions §293.4): in the lane every goal is a post drawn by table/post.js (`.post-card`), its goal's name a button that picks it, the ready one ringed by the portal with *To main*. Removed or changed for the posts: test_the_pile_leans_and_rises_on_hover_like_a_card
+had the lane's cards lean (`.ork-leans`, a hand card's move); a post does not lean, its act (the card is told apart under the pointer and reached) is held by test_a_post_of_the_lane_is_a_post_with_a_visible_focus_and_its_goal_reached_by_tab; the 144 x 202 card size of the lane
+is now one post of the lane's width, held by test_the_goal_ready_for_main_lies_on_top_...; every press of a card is the press of the post's goal name, held by the two tests of picking at the head of the lane's part."""
 from __future__ import annotations
 
 import os
@@ -145,7 +149,7 @@ def test_nothing_done_and_nothing_ready_for_main_lays_no_end_at_the_narrow_width
     try:
         pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
-        assert pg.locator(".release-lane").count() == 1 and pg.locator(".release-lane .hand-done, .release-lane .ork-portal-ring, .release-lane [data-portal-card]").count() == 0, "the lane is there and holds no card and no ring"
+        assert pg.locator(".release-lane").count() == 1 and pg.locator(".release-lane .post-card, .release-lane .ork-portal-ring, .release-lane [data-portal-card]").count() == 0, "the lane is there and holds no post and no ring"
         assert pg.locator(".table-end, .frame-edge").count() == 0
         narrow.no_sideways(pg)
     finally:
@@ -185,17 +189,18 @@ def test_the_discard_is_drawn_from_its_first_goal_done_and_not_before_at_the_nar
     assert not log, "\n".join(log)
 
 
-def test_the_pile_leans_and_rises_on_hover_like_a_card(gui):
-    pg, host, log = open_hand(gui)
+def test_a_post_of_the_lane_is_a_post_with_a_visible_focus_and_its_goal_reached_by_tab(gui):
+    """Holds the act of the former test of a card leaning under the pointer: the lane's card is told apart and reached (a post, not a hand card)."""
+    pg, host, log = open_lane_wide(gui)
     try:
-        done = pg.locator(".release-lane .ork-leans").first
-        done.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(500)
-        assert "ork-leans" in done.get_attribute("class")
-        y0 = done.bounding_box()["y"]
-        done.hover()
-        pg.wait_for_timeout(500)
-        assert done.bounding_box()["y"] < y0, "it rises under the pointer"
+        first = pg.locator(".release-lane .post-card").first
+        assert "ork-card" in first.get_attribute("class") and first.get_attribute("data-race"), "orkUI's card, its party's colour its top edge"
+        assert pg.locator(".release-lane .ork-leans, .release-lane .hand-done").count() == 0, "no hand card in the lane"
+        first.focus()
+        assert first.evaluate("e => getComputedStyle(e).boxShadow") != "none", "a focus shows"
+        button = first.locator(".post-card__goal")
+        button.focus()
+        assert button.evaluate("e => e === document.activeElement") and button.inner_text().strip(), "the goal's name is a button with its word"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -263,9 +268,13 @@ class LaneHost(HandHost):
         self.gate_doc["ideas"] = [g for g in self.gate_doc["ideas"] if g["slug"] == "music"]
 
 
+def open_lane_wide(gui):
+    return open_lane(gui)
+
+
 def open_lane(gui, host=None):
     pg, host, log = open_hand(gui, host=host or LaneHost(), width="wide")
-    pg.locator(".release-lane .hand-done, .release-lane [data-portal-card]").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".release-lane .post-card").first.wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(400)
     return pg, host, log
 
@@ -280,11 +289,11 @@ def test_on_techs_tab_the_lane_holds_techs_goals_only_its_label_is_techs_discard
         call(pg, "frame/state.js", "openTab", "tech")
         pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
         assert pg.locator(".release-lane__label").text_content() == "Tech's discard"
-        assert pg.locator(".release-lane [data-portal-card], .release-lane [data-slug]").evaluate_all("els => els.map((e) => e.dataset.portalCard || e.dataset.slug)") == ["music"], "Tech's goal only (Design's Room codes is not here)"
-        pg.locator('.release-lane [data-portal-card="music"]').click()
+        assert pg.locator(".release-lane .post-card[data-slug]").evaluate_all("els => els.map((e) => e.dataset.slug)") == ["music"], "Tech's goal only (Design's Room codes is not here)"
+        pg.locator('.release-lane .post-card[data-slug="music"] .post-card__goal').click()
         picked(pg, "music")
         assert sig(pg, "frame/state.js", "over") is None and pg.locator('[data-kind="discard"], .hand-discardview').count() == 0, "no discard view over the pane"
-        assert "ork-picked" in pg.locator('.release-lane [data-portal-card="music"]').get_attribute("class")
+        assert pg.locator('.release-lane .post-card[data-slug="music"]').get_attribute("data-picked") == "true"
         assert sig(pg, "frame/state.js", "tab") == "tech", "Tech's tab is on the goal's route"
     finally:
         pg.close()
@@ -294,7 +303,7 @@ def test_on_techs_tab_the_lane_holds_techs_goals_only_its_label_is_techs_discard
 def test_a_goal_done_and_not_seen_pressed_is_picked_and_told_to_the_host_as_seen_and_put_away_by_esc(gui):
     pg, host, log = open_lane(gui)
     try:
-        pg.locator('.release-lane__done [data-slug="codes"]').click()
+        pg.locator('.release-lane__done [data-slug="codes"] .post-card__goal').click()
         picked(pg, "codes")
         pg.wait_for_function("() => true")
         assert host.seen_log == ["codes"], "`ideas.seen` is sent when the card is picked"
@@ -311,10 +320,10 @@ def test_the_goal_ready_for_main_lies_on_top_of_the_goals_not_seen_in_the_hands_
     pg, host, log = open_lane(gui)
     try:
         ready, seen = box(pg, '.release-lane [data-portal-card="music"]'), box(pg, '.release-lane__done [data-slug="codes"]')
-        assert ready["y"] < seen["y"] and (round(ready["width"]), round(ready["height"])) == CARD["wide"] == (round(seen["width"]), round(seen["height"])), "top to bottom, whole cards at the hand's size"
-        assert pg.locator(".release-lane .portal-host.is-ring .ork-portal-ring").count() == 1 and pg.locator(".release-lane__done .ork-portal-ring").count() == 0, "the ring lies round the top card alone"
-        r = box(pg, ".release-lane .ork-portal-ring")
-        assert r["y"] <= ready["y"] and ready["y"] + ready["height"] <= r["y"] + r["height"], "the ring round the card"
+        assert ready["y"] < seen["y"] and round(ready["width"]) == round(seen["width"]) and ready["width"] > CARD["wide"][0], "top to bottom, whole posts of the lane's width"
+        assert pg.locator(".release-lane .portal-host.is-ring .ork-portal-ring").count() == 1 and pg.locator(".release-lane__done .ork-portal-ring").count() == 0, "the ring lies round the top post alone"
+        assert pg.locator('.release-lane .post-card[data-portal-card="music"]').get_attribute("data-portal") == "1" and pg.locator(".release-lane .post-card[data-portal]").count() == 1, "the portal's colour rings the top ready post alone"
+        assert pg.locator('.release-lane [data-portal-card="music"] [data-act="to_main"]').inner_text().strip() == "To main"
         shot(pg, "wide-lane")
     finally:
         pg.close()

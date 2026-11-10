@@ -92,7 +92,7 @@ def test_the_headings_are_plaques_and_an_empty_lane_says_whose_it_is_on_a_plate(
     assert heads.count() >= 1
     for i in range(heads.count()):
         assert "ork-plaque" in (heads.nth(i).get_attribute("class") or ""), heads.nth(i).inner_text()
-    assert pg.locator(".release-lane__label.ork-plaque").inner_text().strip().lower() == "discard"
+    assert pg.locator(".release-lane__label").inner_text().strip().lower() == "discard"
     free = pg.locator(".table-lane__free.ork-plate")
     assert free.count() >= 1
     plate = pg.evaluate(BG, "--ork-plate-orkmaster")

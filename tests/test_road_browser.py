@@ -205,7 +205,7 @@ def test_with_no_gate_there_is_no_ring_release_and_live_are_tabs_and_nothing_is_
         assert pg.locator(".ork-portal-ring, .portal-host, .ork-portal, [data-portal-card]").count() == 0
         assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("3" if width == "wide" else "5")
         assert pg.locator(".hand-lane").count() == 5
-        assert pg.locator(".table-end").count() == 0 and pg.locator(".release-lane .hand-done, .release-lane [data-portal-card]").count() == 0, "nothing done, nothing ready"
+        assert pg.locator(".table-end").count() == 0 and pg.locator(".release-lane .post-card, .release-lane [data-portal-card]").count() == 0, "nothing done, nothing ready"
         shot(pg, f"c113-no-gate-{width}", still=False)
         tab(pg, "live").click()
         pg.locator('.table-tab[data-tab="live"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
@@ -219,7 +219,7 @@ def test_with_no_gate_a_goal_done_lies_in_the_lane_with_no_ring_and_no_ready_for
     host.gate_doc = dict(NO_GATE)
     pg, log = open_page(gui, host)
     try:
-        pile = pg.locator(".release-lane .hand-done")
+        pile = pg.locator(".release-lane .post-card")
         pile.first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
         assert pg.locator(".ork-portal-ring, .portal-host, [data-portal-card], [data-tomain]").count() == 0 and pg.locator(".release-lane__label").text_content() == "Discard"

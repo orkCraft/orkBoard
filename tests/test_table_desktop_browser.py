@@ -1328,7 +1328,7 @@ def test_a_form_over_the_pane_keeps_the_discards_column_and_the_hand(gui):
     from tests.test_discard_table_browser import open_maps
     pg, host, log = open_maps(gui, "wide")
     try:
-        pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
+        pg.locator(".release-lane .post-card").first.wait_for(timeout=WAIT_MS)
         pg.get_by_role("button", name="The Orkmaster's menu").click()
         pg.get_by_role("menuitem", name="Settings").click()
         pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
@@ -1336,7 +1336,7 @@ def test_a_form_over_the_pane_keeps_the_discards_column_and_the_hand(gui):
         assert pg.locator(".hand-end > .hand-die").count() == 1 and pg.locator(".release-lane__head .pots").count() == 1, "the die stays in the hand, the potions in the column's head"
         assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
         pg.keyboard.press("Escape")
-        pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
+        pg.locator(".release-lane .post-card").first.wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1382,7 +1382,7 @@ def test_start_lays_the_table_in_order_and_says_so_and_the_ring_waits_for_its_fi
     delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.hand-end > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
     assert delays["tab"] < delays["chair"] < delays["die"] < delays["plus"], delays
     pg.locator(".hand-field [data-first-lit]").wait_for(timeout=WAIT_MS)                       # the + card's card is open, its first corner lit (spec 150 G.2.4): no tour
-    assert pg.locator(".table-end, .ork-card-place, .release-lane .hand-done").count() == 0, "§247.1: no pile and no dashed place before the first content (Release's lane is there, empty)"
+    assert pg.locator(".table-end, .ork-card-place, .release-lane .post-card").count() == 0, "§247.1: no pile and no dashed place before the first content (Release's lane is there, empty)"
     pg.locator('.frame:not([data-laying])').wait_for(timeout=WAIT_MS)
     pg.locator(".fo-bubble").wait_for(state="detached", timeout=WAIT_MS)
     assert not d.errors, d.errors

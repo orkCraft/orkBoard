@@ -86,19 +86,20 @@ def test_the_figure_at_the_foots_right_is_the_one_the_state_gives(table):
 
 
 @pytest.mark.browser
+# Goal 170 B: the lane at the wide width draws each goal done as a post (post.js; its act held by tests/test_discard_table_browser.py), so the card's four corners are read on the narrow pile, which keeps DoneFace.
 def test_the_discards_card_has_a_top_row_and_a_foot_row(gui):
     server, browser = gui
-    pg, host, log = open_maps(gui, "wide", done=False)
+    pg, host, log = open_maps(gui, "narrow", done=False)
     try:
         done = lambda tid, who: task(tid, f"Task {tid}", "merged", who=who, started="2026-10-20T10:00:00", finished="2026-10-20T10:18:00", spend={"tokens": 9000, "usd": None, "tool": "codex"})      # noqa: E731
         host.nodes.append(node("music", "tech", "Lobby music loop with a very long name that goes on and on for more than four lines of the card", "done", element="void", place="discard", updated="2026-10-20T12:00:00",
                                tasks=[done("m1", "grunt"), done("m2", "artist")]))
         host.push()
-        card = pg.locator(":is(.release-lane, .table-end) .hand-done.hand-card")
+        card = pg.locator(".table-end .hand-done.hand-card")
         card.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(600)
         box = card.bounding_box()
-        assert (round(box["width"]), round(box["height"])) == (144, 202)
+        assert (round(box["width"]), round(box["height"])) == (80, 112)
         corners_ok(card)
         assert card.locator(".corner--top .corner__kind .ork-sign.check").count() == 1, "the done sign"
         ok = pg.evaluate("() => { const d = document.createElement('i'); d.style.color = 'var(--ork-success)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; }")

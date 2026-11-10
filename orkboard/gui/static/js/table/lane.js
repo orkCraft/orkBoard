@@ -11,12 +11,13 @@ import { TESTING, mergeGate, testing } from "../arena/gate.js";
 import { ORKMASTER, pick, picked, tab } from "../frame/state.js";
 import { readyOf, readyWords } from "../hand/data.js";
 import { nightMoons } from "../hand/nightcard.js";
-import { DoneFace, mainLine, shownDone, useNightDeal } from "./discard.js";
+import { mainLine, shownDone, useNightDeal } from "./discard.js";
+import { DonePost, ReadyPosts } from "./donepost.js";
 import { columnOn, isLive, isRelease, nameOf, noGate, openTabOf, partiesAll, roadParties, routeParties } from "./data.js";
 import { laidNow } from "./laying.js";
-import { LowerPile, Plate, lowerHeld } from "./plates.js";            // the two piles and the plates over them (spec 168 F2)
+import { LowerPile, PLATE_WORDS, Plate, lowerHeld } from "./plates.js";            // the two piles and the plates over them (spec 168 F2)
 import { discardLabel } from "./chroniclewords.js";
-import { ReadyCards, choose, chosenSlug, close, sending } from "./portal.js";
+import { choose, chosenSlug, close, sending } from "./portal.js";
 import { RingAround } from "./ring.js";
 import { PotionRow } from "../hand/potionrow.js";
 import { StopAll } from "./stopall.js";
@@ -47,14 +48,14 @@ export function ReleaseLane({ tab, parties }) {
   const merge = (e) => mergeGate(e);
   return html`<aside class=${cls("release-lane", { "is-headless": headless })} aria-label=${label} data-lane="release" data-through=${party || undefined}>
     <div class="release-lane__head" data-room-things="discard"><${PotionRow} /><div class="release-lane__side"><${PresenceChain} half=${true} /><${StopAll} /></div></div>
-    <span class="table-end__label release-lane__label ork-plaque">${label}</span>
+    <span class="release-lane__label">${label}</span>
     <div class="release-lane__scroll" ref=${scroll}>
-      ${upper && html`<${Plate} which="main" />`}
-      ${(top || sending.value) && html`<${RingAround} slug=${top?.slug || null}>${top && html`<${ReadyCards} goals=${[top]} main=${ready.main} on=${now} onPress=${press} />`}<//>`}
-      ${goals.length > 1 && html`<${ReadyCards} goals=${goals.slice(1)} main=${ready.main} on=${now} onPress=${press} />`}
+      ${upper && html`<${Plate} which="main" /><p class="discard-pile__words">${PLATE_WORDS.main}</p>`}
+      ${(top || sending.value) && html`<${RingAround} slug=${top?.slug || null}>${top && html`<${ReadyPosts} goals=${[top]} main=${ready.main} on=${now} onPress=${press} ringed=${true} />`}<//>`}
+      ${goals.length > 1 && html`<${ReadyPosts} goals=${goals.slice(1)} main=${ready.main} on=${now} onPress=${press} />`}
       ${own && html`<p class="release-lane__own cap">${readyWords(ready)}: commits that belong to no goal.<button type="button" class="ork-btn" data-to-main disabled=${testing.value} onClick=${merge}>To ${ready.main}</button>${testing.value && html` <span role="status" data-testing>${TESTING}</span>`}</p>`}
-      ${done.length > 0 && html`<ul class="release-lane__done" aria-label="Done, not yet seen">${done.map((x) => html`<li key=${x.slug}><${DoneFace} g=${x} picked=${now === x.slug} dealing=${dealing === x.slug ? dealing : ""} moon=${moons.has(x.slug)}
-        line=${mainLine(x)} label=${`${x.full}, done`} onPress=${() => press(x.slug)} /></li>`)}</ul>`}
+      ${done.length > 0 && html`<ul class="release-lane__done discard-posts" aria-label="Done, not yet seen">${done.map((x) => html`<li key=${x.slug}><${DonePost} g=${x} kind="done" sub="done" picked=${now === x.slug} dealing=${dealing === x.slug ? dealing : ""} moon=${moons.has(x.slug)}
+        line=${mainLine(x)} label=${`${x.full}, done`} onPick=${press} /></li>`)}</ul>`}
       <${LowerPile} goals=${lowerGoals} />
     </div>
   </aside>`;

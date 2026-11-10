@@ -440,7 +440,7 @@ def test_a_ready_card_pressed_is_picked_and_chosen_and_its_to_main_on_the_table_
         pg.wait_for_function("() => document.querySelector('[data-tomain]').dataset.portal === 'open'", timeout=WAIT_MS)
         assert pg.locator(".table-tomain__line").text_content() == "Into main: Lobby, and Reconnect it stands on"
         assert pg.locator("#table-pane [data-to-main]").count() == 1 and sig(pg, "frame/state.js", "over") is None
-        assert "ork-picked" in lane_card(pg, "music").get_attribute("class")
+        assert lane_card(pg, "music").get_attribute("data-picked") == "true"
         shot(pg, "wide-to-main")
         pg.locator("[data-tomain] [data-to-main]").click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
