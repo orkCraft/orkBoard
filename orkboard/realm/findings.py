@@ -327,17 +327,17 @@ def _sum(parts: list[dict], level: str) -> dict:
 
 
 def _view(state_dir: Path, root: Path, f: dict) -> dict:
-    return {"id": f["id"], "party": f["party"], "level": f["level"], "what": f["what"], "cause": f["cause"], "change": f["change"], "shows": f["shows"], "promised": f["promised"],
+    return {"id": f["id"], "party": f["party"], "level": f["level"] or "work", "what": f["what"], "cause": f["cause"], "change": f["change"], "shows": f["shows"], "promised": f["promised"],
             "source": f["source"], "on": f["on"], "answer": f["answer"], "pulls": pulls_of(state_dir, root, f)}
 
 
 def rows(state_dir: Path, root: Path) -> list[dict]:
-    """The hand's rows: one `quality` row a goal that has findings sorted and not answered (`{kind, idea, goal, title, priority, blocks, at, level, findings: [{id, party, level, what, cause, change, pulls …}], pulls}`,
+    """The hand's rows: one `quality` row a goal that has findings told or sorted and not answered (a told one has no level yet: it reads as `work` until the Orkmaster sorts it) (`{kind, idea, goal, title, priority, blocks, at, level, findings: [{id, party, level, what, cause, change, pulls …}], pulls}`,
     its findings in the order of their level, Decision first, then as they were found; `pulls` the sum of theirs: *Fix all there*) and a `finding` row for each of no goal (`{kind, id, level, party, what, …, pulls}`).
     Never urgent: `blocks` False."""
     out: list[dict] = []
     for idea in _goals(state_dir):
-        waiting = [f for f in of_goal(state_dir, idea) if f["status"] == "sorted"]
+        waiting = [f for f in of_goal(state_dir, idea) if f["status"] in ("sorted", "told")]      # a finding told (an acceptance's, a seat's) is a card at once, not only once the Orkmaster has sorted it (spec 168 G1)
         if not waiting:
             continue
         if not idea:

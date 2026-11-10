@@ -71,7 +71,7 @@ class GoalViewMixin:
         plan = ideas.plan(self.state_dir, slug) or {}
         crafts = {t["slug"]: goal_team.craft_of(root, t["slug"]) for t in tracks}
         touch = goal_result.touched(self.state_dir, Path(self.host.repo_root), slug, self._ref()) if state == "done" else None
-        return {"idea": slug, "state": state, **goal_result.of(sections, plan.get("tasks") or [], touch, state == "done", crafts, home), "made": made_of(plan), "red_before": red_before_of(plan)}
+        return {"idea": slug, "state": state, **goal_result.of(sections, plan.get("tasks") or [], touch, state == "done", crafts, home, plan.get("accepts")), "made": made_of(plan), "red_before": red_before_of(plan)}
 
 
 def goalview_commands(ideas_: Any) -> dict:

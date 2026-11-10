@@ -56,7 +56,7 @@ function Verdict({ rec }) {
   return html`<section class="quality-sec" data-part="verdict" aria-label="Against its spec"><h3 class="ork-label">Against its spec</h3>
     ${parties.map((p) => html`<div key=${p} class="quality-party"><span class="quality-party__nm">${partyName(p)}</span><ul class="quality-list">${flat.filter((r) => r.party === p).map((r, i) => html`<li key=${i} class=${cls("quality-line", `is-${r.verdict}`)} data-verdict=${r.verdict}>
       <b class="quality-line__sign" aria-hidden="true">${VERDICT[r.verdict]?.[0] || "·"}</b><span>${r.id}${r.line ? ` — ${r.line}` : ""}</span><span class="cap quality-line__word">${VERDICT[r.verdict]?.[1] || r.verdict}</span></li>`)}</ul></div>`)}
-    ${done.length > 0 && html`<div class="quality-party"><span class="quality-party__nm">Done when, checked</span><ul class="quality-list">${done.map((d, i) => html`<li key=${i} class=${cls("quality-line", { "is-ok": d.state === "ok" })} data-state=${d.state || undefined}><b class="quality-line__sign" aria-hidden="true">${d.state === "ok" ? "✓" : "·"}</b><span>${d.text}</span></li>`)}</ul></div>`}
+    ${done.length > 0 && html`<div class="quality-party"><span class="quality-party__nm">Done when</span><ul class="quality-list">${done.map((d, i) => html`<li key=${i} class=${cls("quality-line", { "is-ok": d.state === "ok" })} data-state=${d.state || undefined}><b class="quality-line__sign" aria-hidden="true">${d.state === "ok" ? "✓" : "·"}</b><span>${d.text}</span>${d.word && html`<span class="cap quality-line__word">${d.word}</span>`}</li>`)}</ul></div>`}
   </section>`;
 }
 

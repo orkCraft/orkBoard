@@ -8,6 +8,9 @@ from orkboard.realm.lexicon_term import Term, _t
 
 WINDOW: tuple[Term, ...] = (
     # The table and the hand (docs/specs/98-the-table-and-the-hand.md §0.1, §2.4; decisions §145): the window's two parts
+    _t("not_checked", "not checked"),                              # a goal's *Done when* line nobody looked at, or the acceptance could not see (spec 168 G1, decisions §283.16.10): never *ok* by default
+    _t("not_met", "not met"),                                      # a *Done when* line the acceptance looked at and found not met
+    _t("landed_not_compared", "landed, not compared"),             # a promised part of a craft whose map has no file touch: its tasks landed, nothing was compared (spec 168 G1)
     _t("table", "table"),                                          # the window's upper part: the leaders' tabs and the pane under them (what and why, through whose eyes)
     _t("hand", "hand"),                                            # the window's lower part: what the person decides, under the lanes, with the stacks of stops and the discard
     _t("discard", "discard"),                                      # the goals done and not yet seen, and what is ready for main (read *Done*)
