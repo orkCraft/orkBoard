@@ -98,6 +98,16 @@ def _wait(host, party):
     raise AssertionError("the keeper never finished")
 
 
+def _until(ok, why, s=10.0):
+    """`ok()` comes true within `s` seconds: the look runs on the keeper's thread, which may not have started when the command returns (so `_wait` alone can race it)."""
+    end = time.monotonic() + s
+    while time.monotonic() < end:
+        if ok():
+            return
+        time.sleep(0.02)
+    raise AssertionError(why)
+
+
 def _look(host, party):
     got = host.command("ideas.concerns", {"party": party})
     _wait(host, party)
@@ -678,12 +688,10 @@ def test_the_command_lays_it_later_and_the_partys_row_in_the_map_says_so_and_the
     assert got["ok"] and next(c for c in got["concerns"] if c["id"] == cid)["later"] is True
     assert [(c["id"], c["later"], c["in_hand"]) for c in row()][0] == (cid, True, False)
     host.command("ideas.concerns_again", {"party": design})
-    _wait(host, design)
-    assert [(c["id"], c["later"], c["in_hand"]) for c in row()][0] == (cid, False, True), "the leader's next look found it again: it is a card in the hand again"
+    _until(lambda: [(c["id"], c["later"], c["in_hand"]) for c in row()][0] == (cid, False, True), "the leader's next look found it again: it is a card in the hand again")
     model.answer = {"concerns": [concern("home", "note", "Plain")]}
     host.command("ideas.concerns_again", {"party": design})
-    _wait(host, design)
-    assert [c["id"] for c in row()] == [first["concerns"][1]["id"]], "a look that does not find it again drops it"
+    _until(lambda: [c["id"] for c in row()] == [first["concerns"][1]["id"]], "a look that does not find it again drops it")
 
 
 def test_the_ways_of_a_concern_in_the_hand_each_take_it_out_of_the_hand_and_a_gone_one_is_refused_in_plain_words(host, design, model):
