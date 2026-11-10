@@ -77,7 +77,13 @@ def gui(tmp_path_factory):
     subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
     subprocess.run([*git, "add", "-A"], cwd=repo, check=True)
     subprocess.run([*git, "commit", "-qm", "init"], cwd=repo, check=True)
-    server = Server(Orkboard(repo))
+    host = Orkboard(repo)
+    from orkboard.realm import project_kind
+    project_kind.keep(host.ideas.state_dir, "code")
+    from orkboard.realm import first_open
+    first_open.lay(host.ideas.state_dir)
+    host.first_open.tools_skipped = True          # a machine with no AI tool installed (a CI box, a container) would otherwise open on the card that adds one, and the kind card, before any tab
+    server = Server(host)
     thread = server.start_thread()
     yield server, browser
     browser.close()

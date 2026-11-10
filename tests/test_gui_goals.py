@@ -329,7 +329,7 @@ def test_needs_you_carries_every_question_with_its_likely_answers_and_one_answer
     assert '"choices": ["two to four likely answers, each at most 40 characters"]' in model.seen[0]["prompt"]
     row = next(n for n in host.command("ideas.board")["needs_you"] if n["kind"] == "goal")
     assert row["questions"] == ["Which channel first? (npm / brew)", "Which week?"] and row["text"] == "Which channel first?"
-    assert row["asked"] == [{"ask": "Which channel first?", "choices": ["npm", "brew"], "pick": None, "why": ""},
+    assert row["asked"] == [{"ask": "Which channel first?", "choices": ["npm", "brew"], "pick": None, "why": "", "kinds": ["other", "other"]},
                             {"ask": "Which week?", "choices": [], "pick": None, "why": ""}]     # a plain string of before
     host.command("ideas.answer", {"slug": slug, "answers": ["npm"], "goal": True})
     _wait(host, slug, goal=True)

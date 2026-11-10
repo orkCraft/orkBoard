@@ -43,7 +43,7 @@ def _open_result(pg, slug="music"):
 
 
 def test_a_result_sets_what_it_promised_over_what_it_made_and_says_its_spend_in_tokens_and_the_share_with_no_price(gui):
-    pg, host, log = open_hand(gui, host=ResultHost(UNPRICED))
+    pg, host, log = open_hand(gui, width="narrow", host=ResultHost(UNPRICED))
     try:
         result = _open_result(pg)
         pg.wait_for_function("() => document.querySelector('.hand-result__promised')", timeout=WAIT_MS)
@@ -61,7 +61,7 @@ def test_a_result_sets_what_it_promised_over_what_it_made_and_says_its_spend_in_
 
 
 def test_a_result_with_a_price_says_the_price_as_before(gui):
-    pg, host, log = open_hand(gui, host=ResultHost(PRICED))
+    pg, host, log = open_hand(gui, width="narrow", host=ResultHost(PRICED))
     try:
         result = _open_result(pg)
         pg.wait_for_function("() => document.querySelector('.hand-result__promised')", timeout=WAIT_MS)
@@ -72,7 +72,7 @@ def test_a_result_with_a_price_says_the_price_as_before(gui):
 
 
 def test_tokens_and_the_share_are_said_in_few_words(gui):
-    pg, host, log = open_hand(gui, host=ResultHost(UNPRICED))
+    pg, host, log = open_hand(gui, width="narrow", host=ResultHost(UNPRICED))
     try:
         words = pg.evaluate("""async () => { const { spendWords, tokenWords, shareWords } = await import('/static/js/shell/preview.js');
           return [tokenWords(3100000), tokenWords(412000), tokenWords(900), tokenWords(1), shareWords({ name: 'Codex', window: 'week', share: 0.4 }),
@@ -86,7 +86,7 @@ def test_tokens_and_the_share_are_said_in_few_words(gui):
 
 
 def test_a_route_with_no_price_says_its_calls_and_has_no_dollar_chip(gui):
-    pg, host, log = open_hand(gui, host=ResultHost(UNPRICED))
+    pg, host, log = open_hand(gui, width="narrow", host=ResultHost(UNPRICED))
     try:
         got = pg.evaluate("""async () => { const { costLine } = await import('/static/js/hand/routecard.js');
           return [costLine({ calls: 3, usd_low: null, usd_high: null }), costLine({ calls: 4, usd_low: 0.5, usd_high: 1.5 })]; }""")
@@ -99,7 +99,7 @@ def test_a_route_with_no_price_says_its_calls_and_has_no_dollar_chip(gui):
 
 @pytest.mark.parametrize("n, said", [(0, None), (1, "1 test was red before this goal"), (3, "3 tests were red before this goal")])
 def test_a_result_says_in_one_line_how_many_tests_were_red_before_the_goal(gui, n, said):
-    pg, host, log = open_hand(gui, host=ResultHost(PRICED, red_before=n))
+    pg, host, log = open_hand(gui, width="narrow", host=ResultHost(PRICED, red_before=n))
     try:
         result = _open_result(pg)
         pg.wait_for_function("() => document.querySelector('.hand-result__promised')", timeout=WAIT_MS)

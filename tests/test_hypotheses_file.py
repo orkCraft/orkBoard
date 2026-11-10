@@ -10,7 +10,7 @@ import pytest
 
 from orkboard.realm import hypotheses as hyp, hypotheses_file as hf
 
-OWN = Path(__file__).resolve().parent.parent / "docs" / "hypotheses.md"          # this repository's own file: H1–H5
+OWN = Path(__file__).resolve().parent.parent / "docs" / "hypotheses.md"          # this repository's own file: H1–H6
 
 
 def changed(old: str, new: str) -> list[str]:
@@ -37,11 +37,11 @@ def test_the_file_is_the_chosen_one_else_docs_hypotheses_never_outside_the_root_
 
 # -- read: this repository's own file -------------------------------------------------------------------------------------------------------
 
-def test_the_own_file_reads_as_five_hypotheses_with_their_conditions_and_drafts():
+def test_the_own_file_reads_as_six_hypotheses_with_their_conditions_and_drafts():
     got = hf.parse(OWN.read_text("utf-8"))
-    assert got["skipped"] == [] and [i["id"] for i in got["items"]] == ["h1", "h2", "h3", "h4", "h5"]
-    h1, h2, h3, h4, h5 = got["items"]
-    assert [i["state"] for i in got["items"]] == ["open"] * 5                                  # `testing` is the goals' to say, not the file's
+    assert got["skipped"] == [] and [i["id"] for i in got["items"]] == ["h1", "h2", "h3", "h4", "h5", "h6"]
+    h1, h2, h3, h4, h5, h6 = got["items"]
+    assert [i["state"] for i in got["items"]] == ["open"] * 6                                  # `testing` is the goals' to say, not the file's
     assert h1["text"].startswith("Orkboard is a studio that sees your real product") and h1["signal"].startswith("on the same real tasks, goals made in Orkboard")
     assert [w["name"] for w in h1["refuted"]] == [""] and h1["refuted"][0]["when"].startswith("no difference in first-time acceptance")            # `Refutes:` has no name
     assert h2["signal"].startswith("over the owner's week") and h2["refuted"][0]["when"].startswith("sketches are mostly skipped")
@@ -52,6 +52,7 @@ def test_the_own_file_reads_as_five_hypotheses_with_their_conditions_and_drafts(
     assert h5["text"] == "A paid asset is kept at its price"
     assert h5["signal"] == "most of Art's first ten paid picks are kept in the project's tree at their receipt price."
     assert h5["refuted"] and h5["if_holds"]
+    assert h6["text"].startswith("The person reads a leader's view") and h6["refuted"] and h6["if_holds"]
     assert all(len(i["text"]) <= hyp.TEXT_CHARS and len(i["signal"]) <= hyp.TEXT_CHARS and len(i["if_holds"]) <= hyp.DRAFT_CHARS for i in got["items"])
     assert all(i["evidence"] == [] and i["verdict"] == {} for i in got["items"])
 

@@ -175,7 +175,8 @@ def test_a_later_step_of_high_risk_waits_for_start_and_an_ordinary_one_goes_by_i
     node = next(n for n in h.command("ideas.map", {})["nodes"] if n["slug"] == slug)
     assert node["needs_you"] == "start" and node["asks_you"] is True
     row = next(r for r in h.command("ideas.board")["needs_you"] if r["idea"] == slug and r["kind"] == "start")
-    assert row["cost"]["usd_low"] > 0 and row["cost"]["usd_high"] >= row["cost"]["usd_low"] and "was" not in row and row["step"] == 2 and row["party_name"]                      # data, the face words it
+    assert "cost" not in row and "was" not in row  # Tech's tool (agy) has no price known: no dollars are said (spec 149 H.3)
+    assert row["step"] == 2 and row["party_name"]                      # data, the face words it
     h.command("ideas.start", {"idea": slug})                                                                                  # the start card's answer
     assert idea_route.waits(ideas.plan(h.ideas.state_dir, slug)) is None
     work.runner.tick()

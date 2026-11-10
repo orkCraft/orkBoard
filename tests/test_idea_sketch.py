@@ -464,7 +464,7 @@ def test_a_task_is_told_of_the_sketch_in_its_prompt_before_its_own_words(host, p
     from orkboard.core.idea_task import TaskMixin
     slug, _seen = _sketched(host, parties, model)
     _pick(host, slug, key="A")
-    runner = SimpleNamespace(repo_root=host.repo_root, state_dir=host.ideas.state_dir, settings={}, _role=lambda t: {"name": "Grunt", "instruction": "", "slug": "grunt"}, _env=lambda *a: {}, _reading=lambda *a: "", _without=lambda *a: [])
+    runner = SimpleNamespace(repo_root=host.repo_root, state_dir=host.ideas.state_dir, settings={}, _role=lambda t: {"name": "Grunt", "instruction": "", "slug": "grunt"}, _env=lambda *a: {}, _reading=lambda *a: "", _without=lambda *a: [], tool_of=lambda *a: "claude")
     plan = {"tasks": [{"id": "k1", "title": "Build it", "brief": "Make the screen"}]}
     prompt = TaskMixin._prompt(runner, slug, plan, plan["tasks"][0])
     assert prompt.index("# The idea") < prompt.index("# The sketch the person picked") < prompt.index("# Your task: Build it")
