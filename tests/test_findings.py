@@ -179,6 +179,25 @@ def test_one_quality_card_a_goal_its_findings_in_the_order_of_their_level_and_ne
     assert card["pulls"]["estimate"]["usd_high"] == pytest.approx(sum(f["pulls"]["estimate"]["usd_high"] for f in card["findings"]), abs=0.02)
 
 
+def test_a_finding_an_acceptance_told_is_a_card_in_the_hand_before_the_orkmaster_sorts_it(host, tech):
+    sd, root = host.ideas.state_dir, host.ideas.root()
+    slug = _goal(host, tech)
+    f = _add(host, slug, source="accept", on="tech: look at Done when 1", found="Nobody could look at: The screen shows the winner")
+    assert findings.rows(sd, root) == [], "found, not told: nothing yet"
+    findings.told(sd, slug, f["id"], {"what": f["found"], "shows": "Done when 1", "promised": "The screen shows the winner"})
+    rows = findings.rows(sd, root)
+    assert [r["kind"] for r in rows] == ["quality"] and rows[0]["idea"] == slug and rows[0]["blocks"] is False
+    assert [(x["id"], x["level"], x["source"], x["party"]) for x in rows[0]["findings"]] == [(f["id"], "work", "accept", "tech")], "no level yet: it reads as work"
+    assert rows[0]["findings"][0]["promised"] == "The screen shows the winner"
+    findings.sorted_(sd, slug, f["id"], "spec")
+    assert findings.rows(sd, root)[0]["findings"][0]["level"] == "spec", "the Orkmaster's level replaces it; the card stays"
+    findings.answer(sd, f["id"], "later")
+    assert findings.rows(sd, root) == [], "answered: it leaves the hand"
+    loose = findings.add(sd, {"source": "concern", "idea": "", "party": "tech", "on": "c-1", "found": "Results is slow"})
+    findings.told(sd, "", loose["id"], {"what": "Results is slow"})
+    assert [r["kind"] for r in findings.rows(sd, root)] == ["finding"], "a told finding of no goal is a row of its own"
+
+
 def test_a_finding_of_no_goal_is_a_row_of_its_own_and_a_later_finding_joins_its_goals_card(host, tech):
     sd, root = host.ideas.state_dir, host.ideas.root()
     slug = _goal(host, tech)

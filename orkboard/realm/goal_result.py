@@ -9,19 +9,21 @@ Tech's map is the project's parts (the folders its files are in), so a part is *
 the screens whose component, or a file it imports, was changed). A craft whose map the host does not read from the files (Product, Game design, Art …) has no such touch: a promised line
 there is judged by the party's tasks alone (all merged: *As promised*; some: *Not quite*; none: *Not done*).
 
-- **ok** *As promised*: the part was touched (or, with no touch to read, the party's tasks all landed).
+- **ok** *As promised*: the part was touched.
+- **landed** *landed, not compared*: the party's tasks all landed and its craft has no file touch to compare them with (Product, Game design, Art …, or no commits to read): said so, never *ok* (decisions §283.16.10, trial 152-e F4).
 - **differs** *Not quite*: the party's tasks all landed but no file of this part changed (or, with no touch, only some landed).
 - **missing** *Not done*: not touched and the party's tasks have not all landed (or none did).
 - **extra** *More than promised*: touched, and no *Will be* line of the party names it (only for a map that has a touch to read, and at most `EXTRA_MAX`).
 
-A **Done when** line is `ok` once the goal is done, every task of the party landed and no check of the goal left a finding; else it has no mark (nothing says it is unmet or met).
+A **Done when** line says only what was seen (decisions §283.16.10): `ok` where a leader's acceptance of the party's step said **met** (`plan.accepts`) and the goal is done; `unmet` where it said not met;
+`unchecked` (*not checked*) for every other line: one the acceptance said *unseen*, one nobody looked at, a step whose acceptance failed. Never `ok` by default. `landed` apart says whether every task of the party landed with no check left.
 """
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-from orkboard.realm import goal_screens, idea_checks, project_map, spec_sections
+from orkboard.realm import goal_screens, idea_checks, idea_route, lexicon, project_map, spec_sections
 
 EXTRA_MAX = 8
 TOUCH_CRAFTS = {"tech": "parts", "design": "screens"}              # the crafts whose maps are read from the files, and by which key of `touched`
@@ -74,7 +76,7 @@ def judge(promised: list[dict], touch: dict | None, tasks: list[dict], craft: st
             else:
                 verdict, line = "missing", "not done yet" if merged else "nothing of it landed"
         elif total and merged == total:
-            verdict, line = "ok", said or "as promised"
+            verdict, line = "landed", lexicon.term("landed_not_compared")       # nothing was compared with the files: it landed, no more is said
         elif merged:
             verdict, line = "differs", f"{merged} of {total} tasks landed"
         else:
@@ -91,9 +93,25 @@ def judge(promised: list[dict], touch: dict | None, tasks: list[dict], craft: st
     return out
 
 
-def of(sections: list[Any], tasks: list[dict], touch: dict | None, done: bool, crafts: dict[str, str], home: str = "") -> dict:
-    """One answer for a goal: `sections` are `spec_sections.read`'s (`Section(party, title, parts)`), `tasks` the plan's, `touch` as `touched()`, `done` the goal is done, `crafts` `{party: craft}`, `home` the goal's own party (a plan of before stamps no party: its tasks are the home's).
-    `{parties: [{party, title, parts, done_when: [{text, proof, state}]}], files, screens}` (`proof` a line's mark, `[test]` · `[look]` · `[person]`, apart from its `text`); a party with no *Will be* and no *Done when* is left out."""
+def _looked(accepts: dict | None, steps: set[int], n: int) -> str:
+    """What the acceptances of these `steps` said of *Done when* line `n`: `ok` (met, and no acceptance said not met), `unmet`, or `unchecked` (unseen, not asked, no acceptance)."""
+    seen = []
+    for key, rec in (accepts or {}).items():
+        try:
+            step = int(str(key).split(":")[0])
+        except ValueError:
+            continue
+        if step in steps and isinstance(rec, dict):
+            seen += [d.get("met") for d in rec.get("done_when") or [] if isinstance(d, dict) and d.get("n") == n]
+    if any(m is False for m in seen):
+        return "unmet"
+    return "ok" if any(m is True for m in seen) else "unchecked"
+
+
+def of(sections: list[Any], tasks: list[dict], touch: dict | None, done: bool, crafts: dict[str, str], home: str = "", accepts: dict | None = None) -> dict:
+    """One answer for a goal: `sections` are `spec_sections.read`'s (`Section(party, title, parts)`), `tasks` the plan's, `touch` as `touched()`, `done` the goal is done, `crafts` `{party: craft}`, `home` the goal's own party (a plan of before stamps no party: its tasks are the home's),
+    `accepts` the plan's `accepts` (`{step: {done_when: [{n, met, why}]}}`): the only thing that makes a *Done when* line `ok`.
+    `{parties: [{party, title, parts, done_when: [{text, proof, state, landed, word}]}], files, screens}` (`proof` a line's mark, `[test]` · `[look]` · `[person]`, apart from its `text`; `word` what a line not `ok` says: *not checked* · *not met*); a party with no *Will be* and no *Done when* is left out."""
     checks_left = any((idea_checks.counts(t.get("findings") if isinstance(t.get("findings"), list) else None)["left"] or 0) > 0
                       for t in tasks if t.get("kind") in idea_checks.TAGS)
     out = []
@@ -104,7 +122,10 @@ def of(sections: list[Any], tasks: list[dict], touch: dict | None, done: bool, c
         if not will and not lines:
             continue
         merged, total = _landed(mine)
-        met = done and bool(total) and merged == total and not checks_left
+        landed = done and bool(total) and merged == total and not checks_left
+        steps = {idea_route.step_of(t) for t in mine}
+        marks = [_looked(accepts, steps, i) if done else "unchecked" for i in range(1, len(lines) + 1)]
         out.append({"party": s.party, "title": s.title, "parts": judge(will, touch, mine, crafts.get(s.party, "")),
-                    "done_when": [{"text": spec_sections.bare(x), "proof": spec_sections.proof_of(x), "state": "ok" if met else ""} for x in lines]})      # the mark apart (decisions §257.4)
+                    "done_when": [{"text": spec_sections.bare(x), "proof": spec_sections.proof_of(x), "state": m, "landed": landed, **({"word": lexicon.term("not_met" if m == "unmet" else "not_checked")} if m != "ok" else {})}
+                                  for x, m in zip(lines, marks)]})      # the mark apart (decisions §257.4); only a line the acceptance said met is ok (decisions §283.16.10)
     return {"parties": out, "files": (touch or {}).get("files", 0), "screens": (touch or {}).get("screens", [])}

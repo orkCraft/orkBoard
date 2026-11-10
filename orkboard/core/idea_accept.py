@@ -190,7 +190,7 @@ class AcceptMixin:
         row = got[0] if got else {"parts": [], "done_when": []}
         out = [f"- Will be, {p['kind'] or 'more'} {p['id']}: {p['verdict']} ({p['line']})" for p in row["parts"]]
         merged = sum(1 for t in tasks if t.get("state") == "merged")
-        out += [f"- Done when {i}: " + ("every task of the step landed with no check left" if d["state"] == "ok" else "not everything landed or a check left a finding") for i, d in enumerate(row["done_when"], start=1)]
+        out += [f"- Done when {i}: " + ("every task of the step landed with no check left" if d["landed"] else "not everything landed or a check left a finding") for i, d in enumerate(row["done_when"], start=1)]
         return "\n".join(out) + (f"\n{merged} of {len(tasks)} tasks landed" if tasks else "")
 
     def _changed_files(self, slug: str, task: dict) -> list[dict]:
