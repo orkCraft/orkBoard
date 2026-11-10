@@ -120,6 +120,7 @@ def pushes_dev(value: object) -> bool:
 
 def pushes_main(value: object) -> bool:
     return push_way(value) in ("main", "both")
+NIGHT_RUNGS = ("off", "ideas", "builds", "proposals")      # spec 168 H3 (decisions §283.32): the night is a ladder, each rung doing what the one below does
 LOOK_WAITS = ("30m", "2h", "tonight", "none")           # spec 144 A.1: *Give me time to look*
 NIGHT = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$")
 FOCUSES = ("", "board")
@@ -134,7 +135,7 @@ PROJECTS_OPEN = 20                       # the most projects open at once
 # The Board's settings that are the project's (spec 37 §8): read from `<repo>/.orkcraft/board.json`, the machine's
 # `ideas` being the defaults a new project starts from; `risk_paths` is the tracked `orkcraft.toml`'s `[board]`.
 BOARD = ("target", "autostart", "night", "night_low", "work_at_night", "merge_into", "push", "review", "review_v", "wiki", "max_parallel", "reserve_day",
-         "reserve_night", "hours", "presence", "look_wait")
+         "reserve_night", "hours", "presence", "look_wait", "night_rung", "night_leaders")
 BOARD_FILE = Path(".orkcraft") / "board.json"
 
 
@@ -319,6 +320,10 @@ def clean_ideas(raw: object) -> dict:
         out["push"] = way
     if raw.get("target") in IDEA_TARGETS:
         out["target"] = raw["target"]
+    if raw.get("night_rung") in NIGHT_RUNGS:        # spec 168 H3: the night's ladder (`night_rung` reads it with the old `work_at_night`)
+        out["night_rung"] = raw["night_rung"]
+    if (picked := clean_night_leaders(raw.get("night_leaders"))) is not None:
+        out["night_leaders"] = picked
     if raw.get("look_wait") in LOOK_WAITS:          # an unknown value reads as the default, 2 h (spec 144 A.1)
         out["look_wait"] = raw["look_wait"]
     if isinstance(raw.get("night_low"), bool):       # spec 83: Low work may run at night; None = not asked yet
@@ -645,3 +650,49 @@ def save_phones(phones: list[dict], port: int, file: Path | None = None) -> None
     raw = _raw(file)
     raw["phones"], raw["phone_port"] = clean_phones(phones), port
     _write(file, raw)
+
+
+# -- the night's ladder (spec 168 H3, decisions §283.32) -----------------------------------------------------------------------------------------
+
+def clean_night_leaders(value: object) -> list[str] | None:
+    """The parties whose leaders the night asks for a proposal (slugs, at most 20, no repeats); None when `value` is no list."""
+    if not isinstance(value, list):
+        return None
+    out: list[str] = []
+    for v in value:
+        if isinstance(v, str) and re.fullmatch(r"[a-z0-9-]{1,100}", v.strip()) and v.strip() not in out:
+            out.append(v.strip())
+    return out[:20]
+
+
+def night_rung(settings: dict | None) -> str:
+    """The rung of the night's ladder: "off" | "ideas" | "builds" | "proposals". The old `work_at_night` is read as it always was: on means the builds
+    (at least); off takes the builds away (a stored "builds" or "proposals" with the old key off reads "ideas": the person turned the builds off by
+    the old key). With neither key set the night is off."""
+    s = settings or {}
+    rung = s.get("night_rung") if s.get("night_rung") in NIGHT_RUNGS else "off"
+    old = s.get("work_at_night") is True
+    if old and rung in ("off", "ideas"):
+        return "builds"
+    if not old and rung in ("builds", "proposals"):
+        return "ideas"
+    return rung
+
+
+def night_leaders(settings: dict | None) -> list[str]:
+    """The parties whose leaders the night asks for a proposal; only the rung "proposals" asks them."""
+    got = clean_night_leaders((settings or {}).get("night_leaders"))
+    return got if got and night_rung(settings) == "proposals" else []
+
+
+def night_values(rung: str, leaders: object = None) -> dict:
+    """The settings one choice of the ladder writes: the rung, the leaders picked, and the old `work_at_night` kept in step (true from "builds" up)."""
+    if rung not in NIGHT_RUNGS:
+        raise ValueError("The night is off, ideas and specs, and the builds, or and the leaders' proposals")
+    out: dict = {"night_rung": rung, "work_at_night": rung in ("builds", "proposals")}
+    if leaders is not None:
+        picked = clean_night_leaders(leaders)
+        if picked is None:
+            raise ValueError("The leaders picked are a list of parties")
+        out["night_leaders"] = picked
+    return out

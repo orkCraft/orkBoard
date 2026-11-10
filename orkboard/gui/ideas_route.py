@@ -433,6 +433,7 @@ class RouteMixin:
                 ripe.append(slug)
         if ripe:
             self._backlog_next(found, states, ripe, wall)
+        self.night_pickup(found, states, wall)                  # spec 168 H3: inside the night's window, what the rung picks up (gui/ideas_night.py)
 
     def _backlog_next(self, found: list[dict], states: dict, ripe: list[str], wall: float) -> None:
         """Decisions §239: of the goals put off whose reset has passed, **one** starts Talk per pass, the first in the Orkmaster's order (`goal_route.context`), and the next

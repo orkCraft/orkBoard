@@ -245,6 +245,13 @@ WINDOW: tuple[Term, ...] = (
     _t("checks_before_main", "Checks before main"),                # Release's table while a goal is chosen for main: a skeleton a check (spec 156 D.4, decisions §261.8)
     _t("to_main", "To main"),                                     # merge what is ready in dev into main, by code (the discard's button)
     _t("to_main_untested", "To main without the tests"),          # the card's second act: the goal goes to main with no test run, the only skip (decisions §274.3; `ideas.to_main` `untested: true`)
+    # the night's ladder (spec 168 H3, decisions §283.32; settings.py `night_rung`, core/idea_night.py)
+    _t("night_slot", "The night"),                                 # the slot's label: when the Board works by itself and how far it goes
+    _t("night_rung_off", "Off"),                                   # the lowest rung: the night does nothing
+    _t("night_rung_ideas", "Ideas and specs"),                     # Talk and the specs of the goals in line; nothing built
+    _t("night_rung_builds", "and the builds"),                     # also builds what was agreed and is ready to build (the old *Work at night*)
+    _t("night_rung_proposals", "and the leaders' proposals"),      # also one proposal for each leader picked, three a night at most, to a ready spec, never built without a press
+    _t("proposed", "proposed"),                                    # the mark of a night's proposal in *Specs* until the person's Take or Drop
 )
 
 

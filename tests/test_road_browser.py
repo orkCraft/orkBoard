@@ -1,4 +1,5 @@
-"""The road after the work (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, decisions §188; docs/specs/156-one-pick-and-the-release-column.md D.2, D.4, decisions §261.7–§261.8), in a real browser against a stub host, at the two widths
+"""(Release and Live wait, decisions §283.29: Release, seated, keeps its page and has no tab, no lane and no table of checks; Live is the road's one tab. Its tests below say so.)
+The road after the work (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, decisions §188; docs/specs/156-one-pick-and-the-release-column.md D.2, D.4, decisions §261.7–§261.8), in a real browser against a stub host, at the two widths
 of `tests/narrow.py`: Release and Live are tabs at the wide width too, **Live before Release, Release last**, Live's lane after the tabs' end and Release's lane the discard; their leaders' heads wear the corners' old waking rules on the tabs' faces (asleep:
 grey and still; awake: in colour, stepping while a task runs, an alert sign on it); the narrow width keeps them in the row of heads in the Board's order. A goal chosen for main (the ready card picked in the lane) has its checks asked (`ideas.to_main_checks`)
 and followed in the snapshot's `main_checks` (scripted here as the host's `main.check` moves it): Release's table shows each check, a skeleton with its name and its state and, for a red one, why; *To main* waits while they run and says the reason while one
@@ -92,10 +93,10 @@ def states(pg):
 def test_at_the_wide_width_release_stands_in_the_leaders_row_and_live_is_the_last_tab_and_at_the_narrow_width_they_are_kept_in_the_boards_order(gui):
     pg, log = open_page(gui, RoadHost(bare=True))
     try:
-        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"], "Release in the leaders' row in the Board's order, Live last"
-        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "4", "four lanes before the tabs' end, Release's among them; Live's lane follows it and the discard is the window's column beside the table"
-        assert pg.locator(".hand-lane").count() == 6 and pg.locator(".table-lane[data-party]").count() == 5
-        assert pg.locator('.table-lane[data-party="release"]').count() == 1 and pg.locator('.table-lane[data-party="live"]').count() == 1, "Release has a lane as any party, Live has one after the end"
+        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "live"], "Release, seated, has no tab (decisions §283.29); Live is last"
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "3", "three lanes before the tabs' end; Live's lane follows it and the discard is the window's column beside the table"
+        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".table-lane[data-party]").count() == 4
+        assert pg.locator('.table-lane[data-party="release"]').count() == 0 and pg.locator('.table-lane[data-party="live"]').count() == 1, "Release has no lane, Live has one after the end"
         assert pg.locator(".frame > .release-lane").count() == 1 and pg.locator(".frame-table .release-lane").count() == 0, "the discard is beside the table, outside it"
         assert pg.locator(".ork-portal-ring__before, .ork-portal-ring__after, .ork-portal-ring").count() == 0, "their heads have left the ring"
     finally:
@@ -103,7 +104,7 @@ def test_at_the_wide_width_release_stands_in_the_leaders_row_and_live_is_the_las
     assert not log, "\n".join(log)
     pg, log = open_page(gui, RoadHost(bare=True), "narrow")
     try:
-        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"], "the narrow width keeps them in the row of heads"
+        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "live"], "the narrow width keeps Live in the row of heads, Release has none"
         assert pg.locator(".ork-portal-ring, .release-lane").count() == 0
     finally:
         pg.close()
@@ -113,7 +114,8 @@ def test_at_the_wide_width_release_stands_in_the_leaders_row_and_live_is_the_las
 def test_asleep_each_road_tab_is_its_leaders_head_grey_and_still_and_a_press_opens_the_party(gui):
     pg, log = open_page(gui, RoadHost(bare=True))
     try:
-        for slug, race in (("release", "lich-elder"), ("live", "imp-elder")):
+        assert tab(pg, "release").count() == 0
+        for slug, race in (("live", "imp-elder"),):
             assert asleep(pg, slug) and "is-working" not in tab(pg, slug).get_attribute("class")
             src = tab(pg, slug).locator(".ork-race__head").get_attribute("src")
             assert race in src and "asleep" in src, f"{slug}: its leader's head, the asleep face"
@@ -121,9 +123,7 @@ def test_asleep_each_road_tab_is_its_leaders_head_grey_and_still_and_a_press_ope
         tab(pg, "live").click()
         pg.locator('.table-tab[data-tab="live"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
         assert sig(pg, "frame/state.js", "tab") == "live"
-        tab(pg, "release").click()
-        pg.locator('.table-tab[data-tab="release"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".release-lane__label").text_content() == "Release's discard"
+        assert pg.locator(".release-lane__label").text_content() == "Live's discard"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -133,7 +133,7 @@ def test_a_road_tab_wakes_on_the_signals_the_corners_used_and_steps_while_a_task
     host = RoadHost()
     pg, log = open_page(gui, host)
     try:
-        assert not asleep(pg, "release"), "goals are ready for main: Release is awake"
+        assert tab(pg, "release").count() == 0, "goals are ready for main, and Release has no tab to wake"
         assert asleep(pg, "live")
         host.nodes.append(node("hotfix", "live", "Ship the hotfix", "table", state="working", stage="implementation", tasks=[task("h1", "Patch the server", "running")]))
         host.bump(None)
@@ -155,15 +155,15 @@ def test_a_road_tab_wakes_on_the_signals_the_corners_used_and_steps_while_a_task
     assert not log, "\n".join(log)
 
 
-def test_release_wakes_for_a_task_that_runs_and_sleeps_with_nothing_to_do(gui):
+def test_release_has_no_tab_whatever_its_tasks_do(gui):
     host = RoadHost(bare=True)
     pg, log = open_page(gui, host)
     try:
-        assert asleep(pg, "release")
+        assert tab(pg, "release").count() == 0
         host.nodes.append(node("cut", "release", "Cut the release", "table", state="working", stage="implementation", tasks=[task("r1", "Tag it", "running")]))
         host.bump(None)
-        pg.wait_for_function("() => document.querySelector('.table-tab[data-tab=\"release\"]').dataset.working !== undefined", timeout=WAIT_MS)
-        assert not asleep(pg, "release")
+        pg.wait_for_timeout(500)
+        assert tab(pg, "release").count() == 0, "a task that runs wakes no tab: Release has none"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -171,19 +171,17 @@ def test_release_wakes_for_a_task_that_runs_and_sleeps_with_nothing_to_do(gui):
 
 # -- the hand ------------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_road_partys_cards_lie_in_its_lane_under_its_tab_before_the_potions(gui):
+def test_a_seated_release_has_no_lane_in_the_hand_and_the_others_keep_theirs(gui):
     host = RoadHost()
     host.needs.append(need("asks", "release", "gate", "Hold the release?", "Hold it for the weekend?", at="2026-10-20T10:30:00",
                            asked=[{"ask": "Hold it for the weekend?", "choices": ["Yes", "No"], "pick": None, "why": "", "by": None, "look": False}]))
     host.nodes.append(node("gate", "release", "Hold the release?", "hand", state="asks", asks_you=True, asked=host.needs[-1]["asked"]))
     pg, log = open_page(gui, host)
     try:
-        pg.locator('.hand-stack[data-goal="gate"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator('.hand-lane[data-lane="4"] .hand-stack[data-goal="gate"]').count() == 1, "in Release's lane, as any party's (the discard is the column beside the table)"
+        pg.locator('.hand-stack[data-goal="theme"]').wait_for(timeout=WAIT_MS)
         assert pg.locator('.hand-lane[data-lane="3"] .hand-stack[data-goal="theme"]').count() == 1
-        road = pg.locator('.hand-stack[data-goal="gate"]').bounding_box()
-        release = tab(pg, "release").bounding_box()
-        assert road["x"] >= release["x"] - 60 and road["x"] + road["width"] <= pg.viewport_size["width"], "under Release's tab, in the leaders' lanes"
+        assert pg.locator('.hand-lane').count() == 5 and tab(pg, "release").count() == 0, "Release waits: no tab, no lane of its own (decisions §283.29)"
+        assert pg.locator('.hand-stack[data-goal="gate"]').count() >= 1, "its question is not lost: it lies in the hand's last lane"
         assert pg.locator(".hand-end .hand-die").count() == 1
     finally:
         pg.close()
@@ -203,14 +201,14 @@ def test_with_no_gate_there_is_no_ring_release_and_live_are_tabs_and_nothing_is_
     pg, log = open_page(gui, host, width)
     try:
         pg.wait_for_timeout(400)
-        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"]
+        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "live"]
         assert pg.locator(".ork-portal-ring, .portal-host, .ork-portal, [data-portal-card]").count() == 0
-        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("4" if width == "wide" else "6")
-        assert pg.locator(".hand-lane").count() == 6
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("3" if width == "wide" else "5")
+        assert pg.locator(".hand-lane").count() == 5
         assert pg.locator(".table-end").count() == 0 and pg.locator(".release-lane .hand-done, .release-lane [data-portal-card]").count() == 0, "nothing done, nothing ready"
         shot(pg, f"c113-no-gate-{width}", still=False)
-        tab(pg, "release").click()
-        pg.locator('.table-tab[data-tab="release"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+        tab(pg, "live").click()
+        pg.locator('.table-tab[data-tab="live"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -238,16 +236,16 @@ def test_the_ring_comes_and_goes_with_the_gate_and_the_tabs_stay_where_they_are(
     host.gate_doc = dict(NO_GATE)
     pg, log = open_page(gui, host)
     try:
-        assert pg.locator(".ork-portal-ring").count() == 0 and tabs(pg)[-2:] == ["release", "live"]
+        assert pg.locator(".ork-portal-ring").count() == 0 and tabs(pg)[-1:] == ["live"]
         host.nodes.append(node("music", "tech", "Lobby music loop", "discard", state="done", element="void", updated="2026-10-20T12:00:00"))
         host.gate_doc = {**GATE, "commits": 2, "files": 1, "ideas": [{"slug": "music", "title": "Lobby music loop", "goal": "tech", "tasks": 1}]}      # a main branch appears, and a goal is ready for it
         host.bump({})
         pg.locator(".release-lane .ork-portal-ring").wait_for(timeout=WAIT_MS)
-        assert tabs(pg)[-2:] == ["release", "live"] and card(pg, "music").count() == 1
+        assert tabs(pg)[-1:] == ["live"] and card(pg, "music").count() == 1
         host.gate_doc = dict(NO_GATE)
         host.bump({})
         pg.locator(".release-lane .ork-portal-ring").wait_for(state="detached", timeout=WAIT_MS)
-        assert tabs(pg)[-2:] == ["release", "live"]
+        assert tabs(pg)[-1:] == ["live"]
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -255,20 +253,16 @@ def test_the_ring_comes_and_goes_with_the_gate_and_the_tabs_stay_where_they_are(
 
 # -- the checks, on Release's table ----------------------------------------------------------------------------------------------------------------
 
-def test_release_shows_the_checks_a_skeleton_each_while_they_run_and_to_main_waits_for_the_last(gui):
+def test_to_main_runs_its_checks_without_release_s_skeletons_and_waits_for_the_last(gui):
     host = RoadPortalHost()
     host.step("music", "passed", "running", "waiting")
     pg, log = open_page(gui, host)
     try:
         card(pg, "music").wait_for(timeout=WAIT_MS)
         choose(pg, "music")
-        tab(pg, "release").click()
-        pg.locator(".table-checks .table-check").nth(2).wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'check'", timeout=WAIT_MS)
         assert _calls(pg, host, "ideas.to_main_checks", 1) == [{"idea": "music"}]
-        assert pg.locator(".table-checks .table-check__name").all_inner_texts() == ["The merge", "Tests", "Looks"] and states(pg) == ["passed", "checking", "waiting"]
-        srcs = pg.locator(".table-checks .ork-race__head").evaluate_all("els => els.map((e) => e.getAttribute('src'))")
-        assert ["skeleton-laborer" in srcs[0], "skeleton-warrior" in srcs[1], "skeleton-elder" in srcs[2]] == [True, True, True], "Release's members, one a check"
-        assert "is-working" in pg.locator(".table-checks .table-check__head").nth(1).get_attribute("class") and not asleep(pg, "release"), "the one running steps; Release is awake"
+        assert pg.locator(".table-checks").count() == 0 and tab(pg, "release").count() == 0, "Release's table of checks is off (decisions §283.29): the gate's checks run all the same"
         assert pg.locator("[data-tomain]").get_attribute("data-portal") == "check" and pg.locator(".table-tomain__line").text_content() == "Checking the way into main"
         shot(pg, "checking")
         to_main(pg).click(force=True)                                                        # a press while a check runs waits for it: nothing goes to main yet
@@ -288,9 +282,8 @@ def test_a_red_check_says_why_in_words_blocks_to_main_and_clears_when_fixed(gui)
     try:
         card(pg, "codes").wait_for(timeout=WAIT_MS)
         choose(pg, "codes")
-        tab(pg, "release").click()
-        pg.locator(".table-checks .table-check.is-red").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-check.is-red .table-check__why").text_content() == "2 tests fail" and states(pg) == ["passed", "red"]
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'sealed'", timeout=WAIT_MS)
+        assert pg.locator(".table-checks").count() == 0
         assert pg.locator(".table-tomain__sealed").text_content() == "Sealed: Tests is red: 2 tests fail" and pg.locator("[data-tomain]").get_attribute("data-portal") == "sealed"
         assert pg.locator(".table-tomain__sealed").evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-danger)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
         shot(pg, "red")
@@ -305,16 +298,15 @@ def test_a_red_check_says_why_in_words_blocks_to_main_and_clears_when_fixed(gui)
     assert not log, "\n".join(log)
 
 
-def test_a_fourth_check_is_shown_too_a_skeleton_each(gui):
+def test_a_fourth_check_runs_too_with_no_skeleton_drawn(gui):
     host = RoadPortalHost()
     host.step("codes", "passed", "passed", "passed", "running")
     pg, log = open_page(gui, host)
     try:
         card(pg, "codes").wait_for(timeout=WAIT_MS)
         choose(pg, "codes")
-        tab(pg, "release").click()
-        pg.locator(".table-checks .table-check").nth(3).wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-checks .table-check__name").all_inner_texts() == ["The merge", "Tests", "Looks", "Regression"] and states(pg)[-1] == "checking"
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'check'", timeout=WAIT_MS)
+        assert pg.locator(".table-checks").count() == 0, "four checks run, and Release's skeletons are not drawn"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -335,8 +327,7 @@ def test_a_seal_no_check_owns_says_its_reason_and_asks_for_no_checks_and_a_confl
         card(pg, "music").click()
         settle(pg)
         card(pg, "menu").click()
-        tab(pg, "release").click()
-        pg.wait_for_function("() => document.querySelectorAll('.table-checks .table-check.is-red').length === 1", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'sealed'", timeout=WAIT_MS)
         assert pg.locator(".table-tomain__sealed").text_content() == f"Sealed: The merge is red: {SEALED}"
     finally:
         pg.close()
@@ -439,12 +430,11 @@ def test_the_lane_and_the_table_fit_over_the_hand_at_1280_and_1024_wide_in_every
         clear("at rest")
         shot(pg, f"{width}-rest")
         choose(pg, "codes")
-        tab(pg, "release").click()
-        pg.wait_for_function("() => document.querySelectorAll('.table-checks .table-check.is-red').length === 1", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'sealed'", timeout=WAIT_MS)
         clear("red")
         shot(pg, f"{width}-red")
         host.step("codes", "passed", "running", "waiting")
-        pg.wait_for_function("() => document.querySelectorAll('.table-checks .table-check').length === 3", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'check'", timeout=WAIT_MS)
         clear("checking")
         host.step("codes", "passed", "passed", "passed")
         pg.wait_for_function("() => document.querySelector('[data-tomain]').dataset.portal === 'open'", timeout=WAIT_MS)

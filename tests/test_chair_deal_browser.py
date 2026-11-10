@@ -22,6 +22,7 @@ SHOTS = Path(os.environ["CHAIR_SHOTS"]) if os.environ.get("CHAIR_SHOTS") else No
 LIVEOPS = "Events, the numbers of play, what players say, small fixes."
 MARKETING = "Pages, posts and search; the store page and the way people come."
 RELEASE = "Ships what is done: the gate, the version, the notes."
+ART = "The look of it: sprites, scenes, the pictures players see."
 
 
 def preset(id, name, line, leader, stage, **more):
@@ -30,13 +31,13 @@ def preset(id, name, line, leader, stage, **more):
 
 
 class ChairHost(StallHost):
-    """The stall's host with the chair's three crafts unseated (LiveOps, Marketing with the Orkmaster's pick, Release, which has no price) and a `ideas.goal_save` that seats the craft sent."""
+    """The stall's host with the chair's crafts unseated (Marketing with the Orkmaster's pick, Art, which has no price) and, as the host says them, LiveOps and Release as waiting (`waits`: decisions §283.29), which no chair offers; a `ideas.goal_save` seats the craft sent."""
 
     def __init__(self, pick=True, stage="live", **more):
         super().__init__(**more)
         self.stage = stage
-        self.presets = [preset("liveops", "LiveOps", LIVEOPS, "event-imp", "live"), preset("marketing", "Marketing", MARKETING, "growth-hack-gnome", "idea", **({"recommended": True} if pick else {})),
-                        preset("release", "Release", RELEASE, "release-night-king", "being_made")]
+        self.presets = [preset("liveops", "LiveOps", LIVEOPS, "event-imp", "live", waits=True), preset("marketing", "Marketing", MARKETING, "growth-hack-gnome", "idea", **({"recommended": True} if pick else {})),
+                        preset("art", "Art", ART, "art-dryad", "live"), preset("release", "Release", RELEASE, "release-night-king", "being_made", waits=True)]
         self.saved = []
 
     def handle(self, name, a):
@@ -48,13 +49,13 @@ class ChairHost(StallHost):
             return {"stage": self.stage, "read": self.stage, "kind": "game", "offered": {}}
         if name == "ideas.party_price":
             self.log.append((name, a))
-            if a["leader"] == "release-night-king":
+            if a["leader"] == "art-dryad":
                 return {"error": "No price"}
             return {"low": 4.0, "high": 5.0, "learned": True, "ideas": 3, "checks": [], "hints": []}
         if name == "ideas.goal_save":
             self.log.append((name, a))
             self.saved.append(a)
-            slug = {"liveops": "run", "marketing": "marketing", "release": "release"}[a["preset"]]
+            slug = {"liveops": "run", "marketing": "marketing", "art": "art", "release": "release"}[a["preset"]]
             self.parties.append(party(slug, a["title"], "gnome", "marketing"))
             return self.bump({"slug": slug})
         return super().handle(name, a)
@@ -91,15 +92,16 @@ def test_the_chair_deals_a_card_for_each_craft_not_seated_with_head_line_price_a
         assert q.locator(".hand-card__name").inner_text().strip() == "A new chair at the table" and q.locator(".hand-card__foot").inner_text().strip() == "Which craft sits in it?"
         assert q.locator("img.ork-race__head").get_attribute("src").endswith("peon-crown.png"), "the Orkmaster's head"
         cards = pg.locator(".hand-crafts .hand-craft")
-        assert [c.get_attribute("data-craft") for c in cards.all()] == ["liveops", "marketing", "release"]
+        assert [c.get_attribute("data-craft") for c in cards.all()] == ["marketing", "art"], "no Release nor LiveOps chair (decisions §283.29)"
         for c in cards.all():
             assert size(c) == [144, 202]
             assert c.locator(".corner--top img.ork-race__head").count() == 1, "its race's head as its sign"
-        live, mk, rel = cards.nth(0), cards.nth(1), cards.nth(2)
-        assert "/goblin-" in live.locator(".corner--top img.ork-race__head").get_attribute("src") and "/gnome-" in mk.locator(".corner--top img.ork-race__head").get_attribute("src")
-        assert live.locator(".hand-ans__name").inner_text().strip() == "LiveOps" and live.locator(".hand-ans__line").inner_text().strip() == LIVEOPS, "the whole line"
-        assert live.locator(".hand-ans__line").evaluate("e => e.scrollHeight <= e.clientHeight + 1"), "not cut"
-        assert "of Claude's week" in live.locator(".hand-craft__price").inner_text() and live.locator(".corner--foot .ork-gem").count() == 1, "its price, said plainly, in its corner"
+        mk, rel = cards.nth(0), cards.nth(1)
+        assert "/gnome-" in mk.locator(".corner--top img.ork-race__head").get_attribute("src")
+        assert mk.locator(".hand-ans__name").inner_text().strip() == "Marketing" and mk.locator(".hand-ans__line").inner_text().strip() == MARKETING, "the whole line"
+        assert mk.locator(".hand-ans__line").evaluate("e => e.scrollHeight <= e.clientHeight + 1"), "not cut"
+        assert "of Claude's week" in mk.locator(".hand-craft__price").inner_text() and mk.locator(".corner--foot .ork-gem").count() == 1, "its price, said plainly, in its corner"
+        live = rel
         assert rel.locator(".hand-craft__price").inner_text().strip() == "no price yet" and rel.locator(".ork-gem").count() == 0, "no price: it says so, none invented"
         assert mk.get_attribute("data-pick") == "1" and mk.locator("[data-star]").inner_text() == "★" and mk.locator("[data-pick-words]").inner_text() == "the Orkmaster's pick"
         assert live.get_attribute("data-pick") is None and not live.locator("[data-star]").count() and not rel.locator("[data-star]").count(), "only the pick is starred"
@@ -116,9 +118,9 @@ def test_with_no_pick_in_the_presets_the_first_reached_unseated_craft_is_the_ork
     pg, host, log = open_hand(gui, host=ChairHost(pick=False))
     try:
         press_chair(pg)
-        assert pg.locator(".hand-craft").count() == 3 and pg.locator("[data-star]").count() == 1
+        assert pg.locator(".hand-craft").count() == 2 and pg.locator("[data-star]").count() == 1
         pick = pg.locator('.hand-craft[data-pick="1"]')
-        assert pick.count() == 1 and pick.get_attribute("data-craft") == "liveops" and pick.locator("[data-pick-words]").inner_text() == "the Orkmaster's pick"
+        assert pick.count() == 1 and pick.get_attribute("data-craft") == "marketing" and pick.locator("[data-pick-words]").inner_text() == "the Orkmaster's pick"
         assert not log, log
     finally:
         pg.close()
@@ -128,7 +130,7 @@ def test_the_first_pick_skips_a_craft_whose_stage_is_not_reached(gui):
     pg, host, log = open_hand(gui, host=ChairHost(pick=False, stage="being_made"))
     try:
         press_chair(pg)
-        assert pg.locator(".hand-craft").count() == 2 and pg.locator('.hand-craft[data-pick="1"]').get_attribute("data-craft") == "marketing"
+        assert pg.locator(".hand-craft").count() == 1 and pg.locator('.hand-craft[data-pick="1"]').get_attribute("data-craft") == "marketing"
         assert pg.locator("[data-star]").count() == 1
     finally:
         pg.close()

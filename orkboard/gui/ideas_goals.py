@@ -350,7 +350,7 @@ class GoalsMixin:
                             "questions": g["questions"][:5], "asked": asked,
                             "priority": g["priority"], "blocks": False,
                             "at": ideas.goal_state(self.state_dir, g["slug"])["read_time"]})
-        return out + party_proposals.rows(self.root(False), self.state_dir, goals)       # a party's proposal waits too (spec 43 §4.2)
+        return out + party_proposals.rows(self.root(False), self.state_dir, goals) + self.night_rows(goals)       # a party's proposal waits too (spec 43 §4.2), and the night's (spec 168 H3)
 
 
 def _what_it_says(g: dict) -> tuple:

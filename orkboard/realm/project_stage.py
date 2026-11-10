@@ -8,7 +8,7 @@
     crafts("web", "idea")                 # the cards of one stage
 
 **The crafts by stage**: *Idea* the concept's crafts (Game design and Art; Product and Design), lean; *Being made* adds Tech, standard; *Live* adds LiveOps or
-Run, and Marketing (§151.7), standard. **Release is offered at every stage** (§137.1, §274.1): its card is not `locked` (a craft as any, it may be dropped),
+Run, and Marketing (§151.7), standard. **Release, Run and LiveOps wait** (§283.29: no chair offers them; before it Release was offered at every stage, §137.1, §274.1): Release's card is not `locked` (a craft as any, it may be dropped),
 Lean, its leader and its engineer and notes (`squad`: a party holds one who does, spec 152 A.5), the leader on the cheaper tier (§151.6, §157.2: Seasoned). A card is `{id, name, line, craft, leader, build, check, squad, size,
 tiers, from, locked, because}`; `from` is the stage that adds it, so a face groups the cards under the stages' headings. The names `idea` · `being_made` ·
 `live` are code's; the face says Idea, Being made and Live (spec 100; the host returns keys, never words). No face, no model; the project's names are read, never
@@ -27,6 +27,7 @@ FROM = {"product": "idea", "game-design": "idea", "design": "idea", "art": "idea
         "tech": "being_made", "run": "live", "liveops": "live", "marketing": "live"}          # the stage that adds a craft
 SIZE = {"product": "lean", "game-design": "lean", "design": "lean", "art": "lean", "release": "lean",
         "tech": "standard", "run": "standard", "liveops": "standard", "marketing": "standard"}     # the size a craft is proposed in
+WAITS = ("release", "run", "liveops")        # the crafts that wait (decisions §283.29): no chair offers them; a Release already seated keeps its page, with no tab and its checks off
 FILE = "project.json"
 STORE_PAGES = ("fastlane/metadata", "fastlane/screenshots", "ios/fastlane/metadata", "android/fastlane/metadata", "store", "appstore", "play-store", "playstore")
 DEPLOY_FILES = {"vercel.json", "netlify.toml", "fly.toml", "procfile", "app.yaml", "app.yml", "serverless.yml", "serverless.yaml", "render.yaml", "heroku.yml",
@@ -100,12 +101,17 @@ def card(recipe: dict) -> dict:
             "locked": False, "because": recipe.get("because") or ""}
 
 
+def waits(craft: str) -> bool:
+    """Whether a craft waits (decisions §283.29, changing §261.7 and §273.2): Release, and Live's Run and LiveOps. Its chair is not offered."""
+    return craft in WAITS
+
+
 def crafts(kind: str, stage: str) -> list[dict]:
-    """The cards the project's kind is offered at a stage, in the kind's order: the crafts of the stages reached and Release, offered at every stage (a craft as any, decisions §274.1: the person may remove it)."""
+    """The cards the project's kind is offered at a stage, in the kind's order: the crafts of the stages reached, those that wait left out (Release, Run, LiveOps: decisions §283.29, which changes §274.1's *offered at every stage*)."""
     if stage not in STAGES:
         raise ValueError("A stage is idea, being_made or live")
     reached = STAGES[:STAGES.index(stage) + 1]
-    return [card(r) for r in party_recipes.for_kind(kind) if FROM.get(r.get("craft") or r["id"], "live") in reached or r["id"] == party_recipes.RELEASE]
+    return [card(r) for r in party_recipes.for_kind(kind) if FROM.get(r.get("craft") or r["id"], "live") in reached and not waits(r.get("craft") or r["id"])]
 
 
 def offered(kind: str) -> dict[str, list[dict]]:

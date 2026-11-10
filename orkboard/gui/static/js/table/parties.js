@@ -115,7 +115,7 @@ function StageHead({ id, here, onSet }) {
 export function Parties({ props = {}, close }) {
   const [got, setGot, reload] = useBeginning(), tools = useTools(), [edit, setEdit] = useState({}), [seat, setSeat] = useState(null), [busy, setBusy] = useState(false);
   const tracks = (board.value?.tracks || []).filter((t) => t.slug !== "general");
-  const presets = got?.presets || [], stage = got?.stage.stage || "idea", views = presets.map((p) => viewOf(p, tracks, edit, stage)), price = usePrices(views);
+  const presets = (got?.presets || []).filter((p) => !p.waits || madeFrom(p, tracks)), stage = got?.stage.stage || "idea", views = presets.map((p) => viewOf(p, tracks, edit, stage)), price = usePrices(views);
   const first = props.first ?? tracks.length === 0, name = currentProject.value?.name || "the project";
   useLayoutEffect(() => {                                                                                    // Esc lowers the seat first: the table's own Esc would take the whole card away with it
     if (!seat) return undefined;
