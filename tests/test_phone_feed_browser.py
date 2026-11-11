@@ -756,3 +756,32 @@ def test_pictures_of_the_header_and_the_round_button_for_design(gui):
         shot(pg, "h-round")
     finally:
         context.close()
+
+
+@pytest.mark.skipif(not SHOTS, reason="pictures for Design: set FEED_SHOTS")
+def test_pictures_of_a_stack_opened_and_the_seen_line_spread_for_design(gui):
+    """Goal 169 I, beside feed.html v3 screen 6: Tech's stack opened (More from Tech pressed, its posts shown) and the seen line pressed, spread as a deck, each card's head showing, at 390 x 844 and three device pixels a pixel."""
+    server, browser = gui
+    host = FeedHost()
+    context = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, device_scale_factor=3)
+    context.add_init_script(f"localStorage.setItem('orkcraft.looked', JSON.stringify({{ '{PROJECT}': {at_look(95)} }}));")
+    pg = context.new_page()
+    pg.route_web_socket("**/ws*", host.on_socket)
+    try:
+        pg.goto(server.url)
+        pg.locator(".up-feed .post-card").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(800)
+        tech = pg.locator('.post-card--news[data-leader="tech"]')
+        tech.get_by_role("button", name="More from Tech").click()
+        pg.locator('.post-card--news[data-leader="tech"] .post-card__more').first.wait_for(timeout=WAIT_MS)
+        tech.scroll_into_view_if_needed()
+        pg.wait_for_timeout(500)
+        shot(pg, "stack-open")
+        line = pg.locator(".up-fd__seenline")
+        line.click()
+        pg.locator(".up-fd__spread .post-card--seen").first.wait_for(timeout=WAIT_MS)
+        scroll_feed(pg, 100000)
+        pg.wait_for_timeout(500)
+        shot(pg, "seen-spread")
+    finally:
+        context.close()
