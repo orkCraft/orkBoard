@@ -265,3 +265,50 @@ The backs of playing cards for a card-game interface on one sheet, three upright
 ```
 A party's pennant for a card-game interface on one sheet, two square tiles side by side, in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients. A swallowtail pennant on a short bronze pole with a gilt finial; the flag itself plain WHITE with one light grey shade and no emblem (it is coloured by its party later). Tile 1: the pennant at rest, hanging a little. Tile 2: the same pennant flying out in the wind. A light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
+
+## The table of cards (decision §295, goal 170's talk of 11 November 2026)
+
+What the mockups of `docs/mockups/table-cards/`, `spreads/` and `frameworks/` drew by code and the cartoon still lacks. The signs on
+the tokens stay orkUI's (§289.2): a token's face is drawn empty and its sign set in it by code, as on a card's back. A party's colour
+is laid by code, so the tokens and the meeples are drawn white.
+
+### K14. The Orkmaster, a half-ork, half-goblin, and its faces (attach K1 and `docs/mockups/orkmaster/faces-sheet.jpg`)
+```
+Eight head portraits of ONE character for a card-game interface on one sheet, a 4x2 grid, in EXACTLY the humorous flat cartoon style of the first attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, big expressive eyes, comic proportions. The character is the second attached sheet's: the Orkmaster, the table's dealer, a HALF-ORK, HALF-GOBLIN: a goblin's long pointed ears and long hooked nose and a sly reckoning look; an ork's olive-green skin, two small lower tusks and a heavy jaw; small round wire glasses, a small brass crown with three points, and under the chin a white shirt collar with a dark bow tie (the only thing below the head, kept small, inside the tile). Front-facing, the same face, colours, crown, glasses and size in every tile, the eyes on one line, wholly inside its tile with a clear margin (the ears' tips inside). Tiles, left to right, top to bottom: 1 at rest (calm, a faint knowing smile), 2 thoughtful (eyes half shut behind the glasses, the mouth pressed), 3 happy (a wide closed-eyed smile), 4 puzzled (one brow up, the mouth a little open), 5 shocked (eyes wide and round, the mouth an O), 6 panicked (eyes huge, a bead of sweat, the crown jumping off the head), 7 tired (heavy lids, dark rings under the eyes, the mouth slack), 8 sly (a sideways look, a crooked smile). Never angry. Every head reads on a very dark background: no dark mass without a light rim. Each tile slightly wider than tall (12:11), a flat mid-grey background (#3a3a3a), a thin grey-brown frame. No text, letters or numbers.
+```
+
+### K15. The Orkmaster at 16 pixels (attach K14)
+```
+The same character as the attached sheet's tile 1, in the same humorous flat cartoon style, on one sheet of two square tiles side by side, redrawn SIMPLER so it reads at 16 pixels: only the face, the eyes behind the round glasses, the long pointed ears, the long nose, the tusks, the crown and the bow tie; outlines twice as thick, no wrinkles, no small teeth, no glare on the glasses. Tile 1 at rest, tile 2 happy. The head the same height in both, wholly inside its tile with a clear margin, a light rim, a flat mid-grey background (#3a3a3a), a thin grey-brown frame. No text, letters or numbers.
+```
+
+### O7. The tokens (attach K1 and O1)
+A leader's view on a goal's card (for, risk, question, against) and the person's own (a question, a concern): round, thick, its edge
+seen; the leader's coloured by its party in code, the person's its own bone and brass.
+```
+Game tokens for a card-game interface on one sheet, a 4x2 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, a little chunky. Each token is a thick round disc, like a tavern game's token of bone or wood, centred in its tile at the same scale across the sheet. Its face is EMPTY: a plain recessed round middle with nothing in it (a sign is set in it later). Top row, the leaders' tokens, plain WHITE with one light grey shade (they are coloured later): 1 a token seen straight on from above, its rim raised, its empty middle. 2 the same token in three-quarter view, its thick edge seen as a band with small notches round it like a poker chip's, a small soft shadow under it. 3 three of the same tokens in a short stack, a little offset, seen in three-quarter view. 4 the same token dropping onto a surface, a little tilted, two short curved motion lines above it. Bottom row, the person's own token, IVORY BONE with a BRASS rim, a little larger than the white ones: 5 seen straight on, its empty middle. 6 in three-quarter view, its brass edge seen. 7 lying on the corner of a plain card seen from above, as if just put there. 8 tile 5 redrawn SIMPLER so it reads at 18 pixels: outlines twice as thick, only the disc, its rim and the empty middle. Every token has a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters, numbers or symbols.
+```
+
+### O8. The hourglass (attach K1 and O3a)
+For *Deals itself at 13:40* and the gate's check that still runs.
+```
+An hourglass for a card-game interface on one sheet, a 2x2 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, a little chunky, the same warm brown wood and brass as the attached backpack and book. A small tavern hourglass: two round glass bulbs between a brass top and bottom held by three turned wooden posts, warm golden sand. 1 the sand all in the top bulb, at rest. 2 the sand half run down, a thin stream falling. 3 the sand all in the bottom bulb, run out. 4 tile 2 redrawn SIMPLER so it reads at 16 pixels: outlines twice as thick, no posts' turnings, the sand one flat shape. Each hourglass upright, centred, the same size in every tile, with a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### O9. The meeple (attach K1 and O7)
+A party's piece on its stage (the track of stages), coloured by its party in code.
+```
+A game piece for a card-game interface on one sheet, a 2x2 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, a little chunky. The piece is a classic wooden board-game meeple (a round head, arms out, two short legs), plain WHITE with one light grey shade (it is coloured later), with a small crude ork's touch: two tiny tusks on its round head. 1 the meeple standing, front-on. 2 the same meeple in three-quarter view, its thickness seen, a small soft shadow under it. 3 the same meeple stepping forward onto the edge of a plain card, a short motion line behind it. 4 tile 1 redrawn SIMPLER so it reads at 16 pixels: outlines twice as thick, no tusks. Each piece centred, the same size in every tile, with a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### O10. The dealer's hands (attach K14 and O5)
+For the deal and the Orkmaster's deck: its hands only, with the cards' backs of O5.
+```
+The dealer's hands for a card-game interface on one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients. The hands are the attached character's: olive-green, long knobbly fingers, short dark nails, a white shirt cuff with a small brass cufflink at each wrist; no arm beyond the cuff, no body. The cards are EXACTLY the attached sheet's small backs. 1 both hands holding a deck, the top cards fanned out a little. 2 one hand dealing a single card, the card flying away face down, two short curved motion lines behind it. 3 both hands shuffling, the cards riffling between them in an arch. 4 both hands sweeping a small pile of face-down cards together. Each centred, the same scale in every tile, with a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### O11. The tavern's card table (attach K1 and O3b)
+The table's ground behind the lanes and the spreads, kept quiet under the cards.
+```
+A tavern's card table for a card-game interface on one sheet, two wide tiles stacked (each 2:1), in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, the same warm brown wood and brass as the attached chairs. 1 a card table seen straight from above: a broad wooden rim with brass corner caps round a plain cloth of a VERY DARK muted green, flat, with nothing on it; the cloth must stay dark enough for light cards and text laid on it later. 2 one corner of the same table, close up: the wooden rim, a brass corner cap, a little of the dark cloth. A flat mid-grey background (#3a3a3a) round the table, a thin grey-brown frame around each tile. No text, letters, numbers or cards.
+```
