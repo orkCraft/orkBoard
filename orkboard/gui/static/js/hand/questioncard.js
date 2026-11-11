@@ -23,7 +23,7 @@ const hintOf = (s) => {
 };
 
 /** What the answers to a question do, for the pane's choices and for the card upright: `top` the first card of its stack not answered, `mine` the stack's cards, `from` where the pane came from. */
-function asking(top, mine, from) {
+export function asking(top, mine, from) {
   const c = top.card, row = top.ref, lead = top.party?.lead, last = mine.length === 1, first = !cardsOf(row).some((x) => given.value[cardSig(top.scope, x)]);
   const answer = (said) => {
     give(top.scope, c, said);

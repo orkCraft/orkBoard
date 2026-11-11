@@ -8,6 +8,7 @@ import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Elem, Icon, Sign } from "../orkui.js";
 import { openSpread } from "./spreads/open.js";
+import { giveBack, keepTab } from "./back.js";
 import { viewsOf } from "./feed.js";
 import { GoalLine, PostBody, PostHead, KINDS, TAGS, when, whoOf } from "../table/post.js";
 
@@ -74,7 +75,7 @@ export function answerInHand(slug) {
 /** The card opened: `{kind: "post", p, from}` or `{kind: "goal", n, line, tokens, acts, from}`; null when none. */
 export const opened = signal(null);
 export const openCard = (what) => { opened.value = what; };
-const shut = () => { const was = opened.peek(); opened.value = null; was?.from?.focus?.(); };
+const shut = () => { const was = opened.peek(); opened.value = null; giveBack(was?.from); };
 
 /** L: the card opened over the table, upright and big; Esc or Close puts it away. */
 export function CardL({ onPick }) {
@@ -82,7 +83,7 @@ export function CardL({ onPick }) {
   useEffect(() => {
     if (!o) return undefined;
     root.current?.querySelector(".cards-l__shut")?.focus();
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); shut(); } };
+    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); shut(); } else keepTab(root.current, e); };
     addEventListener("keydown", key, true);
     return () => removeEventListener("keydown", key, true);
   }, [o]);

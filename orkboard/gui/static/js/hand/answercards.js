@@ -41,7 +41,7 @@ export function useWide() {
 
 /** The line a way says of itself: the leader's own (`lines[i]`, written to fit the card), else the question's why for the pick, else a plain one. */
 const lineOf = (q, i) => String(q.lines?.[i] || q.hints?.[i] || (i === q.pick ? q.why || PICK_LINE : NO_LINE));
-const pickOf = (q) => (q.pick != null ? q.choices?.[q.pick] || "" : "");
+export const pickOf = (q) => (q.pick != null ? q.choices?.[q.pick] || "" : "");
 
 /** The ways of one question `q` as cards; `run(choice, i)` plays one. A way is `{id, name, line, own (the line is the leader's own), pick, cost, sign, kind (the leader's kind of it: realm/way_kinds.py), run}`. */
 function waysOf(q, run) {
@@ -61,7 +61,7 @@ export function answerSet(s) {
 }
 
 /** The ways of question `i` of several: pressing one keeps it (`keep(all)`) and asks the next; the last sends them all, in the order asked. `kept`: what was picked before. */
-function stepWays(s, asked, i, kept, keep) {
+export function stepWays(s, asked, i, kept, keep) {
   const last = i === asked.length - 1;
   return waysOf(asked[i], (c) => {
     const all = [...kept.slice(0, i), c];

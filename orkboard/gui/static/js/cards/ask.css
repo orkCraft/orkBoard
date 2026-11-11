@@ -1,0 +1,25 @@
+/* A question answered in an L (goal 170; docs/mockups/table-cards/ ?open=ask; js/cards/ask.js): layout only, orkUI's tokens. */
+.cards-ask { width: min(460px, 94vw); max-height: 94vh; aspect-ratio: auto; gap: var(--ork-3); padding: 34px 26px 26px; }
+.cards-ask__who { display: flex; align-items: center; gap: var(--ork-3); padding-right: 96px; }
+.cards-ask__who b { display: block; font: var(--ork-type-heading); }
+.cards-ask__who small { display: block; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.cards-ask__av { flex: none; display: inline-flex; }
+.cards-ask__q { overflow-wrap: anywhere; }
+.cards-ask__why { margin: 0; }
+.cards-ask__ways { display: flex; flex-direction: column; gap: var(--ork-2); }
+.cards-way { display: flex; align-items: center; gap: var(--ork-3); width: 100%; padding: var(--ork-3); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-panel); color: var(--ork-ink); text-align: left; cursor: pointer; }
+.cards-way:hover { border-color: var(--ork-ink-muted); }
+.cards-way:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.cards-way.is-pick { border-color: var(--ork-ink); }
+.cards-way.is-own { border-style: dashed; color: var(--ork-ink-read); }
+.cards-way__k { flex: none; width: 26px; height: 26px; display: grid; place-items: center; border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-label); color: var(--ork-ink-read); }
+.cards-way__t { min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.cards-way__t b { font: var(--ork-type-button); }
+.cards-way__t small { font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.cards-ask__pen { display: flex; flex-direction: column; gap: var(--ork-2); align-items: flex-start; }
+.cards-ask__field { width: 100%; box-sizing: border-box; }
+.cards-ask__acts { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.cards-ask__notes { display: flex; flex-direction: column; gap: var(--ork-2); }
+.cards-ask__note { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-3); font: var(--ork-type-read); color: var(--ork-ink-read); }
+.cards-ask__foot { margin-top: auto; display: flex; justify-content: space-between; gap: var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink-muted); padding-right: 40px; }
+.cards-ask > .cards-ix { z-index: 1; }

@@ -55,7 +55,7 @@ def test_the_hands_cards_are_whole_s_cards_and_the_asking_one_is_ringed(page_url
         b.close()
 
 
-def test_pressing_a_question_card_opens_its_ways(page_url):
+def test_pressing_a_question_card_opens_its_ways_in_an_l_over_the_table(page_url):
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
@@ -63,5 +63,5 @@ def test_pressing_a_question_card_opens_its_ways(page_url):
         card = pg.locator(".frame-hand button.hand-card--stop.is-asks").first
         card.wait_for(timeout=15000)
         card.click()
-        pg.locator("button.q-card[data-pick='1']").wait_for(timeout=5000)
+        pg.locator(".cards-ask .cards-way[data-pick='1']").wait_for(timeout=5000)
         b.close()
