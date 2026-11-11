@@ -128,7 +128,7 @@ made in orkUI first, then copied here.
 - met: When the phone opens a project at 390×844, then the body is 17 px, nothing is under 14 px, a card is #33373a framed #4c5257, and every word passes 4.5:1 on its ground
 - met: When the phone opens a project with a goal waiting for main and news since this phone's last look, then the heads row is on top, what waits comes first, news newest first, the hand at the foot, no tab
 - met: When a person presses a head in the feed, then it is aria-pressed, the others faint, a line says the feed shows only it; pressed again, the whole feed and no line
-- cannot see: When the feed is scrolled to its foot at 390×844, then the header is one thin row with Stop all and the chain, a block's sideways cards have a button each way, the seen line spreads as a deck
+- met: When the feed is scrolled to its foot at 390×844, then the header is one thin row with Stop all and the chain, a block's sideways cards have a button each way, the seen line spreads as a deck
 
 ## Tech
 ### Talk
