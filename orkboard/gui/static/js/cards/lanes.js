@@ -7,6 +7,7 @@ import { pick } from "../frame/state.js";
 import { nameOf } from "../table/data.js";
 import { raceOf } from "../table/felt.js";
 import { CardM, CardS, openCard } from "./card.js";
+import { openSpread } from "./spreads/open.js";
 import { nodes, postsOf, shareOf, tokensOf } from "./feed.js";
 
 const AT_WORK = new Set(["ready", "running", "testing", "picking", "failed", "review"]);
@@ -16,7 +17,9 @@ export function WorkCard({ n, tilt = 0 }) {
   const t = tokensOf(n.slug), line = `${n.state === "review" ? "to review" : "at work"}`;
   const card = { slug: n.slug, title: n.short || n.title, element: n.element, hue: n.hue, sign: n.type?.sign || "", leader: n.goal };
   return html`<${CardS} n=${card} line=${line} bar=${shareOf(n) ?? 0} tokens=${t} tilt=${tilt}
-    onOpen=${(e) => openCard({ kind: "goal", n: { ...card, title: n.title }, line, tokens: t, from: e.currentTarget, acts: [{ label: "Open its plan", main: true, run: () => pick(n.slug) }] })} />`;
+    onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line, tokens: t, from, acts: [{ label: "Open its plan", main: true, run: () => pick(n.slug) },
+      { label: "Its stages", run: () => openSpread({ kind: "track", slug: n.slug, from }) },
+      ...(n.state === "review" || n.state === "done" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />`;
 }
 
 function Lane({ g }) {
