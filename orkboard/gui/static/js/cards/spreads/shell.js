@@ -9,7 +9,7 @@ import { Index } from "../card.js";
 import { closeSpread } from "./open.js";
 
 /** `kind`: the spread (its `data-spread`); `title`, `line`, `say`: its head; `note`: the hand's words; `acts`: the hand's buttons; children: the field. */
-export function SpreadFrame({ kind, title, line = "", say = "", note = "", acts = null, children }) {
+export function SpreadFrame({ kind, title, line = "", say = "", note = "", acts = null, hand = null, children }) {
   const root = useRef();
   useEffect(() => {
     root.current?.querySelector(".sp-shut")?.focus();
@@ -24,7 +24,7 @@ export function SpreadFrame({ kind, title, line = "", say = "", note = "", acts 
         ${say && html`<span class="sp-say">${say}</span>`}
         <button type="button" class="ork-btn sp-shut" onClick=${closeSpread}><${Icon} name="close" /><span>Close</span></button></header>
       <div class="sp-field">${children}</div>
-      <footer class="sp-hand">${note && html`<p class="sp-note">${note}</p>`}${acts && html`<div class="sp-acts">${acts}</div>`}</footer>
+      <footer class="sp-hand">${hand && html`<div class="sp-cards" role="group" aria-label="Your hand">${hand}</div>`}${note && html`<p class="sp-note">${note}</p>`}${acts && html`<div class="sp-acts">${acts}</div>`}</footer>
     </div></div>`;
 }
 
@@ -36,13 +36,24 @@ export const Chk = ({ no = false }) => html`<span class=${cls("sp-chk", { "is-no
 
 /** A card face up in a spread: its party's colour (`party`), the goal's rune and sign (`n`), its name, a line, and more under them (children).
  *  `size`: xl, lg, md or sm; `tilt`: its turn in degrees; `mark`: "ok" or "no" puts a check on it. */
-export function SpCard({ party, n = null, name, line = "", size = "lg", tilt = 0, mark = "", muted = false, portal = false, label = "", children }) {
-  const w = whoOf(party || "orkmaster");
-  return html`<div class=${cls("ork-card cards-s sp-card", { [`is-${size}`]: true, "is-muted": muted, "is-portal": portal })} data-race=${w.race || "orkmaster"} style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${label || undefined}>
+export function SpCard({ party, n = null, name, line = "", size = "lg", tilt = 0, mark = "", muted = false, portal = false, label = "", onPress = null, picked = false, children }) {
+  const w = whoOf(party || "orkmaster"), Tag = onPress ? "button" : "div";
+  return html`<${Tag} type=${onPress ? "button" : undefined} onClick=${onPress || undefined} aria-pressed=${onPress && picked !== null ? String(!!picked) : undefined}
+    class=${cls("ork-card cards-s sp-card", { [`is-${size}`]: true, "is-muted": muted, "is-portal": portal, "is-pick": !!onPress, "is-picked": picked })} data-race=${w.race || "orkmaster"} style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${label || undefined}>
     ${size !== "sm" && html`<${Index} n=${n} />`}${mark && html`<${Chk} no=${mark === "no"} />`}
     ${(size === "xl" || size === "lg") && html`<span class="sp-pic"><${HeadOf} w=${w} size=${size === "xl" ? "big" : "mid"} /></span>`}
-    <b class="sp-card__name">${name}</b>${line && html`<small class="sp-card__line">${line}</small>`}${children}</div>`;
+    <b class="sp-card__name">${name}</b>${line && html`<small class="sp-card__line">${line}</small>`}${children}</${Tag}>`;
 }
+
+/** A pile's thickness, never a number: up to six backs, each a little higher than the one under it (`n` the cards in it; nothing when none). */
+export function Thick({ n, label }) {
+  if (n < 1) return null;
+  return html`<span class="sp-col sp-deckl"><span class="sp-thick" aria-hidden="true">${Array.from({ length: Math.min(n, 6) }, (_, i) => html`<span key=${i} style=${`--dx:${i * 2}px;--dy:${-i * 2}px`}></span>`)}</span>
+    <span class="sp-cap">${label}</span></span>`;
+}
+
+/** What a goal's card shows of its Board node: its rune, hue and sign. */
+export const faceOf = (n) => ({ element: n?.element, hue: n?.hue, sign: n?.type?.sign || "" });
 
 /** A card face down (orkUI's back): what is not needed yet. A button when `onPress` is given (it turns the card). */
 export function SpBack({ tilt = 0, size = "md", name = "", onPress = null }) {

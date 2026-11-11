@@ -8,7 +8,7 @@ import { nameOf } from "../table/data.js";
 import { raceOf } from "../table/felt.js";
 import { CardM, CardS, openCard } from "./card.js";
 import { openSpread } from "./spreads/open.js";
-import { nodes, postsOf, shareOf, tokensOf } from "./feed.js";
+import { nodes, postsOf, shareOf, tokensOf, viewsOf } from "./feed.js";
 import { FrameSwitch, TablesView } from "./tables/index.js";      // a leader's framework instead of the lanes (goal 170 T)
 import { frameworkOf, laid } from "./tables/state.js";
 
@@ -21,6 +21,7 @@ export function WorkCard({ n, tilt = 0 }) {
   return html`<${CardS} n=${card} line=${line} bar=${shareOf(n) ?? 0} tokens=${t} tilt=${tilt}
     onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line, tokens: t, from, acts: [{ label: "Open its plan", main: true, run: () => pick(n.slug) },
       { label: "Its stages", run: () => openSpread({ kind: "track", slug: n.slug, from }) },
+      ...(viewsOf(n.slug).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: n.slug, from }) }] : []),
       ...(n.state === "review" || n.state === "done" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />`;
 }
 
