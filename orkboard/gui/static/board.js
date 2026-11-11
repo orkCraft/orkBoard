@@ -4,7 +4,8 @@
 // app.js, which draws the same shell when `focus` is "board".
 import { render } from "preact";
 import { html, cls, linked } from "./js/html.js";
-import { town, connect, openLink, copyText, toasts, dismiss, holdToast } from "./js/link.js";
+import { town, connect, openLink, copyText, toasts, dismiss, holdToast, onMocks } from "./js/link.js";
+import { signal } from "@preact/signals";
 import { Onboarding } from "./js/onboarding.js";
 import { ContextMenu, onContextMenu, saveLogs } from "./js/shell/errors.js";
 import { watchErrors } from "./js/crashes.js";
@@ -32,10 +33,14 @@ function Toasts() {
   </div>`;
 }
 
+// On mocks (`?mock=1`, goal 170 M) the plate that says so; its module is loaded only then.
+const Plate = signal(null);
+if (onMocks()) import("./js/mock/plate.js").then((m) => { Plate.value = m.MockPlate; });
+
 function Board() {
   const t = town.value;
   if (!t) return html`<div class="gui-loading ok-font-body">Opening the board…</div>`;
-  return html`<div class="gui gui-board">${t.onboarding ? html`<${Onboarding} />` : html`<${Shell} /><${UpdateAsk} />`}<${Toasts} /><${ContextMenu} /></div>`;
+  return html`<div class="gui gui-board">${Plate.value && html`<${Plate.value} />`}${t.onboarding ? html`<${Onboarding} />` : html`<${Shell} /><${UpdateAsk} />`}<${Toasts} /><${ContextMenu} /></div>`;
 }
 
 // A link to another site opens in the browser, never in the app's own window.

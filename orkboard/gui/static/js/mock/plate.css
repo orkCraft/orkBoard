@@ -1,0 +1,6 @@
+/* The mocks' plate (js/mock/plate.js): small, at the window's lower middle, over everything; orkUI's tokens only. */
+.mock-plate { position: fixed; z-index: 9000; left: 50%; bottom: 8px; transform: translateX(-50%); max-width: min(560px, 92vw); }
+.mock-plate__b { padding: 4px 10px; border: 1px dashed var(--ork-alert); background: var(--ork-panel); color: var(--ork-alert);
+  font: var(--ork-type-caption); cursor: pointer; }
+.mock-plate__sent { margin: 6px 0 0; padding: 8px 12px; list-style: none; background: var(--ork-panel); color: var(--ork-ink-read); font: var(--ork-type-caption); }
+.mock-plate__sent code { font-family: var(--ork-font-mono); color: var(--ork-ink-muted); }

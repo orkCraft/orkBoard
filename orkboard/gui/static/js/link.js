@@ -36,6 +36,11 @@ const terminals = new Map();               // session key → (kind, bytes) => v
 let socket = null;
 let nextId = 1;
 let paired = null;                         // the paired link (js/linkpaired.js) once the frame says so
+// `?mock=1`: the page on mocks (goal 170, stage M): no host; js/mock/mocklink.js answers from a recording.
+const MOCK = new URLSearchParams(location.search).get("mock") === "1";
+let mock = null;
+/** Whether this page runs on mocks (`?mock=1`): what it would send is kept, never sent. */
+export const onMocks = () => MOCK;
 
 /** The frame says this page is paired (spec 94 §4): `connect()` and `command()` then go by the phone's socket. Returns it
  *  ({opened(fn), news(fn), close(), unpair()}) for the frame's push and unpairing. */
@@ -113,6 +118,7 @@ export function act(id, name, args = {}) {
 
 /** Send a command to the host; resolves with its result, rejects with its error (also toasted, unless `quiet`: the caller says it itself). */
 export function command(name, args = {}, quiet = false) {
+  if (mock) return mock.command(name, args);
   if (paired) return paired.command(name, args, quiet);
   return new Promise((resolve, reject) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
@@ -169,6 +175,7 @@ function receive(msg) {
 }
 
 export function connect() {
+  if (MOCK) { import("./mock/mocklink.js").then((m) => { mock = m; return m.open({ town, online, toast }); }); return; }
   if (paired) { paired.connect(); return; }
   const ws = new WebSocket(`ws://${location.host}/ws?t=${encodeURIComponent(TOKEN)}`);
   ws.onopen = () => { socket = ws; online.value = true; };
