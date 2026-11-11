@@ -52,8 +52,16 @@ export function TPile({ ctx, id, title, line = "", sign = "work", n = 3, open = 
 /** A card face down; pressed, it turns up (`onTurn`). */
 export const TBack = ({ name, onTurn }) => html`<button type="button" class="tb-faced" data-card="face-down" aria-label=${`${name}, face down. Press to turn it.`} onClick=${onTurn}></button>`;
 
-/** The strip where the person takes a token (the hand's place on this table): Question and Concern; held, the next press on a card puts it there
- *  and asks for its few words. */
+/** The person's two tokens, Question and Concern (decisions §145: what the person decides is in the hand): drawn at the left of the hand's cards
+ *  while a leader's table is open (hand/hand.js); held, the next press on a card of the table puts it there and asks for its few words (`TokenStrip`). */
+export function TokenTakes() {
+  return html`<div class="tb-takes" role="group" aria-label="Your tokens">
+    ${["question", "concern"].map((v) => html`<button type="button" key=${v} class=${cls("tb-take", { "is-held": held.value === v })} data-token=${v} aria-pressed=${String(held.value === v)}
+        onClick=${() => { held.value = held.value === v ? "" : v; asking.value = null; }}><${YouToken} view=${v} big=${true} /><b>${WORDS[v].word}</b></button>`)}
+  </div>`;
+}
+
+/** The foot of a leader's table: where a held token's few words are asked, or what to do with the tokens in the hand. */
 export function TokenStrip({ ctx, leader }) {
   const ask = asking.value, box = useRef(), [text, setText] = useState("");
   useEffect(() => { if (ask) { setText(""); box.current?.focus(); } }, [ask]);
@@ -63,13 +71,11 @@ export function TokenStrip({ ctx, leader }) {
     if (held.value && ask) putToken({ ...ask, view: held.value, text });
   };
   const cancel = () => { asking.value = null; held.value = ""; };
-  return html`<footer class="tb-hand" aria-label="Your tokens">
-    ${["question", "concern"].map((v) => html`<button type="button" key=${v} class=${cls("tb-take", { "is-held": held.value === v })} data-token=${v} aria-pressed=${String(held.value === v)}
-        onClick=${() => { held.value = held.value === v ? "" : v; asking.value = null; }}><${YouToken} view=${v} big=${true} /><b>${WORDS[v].word}</b></button>`)}
+  return html`<footer class="tb-hand" aria-label="Your words on this table">
     ${ask && held.value ? html`<form class="tb-ask" onSubmit=${send} onKeyDown=${(e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); cancel(); } }}>
         <label class="tb-ask__to" for="tb-ask-words">Your ${held.value} to ${name} · on <b>${ask.name}</b></label>
         <input ref=${box} id="tb-ask-words" class="ork-input" value=${text} placeholder=${held.value === "concern" ? "What worries you here?" : "What do you want to ask?"} onInput=${(e) => setText(e.currentTarget.value)} />
         <button type="submit" class="ork-btn primary">Send to ${name}</button><button type="button" class="ork-btn quiet" onClick=${cancel}>Cancel</button></form>`
-      : html`<p class="tb-note">${held.value ? `Press a card to put your ${held.value} on it.` : `Put your token on a card: ${name} gets it, and the part of its table it marks is what it betters. Its cards you only turn over, or spread a pile.`}</p>`}
+      : html`<p class="tb-note">${held.value ? `Press a card to put your ${held.value} on it.` : `Take a token in the hand, then put it on a card: ${name} gets it, and the part of its table it marks is what it betters. Its cards you only turn over, or spread a pile.`}</p>`}
   </footer>`;
 }

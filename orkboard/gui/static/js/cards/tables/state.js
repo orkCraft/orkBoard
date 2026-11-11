@@ -42,3 +42,6 @@ export function putToken({ party, framework, card, name, view, text }) {
   command("ideas.table_token", { party, framework, card, view, text: t.text }, true).catch(() => {});
   return t;
 }
+
+/** Whether a leader's table is laid in the pane, so the hand holds the person's tokens (cards/tables/parts.js `TokenTakes`). */
+export const tokensOpen = () => !!laid.value && !!frameworkOf({ slug: laid.value });

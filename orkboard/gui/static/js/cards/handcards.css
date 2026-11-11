@@ -1,0 +1,34 @@
+/* The hand as whole cards (goal 170, stage M; js/cards/handcards.js; docs/mockups/table-cards/ ?face=desk). Only on the table of cards
+   (`.frame[data-cards="1"]`, at the wide width): the hand's cards are S cards 120 wide, 2.5:3.5, each wholly seen, in a row with the + card at
+   the left and the places (the die, the backpack, the book) at the right as they are. Nothing rises to be seen (a whole card needs no rise;
+   a hover or a focus lifts it a few px); the card that asks is lifted and ringed in the alert's yellow (cards.css `.cards-s.is-asks`) with its
+   "!". A pile of a goal's cards is its top card with small offset edges under it. Layout only: every colour, face and corner is orkUI's. */
+@media (min-width: 760px) {
+  .frame[data-cards="1"] .hand { --hc-w: 120px; --hc-shown: var(--hc-h); --hc-seen: var(--hc-h); --hc-rise: 0px; --hc-room: var(--ork-4); --hc-cut: 0px; }
+  .frame[data-cards="1"] .hand .hand-row { display: flex; align-items: flex-start; gap: var(--ork-4); }
+  .frame[data-cards="1"] .hand .hand-lane { display: contents; }
+  .frame[data-cards="1"] .hand .hand-slot { position: relative; left: auto; top: auto; flex: none; width: var(--hc-w); }
+  .frame[data-cards="1"] .hand .hand-slot.is-plus, .frame[data-cards="1"] .hand .hand-slot.is-plus:not(:hover, :focus-within) { margin: 0; z-index: var(--z, 1); }
+  .frame[data-cards="1"] .hand .hand-end { margin-left: auto; flex: none; }
+  .frame[data-cards="1"] .hand .hand-slot:hover, .frame[data-cards="1"] .hand .hand-slot:focus-within, .frame[data-cards="1"] .hand .hand-slot.is-risen { transform: translateY(-6px); }
+  .frame[data-cards="1"] .hand .hand-slot:has(.is-slot):hover, .frame[data-cards="1"] .hand .hand-slot:has(.is-slot):focus-within { transform: none; }
+  /* a card behind another is whole too: the pile is the top card and its small edges */
+  .frame[data-cards="1"] .hand .hand-lane .hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card--s > *,
+  .frame[data-cards="1"] .hand .hand-lane .hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card__name { visibility: visible; }
+
+  /* the S card of the hand (cards.css `.cards-s`: frame, index corners, ring of a card that asks) */
+  .frame[data-cards="1"] .hand .hand-card.hand-card--s { --card-w: 100%; display: flex; flex-direction: column; gap: 4px; width: 100%; height: var(--hc-h); aspect-ratio: auto; padding: 26px 9px 22px; translate: 0 0; }
+  .frame[data-cards="1"] .hand .hand-card--s.is-asks { translate: 0 -6px; }
+  .frame[data-cards="1"] .hand .hand-card--s .hands-name { flex: none; display: -webkit-box; height: auto; max-height: 4.2em; font: var(--ork-type-button); -webkit-line-clamp: 3; line-clamp: 3; }
+  .frame[data-cards="1"] .hand .hand-card--s .hands-line { display: -webkit-box; flex: none; height: auto; max-height: 2.6em; margin: 0; padding: 0; border: 0; -webkit-line-clamp: 2; line-clamp: 2; white-space: normal; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+  .frame[data-cards="1"] .hand .hand-card--s .hands-asks { position: absolute; right: 8px; top: 7px; width: 18px; height: 18px; display: grid; place-items: center; clip-path: circle(50%); background: var(--ork-alert); color: var(--ork-on-ink); font: var(--ork-type-label); }
+  .frame[data-cards="1"] .hand .hand-card--s .hands-head { position: absolute; left: 8px; bottom: 6px; display: inline-flex; }
+  .frame[data-cards="1"] .hand .hand-card--s .hands-head .ork-race__head { width: auto; height: 16px; }
+  .frame[data-cards="1"] .hand .hand-card--s.is-slot > * { visibility: hidden; }
+  .frame[data-cards="1"] .hand .hand-card--s .cards-ix { color: var(--ork-ink-read); }
+  .frame[data-cards="1"] .hand .hand-card--s .hand-card__foot:empty { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .frame[data-cards="1"] .hand .hand-slot { transition: none; } }
+
+/* the person's tokens at the left of the hand's cards while a leader's table is open (cards/tables/parts.js `TokenTakes`; decisions §145) */
+.hand .tb-takes { pointer-events: auto; flex: none; display: flex; align-self: center; gap: var(--ork-3); padding-right: var(--ork-3); }

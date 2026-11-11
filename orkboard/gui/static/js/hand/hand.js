@@ -46,6 +46,9 @@ import { SetupBubble, SetupCard, setupNow } from "./setupcards.js";
 import { columnOn } from "../table/data.js";
 import { laidNow, layLine } from "../table/laying.js";
 import { said } from "./motion.js";
+import { cardsOn } from "../cards/on.js";
+import { TokenTakes } from "../cards/tables/parts.js";
+import { tokensOpen } from "../cards/tables/state.js";
 if (typeof document !== "undefined") {                         // the places' sheet (places.css), as every sheet loads its own
   const href = new URL("./places.css", import.meta.url).href;
   if (!document.querySelector(`link[href="${href}"]`)) {
@@ -126,6 +129,7 @@ export function Hand() {
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${!middle && html`<div class="hand-places"><div class=${sunk ? "hand-row is-sunk" : "hand-row"} inert=${sunk ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
+      ${cardsOn() && tokensOpen() && !bare && html`<${TokenTakes} />`}
       <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
       <div class="hand-end">${!bare && html`<${PlayDie} />`}${places}${pots}</div>
     </div></div>`}

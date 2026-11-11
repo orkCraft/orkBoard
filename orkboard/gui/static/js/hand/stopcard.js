@@ -32,6 +32,8 @@ import { Said } from "./sayonce.js";
 import { asksWords } from "./openwords.js";
 import { footCost } from "./waycost.js";
 import { StopWindow, hasWindow } from "./handwindow.js";
+import { cardsOn } from "../cards/on.js";
+import { HandFace, raceOfStop } from "../cards/handcards.js";
 
 /** The action's sign of a stop and its tone: the alert of a failure and of a sign-in, the question of a question, the check (or cross) of a result, else the sign of what is asked (a plan's page, a pick's picture, a to-do's flag). */
 export function actionOf(s) {
@@ -81,7 +83,7 @@ export const handsWords = (s) => `${s.card ? "a question" : "a card"}: ${s.full}
 /** The card face of a stop `s` (docs/specs/101 §4.5). `top`: the front card of its stack. `onPress`: the press. `dealt`: it came (motion.js `useHanded`: `{i, el, hold}`; `el` the box it flies from, none: it is dealt from under its place). `gone`: it left;
  *  `back`: the box it came from, when it was answered: it is played back there (spec 120 §6.10), else it crumbles where it lay (the shards are its children). */
 export function StopCard({ s, lit = false, slot = false, top = false, dealt = null, gone = false, back = null, onPress, onFocus, children }) {
-  const cost = costOf(s), head = headOf(s), element = s.node?.element || "", hue = s.node?.hue || element, ref = useRef(), from = handedName(s.key), plain = !!dealt && !dealt.el && !dealt.hold;
+  const on = cardsOn(), cost = costOf(s), head = headOf(s), element = s.node?.element || "", hue = s.node?.hue || element, ref = useRef(), from = handedName(s.key), plain = !!dealt && !dealt.el && !dealt.hold;
   useFlight(ref, dealt);
   useLayoutEffect(() => {                                            // answered: it flies back into where it came from (orkUI's `.ork-play`, its end the origin's middle)
     const el = ref.current, origin = gone && back && !reduced() ? boxIn(back) : null;
@@ -91,15 +93,16 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
     el.style.setProperty("--ork-play-y", `${v.y}px`);
     el.classList.add("ork-play");
   }, [gone]);
-  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-card--face${element ? ` el-${hue}` : ""}`, { asks: ["asks", "goal", "pick", "collide", "conflict"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
-        "is-slot": slot, "is-gone": gone, "ork-deal": plain })}
-      data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined} data-from=${from || undefined}
+  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop ${on ? "hand-card--s cards-s" : "hand-card--face"}${element ? ` el-${hue}` : ""}`, { asks: ["asks", "goal", "pick", "collide", "conflict"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
+        "is-slot": slot, "is-gone": gone, "ork-deal": plain, "is-asks": on && signalOf(s) === "alert" })}
+      data-race=${on ? raceOfStop(s) : undefined} data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined} data-from=${from || undefined}
       style=${dealt ? `--ork-deal-i:${dealt.i}` : undefined} aria-label=${`${labelOf(s)}${from ? `, from ${from}` : ""}`} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
+    ${on ? html`<${HandFace} s=${s} sign=${actionOf(s).sign} asks=${signalOf(s) === "alert"} head=${head} line=${footOf(s)} />` : html`
     <${CornerTop} rune=${{ name: element, hue, dim: !element }} kind=${actionOf(s).sign} signal=${signalOf(s)} />
     <span class="hand-card__name" title=${s.full || s.title}>${s.title || s.full}</span>
     ${hasWindow(s) ? html`<span class="hand-card__foot has-window" data-foot="window"><${StopWindow} s=${s} /></span>` : html`<span class="hand-card__foot">${footOf(s)}</span>`}
-    <${CornerFoot} who=${head || from ? { heads: [head], word: from ? `From ${from}` : "" } : null} much=${cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null} />
+    <${CornerFoot} who=${head || from ? { heads: [head], word: from ? `From ${from}` : "" } : null} much=${cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null} />`}
     ${children}
   </button>`;
 }
