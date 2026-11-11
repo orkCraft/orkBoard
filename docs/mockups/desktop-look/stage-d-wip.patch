@@ -1,0 +1,1214 @@
+diff --git a/orkboard/gui/static/js/frame/frame.css b/orkboard/gui/static/js/frame/frame.css
+index d8cd669..c9e3442 100644
+--- a/orkboard/gui/static/js/frame/frame.css
++++ b/orkboard/gui/static/js/frame/frame.css
+@@ -2,7 +2,7 @@
+    everything opened (decisions §142.6). Layout only: every colour, face and corner is orkUI's. */
+ .frame { --card-w: 144px; --col-w: calc(var(--card-w) * 1.25);      /* a lane a card and a quarter wide, room for a fan (decisions §167.7) */
+   --column-tuck: 13px;                                                /* how much of a face-down card lies under the window's left edge (spec 130 E.2, decisions §236.1; §251.4 made it 13 px): the deck and At work keep one right edge, 144 */
+-  --column-w: 160px;                                                  /* the Orkmaster's column, a width of its own (spec 130 E.1, §236.3; spec 147 B.1): the card's 144 and its gutters */
++  --column-w: clamp(216px, calc(100vw - 1064px), 288px);                                                  /* the Orkmaster's lane, a width of its own (goal 170 D, decisions §293.2): a post and its gutters: 288 px as the mockup docs/mockups/desktop-look/ draws it from 1336 px of window, narrower below (216 px at 1280) so the lanes keep their 144 px cards */
+   --cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr);   /* the lanes, then the tabs' end; lanes narrow when they don't fit, never a sideways scroll */
+   display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100dvh; min-width: 0; background: var(--ork-room); }
+ .frame-table { min-height: 0; min-width: 0; overflow: hidden; }
+diff --git a/orkboard/gui/static/js/table/column.css b/orkboard/gui/static/js/table/column.css
+index ed0b89d..93c475a 100644
+--- a/orkboard/gui/static/js/table/column.css
++++ b/orkboard/gui/static/js/table/column.css
+@@ -143,3 +143,23 @@
+ /* the goal's card whose question or failure is lifted in the hand (hand/answercards.js), ringed in its signal's colour: an outline, as a face-down card's back covers its inside (spec 158 F, decisions §270.1) */
+ .col-card[data-ringed] { z-index: 5; outline: 2px solid var(--ork-alert); outline-offset: -2px; }
+ .col-card[data-ringed="fails"] { outline-color: var(--ork-danger); }
++
++/* -- The Orkmaster's lane (goal 170 stage D, decisions §293.2; the mockup docs/mockups/desktop-look/ `.lane.om`): three parts one over the other, *Waits for you*, *Goals*, *At work*, each drawn only when it has a card; the cards are table/post.js's posts, whole, pinned, never a list. The lane scrolls
++   inside the column when its cards are taller than the window; every colour, face and corner is orkUI's (the post's own sheet is post.css). ---- */
++.col-lane { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-6); padding: var(--ork-5); overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
++@media (min-width: 760px) { .col-lane { padding-bottom: 56px; } }                                     /* the last card ends clear of the + card, which stands over the column's foot */
++.col-block { flex: none; display: flex; flex-direction: column; gap: var(--ork-4); min-width: 0; }
++.col-lab { margin: 0; display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-caption); font-size: 13px; line-height: 18px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ork-ink-muted); }
++.col-lab__dot { flex: none; width: 8px; height: 8px; background: var(--ork-party-orkmaster); clip-path: circle(50%); }
++.col-card--post { flex: none; position: relative; min-width: 0; }
++.col-card--post.is-dim { opacity: 0.6; }                                                           /* a potion hovered: the posts whose goal does not wait for its tool step back, never hidden (spec 138 A.2, lit.js) */
++.col-card--post.is-picked > .post-card { box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), inset 0 0 0 var(--ork-line) var(--ork-ink); }      /* one pick: the post's edge in the ink (spec 156 B.2) */
++.col-block > .post-card, .col-card--post > .post-card { width: 100%; }
++.col-lane .col-fan { margin-left: var(--ork-4); }                                                              /* the fan of the Orkmaster's hand: the backs in the lane's room, the one read lifted (fan.js) */
++.col-said { margin: 0; font: var(--ork-type-caption); font-size: 13px; line-height: 18px; color: var(--ork-ink-muted); overflow-wrap: anywhere; }      /* under the fan: *Being read: <goal>* */
++.col-said b { color: var(--ork-ink); font-weight: 600; }
++.col-said.is-asks { color: var(--ork-alert); }
++.col-said--asked { color: var(--ork-ink-muted); }
++.col-bar { height: 4px; background: var(--ork-frame); overflow: hidden; }                           /* a goal at work's live bar, in its party's colour (the post's `--party-hue`); a failure in the danger's */
++.col-bar > i { display: block; height: 100%; background: var(--party-hue, var(--ork-ink-muted)); }
++.col-bar.is-failed > i { background: var(--ork-danger); }
+diff --git a/orkboard/gui/static/js/table/column.js b/orkboard/gui/static/js/table/column.js
+index 5fe403e..b443a73 100644
+--- a/orkboard/gui/static/js/table/column.js
++++ b/orkboard/gui/static/js/table/column.js
+@@ -1,8 +1,9 @@
+-// The Orkmaster's column (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part B, decisions §206.2–§206.3; mockup docs/mockups/goal-card/; as spec 156 B changed it, decisions §261.1, §261.5): pinned at the window's left at the wide width (frame/frame.js), the table's height, the same on every tab, off the table on
+-// orkUI's room as the hand is. **Its head is the Orkmaster's tab** — the crown and *The Orkmaster*, `role="tab"`, open at first, underlined when open; pressed again, the open tab's head asks (ask.js `data-ask-head`) — and under it three piles of the project's goals (piles.js):
+-// *In analysis*, *To review*, *At work · later*. **What a press does**: any card, face down too, picks its goal (`picked`, frame/state.js: one pick across the window), the same card pressed again puts the pick away, as Esc, a press on an empty place of the column and the browser's back do (state.js); a pile hovered or focused fans
+-// its backs, so each is reached. A picked card of To review lifts **Start now** (`ideas.confirm`) and **Hold** (`ideas.ripe_hold`: the wait held, it starts when the person presses Start now), a put-off one **Start now** and **Back to review** (`ideas.ripe_back`), an agreed decision's
+-// **Change…** and **Start now**, a held one's **Talk** — beside the column, not over the pane (part C draws them on the table through the Orkmaster); *Next* and *Remove* of a goal are in its menu (dropgoal.js). *Tonight* waits for a host command that puts an agreed goal off to the night (none yet). The moves between piles (and a goal's start) are colmotion.js's.
++// The Orkmaster's lane (goal 170 stage D, decisions §293.2 on §206; the mockup docs/mockups/desktop-look/ `.lane.om`; before: docs/specs/128 B, 147 B, 168 B): pinned at the window's left at the wide width (frame/frame.js), the table's height, the same on every tab,
++// off the table on orkUI's room as the hand is, **whole cards, no list, no count of what waits**. **Its head is the Orkmaster's tab** — the project's name, `role="tab"`, open at first, underlined when open; pressed again, the open tab's head asks (ask.js `data-ask-head`) — and under it
++// three parts, each drawn only when it has a card: **Waits for you** (what the person's word starts: a spec that starts by itself at a clock time, read from `ideas.feed`'s `waits` — its clock row and its acts; a goal whose spec is ready, with *Start now* and *Hold*; a goal held, with *Start now* and
++// *Back to review*; each the command it sent before: `ideas.start_now`, `ideas.confirm`, `ideas.ripe_hold`, `ideas.ripe_back`), **Goals** (the Orkmaster's hand, a fan of backs: *Being read: <goal>* under it) and **At work** (each goal at work one post with its live bar in its party's colour; a goal put off to the night too, with *Start now*).
++// Every card but a back is a post drawn by table/post.js. **What a press does**: a post's goal, or a back, picks its goal (`picked`, frame/state.js: one pick across the window; the plan opens as today), the same pressed again puts the pick away, as Esc, a press on an empty place of the lane and the browser's
++// back do (state.js); a back of the fan, a spec being written or one proposed lifts its choices beside the lane (*Change…*, *Start now*, *Talk*, the goal's menu). Nothing here sorts: the order is stages.js's (`pilesOf`) and the reader's. The moves between parts (and a goal's start) are colmotion.js's.
+ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+ import { html, cls } from "../html.js";
+ import { Elem, Head, Icon } from "../orkui.js";
+@@ -13,10 +14,15 @@ import { board } from "../board/store.js";
+ import { openTabOf, partiesAll, partiesNow, mapName, waitRuns } from "./data.js";
+ import { askOpen, closeAsk, desk, openAsk } from "./ask.js";
+ import { GoalMenu } from "./dropgoal.js";
+-import { liftDecision } from "../hand/state.js";
++import { liftDecision, litTool, hatched } from "../hand/state.js";
++import { cardCost } from "../hand/cost.js";
+ import { Said } from "../hand/sayonce.js";
+-import { Pile, PILES, WORK_SHOWN, atWorkWords, lookAt, nextWords, pilesOf, underOf, writing, writingWords } from "./piles.js";
+-import { giveWay } from "./giveway.js";
++import { ACTIVE, failed, lookAt, night, pilesOf, writing } from "./stages.js";
++import { sayOf, tasksCount, underOf } from "./piles.js";
++import { defaultTool, waitTool } from "./lit.js";
++import { Fan } from "./fan.js";
++import { GoalLine, PostCard, PostHead, Wait, whoOf } from "./post.js";
++import { useWaits } from "./feedwaits.js";
+ import { useColumnMotion } from "./colmotion.js";
+ import { moodOf } from "./moods.js";
+ import { holdWords, offWords, waitsWords } from "./holdwords.js";
+@@ -110,34 +116,71 @@ function useBeside(root, key, sel) {
+     const host = root.current, el = host?.querySelector(sel);
+     if (!host || !el) return;
+     const h = host.getBoundingClientRect(), r = el.getBoundingClientRect();
+-    setAt(`left:${Math.round(h.width + 8)}px;top:${Math.max(0, Math.round(Math.min(r.top - h.top, h.height - 160)))}px`);
++    setAt(`left:${Math.round(h.width + 8)}px;top:${Math.max(0, Math.round(Math.min(r.top - h.top, h.height - 300)))}px`);
+   }, [key]);
+   return at;
+ }
+ 
+-/** *At work · later* gives way to the window and the column never scrolls (spec 147 B.5, decisions §251.4): the room the pile may take is measured (its box is whatever the fan and the deck leave under their own, never what the pile holds), and `giveWay` (giveway.js) says how far each card behind
+- *  lies below the front one, or that the pile sinks under the hand's rim. Measured again whenever the box changes (a resized window, a goal moved from one pile to another). `laid`: the piles are drawn. */
+-function useGiveWay(root, count, laid) {
+-  const [way, setWay] = useState(null);
+-  useLayoutEffect(() => {
+-    const room = laid ? root.current?.querySelector(".col-room") : null;
+-    if (!room) { setWay(null); return undefined; }
+-    const measure = () => {
+-      const next = giveWay({ room: room.clientHeight, front: room.querySelector(".col-card--up")?.offsetHeight || 202, behind: Math.max(0, Math.min(count, WORK_SHOWN) - 1) });
+-      setWay((was) => (was && was.sunk === next.sunk && was.push === next.push && was.steps.join() === next.steps.join() ? was : next));
+-    };
+-    measure();
+-    const watch = new ResizeObserver(measure);
+-    watch.observe(room);
+-    return () => watch.disconnect();
+-  }, [count, laid]);
+-  return way;
++
++const FAN_ROOM = 184;                                                                                      // the fan's width in the lane (px; the narrowest lane, 216 px, less its padding): the backs lie up to 32 px apart (fan.js `stepOf`)
++const waitsYou = (n) => !waitRuns(n) && (!!n.asks_you || n.state === "asks");                                // a question or the decision to confirm waits for the person
++const own = (n) => ({ dim: !!litTool.value && waitTool(n, defaultTool()) !== litTool.value, hatch: { onPointerEnter: () => { hatched.value = cardCost(n); }, onPointerLeave: () => { hatched.value = null; }, onFocus: () => { hatched.value = cardCost(n); }, onBlur: () => { hatched.value = null; } } });      // a potion hovered dims what does not wait for its tool; a card hovered hatches its next step off its tool's potion (spec 138 A.2, A.4)
++const leaderOf = (n) => (whoOf(n.goal).g ? n.goal : ORKMASTER);                                            // the party a goal at work is drawn under; the Orkmaster's for a goal no party holds
++
++/** A part's label: a dot in the Orkmaster's colour and its words. */
++const Label = ({ id, children }) => html`<p class="col-lab" data-lab=${id}><span class="col-lab__dot" aria-hidden="true"></span>${children}</p>`;
++
++/** What a goal at work does now, for the line under its head: held, put off to the night, a task failed, waiting for the person, a question passed on, the task at work, else *At work*. */
++function nowOf(n, mark) {
++  const asked = askedWords(n.slug), live = (n.tasks || []).find((t) => ["running", "testing", "picking", "failed"].includes(t.state));
++  if (mark === "hold" && !failed(n)) return "Held";
++  if (failed(n)) return "A task failed";
++  if (n.asks_you) return "Waits for you";
++  return asked || (live ? `Now: ${live.short || live.title}` : "At work");
++}
++
++/** A goal whose spec is ready, or held, or put off to the night: a post of the Orkmaster's with only its own acts. A ready one says *Start now* and *Hold*, a held one *Start now* and *Back to review*, a put-off one *Start now*; each the command it sent before (a spec made waits for its look: `ideas.start_now`).
++ *  `onPick`: the goal's name pressed. */
++function GoalWait({ n, off, onPick }) {
++  const [busy, setBusy] = useState(false), look = lookAt(n), name = n.short || n.title || "", asks = !!n.asks_you && !failed(n);     // a goal that asks the person is ringed in the alert's yellow with its sign beside the ring
++  const run = (cmd, args) => async () => { setBusy(true); try { await act(cmd, args || { idea: n.slug }); } finally { setBusy(false); } };
++  const sub = off === "held" ? "held · waits for your word" : off === "night" ? `put off · tonight ${night()}` : look ? `its spec · starts by itself at ${look}` : "its spec is ready";
++  return html`<div class=${cls("col-card col-card--post", { "is-picked": picked.value === n.slug, "is-off": !!off })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-pile=${off ? "work" : "review"} data-state=${n.state} data-off=${off || undefined}>
++    <${PostCard} leader=${ORKMASTER} kind="wait" asks=${asks} label=${`${name}: ${sayOf(n, "review", off, true)}`} data=${{ "data-wait": off || "ready", "data-goal": n.slug }}>
++      <${PostHead} leader=${ORKMASTER} sub=${sub} asks=${asks} />
++      <${GoalLine} slug=${n.slug} name=${name} onPick=${onPick} />
++      ${(holdWords(n) || offWords(n)) && html`<p class="post-card__sub" data-hold=${n.slug}>${[holdWords(n), offWords(n)].filter(Boolean).join(" · ")}</p>`}
++      <div class="post-card__acts">
++        <button type="button" class="ork-btn primary" data-now=${n.slug} disabled=${busy} title="Its sections are written now" onClick=${look ? run("ideas.start_now", { slug: n.slug }) : run("ideas.confirm")}>Start now</button>
++        ${look || off === "night" ? null : off === "held" ? html`<button type="button" class="ork-btn" data-back=${n.slug} disabled=${busy} title="Its wait begins again" onClick=${run("ideas.ripe_back")}>Back to review</button>`
++          : html`<button type="button" class="ork-btn" data-later=${n.slug} disabled=${busy} title="Nothing starts it until you press Start now" onClick=${run("ideas.ripe_hold")}>Hold</button>`}
++        <${GoalMenu} slug=${n.slug} where="inline" />
++      </div>
++    </${PostCard}>
++  </div>`;
++}
++
++/** A goal at work: one post with its live bar in its party's colour (the tasks done of its tasks, never said as a number); its name pressed opens its plan as today. */
++function WorkPost({ n, mark, onPick }) {
++  const bad = failed(n), asks = !!n.asks_you && !bad, tasks = tasksCount(n), name = n.short || n.title || "", leader = leaderOf(n), o = own(n);
++  return html`<div class=${cls("col-card col-card--post", { "is-picked": picked.value === n.slug, "is-dim": o.dim })} ...${o.hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-pile="work" data-state=${n.state}>
++    <${PostCard} leader=${leader} kind="work" asks=${asks} label=${`${name}: ${sayOf(n, "work", "")}`} data=${{ "data-work": n.slug }}>
++      <${PostHead} leader=${leader} sub=${nowOf(n, mark)} asks=${asks} />
++      <${GoalLine} slug=${n.slug} name=${name} onPick=${onPick} />
++      <div class=${cls("col-bar", { "is-failed": bad })} role="progressbar" aria-label="Tasks finished" aria-valuemin="0" aria-valuemax=${tasks?.total || 0} aria-valuenow=${tasks?.done || 0}><i style=${`width:${tasks ? Math.round((tasks.done / tasks.total) * 100) : 0}%`}></i></div>
++    </${PostCard}>
++  </div>`;
++}
++
++/** The line under the fan: the Orkmaster's own words for its first goal (piles.js `underOf`), *reading* said *Being read*: *Being read: **Round timer***; a spec being written when the hand holds no other goal; else the wait for the reset (holdwords.js). */
++function lineOf(analysis, written) {
++  const said = underOf(analysis) || (written[0] && !analysis.length ? `Being written: ${written[0].n.short || written[0].n.title}` : "") || waitsWords(analysis.map((x) => x.n));
++  return said.startsWith("reading: ") ? `Being read: ${said.slice(9)}` : said;
+ }
+ 
+ export function Column() {
+-  const root = useRef(), nodes = mapData.value?.nodes || [], piles = pilesOf(nodes), parties = partiesNow(), all = partiesAll(), [lift, setLift] = useState(null);
++  const root = useRef(), nodes = mapData.value?.nodes || [], piles = pilesOf(nodes), parties = partiesNow(), all = partiesAll(), [lift, setLift] = useState(null), [waits, reload] = useWaits(), laid = laidNow();
+   useColumnMotion(root);
+-  const laid = laidNow(), way = useGiveWay(root, piles.work.length, laid);
+   const gone = lift?.kind === "acts" && (!nodes.some((n) => n.slug === lift.slug) || picked.value !== lift.slug);                 // the choices go with the pick
+   useEffect(() => { if (gone) setLift(null); });
+   useEffect(() => {                                                                    // Esc or a press away puts the lifted thing away
+@@ -148,25 +191,37 @@ export function Column() {
+     document.addEventListener("pointerdown", away, true);
+     return () => { removeEventListener("keydown", key, true); document.removeEventListener("pointerdown", away, true); };
+   }, [lift?.kind, lift?.slug]);
+-  const press = (n, pile, off) => {                                                                          // any card picks its goal, face down too; the same card again puts the pick away (state.js)
+-    const was = picked.value === n.slug, acts = !(pile === "work" && !off);                                 // a card at work has no choices; every other picked card has its choices (and its menu) beside it
+-    setLift(!was && acts ? { kind: "acts", slug: n.slug, off, pile } : null);
++  const press = (n, pile, off) => {                                                                          // a back picks its goal; the same one again puts the pick away (state.js); a back has its choices beside it
++    const was = picked.value === n.slug;
++    setLift(!was ? { kind: "acts", slug: n.slug, off, pile } : null);
+     pick(n.slug);
+   };
+-  useEffect(() => {                                                                                          // a press on an empty place of the column puts the pick away
+-    const away = (e) => { if (picked.value && e.target.matches?.(".col, .col-scroll, .col-sec, .col-room, .col-pile, .col-plab, .col-under")) pick(picked.value); };
++  useEffect(() => {                                                                                          // a press on an empty place of the lane puts the pick away
++    const away = (e) => { if (picked.value && e.target.matches?.(".col, .col-lane, .col-block, .col-lab, .col-said")) pick(picked.value); };
+     const host = root.current;
+     host?.addEventListener("click", away);
+     return () => host?.removeEventListener("click", away);
+   }, []);
+   const place = useBeside(root, `${lift?.kind}:${lift?.slug}`, `.col-card[data-goal="${lift?.slug}"]`);
+-  const behind = piles.analysis.find(({ n }) => askedWords(n.slug));                                          // a goal asked of another leader: its line is the pile's (a back of the hand has no room to say it)
+-  const wrote = writingWords(piles.review), next = nextWords(piles.review);                                  // Specs: what is being written, then (a second line) the next to start by itself
+-  const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: wrote || next, work: atWorkWords(piles.work) }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
++  const fed = new Set(waits.map((w) => w.goal)), written = piles.review.filter(({ n }) => writing(n) || n.proposed), ready = piles.review.filter(({ n }) => !writing(n) && !n.proposed && !fed.has(n.slug));
++  const held = piles.work.filter((x) => x.off === "held"), later = piles.work.filter((x) => x.off === "night"), working = piles.work.filter((x) => !x.off);
++  const hand = [...piles.analysis, ...written.map((x) => ({ ...x, pile: "review" }))], first = hand[0]?.n, asked = piles.analysis.find(({ n }) => askedWords(n.slug));
++  const line = lineOf(piles.analysis, written), at = line.indexOf(": "), item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
+   return html`<div class="col" ref=${root} data-col="1">
+     <${Top} parties=${parties} all=${all} />
+     <${SetupBubble} />
+-    ${laid && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : id === "review" && wrote ? next : ""} onPress=${press} way=${id === "work" ? way : null} />`)}</div>`}
++    ${laid && html`<div class="col-lane" data-lane="orkmaster">
++      ${waits.length + ready.length + held.length > 0 && html`<section class="col-block" data-part="waits" aria-label="Waits for you"><${Label} id="waits">Waits for you</${Label}>
++        ${waits.map((w) => html`<div key=${`${w.kind}:${w.goal}`} class=${cls("col-card col-card--post", { "is-picked": picked.value === w.goal })} data-goal=${w.goal} data-about=${`idea:${w.goal}`} data-pile="review"><${Wait} w=${w} onPick=${pick} onDone=${reload} /></div>`)}
++        ${ready.concat(held).map(({ n, off }) => html`<${GoalWait} key=${n.slug} n=${n} off=${off} onPick=${pick} />`)}</section>`}
++      ${hand.length > 0 && html`<section class="col-block" data-part="goals" aria-label="Goals"><${Label} id="goals">Goals</${Label}>
++        <${Fan} items=${hand} reads=${ACTIVE.includes(first.state)} said=${(n) => `${n.title}: ${sayOf(n, "analysis")}`} line=${(n) => sayOf(n, "analysis")} own=${own} waits=${waitsYou} picked=${picked.value} onPress=${press} room=${FAN_ROOM} />
++        ${line && html`<p class=${cls("col-said", { "is-asks": line === "waits for you" })} data-under="analysis" title=${line}>${at < 0 ? line : html`${line.slice(0, at + 2)}<b>${line.slice(at + 2)}</b>`}</p>`}
++        ${asked && html`<p class="col-said col-said--asked" data-under-asked="analysis">${askedWords(asked.n.slug)}</p>`}</section>`}
++      ${working.length + later.length > 0 && html`<section class="col-block" data-part="work" aria-label="At work"><${Label} id="work">At work</${Label}>
++        ${working.map(({ n, mark }) => html`<${WorkPost} key=${n.slug} n=${n} mark=${mark} onPick=${pick} />`)}
++        ${later.map(({ n, off }) => html`<${GoalWait} key=${n.slug} n=${n} off=${off} onPick=${pick} />`)}</section>`}
++    </div>`}
+     <${Passing} />
+     ${item && !gone && html`<${Acts} n=${item} off=${lift.off} pile=${lift.pile} place=${place} close=${() => setLift(null)} />`}
+   </div>`;
+diff --git a/orkboard/gui/static/js/table/fan.js b/orkboard/gui/static/js/table/fan.js
+index cbae921..dc09de3 100644
+--- a/orkboard/gui/static/js/table/fan.js
++++ b/orkboard/gui/static/js/table/fan.js
+@@ -8,13 +8,13 @@ import { everBack } from "./backcard.js";
+ import { movesOn } from "./lit.js";
+ import { backSpec, withPreview } from "./preview.js";
+ 
+-export const BACK_W = 56, FAN_W = 144, MAX_STEP = 16, MIN_STEP = 6, SINK = 0.7;
++export const BACK_W = 56, FAN_W = 144, MAX_STEP = 16, MIN_STEP = 6, SINK = 0.7, WIDE_STEP = 32;      // WIDE_STEP: the Orkmaster's lane (goal 170, decisions §293.2) gives the fan more room than the old column's 144 px
+ const OLD = { turn: 1.5, max: 44, min: 10 };
+ 
+-/** The step between two backs of a fan of `n` (px): 16 while they are few, `88 / (n - 1)` as they grow so the fan stays within the column (14 at seven, 12 at eight), never under 6. `legacy`: 44, never under 10. */
+-export function stepOf(n, legacy = false) {
+-  const max = legacy ? OLD.max : MAX_STEP, min = legacy ? OLD.min : MIN_STEP;
+-  return n < 2 ? 0 : Math.max(min, Math.min(max, Math.floor((FAN_W - BACK_W) / (n - 1))));
++/** The step between two backs of a fan of `n` (px): 16 while they are few, `88 / (n - 1)` as they grow so the fan stays within the column (14 at seven, 12 at eight), never under 6. `legacy`: 44, never under 10. `room`: the width the lane gives the fan; over 144 the backs lie up to 32 apart. */
++export function stepOf(n, legacy = false, room = FAN_W) {
++  const max = legacy ? OLD.max : room > FAN_W ? WIDE_STEP : MAX_STEP, min = legacy ? OLD.min : MIN_STEP;
++  return n < 2 ? 0 : Math.max(min, Math.min(max, Math.floor((room - BACK_W) / (n - 1))));
+ }
+ 
+ /** The turn between two neighbours (degrees): 6 while there are few, 5 up to seven, 4 after. */
+@@ -27,11 +27,11 @@ export const turnOf = (i, n, legacy = false) => Number(((i - (n - 1) / 2) * turn
+ export const sinkOf = (i, n, legacy = false) => (legacy ? 0 : Number((((i - (n - 1) / 2) ** 2) * SINK).toFixed(1)));
+ 
+ /** One back of the hand. `reading`: the goal being read (lifted, its rune glowing); `asks`: it waits for the person (the frame in the alert); `mark`: "hold" (a pause) or "later" (a moon) on its back; `words`: what its title and label say. */
+-function Back({ n, i, count, legacy, reading, asks, mark, words, line, dim, hatch, on, onPress }) {
++function Back({ n, i, count, legacy, pile, reading, asks, mark, words, line, dim, hatch, on, onPress }) {
+   const el = n.element || "", hue = n.hue || el;
+   everBack.add(n.slug);                                                                                    // seen face down: its turn up and its flight to a lane are played once (backcard.js)
+-  return html`<button type="button" class=${cls("ork-card col-card col-card--down col-card--fan", { "is-reading": reading, "ork-picked": on, asks, "is-dim": dim })} ...${withPreview(hatch || {}, backSpec(n.title, line, n))} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="analysis" data-down="1" data-mark=${mark || undefined}
+-    style=${`--i:${i};--r:${turnOf(i, count, legacy)}deg;--z:${i + 1};--sink:${sinkOf(i, count, legacy)}px`} aria-label=${words} aria-pressed=${String(on)} onClick=${() => onPress(n, "analysis")}>
++  return html`<button type="button" class=${cls("ork-card col-card col-card--down col-card--fan", { "is-reading": reading, "ork-picked": on, asks, "is-dim": dim })} ...${withPreview(hatch || {}, backSpec(n.title, line, n))} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile=${pile} data-down="1" data-mark=${mark || undefined}
++    style=${`--i:${i};--r:${turnOf(i, count, legacy)}deg;--z:${i + 1};--sink:${sinkOf(i, count, legacy)}px`} aria-label=${words} aria-pressed=${String(on)} onClick=${() => onPress(n, pile)}>
+     <span class=${cls("ork-card-back small col-fan__back", { "is-ringed": on })} aria-hidden="true"></span>
+     <span class="col-fan__seal" aria-hidden="true"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${reading && movesOn(n.slug)} still=${false} /></span>
+     ${mark && html`<span class="col-fan__held" aria-hidden="true"><${Sign} name=${mark === "later" ? "moon" : "pause"} /></span>`}
+@@ -39,12 +39,12 @@ function Back({ n, i, count, legacy, reading, asks, mark, words, line, dim, hatc
+ }
+ 
+ /** The fan: `items` are the pile's `{n, mark}` in the Orkmaster's order, `reads` whether the first is being read (the pile's `ACTIVE`), `said(n)` a card's words for its title and label, `own(n)` its dim and hatch (piles.js `lit`). */
+-export function Fan({ items, reads, said, line = () => "", own, waits, picked, onPress, legacy = false }) {
++export function Fan({ items, reads, said, line = () => "", own, waits, picked, onPress, legacy = false, room = FAN_W }) {
+   const count = items.length;
+-  return html`<div class="col-fan" style=${`--step:${stepOf(count, legacy)}px`} data-count=${count} role="group" aria-label="The Orkmaster's hand: press to read them in order">
+-    ${items.map(({ n, mark }, i) => {
++  return html`<div class="col-fan" style=${`--step:${stepOf(count, legacy, room)}px${room > FAN_W ? `;width:${room}px` : ""}`} data-count=${count} role="group" aria-label="The Orkmaster's hand: press to read them in order">
++    ${items.map(({ n, mark, pile }, i) => {
+       const o = own(n), m = mark ?? (n.held_for === "hold" ? "hold" : "");
+-      return html`<${Back} key=${n.slug} n=${n} i=${i} count=${count} legacy=${legacy} reading=${reads && i === 0} asks=${waits(n)} mark=${m} words=${said(n)} line=${line(n)} dim=${o.dim} hatch=${o.hatch} on=${picked === n.slug} onPress=${onPress} />`;
++      return html`<${Back} key=${n.slug} n=${n} i=${i} count=${count} legacy=${legacy} pile=${pile || "analysis"} reading=${reads && i === 0} asks=${waits(n)} mark=${m} words=${said(n)} line=${line(n)} dim=${o.dim} hatch=${o.hatch} on=${picked === n.slug} onPress=${onPress} />`;
+     })}
+   </div>`;
+ }
+diff --git a/orkboard/gui/static/js/table/feedwaits.js b/orkboard/gui/static/js/table/feedwaits.js
+new file mode 100644
+index 0000000..0f215ab
+--- /dev/null
++++ b/orkboard/gui/static/js/table/feedwaits.js
+@@ -0,0 +1,17 @@
++// What waits for the person, read from the host's `ideas.feed` (realm/board_feed.py `waits`; goal 170 stage D, decisions §293.2): asked **once a refresh of the Board** by the page (no new host command), the specs that start by themselves at a clock time
++// (`kind` "starts": its goal, its leader, its clock time and its acts, each the command the reader names). The goals done and waiting for main (`kind` "main") are the discard's and are not read here. Nothing is sorted or counted: the reader's order is kept.
++import { useEffect, useRef, useState } from "preact/hooks";
++import { command } from "../link.js";
++import { currentProject } from "../shell/projects.js";
++import { mapData } from "../shell/store.js";
++
++/** `[waits, reload]`: the reader's *starts* waits in its order, read again whenever the Board is read again (`mapData`) or the project changes; a refusal keeps what was drawn. */
++export function useWaits() {
++  const [got, setGot] = useState([]), n = useRef(0), project = currentProject.value?.path || "", board = mapData.value;
++  const load = () => {
++    const k = ++n.current;
++    command("ideas.feed", {}, true).then((r) => { if (k === n.current) setGot((Array.isArray(r?.waits) ? r.waits : []).filter((w) => w.kind === "starts")); }).catch(() => {});
++  };
++  useEffect(() => { load(); }, [project, board]);
++  return [got, load];
++}
+diff --git a/tests/test_card_life_browser.py b/tests/test_card_life_browser.py
+index 2d5a57a..8356524 100644
+--- a/tests/test_card_life_browser.py
++++ b/tests/test_card_life_browser.py
+@@ -181,7 +181,7 @@ def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_col
+         assert card.locator(".ork-plus, .ork-icon").count() == 0, "no +: the + card alone keeps that"
+         colours = card.evaluate("e => { const c = getComputedStyle(e); const action = getComputedStyle(document.documentElement).getPropertyValue('--ork-action').trim(); const probe = document.createElement('i'); probe.style.color = action; document.body.appendChild(probe); const a = getComputedStyle(probe).color; probe.remove(); return [c.borderTopColor, c.color, c.backgroundColor, a]; }")
+         assert colours[3] not in colours[:3], f"never the + card's green: {colours}"
+-        assert pg.locator('.frame-column .col-sec[data-pile="analysis"] .col-card').count() == 1 and pg.locator(".frame-table .table-card--back").count() == 0, "in the column, not the Orkmaster's lane"
++        assert pg.locator('.frame-column .col-card[data-pile="analysis"]').count() == 1 and pg.locator(".frame-table .table-card--back").count() == 0, "in the column, not the Orkmaster's lane"
+         assert pg.locator(".hand .hand-plus").count() == 1, "a new + card lies at the lane's end"
+         shot(pg, "send-landed")
+     finally:
+diff --git a/tests/test_column_browser.py b/tests/test_column_browser.py
+index ea8f5c3..e48a17e 100644
+--- a/tests/test_column_browser.py
++++ b/tests/test_column_browser.py
+@@ -1,7 +1,16 @@
+-"""Spec 128 part B (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md, decisions §206.2–§206.3) as spec 147 part B changed it (docs/specs/147-one-card-four-corners.md, decisions §251.3–§251.4; mockup docs/mockups/card-ratio/), in a real browser against a stub host: the
+-Orkmaster's column, 160 px, pinned at the window's left, its head the Orkmaster's tab (open at first, underlined, the tabs at the top the leaders' alone), its three piles by the goals' states (In analysis the Orkmaster's hand, a near-straight fan of 56 x 78 backs with the goal being read lifted;
+-To review a squared deck of backs on their side, its ring the wait, the next to start named; At work · later standing cards read by their four corners), what a press does (any card, a back too, picks its goal and the same card again puts the pick away; Next and Remove are in the goal's menu; a card of
+-To review lifts Start now and Hold, a put-off one Start now and Back to review), the foot of each card behind the front one, a column that never scrolls and gives way to a short window (giveWay), the moves between piles, and the phone (under 760 px: no column, the Orkmaster's tab and lane as they were)."""
++"""Goal 170 stage D (docs/specs/170-the-desktop-in-the-feeds-look.md, decisions §293.2 on §206; the mockup docs/mockups/desktop-look/ `.lane.om`), in a real browser against a stub host: the Orkmaster's lane, 216 px at 1280 (288 from 1352), pinned at the window's left, its head the
++Orkmaster's tab (open at first, underlined; the tabs at the top the leaders' alone) and under it three parts, each drawn only when it has a card, whole cards drawn by table/post.js, no list, no count: **Waits for you** (a spec that starts by itself at a clock
++time, read from `ideas.feed`'s `waits`, with its clock row and its acts; a goal whose spec is ready with *Start now* and *Hold*; a goal held with *Start now* and *Back to review*), **Goals** (the Orkmaster's hand, a fan of backs, *Being read: <goal>*) and
++**At work** (each goal at work a post with its live bar in its party's colour; one put off to the night with *Start now*); what a press does (a back or a post's goal picks its goal, the same again puts the pick away); the moves between parts; and the phone
++(under 760 px: no column, the Orkmaster's tab and lane as before).
++
++The cases of the three piles this file held before goal 170 D, and the case that now holds each act:
++- the deck squared three pixels apart, the standing cards' foot, a card hovered sliding out (test_the_deck_is_squared_...): gone with the piles; the posts are whole and none lies over another: test_the_lane_reads_waits_for_you_goals_and_at_work_...;
++- a card of To review lifts Start now and Hold, a put-off one Start now and Back to review (two cases): test_a_ready_spec_is_a_post_with_start_now_and_hold_... and test_a_held_goal_is_a_post_with_start_now_and_back_to_review_...;
++- a face-up card picks its goal (test_a_face_up_card_picks_...): test_a_goal_at_work_is_a_post_with_its_live_bar_...;
++- a standing card's four corners and its foot row of 26 px (test_a_standing_card_has_its_four_corners_...): the same test (a post's head, its goal and its bar; the corners are the phone menu's and the old piles'), and tests/test_post_browser.py for the post itself;
++- a goal agreed moves from In analysis to To review and At work (test_a_goal_agreed_moves_...): test_a_goal_agreed_moves_from_the_fan_to_waits_for_you_and_then_to_at_work.
++"""
+ from __future__ import annotations
+ 
+ import datetime as dt
+@@ -61,8 +70,47 @@ def open_column(gui, width="wide", host=None):
+     return pg, host, log
+ 
+ 
++def look_at(minutes=60):
++    """`look_until` (epoch seconds) of a spec that starts by itself in `minutes`, and its local clock time as the page says it."""
++    at = dt.datetime.now() + dt.timedelta(minutes=minutes)
++    return at.timestamp(), f"{at:%H:%M}"
++
++
++class LaneHost(ColumnHost):
++    """The Orkmaster's lane with every part: a spec that starts by itself at a clock time (`look`: its wait is `ideas.feed`'s), two goals whose spec is ready, one held, one put off to the night, one at work with its first task done of two, and the hand's five backs.
++    `ideas.feed` is asked for its `waits`; it says the starts of the Board's rows as realm/board_feed.py does."""
++
++    def __init__(self):
++        super().__init__()
++        until, self.clock = look_at(60)
++        self.nodes.append(node("look", "tech", "Leaderboard is ready", "table", state="plan", element="void", agreed=True, look_until=until, back=back()))
++        self.nodes[[n["slug"] for n in self.nodes].index("music")]["tasks"] = [task("m1", "Make the loop", "merged"), task("m2", "Mix it", "running", head=head("dryad", "design"))]
++        self.feeds = 0
++
++    def waits(self):
++        return [{"kind": "starts", "goal": n["slug"], "short": n["short"], "title": n["title"], "party": n["goal"], "leader": "orkmaster", "at": dt.datetime.fromtimestamp(n["look_until"]).astimezone().isoformat(timespec="seconds"),
++                 "acts": [{"act": "change_spec", "command": "ideas.spec_change", "args": {"idea": n["slug"]}}, {"act": "start_now", "command": "ideas.start_now", "args": {"slug": n["slug"]}}]}
++                for n in self.nodes if n.get("look_until") and n["state"] == "plan"]
++
++    def handle(self, name, a):
++        if name == "ideas.feed":
++            self.feeds += 1
++            self.log.append((name, a))
++            return {"since": None, "heads": [], "waits": self.waits(), "posts": [], "seen": None}
++        if name in ("ideas.spec_change", "ideas.start_now"):
++            self.log.append((name, a))
++            return self.bump({"ok": True})
++        return super().handle(name, a)
++
++
++def open_lane(gui, width="wide", host=None):
++    pg, host, log = open_column(gui, width=width, host=host or LaneHost())
++    pg.wait_for_selector('.col-card[data-goal="look"]', timeout=WAIT_MS)
++    return pg, host, log
++
++
+ def goals(pg, pile):
+-    return pg.eval_on_selector_all(f'.col-sec[data-pile="{pile}"] .col-card', "els => els.map((e) => e.dataset.goal)")
++    return pg.eval_on_selector_all(f'.frame-column .col-card[data-pile="{pile}"]', "els => els.map((e) => e.dataset.goal)")
+ 
+ 
+ def test_the_column_lies_left_of_the_table_the_table_height_and_its_head_is_the_orkmasters_tab_open_at_first(gui):
+@@ -71,7 +119,7 @@ def test_the_column_lies_left_of_the_table_the_table_height_and_its_head_is_the_
+         col = pg.locator(".frame-column")
+         col.wait_for(timeout=WAIT_MS)
+         c, t, h = col.bounding_box(), pg.locator(".frame-table").bounding_box(), pg.locator(".frame-hand").bounding_box()
+-        assert c["x"] == 0 and c["x"] + c["width"] <= t["x"] + 1 and abs(c["width"] - 160) <= 1, ("spec 147 B.1: 160 px", c, t)
++        assert c["x"] == 0 and c["x"] + c["width"] <= t["x"] + 1 and abs(c["width"] - 216) <= 1, ("goal 170 D: 216 px at 1280 (288 from 1352)", c, t)
+         assert abs(c["height"] - t["height"]) <= 1 and c["y"] + c["height"] <= h["y"] + 1, "the table's height, the hand under both"
+         assert h["x"] == 0 and h["width"] >= c["width"] + t["width"] - 1
+         tab = col.get_by_role("tab")
+@@ -93,19 +141,47 @@ def test_the_column_lies_left_of_the_table_the_table_height_and_its_head_is_the_
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_the_three_piles_hold_the_goals_by_their_states_and_a_goal_lies_in_one(gui):
+-    pg, host, log = open_column(gui)
++def test_the_lane_reads_waits_for_you_goals_and_at_work_whole_cards_no_list_no_count(gui):
++    """Goal 170 D (decisions §293.2; Design's *Done when* 2): a spec that starts by itself at a clock time and a goal at work: the lane reads Waits for you, Goals (the fan, Being read), At work, in that order, whole cards drawn by post.js, pinned, no list, no count."""
++    pg, host, log = open_lane(gui)
+     try:
+-        pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+-        assert [t.strip() for t in pg.eval_on_selector_all(".col-plab__t", "els => els.map((e) => e.textContent)")] == [lexicon.term("pile_ideas"), lexicon.term("pile_specs"), lexicon.term("pile_implementation")] == ["Ideas", "Specs", "Implementation"]
+-        assert goals(pg, "analysis") == ["reading", "talk", "raw1", "raw2", "raw3"], "the one the Orkmaster reads first, then Talk, then the rest in its order: every goal of the pile is a back of the hand"
+-        assert goals(pg, "review") == ["timer", "scoring"], "agreed, the wait that ends first in front"
+-        assert goals(pg, "work") == ["music", "held", "late"], "at work, then held, then the night's"
+-        every = goals(pg, "analysis") + goals(pg, "review") + goals(pg, "work")
+-        assert len(every) == len(set(every)) and "old" not in every, "a goal in one pile; a goal done is the discard's"
+-        assert pg.locator(".col-card--fan").count() == 5 and pg.locator(".col-card--spec").count() == 2 and pg.locator(".col-card--up").count() == 3, "the hand, the deck and the standing cards"
+-        assert pg.locator(".col-sec .col-plab").all_inner_texts() and pg.locator('[data-under="analysis"]').inner_text() == "reading: Players see who answered first"
+-        assert pg.locator('[data-under="review"]').inner_text() == "next in 2 min: Round timer on phones", "the next to start, its time and its name"
++        labels = pg.locator(".col-lab")
++        assert [t.strip().lower() for t in labels.all_inner_texts()] == ["waits for you", "goals", "at work"], "the parts in their order"
++        ys = pg.eval_on_selector_all(".col-block", "els => els.map((e) => e.getBoundingClientRect().top)")
++        assert ys == sorted(ys) and len(ys) == 3
++        assert not any(re.search(r"\d", t) for t in labels.all_inner_texts()) and pg.locator(".col-list, .col-list__row, .col-sec, .col-count").count() == 0, "no list, no count of what waits"
++        assert goals(pg, "analysis") == ["reading", "talk", "raw1", "raw2", "raw3"], "the one the Orkmaster reads first, then Talk, then the rest in its order: every goal of the hand is a back"
++        assert goals(pg, "review") == ["look", "timer", "scoring"], "the spec whose look runs (the reader's wait) first, then the ready ones, the one that starts first first"
++        assert sorted(goals(pg, "work")) == ["held", "late", "music"], "at work, held and the night's: the held one among the waits, the others at work"
++        posts = pg.locator(".frame-column .post-card")
++        assert posts.count() == len(pg.eval_on_selector_all(".frame-column .col-card--post", "els => els")) == 6, "every card but a back is a post of post.js: the clock wait, two ready, the held one, the one at work, the one put off"
++        lane = pg.locator(".col-lane")
++        assert lane.evaluate("e => e.scrollWidth <= e.clientWidth + 1"), "whole cards: none cut at the side"
++        boxes = pg.eval_on_selector_all(".frame-column .post-card", "els => els.map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom]; })")
++        lb = lane.bounding_box()
++        assert all(b[0] >= lb["x"] - 1 and b[2] <= lb["x"] + lb["width"] + 1 for b in boxes), "inside the lane's width"
++        tops = sorted(b[1] for b in boxes)
++        assert all(b[3] <= n[1] + 1 for b, n in zip(sorted(boxes, key=lambda b: b[1]), sorted(boxes, key=lambda b: b[1])[1:])), "no post lies over another"
++        wait = pg.locator('.post-card[data-wait="starts"]')
++        assert wait.count() == 1 and wait.get_attribute("data-goal") == "look" and f"Starts by itself at {host.clock}" in wait.locator(".post-card__clock").inner_text(), "the clock row: a clock time, never a countdown"
++        assert [a.strip() for a in wait.locator(".post-card__acts").get_by_role("button").all_inner_texts()] == ["Change the spec", "Start now"]
++        assert pg.locator('[data-under="analysis"]').inner_text() == "Being read: Players see who answered first", "Being read: <goal>"
++        assert host.feeds >= 1 and not any(c[0] == "ideas.recap" for c in host.log), "what waits is read from ideas.feed, asked by the page"
++    finally:
++        pg.close()
++    assert not log, "\n".join(log)
++
++
++def test_the_feed_is_asked_once_a_refresh_and_a_wait_it_names_is_a_post_the_goals_own_row_gives_way_to(gui):
++    pg, host, log = open_lane(gui)
++    try:
++        assert pg.locator('.frame-column .col-card[data-goal="look"]').count() == 1, "the spec whose look runs is one post, not two: the reader's wait, not a second one from the Board's row"
++        asked = host.feeds
++        host.nodes[0]["title"] = host.nodes[0]["short"] = "Players see who answered first, again"
++        host.bump({})
++        pg.wait_for_function("() => document.querySelector('.col-card--fan[data-goal=reading]')?.getAttribute('aria-label')?.includes('again')", timeout=WAIT_MS)
++        pg.wait_for_timeout(300)
++        assert host.feeds in (asked + 1, asked + 2), f"one ask for a refresh of the Board ({asked} then {host.feeds})"
+     finally:
+         pg.close()
+     assert not log, "\n".join(log)
+@@ -128,9 +204,9 @@ def test_in_analysis_is_the_orkmasters_hand_a_fan_of_small_backs_each_rune_in_it
+             rune, box = card.locator(".ork-elem").bounding_box(), card.evaluate("e => { const r = e.getBoundingClientRect(); return {x: r.x, y: r.y, w: r.width, h: r.height}; }")
+             assert abs(rune["x"] + rune["width"] / 2 - (box["x"] + box["w"] / 2)) <= 4 and abs(rune["y"] + rune["height"] / 2 - (box["y"] + box["h"] / 2)) <= 8, "the rune in the back's middle"
+             assert (card.get_attribute("aria-label") or "").startswith(["Players see", "A sound when", "Kick a player", "Host can skip", "Mute a noisy"][i]) and card.get_attribute("title") is None, "its goal's name in its label, no native title (the preview, spec 168 A2)"
+-        assert fan.evaluate("e => e.offsetWidth") <= 144
++        assert fan.evaluate("e => e.offsetWidth") <= 184, "the lane gives the fan 184 px (goal 170 D)"
+         step = cards.evaluate_all("els => els.map((e) => e.offsetLeft)")
+-        assert [b - a for a, b in zip(step, step[1:])] == [16] * 4, f"five backs: 16 px apart ({step})"
++        assert [b - a for a, b in zip(step, step[1:])] == [32] * 4, f"five backs: 32 px apart in the lane ({step})"
+         turns = cards.evaluate_all("els => els.map((e) => e.style.getPropertyValue('--r'))")
+         assert turns == ["-10deg", "-5deg", "0deg", "5deg", "10deg"], "5 degrees a card about the middle one"
+         reading = pg.locator(".col-card--fan.is-reading")
+@@ -177,113 +253,83 @@ def test_a_press_on_a_face_down_card_picks_its_goal_with_no_list_and_next_and_re
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_a_face_up_card_picks_its_goal_and_a_card_of_to_review_lifts_start_now_and_later_today(gui):
+-    pg, host, log = open_column(gui)
++def test_a_goal_at_work_is_a_post_with_its_live_bar_in_its_partys_colour_and_pressing_it_opens_its_plan(gui):
++    """Goal 170 D: a goal at work is one post: its party's top edge, its leader's head and name, what it does now, its live bar; its name pressed picks the goal (its plan opens as today), pressed again puts the pick away."""
++    pg, host, log = open_lane(gui)
+     try:
+-        pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
+-        music = pg.locator('.col-card[data-goal="music"]')
+-        music.click()
+-        assert sig(pg, "frame/state.js", "picked") == "music" and music.get_attribute("aria-pressed") == "true"
++        post = pg.locator('.col-card[data-goal="music"]')
++        card = post.locator(".post-card")
++        assert card.get_attribute("data-leader") == "design" and card.get_attribute("data-race") and post.locator(".post-card__name").inner_text().strip().lower() == "design", "its party's leader says it"
++        assert "Now: Mix it" in post.locator(".post-card__sub").inner_text()
++        bar = post.locator(".col-bar")
++        assert bar.get_attribute("role") == "progressbar" and bar.get_attribute("aria-valuenow") == "1" and bar.get_attribute("aria-valuemax") == "2"
++        fill = bar.locator("i").evaluate("e => getComputedStyle(e).backgroundColor")
++        assert fill != "rgba(0, 0, 0, 0)" and abs(bar.locator("i").bounding_box()["width"] / bar.bounding_box()["width"] - 0.5) < 0.02, "half of its tasks done: half its bar, in the party's colour"
++        assert not re.search(r"\d\s*/\s*\d", post.inner_text()), "never said as a number"
++        post.get_by_role("button", name="Music in the lobby").click()
++        assert sig(pg, "frame/state.js", "picked") == "music" and "is-picked" in post.get_attribute("class").split()
+         assert pg.locator(".col-lift").count() == 0, "a goal at work: picked, no choices"
+         assert pg.locator(".col-head__tab").get_attribute("aria-selected") == "true", "the open tab stays the Orkmaster's: the column is on every tab"
+-        music.click()
++        post.get_by_role("button", name="Music in the lobby").click()
+         assert sig(pg, "frame/state.js", "picked") == ""
+-        timer = pg.locator('.col-card[data-goal="timer"]')
+-        timer.click()
+-        assert sig(pg, "frame/state.js", "picked") == "timer"
+-        acts = pg.locator('.col-lift[data-lift="acts"]')
+-        acts.wait_for(timeout=WAIT_MS)
+-        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")][:2] == ["Start now", "Hold"] and acts.locator(".table-dropper").count() == 1, "and the goal's menu: it can be dropped"
+-        # a lifted card says its title once (spec 140 A4, decisions §247.6): the whole title is its heading, no line repeats it, what it says is one sentence and the rest is behind its …
+-        assert acts.locator(".col-lift__t").inner_text().strip() == "Round timer on phones" and acts.get_by_text("Round timer on phones").count() == 1
+-        said = acts.locator("[data-said]")
+-        assert said.count() == 1 and said.evaluate("e => e.firstChild.textContent.trim()") == "Its spec is ready; it starts by itself in its turn." and "ask a leader" not in said.inner_text()
+-        more = said.get_by_role("button", name="More")
+-        more.click()
+-        assert "ask a leader there to change it" in said.inner_text() and said.get_by_role("button", name="Less").count() == 1
+-        acts.get_by_role("button", name="Hold").click()
+-        assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "timer"}))
+-        timer.click()
+-        assert sig(pg, "frame/state.js", "picked") == "", "the same card again puts the pick away"
+-        timer.click()
+-        acts.wait_for(timeout=WAIT_MS)
+-        acts.get_by_role("button", name="Start now").click()
+-        assert _sent(pg, host, ("ideas.confirm", {"idea": "timer"}))
++        assert pg.locator(".frame-column .cascade, .frame-column .table-task, .frame-column .col-card--up").count() == 0, "no cascade in the lane"
+     finally:
+         pg.close()
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_a_put_off_card_lifts_start_now_and_back_to_review_and_says_held_or_the_moon(gui):
+-    pg, host, log = open_column(gui)
++def test_a_ready_spec_is_a_post_with_start_now_and_hold_each_sending_the_command_it_sent_before(gui):
++    pg, host, log = open_lane(gui)
+     try:
+-        pg.set_viewport_size({"width": 1280, "height": 1100})                      # room for the foot of each card behind the front one
+-        pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
+-        held, late = pg.locator('.col-card[data-goal="held"]'), pg.locator('.col-card[data-goal="late"]')
+-        assert "Held" in held.locator(".col-foot").inner_text() and held.locator(".col-foot .ork-sign.pause, .col-foot [class*=pause]").count() >= 0
+-        assert "01:00" in late.locator(".col-foot").inner_text() and late.locator(".col-foot .ork-sign").count() >= 1
+-        assert pg.locator(".col-card--up .col-win, .col-card--up .table-card__win, .col-fnm").count() == 0, "spec 142 A, 140 A2: no window, no name in a foot"
+-        held.click(position={"x": 20, "y": held.bounding_box()["height"] - 8})   # its foot shows under the card above it
+-        acts = pg.locator('.col-lift[data-lift="acts"]')
+-        acts.wait_for(timeout=WAIT_MS)
+-        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")][:2] == ["Start now", "Back to review"]
+-        assert acts.locator("[data-said]").count() == 1 and acts.get_by_role("button", name="More").count() == 0, "one sentence: nothing behind a …"
+-        acts.get_by_role("button", name="Back to review").click()
+-        assert _sent(pg, host, ("ideas.ripe_back", {"idea": "held"}))
+-        late.click(position={"x": 20, "y": late.bounding_box()["height"] - 8})
+-        acts.wait_for(timeout=WAIT_MS)
+-        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")] == ["Start now"], "the night's own: only Start now"
++        post = pg.locator('.col-card[data-goal="timer"]')
++        acts = post.locator(".post-card__acts")
++        assert [t.strip() for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")][:2] == ["Start now", "Hold"] and acts.locator(".table-dropper").count() == 1, "and the goal's menu: it can be dropped"
++        acts.get_by_role("button", name="Hold").click()
++        assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "timer"}))
++        acts.get_by_role("button", name="Start now").click()
++        assert _sent(pg, host, ("ideas.confirm", {"idea": "timer"}))
++        wait = pg.locator('.post-card[data-wait="starts"]')
++        wait.get_by_role("button", name="Start now").click()
++        assert _sent(pg, host, ("ideas.start_now", {"slug": "look"})), "a spec with a clock time: the reader's own act"
++        wait.get_by_role("button", name="Change the spec").click()
++        wait.get_by_role("textbox").fill("Make the board bigger")
++        wait.get_by_role("button", name="Send").click()
++        assert _sent(pg, host, ("ideas.spec_change", {"idea": "look", "text": "Make the board bigger"})), "Change the spec asks its words first"
+     finally:
+         pg.close()
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_the_deck_is_squared_three_pixels_apart_and_standing_cards_show_the_foot_of_each_behind_the_front_one_and_a_card_hovered_slides_out(gui):
+-    host = ColumnHost()
+-    for i in range(6):
+-        host.nodes.append(node(f"more{i}", "tech", f"Another goal {i}", "table", state="ready", agreed=True, element="ice", back=back(ripe=ripe(600 + i))))
+-    for i in range(3):
+-        host.nodes.append(node(f"also{i}", "tech", f"Also at work {i}", "table", state="working", element="dust", stage="implementation", tasks=[task(f"a{i}", "Do it", "running")]))
+-    pg, host, log = open_column(gui, host=host)
++def test_a_held_goal_is_a_post_with_start_now_and_back_to_review_and_one_put_off_to_the_night_start_now_alone(gui):
++    pg, host, log = open_lane(gui)
+     try:
+-        pg.set_viewport_size({"width": 1280, "height": 1200})
+-        pg.wait_for_selector(".col-card--spec", timeout=WAIT_MS)
+-        deck = pg.locator('.col-sec[data-pile="review"] .col-card')
+-        assert deck.count() == 5, "the front and four behind, no count"
+-        boxes = [deck.nth(i).bounding_box() for i in range(5)]
+-        assert all(abs(b["width"] - 78) <= 1 and abs(b["height"] - 56) <= 1 for b in boxes), f"small backs on their side, 78 x 56: {boxes[0]}"
+-        assert [round(b["y"] - boxes[0]["y"]) for b in boxes] == [0, 4, 8, 12, 16], "a squared deck: 4 px apart"
+-        assert len({round(b["x"]) for b in boxes}) == 1, "unturned, one above another"
+-        assert deck.evaluate_all("els => els.map((e) => getComputedStyle(e).transform)") == ["none"] * 5
+-        work = pg.locator('.col-sec[data-pile="work"] .col-card')
+-        pg.wait_for_function("() => document.querySelectorAll('.col-sec[data-pile=work] .col-card').length >= 4", timeout=WAIT_MS)
+-        assert work.count() == 6, "the front and five behind"
+-        wb = [work.nth(i).bounding_box() for i in range(work.count())]
+-        assert all(abs(b["width"] - 144) <= 1 and abs(b["height"] - 202) <= 1 for b in wb), f"standing, 144 x 202: {wb[0]}"
+-        assert all(abs(b["x"] + b["width"] - 144) <= 1 for b in wb[:1]) and abs(boxes[0]["x"] + 13) <= 1, "the deck lies 13 px under the window's edge (decisions §236)"
+-        assert pg.locator(".col-sec .col-plab").first.inner_text() and "More" not in pg.locator(".col-scroll").inner_text()
+-        before = work.nth(1).bounding_box()
+-        assert [round(wb[i + 1]["y"] - wb[i]["y"]) for i in range(5)] == [26] * 5, "the foot of each, 26 px"
+-        work.nth(1).hover(position={"x": 30, "y": wb[1]["height"] - 6})
+-        pg.wait_for_function("([x]) => { const e = document.querySelectorAll('.col-sec[data-pile=work] .col-card')[1]; return e.getBoundingClientRect().x > x + 20; }", arg=[before["x"]], timeout=WAIT_MS)
++        held, late = pg.locator('.col-card[data-goal="held"]'), pg.locator('.col-card[data-goal="late"]')
++        assert held.locator('xpath=ancestor::*[@data-part="waits"]').count() == 1 and "held" in held.locator(".post-card__sub").first.inner_text().lower(), "held: among the waits"
++        assert late.locator('xpath=ancestor::*[@data-part="work"]').count() == 1 and "01:00" in late.locator(".post-card__sub").first.inner_text(), "put off to the night: among the goals at work, the hour said"
++        assert [t.strip() for t in held.locator(".post-card__acts").get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")][:2] == ["Start now", "Back to review"]
++        held.get_by_role("button", name="Back to review").click()
++        assert _sent(pg, host, ("ideas.ripe_back", {"idea": "held"}))
++        assert [t.strip() for t in late.locator(".post-card__acts").get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")] == ["Start now"], "the night's own: only Start now"
++        late.get_by_role("button", name="Start now").click()
++        assert _sent(pg, host, ("ideas.confirm", {"idea": "late"}))
+     finally:
+         pg.close()
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_a_goal_agreed_moves_from_in_analysis_to_to_review_and_its_wait_over_to_at_work(gui):
++def test_a_goal_agreed_moves_from_the_fan_to_waits_for_you_and_then_to_at_work(gui):
+     pg, host, log = open_column(gui)
+     try:
+         pg.wait_for_selector(".col-card--fan", timeout=WAIT_MS)
+         host.nodes[2].update(state="ready", agreed=True, back=back(ripe=ripe(60)))
+         host.bump({})
+-        pg.wait_for_function("() => document.querySelector('.col-sec[data-pile=review] [data-goal=raw1]')", timeout=WAIT_MS)
+-        assert "raw1" not in goals(pg, "analysis") and pg.locator('.col-card[data-goal="raw1"]').get_attribute("class").count("col-card--spec") == 1, "a back of the deck now: its sections are written, face down"
++        pg.wait_for_function("() => document.querySelector('.col-block[data-part=waits] [data-goal=raw1]')", timeout=WAIT_MS)
++        assert "raw1" not in goals(pg, "analysis") and "col-card--post" in pg.locator('.col-card[data-goal="raw1"]').get_attribute("class").split(), "a post of Waits for you now: its spec is ready"
+         host.nodes[2].update(state="working", stage="implementation", back=back(ripe=ripe(0, by="leaders")), tasks=[task("r1", "Kick it", "running")])
+         host.bump({})
+-        pg.wait_for_function("() => document.querySelector('.col-sec[data-pile=work] [data-goal=raw1]')", timeout=WAIT_MS)
+-        assert "raw1" not in goals(pg, "review") and pg.locator('.col-card[data-goal="raw1"]:not(.table-flyer)').get_attribute("class").count("col-card--up") == 1, "standing: it plays"
+-        pg.wait_for_selector('.table-board .table-goal[data-goal="raw1"]', timeout=WAIT_MS)
++        pg.wait_for_function("() => document.querySelector('.col-block[data-part=work] [data-goal=raw1]')", timeout=WAIT_MS)
++        assert "raw1" not in goals(pg, "review") and pg.locator('.col-card[data-goal="raw1"]:not(.table-flyer) .col-bar').count() == 1, "at work: a post with its live bar"
++        pg.wait_for_selector('.table-board [data-goal="raw1"]', timeout=WAIT_MS)            # its party's lane holds it (a token where the lane is narrow)
+         host.nodes[2].update(state="done", tasks=[])
+         host.bump({})
+         pg.wait_for_function("() => !document.querySelector('.col-card[data-goal=raw1]')", timeout=WAIT_MS)
+@@ -307,17 +353,19 @@ class SortHost(ColumnHost):
+         ]
+ 
+ 
+-def test_a_decision_and_a_spec_being_written_are_backs_of_the_hand_and_a_spec_made_a_back_of_the_deck(gui):
++def test_a_decision_and_a_spec_being_written_are_backs_of_the_hand_and_a_spec_made_a_post_of_waits_for_you(gui):
+     pg, host, log = open_column(gui, host=SortHost())
+     try:
+         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+-        assert goals(pg, "analysis") == ["decide"], "the agreed decision's wait is in Ideas (decisions §283.12)"
+-        assert goals(pg, "review") == ["sect", "sketch", "draft", "made"], "sections, sketch and the Orkmaster's own planning are Specs' (written first), a spec made by its leaders (agreed) after them"
+-        assert goals(pg, "work") == ["heldd"], "a decided goal held stays put off"
+-        assert pg.locator('.col-card[data-goal="made"]').get_attribute("class").count("col-card--spec") == 1
+-        assert pg.locator('[data-under="review"]').inner_text().startswith("writing: ") and pg.locator(".col-card--spec").first.locator(".ork-elem.is-glowing").count() == 1, "the leaders writing its spec: the front back with its rune glowing and the title says it"
+-        assert pg.locator('[data-under="analysis"]').inner_text() == "waits for you", "Ideas says only what it waits for"
+-        pg.locator('.col-sec[data-pile="review"] .col-card--down').first.click()
++        assert goals(pg, "analysis") == ["decide"], "the agreed decision's wait is in the hand (decisions §283.12)"
++        assert sorted(goals(pg, "review")) == ["draft", "made", "sect", "sketch"], "sections, sketch and the Orkmaster's own planning are written first: backs of the hand; a spec made by its leaders (agreed) a post"
++        assert sorted(goals(pg, "work")) == ["heldd"], "a decided goal held stays put off: a post among the waits"
++        fan = pg.eval_on_selector_all(".col-card--fan", "els => els.map((e) => e.dataset.goal)")
++        assert fan == ["decide", "sect", "sketch", "draft"], "the hand: the goal the Orkmaster is on, then the specs being written"
++        assert pg.locator('.col-card[data-goal="made"]').get_attribute("class").count("col-card--post") == 1 and pg.locator('.col-block[data-part="waits"] .col-card[data-goal="made"]').count() == 1
++        assert pg.locator('[data-under="analysis"]').inner_text() == "waits for you", "the hand says only what it waits for"
++        assert pg.locator('.col-card--fan[data-pile="review"]').first.locator(".ork-elem").count() == 1
++        pg.locator('.col-card--fan[data-goal="sect"]').click(position={"x": 8, "y": 40})
+         assert sig(pg, "frame/state.js", "picked") != "" and pg.locator(".col-list").count() == 0, "a face-down card is picked, with no list"
+         pg.keyboard.press("Escape")                                   # the card's choices beside the column go first, then the pick
+         pg.wait_for_selector(".col-lift", state="detached", timeout=WAIT_MS)
+@@ -326,7 +374,7 @@ def test_a_decision_and_a_spec_being_written_are_backs_of_the_hand_and_a_spec_ma
+         for n in host.nodes[1:4]:
+             n.update(state="done", folded=True)
+         host.bump({})
+-        pg.wait_for_function("() => document.querySelectorAll('.col-sec[data-pile=review] .col-card').length === 1", timeout=WAIT_MS)
++        pg.wait_for_function("() => document.querySelectorAll('.col-card--fan').length === 1", timeout=WAIT_MS)
+         card = pg.locator('.col-card[data-goal="decide"]')
+         assert "its decision waits for your word" in card.get_attribute("aria-label") and "waits for you" in pg.locator('[data-under="analysis"]').inner_text()
+         assert "asks" in card.get_attribute("class").split() and card.locator(".is-glowing").count() == 0, "its frame in the alert and nothing glowing: it waits for the person"
+@@ -365,33 +413,33 @@ class StagesHost(ColumnHost):
+         ]
+ 
+ 
+-def test_each_state_lies_in_its_stage_pile_and_a_goal_put_off_lies_where_what_happens_to_it_next(gui):
++def test_each_state_lies_in_its_part_and_a_goal_put_off_lies_where_what_happens_to_it_next(gui):
+     pg, host, log = open_column(gui, host=StagesHost())
+     try:
+         pg.set_viewport_size({"width": 1280, "height": 1200})
+         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+         ideas, specs, work = goals(pg, "analysis"), goals(pg, "review"), goals(pg, "work")
+-        assert ideas[:6] == ["reading", "talk", "raw", "asks", "routed", "decided"] and ideas[6:] == ["heldidea", "lateidea"], f"Ideas: read, Talk, the decision's wait; held or later before Talk at the fan's end: {ideas}"
++        fan = pg.eval_on_selector_all(".col-card--fan", "els => els.map((e) => e.dataset.goal)")
++        assert ideas[:6] == ["reading", "talk", "raw", "asks", "routed", "decided"] and ideas[6:] == ["heldidea", "lateidea"], f"the hand: read, Talk, the decision's wait; held or later before Talk at the fan's end: {ideas}"
++        assert fan == ideas + ["sketch", "sections", "draft"], f"and the specs being written after them: {fan}"
+         assert pg.locator('.col-card[data-goal="heldidea"] .col-fan__held .ork-sign.pause').count() == 1 and pg.locator('.col-card[data-goal="lateidea"][data-mark="later"] .col-fan__held .ork-sign.moon').count() == 1, "a pause on a held back, a moon on one put off to a later hour"
+-        assert specs == ["sketch", "sections", "draft", "ready", "planned"], f"Specs (the front and four behind): the sections written first, then the wait that ends first: {specs}"
+-        assert work[:3] == ["work", "heldwork", "failed"] or sorted(work[:3]) == ["failed", "heldwork", "work"], work
+-        assert work[3:] == ["heldspec", "heldwait", "night"], f"held after its spec (a decision held too), then the night's, at the cascade's foot: {work}"
++        assert specs == ["sketch", "sections", "draft", "ready", "planned", "plan"] or sorted(specs) == sorted(["sketch", "sections", "draft", "ready", "planned", "plan"]), f"specs: the ones being written are backs, the ones made posts of Waits for you: {specs}"
++        waits = pg.eval_on_selector_all('.col-block[data-part="waits"] .col-card', "els => els.map((e) => e.dataset.goal)")
++        assert waits == ["ready", "planned", "plan", "heldspec", "heldwait"], f"Waits for you: the specs made (the one that starts first first), then the held ones: {waits}"
++        assert pg.eval_on_selector_all('.col-block[data-part="work"] .col-card', "els => els.map((e) => e.dataset.goal)") == ["work", "heldwork", "failed", "night"], "at work, then the night's"
+         held = pg.locator('.col-card[data-goal="heldwork"]')
+-        assert held.get_attribute("data-off") is None and held.locator(".ork-sign.pause").count() == 1 and "at work: held" in held.get_attribute("aria-label"), "held at work: in the cascade with a pause"
+-        assert pg.locator('.col-card[data-goal="failed"]').get_attribute("class").count("fails") == 1, "a failure stays at work in the danger's ring"
+-        assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") and pg.locator('[data-under="review"]').inner_text() == "writing: Sketching"
+-        assert pg.locator('[data-under-asked="review"]').inner_text().startswith("next in "), "the next to start by itself, under the writing"
+-        assert pg.locator('[data-under="work"]').inner_text() == "at work: At work"
+-        # a card of Specs being written offers no Start now: only its menu
+-        pg.locator('.col-card[data-goal="sketch"]').click(position={"x": 40, "y": 28})
++        assert held.get_attribute("data-off") is None and "Held" in held.locator(".post-card__sub").inner_text(), "held at work: a post among the others at work, it says Held"
++        assert pg.locator('.col-card[data-goal="failed"] .col-bar.is-failed').count() == 1 and "A task failed" in pg.locator('.col-card[data-goal="failed"] .post-card__sub').inner_text(), "a failure stays at work, its bar in the danger's colour"
++        assert pg.locator('[data-under="analysis"]').inner_text().startswith("Being read: ")
++        assert pg.locator('[data-part="work"] .col-card--post').count() == 4
++        # a back of a spec being written offers no Start now: only its menu
++        pg.locator('.col-card--fan[data-goal="sketch"]').click(position={"x": 8, "y": 40})
+         pg.locator('.col-lift[data-goal="sketch"]').wait_for(timeout=WAIT_MS)
+         assert pg.locator('.col-lift[data-goal="sketch"] [data-now]').count() == 0 and "writing its spec" in pg.locator('.col-lift[data-goal="sketch"]').inner_text()
+         pg.keyboard.press("Escape")
+         pg.keyboard.press("Escape")
+-        # held after its spec: Start now and Back to review, on the cascade's foot
+-        pg.locator('.col-card[data-goal="heldspec"]').click(position={"x": 30, "y": 196})
+-        row = pg.locator('.col-lift[data-goal="heldspec"]')
+-        row.wait_for(timeout=WAIT_MS)
++        # held after its spec: Start now and Back to review, on its post
++        row = pg.locator('.col-card[data-goal="heldspec"]')
+         assert row.get_by_role("button", name="Start now").count() == 1 and row.get_by_role("button", name="Back to review").count() == 1
+     finally:
+         pg.close()
+@@ -528,16 +576,16 @@ def test_a_goal_the_orkmaster_or_its_leaders_are_on_is_lifted_with_its_rune_glow
+     for state, reads in (("reading", True), ("talk", True), ("sections", True), ("routed", False), ("raw", False)):
+         pg, host, log = ring_card(gui, state=state, bk=leaders(2) if state in ("talk", "sections", "routed") else None)
+         try:
+-            if state == "sections":                                                                 # the spec being written lies in Specs (decisions §283.12): its rune glows on the deck's front card, the pile says *writing: …*
+-                card = pg.locator('.col-card--spec[data-goal="g"]')
+-                assert card.locator(".ork-elem.is-glowing").count() == 1 and pg.locator('[data-under="review"]').inner_text().startswith("writing: "), state
+-                assert pg.locator(".col-card--fan").count() == 0, "nothing of it left in Ideas"
++            if state == "sections":                                                                 # the spec being written lies at the hand's end (decisions §283.12, goal 170 D): a back of the hand, its rune glowing, the line says *Being written*
++                card = pg.locator('.col-card--fan[data-goal="g"]')
++                assert card.get_attribute("data-pile") == "review" and card.locator(".ork-elem.is-glowing").count() == 1 and pg.locator('[data-under="analysis"]').inner_text().startswith("Being written: "), state
+                 continue
+             card = pg.locator('.col-card--fan[data-goal="g"]')
+             assert ("is-reading" in card.get_attribute("class").split()) == reads, state
+             assert card.locator(".ork-elem.is-glowing").count() == int(reads), state
+             assert card.locator(".col-sigil, .col-mid, .col-play").count() == 0, "no ring, no heads, no play on a back of the hand"
+-            assert pg.locator('[data-under="analysis"]').inner_text().startswith("reading: ") == (state == "reading"), state
++            line = pg.locator('[data-under="analysis"]')
++            assert (line.count() == 1 and line.inner_text().startswith("Being read: ")) == (state == "reading"), state
+         finally:
+             pg.close()
+         assert not log, "\n".join(log)
+@@ -578,33 +626,6 @@ def test_an_agreed_decision_says_when_its_spec_starts_under_the_title_and_start_
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_a_standing_card_has_its_four_corners_its_name_in_three_lines_and_a_foot_row_that_is_26_px_from_its_bottom(gui):
+-    """Spec 147 B.4 (decisions §251.3): rune and kind at the top, the name in up to three lines (spec 150 C), what it does now, the wait's bar where it waits, who and how much at the foot; no window, no name in a foot."""
+-    long = "Rename every room after it is made so the whole line of the name has to be said in three lines of the card, with every word of it kept in the page"
+-    host = ColumnHost()
+-    host.nodes.append(node("longone", "tech", long, "table", state="working", element="ice", stage="implementation", tasks=[task("l1", "Rename them", "running", left=720)]))
+-    pg, host, log = open_column(gui, host=host)
+-    try:
+-        pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
+-        card = pg.locator('.col-card[data-goal="longone"]')
+-        assert pg.locator(".col-card--up .col-win, .col-card--up .table-card__win").count() == 0
+-        assert card.locator(".corner--top .corner__rune .ork-elem").count() == 1 and card.locator(".corner--foot").count() == 1, "the four corners"
+-        assert card.locator(".corner--foot .corner__much").inner_text().strip() == "12 min left", "its time left"
+-        nm = card.locator(".col-nm")
+-        assert nm.inner_text().strip() == long, "the name whole in the DOM"
+-        lines = nm.evaluate("e => Math.round(e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight))")
+-        assert lines == 3, "up to three lines, then cut (spec 150 C, decisions §254.2)"
+-        assert "Now: Rename them" in card.locator(".col-now").inner_text() and card.locator(".col-count").inner_text() == "0/1"
+-        box, foot = card.bounding_box(), card.locator(".corner--foot").bounding_box()
+-        assert abs(box["width"] - 144) <= 1 and abs(box["height"] - 202) <= 1
+-        assert abs((box["y"] + box["height"]) - foot["y"] - 26) <= 1.5, "the foot row, with the card's padding, is 26 px: what a card behind the front one shows"
+-        top = card.locator(".corner--top").bounding_box()
+-        assert abs(nm.bounding_box()["y"] - box["y"] - 32) <= 1.5 and top["height"] == 20, "the name begins 32 px under the card's top"
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+ class PutOffHost(ColumnHost):
+     """Spec 138 B.5: goals put off in In analysis, one for this afternoon, one for another day, one whose hour has passed, one with none."""
+ 
+@@ -672,20 +693,20 @@ def test_a_goal_another_tool_holds_says_taken_by_and_a_goal_kept_off_says_so_on_
+ 
+ 
+ def test_the_new_goals_card_at_the_tables_foot_leaves_the_column_whole_and_uncut(gui):
+-    """Spec 150 A.2 (decisions §254.10), changed by spec 168 D2 (§286): the field was a card laid over the column; now the card stands at the table's foot at its left, beside the column, and the field lies in the hand's place: the At work card keeps its full width and is covered by neither."""
++    """Spec 150 A.2 (decisions §254.10), changed by spec 168 D2 (§286): the field was a card laid over the column; now the card stands at the table's foot at its left, beside the column, and the field lies in the hand's place: the At work post keeps its full width and is covered by neither."""
+     pg, host, log = open_column(gui)
+     try:
+         pg.set_viewport_size({"width": 1280, "height": 800})
+-        pg.wait_for_selector(".col-sec[data-pile=work] .col-card--up", timeout=WAIT_MS)
++        pg.wait_for_selector(".col-block[data-part=work] .col-card--post", timeout=WAIT_MS)
+         pg.locator(".hand .hand-plus").click()
+         pg.locator(".hand-field__card").wait_for(timeout=WAIT_MS)
+         pg.wait_for_function("() => document.querySelector('.hand-field__card').getAnimations().every((a) => a.playState === 'finished')", timeout=WAIT_MS)
+         got = pg.evaluate("""() => {
+-          const f = document.querySelector('.hand-field__card'), x = document.querySelector('.hand-fieldbox'), c = document.querySelector('.col-sec[data-pile=work] .col-card--up'), r = c.getBoundingClientRect(), fr = f.getBoundingClientRect(), xr = x.getBoundingClientRect();
++          const f = document.querySelector('.hand-field__card'), x = document.querySelector('.hand-fieldbox'), c = document.querySelector('.col-block[data-part=work] .col-card--post'), r = c.getBoundingClientRect(), fr = f.getBoundingClientRect(), xr = x.getBoundingClientRect();
+           return {w: r.width, cardOver: fr.left < r.right && fr.right > r.left && fr.top < r.bottom && fr.bottom > r.top, fieldOver: xr.left < r.right && xr.right > r.left && xr.top < r.bottom && xr.bottom > r.top};
+         }""")
+         assert not got["cardOver"] and not got["fieldOver"], f"the column is covered by neither the card nor the field: {got}"
+-        assert abs(got["w"] - 144) <= 0.5, f"the At work card keeps its full width: {got}"
++        assert got["w"] >= 190, f"the At work post keeps its full width: {got}"
+     finally:
+         pg.close()
+     assert not log, "\n".join(log)
+diff --git a/tests/test_column_fan_browser.py b/tests/test_column_fan_browser.py
+index 0048568..c5902eb 100644
+--- a/tests/test_column_fan_browser.py
++++ b/tests/test_column_fan_browser.py
+@@ -1,6 +1,13 @@
+-"""Spec 147 B (docs/specs/147-one-card-four-corners.md, decisions §251.3–§251.4; mockup docs/mockups/card-ratio/), in a real browser against a stub host: the Orkmaster's hand is a near-straight fan of 56 x 78 backs no wider than 144 px whatever it holds, the goal being read lifted; the column never
+-scrolls at 650, 790 and 940 px of window and *At work · later* gives way (a foot, an edge, then the pile sinks under the hand's rim); To review is a deck of backs whose ring fills by the share of the wait, a goal that asks the person has the ring and the frame in the alert and is never the next to start,
+-and the next to start is named under the title; `giveWay` (table/giveway.js) and the words of the piles (realm/lexicon.py `column_reading`, `next_in`, `next_at`)."""
++"""Goal 170 stage D (docs/specs/170-the-desktop-in-the-feeds-look.md, decisions §293.2; before: spec 147 B and spec 168 B, decisions §251.3–§251.4, §283.13), in a real browser against a stub host: the Orkmaster's hand is a near-straight fan of 56 x 78 backs in the lane's 240 px
++(32 apart while they are few, tighter as they grow, never a count), the goal being read lifted and *Being read: <goal>* under it; *Waits for you* holds the goals whose spec is ready, the one that starts first first, a goal that asks ringed in the alert with its
++sign; the lane scrolls inside the column and never lets the window scroll; and the words of the piles (realm/lexicon.py `column_reading`, `next_in`, `next_at`) that stages.js keeps for the phone's menu.
++
++The cases of the piles this file held before goal 170 D, and the case that now holds each act:
++- the column never scrolls at 650, 790 and 940 px of window, *At work · later* gives way (a foot, an edge, the pile sinks), at 650/790/940 the front card shows its rune row, a window made taller lays the pile again (five cases): test_the_lane_scrolls_inside_the_column_and_the_window_never_scrolls_at_any_of_three_heights (the posts are whole at every height; nothing sinks under the hand's rim). `giveWay` itself (table/giveway.js, the phone menu's) keeps test_giveway_feet_then_edges_...;
++- To review names the next to start under its title, a goal that asks is never the next (test_to_review_names_the_next_...): test_waits_for_you_holds_the_ready_specs_the_one_that_starts_first_first_and_a_goal_that_asks_ringed_in_the_alert;
++- a back of the deck fills its ring by the share of the wait (test_a_back_of_the_deck_fills_its_ring_...): gone with the deck (the post says its spec is ready; a clock time says when it starts: tests/test_column_browser.py test_the_lane_reads_waits_for_you_...); a goal that asks, its ring and its frame in the alert: the same test as above;
++- the column never scrolls at 1366 by 768 with the new piles (test_the_column_never_scrolls_at_1366_...): the same lane test at 1366 by 768.
++"""
+ from __future__ import annotations
+ 
+ import re
+@@ -32,13 +39,7 @@ class FanHost(ColumnHost):
+         self.nodes += [node(f"w{i}", "design", f"Goal at work {i}", "table", state="working", element="meadow", stage="implementation", tasks=[task(f"t{i}", "Do it", "running")]) for i in range(work)]
+ 
+ 
+-def at(pg, height):
+-    pg.set_viewport_size({"width": 1280, "height": height})
+-    pg.mouse.move(700, 300)
+-    pg.wait_for_timeout(300)                                                               # the observer measures, the page lays the pile again
+-
+-
+-def test_the_fan_of_eight_is_no_wider_than_144_px_each_back_a_step_apart_and_the_one_read_lifted(gui):
++def test_the_fan_of_eight_is_no_wider_than_184_px_each_back_a_step_apart_and_the_one_read_lifted(gui):
+     pg, host, log = open_column(gui, host=FanHost())
+     try:
+         pg.wait_for_selector(".col-card--fan", timeout=WAIT_MS)
+@@ -46,8 +47,8 @@ def test_the_fan_of_eight_is_no_wider_than_144_px_each_back_a_step_apart_and_the
+         cards = pg.locator(".col-card--fan")
+         assert cards.count() == 8
+         left = cards.evaluate_all("els => els.map((e) => e.offsetLeft)")
+-        assert [b - a for a, b in zip(left, left[1:])] == [12] * 7, f"floor(88 / 7) = 12 px apart ({left}): 12 to 16, tighter after seven"
+-        assert max(x + 56 for x in left) <= 144 and pg.locator(".col-fan").evaluate("e => e.offsetWidth") <= 144, "never wider than 144 px"
++        assert [b - a for a, b in zip(left, left[1:])] == [18] * 7, f"floor((184 - 56) / 7) = 18 px apart ({left}): 32 while few, tighter after"
++        assert max(x + 56 for x in left) <= 184 and pg.locator(".col-fan").evaluate("e => e.offsetWidth") <= 184, "never wider than the lane's 184 px"
+         assert cards.evaluate_all("els => els.map((e) => [e.offsetWidth, e.offsetHeight])") == [[56, 78]] * 8
+         assert cards.evaluate_all("els => els.map((e) => e.style.getPropertyValue('--r'))") == ["-14deg", "-10deg", "-6deg", "-2deg", "2deg", "6deg", "10deg", "14deg"], "4 degrees a card past seven, about the middle"
+         sink = cards.evaluate_all("els => els.map((e) => parseFloat(e.style.getPropertyValue('--sink')))")
+@@ -57,9 +58,9 @@ def test_the_fan_of_eight_is_no_wider_than_144_px_each_back_a_step_apart_and_the
+         lifted = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => Math.round(new DOMMatrix(getComputedStyle(e).transform).f - parseFloat(e.style.getPropertyValue('--sink'))))")
+         assert lifted == [-12] + [0] * 7, "the goal being read stands 12 px out of the fan"
+         under = pg.locator('[data-under="analysis"]')
+-        assert under.inner_text() == "reading: Goal in analysis 0" and under.bounding_box()["y"] < pg.locator(".col-fan").bounding_box()["y"], "named under the title, over the hand"
++        assert under.inner_text() == "Being read: Goal in analysis 0" and under.bounding_box()["y"] > pg.locator(".col-fan").bounding_box()["y"], "Being read: <goal>, under the hand"
+         assert pg.locator(".col-fan").bounding_box()["height"] == 92, "the fan is about 90 px tall whatever it holds"
+-        pg.locator(".col-card--fan").nth(6).hover(position={"x": 5, "y": 50})                 # its left 12 px: the next back lies over the rest
++        pg.locator(".col-card--fan").nth(6).hover(position={"x": 5, "y": 50})                 # its left 26 px: the next back lies over the rest
+         pg.wait_for_timeout(100)
+         assert pg.evaluate("() => { const e = document.querySelectorAll('.col-card--fan')[6]; return Math.round(new DOMMatrix(getComputedStyle(e).transform).f - parseFloat(e.style.getPropertyValue('--sink'))); }") == -10, "a back hovered rises 10 px"
+     finally:
+@@ -73,6 +74,7 @@ def test_the_step_and_the_turn_of_a_fan_by_how_many_it_holds(gui):
+         got = [call(pg, "table/fan.js", "stepOf", n) for n in (0, 1, 2, 3, 4, 6, 7, 8, 9, 12, 30)]
+         assert got == [0, 0, 16, 16, 16, 16, 14, 12, 11, 8, 6], "16 while few, 14 at seven (seven within the column's 160 px), 88 / (n - 1) as they grow, never under 6, never a count"
+         assert all(56 + (n - 1) * call(pg, "table/fan.js", "stepOf", n) <= 144 for n in range(2, 8)), "up to seven within 144 px"
++        assert [call(pg, "table/fan.js", "stepOf", n, False, 184) for n in (0, 1, 2, 3, 6, 7, 8, 9, 12, 30)] == [0, 0, 32, 32, 25, 21, 18, 16, 11, 6], "the lane's 184 px: up to 32 apart, 128 / (n - 1) as they grow, never under 6"
+         assert [call(pg, "table/fan.js", "turnStep", n) for n in (2, 4, 5, 7, 8, 12)] == [6, 6, 5, 5, 4, 4], "4 to 6 degrees a card"
+         assert [call(pg, "table/fan.js", "turnOf", i, 4) for i in range(4)] == [-9, -3, 3, 9] and call(pg, "table/fan.js", "turnOf", 1, 3) == 0
+         assert [call(pg, "table/fan.js", "stepOf", n, True) for n in (2, 3, 4, 9)] == [44, 44, 29, 11] and call(pg, "table/fan.js", "turnOf", 0, 3, True) == -1.5, "the phone's menu keeps the fan it had"
+@@ -81,128 +83,47 @@ def test_the_step_and_the_turn_of_a_fan_by_how_many_it_holds(gui):
+     assert not log, "\n".join(log)
+ 
+ 
+-@pytest.mark.parametrize("height", [650, 790, 940])
+-def test_the_column_never_scrolls_at_any_of_the_three_heights(gui, height):
+-    pg, host, log = open_column(gui, host=FanHost())
+-    try:
+-        at(pg, height)
+-        got = pg.evaluate("""() => { const s = document.querySelector('.col-scroll'), r = document.querySelector('.col-room'), c = document.querySelector('.col'); return {
+-          scroll: [s.scrollHeight, s.clientHeight, getComputedStyle(s).overflowY], col: [c.scrollHeight, c.clientHeight, c.scrollWidth, c.clientWidth], all: [...document.querySelectorAll('.col *')].some((e) => ['auto', 'scroll'].includes(getComputedStyle(e).overflowY) && e.scrollHeight > e.clientHeight + 1 && !e.closest('.col-lift')) }; }""")
+-        assert got["scroll"][0] <= got["scroll"][1] and got["scroll"][2] == "hidden", got
+-        assert got["col"][0] <= got["col"][1] and not got["all"], got
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+-def room_and_cards(pg):
+-    return pg.evaluate("""() => { const r = document.querySelector('.col-room').getBoundingClientRect();
+-      return {room: {top: r.top, bottom: r.bottom, height: r.height}, sunk: document.querySelector('.col-pile.is-up').classList.contains('is-sunk'),
+-        cards: [...document.querySelectorAll('.col-sec[data-pile=work] .col-card')].map((e) => { const b = e.getBoundingClientRect(), f = e.querySelector('.corner--foot').getBoundingClientRect(), u = e.querySelector('.corner--top').getBoundingClientRect();
+-          const mid = document.elementFromPoint(f.left + 8, f.top + f.height / 2);
+-          return {top: b.top, left: b.left, bottom: b.bottom, rune: u.top + 20, footTop: f.top, footBottom: f.bottom, footSeen: !!mid && mid.closest('.col-card') === e && f.bottom <= r.bottom + 0.5}; }) }; }""")
+-
+-
+-def test_at_650_the_front_card_shows_its_rune_row_and_the_cards_behind_are_slivers(gui):
+-    pg, host, log = open_column(gui, host=FanHost())
+-    try:
+-        at(pg, 650)
+-        got = room_and_cards(pg)
+-        front = got["cards"][0]
+-        assert got["sunk"], "the pile sank under the hand's rim"
+-        assert got["room"]["height"] >= 32 and front["top"] >= got["room"]["top"] - 1 and front["rune"] <= got["room"]["bottom"] + 0.5, f"the front card's rune row (its top 32 px) shows ({got})"
+-        shown = got["room"]["bottom"] - front["top"]
+-        assert shown >= 32 and ((shown - 32) % 20 < 0.6 or (shown - 32) % 20 > 19.4), f"the rim falls between two lines of the front card (its top 32 px, then 20 px a line): {shown}"
+-        assert all(not c["footSeen"] for c in got["cards"]), "no foot shows in so little room"
+-        assert [round(c["left"] - front["left"]) for c in got["cards"]] == [0, 3, 6, 9, 12][: len(got["cards"])] and len({round(c["top"]) for c in got["cards"]}) == 1, "the cards behind lie 3 px to the right each: slivers"
+-        assert pg.locator(".col-card--up .corner__rune .ork-elem").first.is_visible()
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+-def test_at_790_the_cards_behind_give_up_their_feet_for_edges_the_furthest_first_or_the_pile_sinks(gui):
++@pytest.mark.parametrize("size", [(1280, 650), (1280, 790), (1280, 940), (1366, 768)])
++def test_the_lane_scrolls_inside_the_column_and_the_window_never_scrolls_at_any_of_three_heights(gui, size):
+     pg, host, log = open_column(gui, host=FanHost())
+     try:
+-        at(pg, 790)
+-        got = room_and_cards(pg)
+-        top = [round(c["top"] - got["cards"][0]["top"]) for c in got["cards"]]
+-        steps = [b - a for a, b in zip(top, top[1:])]
+-        if not got["sunk"]:
+-            assert set(steps) <= {26, 3} and steps == sorted(steps, reverse=True), f"a foot while it fits, then edges, the furthest first: {steps}"
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+-def test_at_940_every_card_behind_shows_its_foot(gui):
+-    pg, host, log = open_column(gui, host=FanHost())
+-    try:
+-        at(pg, 940)
+-        got = room_and_cards(pg)
+-        assert not got["sunk"] and len(got["cards"]) == 4
+-        assert [round(b["top"] - a["top"]) for a, b in zip(got["cards"], got["cards"][1:])] == [26, 26, 26], "the foot of each, 26 px"
+-        assert all(c["footSeen"] for c in got["cards"]), f"every foot (who, how much) is seen, whole and uncovered ({got})"
+-        assert got["cards"][-1]["bottom"] <= got["room"]["bottom"] + 0.5
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+-def test_a_window_made_taller_lays_the_pile_again_without_a_reload(gui):
+-    pg, host, log = open_column(gui, host=FanHost())
+-    try:
+-        at(pg, 650)
+-        assert room_and_cards(pg)["sunk"]
+-        at(pg, 940)
+-        assert not room_and_cards(pg)["sunk"], "the observer measured again"
+-        at(pg, 650)
+-        assert room_and_cards(pg)["sunk"]
++        pg.wait_for_selector(".col-lane", timeout=WAIT_MS)
++        pg.set_viewport_size({"width": size[0], "height": size[1]})
++        pg.mouse.move(700, 300)
++        pg.wait_for_timeout(300)
++        got = pg.evaluate("""() => { const l = document.querySelector('.col-lane'), c = document.querySelector('.col'), d = document.documentElement; return {
++          lane: [l.scrollHeight, l.clientHeight, getComputedStyle(l).overflowY, l.scrollWidth, l.clientWidth], col: [c.scrollHeight, c.clientHeight, c.scrollWidth, c.clientWidth], page: [d.scrollHeight, d.clientHeight, d.scrollWidth, d.clientWidth]}; }""")
++        assert got["lane"][2] == "auto" and got["lane"][3] <= got["lane"][4] + 4, got      # a turned back of the fan may lie a pixel or two past the lane, clipped (overflow-x hidden)
++        assert got["col"][0] <= got["col"][1] and got["page"][0] <= got["page"][1] and got["page"][2] <= got["page"][3], f"the lane scrolls in its own box; the column and the window do not: {got}"
++        assert pg.locator(".col-lane .post-card").first.evaluate("e => e.offsetWidth") >= 190 and pg.locator(".col-lane .post-card").evaluate_all("els => els.every((e) => e.getBoundingClientRect().height > 60)"), "whole cards at every height"
++        last = pg.locator(".col-lane .col-card--post").last
++        last.scroll_into_view_if_needed()
++        box, lane = last.bounding_box(), pg.locator(".col-lane").bounding_box()
++        assert box["y"] + box["height"] <= lane["y"] + lane["height"] + 1, "the last card is reached whole by scrolling the lane"
+     finally:
+         pg.close()
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_to_review_names_the_next_to_start_under_its_title_and_a_goal_that_asks_is_never_the_next(gui):
++def test_waits_for_you_holds_the_ready_specs_the_one_that_starts_first_first_and_a_goal_that_asks_ringed_in_the_alert(gui):
+     pg, host, log = open_column(gui, host=FanHost())
+     try:
+-        under = pg.locator('[data-under="review"]')
+-        assert under.inner_text() == "next in 2 min: Round timer on phones", "its time and its name"
+-        assert under.locator("b").inner_text() == "Round timer on phones" and under.bounding_box()["y"] < pg.locator(".col-card--spec").first.bounding_box()["y"], "named under the title, over the deck"
+-        assert [c.get_attribute("data-goal") for c in pg.locator(".col-card--spec").all()] == ["soon", "asking"], "the one that starts first in front"
++        pg.wait_for_selector('.col-block[data-part="waits"]', timeout=WAIT_MS)
++        pg.emulate_media(reduced_motion="reduce")
++        waits = lambda: [c.get_attribute("data-goal") for c in pg.locator('.col-block[data-part="waits"] .col-card').all()]  # noqa: E731
++        assert waits() == ["soon", "asking"], "the one that starts first in front, the one that asks after it (nothing runs for it)"
++        soon, asking = pg.locator('.col-card[data-goal="soon"] .post-card'), pg.locator('.col-card[data-goal="asking"] .post-card')
++        alert = pg.evaluate("() => { const s = document.createElement('i'); s.style.color = getComputedStyle(document.documentElement).getPropertyValue('--ork-alert'); document.body.append(s); const v = getComputedStyle(s).color; s.remove(); return v; }")
++        assert "is-asks" in asking.get_attribute("class").split() and asking.locator(".post-card__asks").count() == 1 and asking.evaluate("e => getComputedStyle(e).borderTopColor") == alert, "a goal that asks: its frame in the alert and its sign beside it, the ring never alone"
++        assert "is-asks" not in soon.get_attribute("class").split() and soon.evaluate("e => getComputedStyle(e).borderTopColor") != alert
+         by = {n["slug"]: n for n in host.nodes}
+         by["soon"].update(asks_you=True, back=back(ripe=None))                                  # now the timer asks the person ...
+         by["asking"].update(asks_you=False, back=back(ripe=ripe(30, seconds=240)))              # ... and the other one's wait runs
+         host.bump({})
+-        pg.wait_for_function("() => document.querySelector('[data-under=review]').textContent === 'next in 30 s: Which clock to keep'", timeout=WAIT_MS)
+-        by["asking"].update(asks_you=True, back=back(ripe=None))
+-        host.bump({})
+-        pg.wait_for_function("() => document.querySelector('[data-under=review]').textContent === ''", timeout=WAIT_MS)       # none starts by itself: nothing is named
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+-def test_a_back_of_the_deck_fills_its_ring_by_the_share_of_the_wait_and_a_goal_that_asks_has_the_ring_and_the_frame_in_the_alert(gui):
+-    pg, host, log = open_column(gui, host=FanHost())
+-    try:
+-        pg.wait_for_selector(".col-card--spec", timeout=WAIT_MS)
+-        pg.emulate_media(reduced_motion="reduce")
+-        soon, asking = pg.locator('.col-card--spec[data-goal="soon"]'), pg.locator('.col-card--spec[data-goal="asking"]')
+-        ring = soon.locator(".ork-sigil.is-waiting")
+-        assert ring.count() == 1 and float(ring.get_attribute("data-share")) == pytest.approx(0.5), "120 of 240 s left: half of the ring"
+-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=soon] .ork-sigil'), '::after').getPropertyValue('--_arc')").strip() == "180deg", "four places of eight"
+-        assert soon.locator(".col-spec__rune .ork-elem").count() == 1 and soon.locator(".corner").count() == 0, "its ring holds the rune: no corners"
+-        ice, alert = pg.evaluate("() => [getComputedStyle(document.documentElement).getPropertyValue('--ork-elem-ice').trim(), getComputedStyle(document.documentElement).getPropertyValue('--ork-alert').trim()]")
+-        paint = lambda c: pg.evaluate("(c) => { const s = document.createElement('i'); s.style.color = c; document.body.append(s); const v = getComputedStyle(s).color; s.remove(); return v; }", c)  # noqa: E731
+-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=soon] .ork-sigil'), '::after').color") == paint(ice), "its ring in the goal's colour"
+-        assert "asks" in asking.get_attribute("class").split() and asking.locator(".ork-sigil.col-stopped").count() == 1
+-        assert float(asking.locator(".ork-sigil").get_attribute("data-share")) == 1 and asking.locator(".ork-sigil").evaluate("e => e.classList.contains('col-busy')") is False, "the ring full and still"
+-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=asking] .ork-sigil'), '::after').color") == paint(alert), "in the alert"
+-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=asking]')).borderTopColor") == paint(alert), "and its frame"
+-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--spec[data-goal=soon]')).borderTopColor") != paint(alert)
+-        asking.click(position={"x": 40, "y": 54})                                               # its 4 px under the front back
+-        assert pg.evaluate("() => import('/static/js/frame/state.js').then((x) => x.picked.value)") == "asking", "a back pressed picks its goal"
++        pg.wait_for_function("() => document.querySelector('.col-block[data-part=waits] .col-card').dataset.goal === 'asking'", timeout=WAIT_MS)
++        assert waits() == ["asking", "soon"], "the wait that ends first is first again"
++        pg.locator('.col-card[data-goal="soon"]').get_by_role("button", name="Round timer on phones").click()
++        assert pg.evaluate("() => import('/static/js/frame/state.js').then((x) => x.picked.value)") == "soon", "a post's goal pressed picks its goal"
+     finally:
+         pg.close()
+     assert not log, "\n".join(log)
+@@ -239,8 +160,8 @@ def test_the_pages_column_words_are_the_glossarys():
+     assert re.findall(r'"([^"]+)"\]', titles) == [lexicon.term("pile_ideas"), lexicon.term("pile_specs"), lexicon.term("pile_implementation")]
+ 
+ 
+-def test_seven_backs_lie_within_the_columns_160_px_and_a_picked_back_rises_with_its_ring(gui):
+-    """Spec 168 B2 (decisions §283.13): seven backs 14 px apart, 5 degrees a card, within 160 px, never a count; the picked back risen, its back `.is-ringed`."""
++def test_seven_backs_lie_within_the_lanes_184_px_and_a_picked_back_rises_with_its_ring(gui):
++    """Spec 168 B2 (decisions §283.13), goal 170 D: seven backs 21 px apart, 5 degrees a card, within the lane's 184 px, never a count; the picked back risen, its back `.is-ringed`."""
+     pg, host, log = open_column(gui, host=FanHost(analysis=7))
+     try:
+         pg.wait_for_selector(".col-card--fan", timeout=WAIT_MS)
+@@ -248,9 +169,9 @@ def test_seven_backs_lie_within_the_columns_160_px_and_a_picked_back_rises_with_
+         cards = pg.locator(".col-card--fan")
+         assert cards.count() == 7
+         left = cards.evaluate_all("els => els.map((e) => e.offsetLeft)")
+-        assert [b - a for a, b in zip(left, left[1:])] == [14] * 6 and max(x + 56 for x in left) <= 144 <= 160, left
++        assert [b - a for a, b in zip(left, left[1:])] == [21] * 6 and max(x + 56 for x in left) <= 184, left
+         assert cards.evaluate_all("els => els.map((e) => e.style.getPropertyValue('--r'))") == ["-15deg", "-10deg", "-5deg", "0deg", "5deg", "10deg", "15deg"]
+-        assert not any(ch.isdigit() for ch in pg.locator(".col-sec[data-pile=analysis] .col-plab").inner_text()), "never a count"
++        assert not any(ch.isdigit() for ch in pg.locator('.col-lab[data-lab="goals"]').inner_text()), "never a count"
+         assert pg.locator(".col-fan .is-ringed").count() == 0
+         cards.nth(3).click(position={"x": 8, "y": 50})
+         pg.wait_for_selector(".col-card--fan.ork-picked", timeout=WAIT_MS)
+@@ -263,16 +184,3 @@ def test_seven_backs_lie_within_the_columns_160_px_and_a_picked_back_rises_with_
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_the_column_never_scrolls_at_1366_by_768_with_the_new_piles(gui):
+-    """Spec 168 B2: Ideas' fan, Specs' small deck and Implementation's cascade fit the table's height at the common laptop screen; only Implementation gives way."""
+-    pg, host, log = open_column(gui, host=FanHost())
+-    try:
+-        pg.set_viewport_size({"width": 1366, "height": 768})
+-        pg.mouse.move(700, 300)
+-        pg.wait_for_timeout(300)
+-        got = pg.evaluate("""() => { const s = document.querySelector('.col-scroll'), c = document.querySelector('.col'); return {scroll: [s.scrollHeight, s.clientHeight, getComputedStyle(s).overflowY], col: [c.scrollHeight, c.clientHeight]}; }""")
+-        assert got["scroll"][0] <= got["scroll"][1] and got["scroll"][2] == "hidden" and got["col"][0] <= got["col"][1], got
+-        assert pg.locator(".col-sec[data-pile=review] .col-card--spec").first.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [78, 56], "Specs' cards lie on their side, 78 x 56"
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+diff --git a/tests/test_column_tuck_browser.py b/tests/test_column_tuck_browser.py
+index 571df45..a3382ef 100644
+--- a/tests/test_column_tuck_browser.py
++++ b/tests/test_column_tuck_browser.py
+@@ -1,5 +1,10 @@
+-"""Spec 130 E.1–E.2 (decisions §236) as spec 147 B changed it (decisions §251.4: the column 160 px, the tuck 13 px), in a real browser against a stub host: the Orkmaster's column has a width of its own; a back of To review lies tucked under the window's left edge with its seal whole in what shows,
+-slides out whole on hover and on focus and goes back; the deck and the standing cards of At work share one right edge, 144, and the hand's fan lies inside it; a standing card keeps its width; the hand's lanes stand under the table's at 1280 and 1920. The numbers are read from `--column-tuck`."""
++"""Goal 170 stage D (decisions §293.2), after spec 130 E.1 (decisions §236): in a real browser against a stub host, the Orkmaster's lane has a width of its own (216 px at 1280, 288 from 1352: `--column-w`) and the table gains what it gives up; the hand's lanes stand under the table's at 1280 and 1920.
++
++Removed with the piles (a face-down card no longer lies tucked under the window's edge; `--column-tuck` stays for the phone's menu):
++- a back of the deck is cut by the window's edge and its seal is whole in what shows; a back of the deck slides out whole on hover and on focus; under reduced motion the card is whole at once: tests/test_column_browser.py test_the_lane_reads_waits_for_you_goals_and_at_work_whole_cards_no_list_no_count
++  (every post whole, inside the lane's width, none under the edge or over another) and tests/test_column_fan_browser.py test_the_lane_scrolls_inside_the_column_and_the_window_never_scrolls_at_any_of_three_heights;
++- the deck and the standing cards share one right edge, the hand lies inside it, a standing card keeps its width: the same two tests (the fan within the lane's 184 px: test_the_fan_of_eight_is_no_wider_than_240_px_...).
++"""
+ from __future__ import annotations
+ 
+ import pytest
+@@ -10,114 +15,25 @@ from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+ from tests.test_column_browser import ColumnHost, open_column  # noqa: E402
+ 
+ pytestmark = pytest.mark.browser
+-DOWN = '.col-sec[data-pile="review"] .col-card--spec'
+ 
+ 
+ def px(pg, name):
+     return float(pg.evaluate(f"() => parseFloat(getComputedStyle(document.querySelector('.frame')).getPropertyValue('{name}'))"))
+ 
+ 
+-def rest(pg):
+-    """The pointer away, and no card keeps focus: every card lies at rest."""
+-    pg.mouse.move(700, 300)
+-    pg.evaluate("() => document.activeElement?.blur()")
+-
+-
+-def settled(pg, sel):
+-    pg.wait_for_function("(s) => { const e = document.querySelector(s); return e && e.getAnimations().every((a) => a.playState !== 'running'); }", arg=sel, timeout=WAIT_MS)
+-    return pg.locator(sel).first.bounding_box()
+-
+-
+ def test_the_column_has_a_width_of_its_own_and_the_table_gains_what_it_gives_up(gui):
+     pg, host, log = open_column(gui)
+     try:
+         tuck = px(pg, "--column-tuck")
+         assert tuck == 13, "decisions §251.4: 13 px under the window's edge"
+         c, t = pg.locator(".frame-column").bounding_box(), pg.locator(".frame-table").bounding_box()
+-        assert abs(c["width"] - 160) <= 1 and abs(c["width"] - ((157 - tuck) + 16)) <= 1, ("the card's 144 and its gutters", c)
++        assert abs(c["width"] - 216) <= 1, ("goal 170 D: a post and its gutters, 216 px at 1280", c)
+         assert c["x"] == 0 and abs(t["x"] - c["width"]) <= 1, "the table begins where the column ends"
+     finally:
+         pg.close()
+     assert not log, "\n".join(log)
+ 
+ 
+-def test_a_back_of_the_deck_is_cut_by_the_windows_edge_and_its_seal_is_whole_in_what_shows(gui):
+-    pg, host, log = open_column(gui)
+-    try:
+-        rest(pg)
+-        tuck = px(pg, "--column-tuck")
+-        box = settled(pg, DOWN)
+-        assert abs(box["x"] + tuck) <= 1 and abs(box["width"] - 78) <= 1 and abs(box["height"] - 56) <= 1, box      # a small back on its side (spec 168 B2)
+-        shown = box["x"] + box["width"]
+-        assert abs(shown - (78 - tuck)) <= 1, "what shows of it: 65 px"
+-        seal = pg.locator(f"{DOWN} .col-sigil").first.bounding_box()
+-        assert abs(seal["x"] + seal["width"] / 2 - shown / 2) <= 1.5, (seal, shown)
+-        assert seal["x"] >= 0 and seal["x"] + seal["width"] <= shown, "the ring is inside the window, under no edge"
+-        edges = pg.evaluate("() => { const s = document.querySelector('.col-scroll'); return [getComputedStyle(s).overflowX, s.getBoundingClientRect().left]; }")
+-        assert edges == ["hidden", 0], "the cut is the column's own box at the window's edge: no margin"
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+-def test_a_back_of_the_deck_slides_out_whole_on_hover_and_on_focus_and_goes_back(gui):
+-    pg, host, log = open_column(gui)
+-    try:
+-        rest(pg)
+-        tuck = px(pg, "--column-tuck")
+-        pg.hover(DOWN, position={"x": 60, "y": 50})
+-        out = settled(pg, DOWN)
+-        assert abs(out["x"]) <= 1, out
+-        seen = pg.evaluate("""(sel) => { const c = document.querySelector(sel).getBoundingClientRect(); const hit = document.elementFromPoint(c.right - 4, c.top + c.height / 2); return hit?.closest?.('.col-card--spec') != null; }""", DOWN)
+-        assert seen, "its right end lies over the table, not clipped by the pile's box"
+-        rest(pg)
+-        assert abs(settled(pg, DOWN)["x"] + tuck) <= 1, "back when left"
+-        pg.locator(DOWN).first.focus()
+-        assert pg.evaluate("(s) => document.activeElement === document.querySelector(s)", DOWN), "the front back takes the keyboard"
+-        out = settled(pg, DOWN)
+-        assert abs(out["x"]) <= 1, out
+-        ring = pg.evaluate("(s) => getComputedStyle(document.querySelector(s)).boxShadow", DOWN)
+-        assert "inset" in ring, "the focus ring is drawn inside what shows"
+-        rest(pg)
+-        assert abs(settled(pg, DOWN)["x"] + tuck) <= 1
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+-def test_under_reduced_motion_nothing_animates_and_the_card_is_whole_at_once(gui):
+-    pg, host, log = open_column(gui)
+-    try:
+-        pg.emulate_media(reduced_motion="reduce")
+-        rest(pg)
+-        assert pg.evaluate("(s) => getComputedStyle(document.querySelector(s)).transitionDuration", DOWN) == "0s"
+-        pg.hover(DOWN, position={"x": 60, "y": 50})
+-        box = pg.locator(DOWN).first.bounding_box()
+-        assert abs(box["x"]) <= 1, "at once"
+-        assert pg.evaluate("(s) => document.querySelector(s).getAnimations().length", DOWN) == 0
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+-def test_the_deck_and_the_standing_cards_share_one_right_edge_the_hand_lies_inside_it_and_a_standing_card_keeps_its_width(gui):
+-    pg, host, log = open_column(gui)
+-    try:
+-        rest(pg)
+-        ends = {}
+-        for pile, sel in (("review", ".col-card--spec"), ("work", ".col-card--up")):
+-            box = settled(pg, f'.col-sec[data-pile="{pile}"] {sel}')
+-            ends[pile] = box["x"] + box["width"]
+-            if sel.endswith("up"):
+-                assert abs(box["width"] - 144) <= 1 and abs(box["height"] - 202) <= 1, box
+-        assert abs(ends["review"] - (78 - 13)) <= 1 and abs(ends["work"] - 144) <= 1, ends      # Specs' small backs show 65 px of their 78, Implementation's cards 144
+-        fan = pg.evaluate("() => [...document.querySelectorAll('.col-card--fan')].map((e) => e.offsetLeft + e.offsetWidth)")
+-        assert fan and max(fan) <= 144, "the hand is never wider than 144 px"
+-    finally:
+-        pg.close()
+-    assert not log, "\n".join(log)
+-
+-
+ @pytest.mark.parametrize("width", [1280, 1920])
+ def test_the_hands_lanes_stand_under_the_tables_lanes(gui, width):
+     pg, host, log = open_column(gui, host=ColumnHost())
+diff --git a/tests/test_desktop_look_browser.py b/tests/test_desktop_look_browser.py
+index e5cad5f..7dc98b7 100644
+--- a/tests/test_desktop_look_browser.py
++++ b/tests/test_desktop_look_browser.py
+@@ -35,7 +35,7 @@ def open_window(gui):
+     pg.route_web_socket("**/ws*", host.on_socket)
+     pg.goto(server.url)
+     pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+-    pg.locator(".col-plab__t").first.wait_for(timeout=WAIT_MS)
++    pg.locator(".col-lab").first.wait_for(timeout=WAIT_MS)
+     pg.wait_for_timeout(1500)
+     return pg
+ 
+@@ -48,7 +48,7 @@ def rubik(pg, selector):
+ 
+ def test_headings_buttons_and_card_text_are_rubik(gui):
+     pg = open_window(gui)
+-    assert rubik(pg, ".col-plab__t")
++    assert rubik(pg, ".col-lab")
+     assert rubik(pg, "button")
+     fams = pg.evaluate("""() => { for (const c of document.querySelectorAll(".ork-card")) for (const e of c.querySelectorAll("*"))
+       if ([...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && e.getBoundingClientRect().width) return getComputedStyle(e).fontFamily; return ""; }""")
