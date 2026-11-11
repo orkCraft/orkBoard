@@ -13,6 +13,8 @@ import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
 import { PHASES, isRelease, nameOf, wide, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
 import { BoardMap } from "./boardmap.js";
+import { cardsOn } from "../cards/on.js";                   // the table of cards: its lanes instead of the map (goal 170 E)
+import { CardsLanes } from "../cards/lanes.js";
 import { mapOf } from "./maps.js";
 import "./mapparts.js";                                     // the parties' maps (spec 102)
 import { PickHost, PickStrip } from "./picking.js";         // picking on a party's map (spec 102 §6)
@@ -127,7 +129,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
     ${!o && !bare && !stalled && html`<${ToMain} />`}
     ${!o && !bare && !stalled && g && isRelease(g) && html`<${ChecksView} />`}
     <div class="table-body" ref=${body} data-end=${form ? "form" : o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
-      ${o ? html`<${Over} />` : stalled ? (narrow ? html`<${Stall} g=${g} />` : html`<${Slots} g=${g} />`) : past ? html`<${PastGoal} idea=${picked.value} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${column && picks && kind === "result" ? html`<${ResultTable} n=${picks} />` : column && picks && stageKind(picks) === "idea" ? html`<${IdeaTable} n=${picks} />` : column && picks && stageKind(picks) === "spec" ? html`<${SpecTable} n=${picks} />` : kind === "route" ? html`<${RouteView} n=${picks} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`}
+      ${o ? html`<${Over} />` : stalled ? (narrow ? html`<${Stall} g=${g} />` : html`<${Slots} g=${g} />`) : past ? html`<${PastGoal} idea=${picked.value} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} />${column && picks && kind === "result" ? html`<${ResultTable} n=${picks} />` : column && picks && stageKind(picks) === "idea" ? html`<${IdeaTable} n=${picks} />` : column && picks && stageKind(picks) === "spec" ? html`<${SpecTable} n=${picks} />` : kind === "route" ? html`<${RouteView} n=${picks} />` : (cardsOn() ? html`<${CardsLanes} parties=${parties} />` : html`<${BoardMap} parties=${parties} narrow=${narrow} column=${column} />`)}
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`

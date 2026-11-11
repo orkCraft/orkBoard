@@ -23,6 +23,8 @@ import { holdWords, offWords, waitsWords } from "./holdwords.js";
 import { SetupBubble } from "../hand/setupcards.js";
 import { laidNow } from "./laying.js";
 import { Passing, askedWords } from "./passing.js";
+import { cardsOn } from "../cards/on.js";                 // the table of cards: the dealer's lane in the column (goal 170 D)
+import { CardsColumn } from "../cards/dealer.js";
 import { ProjectLine, useProjectNow } from "./projectdeal.js";
 
 const CROWN = { race: "peon", tier: "crown" };                   // the Orkmaster's head
@@ -166,7 +168,7 @@ export function Column() {
   return html`<div class="col" ref=${root} data-col="1">
     <${Top} parties=${parties} all=${all} />
     <${SetupBubble} />
-    ${laid && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : id === "review" && wrote ? next : ""} onPress=${press} way=${id === "work" ? way : null} />`)}</div>`}
+    ${laid && cardsOn() && html`<div class="col-scroll"><${CardsColumn} /></div>`}${laid && !cardsOn() && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : id === "review" && wrote ? next : ""} onPress=${press} way=${id === "work" ? way : null} />`)}</div>`}
     <${Passing} />
     ${item && !gone && html`<${Acts} n=${item} off=${lift.off} pile=${lift.pile} place=${place} close=${() => setLift(null)} />`}
   </div>`;
