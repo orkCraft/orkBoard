@@ -71,7 +71,7 @@ export function AskL() {
   useEffect(() => { setStep(0); setKept([]); setPen(false); setWords(""); }, [a?.key]);
   useEffect(() => { setPen(false); setWords(""); }, [m?.q]);                                 // the next question of the goal: its own field
   useEffect(() => { if (a && !m) closeAsk(); }, [a, !m]);                                    // answered, or gone from the Board: the L goes with it
-  useEffect(() => {
+  useLayoutEffect(() => {   // the keys at once, before the first paint: an Esc pressed as the card opens closes it
     if (!a) return undefined;
     const key = (e) => {
       const { m: now, pen: writing } = live.current;

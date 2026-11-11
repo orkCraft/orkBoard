@@ -211,12 +211,13 @@ def test_the_focus_goes_back_to_the_card_that_opened_an_l_or_a_spread_and_tab_st
         m.focus()
         pg.keyboard.press("Enter")
         pg.wait_for_selector(".cards-l")
+        pg.wait_for_function("() => !!document.activeElement.closest('.cards-l')")      # the L takes the focus as it opens
         for _ in range(9):
             pg.keyboard.press("Tab")
             assert pg.evaluate("() => !!document.activeElement.closest('.cards-l')"), "Tab left the L"
         label = m.get_attribute("aria-label")
         pg.locator(".cards-l__shut").click()
-        pg.wait_for_timeout(150)
+        pg.wait_for_function(on)
         assert pg.evaluate(on) and pg.evaluate("() => document.activeElement.getAttribute('aria-label')") == label
         # the card is drawn again while the L lies over it: the focus goes to the one in its place
         m.focus()
@@ -224,7 +225,7 @@ def test_the_focus_goes_back_to_the_card_that_opened_an_l_or_a_spread_and_tab_st
         pg.wait_for_selector(".cards-l")
         pg.evaluate("(label) => { const el = [...document.querySelectorAll('.cards-m')].find((e) => e.getAttribute('aria-label') === label); el.replaceWith(el.cloneNode(true)); }", label)
         pg.keyboard.press("Escape")
-        pg.wait_for_timeout(200)
+        pg.wait_for_function(on)
         assert pg.evaluate(on) and pg.evaluate("() => document.activeElement.getAttribute('aria-label')") == label
         # a spread from the deck, closed by Esc and by Close
         for how in ("Escape", "Close"):

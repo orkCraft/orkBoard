@@ -3,7 +3,7 @@
 // through table/post.js's head and body. **L**: a card opened; pressed, an M turns back upright and grows over the table
 // (`openCard`), Esc or Close puts it away and the focus goes back to the card it came from. A leader's view of a goal is a
 // **token** on its S: round, its party's colour, its sign, its word beside it (§295.4). Layout only (cards.css).
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Elem, Icon, Sign } from "../orkui.js";
@@ -52,7 +52,7 @@ export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
     ...(p.goal && viewsOf(p.goal).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: p.goal, from: ref.current }) }] : [])] });
   return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-asks": !!p.asks, "is-stacked": more > 0 })} data-race=${whoOf(p.leader).race || "orkmaster"}
       data-kind=${p.kind} tabindex="0" aria-label=${`${whoOf(p.leader).name}: ${p.text}. Press to open.`}
-      onClick=${(e) => { if (!e.target.closest("button")) open(); }} onKeyDown=${(e) => { if (e.key === "Enter" && e.target === ref.current) open(); }}>
+      onClick=${(e) => { if (!e.target.closest("button")) open(); }} onKeyDown=${(e) => { if (e.key === "Enter" && e.target === ref.current) { e.preventDefault(); open(); } }}>
     <${PostHead} leader=${p.leader} sub=${subOf(p)} tag=${TAGS[p.kind] || ""} asks=${!!p.asks} />
     <div class="cards-m__body"><${PostBody} p=${p} onPick=${onPick} /></div>
     ${p.asks && p.goal && html`<button type="button" class="ork-btn cards-m__answer" onClick=${() => answerInHand(p.goal)}><${Icon} name="arrow-right" /><span>Answer in hand</span></button>`}
@@ -80,7 +80,7 @@ const shut = () => { const was = opened.peek(); opened.value = null; giveBack(wa
 /** L: the card opened over the table, upright and big; Esc or Close puts it away. */
 export function CardL({ onPick }) {
   const o = opened.value, root = useRef();
-  useEffect(() => {
+  useLayoutEffect(() => {   // the keys at once, before the first paint: an Esc pressed as the card opens closes it
     if (!o) return undefined;
     root.current?.querySelector(".cards-l__shut")?.focus();
     const key = (e) => { if (e.key === "Escape") { e.preventDefault(); shut(); } else keepTab(root.current, e); };

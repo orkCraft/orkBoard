@@ -1,7 +1,7 @@
 // The frame every spread shares (docs/mockups/spreads/, desktop): a veil over the window, the Orkmaster's head with a line and what it
 // says, the field in the middle, the hand's strip under it (a note, the acts). Esc and *Close* put it away, the focus goes back to what
 // opened it (open.js). The pieces drawn in a field: a card (`SpCard`), a card face down (`SpBack`), a check's mark (`Chk`).
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { html, cls } from "../../html.js";
 import { Icon } from "../../orkui.js";
 import { HeadOf, whoOf } from "../../table/post.js";
@@ -12,7 +12,7 @@ import { keepTab } from "../back.js";
 /** `kind`: the spread (its `data-spread`); `title`, `line`, `say`: its head; `note`: the hand's words; `acts`: the hand's buttons; children: the field. */
 export function SpreadFrame({ kind, title, line = "", say = "", note = "", acts = null, hand = null, children }) {
   const root = useRef();
-  useEffect(() => {
+  useLayoutEffect(() => {   // the keys at once, before the first paint: an Esc pressed as the card opens closes it
     root.current?.querySelector(".sp-shut")?.focus();
     const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeSpread(); } else keepTab(root.current, e); };
     addEventListener("keydown", key, true);
