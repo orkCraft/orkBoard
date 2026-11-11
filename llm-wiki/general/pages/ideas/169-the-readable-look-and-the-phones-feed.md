@@ -6,11 +6,11 @@ order: 16
 size:
 priority: normal
 short: The readable look and the phone's feed
-phase: work
+phase: done
 route: design, tech
 by: claude-code
 schema: 3
-gate: 13478e2 · 0 files · green
+gate: 6e6a376 · critical 190 passed (alpha) · green
 ---
 # The readable look and the phone's feed: Rubik, lifted colours, round corners; the phone's tables as a feed of blocks
 
@@ -65,6 +65,13 @@ made in orkUI first, then copied here.
 - [ ] I. Design accepts the feed
   - party: Design. Pictures of each of the feed's states at 390×844 (top, a head pressed, a stack opened, the seen line spread, scrolled to the foot with the header folded, the round button open), beside `docs/mockups/phone/feed.html` v3.
   - proves: Design's [look] line and its last three [test] lines on pictures
+
+### The gate (11 November 2026)
+`orkboard gate --base origin/main` did not finish: the change touches 299 files and brings 65 test files, mostly browser ones, past
+the gate's 15 minutes. Under CLAUDE.md's *Alpha* the merge waits for the critical tests only: the gate's `always` and the non-browser
+tests of the modules touched (test_ideas, test_pwa, test_board_feed, test_lexicon, test_design_system, test_gui_wording,
+test_board_recap, test_gui_recap): 190 passed at 6e6a376. The browser tests of each stage were run by its Grunt; those failing
+before the goal too (at dea4459) are named in the pull request.
 
 ## Open questions
 - Where is orkUI's change made? (**A pull request to orkUI, then copied** / The person makes it in orkUI) — CLAUDE.md: the look is made in orkUI, never here; the copy waits for it · A pull request to orkUI, then copied: This goal opens orkUI's pull request; the copy waits for its merge · The person makes it in orkUI: This goal waits until a new orkUI is out to copy
