@@ -29,5 +29,16 @@ export function lay(data) {
       before: "The lanes draw a post as tall as its words; an open post is a drawer.", acts: [] }, more: [] },
     ...(feed.posts || []),
   ];
+  // the same question waits in the hand (decisions §145): a goal's open question, as the host keeps it in the Board's needs;
+  // the hand draws one card a goal, so it joins the goal's own card when the goal already waits there
+  const ask = { id: "page-example", by: "claude-code", leader: "architect", q: "Which way does the table open first, the lanes or the dealer?" + EXAMPLE,
+    choices: ["The lanes first", "The dealer first", "Both at once"], pick: 0, why: "Tech's view: the lanes are what is read most" + EXAMPLE, project: false,
+    kinds: ["take", "take", "other"], lines: ["The leaders' words are seen first", "What waits is seen first", "Both stand at once, the lanes narrower"] };
+  if (board && talk) {
+    const needs = board.needs_you || [], had = needs.find((x) => x.idea === talk.slug);
+    if (had) had.questions = [ask, ...(had.questions || [])];
+    else board.needs_you = [{ idea: talk.slug, goal: talk.goal || "tech", title: talk.title, priority: "normal", blocks: false, at: at(11, 58), kind: "talk", round: 1,
+      stances: [], text: ask.q, outside: true, questions: [ask] }, ...needs];
+  }
   feed.heads = (feed.heads || []).map((h) => (h.leader === "tech" ? { ...h, asks: true, news: true } : h));
 }

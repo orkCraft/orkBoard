@@ -47,15 +47,28 @@ const subOf = (p) => [KINDS[p.kind] || KINDS.news, when(p.at)].filter(Boolean).j
  *  `more`: the leader's posts after it, its stack (`onMore` spreads them). */
 export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
   const ref = useRef();
-  const open = () => openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) },
+  const open = () => openCard({ kind: "post", p, from: ref.current, acts: [...(p.asks && p.goal ? [{ label: "Answer in hand", main: true, run: () => answerInHand(p.goal) }] : []), { label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) },
     ...(p.goal && viewsOf(p.goal).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: p.goal, from: ref.current }) }] : [])] });
   return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-asks": !!p.asks, "is-stacked": more > 0 })} data-race=${whoOf(p.leader).race || "orkmaster"}
       data-kind=${p.kind} tabindex="0" aria-label=${`${whoOf(p.leader).name}: ${p.text}. Press to open.`}
       onClick=${(e) => { if (!e.target.closest("button")) open(); }} onKeyDown=${(e) => { if (e.key === "Enter" && e.target === ref.current) open(); }}>
     <${PostHead} leader=${p.leader} sub=${subOf(p)} tag=${TAGS[p.kind] || ""} asks=${!!p.asks} />
     <div class="cards-m__body"><${PostBody} p=${p} onPick=${onPick} /></div>
+    ${p.asks && p.goal && html`<button type="button" class="ork-btn cards-m__answer" onClick=${() => answerInHand(p.goal)}><${Icon} name="arrow-right" /><span>Answer in hand</span></button>`}
     ${more > 0 && onMore && html`<button type="button" class="cards-m__more" onClick=${onMore}><${Icon} name="chevron-down" /><span>More from ${whoOf(p.leader).name}</span></button>`}
   </article>`;
+}
+
+/** A question a leader asks in its lane is answered in the hand (decisions §145: the hand is what the person decides): its
+ *  card there is pressed, which opens its ways. After the L is put away, so the focus lands on the hand's card. */
+export function answerInHand(slug) {
+  setTimeout(() => {
+    const c = document.querySelector(`.frame-hand button.hand-card[data-goal="${CSS.escape(slug)}"]`);
+    if (!c) return;
+    c.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+    c.focus();
+    c.click();
+  }, 0);
 }
 
 /** The card opened: `{kind: "post", p, from}` or `{kind: "goal", n, line, tokens, acts, from}`; null when none. */

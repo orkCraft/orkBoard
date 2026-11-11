@@ -78,3 +78,5 @@
 .cards-m .post-card__sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cards-m .post-card__dots { display: none; }
 .cards-wait { flex-direction: column; } .cards-wait__acts { flex-direction: row; flex-wrap: wrap; padding-top: 0; }
+.cards-m__answer { align-self: flex-start; margin-top: auto; border-color: var(--ork-alert); color: var(--ork-alert); }
+.cards-m.is-asks .cards-m__body { -webkit-line-clamp: 2; }
