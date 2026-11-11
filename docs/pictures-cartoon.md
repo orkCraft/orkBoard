@@ -323,3 +323,80 @@ The table's ground behind the lanes and the spreads, kept quiet under the cards.
 ```
 A tavern's card table for a card-game interface on one sheet, two wide tiles stacked (each 2:1), in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, the same warm brown wood and brass as the attached chairs. 1 a card table seen straight from above: a broad wooden rim with brass corner caps round a plain cloth of a VERY DARK muted green, flat, with nothing on it; the cloth must stay dark enough for light cards and text laid on it later. 2 one corner of the same table, close up: the wooden rim, a brass corner cap, a little of the dark cloth. A flat mid-grey background (#3a3a3a) round the table, a thin grey-brown frame around each tile. No text, letters, numbers or cards.
 ```
+
+## No pixel left (the person, 11 November 2026: «нам нужно полностью избавиться от пиксельных изображений (руны, картинки карт, типы карт и т.д.)»)
+
+What orkUI still draws in pixels, sheet by sheet. It replaces §289.2's *the signs and the runes are not redrawn* (a decision of its
+own is to be written). Not redrawn still: **the AI tools' marks** (their makers' logos: `marks/harness-*`) and **the interface's
+icons** (`icons/`, pixelarticons): those are taken from an open vector set (Lucide, ISC) rather than drawn, its licence beside it
+and a line in `NOTICE`. A small sign or rune is drawn as a **white silhouette** (one flat white shape, its inner details cut out
+as gaps, no outline colour): code colours it as the text beside it, and orkUI's tool traces it to a vector, as it cuts the sheets.
+
+### R1. The five elements' runes (attach K1)
+```
+Five magic runes for a card-game interface on one sheet, a 3x2 grid of square tiles (tile 6 empty), in the humorous flat cartoon style of the attached sheet but as FLAT SILHOUETTES: each rune ONE flat pure WHITE shape, thick and chunky like a rune carved into a tavern table and filled, its inner details cut out as gaps, no outline in another colour, no shading, no texture, no glow. Each rune centred, the same height in every tile (taller than wide, about 5:7), with a clear margin. They spell nothing and are no letter of any real alphabet: no arrow, no Y on a stem, no lightning bolt, no diamond on legs. Left to right, top to bottom: 1 two curved tusks side by side, pointing up, joined at their base; 2 an old key standing upright, its bow a ring, two teeth; 3 a comb: a bar with five short teeth hanging down; 4 an open eye, almond-shaped, a round pupil; 5 a wave: one rolling crest over two short lines. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### R2. The seven runes of the ring and the seal (attach R1)
+```
+Seven more magic runes, the same family as the attached sheet, on one sheet, a 4x2 grid of square tiles (tile 8 empty): the same FLAT pure WHITE chunky silhouettes, their details cut out as gaps, no outline colour, no shading, no glow, the same height and margin in every tile. They spell nothing and are no letter of any real alphabet: no arrow, no Y on a stem, no lightning bolt, no diamond on legs. Left to right, top to bottom: 1 a hook curling to the left; 2 a short ladder of three rungs; 3 a spiral of two turns; 4 a staff with a knob at its top and a small cross-bar; 5 an hourglass; 6 a lozenge with a dot inside; 7 a knot of two loops. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### S1. The signs of a state, 1 of 2 (attach R1)
+```
+Twelve small signs for a card-game interface on one sheet, a 4x3 grid of square tiles, as the attached runes: each ONE flat pure WHITE chunky silhouette, its details cut out as gaps, no outline colour, no shading, no glow, readable at 16 pixels: bold simple shapes, no thin lines. Each centred at the same size with a clear margin. Left to right, top to bottom: 1 a bold tick (done); 2 a bold cross (failed); 3 two curved arrows chasing each other in a circle (at work); 4 a crescent moon (starts by itself later); 5 a bold exclamation mark in a round blob (a stop that asks); 6 a small pennant on a pole (a goal in main); 7 a bold arrow pointing left (waits for); 8 a bold arrow pointing right (waits for it); 9 a play triangle; 10 two pause bars; 11 a loudspeaker with two sound waves; 12 a short strip of film with three holes. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers except the shapes named.
+```
+
+### S2. The signs of a state, 2 of 2 (attach S1)
+```
+Eight more small signs, the same family as the attached sheet, on one sheet, a 4x2 grid of square tiles: each ONE flat pure WHITE chunky silhouette, details cut out as gaps, no outline colour, no shading, no glow, readable at 16 pixels, the same size and margin. Left to right, top to bottom: 1 three lines of text, the last shorter; 2 a bold question mark; 3 a small five-pointed star (the dealer's pick); 4 two playing cards crossed over each other (a decision against an earlier one); 5 a short sword pointing up; 6 a round-topped shield; 7 a beetle squashed flat, its legs splayed (a bug fixed); 8 a beetle seen from above, six legs, two feelers (a bug). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text or numbers.
+```
+
+### S3. The goal types' small signs, 1 of 2 (attach S1)
+```
+Twelve small signs for a card-game interface, the same family as the attached sheet, on one sheet, a 4x3 grid of square tiles: each ONE flat pure WHITE chunky silhouette, details cut out as gaps, no outline colour, no shading, no glow, readable at 16 pixels, the same size and margin. Each is a THING of a fantasy realm, never a being. Left to right, top to bottom: 1 a magic wand with a small star at its tip; 2 a broom; 3 an anvil; 4 a hand mirror; 5 a cut gem; 6 a wax seal; 7 a heart with a sticking plaster across it; 8 a round-bottomed beaker; 9 a firework rocket; 10 a dial gauge with its needle; 11 a rolled scroll; 12 a fork with two prongs. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### S4. The goal types' small signs, 2 of 2 (attach S3)
+```
+Twelve more small signs, the same family as the attached sheet, on one sheet, a 4x3 grid of square tiles: each ONE flat pure WHITE chunky silhouette, details cut out as gaps, no outline colour, no shading, no glow, readable at 16 pixels, the same size and margin, each a THING of a fantasy realm, never a being. Left to right, top to bottom: 1 a signpost with one board; 2 a sealed letter; 3 a quill; 4 a six-sided die showing three pips; 5 a small castle tower; 6 a pair of scales; 7 a crown; 8 a treasure chest; 9 a market stall with an awning; 10 a lyre; 11 a drafting compass, its legs apart; 12 an elf's shoe with a curled toe. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### T1. The goal types' pictures on a card, 1 of 3 (attach K1 and S3)
+The picture in the middle of an S card and an L card: the type's thing in full colour (§283: a card's picture of its kind, never the
+only thing that says it).
+```
+Nine objects for a card-game interface on one sheet, a 3x3 grid of square tiles, in EXACTLY the humorous flat cartoon style of the first attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions, a little chunky, the warm wood and brass of a tavern. Each is the same thing as the second attached sheet's sign of the same place, now in full colour, centred in its tile at the same scale, front-on or a slight three-quarter view, with a light rim so it reads on a very dark background. Left to right, top to bottom: 1 a magic wand with a glowing star at its tip; 2 a witch's broom; 3 a black iron anvil; 4 a hand mirror in a brass frame; 5 a cut gem, deep red; 6 a red wax seal pressed on a ribbon; 7 a red heart with a white sticking plaster across it; 8 a glass beaker with green liquid and two bubbles; 9 a firework rocket on its stick. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### T2. The goal types' pictures on a card, 2 of 3 (attach T1 and S3)
+```
+Nine more objects, EXACTLY the style, scale and light rim of the first attached sheet, on one sheet, a 3x3 grid of square tiles, each the same thing as the second attached sheet's sign named, in full colour, centred: 1 a brass dial gauge, its needle in the middle; 2 a rolled parchment scroll tied with a ribbon; 3 a silver fork with two prongs; 4 a wooden signpost with one board pointing right (no words on it); 5 a sealed letter with a red wax seal; 6 a white quill in an inkpot; 7 an ivory six-sided die showing three pips; 8 a small stone castle tower with a flag; 9 a brass pair of scales, balanced. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### T3. The goal types' pictures on a card, 3 of 3 (attach T1 and S4)
+```
+Eight more objects, EXACTLY the style, scale and light rim of the first attached sheet, on one sheet, a 4x2 grid of square tiles, each the same thing as the second attached sheet's sign named, in full colour, centred: 1 a small gold crown; 2 a wooden treasure chest with brass corners, shut; 3 a market stall with a striped awning; 4 a golden lyre; 5 a brass drafting compass, its legs apart; 6 a green elf's shoe with a curled toe and a tiny bell; 7 a green beetle seen from above, six legs, two feelers; 8 the same beetle squashed flat, its legs splayed, a small star of impact. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### M1. The moons of a goal's progress (attach K1)
+```
+Five moons for a card-game interface on one sheet, a 3x2 grid of square tiles (tile 6 empty), in the humorous flat cartoon style of the attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients. Each a round moon of the same size, centred, its dark side a deep slate blue and its lit part a pale cream, two or three small craters on the lit part, a light rim so it reads on a very dark background. Left to right, top to bottom: 1 a new moon (all dark); 2 a crescent (a thin lit edge on the right); 3 a half moon (the right half lit); 4 a gibbous moon (three quarters lit); 5 a full moon (all lit). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers, no faces on the moons.
+```
+
+### W1. The races' tools for a pick of four, 1 of 2 (attach K1 and O3a)
+One tool a race, four variants told apart by one zone (`tools/README.md`).
+```
+Twelve objects for a card-game interface on one sheet, a 4x3 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, a little chunky. Each row is ONE tool drawn four times, EXACTLY the same shape, size and colours in its four tiles except the one zone named, so four cards side by side read as one tool told apart at a glance; each centred, with a light rim so it reads on a very dark background. Row 1, the orks' tool: a shaman's hand drum with a spanner leaning on it as its beater; the mark painted on its skin changes: 1 a gear, 2 a lightning-free bolt (a nut and bolt), 3 a spiral, 4 a tusk. Row 2, the elves' tool: a wooden bow whose arrow is a paintbrush; the brush's tip changes: 1 round, 2 flat, 3 dripping paint, 4 a fan brush. Row 3, the goblins' tool: a pickaxe stuck in a small heap of earth; what it dug out lies beside it: 1 a gem, 2 a gold coin, 3 a gear, 4 a mushroom. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### W2. The races' tools for a pick of four, 2 of 2 (attach W1)
+```
+Twelve more objects, EXACTLY the style, scale and light rim of the attached sheet, on one sheet, a 4x3 grid of square tiles, each row ONE tool drawn four times the same but for the one zone named. Row 1, the gnomes' tool: a crier's brass handbell; what rings out of it changes: 1 sound waves, 2 little stars, 3 a music note, 4 little hearts. Row 2, the knights' tool: a treasure map, partly unrolled, a dotted path across it; the mark at the path's end changes: 1 a red cross, 2 a star, 3 a heart, 4 a crown. Row 3, the undead's tool: an hourglass in a dark wooden frame; the finial on its top changes: 1 a candle, 2 a bone, 3 a gem, 4 a ring. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### W3. The tiers' marks (attach K3)
+A leader's tier said by a small mark beside its head (`marks/rank-1..3`).
+```
+Three small marks for a card-game interface on one sheet, three square tiles side by side, as the gear of the attached leaders' tiers but alone, in the humorous flat cartoon style: thick even dark outlines, flat colours with one shade each, no texture, no gradients, readable at 16 pixels. 1 a novice's mark: one bronze chevron; 2 a seasoned one's: two silver chevrons stacked; 3 a veteran's: three gold chevrons stacked under a small star. Each centred at the same size, a light rim. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
