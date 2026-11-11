@@ -7,13 +7,14 @@ import { Icon } from "../../orkui.js";
 import { HeadOf, whoOf } from "../../table/post.js";
 import { Index } from "../card.js";
 import { closeSpread } from "./open.js";
+import { keepTab } from "../back.js";
 
 /** `kind`: the spread (its `data-spread`); `title`, `line`, `say`: its head; `note`: the hand's words; `acts`: the hand's buttons; children: the field. */
 export function SpreadFrame({ kind, title, line = "", say = "", note = "", acts = null, hand = null, children }) {
   const root = useRef();
   useEffect(() => {
     root.current?.querySelector(".sp-shut")?.focus();
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeSpread(); } };
+    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeSpread(); } else keepTab(root.current, e); };
     addEventListener("keydown", key, true);
     return () => removeEventListener("keydown", key, true);
   }, []);

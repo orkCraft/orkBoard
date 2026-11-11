@@ -85,7 +85,7 @@
 .tb-fan { display: flex; padding: 6px 0 12px; } .tb-fan > .tb-slot { margin: 0 -6px; } .tb-fan.is-col { flex-direction: column; gap: 10px; align-items: flex-start; } .tb-fan.is-col > .tb-slot { margin: 0; }
 .tb-rules { display: flex; flex-direction: column; gap: 10px; padding: 12px; background: var(--ork-room); border: 1px solid var(--ork-frame); position: sticky; top: 0; }
 .tb-rule { margin: 0; display: flex; gap: 8px; align-items: flex-start; font: var(--ork-type-caption); color: var(--ork-ink-read); }
-.tb-rule small { display: block; font-family: var(--ork-font-code); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.tb-rule small { display: block; font: var(--ork-type-caption); font-family: var(--ork-font-code); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
 .tb-rule b { color: var(--ork-ink); } .tb-rule > span:not(.cards-tok):not(.tb-you) { flex: 1; min-width: 0; }
 .tb-rule .cards-tok span { display: none; }
 .tb-sent { border-top: 1px dashed var(--ork-edge); padding-top: 8px; }
