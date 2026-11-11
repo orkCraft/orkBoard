@@ -1,5 +1,5 @@
 """**The discard as cards** (goal 170): on mocks the right column draws its goals as S cards: under the plate *main* the goal ready for
-main ringed with its act *To main* as a button beside it, under the plate *dev* the goals waiting for dev. No count. The recording holds
+main ringed with its act *To main* as a button beside it, under the plate *dev* the goals done and not yet seen, then those waiting for dev. No count. The recording holds
 no goal done, so the test lays some into the page's own signals (the Board's map, the gate, the Board's rows)."""
 from __future__ import annotations
 
@@ -66,8 +66,9 @@ def test_the_discard_draws_s_cards_under_both_plates_and_to_main_is_a_button(pag
         btn = lane.locator("button[data-act=to_main]")
         assert btn.count() == 1 and btn.inner_text().strip() == "To main"
         assert btn.bounding_box()["x"] > box["x"] + box["width"] - 1
-        # two to a row: the goals that are not the ready one lie side by side
-        a, c = lane.locator("[data-goal=g-more]").bounding_box(), lane.locator("[data-goal=g-seen]").bounding_box()
+        # a goal done and not yet seen lies under the dev plate (the person, 11 November 2026), two to a row with the one waiting for dev
+        assert lane.locator("[data-pile=lower] [data-goal=g-seen]").count() == 1
+        a, c = lane.locator("[data-goal=g-seen]").bounding_box(), lane.locator("[data-goal=g-wait]").bounding_box()
         assert abs(a["y"] - c["y"]) < 4 and a["x"] != c["x"]
         # no count anywhere in the column
         assert "goals ready" not in lane.inner_text()
