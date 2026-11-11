@@ -332,6 +332,14 @@ icons** (`icons/`, pixelarticons): those are taken from an open vector set (Luci
 and a line in `NOTICE`. A small sign or rune is drawn as a **white silhouette** (one flat white shape, its inner details cut out
 as gaps, no outline colour): code colours it as the text beside it, and orkUI's tool traces it to a vector, as it cuts the sheets.
 
+**The first takes (11 November 2026)**, in `objects/cartoon/sheets/`: `m1-moons.jpg`, `s4-type-signs-2.jpg`, `r1-element-runes.jpg`.
+S4 is taken as it is (the chest and the tower are busy at 16 px; they are drawn at 18 px and over). M1 is taken but tile 3: its half
+moon is lit past the middle, too like tile 4; take tile 3 again with *the dark and the lit halves split by a STRAIGHT vertical line
+through the middle*. R1 drew pictograms (a key, a comb, an eye, a wave like a weather icon) in the signs' own style, so a rune and a
+sign would look alike, and tile 1's crossed tips read as a letter A: take it again with *Runes, not pictures: drawn as CARVED RUNES of
+straight cuts and sharp angles, as if scratched with a knife, each a few strokes only; curves only where a shape cannot be without;
+tile 1's tusks stand apart, never crossing*.
+
 ### R1. The five elements' runes (attach K1)
 ```
 Five magic runes for a card-game interface on one sheet, a 3x2 grid of square tiles (tile 6 empty), in the humorous flat cartoon style of the attached sheet but as FLAT SILHOUETTES: each rune ONE flat pure WHITE shape, thick and chunky like a rune carved into a tavern table and filled, its inner details cut out as gaps, no outline in another colour, no shading, no texture, no glow. Each rune centred, the same height in every tile (taller than wide, about 5:7), with a clear margin. They spell nothing and are no letter of any real alphabet: no arrow, no Y on a stem, no lightning bolt, no diamond on legs. Left to right, top to bottom: 1 two curved tusks side by side, pointing up, joined at their base; 2 an old key standing upright, its bow a ring, two teeth; 3 a comb: a bar with five short teeth hanging down; 4 an open eye, almond-shaped, a round pupil; 5 a wave: one rolling crest over two short lines. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
