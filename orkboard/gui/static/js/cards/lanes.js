@@ -12,7 +12,7 @@ import { nodes, postsOf, shareOf, tokensOf, viewsOf } from "./feed.js";
 import { FrameSwitch, TablesView } from "./tables/index.js";      // a leader's framework instead of the lanes (goal 170 T)
 import { frameworkOf, laid } from "./tables/state.js";
 
-const AT_WORK = new Set(["ready", "running", "testing", "picking", "failed", "review"]);
+export const AT_WORK = new Set(["ready", "running", "testing", "picking", "failed", "review"]);
 
 /** A goal at work of a party, as an S card. */
 export function WorkCard({ n, tilt = 0 }) {

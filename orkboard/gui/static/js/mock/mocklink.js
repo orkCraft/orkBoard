@@ -6,7 +6,8 @@
 // `proposed` part, which is the contract the host is to answer later.
 import { signal } from "@preact/signals";
 
-const URL_OF = "/static/mock/board.json";
+// Beside this module's own folder, so it is found on the desktop (/static/mock/) and on the phone (/app/page/mock/) alike.
+const URL_OF = new URL("../../mock/board.json", import.meta.url).href;
 /** What is laid over the recording, each a module of `parts/` with its own `lay(data)`: examples marked as such, and what the
  *  spreads and the leaders' tables read that the host does not answer yet (the contract proposed). */
 const PARTS = ["examples", "spreads", "tables"];

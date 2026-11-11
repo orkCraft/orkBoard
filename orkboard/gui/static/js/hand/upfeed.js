@@ -18,6 +18,8 @@ import { HeadOf, PostBody, PostCard, PostHead, Stack, Wait, when, whoOf } from "
 import { pickGoal } from "./entries.js";
 import { workOf } from "./upmenu.js";
 import { Concerns } from "./upparty.js";
+import { cardsOn } from "../cards/on.js";                 // the table of cards on the phone (goal 170 P): the feed in cards (cards/phone.js)
+import { PhoneCards } from "../cards/phone.js";
 
 export const FEED = "ideas.feed";
 export const onlyOrk = signal(false);                        // the Orkmaster's head pressed: the feed narrowed to its posts (a party's head narrows by `tab`)
@@ -116,6 +118,8 @@ export function Feed({ g, entries }) {
   const work = only && only !== ORKMASTER ? [] : atWork(), mineWork = g ? atWork(g) : [];
   const news = feed?.since ? `New since your last look · ${when(feed.since)}` : "News";
   const empty = feed && !waits.length && !stacks.length && !work.length && !mineWork.length && !seen;
+  if (cardsOn()) return html`<${PhoneCards} only=${only} party=${g ? g.slug : ""} heads=${html`<${Heads} heads=${heads} only=${only} press=${(l) => pressHead(l, only)} />`} waits=${waits} stacks=${stacks}
+    news=${news} seen=${seen && html`<${Seen} seen=${seen} onPick=${onPick} />`} empty=${empty} onPick=${onPick} reload=${reload} concerns=${g && html`<${ConcernsBlock} g=${g} />`} />`;
   return html`<div class="up-look up-feed" data-look="feed" data-only=${only || undefined} data-since=${since ?? undefined}>
     <${Heads} heads=${heads} only=${only} press=${(l) => pressHead(l, only)} />
     ${only && html`<p class="up-fd__only" role="status">The feed shows only ${whoOf(only).name}</p>`}

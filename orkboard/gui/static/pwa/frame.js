@@ -5,7 +5,7 @@
 // after the computer forgot the phone. The computer's update is the page's own (js/shell/update.js `UpdateAsk`: the snapshot carries it). The old face (old.html,
 // board-app.js) keeps its own copy of all this until spec 94 E.
 import { effect } from "@preact/signals";
-import { forgotten, offlineLine, pairWith, unreached } from "./page/js/link.js";
+import { forgotten, offlineLine, onMocks, pairWith, unreached } from "./page/js/link.js";
 import { store } from "./page/js/linkpaired.js";
 import { picked } from "./page/js/frame/state.js";
 import { makeRemote } from "./shell-remote.js";
@@ -58,10 +58,11 @@ const arrivalOf = (params, url = "") => {
   return { tag: from.slice(5), goal: params.get("goal") || new URLSearchParams(String(url).split("#")[1] || "").get("goal") || "" };
 };
 let arrival = arrivalOf(hash);
-// Nothing of it stays in the address: a code is once, a token is this phone's own.
-if (location.hash || location.search) history.replaceState(null, "", location.pathname);
+// Nothing of it stays in the address: a code is once, a token is this phone's own. On mocks (`?mock=1`, goal 170) the query stays: the page reads it.
+const MOCK = onMocks();
+if (location.hash || (location.search && !MOCK)) history.replaceState(null, "", MOCK ? location.pathname + location.search : location.pathname);
 
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js?app=board").catch(() => {});
+if ("serviceWorker" in navigator && !MOCK) navigator.serviceWorker.register("sw.js?app=board").catch(() => {});
 
 // -- the cards before the page ------------------------------------------------------------------------------
 
@@ -312,6 +313,15 @@ globalThis.orkboardPhone = Object.freeze({
 
 // -- start --------------------------------------------------------------------------------------------------
 
-if (code) pairing(code);
+/** On mocks (`?mock=1`, goal 170 stage P): no pairing and no computer; the page's link answers from the recording (js/mock/mocklink.js, loaded only then). */
+async function startMock() {
+  started = true;
+  card.hidden = true;
+  app.hidden = false;
+  await import("./page/board.js");
+}
+
+if (MOCK) startMock();
+else if (code) pairing(code);
 else if (device?.token) start();
 else unpaired();

@@ -1,0 +1,17 @@
+/* The phone's feed in cards (goal 170 stage P; js/cards/phone.js; docs/mockups/table-cards/ ?face=phone): the cards of cards.css at the phone's width.
+   An M is the feed's width, its words 14 px and over; the shelf of S cards scrolls sideways. Layout only: every colour, face and corner is orkUI's. */
+.up-ct { gap: var(--ork-4); }
+.up-ct__lab { flex: none; margin: var(--ork-4) 0 0; padding: var(--ork-1) var(--ork-3); align-self: flex-start; background: var(--_plate); font-size: 14px; line-height: 18px; color: var(--ork-ink); }
+.up-ct .cards-m { padding: 14px 16px 15px; gap: 8px; font-size: 14px; line-height: 20px; }
+.up-ct .cards-m__body { font-size: 14px; line-height: 20px; -webkit-line-clamp: 4; }
+.up-ct .cards-m.is-asks .cards-m__body { -webkit-line-clamp: 3; }
+.up-ct .cards-m__answer, .up-ct .cards-m__more { min-height: var(--ork-tap); font-size: 14px; }
+.up-ct .cards-m .post-card__sub { font-size: 14px; }
+.up-ct__shelf { flex: none; display: flex; gap: var(--ork-4); margin: 0 calc(var(--ork-5) * -1); padding: var(--ork-2) var(--ork-5) var(--ork-4); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.up-ct__shelf::-webkit-scrollbar { display: none; }
+.up-ct__shelf .ork-card.cards-s { --card-w: 112px; padding: 28px 9px 24px; }
+.up-ct .cards-s__name { font-size: 14px; line-height: 18px; }
+.up-ct .cards-s__line, .up-ct .cards-tok { font-size: 14px; line-height: 18px; }
+/* a card opened fills the screen: its frame and corners kept, its height grows (cards.css gives it the whole window at 600 px and under) */
+@media (max-width: 600px) { .cards-veil { place-items: stretch; } .cards-l { box-sizing: border-box; min-height: 100%; } .cards-l__body { font-size: 16px; } .cards-l__shut { top: calc(var(--ork-3) + env(safe-area-inset-top, 0px)); } }
+.cards-l .post-card__dots { display: none; }

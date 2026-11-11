@@ -2,13 +2,21 @@
 paths the host serves them (gui/server.py), and the page opened with `?mock=1` (js/mock/mocklink.js).
 
     uv run python tools/serve_mock.py [port]     # then open http://127.0.0.1:<port>/?mock=1
+
+The phone's page too (goal 170, stage P), at the path the phone listener serves it (gui/pwa.py `PREFIX`): the app's own files,
+the desktop's page as `/app/page/...` and orkUI as `/ds/orkui/`, so `http://127.0.0.1:<port>/app/?mock=1` is the phone's page
+with no computer (open it at 390 x 844 with touch, or as a phone in the browser's tools). The recording is served there as
+`/app/page/mock/`, which js/mock/mocklink.js reads beside its own folder; the phone listener never serves it.
 """
 import functools, http.server, mimetypes, sys
 from pathlib import Path
 from orkboard.design import tokens
-from orkboard.gui import server
+from orkboard.gui import pwa, server
 
 STATIC, SYSTEM = server.STATIC, tokens.SYSTEM
+
+
+app_files, ds_files = functools.cache(pwa.files), functools.cache(pwa.ds_files)
 
 
 class Page(http.server.BaseHTTPRequestHandler):
@@ -21,12 +29,28 @@ class Page(http.server.BaseHTTPRequestHandler):
             return self.send(STATIC / "index.html")
         if path == "/roles.css":
             return self.send(None, tokens.roles_css().encode(), "text/css; charset=utf-8")
+        if path.startswith("/app/page/mock/"):                              # the recording, for the phone's page (the listener does not serve it)
+            f = (STATIC / "mock" / path[len("/app/page/mock/"):]).resolve()
+            if f.is_file() and (STATIC / "mock").resolve() in f.parents:
+                return self.send(f)
+        if pwa.wants(path):
+            return self.phone(path)
         for route, root in (("/static/", STATIC), ("/ds/", SYSTEM)):
             if path.startswith(route):
                 f = (root / path[len(route):]).resolve()
                 if f.is_file() and root.resolve() in f.parents:
                     return self.send(f)
         self.send_error(404)
+
+    def phone(self, path):
+        """The phone's page: its page and manifest as the listener serves them (CSP and all, `pwa.serve`); the rest, which that call
+        would look up again among hundreds of files each time, from the maps made once."""
+        under_ds = path.startswith(pwa.DS)
+        name = path[len(pwa.DS if under_ds else pwa.PREFIX):] or "index.html"
+        f = (ds_files() if under_ds else app_files()).get(name)
+        if f and f.suffix in pwa.TYPES and not name.endswith((".html", "sw.js", ".webmanifest")):
+            return self.send(f)
+        self.wfile.write(pwa.serve("GET", self.path))
 
     def send(self, f, body=None, kind=None):
         body = f.read_bytes() if f else body
