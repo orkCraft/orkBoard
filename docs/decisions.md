@@ -8259,3 +8259,51 @@ at the table, as the Orkmaster is no party's leader. So:
    game's terms, is still talked over (goal 170).
 
 The owner's call.
+
+## 296. One card ratio, three sizes: S a goal, M a word, L read; a card read by its corners, its act under its leaders' tokens; what is the person's move lies in the hand only; a leader's framework laid from its table's file; no pixel picture (11 November 2026, the owner)
+
+Changes: 283.1 and 270.1, 270.7 (two sizes only, no opened card), 251.2 and 283.17 (the bottom corners), 252.1 (the middle of a
+face-up card on the table), 293.1 (every card a post), 293.3 (what a leader asks first in its lane), 206.2, 251.4 and 283.11 (the
+Orkmaster's column of 160 px, never scrolled, its piles), 283.35 and 289.2 (the pictures in orkUI's pixels; the signs and the runes
+not redrawn). Kept: 240 (the decision all agreed on waits in the column), 270.2 and 283.19 (a question's ways are the hand's cards),
+273 and 283.27–28 (the discard), 294, 268, 295.
+
+Why: goal 170's talk of 11 November 2026, on the mockups `docs/mockups/table-cards/`, `spreads/` and `frameworks/` and the page on
+mocks (`?mock=1`, `tools/serve_mock.py`): the person asked whether cards of any height lose the card game, chose one ratio turned on
+its side for a leader's word and turned back up when read (*three sizes close every size*), set a card's corners (*the leaders'
+tokens lie on the start: look at the risks first, then begin*), and asked whether what asks the person needs to be on the table at
+all when its card is in the hand (*duplication and complication*). Read against the decisions, the mocks had left some of them
+without saying so (the table of this talk); the person took each way recommended. So:
+1. **One card ratio, 2.5 : 3.5, three sizes.** **S**, upright: a goal (in the hand, at work, in the discard, on a spread). **M**, the
+   same card on its side: a leader's or the Orkmaster's word (news, a view, a change, why it asks), never a goal and never an act of
+   the person's. **L**, upright and large: a card opened to be read, over the table on the desktop, the whole screen on a phone; an M
+   pressed turns back up as it grows. The face is the card read whole; its acts are the place's.
+2. **A question's ways are the hand's cards** (§270.2 and §283.19 kept): a question lifted rises at the table's foot and its ways lie
+   in the hand, each a card; an L shows what is asked and why, its ways stay in the hand.
+3. **An S is read by its corners**: **top left the rune**, **top right the kind** (the signal's colour there and in the frame only),
+   **bottom left when** (put off, starts by itself at a time, at work since), **bottom right its act** (*Start*, its cost on it as
+   §283.17's one figure: ≈ the share of its tool, or what it has spent at work, or what it spent when done). **The head of the leader
+   who does it is its picture, in the middle**, its title and one line under it. A card's corners never repeat one another.
+4. **A leader's risk, question or stance against lies on the card's act** (§295.4's tokens): the person reads it before the act can
+   be pressed; a token pressed says its note and moves aside, a question's raises its card in the hand. A view *for* lies on nothing;
+   the views for and the ones read are said in the card's L.
+5. **What is the person's move lies in the hand only** (§240.1, §206.7 and §145 kept): a leader's lane holds no *Asks you* and no
+   second copy of a question; the table says that something waits by the token on its goal's card and the **!** on the asking
+   leader's tab (§294.1). The leader's post that says why it asks is an M among its news.
+6. **The Orkmaster's lane is as wide as an S with its act** (236 px at 1440, it scrolls when it must): what starts by itself at a time
+   (§240.2, its *Change…* and *Start now*), the deck it deals from (*Being read: <goal>*), what is at work. No list, no count.
+7. **A leader's framework is laid from its table's file** (§267.2–§267.3): `llm-wiki/general/pages/tables/<party>.md`, kept by its
+   leader; a framework's entities (a persona, a job, a module) are read from the Board and the code, never drawn by hand. The person
+   turns a card over and spreads a pile, never moves a card; the person's own token (a question, a concern) put on a card goes to its
+   leader and marks the part of its table to better.
+8. **No pixel picture**: the runes, the signs, the kinds' pictures, the moons, the races' tools and the tiers' marks are redrawn in
+   the cartoon (`docs/pictures-cartoon.md`, *No pixel left*), made in orkUI and copied; the AI tools' marks stay their makers'; the
+   interface's icons come from an open vector set, its licence beside it.
+9. **The spreads** (`docs/mockups/spreads/`) lay cards to show one thing at a time: the centre what is talked of, the hand what the
+   person decides, a fan a choice, a pile a group (its thickness, never a number), a card face down what is not needed now, the
+   sides the voices; three to five face up at most; every gesture also a button with its word and a key. Each spread is a goal of
+   its own on the Board.
+10. **Built** on the page's table of cards (`js/cards/`), drawn on mocks and with `?table=cards` until goal 170's last step turns it
+   on and the old faces go; what the host does not answer yet is the contract the mocks hold (`js/mock/parts/`).
+
+The owner's call.

@@ -53,7 +53,7 @@ export function CardS({ n, line = "", when = "", bar = null, tokens = [], act = 
     <span class="cards-c cards-c--bl">${asks && !when ? html`<span class="cards-s__asks" aria-hidden="true">!</span><span>waits for you</span>` : when}</span>
     <span class="cards-c cards-c--br">${top ? html`<button type="button" class="cards-lie" data-race=${whoOf(top.leader).race || "orkmaster"} data-view=${top.view}
           aria-label=${`${whoOf(top.leader).name}: ${VIEWS[top.view].word}${top.note ? `: ${top.note}` : ""}. Read it first; pressed, it moves aside`} title=${top.note || ""}
-          onClick=${(e) => { e.stopPropagation(); setRead([...read, top.leader]); }}>
+          onClick=${(e) => { e.stopPropagation(); setRead([...read, top.leader]); if (top.view === "question") answerInHand(n.slug); }}>
           ${lying.slice(1).map(() => html`<span class="cards-lie__under" aria-hidden="true"></span>`)}<i aria-hidden="true">${VIEWS[top.view].mark}</i><span>${VIEWS[top.view].word}</span></button>`
         : act ? html`<button type="button" class="ork-btn cards-act" onClick=${(e) => { e.stopPropagation(); act.run(); }}><span>${act.label}</span>${act.cost && html`<small>${act.cost}</small>`}</button>`
         : bar !== null ? html`<span class="cards-pct">${Math.round(bar * 100)}%</span>` : ""}</span>
@@ -69,20 +69,19 @@ const subOf = (p) => [KINDS[p.kind] || KINDS.news, when(p.at)].filter(Boolean).j
  *  `more`: the leader's posts after it, its stack (`onMore` spreads them). */
 export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
   const ref = useRef();
-  const open = () => openCard({ kind: "post", p, from: ref.current, acts: [...(p.asks && p.goal ? [{ label: "Answer in hand", main: true, run: () => answerInHand(p.goal) }] : []), { label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) },
+  const open = () => openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) },
     ...(p.goal && viewsOf(p.goal).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: p.goal, from: ref.current }) }] : [])] });
-  return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-asks": !!p.asks, "is-stacked": more > 0 })} data-race=${whoOf(p.leader).race || "orkmaster"}
+  return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-stacked": more > 0 })} data-race=${whoOf(p.leader).race || "orkmaster"}
       data-kind=${p.kind} tabindex="0" aria-label=${`${whoOf(p.leader).name}: ${p.text}. Press to open.`}
       onClick=${(e) => { if (!e.target.closest("button")) open(); }} onKeyDown=${(e) => { if (e.key === "Enter" && e.target === ref.current) { e.preventDefault(); open(); } }}>
-    <${PostHead} leader=${p.leader} sub=${subOf(p)} tag=${TAGS[p.kind] || ""} asks=${!!p.asks} />
+    <${PostHead} leader=${p.leader} sub=${subOf(p)} tag=${TAGS[p.kind] || ""} />
     <div class="cards-m__body"><${PostBody} p=${p} onPick=${onPick} /></div>
-    ${p.asks && p.goal && html`<button type="button" class="ork-btn cards-m__answer" onClick=${() => answerInHand(p.goal)}><${Icon} name="arrow-right" /><span>Answer in hand</span></button>`}
     ${more > 0 && onMore && html`<button type="button" class="cards-m__more" onClick=${onMore}><${Icon} name="chevron-down" /><span>More from ${whoOf(p.leader).name}</span></button>`}
   </article>`;
 }
 
-/** A question a leader asks in its lane is answered in the hand (decisions §145: the hand is what the person decides): its
- *  card there is pressed, which opens its ways. After the L is put away, so the focus lands on the hand's card. */
+/** A question is answered in the hand (decisions §145, §296.4): a question token pressed raises its goal's card there:
+ *  the card is pressed, which opens its ways. After the L is put away, so the focus lands on the hand's card. */
 export function answerInHand(slug) {
   setTimeout(() => {
     const c = document.querySelector(`.frame-hand button.hand-card[data-goal="${CSS.escape(slug)}"]`);
@@ -114,7 +113,7 @@ export function CardL({ onPick }) {
     <article ref=${root} class="ork-card cards-l" role="dialog" aria-modal="true" aria-label=${o.kind === "post" ? `${whoOf(leader).name}: ${o.p.text}` : o.n.title}
         data-race=${whoOf(leader).race || "orkmaster"} data-from=${o.kind}>
       <button type="button" class="ork-btn quiet cards-l__shut" onClick=${shut}><${Icon} name="close" /><span>Close</span></button>
-      ${o.kind === "post" ? html`<${PostHead} leader=${o.p.leader} sub=${subOf(o.p)} tag=${TAGS[o.p.kind] || ""} asks=${!!o.p.asks} />
+      ${o.kind === "post" ? html`<${PostHead} leader=${o.p.leader} sub=${subOf(o.p)} tag=${TAGS[o.p.kind] || ""} />
           <div class="cards-l__body"><${PostBody} p=${o.p} onPick=${(s) => { shut(); onPick?.(s); }} /></div>`
         : html`<${PostHead} leader=${leader} sub=${o.line || ""} />
           <h2 class="cards-l__title">${o.n.title}</h2>

@@ -24,7 +24,6 @@ import { PlayDie } from "./playdie.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
 import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
-import { AskToL, isQuestion } from "../cards/ask.js";
 import { SayLifted } from "./sayplay.js";
 import { ConflictPlay } from "./conflictcard.js";                          // a decision's conflict in play: its ways the hand (spec 168 D1)
 import { ConcernPlay } from "./concernplay.js";                          // a concern in play: its ways the hand (spec 168 D4)
@@ -121,11 +120,10 @@ export function Hand() {
   const deal = wide && !s && !invOpen && headerDeal.value ? headerDeal.value : "";                   // the Orkmaster's header pressed: the kinds or the stages are the hand
   useEffect(() => { if ((key || fieldOpen.value || !wide) && headerDeal.value) headerDeal.value = ""; }, [key, fieldOpen.value, wide]);
   const chair = dealing.value && wide && !invOpen && !middle && !bare && !s;                                   // the new chair pressed: its crafts are the hand (spec 161 I)
-  const ask = cardsOn() && wide && isQuestion(s);                                          // the table of cards: a question is answered in an L over the table (cards/ask.js)
-  const cards = s && wide && !ask ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
+  const cards = s && wide ? answerSet(s) : null;                                           // a card with one open question, or a failure: it rises and its ways lie in the hand; the rest of the hand sinks, grey and inert
   const sayOn = wide && lifted.value === PLAY;                                                                  // a leader's card of the say in play: its ways are the hand (sayplay.js)
   const fieldWide = fieldOpen.value && wide && !middle;                                                   // the new goal's field lies in the hand's place (spec 168 D2)
-  const sunk = !!(slotOn || cards || deal || chair || (s && wide && !ask) || fieldWide || sayOn);                                    // what the person plays lies in the hand's place: the hand's own cards sink (spec 168 D1, D2)
+  const sunk = !!(slotOn || cards || deal || chair || (s && wide) || fieldWide || sayOn);                                    // what the person plays lies in the hand's place: the hand's own cards sink (spec 168 D1, D2)
   const places = columnOn() && !bare ? html`<${Backpack} /><${Book} />` : null;                                // the places that change the table: the die, the backpack, the book (spec 168 A5)
   const pots = !columnOn() ? html`<${Mana} lifted=${s} />` : bare ? html`<${PotionRow} above=${true} />` : null;
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
@@ -138,8 +136,7 @@ export function Hand() {
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
     ${slotOn && html`<${SlotDeal} />`}
-    ${ask && html`<${AskToL} s=${s} anchor=${anchor} />`}
-    ${s && !ask && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "decided" ? html`<${DecidedPlay} s=${s} />` : s.kind === "night_proposal" ? html`<${NightProposalPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
+    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "decided" ? html`<${DecidedPlay} s=${s} />` : s.kind === "night_proposal" ? html`<${NightProposalPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
     ${sayOn && (isDevPlay() ? html`<${DevLifted} />` : html`<${SayLifted} />`)}
     ${deal && html`<${ProjectDeal} which=${deal} />`}
     ${key === ADD_TOOL && html`<${AddTool} />`}

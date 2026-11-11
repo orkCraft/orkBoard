@@ -1,5 +1,5 @@
 // The Orkmaster's lane of the table of cards (goal 170 D; decision §295: the table's dealer; docs/mockups/table-cards/):
-// *Waits for you* (a spec that starts by itself: its card, its clock, its acts), *Goals* (the deck it deals from, *Being
+// *Starts by itself* (decisions §240.2, §296.6: a spec that starts by itself: its card, its clock, its acts), *Goals* (the deck it deals from, *Being
 // read: <goal>*), *At work* (every goal at work, S cards with their bars). Whole cards, no list, no count.
 import { html } from "../html.js";
 import { command, proposed } from "../link.js";
@@ -15,14 +15,14 @@ const IN_TALK = new Set(["new", "talk", "spec", "idea"]);
 function Waits() {
   const waits = feed.value?.waits || [];
   if (!waits.length) return null;
-  return html`<p class="cards-lab">Waits for you</p>${waits.map((w) => {
+  return html`<p class="cards-lab">Starts by itself</p>${waits.map((w) => {
     const n = nodeOf(w.goal) || { slug: w.goal, title: w.short || w.goal };
     const card = { slug: n.slug, title: n.short || n.title, element: n.element, hue: n.hue, sign: n.type?.sign || "", leader: w.leader || "orkmaster" };
     const acts = (w.acts || []).map((a) => ({ label: ACTS[a.act] || a.act, main: a.act !== "change_spec", run: () => command(a.command, a.args || {}) }));
     const start = (w.acts || []).find((a) => a.act === "start_now"), price = proposed("costs")?.goals?.[n.slug];
     const act = start && { label: ACTS.start_now, cost: price ? `≈${price.pct}% ${price.tool === "codex" ? "Codex" : "Claude"}` : "", run: () => command(start.command, start.args || {}) };
-    return html`<div class="cards-wait" key=${w.goal}><${CardS} n=${card} asks=${true} when=${w.at ? `starts ${w.at.slice(11, 16)}` : ""} act=${act} tokens=${tokensOf(n.slug)}
-        onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line: "waits for you", from,
+    return html`<div class="cards-wait" key=${w.goal}><${CardS} n=${card} when=${w.at ? `starts ${w.at.slice(11, 16)}` : ""} act=${act} tokens=${tokensOf(n.slug)}
+        onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line: "starts by itself", from,
           acts: [...acts, ...(viewsOf(n.slug).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: n.slug, from }) }] : []),
             ...(IN_TALK.has(n.state) ? [{ label: "The deal", run: () => openSpread({ kind: "deal", slug: n.slug, from }) }] : []), ...(w.kind === "main" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />
       <div class="cards-wait__acts">${acts.filter((a) => a.label !== ACTS.start_now).map((a) => html`<button type="button" class="ork-btn quiet" onClick=${a.run}>${a.label}</button>`)}</div></div>`;

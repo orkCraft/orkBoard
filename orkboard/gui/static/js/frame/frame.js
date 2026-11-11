@@ -7,7 +7,6 @@ import { Hand } from "../hand/hand.js";
 import { Column } from "../table/column.js";
 import { cardsOn } from "../cards/on.js";          // the table of cards (goal 170, the talk of 11 November 2026), on mocks and with ?table=cards
 import { CardL } from "../cards/card.js";
-import { AskL } from "../cards/ask.js";
 import { Spreads } from "../cards/spreads/index.js";
 import { pick } from "./state.js";
 import { Balloon } from "../table/balloon.js";
@@ -20,7 +19,7 @@ import { SetupWatch } from "../hand/setupcards.js";     // what the Orkmaster as
 import { laidNow, laying, useLaying } from "../table/laying.js";   // the window not yet laid, and the laying at Start (spec 130 C.6)
 import { FirstGoal, Room, roomOn } from "./firstopen.js";   // the first open as four cards in the dark room (spec 150 G)
 
-const sheets = ["./frame.css", "../table/table.css", "../table/work.css", "../table/corners.css", "../table/made.css", "../table/cardwindow.css", "../table/discard.css", "../table/lane.css", "../table/portal.css", "../table/plates.css", "../table/notice.css", "../table/balloon.css", "../table/ask.css", "../table/back.css", "../table/column.css", "../table/smallcard.css", "../table/preview.css", "../table/goalview.css", "../table/steps.css", "../table/presence.css", "../table/dayline.css", "../hand/hand.css", "../hand/mana.css", "../hand/handcard.css", "../hand/cardface.css", "../hand/openedcard.css", "../hand/upright.css", "../hand/upround.css", "../hand/upmenu.css", "../hand/uplook.css", "../table/post.css", "../hand/upfeed.css", "./firstopen.css", "../table/look.css", "../table/projectdeal.css", "../hand/chairdeal.css", "../hand/fieldwide.css", "../mock/plate.css", "../cards/cards.css", "../cards/phone.css", "../cards/ask.css", "../cards/handcards.css", "../cards/discard.css", "../cards/spreads/spreads.css", "../cards/tables/tables.css"].map((p) => new URL(p, import.meta.url).href);
+const sheets = ["./frame.css", "../table/table.css", "../table/work.css", "../table/corners.css", "../table/made.css", "../table/cardwindow.css", "../table/discard.css", "../table/lane.css", "../table/portal.css", "../table/plates.css", "../table/notice.css", "../table/balloon.css", "../table/ask.css", "../table/back.css", "../table/column.css", "../table/smallcard.css", "../table/preview.css", "../table/goalview.css", "../table/steps.css", "../table/presence.css", "../table/dayline.css", "../hand/hand.css", "../hand/mana.css", "../hand/handcard.css", "../hand/cardface.css", "../hand/openedcard.css", "../hand/upright.css", "../hand/upround.css", "../hand/upmenu.css", "../hand/uplook.css", "../table/post.css", "../hand/upfeed.css", "./firstopen.css", "../table/look.css", "../table/projectdeal.css", "../hand/chairdeal.css", "../hand/fieldwide.css", "../mock/plate.css", "../cards/cards.css", "../cards/phone.css", "../cards/handcards.css", "../cards/discard.css", "../cards/spreads/spreads.css", "../cards/tables/tables.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
   for (const href of sheets) {
     if (!document.querySelector(`link[href="${href}"]`)) {
@@ -48,6 +47,6 @@ export function Frame() {
     <div class="frame-table"><${Table} column=${column} /></div>
     <${DiscardColumn} />
     <div class="frame-hand"><${Hand} /></div>
-    <${SetupWatch} /><${FirstGoal} /><${CrashNote} /><${ReportPanel} />${cardsOn() && html`<${CardL} onPick=${pick} /><${AskL} /><${Spreads} />`}
+    <${SetupWatch} /><${FirstGoal} /><${CrashNote} /><${ReportPanel} />${cardsOn() && html`<${CardL} onPick=${pick} /><${Spreads} />`}
   </div>`;
 }

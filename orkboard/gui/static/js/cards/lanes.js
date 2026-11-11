@@ -1,5 +1,5 @@
 // The leaders' lanes of the table of cards (goal 170 E, F; the talk of 11 November 2026; docs/mockups/table-cards/): a lane a
-// party, its leader's words as M cards in the feed's order (what asks first), one leader's posts in a row one stack with
+// party, its leader's words as M cards in the feed's order (what the person decides is the hand's only, decisions §296.5), one leader's posts in a row one stack with
 // *More from <leader>*; a goal of the party at work an S card with its bar and its tokens. No list, no count.
 import { useState } from "preact/hooks";
 import { html } from "../html.js";
@@ -27,13 +27,11 @@ export function WorkCard({ n, tilt = 0 }) {
 
 function Lane({ g }) {
   const [spread, setSpread] = useState({}), posts = postsOf(g.slug), work = nodes().filter((n) => n.goal === g.slug && AT_WORK.has(n.state));
-  const asks = posts.filter((s) => s.p.asks), news = posts.filter((s) => !s.p.asks);
   const one = (s, i) => [html`<${CardM} key=${i} p=${s.p} more=${spread[i] ? 0 : s.more.length} onPick=${pick} onMore=${() => setSpread({ ...spread, [i]: true })} />`,
     ...(spread[i] ? s.more.map((p, j) => html`<${CardM} key=${`${i}-${j}`} p=${p} onPick=${pick} />`) : [])];
   return html`<section class="cards-lane" data-race=${raceOf(g)} data-party=${g.slug} aria-label=${`${nameOf(g)}'s lane`}>
     ${frameworkOf(g) && html`<header class="cards-lane__head"><b>${nameOf(g)}</b><${FrameSwitch} g=${g} /></header>`}
-    ${asks.length > 0 && html`<p class="cards-lab">Asks you</p>${asks.flatMap((s) => one(s, posts.indexOf(s)))}`}
-    ${news.length > 0 && html`<p class="cards-lab">New since your last look</p>${news.flatMap((s) => one(s, posts.indexOf(s)))}`}
+    ${posts.length > 0 && html`<p class="cards-lab">New since your last look</p>${posts.flatMap((s, i) => one(s, i))}`}
     ${work.length > 0 && html`<p class="cards-lab">At work</p><div class="cards-row is-wrap">${work.map((n, i) => html`<${WorkCard} key=${n.slug} n=${n} tilt=${i % 2 ? 2 : -2} />`)}</div>`}
     ${!posts.length && !work.length && html`<p class="cards-quiet">Quiet: nothing new from ${nameOf(g)}.</p>`}
   </section>`;

@@ -199,7 +199,7 @@ def test_the_deal_opens_from_a_goal_in_talks_l_and_the_deck_and_deals_the_route_
         sp.get_by_role("button", name="Deal it").click()
         sent = pg.evaluate(SENT)
         assert pg.locator(".sp-veil").count() == 0 and "ideas.route_set" in sent and "ideas.route_start" in sent
-        pg.get_by_role("button", name="The deal").first.click()      # the deck's act
+        pg.get_by_role("button", name="The deal", exact=True).first.click()      # the deck's act
         spread_of(pg, "deal")
         closes_with_esc(pg)
         b.close()

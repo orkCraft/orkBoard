@@ -1,7 +1,7 @@
 """**The phone in cards** (goal 170, stage P; docs/mockups/table-cards/ ?face=phone): the phone's page (`/app/`, gui/pwa.py) on mocks (`?mock=1`),
 served by tools/serve_mock.py at the path the phone listener serves it, at 390 x 844 with touch. Its link asks no computer (js/mock/mocklink.js,
-reached as `./page/js/mock/mocklink.js`); the feed is drawn in cards (js/cards/phone.js): the leaders' heads in rings, the leader's ask first as an
-M card full width with *Answer in hand*, what is at work a shelf of S cards, and a card pressed opens as an L that fills the screen, Close puts it
+reached as `./page/js/mock/mocklink.js`); the feed is drawn in cards (js/cards/phone.js): the leaders' heads in rings, the leaders' M cards full width (what asks lies in
+the hand only, decisions §296.5), what is at work a shelf of S cards, and a card pressed opens as an L that fills the screen, Close puts it
 away. Without `?mock=1` the phone loads no mock module. Set `ORK_SHOTS` to a folder to leave screenshots there."""
 from __future__ import annotations
 
@@ -49,14 +49,13 @@ def test_the_phone_on_mocks_draws_its_feed_in_cards(base):
         # the leaders' heads in rings, the Orkmaster's first
         heads = pg.locator(".up-fh__head")
         assert heads.count() >= 3 and heads.first.get_attribute("data-leader") == "orkmaster"
-        # the feed: M cards full width, the leader's ask first, with Answer in hand
+        # the feed: M cards full width; no section of what asks (decisions §296.5: the person's move lies in the hand)
         feed = pg.locator(".up-ct")
         ms = feed.locator(".cards-m")
         first = ms.first.bounding_box()
         assert first["width"] >= 390 - 40, first
-        assert "is-asks" in ms.first.get_attribute("class")
-        assert ms.first.get_by_role("button", name="Answer in hand").is_visible()
-        assert feed.locator(".cards-lab").first.inner_text().strip().lower() == "asks you"
+        assert feed.get_by_role("button", name="Answer in hand").count() == 0
+        assert "asks you" not in [t.strip().lower() for t in feed.locator(".cards-lab").all_inner_texts()]
         # what is at work: a shelf of S cards
         shelf = pg.locator(".up-ct__shelf")
         assert shelf.locator(".cards-s").count() >= 2

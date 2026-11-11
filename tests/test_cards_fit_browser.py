@@ -122,12 +122,7 @@ def open_gate(pg):
     raise AssertionError("no goal to review on the mock")
 
 
-def open_ask(pg):
-    pg.locator(".frame-hand button.hand-card[data-kind='talk']").first.click()
-    pg.wait_for_selector(".cards-ask")
-
-
-SURFACES = {"the table": (lambda pg: None, ".frame"), "an L": (open_l, ".cards-l"), "a question in an L": (open_ask, ".cards-ask"),
+SURFACES = {"the table": (lambda pg: None, ".frame"), "an L": (open_l, ".cards-l"),
             "the gate spread": (open_gate, ".sp-veil"), "a leader's table": (open_table, ".frame")}
 
 

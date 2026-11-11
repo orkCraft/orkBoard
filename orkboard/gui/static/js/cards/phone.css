@@ -4,8 +4,7 @@
 .up-ct__lab { flex: none; margin: var(--ork-4) 0 0; padding: var(--ork-1) var(--ork-3); align-self: flex-start; background: var(--_plate); font-size: 14px; line-height: 18px; color: var(--ork-ink); }
 .up-ct .cards-m { padding: 14px 16px 15px; gap: 8px; font-size: 14px; line-height: 20px; }
 .up-ct .cards-m__body { font-size: 14px; line-height: 20px; -webkit-line-clamp: 4; }
-.up-ct .cards-m.is-asks .cards-m__body { -webkit-line-clamp: 3; }
-.up-ct .cards-m__answer, .up-ct .cards-m__more { min-height: var(--ork-tap); font-size: 14px; }
+.up-ct .cards-m__more { min-height: var(--ork-tap); font-size: 14px; }
 .up-ct .cards-m .post-card__sub { font-size: 14px; }
 .up-ct__shelf { flex: none; display: flex; gap: var(--ork-4); margin: 0 calc(var(--ork-5) * -1); padding: var(--ork-2) var(--ork-5) var(--ork-4); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
 .up-ct__shelf::-webkit-scrollbar { display: none; }
