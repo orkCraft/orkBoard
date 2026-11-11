@@ -1,0 +1,77 @@
+/* A leader's table: its framework laid as cards (docs/mockups/frameworks/). On orkUI's tokens and docs/mockups/table-cards/'s pieces. */
+.s p { font: 400 12px/16px var(--ork-font-read); color: var(--ork-ink-read); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.s.xl { --cw: 190px; padding: 32px 15px 28px; gap: 6px; } .s.xl b { font-size: 17px; line-height: 21px; } .s.xl p { font-size: 13px; line-height: 18px; }
+.s.lg { --cw: 140px; padding: 28px 11px 24px; } .s.lg b { font-size: 15px; line-height: 19px; }
+.back { flex: none; width: var(--cw, 104px); aspect-ratio: 2.5 / 3.5; border-radius: 10px; background: var(--ork-raised) url(../../../design-system/orkui/backs/back.svg) center / 100% 100%;
+  border: 1px solid var(--ork-card-frame); box-shadow: 0 4px 10px rgb(0 0 0 / .4); }
+/* a pile: its top card, its thickness the backs under it */
+.fpile { position: relative; display: inline-block; flex: none; margin: 0 14px 14px 0; }
+.fpile > .back { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.fpile > .cd { position: relative; }
+.fpile .back { --cw: auto; }
+.fpile.on { margin-top: -18px; }
+.row { display: flex; gap: 12px; align-items: flex-start; }
+.shelf { display: flex; gap: 10px; align-items: flex-start; flex-wrap: nowrap; overflow: hidden; padding: 2px 2px 8px; }
+/* the person's own token: the ink's, its mark the person's */
+.tok.you i { background: var(--ork-ink); color: var(--ork-canvas); border-color: #fff; box-shadow: 0 2px 0 var(--ork-ink-muted), 0 3px 5px rgb(0 0 0 / .5), 0 0 0 2px var(--ork-alert); }
+.tok.you.big i { width: 40px; height: 40px; font-size: 20px; }
+.placed { position: absolute; z-index: 3; right: -10px; top: -10px; }
+.placed .tok i { width: 30px; height: 30px; font-size: 16px; }
+.s.marked { box-shadow: inset 0 3px 0 var(--pc), 0 0 0 2px var(--ork-ink), 0 6px 14px rgb(0 0 0 / .4); }
+.sent { display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 10px; background: var(--ork-panel); border: 1px dashed var(--ork-edge); font: 400 13px/18px var(--ork-font-read); color: var(--ork-ink-read); }
+.sent b { color: var(--ork-ink); }
+/* the jobs to be done */
+.fw.jtbd { grid-template-columns: 230px 1fr 260px; align-items: start; }
+.fc { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.fc.mid { align-items: stretch; }
+.jobwrap { display: flex; flex-direction: column; gap: 8px; }
+.m.job { aspect-ratio: 3.5 / 2.5; width: 340px; max-width: 340px; align-self: center; }
+.m.job .jt { font: 500 16px/23px var(--ork-font-read); color: var(--ork-ink); -webkit-line-clamp: 5; }
+.m.job .jt b { font-weight: 700; color: var(--ork-gilt-hi); }
+.forces { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.force { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 15px; border: 1px solid var(--ork-edge); background: var(--ork-panel); font: 400 13px/16px var(--ork-font-read); color: var(--ork-ink-read); }
+.force b { font: 700 12px/14px var(--ork-font-read); text-transform: uppercase; letter-spacing: .05em; }
+.force.in b { color: var(--ork-success); } .force.out b { color: var(--ork-alert); }
+.force.in::before { content: "→"; color: var(--ork-success); font-weight: 700; } .force.out::before { content: "←"; color: var(--ork-alert); font-weight: 700; }
+.fan3 { display: flex; justify-content: center; gap: 0; padding: 6px 0; }
+.fan3 > * { margin: 0 -6px; }
+.fan3 .s, .fan3 > span > .s { --cw: 104px; }
+.fan3.wide .s, .fan3.wide > span > .s { --cw: 92px; }
+.s.hired { box-shadow: inset 0 3px 0 var(--pc), 0 0 0 2px var(--ork-gilt-hi), 0 0 18px rgb(184 145 79 / .35); }
+.s.hired::after { content: "Hired"; position: absolute; right: 10px; bottom: 30px; padding: 2px 7px; border-radius: 5px; background: var(--ork-gilt-hi); color: var(--ork-on-ink); font: 700 12px/15px var(--ork-font-read); }
+.s.fired { background: var(--ork-panel); } .s.fired b, .s.fired p { color: var(--ork-ink-muted); }
+.s.fired::after { content: "Fired"; position: absolute; right: 8px; bottom: 26px; padding: 2px 6px; border-radius: 5px; border: 1px solid var(--ork-edge); color: var(--ork-ink-muted); font: 700 12px/15px var(--ork-font-read); }
+/* the architecture: layers top to bottom, a card on the one it needs */
+.fw.arch { grid-template-columns: 1fr 300px; align-items: start; }
+.layers { display: flex; flex-direction: column; gap: 0; }
+.layer { position: relative; display: flex; align-items: flex-start; gap: 18px; padding: 10px 0 4px 120px; border-top: 1px dashed var(--ork-frame); }
+.layer:first-child { border-top: 0; }
+.layer .ln { position: absolute; left: 0; top: 14px; width: 110px; font: 700 13px/16px var(--ork-font-pixel); color: var(--ork-ink-read); }
+.layer .ln i { display: block; font: 400 12px/15px var(--ork-font-read); font-style: normal; color: var(--ork-ink-muted); }
+.s.mod { --cw: 84px; padding: 26px 8px 20px; } .s.mod b { font: 700 13px/16px var(--ork-font-mono, monospace); word-break: break-all; }
+.s.mod small { white-space: normal; }
+.s.ext { --cw: 170px; aspect-ratio: 3.5 / 2.5; border-style: dashed; background: var(--ork-panel); padding: 26px 12px 18px; }
+.s.frame { border-style: dashed; }
+.s.stray { box-shadow: inset 0 3px 0 var(--pc), 0 0 0 2px var(--ork-alert), 0 6px 14px rgb(0 0 0 / .4); margin-top: -10px; }
+.layer .spread { margin-left: 10px; display: flex; flex-direction: column; gap: 4px; }
+.rules { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; background: rgb(0 0 0 / .25); }
+.rules > p { display: flex; gap: 8px; align-items: flex-start; font: 400 13px/18px var(--ork-font-read); color: var(--ork-ink-read); }
+.rules > p small { display: block; font: 400 12px/15px var(--ork-font-mono, monospace); color: var(--ork-ink-muted); }
+.rules > p b { color: var(--ork-ink); }
+.legend { font: 400 12px/16px var(--ork-font-read); color: var(--ork-ink-muted); }
+.lt.phone .layer { padding: 6px 0 2px 0; flex-wrap: nowrap; gap: 10px; }
+.lt.phone .layer .ln { position: static; width: 58px; flex: none; font-size: 12px; }
+.lt.phone .s.mod { --cw: 78px; padding: 22px 6px 16px; } .lt.phone .s.mod b { font-size: 11px; line-height: 14px; } .lt.phone .s.mod small { font-size: 11px; line-height: 13px; }
+.lt.phone .s.ext { --cw: 230px; }
+.lt.phone .s.lg { --cw: 120px; }
+.lt.phone .m.job { max-width: none; padding: 12px; } .lt.phone .m.job .jt { font-size: 14px; line-height: 20px; }
+.lt.phone .m.job .forces { margin-top: auto; justify-content: flex-start; gap: 4px; } .lt.phone .force { height: 24px; padding: 0 7px; font-size: 11px; }
+.lt.phone .shelf .s { --cw: 96px; padding: 24px 8px 18px; } .lt.phone .shelf .s b { font-size: 12px; line-height: 15px; }
+.s.mod.marked { box-shadow: inset 0 3px 0 var(--pc), 0 0 0 2px var(--ork-ink), 0 6px 14px rgb(0 0 0 / .4); }
+.rules > p > span:not(.tok) { flex: 1; }
+.fc .sent { margin-top: 6px; }
+/* a layer's cards lie on the layer under them: what needs lies on what it needs */
+.desk .layer { margin-bottom: -24px; } .desk .layer:nth-child(1) { z-index: 4; } .desk .layer:nth-child(2) { z-index: 3; } .desk .layer:nth-child(3) { z-index: 2; } .desk .layer:nth-child(4) { z-index: 1; }
+.desk .layer + .layer { padding-top: 30px; }
+.tbl > * { flex-shrink: 0; }
+.lt.phone .shelf .s p { -webkit-line-clamp: 2; }

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard: a leader's frameworks, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<link rel="stylesheet" href="../table-cards/cards.css">
+<link rel="stylesheet" href="frameworks.css">
+<style>
+/* A leader's table (goal 170's talk, 11 November 2026, the owner): a leader lays its framework as a spread of cards, from what it
+   wrote on the Board. The person never moves its cards: it turns one over, spreads a pile to see what comes, its groups and what
+   needs what; and it puts its own token (a question, a concern) on a card, as a leader puts one on the person's card: that token
+   goes to the leader, and marks the part of the table to better. ?f=jtbd|arch &face=desk|phone. */
+.lt { position: relative; overflow: hidden; background: var(--ork-canvas); }
+.lt.desk { width: 1440px; height: 900px; display: grid; grid-template-columns: 1fr 268px; grid-template-rows: 72px 1fr 170px; }
+.ttop { grid-column: 1; display: flex; align-items: stretch; gap: 6px; padding: 8px 12px 0; border-bottom: 1px solid var(--ork-frame); }
+.tbl { grid-column: 1; grid-row: 2; position: relative; display: flex; flex-direction: column; gap: 10px; padding: 12px 20px; background: var(--ork-table);
+  background-image: radial-gradient(110% 90% at 50% 45%, color-mix(in srgb, var(--pc) 9%, transparent), transparent 70%); overflow: hidden; }
+.tbar { display: flex; align-items: center; gap: 12px; }
+.tbar b { font: 700 18px/22px var(--ork-font-pixel); } .tbar small { font: 400 13px/17px var(--ork-font-read); color: var(--ork-ink-muted); }
+.seg { margin-left: auto; display: inline-flex; border: 1px solid var(--ork-edge); border-radius: 9px; overflow: hidden; }
+.seg span { padding: 7px 12px; font: 700 13px/16px var(--ork-font-pixel); color: var(--ork-ink-muted); } .seg span.on { background: var(--ork-raised); color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--pc); }
+.fw { flex: 1; position: relative; display: grid; gap: 22px; min-height: 0; }
+.colh { font: 700 12px/16px var(--ork-font-read); letter-spacing: .06em; text-transform: uppercase; color: var(--ork-ink-muted); display: flex; align-items: center; gap: 8px; }
+.colh i { font-style: normal; font: 400 12px/16px var(--ork-font-read); letter-spacing: 0; text-transform: none; }
+.rgt { grid-column: 2; grid-row: 1 / 4; display: flex; flex-direction: column; gap: 10px; padding: 0 0 12px; background: var(--ork-panel); border-left: 1px solid var(--ork-frame); }
+.rgt .head { height: 72px; flex: none; }
+.rgt .plate { margin: 0 12px; } .rgt .cap { margin: -4px 12px 0; } .rgt .row { padding: 0 12px; }
+.lt .hand { grid-column: 1; grid-row: 3; display: flex; align-items: center; gap: 18px; padding: 0 22px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); }
+.hand .note { font: 400 13px/19px var(--ork-font-read); color: var(--ork-ink-read); max-width: 420px; }
+.mytok { display: flex; flex-direction: column; align-items: center; gap: 6px; font: 700 13px/16px var(--ork-font-pixel); }
+
+/* the phone */
+.lt.phone { width: 390px; height: 844px; border-radius: 44px; border: 1px solid var(--ork-frame); display: flex; flex-direction: column; }
+.lt.phone .tbl { flex: 1; padding: 8px 12px 10px; gap: 8px; }
+.lt.phone .tbar b { font-size: 16px; line-height: 20px; }
+.lt.phone .seg span { padding: 6px 9px; font-size: 12px; }
+.lt.phone .hand { flex: none; padding: 10px 14px 24px; gap: 12px; }
+.lt.phone .hand .note { font-size: 12px; line-height: 16px; }
+.lt.phone .rings { border-bottom: 1px solid var(--ork-frame); }
+</style>
+</head>
+<body>
+<div id="root" style="display:inline-block"></div>
+<script src="../table-cards/cards.js"></script>
+<script>
+const F = Q.get("f") || "jtbd", PH = FACE_OF === "phone";
+const PARTY = F === "jtbd" ? "gd" : "tech";
+const youTok = (q, word, cls = "") => `<span class="tok you ${cls}"><i>${q === "question" ? "?" : "!"}</i>${word}</span>`;
+const pile = (top, n = 3, cls = "") => `<span class="fpile ${cls}">${Array.from({ length: n }, (_, i) => `<span class="back" style="transform:translate(${(i + 1) * 4}px,${(i + 1) * 4}px)"></span>`).reverse().join("")}${top}</span>`;
+const force = (dir, k, t) => `<span class="force ${dir}"><b>${k}</b>${t}</span>`;
+const plain = (k, ix, title, body, cls = "", st = "") => `<article class="cd s ${cls}" style="--pc:${P[k]};${st}"><span class="ix tl">${ix}</span><b>${title}</b>${body ? `<p>${body}</p>` : ""}<span class="ix br">${ix}</span></article>`;
+const mod = (title, line, cls = "", st = "", extra = "") => `<article class="cd s mod ${cls}" style="--pc:${P.tech};${st}"><span class="ix tl">${sign("work")}</span><b>${title}</b><small>${line}</small>${extra}<span class="ix br">${sign("work")}</span></article>`;
+
+const JTBD = () => PH ? `
+  <p class="colh">Who <i>· a persona, its pile spread</i></p>
+  <div class="shelf">${plain("gd", sign("character"), "Friday-night host", "Hosts 4–8 friends, a phone each.", "lg")}${pile(plain("gd", sign("character"), "The quiet one", "Joins if it's easy.", ""), 2)}</div>
+  <p class="colh">The job</p>
+  <article class="cd m job" style="--pc:${P.gd}"><span class="ix tr">${sign("target")}</span><p class="jt"><b>When</b> friends come over, <b>I want</b> a game everyone gets in a minute, <b>so</b> the evening starts with laughs, not rules.</p>
+    <div class="forces">${force("in", "Push", "the rules take too long")}${force("in", "Pull", "a round in 90 s")}${force("out", "Anxiety", "will the quiet ones play?")}${force("out", "Habit", "we always play cards")}</div></article>
+  <div class="shelf">${plain("gd", sign("target"), "Pick a game in a minute", "")}${plain("gd", sign("target"), "Keep the quiet one in", `</p><div class="toks">${youTok("question", "You: a persona of its own?")}</div><p>`)}${plain("gd", sign("target"), "End before midnight", "")}</div>
+  <p class="colh">Hired · fired</p>
+  <div class="shelf">${plain("gd", sign("logo"), "Party game", "A round in 90 s, a vote in 20.", "lg hired")}${pile(plain("mkt", sign("cross"), "Charades", "No scores; the loud ones win.", "fired"), 2)}</div>`
+  : `
+  <div class="fw jtbd">
+    <div class="fc"><p class="colh">Who <i>· pressed, the pile spreads</i></p>
+      ${pile(plain("gd", sign("character"), "Friday-night host", "Hosts 4–8 friends, a phone each. Wants the evening to run itself.", "xl"), 3)}
+      <button class="btn">${icon("chevron-down")}Spread the personas</button></div>
+    <div class="fc mid"><p class="colh">The job <i>· when, I want, so</i></p>
+      <div class="jobwrap">
+        <div class="forces top">${force("in", "Push", "the rules take too long")}${force("in", "Pull", "a round in 90 s")}</div>
+        <article class="cd m job" style="--pc:${P.gd}"><span class="ix tr">${sign("target")}</span>
+          <div class="ph">${avOf("gd")}<span class="who"><b>Game design</b><small>the main job · 10:05</small></span></div>
+          <p class="jt"><b>When</b> friends come over, <b>I want</b> a game everyone gets in a minute, <b>so</b> the evening starts with laughs, not rules.</p></article>
+        <div class="forces bot">${force("out", "Anxiety", "will the quiet ones play?")}${force("out", "Habit", "we always play cards")}</div>
+      </div>
+      <p class="colh">Its smaller jobs <i>· the pile spread</i></p>
+      <div class="fan3">${plain("gd", sign("target"), "Pick a game in a minute", "", "", "--r:-4deg")}
+        <span style="position:relative">${plain("gd", sign("target"), "Keep the quiet one in", "Nobody sits out a round.", "marked", "--r:0deg")}<span class="placed">${youTok("question", "")}</span></span>
+        ${plain("gd", sign("target"), "End before midnight", "", "", "--r:4deg")}</div>
+      </div>
+    <div class="fc"><p class="colh">Hired</p>${plain("gd", sign("logo"), "Party game", "A round in 90 s, a vote in 20. Everyone plays on their phone.", "xl hired")}
+      <p class="colh">Fired <i>· one turned over</i></p>
+      <div class="row">${pile(`<span class="back"></span>`, 2)}${plain("mkt", sign("cross"), "Charades", "No scores; the loud ones win.", "fired", "--r:3deg")}</div>
+      <p class="sent">${youTok("question", "")}<span><b>Your question to Game design</b> · on <i>Keep the quiet one in</i>: “Is the quiet one a persona of its own?” · sent 12:44</span></p></div>
+  </div>`;
+
+const ARCH = () => {
+  const gui = mod("gui/", "the page, its server", "top");
+  const fan = `<div class="fan3 wide"><span style="position:relative">${mod("board_host.py", "the host", "marked", "--r:-5deg")}<span class="placed">${youTok("concern", "")}</span></span>${mod("server.py", "the socket", "", "--r:-2deg")}${mod("phones.py", "the paired phone", "", "--r:1deg")}${mod("static/", "board.js, the shell", "", "--r:4deg")}</div>`;
+  if (PH) return `
+    <p class="legend">A card lying on another needs it. Nothing under <b>gui/</b> imports it.</p>
+    <div class="layer"><span class="ln">Outside</span>${plain("mkt", sign("link"), "Orkline", "imports Orkboard, never the other way", "ext")}</div>
+    <div class="layer"><span class="ln">Faces</span>${pile(gui, 3, "on")}${mod("vscode/", "a frame, not a face", "frame")}</div>
+    <div class="shelf">${fan.replace('class="fan3 wide"', 'class="shelf"')}</div>
+    <div class="layer"><span class="ln">Engine</span>${pile(mod("core/", "the bus, a run, the gate"), 3, "on")}${pile(mod("design/", "orkUI's copy"), 1)}</div>
+    <div class="layer"><span class="ln">Words</span>${pile(mod("realm/", "the Board's words"), 4)}${mod("goal_route.py", "reaches up into core", "stray", "--r:8deg", `<div class="toks">${tok("tech", "risk", "risk")}</div>`)}</div>`;
+  return `
+  <div class="fw arch">
+    <div class="layers">
+      <div class="layer"><span class="ln">Outside<i>imports Orkboard</i></span>${plain("mkt", sign("link"), "Orkline", "imports Orkboard's modules, never the other way", "ext")}</div>
+      <div class="layer"><span class="ln">Faces<i>the page is the one face</i></span>${pile(gui, 4, "on")}${mod("vscode/", "a frame: it starts the page", "frame")}
+        <div class="spread"><p class="colh">gui/ spread <i>· its biggest</i></p>${fan}</div></div>
+      <div class="layer"><span class="ln">Engine<i>no face</i></span>${pile(mod("core/", "the bus, a tool's run, the gate"), 4, "on")}${pile(mod("design/", "orkUI's copy, ui RULES"), 1, "on")}</div>
+      <div class="layer"><span class="ln">Words<i>the Board's own</i></span>${pile(mod("realm/", "the lexicon, a goal's way"), 5)}
+        ${mod("goal_route.py", "reaches up into core: idea_kind", "stray", "--r:9deg", `<div class="toks">${tok("tech", "risk", "risk")}</div>`)}</div>
+    </div>
+    <aside class="rules"><p class="colh">The rules it keeps</p>
+      <p>${tok("tech", "for", "")}<span>Nothing under gui/ imports it<small>tests/test_architecture.py</small></span></p>
+      <p>${tok("tech", "for", "")}<span>Orkline imports Orkboard, never back<small>tests/test_architecture.py</small></span></p>
+      <p>${tok("tech", "risk", "")}<span>realm/ reaches up into core/<small>goal_route.py, lazily</small></span></p>
+      <p>${youTok("concern", "")}<span><b>Your concern to Tech</b> · on <i>board_host.py</i>: “805 lines, past the ~600 a module may grow to. Split it?” · sent 12:46</span></p>
+      <p class="legend">A card lying on another needs it; a pile spread shows its biggest.</p></aside>
+  </div>`;
+};
+
+const H2 = { gd: "unicorn-elder", tech: "shaman-elder" };
+const tab = (k, line, on, flag = "") => `<button class="tab${on ? " is-on" : ""}" style="--pc:${P[k]}"><span class="seat"><img class="chair" src="${O}chair/chair-leader-${CH[k]}.png" srcset="${O}chair/chair-leader-${CH[k]}@2x.png 2x" alt=""><img class="hd" src="${O}races/${H[k]}.png" srcset="${O}races/${H[k]}@2x.png 2x" alt=""></span>${flag === "new" ? '<span class="new"></span>' : ""}<span><b>${N[k]}</b><small>${line}</small></span></button>`;
+const title = F === "jtbd" ? ["Game design's table", "Jobs to be done · Party game"] : ["Tech's table", "Its architecture · this repository's modules"];
+const seg = F === "jtbd" ? `<span class="seg"><span>Feed</span><span class="on">Jobs</span><span>Core loop</span></span>` : `<span class="seg"><span>Feed</span><span class="on">Architecture</span><span>Decisions</span></span>`;
+const handH = `<span class="mytok">${youTok("question", "", "big")}Question</span><span class="mytok">${youTok("concern", "", "big")}Concern</span>
+  <p class="note">Put your token on a card: ${N[PARTY]} gets it, and the part of its table it marks is what it betters. Its cards you only turn over, or spread a pile.</p>`;
+
+document.getElementById("root").innerHTML = PH
+  ? `<div class="lt phone"><div class="sb"><span>12:47</span><span>●●● 5G ▮</span></div>
+      <div class="tbl" style="--pc:${P[PARTY]}"><div class="tbar"><span><b>${title[0]}</b><br><small>${title[1]}</small></span>${seg.replace(/<span>Feed<\/span>/, "")}</div>${F === "jtbd" ? JTBD() : ARCH()}</div>
+      <div class="hand">${handH.replace(/<p class="note">[\s\S]*?<\/p>/, '<p class="note">Your token on a card goes to its leader. You turn cards over; you never move them.</p>')}</div></div>`
+  : `<div class="lt desk"><div class="ttop"><div class="proj"><span class="av face">${face("thoughtful")}</span><span><b>Party game</b><small>Game · being made</small></span></div>
+        ${tab("gd", F === "jtbd" ? "its jobs" : "writing the loop", F === "jtbd")}${tab("tech", F === "jtbd" ? "at work" : "its architecture", F !== "jtbd")}${tab("art", "2 screens changed", false, "new")}${tab("mkt", "quiet")}</div>
+      <aside class="rgt"><div class="head">${pot("claude", 62)}${pot("codex", 18, true)}<span class="chain"><img src="${PIC("chain")}" alt=""><span>Here</span></span><button class="stop">${icon("stop")}Stop all</button></div>
+        <span class="plate">${icon("git-merge")}main</span><p class="cap">done in dev · waits for main</p><div class="row">${S("rel", elem("meadow") + sign("check"), "Sign-in", "tests passed", "", "portal")}</div>
+        <span class="plate">${icon("git-merge")}dev</span><p class="cap">done · waits for dev</p></aside>
+      <div class="tbl" style="--pc:${P[PARTY]}"><div class="tbar">${avOf(PARTY).replace('class="av"', 'class="av" style="width:40px;height:40px"')}<span><b>${title[0]}</b><br><small>${title[1]}</small></span>${seg}</div>${F === "jtbd" ? JTBD() : ARCH()}</div>
+      <div class="hand">${handH}<div class="places" style="margin-left:auto"><button class="place"><img src="${PIC("die")}" alt="">Play</button><button class="place"><img src="${PIC("backpack")}" alt="">Inventory</button><button class="place"><img src="${PIC("book")}" alt="">History</button></div></div></div>`;
+</script>
+</body>
+</html>
