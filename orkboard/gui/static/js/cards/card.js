@@ -25,10 +25,10 @@ const Index = ({ n, turned = false }) => html`<span class=${cls("cards-ix", { "i
 
 /** S: a goal upright. `n`: {slug, title, element, hue, sign, leader}; `line` under its name; `bar` its share done (0–1) or null;
  *  `tokens` [{leader, view, word}]; `asks`: it waits for the person; `onOpen`: pressed. */
-export function CardS({ n, line = "", bar = null, tokens = [], asks = false, ready = false, onOpen = null, tilt = 0 }) {
+export function CardS({ n, line = "", bar = null, tokens = [], asks = false, ready = false, onOpen = null, tilt = 0, ...rest }) {
   const w = whoOf(n.leader || "orkmaster");
   return html`<button type="button" class=${cls("ork-card cards-s", { "is-asks": asks, "is-ready": ready })} data-race=${w.race || "orkmaster"} data-goal=${n.slug}
-      style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${`${n.title}${line ? `: ${line}` : ""}`} onClick=${onOpen}>
+      style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${`${n.title}${line ? `: ${line}` : ""}`} onClick=${onOpen} ...${rest}>
     <${Index} n=${n} />${asks && html`<span class="cards-s__asks" aria-hidden="true">!</span>`}
     <b class="cards-s__name">${n.title}</b>${line && html`<small class="cards-s__line">${line}</small>`}
     ${bar !== null && html`<span class="cards-bar" aria-hidden="true"><i style=${`width:${Math.round(bar * 100)}%`}></i></span>`}

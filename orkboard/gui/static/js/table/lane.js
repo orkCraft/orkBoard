@@ -22,6 +22,8 @@ import { RingAround } from "./ring.js";
 import { PotionRow } from "../hand/potionrow.js";
 import { StopAll } from "./stopall.js";
 import { PresenceChain } from "./presence.js";
+import { cardsOn } from "../cards/on.js";                                          // the table of cards' look (goal 170): the piles as S cards
+import { CardsPiles } from "../cards/discard.js";
 
 /** Whether the lane is drawn: the table is laid. A form over the pane leaves it, nothing changes size by what is open (decisions §283.5). */
 export const laneShown = () => laidNow();
@@ -46,17 +48,19 @@ export function ReleaseLane({ tab, parties }) {
     if (!again && shownDone().some((x) => x.slug === slug)) act("ideas.seen", { idea: slug });
   };
   const merge = (e) => mergeGate(e);
+  const ownNode = own && html`<p class="release-lane__own cap">${readyWords(ready)}: commits that belong to no goal.<button type="button" class="ork-btn" data-to-main disabled=${testing.value} onClick=${merge}>To ${ready.main}</button>${testing.value && html` <span role="status" data-testing>${TESTING}</span>`}</p>`;
   return html`<aside class=${cls("release-lane", { "is-headless": headless })} aria-label=${label} data-lane="release" data-through=${party || undefined}>
     <div class="release-lane__head" data-room-things="discard"><${PotionRow} /><div class="release-lane__side"><${PresenceChain} half=${true} /><${StopAll} /></div></div>
     <span class="release-lane__label">${label}</span>
     <div class="release-lane__scroll" ref=${scroll}>
+      ${cardsOn() ? html`<${CardsPiles} p=${{ upper, goals, ready, own: ownNode, done, lowerGoals, now, press, moons }} />` : html`
       ${upper && html`<${Plate} which="main" /><p class="discard-pile__words">${PLATE_WORDS.main}</p>`}
       ${(top || sending.value) && html`<${RingAround} slug=${top?.slug || null}>${top && html`<${ReadyPosts} goals=${[top]} main=${ready.main} on=${now} onPress=${press} ringed=${true} />`}<//>`}
       ${goals.length > 1 && html`<${ReadyPosts} goals=${goals.slice(1)} main=${ready.main} on=${now} onPress=${press} />`}
-      ${own && html`<p class="release-lane__own cap">${readyWords(ready)}: commits that belong to no goal.<button type="button" class="ork-btn" data-to-main disabled=${testing.value} onClick=${merge}>To ${ready.main}</button>${testing.value && html` <span role="status" data-testing>${TESTING}</span>`}</p>`}
+      ${ownNode}
       ${done.length > 0 && html`<ul class="release-lane__done discard-posts" aria-label="Done, not yet seen">${done.map((x) => html`<li key=${x.slug}><${DonePost} g=${x} kind="done" sub="done" picked=${now === x.slug} dealing=${dealing === x.slug ? dealing : ""} moon=${moons.has(x.slug)}
         line=${mainLine(x)} label=${`${x.full}, done`} onPick=${press} /></li>`)}</ul>`}
-      <${LowerPile} goals=${lowerGoals} />
+      <${LowerPile} goals=${lowerGoals} />`}
     </div>
   </aside>`;
 }

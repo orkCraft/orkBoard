@@ -1,0 +1,11 @@
+/* The discard in the table of cards' look (js/cards/discard.js; goal 170): S cards two to a row, the goal ready for main ringed with *To main* beside it. Layout only: every colour, face and corner is orkUI's. */
+.cards-pile { display: flex; flex-direction: column; gap: var(--ork-4); width: 100%; }
+.cards-pile > * { flex: none; }
+.cards-pile .cards-row { gap: var(--ork-3); }
+.cards-pile .ork-card.cards-s { --card-w: calc(50% - 5px); }
+.cards-pile .cards-ready { align-items: flex-end; }
+.release-lane .cards-ready .portal-host.is-ring { overflow: visible; flex: none; width: calc(50% - 5px); align-self: flex-start; }
+.cards-ready .portal-host .ork-card.cards-s { --card-w: 100%; position: relative; z-index: 1; }
+.cards-ready__acts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-2); align-items: stretch; }
+.cards-ready__acts .ork-btn { justify-content: center; }
+.cards-lower { border-top: 0; padding-top: 0; }
