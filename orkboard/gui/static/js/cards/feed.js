@@ -37,7 +37,7 @@ export function viewsOf(slug) {
 }
 
 /** The leaders' views of a goal as tokens: [{leader, view}]. */
-export const tokensOf = (slug) => viewsOf(slug).map(({ leader, view }) => ({ leader, view }));
+export const tokensOf = (slug) => viewsOf(slug).map(({ leader, view, p }) => ({ leader, view, note: p?.text || "" }));
 
 /** A goal's share done, by its route's steps (0–1), or null when its route says nothing. */
 export function shareOf(n) {

@@ -3,10 +3,10 @@
 // through table/post.js's head and body. **L**: a card opened; pressed, an M turns back upright and grows over the table
 // (`openCard`), Esc or Close puts it away and the focus goes back to the card it came from. A leader's view of a goal is a
 // **token** on its S: round, its party's colour, its sign, its word beside it (§295.4). Layout only (cards.css).
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
-import { Elem, Icon, Sign } from "../orkui.js";
+import { Elem, Head, Icon, Sign } from "../orkui.js";
 import { openSpread } from "./spreads/open.js";
 import { giveBack, keepTab } from "./back.js";
 import { viewsOf } from "./feed.js";
@@ -22,21 +22,42 @@ export function Token({ leader, view, word = "" }) {
     <i aria-hidden="true">${v.mark}</i><span>${word || v.word}</span></span>`;
 }
 
-/** The rune and the kind's sign of a goal, a card's index (its top left, and turned at its bottom right). */
-export const Index = ({ n, turned = false }) => html`<span class=${cls("cards-ix", { "is-turned": turned })} aria-hidden="true">
-  <${Elem} name=${n?.element || ""} hue=${n?.hue || ""} dim=${!n?.element} />${n?.sign && html`<${Sign} name=${n.sign} />`}</span>`;
+/** A card's two upper corners (the person, 11 November 2026): its goal's rune at the top left, the kind's sign at the top right. A card's
+ *  corners each say one thing, so no corner repeats another (`turned` draws nothing: the mirrored index of a playing card is gone). */
+export const Index = ({ n, turned = false }) => (turned ? null : html`<span class="cards-c cards-c--tl" aria-hidden="true"><${Elem} name=${n?.element || ""} hue=${n?.hue || ""} dim=${!n?.element} /></span>
+  ${n?.sign && html`<span class="cards-c cards-c--tr" aria-hidden="true"><${Sign} name=${n.sign} /></span>`}`);
 
-/** S: a goal upright. `n`: {slug, title, element, hue, sign, leader}; `line` under its name; `bar` its share done (0–1) or null;
- *  `tokens` [{leader, view, word}]; `asks`: it waits for the person; `onOpen`: pressed. */
-export function CardS({ n, line = "", bar = null, tokens = [], asks = false, ready = false, onOpen = null, tilt = 0, ...rest }) {
-  const w = whoOf(n.leader || "orkmaster");
-  return html`<button type="button" class=${cls("ork-card cards-s", { "is-asks": asks, "is-ready": ready })} data-race=${w.race || "orkmaster"} data-goal=${n.slug}
-      style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${`${n.title}${line ? `: ${line}` : ""}`} onClick=${onOpen} ...${rest}>
-    <${Index} n=${n} />${asks && html`<span class="cards-s__asks" aria-hidden="true">!</span>`}
+/** The views that lie on a card's act until the person has read them: a risk, a question, a stance against (a view *for* does not). */
+export const BLOCKS = new Set(["risk", "question", "against"]);
+
+/** S: a goal upright (the person, 11 November 2026). Its corners: the rune top left, the kind's sign top right, **when** bottom left
+ *  (`when`: put off, starts by itself at a time, at work), **its act** bottom right (`act`: {label, cost, run}, or its share done when
+ *  `bar` is given); the head of the leader who does it is its picture in the middle, its name and `line` under it. A leader's risk,
+ *  question or stance against (`tokens`: [{leader, view, note}]) lies **on its act**: the person reads it first, and a token pressed
+ *  moves aside, its note said; a view *for* and the views read are said in the card's L. A card with an act of its own is a group of buttons; else the card is one. */
+export function CardS({ n, line = "", when = "", bar = null, tokens = [], act = null, asks = false, ready = false, onOpen = null, tilt = 0, ...rest }) {
+  const w = whoOf(n.leader || "orkmaster"), [read, setRead] = useState([]);
+  const lying = tokens.filter((t) => BLOCKS.has(t.view) && !read.includes(t.leader));      // a view for, or one read, is said in the card's L (no room on an S)
+  const group = !!act || tokens.some((t) => BLOCKS.has(t.view));
+  const Tag = group ? "div" : "button";
+  const label = `${n.title}${line ? `: ${line}` : ""}${when ? `, ${when}` : ""}`;
+  const own = group ? { role: "group", tabindex: "0", onKeyDown: (e) => { if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); onOpen?.(e); } },
+    onClick: (e) => { if (!e.target.closest("button")) onOpen?.(e); } } : { type: "button", onClick: onOpen };
+  const top = lying[0];
+  return html`<${Tag} class=${cls("ork-card cards-s", { "is-asks": asks, "is-ready": ready, "is-group": group })} data-race=${w.race || "orkmaster"} data-goal=${n.slug}
+      style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${label} ...${own} ...${rest}>
+    <${Index} n=${n} />
+    <span class="cards-s__pic" aria-hidden="true">${w.head && html`<${Head} race=${w.head.race} tier=${w.head.tier} />`}</span>
     <b class="cards-s__name">${n.title}</b>${line && html`<small class="cards-s__line">${line}</small>`}
     ${bar !== null && html`<span class="cards-bar" aria-hidden="true"><i style=${`width:${Math.round(bar * 100)}%`}></i></span>`}
-    ${tokens.length > 0 && html`<span class="cards-toks">${tokens.map((t) => html`<${Token} ...${t} />`)}</span>`}
-    <${Index} n=${n} turned=${true} /></button>`;
+    <span class="cards-c cards-c--bl">${asks && !when ? html`<span class="cards-s__asks" aria-hidden="true">!</span><span>waits for you</span>` : when}</span>
+    <span class="cards-c cards-c--br">${top ? html`<button type="button" class="cards-lie" data-race=${whoOf(top.leader).race || "orkmaster"} data-view=${top.view}
+          aria-label=${`${whoOf(top.leader).name}: ${VIEWS[top.view].word}${top.note ? `: ${top.note}` : ""}. Read it first; pressed, it moves aside`} title=${top.note || ""}
+          onClick=${(e) => { e.stopPropagation(); setRead([...read, top.leader]); }}>
+          ${lying.slice(1).map(() => html`<span class="cards-lie__under" aria-hidden="true"></span>`)}<i aria-hidden="true">${VIEWS[top.view].mark}</i><span>${VIEWS[top.view].word}</span></button>`
+        : act ? html`<button type="button" class="ork-btn cards-act" onClick=${(e) => { e.stopPropagation(); act.run(); }}><span>${act.label}</span>${act.cost && html`<small>${act.cost}</small>`}</button>`
+        : bar !== null ? html`<span class="cards-pct">${Math.round(bar * 100)}%</span>` : ""}</span>
+  <//>`;
 }
 
 /** A card's back: a goal not shown, a pile's thickness. */

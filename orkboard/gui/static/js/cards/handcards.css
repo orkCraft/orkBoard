@@ -22,8 +22,8 @@
   .frame[data-cards="1"] .hand .hand-card--s .hands-name { flex: none; display: -webkit-box; height: auto; max-height: 4.2em; font: var(--ork-type-button); -webkit-line-clamp: 3; line-clamp: 3; }
   .frame[data-cards="1"] .hand .hand-card--s .hands-line { display: -webkit-box; flex: none; height: auto; max-height: 2.6em; margin: 0; padding: 0; border: 0; -webkit-line-clamp: 2; line-clamp: 2; white-space: normal; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
   .frame[data-cards="1"] .hand .hand-card--s .hands-asks { position: absolute; right: 8px; top: 7px; width: 18px; height: 18px; display: grid; place-items: center; clip-path: circle(50%); background: var(--ork-alert); color: var(--ork-on-ink); font: var(--ork-type-label); }
-  .frame[data-cards="1"] .hand .hand-card--s .hands-head { position: absolute; left: 8px; bottom: 6px; display: inline-flex; }
-  .frame[data-cards="1"] .hand .hand-card--s .hands-head .ork-race__head { width: auto; height: 16px; }
+  .frame[data-cards="1"] .hand .hand-card--s .hands-pic { flex: none; height: 36px; } .frame[data-cards="1"] .hand .hand-card--s .hands-pic .ork-race__head { height: 34px; width: auto; }
+  .frame[data-cards="1"] .hand .hand-card--s .hands-name { -webkit-line-clamp: 2; line-clamp: 2; max-height: 2.8em; }
   .frame[data-cards="1"] .hand .hand-card--s.is-slot > * { visibility: hidden; }
   .frame[data-cards="1"] .hand .hand-card--s .cards-ix { color: var(--ork-ink-read); }
   .frame[data-cards="1"] .hand .hand-card--s .hand-card__foot:empty { display: none; }
@@ -32,3 +32,4 @@
 
 /* the person's tokens at the left of the hand's cards while a leader's table is open (cards/tables/parts.js `TokenTakes`; decisions §145) */
 .hand .tb-takes { pointer-events: auto; flex: none; display: flex; align-self: center; gap: var(--ork-3); padding-right: var(--ork-3); }
+.frame[data-cards="1"] .hand .hand-card--s .hands-when { max-width: calc(100% - 16px); }
