@@ -40,7 +40,7 @@ def test_the_stages_open_from_a_goals_act_and_close_with_esc(page_url):
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
         opened(pg, page_url)
-        card = pg.locator(".cards-dealer .cards-s[data-goal]").first
+        card = pg.locator(".cards-dealer .cards-row .cards-s[data-goal]").first
         card.click()
         pg.get_by_role("button", name="Its stages").click()
         spread = pg.locator("[data-spread=track]")
@@ -51,7 +51,7 @@ def test_the_stages_open_from_a_goals_act_and_close_with_esc(page_url):
         assert pg.evaluate("document.activeElement.classList.contains('sp-shut')")
         pg.keyboard.press("Escape")
         assert pg.locator(".sp-veil").count() == 0
-        assert pg.evaluate("document.activeElement === document.querySelector('.cards-dealer .cards-s[data-goal]')")
+        assert pg.evaluate("document.activeElement === document.querySelector('.cards-dealer .cards-row .cards-s[data-goal]')")
         b.close()
 
 
@@ -84,7 +84,7 @@ def test_the_gate_opens_from_a_goal_to_review_and_to_main_waits_for_its_checks(p
         opened(pg, page_url)
         pg.evaluate("""async () => { const st = await import("/static/js/shell/store.js"); const m = st.mapData.value;
           st.mapData.value = { ...m, nodes: m.nodes.map((n) => n.state === "ready" ? { ...n, state: "review" } : n) }; }""")
-        pg.locator(".cards-dealer .cards-s[data-goal]").first.click()
+        pg.locator(".cards-dealer .cards-row .cards-s[data-goal]").first.click()
         pg.get_by_role("button", name="At the gate").click()
         gate = pg.locator("[data-spread=gate]")
         gate.wait_for()

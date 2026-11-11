@@ -68,3 +68,13 @@
 @keyframes cards-turn { from { transform: rotate(-90deg) scale(.5); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .cards-l { animation: none; } .cards-s { transition: none; } }
 @media (max-width: 600px) { .cards-l { width: 100vw; max-height: 100vh; height: 100%; aspect-ratio: auto; } .cards-lanes { grid-template-columns: 1fr; } }
+
+/* the window in cards: the dealer's lane as wide as the mockup's (docs/mockups/table-cards/: 248 px at 1440), the discard a little wider */
+.frame[data-cards="1"] { --column-w: 236px; --col-w: 250px; }
+.cards-dealer .ork-card.cards-s { --card-w: 104px; }
+/* an M's head keeps the leader's name whole: the label and the ask wrap under it, the dots (no act on an M) are not drawn */
+.cards-m .post-card__who { flex-wrap: wrap; row-gap: 2px; }
+.cards-m .post-card__by { flex: 1 1 110px; min-width: 110px; }
+.cards-m .post-card__sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cards-m .post-card__dots { display: none; }
+.cards-wait { flex-direction: column; } .cards-wait__acts { flex-direction: row; flex-wrap: wrap; padding-top: 0; }

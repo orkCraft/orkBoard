@@ -42,7 +42,7 @@ export function Frame() {
       <${Room} /><${SetupWatch} /><${CrashNote} /><${ReportPanel} />
     </div>`;
   }
-  return html`<div class="frame" data-frame="1" data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-discard=${column && laneShown() ? "1" : undefined} data-live=${live ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && (over.value || inventory.value !== null) ? "1" : undefined} style=${`--lanes:${lanesBeforeEnd() + (column ? 0 : 1)}`}>
+  return html`<div class="frame" data-frame="1" data-cards=${cardsOn() ? "1" : undefined} data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-discard=${column && laneShown() ? "1" : undefined} data-live=${live ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && (over.value || inventory.value !== null) ? "1" : undefined} style=${`--lanes:${lanesBeforeEnd() + (column ? 0 : 1)}`}>
     ${column && html`<aside class="frame-column" aria-label="The Orkmaster's goals"><${Column} /><${Balloon} /></aside>`}
     <div class="frame-table"><${Table} column=${column} /></div>
     <${DiscardColumn} />
