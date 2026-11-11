@@ -23,16 +23,20 @@ export function postsOf(leader) {
 export const nodes = () => mapData.value?.nodes || [];
 export const nodeOf = (slug) => nodes().find((n) => n.slug === slug) || null;
 
-/** The leaders' views of a goal, from the feed's posts about it: a concern is a risk, an ask a question (the host answers
- *  no tokens yet; this is the contract proposed, docs/mockups/table-cards/). */
-export function tokensOf(slug) {
+/** What each leader said of a goal, from the feed's posts about it, the first of each leader (what asks first): [{leader, p, view}]. A concern is a
+ *  risk, an ask a question, else for (the host answers no tokens yet; this is the contract proposed, docs/mockups/table-cards/). */
+export function viewsOf(slug) {
   const seen = new Map();
   for (const s of feed.value?.posts || []) for (const p of [s.post, ...(s.more || [])]) {
-    if (p.goal !== slug || seen.has(p.leader)) continue;
-    seen.set(p.leader, { leader: p.leader, view: p.asks ? "question" : p.kind === "concern" ? "risk" : "for" });
+    if (p.goal !== slug) continue;
+    const view = p.asks ? "question" : p.kind === "concern" ? "risk" : "for", had = seen.get(p.leader);
+    if (!had || (p.asks && !had.p.asks)) seen.set(p.leader, { leader: p.leader, p, view });
   }
   return [...seen.values()];
 }
+
+/** The leaders' views of a goal as tokens: [{leader, view}]. */
+export const tokensOf = (slug) => viewsOf(slug).map(({ leader, view }) => ({ leader, view }));
 
 /** A goal's share done, by its route's steps (0–1), or null when its route says nothing. */
 export function shareOf(n) {
