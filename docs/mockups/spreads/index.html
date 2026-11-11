@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard: the spreads, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<link rel="stylesheet" href="../table-cards/cards.css">
+<style>
+/* The spreads (goal 170's talk, 11 November 2026): cards laid out so a person looks at one thing at a time. The centre is what is
+   talked of, the hand what the person decides, a fan a choice, a pile one group (its thickness, never a number), a card face down
+   what is not needed now, the discard what is done, the sides the voices. At most three to five cards face up.
+   ?s=dispute|cost|duel|sort|track|deal|diff|gate &face=desk|phone. On orkUI's tokens and docs/mockups/table-cards/'s pieces. */
+.sp { position: relative; overflow: hidden; background: var(--ork-room); }
+.sp.desk { width: 1440px; height: 900px; display: grid; grid-template-rows: 1fr 196px; }
+.sp.desk .bg { position: absolute; inset: 0; background: url(../table-cards/shots/desktop.png) 0 0 / 1440px 900px; filter: blur(3px) brightness(.32) saturate(.7); }
+.stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 22px 40px 10px; min-height: 0; }
+.sp-h { align-self: stretch; display: flex; align-items: center; gap: 12px; }
+.sp-h .av { width: 52px; height: 52px; border-radius: 12px; background: #3d3d3d; }
+.sp-h .t { flex: 1; } .sp-h b { display: block; font: 700 20px/24px var(--ork-font-pixel); } .sp-h small { font: 400 14px/19px var(--ork-font-read); color: var(--ork-ink-read); }
+.sp-h .say { position: relative; padding: 8px 12px; border-radius: 10px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); font: 400 14px/19px var(--ork-font-read); max-width: 560px; }
+.sp-h .say::before { content: ""; position: absolute; left: -7px; top: 16px; width: 12px; height: 12px; background: inherit; border-left: 1px solid var(--ork-card-frame); border-bottom: 1px solid var(--ork-card-frame); transform: rotate(45deg); }
+.field { flex: 1; align-self: stretch; position: relative; display: flex; align-items: center; justify-content: center; gap: 28px; min-height: 0; }
+.keys { font: 400 12px/15px var(--ork-font-read); color: var(--ork-ink-muted); }
+.kb { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; margin: 0 2px; border: 1px solid var(--ork-edge); border-radius: 5px; font: 700 12px/1 var(--ork-font-read); color: var(--ork-ink-read); }
+.sp.desk .hand { grid-row: 2; position: relative; display: flex; align-items: flex-end; gap: 14px; padding: 0 24px 14px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); }
+.hand .note { align-self: center; font: 400 13px/18px var(--ork-font-read); color: var(--ork-ink-muted); max-width: 260px; }
+.hand .acts { margin-left: auto; align-self: center; display: flex; gap: 10px; align-items: center; }
+
+/* bigger cards for a spread */
+.s.xl { --cw: 210px; padding: 34px 16px 30px; gap: 6px; }
+.s.xl .pic { height: 56px; } .s.xl .pic img { width: 56px; }
+.s.xl b { font-size: 18px; line-height: 22px; -webkit-line-clamp: 3; } .s.xl small { font-size: 13px; line-height: 17px; white-space: normal; }
+.s.xl p { font: 400 13px/18px var(--ork-font-read); color: var(--ork-ink-read); }
+.s.lg { --cw: 150px; padding: 30px 12px 26px; } .s.lg .pic { height: 40px; } .s.lg .pic img { width: 40px; } .s.lg b { font-size: 15px; line-height: 19px; }
+.s.lg small { white-space: normal; }
+.s.muted { background: var(--ork-panel); } .s.muted b, .s.muted p { color: var(--ork-ink-muted); }
+.back { flex: none; width: var(--cw, 104px); aspect-ratio: 2.5 / 3.5; border-radius: 10px; background: var(--ork-raised) url(../../../design-system/orkui/backs/back.svg) center / 100% 100%;
+  border: 1px solid var(--ork-card-frame); box-shadow: 0 6px 14px rgb(0 0 0 / .4); transform: rotate(var(--r, 0deg)); }
+.pile { position: relative; flex: none; width: var(--cw, 104px); aspect-ratio: 2.5 / 3.5; }
+.pile > * { position: absolute; inset: 0; width: 100%; }
+.cap2 { font: 600 13px/17px var(--ork-font-read); color: var(--ork-ink-read); text-align: center; }
+.col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+/* the cost in a card's corner, as a card game's mana: its tool's mark, its share, its words under the card */
+.cost { position: absolute; z-index: 2; right: 7px; top: 7px; min-width: 40px; height: 26px; padding: 0 6px; display: inline-flex; align-items: center; gap: 3px; border-radius: 13px;
+  background: color-mix(in srgb, var(--ork-party-undead) 30%, var(--ork-raised)); border: 2px solid color-mix(in srgb, var(--ork-party-undead) 70%, #fff);
+  font: 700 12px/1 var(--ork-font-read); color: var(--ork-ink); box-shadow: 0 2px 0 rgb(0 0 0 / .5); }
+.cost img { width: 12px; height: 12px; } .cost.over { border-color: var(--ork-alert); background: color-mix(in srgb, var(--ork-alert) 28%, var(--ork-raised)); }
+.costw { font: 400 13px/18px var(--ork-font-read); color: var(--ork-ink-read); text-align: center; max-width: 210px; }
+.costw.over { color: var(--ork-alert); }
+.pots { display: flex; gap: 10px; align-items: center; }
+
+/* the duel */
+.or { font: 700 22px/1 var(--ork-font-pixel); color: var(--ork-ink-muted); }
+.ladder { position: absolute; right: 0; top: 0; bottom: 0; width: 170px; display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px; background: rgb(0 0 0 / .25); }
+.ladder .lab { padding: 0 0 4px; }
+.rung { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px; border-radius: 8px; background: var(--ork-card); border: 1px solid var(--ork-card-frame); box-shadow: inset 3px 0 0 var(--pc); font: 700 13px/16px var(--ork-font-pixel); }
+.rung.gap { background: none; border-style: dashed; color: var(--ork-ink-muted); font: 400 12px/15px var(--ork-font-read); box-shadow: none; }
+.deckl { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.thick { position: relative; width: 74px; aspect-ratio: 2.5 / 3.5; }
+.thick span { position: absolute; inset: 0; border-radius: 8px; background: var(--ork-raised) url(../../../design-system/orkui/backs/back.svg) center / 100% 100%; border: 1px solid var(--ork-card-frame); }
+
+/* the sort: three piles to drop into */
+.drop { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.bin { position: relative; width: var(--cw, 120px); aspect-ratio: 2.5 / 3.5; border-radius: 10px; border: 2px dashed var(--ork-edge); display: grid; place-items: center; }
+.bin .ork-icon { width: 26px; height: 26px; color: var(--ork-ink-muted); }
+.bin.work { border-color: var(--ork-action); } .bin.later { border-color: var(--ork-gilt-hi); } .bin.drop-it { border-color: var(--ork-ink-muted); }
+.bin .in { position: absolute; inset: 6px; border-radius: 8px; background: var(--ork-card); border: 1px solid var(--ork-card-frame); box-shadow: inset 0 3px 0 var(--pc), 0 3px 0 -1px var(--ork-raised), 0 3px 0 0 var(--ork-card-frame); }
+
+/* the track: done ones a pile at the left, the stage now in the middle, the ones to come face down */
+.meeple { position: absolute; z-index: 3; width: 34px; height: 36px; background: var(--pc); filter: drop-shadow(0 3px 2px rgb(0 0 0 / .6));
+  clip-path: polygon(38% 0, 62% 0, 70% 10%, 70% 26%, 100% 38%, 100% 52%, 72% 50%, 86% 100%, 58% 100%, 50% 78%, 42% 100%, 14% 100%, 28% 50%, 0 52%, 0 38%, 30% 26%, 30% 10%); }
+.road { display: flex; align-items: center; gap: 18px; }
+.done-pile { position: relative; width: 120px; aspect-ratio: 2.5 / 3.5; }
+.done-pile .s { position: absolute; inset: 0; --cw: 120px; }
+.ahead { display: flex; } .ahead .back { --cw: 96px; margin-left: -36px; } .ahead .back:first-child { margin-left: 0; }
+.chk { position: absolute; z-index: 2; right: 8px; top: 8px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--ork-success); color: var(--ork-on-ink); font: 800 13px/1 var(--ork-font-pixel); }
+
+/* the deal: the chairs, a card on each that is dealt */
+.chairs { display: flex; gap: 26px; align-items: flex-end; }
+.chairc { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 150px; }
+.chairc .ch { width: 96px; height: auto; }
+.chairc .hd { position: absolute; top: 8px; width: 46px; }
+.chairc .s { --cw: 84px; padding: 22px 7px 18px; position: absolute; top: 58px; transform: rotate(var(--r, 0deg)); }
+.chairc .s b { font-size: 12px; line-height: 15px; } .chairc .s .pic { display: none; }
+.chairc b.n { margin-top: 70px; font: 700 15px/19px var(--ork-font-pixel); } .chairc small { font: 400 12px/15px var(--ork-font-read); color: var(--ork-ink-muted); text-align: center; }
+.chairc.empty .ch { opacity: 1; filter: grayscale(.8) brightness(.6); }
+.flying { position: absolute; z-index: 4; }
+.dealer-big { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dealer-big .av { width: 84px; height: 84px; border-radius: 18px; background: #3d3d3d; }
+
+/* the diff: the card after on the card before, its edge showing */
+.diffpair { position: relative; display: flex; gap: 30px; align-items: flex-start; }
+.l.mid { width: 330px; aspect-ratio: 2.5 / 3.5; padding: 30px 22px 24px; gap: 10px; }
+.l.mid h2 { font-size: 19px; line-height: 24px; } .l.mid p { font-size: 14px; line-height: 21px; }
+.l.before { background: var(--ork-panel); } .l.before h2, .l.before p { color: var(--ork-ink-muted); }
+.tagp { align-self: flex-start; display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; font: 700 12px/1 var(--ork-font-read); letter-spacing: .05em; text-transform: uppercase; }
+.tagp.was { border: 1px solid var(--ork-edge); color: var(--ork-ink-muted); } .tagp.now { background: var(--ork-action); color: var(--ork-on-ink); }
+ins, del { text-decoration: none; padding: 1px 3px; border-radius: 4px; }
+ins { background: color-mix(in srgb, var(--ork-success) 28%, transparent); color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-success); }
+del { background: color-mix(in srgb, var(--ork-danger) 22%, transparent); color: var(--ork-ink-read); text-decoration: line-through; }
+.arrow { align-self: center; font: 700 28px/1 var(--ork-font-pixel); color: var(--ork-ink-muted); }
+
+/* the gate: the goal in the middle, its checks round it, each turned when it is known */
+.gate { position: relative; width: 760px; height: 520px; margin-top: -6px; }
+.gate .mid { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.gate .ring { position: absolute; left: 50%; top: 50%; width: 420px; height: 420px; transform: translate(-50%, -50%); border-radius: 50%; border: 3px dashed color-mix(in srgb, var(--ork-portal) 55%, transparent); }
+.gk { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; width: 120px; }
+.gk .s { --cw: 82px; padding: 30px 7px 16px; justify-content: flex-start; } .gk .ix { display: none; } .gk .s .pic { display: none; } .gk .s b { font-size: 12px; line-height: 15px; }
+.gk .back { --cw: 82px; }
+.gk small { font: 600 12px/15px var(--ork-font-read); color: var(--ork-ink-read); text-align: center; }
+.gk .chk.no { background: var(--ork-danger); }
+.gk .glass { font: 600 12px/15px var(--ork-font-read); color: var(--ork-ink-read); }
+
+/* the dispute: the thing in the middle, the leaders at its sides */
+.voices { display: flex; flex-direction: column; gap: 14px; width: 330px; }
+.voice { display: flex; gap: 10px; align-items: flex-start; }
+.voice .av { width: 56px; height: 56px; box-shadow: 0 0 0 2px var(--ork-canvas), 0 0 0 4px var(--pc); }
+.voice .m { flex: 1; aspect-ratio: 3.5 / 2.5; }
+.voice.right { flex-direction: row-reverse; }
+
+/* the phone's spread */
+.sp.phone { width: 390px; height: 844px; border-radius: 44px; border: 1px solid var(--ork-frame); display: flex; flex-direction: column; background: var(--ork-canvas); }
+.sp.phone .stage { flex: 1; padding: 6px 14px 8px; gap: 12px; }
+.sp.phone .sp-h { gap: 10px; } .sp.phone .sp-h .av { width: 40px; height: 40px; border-radius: 10px; }
+.sp.phone .sp-h b { font-size: 17px; line-height: 21px; } .sp.phone .sp-h small { font-size: 13px; line-height: 17px; }
+.sp.phone .field { flex-direction: column; gap: 12px; justify-content: flex-start; }
+.ptop { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+.sp.phone .hand { flex: none; display: flex; align-items: flex-end; gap: 10px; padding: 10px 14px 24px; border-top: 1px solid var(--ork-frame); background: var(--ork-room); }
+.sp.phone .hand .s { --cw: 92px; padding: 22px 7px 18px; } .sp.phone .hand .s b { font-size: 13px; line-height: 16px; } .sp.phone .hand .s .pic { height: 22px; } .sp.phone .hand .s .pic img { width: 22px; }
+.sp.phone .hand .acts { margin: 0; flex: 1; justify-content: stretch; } .sp.phone .hand .acts .btn { flex: 1; justify-content: center; }
+.sp.phone .s.xl { --cw: 190px; } .sp.phone .s.lg { --cw: 140px; }
+.sp.phone .l.mid { width: 100%; aspect-ratio: auto; }
+
+.s p { font: 400 12px/16px var(--ork-font-read); color: var(--ork-ink-read); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sp.phone .field.sp-cost { align-content: flex-start; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 12px 10px; }
+.sp.phone .field.sp-cost .col:first-child { width: 100%; }
+.sp.phone .field.sp-cost .s { --cw: 108px; padding: 28px 9px 22px; } .sp.phone .field.sp-cost .costw { max-width: 108px; font-size: 12px; line-height: 16px; }
+.sp.phone .road { gap: 10px; } .sp.phone .done-pile { width: 72px; } .sp.phone .done-pile .s { --cw: 72px; padding: 22px 6px 16px; } .sp.phone .done-pile .s .pic { display: none; }
+.sp.phone .done-pile .s b { font-size: 12px; line-height: 15px; }
+.sp.phone .ahead .back { --cw: 58px; margin-left: -40px; } .sp.phone .ahead .back:first-child { margin-left: 0; }
+.sp.phone .field.sp-duel { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.sp.phone .field.sp-duel .s { --cw: 160px; }
+</style>
+</head>
+<body>
+<div id="root" style="display:inline-block"></div>
+<script src="../table-cards/cards.js"></script>
+<script>
+const SP = Q.get("s") || "duel", PH = FACE_OF === "phone";
+const kb = (k) => `<span class="kb">${k}</span>`;
+const hdr = (f, title, line, say = "") => `<div class="sp-h"><span class="av face">${face(f)}</span><span class="t"><b>${title}</b><small>${line}</small></span>${say && !PH ? `<span class="say">${say}</span>` : ""}
+  <button class="btn">${icon("close")}${PH ? "" : "Close"}</button></div>`;
+const cost = (tool, pct, over = false) => `<span class="cost${over ? " over" : ""}">${mark(tool).replace('class="ork-mark"', "")}${pct}%</span>`;
+const withCost = (card, c) => card.replace('<span class="ix tl">', c + '<span class="ix tl">');
+const places = `<div class="places"><button class="place"><img src="${PIC("die")}" alt="">Play</button><button class="place"><img src="${PIC("backpack")}" alt="">Inventory</button><button class="place"><img src="${PIC("book")}" alt="">History</button></div>`;
+
+const SPREADS = {
+  // 2. the dispute: the goal in the middle, the leaders at its sides, their ways in the hand
+  dispute: () => ({
+    head: hdr("puzzled", "Game design and Tech disagree", "Coins in the sky · the Orkmaster brings it to you", "They each put a token on it. Read both, then play a way from your hand."),
+    field: PH
+      ? `${S("gd", elem("ice") + sign("balance"), "Coins in the sky", "Game design · the spec", `<div class="toks">${tok("gd", "risk", "risk")}${tok("tech", "for", "for")}</div>`, "lg")}
+         ${M("gd", "its view · 10:20", "They pay twice a round", "Half as many, or a round's coins drop.", tok("gd", "risk", "risk: Balance"), "", elem("ice") + sign("balance"))}
+         ${M("tech", "its view · 10:41", "Leave them as they are", "Cheap to keep; the balance pass can tune them later.", tok("tech", "for", "for"), "", elem("meadow") + sign("work"))}`
+      : `<div class="voices"><div class="voice"><span class="av">${head(H.gd)}</span>${M("gd", "its view · 10:20", "They pay twice a round", "Half as many, or a round's coins drop. A player should feel the sky is a bonus, not the game.", tok("gd", "risk", "risk: Balance"), "", elem("ice") + sign("balance"))}</div>
+           <div class="voice"><span class="av">${head(H.art)}</span>${M("art", "its view · 10:55", "Either way, one sprite", "Coins in the sky need their own glint.", tok("art", "question", "question: the glint"), "", elem("meadow") + sign("picture"))}</div></div>
+         ${S("gd", elem("ice") + sign("balance"), "Coins in the sky", "Game design · the spec", `<p>Coins float over the second jump's height.</p><div class="toks">${tok("gd", "risk", "risk")}${tok("tech", "for", "for")}${tok("art", "question", "?")}</div>`, "xl")}
+         <div class="voices"><div class="voice right"><span class="av">${head(H.tech)}</span>${M("tech", "its view · 10:41", "Leave them as they are", "Cheap to keep; the balance pass can tune them after a play test.", tok("tech", "for", "for"), "", elem("meadow") + sign("work"))}</div></div>`,
+    hand: `${S("gd", elem("ice") + sign("balance"), "Half as many coins", "Game design's way", "", "up")}${S("tech", elem("meadow") + sign("work"), "Keep them, tune later", "Tech's way", "", "", "--r:2deg")}${S("om", elem("void") + sign("text"), "Your own words…", "", "", "", "--r:-2deg")}
+      <p class="note">Play a way and both leaders are told. ${kb("1")}${kb("2")}${kb("3")}</p>`,
+  }),
+  // 3. the cost in the corner: a goal says its cost before it is played
+  cost: () => ({
+    head: hdr("thoughtful", "What each card costs to play", "An estimate from the work's size; it can be more", "Claude has 62%, Codex 18% left today. The Leaderboard needs more Codex than is left."),
+    field: `<div class="col"><div class="pots">${pot("claude", 62)}${pot("codex", 18, true)}</div><p class="keys">left today, refilled at 04:00</p></div>
+      <div class="col">${withCost(S("tech", elem("meadow") + sign("work"), "Reconnect", "Tech · rooms, resume", "", PH ? "lg" : "xl"), cost("claude", 12))}<p class="costw">about 12% of Claude</p></div>
+      <div class="col">${withCost(S("art", elem("ice") + sign("screen"), "Lobby", "Art · two screens", "", PH ? "lg" : "xl"), cost("claude", 6))}<p class="costw">about 6% of Claude</p></div>
+      <div class="col">${withCost(S("om", elem("void") + sign("tune"), "Leaderboard", "Tech · Codex's spec", "", (PH ? "lg" : "xl") + " muted"), cost("codex", 25, true))}<p class="costw over">about 25% of Codex: 18% left. Wait for 04:00, or play it on Claude</p></div>`,
+    hand: `<p class="note">The cost is the AI tools' use, said before you play; a card you cannot pay says so and why.</p>
+      <div class="acts"><button class="btn go">${icon("play")}Play Reconnect</button><button class="btn">Leaderboard on Claude</button></div>`,
+  }),
+  // 4. the duel: two goals, which matters more now; the order grows on the right
+  duel: () => ({
+    head: hdr("thoughtful", "Which matters more now?", "Two at a time; the order builds itself", "Pick one of two. Skip when you can't tell; I'll ask the pair again later."),
+    field: `${PH ? "" : `<div class="deckl"><span class="thick">${[0, 1, 2, 3, 4].map((i) => `<span style="transform:translate(${i * 2}px,${-i * 2}px)"></span>`).join("")}</span><span class="keys">still to weigh</span></div>`}
+      <div class="col">${S("gd", elem("ice") + sign("mechanic"), "Double jump", "Game design · a mechanic", `<p>A second press in the air jumps again.</p>`, PH ? "lg" : "xl", "--r:-2deg")}<button class="btn">${kb("←")}This one</button></div>
+      ${PH ? "" : `<span class="or">or</span>`}
+      <div class="col">${S("mkt", elem("dust") + sign("store"), "Store page", "Marketing · its first page", `<p>The store's words and its five pictures.</p>`, PH ? "lg" : "xl", "--r:2deg")}<button class="btn">This one${kb("→")}</button></div>
+      ${PH ? "" : `<div class="ladder">${LAB("The order so far", "om")}<span class="rung" style="--pc:${P.tech}">Reconnect</span><span class="rung" style="--pc:${P.art}">Lobby</span><span class="rung gap">Double jump or Store page?</span><span class="rung" style="--pc:${P.gd}">Coins in the sky</span></div>`}`,
+    hand: `<p class="note">Can't tell? ${kb("↓")} skip this pair.</p><div class="acts"><button class="btn">${icon("arrow-right")}Skip</button><button class="btn go">${icon("check")}Done: keep this order</button></div>`,
+  }),
+  // 5. the sort: one card at a time in the middle, three piles to drop it on
+  sort: () => ({
+    head: hdr("thoughtful", "Sort the new goals", "One at a time; the pile at the left thins as you go", "Six goals came in from the play test. Where does each go?"),
+    field: `${PH ? "" : `<div class="deckl"><span class="thick">${[0, 1, 2, 3].map((i) => `<span style="transform:translate(${i * 2}px,${-i * 2}px)"></span>`).join("")}</span><span class="keys">new, to sort</span></div>`}
+      <div class="col" style="gap:16px">${S("gd", elem("lava") + sign("bug"), "The timer stops at a round's end", "a play test · 11:30", `<p>The round's clock freezes at 0 and the vote never opens.</p>`, PH ? "lg" : "xl")}</div>
+      ${PH ? "" : `<div class="col" style="gap:18px;margin-left:30px">
+        <div class="drop"><span class="bin work" style="--pc:${P.tech}"><span class="in"></span>${icon("play")}</span><span class="cap2">${kb("1")} To work</span></div></div>
+        <div class="col" style="gap:18px"><div class="drop"><span class="bin later"><span class="in" style="--pc:${P.mkt}"></span>${icon("clock")}</span><span class="cap2">${kb("2")} Later</span></div></div>
+        <div class="col" style="gap:18px"><div class="drop"><span class="bin drop-it">${icon("trash")}</span><span class="cap2">${kb("3")} Drop</span></div></div>`}`,
+    hand: PH ? `<div class="acts"><button class="btn go">${icon("play")}To work</button><button class="btn">${icon("clock")}Later</button><button class="btn">${icon("trash")}Drop</button></div>`
+      : `<p class="note">Drag the card onto a pile, or press its key. A dropped goal stays in the history.</p><div class="acts"><button class="btn">${icon("arrow-left")}Back one</button></div>`,
+  }),
+  // 6. the track: done stages a pile, the stage now face up with the party's meeple, the ones to come face down
+  track: () => ({
+    head: hdr("happy", "Double jump: where it is", "Game design's spec, then Tech's work", "Two stages done, the third at work. You need not look at the ones to come."),
+    field: `<div class="road">
+      <div class="col"><span class="done-pile">${[3, 0].map((r) => S("gd", elem("ice") + sign("text"), r ? "Its spec" : "The jump's feel", "done", "", "", `--r:${r - 4}deg`)).join("")}<span class="chk">✓</span></span><span class="cap2">done</span></div>
+      <div class="col" style="position:relative"><span class="meeple" style="--pc:${P.tech};right:18px;top:-12px"></span>${S("tech", elem("meadow") + sign("work"), "The second jump in code", "Tech · now", `<p>Air jump, once, half as high; its test.</p><div class="bar" style="--w:55%"><i></i></div>`, PH ? "lg" : "xl")}<span class="cap2">at work, since 11:20</span></div>
+      <div class="col"><span class="ahead">${[0, 1, 2].map((i) => `<span class="back" style="--r:${i * 3}deg"></span>`).join("")}</span><span class="cap2">to come, face down</span></div></div>`,
+    hand: `<p class="note">A stage to come turns face up when it starts. Pressed, a face-down card says only its name.</p><div class="acts"><button class="btn">${icon("eye")}Show what comes</button></div>`,
+  }),
+  // 7. the deal: the dealer deals a goal onto the chairs of the parties it goes to
+  deal: () => ({
+    head: hdr("thoughtful", "The Orkmaster deals Coins in the sky", "To Game design for its spec, then Tech and Art for the work", "Here is my deal. Move a card off a chair, or onto the empty one, before I start."),
+    field: `<div class="col" style="gap:24px">
+      ${PH ? "" : `<div class="dealer-big"><span class="av face">${face("sly")}</span>${S("gd", elem("ice") + sign("balance"), "Coins in the sky", "the goal", "", "lg")}</div>`}
+      <div class="chairs" style="${PH ? "flex-wrap:wrap;justify-content:center;gap:10px 18px" : ""}">
+        ${[["gd", "knight", "Game design", "writes its spec", "-4"], ["tech", "ork", "Tech", "the code", "3"], ["art", "elf", "Art", "the coins' glint", "-2"], ["mkt", "gnome", "Marketing", "not dealt", ""]].map(([k, ch, n, w, r]) => `
+          <div class="chairc${r ? "" : " empty"}" style="${PH ? "width:150px" : ""}"><img class="ch" src="${O}chair/chair-leader-${ch}.png" srcset="${O}chair/chair-leader-${ch}@2x.png 2x" alt=""><img class="hd" src="${O}races/${H[k]}.png" srcset="${O}races/${H[k]}@2x.png 2x" alt="">
+            ${r ? S(k, elem("ice") + sign("balance"), "Coins in the sky", "", "", "", `--r:${r}deg`) : ""}<b class="n">${n}</b><small>${w}</small></div>`).join("")}</div></div>`,
+    hand: `<p class="note">Drag a card between chairs, or choose its party with the keys.</p><div class="acts"><button class="btn">${icon("pencil")}Change the deal</button><button class="btn go">${icon("play")}Deal it</button></div>`,
+  }),
+  // 8. before and after: the card before muted at the left, the card after with its changes marked
+  diff: () => {
+    const before = `<article class="cd l mid before" style="--pc:${P.gd}"><span class="ix tl">${elem("ice")}${sign("mechanic")}</span><span class="tagp was">Before · 10:05</span>
+      <h2>Double jump</h2><p>A second press in the air jumps again, <del>as high as the first</del>. It can be used <del>any number of times</del> before landing.</p></article>`;
+    const after = `<article class="cd l mid" style="--pc:${P.gd}"><span class="ix tl">${elem("ice")}${sign("mechanic")}</span><span class="tagp now">After · 11:58</span>
+      <h2>Double jump</h2><p>A second press in the air jumps again, <ins>half as high</ins>. It can be used <ins>once</ins> before landing.</p>
+      <div class="toks">${tok("gd", "for", "Game design")}${tok("tech", "for", "Tech")}</div></article>`;
+    return {
+      head: hdr("thoughtful", "Game design changed its section", "Double jump · since your last look", "Two lines changed after Tech's question. The rest is as you read it."),
+      field: PH ? `<div style="position:relative;align-self:stretch;padding-top:64px">${before.replace('class="cd l mid before"', 'class="cd l mid before" style="position:absolute;left:10px;right:10px;top:0;height:120px;--pc:' + P.gd + '"')}<div style="position:relative">${after}</div></div>`
+        : `<div class="diffpair">${before}<span class="arrow">→</span>${after}</div>`,
+      hand: `<p class="note">${kb("←")}${kb("→")} turn between before and after.</p><div class="acts"><button class="btn">${icon("arrow-left")}Send back</button><button class="btn go">${icon("check")}Accept</button></div>`,
+    };
+  },
+  // 9. the gate: the goal in the middle, its checks round it, turned as each is known; the portal opens when all are green
+  gate: () => {
+    const g = (x, y, inner, w) => `<div class="gk" style="left:${x}%;top:${y}%">${inner}<small>${w}</small></div>`;
+    const ok = (k, t) => `<span style="position:relative">${S(k, elem("meadow") + sign("check"), t, "", "", "")}<span class="chk">✓</span></span>`;
+    const checks = [
+      g(50, 6, ok("tech", "Unit tests"), "312 passed"), g(88, 28, ok("tech", "Tech accepts"), "its section's Done when"),
+      g(88, 72, ok("gd", "Game design accepts"), "the feel, played"), g(50, 94, `<span class="back"></span>`, `<span class="glass"><span class="hg"></span>Browser tests, 4 min</span>`),
+      g(12, 72, ok("rel", "Release checks"), "the notes, the version"), g(12, 28, `<span style="position:relative">${S("om", elem("void") + sign("chart"), "Its cost", "", "", "")}<span class="chk">✓</span></span>`, "used 9% of Claude")];
+    return {
+      head: hdr("thoughtful", "Sign-in at the gate", "Every check turns green, then the portal opens", "Five checks green; the browser tests still run. To main opens when they turn."),
+      field: PH ? `${S("rel", elem("meadow") + sign("check"), "Sign-in", "and Combo scoring", "", "lg portal")}
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px;justify-items:center">${checks.map((c) => c.replace(/style="left:[^"]*"/, 'style="position:relative;transform:none;width:110px"')).join("")}</div>`
+        : `<div class="gate"><span class="ring"></span><div class="mid">${S("rel", elem("meadow") + sign("check"), "Sign-in", "and Combo scoring with it", `<div class="toks">${tok("tech", "for", "Tech")}${tok("gd", "for", "GD")}${tok("rel", "for", "Release")}</div>`, "xl portal")}</div>${checks.join("")}</div>`,
+      hand: `<p class="note">A red check stays face up with what failed and who mends it.</p><div class="acts"><button class="btn" disabled style="opacity:1;color:var(--ork-ink-muted)">${icon("git-merge")}To main opens after the browser tests</button></div>`,
+    };
+  },
+};
+
+const sp = SPREADS[SP]();
+document.getElementById("root").innerHTML = PH
+  ? `<div class="sp phone"><div class="sb"><span>12:47</span><span>●●● 5G ▮</span></div><div class="stage">${sp.head}<div class="field sp-${SP}">${sp.field}</div></div><div class="hand">${sp.hand.replace(/<p class="note">[\s\S]*?<\/p>/, "")}</div></div>`
+  : `<div class="sp desk"><span class="bg"></span><div class="stage">${sp.head}<div class="field">${sp.field}</div></div><div class="hand">${sp.hand}${SP === "dispute" ? "" : ""}</div></div>`;
+</script>
+</body>
+</html>
