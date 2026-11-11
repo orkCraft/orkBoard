@@ -1,0 +1,106 @@
+/* The leaders' tables (goal 170, the talk of 11 November 2026; docs/mockups/frameworks/): a leader's framework laid as cards in the pane, on orkUI's tokens
+   and cards.css's pieces. Layout only: every colour, face and corner is orkUI's (`.ork-card`, `--party-hue` from `data-race`). The person never moves a card:
+   it turns one over (`.is-over`), spreads a pile (`.is-open`), puts a token of its own (`.tb-you`, bone with a brass rim, never a leader's round colour). */
+.cards-lane__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 0 4px; }
+.cards-lane__head > b { font: var(--ork-type-heading); }
+.tb-switch { margin-left: auto; }
+.tb-switch .ork-btn { padding-inline: 10px; }
+
+.tb { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.tb-head { display: flex; align-items: center; gap: 12px; padding: 10px 20px 4px; flex: none; }
+.tb-av { flex: none; display: grid; place-items: center; }
+.tb-t { display: flex; flex-direction: column; min-width: 0; } .tb-t b { font: var(--ork-type-heading); } .tb-t small { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.tb-head .tb-switch { margin-left: auto; }
+.tb-body { flex: 1; min-height: 0; overflow: auto; padding: 6px 20px 12px; }
+.tb-colh { margin: 0; display: flex; align-items: center; gap: 8px; font: var(--ork-type-label); letter-spacing: var(--ork-type-label-track); text-transform: uppercase; color: var(--ork-ink-muted); }
+.tb-colh i { font: var(--ork-type-caption); font-style: normal; letter-spacing: 0; text-transform: none; }
+
+/* a card: S on its ratio, its size from its slot */
+.tb-slot { --card-w: 100px; position: relative; flex: none; width: var(--card-w); }
+.tb-slot.is-sm { --card-w: 92px; } .tb-slot.is-lg { --card-w: 128px; } .tb-slot.is-xl { --card-w: 166px; } .tb-slot.is-wide { --card-w: 168px; } .tb-slot.is-job { --card-w: 310px; }
+.tb-card { position: relative; display: flex; flex-direction: column; gap: 3px; width: var(--card-w); aspect-ratio: 2.5 / 3.5; padding: 26px 8px 18px; text-align: left; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--ork-card-frame); color: var(--ork-ink); box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), 0 4px 0 var(--ork-room); transform: rotate(var(--rot, 0deg));
+  transition: transform var(--ork-motion-quick) var(--ork-motion-ease); }
+.tb-card:hover, .tb-card:focus-visible { transform: translateY(-3px) rotate(var(--rot, 0deg)); }
+.tb-card:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.tb-slot.is-wide .tb-card, .tb-slot.is-job .tb-card { aspect-ratio: 3.5 / 2.5; }
+.tb-slot.is-xl .tb-card { padding: 32px 14px 24px; gap: 6px; } .tb-slot.is-lg .tb-card { padding: 28px 11px 22px; }
+.tb-slot.is-job .tb-card { padding: 28px 18px 14px; }
+.tb-ix { position: absolute; left: 8px; top: 7px; display: flex; }
+.tb-name { font: var(--ork-type-button); overflow-wrap: anywhere; } .tb-name.is-mono { font-family: var(--ork-font-code); font-size: 12px; line-height: 15px; }
+.tb-slot.is-xl .tb-name { font: var(--ork-type-title); }
+.tb-line, .tb-count { font: var(--ork-type-caption); color: var(--ork-ink-muted); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.tb-slot.is-sm .tb-line, .tb-slot.is-md .tb-line { -webkit-line-clamp: 3; }
+.tb-pile .tb-line { -webkit-line-clamp: 2; }
+.tb-count { margin-top: auto; color: var(--ork-ink-read); }
+.tb-card.is-over { background: var(--ork-panel); box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), 0 4px 0 var(--ork-room); }
+.tb-card.is-over .tb-line { color: var(--ork-ink-read); -webkit-line-clamp: 6; }
+.tb-card.is-ext { border-style: dashed; background: var(--ork-panel); }
+.tb-card.is-frame { border-style: dashed; }
+.tb-card.is-stray { box-shadow: inset 0 3px 0 var(--party-hue), 0 0 0 2px var(--ork-alert), 0 4px 0 var(--ork-room); }
+.tb-card.is-hired { box-shadow: inset 0 3px 0 var(--party-hue), 0 0 0 2px var(--ork-gilt-hi), 0 4px 0 var(--ork-room); }
+.tb-card.is-hired::after { content: "Hired"; position: absolute; right: 10px; bottom: 8px; padding: 2px 7px; background: var(--ork-gilt-hi); color: var(--ork-on-ink); font: var(--ork-type-label); }
+.tb-card.is-fired { background: var(--ork-panel); } .tb-card.is-fired .tb-name, .tb-card.is-fired .tb-line { color: var(--ork-ink-muted); }
+.tb-card.is-fired::after { content: "Fired"; position: absolute; right: 8px; bottom: 6px; padding: 2px 6px; border: 1px solid var(--ork-edge); color: var(--ork-ink-muted); font: var(--ork-type-label); }
+.tb-card.is-marked { box-shadow: inset 0 3px 0 var(--party-hue), 0 0 0 2px var(--ork-ink), 0 4px 0 var(--ork-room); }
+.tb-jt { font: var(--ork-type-read); color: var(--ork-ink); } .tb-jt b { color: var(--ork-gilt-hi); }
+.tb-toks { display: flex; flex-wrap: wrap; gap: 3px; margin-top: auto; }
+.tb-card .cards-tok i { width: 20px; height: 20px; }
+.tb-card .cards-tok span { display: none; }
+
+/* a pile: its top card, its thickness the backs under it, down and to the right */
+.tb-pile { margin: 0 14px 14px 0; }
+.tb-under { position: absolute; left: var(--dx); top: var(--dx); width: var(--card-w); aspect-ratio: 2.5 / 3.5; border: 1px solid var(--ork-card-frame); box-shadow: none;
+  background: var(--ork-raised) url(/ds/orkui/backs/back.svg) center / 100% 100%; }
+.tb-faced { flex: none; width: 92px; aspect-ratio: 2.5 / 3.5; padding: 0; border: 1px solid var(--ork-card-frame); cursor: pointer; background: var(--ork-raised) url(/ds/orkui/backs/back.svg) center / 100% 100%; box-shadow: 0 4px 0 var(--ork-room); }
+.tb-faced:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.tb-pile.is-open .tb-card { box-shadow: inset 0 3px 0 var(--party-hue), 0 0 0 2px var(--ork-ink-muted), 0 4px 0 var(--ork-room); }
+
+/* the person's token: bone with a brass rim (the leaders' are round and their party's colour) */
+.tb-you { display: inline-flex; flex: none; }
+.tb-you i { width: 24px; height: 24px; display: grid; place-items: center; clip-path: circle(50%); font: var(--ork-type-label); font-style: normal; background: var(--ork-ink); color: var(--ork-canvas); box-shadow: inset 0 0 0 3px var(--ork-gilt-hi); }
+.tb-you.is-big i { width: 40px; height: 40px; font: var(--ork-type-heading); box-shadow: inset 0 0 0 4px var(--ork-gilt-hi); }
+.tb-placed { position: absolute; z-index: 3; right: -8px; top: -8px; display: flex; } .tb-placed .tb-you i { width: 28px; height: 28px; }
+
+/* the hand's place on this table: the person's tokens and the words they take */
+.tb-hand { flex: none; display: flex; align-items: center; gap: 14px; padding: 8px 22px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); min-height: 68px; }
+.tb-take { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px 6px; border: 0; background: none; cursor: pointer; color: var(--ork-ink); font: var(--ork-type-label); }
+.tb-take:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.tb-take.is-held .tb-you i { box-shadow: inset 0 0 0 4px var(--ork-gilt-hi), 0 0 0 3px var(--ork-ink); }
+.tb-note { margin: 0; max-width: 520px; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.tb-ask { flex: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.tb-ask__to { flex: 1 0 100%; font: var(--ork-type-caption); color: var(--ork-ink-read); } .tb-ask__to b { color: var(--ork-ink); }
+.tb-ask .ork-input { flex: 1 1 220px; min-width: 0; }
+
+/* the architecture: layers top to bottom, a card on the one it needs */
+.tb-arch { display: grid; grid-template-columns: 1fr 290px; gap: 22px; align-items: start; }
+.tb-layers { display: flex; flex-direction: column; min-width: 0; }
+.tb-layer { position: relative; display: flex; align-items: flex-start; gap: 16px; padding: 28px 0 4px 120px; margin-bottom: -22px; border-top: 1px dashed var(--ork-frame); min-height: 150px; }
+.tb-layer:first-child { border-top: 0; padding-top: 6px; } .tb-layer:nth-child(1) { z-index: 4; } .tb-layer:nth-child(2) { z-index: 3; } .tb-layer:nth-child(3) { z-index: 2; } .tb-layer:nth-child(4) { z-index: 1; }
+.tb-ln { position: absolute; left: 0; top: 10px; width: 110px; font: var(--ork-type-button); color: var(--ork-ink-read); }
+.tb-layer:first-child .tb-ln { top: 6px; }
+.tb-ln i { display: block; font: var(--ork-type-caption); font-style: normal; color: var(--ork-ink-muted); }
+.tb-layer.has-spread { margin-bottom: 0; flex-wrap: wrap; }
+.tb-spread { flex: 1 0 100%; display: flex; flex-direction: column; gap: 4px; margin-left: 6px; min-width: 0; }
+.tb-fan { display: flex; padding: 6px 0 12px; } .tb-fan > .tb-slot { margin: 0 -6px; } .tb-fan.is-col { flex-direction: column; gap: 10px; align-items: flex-start; } .tb-fan.is-col > .tb-slot { margin: 0; }
+.tb-rules { display: flex; flex-direction: column; gap: 10px; padding: 12px; background: var(--ork-room); border: 1px solid var(--ork-frame); position: sticky; top: 0; }
+.tb-rule { margin: 0; display: flex; gap: 8px; align-items: flex-start; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.tb-rule small { display: block; font-family: var(--ork-font-code); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.tb-rule b { color: var(--ork-ink); } .tb-rule > span:not(.cards-tok):not(.tb-you) { flex: 1; min-width: 0; }
+.tb-rule .cards-tok span { display: none; }
+.tb-sent { border-top: 1px dashed var(--ork-edge); padding-top: 8px; }
+.tb-legend { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+
+/* jobs to be done: who, the job and its forces, hired and fired */
+.tb-jtbd { display: grid; grid-template-columns: 220px 1fr 250px; gap: 22px; align-items: start; }
+.tb-fc { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; min-width: 0; } .tb-fc.is-mid { align-items: stretch; }
+.tb-fc .tb-slot.is-job { align-self: center; max-width: 100%; }
+.tb-forces { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tb-force { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 1px solid var(--ork-edge); background: var(--ork-panel); font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.tb-force b { font: var(--ork-type-label); letter-spacing: var(--ork-type-label-track); text-transform: uppercase; }
+.tb-force.is-in b { color: var(--ork-success); } .tb-force.is-out b { color: var(--ork-alert); }
+.tb-force.is-in::before { content: "→"; color: var(--ork-success); } .tb-force.is-out::before { content: "←"; color: var(--ork-alert); }
+.tb-row { display: flex; gap: 12px; align-items: flex-start; }
+.tb-sentbox { margin: 0; display: flex; gap: 10px; align-items: center; padding: 8px 12px; background: var(--ork-panel); border: 1px dashed var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-read); } .tb-sentbox b { color: var(--ork-ink); }
+@media (max-width: 1100px) { .tb-arch, .tb-jtbd { grid-template-columns: 1fr; } .tb-layer { padding-left: 0; padding-top: 34px; flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .tb-card { transition: none; } }

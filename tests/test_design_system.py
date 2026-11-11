@@ -12,6 +12,7 @@ STATIC = server.STATIC
 SHEETS = [STATIC / "page.css", STATIC / "js" / "shell" / "shell.css", STATIC / "js" / "board" / "board.css",
           STATIC / "js" / "arena" / "arena.css", STATIC / "js" / "arena" / "systemmap.css", STATIC / "js" / "arena" / "limits.css", STATIC / "js" / "arena" / "play.css", STATIC / "pwa" / "app.css", STATIC / "pwa" / "party.css"]
 SHEETS += sorted(p for d in ("frame", "table", "hand", "mock", "cards") for p in (STATIC / "js" / d).glob("*.css"))   # the window as two parts (spec 98): every sheet of its folders
+SHEETS += sorted((STATIC / "js" / "cards" / "tables").glob("*.css"))   # the leaders' tables (goal 170 T)
 
 
 def test_the_copy_is_orkuis_office_look_as_stamped():

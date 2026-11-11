@@ -1,0 +1,423 @@
+{
+ "recorded": "2026-11-11T16:03:10+00:00",
+ "folder": "agent-ab40feb659a1bb413",
+ "tables": {
+  "tech": {
+   "architecture": {
+    "title": "Architecture",
+    "line": "Its architecture · this repository's modules",
+    "party": "tech",
+    "limit": 600,
+    "layers": [
+     {
+      "id": "outside",
+      "name": "Outside",
+      "line": "imports Orkboard",
+      "cards": [
+       {
+        "id": "orkline",
+        "title": "Orkline",
+        "line": "imports Orkboard's modules, never the other way round",
+        "kind": "ext",
+        "needs": {}
+       }
+      ]
+     },
+     {
+      "id": "faces",
+      "name": "Faces",
+      "line": "the page is the one face",
+      "cards": [
+       {
+        "id": "gui/",
+        "title": "gui/",
+        "line": "the page, its server",
+        "kind": "pile",
+        "modules": 104,
+        "lines": 19552,
+        "needs": {
+         "realm": 108,
+         "core": 46,
+         "design": 3
+        },
+        "biggest": [
+         {
+          "id": "gui/board_host.py",
+          "title": "board_host.py",
+          "line": "the host",
+          "lines": 805,
+          "past": true,
+          "needs": {
+           "realm": 3,
+           "top": 2,
+           "core": 5,
+           "sources": 1
+          }
+         },
+         {
+          "id": "gui/ideas.py",
+          "title": "ideas.py",
+          "line": "the Board's commands",
+          "lines": 775,
+          "past": true,
+          "needs": {
+           "realm": 1,
+           "top": 1,
+           "core": 2
+          }
+         },
+         {
+          "id": "gui/drive.py",
+          "title": "drive.py",
+          "line": "the command line's drive",
+          "lines": 600,
+          "past": false,
+          "needs": {
+           "realm": 3,
+           "top": 2
+          }
+         },
+         {
+          "id": "gui/ideas_board.py",
+          "title": "ideas_board.py",
+          "line": "the Board as the page asks it",
+          "lines": 580,
+          "past": false,
+          "needs": {
+           "realm": 2,
+           "top": 1,
+           "core": 1
+          }
+         }
+        ]
+       },
+       {
+        "id": "vscode/",
+        "title": "vscode/",
+        "line": "a frame: it starts the page",
+        "kind": "frame",
+        "lines": 322,
+        "needs": {
+         "gui": 1
+        }
+       }
+      ]
+     },
+     {
+      "id": "engine",
+      "name": "Engine",
+      "line": "no face",
+      "cards": [
+       {
+        "id": "core/",
+        "title": "core/",
+        "line": "the bus, a tool's run, the gate",
+        "kind": "pile",
+        "modules": 65,
+        "lines": 15129,
+        "needs": {
+         "realm": 111
+        },
+        "biggest": [
+         {
+          "id": "core/op_runner.py",
+          "title": "op_runner.py",
+          "line": "an operation's run",
+          "lines": 629,
+          "past": true,
+          "needs": {
+           "realm": 2,
+           "sources": 1,
+           "top": 1
+          }
+         },
+         {
+          "id": "core/idea_runner.py",
+          "title": "idea_runner.py",
+          "line": "a plan's run",
+          "lines": 618,
+          "past": true,
+          "needs": {
+           "realm": 2,
+           "top": 1
+          }
+         },
+         {
+          "id": "core/idea_plan.py",
+          "title": "idea_plan.py",
+          "line": "a goal's plan",
+          "lines": 579,
+          "past": false,
+          "needs": {
+           "realm": 2,
+           "sources": 1,
+           "hooks": 1
+          }
+         },
+         {
+          "id": "core/idea_keeper.py",
+          "title": "idea_keeper.py",
+          "line": "the Board's keeper",
+          "lines": 550,
+          "past": false,
+          "needs": {
+           "realm": 5,
+           "sources": 2,
+           "top": 1
+          }
+         }
+        ]
+       },
+       {
+        "id": "design/",
+        "title": "design/",
+        "line": "orkUI's copy, the UI rules",
+        "kind": "pile",
+        "modules": 8,
+        "lines": 733,
+        "needs": {},
+        "biggest": [
+         {
+          "id": "design/ui.py",
+          "title": "ui.py",
+          "line": "a UI document",
+          "lines": 216,
+          "past": false,
+          "needs": {}
+         },
+         {
+          "id": "design/mark.py",
+          "title": "mark.py",
+          "line": "the mark",
+          "lines": 128,
+          "past": false,
+          "needs": {}
+         },
+         {
+          "id": "design/tokens.py",
+          "title": "tokens.py",
+          "line": "the tokens",
+          "lines": 125,
+          "past": false,
+          "needs": {
+           "top": 1
+          }
+         },
+         {
+          "id": "design/mascots.py",
+          "title": "mascots.py",
+          "line": "the mascots",
+          "lines": 119,
+          "past": false,
+          "needs": {}
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "words",
+      "name": "Words",
+      "line": "the Board's own",
+      "cards": [
+       {
+        "id": "realm/",
+        "title": "realm/",
+        "line": "the lexicon, a goal's way",
+        "kind": "pile",
+        "modules": 230,
+        "lines": 47990,
+        "needs": {
+         "core": 4
+        },
+        "biggest": [
+         {
+          "id": "realm/ideas.py",
+          "title": "ideas.py",
+          "line": "the goals and parties as files",
+          "lines": 689,
+          "past": true,
+          "needs": {}
+         },
+         {
+          "id": "realm/hypotheses.py",
+          "title": "hypotheses.py",
+          "line": "Product's hypotheses",
+          "lines": 641,
+          "past": true,
+          "needs": {}
+         },
+         {
+          "id": "realm/loop.py",
+          "title": "loop.py",
+          "line": "a game's core loop",
+          "lines": 584,
+          "past": false,
+          "needs": {
+           "hooks": 1
+          }
+         },
+         {
+          "id": "realm/board_map.py",
+          "title": "board_map.py",
+          "line": "the Board's map",
+          "lines": 564,
+          "past": false,
+          "needs": {}
+         }
+        ]
+       }
+      ],
+      "stray": [
+       {
+        "id": "realm/goal_route.py",
+        "title": "goal_route.py",
+        "line": "reaches up into core, lazily",
+        "lines": 427,
+        "past": false,
+        "needs": {
+         "core": 3
+        },
+        "lazy": true,
+        "imports": [
+         "orkboard.core"
+        ]
+       },
+       {
+        "id": "realm/map_night.py",
+        "title": "map_night.py",
+        "line": "reaches up into core, lazily",
+        "lines": 11,
+        "past": false,
+        "needs": {
+         "core": 1
+        },
+        "lazy": true,
+        "imports": [
+         "orkboard.core"
+        ]
+       }
+      ]
+     }
+    ],
+    "rules": [
+     {
+      "view": "for",
+      "text": "Nothing under core/, realm/ or design/ imports gui/",
+      "where": "tests/test_architecture.py · test_no_face_in"
+     },
+     {
+      "view": "for",
+      "text": "Orkline imports Orkboard, never back; Orkboard starts with none of Orkline's",
+      "where": "tests/test_architecture.py · test_orkboard_starts_alone"
+     },
+     {
+      "view": "for",
+      "text": "Nothing imports Textual or Rich",
+      "where": "tests/test_architecture.py · test_the_terminal_ui_stays_gone"
+     },
+     {
+      "view": "risk",
+      "text": "realm/ reaches up into core/ (2 modules, lazily)",
+      "where": "realm/goal_route.py, realm/map_night.py",
+      "card": "realm/goal_route.py"
+     },
+     {
+      "view": "risk",
+      "text": "6 modules are past the ~600 lines a module may grow to",
+      "where": "gui/board_host.py 805, gui/ideas.py 775, realm/ideas.py 689…",
+      "card": "gui/board_host.py"
+     }
+    ],
+    "tech_tokens": [
+     {
+      "card": "realm/goal_route.py",
+      "view": "risk"
+     }
+    ]
+   }
+  },
+  "product": {
+   "jtbd": {
+    "title": "Jobs to be done",
+    "line": "Who hires Orkboard, for what job",
+    "party": "product",
+    "personas": [
+     {
+      "id": "solo",
+      "title": "Solo developer",
+      "line": "Runs AI tools on their own project and wants the work to go on while they look away."
+     },
+     {
+      "id": "lead",
+      "title": "The reviewing lead",
+      "line": "Reads what the orks made and decides what goes into main."
+     }
+    ],
+    "job": {
+     "id": "main",
+     "when": "I have several AI tools going on my project",
+     "want": "one place where each tool's work is a goal I can see and answer",
+     "so": "I stay the one who decides, not the one who watches terminals",
+     "persona": "solo"
+    },
+    "forces": [
+     {
+      "dir": "in",
+      "kind": "Push",
+      "text": "terminals scroll past and I lose what each tool did"
+     },
+     {
+      "dir": "in",
+      "kind": "Pull",
+      "text": "one Board, a card a goal, a gate before main"
+     },
+     {
+      "dir": "out",
+      "kind": "Anxiety",
+      "text": "will the orks break main?"
+     },
+     {
+      "dir": "out",
+      "kind": "Habit",
+      "text": "I just talk to one tool in a terminal"
+     }
+    ],
+    "jobs": [
+     {
+      "id": "waits",
+      "title": "Know what waits for me",
+      "line": "One look says what asks, what is ready."
+     },
+     {
+      "id": "changed",
+      "title": "See what changed before main",
+      "line": "The gate's tests and the diff, then my yes."
+     },
+     {
+      "id": "stop",
+      "title": "Stop a tool that runs away",
+      "line": ""
+     }
+    ],
+    "hired": {
+     "id": "orkboard",
+     "title": "Orkboard",
+     "line": "One Board for the goals: the orks do them, you decide what goes into main."
+    },
+    "fired": [
+     {
+      "id": "tabs",
+      "title": "A terminal tab per tool",
+      "line": "Each tool alone; nothing says what is done or what waits."
+     },
+     {
+      "id": "todo",
+      "title": "A TODO file",
+      "line": "Written once, never read; the tools do not take it."
+     }
+    ]
+   }
+  }
+ }
+}

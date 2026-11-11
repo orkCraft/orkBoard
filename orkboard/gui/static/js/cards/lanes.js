@@ -9,6 +9,8 @@ import { raceOf } from "../table/felt.js";
 import { CardM, CardS, openCard } from "./card.js";
 import { openSpread } from "./spreads/open.js";
 import { nodes, postsOf, shareOf, tokensOf } from "./feed.js";
+import { FrameSwitch, TablesView } from "./tables/index.js";      // a leader's framework instead of the lanes (goal 170 T)
+import { frameworkOf, laid } from "./tables/state.js";
 
 const AT_WORK = new Set(["ready", "running", "testing", "picking", "failed", "review"]);
 
@@ -28,6 +30,7 @@ function Lane({ g }) {
   const one = (s, i) => [html`<${CardM} key=${i} p=${s.p} more=${spread[i] ? 0 : s.more.length} onPick=${pick} onMore=${() => setSpread({ ...spread, [i]: true })} />`,
     ...(spread[i] ? s.more.map((p, j) => html`<${CardM} key=${`${i}-${j}`} p=${p} onPick=${pick} />`) : [])];
   return html`<section class="cards-lane" data-race=${raceOf(g)} data-party=${g.slug} aria-label=${`${nameOf(g)}'s lane`}>
+    ${frameworkOf(g) && html`<header class="cards-lane__head"><b>${nameOf(g)}</b><${FrameSwitch} g=${g} /></header>`}
     ${asks.length > 0 && html`<p class="cards-lab">Asks you</p>${asks.flatMap((s) => one(s, posts.indexOf(s)))}`}
     ${news.length > 0 && html`<p class="cards-lab">New since your last look</p>${news.flatMap((s) => one(s, posts.indexOf(s)))}`}
     ${work.length > 0 && html`<p class="cards-lab">At work</p><div class="cards-row is-wrap">${work.map((n, i) => html`<${WorkCard} key=${n.slug} n=${n} tilt=${i % 2 ? 2 : -2} />`)}</div>`}
@@ -37,5 +40,6 @@ function Lane({ g }) {
 
 /** The lanes, one a party, in the tabs' order. */
 export function CardsLanes({ parties }) {
+  if (laid.value && parties.some((g) => g.slug === laid.value)) return html`<${TablesView} parties=${parties} />`;
   return html`<div class="cards-lanes" style=${`--lanes:${Math.max(parties.length, 1)}`}>${parties.map((g) => html`<${Lane} key=${g.slug} g=${g} />`)}</div>`;
 }

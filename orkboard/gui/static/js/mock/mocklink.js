@@ -31,7 +31,7 @@ export async function open({ town, online, toast }) {
   toastOf = toast;
   const r = await fetch(URL_OF);
   data = await r.json();
-  for (const part of PARTS) (await import(`./parts/${part}.js`)).lay(data);       // what the recording lacks: the examples, the spreads', the tables'
+  for (const part of PARTS) await (await import(`./parts/${part}.js`)).lay(data);       // what the recording lacks: the examples, the spreads', the tables'
   for (const x of data.replies || []) {
     exact.set(key(x.name, x.args), x);
     if (!byName.has(x.name)) byName.set(x.name, x);
