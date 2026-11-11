@@ -10,7 +10,7 @@ phase: done
 route: design, tech
 by: claude-code
 schema: 3
-gate: 6e6a376 · critical 190 passed (alpha) · green
+gate: 6e6a376 · 11 files · green
 ---
 # The readable look and the phone's feed: Rubik, lifted colours, round corners; the phone's tables as a feed of blocks
 
@@ -69,7 +69,7 @@ made in orkUI first, then copied here.
 ### The gate (11 November 2026)
 `orkboard gate --base origin/main` did not finish: the change touches 299 files and brings 65 test files, mostly browser ones, past
 the gate's 15 minutes. Under CLAUDE.md's *Alpha* the merge waits for the critical tests only: the gate's `always` and the non-browser
-tests of the modules touched (test_ideas, test_pwa, test_board_feed, test_lexicon, test_design_system, test_gui_wording,
+tests of the modules touched, 11 files (the record's count; test_ideas, test_pwa, test_board_feed, test_lexicon, test_design_system, test_gui_wording,
 test_board_recap, test_gui_recap): 190 passed at 6e6a376. The browser tests of each stage were run by its Grunt; those failing
 before the goal too (at dea4459) are named in the pull request.
 
