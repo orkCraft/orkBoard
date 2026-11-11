@@ -272,6 +272,17 @@ What the mockups of `docs/mockups/table-cards/`, `spreads/` and `frameworks/` dr
 the tokens stay orkUI's (§289.2): a token's face is drawn empty and its sign set in it by code, as on a card's back. A party's colour
 is laid by code, so the tokens and the meeples are drawn white.
 
+**The first takes (11 November 2026)**, in `docs/mockups/table-template/objects/cartoon/sheets/` (`k14-orkmaster-faces.jpg`,
+`k15-orkmaster-16.jpg`, `o7-tokens.jpg` … `o11-table.jpg`). Taken as they are: O8 (the hourglass), O9 (the meeple), O10 (the dealer's
+hands). K14 drew the owner's sheet's style, not K1's: three-quarter, shaded, with shoulders and a waistcoat (tile 2 a hand at the chin);
+K15 drew it flat, front-on, with a sticker's rim, nearer K1's heads. Which of the two is the Orkmaster's head is the owner's to say.
+O7's top row is taken but its rims' filigree is too busy for 18–26 px; its bottom row drew a GOLD coin, not bone with a brass rim: a
+token that reads as money (§295.3), so the bottom row is taken again. O11's cloth is green, and a colour on the table that is no party,
+no element and no signal is against §268 (green is also the orks' party): taken again with a near-black cloth.
+Fixes for the takes again: O7 add *The rims are PLAIN: one raised ring and the notches, no engraving, no filigree, no pattern. The
+person's tokens are IVORY BONE, off-white and matte, with ONE thin brass ring; never gold, never a coin.* O11 add *The cloth is a
+VERY DARK warm grey-brown, almost black (#1c1a18), never green; the rim's carving and the brass corners plainer, no letters or glyphs.*
+
 ### K14. The Orkmaster, a half-ork, half-goblin, and its faces (attach K1 and `docs/mockups/orkmaster/faces-sheet.jpg`)
 ```
 Eight head portraits of ONE character for a card-game interface on one sheet, a 4x2 grid, in EXACTLY the humorous flat cartoon style of the first attached sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, big expressive eyes, comic proportions. The character is the second attached sheet's: the Orkmaster, the table's dealer, a HALF-ORK, HALF-GOBLIN: a goblin's long pointed ears and long hooked nose and a sly reckoning look; an ork's olive-green skin, two small lower tusks and a heavy jaw; small round wire glasses, a small brass crown with three points, and under the chin a white shirt collar with a dark bow tie (the only thing below the head, kept small, inside the tile). Front-facing, the same face, colours, crown, glasses and size in every tile, the eyes on one line, wholly inside its tile with a clear margin (the ears' tips inside). Tiles, left to right, top to bottom: 1 at rest (calm, a faint knowing smile), 2 thoughtful (eyes half shut behind the glasses, the mouth pressed), 3 happy (a wide closed-eyed smile), 4 puzzled (one brow up, the mouth a little open), 5 shocked (eyes wide and round, the mouth an O), 6 panicked (eyes huge, a bead of sweat, the crown jumping off the head), 7 tired (heavy lids, dark rings under the eyes, the mouth slack), 8 sly (a sideways look, a crooked smile). Never angry. Every head reads on a very dark background: no dark mass without a light rim. Each tile slightly wider than tall (12:11), a flat mid-grey background (#3a3a3a), a thin grey-brown frame. No text, letters or numbers.
