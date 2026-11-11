@@ -8,6 +8,7 @@ import { ACTS } from "../table/post.js";
 import { Back, CardS, openCard } from "./card.js";
 import { feed, nodeOf, nodes } from "./feed.js";
 import { WorkCard } from "./lanes.js";
+import { openSpread } from "./spreads/open.js";
 
 const IN_TALK = new Set(["new", "talk", "spec", "idea"]);
 
@@ -19,7 +20,8 @@ function Waits() {
     const card = { slug: n.slug, title: n.short || n.title, element: n.element, hue: n.hue, sign: n.type?.sign || "", leader: w.leader || "orkmaster" };
     const acts = (w.acts || []).map((a) => ({ label: ACTS[a.act] || a.act, main: a.act !== "change_spec", run: () => command(a.command, a.args || {}) }));
     return html`<div class="cards-wait" key=${w.goal}><${CardS} n=${card} asks=${true} line=${w.at ? `starts by itself ${w.at.slice(11, 16)}` : "waits for you"}
-        onOpen=${(e) => openCard({ kind: "goal", n: { ...card, title: n.title }, line: "waits for you", acts, from: e.currentTarget })} />
+        onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line: "waits for you", from,
+          acts: [...acts, ...(w.kind === "main" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />
       <div class="cards-wait__acts">${acts.map((a) => html`<button type="button" class="ork-btn quiet" onClick=${a.run}>${a.label}</button>`)}</div></div>`;
   })}`;
 }

@@ -7,6 +7,7 @@ import { useEffect, useRef } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Elem, Icon, Sign } from "../orkui.js";
+import { openSpread } from "./spreads/open.js";
 import { GoalLine, PostBody, PostHead, KINDS, TAGS, when, whoOf } from "../table/post.js";
 
 /** A leader's view, its sign and its word (§295.4). */
@@ -20,7 +21,7 @@ export function Token({ leader, view, word = "" }) {
 }
 
 /** The rune and the kind's sign of a goal, a card's index (its top left, and turned at its bottom right). */
-const Index = ({ n, turned = false }) => html`<span class=${cls("cards-ix", { "is-turned": turned })} aria-hidden="true">
+export const Index = ({ n, turned = false }) => html`<span class=${cls("cards-ix", { "is-turned": turned })} aria-hidden="true">
   <${Elem} name=${n?.element || ""} hue=${n?.hue || ""} dim=${!n?.element} />${n?.sign && html`<${Sign} name=${n.sign} />`}</span>`;
 
 /** S: a goal upright. `n`: {slug, title, element, hue, sign, leader}; `line` under its name; `bar` its share done (0–1) or null;
@@ -45,7 +46,7 @@ const subOf = (p) => [KINDS[p.kind] || KINDS.news, when(p.at)].filter(Boolean).j
  *  `more`: the leader's posts after it, its stack (`onMore` spreads them). */
 export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
   const ref = useRef();
-  const open = () => openCard({ kind: "post", p, from: ref.current });
+  const open = () => openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) }] });
   return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-asks": !!p.asks, "is-stacked": more > 0 })} data-race=${whoOf(p.leader).race || "orkmaster"}
       data-kind=${p.kind} tabindex="0" aria-label=${`${whoOf(p.leader).name}: ${p.text}. Press to open.`}
       onClick=${(e) => { if (!e.target.closest("button")) open(); }} onKeyDown=${(e) => { if (e.key === "Enter" && e.target === ref.current) open(); }}>
