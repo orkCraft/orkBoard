@@ -8229,3 +8229,33 @@ with the chairs, the phone with the rings.* So:
 3. No number on either (§223, §291.9).
 
 The owner's call.
+
+## 295. The Orkmaster is a half-ork, half-goblin, the table's dealer; a leader's view is a token on a goal's card (11 November 2026, the owner)
+
+Changes: 85.1 and 158.4, 158.6 (the Orkmaster an ork, the crowned ork); 91 stays (the crown).
+
+Why: the owner, on the desktop in the feed's look (goal 170), asked whether posts of any height lose the card game, and thought of
+the leaders' views as tokens rather than cards; then of the Orkmaster as a croupier, sending a sheet of its faces
+(`docs/mockups/orkmaster/faces-sheet.jpg`); then: *he should be a goblin or a mix of ork and goblin, as he is thrifty, likes to count
+the tokens and runs everyone.* A pure goblin would be taken for Run's party (§158: goblins run what is live); a mix is one of a kind
+at the table, as the Orkmaster is no party's leader. So:
+1. **The Orkmaster is a half-ork, half-goblin**: the goblin's ears, nose and reckoning look, the ork's green skin, tusks and jaw; its
+   crown (§91), round glasses and a bow tie. Its name stays the Orkmaster; the goblin's blood is in the picture, never in a word. The
+   Taskmaster stays an ork; a Grunt an ork in Tech.
+2. **It is the table's dealer**, never a player: it shuffles the goals, deals a goal to its parties (the route, §85.4), holds the
+   deck and reads its top card (*Being read*), deals a spec at its clock time, and gathers the cards played into the discard's piles.
+   Thrifty, it keeps the count of the mana (the potions, §273).
+3. **The table is a tavern's card table, not a casino's**: the cloth, a wooden rim, tokens of bone or wood. No *bet*, *stake* or
+   *chips* in what a person reads; a token never stands for money, and what costs money says so plainly (CLAUDE.md).
+4. **A leader's view of a goal is a token on its card**: round, thick, its edge seen, in its party's colour, its sign in the middle,
+   one of four: *for*, *risk*, *question*, *against*; each with its word beside it (§283: a picture is never the only thing that says
+   what it means). Pressed, a token opens the leader's note that says why. A token asking the person is the yellow **!** (§294.1).
+5. **Its face follows the table** (the sheet's takes): happy when all is green or a goal went to main, thoughtful while it routes or
+   reads, puzzled when a question waits for the person, shocked when the gate's tests fail, panicked when the mana runs out or Stop
+   all is pressed, tired when the limits are low and the table stands; sly, sparingly; never in rage, which would read as anger at
+   the person. A face is never alone: its words stand beside it (*waits for you*, *mana 18%*).
+6. The heads, the faces and the tokens are drawn in orkUI and copied (CLAUDE.md); the token's word enters `realm/lexicon.py` `TERMS`
+   with the code that draws it. Whether a goal at work and a goal done are fixed-ratio cards, and how a leader's post reads in the
+   game's terms, is still talked over (goal 170).
+
+The owner's call.

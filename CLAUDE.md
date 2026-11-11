@@ -70,7 +70,7 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   (Tech), elves make the look (Design, Art), goblins run what is live (Run, LiveOps), gnomes market, knights make the
   product (Product, a game's Game design), the undead release it; a party's leader is its race's higher form, its mark
   grown out of the head (an ork shaman, an elf dryad, an imp, a gnome fairy, a golden unicorn knight, a lich: decisions §154,
-  §155, §158, §162); its tier is the gear on its head. The Orkmaster and the Taskmaster are orks; a Grunt is an ork in Tech.
+  §155, §158, §162); its tier is the gear on its head. The Orkmaster is a half-ork, half-goblin, the table's dealer (decisions §295); the Taskmaster is an ork; a Grunt is an ork in Tech.
 - **The licence is Apache-2.0** (decisions §96), the extension's too; the names and the ork mark are not licensed
   (`NOTICE`). A file copied from another project comes unchanged, its licence beside it and a line in `NOTICE`
   (`gui/static/vendor/`, orkUI's copy).
