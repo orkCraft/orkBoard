@@ -1,0 +1,9 @@
+/* C, the tale: Alegreya SC's small caps (a storybook, the history book) over Alegreya Sans, a humanist body. */
+:root[data-look="office"] {
+  --lk-head: "Alegreya SC", Georgia, serif; --lk-head-w: 700; --lk-title-w: 800;
+  --lk-text: "Alegreya Sans", system-ui, sans-serif;
+  --lk-case: none; --lk-track: 0.02em;
+  --lk-r: 6px; --lk-r-small: 4px;
+  --ork-ink: #efe8dc; --ork-ink-read: #dcd4c6;
+}
+:root[data-look="office"] { --ork-type-body: 400 16px/22px var(--lk-text); --ork-type-caption: 400 14px/18px var(--lk-text); --ork-type-heading: 700 16px/20px var(--lk-head); }

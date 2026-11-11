@@ -473,8 +473,8 @@ def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label
     nm = head.locator(".table-card__nm")
     assert nm.inner_text().strip() == "Reset the round timer when a player rejoins"
     assert nm.evaluate("e => getComputedStyle(e).textAlign") in ("left", "start") and nm.evaluate("e => getComputedStyle(e).webkitLineClamp") == "2"        # left-aligned, two lines at most (spec 147 A.2)
-    pixel = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').split(',')[0].trim().replace(/[\"']/g, '')")
-    assert pixel and pixel not in nm.evaluate("e => getComputedStyle(e).fontFamily")                                      # a person's words: the body face, never the pixel one (CLAUDE.md, the owner)
+    text = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-text').trim()")
+    assert text and nm.evaluate("e => getComputedStyle(e).fontFamily").replace(chr(34), "") == text.replace(chr(34), "")                                           # a person's words: the text face token (orkUI 0.40 draws every face in Rubik, decisions §291, so "not the pixel face" no longer tells)
     win = failed.locator(".table-card__win")
     assert 80 <= win.bounding_box()["height"] <= 92                                                                      # what the corners and the title leave of the card (spec 147 A.2), so a lane's cards line up
     assert win.get_attribute("data-window") == "fail" and win.locator(".ork-sign.alert").count() == 1 and win.locator(".ork-sign").count() == 1      # a failed task: orkUI's alert sign and its reason (spec 142 C, decisions §249.3)
@@ -850,7 +850,7 @@ def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_
     assert seat.locator(".table-seat__role").inner_text() == "Grunts" and seat.get_attribute("aria-label") == "Grunts, runs on Claude", "the role under the head, in the label with its tool"
     assert seat.locator(".ork-busy").count() == 1 and head.locator('.table-seat[data-seat="tester"] .ork-busy').count() == 0, "the busy mark on the one at work"
     role = seat.locator(".table-seat__role")
-    assert role.evaluate("e => getComputedStyle(e).fontFamily") != pg.locator(".table-title__pt").evaluate("e => getComputedStyle(e).fontFamily"), "the body's face, never the pixel face"
+    assert role.evaluate("e => getComputedStyle(e).fontFamily").startswith("Rubik"), "the one face, Rubik (orkUI 0.40, decisions §291): the pixel face is gone"
     assert role.evaluate("e => getComputedStyle(e).color") != seat.evaluate("e => getComputedStyle(e).color"), "muted"
     assert role.evaluate("e => [getComputedStyle(e).textOverflow, getComputedStyle(e).maxWidth]") == ["ellipsis", "76px"]
     box, rbox = seat.locator(".ork-race__head").bounding_box(), role.bounding_box()
@@ -1328,7 +1328,7 @@ def test_a_form_over_the_pane_keeps_the_discards_column_and_the_hand(gui):
     from tests.test_discard_table_browser import open_maps
     pg, host, log = open_maps(gui, "wide")
     try:
-        pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
+        pg.locator(".release-lane .post-card").first.wait_for(timeout=WAIT_MS)
         pg.get_by_role("button", name="The Orkmaster's menu").click()
         pg.get_by_role("menuitem", name="Settings").click()
         pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
@@ -1336,7 +1336,7 @@ def test_a_form_over_the_pane_keeps_the_discards_column_and_the_hand(gui):
         assert pg.locator(".hand-end > .hand-die").count() == 1 and pg.locator(".release-lane__head .pots").count() == 1, "the die stays in the hand, the potions in the column's head"
         assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
         pg.keyboard.press("Escape")
-        pg.locator(".release-lane .hand-done").first.wait_for(timeout=WAIT_MS)
+        pg.locator(".release-lane .post-card").first.wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1382,7 +1382,7 @@ def test_start_lays_the_table_in_order_and_says_so_and_the_ring_waits_for_its_fi
     delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.hand-end > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
     assert delays["tab"] < delays["chair"] < delays["die"] < delays["plus"], delays
     pg.locator(".hand-field [data-first-lit]").wait_for(timeout=WAIT_MS)                       # the + card's card is open, its first corner lit (spec 150 G.2.4): no tour
-    assert pg.locator(".table-end, .ork-card-place, .release-lane .hand-done").count() == 0, "§247.1: no pile and no dashed place before the first content (Release's lane is there, empty)"
+    assert pg.locator(".table-end, .ork-card-place, .release-lane .post-card").count() == 0, "§247.1: no pile and no dashed place before the first content (Release's lane is there, empty)"
     pg.locator('.frame:not([data-laying])').wait_for(timeout=WAIT_MS)
     pg.locator(".fo-bubble").wait_for(state="detached", timeout=WAIT_MS)
     assert not d.errors, d.errors

@@ -4,46 +4,46 @@
 /* The status bar is translucent in the installed app: the page starts under it. The page fills the rest of the window; the status line, when it is there, takes its height from it. */
 body { box-sizing: border-box; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
 #app { flex: 1 1 0; min-height: 0; height: auto; }
-.phone-status { flex: none; margin: 0; padding: var(--ork-2) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-alert); color: var(--ork-alert); font: var(--ork-type-caption); }
+.phone-status { flex: none; margin: 0; padding: var(--ork-2) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-alert); color: var(--ork-alert); font: var(--ork-type-caption-phone); }
 .phone-frame { position: fixed; inset: 0; z-index: 1000; box-sizing: border-box; overflow: auto; background: var(--ork-canvas); color: var(--ork-ink);
   padding: max(var(--ork-6), env(safe-area-inset-top, 0px)) var(--ork-6) calc(var(--ork-6) + env(safe-area-inset-bottom, 0px)); }
 .phone-card { max-width: 480px; margin: 0 auto; box-sizing: border-box; background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
-  clip-path: var(--ork-notch); padding: var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-4); font: var(--ork-type-body); overflow-wrap: anywhere; }
-.phone-card h1 { margin: 0; font: var(--ork-type-title); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+  clip-path: var(--ork-notch); padding: var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-4); font: var(--ork-type-body-phone); overflow-wrap: anywhere; }
+.phone-card h1 { margin: 0; font: var(--ork-type-title-phone); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
 .phone-card p { margin: 0; }
-.phone-card .muted { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
-.phone-card .warn { color: var(--ork-alert); font: var(--ork-type-caption); }
+.phone-card .muted { color: var(--ork-ink-muted); font: var(--ork-type-caption-phone); }
+.phone-card .warn { color: var(--ork-alert); font: var(--ork-type-caption-phone); }
 .phone-card .ork-btn { align-self: flex-start; }
 
 /* The repository and its token (pwa/shell-remote-settings.js, docs/specs/136 C.1): in the card before pairing and in the crown's menu. */
-.remote-settings { display: flex; flex-direction: column; gap: var(--ork-2); font: var(--ork-type-body); }
-.remote-label { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.remote-say { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-settings { display: flex; flex-direction: column; gap: var(--ork-2); font: var(--ork-type-body-phone); }
+.remote-label { font: var(--ork-type-caption-phone); color: var(--ork-ink-muted); }
+.remote-say { margin: 0; font: var(--ork-type-caption-phone); color: var(--ork-ink-muted); }
 .remote-row { display: flex; gap: var(--ork-3); flex-wrap: wrap; }
-.remote-line { margin: 0; min-height: 1.2em; font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.remote-line { margin: 0; min-height: 1.2em; font: var(--ork-type-caption-phone); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
 .remote-line.is-bad { color: var(--ork-alert); }
 .remote-away summary { min-height: var(--ork-tap); display: flex; align-items: center; cursor: pointer; }
 .remote-away[open] summary { margin-bottom: var(--ork-2); }
 
 /* The screen the journal draws while the computer cannot be reached (pwa/shell-remote-view.js, docs/specs/136 C.4): over the page, under the frame's own cards; the muted *As of* first. */
 .remote-journal { z-index: 900; }
-.remote-page { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--ork-4); font: var(--ork-type-body); overflow-wrap: anywhere; }
+.remote-page { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--ork-4); font: var(--ork-type-body-phone); overflow-wrap: anywhere; }
 .remote-head, .remote-body { display: flex; flex-direction: column; gap: var(--ork-3); }
 .remote-head p, .remote-section h2 { margin: 0; }
-.remote-asof { font: var(--ork-type-title); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
-.remote-sub { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-asof { font: var(--ork-type-title-phone); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.remote-sub { font: var(--ork-type-caption-phone); color: var(--ork-ink-muted); }
 .remote-newgoal { display: flex; flex-direction: column; gap: var(--ork-2); }
 .remote-section { display: flex; flex-direction: column; gap: var(--ork-2); }
-.remote-section h2 { font: var(--ork-type-caption); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.remote-section h2 { font: var(--ork-type-caption-phone); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
 .remote-goals { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
 .remote-goal { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ork-1) var(--ork-3); padding: var(--ork-3); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); }
 .remote-goal__title { flex: 1 1 10rem; min-width: 0; }
-.remote-goal__state { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-goal__state { font: var(--ork-type-caption-phone); color: var(--ork-ink-muted); }
 .remote-goal__needs { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); }
-.remote-mark { font: var(--ork-type-caption); color: var(--ork-alert); }
-.remote-goal__error { flex: 1 1 100%; font: var(--ork-type-caption); color: var(--ork-alert); }
+.remote-mark { font: var(--ork-type-caption-phone); color: var(--ork-alert); }
+.remote-goal__error { flex: 1 1 100%; font: var(--ork-type-caption-phone); color: var(--ork-alert); }
 .remote-goal[data-needs] { border-color: var(--ork-alert); }
 .remote-down { padding: var(--ork-3); border: var(--ork-line) dashed var(--ork-frame); background: var(--ork-canvas); display: flex; flex-direction: column; gap: var(--ork-1); }
 .remote-down__words { margin: 0; white-space: pre-wrap; }
-.remote-down__note { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-down__note { margin: 0; font: var(--ork-type-caption-phone); color: var(--ork-ink-muted); }
 .remote-down__note.is-bad { color: var(--ork-alert); }

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard phone feed, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../readable-look/fonts/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<link rel="stylesheet" href="../readable-look/looks/base.css">
+<link rel="stylesheet" href="../readable-look/looks/a-tavern.css">
+<style>
+/* The owner's proposal (10 November 2026): the phone's tables broken into blocks, scrolled as a social feed. One screen in
+   place of §223's tabs: the heads in a row on top (a ring says a leader has news or asks, never a number), under it one feed
+   of blocks, each a post from the Orkmaster or a leader; the hand at the foot as today. Rubik, the look the owner chose,
+   at §226's phone sizes. orkUI's classes and tokens; this page's own layout until it is decided. */
+:root[data-look="office"] {
+  --ork-type-body: 400 17px/24px var(--lk-text); --ork-type-caption: 400 15px/20px var(--lk-text);
+  --ork-type-label: 600 14px/18px var(--lk-text); --ork-type-heading: 700 17px/22px var(--lk-head);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, h1, h2, h3, ul { margin: 0; padding: 0; }
+ul { list-style: none; }
+button { margin: 0; color: inherit; font: inherit; }
+img { display: block; }
+.mute { color: var(--ork-ink-muted); }
+
+.mk-bar { padding: 12px 16px; border-bottom: 1px solid var(--ork-frame); font: 700 15px/20px var(--lk-head); }
+.mk-line { max-width: 110ch; padding: 12px 16px 0; font: 400 15px/22px var(--lk-text); color: var(--ork-ink-read); }
+.mk-main { display: flex; flex-wrap: wrap; gap: 24px; padding: 16px; }
+.mk-st { display: flex; flex-direction: column; gap: 6px; width: 390px; }
+.mk-st h2 { font: 700 16px/20px var(--lk-head); }
+.mk-st > p { font: 400 14px/19px var(--lk-text); color: var(--ork-ink-muted); min-height: 116px; }
+
+/* the phone: 390 x 844 */
+.ph { position: relative; width: 390px; height: 844px; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--ork-table); border: 1px solid var(--ork-frame); border-radius: 28px; }
+.sb { flex: none; height: 47px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font: 600 15px/20px var(--lk-text); }
+.hb { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; display: flex; align-items: center; justify-content: center; z-index: 6; }
+.hb::after { content: ""; width: 134px; height: 5px; border-radius: 3px; background: var(--ork-ink-faint); }
+
+/* the header: up, the crown, the project or the goal, the bottle; on scroll it folds to one thin row */
+.hdr { flex: none; display: flex; align-items: center; gap: 6px; height: 60px; padding: 0 10px; background: var(--ork-table); z-index: 3; }
+.hdr.thin { height: 44px; border-bottom: 1px solid var(--ork-frame); }
+.hdr.thin .crown { width: 32px; height: 32px; } .hdr.thin .pot { height: 34px; width: 40px; } .hdr.thin .pot .slot { display: none; }
+.crown, .ico { flex: none; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: var(--ork-ink-muted); }
+.crown { border: 1px solid var(--ork-edge); border-radius: 12px; background: var(--ork-panel); }
+.ico .ork-icon { width: 20px; height: 20px; }
+.ico.stop { color: var(--ork-danger); }
+.ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ttl b { font: 700 19px/24px var(--lk-head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.ttl small { font: var(--ork-type-caption); font-size: 14px; color: var(--ork-ink-muted); white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.pot { position: relative; flex: none; width: 48px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px; padding: 0 0 2px;
+  border: 2px solid var(--ork-ink); border-radius: 10px; background: var(--ork-panel); }
+.pot.low { border-color: var(--ork-alert); }
+.pot .slot { height: 30px; display: flex; align-items: flex-end; justify-content: center; }
+.pot .ork-mark { position: absolute; left: 3px; top: 3px; width: 12px; height: 12px; }
+.pot .pct { font: 600 13px/15px var(--lk-text); font-variant-numeric: tabular-nums; }
+
+/* the heads in a row, as a feed's stories: a ring in the party's colour = news since your last look; yellow and ! = it asks */
+.heads { flex: none; display: flex; gap: 4px; padding: 8px 12px 10px; overflow: hidden; background: var(--ork-table); z-index: 3; border-bottom: 1px solid var(--ork-frame); }
+.hd { clip-path: none; flex: none; width: 66px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; border: 0; background: none; }
+.hd .hring { position: relative; overflow: visible; width: 54px; height: 54px; display: grid; place-items: center; border-radius: 50%; background: var(--ork-panel);
+  box-shadow: 0 0 0 2px var(--ork-table), 0 0 0 4px var(--ring, transparent); }
+.hd .hring img { width: 40px; height: auto; }
+.hd.seen .hring { --ring: var(--ork-frame); }
+.hd.asks .hring::after { content: "!"; position: absolute; right: -4px; top: -4px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--ork-alert); color: var(--ork-on-ink); font: 800 13px/1 var(--lk-head); box-shadow: 0 0 0 2px var(--ork-table); z-index: 1; }
+.hd.is-on .hring { background: var(--ork-raised); box-shadow: 0 0 0 2px var(--ork-table), 0 0 0 4px var(--ork-ink); }
+.hd span { max-width: 66px; font: 500 12px/14px var(--lk-text); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hd.is-on span { color: var(--ork-ink); font-weight: 700; }
+.hd.dim { opacity: .4; }
+
+/* the feed */
+.feed { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+.feed > .roll { display: flex; flex-direction: column; gap: 12px; padding: 12px 10px 200px; transform: translateY(calc(var(--scroll, 0) * -1px)); }
+.post { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 16px; background: var(--ork-card); border: 1px solid var(--ork-card-frame);
+  box-shadow: inset 0 3px 0 var(--pc, var(--ork-card-frame)); }
+.post.old { opacity: .62; }
+.ph-h { display: flex; align-items: center; gap: 8px; }
+.ph-h .av { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--ork-panel); }
+.ph-h .av img { width: 28px; height: auto; }
+.ph-h .who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ph-h .who b { font: 700 16px/20px var(--lk-head); }
+.ph-h .who small { font: 400 14px/18px var(--lk-text); color: var(--ork-ink-muted); }
+.ph-h .more { color: var(--ork-ink-faint); }
+.post h3 { font: var(--ork-type-heading); display: flex; align-items: center; gap: 6px; }
+.post p { font: var(--ork-type-body); color: var(--ork-ink-read); }
+.post .cap { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--ork-edge); border-radius: 10px; background: var(--ork-panel);
+  font: 700 15px/18px var(--lk-head); }
+.btn.go { background: var(--ork-action); border-color: var(--ork-action); color: var(--ork-on-ink); }
+.lnk { font: 600 15px/18px var(--lk-text); color: var(--ork-ink-muted); text-decoration: underline; text-underline-offset: 3px; padding: 0 6px; }
+.chg { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: baseline; }
+.chg .k { font: 700 12px/16px var(--lk-text); letter-spacing: .06em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.chg .k.new { color: var(--ork-success); }
+.chg .v { font: var(--ork-type-body); }
+.chg .v small { display: block; font: var(--ork-type-caption); font-size: 14px; color: var(--ork-ink-muted); }
+.clock { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 10px; background: var(--ork-panel); font: 700 16px/20px var(--lk-head); }
+.clock .ork-icon { width: 18px; height: 18px; color: var(--ork-ink-muted); }
+.bar { height: 4px; border-radius: 2px; background: var(--ork-frame); overflow: hidden; } .bar i { display: block; height: 100%; width: 38%; background: var(--ork-ink-muted); }
+
+/* a block's own row of cards, swiped sideways (a feed's carousel); the next card shows its edge */
+.car { display: flex; gap: 8px; margin: 0 -12px; padding: 0 12px; overflow: hidden; }
+.gc { flex: none; width: 150px; height: 112px; display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: 12px; background: var(--ork-raised);
+  border: 1px solid var(--ork-card-frame); box-shadow: inset 0 3px 0 var(--pc, transparent); }
+.gc b { font: 700 16px/20px var(--lk-head); display: flex; align-items: center; gap: 6px; }
+.gc small { font: 400 14px/18px var(--lk-text); color: var(--ork-ink-muted); }
+.gc .hs { margin-top: auto; display: flex; gap: 2px; } .gc .hs img { width: 22px; height: auto; }
+.dots { display: flex; justify-content: center; gap: 6px; } .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--ork-frame); } .dots i.on { background: var(--ork-ink-muted); }
+.pic { flex: none; width: 128px; height: 200px; border-radius: 12px; border: 1px dashed var(--ork-ink-faint); display: grid; place-items: center; text-align: center;
+  padding: 8px; font: 400 13px/17px var(--lk-text); color: var(--ork-ink-muted); background: var(--ork-panel); }
+.pic.changed { border: 2px solid var(--ork-party-elf); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { height: 32px; padding: 0 10px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--ork-edge); border-radius: 8px; font: 600 14px/18px var(--lk-text); }
+.chip.warn { border-color: var(--ork-alert); color: var(--ork-alert); }
+.chip.ok { color: var(--ork-success); border-color: var(--ork-success); }
+.conc { display: flex; gap: 8px; align-items: flex-start; } .conc .ork-sign { color: var(--ork-alert); margin-top: 4px; }
+.sys { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ctr { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 10px; border: 1px solid var(--ork-edge); }
+.ctr .lab { font: 700 12px/16px var(--lk-text); letter-spacing: .06em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.pt { display: flex; justify-content: space-between; align-items: center; gap: 4px; padding: 5px 7px; border-radius: 6px; background: var(--ork-panel); font: 500 14px/18px var(--lk-text); }
+.pt .k { font: 700 11px/14px var(--lk-text); text-transform: uppercase; letter-spacing: .04em; color: var(--ork-ink-muted); }
+.pt.changed { box-shadow: inset 0 0 0 1px var(--ork-ink); } .pt.new { box-shadow: inset 0 0 0 1px var(--ork-success); } .pt.new .k { color: var(--ork-success); }
+.seg { display: inline-flex; border: 1px solid var(--ork-edge); border-radius: 10px; overflow: hidden; }
+.seg button { height: 34px; padding: 0 14px; border: 0; background: none; font: 600 15px/18px var(--lk-text); color: var(--ork-ink-muted); }
+.seg button.is-on { background: var(--ork-raised); color: var(--ork-ink); }
+.done li { display: flex; gap: 8px; font: var(--ork-type-body); color: var(--ork-ink-read); } .done li::before { content: "✓"; color: var(--ork-success); }
+.caught { display: flex; align-items: center; gap: 10px; padding: 6px 4px; font: 600 14px/18px var(--lk-text); color: var(--ork-ink-muted); }
+.caught::before, .caught::after { content: ""; flex: 1; height: 1px; background: var(--ork-frame); }
+.caught .ork-icon { width: 16px; height: 16px; color: var(--ork-success); }
+
+/* the foot as today: the + card, the hand, the die; over the feed, its edge a shade */
+.foot { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; z-index: 5; background: linear-gradient(to top, var(--ork-table) 72%, transparent); }
+.foot.low { height: 120px; }
+.plus { position: absolute; left: 12px; bottom: 30px; width: 58px; height: 82px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--ork-action); border-radius: 10px; background: var(--ork-card); color: var(--ork-action); transform: rotate(-3deg); }
+.plus .ork-icon { width: 26px; height: 26px; }
+.calm { position: absolute; left: 80px; right: 80px; bottom: 58px; text-align: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.die { position: absolute; right: 12px; bottom: 30px; width: 56px; height: 66px; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px;
+  border: 0; background: none; font: 500 12px/14px var(--lk-text); color: var(--ork-ink-muted); }
+.die .ork-die { --_n: 2; rotate: -6deg; }
+.die.ink .ork-die { --_pip: var(--ork-ink); --_edge: var(--ork-ink); }
+.die.off { opacity: .4; }
+.qc { position: absolute; left: 80px; bottom: 30px; width: 206px; height: 150px; display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: 12px;
+  background: var(--ork-card); border: 2px solid var(--ork-alert); transform: rotate(-1.5deg); }
+.qc .h { display: flex; align-items: center; gap: 6px; } .qc .h .ork-sign { color: var(--ork-alert); } .qc .h img { margin-left: auto; width: 22px; }
+.qc .q { font: 700 16px/20px var(--lk-head); } .qc .why { font: 400 14px/18px var(--lk-text); color: var(--ork-ink-muted); }
+.qc .take { margin-top: auto; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--ork-ink); background: var(--ork-panel); font: 700 15px/18px var(--lk-head); }
+.qc .take small { display: block; font: 400 13px/16px var(--lk-text); color: var(--ork-ink-muted); }
+.foot.raised { height: 220px; }
+.stub { position: absolute; bottom: 34px; width: 34px; height: 62px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0;
+  border: 1px solid var(--ork-card-frame); border-radius: 8px; background: var(--ork-card); }
+.stub .ork-sign { color: var(--ork-ink-muted); } .stub.asks .ork-sign { color: var(--ork-alert); }
+
+/* 5: every block cut at a height and laid over the next, as cards dealt down the screen */
+.roll.deck { gap: 0; }
+.roll.deck .post { position: relative; max-height: 158px; overflow: hidden; box-shadow: inset 0 3px 0 var(--pc), 0 -8px 16px rgb(0 0 0 / .5); }
+.roll.deck .post + .post { margin-top: -26px; }
+.roll.deck .post:last-child { max-height: none; }
+/* 6: a deck only where it says something: one leader's posts in a row are one stack, what you have seen is one deck */
+.stack { position: relative; margin-bottom: 14px; }
+.stack > .post { box-shadow: inset 0 3px 0 var(--pc), 0 7px 0 -3px var(--ork-raised), 0 7px 0 -2px var(--ork-card-frame), 0 14px 0 -7px var(--ork-panel), 0 14px 0 -6px var(--ork-card-frame); }
+.stack .more-of { align-self: flex-start; font: 600 14px/18px var(--lk-text); color: var(--ork-ink-muted); display: flex; gap: 6px; align-items: center; }
+.seen { display: flex; flex-direction: column; }
+.seen .post { position: relative; max-height: 64px; overflow: hidden; opacity: 1; filter: saturate(.6) brightness(.85); box-shadow: inset 0 3px 0 var(--pc), 0 -6px 12px rgb(0 0 0 / .45); }
+.seen .post + .post { margin-top: -12px; }
+.seen .post:last-child { max-height: 64px; }
+.seen-h { display: flex; justify-content: space-between; padding: 0 4px 6px; font: 600 14px/18px var(--lk-text); color: var(--ork-ink-muted); }
+.sect { padding: 4px 4px 0; font: 700 12px/16px var(--lk-text); letter-spacing: .06em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.seen-line { clip-path: none; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 12px; border: 1px solid var(--ork-card-frame); border-radius: 14px;
+  background: var(--ork-panel); color: var(--ork-ink-muted); text-align: left;
+  box-shadow: 0 4px 0 -2px var(--ork-raised), 0 4px 0 -1px var(--ork-card-frame); }
+.seen-line .sh { display: flex; } .seen-line .sh img { width: 26px; height: auto; margin-right: -8px; filter: saturate(.6) brightness(.85); }
+.seen-line .st { flex: 1; margin-left: 10px; font: 600 15px/18px var(--lk-text); }
+.seen-line .ork-icon { width: 18px; height: 18px; }
+/* 7 (§292): the die, the backpack and the book under one round button; the lamp's chain from the header */
+.hdr { position: relative; z-index: 4 !important; }
+.chainh { position: absolute; right: 22px; top: 52px; width: 22px; display: flex; flex-direction: column; align-items: center; z-index: 4; }
+.chainh img { width: 15px; height: 54px; object-fit: cover; object-position: top; }
+.chainh span { position: absolute; right: -6px; top: 56px; padding: 1px 5px; border-radius: 6px; background: var(--ork-table); font: 700 12px/14px var(--lk-text); color: var(--ork-alert); }
+.fab { position: absolute; right: 12px; bottom: 34px; width: 64px; height: 64px; padding: 6px; border-radius: 50%; clip-path: none;
+  display: grid; place-items: center; background: var(--ork-raised); border: 2px solid var(--ork-ink); box-shadow: 0 6px 14px rgb(0 0 0 / .5); z-index: 7; }
+.fab img { width: 44px; height: auto; }
+.fab.open { background: var(--ork-ink); }
+.scrim7 { position: absolute; inset: 0; z-index: 6; background: rgb(0 0 0 / .55); }
+.sel { position: absolute; right: 12px; bottom: 108px; z-index: 7; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.sel button { clip-path: none; display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 8px 0 16px; border-radius: 28px;
+  border: 1px solid var(--ork-edge); background: var(--ork-card); font: 700 17px/20px var(--lk-head); box-shadow: 0 4px 10px rgb(0 0 0 / .4); }
+.sel button img { width: 40px; height: 40px; object-fit: contain; }
+.sel button small { display: block; font: 400 14px/16px var(--lk-text); color: var(--ork-ink-muted); }
+.sel .t { text-align: right; }
+.note { max-width: 110ch; padding: 0 16px 24px; font: 400 15px/22px var(--lk-text); color: var(--ork-ink-read); }
+.note li { margin-left: 20px; list-style: disc; }
+</style>
+</head>
+<body>
+<p class="mk-bar">Orkboard · the phone · the feed · v3</p>
+<p class="mk-line">The owner's proposal: the phone's tables broken into blocks and scrolled as a social feed. In place of §223's tabs, one
+screen: the Orkmaster and the leaders as a row of heads on top (a ring = news since your last look, a yellow ! = it asks; never a
+number), under it one feed of blocks, each a post from the one who says it: what waits for you first, then the news, newest first; a block's
+own cards swiped sideways; the hand at the foot as today. A head pressed narrows the feed to it. One leader's posts in a row are one
+stack; what you have seen is one line, pressed it spreads as a deck. A goal's screen is the same feed one level down. Rubik, at
+§226's phone sizes (body 17, captions 15; the 12 px names under the heads are 14 px when built, and a sign joins each ring:
+§291.9). 390 × 844, a stand-in party game. v2 is the owner's answers to v1 (decisions §291).</p>
+<main class="mk-main" id="m"></main>
+<section class="note">
+<p><b>Decided on v2</b> (decisions §292): the die, the backpack and the book under one round button, the chain in the header (7, 8).</p>
+<p><b>Decided on v1</b> (decisions §291): the cards as in 6 (5 not taken), and</p>
+<ul>
+<li>the feed's order: what waits for you first, then the news;</li>
+<li>a pressed head narrows the feed (3);</li>
+<li>what you have seen is folded into one line (2), pressed it spreads as a deck (6).</li>
+</ul>
+</section>
+<script>
+const O = "../../../design-system/orkui/";
+const head = (f) => `<img src="${O}races/${f}.png" srcset="${O}races/${f}@2x.png 2x, ${O}races/${f}@3x.png 3x" alt="">`;
+const mark = (id) => `<img class="ork-mark" src="${O}marks/harness-${id}.png" srcset="${O}marks/harness-${id}@2x.png 2x" alt="">`;
+const icon = (id) => `<svg class="ork-icon" aria-hidden="true"><use href="${O}icons/icons.svg#${id}"/></svg>`;
+const sign = (s) => `<span class="ork-sign ${s}" aria-hidden="true"></span>`;
+const elem = (e) => `<span class="ork-elem ${e}"></span>`;
+const P = { om: "var(--ork-party-orkmaster)", tech: "var(--ork-party-ork)", art: "var(--ork-party-elf)", gd: "var(--ork-party-knight)",
+  rel: "var(--ork-party-undead)", ops: "var(--ork-party-goblin)", mkt: "var(--ork-party-gnome)" };
+const SB = `<div class="sb"><span>12:47</span><span>●●● 5G ▮</span></div>`, HB = `<div class="hb"></div>`;
+const bottle = (now, low = false) => `<button class="pot${low ? " low" : ""}">${mark("claude")}<span class="slot"><span class="ork-potion small${low ? " is-warn" : ""}" style="--ork-potion-left:${now / 100}"></span></span><span class="pct">${now}%</span></button>`;
+const HDR_P = (thin = false) => `<div class="hdr${thin ? " thin" : ""}"><button class="ico">${icon("folder")}</button><button class="crown">${head("peon-crown")}</button>
+  <div class="ttl"><b>Party game</b></div><button class="ico">${icon("sliders")}</button><button class="ico stop">${icon("flag")}</button>${bottle(62)}</div>`;
+const HDR_G = `<div class="hdr"><button class="ico">${icon("chevron-left")}</button><button class="crown">${head("peon-crown")}</button>
+  <div class="ttl"><b>${elem("meadow")}${sign("mechanic")}Double jump</b><small>Spec · ${sign("moon")} Mon 09:00</small></div>${bottle(12, true)}</div>`;
+const L = [["om", "peon-crown", "Orkmaster"], ["gd", "unicorn-elder", "Game design"], ["tech", "shaman-elder", "Tech"], ["art", "dryad-elder", "Art"],
+  ["rel", "lich-elder", "Release"], ["ops", "imp-elder", "LiveOps"], ["mkt", "fairy-elder", "Marketing"]];
+// st: "news" (a ring in its colour), "asks", "seen"; on: the one pressed; dim: narrowed away
+const HEADS = (st = {}, on = null, ls = L) => `<div class="heads">${ls.map(([k, h, n]) => {
+  const s = st[k] || "seen", cls = [s === "asks" ? "asks" : "", s === "seen" ? "seen" : "", on === k ? "is-on" : "", on && on !== k ? "dim" : ""].join(" ");
+  return `<button class="hd ${cls}" style="--ring:${s === "seen" ? "" : s === "asks" ? "var(--ork-alert)" : P[k]}"><span class="hring">${head(h)}</span><span>${n}</span></button>`; }).join("")}</div>`;
+const post = (k, h, who, when, body, old = false) => `<article class="post${old ? " old" : ""}" style="--pc:${P[k]}"><div class="ph-h"><span class="av">${head(h)}</span>
+  <span class="who"><b>${who}</b><small>${when}</small></span><span class="more">${icon("more-horizontal")}</span></div>${body}</article>`;
+const DIE = (st, word) => `<button class="die ${st}"><span class="ork-die face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span><span>${word}</span></button>`;
+const FOOT_CALM = `<div class="foot low"><button class="plus">${icon("plus")}</button><p class="calm">Nothing to decide</p>${DIE("ink", "dev")}</div>`;
+const FOOT_ASK = `<div class="foot raised"><button class="plus">${icon("plus")}</button>
+  <article class="qc"><p class="h">${elem("meadow")}${sign("question")}${head("shaman-elder")}</p><p class="q">How high is the second jump?</p>
+  <p class="why">Tech waits for it.</p><button class="take">Half<small>Game design's pick · one tap</small></button></article>
+  <div class="stub asks" style="left:292px">${elem("dust")}${sign("question")}</div>${DIE("off", "spec")}</div>`;
+
+// the posts
+const REVIEW = post("om", "peon-crown", "Orkmaster", "the plan · 12:40", `<h3>${elem("void")}${sign("tune")}Leaderboard is ready to start</h3>
+  <div class="clock">${icon("clock")}Starts by itself at 13:40</div><div class="bar"><i></i></div>
+  <div class="acts"><button class="btn">${icon("pencil")}Change the spec</button><span class="lnk">Start now</span><span class="lnk">Later</span></div>`);
+const TECH_NEWS = post("tech", "shaman-elder", "Tech", "since your last look · 09:12", `<div class="chg">
+  <span class="k new">new</span><span class="v">net/resume, sessions, redis<small>by Reconnect</small></span>
+  <span class="k">changed</span><span class="v">rooms<small>by Reconnect</small></span>
+  <span class="k">changed</span><span class="v">physics<small>by you, 2 commits</small></span></div>`);
+const gc = (k, e, s, n, w, hs) => `<div class="gc" style="--pc:${P[k]}"><b>${elem(e)}${sign(s)}${n}</b><small>${w}</small><span class="hs">${hs.map(head).join("")}</span></div>`;
+const AT_WORK = post("om", "peon-crown", "Orkmaster", "at work · swipe for the rest", `<div class="car">
+  ${gc("tech", "dust", "feature", "Reconnect", "in dev since 11:20", ["shaman-elder", "shaman-laborer"])}
+  ${gc("art", "ice", "screen", "Lobby", "Art · its screens", ["dryad-elder"])}
+  ${gc("ops", "lava", "sound", "Sound pass", `${sign("moon")} tonight`, ["imp-elder"])}</div><div class="dots"><i class="on"></i><i></i><i></i></div>`);
+const ART = post("art", "dryad-elder", "Art", "2 screens changed · 11:58", `<p>The lobby takes the game's colours; the results screen gets a crown for the round's best.</p>
+  <div class="car"><div class="pic changed">picture: the lobby, after</div><div class="pic changed">picture: results, after</div><div class="pic">picture: the shop</div></div>`);
+const CONCERN = post("tech", "shaman-elder", "Tech", "a concern · Hotspots", `<div class="conc">${sign("alert")}<p>physics is used by 9 parts and was changed 14 times in 30 days.</p></div>
+  <div class="chips"><span class="chip warn">${sign("alert")}Hotspots</span><span class="chip">Coupling</span><span class="chip ok">✓ Modularity</span><span class="chip">Testability</span></div>`);
+const DONE = post("rel", "lich-elder", "Release", "done · waits for main", `<h3>${elem("meadow")}${sign("check")}Sign-in</h3>
+  <p class="cap">The gate's tests passed in dev, and Combo scoring with it.</p><div class="acts"><button class="btn go">${icon("git-merge")}To main</button><span class="lnk">Open</span></div>`);
+const CAUGHT = `<p class="caught">${icon("check")}You have seen everything since 09:12</p>`;
+const OLD = post("gd", "unicorn-elder", "Game design", "yesterday · 18:05", `<p>Double jump's loop is written: a second press in the air, once, half as high.</p>`, true);
+const SYS = post("tech", "shaman-elder", "Tech", "its map, small · the system", `<div class="sys">
+  <div class="ctr"><span class="lab">client · react</span><div class="pt">pages</div><div class="pt">player/move</div><div class="pt new">net/resume<span class="k">new</span></div></div>
+  <div class="ctr"><span class="lab">server</span><div class="pt changed">rooms<span class="k">changed</span></div><div class="pt changed">physics<span class="k">changed</span></div><div class="pt new">redis<span class="k">new</span></div></div></div>
+  <span class="lnk">The whole map</span>`);
+const G_TECH = post("tech", "shaman-elder", "Tech", "its slice of the goal", `<div class="acts"><div class="seg"><button>Now</button><button class="is-on">Will be</button></div><span class="cap">System · 4 parts</span></div>
+  <div class="sys"><div class="ctr"><span class="lab">client</span><div class="pt changed">player/move<span class="k">changed</span></div><div class="pt new">player/jump<span class="k">new</span></div></div>
+  <div class="ctr"><span class="lab">server</span><div class="pt changed">physics<span class="k">changed</span></div><div class="pt">rooms<span class="k">read</span></div></div></div>`);
+const G_GD = post("gd", "unicorn-elder", "Game design", "its section · done when", `<ul class="done"><li>A second press in the air jumps again, once, half as high.</li>
+  <li>The server agrees with the client on where the player lands.</li></ul>`);
+const G_PLAN = post("om", "peon-crown", "Orkmaster", "the plan", `<p>Game design writes the loop, Tech the physics, Art the jump's dust. Tech waits for one answer: the hand.</p>`);
+
+const phone = (hdr, heads, posts, foot, scroll = 0) => `<div class="ph">${SB}${hdr}${heads}<div class="feed"><div class="roll" style="--scroll:${scroll}">${posts.join("")}</div></div>${foot}${HB}</div>`;
+const phoneDeck = (hdr, heads, posts, foot, scroll = 0) => phone(hdr, heads, posts, foot, scroll).replace('class="roll"', 'class="roll deck"');
+const TECH_STACK = `<div class="stack">${TECH_NEWS.replace("</article>", `<span class="more-of">${icon("chevron-down")}More from Tech: a concern, its map</span></article>`)}</div>`;
+const old = (k, h, who, when, t) => post(k, h, who, when, `<p>${t}</p>`);
+const SEEN = `<div class="seen"><p class="seen-h"><span>Seen</span><span>Tap to spread</span></p>
+  ${old("gd", "unicorn-elder", "Game design", "yesterday · 18:05", "Double jump's loop is written.")}
+  ${old("art", "dryad-elder", "Art", "yesterday · 16:40", "The shop's palette.")}
+  ${old("tech", "shaman-elder", "Tech", "yesterday · 15:12", "rooms split in two.")}
+  ${old("om", "peon-crown", "Orkmaster", "yesterday · 11:00", "Sign-in went to dev.")}</div>`;
+const SEEN_LINE = `<button class="seen-line"><span class="sh">${["unicorn-elder", "dryad-elder", "shaman-elder", "peon-crown"].map(head).join("")}</span>
+  <span class="st">Seen since yesterday</span>${icon("chevron-down")}</button>`;
+const SECT = (t) => `<p class="sect">${t}</p>`;
+const WAITS = SECT("Waits for you"), NEWS = SECT("New since your last look · 09:12");
+const PIC = (f) => `feed-pics/${f}.png`;
+const HDR_C = HDR_P().replace('class="hdr"', 'class="hdr chain"').replace('</div>', '</div>') .replace(/(<button class="pot)/, `<span class="chainh"><img src="${PIC("chain")}" alt=""><span>Here</span></span>$1`);
+const FOOT_FAB = (open) => `${open ? '<div class="scrim7"></div>' : ""}<div class="foot low"><button class="plus">${icon("plus")}</button><p class="calm">Nothing to decide</p>
+  </div><button class="fab${open ? " open" : ""}" aria-label="Play, Inventory, History"><img src="${PIC("die")}" alt=""></button>
+  ${open ? `<div class="sel"><button><span class="t">Play<small>start dev's build</small></span><img src="${PIC("die")}" alt=""></button>
+  <button><span class="t">Inventory<small>the Orkmaster's settings</small></span><img src="${PIC("backpack")}" alt=""></button>
+  <button><span class="t">History<small>what was done, by day</small></span><img src="${PIC("book")}" alt=""></button></div>` : ""}`;
+const ST = { tech: "news", art: "news", rel: "news", om: "news", gd: "seen" };
+const SCREENS = [
+  ["1 · The project's feed", "The header as today; under it the heads as a feed's stories: a ring in its party's colour says it has news since your last look, never a number. The feed, what waits for you first: the spec that starts by itself at 13:40, the done goal To main; then the news, newest first: Tech's changes as one stack, the goals at work swiped sideways.",
+    phone(HDR_P(), HEADS(ST), [WAITS, REVIEW, DONE, NEWS, TECH_STACK, AT_WORK], FOOT_CALM)],
+  ["2 · Scrolled", "The heads scroll away and the header folds to one thin row; the hand stays. Art's screens swiped sideways; then the line that you have seen everything since 09:12, and what you have seen folded into one line, its heads small.",
+    phone(HDR_P(true), "", [WAITS, REVIEW, DONE, NEWS, TECH_STACK, AT_WORK, ART, CAUGHT, SEEN_LINE], FOOT_CALM, 1000)],
+  ["3 · A head pressed: Tech", "Tech's head pressed: the feed narrows to Tech's blocks (its news, its concerns, its map made small, §223.1's lens), the other heads faint; pressed again, the whole feed.",
+    phone(HDR_P(), HEADS({ ...ST, tech: "seen" }, "tech"), [TECH_NEWS, CONCERN, SYS], FOOT_CALM)],
+  ["4 · A goal's feed", "A goal picked is the same feed one level down: its header, its route's heads (Tech asks: yellow, with !), and its blocks: the plan, each leader's slice and section. The question is in the hand, raised, its pick one tap away, as today.",
+    phone(HDR_G, HEADS({ tech: "asks", gd: "news" }, null, [["om", "peon-crown", "Plan"], ["gd", "unicorn-elder", "Game design"], ["tech", "shaman-elder", "Tech"], ["art", "dryad-elder", "Art"]]),
+      [G_PLAN, G_TECH, G_GD], FOOT_ASK)],
+  ["5 · Every block cut, cards over cards (not taken)", "The proposal as asked: each block cut at a height and laid over the next, its foot under the one below. More heads at a glance, and it reads as cards; but every block needs a tap to be read, the acts of a cut block (Start now, To main) go under the next, and a pile is what the hand and the Orkmaster's piles already are.",
+    phoneDeck(HDR_P(), HEADS(ST), [REVIEW, AT_WORK, TECH_NEWS, ART, CONCERN, DONE], FOOT_CALM)],
+  ["6 · A deck only where it says something (taken)", "A block is read whole, as a post is; one leader's posts in a row are one stack (Tech's edges under its card, More from Tech opens them); the seen line pressed spreads as a deck, each card's head showing. The new is read whole; the old is cards.",
+    phone(HDR_P(true), "", [WAITS, REVIEW, DONE, NEWS, TECH_STACK, CAUGHT, SEEN], FOOT_CALM, 560)],
+  ["7 · One round button, the chain in the header (§292)", "The die, the backpack and the book under one round button at the foot's right, its face the die in its state; the lamp's chain hangs from the header beside the bottle, lit Here.",
+    phone(HDR_C, HEADS(ST), [WAITS, REVIEW, DONE, NEWS, TECH_STACK], FOOT_FAB(false))],
+  ["8 · The round button pressed", "Pressed, a selector of three rises over the foot, each a picture and its word: Play, Inventory, History; a tap outside or the button again closes it.",
+    phone(HDR_C, HEADS(ST), [WAITS, REVIEW, DONE, NEWS, TECH_STACK], FOOT_FAB(true))],
+];
+document.getElementById("m").innerHTML = SCREENS.map(([t, d, p]) => `<section class="mk-st"><h2>${t}</h2><p>${d}</p>${p}</section>`).join("");
+</script>
+</body>
+</html>

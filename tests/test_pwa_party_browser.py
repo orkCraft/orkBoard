@@ -174,8 +174,8 @@ async def test_new_party_says_what_it_can_take_under_the_price_three_lines_at_mo
         game = sheet.locator('.preset-tile[data-preset="game"]')                                                      # the Game (a squad of its own): ten types, none missing anyone
         await game.click()
         line = await _takes(sheet, "mechanic")
-        assert said(await line.inner_text()) == "It can take: New feature · Fix a bug · Clean up · New icon · New logo · New mechanic · New level · New character · Balance pass · New sound"
-        assert await line.locator(".take-with").count() == 0 and await line.locator(".is-missing").count() == 0 and await line.locator(".take-more").count() == 0
+        assert said(await line.inner_text()).startswith("It can take: New feature · Fix a bug · Clean up · New icon · New logo · New mechanic · New level · New character") and said(await line.locator(".take-more").inner_text()) == "and 2 more"   # at the phone type (15 px) three lines hold eight
+        assert await line.locator(".take-with").count() == 0 and await line.locator(".is-missing").count() == 0 and await line.locator(".take-more").count() == 1
         await sheet.locator('.preset-tile[data-preset="mobile-app"]').click()
         line = await _takes(sheet, "pain")
         assert await line.evaluate("e => e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight)") <= 3.05

@@ -165,7 +165,7 @@ def test_in_a_1366_by_768_window_the_ready_card_and_the_first_not_seen_are_in_vi
         for b in (ready, seen):
             assert b["y"] >= scroll["y"] - 1 and b["y"] + b["height"] <= scroll["y"] + scroll["height"] + 1, f"in view: {b} in {scroll}"
         assert ready["y"] < seen["y"], "the ready card on top"
-        assert round(ready["width"]) == 144 and round(ready["height"]) == 202, "whole cards at the hand's size"
+        assert round(ready["width"]) == round(seen["width"]) and ready["width"] > 144, "whole posts of the lane's width (goal 170 B: a post, not a hand card at 144 x 202)"
         assert pg.evaluate("() => document.documentElement.scrollHeight - innerHeight") <= 0, "the page itself does not scroll"
         shot(pg, "lane-1366x768")
     finally:

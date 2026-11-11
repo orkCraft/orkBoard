@@ -82,7 +82,7 @@ export function choose(slug) {
 const checkedOpen = (slug) => pending.value === slug || checksOf(slug).some((c) => c.state !== "passed");
 
 /** The goals the picked one takes along (`goal_main.plan`: the goal and what it stands on that main lacks), lit on the pile while it is chosen. */
-const alongOf = (slug) => new Set(chosen.value === slug && plan.value?.slug === slug && plan.value.state === "ok" ? (plan.value.goals || []).filter((s) => s !== slug) : []);
+export const alongOf = (slug) => new Set(chosen.value === slug && plan.value?.slug === slug && plan.value.state === "ok" ? (plan.value.goals || []).filter((s) => s !== slug) : []);
 
 /** Closes the portal and drops the choice. */
 export function close() {

@@ -1,6 +1,6 @@
 // The phone's hand, its row (docs/specs/147-one-card-four-corners.md part F.2, decisions §251.5; before: docs/specs/117-the-phone-a-menu-of-the-leaders.md §3.2, decisions §195.4): one card an entry (entries.js `entriesOf`: a goal's cards one entry, a card of no goal one, a goal ready for main one), **laid by leader**: before each
 // group a 22 px separator with the leader's head (the crown's for the project's lane, then each party's leader, the goals ready for main last under the lich's), in the lanes' order. A card is 80 x 112, **cut at 62** by the row: its rune and kind and its title in two lines show; under the cut why it is asked, who
-// asks and what it costs. **Pressed, a card rises and shows the rest; tapped, it opens** (a press picks it: entries.js `pickEntry`, the middle shows it opened). The picked entry wears the ink's frame. The row scrolls sideways under the + card, which lies at its right end, fixed (a press opens the field: updeck.js `DeckField`).
+// asks and what it costs. **Pressed, a card rises and shows the rest; tapped, it opens** (a press picks it: entries.js `pickEntry`, the middle shows it opened; the one opened, tapped again, goes back to the feed: `toFeed`, goal 169 F). The picked entry wears the ink's frame. The row scrolls sideways between the + card, which lies at its left end, fixed (a press opens the field: updeck.js `DeckField`), and the round button at its right (upround.js: the die, the backpack and the book under one button, goal 169 H, decisions §292.1–§292.2).
 // No count, and no edge for the rest of a goal's cards. With no entry the row is the + card alone.
 // **A card that lands out of the row's view** (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.9, decisions §198.9) moves no scroll: the row's cue at its edge (scrollcue.js: the fade of what lies beyond) brightens once, at the side the card lies (`data-cue`: a strip at that
 // edge for `CUE_MS`; static under reduced motion), so the person sees that a card came. A card that lands in view says nothing more; a page hidden meanwhile, none (§89.0). Layout only (upright.css); every colour, face and corner is orkUI's.
@@ -15,18 +15,25 @@ import { costOf } from "./cost.js";
 import { laneOf } from "./data.js";
 import { laneHead } from "./stacks.js";
 import { handedName, useFlight, useHanded } from "./motion.js";
-import { pickEntry } from "./entries.js";
+import { pickEntry, toFeed } from "./entries.js";
 import { PlusCard } from "./pluscard.js";
+import { Round, roundOpen } from "./upround.js";
 import { useScrollCue } from "../scrollcue.js";
 
 const ASKS = ["asks", "goal", "pick", "collide"];
 export const CUE_MS = 1400;                                  // how long the edge cue is bright
 
-/** Which side of the row a card lies out of view on: "right" (past the clear part, the + card lies over the row's right end), "left", "" when it is wholly in view or not drawn. */
-export function sideOut(row, el, plusW = 0) {
+/** Which side of the row a card lies out of view on: "right" (past the clear part: the round button lies over the row's right end, `roundW`), "left" (the + card lies over its left end, `plusW`), "" when it is wholly in view or not drawn. */
+export function sideOut(row, el, plusW = 0, roundW = 0) {
   if (!row || !el) return "";
   const r = row.getBoundingClientRect(), c = el.getBoundingClientRect();
-  return c.right > r.right - plusW + 0.5 ? "right" : c.left < r.left - 0.5 ? "left" : "";
+  return c.right > r.right - roundW + 0.5 ? "right" : c.left < r.left + plusW - 0.5 ? "left" : "";
+}
+
+/** The room the + card (at the row's left end) and the round button (at its right) take of the row's two ends, in px from each edge. */
+function endsOf(row) {
+  const foot = row?.parentElement, r = row?.getBoundingClientRect(), p = foot?.querySelector(".up-plus")?.getBoundingClientRect(), b = foot?.querySelector(".up-round")?.getBoundingClientRect();
+  return r ? [p ? Math.max(0, p.right - r.left) : 0, b ? Math.max(0, r.right - b.left) : 0] : [0, 0];
 }
 
 /** What an entry's card says of itself, read by its four corners (spec 147 A): `{name, label, element, hue, kind, signal, why, asker, cost, ask, fail}`; a ready goal's kind is the check in the success colour, it asks nothing and costs nothing; `ask`/`fail` put the card in the alert's frame. */
@@ -65,12 +72,12 @@ export function groupsOf(entries, parties = partiesNow()) {
 /** The row: the entries' cards laid by leader, the picked one (`cur`) raised and kept in view, the + card at the end. */
 export function Row({ entries, cur, plus }) {
   const cards = useRef(), seen = useRef(null), [cue, setCue] = useState(""), dealt = useHanded(entries.filter((e) => e.kind !== "ready").map((e) => ({ key: e.key, top: true, ...whoOf(e.stops[0]), name: askerOf(e.stops[0]), words: handsWords(e.stops[0]) })));
-  useEffect(() => {                                              // the picked card is kept inside the row's clear part (the + card lies over its right end)
+  useEffect(() => {                                              // the picked card is kept inside the row's clear part (the + card lies over its left end, the round button over its right)
     const row = cards.current, el = row?.querySelector('[aria-pressed="true"]');
     if (!row || !el) return;
-    const r = row.getBoundingClientRect(), c = el.getBoundingClientRect(), plusW = row.parentElement.querySelector(".up-plus")?.offsetWidth || 0, gutter = 12;
-    if (c.left < r.left + gutter) row.scrollLeft -= r.left + gutter - c.left;
-    else if (c.right > r.right - plusW - gutter) row.scrollLeft += c.right - (r.right - plusW - gutter);
+    const r = row.getBoundingClientRect(), c = el.getBoundingClientRect(), [plusW, roundW] = endsOf(row), gutter = 12;
+    if (c.left < r.left + plusW + gutter) row.scrollLeft -= r.left + plusW + gutter - c.left;
+    else if (c.right > r.right - roundW - gutter) row.scrollLeft += c.right - (r.right - roundW - gutter);
   }, [cur?.key, entries.length]);
   useScrollCue(cards);
   const keys = entries.map((e) => e.key).join("|");
@@ -78,17 +85,18 @@ export function Row({ entries, cur, plus }) {
     const was = seen.current, now = new Set(entries.map((e) => e.key));
     seen.current = now;
     if (!was || document.hidden) return undefined;
-    const row = cards.current, plusW = row?.parentElement.querySelector(".up-plus")?.offsetWidth || 0;
-    const sides = entries.filter((e) => !was.has(e.key)).map((e) => sideOut(row, row?.querySelector(`[data-key="${CSS.escape(e.key)}"]`), plusW)).filter(Boolean);
+    const row = cards.current, [plusW, roundW] = endsOf(row);
+    const sides = entries.filter((e) => !was.has(e.key)).map((e) => sideOut(row, row?.querySelector(`[data-key="${CSS.escape(e.key)}"]`), plusW, roundW)).filter(Boolean);
     if (!sides.length) return undefined;
     setCue(sides.includes("right") ? "right" : "left");
     const t = setTimeout(() => setCue(""), CUE_MS);
     return () => clearTimeout(t);
   }, [keys]);
-  return html`<div class="up-row" role="group" aria-label="Cards in the hand" data-cue=${cue || undefined}>
+  return html`<div class=${cls("up-row", { "is-round": roundOpen.value })} role="group" aria-label="Cards in the hand" data-cue=${cue || undefined}>
     <div class="up-cards gui-scrolls" ref=${cards}>${groupsOf(entries).flatMap((g) => [
       html`<span key=${`sep:${g.key}`} class="up-sep" data-lane=${g.key} aria-hidden="true">${g.head && html`<${Head} race=${g.head.race} tier=${g.head.tier} />`}</span>`,
-      ...g.entries.map((e) => html`<${Entry} key=${e.key} e=${e} on=${cur?.key === e.key} onPick=${() => pickEntry(e)} dealt=${dealt[e.key] ?? null} />`)])}</div>
+      ...g.entries.map((e) => html`<${Entry} key=${e.key} e=${e} on=${cur?.key === e.key} onPick=${() => (cur?.key === e.key ? toFeed() : pickEntry(e))} dealt=${dealt[e.key] ?? null} />`)])}</div>
     <div class="up-plus"><${PlusCard} onPress=${plus} /></div>
+    <${Round} />
   </div>`;
 }

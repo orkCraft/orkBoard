@@ -79,6 +79,7 @@ def test_on_a_phone_the_origin_is_the_goal_in_the_middle_when_it_is_the_cards_go
         host.put("dark", "Players see who answered first", "talk", "dust", back=back(route=("design", "tech")))
         talk_questions(host)
         host.bump({})
+        pg.locator('.hand-up .up-card[data-key="goal:dark"]').click()      # goal 169 F: the middle is the feed until the card is pressed
         pg.locator(".up-look[data-goal='dark']").wait_for(timeout=WAIT_MS)
         got = pg.evaluate(FROM_JS, [{"goal": "dark", "party": "design"}])
         assert got["at"] == "goal" and got["goal"] == "dark", "the goal picked in the middle, when it is the card's goal"

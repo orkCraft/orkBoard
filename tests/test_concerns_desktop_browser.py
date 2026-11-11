@@ -809,8 +809,7 @@ def test_the_evening_line_is_at_the_top_of_the_bubble_with_the_check_in_the_ink_
     assert mark.get_attribute("role") == "img" and mark.get_attribute("aria-label") == "toward", "its way as a word for a screen reader"
     assert mark.locator(".ork-sign.check").count() == 1
     assert mark.locator(".ork-sign").evaluate("e => getComputedStyle(e).color") == line.locator("b").evaluate("e => getComputedStyle(e).color"), "the check is in the ink, as the words are"
-    pixel = pg.locator(".table-title__pt").evaluate("e => getComputedStyle(e).fontFamily")
-    assert line.evaluate("e => getComputedStyle(e).fontFamily") == pg.evaluate("() => getComputedStyle(document.body).fontFamily") != pixel, "the line is in the body face, not the pixel one"
+    assert line.evaluate("e => getComputedStyle(e).fontFamily") == pg.evaluate("() => getComputedStyle(document.body).fontFamily"), "the line is in the body face (orkUI 0.40: one face, Rubik, for every word)"
     who, box = pg.locator(".table-ask__who").bounding_box(), line.bounding_box()
     assert who["y"] + who["height"] <= box["y"] + 1 and pg.locator(".table-ask__field").bounding_box()["y"] >= box["y"] + box["height"] - 1, "under the leader's name, over the field"
     narrow.no_sideways(pg)

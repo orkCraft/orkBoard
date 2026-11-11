@@ -4,7 +4,7 @@
 .table-card__win.is-window[data-window="made"] > span { flex: 1; min-width: 0; box-sizing: border-box; display: flex; padding: var(--ork-2) var(--ork-3); font: var(--ork-type-caption); }
 
 /* Tech: the files it touched, and their lines as six bars */
-.made-diff { flex-direction: column; justify-content: center; gap: 5px; font-family: var(--ork-font-code); font-size: 10px; color: var(--ork-ink-muted); }
+.made-diff { flex-direction: column; justify-content: center; gap: 5px; font-family: var(--ork-font-code); font-size: 12px; color: var(--ork-ink-muted); }
 .made-diff__row { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
 .made-diff__file { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .made-diff__bars { flex: none; display: inline-flex; gap: 1px; }
@@ -16,7 +16,7 @@
 /* Art: the asset at its pixels on a checker of tokens, its name and size beside it */
 .made-asset { align-items: center; justify-content: center; gap: var(--ork-4); background: repeating-conic-gradient(var(--ork-canvas) 0 25%, color-mix(in srgb, var(--ork-ink) 4%, var(--ork-canvas)) 0 50%) 0 0 / 8px 8px; }
 .made-asset__img { flex: none; image-rendering: pixelated; display: block; }
-.made-asset__cap { display: flex; flex-direction: column; min-width: 0; color: var(--ork-ink-muted); font-family: var(--ork-font-code); font-size: 10px; line-height: 14px; }
+.made-asset__cap { display: flex; flex-direction: column; min-width: 0; color: var(--ork-ink-muted); font-family: var(--ork-font-code); font-size: 12px; line-height: 14px; }
 .made-asset__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Design: the screen it changed, before faint */
@@ -38,6 +38,6 @@
 .made-hyp { flex-direction: column; justify-content: center; gap: var(--ork-2); }
 .made-hyp__text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; color: var(--ork-ink-read); line-height: 15px; quotes: "“" "”"; }
 .made-hyp__state { display: flex; align-items: center; }
-.made-hyp__chip { height: 18px; font-size: 10px; }
+.made-hyp__chip { height: 18px; font-size: 12px; }
 .made-hyp__chip.is-held { color: var(--ork-success); }
 .made-hyp__chip.is-refuted { color: var(--ork-danger); }

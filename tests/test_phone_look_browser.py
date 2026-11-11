@@ -1,9 +1,11 @@
 """The phone's middle (docs/specs/117-the-phone-a-menu-of-the-leaders.md §5, part D; decisions §195.2; the mockup docs/mockups/phone/sidebar.html A1 and A3), in a real browser against a stub host, with touch at 390 × 844: what is looked at is the goal picked, else the
 party the person picked in the menu, else the goal of the hand's first card (its card on it, answered with one tap), else nothing (*Nothing waits for you.*). A goal: its header, its phases (a press opens its page), its route by its leaders' heads (done, at work,
 next), why and *<Party>'s tasks*; a goal in line: its phases, the moon and its hour. A party: its leader's header, its squad (a head opens its popover as a sheet), the tools of its sword and shield in words, its goals at work and its concerns. Screenshots to
-$UPRIGHT_SHOTS when it is set."""
+$UPRIGHT_SHOTS when it is set. Since goal 169 F a party picked is the project's feed narrowed to it and nothing picked is the whole feed: tests/test_phone_feed_browser.py. Since goal 169 G a goal's route is its feed's heads row (the reader cut to
+its route, `ideas.feed` with `route`) in place of its route's legs; its feed's blocks: tests/test_phone_feed_browser.py."""
 from __future__ import annotations
 
+import datetime as dt
 import os
 from pathlib import Path
 
@@ -12,7 +14,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_context_narrow_browser import SIGN_IN_Q, TIMER_Q, WHY, UprightHost, box, cards, context_of, css_colour, name_of, open_up, pots, wait_title  # noqa: E402
+from tests.test_hand_context_narrow_browser import SIGN_IN_Q, TIMER_Q, WHY, UprightHost, box, cards, context_of, css_colour, name_of, open_up, wait_title  # noqa: E402
 from tests.test_hand_desktop_browser import head, node, sig, task  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
 
@@ -23,6 +25,7 @@ SEAT_WHY = "A player who loses signal comes back to the seat they had."
 SEAT = "Keep the seat when a socket reconnects"
 CONCERN = {"id": "c1", "level": "alert", "what": "Lobbies live in memory: a restart drops every game.", "why": "", "fix": "", "on": "server/lobby.ts", "aspect": "hotspots"}
 NOTE = {"id": "c2", "level": "note", "what": "The email link has no rate limit.", "why": "", "fix": "", "on": "auth/link.ts", "aspect": "security"}
+ROUTES = {"seat": ["design", "tech", "product"], "signin": ["tech"], "phones": ["design"], "daily": ["design"], "music": ["tech"]}       # each goal's route, as the reader cuts the feed to it (goal 169 G)
 MADE = {"id": "c3", "level": "alert", "what": "Already a goal.", "why": "", "fix": "", "on": "server/rooms.ts", "aspect": "hotspots", "idea": "seat"}
 
 
@@ -52,7 +55,19 @@ class LookHost(UprightHost):
         tech.update(brief="How it is built, and what it costs to change.", size="standard", does_tool="claude", does_default=True, does_mixed=False, checks_tool="codex", checks_default=False, checks_mixed=False, lean=False,
                     party=[{**tech["leader"], "band": "lead", "state": "free", "why": ""}, {"slug": "tester", "name": "Tester", "head": head("peon", tier="laborer"), "band": "check", "state": "free", "why": ""}])
 
+    def goal_feed(self, a):
+        """The reader's feed cut to a goal's route (realm/board_feed.py `route`): the Orkmaster's head, then the route's leaders in route order; Tech asks on Sign-in, Design has news on the seat; the seat's posts, Tech's then Design's."""
+        slug, at = a["route"], dt.datetime.now().astimezone().replace(microsecond=0)
+        heads = [{"leader": "orkmaster", "news": False, "asks": False}] + [{"leader": p, "news": slug == "seat" and p in ("tech", "design"), "asks": slug == "signin" and p == "tech"} for p in ROUTES.get(slug, [])]
+        post = lambda leader, m, text, kind="news": {"leader": leader, "at": (at - dt.timedelta(minutes=m)).isoformat(timespec="seconds"), "kind": kind, "goal": slug, "text": text, "event": "idea.added", "acts": []}  # noqa: E731
+        posts = [{"leader": "tech", "post": post("tech", 6, "Accepted step 1 of Keep the seat"), "more": [post("tech", 11, "Keep the seat's plan changed", "change")]},
+                 {"leader": "design", "post": post("design", 25, "Keep the seat's screen is drawn"), "more": []}] if slug == "seat" else []
+        return {"since": "", "heads": heads, "waits": [], "posts": posts, "seen": None}
+
     def handle(self, name, a):
+        if name == "ideas.feed" and a.get("route"):
+            self.log.append((name, a))
+            return self.goal_feed(a)
         if name == "ideas.concerns":
             self.log.append((name, a))
             return {"status": "done", "error": "", "concerns": [CONCERN, NOTE, MADE] if a.get("party") == "tech" else [], "dismissed": []}
@@ -82,10 +97,13 @@ def raised(pg):
     return pg.locator('.hand-up .up-card[aria-pressed="true"]')
 
 
-def test_with_a_hand_the_first_entrys_goal_is_looked_at_its_way_under_its_card_answered_with_one_tap(gui):
+def test_a_card_of_the_row_pressed_shows_its_goal_its_way_under_its_card_answered_with_one_tap(gui):       # goal 169 F: was the hand's first entry looked at by itself; now the feed until a card is pressed
     pg, host, log = open_up(gui, host=LookHost())
     try:
-        assert look(pg).get_attribute("data-look") == "goal" and look(pg).get_attribute("data-goal") == "signin" and look(pg).get_attribute("data-entry") == "goal:signin", "the goal of the hand's first card"
+        assert look(pg).get_attribute("data-look") == "feed" and raised(pg).count() == 0, "with nothing picked: the feed, no card raised"
+        cards(pg).first.click()
+        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.look === 'goal'", timeout=WAIT_MS)
+        assert look(pg).get_attribute("data-goal") == "signin" and look(pg).get_attribute("data-entry") == "goal:signin", "the goal of the card pressed"
         head_ = pg.locator(".up-gh")
         assert head_.locator(".up-gh__name").inner_text().strip() == "Sign-in" and head_.locator(".ork-elem.dust.big").count() == 1 and head_.locator(".ork-sign.feature").count() == 1
         assert head_.locator(".up-gh__type").inner_text().strip() == "Feature · Talk"
@@ -94,8 +112,9 @@ def test_with_a_hand_the_first_entrys_goal_is_looked_at_its_way_under_its_card_a
         assert c.locator(".up-ctx__who").inner_text().strip().lower() == "tech" and c.locator(".up-ctx__why").inner_text().strip() == WHY and c.locator(".up-ctx__rec").inner_text().strip() == "Recommended: Email link"
         assert c.locator(".up-ctx__wait").inner_text().strip() == "Grunt waits for your answer" and c.locator(".up-ctx__goal").count() == 0
         assert name_of(pg) == SIGN_IN_Q and raised(pg).get_attribute("data-key") == "goal:signin", "its card, with its answers, and the same card raised in the row"
-        ys = [box(pg.locator(s).first)["y"] for s in (".up-gh", ".up-ctx", ".hand-up .hand-lifted", ".up-phases", ".up-route", ".up-why")]
-        assert ys == sorted(ys) and len(set(ys)) == 6, "the header, the context, the card, the phases, the route, why"
+        pg.locator(".up-gfeed .up-fh").wait_for(timeout=WAIT_MS)
+        ys = [box(pg.locator(s).first)["y"] for s in (".up-gh", ".up-ctx", ".hand-up .hand-lifted", ".up-phases", ".up-gfeed .up-fh", ".up-why")]
+        assert ys == sorted(ys) and len(set(ys)) == 6, "the header, the context, the card, the phases, its feed's heads (goal 169 G: was its route), why"
         assert pg.locator(".up-why").inner_text().strip() == "About signin."
         shot(pg, "phone-look-goal")
         pg.locator(".hand-up .hand-lifted .q-card", has_text="Passkey").click()
@@ -127,7 +146,7 @@ def test_the_phases_the_past_ones_muted_its_own_in_the_ink_and_a_press_opens_the
     assert not log, "\n".join(log)
 
 
-def test_a_goal_picked_from_the_menu_with_no_card_shows_its_way_alone_route_why_and_the_tasks_of_the_step_at_work(gui):
+def test_a_goal_picked_from_the_menu_with_no_card_shows_its_way_alone_its_routes_heads_why_and_the_tasks_of_the_step_at_work(gui):       # goal 169 G: the route's legs are its feed's heads
     pg, host, log = open_up(gui, host=LookHost())
     try:
         pick_from_menu(pg, "goal", SEAT)
@@ -136,12 +155,13 @@ def test_a_goal_picked_from_the_menu_with_no_card_shows_its_way_alone_route_why_
         assert cards(pg).count() == 2, "the hand's cards stay in the row"
         assert sig(pg, "frame/state.js", "picked") == "seat"
         assert pg.locator(".up-gh__name").inner_text().strip() == SEAT and pg.locator(".up-gh__type").inner_text().strip() == "Feature · at work in Tech"
-        steps = pg.locator(".up-route .up-step")
-        assert [s.inner_text().strip() for s in steps.all()] == ["Design", "Tech", "Product"] and [s.get_attribute("class") for s in steps.all()] == ["up-step is-done", "up-step is-now", "up-step is-next"], "the parties in the route's order"
-        assert all("/races/" in s.locator("img").get_attribute("src") for s in steps.all()) and steps.nth(0).locator(".ork-sign.check").count() == 1 and steps.nth(1).locator(".ork-sign.work").count() == 1
-        assert steps.nth(1).evaluate("(e) => getComputedStyle(e).rotate") not in ("none", "0deg"), "the one at work turned"
-        assert float(steps.nth(2).evaluate("(e) => getComputedStyle(e).opacity")) < 1, "the next faint"
-        assert pg.locator(".up-route .ork-icon").count() == 2
+        pg.locator(".up-gfeed .up-fh__head").first.wait_for(timeout=WAIT_MS)
+        assert _calls(pg, host, "ideas.feed")[-1] == {"route": "seat"}, "the feed cut to the goal's route (no look on this phone: no since)"
+        steps = pg.locator(".up-gfeed .up-fh__head")
+        assert [s.get_attribute("data-leader") for s in steps.all()] == ["orkmaster", "design", "tech", "product"], "the Orkmaster, then the route's leaders in the route's order"
+        assert [s.locator(".up-fh__name").inner_text().strip() for s in steps.all()] == ["Orkmaster", "Design", "Tech", "Product"]
+        assert all("/races/" in s.locator("img").get_attribute("src") for s in steps.all()), "each its leader's head"
+        assert pg.locator(".up-route, .up-step").count() == 0, "no route's legs beside it"
         assert pg.locator(".up-why").inner_text().strip() == SEAT_WHY
         assert pg.locator(".up-why").evaluate("(e) => getComputedStyle(e).webkitLineClamp") == "4"
         tasks = pg.locator(".up-tasks .up-task")
@@ -162,7 +182,9 @@ def test_a_goal_picked_from_the_menu_with_no_card_shows_its_way_alone_route_why_
 def test_a_task_that_asks_or_failed_is_in_the_alerts_frame_and_the_goals_card_is_on_its_way(gui):
     pg, host, log = open_up(gui, host=LookHost(calm=False))
     try:
-        assert look(pg).get_attribute("data-goal") == "seat" and raised(pg).get_attribute("data-key") == "goal:seat", "a failed task is a card: the goal of the hand's first card"
+        pg.locator('.hand-up .up-card[data-key="goal:seat"]').click()
+        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'seat'", timeout=WAIT_MS)
+        assert raised(pg).get_attribute("data-key") == "goal:seat", "a failed task is a card: its goal's card pressed in the row"
         assert pg.locator(".hand-up .hand-lifted").count() == 1 and pg.locator(".up-tasks").count() == 1
         tasks = pg.locator(".up-tasks .up-task")
         assert [t.locator(".up-task__name").inner_text().strip() for t in tasks.all()] == ["Reset the round timer", "Keep the seat", "Pick the wording"]
@@ -175,7 +197,7 @@ def test_a_task_that_asks_or_failed_is_in_the_alerts_frame_and_the_goals_card_is
     assert not log, "\n".join(log)
 
 
-def test_a_goal_in_line_shows_its_phases_and_why_and_the_moon_with_its_hour_no_route_no_tasks(gui):
+def test_a_goal_in_line_shows_its_phases_and_why_and_the_moon_with_its_hour_no_feed_no_tasks(gui):
     pg, host, log = open_up(gui, host=LookHost())
     try:
         pick_from_menu(pg, "goal", "Chat in the lobby")
@@ -183,72 +205,9 @@ def test_a_goal_in_line_shows_its_phases_and_why_and_the_moon_with_its_hour_no_r
         assert [p.get_attribute("class") for p in pg.locator(".up-phase").all()] == ["up-phase"] * 4, "none past, none its own"
         wait = pg.locator(".up-wait")
         assert wait.locator(".ork-sign.moon").count() == 1 and wait.inner_text().strip() == "Waits for the reset, from 21:40", "the moon and its hour"
-        assert pg.locator(".up-route, .up-tasks").count() == 0 and pg.locator(".up-why").inner_text().strip() == "About chat."
+        assert pg.locator(".up-gfeed, .up-tasks").count() == 0 and pg.locator(".up-why").inner_text().strip() == "About chat."
+        assert not [a for n, a in host.log if n == "ideas.feed" and a.get("route")], "a goal in line asks no feed of its route (goal 169 G)"
         shot(pg, "phone-look-line")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_party_picked_shows_its_header_squad_tools_goals_at_work_and_concerns(gui):
-    pg, host, log = open_up(gui, host=LookHost())
-    try:
-        pick_from_menu(pg, "party", "Tech")
-        assert look(pg).get_attribute("data-look") == "party" and sig(pg, "frame/state.js", "tab") == "tech" and sig(pg, "frame/state.js", "picked") == ""
-        assert raised(pg).count() == 0 and pg.locator(".hand-up .hand-lifted").count() == 0, "no card raised, no card in the middle"
-        h = pg.locator(".up-ph")
-        hd = box(h.locator("img").first)
-        assert "/races/shaman-elder" in h.locator("img").first.get_attribute("src") and round(hd["width"]) == 48 and round(hd["height"]) == 44, "its leader's head, 48 x 44"
-        assert h.locator(".up-ph__name").text_content().strip() == "Tech" and h.locator(".up-ph__brief").inner_text().strip() == "How it is built, and what it costs to change." and h.locator(".up-ph__size").inner_text().strip() == "Standard"
-        faces = pg.evaluate("() => [getComputedStyle(document.querySelector('.up-ph__name')).fontFamily, getComputedStyle(document.querySelector('.up-ph__brief')).fontFamily]")
-        assert faces[0] != faces[1], "its name in the heading face"
-        cols = pg.locator(".up-squad__col")
-        assert [c.locator(".up-lab").inner_text().strip().lower() for c in cols.all()] == ["leads", "does", "checks"], "Leads, Does (the Grunt of its tasks), Checks"
-        seats = pg.locator(".up-squad .table-seat")
-        assert seats.count() >= 2 and all(box(s)["width"] >= 44 and box(s)["height"] >= 44 for s in seats.all()), "the heads only, each a 44 px target"
-        assert pg.locator(".up-squad").inner_text().count("Tester") == 0, "heads only: no names"
-        tools = pg.locator(".up-tools .up-tool")
-        assert [t.inner_text().strip() for t in tools.all()] == ["Does on the default (now Claude Code)", "Checks on Codex, set for this party"]
-        assert tools.nth(0).locator(".ork-sign.sword").count() == 1 and tools.nth(1).locator(".ork-sign.shield").count() == 1 and tools.nth(0).locator("img.ork-mark").count() == 1
-        work = pg.locator(".up-party .up-grow")
-        assert [w.inner_text().replace("\n", " ").strip() for w in work.all()] == [f"{SEAT} Checks"], "its goals at work as the menu's rows (the front task checks)"
-        concerns = pg.locator(".up-concerns .up-concern")
-        assert [c.locator(".up-concern__what").inner_text().strip() for c in concerns.all()] == [CONCERN["what"], NOTE["what"]], "the alerts first; one made into a goal is not a concern now"
-        assert concerns.nth(0).locator(".ork-sign.alert").count() == 1 and concerns.nth(0).locator(".up-concern__on").inner_text().strip() == "server/lobby.ts" and concerns.nth(1).locator(".ork-sign.alert").count() == 0
-        assert pg.eval_on_selector_all(".up-party .up-sec .up-lab", "(els) => els.map((e) => e.textContent.trim())") == ["At work", "Concerns"]
-        assert _calls(pg, host, "ideas.concerns")[0] == {"party": "tech"}
-        shot(pg, "phone-look-party")
-        work.first.click()
-        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'seat'", timeout=WAIT_MS)
-        assert sig(pg, "frame/state.js", "picked") == "seat" and sig(pg, "frame/state.js", "tab") == "orkmaster", "a press on its goal picks the goal"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_head_of_the_squad_opens_its_popover_as_a_sheet_at_the_foot(gui):
-    pg, host, log = open_up(gui, host=LookHost())
-    try:
-        pick_from_menu(pg, "party", "Tech")
-        pg.locator(".up-squad .table-seat").first.click()
-        pop = pg.locator(".table-seatpop")
-        pop.wait_for(timeout=WAIT_MS)
-        r, h = box(pop), pg.viewport_size["height"]
-        assert r["y"] + r["height"] == pytest.approx(h, abs=2) and r["x"] <= 1 and r["width"] >= pg.viewport_size["width"] - 2, "a sheet at the foot of the screen"
-        pg.keyboard.press("Escape")
-        pop.wait_for(state="detached", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_party_with_no_concerns_and_no_goal_at_work_has_neither_section(gui):
-    pg, host, log = open_up(gui, host=LookHost())
-    try:
-        pick_from_menu(pg, "party", "Release")
-        assert look(pg).get_attribute("data-look") == "party" and pg.locator(".up-ph__name").text_content().strip() == "Release"
-        pg.wait_for_timeout(300)
-        assert pg.locator(".up-concerns, .up-party .up-sec").count() == 0, "none when it has none"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -258,16 +217,17 @@ def test_a_press_on_a_card_of_the_row_lets_the_party_go_and_a_party_is_not_kept_
     pg, host, log = open_up(gui, host=LookHost())
     try:
         pick_from_menu(pg, "party", "Tech")
-        assert look(pg).get_attribute("data-look") == "party"
+        assert look(pg).get_attribute("data-look") == "feed" and look(pg).get_attribute("data-only") == "tech", "the feed narrowed to the party (goal 169 F)"
         cards(pg).nth(1).click()
         pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'phones'", timeout=WAIT_MS)
         assert sig(pg, "frame/state.js", "tab") == "orkmaster" and raised(pg).get_attribute("data-key") == "goal:phones"
         pick_from_menu(pg, "party", "Design")
-        assert look(pg).get_attribute("data-look") == "party"
+        assert look(pg).get_attribute("data-only") == "design"
         pg.reload()
         pg.wait_for_selector(".hand-up .up-look", timeout=WAIT_MS)
-        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.look === 'goal'", timeout=WAIT_MS)
-        assert look(pg).get_attribute("data-goal") == "signin", "a phone starts on the hand's goal, whatever party the tabs kept on this device"
+        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.look === 'feed'", timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        assert look(pg).get_attribute("data-only") is None and sig(pg, "frame/state.js", "tab") == "orkmaster", "a phone starts on the whole feed, whatever party the tabs kept on this device"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -281,7 +241,7 @@ def test_answering_the_last_card_of_the_picked_goal_picks_the_next_entry(gui):
         assert sig(pg, "frame/state.js", "picked") == "phones"
         pg.locator(".hand-up .hand-lifted button", has_text="Server counts, phones show it").first.click()
         pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'signin'", timeout=WAIT_MS)
-        assert sig(pg, "frame/state.js", "picked") == "" and raised(pg).get_attribute("data-key") == "goal:signin" and cards(pg).count() == 1, "the next entry is looked at, its card raised"
+        assert sig(pg, "frame/state.js", "picked") == "signin" and raised(pg).get_attribute("data-key") == "goal:signin" and cards(pg).count() == 1, "the next entry is picked, its card raised"
         assert name_of(pg) == SIGN_IN_Q
     finally:
         pg.close()
@@ -303,21 +263,8 @@ def test_a_goal_picked_from_the_menu_that_has_a_card_shows_its_card_and_raises_i
     assert not log, "\n".join(log)
 
 
-def test_with_nothing_picked_and_nothing_in_the_hand_the_line_and_the_crown_and_the_plus_card_are_the_ways_on(gui):
-    pg, host, log = open_up(gui, "empty")
-    try:
-        assert pg.locator(".up-look").count() == 0 and pg.get_by_text("Nothing waits for you.", exact=True).count() == 1
-        assert crown(pg).count() == 1 and pg.locator(".up-plus .hand-plus").count() == 1 and pots(pg).count() == 4
-        pick_from_menu(pg, "party", "Tech")
-        assert look(pg).get_attribute("data-look") == "party", "a party can be looked at with an empty hand"
-        assert pg.get_by_text("Nothing waits for you.", exact=True).count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_card_of_no_goal_is_its_context_and_its_card_and_the_ready_goal_has_its_way_under_the_portal(gui):
-    pg, host, log = open_up(gui, "paid")
+    pg, host, log = open_up(gui, "paid", first=True)
     try:
         assert look(pg).get_attribute("data-look") == "card" and context_of(pg).count() == 1 and pg.locator(".hand-up .hand-lifted").count() == 1 and pg.locator(".up-gh, .up-phases").count() == 0
     finally:
@@ -332,3 +279,56 @@ def test_a_card_of_no_goal_is_its_context_and_its_card_and_the_ready_goal_has_it
         shot(pg, "phone-look-ready")
     finally:
         pg.close()
+
+
+READABLE = """() => {
+  const rgb = (s) => { const m = s.match(/rgba?\\(([^)]+)\\)/); const p = m[1].split(/[ ,\\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+  const lum = ({ r, g, b }) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+  const bgOf = (el) => { for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c.a > 0.5) return c; if (e.classList.contains("ork-btn")) { const q = rgb(getComputedStyle(e, "::before").backgroundColor); if (q.a > 0.5) return q; } } return { r: 0, g: 0, b: 0, a: 1 }; };
+  const sizes = [], low = [], small = [];
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if (!n.textContent.trim()) continue;
+    const el = n.parentElement, cs = getComputedStyle(el), r = el.getBoundingClientRect();
+    if (!r.width || !r.height || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0 || el.closest("script,style,noscript,[hidden]")) continue;
+    const size = parseFloat(cs.fontSize); sizes.push(size); if (size < 14) small.push(`${el.tagName}.${el.className} ${size}px ${n.textContent.trim().slice(0, 20)}`);
+    const f = rgb(cs.color), b = bgOf(el), a = f.a;
+    const mix = { r: f.r * a + b.r * (1 - a), g: f.g * a + b.g * (1 - a), b: f.b * a + b.b * (1 - a) };
+    const l1 = lum(mix), l2 = lum(b), ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    if (ratio < 4.5) low.push(`${el.tagName}.${el.className} ${n.textContent.trim().slice(0, 30)} ${ratio.toFixed(2)} fg=${cs.color} bg=${JSON.stringify(b)} dis=${el.disabled}`);
+  }
+  return { body: getComputedStyle(document.body).fontSize, min: Math.min(...sizes), count: sizes.length, low, small };
+}"""
+
+
+def test_the_hand_page_text_is_17_px_nothing_under_14_and_every_text_reads_at_4_5_to_1(gui):
+    pg, host, log = open_up(gui, host=LookHost())
+    try:
+        got = pg.evaluate(READABLE)
+        assert got["count"] > 5
+        assert got["body"] == "17px", "the body's text is 17 px"
+        assert got["min"] >= 14, f"nothing under 14 px: {got['small']}"
+        assert got["low"] == [], "every visible text reads at 4.5:1 against its background"
+        card = pg.locator(".hand-up .up-card").first      # a card's edge may be its state's ring (picked, asking): its ground and the frame token are what is lifted
+        assert card.evaluate("(e) => getComputedStyle(e).backgroundColor") == "rgb(51, 55, 58)", "a card on the lifted card colour"
+        assert pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-card-frame').trim()") == "#4c5257", "the card's frame lifted"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_hand_of_three_goals_cards_shows_all_three_whole_at_390_wide_with_text_of_14_px_or_more(gui):
+    """The look's bigger type must not drop or push out a card (goal 169): the stub's hand draws its first three cards whole, side by side in the row (it scrolls sideways past the plus card), the type in them 14 px or more."""
+    pg, host, log = open_up(gui, host=LookHost(calm=False))
+    try:
+        row = cards(pg)
+        assert row.count() >= 3, f"the stub's hand holds at least three cards, {row.count()} drawn"
+        got = pg.evaluate("""() => { const r = document.querySelector('.up-cards'), cs = [...r.querySelectorAll('.up-card')].slice(0, 3); r.scrollLeft = 0;
+            return { right: Math.max(...cs.map(c => c.offsetLeft + c.offsetWidth)), width: r.scrollWidth, sizes: cs.map(c => [c.offsetWidth, c.offsetHeight]),
+                     type: Math.min(...[...r.querySelectorAll('.up-card *')].filter(e => e.childElementCount === 0 && e.textContent.trim()).map(e => parseFloat(getComputedStyle(e).fontSize))) } }""")
+        assert all(w >= 80 and h >= 100 for w, h in got["sizes"]), got
+        assert got["right"] <= got["width"], got
+        assert got["type"] >= 14, got
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

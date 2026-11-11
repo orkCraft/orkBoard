@@ -3,11 +3,11 @@
 .presets { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; }
 .preset-group h4 { margin: 0; }
 .preset-group.is-own { padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); }
-.presets__kind { margin: 0; font: var(--ork-type-caption); }
+.presets__kind { margin: 0; font: var(--ork-type-caption-phone); }
 .preset-cards { display: flex; flex-direction: column; gap: var(--ork-3); }
 .preset-cards.is-grid { display: grid; grid-template-columns: 1fr 1fr; }
 .presets .preset-tile { width: 100%; }
-.presets .preset-tile b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.presets .preset-tile b { font: var(--ork-type-heading-phone); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
 .presets .preset-tile.is-compact { padding: var(--ork-2) var(--ork-3); }
 
 /* a greyed preset (Team, when the person has one already), the recurring goals a running party proposes and what Team is (docs/specs/92-running-and-the-team.md) */
@@ -28,7 +28,7 @@
 .pbands { display: flex; flex-direction: column; gap: var(--ork-4); }
 .pband { display: flex; flex-direction: column; gap: var(--ork-3); padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-edge); }
 .pband__head { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--ork-4); }
-.pband__head h3 { margin: 0; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.pband__head h3 { margin: 0; font: var(--ork-type-heading-phone); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
 .pband__seats { margin-left: auto; }
 .pseat { display: grid; grid-template-columns: 28px minmax(0, 1fr) 44px; align-items: center; column-gap: var(--ork-4); row-gap: var(--ork-3); padding: var(--ork-3); box-sizing: border-box;
   border: var(--ork-line) solid var(--ork-frame); }
@@ -47,7 +47,7 @@
   padding: var(--ork-3); border: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); }
 .pseat.is-empty:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .pseat.is-empty .team-seat { width: 24px; height: 22px; border-style: dashed; border-color: var(--ork-frame); }
-.pseat__add { display: inline-flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-button); }
+.pseat__add { display: inline-flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-button-phone); }
 .sheet-foot:has(.foot-line) { flex-wrap: wrap; }
 .foot-line { flex: 1 1 100%; margin: 0; }
 .sheet-foot .foot-line + .ork-btn { flex: 1 1 100%; }
@@ -57,7 +57,7 @@
 .seat-list .team-row { grid-template-columns: 24px 1fr auto; grid-template-areas: "head name chip" "head line chip"; }
 .seat-list .team-row .pseat__needs { grid-area: chip; grid-column: auto; }
 .tool-group { display: flex; flex-direction: column; gap: var(--ork-2); }
-.tool-group h4 { margin: var(--ork-4) 0 var(--ork-1); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.tool-group h4 { margin: var(--ork-4) 0 var(--ork-1); font: var(--ork-type-label-phone); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
 .tool-row { all: unset; box-sizing: border-box; width: 100%; min-height: var(--ork-tap); display: flex; align-items: flex-start; gap: var(--ork-4); padding: var(--ork-3); cursor: pointer;
   border-bottom: var(--ork-line) solid var(--ork-frame); }
 .tool-row[aria-pressed="true"] { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
@@ -65,6 +65,6 @@
 .tool-row.is-off { color: var(--ork-ink-faint); cursor: not-allowed; }
 .tool-row__text { display: flex; flex-direction: column; min-width: 0; }
 .tool-row__text b { font-weight: 600; }
-.tool-row__alert { color: var(--ork-alert); font: var(--ork-type-caption); font-weight: normal; }
+.tool-row__alert { color: var(--ork-alert); font: var(--ork-type-caption-phone); font-weight: normal; }
 .tool-row__why { color: var(--ork-ink); }
 .tool-foot { margin: var(--ork-3) 0 0; }

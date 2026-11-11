@@ -1,7 +1,7 @@
 // The app's worker (gui/pwa.py): the shell opens without the network, the town never does. Every file is
 // asked of the town first, so a new version arrives the next time it is reachable; the cache is only for
 // when it is not. The socket is never cached: what the town is comes live or not at all.
-const CACHE = "orkcraft-app-v106";
+const CACHE = "orkcraft-app-v108";
 // The app (docs/specs/117-the-phone-a-menu-of-the-leaders.md §2) is the desktop's page: `./` (index.html), the frame, and `PAGE`, the page's own files
 // (page/board.js, page/js/**, page/vendor/, page/page.css, roles.css) and orkUI's faces, heads, marks and pictures, which gui/pwa.py writes in when it serves this
 // file: that list is the page's, not a copy kept here. SHELL is the rest: the frame's files, orkUI's styles and faces (docs/specs/40-design-system.md; its race heads are kept as they are drawn) and the old
@@ -19,7 +19,7 @@ const SHELL = ["./", "frame.js", "frame.css", "old.html", "board-app.js", "util.
   "signs/restructure.svg", "signs/abtest.svg", "signs/landing.svg", "signs/post.svg", "signs/tagline.svg",
   "signs/mechanic.svg", "signs/level.svg", "signs/balance.svg", "signs/character.svg", "signs/release.svg", "signs/store.svg", "signs/tune.svg", "signs/pick.svg",
   "icons/icons.svg", "app.css", "party.css", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png",
-  "fonts/ibm-plex-mono-latin-400-normal.woff2", "fonts/ibm-plex-mono-latin-600-normal.woff2", "fonts/pixelify-sans-latin-500-normal.woff2"];
+  "fonts/ibm-plex-mono-latin-400-normal.woff2", "fonts/ibm-plex-mono-latin-600-normal.woff2", "fonts/rubik-latin-400-normal.woff2", "fonts/rubik-latin-500-normal.woff2", "fonts/rubik-latin-600-normal.woff2", "fonts/rubik-latin-700-normal.woff2"];
 const CACHE_PREFIXES = ["fonts/"];
 const DS = "/ds/orkui/";      // orkUI by the address the page's code names (js/orkui.js `ORKUI`): the same files as /app/<name>, kept under that name
 

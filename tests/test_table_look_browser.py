@@ -61,6 +61,10 @@ def test_on_techs_tab_the_table_wears_techs_felt_and_the_open_tab_its_pennant(gu
         assert closed.nth(i).locator(".ork-pennant:not(.is-open)").count() == 1
     top = pg.locator(".table-tabcell.is-open .ork-pennant").bounding_box()["y"]
     assert top >= 4                                                             # clear of the window's top edge
+    ring = pg.locator(".table-tabcell:not(.is-open) .table-seatbox__sit").first        # the desktop's head stands on its chair, no ring round it (decisions §294; the phone keeps its rings)
+    assert ring.evaluate("e => getComputedStyle(e, '::before').backgroundImage") == "none"
+    assert pg.locator(".table-tabcell .table-seatbox.has-chair").count() >= 3, "the chairs stay"
+    assert not any(ch.isdigit() for ch in pg.locator(".table-tabs__list").inner_text()), "no number on a tab"
     shot(pg, "tech")
 
 
@@ -88,7 +92,7 @@ def test_the_headings_are_plaques_and_an_empty_lane_says_whose_it_is_on_a_plate(
     assert heads.count() >= 1
     for i in range(heads.count()):
         assert "ork-plaque" in (heads.nth(i).get_attribute("class") or ""), heads.nth(i).inner_text()
-    assert pg.locator(".release-lane__label.ork-plaque").inner_text().strip().lower() == "discard"
+    assert pg.locator(".release-lane__label").inner_text().strip().lower() == "discard"
     free = pg.locator(".table-lane__free.ork-plate")
     assert free.count() >= 1
     plate = pg.evaluate(BG, "--ork-plate-orkmaster")

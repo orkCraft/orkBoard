@@ -59,6 +59,7 @@ ELEMENTS = tokens.ORKUI / "elements"   # orkUI's elements (a goal's mark, spec 5
 MOONS = tokens.ORKUI / "moons"      # orkUI's moons (a goal's progress, spec 74 §6), served as moons/<file>: `.ork-moon` masks them from beside components.css
 SIGNS = tokens.ORKUI / "signs"      # orkUI's signs (✓ ✗ ↻ the clock ! ⚑ ← →, spec 50 §1.6), served as signs/<file> for `.ork-sign`: a mask needs the page's own origin
 MASKS = ("backs", "chair", "door", "potion", "runes", "tools")   # orkUI's other pictures (the card backs, the chair and the door of 0.27.0, the potions' bottles, a tool's rune and bell), which components.css draws from beside it
+PLACES = ("die", "pack", "book", "chain")   # orkUI's cartoon places (0.41.0, decisions §293.6): the phone's round button, its selector and the lamp's chain draw their pictures (goal 169 H)
 STYLES = ("fonts.css", "tokens.css", "components.css")   # orkUI itself: its faces, colours and components
 STATIC = Path(__file__).resolve().parent / "static"   # the desktop's page: board.js, js/**, page.css, vendor/ (gui/server.py serves it as /static/)
 PAGE = "page/"                      # …and where the app serves it: beside the app's own board.js (the old face's), so no name is shared
@@ -101,7 +102,7 @@ def page_files() -> dict[str, Path]:
 
 def ds_files() -> dict[str, Path]:
     """orkUI's files by the name they are served at, under PREFIX and (`DS`) by the desktop's address: its styles, faces, race heads, marks,
-    elements, moons, signs (and the big ones), the potions, runes, tools and backs, and the pixel icons (docs/specs/40-design-system.md)."""
+    elements, moons, signs (and the big ones), the potions, runes, tools and backs, the places' cartoon pictures (the die, the pack, the book, the chain) and the pixel icons (docs/specs/40-design-system.md)."""
     styles = {name: tokens.ORKUI / name for name in STYLES}
     faces = {f"fonts/{p.name}": p for p in sorted(FONTS.iterdir()) if p.suffix == ".woff2"}
     heads = {f"races/{p.name}": p for p in sorted(RACES.iterdir()) if p.suffix == ".png"}
@@ -110,7 +111,8 @@ def ds_files() -> dict[str, Path]:
     moons = {f"moons/{p.name}": p for p in sorted(MOONS.iterdir()) if p.suffix == ".svg"}
     signs = {f"signs/{p.relative_to(SIGNS).as_posix()}": p for p in sorted(SIGNS.rglob("*.svg"))}      # and signs/big/
     masks = {f"{folder}/{p.name}": p for folder in MASKS for p in sorted((tokens.ORKUI / folder).glob("*.svg"))}
-    return {**styles, **faces, **heads, **marks, **elements, **moons, **signs, **masks, "icons/icons.svg": tokens.ORKUI / "icons" / "icons.svg"}
+    places = {f"{folder}/{p.name}": p for folder in PLACES for p in sorted((tokens.ORKUI / folder).glob("*.png"))}
+    return {**styles, **faces, **heads, **marks, **elements, **moons, **signs, **masks, **places, "icons/icons.svg": tokens.ORKUI / "icons" / "icons.svg"}
 
 
 def wants(path: str) -> bool:

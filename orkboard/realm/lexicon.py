@@ -201,6 +201,7 @@ TERMS: tuple[Term, ...] = (
     _t("project_kind", "what the project is"),                     # an empty folder, a mobile app, a web app, a backend, a game, data work, a team's wiki, a designer's folder, texts, code (spec 75; realm/project_kind.py)
     _t("project_level", "The project"),                           # the project's level: its parties as columns, their goals in them (spec 70 §2)
     _t("notification", "notification", "notifications"),          # a push to a paired phone: an answer that waits, the morning (spec 42 §3)
+    _t("feed", "feed", "feeds"),                                   # the phone's project screen: what waits first, then each leader's posts since this phone's last look, the heads on top (decisions §291.5–§291.9; realm/board_feed.py)
     _t("record", "record"),                                        # what an agent did in the last 30 days, in its dialog (spec 42 §4)
     _t("this_week", "This week"),                                  # the work of the last seven days, at API prices, beside today's spend (spec 42 §6)
     _t("last_week", "Last week"),                                  # the card of the week before this one, Monday to Sunday (spec 42 §7)

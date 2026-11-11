@@ -19,6 +19,8 @@ export const unreached = pairedUnreached;
 export const waiting = pairedWaiting;
 /** Paired: why the phone must be paired again ("" while it is). */
 export const forgotten = pairedForgotten;
+/** This device's last look at a project's feed (hand/upfeed.js), kept beside the pairing (js/linkpaired.js `looked`). */
+export { looked } from "./linkpaired.js";
 
 export const town = signal(null);          // the last snapshot (gui/state.py), null until the first
 export const online = signal(false);

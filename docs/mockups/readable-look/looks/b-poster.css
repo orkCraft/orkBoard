@@ -1,0 +1,8 @@
+/* B, the poster: Unbounded's wide heavy headings (a game's title screen), Onest's plain body (made for screens). */
+:root[data-look="office"] {
+  --lk-head: "Unbounded", system-ui, sans-serif; --lk-head-w: 500; --lk-title-w: 700;
+  --lk-text: "Onest", system-ui, sans-serif;
+  --lk-case: none; --lk-track: 0;
+  --lk-r: 8px; --lk-r-small: 6px;
+}
+:root[data-look="office"] { --ork-type-heading: 500 14px/20px var(--lk-head); --ork-type-button: 500 13px/18px var(--lk-head); }

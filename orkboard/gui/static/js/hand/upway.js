@@ -1,10 +1,10 @@
 // A goal's way on the phone's middle (docs/specs/117-the-phone-a-menu-of-the-leaders.md §5.1, docs/mockups/phone/sidebar.html A1, decisions §195.2): its header (its element big, its short name in the body face, its type's sign and *<Type> · at work in <Party>*, or its phase's word),
-// its phases (`PHASES`: the past ones muted, its own in the ink; a press opens the goal's Talk or Spec page over the pane, as *Spec* under the card did), its route (the parties it passes in the route's order, each its leader's head and name: done with the check, the one at work
-// turned, the next faint), why (its spec's *Why*, else the goal's own words, at most four lines) and *<Party>'s tasks* (the tasks of the step at work: `cascadeOf`, each its doer's head, its name and its stage's word, in the alert's frame when it asks or failed). A goal in line has its
+// its phases (`PHASES`: the past ones muted, its own in the ink; a press opens the goal's Talk or Spec page over the pane, as *Spec* under the card did), its route's parties (`routeOf`: in the route's order, done, at work, next; since goal 169 G the goal's
+// feed, upfeed.js `GoalFeed`, draws the route's leaders as its heads row in place of the route's legs), why (its spec's *Why*, else the goal's own words, at most four lines) and *<Party>'s tasks* (the tasks of the step at work: `cascadeOf`, each its doer's head, its name and its stage's word, in the alert's frame when it asks or failed). A goal in line has its
 // phases and why only, and the moon with its hour when it waits for the reset. Everything is read from what the page has (`ideas.map`, `ideas.board`) and the spec's page (`ideas.page`, as the Spec page reads it). Layout only (uplook.css).
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Elem, Head, Icon, Sign } from "../orkui.js";
+import { Elem, Head, Sign } from "../orkui.js";
 import { command } from "../link.js";
 import { board } from "../board/store.js";
 import { openOver } from "../frame/state.js";
@@ -48,16 +48,6 @@ export function Phases({ n }) {
 export function Waits({ n }) {
   const g = lineNow().find((x) => x.slug === n.slug);
   return g ? html`<p class="up-wait">${g.reset && html`<${Sign} name="moon" />`}<span>${waitsWords(g)}</span></p>` : null;
-}
-
-/** The route: the parties in order with an arrow between them. */
-export function Route({ n }) {
-  const steps = routeOf(n);
-  if (!steps.length) return null;
-  const word = { done: "done", now: "at work", next: "next" };
-  return html`<div class="up-route" role="list" aria-label="Its route">${steps.map((s, i) => html`${i > 0 && html`<${Icon} name="arrow-right" />`}
-    <span key=${s.slug} role="listitem" class=${cls("up-step", { [`is-${s.state}`]: true })} data-party=${s.slug} aria-label=${`${s.name}: ${word[s.state]}`} title=${`${s.name}: ${word[s.state]}`}>
-      ${s.head && html`<${Head} race=${s.head.race} tier=${s.head.tier} />`}<span>${s.name}</span>${s.state === "done" && html`<${Sign} name="check" />`}${s.state === "now" && html`<${Sign} name="work" />`}</span>`)}</div>`;
 }
 
 /** The goal's own words when its spec has no *Why*: its full title when the short name is shorter. */

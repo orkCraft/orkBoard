@@ -24,7 +24,7 @@ The colours are tokens, never values in a face: `--ork-elem-meadow`, `--ork-elem
 `--ork-elem-lava` (`tokens.json`). They are muted, **each of a hue no signal has**: at least 20 (CIE76) from every signal
 (success, alert, warning, danger) and from the action's green, and each at least 3:1 on `--ork-panel` and on `--ork-raised` (a
 graphic, not text). Meadow leans toward teal (`#6fb8a8`), dust is a darker ochre (`#b8914f`), lava a warm red-brown that is never
-the danger's (`#ad6a5a`, 25 from `danger`), ice (`#82aaff`) and void (`#8e88a8`) are as they were. `.dim` draws the mark in `--ork-ink-faint`.
+the danger's (`#b56f5e` since 0.40.0, was `#ad6a5a`, 25 from `danger`), ice (`#82aaff`) and void (`#8e88a8`) are as they were. `.dim` draws the mark in `--ork-ink-faint`.
 
     <span class="ork-elem meadow" aria-hidden="true"></span>          14 x 14
     <span class="ork-elem ice big" aria-hidden="true"></span>         28 x 28

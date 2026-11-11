@@ -23,7 +23,7 @@ export const unreached = signal(false);
 /** The phone was forgotten on the computer: the words to say with the pairing card, "" otherwise. */
 export const forgotten = signal("");
 
-const KEPT = "orkcraft.town", OUTBOX = "orkcraft.outbox", DEVICE = "orkcraft.device", SPACE = "orkcraft.orkspace";
+const KEPT = "orkcraft.town", OUTBOX = "orkcraft.outbox", DEVICE = "orkcraft.device", SPACE = "orkcraft.orkspace", LOOKED = "orkcraft.looked";
 const randomId = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, "0")).join("");
 export const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -32,6 +32,16 @@ export const kept = {
   get() { try { return JSON.parse(localStorage.getItem(KEPT)); } catch { return null; } },
   set(state) { try { localStorage.setItem(KEPT, JSON.stringify({ at: Date.now(), state })); } catch { /* not kept */ } },
   clear() { try { localStorage.removeItem(KEPT); } catch { /* nothing kept */ } },
+};
+
+/** This device's own last look at each project's feed (goal 169 F, decisions §291.6; the person's answer: since this phone's last look), ms since the epoch by the project's path; kept
+ *  beside the pairing and wiped with it as `kept` is. A narrow desktop window, which has no pairing, keeps it under the same key. Written when the person leaves the feed (hand/upfeed.js). */
+export const looked = {
+  all() { try { return JSON.parse(localStorage.getItem(LOOKED)) || {}; } catch { return {}; } },
+  /** The last look at `project`, null for none. */
+  get(project) { const ms = looked.all()[project]; return typeof ms === "number" && ms > 0 ? ms : null; },
+  set(project, ms = Date.now()) { try { localStorage.setItem(LOOKED, JSON.stringify({ ...looked.all(), [project]: ms })); } catch { /* this run only */ } },
+  clear() { try { localStorage.removeItem(LOOKED); } catch { /* nothing kept */ } },
 };
 
 /** What the person gave with no signal, kept on this phone until the computer answers again; wiped with the pairing. */
@@ -70,7 +80,7 @@ export const outbox = {
 export const store = {
   get() { try { return JSON.parse(localStorage.getItem(DEVICE)); } catch { return null; } },
   set(v) { try { localStorage.setItem(DEVICE, JSON.stringify(v)); } catch { /* private mode: this run only */ } },
-  clear() { try { localStorage.removeItem(DEVICE); localStorage.removeItem(SPACE); } catch { /* nothing kept */ } kept.clear(); outbox.clear(); },
+  clear() { try { localStorage.removeItem(DEVICE); localStorage.removeItem(SPACE); } catch { /* nothing kept */ } kept.clear(); outbox.clear(); looked.clear(); },
 };
 
 /**

@@ -119,12 +119,12 @@ async def test_a_token_has_no_goal_line_its_type_top_right_one_value_and_the_sta
         assert "after Challenge store, Credential table and migration" in await waiting.get_attribute("title") and not re.search(r"\bk[1-5]\b", await waiting.get_attribute("title"))
         failed = page.locator('.stack .deck[data-state="failed"] .tcard')
         style = await failed.evaluate(STYLE)
-        assert style["border"] == await _color(page, "--ork-danger") and style["bg"] == await _color(page, "--ork-raised")   # the danger edge, the raised fill
+        assert style["border"] == await _color(page, "--ork-danger") and style["bg"] == await _color(page, "--ork-card")   # the danger edge, the card fill (the phone draws a task as orkUI's card, 089376e..aeb82cf)
         run = await running.locator(".tcard").evaluate(STYLE)
-        assert run["bg"] == await _color(page, "--ork-raised") and run["border"] == await _color(page, "--ork-edge")
+        assert run["bg"] == await _color(page, "--ork-card") and run["border"] == await _color(page, "--ork-edge")
         assert (await waiting.locator(".tcard").evaluate(STYLE))["style"] == "dashed"                                  # waiting: dashed on the canvas
         name = await running.locator(".tcard__name").evaluate("(e) => { const s = getComputedStyle(e); return [s.fontWeight, s.fontSize, s.lineHeight]; }")
-        assert name == ["600", "12px", "15px"]
+        assert name == ["600", "14px", "18px"]   # the phone's floor is 14 px (orkUI's phone type tokens, aeb82cf)
 
 
 @pytest.mark.asyncio

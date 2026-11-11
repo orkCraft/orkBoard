@@ -60,6 +60,7 @@
   .hand:has(.hand-mana[data-rows="2"][data-paid]) { --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap)) + var(--hc-cap) + var(--ork-1)); }
   .hand-pot { padding-block: 0; }
   .hand-pot__share, .hand-pot__week { line-height: 12px; }
+  .hand-pot__share, .hand-pot__week { font-size: 14px; }                                                                                  /* the phone's floor (decisions §291): Rubik's "100%" in it, with no padding, is inside the 44 px of a potion */
   .hand:has(.hand-mana[data-rows="1"]) { --hc-potw: var(--hc-pot1); }
 }
 
@@ -108,5 +109,5 @@
   .hand-die + .hand-mana { margin-left: 0; }                                                                    /* the die and the potions stand together at the row's end */
   .hand-pot__pct { display: inline; }                                                                          /* the hour a tool comes back (*back 14:00*) is too wide for a crowded row: the share stands, the reset is in the words on the control */
   .hand-pot__week-name, .hand-pot__week--of, .hand-pot__back { display: none; }                                              /* the phone's potions keep their narrow width: the week's share alone under the now share (its words are on the control); */
-  .hand-pot { min-width: 0; padding-inline: var(--ork-1); }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
+  .hand-pot { min-width: 0; padding-inline: 0; }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
 }

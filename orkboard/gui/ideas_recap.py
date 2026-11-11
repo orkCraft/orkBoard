@@ -1,5 +1,6 @@
 """Coming back (docs/specs/42-coming-back.md) as `gui/ideas.py`'s `Ideas` has it: `ideas.recap`, what the Board did since a
-device's last look (realm/board_recap.py), `ideas.night`, what the night did for the morning's card (spec 121 §5), and `ideas.today`, today's events as rows (spec 49 §2.2, realm/board_today.py). It
+device's last look (realm/board_recap.py), `ideas.night`, what the night did for the morning's card (spec 121 §5), `ideas.today`, today's events as rows (spec 49 §2.2, realm/board_today.py), and `ideas.feed`, the phone's feed (decisions §291.5–§291.9,
+realm/board_feed.py). It
 reads and changes nothing; B, F, G and H add their readers here. Split from ideas.py to keep it under ~600 lines.
 """
 from __future__ import annotations
@@ -8,7 +9,7 @@ import datetime as dt
 from pathlib import Path
 
 from orkboard.gui.ideas_args import IdeasError
-from orkboard.realm import board_recap, board_today, board_week, event_log, goal_flags, ideas, op_runs
+from orkboard.realm import board_feed, board_recap, board_today, board_week, event_log, goal_flags, ideas, op_runs
 
 RECAP_DAYS = 30                          # a last look older than this is taken as this many days ago
 
@@ -32,6 +33,36 @@ class RecapMixin:
         got["waits"] = {"you": int(snap.get("needs_you") or 0), "review": int(snap.get("review_count") or 0)}
         got["nights"] = board_week.streak(Path(self.host.repo_root), self.settings_now(), now)
         return got
+
+    def feed(self, args: dict) -> dict:
+        """`{"since"?: <ms since the epoch>, "route"?: <a goal's slug>}`: the phone's feed (realm/board_feed.py): what waits first, then each leader's
+        posts since this device's last look (`since`, as `ideas.recap` takes it; none: everything is news), stacked, and what came before as the one
+        seen item. `route`: the feed cut to that goal's route, for a goal's screen. The goals waiting for main are `ideas.gate`'s."""
+        now = dt.datetime.now().astimezone()
+        since = None
+        if (ms := args.get("since")) is not None:
+            if not isinstance(ms, (int, float)) or isinstance(ms, bool):
+                raise IdeasError("`since` is the last look, in milliseconds")
+            try:
+                since = dt.datetime.fromtimestamp(ms / 1000).astimezone()
+            except (OverflowError, OSError, ValueError):
+                raise IdeasError("`since` is the last look, in milliseconds") from None
+            if since > now:
+                raise IdeasError("`since` is ahead of now")
+            since = max(since, now - dt.timedelta(days=RECAP_DAYS))
+        route = args.get("route")
+        if route is not None and (not isinstance(route, str) or not route.strip()):
+            raise IdeasError("`route` is a goal's slug")
+        try:
+            ready = self.gate({}).get("ideas") or []
+        except Exception:                                  # a repository git cannot read: nothing waits for main that the Board can see
+            ready = []
+        try:
+            return board_feed.build(Path(self.host.repo_root), self.state_dir, self.board(make=False), since, now, ready=ready,
+                                    pages=self.root(False), route=route.strip() if route else None, into=self._into(),
+                                    back=dt.timedelta(days=RECAP_DAYS))
+        except ValueError as e:
+            raise IdeasError(str(e)) from None
 
     def night(self, args: dict) -> dict | None:
         """`{"since"?: <ms since the epoch>, "opened"?: true}`: what the night did, for the morning's card (spec 121 §5.2, realm/board_recap.py `night`): from the last night's window, or the device's last look

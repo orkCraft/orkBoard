@@ -10,8 +10,8 @@
 .pot-s__cork { display: flex; position: relative; z-index: 1; height: 16px; margin-bottom: -6px; }                  /* the tool's mark on the bottle's neck, its cork: the same on every size, so the corks stand on one line as the tops do */
 .pot-s__none { display: flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 36px; opacity: 0.5; }                  /* a tool whose limits were not read, or billed by its API: its mark where a bottle would stand */
 .pot-s__cap { display: flex; flex-direction: column; align-items: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pot-s__cap > * { font-size: 11px; line-height: 13px; font-weight: 400; }
-.pot-s__week { font-size: 10px !important; line-height: 11px !important; color: var(--ork-ink-muted); }
+.pot-s__cap > * { font-size: 12px; line-height: 13px; font-weight: 400; }
+.pot-s__week { font-size: 12px !important; line-height: 11px !important; color: var(--ork-ink-muted); }
 .pot-s.is-front .pot-s__five { color: var(--ork-ink); font-weight: 600; }                                                                    /* the tool the work goes to: its share in the ink */
 .pot-s.is-warn .pot-s__five { color: var(--ork-alert); }
 .pot-s.is-danger .pot-s__five { color: var(--ork-danger); }

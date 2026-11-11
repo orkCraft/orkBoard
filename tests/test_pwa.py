@@ -61,7 +61,7 @@ def test_the_app_is_its_own_files_and_nothing_else():
     head, body = _split(pwa.serve("GET", "/app/fonts/ibm-plex-mono-latin-400-normal.woff2"))   # orkUI's faces, as the desktop's
     assert "Content-Type: font/woff2" in head and body[:4] == b"wOF2"
     faces = _split(pwa.serve("GET", "/app/fonts.css"))[1]
-    assert b"IBM Plex Mono" in faces and b"Pixelify Sans" in faces
+    assert b"IBM Plex Mono" in faces and b"Rubik" in faces and b"Pixelify" not in faces
     assert _split(pwa.serve("GET", "/app/fonts/OFL-IBM-Plex-Mono.txt"))[0].startswith("HTTP/1.1 404")
     head, body = _split(pwa.serve("GET", "/app/races/elf-elder.png"))                         # orkUI's race heads
     assert "Content-Type: image/png" in head and body[:8] == b"\x89PNG\r\n\x1a\n"
@@ -194,6 +194,20 @@ def test_the_service_worker_keeps_every_module_the_app_loads():
     assert {k for k in pwa.files() if k.startswith(pwa.PAGE) and k.endswith((".js", ".mjs", ".css"))} <= page
     assert {"page/board.js", "page/js/link.js", "page/js/hand/upright.js", "page/vendor/preact.mjs", "page/page.css", "roles.css"} <= page
     assert not any("xterm" in k for k in page)
+
+
+def test_every_file_the_service_worker_keeps_answers_and_the_faces_are_rubiks():
+    """What the worker precaches is served by the same route the phone app uses; the cache is a new one, Rubik's faces are in it and Pixelify Sans is not."""
+    served = _split(pwa.serve("GET", "/app/sw.js"))[1].decode()
+    cache = re.search(r'const CACHE = "orkcraft-app-v(\d+)"', served)
+    assert cache and int(cache.group(1)) >= 107
+    shell = re.search(r"const SHELL = (\[.*?\]);", served, re.S)
+    paths = set(re.findall(r'"([^"]+)"', shell.group(1))) | set(json.loads(re.search(r"const PAGE = (\[.*?\]);", served).group(1)))
+    for path in sorted(paths):
+        head = pwa.serve("GET", "/app/" + ("" if path == "./" else path)).split(b"\r\n", 1)[0].decode()
+        assert " 200 " in head + " ", f"{path}: {head}"
+    assert any(p.endswith(".woff2") and "rubik" in p.lower() for p in paths)
+    assert not any("pixelify-sans" in p.lower() for p in paths)
 
 
 def test_the_service_worker_also_keeps_the_elements_and_the_signs_the_masks_draw():
@@ -474,7 +488,7 @@ def test_the_workers_install_fills_its_cache_past_the_http_cache():
 
 def test_service_worker_names_cache_version_and_cache_first_prefixes():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "orkcraft-app-v106" in sw
+    assert "orkcraft-app-v108" in sw
     prefixes = sw[sw.index("CACHE_PREFIXES = ["):sw.index("];", sw.index("CACHE_PREFIXES = ["))]
     assert set(re.findall(r'"([^"]+)"', prefixes)) == set(pwa.CACHE_PREFIXES) == {"fonts/"}
 

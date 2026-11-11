@@ -332,11 +332,11 @@ def test_at_the_wide_width_a_goal_done_in_the_night_wears_the_moon_on_its_card_i
         host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0}
     pg, host, log = window(gui, "wide", reduced=True, prep=no_ready)
     try:
-        cards = pg.locator('.release-lane__done .hand-done[data-moon="1"]')
+        cards = pg.locator('.release-lane__done .post-card[data-moon="1"]')
         cards.first.wait_for(timeout=WAIT_MS)
-        assert cards.count() == 2 and cards.first.locator(".hand-done__moon .ork-sign.moon").count() == 1, "a moon on each of the night's goals, whole cards in the lane"
+        assert cards.count() == 2 and cards.first.locator(".post-card__moon .ork-sign.moon").count() == 1, "a moon on each of the night's goals, whole posts in the lane"
         cards.first.click()                                                                                    # picked: it is seen and leaves *not yet seen*
-        pg.wait_for_function("() => document.querySelectorAll('.release-lane__done .hand-done').length === 1", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.release-lane__done .post-card').length === 1", timeout=WAIT_MS)
         assert host.seen_log == [cards.first.get_attribute("data-slug")] or len(host.seen_log) == 1
         assert pg.locator(".hand-discardview").count() == 0
     finally:

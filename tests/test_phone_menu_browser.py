@@ -308,8 +308,7 @@ def test_a_goal_pressed_is_picked_and_the_menu_closes_the_picked_row_has_the_ink
     pg, host, errors = start(gui)
     try:
         opened(pg)
-        on = pg.locator(".up-menu .is-on")
-        assert on.count() == 1 and on.get_attribute("data-goal") == "seat", "nothing chosen: the goal of the hand's first card is the picked one"
+        assert pg.locator(".up-menu .is-on").count() == 0, "nothing chosen: the feed is looked at, no row picked (goal 169 F)"
         pg.locator(".up-grow", has_text="Tidy the lobby code").click()
         menu(pg).wait_for(state="detached", timeout=WAIT_MS)
         assert sig(pg, "frame/state.js", "picked") == "calm" and sig(pg, "frame/state.js", "tab") == "orkmaster", "the goal is picked, no party"
@@ -331,7 +330,7 @@ def test_a_goal_pressed_is_picked_and_the_menu_closes_the_picked_row_has_the_ink
 def test_a_goal_with_a_card_in_the_hand_is_picked_as_that_card(gui):
     pg, host, errors = start(gui)
     try:
-        assert pg.locator('.up-card[aria-pressed="true"]').get_attribute("data-key") == "goal:seat"
+        assert pg.locator('.up-card[aria-pressed="true"]').count() == 0, "the feed: no card raised (goal 169 F)"
         opened(pg)
         pg.locator(".up-grow", has_text="Check that a rejoin keeps the round").click()
         menu(pg).wait_for(state="detached", timeout=WAIT_MS)

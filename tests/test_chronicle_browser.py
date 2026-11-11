@@ -154,7 +154,9 @@ def test_a_decision_newer_than_the_partys_last_look_is_a_muted_dot_on_its_tab_go
     pg.locator('.table-tab[data-tab="design"] .table-tab__new').wait_for(timeout=WAIT_MS)
     dot = pg.locator('.table-tab[data-tab="design"] .table-tab__new')
     assert dot.get_attribute("aria-label") == "A decision is newer than your last look at this party's past" and pg.locator('.table-tab[data-tab="tech"] .table-tab__new').count() == 0, "Design's tab only"
-    assert dot.evaluate("e => getComputedStyle(e).backgroundColor") == pg.evaluate("() => { const s = document.createElement('i'); s.style.backgroundColor = 'var(--ork-ink-muted)'; document.body.append(s); const c = getComputedStyle(s).backgroundColor; s.remove(); return c; }"), "muted"
+    hue = pg.evaluate("() => { const s = document.createElement('i'); s.style.backgroundColor = 'var(--ork-party-elf)'; document.body.append(s); const c = getComputedStyle(s).backgroundColor; s.remove(); return c; }")
+    assert hue in dot.evaluate("e => getComputedStyle(e).backgroundImage"), "a dot in its party's colour (goal 170 C), named by its label, never a number"
+    assert dot.inner_text().strip() == ""
     shot(pg, "past-dot.png")
     call(pg, "frame/state.js", "openTab", "design")                                                          # its history opened by the book: the newest decision is seen
     pg.locator("[data-book]").click()

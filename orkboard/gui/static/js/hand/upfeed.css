@@ -1,0 +1,73 @@
+/* The project's feed on the phone (goal 169 F, decisions §291.5–§291.9; hand/upfeed.js), drawn after the mockup docs/mockups/phone/feed.html v3 (screens 1, 2, 3 and 6, the person's choice): the heads row on top as round rings, then the blocks, each a card of orkUI's
+   with its party's colour as its top edge (a post's own rules are table/post.css). Layout only: every colour, face and corner is orkUI's (its tokens, its card's and its button's corners; a head's round is a clip, never a corner of its own); a party's colour is its race's (`data-race`, table/look.css
+   `--party-hue`), the Orkmaster's its own token. Nothing under 14 px; every target 44 px at least. `.up-look` (upright.css) scrolls as a whole. */
+
+.up-feed { gap: var(--ork-5); }
+.up-gfeed { flex: none; display: flex; flex-direction: column; }            /* a goal's feed (goal 169 G), under its header, its card and its phases */
+.up-feed [data-leader="orkmaster"] { --party-hue: var(--ork-party-orkmaster); }
+
+/* the heads row: the Orkmaster and the leaders, as a feed's stories; it scrolls sideways when they do not fit */
+.up-fh { flex: none; display: flex; gap: var(--ork-2); margin: 0 calc(var(--ork-4) * -1); padding: var(--ork-4) var(--ork-5) var(--ork-4); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; background: var(--_plate); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.up-fh::-webkit-scrollbar { display: none; }
+.up-fh__head { appearance: none; position: relative; flex: none; box-sizing: border-box; width: 66px; min-height: var(--ork-tap); margin: 0; padding: var(--ork-1) 0; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2);
+  border: 0; background: none; color: var(--ork-ink-muted); cursor: pointer; }
+.up-fh__head:focus-visible { outline: 0; }
+.up-fh__head:focus-visible .up-fh__name { color: var(--ork-ink); text-decoration: underline; text-underline-offset: 3px; }
+.up-fh__ring { box-sizing: border-box; width: 58px; height: 58px; display: grid; place-items: center; background: transparent; clip-path: circle(50%); }      /* the ring: 2 px of the party's colour, 2 px of the table, the head's 50 px */
+.up-fh__gap { width: 54px; height: 54px; display: grid; place-items: center; background: var(--_plate); clip-path: circle(50%); }
+.up-fh__disc { width: 50px; height: 50px; display: grid; place-items: center; background: var(--ork-panel); clip-path: circle(50%); }
+.up-fh__disc > img { width: 38px; height: auto; }
+.up-fh__head.is-news .up-fh__ring { background: var(--party-hue, var(--ork-ink)); }
+.up-fh__head.is-asks .up-fh__ring { background: var(--ork-alert); }
+.up-fh__head[aria-pressed="true"] .up-fh__ring { background: var(--ork-ink); }
+.up-fh__head[aria-pressed="true"] .up-fh__disc { background: var(--ork-raised); }
+.up-fh__head.is-faint { opacity: 0.4; }
+.up-fh__news, .up-fh__ask { position: absolute; top: 0; right: var(--ork-1); box-sizing: border-box; width: 22px; height: 22px; display: grid; place-items: center; clip-path: circle(50%); }
+.up-fh__news { background: var(--ork-panel); color: var(--ork-ink); box-shadow: inset 0 0 0 2px var(--party-hue, var(--ork-ink)); }
+.up-fh__ask { background: var(--ork-alert); color: var(--ork-on-ink); font: var(--ork-type-label); font-size: 14px; line-height: 1; font-weight: 800; }
+.up-fh__name { max-width: 66px; font: var(--ork-type-label); text-transform: none; letter-spacing: 0; font-size: 14px; line-height: 18px; font-weight: 500; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-fh__head[aria-pressed="true"] .up-fh__name { color: var(--ork-ink); font-weight: 700; }
+
+/* the labels over the blocks (*Waits for you*, *New since your last look · 09:12*), the narrowed feed's line, *Nothing waits for you.*: on the felt's plate */
+.up-fd__lab { flex: none; align-self: flex-start; margin: var(--ork-4) 0 calc(var(--ork-2) * -1); padding: var(--ork-1) var(--ork-3); background: var(--_plate); font: var(--ork-type-label); font-size: 14px; font-weight: 700; }
+.up-fd__only { flex: none; align-self: flex-start; margin: 0; padding: var(--ork-1) var(--ork-3); background: var(--_plate); font: var(--ork-type-caption); color: var(--ork-ink); }
+
+
+/* a block of several goals: sideways cards, a button each way */
+.up-fd__car { display: flex; gap: var(--ork-4); margin: 0 calc(var(--ork-5) * -1); padding: var(--ork-1) var(--ork-5); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--ork-5); scrollbar-width: none; }
+.up-fd__car::-webkit-scrollbar { display: none; }
+.up-fd__gc { appearance: none; flex: none; box-sizing: border-box; width: 156px; min-height: 112px; margin: 0; padding: var(--ork-4) var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-2); scroll-snap-align: start;
+  border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-raised); color: var(--ork-ink); text-align: left; cursor: pointer; box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)); }
+.up-fd__gc:focus-visible { outline: 0; box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), inset 0 0 0 2px var(--ork-ink); }
+.up-fd__gtop { display: flex; align-items: center; gap: var(--ork-2); }
+.up-fd__gtop .ork-sign { color: var(--ork-ink-muted); }
+.up-fd__gcn { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-heading); font-size: 16px; line-height: 20px; }
+.up-fd__gfoot { margin-top: auto; display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-caption); font-size: 14px; line-height: 18px; color: var(--ork-ink-muted); }
+.up-fd__arrows { display: flex; justify-content: flex-end; gap: var(--ork-4); }
+.post-card .ork-btn.up-fd__arrow { min-width: var(--ork-tap); padding: 0; justify-content: center; }
+.up-fd__arrow .ork-icon { width: 20px; height: 20px; }
+
+/* a party's concerns in the feed narrowed to it */
+.up-fd__concerns { flex: none; box-sizing: border-box; padding: var(--ork-5); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); clip-path: var(--ork-notch); color: var(--ork-ink); }
+.up-fd__concerns:empty { display: none; }
+.up-fd__concerns .up-concern:last-child { border-bottom: 0; }
+
+/* the seen line: *You have seen everything since 09:12* between two rules, then one round row with the small heads and a chevron; pressed, its cards spread, each card's head showing */
+.up-fd__seen { flex: none; display: flex; flex-direction: column; gap: var(--ork-4); }
+.up-fd__seenline { appearance: none; box-sizing: border-box; width: 100%; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-4); border: 0; background: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); font-weight: 600; text-align: left; cursor: pointer; }
+.up-fd__seenline:focus-visible { outline: 0; }
+.up-fd__seenline:focus-visible .up-fd__seenrow { box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.up-fd__caught { display: flex; align-items: center; gap: var(--ork-4); font-size: 14px; line-height: 18px; }
+.up-fd__caught::before, .up-fd__caught::after { content: ""; flex: 1; height: var(--ork-line); background: var(--ork-frame); }
+.up-fd__caught > .ork-icon { flex: none; width: 16px; height: 16px; color: var(--ork-success); }
+.up-fd__seenwords { flex: none; max-width: 70%; padding: 0 var(--ork-2); background: var(--_plate); }
+.up-fd__seenrow { box-sizing: border-box; min-height: 52px; display: flex; align-items: center; gap: var(--ork-4); padding: var(--ork-3) var(--ork-5); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); color: var(--ork-ink);
+  clip-path: var(--ork-notch); }
+.up-fd__seenrow > .ork-icon { flex: none; width: 18px; height: 18px; color: var(--ork-ink-muted); }
+.up-fd__seenwhat { flex: 1; min-width: 0; font: var(--ork-type-heading); font-size: 16px; line-height: 20px; }
+.up-fd__smalls { flex: none; display: flex; }
+.up-fd__small { width: 30px; height: 30px; display: grid; place-items: center; background: var(--ork-panel); clip-path: circle(50%); }
+.up-fd__small > img { width: 22px; height: auto; }
+.up-fd__small + .up-fd__small { margin-left: calc(var(--ork-4) * -1); }
+.up-fd__spread { display: flex; flex-direction: column; gap: var(--ork-2); }
+.post-card--seen { padding: var(--ork-4) var(--ork-5); gap: var(--ork-3); }

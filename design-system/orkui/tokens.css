@@ -1,18 +1,18 @@
-/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.39.0, look office). Do not edit. */
+/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.41.0, look office). Do not edit. */
 
 :root[data-look="office"] {
   color-scheme: dark;
   --ork-canvas: #151412;
   --ork-room: #090807;
-  --ork-panel: #1e1c1a;
-  --ork-raised: #282622;
+  --ork-panel: #1f1d1a;
+  --ork-raised: #2e2b27;
   --ork-paper: #1a1816;
-  --ork-frame: #3a3832;
+  --ork-frame: #45423b;
   --ork-edge: #908a82;
-  --ork-ink: #dedbd6;
-  --ork-ink-muted: #aca8a1;
-  --ork-ink-faint: #98948e;
-  --ork-ink-read: #cac7c1;
+  --ork-ink: #ebe7e0;
+  --ork-ink-muted: #bbb6ad;
+  --ork-ink-faint: #a8a39a;
+  --ork-ink-read: #d6d2ca;
   --ork-on-ink: #151412;
   --ork-action: #6aa84f;
   --ork-action-hi: #7fbf5f;
@@ -25,12 +25,12 @@
   --ork-elem-ice: #82aaff;
   --ork-elem-dust: #b8914f;
   --ork-elem-void: #8e88a8;
-  --ork-elem-lava: #ad6a5a;
+  --ork-elem-lava: #b56f5e;
   --ork-table: #1a1816;
-  --ork-table-rim: #3a3832;
+  --ork-table-rim: #45423b;
   --ork-table-rim-hi: #47443e;
-  --ork-card: #2a2e31;
-  --ork-card-frame: #383d41;
+  --ork-card: #33373a;
+  --ork-card-frame: #4c5257;
   --ork-mana: #7b97b8;
   --ork-portal: #b27bf6;
   --ork-portal-hi: #d5a8ff;
@@ -109,10 +109,10 @@
   --ork-leather-lo: #4a3020;
   --ork-leather-edge: #2a1a10;
   --ork-stitch: #c9a97a;
-  --ork-font-pixel: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
-  --ork-font-text: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --ork-font-read: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --ork-font-code: var(--ork-font-text);
+  --ork-font-pixel: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ork-font-text: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ork-font-read: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ork-font-code: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ork-motion-quick: 120ms;
   --ork-motion-base: 180ms;
   --ork-motion-sure: 250ms;
@@ -124,27 +124,34 @@
   --ork-motion-rise: 4px;
   --ork-motion-press: 0.96;
   --ork-motion-shards: 6;
-  --ork-type-title: 500 16px/20px var(--ork-font-pixel);
-  --ork-type-title-case: uppercase;
-  --ork-type-title-track: 0.04em;
-  --ork-type-heading: 500 14px/16px var(--ork-font-pixel);
-  --ork-type-heading-case: uppercase;
-  --ork-type-heading-track: 0.04em;
+  --ork-type-title: 700 19px/24px var(--ork-font-pixel);
+  --ork-type-title-case: none;
+  --ork-type-title-track: 0.01em;
+  --ork-type-heading: 700 15px/20px var(--ork-font-pixel);
+  --ork-type-heading-case: none;
+  --ork-type-heading-track: 0.01em;
   --ork-type-label: 600 12px/16px var(--ork-font-read);
   --ork-type-label-case: uppercase;
   --ork-type-label-track: 0.08em;
-  --ork-type-button: 500 13px/16px var(--ork-font-pixel);
+  --ork-type-button: 700 14px/18px var(--ork-font-pixel);
   --ork-type-button-case: none;
-  --ork-type-button-track: 0;
-  --ork-type-body: 400 14px/20px var(--ork-font-read);
+  --ork-type-button-track: 0.01em;
+  --ork-type-body: 400 15px/22px var(--ork-font-read);
   --ork-type-body-case: none;
-  --ork-type-body-track: 0;
-  --ork-type-caption: 400 12px/16px var(--ork-font-read);
+  --ork-type-body-track: 0.01em;
+  --ork-type-caption: 400 13px/18px var(--ork-font-read);
   --ork-type-caption-case: none;
-  --ork-type-caption-track: 0;
-  --ork-type-read: 400 15px/26px var(--ork-font-read);
+  --ork-type-caption-track: 0.01em;
+  --ork-type-read: 400 16px/26px var(--ork-font-read);
   --ork-type-read-case: none;
-  --ork-type-read-track: 0;
+  --ork-type-read-track: 0.01em;
+  --ork-type-heading-phone: 700 17px/22px var(--ork-font-pixel);
+  --ork-type-button-phone: 700 15px/18px var(--ork-font-pixel);
+  --ork-type-label-phone: 600 14px/18px var(--ork-font-read);
+  --ork-type-body-phone: 400 17px/24px var(--ork-font-read);
+  --ork-type-caption-phone: 400 15px/20px var(--ork-font-read);
+  --ork-type-title-phone: 700 19px/24px var(--ork-font-pixel);
+  --ork-type-read-phone: 400 17px/28px var(--ork-font-read);
   --ork-1: 2px;
   --ork-2: 4px;
   --ork-3: 6px;
@@ -162,11 +169,16 @@
   --ork-tabbar: 56px;
   --ork-keyline: 24px;
   --ork-line: 1px;
-  --ork-radius: 0px;
+  --ork-radius: 10px;
+  --ork-radius-card: 10px;
+  --ork-radius-control: 6px;
+  --ork-radius-inset: 5px;
   --ork-double: 3px;
   --ork-notch-size: 2px;
-  --ork-notch: polygon(2px 0, calc(100% - 2px) 0, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 0 calc(100% - 2px), 0 2px);
+  --ork-notch-control: inset(0 round 6px);
+  --ork-notch: inset(0 round 10px);
   --ork-scrim: rgb(0 0 0 / 0.6);
+  --ork-light-edge: inset 0 1px 0 rgb(255 255 255 / 0.06);
 
   /* the old role names, so shared components and old rules take the new colours */
   --canvas: var(--ork-canvas);
@@ -287,13 +299,13 @@
   --space-6: 24px;
   --space-8: 32px;
   --radius-0: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-full: 0px;
-  --ok-radius: 0px;
-  --ok-radius-md: 0px;
-  --ok-radius-lg: 0px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 10px;
+  --radius-full: 999px;
+  --ok-radius: 6px;
+  --ok-radius-md: 10px;
+  --ok-radius-lg: 10px;
   --ok-stroke: 1px;
   --ok-frame: 1px;
   --ok-control: 24px;
@@ -324,11 +336,12 @@
 /* The phone: the same look at a thumb's size (sizes in px at the system's default text size). */
 @media (max-width: 1023px) {
   :root[data-look="office"] {
-    --ork-type-heading: 500 16px/20px var(--ork-font-pixel);
-    --ork-type-button: 500 16px/20px var(--ork-font-pixel);
-    --ork-type-label: 600 14px/16px var(--ork-font-read);
-    --ork-type-body: 400 16px/22px var(--ork-font-read);
-    --ork-type-caption: 400 13px/18px var(--ork-font-read);
+    --ork-type-heading: 700 17px/22px var(--ork-font-pixel);
+    --ork-type-button: 700 15px/18px var(--ork-font-pixel);
+    --ork-type-label: 600 14px/18px var(--ork-font-read);
+    --ork-type-body: 400 17px/24px var(--ork-font-read);
+    --ork-type-caption: 400 15px/20px var(--ork-font-read);
+    --ork-type-title: 700 19px/24px var(--ork-font-pixel);
     --ork-type-read: 400 17px/28px var(--ork-font-read);
     --ork-control: 40px;
     --ork-row: 44px;

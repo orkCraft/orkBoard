@@ -226,7 +226,7 @@ async def test_a_texts_tile_shows_its_words_the_first_lines_in_the_tile_and_all_
         warm = raised.locator('.pk[data-key="B"] .pk__words')
         assert "Welcome back." in await warm.inner_text()
         assert await raised.locator('.pk[data-key="C"] .pk__words').inner_text() == "# Sign in\n\nUse your passkey."      # Markdown keeps its marks: what is written keeps its words
-        assert await warm.evaluate("e => getComputedStyle(e).fontFamily.includes('Plex') && !getComputedStyle(e).fontFamily.includes('Pixelify')")     # never the pixel face
+        assert await warm.evaluate("e => getComputedStyle(e).fontFamily.includes('Rubik')")     # the one face, Rubik
         await _shot_to(page, "pick-texts")
         await raised.locator('[data-act="open-screen"]').click()
         screen = page.locator(".screen .pks.is-swipe")

@@ -11,6 +11,7 @@ import { ORKUI } from "../orkui.js";
 import { TARGETS } from "../board/target.js";
 import { command, toast } from "../link.js";
 import { pctShort, rated } from "../spend.js";
+import { setPostWorld } from "./post.js";
 
 export const GENERAL = "general";                       // the system's party: it has no tab of its own
 export const WHOLE = "The whole project";
@@ -30,6 +31,7 @@ export const columnOn = () => wide.value && !uprightNow.value;
 
 /** Every party of the project in the Board's order, General left out: what everything that looks a party up by its slug needs (a map's name, a question's party, the open tab). */
 export const partiesAll = () => goalsOf(mapData.value, goalList().map((x) => x.slug)).filter((g) => g.slug !== GENERAL);
+setPostWorld({ parties: partiesAll, nodes: () => mapData.value?.nodes || [], orkmaster: () => mapData.value?.project?.orkmaster || null });      // table/post.js asks the Board through these and imports none of it
 
 const LIVE_CRAFTS = ["run", "liveops"];
 /** Whether a decided goal's wait runs (spec 120 §3.5: the leaders agreed, not held, not yet ended): it goes on by itself, so its decision asks nothing of the person (decisions §240). */

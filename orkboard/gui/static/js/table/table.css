@@ -54,7 +54,12 @@
 .table-tab.is-off .table-tab__main, .table-tab.is-off .table-tab__txt { color: var(--ork-ink-faint); }      /* a party the picked goal's route does not pass: grey, its head asleep (tabs.js) */
 .table-tab.is-off .table-seatbox { opacity: 0.6; }
 /* a party whose map has an alert (concerns.js `hasAlert`): orkUI's alert sign in the alert tone at the tab's foot, no count (decisions §145.3) */
-.table-tab__alert { position: absolute; right: var(--ork-2); top: var(--ork-2); display: inline-flex; color: var(--ork-alert); pointer-events: none; }
+/* the desktop's tabs on their chairs, no ring (decisions §294; the phone keeps its rings): the head stands on its chair's back (the open leader's grander), a dot in its party's colour beside it for news and a yellow round ! when it asks, never a number and never a colour alone: each carries its words (`title`, `aria-label`) and the ! its sign; hard-stop circles, orkUI's sheets draw no round corner. */
+.table-tab__alert { position: absolute; left: 34px; top: 0; width: 20px; height: 20px; display: grid; place-items: center; color: var(--ork-on-ink); pointer-events: none;
+  background: radial-gradient(circle 10px, var(--ork-alert) 0 8px, var(--ork-room) 8px 10px, transparent 10px); }
+.table-tab__alert .ork-sign { width: 12px; height: 12px; }
+.table-tab__new { position: absolute; left: 46px; bottom: var(--ork-5); width: 14px; height: 14px; pointer-events: none;
+  background: radial-gradient(circle 7px, var(--party-hue, var(--ork-ink-muted)) 0 5px, var(--ork-room) 5px 7px, transparent 7px); }
 .table[data-compact="true"] .table-tab { justify-content: center; padding: var(--ork-2) 0 0; }
 .table[data-compact="true"] .table-tab__txt { display: none; }
 /* a row of heads: the open head stands in the middle of its cell, the tab's button lies under it over the whole cell */
