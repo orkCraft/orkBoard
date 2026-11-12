@@ -67,7 +67,7 @@ from orkboard.gui.ideas_gate import GateMixin, gate_commands
 from orkboard.gui.ideas_goals import GoalsMixin
 from orkboard.gui.ideas_hearing import hearing_commands
 from orkboard.gui.ideas_say import say_commands
-from orkboard.gui.ideas_mats import mats_commands
+from orkboard.gui.ideas_mats import mats_commands, played
 from orkboard.gui.ideas_map import MapMixin
 from orkboard.gui.ideas_party import PartyMixin, stage_commands
 from orkboard.gui.ideas_pick import PickMixin
@@ -772,5 +772,5 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
         table.update(sketch_commands(self))                # spec 121 A: *Sketch it first*, *No sketch* (gui/ideas_sketch.py)
         table["ideas.night"] = self.night                  # spec 121 D: what the night did, for the morning's card (gui/ideas_recap.py)
         table["ideas.feed"] = self.feed                    # goal 169 E: the phone's feed, what waits first, then the leaders' posts (gui/ideas_recap.py)
-        return {name: guarded(name, fn) for name, fn in table.items()}
+        return {name: played(self, name, guarded(name, fn)) for name, fn in table.items()}
 

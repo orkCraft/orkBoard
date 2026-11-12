@@ -3,13 +3,59 @@
     ideas.turns {}      # the moves that wait for the person (`realm/board_turns.py`): {turns: [{goal, kind, at, questions?}]}; read only, no model, no write
     ideas.verdicts {}   # each goal's tokens: {<goal>: [{leader, verdict, why, stance, for, against, instead, assumes}]}, one for each leader of its route that has said its `### Talk`
     ideas.tables {}     # each party's framework: {<party>: {architecture | jtbd: its cards}}; what is not laid is empty and says who fills it, never an example
+    ideas.undo {idea}   # the goal's last one-press move put back (`core/idea_undo.py`), only while its page is still as the move left it
+    ideas.take_back {slug}   # a Drop's Undo
+    A one-press move (`ideas.drop`, `ideas.queue` for Hold, `ideas.answer`) keeps its Undo and logs `move_played`; a sealed one (Merge into main, Send to a branch, Ship a release) goes only with `sealed: true`.
 """
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-from orkboard.realm import board_turns, code_layers, ideas, opportunity_tree, page_talk
+from orkboard.core import idea_undo
+from orkboard.gui.ideas_args import IdeasError, _device
+from orkboard.realm import board_turns, code_layers, event_log, ideas, opportunity_tree, page_talk
+
+SEALED_BY = {"ideas.to_main": "merge_main", "ideas.gate_merge": "merge_main", "ideas.goal_to_dev": "send_branch", "ideas.release_out": "ship_release",
+             "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass"}
+ONE_PRESS_BY = ("ideas.drop", "ideas.queue", "ideas.answer")
+
+
+def move_kind(name: str, args: dict) -> str:
+    """The kind of the hand's move a command is ("" for any other): a Hold is the queue's `hold` (or the old `night`), an answer is a question's way (not a party's)."""
+    if name in SEALED_BY:
+        return SEALED_BY[name]
+    if name == "ideas.drop":
+        return "drop"
+    if name == "ideas.queue":
+        return "hold" if args.get("queue") in ("hold", "night") else ""
+    return "answer" if name == "ideas.answer" and args.get("goal") is not True else ""
+
+
+def played(ideas_: Any, name: str, fn: Any) -> Any:
+    """`gui/ideas.py`'s `guarded` runs a command through this: a sealed kind is refused unless the page sends its seal; a one-press move keeps its Undo and logs `move_played`."""
+    if name not in SEALED_BY and name not in ONE_PRESS_BY:
+        return fn
+
+    def run(args: dict) -> Any:
+        kind = move_kind(name, args)
+        if not kind:
+            return fn(args)
+        if idea_undo.way(kind) == "sealed":
+            if args.get("sealed") is not True:
+                raise IdeasError(f"{idea_undo.SEALED[kind]} cannot be undone: it goes only on its seal")
+            return fn(args)
+        slug = args.get("slug") if isinstance(args.get("slug"), str) else ""
+        if not slug:
+            return fn(args)
+        i = ideas_
+        before = idea_undo.snapshot(i.root(), i.state_dir, slug)
+        got = fn(args)
+        origin = args["from"] if args.get("from") in ("hand", "mat") else ""
+        if idea_undo.keep(i.state_dir, slug, kind, before, idea_undo.snapshot(i.root(), i.state_dir, slug), i.host.publish, origin):
+            i._ev(event_log.MOVE_PLAYED, args, idea=slug, kind=kind, **{"from": origin})
+        return got
+    return run
 
 
 class Mats:
@@ -53,6 +99,19 @@ class Mats:
             out["product"] = {"jtbd": jobs_to_be_done(opportunity_tree.read(self.i.state_dir))}
         return out
 
+    def undo(self, args: dict, kind: str = "", key: str = "idea") -> dict:
+        slug = args.get(key)
+        if not isinstance(slug, str) or not slug.strip():
+            raise IdeasError(f"{key} is not text")
+        got = idea_undo.undo(self.i.root(), self.i.state_dir, slug.strip(), self.i.host.publish, kind)
+        self.i.tree_note(slug.strip(), "undone")
+        self.i._ev(event_log.MOVE_UNDONE, args, idea=slug.strip(), kind=got["kind"])
+        self.i.changed(slug.strip())
+        return {"ok": True, **got}
+
+    def take_back(self, args: dict) -> dict:
+        return self.undo(args, "drop", "slug")
+
 
 ASKS_JOBS = "Product lays its jobs"
 ASKS_PEOPLE = "Product asks the person who the people are"
@@ -76,4 +135,5 @@ def jobs_to_be_done(rec: dict) -> dict:
 def mats_commands(ideas_: Any) -> dict:
     """The cards' commands by name (`gui/ideas.py` adds them to its table: `**mats_commands(self)`)."""
     m = Mats(ideas_)
-    return {"ideas.turns": m.turns, "ideas.verdicts": m.verdicts, "ideas.tables": m.tables}
+    return {"ideas.turns": m.turns, "ideas.verdicts": m.verdicts, "ideas.tables": m.tables,
+            "ideas.undo": m.undo, "ideas.take_back": m.take_back}

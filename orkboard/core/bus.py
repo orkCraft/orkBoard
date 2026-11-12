@@ -39,7 +39,9 @@ SIGN_IN = "sign_in"  # harness, tool, state, by, auto, why, command, waiting: a 
 SIGNED_IN = "signed_in"  # harness: a tool is signed in again; what was held for it goes on (spec 45 §6)
 TOOL_MOVED = "tool_moved"  # from, to, until: the tool the work goes to changed (the Main tool ran dry, or is back): once a change (realm/tool_now.py, spec 105 §2.5)
 MAIN_CHECK = "main.check"  # idea, checks: a step of the checks on a goal's way into main ([{name, state, words}], gui/ideas_gate.py, spec 111 §4.2); the face reads the snapshot's `main_checks`
-LOOK = "look"        # the greeting of "since your last look" changed (core/last_look.py): a face draws it again
+MOVE_PLAYED = "move.played"  # idea, kind, origin: a one-press move of the hand was played and its Undo kept (core/idea_undo.py, spec 171 D)
+MOVE_UNDONE = "move.undone"  # idea, kind: that move was put back
+LOOK = "look"       # the greeting of "since your last look" changed (core/last_look.py): a face draws it again
 
 
 @dataclass(frozen=True)
