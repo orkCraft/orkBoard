@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -91,8 +92,11 @@ def test_orkboard_on_the_desktop_the_four_panes_a_goal_saved_and_needs_you_no_ca
             made = {r["slug"]: r for r in board.command("ideas.roles")["roles"]}
             assert made["copywriter"]["craft"] == "marketing" and made["growth"]["takes"] == ["campaign"]   # the party's agents: the project's roles
             pg.locator(f'.table-tab[data-tab="{g["slug"]}"]').click()                               # its tab
-            pg.locator(".table-head").wait_for(timeout=WAIT_MS)             # the party's header says who is in it
-            assert pg.locator(".table-seat").count() >= 2
+            pg.locator(".table-head").wait_for(timeout=WAIT_MS)             # the party's header: the leader's small cards (spec 168 E1)
+            pg.get_by_role("button", name=re.compile(r"'s menu$")).first.click()
+            pg.get_by_role("menuitem", name="Seats and tools").click()                              # who is in it lies in its leader's inventory (decisions §283.16.2)
+            pg.locator(".stall-seats").wait_for(timeout=WAIT_MS)
+            assert pg.locator(".stall-seats .table-seat").count() >= 2
             ask = pg.locator(".hand-card[data-kind=goal][data-party=marketing]")
             ask.wait_for(timeout=WAIT_MS)                    # the keeper's question of each party made: a card in the hand
             assert pg.locator(".hand").is_visible() and "Which channel first?" in ask.get_attribute("title")

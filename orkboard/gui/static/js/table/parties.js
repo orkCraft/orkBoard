@@ -131,6 +131,7 @@ export function Parties({ props = {}, close }) {
   const commit = async () => {
     const mine = over.peek();                                                        // what was over the pane when Start or Save was pressed: only that is closed at the end
     setBusy(true);
+    if (first) offered.add(currentProject.value?.path || "");                       // Start lays the table: its mount must not offer the first start again while the snapshot still has no party (useFirstStart)
     let failed = false;
     for (const { args } of todo) {
       if (!(await ask("ideas.goal_save", args))) { failed = true; break; }

@@ -71,14 +71,16 @@ def test_a_failed_card_wears_one_ring_and_a_faint_second_over_its_frame(table):
 
 @pytest.mark.browser
 def test_a_done_card_has_the_frame_and_no_ring(gui):
+    """A done goal in the discard is a post (decisions §293.1, which changes §276's thick frame for this card): a border and its party's colour as a 3 px top edge, and no ring of any colour."""
     pg, host, log = open_maps(gui, "wide")
     try:
-        card = pg.locator(".hand-done.hand-card").first
+        card = pg.locator(".release-lane .post-card--done").first
         card.wait_for(timeout=WAIT_MS)
-        got = lines(card.evaluate(FRAME))
-        assert [w for _, w in got] == [3, 4, 5], "the frame alone"
-        for ring in ("--ork-danger", "--ork-alert", "--ork-success"):
-            assert token(pg, ring) not in [c for c, _ in got], f"success is no ring and nothing else rings it ({ring})"
+        shadow, outline, border = card.evaluate("(e) => { const s = getComputedStyle(e); return [s.boxShadow, s.outlineStyle, s.borderTopWidth]; }")
+        assert re.fullmatch(r"rgb\([\d, ]+\) 0px 3px 0px 0px inset", shadow) and border == "1px", f"the post's top edge alone, inside its border: {shadow}"
+        assert outline == "none", "no outline ring"
+        for ring in ("--ork-danger", "--ork-alert"):
+            assert token(pg, ring) not in shadow, f"nothing rings a done card ({ring})"
     finally:
         pg.close()
     assert not log, "\n".join(log)
