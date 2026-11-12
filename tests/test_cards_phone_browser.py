@@ -16,6 +16,7 @@ pytest.importorskip("playwright.sync_api")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
 from tests import narrow  # noqa: E402
+from tests import mock_kit  # noqa: E402
 from tests.browser_kit import launch  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
@@ -27,7 +28,7 @@ SHOTS = os.environ.get("ORK_SHOTS", "")
 
 @pytest.fixture(scope="module")
 def base():
-    s = serve_mock.serve(0)
+    s = serve_mock.serve(0, mock_kit.lay_standard)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}"
     s.shutdown()

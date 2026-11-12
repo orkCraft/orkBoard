@@ -14,6 +14,7 @@ pytest.importorskip("playwright.sync_api")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
 from tests import narrow  # noqa: E402
+from tests import mock_kit  # noqa: E402
 from tests.browser_kit import launch  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
@@ -29,7 +30,7 @@ LIMITS = """() => import('/app/page/js/link.js').then(({ town }) => {
 
 @pytest.fixture(scope="module")
 def base():
-    s = serve_mock.serve(0)
+    s = serve_mock.serve(0, mock_kit.lay_standard)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}"
     s.shutdown()
@@ -106,7 +107,7 @@ def test_the_round_buttons_fan_is_new_goal_and_play_only_and_new_goal_opens_the_
         opts = pg.locator(".up-fan__opt")
         opts.first.wait_for(timeout=3000)
         assert [t.strip() for t in pg.locator(".up-fan__lab").all_inner_texts()] == ["New goal", "Play"]
-        assert pg.get_by_role("button", name="Inventory").count() == 0 and pg.get_by_role("button", name="History").count() == 0
+        assert pg.get_by_role("button", name="Inventory", exact=True).count() == 0 and pg.get_by_role("button", name="History", exact=True).count() == 0
         assert "is-open" in fan.get_attribute("class") and fan.locator(".ork-icon").count() == 1                 # the cross
         for el in opts.all():
             box = el.bounding_box()
@@ -118,30 +119,13 @@ def test_the_round_buttons_fan_is_new_goal_and_play_only_and_new_goal_opens_the_
         b.close()
 
 
-def test_a_turn_card_in_the_foot_opens_its_ways_and_a_battle_card_opens_the_battle_spread(base):
+def test_the_phones_hand_deals_no_turn_card_and_no_battle_card_until_stage_k_reads_ideas_turns(base):
+    """Was: a turn card in the foot opens its ways, a battle card opens the battle spread: three cards (an idea rated, a spec rated, a battle) laid by the mock's
+    `proposed.turns` and `proposed.battles`. The host lays no battle and the hand deals no turn from `ideas.turns` yet (goal 171 stage K), so the row holds none."""
     with sync_playwright() as p:
         b, pg, errors = phone(p, base + "/app/?mock=1")
-        turn = pg.locator(".up-card[data-kind=stops][data-key^='card:turn/']").first
-        turn.scroll_into_view_if_needed()
-        assert pg.locator(".up-card[data-key^='card:turn/']").count() == 3                                  # an idea rated, a spec rated, a battle
-        pg.locator(".up-card[data-key^='card:turn/'][data-key$='/rated']").click()
-        look = pg.locator(".up-look .hand-lifted[data-kind=turn]")
-        look.wait_for(timeout=5000)
-        for name in ("Play it", "Change it", "Put off", "Drop"):
-            assert look.get_by_role("button", name=name).count() == 1, name
-        assert look.get_by_role("button", name="Play it").is_disabled()                                      # Tech's risk blocks it, and the line says so
-        assert "risk blocks it" in look.inner_text()
-        look.get_by_role("button", name="Change it").click()
-        assert look.locator("textarea").is_visible()
-        look.get_by_role("button", name="Drop").click()
-        pg.wait_for_function("() => !document.querySelector(\".up-card[data-key$='/rated']\")", timeout=5000)
-        battle = pg.locator(".up-card[data-key$='/battle']")
-        battle.scroll_into_view_if_needed()
-        battle.click()
-        spread = pg.locator("[data-spread=battle]")
-        spread.wait_for(timeout=5000)
-        assert spread.locator(".bt-new .sp-card").count() == 1 and spread.locator(".sp-cards [data-way]").count() == 4
-        assert pg.locator(".up-look .hand-lifted[data-kind=battle]").count() == 0                         # the card went to the spread, not to an opened card
+        assert pg.locator(".up-card[data-key^='card:turn/']").count() == 0 and pg.locator(".up-card[data-kind=stops][data-key$='/battle']").count() == 0
+        assert pg.locator("[data-spread=battle]").count() == 0
         narrow.no_sideways(pg)
         assert not errors, errors
         b.close()

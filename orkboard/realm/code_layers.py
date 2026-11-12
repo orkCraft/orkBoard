@@ -1,6 +1,6 @@
 """Tech's Architecture table, read from a project's own code (goal 171, stage C; `ideas.tables`): `orkboard/`'s packages, each module's line count, the
 imports between the packages, the realm modules that reach up into core, the rule `tests/test_architecture.py` keeps (core, realm and design never
-import gui) and the `~600 lines` rule of CLAUDE.md. Pure: it reads files and writes none; `tools/record_tables.py` calls it too."""
+import gui) and the `~600 lines` rule of CLAUDE.md. Pure: it reads files and writes none; the recording of `ideas.tables` (gui/ideas_mats.py) is its host answer."""
 from __future__ import annotations
 
 import ast
