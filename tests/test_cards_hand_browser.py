@@ -236,7 +236,12 @@ def test_drop_on_the_mat_sends_from_mat_and_undo_puts_the_page_back(turned_url):
 
 @pytest.fixture(scope="module")
 def crowded_url():
-    s = serve_mock.serve(0, mock_kit.lay_turned)                          # many cards in the hand: a crowded row (goal 171 stage N2)
+    def crowded(data):                                                     # many cards in the hand: a crowded row (goal 171 stage N2)
+        mock_kit.lay_turned(data)
+        more = [{"goal": g, "kind": "spec", "at": mock_kit.at(12, i)} for i, g in enumerate(
+            ("160-the-tools-of-a-craft", "159-a-ways-own-line", "158-the-window-as-a-table", "157-the-inventory-a-merchants-stall"))]
+        mock_kit.reply(data, "ideas.turns")["result"]["turns"] += more
+    s = serve_mock.serve(0, crowded)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}/?mock=1&table=cards"
     s.shutdown()
@@ -257,7 +262,8 @@ def test_a_crowded_hand_at_1440_keeps_each_cards_title_from_its_first_letter(cro
         pg.locator(".frame-hand button.hand-card--stop").first.wait_for(timeout=15000)
         pg.wait_for_timeout(800)
         got = pg.evaluate(TITLES)
-        assert len(got) >= 8, got                                          # crowded indeed
+        edges = pg.evaluate("() => [...document.querySelectorAll('.frame-hand button.hand-card--stop')].map((c) => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")
+        assert len(got) >= 5 and any(a[1] > b[0] + 1 for a, b in zip(edges, edges[1:])), edges   # crowded indeed: the cards lie over each other
         assert all(g["ok"] for g in got), [g for g in got if not g["ok"]]
         places = pg.evaluate("() => [...document.querySelectorAll('.frame-hand .hand-end button')].map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.right]; })")
         assert places and all(left >= 0 and right <= 1440 for left, right in places), places
