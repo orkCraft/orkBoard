@@ -78,7 +78,7 @@ def test_drop_sends_ideas_drop_and_the_goal_lies_face_down_in_the_dropped_pile_w
         opened(pg, page_url)
         pg.locator(f"{HAND}[data-kind=turn][data-goal='{TALK}']").click()                                  # its mat opens: the hand is its ways
         pg.locator(".mathand [data-way=drop]").click()
-        assert sent(pg, "ideas.drop") == [{"slug": TALK, "from": "mat"}]
+        assert sent(pg, "ideas.drop") == [{"slug": TALK, "from": "hand"}]
         pile = pg.locator("[data-pile=dropped]")
         pile.wait_for()
         assert pile.locator(".cards-dropped__pile").is_visible() and pile.locator(".cards-s").count() == 0      # face down: no card face, no number

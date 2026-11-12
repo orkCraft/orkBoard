@@ -207,13 +207,13 @@ def test_a_spec_all_written_has_start_the_work_on_its_seal_with_its_cost_said_an
         assert "Start the work" in seal.inner_text() and "cost not known yet" in seal.inner_text()                  # the host gives no estimate here: said so
         assert pg.locator(".mathand [data-way=start]").count() == 0 and pg.locator(".mathand [data-way=drop]").count() == 1      # Start is no way of the hand
         seal.click()
-        assert sent(pg, "ideas.start") == [{"slug": SPEC, "from": "mat", "sealed": True}]
+        assert sent(pg, "ideas.start") == [{"slug": SPEC, "from": "hand", "sealed": True}]
         pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
         assert pg.locator(f"{HAND}[data-goal='{SPEC}']").count() == 0
         b.close()
 
 
-def test_drop_on_the_mat_sends_from_mat_and_undo_puts_the_page_back(turned_url):
+def test_drop_on_the_mat_its_hand_card_opened_sends_from_hand_and_undo_puts_the_page_back(turned_url):
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
@@ -221,7 +221,7 @@ def test_drop_on_the_mat_sends_from_mat_and_undo_puts_the_page_back(turned_url):
         before = keys(pg)
         pg.locator(f"{HAND}[data-kind=turn][data-goal='{TALK}']").click()
         pg.locator(".mathand [data-way=drop]").click()
-        assert sent(pg, "ideas.drop") == [{"slug": TALK, "from": "mat"}]
+        assert sent(pg, "ideas.drop") == [{"slug": TALK, "from": "hand"}]
         pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
         assert pg.locator(f"{HAND}[data-goal='{TALK}']").count() == 0 and pg.locator("[data-pile=dropped]").count() == 1      # it lies face down in the Dropped pile
         toast = pg.locator(".gui-toast", has_text="Dropped:").first
@@ -231,6 +231,19 @@ def test_drop_on_the_mat_sends_from_mat_and_undo_puts_the_page_back(turned_url):
         pg.wait_for_function("(sel) => !!document.querySelector(sel)", arg=f"{HAND}[data-kind=turn][data-goal='{TALK}']", timeout=5000)
         assert pg.locator("[data-pile=dropped]").count() == 0
         assert sorted(keys(pg)) == sorted(before)
+        b.close()
+
+
+def test_a_mat_opened_from_the_table_sends_from_mat(turned_url):
+    """`from` says how the person reached the move: a mat opened from the table (no hand card) sends "mat", the hand card's mat "hand"."""
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = b.new_page(viewport={"width": 1440, "height": 900})
+        turned(pg, turned_url)
+        pg.evaluate("""async (slug) => { const sp = await import("/static/js/cards/spreads/open.js"); sp.openSpread({ kind: "track", slug }); }""", TALK)
+        pg.locator("[data-spread=track]").wait_for(timeout=5000)
+        pg.locator(".mathand [data-way=drop]").click()
+        assert sent(pg, "ideas.drop") == [{"slug": TALK, "from": "mat"}]
         b.close()
 
 

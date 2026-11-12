@@ -31,7 +31,7 @@ export function turnCard(s, picked = [], pick = () => {}) {
 
 /** The mat a goal's move lies on (its talk all said, its spec all written): the goal's stages; the card goes back to the hand, where the focus returns when the mat is put away. */
 export function openMoveMat(s, from) {
-  openSpread({ kind: "track", slug: s.ref.slug, from });
+  openSpread({ kind: "track", slug: s.ref.slug, from, opened: "hand" });      // opened by its hand card: its moves are sent `from: "hand"` (the mat opened from the table sends "mat")
 }
 
 /** A card of a move that waits, in play: a question's ways the hand's row, else its mat opened. */

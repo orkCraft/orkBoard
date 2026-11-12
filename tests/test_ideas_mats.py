@@ -155,3 +155,49 @@ def test_a_leader_not_on_the_card_and_a_part_of_a_framework_are_asked_the_same_w
         host.command("ideas.ask_leader", {"party": "nobody", "framework": "A", "card": "b", "text": "?", "sealed": True})
     with pytest.raises(CommandError, match="No goal"):
         host.command("ideas.reply", {"slug": "nope", "leader": "tech", "text": "?", "sealed": True})
+
+
+def test_a_sealed_move_logs_move_played_with_its_kind_and_from_and_keeps_no_undo(host):
+    """Goal 171 O2: a sealed move that went logs `move_played` (kind, from); a refused one logs nothing; no Undo is kept."""
+    from orkboard.gui.board_host import CommandError
+    from orkboard.realm import event_log
+    lay(host, PAGE.format(p="x", t=TALK))
+    _faked(host, [])
+
+    def played():
+        return [r for r in event_log.read(host.repo_root) if r["event"] == "move_played"]
+    with pytest.raises(CommandError):
+        host.command("ideas.reply", {"slug": "goal", "leader": "tech", "text": "Why?", "from": "hand"})      # unsealed: refused
+    with pytest.raises(CommandError, match="no plan yet"):
+        host.command("ideas.start", {"slug": "goal", "from": "mat", "sealed": True})                        # the host refuses
+    assert played() == []
+    for n, origin in enumerate(("hand", "mat")):
+        host.command("ideas.reply", {"slug": "goal", "leader": "tech", "text": f"Why {n}?", "from": origin, "sealed": True})
+        _wait_ask(host)
+        rows = played()
+        assert len(rows) == n + 1 and rows[-1]["kind"] == "paid_pass" and rows[-1]["from"] == origin and rows[-1]["idea"] == "goal"
+    assert not (host.ideas.state_dir / "goals" / "goal" / "undo.json").exists()
+
+
+def test_each_sealed_kind_played_from_hand_or_mat_logs_one_move_played_and_a_refused_one_none(host):
+    """The wrapper itself, over a stand-in command: every sealed table entry logs its kind and `from` once it went, nothing when it raised."""
+    from orkboard.gui import ideas_mats
+    from orkboard.gui.board_host import CommandError
+    from orkboard.realm import event_log
+    table = {**ideas_mats.SEALED_BY, **ideas_mats.SEALED_ON_CARDS}
+
+    def count():
+        return len([r for r in event_log.read(host.repo_root) if r["event"] == "move_played"])
+
+    def refuse(a):
+        raise CommandError("no")
+    for name, kind in table.items():
+        for origin in ("hand", "mat"):
+            before = count()
+            ideas_mats.played(host.ideas, name, lambda a: {"ok": True})({"slug": "goal", "from": origin, "sealed": True})
+            rows = [r for r in event_log.read(host.repo_root) if r["event"] == "move_played"]
+            assert len(rows) == before + 1 and rows[-1]["kind"] == kind and rows[-1]["from"] == origin, (name, origin)
+            with pytest.raises(CommandError):
+                ideas_mats.played(host.ideas, name, refuse)({"slug": "goal", "from": origin, "sealed": True})
+            assert count() == before + 1
+    assert not (host.ideas.state_dir / "goals" / "goal" / "undo.json").exists()

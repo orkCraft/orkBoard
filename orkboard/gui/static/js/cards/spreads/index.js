@@ -15,7 +15,7 @@ import { Battle } from "./battle.js";
 export function Spreads() {
   const s = spread.value;
   if (!s) return null;
-  if (s.kind === "track") return html`<${Track} key=${s.slug} slug=${s.slug} />`;
+  if (s.kind === "track") return html`<${Track} key=${s.slug} slug=${s.slug} opened=${s.opened} />`;
   if (s.kind === "gate") return html`<${Gate} key=${s.slug} slug=${s.slug} />`;
   if (s.kind === "diff" && s.p) return html`<${Diff} key=${s.p.at + s.p.text} p=${s.p} />`;
   if (s.kind === "cost") return html`<${Cost} />`;
