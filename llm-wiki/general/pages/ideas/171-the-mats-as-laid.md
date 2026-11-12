@@ -102,7 +102,7 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - [x] N3. Design's not accepted, the second time: the track mat's zone whole at 390
   - party: Tech (a simpler model). The track mat's field starts at its top as the gate's does, so its zone's label and meeple lie whole on the zone's frame at 390×844; tests/test_cards_mat_browser.py checks the zone labels at 390 too; the fit test flags a word cut off by its field instead of skipping it.
   - proves: Design's *Done when* lines 2 and 5, made again (the last time: what is still not met goes under Not accepted)
-- [ ] O2. Product's not accepted: H7's signal counts how the person reached a move
+- [x] O2. Product's not accepted: H7's signal counts how the person reached a move
   - party: Tech (a simpler model). A sealed move played from a hand card or a mat (Start the work, Merge into main, Send to a branch, Ship a release, a paid pass) logs `move_played` with its kind and `from` once it goes, and keeps no Undo (gui/ideas_mats.py `played()`); a move on a mat its hand card opened is sent `from: hand`, `from: mat` kept for a mat opened from the table (js/cards/spreads/track.js, trackstart.js; js/hand/turncards.js openMoveMat knows the card that opened it); tests/test_cards_hand_browser.py and the host's tests check both.
   - proves: Product's *Done when* line 5, made again
 - [ ] O. Product accepts the step
