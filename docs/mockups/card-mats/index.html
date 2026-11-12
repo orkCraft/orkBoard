@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard: a card's mats</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* A card's mats (goal 170's talk, 12 November 2026): a table is a seat's view of the whole project (the Orkmaster's lane, a leader's
+   lane and framework); everything about one card is a mat. An opened card shows its tokens' slips and a row of its mats, one a seat of
+   its route: the Orkmaster's (its route and stages), each leader's (its view, its section of the spec, its stage, its checks). A mat
+   pressed opens over the table as wide as the pane (the whole screen on a phone), the table kept under it; Esc or Back puts it away.
+   ?v=card|mat &face=desk|phone. Mockup only. */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 14px/19px var(--ork-font-read); }
+.face { position: relative; overflow: hidden; background: var(--ork-table); }
+.desk { width: 1440px; height: 900px; } .phone { width: 390px; min-height: 844px; }
+.tech { --hue: var(--ork-party-ork); --tool: url(../../../design-system/orkui/tools/drum-gear.svg); }
+.design { --hue: var(--ork-party-elf); --tool: url(../../../design-system/orkui/tools/bow-drip.svg); }
+.product { --hue: var(--ork-party-knight); --tool: url(../../../design-system/orkui/tools/map-cross.svg); }
+.om { --hue: var(--ork-party-orkmaster); }
+/* the table under, dimmed */
+.under { position: absolute; inset: 0; background: url(../table-grammar/shots/desk-rest.png) 0 0 / 1440px 900px; filter: brightness(.3) saturate(.6); }
+.ph-under { position: absolute; inset: 0; background: url(../table-grammar/shots/phone-rest.png) 0 0 / 390px auto; filter: brightness(.25); }
+
+.s { position: relative; flex: none; width: 210px; aspect-ratio: 2.5 / 3.5; padding: 34px 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.s .tl { position: absolute; left: 10px; top: 8px; width: 16px; } .s .tr { position: absolute; right: 10px; top: 8px; width: 16px; }
+.s .pic { width: 72px; } .s b { font: 700 18px/23px var(--ork-font-text); text-align: center; }
+.s .foot { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
+.s .when { font-size: 12px; color: var(--ork-ink-muted); } .s.sm { width: 120px; padding: 24px 8px 8px; } .s.sm .pic { width: 40px; } .s.sm b { font-size: 13px; line-height: 17px; }
+.toks { display: flex; gap: 5px; } .tk { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.tk .ring { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--ork-room); border: 2px solid var(--hue); }
+.tk .ring i { width: 16px; height: 16px; background: var(--hue); -webkit-mask: var(--tool) center / contain no-repeat; mask: var(--tool) center / contain no-repeat; }
+.pips { display: flex; gap: 1px; } .p { width: 6px; height: 6px; } .p.ok { background: var(--ork-success); } .p.q { box-shadow: inset 0 0 0 1.5px var(--ork-alert); } .p.r { background: var(--ork-danger); clip-path: polygon(0 0, 100% 0, 100% 45%, 45% 100%, 0 100%); }
+
+/* the opened card */
+.l { position: absolute; left: 50%; top: 40px; translate: -50% 0; width: 920px; padding: 20px 26px 22px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card);
+  box-shadow: inset 0 3px 0 var(--hue), 0 8px 0 var(--ork-room); display: grid; grid-template-columns: 230px 1fr; gap: 22px; }
+.l .shut, .mat .shut { position: absolute; right: 16px; top: 14px; padding: 4px 10px; border: 1px solid var(--ork-edge); font: 700 13px/16px var(--ork-font-text); }
+.l h2 { margin: 0 0 4px; font: 700 22px/27px var(--ork-font-text); } .l .sub { color: var(--ork-ink-read); font-size: 13px; }
+.lab { font: 700 11px/14px var(--ork-font-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ork-ink-muted); margin: 14px 0 8px; }
+.mats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.mt { position: relative; aspect-ratio: 3.5 / 2.5; max-height: 150px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; background: var(--ork-card); border: 1px solid var(--ork-card-frame);
+  border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.mt .h { display: flex; gap: 8px; align-items: center; } .mt .h img { width: 30px; } .mt .h b { font: 700 14px/17px var(--ork-font-text); } .mt .h small { display: block; color: var(--ork-ink-muted); font-size: 11px; line-height: 14px; }
+.mt p { margin: 0; font-size: 13px; line-height: 17px; color: var(--ork-ink-read); }
+.mt .ft { margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ork-ink-read); }
+.bar { flex: 1; height: 5px; background: var(--ork-room); } .bar i { display: block; height: 100%; background: var(--hue); }
+.shape { display: inline-grid; grid-template-columns: repeat(4, 1fr); gap: 2px; width: 26px; height: 14px; flex: none; } .shape i { border: 1px solid var(--hue); }
+.mt.idle { opacity: .55; } .mt.on { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.mt .state { position: absolute; right: 10px; top: 10px; font: 700 10px/13px var(--ork-font-text); letter-spacing: .08em; text-transform: uppercase; padding: 2px 6px; border: 1px solid var(--hue); color: var(--hue); }
+.asks { display: flex; gap: 14px; margin-top: 4px; } .asks span { font: 700 12px/15px var(--ork-font-text); text-decoration: underline; color: var(--ork-ink-read); }
+
+/* a mat opened */
+.mat { position: absolute; left: 236px; right: 300px; top: 72px; bottom: 196px; padding: 18px 24px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card);
+  box-shadow: inset 0 3px 0 var(--hue), 0 8px 0 var(--ork-room); display: grid; grid-template-rows: auto 1fr auto; gap: 14px; }
+.mat .hd { display: flex; gap: 12px; align-items: center; } .mat .hd img { width: 46px; } .mat .hd b { font: 700 20px/24px var(--ork-font-text); display: block; } .mat .hd small { color: var(--ork-ink-read); }
+.mat .back { display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 90px; font: 700 12px/15px var(--ork-font-text); color: var(--ork-ink-read); }
+.mat .back .s.mini { width: 46px; padding: 0; } .mat .back .s.mini * { display: none; }
+.cols { display: grid; grid-template-columns: 1fr 1fr 300px; gap: 20px; min-height: 0; }
+.col h4 { margin: 0 0 8px; font: 700 12px/15px var(--ork-font-text); letter-spacing: .1em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.sec { padding: 10px 12px; background: var(--ork-card); border: 1px solid var(--ork-frame); font-size: 13px; line-height: 18px; } .sec + .sec { margin-top: 8px; }
+.sec b { font: 700 13px/17px var(--ork-font-text); display: block; margin-bottom: 3px; }
+.line { display: grid; grid-template-columns: 12px 1fr; gap: 8px; align-items: baseline; } .line .p { translate: 0 -1px; }
+.tasks { display: flex; flex-direction: column; gap: 8px; }
+.task { display: flex; gap: 10px; align-items: center; padding: 8px 10px; background: var(--ork-card); border: 1px solid var(--ork-frame); box-shadow: inset 3px 0 0 var(--st); font-size: 13px; }
+.task img { width: 26px; } .task small { display: block; color: var(--ork-ink-muted); font-size: 11px; } .task.done { --st: var(--ork-success); } .task.run { --st: var(--ork-alert); } .task.wait { --st: var(--ork-edge); opacity: .7; }
+.note { position: relative; padding: 10px 12px 10px 18px; background: var(--ork-plaque); border: 1px solid var(--ork-leather); border-left: 4px solid var(--hue); }
+.note ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 17px; }
+.note li { display: grid; grid-template-columns: 12px 1fr; gap: 8px; align-items: baseline; } .note li small { display: block; color: var(--ork-ink-read); font-size: 12px; }
+.note .rl { margin-top: 8px; display: inline-block; font: 700 12px/15px var(--ork-font-text); text-decoration: underline; }
+.mfoot { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ork-ink-muted); } .mfoot .kb { padding: 1px 5px; border: 1px solid var(--ork-edge); }
+
+/* the phone */
+.ph { position: relative; padding: 12px; display: flex; flex-direction: column; gap: 12px; background: var(--ork-panel); min-height: 844px; }
+.ph .top { display: flex; align-items: center; gap: 10px; } .ph .top b { font: 700 17px/21px var(--ork-font-text); } .ph .top .shut { margin-left: auto; padding: 4px 9px; border: 1px solid var(--ork-edge); font: 700 13px/16px var(--ork-font-text); }
+.ph .top img { width: 34px; }
+.ph .s { width: 150px; align-self: center; padding: 26px 10px 10px; } .ph .s .pic { width: 50px; } .ph .s b { font-size: 15px; line-height: 19px; }
+.ph .mats { grid-template-columns: 1fr; } .ph .mt { aspect-ratio: auto; max-height: none; min-height: 88px; }
+.ph .cols { grid-template-columns: 1fr; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search), V = q.get("v") || "card", FACE = q.get("face") || "desk";
+const R = "../../../design-system/orkui/", H = { tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png", om: R + "races/peon-crown.png" };
+const pip = (k) => `<i class="p ${k}"></i>`;
+const tk = (who, ks) => `<span class="tk ${who}"><span class="ring"><i></i></span><span class="pips">${ks.map(pip).join("")}</span></span>`;
+const TOKS = tk("product", ["ok", "ok", "ok"]) + tk("tech", ["ok", "ok", "q", "r"]) + tk("design", ["ok", "ok"]);
+const TITLE = "One feed for the phone and the desk";
+const card = (cls = "") => `<div class="s product ${cls}"><img class="tl" src="${R}runes/comb.svg" alt=""><img class="tr" src="${R}signs/feature.svg" alt=""><img class="pic" src="${H.product}" alt=""><b>${TITLE}</b>
+  <span class="foot"><span class="when">at work</span><span class="toks">${TOKS}</span></span></div>`;
+const MATS = [
+  { who: "om", name: "The Orkmaster", sub: "its route and stages", text: "Product, then Tech and Design. Stage 2 of 3.", ft: `<span class="bar"><i style="width:45%"></i></span>45%`, state: "dealt" },
+  { who: "product", name: "Product", sub: "its section of the spec", text: "Will be: one feed a person reads on both. Done when: 3 lines.", ft: `<span class="shape"><i></i><i></i><i></i><i></i></span>Jobs to be done: one job`, state: "written" },
+  { who: "tech", name: "Tech", sub: "its section and its stage", text: "Stage 2 of 3 at work: one reader, two faces. 2 of 5 tasks done.", ft: `<span class="bar"><i style="width:40%"></i></span>2 of 5`, state: "at work", on: true },
+  { who: "design", name: "Design", sub: "its section of the spec", text: "Not started: its stage comes after Tech's.", ft: "waits for Tech's stage", state: "waits", idle: true },
+];
+const mt = (m, i) => `<div class="mt ${m.who}${m.on ? " on" : ""}${m.idle ? " idle" : ""}"><span class="state">${m.state}</span><div class="h"><img src="${H[m.who]}" alt=""><span><b>${m.name}</b><small>${m.sub}</small></span></div><p>${m.text}</p><span class="ft">${m.ft}</span></div>`;
+const ask = `<div class="asks">${["Product", "Tech", "Design"].map((n) => `<span>Ask ${n}…</span>`).join("")}</div>`;
+const SECTION = `<div class="sec"><b>Will be</b>One reader below both faces, realm/board_feed.py; the phone keeps its own order apart.</div>
+  <div class="sec"><b>Done when</b>
+    <div class="line">${pip("ok")}<span>The desktop and the phone read one feed</span></div>
+    <div class="line">${pip("ok")}<span>No module past 600 lines</span></div>
+    <div class="line">${pip("q")}<span>The phone keeps its own order <small style="color:var(--ork-ink-muted)">· waits for your answer</small></span></div></div>`;
+const TASKS = `<div class="tasks"><div class="task done"><img src="${H.tech}" alt=""><span>Move the sort into one reader<small>done · gate green</small></span></div>
+  <div class="task done"><img src="${H.tech}" alt=""><span>The desktop reads it<small>done</small></span></div>
+  <div class="task run"><img src="${H.tech}" alt=""><span>The phone reads it, its order apart<small>at work · a Grunt</small></span></div>
+  <div class="task wait"><img src="${H.tech}" alt=""><span>Tests of both faces<small>waits</small></span></div><div class="task wait"><img src="${H.tech}" alt=""><span>The old sort goes<small>waits</small></span></div></div>`;
+const CHECKS = `<div class="note tech"><b style="font:700 13px/16px var(--ork-font-text)">Its checks</b><ul><li>${pip("ok")}<span>One reader</span></li><li>${pip("ok")}<span>No module past 600 lines</span></li>
+  <li>${pip("q")}<span>Does the phone keep its own order?<small>it cannot be rated without your answer</small></span></li><li>${pip("r")}<span>Two faces share one sort<small>fixed by: the phone's order kept apart</small></span></li></ul><span class="rl">Reply to Tech</span></div>`;
+
+let html;
+if (FACE === "desk") {
+  html = V === "card"
+    ? `<div class="face desk"><span class="under"></span><div class="l product"><span class="shut">Close</span>${card()}
+        <div><h2>${TITLE}</h2><p class="sub" style="margin:0">at work · Product leads · its tokens' slips beside it as now (pressed)</p>${ask}
+          <p class="lab">Its mats · the work on this card, a seat each</p><div class="mats">${MATS.map(mt).join("")}</div>
+          <p class="sub" style="margin:12px 0 0">A mat pressed opens over the table as wide as the pane; the table stays under it.</p></div></div></div>`
+    : `<div class="face desk"><span class="under"></span><div class="mat tech"><span class="shut">Close</span>
+        <div class="hd"><img src="${H.tech}" alt=""><span><b>Tech on ${TITLE}</b><small>its mat · its section, its stage, its checks</small></span>
+          <span class="back"><span class="s mini product"></span>back to the card</span></div>
+        <div class="cols"><div class="col"><h4>Its section of the spec</h4>${SECTION}</div><div class="col"><h4>Its stage · 2 of 3 · 2 of 5 tasks</h4>${TASKS}</div><div class="col"><h4>Its verdict</h4>${CHECKS}</div></div>
+        <div class="mfoot">The lanes stay under it. <span class="kb">Esc</span> puts it away; the card opened again shows Tech's mat lit.</div></div></div>`;
+} else {
+  html = V === "card"
+    ? `<div class="face phone"><div class="ph product"><div class="top"><img src="${H.product}" alt=""><b>One feed…</b><span class="shut">Close</span></div>${card()}${ask}
+        <p class="lab">Its mats</p><div class="mats">${MATS.map(mt).join("")}</div></div></div>`
+    : `<div class="face phone"><div class="ph tech"><div class="top"><img src="${H.tech}" alt=""><b>Tech on One feed…</b><span class="shut">Back</span></div>
+        <div class="cols"><div class="col"><h4>Its section</h4>${SECTION}</div><div class="col"><h4>Its stage · 2 of 5</h4>${TASKS}</div><div class="col"><h4>Its verdict</h4>${CHECKS}</div></div></div></div>`;
+}
+document.getElementById("root").innerHTML = html;
+</script>
+</body>
+</html>
