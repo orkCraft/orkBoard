@@ -408,3 +408,58 @@ A leader's tier said by a small mark beside its head (`marks/rank-1..3`).
 ```
 Three small marks for a card-game interface on one sheet, three square tiles side by side, as the gear of the attached leaders' tiers but alone, in the humorous flat cartoon style: thick even dark outlines, flat colours with one shade each, no texture, no gradients, readable at 16 pixels. 1 a novice's mark: one bronze chevron; 2 a seasoned one's: two silver chevrons stacked; 3 a veteran's: three gold chevrons stacked under a small star. Each centred at the same size, a light rim. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
+
+## The mats (decision §300, §301): the sets they add
+
+What the mats need that no sheet above draws. The felt, the bronze frames, the printed zones, the plates, the fan of the ways and
+the phases' strip are orkUI's CSS (`.ork-table`, `.ork-plate`): no picture. The tokens are O7, the hourglass O8, the chairs O3b, the
+heads K1 to K6, the tools W1 and W2. A small sign or an emblem is a **white silhouette** coloured by code, as *No pixel left* says.
+
+### N1. The kinds of a card of the project's deck (attach R1 and S1)
+The top right corner of a part's card and of a decision's and a release's (§300.4, §300.12).
+```
+Twelve small signs for a card-game interface on one sheet, a 4x3 grid of square tiles, the same family as the attached sheets: each ONE flat pure WHITE chunky silhouette, its details cut out as gaps, no outline in another colour, no shading, no texture, no glow, readable at 16 pixels: bold simple shapes, no thin lines. Each is a THING of a fantasy realm, never a being and never a face. Each centred at the same size with a clear margin. Left to right, top to bottom: 1 a cameo brooch, an oval frame with a plain hooded bust in profile cut out as a gap (a persona); 2 a thick leather work glove, its fingers a little curled (a job); 3 a round boulder lying across a short path (a struggle); 4 an old patched boot, a patch sewn on its toe (what people use instead); 5 an empty picture frame, upright, a thick moulding (a screen); 6 a single brick, its mortar lines cut out as gaps (a part of the code); 7 a rolled measuring tape, its end pulled out a little (a measure); 8 a painter's palette with three paint blobs cut out as gaps and a brush across it (an asset); 9 a clay pot with a jagged crack down its side (an error); 10 a three-legged stool (a seat); 11 a rolled decree tied with a cord, a round seal hanging from it (a decision); 12 a small ship with one square sail, seen from the side (a release). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### E1. The mats' emblems (attach R1)
+The large quiet picture under a mat's zones (§300.15): tinted by code one step lighter than its felt, so it must read as a shape alone.
+```
+Twelve emblems for a card-game interface on one sheet, a 4x3 grid of square tiles, each ONE flat pure WHITE silhouette, large and simple, filling most of its tile, its inner details cut out as wide gaps, no outline in another colour, no shading, no texture, no glow, so it reads both at 300 pixels as a faint watermark and at 48 pixels: bold shapes, few parts, no thin lines. They are emblems of a tavern's card game, never letters, never a real logo. Left to right, top to bottom: 1 a fan of five playing cards held upright (the hand); 2 a round table seen from straight above with four round stools round it (a discussion); 3 three playing cards side by side, the middle one raised a little above the others (a compare); 4 two short swords crossed in an X, points up (a battle); 5 a castle gate's portcullis, its bars cut out as gaps, under a round arch (the gate); 6 a winding path of four round stepping stones from the bottom left to the top right (a flow); 7 five round knots joined by straight lines like a star map, one in the middle and four round it (a scheme); 8 a wooden type case seen from the front, three rows of three square cells cut out as gaps (slots); 9 three short stacks of cards side by side on a flat tray (the discard); 10 a road from the bottom to the top with three milestones beside it (a story map); 11 a long bench seen from the front with four stools standing behind it in a row (a team); 12 a half-unrolled scroll with evenly spaced short tick marks along its edge (the time axis). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### E2. The seal of a mat's move (attach K1 and O3a)
+A mat's one move (§300.15), its words laid on its plate by code; four states of one seal.
+```
+A seal button for a card-game interface on one sheet, a 2x2 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, a little chunky, the same warm bronze and brass as the attached backpack's buckles. The seal is a thick round bronze disc seen straight from above, its rim raised and notched like a coin's edge, a plain FLAT dark-brown round plate in its middle with NOTHING on it (words are laid there later), the same size in every tile. 1 the seal at rest, its rim warm bronze. 2 the same seal ready to be pressed: its rim a brighter gold, a thin bright ring just outside it (no glow, a hard flat ring). 3 the same seal pressed: drawn a little lower, its rim's top edge darker, as if pushed into the table. 4 the same seal that cannot be pressed yet: its rim a dull matte grey-bronze, flatter, no notches' highlights. Each centred with a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### E3. The mats' props and the project's deck (attach K1, O3a and W1)
+The thing that stands in a mat's corner (§300.15), its owner's; and the box the project's deck lies in (§300.12).
+```
+Six objects for a card-game interface on one sheet, a 3x2 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions, a little chunky, the warm wood and brass of a tavern as in the attached backpack. Each centred, the same scale, front-on or a slight three-quarter view, with a light rim so it reads on a very dark background. Left to right, top to bottom: 1 a small wooden abacus with brass rods and round wooden beads, some pushed to one side (the dealer counts); 2 a goblin miner's lantern, a squat iron frame, a warm flame inside behind glass (live things watched); 3 a parchment map rolled up and tied with a red ribbon, a corner unrolled showing a dotted path (the product's road); 4 a large iron spanner lying across two hex nuts (the engineers); 5 a small paint pot with a brush standing in it, a drip running down its side (the look); 6 a wooden card box with brass corners and a brass clasp, its lid open a little, the backs of plain cards seen inside (the project's deck). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+## Every set the final build needs (12 November 2026)
+
+One prompt a set, each written whole above: copy it as it is, attach what it names. *Made* is in orkUI; *to take* waits for a take
+in Gemini; *fix* is taken but one tile is drawn again (its section says how).
+
+| Set | What | Where it stands |
+|---|---|---|
+| K1–K4, K6, the moods sheet | the heads, the leaders' tiers, the members, the eighteen heroes, five moods | made |
+| K5, K7, K8 | the members' tiers; the moods | not needed (code; the moods sheet) |
+| K6, the fixes after the beta; K9–K13 | the heroes fixed; the heroes' moods | to take |
+| K14, K15 | the Orkmaster, a half-ork, half-goblin, its faces; at 16 px | to take |
+| P1–P4 | the cards' pictures: the ways of answering, the settings, a question's kinds | to take |
+| O1 | the potions | made (its top row) |
+| O2a, O2b | the die's faces; the die | O2a made; O2b fix (tile 2) |
+| O3a, O3b, O3c | the backpack and the book; the chairs; the leaders' backs | O3a fix (tile 2); O3b, O3c made |
+| O4, O5, O6 | the lamp's chain; the cards' backs; the pennant | O4 fix; O5, O6 to take |
+| O7–O11 | the tokens; the hourglass; the meeple; the dealer's hands; the tavern's table | to take |
+| R1, R2 | the runes | R1 fix (runes, not pictures); R2 to take |
+| S1–S4 | the small signs | S4 made; S1–S3 to take |
+| T1–T3 | the goal types' pictures | to take |
+| M1 | the moons | made but tile 3 (fix) |
+| W1–W3 | the races' tools; the tiers' marks | to take |
+| N1 | the kinds of a card of the project's deck | to take |
+| E1, E2, E3 | the mats' emblems; the seal; the props and the deck's box | to take |
