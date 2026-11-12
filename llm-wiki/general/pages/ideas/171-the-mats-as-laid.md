@@ -6,11 +6,11 @@ order: 18
 size:
 priority: normal
 short: The mats as laid
-phase: work
+phase: done
 route: product, design, tech
 by: claude-code
 schema: 3
-gate: c939561 · 151 files · red
+gate: 59b7de14 · 151 files · green
 ---
 # The mats as laid: ten layouts, the move on its mat, the project's deck, the backpack as mats, the team by the hero's steps
 
