@@ -47,7 +47,7 @@ def test_the_battle_card_in_the_hand_has_its_emblem_its_vs_line_its_corner_and_i
         assert card.locator(".ork-race__head").count() == 0                                   # no leader's head: the emblem is its picture
         text = card.inner_text()
         assert "vs §240 and " in text and "battle" in text and "Settle it" in text
-        assert card.evaluate("(el) => getComputedStyle(el.querySelector('.cards-emblem i.is-f')).borderTopWidth") == "1px"
+        assert card.evaluate("(el) => getComputedStyle(el.querySelector('.cards-emblem i.is-f')).borderTopWidth") == "2px"
         b.close()
 
 
