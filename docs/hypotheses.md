@@ -279,3 +279,34 @@ written, and on how many of them the view had been opened first.
 Keep the three heads and the calls that write them; consider the view on the phone (its own goal, §282.5) and a view
 that Product writes from its tree once goal 163 lands. If refuted, drop the call after each landing and keep the view
 only where the person asks for a look now.
+
+## H7. The person settles a goal's turns from the hand of moves that wait, not by looking for them on the table
+
+**Status:** open. **Raised:** 2026-11-12 (goal 171).
+
+### The belief
+
+The moves that wait (a question to answer, a Talk to read, a spec to accept) are laid as a hand of cards, one for each
+move, and the person settles a goal's turns from that hand. If they still find what waits by opening mats from the table
+or by looking in the old pane, the hand is a second place to look that costs a read of the Board every refresh and
+brings nothing.
+
+### What would prove it, what would refute it
+
+- **Holds** when, over the days on `?table=cards`, most moves are played from a hand card (`move_played` with
+  `from: hand`).
+- **Refuted** when the person finds what waits by opening mats from the table (`move_played` with `from: mat`) or by the
+  old pane: the hand is not where they look.
+
+### How we test it
+
+In the owner's days on `?table=cards`, on this repository first. The signal is the event `move_played` (idea, kind,
+from, device), which keeps no word of the person's or of a leader's; both `hand` and `mat` values are counted over the same
+days, and nothing leaves the person's machine without their yes (`orkboard usage`). The days are thin until goal 170's
+last step turns the cards on: the person keeps the old table by default behind `?table=cards`, so this says little until
+then.
+
+### If it holds
+
+Keep the hand as the place the moves that wait are settled, and grow its kinds only when a move asks to be there. If
+refuted, keep the moves on their mats and drop the hand's card for any kind that is played from a mat.

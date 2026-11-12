@@ -1,34 +1,19 @@
-// The frame every spread shares (docs/mockups/spreads/, desktop): a veil over the window, the Orkmaster's head with a line and what it
-// says, the field in the middle, the hand's strip under it (a note, the acts). Esc and *Close* put it away, the focus goes back to what
+// The frame every spread shares is `../matframe.js`'s (goal 171 H): the mat on the felt, the Orkmaster's head with a line and what it
+// says, the field in the middle, the hand's strip under it (a note, the acts, the seal). Esc and *Close* put it away, the focus goes back to what
 // opened it (open.js). The pieces drawn in a field: a card (`SpCard`), a card face down (`SpBack`), a check's mark (`Chk`).
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { html, cls } from "../../html.js";
-import { Icon } from "../../orkui.js";
 import { HeadOf, whoOf } from "../../table/post.js";
 import { Index } from "../card.js";
+import { named, signOf } from "../kind.js";
 import { closeSpread, spread } from "./open.js";
 import { Said } from "../said.js";
-import { keepTab } from "../back.js";
+import { MatFrame } from "../matframe.js";
 
-/** `kind`: the spread (its `data-spread`); `title`, `line`, `say`: its head; `note`: the hand's words; `acts`: the hand's buttons; children: the field. */
-export function SpreadFrame({ kind, title, line = "", say = "", note = "", acts = null, hand = null, children }) {
-  const root = useRef();
-  useLayoutEffect(() => {   // the keys at once, before the first paint: an Esc pressed as the card opens closes it
-    root.current?.querySelector(".sp-shut")?.focus();
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeSpread(); } else keepTab(root.current, e); };
-    addEventListener("keydown", key, true);
-    return () => removeEventListener("keydown", key, true);
-  }, []);
-  return html`<div ref=${root} class="sp-veil" role="dialog" aria-modal="true" aria-label=${title} data-spread=${kind}>
-    <div class="sp">
-      <header class="sp-h"><span class="sp-av"><${HeadOf} w=${whoOf("orkmaster")} size="big" /></span>
-        <span class="sp-t"><b>${title}</b>${line && html`<small>${line}</small>`}</span>
-        ${say && html`<span class="sp-say">${say}</span>`}
-        <button type="button" class="ork-btn sp-shut" onClick=${closeSpread}><${Icon} name="close" /><span>Close</span></button></header>
-      ${spread.value?.said && html`<${Said} p=${spread.value.said} />`}
-      <div class="sp-field">${children}</div>
-      <footer class="sp-hand">${hand && html`<div class="sp-cards" role="group" aria-label="Your hand">${hand}</div>`}${note && html`<p class="sp-note">${note}</p>`}${acts && html`<div class="sp-acts">${acts}</div>`}</footer>
-    </div></div>`;
+/** `kind`: the spread (its `data-spread`); `title`, `line`, `say`: its head; `note`: the hand's words; `acts`: the hand's buttons; `seal`: a `Seal` for a move that cannot be undone;
+ *  `phase`: the goal's, along its foot (the gate, the battle); children: the field. It lies in `../matframe.js`'s frame. */
+export function SpreadFrame({ kind, title, line = "", say = "", note = "", acts = null, hand = null, seal = null, phase = "", children }) {
+  return html`<${MatFrame} kind=${kind} title=${title} line=${line} say=${say} note=${note} acts=${acts} hand=${hand} seal=${seal} phase=${phase} onClose=${closeSpread}
+    extra=${spread.value?.said && html`<${Said} p=${spread.value.said} />`}>${children}</${MatFrame}>`;
 }
 
 /** A key as the mockup shows it: `<kbd>`. */
@@ -38,12 +23,12 @@ export const Key = ({ k }) => html`<kbd class="sp-kb">${k}</kbd>`;
 export const Chk = ({ no = false }) => html`<span class=${cls("sp-chk", { "is-no": no })} aria-hidden="true">${no ? "✕" : "✓"}</span>`;
 
 /** A card face up in a spread: its party's colour (`party`), the goal's rune and sign (`n`), its name, a line, and more under them (children).
- *  `size`: xl, lg, md or sm; `tilt`: its turn in degrees; `mark`: "ok" or "no" puts a check on it. */
-export function SpCard({ party, n = null, name, line = "", size = "lg", tilt = 0, mark = "", muted = false, portal = false, label = "", onPress = null, picked = false, children }) {
-  const w = whoOf(party || "orkmaster"), Tag = onPress ? "button" : "div";
+ *  `kind`: goal, decision or part (its sign at the top right and its name, decisions §300.4); `size`: xl, lg, md or sm; `tilt`: its turn in degrees; `mark`: "ok" or "no" puts a check on it. */
+export function SpCard({ party, n = null, kind = "goal", name, line = "", size = "lg", tilt = 0, mark = "", muted = false, portal = false, label = "", onPress = null, picked = false, children }) {
+  const w = whoOf(party || "orkmaster"), Tag = onPress ? "button" : "div", face = { ...n, sign: signOf(kind, n?.sign) };
   return html`<${Tag} type=${onPress ? "button" : undefined} onClick=${onPress || undefined} aria-pressed=${onPress && picked !== null ? String(!!picked) : undefined}
-    class=${cls("ork-card cards-s sp-card", { [`is-${size}`]: true, "is-muted": muted, "is-portal": portal, "is-pick": !!onPress, "is-picked": picked })} data-race=${w.race || "orkmaster"} style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${label || undefined}>
-    ${size !== "sm" && html`<${Index} n=${n} />`}${mark && html`<${Chk} no=${mark === "no"} />`}
+    class=${cls("ork-card cards-s sp-card", { [`is-${size}`]: true, "is-muted": muted, "is-portal": portal, "is-pick": !!onPress, "is-picked": picked })} data-race=${w.race || "orkmaster"} data-cardkind=${kind} style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${named(label || `${name}${line ? `: ${line}` : ""}`, kind)}>
+    <${Index} n=${face} rune=${size !== "sm"} />${mark && html`<${Chk} no=${mark === "no"} />`}
     ${(size === "xl" || size === "lg") && html`<span class="sp-pic"><${HeadOf} w=${w} size=${size === "xl" ? "big" : "mid"} /></span>`}
     <b class="sp-card__name">${name}</b>${line && html`<small class="sp-card__line">${line}</small>`}${children}</${Tag}>`;
 }

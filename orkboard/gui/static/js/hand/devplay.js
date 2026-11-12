@@ -22,7 +22,7 @@ const WAY_LINE = {
 };
 
 /** Sends the goal into dev (`untested` only from *To dev without the tests*); a refusal is the host's toast and the card stays, done the card goes back. */
-const send = (idea, untested = false) => command("ideas.goal_to_dev", { idea, ...(untested ? { untested: true } : {}) }).then(() => lower()).catch(() => {});
+const send = (idea, untested = false) => command("ideas.goal_to_dev", { idea, sealed: true, ...(untested ? { untested: true } : {}) }).then(() => lower()).catch(() => {});
 
 const headOf = (n) => (mapData.value?.goals || []).find((g) => g.slug === n?.goal)?.leader?.head || null;
 

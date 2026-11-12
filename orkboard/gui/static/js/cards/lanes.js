@@ -9,8 +9,8 @@ import { raceOf } from "../table/felt.js";
 import { CardM, CardS, openCard } from "./card.js";
 import { openSpread } from "./spreads/open.js";
 import { nodes, postsOf, shareOf } from "./feed.js";
-import { FrameSwitch, TablesView } from "./tables/index.js";      // a leader's framework instead of the lanes (goal 170 T)
-import { frameworkOf, laid } from "./tables/state.js";
+import { FrameSwitch } from "./tables/index.js";      // a leader's framework, a mat over the pane (goal 171 H)
+import { frameworkOf } from "./tables/state.js";
 
 export const AT_WORK = new Set(["ready", "running", "testing", "picking", "failed", "review"]);
 
@@ -20,8 +20,8 @@ export function WorkCard({ n, tilt = 0 }) {
   const card = { slug: n.slug, title: n.short || n.title, element: n.element, hue: n.hue, sign: n.type?.sign || "", leader: n.goal };
   return html`<${CardS} n=${card} when=${line} bar=${shareOf(n) ?? 0} tilt=${tilt}
     onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line, from, acts: [{ label: "Open its plan", main: true, run: () => pick(n.slug) },
-      { label: "Its stages", run: () => openSpread({ kind: "track", slug: n.slug, from }) },
-      ...(n.state === "review" || n.state === "done" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />`;
+      { label: "Its stages", mat: true, run: () => openSpread({ kind: "track", slug: n.slug, from }) },
+      ...(n.state === "review" || n.state === "done" ? [{ label: "At the gate", mat: true, run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />`;
 }
 
 function Lane({ g }) {
@@ -38,6 +38,5 @@ function Lane({ g }) {
 
 /** The lanes, one a party, in the tabs' order. */
 export function CardsLanes({ parties }) {
-  if (laid.value && parties.some((g) => g.slug === laid.value)) return html`<${TablesView} parties=${parties} />`;
   return html`<div class="cards-lanes" style=${`--lanes:${Math.max(parties.length, 1)}`}>${parties.map((g) => html`<${Lane} key=${g.slug} g=${g} />`)}</div>`;
 }

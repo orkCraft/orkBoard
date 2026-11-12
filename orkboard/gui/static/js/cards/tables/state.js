@@ -1,5 +1,5 @@
 // The leaders' tables' state (goal 170, the talk of 11 November 2026; docs/mockups/frameworks/): what each leader's framework holds
-// (`ideas.tables`, proposed: the host does not answer it yet, the mock lays it, js/mock/parts/tables.js), which of a party's faces is
+// (`ideas.tables`, the host's: gui/ideas_mats.py), which of a party's faces is
 // shown, and the person's own tokens. The person never moves a card: it turns one, spreads a pile, and asks its leader about a part.
 import { signal, effect } from "@preact/signals";
 import { command, town } from "../../link.js";
@@ -25,14 +25,17 @@ export function frameworkOf(g) {
 /** Which party's table is laid in the pane in place of the lanes: a party slug, or "" for the lanes (Feed). */
 export const laid = signal("");
 
+/** The element the focus goes back to when the table is put away (the card or the switch that laid it), or null. */
+export const laidFrom = signal(null);
+
 /** The part a mat laid the table at (mat.js): {party, framework, card, p} (`p`: the leader's post, said at the table's head), or null. */
 export const laidAt = signal(null);
 
 /** Whether the card `id` of a table is the part a mat laid it at. */
 export const isAt = (ctx, id) => { const a = laidAt.value; return !!a && a.party === ctx.party && a.framework === ctx.framework && a.card === id; };
 
-/** Ask a leader about a part of its table (decisions §298.5: the person asks, never puts a token): the command it would be is sent (the mock logs it:
- *  `ideas.ask_leader`, proposed; the host is to take {party, framework, card, text} and give the leader the question, marking that part of its table). */
+/** Ask a leader about a part of its table (decisions §298.5: the person asks, never puts a token): `ideas.ask_leader {party, framework, card, text, sealed}`: the host gives the leader the question
+ *  about that part of its table, a paid pass whose cost the field said before it ran (cards/askcost.js). */
 export function askLeader({ party, framework, card, text }) {
-  return command("ideas.ask_leader", { party, framework, card, text: text.trim() }, true).catch(() => {});
+  return command("ideas.ask_leader", { party, framework, card, text: text.trim(), sealed: true }, true).catch(() => {});
 }

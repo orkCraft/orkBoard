@@ -106,7 +106,7 @@ def test_the_portal_asks_the_checks_then_sends_with_no_release_seated_at_the_nar
     pg, host, log = narrow_view(gui, NoReleaseHost())
     try:
         press_to_main(pg, "narrow", "codes")
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "codes"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "codes"}))
         assert names(host) == ["ideas.to_main_checks", "ideas.to_main"], "the checks are asked first, then the goal is sent"
     finally:
         pg.close()
@@ -117,7 +117,7 @@ def test_the_discards_to_main_asks_the_checks_then_sends_at_the_narrow_width(gui
     pg, host, log = narrow_view(gui, NoReleaseHost())
     try:
         pg.locator(".hand-part__head [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
         assert names(host) == ["ideas.to_main_checks", "ideas.to_main"]
     finally:
         pg.close()
@@ -128,7 +128,7 @@ def test_to_main_on_the_table_asks_the_checks_then_sends_at_the_wide_width(gui):
     pg, host, log = open_lane(gui, NoReleaseHost())
     try:
         press_to_main(pg, "wide")
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
         assert names(host) == ["ideas.to_main_checks", "ideas.to_main"]
     finally:
         pg.close()
@@ -166,9 +166,9 @@ def test_a_project_with_no_tests_offers_to_main_without_the_tests_and_only_that_
         btn.wait_for(timeout=WAIT_MS)
         assert btn.text_content() == UNTESTED
         assert pg.locator("[data-stopped]").text_content() == NO_TESTS
-        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music"}], "the first press sent no `untested`"
+        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music", "sealed": True}], "the first press sent no `untested`"
         btn.click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music", "untested": True}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music", "untested": True}))
         pg.wait_for_function("() => document.querySelectorAll('[data-portal-card=\"music\"]').length === 0", timeout=WAIT_MS)
     finally:
         pg.close()
@@ -218,7 +218,7 @@ def test_red_survives_reselection_and_only_test_again_retries(gui):
         assert any(a.get("again") is True for n, a in host.log if n == "ideas.to_main_checks")
         assert names(host).count("ideas.to_main_checks") > count
         tomain(pg).locator("[data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
     finally:
         pg.close()
     assert not log, "\n".join(log)

@@ -1,0 +1,13 @@
+/* The hand while a mat is open (cards/mathand.js; goal 171 stage K): lies at the window's foot over the mat's scrim, live, the pile of the moves that wait at its left, the open mat's ways beside it.
+   The mat leaves it the room (200 px, matframe.css `.has-hand`). Layout only: every colour, face and corner is orkUI's; no number on the pile, no motion. */
+.mathand { position: fixed; left: 0; right: 0; bottom: 0; height: 200px; z-index: 801; box-sizing: border-box; background: var(--ork-room); border-top: 1px solid var(--ork-frame); }
+.mathand__row { box-sizing: border-box; height: 100%; display: flex; align-items: center; gap: var(--ork-5); padding: var(--ork-3) var(--ork-5); width: min(1240px, calc(100% - 48px)); margin-inline: auto; }
+.mathand__pile { appearance: none; flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); margin: 0; padding: var(--ork-2) var(--ork-3); border: 1px solid transparent; background: none; color: var(--ork-ink); cursor: pointer; }
+.mathand__pile:hover, .mathand__pile:focus-visible { border-color: var(--ork-ink); }
+.mathand__pile:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.mathand__backs { position: relative; display: block; width: 70px; aspect-ratio: 2.5 / 3.5; margin-right: 12px; }
+.mathand__backs span { position: absolute; inset: 0; border: 1px solid var(--ork-card-frame); background: var(--ork-raised) url(/ds/orkui/backs/back.svg) center / 100% 100%; transform: translate(var(--dx, 0), var(--dy, 0)); }
+.mathand__cap { font: var(--ork-type-label); color: var(--ork-ink-read); }
+.mathand__ways { flex: 1 1 auto; min-width: 0; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; align-self: stretch; align-items: center; padding: var(--ork-2); }
+.mathand__ways .bt-way.ork-card { height: 140px; }
+.mathand__ways .bt-way small { color: var(--ork-ink-read); }

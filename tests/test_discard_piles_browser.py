@@ -237,13 +237,13 @@ def test_a_card_of_the_lower_pile_played_has_to_dev_and_in_its_menu_to_dev_witho
         assert menu.inner_text() == "To dev without the tests"
         shot(pg, "lower-played")
         ways.first.click()
-        assert _sent(pg, host, ("ideas.goal_to_dev", {"idea": "dusk"}))
+        assert _sent(pg, host, ("ideas.goal_to_dev", {"sealed": True, "idea": "dusk"}))
         pg.wait_for_function("() => !document.querySelector('[data-pile=\"lower\"] .post-card[data-slug=\"dusk\"]')", timeout=WAIT_MS)
-        assert [a for n, a in host.log if n == "ideas.goal_to_dev"] == [{"idea": "dusk"}], "no `untested` from the way"
+        assert [a for n, a in host.log if n == "ideas.goal_to_dev"] == [{"idea": "dusk", "sealed": True}], "no `untested` from the way"
         pg.evaluate("() => import('/static/js/frame/state.js').then((m) => m.openTab('orkmaster'))")           # playing a card opened its leader's tab: the Orkmaster's sees every pile
         lane_dev(pg, "scores").click()
         pg.locator('.hand-ways-acts [data-act="to_dev_untested"]').click()
-        assert _sent(pg, host, ("ideas.goal_to_dev", {"idea": "scores", "untested": True}))
+        assert _sent(pg, host, ("ideas.goal_to_dev", {"sealed": True, "idea": "scores", "untested": True}))
     finally:
         close(pg, log)
 
@@ -271,10 +271,10 @@ def test_a_goal_blocked_before_dev_is_a_card_in_the_hand_whatever_the_setting_sa
             if review:
                 shot(pg, "blocked-played")
             pg.locator('[data-way="try_again"]').click()
-            assert _sent(pg, host, ("ideas.goal_to_dev", {"idea": "chat"}))
+            assert _sent(pg, host, ("ideas.goal_to_dev", {"sealed": True, "idea": "chat"}))
             assert pg.locator('.hand-places .hand-card[data-key="dev/chat"]').count() == 1, "refused: the card stays"
             pg.locator('[data-way="to_dev_untested"]').click()
-            assert _sent(pg, host, ("ideas.goal_to_dev", {"idea": "chat", "untested": True}))
+            assert _sent(pg, host, ("ideas.goal_to_dev", {"sealed": True, "idea": "chat", "untested": True}))
             pg.wait_for_function("() => !document.querySelector('.hand-places .hand-card[data-key=\"dev/chat\"]')", timeout=WAIT_MS)
         finally:
             close(pg, log, allowed=("no tests",))
@@ -307,8 +307,8 @@ def test_to_main_lights_the_goals_it_takes_along_and_has_to_main_without_the_tes
         assert menu.text_content() == "To main without the tests" and menu.is_visible()
         shot(pg, "to-main-along")
         pg.locator("[data-tomain] [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
-        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music"}], "tested: no `untested`"
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
+        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music", "sealed": True}], "tested: no `untested`"
     finally:
         close(pg, log)
 
@@ -324,8 +324,8 @@ def test_to_main_on_the_post_sends_the_goal_the_way_it_went_before(gui):
         assert button.inner_text().strip() == "To main"
         button.focus()
         pg.keyboard.press("Enter")
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
-        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music"}], "tested: no `untested`"
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
+        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music", "sealed": True}], "tested: no `untested`"
     finally:
         close(pg, log)
 
@@ -357,7 +357,7 @@ def test_the_cards_dissolve_into_the_ring_and_leave_and_under_reduced_motion_not
         post(pg, "music").click()
         pg.locator('[data-along="1"]').wait_for(timeout=WAIT_MS)
         pg.locator("[data-tomain] [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
         assert pg.locator("[data-melting]").count() == 0, "nothing moves under reduced motion"
     finally:
         ctx.close()

@@ -642,7 +642,7 @@ def test_a_goal_ready_for_main_is_releases_card_after_the_questions_with_the_por
         shot(pg, "phone-portal")
         assert _calls(pg, host, "ideas.to_main") == []
         door.click()
-        assert _calls(pg, host, "ideas.to_main") == [{"idea": "music"}]
+        assert _calls(pg, host, "ideas.to_main") == [{"idea": "music", "sealed": True}]
         pg.wait_for_function("() => !document.querySelector('.hand-ready') || document.querySelector('.hand-ready .hand-card__name').textContent.trim() !== 'Lobby is ready for main'", timeout=WAIT_MS)
         assert ready_name(pg) == "" or ready_name(pg) == "Reconnect is ready for main"
     finally:

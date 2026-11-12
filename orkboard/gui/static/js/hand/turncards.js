@@ -1,45 +1,50 @@
-// A card at its turns, in the hand (decisions §298.6, §298.7; the contract proposed in js/mock/parts/turns.js, `proposed.turns`: `[{goal, kind: "rated" | "spec_rated" | "battle", at}]`):
-// the table of cards only. A goal's idea rated (*Play it*, *Change it*, *Put off*, *Drop*) and its spec rated (*Start* with its price, *Change the spec*, *Drop*) are stops of kind `turn`
-// of the Orkmaster's lane, S cards with the goal's craft tokens (cards/handcards.js); a risk that blocks rings the card and holds *Play it* and *Start*, and says whose risk it is. Pressed,
-// its ways lie in the hand as cards, as a question's do (sayplay.js `PlayWays`); each sends a proposed command with `{slug}` (`ideas.turn_play`, `ideas.turn_change` with its words,
-// `ideas.put_off`, `ideas.drop`) and the card goes: a change sends the goal back to the table to be rated again, *Drop* lays it face down in the Dropped pile (cards/dropped.js).
-// A battle (kind `battle`, `proposed.battles`) is a card of its own; pressed it opens the Orkmaster's spread of it (cards/spreads/battle.js), where its ways lie. Wide only.
-import { useEffect } from "preact/hooks";
+// A card of a move that waits, in play (goal 171 stage K; decisions §300.2, §302.4; the host's `ideas.turns`, hand/turnstops.js): the table of cards only.
+// A goal that asks (kind `asks`) lifts its ways as a question's do (sayplay.js `PlayWays`): the ways of its question, one question after the other when it asks several, and *In your own
+// words*; the last answer sends `ideas.answer_way {slug, answers, from: "hand"}` (the answers written under their questions, no keeper pass begun), one press, its toast saying what it sent with **Undo** (cards/played.js). A goal whose Talk is all said or whose spec
+// is all written (kinds `talk`, `spec`) opens the mat its move lies on, the goal's stages (cards/spreads/track.js), where its ways lie in the hand. A battle (kind `battle`) opens its own spread.
+// `turnCard` is the descriptor `PlayWays` draws (and the phone's opened card, turnphone.js draws the same ways). Wide only.
+import { useEffect, useState } from "preact/hooks";
 import { html } from "../html.js";
-import { command, proposed } from "../link.js";
 import { ORKMASTER, lower } from "../frame/state.js";
-import { blockedBy } from "../cards/verdict.js";
-import { dropGoal } from "../cards/dropped.js";
+import { playMove } from "../cards/played.js";
 import { openSpread } from "../cards/spreads/open.js";
-import { whoOf } from "../table/post.js";
 import { PlayWays } from "./sayplay.js";
-import { settle } from "./turnstops.js";
+import { settle, unsettle } from "./turnstops.js";
 
-const toolName = (id) => (proposed("costs")?.tools || []).find((t) => t.id === id)?.name || String(id || "").replace(/^./, (c) => c.toUpperCase());
-/** What starting a goal costs, said as the cost spread says it (*about 12% of Claude*), "" when no price is known. */
-export function priceWords(slug) {
-  const p = proposed("costs")?.goals?.[slug];
-  return p?.tool ? `about ${p.pct}% of ${toolName(p.tool)}` : "";
+const OWN = { label: "Your answer", hold: "Your answer…", button: "Send the answer", note: "Enter sends · Shift+Enter a new line", rows: 4 };
+
+/** What an answer to a goal's questions says it did (the toast), at most 120 characters. */
+export const sentWords = (answers) => `Sent: ${answers.join(" · ")}`.slice(0, 120);
+
+/** The card of a goal that asks, at question `picked.length` (`picked`: the answers so far); `pick(answers)` is called with the answers so far, the last one sends. */
+export function turnCard(s, picked = [], pick = () => {}) {
+  const { slug, questions, party } = s.ref, n = s.node, qs = questions || [], i = Math.min(picked.length, Math.max(0, qs.length - 1)), q = qs[i] || { ask: s.text, ways: [] };
+  const take = (text) => {
+    const next = [...picked, text];
+    if (next.length < qs.length) { pick(next); return Promise.resolve(); }
+    return playMove("ideas.answer_way", { slug, answers: next, ...(party ? { party: true } : {}) }, { from: "hand", goal: slug, party: !!party, said: sentWords(next), done: () => { settle(slug, "asks"); lower(); }, back: () => unsettle(slug, "asks") });
+  };
+  const ways = (q.ways || []).map((w, k) => ({ id: `way-${k}`, name: w, line: "", pick: false, kind: "", run: () => take(w) }));
+  return { title: s.title, foot: `${q.ask}${qs.length > 1 ? ` (${i + 1} of ${qs.length})` : ""}`, sign: "question", element: n?.element || "", hue: n?.hue || "", head: s.head, tab: ORKMASTER, whole: true, ways,
+    pen: { name: "In your own words", line: "Write the answer yourself.", at: ways.length, who: s.party?.lead || "the Orkmaster", send: (text) => take(text), ask: OWN } };
 }
 
-/** A turn's card as `PlayWays` draws it (and the phone's opened card, turnphone.js): its ways, the Pen of *Change it*. */
-export function turnCard(s) {
-  const { slug, turn } = s.ref, n = s.node, by = blockedBy(slug), lead = by ? whoOf(by).name : "", spec = turn === "spec_rated", price = priceWords(slug);
-  const send = (name, then, extra = {}) => Promise.resolve(command(name, { slug, ...extra })).then(() => { then(); lower(); }).catch(() => {});      // refused: the host's toast says why, the card stays
-  const away = () => settle(slug, turn), why = `${lead}'s risk blocks it until ${lead} lifts it.`;
-  const go = { id: "play", name: spec ? "Start" : "Play it", pick: false, kind: "go_on", disabled: !!by, run: () => send("ideas.turn_play", away),
-    line: by ? why : spec ? `The work starts now${price ? `, ${price}` : ""}.` : "The goal goes on to its spec." };
-  const put = { id: "put_off", name: "Put off", line: "It waits in line; nothing starts until you take it.", pick: false, kind: "later", run: () => send("ideas.put_off", away) };
-  const drop = { id: "drop", name: "Drop", line: "It lies face down in the Dropped pile; you can take it back.", pick: false, kind: "drop", run: () => send("ideas.drop", () => dropGoal(slug)) };
-  return { title: s.title, foot: s.text, sign: "flag", element: n?.element || "", hue: n?.hue || "", head: s.head, tab: ORKMASTER, whole: true,
-    ways: spec ? [go, drop] : [go, put, drop],
-    pen: { name: spec ? "Change the spec" : "Change it", line: spec ? "Write what to change in its spec; its leaders rate it again." : "Write what to change; it goes back to the table and is rated again.", at: 1, who: "the Orkmaster",
-      send: (text) => send("ideas.turn_change", away, { text }), ask: { label: spec ? "What to change in the spec" : "What to change", hold: "What should be different…", button: "Send the change", note: "Enter sends · Shift+Enter a new line", rows: 4 } } };
+/** The mat a goal's move lies on (its talk all said, its spec all written): the goal's stages; the card goes back to the hand, where the focus returns when the mat is put away. */
+export function openMoveMat(s, from) {
+  openSpread({ kind: "track", slug: s.ref.slug, from, opened: "hand" });      // opened by its hand card: its moves are sent `from: "hand"` (the mat opened from the table sends "mat")
 }
 
-/** A turn's card in play: its ways the hand's row. */
+/** A card of a move that waits, in play: a question's ways the hand's row, else its mat opened. */
 export function TurnPlay({ s }) {
-  return html`<${PlayWays} card=${turnCard(s)} id=${s.key} idea=${s.ref.slug} kind="turn" />`;
+  const [picked, setPicked] = useState([]);
+  useEffect(() => { setPicked([]); }, [s.key]);
+  useEffect(() => {
+    if (s.ref.turn === "asks") return;
+    openMoveMat(s, document.querySelector(`.frame-hand button.hand-card[data-key="${CSS.escape(s.key)}"]`));
+    lower();
+  }, [s.key]);
+  if (s.ref.turn !== "asks") return null;
+  return html`<${PlayWays} card=${turnCard(s, picked, setPicked)} id=${`${s.key}#${picked.length}`} idea=${s.ref.slug} kind="turn" />`;
 }
 
 /** A battle's card pressed: its spread opens (the goal's Orkmaster lays it) and the card goes back to the hand, where the focus returns when the spread is put away. */

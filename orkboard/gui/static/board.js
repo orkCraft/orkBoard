@@ -35,7 +35,13 @@ function Toasts() {
 
 // On mocks (`?mock=1`, goal 170 M) the plate that says so; its module is loaded only then.
 const Plate = signal(null);
-if (onMocks()) import("./js/mock/plate.js").then((m) => { Plate.value = m.MockPlate; });
+if (onMocks()) {
+  import("./js/mock/plate.js").then((m) => { Plate.value = m.MockPlate; });
+  const sheet = document.createElement("link");
+  sheet.rel = "stylesheet";
+  sheet.href = new URL("./js/mock/plate.css", import.meta.url).href;
+  document.head.appendChild(sheet);
+}
 
 function Board() {
   const t = town.value;

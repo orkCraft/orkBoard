@@ -1,4 +1,4 @@
-// Tech's table: the architecture (docs/mockups/frameworks/, ?f=arch), laid from the code (tools/record_tables.py): layers from the
+// Tech's table: the architecture (docs/mockups/frameworks/, ?f=arch), laid from the code: layers from the
 // outside in, a card lying on the one it needs; a pile of a package is spread on press to its biggest modules; the rules it keeps with
 // their tests; Tech's own risk token on a module that reaches up. Pressed, a module turns over to what it needs and how big it is.
 import { useState } from "preact/hooks";

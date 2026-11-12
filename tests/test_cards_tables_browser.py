@@ -1,5 +1,5 @@
 """**The leaders' tables on mocks** (goal 170, stage T; docs/mockups/frameworks/): a leader's lane has a switch in its head, *Feed* and its framework's
-name; the framework is drawn in the pane in place of the lanes (Tech's Architecture, read from this repository's code by tools/record_tables.py;
+name; the framework is drawn in the pane in place of the lanes (Tech's Architecture, read from this repository's code (realm/code_layers.py);
 Product's Jobs to be done, examples). The person never moves a card or puts a token (decisions §298.5): it turns one over, spreads a pile, and asks
 the leader about a part (`ideas.ask_leader`, proposed, logged by the mock)."""
 from __future__ import annotations
@@ -14,6 +14,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
+from tests import mock_kit  # noqa: E402
 from tests.browser_kit import launch  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
@@ -24,7 +25,7 @@ pytestmark = pytest.mark.browser
 
 @pytest.fixture(scope="module")
 def page_url():
-    s = serve_mock.serve(0)
+    s = serve_mock.serve(0, mock_kit.lay_standard)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}/?mock=1"
     s.shutdown()
@@ -50,7 +51,7 @@ def test_the_switch_shows_each_leaders_framework_and_feed_brings_the_lanes_back(
         assert pg.locator('.cards-lane[data-party="design"] .tb-switch').count() == 0
         assert [t.strip() for t in pg.locator('.cards-lane[data-party="tech"] .tb-switch .ork-btn').all_inner_texts()] == ["Feed", "Architecture"]
         open_table(pg, "tech", "architecture")
-        assert pg.locator(".cards-lanes").count() == 0
+        assert pg.locator(".cards-lanes").evaluate("el => !!el.closest('[inert]')")           # the lanes lie under the mat, inert (goal 171 H)
         assert pg.get_by_text("Tech's table", exact=True).is_visible()
         assert [t.strip() for t in pg.locator(".tb-layer .tb-ln").all_inner_texts()][0].startswith("Outside")
         for layer in ("outside", "faces", "engine", "words"):
@@ -127,7 +128,7 @@ def test_the_person_asks_the_leader_about_a_part_and_puts_no_token(page_url):
         pg.locator(".mock-plate__b").click()
         assert "ideas.ask_leader" in pg.locator(".mock-plate__sent").inner_text()
         got = pg.evaluate("""() => import("/static/js/mock/mocklink.js").then((m) => m.sent.value.filter((s) => s.name === "ideas.ask_leader").map((s) => s.args))""")
-        assert got == [{"party": "tech", "framework": "architecture", "card": "gui/board_host.py", "text": "805 lines, past the ~600 a module may grow to. Split it?"}], json.dumps(got)
+        assert got == [{"party": "tech", "framework": "architecture", "card": "gui/board_host.py", "text": "805 lines, past the ~600 a module may grow to. Split it?", "sealed": True}], json.dumps(got)
         # Product's table: the same, Enter sends
         pg.locator('.tb [data-value="feed"]').click()
         open_table(pg, "product", "jtbd")

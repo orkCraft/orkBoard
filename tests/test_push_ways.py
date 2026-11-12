@@ -81,6 +81,6 @@ def test_a_goal_into_dev_pushes_dev_only_for_dev_and_main(host, repo, tmp_path, 
     land(host, repo, lobby, "k1", branch, {"lobby.ts": "l\n"})
     goal_branch.ready(host.ideas.state_dir, lobby)
     host.command("ideas.into", {"push": way})
-    got = host.command("ideas.goal_to_dev", {"idea": lobby, "untested": True})
+    got = host.command("ideas.goal_to_dev", {"sealed": True, "idea": lobby, "untested": True})
     assert bool(git(remote, "branch", "--list", "dev")) is dev_pushed
     assert (git(remote, "rev-parse", "dev") == got["commit"]) if dev_pushed else True

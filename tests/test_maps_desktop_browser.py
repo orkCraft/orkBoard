@@ -551,7 +551,7 @@ def test_dev_and_main_is_a_card_a_goal_ticked_to_main_with_the_gates_words_and_s
     pg.keyboard.press("Escape")
     to_main.click()
     pg.wait_for_function("() => document.querySelectorAll('.mp-goal').length === 0", timeout=WAIT_MS)
-    assert [a for n, a in host.log if n == "ideas.gate_merge"] == [{}]                                                    # today's command, nothing else
+    assert [a for n, a in host.log if n == "ideas.gate_merge"] == [{"sealed": True}]                                                    # today's command, nothing else
     assert "belong to no goal" in pg.locator(".mp-dev").inner_text()               # the commits are still there: dev is as the stub left it
 
 

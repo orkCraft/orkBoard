@@ -27,13 +27,19 @@ export function giveBack(from) {
   if (document.activeElement === document.body && typeof requestAnimationFrame === "function") requestAnimationFrame(again);     // drawn again a frame later
 }
 
-/** Keeps Tab inside a dialog (`root`): from its last act it goes to its first and back; a focus outside comes in. Call it from the dialog's keydown. */
+/** Keeps Tab inside a dialog (`root`, or the list of its parts: the mat and the hand that follows it): from its last act it goes to its first and back; a focus outside comes in. Call it from the dialog's keydown. */
 export function keepTab(root, e) {
-  if (e.key !== "Tab" || !root) return;
-  const all = [...root.querySelectorAll("button, [href], input, textarea, select, [tabindex]")].filter((el) => !el.disabled && el.tabIndex >= 0 && el.offsetParent !== null);
+  const roots = [].concat(root).filter(Boolean);
+  if (e.key !== "Tab" || !roots.length) return;
+  const all = roots.flatMap((r) => [...r.querySelectorAll("button, [href], input, textarea, select, [tabindex]")]).filter((el) => !el.disabled && el.tabIndex >= 0 && el.offsetParent !== null);
   if (!all.length) return;
   const first = all[0], last = all[all.length - 1], on = document.activeElement;
-  if (!root.contains(on)) { e.preventDefault(); first.focus(); }
+  if (!roots.some((r) => r.contains(on))) { e.preventDefault(); first.focus(); }
+  else if (roots.length > 1) {                                   // the mat and its hand are two parts of the page: the focus goes through them in the order given, never by the page's own
+    const at = all.indexOf(on);
+    e.preventDefault();
+    (at < 0 ? first : all[(at + (e.shiftKey ? all.length - 1 : 1)) % all.length]).focus();
+  }
   else if (e.shiftKey && on === first) { e.preventDefault(); last.focus(); }
   else if (!e.shiftKey && on === last) { e.preventDefault(); first.focus(); }
 }

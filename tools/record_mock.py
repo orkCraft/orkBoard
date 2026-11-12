@@ -14,7 +14,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 FOLDER = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT).resolve()
 OUT = ROOT / "orkboard/gui/static/mock/board.json"
-EXTRA = [["ideas.feed", {}], ["ideas.recap", {"since": ""}]]
+EXTRA = [["ideas.feed", {}], ["ideas.recap", {"since": ""}], ["ideas.turns", {}], ["ideas.verdicts", {}], ["ideas.tables", {}], ["ideas.ask_cost", {}]]
 SPY = """(() => {
   const Real = window.WebSocket; window.__mock = { state: null, replies: [], sent: {} };
   window.WebSocket = function (url, p) {
@@ -40,7 +40,7 @@ def main() -> None:
                 page.add_init_script(SPY)
                 page.goto(url)
                 page.wait_for_timeout(6000)
-                # what the new faces read and the old ones do not ask yet: the feed, the recap since the last look
+                # what the new faces read and the old ones do not ask yet: the feed, the recap since the last look, the cards' turns, verdicts, tables and the cost of a paid pass (gui/ideas_mats.py)
                 page.evaluate("""() => import("/static/js/link.js").then((l) => Promise.all(%s.map(([n, a]) =>
                     l.command(n, a, true).catch(() => null))))""" % json.dumps(EXTRA))
                 page.wait_for_timeout(2000)

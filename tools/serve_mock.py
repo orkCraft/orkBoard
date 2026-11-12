@@ -7,8 +7,11 @@ The phone's page too (goal 170, stage P), at the path the phone listener serves 
 the desktop's page as `/app/page/...` and orkUI as `/ds/orkui/`, so `http://127.0.0.1:<port>/app/?mock=1` is the phone's page
 with no computer (open it at 390 x 844 with touch, or as a phone in the browser's tools). The recording is served there as
 `/app/page/mock/`, which js/mock/mocklink.js reads beside its own folder; the phone listener never serves it.
+
+A test serves the recording with what it presses laid in it: `serve(port, lay)` calls `lay(recording)` on a copy of
+`static/mock/board.json` and serves that copy (tests/mock_kit.py has the lays); the recording on disk is never changed.
 """
-import functools, http.server, mimetypes, sys
+import functools, http.server, json, mimetypes, sys
 from pathlib import Path
 from orkboard.design import tokens
 from orkboard.gui import pwa, server
@@ -25,6 +28,8 @@ class Page(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?")[0]
+        if path in ("/static/mock/board.json", "/app/page/mock/board.json") and getattr(self.server, "recording", None) is not None:
+            return self.send(None, self.server.recording, "application/json")
         if path in ("/", "/index.html"):
             return self.send(STATIC / "index.html")
         if path == "/roles.css":
@@ -64,8 +69,15 @@ class Page(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
-def serve(port: int = 8765) -> http.server.ThreadingHTTPServer:
-    return http.server.ThreadingHTTPServer(("127.0.0.1", port), Page)
+def serve(port: int = 8765, lay=None) -> http.server.ThreadingHTTPServer:
+    """The page's server; with `lay`, it serves the recording after `lay(recording)` has laid into a copy of it."""
+    s = http.server.ThreadingHTTPServer(("127.0.0.1", port), Page)
+    s.recording = None
+    if lay:
+        data = json.loads((STATIC / "mock" / "board.json").read_text(encoding="utf-8"))
+        lay(data)
+        s.recording = json.dumps(data, ensure_ascii=False).encode("utf-8")
+    return s
 
 
 if __name__ == "__main__":

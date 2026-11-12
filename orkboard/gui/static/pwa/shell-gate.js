@@ -52,7 +52,7 @@ export function gateScreen(g, core, act) {
       const btn = e.currentTarget, was = btn.textContent;
       btn.disabled = true;
       btn.textContent = "Running the tests…";            // the host runs the tests before it merges, and a red comes back in words
-      const r = await act("ideas.gate_merge", {}, `Merged: ${g.main} has every goal of ${g.into}.`);
+      const r = await act("ideas.gate_merge", { sealed: true }, `Merged: ${g.main} has every goal of ${g.into}.`);
       if (!r) { gatePress.drop(); btn.textContent = was; btn.disabled = false; }
       else if (r.note) core.flash(r.note);
     } },

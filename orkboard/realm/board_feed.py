@@ -214,7 +214,7 @@ def _waits(b: _Board, ready: list[dict], now: dt.datetime) -> list[dict]:
         i = b.ideas[slug]
         out.append({"kind": "main", "goal": slug, "short": b.short(slug), "title": str(i.get("title") or slug), "party": str(i.get("track") or ""),
                     "leader": release, "at": "", "main_ready": g.get("main_ready") is not False, "main_reason": str(g.get("main_reason") or ""),
-                    "acts": [{"act": "to_main", "command": "ideas.to_main", "args": {"idea": slug}}]})
+                    "acts": [{"act": "to_main", "command": "ideas.to_main", "args": {"idea": slug, "sealed": True}}]})
     return out
 
 

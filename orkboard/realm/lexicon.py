@@ -168,7 +168,8 @@ TERMS: tuple[Term, ...] = (
     _t("race.skeleton", "skeleton", "skeletons"),                  # the Release manager's and checker's race (spec 68 §1; orkUI 0.5.0 draws it, a lich until then)
     _t("leader", "leader", "leaders"),                             # a party's: its steps run as it (core/idea_lead.py)
     _t("party", "party", "parties"),                               # a party's leader, builders and checkers (realm/goal_team.py)
-    _t("verdict", "verdict", "verdicts"),                          # a party's old verdict against its metrics, kept as history (realm/goal_verdict.py)
+    _t("undo", "Undo"),                                            # the toast's button after a one-press move: it puts the goal's page back (core/idea_undo.py; js/cards/played.js, goal 171 K)
+    _t("verdict", "verdict", "verdicts"),                         # a party's old verdict against its metrics, kept as history (realm/goal_verdict.py)
     _t("lens", "lens", "lenses"),                                  # what a new goal points at, the party's way: code, a screen, a pain (realm/idea_lens.py)
     _t("segment", "segment", "segments"),                          # whom a goal is for, a product manager's lens
     _t("task_kind", "task type", "task types"),                    # code · tests · docs · text for people · research

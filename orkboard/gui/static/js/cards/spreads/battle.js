@@ -1,16 +1,16 @@
 // A battle, the Orkmaster's spread (decisions §298.6; docs/mockups/card-path/ ?v=battle): a new card against the old cards it goes against, goals at work or done and decisions (a decision a
 // card of its own with its § for its picture). The new card at the left, the old ones at the right (three face up at most, more as a pile), between them one row for each craft on the new
 // card's route, **axis by axis, no total, no winner said**: the new card's token at the left of the row and the old cards' at the right. Under an old card what it costs to undo it
-// (`undo`: `{pct, tool, what}`). The person's hand holds its four ways as cards; each sends `ideas.battle_settle {slug, way}` (the contract proposed, js/mock/parts/turns.js: the host
-// answers none of it yet) and the battle's card is gone from the hand. No victory is drawn. Esc and *Close* put the spread away. On a phone width the field stacks: new card, axes, old cards.
+// (`undo`: `{pct, tool, what}`). The person's hand holds its four ways as cards; each sends `ideas.battle_settle {slug, way}` (the host answers none of it yet, and no battle is laid: this mat lies empty until the battles' goal fills it) and the battle's card is gone from the hand. No victory is drawn. Esc and *Close* put the spread away. On a phone width the field stacks: new card, axes, old cards.
 import { html } from "../../html.js";
-import { command, proposed } from "../../link.js";
+import { command } from "../../link.js";
 import { Index } from "../card.js";
 import { nodeOf } from "../feed.js";
 import { TokenDot } from "../handtokens.js";
 import { verdictsOf } from "../verdict.js";
 import { settle } from "../../hand/turnstops.js";
 import { whoOf } from "../../table/post.js";
+import { phaseOf } from "../../table/data.js";
 import { closeSpread } from "./open.js";
 import { SpBack, SpCard, SpreadFrame, faceOf } from "./shell.js";
 
@@ -41,7 +41,7 @@ export function waysOf(against) {
 function Old({ a }) {
   const goal = a.kind === "goal", n = goal ? nodeOf(a.ref) : null, w = whoOf(n?.goal || "orkmaster");
   if (goal) return html`<${SpCard} party=${n?.goal} n=${faceOf(n)} name=${a.title} line=${a.state || ""} size="lg" label=${`${a.title}, an old goal`} />`;
-  return html`<div class="ork-card cards-s sp-card is-lg bt-decision" data-race=${w.race || "orkmaster"} role="group" aria-label=${`${a.ref} ${a.title}, a decision`}>
+  return html`<div class="ork-card cards-s sp-card is-lg bt-decision" data-cardkind="decision" data-race=${w.race || "orkmaster"} role="group" aria-label=${`${a.ref} ${a.title}, a decision`}>
     <${Index} n=${{ element: "", hue: "", sign: "balance" }} /><span class="sp-pic bt-sect" aria-hidden="true">§</span>
     <b class="sp-card__name">${a.ref} ${a.title}</b><small class="sp-card__line">${a.state || ""}</small></div>`;
 }
@@ -49,7 +49,7 @@ function Old({ a }) {
 const undoWords = (u) => (u ? `to undo: ≈${u.pct}% ${u.tool}${u.what ? ` · ${u.what}` : ""}` : "");
 
 export function Battle({ slug }) {
-  const n = nodeOf(slug), against = proposed("battles")?.[slug]?.against || [];
+  const n = nodeOf(slug), against = [];
   if (!n || !against.length) return null;
   const mine = verdictsOf(slug), up = against.slice(0, FACE_UP), more = against.slice(FACE_UP);
   const settleWith = (way) => Promise.resolve(command("ideas.battle_settle", { slug, way: way.id })).then(() => { settle(slug, "battle"); closeSpread(); }).catch(() => {});
@@ -58,7 +58,7 @@ export function Battle({ slug }) {
   const title = `A new card against ${NUMBER[against.length] || against.length}`;
   return html`<${SpreadFrame} kind="battle" title=${title} line="The Orkmaster's spread: a battle · nothing is decided for you"
       say=${`It goes against ${againstWords(against)}. Read each axis; the old cards carry what it costs to undo them.`}
-      note="Play a way: every leader is told, the Orkmaster writes it in the journal." hand=${hand}>
+      note="Play a way: every leader is told, the Orkmaster writes it in the journal." hand=${hand} phase=${phaseOf(slug) || "talk"}>
     <div class="bt">
       <section class="bt-side bt-new" aria-label="The new card"><p class="cards-lab" data-race="orkmaster">The new card</p>
         <${SpCard} party=${n.goal} n=${faceOf(n)} name=${n.short || n.title} line=${n.state === "talk" ? "talk" : n.state} size="xl" label=${`${n.title}, the new card`} /></section>
