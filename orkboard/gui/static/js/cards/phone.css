@@ -14,3 +14,48 @@
 /* a card opened fills the screen: its frame and corners kept, its height grows (cards.css gives it the whole window at 600 px and under) */
 @media (max-width: 600px) { .cards-veil { place-items: stretch; } .cards-l { box-sizing: border-box; min-height: 100%; } .cards-l__body { font-size: 16px; } .cards-l__shut { top: calc(var(--ork-3) + env(safe-area-inset-top, 0px)); } }
 .cards-l .post-card__dots { display: none; }
+
+/* the phone's header, round button and turns on the table of cards (hand/uptop.js, upyours.js, upround.js, turnphone.js; decisions §298.7, §298.9; docs/mockups/table-grammar/ ?face=phone). The header holds what the person has: two bottles at most and *+n*, the chain, *Yours* (a menu) and the discard,
+   so its gaps close and the project's name, then Settings, give way first (the menu keeps both). Layout only: every colour, face and corner is orkUI's. */
+.up-top.is-cards { gap: 0; }
+.up-top.is-cards .up-pots { gap: 0; }
+.up-top.is-cards > :is(.up-crown, .up-ico, .up-pile, .up-yours) { flex: none; }
+.up-top.is-thin > .up-yours { display: none; }
+.up-yours { position: relative; flex: none; width: var(--ork-tap); height: var(--ork-tap); }
+.up-yours__btn { appearance: none; box-sizing: border-box; width: var(--ork-tap); height: var(--ork-tap); margin: 0; padding: 0; display: grid; place-items: center; border: var(--ork-line) solid transparent; background: none; color: var(--ork-ink); cursor: pointer; }
+.up-yours.is-open .up-yours__btn { border-color: var(--ork-ink); background: var(--ork-raised); }
+.up-yours__btn:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.up-yours .up-round__pic { flex: none; width: 32px; height: 32px; object-fit: contain; }
+.up-yours__menu { position: absolute; right: 0; top: calc(100% + var(--ork-2)); z-index: 12; box-sizing: border-box; width: max-content; max-width: calc(100vw - var(--ork-5) * 2); display: flex; flex-direction: column;
+  border: var(--ork-line) solid var(--ork-ink); background: var(--ork-panel); }
+.up-yours__item { appearance: none; box-sizing: border-box; min-height: 56px; margin: 0; padding: var(--ork-2) var(--ork-5); display: flex; align-items: center; gap: var(--ork-5); border: 0; border-top: var(--ork-line) solid var(--ork-card-frame); background: none; color: var(--ork-ink); text-align: left; cursor: pointer; }
+.up-yours__item:first-child { border-top: 0; }
+.up-yours__item:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); background: var(--ork-raised); }
+.up-yours__item .up-round__pic, .up-yours__none { flex: none; width: 40px; height: 40px; object-fit: contain; }
+.up-yours__none { display: grid; place-items: center; color: var(--ork-ink-muted); }
+.up-yours__none .ork-icon { width: 24px; height: 24px; }
+.up-yours__words { display: flex; flex-direction: column; min-width: 0; }
+.up-yours__word { font: var(--ork-type-heading); font-size: 17px; line-height: 20px; }
+.up-yours__line { font: var(--ork-type-caption); font-size: 14px; line-height: 18px; color: var(--ork-ink-muted); white-space: nowrap; }
+
+/* the round button's fan: the moves only, two small cards rising over the foot, each its word in a label beside it; the button shows × while it is open */
+.up-round.is-open .up-round__face .ork-icon { width: 28px; height: 28px; color: var(--ork-on-ink); }
+.up-fan { gap: var(--ork-5); }
+.up-fan__opt { appearance: none; box-sizing: border-box; min-height: var(--ork-tap); margin: 0; padding: 0; display: flex; align-items: center; justify-content: flex-end; gap: var(--ork-4); border: 0; background: none; color: var(--ork-ink); cursor: pointer; }
+.up-fan__lab { padding: var(--ork-3) var(--ork-4); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-panel); font: var(--ork-type-heading); font-size: 17px; line-height: 20px; }
+.up-fan__card { flex: none; box-sizing: border-box; width: 64px; height: 62px; padding: 0; display: flex; align-items: center; justify-content: center; }
+.up-fan__card .ork-icon { width: 28px; height: 28px; }
+.up-fan__card .up-round__pic { width: 32px; height: auto; }
+.up-fan__opt:focus-visible .up-fan__card { box-shadow: 0 0 0 2px var(--ork-ink); }
+.up-fan__opt:focus-visible .up-fan__lab { box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.up-row.no-plus .up-cards { padding-left: var(--ork-4); }
+.up-row.no-plus[data-cue="left"]::after { left: var(--ork-4); }
+
+/* a turn's ways on the opened card: each a button of 44 px with the line that says what it does under it */
+.up-turn { display: flex; flex-direction: column; gap: var(--ork-4); }
+.up-turn__text { margin: 0; overflow-wrap: anywhere; }
+.up-turn__way { display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-1); }
+.up-turn__way .ork-btn { min-height: var(--ork-tap); justify-content: center; }
+.up-turn__line { color: var(--ork-ink-muted); font-size: 14px; line-height: 18px; overflow-wrap: anywhere; }
+.up-turn__pen { display: flex; flex-direction: column; gap: var(--ork-3); padding-top: var(--ork-2); }
+.up-turn__pen textarea { width: 100%; box-sizing: border-box; }

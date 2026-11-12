@@ -7,7 +7,7 @@ import { ORKMASTER, picked, tab } from "../frame/state.js";
 import { mapData } from "../shell/store.js";
 import { partiesAll } from "../table/data.js";
 import { Context } from "./context.js";
-import { goalOfEntry, looking } from "./entries.js";
+import { at, goalOfEntry, looking } from "./entries.js";
 import { ReadyCard, readyStop } from "./readycard.js";
 import { Lifted } from "./stopcard.js";
 import { Feed, GoalFeed } from "./upfeed.js";
@@ -16,7 +16,7 @@ import { GoalHead, Phases, Tasks, Waits, Why } from "./upway.js";
 /** What is looked at, `{kind: "goal" | "card" | "party" | "feed", entry, node?, slug?, g?}`: "party" the feed narrowed to the party `g`; `entry` is the card shown (its entry in the hand), null for none. `i`: the place the hand's entry on the screen holds (`placeOf`). */
 export function lookOf(entries, i) {
   const nodes = mapData.value?.nodes || [], slug = picked.value, node = slug ? nodes.find((n) => n.slug === slug) : null;
-  if (node) return { kind: "goal", slug, node, entry: entries.find((e) => goalOfEntry(e) === slug) || null };
+  if (node) return { kind: "goal", slug, node, entry: entries.find((e) => e.key === at.value && goalOfEntry(e) === slug) || entries.find((e) => goalOfEntry(e) === slug) || null };      // the entry pressed in the row, else the goal's first
   const g = tab.value !== ORKMASTER ? partiesAll().find((x) => x.slug === tab.value) : null;
   if (g) return { kind: "party", g, entry: null };
   const e = looking.value ? entries[i] || null : null, goal = e ? goalOfEntry(e) : "", n = goal ? nodes.find((x) => x.slug === goal) : null;

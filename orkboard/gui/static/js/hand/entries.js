@@ -15,7 +15,7 @@ export const later = signal([]);                   // goals ready for main put b
 export const looking = signal(false);              // the phone looks at the entry `at` names (a card of the row pressed), not at the feed (goal 169 F)
 let was = 0;                                       // the place the entry on the screen held, for when it goes
 
-const goalKey = (s) => { const g = goalOfStop(s); return g && !g.startsWith("party:") ? `goal:${g}` : `card:${s.key}`; };
+const goalKey = (s) => { const g = goalOfStop(s); return g && !g.startsWith("party:") && s.kind !== "turn" && s.kind !== "battle" ? `goal:${g}` : `card:${s.key}`; };      // a card at its turns and a battle are entries of their own (decisions §298.7)
 
 /** The entries: `{key, kind: "stops" | "ready", stops, ready?, head, element, name}`; `head`, `element` and `name` are what an arrow to it draws and says. */
 export function entriesOf(stops, readyGoals = [], hidden = later.value) {

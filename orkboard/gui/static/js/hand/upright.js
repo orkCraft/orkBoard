@@ -22,6 +22,7 @@ import { feltOf } from "../table/felt.js";
 import { presenceNow } from "../table/presence.js";
 import { partiesAll } from "../table/data.js";
 import { routeOf } from "./upway.js";
+import "./turnphone.js";                                   // a card at its turns and a battle open on the phone as a question does (decisions §298.7)
 
 /** The felt the phone's table wears (spec 161 K, decisions §275.3): the party shown, the party of the goal shown (the one at work in its route, else its first, else the goal's own) or of the card's leader; the Orkmaster's wood when none is. */
 function feltOfLook(look) {

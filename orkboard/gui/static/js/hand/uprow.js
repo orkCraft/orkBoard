@@ -19,6 +19,9 @@ import { pickEntry, toFeed } from "./entries.js";
 import { PlusCard } from "./pluscard.js";
 import { Round, roundOpen } from "./upround.js";
 import { useScrollCue } from "../scrollcue.js";
+import { cardsOn } from "../cards/on.js";
+import { openSpread } from "../cards/spreads/open.js";
+import { mapData } from "../shell/store.js";
 
 const ASKS = ["asks", "goal", "pick", "collide"];
 export const CUE_MS = 1400;                                  // how long the edge cue is bright
@@ -69,8 +72,16 @@ export function groupsOf(entries, parties = partiesNow()) {
   return [...by.values()].sort((a, b) => a.lane - b.lane);
 }
 
-/** The row: the entries' cards laid by leader, the picked one (`cur`) raised and kept in view, the + card at the end. */
+/** A card of the row pressed: a battle opens the Orkmaster's spread of it (cards/spreads/battle.js; decisions §298.7), any other is picked, and pressed again goes back to the feed. `from`: the card, where the focus goes back. */
+function press(e, cur, from) {
+  if (e.stops?.[0]?.kind === "battle") openSpread({ kind: "battle", slug: e.stops[0].ref.slug, from });
+  else if (cur?.key === e.key) toFeed();
+  else pickEntry(e);
+}
+
+/** The row: the entries' cards laid by leader, the picked one (`cur`) raised and kept in view, the + card at the end. On the table of cards the + card is the round button's *New goal* (upround.js), drawn here only while there is no goal at all (decisions §298.9). */
 export function Row({ entries, cur, plus }) {
+  const lone = !cardsOn() || !(mapData.value?.nodes || []).length;
   const cards = useRef(), seen = useRef(null), [cue, setCue] = useState(""), dealt = useHanded(entries.filter((e) => e.kind !== "ready").map((e) => ({ key: e.key, top: true, ...whoOf(e.stops[0]), name: askerOf(e.stops[0]), words: handsWords(e.stops[0]) })));
   useEffect(() => {                                              // the picked card is kept inside the row's clear part (the + card lies over its left end, the round button over its right)
     const row = cards.current, el = row?.querySelector('[aria-pressed="true"]');
@@ -92,11 +103,11 @@ export function Row({ entries, cur, plus }) {
     const t = setTimeout(() => setCue(""), CUE_MS);
     return () => clearTimeout(t);
   }, [keys]);
-  return html`<div class=${cls("up-row", { "is-round": roundOpen.value })} role="group" aria-label="Cards in the hand" data-cue=${cue || undefined}>
+  return html`<div class=${cls("up-row", { "is-round": roundOpen.value, "no-plus": !lone })} role="group" aria-label="Cards in the hand" data-cue=${cue || undefined}>
     <div class="up-cards gui-scrolls" ref=${cards}>${groupsOf(entries).flatMap((g) => [
       html`<span key=${`sep:${g.key}`} class="up-sep" data-lane=${g.key} aria-hidden="true">${g.head && html`<${Head} race=${g.head.race} tier=${g.head.tier} />`}</span>`,
-      ...g.entries.map((e) => html`<${Entry} key=${e.key} e=${e} on=${cur?.key === e.key} onPick=${() => (cur?.key === e.key ? toFeed() : pickEntry(e))} dealt=${dealt[e.key] ?? null} />`)])}</div>
-    <div class="up-plus"><${PlusCard} onPress=${plus} /></div>
-    <${Round} />
+      ...g.entries.map((e) => html`<${Entry} key=${e.key} e=${e} on=${cur?.key === e.key} onPick=${(ev) => press(e, cur, ev?.currentTarget)} dealt=${dealt[e.key] ?? null} />`)])}</div>
+    ${lone && html`<div class="up-plus"><${PlusCard} onPress=${plus} /></div>`}
+    <${Round} plus=${plus} />
   </div>`;
 }
