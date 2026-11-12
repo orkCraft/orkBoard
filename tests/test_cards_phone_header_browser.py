@@ -128,13 +128,6 @@ def test_a_card_of_a_move_that_waits_in_the_foot_opens_its_ways_or_its_mat(base)
         cards = pg.locator(".up-card[data-key^='card:turn/']")
         cards.first.scroll_into_view_if_needed()
         assert cards.count() == 4 and pg.locator(".up-card[data-kind=stops][data-key$='/battle']").count() == 0
-        pg.locator(".up-card[data-key='card:turn/173-example-2/talk']").click()
-        pg.locator(".up-look .hand-lifted[data-kind=turn]").get_by_role("button", name="Open it").click()
-        pg.locator("[data-spread=track]").wait_for(timeout=5000)
-        assert pg.locator(".frame-hand .mathand").count() == 0                                              # a phone: the mat's ways stay the foot of its screen
-        assert pg.locator("[data-spread=track] .mf-foot [data-way=drop]").count() == 1
-        pg.locator("[data-spread=track] .sp-shut").click()
-        pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
         pg.locator(".up-card[data-key='card:turn/172-example-1/asks']").click()
         look = pg.locator(".up-look .hand-lifted[data-kind=turn]")
         look.wait_for(timeout=5000)
@@ -144,6 +137,21 @@ def test_a_card_of_a_move_that_waits_in_the_foot_opens_its_ways_or_its_mat(base)
         assert look.locator("textarea").is_visible()
         look.get_by_role("button", name="Move it").click()
         assert [a for n, a in pg.evaluate(SENT) if n == "ideas.answer"] == [{"slug": "172-example-1", "answers": ["Move it"], "from": "hand"}]
+        # answered: the hand goes on to the next card by itself and opens it. It is the next card that lies open now, and a tap on it would put it back to the feed (the one opened, tapped again),
+        # which is what a tap here once did and read as "the next card does not open".
+        nxt = pg.locator(".up-look[data-entry='card:turn/173-example-2/talk'] .hand-lifted[data-kind=turn]")
+        nxt.wait_for(timeout=5000)
+        nxt.get_by_role("button", name="Open it").click()
+        pg.locator("[data-spread=track]").wait_for(timeout=5000)
+        assert pg.locator(".frame-hand .mathand").count() == 0                                              # a phone: the mat's ways stay the foot of its screen
+        assert pg.locator("[data-spread=track] .mf-foot [data-way=drop]").count() == 1
+        pg.locator("[data-spread=track] .sp-shut").click()
+        pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
+        pg.locator(".up-card[data-key='card:turn/174-example-3/spec']").click()                              # a spec all written: its mat holds *Start the work* on its seal
+        pg.locator(".up-look .hand-lifted[data-kind=turn]").get_by_role("button", name="Open it").click()
+        seal = pg.locator("[data-spread=track] [data-seal=start]")
+        seal.wait_for(timeout=5000)
+        assert "Start the work" in seal.inner_text() and "cost not known yet" in seal.inner_text() and pg.locator("[data-spread=track] [data-way=start]").count() == 0
         narrow.no_sideways(pg)
         assert not errors, errors
         b.close()

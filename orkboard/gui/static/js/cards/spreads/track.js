@@ -11,6 +11,7 @@ import { dropGoal, takeBackGoal } from "../dropped.js";
 import { playMove } from "../played.js";
 import { settle, unsettle } from "../../hand/turnstops.js";
 import { closeSpread } from "./open.js";
+import { startSeal } from "./trackstart.js";
 import { SpBack, SpCard, SpreadFrame } from "./shell.js";
 
 /** A goal's stages, first to last: [{party, state: "done" | "now" | "next", done, total, at}]. */
@@ -47,7 +48,7 @@ export function Track({ slug }) {
   const say = !now ? "Every stage is done." : `${done.length} of ${stages.length} stages done, ${nameOfParty(now.party)} is at work. You need not look at the ones to come.`;
   const face = (i) => all || turned[i];
   return html`<${SpreadFrame} kind="track" title=${`${title}: where it is`} line=${parties.join(", then ")} say=${say}
-      note="A stage to come turns face up when it starts. Pressed, a face-down card says only its name." hand=${waysOf(slug, n, title)}
+      note="A stage to come turns face up when it starts. Pressed, a face-down card says only its name." hand=${waysOf(slug, n, title)} seal=${startSeal(slug, n, title)}
       acts=${next.length > 0 && html`<button type="button" class="ork-btn" aria-pressed=${String(all)} onClick=${() => setAll(!all)}><${Icon} name="eye" /><span>${all ? "Hide what comes" : "Show what comes"}</span></button>`}>
     <div class="sp-road">
       ${done.length > 0 && html`<div class="sp-col"><span class="sp-pile" aria-label="Stages done">${done.slice(-3).map((s, i, a) => html`<${SpCard} key=${i} party=${s.party} n=${card}

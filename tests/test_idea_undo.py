@@ -73,7 +73,7 @@ def test_take_back_is_a_drop_s_undo_only(host):
 
 def test_every_kind_is_one_press_with_its_reverse_or_sealed():
     assert not set(idea_undo.ONE_PRESS) & set(idea_undo.SEALED)
-    assert set(idea_undo.SEALED) == {"merge_main", "send_branch", "ship_release", "paid_pass"}
+    assert set(idea_undo.SEALED) == {"merge_main", "send_branch", "ship_release", "paid_pass", "start_work"}
     for kind in {*idea_undo.ONE_PRESS, *idea_undo.SEALED}:
         assert idea_undo.way(kind) in ("press", "sealed")
     assert all(idea_undo.ONE_PRESS.values())                         # a reverse for each
@@ -87,6 +87,17 @@ def test_a_sealed_kind_moves_only_on_its_seal(host):
     for name in ("ideas.to_main", "ideas.goal_to_dev", "ideas.release_out"):
         with pytest.raises(IdeasError, match="only on its seal"):
             host.command(name, {"slug": "goal"})
+
+
+def test_start_is_sealed_where_a_card_plays_it_and_as_it_was_for_the_older_faces(host):
+    """Goal 171 K: a card of the hand or a mat (`from: hand|mat`) starts the work only on its seal; a press with no `from` is the older faces' and goes by its own checks."""
+    for origin in ("hand", "mat"):
+        with pytest.raises(IdeasError, match="only on its seal"):
+            host.command("ideas.start", {"slug": "goal", "from": origin})
+    with pytest.raises(IdeasError, match="no plan yet"):
+        host.command("ideas.start", {"slug": "goal", "from": "mat", "sealed": True})      # sealed: it reaches the host's own checks
+    with pytest.raises(IdeasError, match="no plan yet"):
+        host.command("ideas.start", {"slug": "goal"})
 
 
 def test_the_moves_are_logged_and_published(host):

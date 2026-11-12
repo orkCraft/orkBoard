@@ -191,6 +191,28 @@ def test_a_goal_whose_talk_is_said_opens_its_mat_and_the_hand_is_that_mats_ways_
         b.close()
 
 
+def test_a_spec_all_written_has_start_the_work_on_its_seal_with_its_cost_said_and_a_talk_has_none(turned_url):
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = b.new_page(viewport={"width": 1440, "height": 900})
+        turned(pg, turned_url)
+        pg.locator(f"{HAND}[data-kind=turn][data-goal='{TALK}']").click()
+        pg.locator("[data-spread=track]").wait_for(timeout=5000)
+        assert pg.locator("[data-seal]").count() == 0                                                              # a Talk said: nothing that cannot be undone
+        pg.keyboard.press("Escape")
+        pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
+        pg.locator(f"{HAND}[data-kind=turn][data-goal='{SPEC}']").click()
+        seal = pg.locator("[data-spread=track] [data-seal=start]")
+        seal.wait_for(timeout=5000)
+        assert "Start the work" in seal.inner_text() and "cost not known yet" in seal.inner_text()                  # the host gives no estimate here: said so
+        assert pg.locator(".mathand [data-way=start]").count() == 0 and pg.locator(".mathand [data-way=drop]").count() == 1      # Start is no way of the hand
+        seal.click()
+        assert sent(pg, "ideas.start") == [{"slug": SPEC, "from": "mat", "sealed": True}]
+        pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
+        assert pg.locator(f"{HAND}[data-goal='{SPEC}']").count() == 0
+        b.close()
+
+
 def test_drop_on_the_mat_sends_from_mat_and_undo_puts_the_page_back(turned_url):
     with sync_playwright() as p:
         b = launch(p)
