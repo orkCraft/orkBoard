@@ -198,5 +198,24 @@ def lay_standard(data: dict) -> None:
     lay_jobs(data)
 
 
+def lay_turns(data: dict) -> None:
+    """The host's `ideas.turns` for the goals the hand's tests press (goal 171 K): a goal that asks (one question with three ways, and one with two questions), one whose Talk is all said, one
+    whose spec is all written, and one that asks what a Needs you row asks already (its question is that goal's card, so it gets no second). A goal that waits for nobody has none."""
+    ask = lambda q, *ways: {"ask": q + EXAMPLE, "ways": list(ways)}  # noqa: E731
+    turns = [{"goal": "172-example-1", "kind": "asks", "at": at(11, 1), "questions": [ask("Keep the timer in the corner?", "Keep it", "Move it", "Drop it")]},
+             {"goal": "173-example-2", "kind": "talk", "at": at(11, 2)},
+             {"goal": "174-example-3", "kind": "spec", "at": at(11, 3)},
+             {"goal": "175-example-4", "kind": "asks", "at": at(11, 4), "questions": [ask("Which coin first?", "Gold", "Silver"), ask("How many coins?", "Three", "Ten")]},
+             {"goal": "166-the-orkmaster-reads-the-decisions", "kind": "asks", "at": at(11, 5), "questions": [ask("Titles only?", "Yes", "No")]}]
+    ensure(data, "ideas.turns", {})
+    reply(data, "ideas.turns")["result"] = {"turns": turns}
+
+
+def lay_turned(data: dict) -> None:
+    """The standard lays and the moves that wait."""
+    lay_standard(data)
+    lay_turns(data)
+
+
 def recording() -> dict:
     return copy.deepcopy(json.loads(RECORDING.read_text(encoding="utf-8")))

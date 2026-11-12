@@ -22,7 +22,7 @@ from orkboard.realm import ideas
 ONE_PRESS = {"drop": "put the page and its state back",
              "hold": "put the state back",
              "answer": "put the page and its state back"}
-SEALED = {"merge_main": "Merge into main", "send_branch": "Send to a branch", "ship_release": "Ship a release", "paid_pass": "a paid pass"}
+SEALED = {"merge_main": "Merge into main", "send_branch": "Send to a branch", "ship_release": "Ship a release", "paid_pass": "a paid pass", "start_work": "Start the work"}
 
 CHANGED_SINCE = "It changed since: nothing undone"
 NOTHING = "Nothing to undo"

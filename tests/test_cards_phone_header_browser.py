@@ -22,6 +22,7 @@ import serve_mock  # noqa: E402
 
 pytestmark = pytest.mark.browser
 SHOTS = os.environ.get("ORK_SHOTS", "")
+SENT = "() => import('/app/page/js/mock/mocklink.js').then((m) => m.sent.value.map((x) => [x.name, x.args]))"
 LIMITS = """() => import('/app/page/js/link.js').then(({ town }) => {
   const row = (name, left) => ({ provider: name.toLowerCase(), name, left, rows: [{ window: "5h", left, reset: "" }] });
   town.value = { ...town.value, limits: [row("Claude", 0.7), row("Codex", 0.4), row("Gemini", 0.1), row("Qwen", 0.9)], mana: { main: "claude", now: "claude", until: null, moved: null, paid: null } };
@@ -30,7 +31,7 @@ LIMITS = """() => import('/app/page/js/link.js').then(({ town }) => {
 
 @pytest.fixture(scope="module")
 def base():
-    s = serve_mock.serve(0, mock_kit.lay_standard)
+    s = serve_mock.serve(0, mock_kit.lay_turned)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}"
     s.shutdown()
@@ -119,13 +120,38 @@ def test_the_round_buttons_fan_is_new_goal_and_play_only_and_new_goal_opens_the_
         b.close()
 
 
-def test_the_phones_hand_deals_no_turn_card_and_no_battle_card_until_stage_k_reads_ideas_turns(base):
-    """Was: a turn card in the foot opens its ways, a battle card opens the battle spread: three cards (an idea rated, a spec rated, a battle) laid by the mock's
-    `proposed.turns` and `proposed.battles`. The host lays no battle and the hand deals no turn from `ideas.turns` yet (goal 171 stage K), so the row holds none."""
+def test_a_card_of_a_move_that_waits_in_the_foot_opens_its_ways_or_its_mat(base):
+    """Was: a turn card in the foot opens its ways, a battle card opens the battle spread (laid by the mock's `proposed.turns`). Now the cards are the host's `ideas.turns`: a goal that asks opens its
+    question's ways and *In your own words*, a goal whose Talk is said opens its mat by *Open it*. The host lays no battle, so no battle card is drawn (not back)."""
     with sync_playwright() as p:
         b, pg, errors = phone(p, base + "/app/?mock=1")
-        assert pg.locator(".up-card[data-key^='card:turn/']").count() == 0 and pg.locator(".up-card[data-kind=stops][data-key$='/battle']").count() == 0
-        assert pg.locator("[data-spread=battle]").count() == 0
+        cards = pg.locator(".up-card[data-key^='card:turn/']")
+        cards.first.scroll_into_view_if_needed()
+        assert cards.count() == 4 and pg.locator(".up-card[data-kind=stops][data-key$='/battle']").count() == 0
+        pg.locator(".up-card[data-key='card:turn/172-example-1/asks']").click()
+        look = pg.locator(".up-look .hand-lifted[data-kind=turn]")
+        look.wait_for(timeout=5000)
+        for name in ("Keep it", "Move it", "Drop it", "In your own words"):
+            assert look.get_by_role("button", name=name).count() == 1, name
+        look.get_by_role("button", name="In your own words").click()
+        assert look.locator("textarea").is_visible()
+        look.get_by_role("button", name="Move it").click()
+        assert [a for n, a in pg.evaluate(SENT) if n == "ideas.answer"] == [{"slug": "172-example-1", "answers": ["Move it"], "from": "hand"}]
+        # answered: the hand goes on to the next card by itself and opens it. It is the next card that lies open now, and a tap on it would put it back to the feed (the one opened, tapped again),
+        # which is what a tap here once did and read as "the next card does not open".
+        nxt = pg.locator(".up-look[data-entry='card:turn/173-example-2/talk'] .hand-lifted[data-kind=turn]")
+        nxt.wait_for(timeout=5000)
+        nxt.get_by_role("button", name="Open it").click()
+        pg.locator("[data-spread=track]").wait_for(timeout=5000)
+        assert pg.locator(".frame-hand .mathand").count() == 0                                              # a phone: the mat's ways stay the foot of its screen
+        assert pg.locator("[data-spread=track] .mf-foot [data-way=drop]").count() == 1
+        pg.locator("[data-spread=track] .sp-shut").click()
+        pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
+        pg.locator(".up-card[data-key='card:turn/174-example-3/spec']").click()                              # a spec all written: its mat holds *Start the work* on its seal
+        pg.locator(".up-look .hand-lifted[data-kind=turn]").get_by_role("button", name="Open it").click()
+        seal = pg.locator("[data-spread=track] [data-seal=start]")
+        seal.wait_for(timeout=5000)
+        assert "Start the work" in seal.inner_text() and "cost not known yet" in seal.inner_text() and pg.locator("[data-spread=track] [data-way=start]").count() == 0
         narrow.no_sideways(pg)
         assert not errors, errors
         b.close()

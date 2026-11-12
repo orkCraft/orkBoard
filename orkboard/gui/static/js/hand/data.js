@@ -72,13 +72,15 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork), ...inCodeStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...decidedStops(map, after), ...(cardsOn() ? turnStops(map, after) : []), ...nightProposalStops(needs, { ...after, window: String(board.value?.night || "") }), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
+  const first = [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...decidedStops(map, after)];
+  const moves = cardsOn() ? turnStops(map, { ...after, covered: new Set(first.filter((s) => ["asks", "goal", "talk", "cause"].includes(s.kind)).map(goalOfStop)) }) : [];      // the moves that wait (ideas.turns): a goal whose question is a card already has no second one (turnstops.js)
+  return [...first, ...moves, ...nightProposalStops(needs, { ...after, window: String(board.value?.night || "") }), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 
 /** The goal a stop belongs to ("" for a stop of no goal), and the stack it lies in: a goal's; a party's own question (`party:<slug>`); a sign-in alone. */
 export const goalOfStop = (s) => (s.kind === "sign_in" ? "" : s.node?.slug || s.row?.idea || (s.kind === "pick" ? s.row?.slug : "") || s.result?.idea || "");
 export function stackKey(s) {
-  if (s.kind === "turn" || s.kind === "battle") return s.key;                        // a card at its turns or a battle is a stack of its own, beside its goal's questions (decisions §298.7)
+  if (s.kind === "battle") return s.key;                                           // a battle is a stack of its own, beside its goal's questions (decisions §298.7); a move that waits lies in its goal's stack (§300.2)
   const goal = goalOfStop(s);
   return goal || (s.kind === "sign_in" ? s.key : s.kind === "concern" ? `concerns:${s.row.goal}` : s.row?.goal ? `party:${s.row.goal}` : s.key);      // a leader's concerns are one stack of their own (spec 168 D4)
 }

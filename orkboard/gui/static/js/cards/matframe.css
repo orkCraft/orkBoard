@@ -7,6 +7,7 @@
   display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 22px 30px 16px; }
 .mf-veil > .sp.mf:has(> .cards-said) { grid-template-rows: auto auto minmax(0, 1fr) auto; }
 .mf > .cards-said { margin: 10px 8px 0; }
+.mf-veil.has-hand { bottom: 200px; }      /* a desktop mat ends above the hand that follows it, which lies at the window's foot, live (cards/mathand.css) */
 
 /* the head: the avatar, one plate with the title and its line, what the Orkmaster says on a plate, the way out */
 .mf-h { display: flex; align-items: center; gap: 12px; padding: 0 4px; }

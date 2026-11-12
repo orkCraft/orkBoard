@@ -1,13 +1,14 @@
 // The discard's third pile, Dropped (decisions §298.8): the goals dropped lie face down under their plate, thickness only and no number; pressed, the pile spreads them face up
 // (S cards with their last tokens), each with *Take back*, which sends `ideas.take_back {slug}` and brings the goal back to the hand (the host answers it: gui/ideas_mats.py, a Drop's Undo).
-// The host keeps no list of the goals dropped, so the pile holds this page's own drops. A goal dropped on this page (the hand's *Drop*, hand/turncards.js)
-// lies here at once, kept in a signal; one taken back is out of the pile and its turn is back in the hand. Dropping a goal stays the person's: nothing here drops one.
+// The host keeps no list of the goals dropped, so the pile holds this page's own drops. A goal dropped on this page (a mat's *Drop*, cards/spreads/track.js)
+// lies here at once, kept in a signal; one taken back is out of the pile and its turns are back in the hand (hand/turnstops.js). Dropping a goal stays the person's: nothing here drops one.
 import { useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html } from "../html.js";
 import { command } from "../link.js";
 import { CardS } from "./card.js";
 import { nodeOf } from "./feed.js";
+import { unsettle } from "../hand/turnstops.js";
 
 export const droppedNow = signal([]);           // the goals dropped on this page, the last one first
 export const takenBack = signal([]);            // the goals taken back out of the pile (the host's own list may still name them)
@@ -21,7 +22,7 @@ const nodeIn = (slug) => nodeOf(slug) || null;
 
 function One({ slug }) {
   const n = nodeIn(slug) || { slug, title: slug }, card = { slug, title: n.short || n.title || slug, element: n.element, hue: n.hue, sign: n.type?.sign || "check", leader: n.goal };
-  const back = () => Promise.resolve(command("ideas.take_back", { slug })).then(() => takeBackGoal(slug)).catch(() => {});
+  const back = () => Promise.resolve(command("ideas.take_back", { slug })).then(() => { takeBackGoal(slug); unsettle(slug, "*"); }).catch(() => {});
   return html`<div class="cards-dropped__one" data-dropped=${slug}><${CardS} n=${card} line="dropped" />
     <button type="button" class="ork-btn" data-act="take_back" onClick=${back}><span>Take back</span></button></div>`;
 }

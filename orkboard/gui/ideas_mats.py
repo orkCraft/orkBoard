@@ -23,12 +23,15 @@ from orkboard.realm import board_turns, code_layers, board_ask, event_log, idea_
 SEALED_BY = {"ideas.to_main": "merge_main", "ideas.gate_merge": "merge_main", "ideas.goal_to_dev": "send_branch", "ideas.release_out": "ship_release",
              "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass"}
 ONE_PRESS_BY = ("ideas.drop", "ideas.queue", "ideas.answer")
+SEALED_ON_CARDS = {"ideas.start": "start_work"}        # sealed where a card of the hand or a mat plays it (`from: hand|mat`): starting begins paid work that cannot be undone; the older faces' presses of it (no `from`) are as they were
 
 
 def move_kind(name: str, args: dict) -> str:
     """The kind of the hand's move a command is ("" for any other): a Hold is the queue's `hold` (or the old `night`), an answer is a question's way (not a party's)."""
     if name in SEALED_BY:
         return SEALED_BY[name]
+    if name in SEALED_ON_CARDS:
+        return SEALED_ON_CARDS[name] if args.get("from") in ("hand", "mat") else ""
     if name == "ideas.drop":
         return "drop"
     if name == "ideas.queue":
@@ -38,7 +41,7 @@ def move_kind(name: str, args: dict) -> str:
 
 def played(ideas_: Any, name: str, fn: Any) -> Any:
     """`gui/ideas.py`'s `guarded` runs a command through this: a sealed kind is refused unless the page sends its seal; a one-press move keeps its Undo and logs `move_played`."""
-    if name not in SEALED_BY and name not in ONE_PRESS_BY:
+    if name not in SEALED_BY and name not in ONE_PRESS_BY and name not in SEALED_ON_CARDS:
         return fn
 
     def run(args: dict) -> Any:
