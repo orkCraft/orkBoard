@@ -8523,3 +8523,29 @@ recommended and the person said *write them all down*, the recommended way is ta
    deck*, *proposed*, *team*, *seal*).
 
 The owner's call.
+
+## 301. No mock data: every mat on the Board's own data, its logic in the host; compare shows above what the card in focus would make; every picture of the final build one prompt of its own (12 November 2026, the owner)
+
+Changes: 296.10, 298.10, 299.7 and 300.17 (built on mocks, what the host does not answer the contract the mocks hold), 300.1's
+compare (a view above its cards). Kept: 300 but its point 17, 267 (what code reads is free, what only a leader can say is a model's
+pass), 57.3 and 160.6 (the person's money never spent in silence), the Board's *main is the person's*.
+
+Why: the person, 12 November 2026, after decision §300: «мы снимаем мок-данные и уже пишем бизнес-логику по всему»; «у меня есть
+все промпты для генерации графики через Gemini… отдельно каждый промпт на каждый сет айтемов, которые нужны для конечного билда»;
+«планшет сравнения сможет сверху показать результат выбора при выделении карты: например если это разная архитектура или дизайн».
+So:
+1. **The page draws no mock data**: every mat reads the host's answer. The contracts the mocks held (`js/mock/parts/`) become the
+   host's: commands answered in `gui/` by services of `core/` and `realm/`, which publish on the bus (CLAUDE.md); `js/mock/` stays
+   only as the tests' fixtures, never reached by the page (a test says so). Where the Board has nothing yet (no persona, no release
+   goal, one release), a mat lays its empty zones with what fills them and who (*Product lays its jobs*), never an example.
+2. **What code reads is read** (the gate's checks, the branches, the merges, the history, the Board's goals and decisions): free.
+   **What only a leader can say** (a verdict, a hypothesis, a proposed card, a compare's view) **is its pass** (its role file, as
+   now), its cost on its tool's potion said before it runs.
+3. **Into main stays the person's**: *Merge into main* asks first and is the person's press only; no pass and no timer presses it.
+4. **Compare shows above its cards what the card in focus would make**, laid small in its own layout: an architecture's way its
+   scheme, a design's way its screen or its flow, a goal its cost on the potions. Focus moves the view; a card pressed picks it and
+   the view stays. On a phone the view stands on top, the cards under it.
+5. **Every picture the final build needs is one prompt of its own** in `docs/pictures-cartoon.md`, written whole, nothing in it to
+   swap, a set of items each, with where each set stands; the mats' sets (N1, E1 to E3) are added there.
+
+The owner's call.
