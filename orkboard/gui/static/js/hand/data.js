@@ -58,6 +58,9 @@ export function readyWords(r) {
   return `${r.commits} ${r.commits === 1 ? "commit" : "commits"} ready for ${r.main}`;
 }
 
+/** The kinds of old card that ask a question of the person: a spec's or a party's (`asks`, `goal`), Talk's and a bug's cause (`talk`, `cause`). */
+const QUESTIONS = new Set(["asks", "goal", "talk", "cause"]);
+
 /** Every stop of the project, the most urgent first, a to-do last of all: each Needs you row, a failed task and a pick, a result to look at, the tools' sign-ins
  *  (arenawords.js, as the old hand read them). `open`: the tab that is open: a party's slug, or "orkmaster" for the Board's (every party at once, so no card says its party:
  *  its leader's head does). On a party's tab a stop of another party says its party. */
@@ -72,8 +75,9 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork), ...inCodeStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  const first = [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...decidedStops(map, after)];
-  const moves = cardsOn() ? turnStops(map, { ...after, covered: new Set(first.filter((s) => ["asks", "goal", "talk", "cause"].includes(s.kind)).map(goalOfStop)) }) : [];      // the moves that wait (ideas.turns): a goal whose question is a card already has no second one (turnstops.js)
+  const asked = cardsOn() ? out.filter((s) => !QUESTIONS.has(s.kind)) : out;      // on the table of cards a question is its turn card (turnstops.js): its way is one press with its Undo, no pass; the old card of it is not dealt
+  const first = [...todoLast(byUrgency(asked)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...decidedStops(map, after)];
+  const moves = cardsOn() ? turnStops(map, after) : [];      // the moves that wait (ideas.turns, turnstops.js)
   return [...first, ...moves, ...nightProposalStops(needs, { ...after, window: String(board.value?.night || "") }), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 

@@ -8,8 +8,8 @@ export const UNDO_S = 6;                      // the toast offers Undo this long
 export const UNDO = "Undo";
 
 /** Takes the last move of a goal back (`ideas.undo`); `back` runs once the page is as it was. Resolves whether it was put back. */
-export async function undoMove(goal, back) {
-  try { await command("ideas.undo", { idea: goal }); } catch { return false; }          // refused: the host's toast says why (it changed since)
+export async function undoMove(goal, back, party = false) {
+  try { await command("ideas.undo", { idea: goal, ...(party ? { party: true } : {}) }); } catch { return false; }          // refused: the host's toast says why (it changed since)
   toast("Put back: the goal is as it was.");
   back?.();
   return true;
@@ -17,10 +17,10 @@ export async function undoMove(goal, back) {
 
 /** Plays a move: `name`/`args` the command, `from` where it was pressed (hand or mat), `goal` the goal it is about, `said` what the toast says, `done` runs once it went, `back` once it is undone.
  *  `sealed`: the seal (a move that cannot be undone): sent as such, no Undo offered. Resolves whether it went. */
-export async function playMove(name, args, { from, goal, said, done, back, sealed = false }) {
+export async function playMove(name, args, { from, goal, said, done, back, sealed = false, party = false }) {
   try { await command(name, { ...args, ...(sealed ? { sealed: true } : {}), from }, true); } catch (e) { if (e?.message !== "offline") toast(e?.message || "Refused", "error", name); return false; }
   done?.();
   if (sealed) toast(said);
-  else toast(said, "information", "", UNDO_S, null, [{ label: UNDO, run: () => undoMove(goal, back) }]);
+  else toast(said, "information", "", UNDO_S, null, [{ label: UNDO, run: () => undoMove(goal, back, party) }]);
   return true;
 }

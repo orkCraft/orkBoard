@@ -1,7 +1,7 @@
 // The hand's cards of the moves that wait for the person (goal 171 stage K; decisions §300.2, §301.2; the table of cards only): `ideas.turns` is the host's, read from the Board's pages with no model and no write
 // (`{turns: [{goal, kind, at, questions?}]}`, kinds `asks` (a question waits), `talk` (its leaders have all said their Talk), `spec` (every section is written)), asked once a snapshot as `ideas.feed` is.
-// One card a goal that waits, grouped by goal (data.js `stackKey`): what is not asked of the person has none, and nothing is dealt that the host did not name. A goal whose question is already a card of the
-// hand (the Needs you rows keep their stops as today) is that card: it gets no second one. Pressed, the card lifts its ways (`asks`: turncards.js) or opens the mat its move lies on (talk, spec).
+// One card a goal that waits, grouped by goal (data.js `stackKey`): what is not asked of the person has none, and nothing is dealt that the host did not name. On this table a question is only ever this
+// card (data.js `stopsOfProject` leaves the old Needs you cards of a goal's, a Talk's, a party's and a bug's question out): its ways are one press, `ideas.answer_way`. A party's own question (`party: true`) lies in its lane. Pressed, the card lifts its ways (`asks`: turncards.js) or opens the mat its move lies on (talk, spec).
 // A battle is a card of its own (kind `battle`), laid by a mat of its own goal; none is dealt here. Their cards in play are turncards.js's.
 import { signal, effect } from "@preact/signals";
 import { command, town } from "../link.js";
@@ -37,17 +37,16 @@ export const TURN_WORDS = {
 
 const HEAD = { race: "peon", tier: "crown" };      // the Orkmaster's, who deals the moves that wait
 
-/** The hand's stops of the moves that wait: one a goal, in the pages' order. `ctx`: as questions.js `projectStops` has it (`party(slug)`), `covered`: the goals whose question already lies in the hand as a card. */
+/** The hand's stops of the moves that wait: one a goal, in the pages' order. `ctx`: as questions.js `projectStops` has it (`party(slug)`), `goal(slug)`: a party's map entry. */
 export function turnStops(map, ctx = {}) {
   const out = [];
   for (const t of turns.value?.turns || []) {
     if (!TURN_WORDS[t.kind] || settled.value.includes(`${t.goal}:${t.kind}`) || settled.value.includes(`${t.goal}:*`)) continue;      // `*`: the goal's mat played a move that ends all its turns (a Drop, a Hold)
-    if (t.kind === "asks" && ctx.covered?.has(t.goal)) continue;
-    const n = (map?.nodes || []).find((x) => x.slug === t.goal);
-    if (!n) continue;                            // a goal the Board does not show has no card to lie on
-    const title = n.short || n.title || t.goal, text = TURN_WORDS[t.kind](t), party = ctx.party?.(n.goal) || null;
-    out.push({ key: `turn/${t.goal}/${t.kind}`, kind: "turn", ref: { slug: t.goal, turn: t.kind, questions: t.questions || [], at: t.at || "" }, row: { goal: n.goal, idea: t.goal, kind: "turn", blocks: true }, node: n, task: null,
-      label: "Waits for you", gem: "", tone: "alert", gemTip: "", head: HEAD, small: true, whoTip: "", title, full: n.title || title, text, why: "", party, other: false });
+    const mine = t.party ? ctx.goal?.(t.goal) : null, n = t.party ? null : (map?.nodes || []).find((x) => x.slug === t.goal);
+    if (!n && !mine) continue;                   // a goal the Board does not show has no card to lie on
+    const title = n ? n.short || n.title || t.goal : mine.short || mine.title || t.goal, text = TURN_WORDS[t.kind](t), party = ctx.party?.(n ? n.goal : t.goal) || null;
+    out.push({ key: `turn/${t.goal}/${t.kind}`, kind: "turn", ref: { slug: t.goal, turn: t.kind, questions: t.questions || [], at: t.at || "", party: !!t.party }, row: { goal: n ? n.goal : t.goal, ...(n ? { idea: t.goal } : {}), kind: "turn", blocks: !!n }, node: n, task: null,
+      label: "Waits for you", gem: "", tone: "alert", gemTip: "", head: HEAD, small: true, whoTip: "", title, full: n?.title || title, text, why: "", party, other: false });
   }
   return out;
 }

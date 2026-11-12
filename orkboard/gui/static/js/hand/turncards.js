@@ -18,11 +18,11 @@ export const sentWords = (answers) => `Sent: ${answers.join(" · ")}`.slice(0, 1
 
 /** The card of a goal that asks, at question `picked.length` (`picked`: the answers so far); `pick(answers)` is called with the answers so far, the last one sends. */
 export function turnCard(s, picked = [], pick = () => {}) {
-  const { slug, questions } = s.ref, n = s.node, qs = questions || [], i = Math.min(picked.length, Math.max(0, qs.length - 1)), q = qs[i] || { ask: s.text, ways: [] };
+  const { slug, questions, party } = s.ref, n = s.node, qs = questions || [], i = Math.min(picked.length, Math.max(0, qs.length - 1)), q = qs[i] || { ask: s.text, ways: [] };
   const take = (text) => {
     const next = [...picked, text];
     if (next.length < qs.length) { pick(next); return Promise.resolve(); }
-    return playMove("ideas.answer_way", { slug, answers: next }, { from: "hand", goal: slug, said: sentWords(next), done: () => { settle(slug, "asks"); lower(); }, back: () => unsettle(slug, "asks") });
+    return playMove("ideas.answer_way", { slug, answers: next, ...(party ? { party: true } : {}) }, { from: "hand", goal: slug, party: !!party, said: sentWords(next), done: () => { settle(slug, "asks"); lower(); }, back: () => unsettle(slug, "asks") });
   };
   const ways = (q.ways || []).map((w, k) => ({ id: `way-${k}`, name: w, line: "", pick: false, kind: "", run: () => take(w) }));
   return { title: s.title, foot: `${q.ask}${qs.length > 1 ? ` (${i + 1} of ${qs.length})` : ""}`, sign: "question", element: n?.element || "", hue: n?.hue || "", head: s.head, tab: ORKMASTER, whole: true, ways,
