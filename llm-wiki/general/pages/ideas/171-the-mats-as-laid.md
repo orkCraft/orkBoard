@@ -102,6 +102,9 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - [x] N3. Design's not accepted, the second time: the track mat's zone whole at 390
   - party: Tech (a simpler model). The track mat's field starts at its top as the gate's does, so its zone's label and meeple lie whole on the zone's frame at 390×844; tests/test_cards_mat_browser.py checks the zone labels at 390 too; the fit test flags a word cut off by its field instead of skipping it.
   - proves: Design's *Done when* lines 2 and 5, made again (the last time: what is still not met goes under Not accepted)
+- [ ] O2. Product's not accepted: H7's signal counts how the person reached a move
+  - party: Tech (a simpler model). A sealed move played from a hand card or a mat (Start the work, Merge into main, Send to a branch, Ship a release, a paid pass) logs `move_played` with its kind and `from` once it goes, and keeps no Undo (gui/ideas_mats.py `played()`); a move on a mat its hand card opened is sent `from: hand`, `from: mat` kept for a mat opened from the table (js/cards/spreads/track.js, trackstart.js; js/hand/turncards.js openMoveMat knows the card that opened it); tests/test_cards_hand_browser.py and the host's tests check both.
+  - proves: Product's *Done when* line 5, made again
 - [ ] O. Product accepts the step
   - party: Product. Its pass of its own (its role file, its section, the gate's record of A to L, the files they changed), against its *Done when* and *Will be* (H7); what it does not accept is one more stage, twice at most.
   - proves: Product's *Done when* and *Will be*, accepted
@@ -165,6 +168,12 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - H7 is the next free number (H1 to H6 taken); `move_played` (idea, kind, from, device) joins `realm/event_log.py`'s closed list.
 - Product's Jobs to be done reads its jobs from the tree (§172, `tree.json`) and its persona from the person's answer to Product's question: no new store.
 - Undo is the history's (§302.4, the fifth answer above): a move another has changed since cannot be undone, and says so.
+### Accepted
+- met: When the table of cards opens (?table=cards) as the person first meets it, then each fixture goal that waits for the person (a question, its Talk all said, its spec all written) is one card in the hand, grouped by goal, and a goal waiting for nobody has none
+- met: When the person opens a mat from its hand card and closes it again, then while it is open the hand holds that mat's ways only, and once it is closed every card of the moves that wait is back, none lost
+- met: When the table of cards opens (?table=cards) on a Board that keeps no job, as this repository's, then Product's Jobs to be done lays its zones empty, each naming who fills it, and no word on the page ends in « · example»
+- met: When the person presses a one-press move (Drop, Hold, a question's way) and then Undo, then the goal's page is byte for byte as before; Merge into main, Send to a branch, Ship a release and a paid pass move only on their seal
+- not met: When the person plays a move from a hand card or from its mat, then the event log keeps `move_played` with the goal, the move's kind and where it was pressed (hand or mat), never a word, so H7 can be counted — a sealed move (Start the work on a spec's mat, Merge into main, a paid pass) logs no move_played (gui/ideas_mats.py `played`); a move on a mat its hand card opened is logged from: mat as one opened from the table (cards/spreads/track.js, trackstart.js), which H7 counts as refuting, so every Talk and spec turn played from the hand counts against it
 
 ## Design
 ### Talk
