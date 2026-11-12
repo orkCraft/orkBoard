@@ -48,7 +48,7 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 ## Depends on
 
 ## Stages
-- [ ] A. H7, the hand's belief, in docs/hypotheses.md
+- [x] A. H7, the hand's belief, in docs/hypotheses.md
   - party: Product. H7 after H6, in their form (*Status*, *The belief*, *What would prove it, what would refute it*, *How we test it*, *If it holds*): the person settles a goal's turns from the hand of moves that wait, not by looking for them on the table. **Holds** when, over the days on `?table=cards`, most moves are played from a hand card (`move_played` with `from: hand`); **refuted** when the person finds what waits by opening mats from the table or the old pane. Its signal `move_played` (idea, kind, from, device), which keeps no word of the person's or a leader's; the days are thin until goal 170's last step turns the cards on (Product's risk), and it says so. Nothing else changes. Tests: tests/test_hypotheses_file.py, tests/test_gui_hypotheses.py.
   - proves: Product's *Will be* (new hyp:h7); Product's check *H7 in docs/hypotheses.md says what holds it, what refutes it and how it is tested, its signal `move_played`…*
 - [ ] B. The moves that wait: realm/board_turns.py and ideas.turns
