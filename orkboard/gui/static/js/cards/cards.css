@@ -34,6 +34,7 @@
   background: var(--ork-raised) url(/ds/orkui/backs/back.svg) center / 100% 100%; transform: rotate(var(--rot, 0deg)); box-shadow: 0 3px 0 var(--ork-room); }
 .cards-deck { position: relative; display: block; flex: none; width: 100%; height: 92px; margin: 0; padding: 0; border: 0; background: none; cursor: pointer; overflow: hidden; }
 .cards-dealer .cards-back { width: 52px; }
+.cards-dealer .cards-deck { height: 76px; }
 
 /* a token */
 .cards-toks { display: flex; flex-wrap: wrap; gap: 3px 6px; align-items: center; }
@@ -72,6 +73,7 @@
 
 /* the window in cards: the dealer's lane as wide as the mockup's (docs/mockups/table-cards/: 248 px at 1440), the discard a little wider */
 .frame[data-cards="1"] { --column-w: 236px; --col-w: 250px; }
+.frame[data-cards="1"] .col-scroll { padding-right: 0; }      /* the dealer lane fills its column (column.css kept room at the right for a pile's slid-out back) */
 .cards-dealer .ork-card.cards-s { --card-w: 104px; }
 /* an M's head keeps the leader's name whole: the label and the ask wrap under it, the dots (no act on an M) are not drawn */
 .cards-m .post-card__who { flex-wrap: wrap; row-gap: 2px; }

@@ -1,19 +1,19 @@
 /* The hand's right on the table of cards (cards/handright.js; decisions §298.9): two groups with small caps labels, a thin line between, and the
    deck of blank cards at the window's edge, half hidden, its top card rising when pointed at or focused. Layout only: every colour is orkUI's. */
 @media (min-width: 760px) {
-  .frame[data-cards="1"] .hand .hand-row .hand-end.hr { position: relative; flex: none; width: max-content; margin-right: calc(var(--ork-4) * -1); justify-content: flex-end; align-items: center; align-self: stretch; gap: var(--ork-5); padding-right: 124px; }
+  .frame[data-cards="1"] .hand .hand-row .hand-end.hr { position: relative; flex: none; width: max-content; margin-right: calc(var(--ork-4) * -1); justify-content: flex-end; align-items: center; align-self: stretch; gap: var(--ork-5); padding-right: 150px; }
   .hr-group { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); pointer-events: auto; }
   .hr-lab { font: var(--ork-type-label); letter-spacing: var(--ork-type-label-track); text-transform: uppercase; color: var(--ork-ink-muted); white-space: nowrap; }
   .hr-items { display: flex; align-items: flex-end; gap: var(--ork-4); }
   .hr-sep { align-self: center; flex: none; width: 1px; height: 72px; background: var(--ork-frame); }
 
   /* the deck: a box at the window's right edge that clips its card; the card lies half out of it, tilted, with the backs' edges under it */
-  .hr-deck { position: absolute; right: 0; top: 0; bottom: 0; width: 112px; overflow: hidden; pointer-events: none; }
+  .hr-deck { position: absolute; right: 0; top: 0; bottom: 0; width: 136px; overflow: hidden; pointer-events: none; }
   .hr-blank { appearance: none; position: absolute; inset: 0; margin: 0; padding: 0; border: 0; background: none; color: var(--ork-ink); cursor: pointer; pointer-events: auto; }
-  .hr-blank__top.ork-card.ork-plus { position: absolute; right: -52px; bottom: 30px; width: 96px; rotate: -8deg; color: var(--ork-success); border: 1px solid var(--ork-success);
+  .hr-blank__top.ork-card.ork-plus { position: absolute; right: -58px; bottom: 30px; width: 118px; rotate: -8deg; color: var(--ork-success); border: 1px solid var(--ork-success);
     box-shadow: -5px 4px 0 -1px var(--ork-raised), -5px 4px 0 0 var(--ork-card-frame), -10px 8px 0 -1px var(--ork-raised), -10px 8px 0 0 var(--ork-card-frame);
     transition: translate var(--ork-motion-quick) var(--ork-motion-ease), rotate var(--ork-motion-quick) var(--ork-motion-ease); }
-  .hr-blank:is(:hover, :focus-visible) .hr-blank__top { translate: -10px -14px; rotate: -4deg; }
+  .hr-blank:is(:hover, :focus-visible) .hr-blank__top { translate: -30px -14px; rotate: -4deg; }
   .hr-blank:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
   .hr-blank__cap { position: absolute; right: 8px; bottom: 6px; display: inline-flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-read); white-space: nowrap; }
   .hr-blank.is-under .hr-blank__top { visibility: hidden; }
