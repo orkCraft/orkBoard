@@ -8428,3 +8428,98 @@ as an icon: faint, as slots for cards*; then: *for the battle, upright: above th
    slots and the upright battle; what the host does not answer yet the contract the mocks hold (`js/mock/parts/`).
 
 The owner's call.
+
+## 300. A mat is known by its layout and its one move; the move lies on its mat, the hand a card for each move that waits; a card of the project has one keeper and lies in the Orkmaster's deck; the backpack is a seat's mats, its team laid by its hero's steps; a mat is laid as a playmat (12 November 2026, the owner)
+
+Changes: 296.5 (what is the person's move lies in the hand only: now the move lies on its mat and the hand holds a card for each
+move that waits), 296.7 (the person never moves a card: a card is put into a release), 297.2 (the closed list of what a mat opens),
+298.3 (only the leaders put tokens: the gate's checks put theirs), 298.6 (the Orkmaster's spreads: *What each card costs*, *Weigh
+two* and *Sort the new goals* are one mat, *The deal* the discussion's ring), 299.2 (an opened card's row of its mats), 299.5 (the
+slots of each kind), 273 (the discard's two piles), 266.3 and 267.1 (a leader's seats and the stall). Kept: 296 but its points 5
+and 7, 297.3 to 297.6, 298 but its points 3 and 6, 299 but its points 2 and 5's list, 270.2 and 283.19 (a question's ways are the
+hand's cards), 298.5 (the person asks by replying, never by a token), 298.8 (the Dropped pile).
+
+Why: §299.5 left how each kind of mat is laid to a talk of its own: the talk of 12 November 2026 on the mockups `docs/mockups/mats/`
+(`?v=hand|rate|compare|battle|gate|flow|scheme|slots|discard|chart|storymap|persona|shared|pack|team|packom|deck|closed`,
+`&face=desk|phone`, `&step=1|2` on the battle). The person: *all the work with cards happens in mats, and a table is a set of mats*;
+*a card is a mat's content and a token a question and its answer*; then laid the mats one by one, each with its move (the hand, a
+rating, a compare, a battle, the gate, a flow, a scheme, slots, the discard), added a chart's drops for live ops and a story map
+by the versions, folded the gate into the battle (*the tests' cards on top*), asked that the project's cards be the same in every
+framework (*a persona of Product's leader must be the same at the designer's and the marketer's*), that the backpack and the book
+be mats, that a leader's team be laid by its hero's steps, and that the mats look like a collectible card game's. Where a way was
+recommended and the person said *write them all down*, the recommended way is taken. So:
+1. **A mat is known by its layout and its one move**, never by whose it is; **a mat is where the person has a move**, and what has
+   none (a goal at work, its stages) is read in its card (L). Ten layouts: **the hand** (cards in a row, grouped by goal); **the
+   discussion** (a card in the middle, the tokens of its route on a ring round it, each its slip; *Rating* is its first case, its
+   head names the moment: *Rating*, *Spec*, *Accept*); **compare** (up to six cards, 3 × 2 on a desktop and 2 × 3 on a phone, each
+   its price, a picture its middle when they are assets; pick one); **the battle** (§299.6; the gate is a battle nobody disputes,
+   point 8); **the flow** (a tree of cards with arrows, its tokens under each; mark a problem, change a way); **the scheme** (decks
+   and their links; open a deck, ask its keeper); **slots** (a fixed number of cells; fill one with a card offered or one's own);
+   **piles** (the discard, point 9; the deck, point 12); **the grid** (rows and columns named by cards: the story map, point 10, and
+   the team, point 14); **the time axis** (days across: the history book; with a measure's line and slots under its drops, Run's
+   chart, point 11). A mat closed shows its layout's slots (§299.5), each layout its own; where an M leaves less than a third under
+   its words, three slots at its right.
+2. **The move lies on its mat**, at its foot's right, one; **the hand holds a card for each move that waits**, grouped by goal: pressed,
+   it lifts its ways (a turn's, a question's, §270.2) or opens the mat its move lies on. Every gesture is a button with its word and a
+   key (§296.9).
+3. **An opened card shows no row of its mats**: one line says where it lies now (its address, §299.3), pressed it opens that mat; where
+   it was is in the book. **A card has one life**: a mat shows it and never holds it; a card dropped leaves every mat at once.
+4. **A card is a goal, a decision or a part** (point 12), its top right corner says which; nothing else is a card. The mockups' other
+   shapes are these: a check in the gate is the decision it guards, the gate's token on it; a goal's price its act (§296.3), no slip
+   of its own, why in the Orkmaster's balloon; a stage a line of its card's L, the stack at the gate the card itself, its thickness its
+   stages; a release a goal of the kind *release*, its act *Ship <release>*; a pile in the discard the goal whose branch it is (dev and
+   main are places); *New card…* the deck of blank cards (§298.9).
+5. **A token is a question and its answer**: a leader's, of its craft (§298.3's look kept); the gate's, of a check (yes or no); Run's,
+   a hypothesis under a drop. **The person puts none** (§298.5): *Ask <leader>…* of a leader not on a card lays that leader's token
+   dashed on the ring, a chair at the table, filled when it answers.
+6. **The discussion is no mat of its own beyond the ring**: one token's thread is its slip (the last exchange shown, the earlier ones
+   folded as *2 earlier*); when a second leader joins a thread, or two leaders differ, the Orkmaster's balloon says so and the ring
+   opens; *Choice* is ways in the hand, *Fork* the compare mat (§266.5); a question about no card is asked from the leader's tab, its
+   answer a word in its lane. The mat's name is *Discussion*.
+7. **The Orkmaster's column** lays compare (*What each card costs*, *Weigh two* and *Sort the new goals* are one mat, by the number of
+   its cards) and the discussion's ring (*The deal*'s chairs are the route's tokens); a battle; the discard.
+8. **The gate is a battle**: above, the decisions its checks guard, face up the ones a failing check guards with the gate's token *no*
+   on it, the agreeing ones a pile (its thickness, no number); below, the stack. A check that fails has two ways: **Fix it** (back to
+   work, its stage again; the default) and **The test is out of date** (it asks the craft's leader, and a new decision comes first:
+   never one press). With none failing, one move: **Send to <branch>**, its words naming the branch.
+9. **The discard is a pile for each branch with done cards** (this changes §273's two): above each its *into* list (a sheet on a phone)
+   and **Merge into <branch>**, the branch in its words; a pile with a card not through the gate cannot, and says why; into main it
+   asks first, main being the person's; what goes into main leaves the table for the book. *Dropped* lies face down beside (§298.8).
+10. **The story map is Product's**: its jobs across (the job cards of its Jobs to be done, point 12), the releases down, below them *Not
+   in a release*; a card is put into a release and a job by its *into* (the key I; this changes §296.7); a release ships when every
+   card of its row is in main (*Ship <release>*, Release's act). On a phone one release at a time, its jobs a list.
+11. **Run's chart** is the time axis with a measure's line, the merges into main marked on it; under each drop Run's hypotheses as its
+   tokens, each closed by a card (a fix or a check) or *Not related*. **Later**: when Run reads a measure of the running product.
+12. **A card of the project has one keeper**: the others lay it in their frameworks' slots and put their tokens on it, never copy it;
+   its keeper changes it, the change comes to the others as a compare of before and after. It says where it lies (its frameworks and
+   slots, never a count). Two alike are laid in a battle (*Merge*). It outlives a hero and a party. Shared so: a **persona** (Product's;
+   Design's *who is stopped*, Marketing's *who cares*), a **job** and a **struggle** (Product's; a barrier is a struggle with its
+   screen), an **alternative** (Product's; Marketing's *the alternatives*), a **screen** (Design's), a **part of the code** (Tech's), a
+   **measure** (Product's outcome; Marketing's funnel, Release's keys, Run's rates), an **asset** (Art's, or Design's), an **error**
+   (Run's), a **seat** (its leader's). A part's face: its keeper's tool top left, its kind top right, its keeper's framework's hero in
+   the middle. A card a leader proposes lies faint, *proposed by <leader>*, until its keeper takes it; refused, a card comes to the
+   person's hand: *Take it into the deck*, *Drop it*, *Ask both*. **They live in the project's deck**, one deck of the Board's files,
+   held by the Orkmaster.
+13. **The backpack and the book are mats** (§298.1): **the backpack is a seat's set of mats**, the chair picked saying whose (§267.1):
+   a leader's *its hero* (compare), *how it is set* (slots: how it answers, how often it says no), *its team* (point 14), *its cards*
+   (piles: the deck, those it keeps and the others' in its framework); the Orkmaster's *how the project is set* (slots, §266.2), *its
+   team* (the Orkmaster and the Taskmaster), *the project's deck*. The stall of §267 is laid as these mats (its rug compare's grid, its
+   price plates the price on the act). The book is the time axis.
+14. **The team is a grid**: its seats down (its leader first, an empty chair last, which seats one sooner, §266.7), the goal's phases
+   across with *Work* laid as its hero's flow steps (Spike Shaman's *Red*, *Green*, *Refactor*, *Released small*); *Talk*, *Spec* and
+   *Accept* are its leader's always. A seat is a part its leader keeps: its race's head with its tier's gear (§288), its AI tool's mark,
+   its price a goal. The moves: its tool, its tier, who does a step, an empty chair, *Take off the chair* (§266.12); a hero changed
+   changes the *Work* columns, the Orkmaster's pick filling a new step, shown before the hero is taken. On a phone the seats on top, the
+   steps a list.
+15. **A mat is laid as a playmat**: its owner's felt with its bronze frame (orkUI's `.ork-table`), its words on plates (§275.2); its
+   zones printed in bronze, their labels on the frame, an empty zone's sign faint inside; the ways a fan of cards; its move a seal,
+   dim with its why until it can be pressed; the tokens thick; the goal's phases along its foot where they say something; its emblem
+   under its zones and its cards turned a little, quiet, on a desktop only. A word lies on paper (its plaque), a mat on felt. No new
+   colour; orkUI's rule of no smooth gradient and no blurred shadow kept.
+16. **On a phone** every mat is the whole screen with *Back*; the flow runs top-down, the scheme's decks stand in a column, the story
+   map shows a release at a time, the team is turned.
+17. **Built** on the table of cards on mocks (`js/cards/`, `?mock=1`), what the host does not answer yet the contract the mocks hold
+   (`js/mock/parts/`); its words enter `realm/lexicon.py` `TERMS` with the code that draws them (*Discussion*, *keeper*, *the project's
+   deck*, *proposed*, *team*, *seal*).
+
+The owner's call.
