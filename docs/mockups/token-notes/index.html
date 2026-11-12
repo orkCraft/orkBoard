@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard: a token's note, three ways</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* A token's note (goal 170's talk, 12 November 2026): what a leader's token or the person's says, three ways side by side.
+   ?v=balloon|slip|tag &face=desk|phone. A balloon: a speech bubble with a tail to the token. A slip: a paper under the card, held
+   down at its corner by the token. A tag: a label tied to the token by a thread. Each shown on an S in a lane (one token pressed)
+   and on the dispute: the goal's card opened, the leaders' tokens round it with their notes, the ways in the hand. Mockup only. */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 14px/19px var(--ork-font-read); }
+.face { position: relative; overflow: hidden; background: var(--ork-table); }
+.face.desk { width: 1440px; height: 900px; display: grid; grid-template-columns: 470px 1fr; grid-template-rows: 1fr 190px; }
+.face.phone { width: 390px; height: 844px; display: flex; flex-direction: column; }
+.cap { font: 700 11px/14px var(--ork-font-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ork-ink-muted); display: flex; align-items: center; gap: 8px; }
+.cap::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ork-ink-muted); }
+.vname { position: absolute; right: 16px; top: 12px; z-index: 9; padding: 4px 10px; background: var(--ork-alert); color: var(--ork-on-ink); font: 700 13px/18px var(--ork-font-text); }
+
+/* the lane */
+.lane { position: relative; padding: 18px 22px; border-right: 1px solid var(--ork-frame); display: flex; flex-direction: column; gap: 14px; }
+.lane h3 { margin: 0; font: 700 18px/22px var(--ork-font-text); display: flex; align-items: center; gap: 10px; }
+.lane h3 img { width: 34px; }
+.row { position: relative; display: flex; gap: 18px; align-items: flex-start; }
+
+/* an S */
+.s { position: relative; flex: none; width: 150px; aspect-ratio: 2.5 / 3.5; padding: 30px 12px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.s .tl { position: absolute; left: 10px; top: 8px; width: 16px; } .s .tr { position: absolute; right: 10px; top: 8px; width: 16px; }
+.s .pic { width: 52px; } .s b { font: 700 15px/19px var(--ork-font-text); text-align: center; align-self: stretch; }
+.s .bl { position: absolute; left: 10px; bottom: 10px; font: 400 12px/15px var(--ork-font-read); color: var(--ork-ink-muted); }
+.s .br { position: absolute; right: 8px; bottom: 8px; display: flex; }
+.s.big { width: 230px; padding: 40px 16px 16px; } .s.big .pic { width: 84px; } .s.big b { font-size: 20px; line-height: 25px; }
+.s.dim { opacity: .45; }
+
+/* a token */
+.tok { position: relative; flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--hue); color: var(--ork-on-ink);
+  font: 700 16px/1 var(--ork-font-text); box-shadow: 0 0 0 2px var(--ork-card), 0 3px 0 var(--ork-room); }
+.tok + .tok { margin-left: -12px; }
+.tok.on { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.tok.you { background: var(--ork-ink); color: var(--ork-room); }
+.tech { --hue: var(--ork-party-ork); } .design { --hue: var(--ork-party-elf); } .product { --hue: var(--ork-party-knight); } .om { --hue: var(--ork-party-orkmaster); }
+
+/* what every note says */
+.note .who { display: flex; align-items: center; gap: 8px; } .note .who img { width: 26px; }
+.note .who b { font: 700 13px/16px var(--ork-font-text); } .note .who span { font: 700 11px/14px var(--ork-font-text); letter-spacing: .08em; text-transform: uppercase; color: var(--hue); }
+.note p { margin: 4px 0 0; font: 400 14px/19px var(--ork-font-read); color: var(--ork-ink); }
+.note p small { display: block; margin-top: 3px; color: var(--ork-ink-read); font-size: 12px; line-height: 16px; }
+.note textarea { width: 100%; margin-top: 6px; height: 44px; resize: none; background: var(--ork-room); color: var(--ork-ink); border: 1px solid var(--ork-edge); font: 400 13px/17px var(--ork-font-read); padding: 6px; }
+
+/* 1. the balloon */
+.v-balloon .note { position: absolute; width: 250px; padding: 10px 12px; background: var(--ork-paper, var(--ork-panel)); background: var(--ork-panel); border: 1px solid var(--ork-card-frame);
+  border-radius: 14px; box-shadow: 0 6px 0 var(--ork-room); z-index: 3; }
+.v-balloon .note::after { content: ""; position: absolute; width: 14px; height: 14px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); border-top: 0; border-left: 0; rotate: 45deg; }
+.v-balloon .note.tail-down::after { left: 24px; bottom: -8px; } .v-balloon .note.tail-left::after { left: -8px; top: 18px; rotate: 135deg; } .v-balloon .note.tail-right::after { right: -8px; top: 18px; rotate: -45deg; }
+.v-balloon .note.tail-up::after { left: 24px; top: -8px; rotate: 225deg; }
+
+/* 2. the slip under the token */
+.v-slip .note { position: absolute; width: 250px; padding: 12px 14px 12px 22px; background: #e9dfc7; color: #2a241c;
+  border-left: 4px solid var(--hue); box-shadow: 0 4px 0 rgba(0,0,0,.45); rotate: -1.5deg; z-index: 1; }
+.v-slip .note p, .v-slip .note .who b { color: #2a241c; } .v-slip .note p small { color: #5a5040; }
+.v-slip .note .pin { position: absolute; left: -16px; top: -14px; }
+.v-slip .note.r { rotate: 1.5deg; }
+.v-slip .note textarea { background: #f6efdc; color: #2a241c; border-color: #b8a882; }
+
+/* 3. the tag on a thread */
+.v-tag .note { position: absolute; width: 240px; padding: 10px 12px 10px 26px; background: var(--ork-raised); border: 1px solid var(--hue); z-index: 3;
+  clip-path: polygon(14px 0, 100% 0, 100% 100%, 14px 100%, 0 50%); box-shadow: none; }
+.v-tag .note::before { content: ""; position: absolute; left: 10px; top: calc(50% - 4px); width: 8px; height: 8px; border-radius: 50%; background: var(--ork-room); border: 1px solid var(--hue); }
+.v-tag .thread { position: absolute; z-index: 4; height: 2px; background: var(--hue); transform-origin: 0 50%; pointer-events: none; }
+.v-tag .note.flip { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%); padding: 10px 26px 10px 12px; }
+.v-tag .note.flip::before { left: auto; right: 10px; }
+
+/* the dispute: the goal's card opened in the pane */
+.pane { position: relative; display: flex; flex-direction: column; padding: 18px 28px; }
+.oh { display: flex; align-items: center; gap: 12px; } .oh img { width: 48px; }
+.oh b { font: 700 20px/24px var(--ork-font-text); display: block; } .oh small { color: var(--ork-ink-read); }
+.oh .say { margin-left: auto; padding: 8px 12px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); border-radius: 12px; max-width: 420px; font-size: 13px; line-height: 18px; }
+.ring { position: relative; flex: 1; }
+.ring .s.big { position: absolute; left: 50%; top: 50%; translate: -50% -50%; }
+.hand { grid-column: 1 / -1; display: flex; gap: 14px; align-items: flex-end; padding: 0 24px 14px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); }
+.hand .s { width: 118px; padding: 26px 10px 10px; } .hand .s b { font-size: 13px; line-height: 17px; } .hand .s .pic { width: 40px; }
+.hand .s.lift { translate: 0 -14px; box-shadow: inset 0 3px 0 var(--hue), 0 0 0 2px var(--ork-alert); }
+.hand .hn { align-self: center; color: var(--ork-ink-muted); font-size: 13px; max-width: 260px; }
+.hand .mine { margin-left: auto; align-self: center; display: flex; gap: 14px; align-items: center; }
+.hand .mine .tok { width: 40px; height: 40px; font-size: 20px; }
+.hand .mine small { display: block; text-align: center; font-size: 11px; color: var(--ork-ink-muted); }
+.hand .places { display: flex; gap: 14px; align-self: center; } .hand .places img { width: 44px; }
+
+/* the phone */
+.ph-top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--ork-room); border-bottom: 1px solid var(--ork-frame); }
+.ph-top b { font: 700 18px/22px var(--ork-font-text); }
+.ph-body { position: relative; flex: 1; overflow: hidden; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.ph-body .s.big { position: relative; left: auto; top: auto; translate: none; width: 170px; align-self: center; padding: 34px 12px 12px; }
+.ph-body .s.big .pic { width: 60px; } .ph-body .s.big b { font-size: 16px; line-height: 20px; }
+.ph-body .stack { display: flex; flex-direction: column; gap: 10px; }
+.phone .note { position: relative !important; left: auto !important; top: auto !important; width: auto !important; rotate: none !important; }
+.v-slip.phone .note { margin-left: 14px; } .v-tag.phone .note { margin-left: 18px; }
+.ph-hand { display: flex; gap: 8px; padding: 10px 12px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); align-items: flex-end; }
+.ph-hand .s { width: 84px; padding: 22px 6px 6px; } .ph-hand .s b { font-size: 11px; line-height: 14px; } .ph-hand .s .pic { width: 28px; } .ph-hand .s .bl { display: none; }
+.ph-split { display: flex; gap: 6px; padding: 0 0 4px; }
+.ph-lab { font: 700 11px/14px var(--ork-font-text); letter-spacing: .1em; text-transform: uppercase; color: var(--ork-ink-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search), V = q.get("v") || "slip", FACE = q.get("face") || "desk";
+const R = "../../../design-system/orkui/", H = { tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png", om: R + "races/peon-crown.png" };
+const NAME = { tech: "Tech", design: "Design", product: "Product", om: "Orkmaster" }, MARK = { risk: "!", question: "?", against: "✕", for: "✓" };
+const NOTES = {
+  tech: { view: "risk", text: "The dealer first hides the lanes on a laptop.", why: "At 1280 the Orkmaster's lane and two lanes do not fit beside a spread." },
+  design: { view: "for", text: "The lanes first: they are what is read most.", why: "Five of seven looks in the trial began at a lane." },
+  product: { view: "question", text: "Which do new people open first?", why: "We have not watched anyone new yet." },
+};
+const tok = (who, view, on = false) => `<span class="tok ${who}${on ? " on" : ""}" title="${NAME[who]}: ${view}">${MARK[view]}</span>`;
+const say = (who, n, extra = "") => `<div class="who"><img src="${H[who]}" alt=""><b>${NAME[who]}</b><span>${n.view}</span></div><p>${n.text}<small>${n.why}</small></p>${extra}`;
+const S = (o) => `<div class="s ${o.who} ${o.cls || ""}"><img class="tl" src="${R}runes/${o.rune || "comb"}.svg" alt=""><img class="tr" src="${R}signs/${o.sign || "feature"}.svg" alt="">
+  <img class="pic" src="${H[o.who]}" alt=""><b>${o.title}</b>${o.bl ? `<span class="bl">${o.bl}</span>` : ""}<span class="br">${o.br || ""}</span></div>`;
+
+/** a note at (x, y) in its parent, pointing at a token at (tx, ty); `side` where it opens */
+function note(who, n, x, y, side, tx, ty, extra = "") {
+  const pin = V === "slip" ? `<span class="pin">${tok(who, n.view)}</span>` : "";
+  const tail = V === "balloon" ? ` tail-${side}` : "", flip = V === "tag" && side === "right" ? " flip" : "", r = V === "slip" && side === "right" ? " r" : "";
+  return `<div class="note ${who}${tail}${flip}${r}" data-side="${side}" style="left:${x}px;top:${y}px">${pin}${say(who, n, extra)}</div>`;
+}
+
+const LABEL = { balloon: "A · balloon", slip: "B · slip under the token", tag: "C · tag on a thread" }[V];
+let html;
+if (FACE === "desk") {
+  const laneNote = V === "balloon" ? note("tech", NOTES.tech, 70, 92, "down", 0, 0) : note("tech", NOTES.tech, 182, 128, "left", 152, 344);
+  const ring = [
+    note("tech", NOTES.tech, 40, 70, "right", 368, 300),
+    note("design", NOTES.design, 640, 60, "left", 568, 290),
+    note("product", NOTES.product, 640, 300, "left", 568, 380),
+  ].join("");
+  html = `<div class="face desk v-${V}"><span class="vname">${LABEL}</span>
+    <section class="lane"><h3><img src="${H.tech}" alt="">Tech</h3><span class="cap">At work</span>
+      <div class="row" style="margin-top:${V === "balloon" ? 170 : 0}px">${S({ who: "tech", title: "The table, its edge", bl: "at work", br: tok("tech", "risk", true) + tok("design", "for") + tok("product", "question"), rune: "comb" })}
+        ${S({ who: "tech", title: "The Board", bl: "at work", br: "<span style='font-size:12px;color:var(--ork-ink-muted)'>40%</span>", rune: "hook", cls: V === "balloon" ? "" : "dim" })}</div>
+      ${laneNote}
+      <span class="cap" style="margin-top:auto">New since your last look</span>
+      <div class="row">${S({ who: "tech", title: "The Orkmaster reads decisions", bl: "talk", br: tok("you", "question"), rune: "eye" }).replace('class="tok you', 'class="tok you')}</div>
+      ${V === "balloon" ? "" : note("om", { view: "question", text: "", why: "" }, 182, 610, "left", 152, 820, "").replace(/<div class="who">.*?<\/div><p><small><\/small><\/p>/s, `<div class="who"><b>Your question to Tech</b></div><textarea>Do we need the dealer at all on a laptop?</textarea>`)}
+    </section>
+    <section class="pane"><div class="oh"><img src="${H.om}" alt=""><span><b>Tech and Design disagree</b><small>The table, its edge · the Orkmaster brings it to you</small></span>
+      <span class="say">Each put a token on it. Read them, then play a way from your hand.</span></div>
+      <div class="ring">${S({ who: "tech", cls: "big", title: "The table, its edge", bl: "talk · round 1", br: tok("tech", "risk") + tok("design", "for") + tok("product", "question"), rune: "comb" })}${ring}</div></section>
+    <footer class="hand">${S({ who: "tech", cls: "lift", title: "The table, its edge", bl: "! waits for you" })}
+      ${S({ who: "tech", title: "Answer Tech's risk first", bl: "Tech's way" })}${S({ who: "design", title: "Go with Design's view", bl: "Design's way" })}${S({ who: "om", title: "Your own words…", sign: "text" })}
+      <span class="hn">Play a way and every leader is told.</span>
+      <span class="mine">${["question", "concern"].map((k) => `<span><span class="tok you">${k === "question" ? "?" : "!"}</span><small>${k === "question" ? "Question" : "Concern"}</small></span>`).join("")}</span>
+      <span class="places"><img src="${R}die/die-rest.png" alt="" onerror="this.remove()"><img src="${R}pack/pack-open.png" alt="" onerror="this.remove()"><img src="${R}book/book-shut.png" alt="" onerror="this.remove()"></span></footer>
+  </div>`;
+} else {
+  const n = (who) => note(who, NOTES[who], 0, 0, "up", 0, 0);
+  html = `<div class="face phone v-${V}"><span class="vname">${LABEL}</span>
+    <header class="ph-top"><img src="${H.om}" alt="" width="34"><b>Tech and Design disagree</b></header>
+    <div class="ph-body">${S({ who: "tech", cls: "big", title: "The table, its edge", bl: "talk · round 1", br: tok("tech", "risk", true) + tok("design", "for") + tok("product", "question"), rune: "comb" })}
+      <div class="stack">${n("tech")}${n("design")}${n("product")}</div></div>
+    <footer class="ph-hand">${S({ who: "tech", title: "Answer Tech's risk first", bl: "" })}${S({ who: "design", title: "Go with Design's view" })}${S({ who: "om", title: "Your own words…", sign: "text" })}
+      <span style="margin-left:auto;display:flex;flex-direction:column;gap:6px"><span class="tok you">?</span><span class="tok you">!</span></span></footer>
+  </div>`;
+}
+document.getElementById("root").innerHTML = html;
+// a slip: the tokens leave the card and hold their slips down, so the card that is read shows none
+if (V === "slip") document.querySelectorAll(".pane .s.big .br, .ph-body .s.big .br, .lane .row:first-of-type .s:first-child .br").forEach((b) => { b.innerHTML = ""; });
+// a tag: a thread from the token it hangs from to the tag's eye, measured where both are drawn
+if (V === "tag") {
+  const face = document.querySelector(".face"), F = face.getBoundingClientRect();
+  document.querySelectorAll(".note").forEach((n) => {
+    const who = [...n.classList].find((c) => NAME[c] || c === "om"), scope = n.closest(".pane, .lane, .ph-body");
+    const t = who === "om" ? scope.querySelector(".tok.you") : scope.querySelector(`.s .tok.${who}`);
+    if (!t) return;
+    const a = t.getBoundingClientRect(), b = n.getBoundingClientRect(), right = n.dataset.side === "right";
+    const x1 = a.left + a.width / 2 - F.left, y1 = a.top + a.height / 2 - F.top, x2 = (right ? b.right - 14 : b.left + 14) - F.left, y2 = b.top + b.height / 2 - F.top;
+    const th = document.createElement("span");
+    th.className = `thread ${who}`;
+    th.style.cssText = `left:${x1}px;top:${y1}px;width:${Math.hypot(x2 - x1, y2 - y1)}px;rotate:${Math.atan2(y2 - y1, x2 - x1)}rad`;
+    face.append(th);
+  });
+}
+</script>
+</body>
+</html>
