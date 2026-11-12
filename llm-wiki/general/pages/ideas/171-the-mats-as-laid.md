@@ -93,6 +93,9 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - [ ] N. Design accepts on pictures
   - party: Design. The real page drawn at 1440 and 390 (an open mat with its seal, closed mats, the hand with no mat open and with one): laid beside closed, hand and battle-2 (desk and phone) in docs/mockups/mats/shots, the frame unchanged (§104.0, §145); its *Done when* tests and checks read on the gate's record; what it does not accept is one more stage, twice at most.
   - proves: Design's "When the frame, a closed mat and the hand are drawn on the real page at 1440 and 390, then laid beside closed, hand and battle-2 … they read as drawn"; Design's *Done when* and *Will be* (changed home), accepted
+- [ ] N2. Design's not accepted: zones on the track mat, the hand's titles whole, the gate unscaled on the phone, the fit test measuring a mat's words
+  - party: Tech (a simpler model). The track mat lays its done, now and to come as Zones labelled on their frame (`.mf-zl`), the phases' row on a plate (tested in tests/test_cards_mat_browser.py on an open mat); a crowded hand at 1440 keeps each card's title whole from its first letter, the places still in the window (handcards.css `.hand-slot`); the gate mat at 390 is laid unscaled, its words 12 px at least drawn, no check cut at the screen's edge, in the fit test at 390 measuring the size drawn; the fit test's ground() stops at an opaque plate or card so a mat's words are measured at 4.5:1.
+  - proves: Design's *Done when* lines 2 and 5, made again
 - [ ] O. Product accepts the step
   - party: Product. Its pass of its own (its role file, its section, the gate's record of A to L, the files they changed), against its *Done when* and *Will be* (H7); what it does not accept is one more stage, twice at most.
   - proves: Product's *Done when* and *Will be*, accepted
