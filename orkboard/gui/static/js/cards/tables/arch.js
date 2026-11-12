@@ -4,8 +4,7 @@
 import { useState } from "preact/hooks";
 import { html, cls } from "../../html.js";
 import { Token } from "../card.js";
-import { placed } from "./state.js";
-import { TCard, TPile, YouToken } from "./parts.js";
+import { TCard, TPile } from "./parts.js";
 
 const SIGN = { ext: "link", frame: "page", pile: "work", mod: "work" };
 
@@ -30,7 +29,6 @@ function Spread({ ctx, c, risk, limit }) {
 /** Tech's table. `ctx`: {party, framework, race}; `data`: the architecture the record holds. */
 export function Architecture({ ctx, data }) {
   const [open, setOpen] = useState({}), flip = (id) => setOpen({ ...open, [id]: !open[id] }), risks = new Set((data.tech_tokens || []).map((t) => t.card));
-  const sent = placed.value.filter((t) => t.party === ctx.party && t.framework === ctx.framework);
   return html`<div class="tb-arch">
     <div class="tb-layers">${data.layers.map((l) => html`<section key=${l.id} class=${cls("tb-layer", { "has-spread": l.cards.some((c) => c.kind === "pile" && open[c.id]) })} data-layer=${l.id}>
       <span class="tb-ln">${l.name}<i>${l.line}</i></span>
@@ -43,7 +41,6 @@ export function Architecture({ ctx, data }) {
     </section>`)}</div>
     <aside class="tb-rules" aria-label="The rules it keeps"><p class="tb-colh">The rules it keeps</p>
       ${data.rules.map((r, i) => html`<p key=${i} class="tb-rule" data-view=${r.view}><${Token} leader=${ctx.party} view=${r.view} word=" " /><span>${r.text}<small>${r.where}</small></span></p>`)}
-      ${sent.map((t, i) => html`<p key=${`s${i}`} class="tb-rule tb-sent" data-sent=${t.view}><${YouToken} view=${t.view} /><span><b>Your ${t.view} to ${ctx.leader}</b> · on <i>${t.name}</i>${t.text ? html`: “${t.text}”` : ""}<small>sent ${new Date(t.at).toTimeString().slice(0, 5)}</small></span></p>`)}
       <p class="tb-legend">A card lying on another needs it; a pile spread shows its biggest.</p></aside>
   </div>`;
 }

@@ -127,9 +127,13 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .sp-chair__k { position: absolute; top: 0; left: 0; }
 @media (max-width: 900px) { .sp-dispute, .sp-costs, .sp-chairs { flex-wrap: wrap; } .sp-ladder { display: none; } .sp-bins { margin-left: 0; } .sp-deckl { display: none; } }
 
-/* the deck's acts: the spreads of the goals in line, beside the deck */
-.cards-deckacts { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 4px 0; }
-.cards-deckacts .ork-btn { height: auto; min-height: 28px; max-width: 100%; white-space: normal; text-align: left; justify-content: flex-start; }
+/* the Orkmaster's mats, small M-like rows under its deck: the spread's shape, its word, the Orkmaster's stripe (cards/dealer.js) */
+.cards-deckacts { display: flex; flex-direction: column; gap: 4px; margin: 2px 4px 0; }
+.cards-matrow { appearance: none; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 32px; margin: 0; padding: 4px 8px; text-align: left; cursor: pointer; color: var(--ork-ink-read); font: var(--ork-type-caption);
+  background: var(--ork-panel); border: 1px solid var(--ork-card-frame); box-shadow: inset 3px 0 0 var(--party-hue, var(--ork-card-frame)); }
+.cards-matrow:hover { color: var(--ork-ink); border-color: var(--ork-edge); }
+.cards-matrow:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.cards-matrow > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .sp:has(> .cards-said) { grid-template-rows: auto auto minmax(0, 1fr) 196px; }      /* a spread a mat opened: the leader's words under its head (decisions §297.4) */
 .sp > .cards-said { margin: 10px 40px 0; }
 

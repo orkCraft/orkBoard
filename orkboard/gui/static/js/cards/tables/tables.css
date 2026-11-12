@@ -1,6 +1,6 @@
 /* The leaders' tables (goal 170, the talk of 11 November 2026; docs/mockups/frameworks/): a leader's framework laid as cards in the pane, on orkUI's tokens
    and cards.css's pieces. Layout only: every colour, face and corner is orkUI's (`.ork-card`, `--party-hue` from `data-race`). The person never moves a card:
-   it turns one over (`.is-over`), spreads a pile (`.is-open`), puts a token of its own (`.tb-you`, bone with a brass rim, never a leader's round colour). */
+   it turns one over (`.is-over`), spreads a pile (`.is-open`), is asked about by the person (`.tb-asklink`). */
 .cards-lane__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 0 4px; }
 .cards-lane__head > b { font: var(--ork-type-heading); }
 .tb-switch { margin-left: auto; }
@@ -42,7 +42,6 @@
 .tb-card.is-hired::after { content: "Hired"; position: absolute; right: 10px; bottom: 8px; padding: 2px 7px; background: var(--ork-gilt-hi); color: var(--ork-on-ink); font: var(--ork-type-label); }
 .tb-card.is-fired { background: var(--ork-panel); } .tb-card.is-fired .tb-name, .tb-card.is-fired .tb-line { color: var(--ork-ink-muted); }
 .tb-card.is-fired::after { content: "Fired"; position: absolute; right: 8px; bottom: 6px; padding: 2px 6px; border: 1px solid var(--ork-edge); color: var(--ork-ink-muted); font: var(--ork-type-label); }
-.tb-card.is-marked { box-shadow: inset 0 3px 0 var(--party-hue), 0 0 0 2px var(--ork-ink), 0 4px 0 var(--ork-room); }
 .tb-jt { font: var(--ork-type-read); color: var(--ork-ink); } .tb-jt b { color: var(--ork-gilt-hi); }
 .tb-toks { display: flex; flex-wrap: wrap; gap: 3px; margin-top: auto; }
 .tb-card .cards-tok i { width: 20px; height: 20px; }
@@ -56,21 +55,16 @@
 .tb-faced:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .tb-pile.is-open .tb-card { box-shadow: inset 0 3px 0 var(--party-hue), 0 0 0 2px var(--ork-ink-muted), 0 4px 0 var(--ork-room); }
 
-/* the person's token: bone with a brass rim (the leaders' are round and their party's colour) */
-.tb-you { display: inline-flex; flex: none; }
-.tb-you i { width: 24px; height: 24px; display: grid; place-items: center; clip-path: circle(50%); font: var(--ork-type-label); font-style: normal; background: var(--ork-ink); color: var(--ork-canvas); box-shadow: inset 0 0 0 3px var(--ork-gilt-hi); }
-.tb-you.is-big i { width: 40px; height: 40px; font: var(--ork-type-heading); box-shadow: inset 0 0 0 4px var(--ork-gilt-hi); }
-.tb-placed { position: absolute; z-index: 3; right: -8px; top: -8px; display: flex; } .tb-placed .tb-you i { width: 28px; height: 28px; }
-
 /* the hand's place on this table: the person's tokens and the words they take */
 .tb-hand { flex: none; display: flex; align-items: center; gap: 14px; padding: 8px 22px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); min-height: 68px; }
-.tb-take { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px 6px; border: 0; background: none; cursor: pointer; color: var(--ork-ink); font: var(--ork-type-label); }
-.tb-take:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
-.tb-take.is-held .tb-you i { box-shadow: inset 0 0 0 4px var(--ork-gilt-hi), 0 0 0 3px var(--ork-ink); }
 .tb-note { margin: 0; max-width: 520px; font: var(--ork-type-caption); color: var(--ork-ink-read); }
-.tb-ask { flex: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
-.tb-ask__to { flex: 1 0 100%; font: var(--ork-type-caption); color: var(--ork-ink-read); } .tb-ask__to b { color: var(--ork-ink); }
-.tb-ask .ork-input { flex: 1 1 220px; min-width: 0; }
+.tb-slot.is-over { z-index: 4; }
+.tb-askrow { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 6px; max-width: var(--card-w); }
+.tb-asklink { appearance: none; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; font: var(--ork-type-caption); color: var(--ork-action); text-decoration: underline; }
+.tb-asklink:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.tb-asked { font: var(--ork-type-caption); color: var(--ork-success); }
+.tb-askbox { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; width: max(var(--card-w), 220px); padding: 8px; background: var(--ork-panel); border: 1px solid var(--ork-edge); }
+.tb-askbox__acts { display: flex; gap: 6px; flex-wrap: wrap; }
 
 /* the architecture: layers top to bottom, a card on the one it needs */
 .tb-arch { display: grid; grid-template-columns: 1fr 290px; gap: 22px; align-items: start; }
@@ -86,9 +80,8 @@
 .tb-rules { display: flex; flex-direction: column; gap: 10px; padding: 12px; background: var(--ork-room); border: 1px solid var(--ork-frame); position: sticky; top: 0; }
 .tb-rule { margin: 0; display: flex; gap: 8px; align-items: flex-start; font: var(--ork-type-caption); color: var(--ork-ink-read); }
 .tb-rule small { display: block; font: var(--ork-type-caption); font-family: var(--ork-font-code); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
-.tb-rule b { color: var(--ork-ink); } .tb-rule > span:not(.cards-tok):not(.tb-you) { flex: 1; min-width: 0; }
+.tb-rule b { color: var(--ork-ink); } .tb-rule > span:not(.cards-tok) { flex: 1; min-width: 0; }
 .tb-rule .cards-tok span { display: none; }
-.tb-sent { border-top: 1px dashed var(--ork-edge); padding-top: 8px; }
 .tb-legend { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 
 /* jobs to be done: who, the job and its forces, hired and fired */
@@ -101,6 +94,3 @@
 .tb-force.is-in b { color: var(--ork-success); } .tb-force.is-out b { color: var(--ork-alert); }
 .tb-force.is-in::before { content: "→"; color: var(--ork-success); } .tb-force.is-out::before { content: "←"; color: var(--ork-alert); }
 .tb-row { display: flex; gap: 12px; align-items: flex-start; }
-.tb-sentbox { margin: 0; display: flex; gap: 10px; align-items: center; padding: 8px 12px; background: var(--ork-panel); border: 1px dashed var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-read); } .tb-sentbox b { color: var(--ork-ink); }
-@media (max-width: 1100px) { .tb-arch, .tb-jtbd { grid-template-columns: 1fr; } .tb-layer { padding-left: 0; padding-top: 34px; flex-wrap: wrap; } }
-@media (prefers-reduced-motion: reduce) { .tb-card { transition: none; } }

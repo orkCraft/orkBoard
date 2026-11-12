@@ -25,9 +25,9 @@ export function matOf(p) {
   return null;
 }
 
-/** A spread's shape on a mat: two cards side by side (before and after), a fan (the voices), a grid (a table). */
+/** A spread's shape on a mat: two cards side by side (`diff`: before and after, or two weighed), a fan (`dispute`: the voices, the costs, the deal), a grid (`table`: a table, the new goals sorted). */
 export const Shape = ({ shape }) => html`<span class="cards-mat__shape" data-shape=${shape} aria-hidden="true">${
-  Array.from({ length: shape === "diff" ? 2 : 4 }, (_, i) => html`<i key=${i}></i>`)}</span>`;
+  Array.from({ length: shape === "diff" ? 2 : shape === "dispute" ? 3 : 4 }, (_, i) => html`<i key=${i}></i>`)}</span>`;
 
 /** The mat's foot on an M: its shape and its line. */
 export const MatFoot = ({ mat }) => html`<span class="cards-mat" data-mat=${mat.kind}><${Shape} shape=${mat.shape} /><span>${mat.line}</span></span>`;

@@ -48,8 +48,7 @@ import { columnOn } from "../table/data.js";
 import { laidNow, layLine } from "../table/laying.js";
 import { said } from "./motion.js";
 import { cardsOn } from "../cards/on.js";
-import { TokenTakes } from "../cards/tables/parts.js";
-import { tokensOpen } from "../cards/tables/state.js";
+import { HandRight } from "../cards/handright.js";                  // the table of cards: the hand's two groups and the deck of blank cards at its right (decisions §298.9)
 if (typeof document !== "undefined") {                         // the places' sheet (places.css), as every sheet loads its own
   const href = new URL("./places.css", import.meta.url).href;
   if (!document.querySelector(`link[href="${href}"]`)) {
@@ -74,7 +73,7 @@ function useKeys(root) {
     const away = (e) => {
       const t = e.target;
       if (!root.current || aloud(t)) return;
-      if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .hand-fieldbox, .hand-dealt, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
+      if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .hr-blank, .hand-fieldbox, .hand-dealt, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
       if ((stopKeyOf(lifted.value) || lifted.value === PLAY) && !t.closest?.(".hand-lifted, .hand-body, .hand-card, .hand-ways-row, .hand-pen, .hand-tool, .hand-pot, .pot-s, .pots__all, .rh-stop")) lower();
     };
     const key = (e) => {
@@ -89,7 +88,7 @@ function useKeys(root) {
       if (typing(on) || aloud(on) || document.querySelector("[aria-modal='true']") || fieldOpen.value || !mapData.value || !partiesOf().length) return;
       e.preventDefault();
       lower();
-      openField(e.key);
+      openField(cardsOn() && /^n$/i.test(e.key) ? "" : e.key);        // on the table of cards the key N is the deck of blank cards: it opens the field, and is not the goal's first letter
     };
     document.addEventListener("pointerdown", away, true);
     window.addEventListener("keydown", key);
@@ -102,7 +101,7 @@ export function Hand() {
   useKeys(root);
   useNight();
   const wide = useWide();
-  const all = stopsOfProject(map, needs, open).filter((x) => wide || (x.kind !== "concern" && x.kind !== "doubt" && x.kind !== "decided" && x.kind !== "night_proposal" && x.kind !== "dev_blocked" && x.kind !== "turn" && x.kind !== "battle")), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
+  const all = stopsOfProject(map, needs, open).filter((x) => wide || (x.kind !== "concern" && x.kind !== "doubt" && x.kind !== "decided" && x.kind !== "night_proposal" && x.kind !== "dev_blocked" && ((x.kind !== "turn" && x.kind !== "battle") || uprightNow.value))), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map && !isToolKey(key)) lower(); }, [key, !s]);   // the stop was answered: the card goes with it (a tool's card is no stop: it goes by its own)
   useEffect(() => { liftedStop.value = s || null; }, [s]);                                // the right column's potions hatch the share the lifted card takes (potionrow.js)
   useEffect(() => () => { liftedStop.value = null; }, []);
@@ -127,12 +126,12 @@ export function Hand() {
   const sunk = !!(slotOn || cards || deal || chair || (s && wide) || fieldWide || sayOn);                                    // what the person plays lies in the hand's place: the hand's own cards sink (spec 168 D1, D2)
   const places = columnOn() && !bare ? html`<${Backpack} /><${Book} />` : null;                                // the places that change the table: the die, the backpack, the book (spec 168 A5)
   const pots = !columnOn() ? html`<${Mana} lifted=${s} />` : bare ? html`<${PotionRow} above=${true} />` : null;
+  const deckOn = cardsOn() && wide && !bare;                                                                    // the table of cards: no + card at the hand's left, the deck of blank cards at its right (cards/handright.js)
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${!middle && html`<div class="hand-places"><div class=${sunk ? "hand-row is-sunk" : "hand-row"} inert=${sunk ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
-      ${cardsOn() && tokensOpen() && !bare && html`<${TokenTakes} />`}
-      <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
-      <div class="hand-end">${!bare && html`<${PlayDie} />`}${places}${pots}</div>
+      <${Stacks} stacks=${stacks} plus=${bare || deckOn ? null : html`<${PlusCard} onPress=${plus} />`} />
+      ${deckOn ? html`<${HandRight} places=${places} pots=${pots} onPress=${plus} />` : html`<div class="hand-end">${!bare && html`<${PlayDie} />`}${places}${pots}</div>`}
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}

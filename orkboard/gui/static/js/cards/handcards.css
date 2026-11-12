@@ -30,8 +30,6 @@
 }
 @media (prefers-reduced-motion: reduce) { .frame[data-cards="1"] .hand .hand-slot { transition: none; } }
 
-/* the person's tokens at the left of the hand's cards while a leader's table is open (cards/tables/parts.js `TokenTakes`; decisions §145) */
-.hand .tb-takes { pointer-events: auto; flex: none; display: flex; align-self: center; gap: var(--ork-3); padding-right: var(--ork-3); }
 .frame[data-cards="1"] .hand .hand-card--s .hands-when { max-width: calc(100% - 16px); }
 
 /* a card's turn and a battle in the hand (hand/turncards.js; decisions §298.6, §298.7): its tokens small at the corner, a blocked card ringed in the danger's colour, the battle's emblem in the middle */

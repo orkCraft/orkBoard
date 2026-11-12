@@ -31,12 +31,13 @@ export function releaseProxy() {
   proxy = null;
 }
 
+const plusOf = () => document.querySelector(".hand .hand-plus") || document.querySelector(".hand .hr-blank__top");      // the + card, or on the table of cards the deck of blank cards' top one
 const FROM = (a, b, turn) => `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height})${turn ? ` perspective(60em) rotateY(${turn})` : ""}`;
 
 /** A copy of `el` at the box `b`, over the page, taking no press. */
 function copyOf(el, b, extra = "") {
   const g = el.cloneNode(true);
-  g.classList.remove("hand-plus", "ork-leans", "is-choosing", "is-large");
+  g.classList.remove("hand-plus", "hr-blank__top", "ork-leans", "is-choosing", "is-large");
   g.classList.add("hand-ghost");
   for (const a of ["aria-label", "title", "aria-haspopup", "aria-expanded", "id", "ref"]) g.removeAttribute(a);
   g.setAttribute("aria-hidden", "true");
@@ -72,7 +73,7 @@ const TURN = (w, deg) => `translateX(${w / 2}px) perspective(60em) rotateY(${deg
 /** The field has just been drawn: the + card turns over and grows into it, from where it lies. A copy of the + card (the card's back) turns away over the first half while the field, edge-on until then, turns in over the second: a half turn and a half turn, 180° in all,
  *  and the growth from the + card's box to the field's runs through both (`translate` and `scale`, which leave the turn its own `transform`). Nothing under reduced motion. */
 export function growFrom(el) {
-  const plus = document.querySelector(".hand .hand-plus"), a = boxIn(plus), b = el?.getBoundingClientRect();
+  const plus = plusOf(), a = boxIn(plus), b = el?.getBoundingClientRect();
   if (!el || !a || !b?.width || reduced()) return;
   const time = tokenMs("--ork-motion-play", 400) * 0.9, half = time / 2, origin = { transformOrigin: "0 0" };       // the field grows to the gutters on a phone: a spring's overshoot would spill past the window
   const move = (f, t) => [{ translate: `${f.x}px ${f.y}px`, scale: `${f.kx} ${f.ky}`, ...origin }, { translate: `${t.x}px ${t.y}px`, scale: `${t.kx} ${t.ky}`, ...origin }];
@@ -87,7 +88,7 @@ export function growFrom(el) {
 
 /** Esc or a press away: the field was taken off the page at once; a copy of the + card turns back from the field's box into the + card where it lay (the real one is hidden meanwhile). */
 export function turnBack(box) {
-  const plus = document.querySelector(".hand .hand-plus"), b = boxIn(plus);
+  const plus = plusOf(), b = boxIn(plus);
   if (!plus || !b || !box?.width || reduced()) return;
   const g = copyOf(plus, b);
   document.body.appendChild(g);

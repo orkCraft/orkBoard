@@ -4,8 +4,7 @@
 import { useState } from "preact/hooks";
 import { html, cls } from "../../html.js";
 import { Icon } from "../../orkui.js";
-import { placed } from "./state.js";
-import { TBack, TCard, TPile, YouToken } from "./parts.js";
+import { TBack, TCard, TPile } from "./parts.js";
 
 const Force = ({ f }) => html`<span class=${cls("tb-force", `is-${f.dir}`)} data-force=${f.kind.toLowerCase()}><b>${f.kind}</b>${f.text}</span>`;
 
@@ -13,7 +12,6 @@ const Force = ({ f }) => html`<span class=${cls("tb-force", `is-${f.dir}`)} data
 export function Jobs({ ctx, data }) {
   const [open, setOpen] = useState({}), [turned, setTurned] = useState({}), flip = (id) => setOpen({ ...open, [id]: !open[id] });
   const { job, forces, personas, jobs, hired, fired } = data, who = personas.find((p) => p.id === job.persona) || personas[0];
-  const sent = placed.value.filter((t) => t.party === ctx.party && t.framework === ctx.framework);
   const jobFace = html`<span class="tb-jt"><b>When</b> ${job.when}, <b>I want</b> ${job.want}, <b>so</b> ${job.so}.</span>`;
   return html`<div class="tb-jtbd">
     <div class="tb-fc"><p class="tb-colh">Who <i>· pressed, the pile spreads</i></p>
@@ -36,7 +34,6 @@ export function Jobs({ ctx, data }) {
       <p class="tb-colh">Fired <i>· one turned over</i></p>
       <div class="tb-row">${fired.map((f, i) => (i === 0 || turned[f.id] ? html`<${TCard} key=${f.id} ctx=${ctx} id=${f.id} title=${f.title} line=${f.line} sign="cross" size="md" kind="fired" tilt=${i ? -3 : 3} back=${["What they use now, and drop for it."]} />`
         : html`<${TBack} key=${f.id} name="A card" onTurn=${() => setTurned({ ...turned, [f.id]: true })} />`))}</div>
-      ${sent.map((t, i) => html`<p key=${i} class="tb-sentbox" data-sent=${t.view}><${YouToken} view=${t.view} /><span><b>Your ${t.view} to ${ctx.leader}</b> · on <i>${t.name}</i>${t.text ? html`: “${t.text}”` : ""} · sent ${new Date(t.at).toTimeString().slice(0, 5)}</span></p>`)}
     </div>
   </div>`;
 }

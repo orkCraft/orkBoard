@@ -1,6 +1,6 @@
 // The leaders' tables (goal 170, the talk of 11 November 2026; docs/mockups/frameworks/), on the table of cards only (cards/on.js): a leader whose
 // framework the host holds (`ideas.tables`) gets a switch in its lane's head, *Feed* and its framework's name; the framework is drawn in the
-// pane in place of the lanes, as the mockup draws it (the whole table, its rules beside it, the person's tokens under it), because a framework
+// pane in place of the lanes, as the mockup draws it (the whole table, its rules beside it, a line under it), because a framework
 // is read as a spread across the pane, not as a column; the same switch, at its head, goes back to the lanes. Product's (knights') is Jobs to be done, Tech's (orks') Architecture.
 import { html } from "../../html.js";
 import { Switch } from "../../orkui.js";
@@ -9,7 +9,7 @@ import { raceOf } from "../../table/felt.js";
 import { HeadOf, whoOf } from "../../table/post.js";
 import { Architecture } from "./arch.js";
 import { Jobs } from "./jtbd.js";
-import { TokenStrip } from "./parts.js";
+import { TableFoot } from "./parts.js";
 import { frameworkOf, laid, laidAt } from "./state.js";
 import { useEffect, useRef } from "preact/hooks";
 import { Said } from "../said.js";
@@ -34,6 +34,6 @@ export function TablesView({ parties }) {
       <${FrameSwitch} g=${g} /></header>
     ${at?.p && html`<${Said} p=${at.p} />`}
     <div class="tb-body"><${Face} ctx=${ctx} data=${fw.data} /></div>
-    <${TokenStrip} ctx=${ctx} leader=${nameOf(g)} />
+    <${TableFoot} />
   </section>`;
 }

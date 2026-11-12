@@ -1,7 +1,7 @@
 """**The leaders' tables on mocks** (goal 170, stage T; docs/mockups/frameworks/): a leader's lane has a switch in its head, *Feed* and its framework's
 name; the framework is drawn in the pane in place of the lanes (Tech's Architecture, read from this repository's code by tools/record_tables.py;
-Product's Jobs to be done, examples). The person never moves a card: it turns one over, spreads a pile, and puts a token of its own, which
-is kept and the command it would be (`ideas.table_token`, proposed) is logged by the mock."""
+Product's Jobs to be done, examples). The person never moves a card or puts a token (decisions §298.5): it turns one over, spreads a pile, and asks
+the leader about a part (`ideas.ask_leader`, proposed, logged by the mock)."""
 from __future__ import annotations
 
 import json
@@ -105,45 +105,44 @@ def test_a_pile_spreads_on_press_and_a_card_turns_over_on_press(page_url):
         b.close()
 
 
-def test_the_persons_token_lands_on_a_card_and_the_would_be_command_is_logged(page_url):
+def test_the_person_asks_the_leader_about_a_part_and_puts_no_token(page_url):
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
         pg.goto(page_url)
         pg.wait_for_selector(".cards-lane", timeout=15000)
         open_table(pg, "tech", "architecture")
+        # no token in the hand, none on the table; the foot says what to do
+        assert pg.locator("[data-token], .tb-takes, .tb-you").count() == 0
+        assert "Press a card to turn it over; ask its leader about any part." in pg.locator(".tb-hand").inner_text()
         pg.locator('[data-card="gui/"]').click()
-        # with no token held a press only turns; with one held it puts the token and asks its words
-        pg.locator('[data-token="concern"]').click()
-        assert pg.locator('[data-token="concern"]').get_attribute("aria-pressed") == "true"
-        pg.locator('[data-card="gui/board_host.py"]').click()
-        assert pg.locator('[data-card="gui/board_host.py"]').get_attribute("aria-pressed") == "false"
-        words = pg.locator(".tb-ask input")
-        assert "board_host.py" in pg.locator(".tb-ask__to").inner_text()
-        words.fill("805 lines, past the ~600 a module may grow to. Split it?")
+        card = pg.locator('[data-card="gui/board_host.py"]')
+        assert pg.locator("[data-ask-part]").count() == 0
+        card.click()
+        assert card.get_attribute("aria-pressed") == "true"
+        pg.get_by_role("button", name="Ask Tech about this part").click()
+        pg.get_by_role("textbox", name="Your words to Tech about this part").fill("805 lines, past the ~600 a module may grow to. Split it?")
         pg.get_by_role("button", name="Send to Tech").click()
-        slot = pg.locator('.tb-slot:has([data-card="gui/board_host.py"])')
-        assert slot.locator('.tb-placed .tb-you[data-view="concern"]').count() == 1
-        assert pg.locator('.tb-sent[data-sent="concern"]').inner_text().count("Your concern to Tech · on board_host.py") == 1
-        assert pg.locator('[data-token="concern"]').get_attribute("aria-pressed") == "false"
+        assert pg.locator(".tb-asked").inner_text() == "Sent to Tech"
         pg.locator(".mock-plate__b").click()
-        sent = pg.locator(".mock-plate__sent").inner_text()
-        assert "ideas.table_token" in sent
-        # the command carries the card, the view and the words
-        got = pg.evaluate("""() => import("/static/js/mock/mocklink.js").then((m) => m.sent.value.filter((s) => s.name === "ideas.table_token").map((s) => s.args))""")
-        assert got == [{"party": "tech", "framework": "architecture", "card": "gui/board_host.py", "view": "concern", "text": "805 lines, past the ~600 a module may grow to. Split it?"}], json.dumps(got)
-        # a question on a job of Product's table
+        assert "ideas.ask_leader" in pg.locator(".mock-plate__sent").inner_text()
+        got = pg.evaluate("""() => import("/static/js/mock/mocklink.js").then((m) => m.sent.value.filter((s) => s.name === "ideas.ask_leader").map((s) => s.args))""")
+        assert got == [{"party": "tech", "framework": "architecture", "card": "gui/board_host.py", "text": "805 lines, past the ~600 a module may grow to. Split it?"}], json.dumps(got)
+        # Product's table: the same, Enter sends
         pg.locator('.tb [data-value="feed"]').click()
         open_table(pg, "product", "jtbd")
-        pg.locator('[data-token="question"]').click()
+        assert pg.locator("[data-token]").count() == 0
         pg.locator('[data-card="lead"], [data-card="pile:solo"]').first.click()
-        pg.locator(".tb-ask input").fill("Is the lead a persona of its own?")
+        pg.locator('[data-card="pile:jobs"]').click()
+        pg.locator('[data-spread="jobs"] [data-card="waits"]').click()
+        pg.get_by_role("button", name="Ask Product about this part").click()
+        pg.get_by_role("textbox", name="Your words to Product about this part").fill("Is this a job of its own?")
         pg.keyboard.press("Enter")
-        assert pg.locator('.tb-sentbox[data-sent="question"]').count() == 1
+        assert pg.locator(".tb-asked").count() == 1
         b.close()
 
 
-def test_no_card_moves_the_person_only_turns_spreads_and_puts_a_token(page_url):
+def test_no_card_moves_the_person_only_turns_spreads_and_asks(page_url):
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})

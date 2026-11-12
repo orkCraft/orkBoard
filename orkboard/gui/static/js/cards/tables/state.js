@@ -1,6 +1,6 @@
 // The leaders' tables' state (goal 170, the talk of 11 November 2026; docs/mockups/frameworks/): what each leader's framework holds
 // (`ideas.tables`, proposed: the host does not answer it yet, the mock lays it, js/mock/parts/tables.js), which of a party's faces is
-// shown, and the person's own tokens. The person never moves a card: it turns one, spreads a pile, and puts a token (a question or a concern).
+// shown, and the person's own tokens. The person never moves a card: it turns one, spreads a pile, and asks its leader about a part.
 import { signal, effect } from "@preact/signals";
 import { command, town } from "../../link.js";
 
@@ -31,23 +31,8 @@ export const laidAt = signal(null);
 /** Whether the card `id` of a table is the part a mat laid it at. */
 export const isAt = (ctx, id) => { const a = laidAt.value; return !!a && a.party === ctx.party && a.framework === ctx.framework && a.card === id; };
 
-/** The person's token held in the hand ("question" or "concern", "" none), the card it is about to be put on, and the tokens put. */
-export const held = signal("");
-export const asking = signal(null);                     // {party, framework, card, name}
-export const placed = signal([]);                       // [{party, framework, card, name, view, text, at}]
-
-export const WORDS = { question: { mark: "?", word: "Question" }, concern: { mark: "!", word: "Concern" } };
-
-/** Put the person's token on a card: kept here, and the command it would be is sent (the mock logs it: `ideas.table_token`, proposed;
- *  the host is to take {party, framework, card, view, text} and give the token to the leader, marking that part of its table). */
-export function putToken({ party, framework, card, name, view, text }) {
-  const t = { party, framework, card, name, view, text: text.trim(), at: new Date().toISOString() };
-  placed.value = [...placed.value, t];
-  held.value = "";
-  asking.value = null;
-  command("ideas.table_token", { party, framework, card, view, text: t.text }, true).catch(() => {});
-  return t;
+/** Ask a leader about a part of its table (decisions §298.5: the person asks, never puts a token): the command it would be is sent (the mock logs it:
+ *  `ideas.ask_leader`, proposed; the host is to take {party, framework, card, text} and give the leader the question, marking that part of its table). */
+export function askLeader({ party, framework, card, text }) {
+  return command("ideas.ask_leader", { party, framework, card, text: text.trim() }, true).catch(() => {});
 }
-
-/** Whether a leader's table is laid in the pane, so the hand holds the person's tokens (cards/tables/parts.js `TokenTakes`). */
-export const tokensOpen = () => !!laid.value && !!frameworkOf({ slug: laid.value });
