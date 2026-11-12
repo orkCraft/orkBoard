@@ -8390,3 +8390,41 @@ dots for the approvals, questions and risks*. So:
    orkUI.
 
 The owner's call.
+
+## 299. A table is a seat's view of the whole project; everything about one card is its mats, one a seat of its route; a mat shows its spread's slots; a battle is laid upright (12 November 2026, the owner)
+
+Changes: 283 (a table for every stage and eye: a goal's own table in the pane, its stages and its leaders' tables), 297.1 (a mat known by
+its shape beside its line), 298.6 (a battle laid side by side, the new card on the left). Kept: 296, 297.2–297.6, 298 but its point 6's
+layout.
+
+Why: goal 170's talk of 12 November 2026, on the mockups `docs/mockups/card-mats/` (`?v=card`, `?v=mat`, `?v=slots`). The person:
+*maybe a leader's work on a card is not a table of its own but a mat; then the only tables left are the Orkmaster's and the leaders'
+view of the project, all the rest goes as mats, and that lies better on the phone*; then: *on a mat show its kind in its background, not
+as an icon: faint, as slots for cards*; then: *for the battle, upright: above the earlier decisions, below the one now*. So:
+1. **A table is a seat's view of the whole project**: the Orkmaster's lane, a leader's lane and its framework (Architecture, Jobs to be
+   done), under the tabs. Nothing else is a table.
+2. **Everything about one card is a mat**: the Orkmaster's (its route and deal, its stages, its price, the gate, a battle) and each
+   leader's of its route (its view in Talk, its section of the spec, its stage of the work, its checks; a change in its framework stays
+   its mat in its lane, §297). An opened card (L) shows its tokens' slips and **a row of its mats, one a seat**, each with its state
+   (*dealt*, *written*, *at work*, *waits*), the seat at work lit, a seat not begun faint.
+3. **A mat pressed opens over the table**, as wide as the pane on a desktop, the table kept under it and dimmed; the whole screen on a
+   phone with *Back*. Esc or Back puts it away and the card opened again shows that mat lit. **A mat opened has an address** (its goal
+   and its seat), so a phone's Back, the feed and the journal can open it. A leader's mat on a card holds its section (*Will be*, *Done
+   when* with its checks' squares), its stage (its tasks and their states) and its verdict (its slip, *Reply to <leader>*).
+4. **The goal's own table in the pane goes**: its parts (the route, the stages, the sections, *Done when*, *Judge again*) move into the
+   mats, never rewritten. On the table of cards a goal picked opens as its card (L), not as a table in the pane.
+5. **A mat shows its spread's slots, faint, behind its words** (the person's: *as slots for cards*): thin dashed outlines in orkUI's
+   frame, under its words, `aria-hidden`, its line still saying what it is; the small shape beside its line goes. The slots are its
+   spread's layout: *What changed* two cards; *Architecture* a layer and rows of small slots; *Jobs to be done* columns; *Its stages* a
+   row; *What each card costs* a fan; *Weigh two* two cards; *Sort* a grid; *The deal* a card over its chairs; *A battle* one against
+   two; a leader on a card its three zones. Opened, the cards are dealt into the slots (no motion when the person asks for less). **A
+   word (news, a view) has no slots**: a mat and a word are told apart at a glance. Where an M leaves less than a third of its height
+   under its words, its slots are a simpler form of two to four. How each kind of mat is laid is talked over in a session of its own.
+6. **A battle is laid upright**: above, the cards it goes against (three face up at most, the rest a pile), each its cost to undo under
+   it; across the middle the battle's line, one column an axis of its route's crafts, the old cards' tokens above the line and the new
+   card's below, *No total* beside it; below, the new card, over the hand, where its ways lie. The same on a desktop and a phone; its
+   cards are S on a desktop, their details in their slips.
+7. **Built** on the table of cards on mocks (`js/cards/`, `?mock=1`) after goal 170's stage 4: the mats of a card, their address, their
+   slots and the upright battle; what the host does not answer yet the contract the mocks hold (`js/mock/parts/`).
+
+The owner's call.
