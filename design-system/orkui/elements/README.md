@@ -10,7 +10,11 @@ by `tools/build_runes.py` from `runes/runes.json` (`elements`), never by hand:
 
     meadow.svg   tusks     ice.svg   a key     dust.svg   a comb     void.svg   an eye     lava.svg   a wave
 
-Each is the rune's **5 x 7** grid **centred in a 7 x 7** grid (columns 1 to 5, rows 0 to 6) of unit squares, one `path` (`M{x} {y}h1v1h-1z` for every pixel,
+**Since 0.43.0 each element file is its rune's traced silhouette** (the owner's R1 take, accepted as it is): `<element>.svg` is the same file as `../runes/<rune>.svg`, one `<path fill-rule="evenodd">`, `fill="#000"`, a square
+`viewBox="0 0 64 64"`, the rune fitted by its longer side and centred, no `crispEdges`; `.ork-elem` still fills its box with the element's colour through `mask-image: url(elements/<name>.svg)` (`mask-size` 100%), so nothing in the CSS changed. They are made by
+`tools/build_signs_from_art.py` (`../signs/art.json`, `aliases`), no longer by `tools/build_runes.py`. The paragraph below is how they were drawn before 0.43.0.
+
+Each was the rune's **5 x 7** grid **centred in a 7 x 7** grid (columns 1 to 5, rows 0 to 6) of unit squares, one `path` (`M{x} {y}h1v1h-1z` for every pixel,
 row by row from the top), `viewBox="0 0 7 7"`, `fill="#000"`, `shape-rendering="crispEdges"`: no colour of its own, no metadata. They are **drawn as
 masks**: `.ork-elem` in `components.css` fills a 14 x 14 box (`.big` 28 x 28, two or four pixels a cell, whole pixels) with the element's
 colour through `mask-image: url(elements/<name>.svg)`, so the file's black is only the shape. The file names, the tokens, the classes and the sizes

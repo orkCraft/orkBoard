@@ -17,6 +17,10 @@ zone that changes, so four cards side by side read as one tool told apart at a g
     hourglass   skeletons (Release)            an hourglass (the release date); its finial changes
                                                (hourglass-candle, hourglass-bone, hourglass-gem, hourglass-ring)
 
+**Since 0.42.0 each also has the owner's colour take**, a transparent, trimmed, centred PNG beside its masks: `<tool>-<variant>.png` at 28 x 28, `@2x` 56 x 56 and `@3x` 84 x 84 (cut, not traced, from
+the sheets `w1-tools-1.jpg` and `w2-tools-2.jpg` by `tools/build_things_from_art.py`, which `races/art/things.json` feeds; one tool's four variants share one box, so the thing does not jump). A colour picture
+cannot be a CSS mask, so `.ork-tool` still draws the two-tone SVGs below, coloured by party or token, and no CSS draws the PNGs yet.
+
 Each is a **14 x 14** drawing in **two tones**, as a goal type's big sign (`../signs/README.md`): `<tool>-<variant>.svg` the silhouette and
 `<tool>-<variant>-light.svg` its light, in the signs' format, made from `../../drawings/drawings.json` by `python tools/build_big.py`.
 `.ork-tool` in `components.css` draws one at **28 px**, two pixels a cell, the size of a pick's window, never another: the silhouette in

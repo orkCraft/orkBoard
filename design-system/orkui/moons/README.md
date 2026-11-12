@@ -7,7 +7,10 @@ a colour of its own: the dark side, then the lit part over it.
     disk.svg   the whole moon (the dark side, and the full moon's lit part)        crescent.svg   the lit part of a crescent
     half.svg   the lit part of a half                                              gibbous.svg    the lit part of a gibbous
 
-Each is a **7 x 7** grid of unit squares, one `path` (`M{x} {y}h1v1h-1z` for every pixel, row by row from the top), `viewBox="0 0
+**Since 0.42.0 the moons also have the owner's colour take**, beside the masks: `disk.png` (the new moon, all dark), `crescent.png`, `half.png`, `gibbous.png`, `full.png`, each 14 x 14, `@2x` 28 x 28 and `@3x` 42 x 42,
+transparent, trimmed and centred on one common box (cut from `m1-moons-2.jpg` by `tools/build_things_from_art.py`, `races/art/things.json`). `.ork-moon` still draws the masks in the frame and ink colours, and no CSS draws the PNGs yet.
+
+Each mask is a **7 x 7** grid of unit squares, one `path` (`M{x} {y}h1v1h-1z` for every pixel, row by row from the top), `viewBox="0 0
 7 7"`, `fill="#000"`, `shape-rendering="crispEdges"`: no colour of its own, no metadata. They are **drawn as masks**:
 `.ork-moon` in `components.css` fills a 14 x 14 box (`.big` 28 x 28, two or four pixels a cell, whole pixels) with `--ork-frame`
 through `mask-image: url(moons/disk.svg)`, the dark side, and its `::after` fills the same box over it with the lit part through the

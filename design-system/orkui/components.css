@@ -1045,7 +1045,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 @property --_arc { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @property --_fade { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
 .ork-rune { display: inline-block; flex: none; width: 10px; height: 14px; vertical-align: middle; background: currentColor;
-  -webkit-mask: var(--_rune) center / 100% 100% no-repeat; mask: var(--_rune) center / 100% 100% no-repeat; }
+  -webkit-mask: var(--_rune) center / contain no-repeat; mask: var(--_rune) center / contain no-repeat; }   /* contain, 0.42.0: the seven decoration runes are square traced vectors, the five elements' 5 x 7 pixels fill the box as before */
 .ork-rune.big { width: 20px; height: 28px; }
 .ork-rune.key { --_rune: url(runes/key.svg); }
 .ork-rune.eye { --_rune: url(runes/eye.svg); }

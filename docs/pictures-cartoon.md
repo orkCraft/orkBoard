@@ -182,6 +182,15 @@ Left to right, top to bottom:
 20 an absurdly tall tower of crates, wobbling.
 ```
 
+### P2a and P2b. The Orkmaster's settings, in two sheets (attach K1 and the first take, `p2-om-settings.jpg`)
+P2's first take (12 November 2026) drew its 4x5 sheet as uneven rows, two pairs in one tile (13 and 14, 16 and 17) and two tiles of its own (a lever alone, a hammer by a sack): a 4x5 grid of wide tiles is too long a sheet (the lessons above). Taken again as two sheets of ten, each a 5x2 grid as P3. The first take's drawings are good: attach it so the things keep their look.
+```
+Ten small item pictures for a card game on one sheet, a 5x2 grid of WIDE tiles (five across, two down, every tile EXACTLY the same size, each about twice as wide as tall, 1.9:1), the same things and the same drawing as the attached first take, ONE thing in each tile, never two in one tile, never a tile of its own beyond these ten. A humorous flat cartoon matching the line, colour and humour of the attached head sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions. In every tile the thing stands large and centred on a wooden table edge along the bottom of the tile, against a dark slate background, with a light rim so it reads on dark. A thin grey-brown frame around each tile. No text, letters or numbers anywhere. Left to right, top to bottom: 1 a coin purse tied with three knots, a moth fluttering out of it. 2 brass scales with a feather on one pan and an anvil on the other, somehow perfectly level. 3 a gem on a small anvil polished to a blinding sparkle, tiny sunglasses lying beside it. 4 a small rocket strapped to a playing card, its fuse already sparking. 5 a candle a third burnt down, a snail racing it along the table. 6 a very tall fresh candle, a spider just starting a web at its base. 7 a little forge, a crescent moon in a nightcap hanging above its chimney. 8 a hand pulling a big wooden lever with a small red knob. 9 a blacksmith's hammer tucked into a tiny bed under a blanket, wearing a nightcap. 10 a scroll beside a lit candle, round spectacles resting on the scroll.
+```
+```
+Ten small item pictures for a card game on one sheet, a 5x2 grid of WIDE tiles (five across, two down, every tile EXACTLY the same size, each about twice as wide as tall, 1.9:1), the same things and the same drawing as the attached first take, ONE thing in each tile, never two in one tile, never a tile of its own beyond these ten. A humorous flat cartoon matching the line, colour and humour of the attached head sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions. In every tile the thing stands large and centred on a wooden table edge along the bottom of the tile, against a dark slate background, with a light rim so it reads on dark. A thin grey-brown frame around each tile. No text, letters or numbers anywhere. Left to right, top to bottom: 1 an anvil glowing under a few stars, a hammer swinging all by itself mid-strike. 2 a lantern beside an open sack spilling small glowing lightbulb-shaped ideas, tiny tiptoe footprints leading away. 3 a little mine cart rolling down a short track on its own, a playing card riding in it like a passenger. 4 the same mine cart stopped by a brick, a clamp on its wheel. 5 a wooden chest with an absurd number of padlocks. 6 one determined carrier pigeon standing with one sealed letter. 7 two carrier pigeons tangled together with two sealed letters. 8 one crate on a tiny hand cart. 9 three crates stacked neatly. 10 an absurdly tall tower of crates, wobbling.
+```
+
 ### P3. A leader's settings (attach K1 and the pixel sheet of these settings)
 ```
 Ten small item pictures for a card game on one sheet, a 5x2 grid of WIDE tiles (five across, two down, each about twice as wide as tall, 1.9:1). A humorous flat cartoon matching the line, colour and humour of the attached head sheet: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions. Objects first, a joke at a glance. In every tile the thing stands large and centred on a wooden table edge along the bottom of the tile, against a dark slate background, with a light rim so it reads on dark. A thin grey-brown frame around each tile. No text, letters or numbers anywhere.
@@ -293,6 +302,13 @@ Eight head portraits of ONE character for a card-game interface on one sheet, a 
 The same character as the attached sheet's tile 1, in the same humorous flat cartoon style, on one sheet of two square tiles side by side, redrawn SIMPLER so it reads at 16 pixels: only the face, the eyes behind the round glasses, the long pointed ears, the long nose, the tusks, the crown and the bow tie; outlines twice as thick, no wrinkles, no small teeth, no glare on the glasses. Tile 1 at rest, tile 2 happy. The head the same height in both, wholly inside its tile with a clear margin, a light rim, a flat mid-grey background (#3a3a3a), a thin grey-brown frame. No text, letters or numbers.
 ```
 
+
+### K16. The Orkmaster's four other moods (attach K15)
+The person picked K15's head, 12 November 2026 (flat, front-on, nearer K1's heads); its two tiles are the head at rest and pleased.
+The moods orkUI keeps (`peon-crown-<mood>`) want four more in the same drawing.
+```
+The same character as the attached sheet, EXACTLY the same drawing, flat and front-on, the same thick outlines, the same crown, round glasses, long pointed ears, long nose, tusks and bow tie, the same head size and position in every tile, on one sheet of four square tiles in a 2x2 grid, only the face's expression changing. 1 focused: thinking hard, eyebrows drawn together, eyes narrowed a little behind the glasses, mouth a short straight line. 2 worried: eyebrows raised and slanted up in the middle, a small wobbly frown, one bead of sweat at the temple. 3 no: shocked, eyes wide and round behind the glasses, mouth a small open O, the ears flattened back a little. 4 asleep: eyes shut as two curved lines, glasses slipped down the nose, mouth open a little, a small bubble at the nose (no letters). Wholly inside each tile with a clear margin, a light rim, a flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
 ### O7. The tokens (attach K1 and O1)
 A leader's view on a goal's card (for, risk, question, against) and the person's own (a question, a concern): round, thick, its edge
 seen; the leader's coloured by its party in code, the person's its own bone and brass.
@@ -449,17 +465,17 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | K1–K4, K6, the moods sheet | the heads, the leaders' tiers, the members, the eighteen heroes, five moods | made |
 | K5, K7, K8 | the members' tiers; the moods | not needed (code; the moods sheet) |
 | K6, the fixes after the beta; K9–K13 | the heroes fixed; the heroes' moods | to take |
-| K14, K15 | the Orkmaster, a half-ork, half-goblin, its faces; at 16 px | to take |
-| P1–P4 | the cards' pictures: the ways of answering, the settings, a question's kinds | to take |
+| K14, K15, K16 | the Orkmaster, a half-ork, half-goblin, its faces; at 16 px; its four other moods | taken; the person picked K15's head (12 November 2026); K16 to take |
+| P1–P4 | the cards' pictures: the ways of answering, the settings, a question's kinds | P1 taken, its file to come; P2 taken again as P2a and P2b; P3 to take; P4 taken |
 | O1 | the potions | made (its top row) |
-| O2a, O2b | the die's faces; the die | O2a made; O2b fix (tile 2) |
-| O3a, O3b, O3c | the backpack and the book; the chairs; the leaders' backs | O3a fix (tile 2); O3b, O3c made |
-| O4, O5, O6 | the lamp's chain; the cards' backs; the pennant | O4 fix; O5, O6 to take |
-| O7–O11 | the tokens; the hourglass; the meeple; the dealer's hands; the tavern's table | to take |
-| R1, R2 | the runes | R1 fix (runes, not pictures); R2 to take |
-| S1–S4 | the small signs | S4 made; S1–S3 to take |
-| T1–T3 | the goal types' pictures | to take |
-| M1 | the moons | made but tile 3 (fix) |
-| W1–W3 | the races' tools; the tiers' marks | to take |
+| O2a, O2b | the die's faces; the die | made (O2b's second take) |
+| O3a, O3b, O3c | the backpack and the book; the chairs; the leaders' backs | made (O3a's second take) |
+| O4, O5, O6 | the lamp's chain; the cards' backs; the pennant | O4 made (its second take); O5 taken and kept as it is by the person (its plum and its seal's glow, 12 November 2026); O6 taken, its file to come |
+| O7–O11 | the tokens; the hourglass; the meeple; the dealer's hands; the tavern's table | taken (O7 and O11 again, their files to come; O11's cloth is orkUI's felt, only its rim is used) |
+| R1, R2 | the runes | R1's second take accepted by the person as it is (the runes are their names' pictures); R2 made |
+| S1–S4 | the small signs | made (S1–S3 in orkUI 0.42.0; S4 taken, not yet in orkUI) |
+| T1–T3 | the goal types' pictures | taken, their files to come |
+| M1 | the moons | made (taken again whole; in orkUI 0.42.0) |
+| W1–W3 | the races' tools; the tiers' marks | made (orkUI 0.42.0) |
 | N1 | the kinds of a card of the project's deck | to take |
-| E1, E2, E3 | the mats' emblems; the seal; the props and the deck's box | to take |
+| E1, E2, E3 | the mats' emblems; the seal; the props and the deck's box | taken |

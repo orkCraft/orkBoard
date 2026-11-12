@@ -73,7 +73,20 @@ The twenty-five pictures are also in `../emblems/` (the library), with fourteen 
 *moon* is a crescent alone, the one moon of the window (it was *night*, a crescent and a star, before 0.15.0): the *void* element (`../elements/`) is a ring now and no crescent, and the icon `moon` is gone from the sprite. The moons (`../moons/`) draw a goal's progress, never a state. The close (×), the plus (+)
 and the chevrons (›, ⌄) are not here: they are orkUI's icons (`../icons/icons.svg`), drawn on this same grid.
 
-Each is a **7 x 7** grid of unit squares, one `path` (`M{x} {y}h1v1h-1z` for every pixel, row by row from the top), `viewBox="0 0
+**Since 0.43.0 the same tool also traces the mats' emblems into `../mats/`, the five elements' runes into `../runes/` and `../elements/`** (`art.json`).
+
+**Since 0.42.0 the signs are the owner's cartoon silhouettes, traced** (Orkboard's `docs/pictures-cartoon.md`, *No pixel left*): thirty-two of them, the twelve of the sheet `s1-state-signs.jpg`
+(`check cross work moon alert flag before after play pause sound film`), the eight of `s2-state-signs.jpg` (`text question pick conflict sword shield bug-squashed bug`) and the twelve of
+`s3-type-signs.jpg` (`feature tidy restructure screen picture logo target flask horn chart page abtest`; with `night`, the copy of `moon`, one file more), are each **one flat white shape, its inner details cut out as
+gaps**, read from the sheet and traced to a vector by `tools/build_signs_from_art.py` (`uv run --with pillow --with numpy python tools/build_signs_from_art.py`, `--check`, `--preview`; the sheets are in
+`../../races/art/cartoon/`, `art.json` here says which tile is which name). The tool finds each tile's frame, thresholds the silhouette against the sheet's grey ground, walks its outline and holes
+(marching squares, sub-pixel), simplifies them (Ramer-Douglas-Peucker) and writes **one `<path fill-rule="evenodd">`** in a square `viewBox="0 0 64 64"` with `fill="#000"`: the silhouette is fitted by its
+longer side to the box less a margin of 3 and centred, the same in every file; no `shape-rendering` (a curve is smooth), at most a few KB a file, numbers rounded to two decimals so a file is stable.
+Each is still a **mask** with no colour of its own: `.ork-sign` fills its box with `currentColor` through `mask-image` (`mask-size: 100%`, so a 64 box is a 14 or a 28 px sign) as before. The names and
+the paths are the ones the faces drew; what has no new take stays as it was: the other signs (`landing post tagline mechanic level balance character release store tune compass steps`, still the pixels below)
+and `big/` (the goal types at 28 px, 14 x 14 in two tones). The 28 px `.big` of a type whose small sign is traced still draws its `big/` pixels over it, as before, until its own take.
+
+The rest are each a **7 x 7** grid of unit squares, one `path` (`M{x} {y}h1v1h-1z` for every pixel, row by row from the top), `viewBox="0 0
 7 7"`, `fill="#000"`, `shape-rendering="crispEdges"`: no colour of its own, no metadata. They are **drawn as masks**:
 `.ork-sign` in `components.css` fills a 14 x 14 box (`.big` 28 x 28, two or four pixels a cell, whole pixels) with
 `background: currentColor` through `mask-image: url(signs/<name>.svg)`, so a sign takes the colour of the text it stands in and the

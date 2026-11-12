@@ -1,0 +1,146 @@
+{
+ "note": "The owner's cartoon silhouettes (0.42.0; Orkboard's docs/pictures-cartoon.md, No pixel left), traced to vectors by tools/build_signs_from_art.py (uv run --with pillow --with numpy python tools/build_signs_from_art.py). `sheets`: each sheet in races/art/cartoon/ (`file`), its `grid` [columns, rows], its tile names row by row (null: an empty tile) and the folder its files go to (`target`). The frames are found by the tool, not measured here. `viewbox` and `margin`: every file is a square box of that size, the silhouette fitted by its longer side to the box less the margin and centred; `tolerance`: the simplification (Ramer-Douglas-Peucker) in box units. `aliases`: other files that are a copy of a name's (night is moon; an element is its rune, in ../elements/). Since 0.43.0 the five elements' runes (r1-element-runes-2.jpg: tusks, key, comb, eye, wave) are traced too, and each element's file is a copy of its rune (an alias into ../elements/). The tool never touches a name that is not here (the other signs, big/ and the composites).",
+ "viewbox": 64,
+ "margin": 3,
+ "tolerance": 0.18,
+ "aliases": {
+  "moon": [
+   "night"
+  ],
+  "tusks": [
+   "../elements/meadow"
+  ],
+  "key": [
+   "../elements/ice"
+  ],
+  "comb": [
+   "../elements/dust"
+  ],
+  "eye": [
+   "../elements/void"
+  ],
+  "wave": [
+   "../elements/lava"
+  ]
+ },
+ "sheets": [
+  {
+   "file": "cartoon/r2-ring-runes.jpg",
+   "grid": [
+    4,
+    2
+   ],
+   "target": "office/runes",
+   "names": [
+    "hook",
+    "ladder",
+    "spiral",
+    "staff",
+    "hourglass",
+    "diamond",
+    "knot",
+    null
+   ]
+  },
+  {
+   "file": "cartoon/r1-element-runes-2.jpg",
+   "grid": [
+    3,
+    2
+   ],
+   "target": "office/runes",
+   "names": [
+    "tusks",
+    "key",
+    "comb",
+    "eye",
+    "wave",
+    null
+   ]
+  },
+  {
+   "file": "cartoon/s1-state-signs.jpg",
+   "grid": [
+    4,
+    3
+   ],
+   "target": "office/signs",
+   "names": [
+    "check",
+    "cross",
+    "work",
+    "moon",
+    "alert",
+    "flag",
+    "before",
+    "after",
+    "play",
+    "pause",
+    "sound",
+    "film"
+   ]
+  },
+  {
+   "file": "cartoon/s2-state-signs.jpg",
+   "grid": [
+    4,
+    2
+   ],
+   "target": "office/signs",
+   "names": [
+    "text",
+    "question",
+    "pick",
+    "conflict",
+    "sword",
+    "shield",
+    "bug-squashed",
+    "bug"
+   ]
+  },
+  {
+   "file": "cartoon/s3-type-signs.jpg",
+   "grid": [
+    4,
+    3
+   ],
+   "target": "office/signs",
+   "names": [
+    "feature",
+    "tidy",
+    "restructure",
+    "screen",
+    "picture",
+    "logo",
+    "target",
+    "flask",
+    "horn",
+    "chart",
+    "page",
+    "abtest"
+   ]
+  },
+  {
+   "file": "cartoon/e1-emblems.jpg",
+   "grid": [
+    4,
+    3
+   ],
+   "target": "office/mats",
+   "names": [
+    "hand",
+    "discussion",
+    "compare",
+    "battle",
+    "gate",
+    "flow",
+    "scheme",
+    "slots",
+    "discard",
+    "storymap",
+    "team",
+    "timeaxis"
+   ]
+  }
+ ]
+}
