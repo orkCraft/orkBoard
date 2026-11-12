@@ -56,7 +56,16 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .sp-l ins { background: color-mix(in srgb, var(--ork-success) 28%, transparent); color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-success); }
 .sp-l del { background: color-mix(in srgb, var(--ork-danger) 22%, transparent); color: var(--ork-ink-read); text-decoration: line-through; }
 .sp-arrow { align-self: center; font: var(--ork-type-title); color: var(--ork-ink-muted); }
-@media (max-width: 900px) { .sp-diff, .sp-road { flex-direction: column; } .sp-gate { transform: scale(.6); } .sp-hand { padding-left: 12px; } }
+@media (max-width: 900px) { .sp-diff, .sp-road { flex-direction: column; } .sp-hand { padding-left: 12px; } }
+/* the gate on a phone is laid unscaled (its words 12 px at least as drawn): the goal on top, its checks wrapped in rows under it, none cut at the screen's edge (goal 171 N2) */
+@media (max-width: 900px) {
+  .sp-gate { width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 16px 12px; }
+  .sp-ring { display: none; }
+  .sp-gate__mid { position: static; transform: none; flex: 0 0 100%; display: flex; justify-content: center; }
+  .sp-gk { position: static; transform: none; width: 112px; }
+  .sp-gate__mid .sp-card.is-xl { --card-w: 132px; padding: 26px 10px 22px; } .sp-gate__mid .sp-card .sp-card__name { font-size: 14px; line-height: 18px; }
+  [data-spread="gate"] .mf-field { align-items: flex-start; }      /* a field that scrolls starts at its top: centred, its top would be cut */
+}
 
 /* the hand's cards: the ways a person plays, a hand poking up from the strip's bottom */
 .sp-cards { display: flex; align-items: flex-end; gap: 12px; align-self: flex-end; }

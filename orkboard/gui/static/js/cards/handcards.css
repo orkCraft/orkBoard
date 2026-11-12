@@ -8,6 +8,7 @@
   .frame[data-cards="1"] .hand .hand-row { display: flex; align-items: flex-start; gap: var(--ork-4); }
   .frame[data-cards="1"] .hand .hand-lane { display: contents; }
   .frame[data-cards="1"] .hand .hand-slot { position: relative; left: auto; top: auto; flex: 0 1000 var(--hc-w); min-width: var(--hc-tight, 28px); width: auto; }
+  .frame[data-cards="1"] .hand .hand-slot:not(:hover, :focus-within, .is-risen) { z-index: auto; }      /* a crowded row overlaps from the right: each card lies over the one before it, so its own title keeps its first letter (goal 171 N2) */
   .frame[data-cards="1"] .hand .hand-slot > * { width: var(--hc-w); }      /* a crowded row tightens its cards to their left edges, so the places at its right stay in the window (goal 171 L) */
   .frame[data-cards="1"] .hand .hand-row { gap: var(--ork-2); }
   .frame[data-cards="1"] .hand .hand-row::after { content: ""; order: 50; flex: 0 1 calc(var(--hc-w) - var(--hc-tight, 28px)); min-width: 0; }

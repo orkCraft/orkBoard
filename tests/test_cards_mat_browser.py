@@ -275,3 +275,31 @@ def test_an_address_of_a_goal_the_board_does_not_have_opens_nothing(page_url):
         pg.wait_for_function("location.hash === ''")
         assert pg.locator(".sp-veil").count() == 0
         b.close()
+
+
+@pytest.fixture(scope="module")
+def turned_url():
+    s = serve_mock.serve(0, mock_kit.lay_turned)
+    threading.Thread(target=s.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{s.server_port}/?mock=1"
+    s.shutdown()
+
+
+def test_the_track_mat_lays_its_stages_as_zones_with_their_labels_on_their_frame_and_its_phases_on_a_plate(turned_url):
+    """Goal 171 stage N2: the done, now and to come are `Zone`s of matframe.js, each label (`.mf-zl`) on its frame; the phases' row lies on a plate."""
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = b.new_page(viewport={"width": 1440, "height": 900})
+        pg.goto(turned_url)
+        pg.wait_for_selector(".cards-m", timeout=15000)
+        pg.wait_for_timeout(800)
+        pg.locator(".frame-hand button.hand-card[data-kind=turn][data-goal='174-example-3']").click()
+        pg.wait_for_selector("[data-spread=track] .mf")
+        labels = pg.locator("[data-spread=track] .mf-zone > .mf-zl")
+        assert labels.count() >= 1 and all(labels.nth(i).is_visible() for i in range(labels.count()))
+        assert labels.first.evaluate("(e) => { const r = e.getBoundingClientRect(), z = e.parentElement.getBoundingClientRect(); return r.top < z.top + 12 && r.bottom > z.top - 12; }")     # on the zone's frame
+        assert pg.locator("[data-spread=track] .mf-zone .sp-card").count() >= 1
+        phases = pg.locator("[data-spread=track] .mf-phases")
+        assert phases.is_visible() and phases.locator(".mf-phase").count() == 5
+        assert phases.evaluate("(e) => getComputedStyle(e).backgroundColor") != "rgba(0, 0, 0, 0)"
+        b.close()

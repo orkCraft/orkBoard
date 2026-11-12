@@ -26,7 +26,7 @@
 .mf-foot { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 14px; padding: 8px 4px 0; }
 .mf-foot .sp-note { align-self: center; margin: 0; max-width: 300px; padding: 4px 10px; font: var(--ork-type-caption); color: var(--ork-ink-read); }
 .mf-foot .sp-acts { margin-left: auto; align-self: center; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end; }
-.mf-phases { align-self: center; display: flex; align-items: center; margin: 0; padding: 0; list-style: none; }
+.mf-phases { align-self: center; display: flex; align-items: center; margin: 0; padding: 4px 6px; list-style: none; background: var(--_plate); }
 .mf-phase { padding: 2px 10px; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-bronze-hi); }
 .mf-phase + .mf-phase::before { content: "\203A"; margin-right: 10px; color: var(--ork-bronze); }
 .mf-phase.is-on { background: var(--_plate); color: var(--ork-gilt-hi); border: 1px solid var(--ork-gilt); }

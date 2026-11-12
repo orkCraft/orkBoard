@@ -29,13 +29,19 @@ TEXTS = """(root) => {
   const parse = (c) => { cv.clearRect(0, 0, 1, 1); cv.fillStyle = "#000"; cv.fillStyle = c; cv.fillRect(0, 0, 1, 1); const d = cv.getImageData(0, 0, 1, 1).data; return { r: d[0], g: d[1], b: d[2], a: d[3] / 255 }; };
   const over = (top, under) => ({ r: top.r * top.a + under.r * (1 - top.a), g: top.g * top.a + under.g * (1 - top.a), b: top.b * top.a + under.b * (1 - top.a), a: 1 });
   const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
-  const ground = (el) => { const chain = []; for (let e = el; e; e = e.parentElement) chain.push(e);
-    let c = { r: 9, g: 8, b: 7, a: 1 }, image = false;
-    for (const e of chain.reverse()) { const cs = getComputedStyle(e), bg = parse(cs.backgroundColor); if (bg.a > 0) c = over(bg, c); if (cs.backgroundImage !== "none") image = true;
+  // The ground a word lies on: its element's and its parents' layers from the word outwards, up to the first opaque plate or card (a background colour of alpha 1); what lies under that one is not seen.
+  // An image (the felt's dither) counts only where it lies on or inside that opaque layer, so a mat's words on a plate are measured.
+  const ground = (el) => { const layers = []; let image = false, opaque = false;
+    for (let e = el; e && !opaque; e = e.parentElement) { const cs = getComputedStyle(e), bg = parse(cs.backgroundColor), er = e.getBoundingClientRect();
       const pc = getComputedStyle(e, "::before");      // orkUI draws a button's ground on its ::before
-      const er = e.getBoundingClientRect();           // only a ground that covers its element (not a dot beside a label)
-      if (pc.content !== "none" && pc.content !== "normal" && pc.position === "absolute" && parseFloat(pc.width) >= er.width - 6 && parseFloat(pc.height) >= er.height - 6) { const pb = parse(pc.backgroundColor); if (pb.a > 0) c = over(pb, c); if (pc.backgroundImage !== "none") image = true; } }
+      if (pc.content !== "none" && pc.content !== "normal" && pc.position === "absolute" && parseFloat(pc.width) >= er.width - 6 && parseFloat(pc.height) >= er.height - 6) { const pb = parse(pc.backgroundColor); if (pb.a > 0) { layers.push(pb); if (pb.a >= 1) opaque = true; } if (pc.backgroundImage !== "none") image = true; }
+      if (bg.a > 0) { layers.push(bg); if (bg.a >= 1) opaque = true; }
+      if (cs.backgroundImage !== "none") image = true; }
+    let c = { r: 9, g: 8, b: 7, a: 1 };
+    for (const l of layers.reverse()) c = over(l, c);
     return { c, image }; };
+  // The size a word is drawn at: its font size times the scale of every transform above it (a scaled mat's words are smaller than their font says).
+  const drawn = (el) => { let k = 1; for (let e = el; e && e !== document.documentElement; e = e.parentElement) { const t = getComputedStyle(e).transform; if (t && t !== "none") { const m = new DOMMatrix(t); k *= Math.sqrt(m.a * m.a + m.b * m.b); } } return k; };
   const out = [], seen = new Set();
   const walker = document.createTreeWalker(sel, NodeFilter.SHOW_TEXT);
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
@@ -49,7 +55,7 @@ TEXTS = """(root) => {
     if (clipped) continue;
     seen.add(el);
     const fg = parse(cs.color), g = ground(el), under = over(fg, g.c), a = lum(under), b = lum(g.c), ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-    out.push({ text: text.slice(0, 40), cls: (el.className && el.className.baseVal === undefined ? el.className : "").toString().slice(0, 50), tag: el.tagName, size: parseFloat(cs.fontSize), ratio: Math.round(ratio * 100) / 100, image: g.image });
+    out.push({ text: text.slice(0, 40), cls: (el.className && el.className.baseVal === undefined ? el.className : "").toString().slice(0, 50), tag: el.tagName, size: Math.round(parseFloat(cs.fontSize) * drawn(el) * 100) / 100, ratio: Math.round(ratio * 100) / 100, image: g.image });
   }
   return out;
 }"""
@@ -120,9 +126,10 @@ def open_l(pg):
 
 
 def open_gate(pg):
-    for i in range(pg.locator(".cards-s").count()):
-        card = pg.locator(".cards-s").nth(i)
+    for i in range(pg.locator(".cards-s:visible").count()):
+        card = pg.locator(".cards-s:visible").nth(i)
         if "to review" in (card.get_attribute("aria-label") or ""):
+            card.scroll_into_view_if_needed()
             card.click()
             pg.locator(".cards-l__acts button", has_text="At the gate").click()
             pg.wait_for_selector(".sp-veil[data-spread='gate']")
@@ -153,7 +160,7 @@ SURFACES = {"the table": (lambda pg: None, ".frame"), "an L": (open_l, ".cards-l
             "an open mat": (open_mat, "[data-spread=track]"), "a closed mat": (closed_mat, ".cards-m[data-mat]"),
             "the hand with a mat open": (open_mat, ".frame-hand")}
 PHONE_ROOT = {"a closed mat": ".up-ct .cards-m[data-mat]", "the hand with a mat open": "[data-spread=track] .mf-foot"}      # a phone's hand is the foot of the mat's screen
-ON_PHONE = {"an open mat", "a closed mat", "the hand with a mat open"}
+ON_PHONE = {"an open mat", "a closed mat", "the hand with a mat open", "the gate spread"}
 CASES = [(n, z) for n in SURFACES for z in MAT_SIZES if z in SIZES or n in ON_PHONE]
 
 
@@ -267,4 +274,22 @@ def test_the_focus_goes_back_to_the_card_that_opened_an_l_or_a_spread_and_tab_st
             pg.keyboard.press("Escape") if how == "Escape" else pg.locator(".sp-shut").click()
             pg.wait_for_timeout(200)
             assert pg.evaluate("() => document.activeElement.matches('[data-spread-act=cost]')")
+        b.close()
+
+
+def test_the_gate_mat_on_the_phone_is_laid_unscaled_and_no_check_is_cut_at_the_screens_edge(page_url):
+    """Goal 171 stage N2: no ancestor of the gate's field scales it down, its words are 12 px at least as drawn, every check lies inside the screen's width."""
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = fresh(b, page_url, (390, 844))
+        open_gate(pg)
+        pg.wait_for_timeout(500)
+        got = pg.evaluate("""() => { const scales = [], gate = document.querySelector('.sp-gate');
+          for (let e = gate; e && e !== document.documentElement; e = e.parentElement) { const t = getComputedStyle(e).transform; if (t !== 'none') { const m = new DOMMatrix(t); scales.push(Math.hypot(m.a, m.b)); } }
+          const checks = [...document.querySelectorAll('.sp-gk')].map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; });
+          const words = [...gate.querySelectorAll('.sp-gk small, .sp-card__name, .sp-card__line')].map((e) => parseFloat(getComputedStyle(e).fontSize) * (e.getBoundingClientRect().width / (e.offsetWidth || 1)));
+          return { scales, checks, words }; }""")
+        assert all(k >= 1 for k in got["scales"]), got["scales"]
+        assert got["checks"] and all(left >= 0 and right <= 390 for left, right in got["checks"]), got["checks"]
+        assert got["words"] and all(w >= 11.9 for w in got["words"]), got["words"]
         b.close()
