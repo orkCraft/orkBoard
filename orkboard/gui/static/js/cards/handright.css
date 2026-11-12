@@ -10,10 +10,10 @@
   /* the deck: a box at the window's right edge that clips its card; the card lies half out of it, tilted, with the backs' edges under it */
   .hr-deck { position: absolute; right: 0; top: 0; bottom: 0; width: 136px; overflow: hidden; pointer-events: none; }
   .hr-blank { appearance: none; position: absolute; inset: 0; margin: 0; padding: 0; border: 0; background: none; color: var(--ork-ink); cursor: pointer; pointer-events: auto; }
-  .hr-blank__top.ork-card.ork-plus { position: absolute; right: -58px; bottom: 30px; width: 118px; rotate: -8deg; color: var(--ork-success); border: 1px solid var(--ork-success);
+  .hr-blank__top.ork-card.ork-plus { position: absolute; right: -30px; bottom: 30px; width: 96px; rotate: -8deg; color: var(--ork-success); border: 1px solid var(--ork-success);
     box-shadow: -5px 4px 0 -1px var(--ork-raised), -5px 4px 0 0 var(--ork-card-frame), -10px 8px 0 -1px var(--ork-raised), -10px 8px 0 0 var(--ork-card-frame);
     transition: translate var(--ork-motion-quick) var(--ork-motion-ease), rotate var(--ork-motion-quick) var(--ork-motion-ease); }
-  .hr-blank:is(:hover, :focus-visible) .hr-blank__top { translate: -30px -14px; rotate: -4deg; }
+  .hr-blank:is(:hover, :focus-visible) .hr-blank__top { translate: -22px -6px; rotate: -4deg; }
   .hr-blank:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
   .hr-blank__cap { position: absolute; right: 8px; bottom: 6px; display: inline-flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-read); white-space: nowrap; }
   .hr-blank.is-under .hr-blank__top { visibility: hidden; }
