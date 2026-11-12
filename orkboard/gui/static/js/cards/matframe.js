@@ -35,8 +35,8 @@ export function Phases({ at }) {
 }
 
 /** A zone printed in bronze on the felt, its label on its frame; empty, its sign lies faint inside (`empty`: what it waits for). */
-export function Zone({ label, empty = "", children, ...rest }) {
-  return html`<section class=${cls("mf-zone", { "is-empty": !!empty })} aria-label=${label} ...${rest}><span class="mf-zl" aria-hidden="true">${label}</span>${empty ? html`<span class="mf-slot" aria-hidden="true"></span><span class="mf-zs ork-plate">${empty}</span>` : children}</section>`;
+export function Zone({ label, empty = "", children, class: more = "", ...rest }) {
+  return html`<section class=${cls(cls("mf-zone", more), { "is-empty": !!empty })} aria-label=${label} ...${rest}><span class="mf-zl" aria-hidden="true">${label}</span>${empty ? html`<span class="mf-slot" aria-hidden="true"></span><span class="mf-zs ork-plate">${empty}</span>` : children}</section>`;
 }
 
 /** The seal at a mat's foot's right, for a move that cannot be undone (Merge into main, Send to a branch, Ship a release, a paid pass): dim with its why until it can be pressed

@@ -232,3 +232,33 @@ def test_drop_on_the_mat_sends_from_mat_and_undo_puts_the_page_back(turned_url):
         assert pg.locator("[data-pile=dropped]").count() == 0
         assert sorted(keys(pg)) == sorted(before)
         b.close()
+
+
+@pytest.fixture(scope="module")
+def crowded_url():
+    s = serve_mock.serve(0, mock_kit.lay_turned)                          # many cards in the hand: a crowded row (goal 171 stage N2)
+    threading.Thread(target=s.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{s.server_port}/?mock=1&table=cards"
+    s.shutdown()
+
+
+TITLES = """() => [...document.querySelectorAll('.frame-hand button.hand-card--stop')].map((c) => {
+  const t = c.querySelector('.hands-name'), r = t.getBoundingClientRect(), range = document.createRange(); range.selectNodeContents(t);
+  const first = range.getClientRects()[0] || r, x = first.left + 1, y = first.top + first.height / 2, hit = document.elementFromPoint(x, y);
+  return { title: t.textContent.slice(0, 30), x, y, ok: !!hit && c.contains(hit) }; })"""
+
+
+def test_a_crowded_hand_at_1440_keeps_each_cards_title_from_its_first_letter(crowded_url):
+    """Each card's title lies whole from its first letter: no card covers the left edge of the one after it, and the places stay in the window."""
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = b.new_page(viewport={"width": 1440, "height": 900})
+        pg.goto(crowded_url)
+        pg.locator(".frame-hand button.hand-card--stop").first.wait_for(timeout=15000)
+        pg.wait_for_timeout(800)
+        got = pg.evaluate(TITLES)
+        assert len(got) >= 8, got                                          # crowded indeed
+        assert all(g["ok"] for g in got), [g for g in got if not g["ok"]]
+        places = pg.evaluate("() => [...document.querySelectorAll('.frame-hand .hand-end button')].map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.right]; })")
+        assert places and all(left >= 0 and right <= 1440 for left, right in places), places
+        b.close()
