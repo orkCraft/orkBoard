@@ -87,7 +87,7 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - [x] L2. Tech's not accepted: a question's way with no pass, and no paid pass as one-press
   - party: Tech (a simpler model). A question's way played from the hand writes the person's answer under its question with no pass begun, as gui/ideas_phase.py `outside_answer` does, its Undo through core/idea_undo.py, tested played through its command (`from: hand`) and undone byte for byte; a test plays every command of gui/ideas_mats.py's one-press table with `keeper.call` faked to fail and finds no model reached; a one-press kind it catches moves to the sealed table with its cost said.
   - proves: Tech's *Done when* lines 4 and 5, made again
-- [ ] L3. Tech's not accepted, the second time: every question's way dealt on the table of cards is one press or sealed
+- [x] L3. Tech's not accepted, the second time: every question's way dealt on the table of cards is one press or sealed
   - party: Tech (a simpler model). On ?table=cards a goal whose question is an old Needs-you card (asks, goal, talk or cause: hand/data.js) gets its turn card from ideas.turns instead, so no way the hand deals there sends ideas.talk_answer or ideas.answer (a pass); every question's way there is ideas.answer_way, one press with its Undo, and a leader's pass after it a sealed move with its cost said. Tested on the gui fixture's real host, no ?mock=1, not on a turn laid by hand.
   - proves: Tech's *Done when* line 5, made again (the last time: what is still not met goes under Not accepted)
 - [ ] M. Tech accepts the step
