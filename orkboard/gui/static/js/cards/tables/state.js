@@ -34,5 +34,5 @@ export const isAt = (ctx, id) => { const a = laidAt.value; return !!a && a.party
 /** Ask a leader about a part of its table (decisions §298.5: the person asks, never puts a token): the command it would be is sent (the mock logs it:
  *  `ideas.ask_leader`, proposed; the host is to take {party, framework, card, text} and give the leader the question, marking that part of its table). */
 export function askLeader({ party, framework, card, text }) {
-  return command("ideas.ask_leader", { party, framework, card, text: text.trim() }, true).catch(() => {});
+  return command("ideas.ask_leader", { party, framework, card, text: text.trim(), sealed: true }, true).catch(() => {});
 }

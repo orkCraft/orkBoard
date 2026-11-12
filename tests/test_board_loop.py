@@ -114,7 +114,7 @@ def test_an_idea_goes_from_the_phone_through_review_to_a_commit_on_dev(town):
     assert task["state"] == "merged" and task["commit"] == commit
     from orkboard.realm import goal_branch                                                           # spec 168 F1 (decisions §283.26): the task landed on the goal's own branch
     if goal_branch.waits_for_dev(host.ideas.state_dir, slug):                                           # … and, Lands in dev by itself off, the goal waits there for the person's To dev
-        host.command("ideas.goal_to_dev", {"idea": slug})
+        host.command("ideas.goal_to_dev", {"sealed": True, "idea": slug})
     _until(host, lambda: subprocess.run(["git", "merge-base", "--is-ancestor", commit, "dev"], cwd=str(repo), capture_output=True).returncode == 0,
            "the goal goes into dev once", seconds=120)
     assert _git(repo, "log", "-1", "--format=%s", commit) == "Add the feature" and (repo / ".git").exists()

@@ -56,7 +56,7 @@ export function makeGoals(core, about, process = () => {}) {
   const nameOf = (slug) => partyNameOf(st, slug);
   async function markOut(slug) {
     outError = "";
-    const r = await core.call("ideas.release_out", { slug }, (e) => { outError = e || "Not done"; if (sh.el.open) drawSheet(); });
+    const r = await core.call("ideas.release_out", { slug, sealed: true }, (e) => { outError = e || "Not done"; if (sh.el.open) drawSheet(); });
     if (!r) return;
     asking = "";
     await core.refresh();

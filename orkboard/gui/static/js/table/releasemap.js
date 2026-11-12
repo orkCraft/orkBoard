@@ -53,7 +53,7 @@ export function ReleaseMap({ g, narrow }) {
     setBusy(true);
     setRefused("");
     try {
-      const got = await command("ideas.gate_merge", {}, true);
+      const got = await command("ideas.gate_merge", { sealed: true }, true);
       if (got?.note) toast(got.note, "warning");
       await refreshShell();
       reload();

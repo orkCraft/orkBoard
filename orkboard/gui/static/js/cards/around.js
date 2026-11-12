@@ -32,7 +32,7 @@ export function ReplySlip({ slug, v }) {
   const close = () => { setOpen(false); setTimeout(() => btn.current?.focus(), 0); };
   return html`<${Slip} leader=${v.leader} checks=${v.checks} token=${html`<${CraftToken} leader=${v.leader} checks=${v.checks} on=${true} />`}>
     <button ref=${btn} type="button" class="cards-linkb" data-reply=${v.leader} aria-expanded=${open ? "true" : "false"} onClick=${() => (open ? close() : setOpen(true))}>Reply to ${name}</button>
-    ${open && html`<${Field} leader=${v.leader} label="Your reply" onClose=${close} send=${(text) => command("ideas.reply", { slug, leader: v.leader, text }, true)} />`}<//>`;
+    ${open && html`<${Field} leader=${v.leader} label="Your reply" onClose=${close} send=${(text) => command("ideas.reply", { slug, leader: v.leader, text, sealed: true }, true)} />`}<//>`;
 }
 
 /** The slips of an opened card in a column, the verdicts' own order, alternate ones on each side (`side` 0 or 1; all on one column on a phone: CSS). */
@@ -55,5 +55,5 @@ export function AskRow({ slug, route }) {
           onClick=${() => (at === leader ? closeAsk() : setAt(leader))}><span class="cards-ask__ring"><${HeadOf} w=${w} /></span><span>Ask ${w.name}…</span></button>${off && html`<small>not on its route</small>`}</span>`;
     })}</div>
     ${at && html`<${Field} key=${at} leader=${at} label=${`Ask ${whoOf(at).name} about this card`} onClose=${closeAsk}
-      send=${(text) => command("ideas.ask_leader", { slug, leader: at, text }, true)} />`}</div>`;
+      send=${(text) => command("ideas.ask_leader", { slug, leader: at, text, sealed: true }, true)} />`}</div>`;
 }

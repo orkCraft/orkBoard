@@ -99,3 +99,18 @@ def test_the_moves_are_logged_and_published(host):
     played = [r for r in rows if r["event"] == "move_played"]
     assert played and played[0]["kind"] == "hold" and played[0]["from"] == "hand" and played[0]["idea"] == "goal"
     assert any(r["event"] == "move_undone" for r in rows)
+
+
+def test_every_page_call_of_a_sealed_command_sends_its_seal():
+    """The page's own presses of a sealed move (the portal, the merge button) pass `sealed: true`; js/mock/ answers, it never calls."""
+    import re
+    from pathlib import Path
+    from orkboard.gui.ideas_mats import SEALED_BY
+    static, found = Path(__file__).resolve().parents[1] / "orkboard" / "gui" / "static", 0
+    for path in [*static.rglob("*.js"), *static.rglob("*.html")]:
+        if "mock" in path.relative_to(static).parts or "vendor" in path.relative_to(static).parts:
+            continue
+        for m in re.finditer(r"""["'`](%s)["'`]\s*,\s*\{[^}]*\}?""" % "|".join(map(re.escape, SEALED_BY)), path.read_text(encoding="utf-8")):
+            found += 1
+            assert "sealed: true" in m.group(0), f"{path.name}: {m.group(1)} sends no seal"
+    assert found >= 8
