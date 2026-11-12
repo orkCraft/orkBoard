@@ -8,6 +8,7 @@ priority: normal
 short: The mats as laid
 phase: talk
 route: product, design, tech
+asks: person
 by: claude-code
 schema: 3
 ---
@@ -58,6 +59,11 @@ the backpack and the team, the frameworks' mats, the story map, the history book
   - Answered: Seal only what cannot be undone (Merge into main, Send to a branch, Ship a release); every other move is one press, its Undo in Orkboard's history (the person: «можешь историями оркборда») (the person, 2026-11-12)
 - Each mat checked against its shot? (**Pictures, a stage a mat** / One picture pass at the end / The person presses ?mock=1) — Weaker models drift from a mockup without a picture to hold them (goal 170's risk); docs/mockups/mats/shots holds 44, desk and phone · Pictures, a stage a mat: Each mat accepted on desk and phone pictures before the next begins · One picture pass at the end: Fewer passes; a drift found when all are built, many mats made again · The person presses ?mock=1: No picture kept; the person finds the drift by pressing, after the merge
   - Answered: Pictures, a stage a mat: each mat drawn on the real page at 1440 and 390, laid beside its shot in docs/mockups/mats/shots, accepted by Design's pass; each mat added to tests/test_cards_fit_browser.py (the person: «давай вариант а») (the person, 2026-11-12)
+- A move with no Undo yet? (**One Undo part, the rest sealed** / The toasts' Undo, the book later / Every move sealed for now) — the person's answer gives each one-press move its Undo in the history; the host's are a few toasts (unthrow, undo_rewrite, put_back_undo) · One Undo part, the rest sealed: core keeps each move's reverse; a pass begun or money spent carries the seal · The toasts' Undo, the book later: The toasts' Undo as today; Drop and Start one press with nothing to undo · Every move sealed for now: Nothing lost; every move two presses until the history book's goal lands
+  - Answered: One Undo part, the rest sealed: core keeps each one-press move's reverse in the history; a move it cannot reverse (a pass begun, money spent, Merge into main, Send to a branch, Ship a release) carries the seal (decided by §302.4, 2026-11-12)
+- Which table do the mats land on? (**Behind ?table=cards until the last mat** / The cards the default now / Both tables kept a while) — cards/on.js draws the cards on ?mock=1 and ?table=cards only; §299.4 retires the goal's pane, yet its acts' mats are later goals · Behind ?table=cards until the last mat: Today's table stays; cards/on.js flipped once the discard and battle land · The cards the default now: One table now; acts with no mat yet (the gate, To main) gone until theirs land · Both tables kept a while: 170's D to F go on; every goal changes two tables until one goes
+  - Answered: Behind ?table=cards until goal 170's last step turns the table of cards on and the old faces go (decided by §296.10, 2026-11-12)
+- Does §302's hand come in here? (**§302.1 and .4 here, zones later** / All of §302 here / §302 a goal of its own) — §302 came after this Gist and changes §300.2's hand; a zone's narrowing reads the project's deck (§300.12), a goal of its own · §302.1 and .4 here, zones later: The hand follows the open mat now; a zone narrows it once the deck lands · All of §302 here: The hand reads the project's deck early; this goal takes the deck's host part · §302 a goal of its own: This goal builds §300.2's hand; §302 rewrites the same hand right after
 
 ## Decisions
 
@@ -78,3 +84,12 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - against: The seal makes a mat's move two presses and the hand's one (§300.2, §300.15; Nielsen 4, 7); the phone's battle shot lays the seal before its ways, its ways turned (WCAG 2.4.3, §300.15)
 - instead: The mats on a goal's path first (hand, Discussion, battle and gate, discard), each accepted on desk and phone pictures; the grid, scheme, flow and backpack once those pass
 - assumes: a closed mat is told by its faint slots alone at an M's size (§300.1) — shown by: on ?mock=1 at 1440 the person names five closed mats' kinds with their lines covered
+
+## Tech
+### Talk
+- verdict: doubt — go only if each one-press move has its reverse in one Undo part over realm/event_log.py, or carries the seal; the host's Undo is a few toasts, no history
+- stance: Tech lays the frame, the address, the hand and the three kinds on js/cards; the mats' commands in a gui module of their own, served by core and realm; js/mock for tests only
+- for: One contract: the cards read seven parts only the mock holds and send eight commands no host answers (ideas.tables, ideas.reply…); verdicts are read free (realm/page_talk.py)
+- against: js/cards is goal 170's stage T, built, never accepted, D to J open; gui/ideas.py (775 lines) and board_host.py (805) past 600; 14 browser tests open ?mock=1
+- instead: The host's half first: the hand's turns and the verdicts answered, ideas.reply and ideas.ask_leader taken, proposed() gone from js/link.js; the felt and seal after 170's T
+- assumes: every move that waits is read from the Board's files (phase, asks, gate, Talk), no leader's pass — shown by: ideas.turns on this repository lays the hand ?mock=1 shows, no model run
