@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard: a card's way</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* A card's way (goal 170's talk, 12 November 2026): a new goal is a card made; the Orkmaster prices it and lays its mats, the route's
+   leaders rate it with tokens (a strength or a weakness, its weight 1 to 3, or a question), each on its own axis, never summed; it
+   comes to the hand at its turn (rated, its spec rated, a question it cannot go on without, a battle); a strong card starts by itself;
+   one dropped lies face down in the discard's third pile. A battle: a new card against the cards it goes against (goals, decisions), axis
+   by axis, the old cards' cost to undo on them, the call the person's. The person asks by replying on a token's note (a) or by *Ask
+   <leader>* at its head on an opened card (b). ?v=path|battle|open &face=desk|phone. Mockup only. */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 14px/19px var(--ork-font-read); }
+.face { position: relative; overflow: hidden; background: var(--ork-table); }
+.desk { width: 1440px; height: 900px; } .phone { width: 390px; min-height: 844px; }
+.tech { --hue: var(--ork-party-ork); } .design { --hue: var(--ork-party-elf); } .product { --hue: var(--ork-party-knight); } .om { --hue: var(--ork-party-orkmaster); } .you { --hue: var(--ork-ink); } .dec { --hue: var(--ork-gilt); }
+
+/* an S */
+.s { position: relative; flex: none; width: 150px; aspect-ratio: 2.5 / 3.5; padding: 28px 10px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.s .tl { position: absolute; left: 9px; top: 7px; width: 15px; } .s .tr { position: absolute; right: 9px; top: 7px; width: 15px; }
+.s .pic { width: 52px; height: 52px; display: grid; place-items: center; } .s .pic img { width: 52px; }
+.s b { font: 700 14px/18px var(--ork-font-text); text-align: center; } .s .vs { font-size: 11px; line-height: 14px; color: var(--ork-ink-read); text-align: center; }
+.s .bl { position: absolute; left: 9px; bottom: 8px; font-size: 11px; line-height: 14px; color: var(--ork-ink-muted); }
+.s .br { position: absolute; right: 7px; bottom: 7px; display: flex; align-items: flex-end; gap: 6px; }
+.s .act { padding: 3px 7px; background: var(--ork-ink); color: var(--ork-room); font: 700 11px/14px var(--ork-font-text); }
+.s .act small { display: block; font-weight: 400; font-size: 10px; }
+.s.asks { box-shadow: inset 0 3px 0 var(--hue), 0 0 0 2px var(--ork-alert); } .s.asks .bl { color: var(--ork-alert); }
+.s.blocked { box-shadow: inset 0 3px 0 var(--hue), 0 0 0 2px var(--ork-danger); } .s.blocked .bl { color: var(--ork-danger); }
+.s.blank { background: var(--ork-raised); border-style: dashed; } .s.blank .pic { border: 1px dashed var(--ork-edge); border-radius: 50%; }
+.s.big { width: 220px; padding: 38px 14px 14px; } .s.big .pic, .s.big .pic img { width: 80px; height: 80px; } .s.big b { font-size: 19px; line-height: 24px; }
+.s.dim { opacity: .45; }
+.emblem { width: 60px; height: 52px; position: relative; } .emblem i { position: absolute; top: 4px; width: 26px; height: 38px; border-radius: 4px; border: 2px solid var(--ork-ink-read); background: var(--ork-raised); }
+.emblem i:nth-child(1) { left: 2px; rotate: -18deg; border-color: var(--ork-alert); background: var(--ork-card); } .emblem i:nth-child(2) { left: 22px; rotate: 10deg; } .emblem i:nth-child(3) { left: 32px; rotate: 22deg; }
+.s.big .emblem { width: 90px; height: 80px; } .s.big .emblem i { width: 38px; height: 56px; }
+
+/* a token: its sign and its weight in pips; the person's is no token */
+.tok { position: relative; flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--hue); color: var(--ork-on-ink);
+  font: 700 14px/1 var(--ork-font-text); box-shadow: 0 0 0 2px var(--ork-card), 0 2px 0 var(--ork-room); }
+.tok .w { position: absolute; bottom: -7px; left: 50%; translate: -50% 0; display: flex; gap: 2px; }
+.tok .w i { width: 5px; height: 5px; border-radius: 50%; background: var(--ork-ink); box-shadow: 0 0 0 1px var(--ork-room); }
+.toks { display: flex; gap: 3px; } .tok.old { opacity: .3; } .tok.fly { box-shadow: 0 0 0 2px var(--ork-table), 0 6px 0 rgba(0,0,0,.4); }
+.tok.big { width: 34px; height: 34px; font-size: 17px; }
+
+/* a token's note (D) */
+.note { position: relative; padding: 10px 12px 10px 18px; background: var(--ork-plaque); border: 1px solid var(--ork-leather); border-left: 4px solid var(--hue); box-shadow: 0 4px 0 var(--ork-room); }
+.note .pin { position: absolute; left: -15px; top: -13px; }
+.note .who { display: flex; align-items: center; gap: 7px; } .note .who img { width: 22px; } .note .who b { font: 700 12px/15px var(--ork-font-text); }
+.note .who span { font: 700 10px/13px var(--ork-font-text); letter-spacing: .08em; text-transform: uppercase; color: var(--hue); }
+.note p { margin: 3px 0 0; font-size: 13px; line-height: 17px; } .note .fix { display: block; margin-top: 3px; font-size: 12px; color: var(--ork-ink-read); } .note .fix b { color: var(--ork-ink); font-weight: 700; }
+.note .reply { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--ork-leather); font-size: 12px; } .note .reply b { font: 700 12px/15px var(--ork-font-text); }
+.note .field { margin-top: 4px; padding: 6px; background: var(--ork-room); border: 1px solid var(--ork-edge); font-size: 12px; }
+.note .rl { margin-top: 6px; display: inline-block; font: 700 12px/15px var(--ork-font-text); text-decoration: underline; }
+
+/* the storyboard */
+.board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; height: 100%; }
+.fr { position: relative; padding: 18px 16px; border-right: 1px solid var(--ork-frame); display: flex; flex-direction: column; gap: 12px; }
+.fr h4 { margin: 0; font: 700 15px/19px var(--ork-font-text); } .fr h4 span { display: grid; place-items: center; width: 24px; height: 24px; float: left; margin-right: 8px; background: var(--ork-ink); color: var(--ork-room); }
+.fr .sub { font-size: 12px; line-height: 16px; color: var(--ork-ink-read); min-height: 48px; }
+.fr .stage { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.where { align-self: stretch; font: 700 10px/13px var(--ork-font-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ork-ink-faint); border-bottom: 1px solid var(--ork-frame); padding-bottom: 4px; }
+.heads { display: flex; gap: 10px; justify-content: center; } .heads img { width: 40px; border-radius: 50%; border: 2px solid var(--hue); background: var(--ork-panel); }
+.trail { position: absolute; width: 2px; border-left: 2px dashed var(--hue); transform-origin: top; }
+.ways { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; } .ways span { padding: 5px 9px; border: 1px solid var(--ork-edge); font: 700 12px/15px var(--ork-font-text); }
+.ways span.main { background: var(--ork-ink); color: var(--ork-room); border-color: var(--ork-ink); }
+.pile { position: relative; width: 110px; height: 150px; } .pile i { position: absolute; width: 96px; aspect-ratio: 2.5/3.5; border-radius: 8px; border: 1px solid var(--ork-card-frame);
+  background: var(--ork-raised) url(../../../design-system/orkui/backs/back.svg) center / 100% 100%; }
+.pill { padding: 2px 10px; border: 1px solid var(--ork-gilt); color: var(--ork-gilt); font: 700 12px/16px var(--ork-font-text); border-radius: 12px; }
+.pill.drop { border-color: var(--ork-ink-muted); color: var(--ork-ink-muted); }
+.or { font: 700 11px/14px var(--ork-font-text); letter-spacing: .12em; color: var(--ork-ink-muted); }
+
+/* the battle and the opened card: a spread over the window */
+.sp { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr 200px; background: var(--ork-table); }
+.sp-h { display: flex; align-items: center; gap: 12px; padding: 18px 32px 0; } .sp-h img { width: 50px; } .sp-h b { display: block; font: 700 21px/26px var(--ork-font-text); } .sp-h small { color: var(--ork-ink-read); }
+.sp-h .say { margin-left: auto; max-width: 520px; padding: 8px 12px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); border-radius: 12px; font-size: 13px; line-height: 18px; }
+.sp-h .shut { padding: 6px 10px; border: 1px solid var(--ork-edge); font: 700 13px/16px var(--ork-font-text); }
+.field { position: relative; display: grid; grid-template-columns: 260px 1fr 380px; gap: 26px; padding: 18px 32px; align-items: center; }
+.side { display: flex; flex-direction: column; align-items: center; gap: 10px; } .side .lab { font: 700 11px/14px var(--ork-font-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.olds { display: flex; gap: 16px; justify-content: center; }
+.olds .s { width: 170px; } .olds .s:nth-child(1) { rotate: -3deg; } .olds .s:nth-child(2) { rotate: 3deg; }
+.undo { font-size: 11px; line-height: 14px; color: var(--ork-ink-read); text-align: center; } .undo b { color: var(--ork-alert); }
+.axes { display: flex; flex-direction: column; gap: 10px; }
+.ax { display: grid; grid-template-columns: 1fr 120px 1fr; align-items: center; gap: 10px; padding: 8px 12px; background: var(--ork-panel); border: 1px solid var(--ork-frame); }
+.ax .l { display: flex; justify-content: flex-end; gap: 8px; align-items: center; font-size: 12px; color: var(--ork-ink-read); } .ax .r { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--ork-ink-read); }
+.ax .m { text-align: center; font: 700 12px/15px var(--ork-font-text); letter-spacing: .06em; text-transform: uppercase; } .ax .m small { display: block; font: 400 11px/14px var(--ork-font-read); color: var(--ork-ink-muted); text-transform: none; letter-spacing: 0; }
+.hand { position: relative; display: flex; align-items: flex-end; gap: 14px; padding: 0 28px 16px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); }
+.hand .s { width: 150px; } .hand .s.lift { translate: 0 -16px; }
+.hand .w2 { width: 128px; aspect-ratio: 2.5/3.5; padding: 12px 10px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.hand .w2 b { font: 700 13px/17px var(--ork-font-text); } .hand .w2 small { font-size: 11px; color: var(--ork-ink-muted); }
+.hand .hn { align-self: center; font-size: 13px; color: var(--ork-ink-muted); max-width: 240px; }
+.asks-row { display: flex; gap: 18px; justify-content: center; } .ask { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ask img { width: 46px; border-radius: 50%; border: 2px solid var(--hue); background: var(--ork-panel); } .ask u { font: 700 12px/15px var(--ork-font-text); }
+.ask.none img { opacity: .5; }
+
+/* the phone */
+.ph-top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--ork-room); border-bottom: 1px solid var(--ork-frame); } .ph-top img { width: 36px; } .ph-top b { font: 700 17px/21px var(--ork-font-text); }
+.ph-top .shut { margin-left: auto; padding: 5px 9px; border: 1px solid var(--ork-edge); font: 700 13px/16px var(--ork-font-text); }
+.ph { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
+.ph .row { display: flex; gap: 12px; align-items: center; justify-content: center; }
+.ph .s { width: 132px; } .ph .s.big { width: 170px; padding: 32px 12px 12px; } .ph .s.big .pic, .ph .s.big .pic img { width: 60px; height: 60px; } .ph .s.big b { font-size: 16px; line-height: 20px; }
+.ph .ax { grid-template-columns: 1fr 92px 1fr; padding: 6px 8px; }
+.ph-hand { display: flex; gap: 8px; padding: 10px 12px 14px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); flex-wrap: wrap; }
+.ph-hand span { padding: 8px 10px; border: 1px solid var(--ork-edge); font: 700 13px/16px var(--ork-font-text); } .ph-hand span.main { background: var(--ork-ink); color: var(--ork-room); }
+.ph-fr { border-bottom: 1px solid var(--ork-frame); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.ph-fr .stage { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; position: relative; }
+.ph-fr h4 { margin: 0; font: 700 15px/19px var(--ork-font-text); } .ph-fr h4 span { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 8px; background: var(--ork-ink); color: var(--ork-room); }
+.ph-fr .sub { font-size: 12px; line-height: 16px; color: var(--ork-ink-read); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search), V = q.get("v") || "path", FACE = q.get("face") || "desk";
+const R = "../../../design-system/orkui/", H = { tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png", om: R + "races/peon-crown.png" };
+const NAME = { tech: "Tech", design: "Design", product: "Product", om: "Orkmaster" };
+const SIGN = { "+": "+", "-": "−", "?": "?" };
+const tok = (who, sign, w = 0, cls = "") => `<span class="tok ${who} ${cls}">${SIGN[sign]}${w ? `<span class="w">${"<i></i>".repeat(w)}</span>` : ""}</span>`;
+const S = (o) => `<div class="s ${o.who} ${o.cls || ""}"><img class="tl" src="${R}runes/${o.rune || "comb"}.svg" alt="">${o.sign !== "" ? `<img class="tr" src="${R}signs/${o.sign || "feature"}.svg" alt="">` : ""}
+  <span class="pic">${o.pic || (o.who === "blank" ? "" : `<img src="${H[o.lead || o.who]}" alt="">`)}</span><b>${o.title}</b>${o.vs ? `<span class="vs">${o.vs}</span>` : ""}${o.bl ? `<span class="bl">${o.bl}</span>` : ""}<span class="br">${o.toks ? `<span class="toks">${o.toks}</span>` : ""}${o.act || ""}</span></div>`;
+const EMB = `<span class="emblem" aria-hidden="true"><i></i><i></i><i></i></span>`;
+const act = (label, cost) => `<span class="act">${label}${cost ? `<small>${cost}</small>` : ""}</span>`;
+const note = (who, sign, w, text, fix, extra = "") => `<div class="note ${who}"><span class="pin">${tok(who, sign, w)}</span><div class="who"><img src="${H[who]}" alt=""><b>${NAME[who]}</b><span>${sign === "+" ? "strength" : sign === "-" ? "weakness" : "question"} ${"●".repeat(w)}</span></div>
+  <p>${text}${fix ? `<span class="fix"><b>Fixed by:</b> ${fix}</span>` : ""}</p>${extra}</div>`;
+const TITLE = "One feed for the phone and the desk";
+const rated = tok("product", "+", 3) + tok("tech", "-", 3) + tok("design", "+", 1);
+
+let html;
+if (V === "path") {
+  const fr = [
+    { h: "You make a card", sub: "Drawn from the deck of blank cards and named: it is born unrated, no picture, no tokens.", stage: `<span class="where">The table · new</span>${S({ who: "you", cls: "blank", title: TITLE, bl: "new", sign: "", pic: " " })}` },
+    { h: "It is priced and rated", sub: "The Orkmaster routes it and puts its price on its act; the route's leaders each put a token on their own axis.", stage: `<span class="where">The table · talk</span><div class="heads"><img class="product" src="${H.product}"><img class="tech" src="${H.tech}"><img class="design" src="${H.design}"></div>
+        <div style="display:flex;gap:16px">${tok("product", "+", 3, "fly")}${tok("tech", "-", 3, "fly")}${tok("design", "+", 1, "fly")}</div>${S({ who: "product", title: TITLE, bl: "talk", act: act("Start", "≈8% Claude"), toks: "" })}` },
+    { h: "It comes back to you", sub: "Rated, at its turn. A weakness of weight 3 blocks it: its note says what fixes it.", stage: `<span class="where">Your hand</span>${S({ who: "product", cls: "blocked", title: TITLE, bl: "blocked", toks: rated, act: "" })}
+        <div style="width:100%">${note("tech", "-", 3, "Two feeds share one reader: a phone's own order breaks.", "a phone keeps its order apart, one reader below.")}</div>
+        <div class="ways"><span class="main">Change it</span><span>Play it</span><span>Put off</span><span>Drop</span></div>` },
+    { h: "Changed, rated again", sub: "Your change sends it back. The old tokens stay faint beside the new: what the change fixed is seen.", stage: `<span class="where">The table · talk, round 2</span>${S({ who: "product", title: TITLE + ": its order its own", bl: "talk · round 2", toks: tok("product", "+", 3) + tok("tech", "+", 1) + tok("design", "+", 1), act: act("Start", "≈9% Claude") })}
+        <div style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ork-ink-muted)">was ${tok("tech", "-", 3, "old")}</div>` },
+    { h: "It starts, or it is dropped", sub: "Strong and within its price it starts by itself (§240.2). Dropped, it lies face down in the discard's third pile and can be taken back.", stage: `<span class="where">The Orkmaster's lane</span>${S({ who: "om", lead: "product", title: TITLE, bl: "starts 13:40", toks: tok("product", "+", 3) + tok("tech", "+", 1), act: act("Start now", "") })}
+        <span class="or">OR</span><span class="where">The discard</span><span class="pill drop">dropped</span><div class="pile">${[0, 1, 2].map((i) => `<i style="left:${i * 4}px;top:${-i * 4}px"></i>`).join("")}</div>` },
+  ];
+  html = FACE === "desk"
+    ? `<div class="face desk"><div class="board">${fr.map((f, i) => `<section class="fr"><h4><span>${i + 1}</span>${f.h}</h4><p class="sub" style="margin:0">${f.sub}</p><div class="stage">${f.stage}</div></section>`).join("")}</div></div>`
+    : `<div class="face phone">${fr.map((f, i) => `<section class="ph-fr"><h4><span>${i + 1}</span>${f.h}</h4><p class="sub" style="margin:0">${f.sub}</p><div class="stage">${f.stage}</div></section>`).join("")}</div>`;
+} else if (V === "battle") {
+  const newer = S({ who: "product", cls: "big", title: TITLE, bl: "talk", toks: tok("product", "+", 3) + tok("tech", "+", 2) + tok("design", "-", 1), sign: "feature" });
+  const olds = `${S({ who: "dec", title: "§240 The decision all agreed starts by itself", rune: "staff", sign: "balance", pic: `<span style="font:700 28px/1 var(--ork-font-text);color:var(--ork-gilt)">§</span>`, bl: "decided", toks: tok("product", "+", 2) + tok("tech", "+", 2) })}
+    ${S({ who: "tech", title: "The table, its edge", bl: "built · gate passed", toks: tok("design", "+", 3) + tok("tech", "+", 1), rune: "comb" })}`;
+  const axes = [["Value", "Product", "product", ["+", 3], ["+", 2]], ["Risk", "Tech", "tech", ["+", 2], ["+", 2]], ["Experience", "Design", "design", ["-", 1], ["+", 3]]];
+  const axRows = axes.map(([a, who, c, l, r]) => `<div class="ax"><span class="l">${tok(c, l[0], l[1])}</span><span class="m">${a}<small>${who}'s axis</small></span><span class="r">${tok(c, r[0], r[1])}</span></div>`).join("");
+  const handWays = [["New wins", "the old reopens as a change; §240 is replaced, never edited"], ["Old wins", "the new to Dropped, or changed to fit"], ["Merge", "the leaders write one card of both"], ["Not a battle", "the Orkmaster read it wrong"]];
+  if (FACE === "desk") html = `<div class="face desk"><div class="sp">
+    <header class="sp-h"><img src="${H.om}" alt=""><span><b>A new card against two</b><small>The Orkmaster's mat: a battle · nothing is decided for you</small></span>
+      <span class="say">It goes against a decision and a goal built. Read each axis; the old cards carry what it costs to undo them.</span><span class="shut">Close</span></header>
+    <div class="field"><div class="side"><span class="lab">The new card</span>${newer}</div>
+      <div class="axes"><div class="ax" style="background:none;border:0"><span class="l" style="font-weight:700">new</span><span class="m"></span><span class="r" style="font-weight:700">old (both)</span></div>${axRows}
+        <p style="margin:6px 0 0;font-size:12px;color:var(--ork-ink-muted);text-align:center">No total: one weakness can outweigh three strengths. The tokens are the leaders'; the price is the Orkmaster's.</p></div>
+      <div class="side"><span class="lab">What it goes against</span><div class="olds">${olds}</div><span class="undo">to undo: <b>≈20% Claude</b> · 2 modules, 6 tests change</span></div></div>
+    <footer class="hand">${S({ who: "product", cls: "asks lift", title: TITLE, vs: "vs §240 and The table, its edge", pic: EMB, bl: "battle", act: act("Settle it", "") })}
+      ${handWays.map(([b, s], i) => `<div class="w2 ${i === 0 ? "product" : i === 1 ? "dec" : "om"}"><b>${b}</b><small>${s}</small></div>`).join("")}<span class="hn">Play a way: every leader is told, the Orkmaster writes it in the journal.</span></footer>
+  </div></div>`;
+  else html = `<div class="face phone"><header class="ph-top"><img src="${H.om}" alt=""><b>A new card against two</b><span class="shut">Close</span></header>
+    <div class="ph"><div class="row">${S({ who: "product", title: TITLE, toks: tok("product", "+", 3) + tok("tech", "+", 2) + tok("design", "-", 1), bl: "new" })}</div>
+      <div class="axes">${axRows}</div>
+      <div class="row" style="gap:8px">${olds.replace(/class="s /g, 'style="width:118px" class="s ')}</div><span class="undo">to undo: <b>≈20% Claude</b> · 2 modules, 6 tests change</span></div>
+    <footer class="ph-hand">${handWays.map(([b], i) => `<span class="${i === 0 ? "main" : ""}">${b}</span>`).join("")}</footer></div>`;
+} else {
+  const reply = `<div class="reply"><b>Your reply</b><div class="field">Does the phone need its own order, or only its own first screen?</div><span class="rl">Send to Tech</span></div>`;
+  const notes = [note("tech", "-", 3, "Two feeds share one reader: a phone's own order breaks.", "a phone keeps its order apart.", reply),
+    note("product", "+", 3, "One feed: a person reads one story on both.", ""), note("design", "+", 1, "The cards already share their face.", "")];
+  const asks = `<div class="asks-row">${["product", "tech", "design"].map((w) => `<span class="ask ${w}"><img src="${H[w]}" alt=""><u>Ask ${NAME[w]}…</u></span>`).join("")}<span class="ask none" style="--hue:var(--ork-party-goblin)"><img src="${R}races/imp-elder.png" alt=""><u>Ask Run…</u><small style="font-size:10px;color:var(--ork-ink-muted)">not on its route</small></span></div>`;
+  if (FACE === "desk") html = `<div class="face desk"><div class="sp" style="grid-template-rows:auto 1fr 120px">
+    <header class="sp-h"><img src="${H.product}" alt=""><span><b>${TITLE}</b><small>Opened · talk · Product leads</small></span><span class="shut" style="margin-left:auto">Close</span></header>
+    <div class="field" style="grid-template-columns:380px 1fr 380px">
+      <div style="display:flex;flex-direction:column;gap:22px">${notes[0]}</div>
+      <div class="side">${S({ who: "product", cls: "big", title: TITLE, bl: "talk", act: act("Start", "≈8% Claude") })}<span class="lab" style="margin-top:12px">Ask a leader about this card (b)</span>${asks}</div>
+      <div style="display:flex;flex-direction:column;gap:22px">${notes[1]}${notes[2]}<p style="margin:0;font-size:12px;color:var(--ork-ink-muted)">(a) Reply on a note: your words go to its leader under its own, and its answer comes back on its token.</p></div></div>
+    <footer class="hand"><span class="hn" style="max-width:none">The tokens lay on their notes as the card opened; the card keeps where each lay. Esc puts them back.</span></footer></div></div>`;
+  else html = `<div class="face phone"><header class="ph-top"><img src="${H.product}" alt=""><b>One feed…</b><span class="shut">Close</span></header>
+    <div class="ph"><div class="row">${S({ who: "product", cls: "big", title: TITLE, bl: "talk", act: act("Start", "≈8%") })}</div>${asks.replace('class="asks-row"', 'class="asks-row" style="gap:10px"')}
+      <div style="display:flex;flex-direction:column;gap:16px;padding-left:14px">${notes.join("")}</div></div></div>`;
+}
+document.getElementById("root").innerHTML = html;
+</script>
+</body>
+</html>
