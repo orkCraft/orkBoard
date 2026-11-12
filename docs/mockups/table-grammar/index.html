@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard: the table's grammar</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The table's grammar (goal 170's talk, 12 November 2026): every seat has its cards (what it does), its tokens (what it says) and
+   its mats (how it sees). The person's hand is what it decides; at the hand's right what it does (the question token, the die, the
+   deck of blank cards half hidden at the edge) and what it has (the backpack, the book). A token's note is a slip on a thread (D).
+   The phone: at the top what the person has (two bottles and +n, the discard, *Yours*: the backpack, the book); at the foot the round
+   button's fan of moves (a new card, a question, the die). ?face=desk | phone&s=rest|fab|ask|yours. Mockup only. */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 14px/19px var(--ork-font-read); }
+.face { position: relative; overflow: hidden; background: var(--ork-table); }
+.desk { width: 1440px; height: 900px; display: grid; grid-template-columns: 236px 1fr 300px; grid-template-rows: 64px 1fr 196px; }
+.cap { font: 700 11px/14px var(--ork-font-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ork-ink-muted); display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.cap::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--hue, var(--ork-ink-muted)); }
+.tech { --hue: var(--ork-party-ork); } .design { --hue: var(--ork-party-elf); } .product { --hue: var(--ork-party-knight); } .om { --hue: var(--ork-party-orkmaster); } .you { --hue: var(--ork-ink); }
+
+/* the top */
+.top { grid-column: 1 / 3; display: flex; align-items: stretch; background: var(--ork-room); border-bottom: 1px solid var(--ork-frame); }
+.brand { width: 236px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-right: 1px solid var(--ork-frame); }
+.brand img { width: 40px; } .brand b { font: 700 18px/22px var(--ork-font-text); display: block; } .brand small { color: var(--ork-ink-muted); font-size: 12px; }
+.tab { display: flex; align-items: center; gap: 10px; padding: 0 26px; font: 700 17px/20px var(--ork-font-text); border-bottom: 3px solid transparent; }
+.tab img { width: 40px; } .tab.on { border-color: var(--hue); }
+.tab .bang { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--ork-alert); color: var(--ork-on-ink); font-size: 13px; margin-left: -6px; }
+
+/* the Orkmaster's lane */
+.om-lane { padding: 14px; border-right: 1px solid var(--ork-frame); display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.deck { position: relative; height: 128px; } .deck .bk { position: absolute; top: 0; width: 84px; aspect-ratio: 2.5/3.5; border-radius: var(--ork-radius-card);
+  background: var(--ork-raised) url(../../../design-system/orkui/backs/back.svg) center / 100% 100%; border: 1px solid var(--ork-card-frame); }
+.read { font-size: 13px; color: var(--ork-ink-read); } .read b { color: var(--ork-ink); }
+
+/* the pane: the lanes */
+.lanes { display: grid; grid-template-columns: repeat(3, 1fr); min-width: 0; }
+.lane { position: relative; padding: 12px 14px; border-right: 1px solid var(--ork-frame); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lane h3 { margin: 0; font: 700 16px/20px var(--ork-font-text); display: flex; justify-content: space-between; align-items: center; }
+.sw { display: flex; gap: 4px; } .sw span { padding: 3px 8px; font: 700 12px/16px var(--ork-font-text); border: 1px solid var(--ork-edge); } .sw span.on { background: var(--ork-ink); color: var(--ork-room); }
+.row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+
+/* cards */
+.s { position: relative; flex: none; width: 128px; aspect-ratio: 2.5 / 3.5; padding: 26px 10px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.s .tl { position: absolute; left: 9px; top: 7px; width: 14px; } .s .tr { position: absolute; right: 9px; top: 7px; width: 14px; }
+.s .pic { width: 44px; } .s b { font: 700 13px/17px var(--ork-font-text); text-align: center; }
+.s .bl { position: absolute; left: 9px; bottom: 8px; font-size: 11px; line-height: 14px; color: var(--ork-ink-muted); }
+.s .br { position: absolute; right: 7px; bottom: 7px; display: flex; }
+.s.asks { box-shadow: inset 0 3px 0 var(--hue), 0 0 0 2px var(--ork-alert); }
+.s.asks .bl { color: var(--ork-alert); }
+.m { position: relative; width: 100%; aspect-ratio: 3.5 / 2.5; max-height: 150px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+  background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.m .h { display: flex; gap: 8px; align-items: center; } .m .h img { width: 28px; } .m .h b { font: 700 13px/16px var(--ork-font-text); } .m .h small { color: var(--ork-ink-muted); font-size: 11px; }
+.m p { margin: 0; font-size: 13px; line-height: 17px; }
+.mat { margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ork-ink-read); }
+.shape { display: inline-grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; width: 24px; height: 16px; } .shape i { border: 1px solid var(--hue); }
+.shape.fan { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; } .shape.two { grid-template-rows: 1fr; }
+.omat { display: flex; align-items: center; gap: 8px; padding: 7px 9px; background: var(--ork-card); border: 1px solid var(--ork-card-frame); box-shadow: inset 3px 0 0 var(--hue); font-size: 12px; line-height: 15px; }
+
+/* tokens and a note (D) */
+.tok { position: relative; flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--hue); color: var(--ork-on-ink);
+  font: 700 13px/1 var(--ork-font-text); box-shadow: 0 0 0 2px var(--ork-card), 0 2px 0 var(--ork-room); }
+.tok + .tok { margin-left: -9px; } .tok.on { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.tok.q { background: var(--ork-ink); color: var(--ork-room); }
+.note { position: absolute; z-index: 5; width: 240px; padding: 10px 12px 10px 18px; background: var(--ork-plaque); border: 1px solid var(--ork-leather); border-left: 4px solid var(--hue);
+  box-shadow: 0 4px 0 var(--ork-room); rotate: -1.2deg; }
+.note .who { display: flex; align-items: center; gap: 7px; } .note .who img { width: 22px; } .note .who b { font: 700 12px/15px var(--ork-font-text); }
+.note .who span { font: 700 10px/13px var(--ork-font-text); letter-spacing: .08em; text-transform: uppercase; color: var(--hue); }
+.note p { margin: 3px 0 0; font-size: 13px; line-height: 17px; } .note p small { display: block; color: var(--ork-ink-read); font-size: 11px; line-height: 15px; margin-top: 2px; }
+.thread { position: absolute; z-index: 4; height: 2px; background: var(--hue); transform-origin: 0 50%; pointer-events: none; }
+
+/* the discard and its head */
+.side { grid-row: 1 / 3; grid-column: 3; display: flex; flex-direction: column; background: var(--ork-room); border-left: 1px solid var(--ork-frame); }
+.head { display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; height: 64px; border-bottom: 1px solid var(--ork-frame); }
+.bottle { position: relative; width: 26px; height: 40px; display: flex; flex-direction: column; align-items: center; }
+.bottle .neck { width: 10px; height: 8px; background: var(--ork-edge); } .bottle .body { position: relative; width: 26px; flex: 1; border: 2px solid var(--ork-edge); border-radius: 6px 6px 8px 8px; overflow: hidden; background: var(--ork-room); }
+.bottle .liq { position: absolute; left: 0; right: 0; bottom: 0; background: var(--ork-mana); } .bottle.def .body { border-color: var(--ork-gilt); }
+.bottle small { position: absolute; bottom: -14px; font-size: 10px; color: var(--ork-ink-muted); }
+.more { display: grid; place-items: center; min-width: 30px; height: 26px; padding: 0 6px; border: 1px solid var(--ork-edge); font: 700 12px/1 var(--ork-font-text); color: var(--ork-ink-read); }
+.chain { width: 18px; height: 52px; background: url(../../../design-system/orkui/chain/chain-rest.png) top center / contain no-repeat; align-self: flex-start; }
+.stop { margin-left: auto; padding: 6px 10px; border: 1px solid var(--ork-danger); color: var(--ork-danger); font: 700 13px/16px var(--ork-font-text); }
+.piles { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.pill { align-self: flex-start; padding: 2px 10px; border: 1px solid var(--ork-gilt); color: var(--ork-gilt); font: 700 13px/18px var(--ork-font-text); border-radius: 12px; }
+.tomain { padding: 6px 12px; background: var(--ork-success); color: var(--ork-on-ink); font: 700 13px/16px var(--ork-font-text); align-self: center; }
+
+/* the hand */
+.hand { grid-column: 1 / 4; position: relative; display: flex; align-items: flex-end; gap: 14px; padding: 26px 0 14px 24px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); overflow: hidden; }
+.hand > .s { width: 124px; }
+.hand .lab { position: absolute; top: 8px; font: 700 10px/13px var(--ork-font-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ork-ink-faint); }
+.moves { margin-left: auto; align-self: center; display: flex; gap: 26px; align-items: flex-end; padding-right: 150px; }
+.grp { display: flex; flex-direction: column; gap: 8px; } .grp > .lab { position: static; } .grp > div { display: flex; gap: 18px; align-items: flex-end; }
+.moves .it { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: var(--ork-ink-read); }
+.moves .it img { height: 46px; } .moves .tok.q { width: 46px; height: 46px; font-size: 24px; }
+.moves .sep { width: 1px; height: 60px; background: var(--ork-frame); }
+.blank { position: absolute; right: -46px; bottom: 18px; width: 118px; aspect-ratio: 2.5/3.5; rotate: -8deg; border-radius: var(--ork-radius-card);
+  background: var(--ork-raised) url(../../../design-system/orkui/backs/plus-lines.svg) center / 100% 100%; border: 1px solid var(--ork-success); box-shadow: -5px 4px 0 -1px var(--ork-raised), -5px 4px 0 0 var(--ork-card-frame), -10px 8px 0 -1px var(--ork-raised), -10px 8px 0 0 var(--ork-card-frame); }
+.blank.up { translate: -10px -20px; rotate: -4deg; }
+.blank-cap { position: absolute; right: 12px; bottom: 6px; font-size: 11px; color: var(--ork-ink-muted); }
+.kbd { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border: 1px solid var(--ork-edge); font: 700 11px/1 var(--ork-font-read); }
+
+/* the phone */
+.phone { width: 390px; height: 844px; display: flex; flex-direction: column; }
+.ph-head { display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 10px; background: var(--ork-room); border-bottom: 1px solid var(--ork-frame); }
+.ph-head .crown { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--ork-frame); } .ph-head .crown img { width: 36px; }
+.ph-head .stopi { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--ork-danger); color: var(--ork-danger); font: 700 18px/1 var(--ork-font-text); }
+.ph-head .yours { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--ork-frame); } .ph-head .yours img { width: 34px; } .ph-head .yours.on { border-color: var(--ork-ink); background: var(--ork-raised); }
+.ph-head .disc { position: relative; width: 34px; height: 46px; border-radius: 5px; background: var(--ork-card); border: 1px solid var(--ork-success); box-shadow: 3px 3px 0 -1px var(--ork-raised), 3px 3px 0 0 var(--ork-card-frame); display: grid; place-items: center; color: var(--ork-success); font-weight: 700; }
+.ph-head .chain { height: 54px; width: 14px; }
+.heads { display: flex; gap: 14px; padding: 10px 12px 8px; overflow: hidden; background: var(--ork-room); }
+.heads .hd { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; font: 700 12px/15px var(--ork-font-text); color: var(--ork-ink-read); }
+.heads .hd span { position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; border: 3px solid var(--hue); background: var(--ork-panel); }
+.heads .hd img { width: 46px; } .heads .hd i { position: absolute; right: -4px; top: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--ork-alert); color: var(--ork-on-ink); font: 700 13px/20px var(--ork-font-text); text-align: center; font-style: normal; }
+.feed { position: relative; flex: 1; overflow: hidden; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+.shelf { display: flex; gap: 10px; } .shelf .s { width: 112px; }
+.foot { position: relative; height: 96px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); }
+.foot .s { width: 62px; padding: 18px 4px 4px; } .foot .s b { font-size: 9px; line-height: 11px; } .foot .s .pic { width: 22px; } .foot .s .bl, .foot .s .tl, .foot .s .tr { display: none; }
+.fab { position: absolute; right: 14px; bottom: 14px; z-index: 8; width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; background: var(--ork-raised); border: 3px solid var(--ork-edge); font: 700 30px/1 var(--ork-font-text); }
+.fab.open { border-color: var(--ork-ink); }
+.scrim { position: absolute; inset: 0; z-index: 6; background: var(--ork-scrim); }
+.fan { position: absolute; right: 18px; bottom: 96px; z-index: 7; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+.fan .f { display: flex; align-items: center; gap: 10px; font: 700 15px/18px var(--ork-font-text); }
+.fan .f span.lbl { padding: 6px 10px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); }
+.fan .f .c { width: 58px; height: 80px; border-radius: 7px; display: grid; place-items: center; background: var(--ork-card); border: 1px solid var(--ork-card-frame); }
+.fan .f .c img { width: 42px; } .fan .f .c .tok.q { width: 38px; height: 38px; font-size: 20px; }
+.fan .f:nth-child(1) .c { rotate: -6deg; } .fan .f:nth-child(3) .c { rotate: 5deg; }
+.aim { position: absolute; left: 0; right: 0; bottom: 96px; z-index: 7; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--ork-panel); border-top: 2px solid var(--ork-ink); font-size: 14px; }
+.aim .tok.q { width: 32px; height: 32px; font-size: 17px; } .aim u { margin-left: auto; font-weight: 700; }
+.lit { outline: 2px dashed var(--ork-ink); outline-offset: 3px; }
+.dim { opacity: .4; }
+.menu { position: absolute; right: 52px; top: 58px; z-index: 7; width: 230px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); box-shadow: 0 6px 0 var(--ork-room); }
+.menu .mi { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--ork-frame); font: 700 15px/18px var(--ork-font-text); }
+.menu .mi img { width: 34px; } .menu .mi small { display: block; font: 400 12px/15px var(--ork-font-read); color: var(--ork-ink-muted); }
+.menu .mi:last-child { border-bottom: 0; }
+.bottles-open { position: absolute; left: 98px; top: 58px; z-index: 7; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search), FACE = q.get("face") || "desk", ST = q.get("s") || "rest";
+const R = "../../../design-system/orkui/", H = { tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png", om: R + "races/peon-crown.png" };
+const MARK = { risk: "!", question: "?", for: "✓" };
+const tok = (who, view, on = false) => `<span class="tok ${who}${on ? " on" : ""}">${MARK[view]}</span>`;
+const S = (o) => `<div class="s ${o.who} ${o.cls || ""}" ${o.id ? `id="${o.id}"` : ""}><img class="tl" src="${R}runes/${o.rune || "comb"}.svg" alt=""><img class="tr" src="${R}signs/${o.sign || "feature"}.svg" alt="">
+  <img class="pic" src="${H[o.who]}" alt=""><b>${o.title}</b>${o.bl ? `<span class="bl">${o.bl}</span>` : ""}<span class="br">${o.br || ""}</span></div>`;
+const M = (o) => `<div class="m ${o.who}"><div class="h"><img src="${H[o.who]}" alt=""><span><b>${o.name}</b> <small>${o.sub}</small></span></div><p>${o.text}</p>
+  <span class="mat"><span class="shape ${o.shape || ""}">${"<i></i>".repeat(o.shape === "fan" ? 3 : o.shape === "two" ? 2 : 4)}</span>${o.mat}</span></div>`;
+const bottle = (pct, def, mark) => `<span class="bottle${def ? " def" : ""}"><span class="neck"></span><span class="body"><span class="liq" style="height:${pct}%"></span></span><small>${mark}</small></span>`;
+const NOTE = { who: "tech", view: "risk", text: "The dealer first hides the lanes on a laptop.", why: "At 1280 two lanes do not fit beside a spread." };
+const note = (n, x, y, id) => `<div class="note ${n.who}" id="${id}" style="left:${x}px;top:${y}px"><div class="who"><img src="${H[n.who]}" alt=""><b>${n.who === "tech" ? "Tech" : n.who}</b><span>${n.view}</span></div><p>${n.text}<small>${n.why}</small></p></div>`;
+const yourNote = (x, y, id) => `<div class="note you" id="${id}" style="left:${x}px;top:${y}px"><div class="who"><b>Your question to Design</b></div>
+  <p style="margin-top:6px;padding:6px;background:var(--ork-room);border:1px solid var(--ork-edge)">Why the lanes first on a phone too?</p></div>`;
+
+let html;
+if (FACE === "desk") {
+  html = `<div class="face desk">
+  <header class="top"><div class="brand"><img src="${H.om}" alt=""><span><b>orkBoard</b><small>Backend · Being made</small></span></div>
+    <span class="tab tech on"><img src="${H.tech}" alt="">Tech<span class="bang">!</span></span><span class="tab design"><img src="${H.design}" alt="">Design</span><span class="tab product"><img src="${H.product}" alt="">Product</span></header>
+  <aside class="side"><div class="head">${bottle(70, true, "CC")}${bottle(35, false, "CX")}${bottle(90, false, "GM")}<span class="chain"></span><span class="stop">Stop all</span></div>
+    <div class="piles"><span class="pill">main</span><span style="font-size:12px;color:var(--ork-ink-muted)">done in dev · waits for main</span>
+      <div class="row">${S({ who: "tech", title: "What trial 152 found", bl: "ready", sign: "check" })}<span class="tomain">To main</span></div>
+      <span class="pill">dev</span><div class="row">${S({ who: "tech", title: "A window on every card", bl: "done", sign: "check" })}${S({ who: "tech", title: "A goal on local", bl: "done", sign: "check" })}</div></div></aside>
+  <section class="om-lane om"><span class="cap">Starts by itself</span>${S({ who: "om", title: "The Orkmaster reads decisions", bl: "13:40", br: `<span style="font-size:11px;padding:2px 6px;background:var(--ork-ink);color:var(--ork-room);font-weight:700">Start</span>`, rune: "eye" })}
+    <span class="cap">Goals</span><div class="deck">${[0, 1, 2, 3].map((i) => `<span class="bk" style="left:${i * 30}px;rotate:${(i - 1.5) * 4}deg"></span>`).join("")}</div>
+    <p class="read" style="margin:0">Being read: <b>Product's tree</b></p>
+    <span class="cap">Its mats</span>
+    <div class="omat om"><span class="shape fan"><i></i><i></i><i></i></span>What each card costs</div><div class="omat om"><span class="shape two"><i></i><i></i></span>Weigh two</div>
+    <div class="omat om"><span class="shape"><i></i><i></i><i></i><i></i></span>Sort the new goals</div><div class="omat om"><span class="shape fan"><i></i><i></i><i></i></span>The deal</div></section>
+  <main class="lanes">
+    <section class="lane tech"><h3>Tech<span class="sw"><span class="on">Feed</span><span>Architecture</span></span></h3><span class="cap">New since your last look</span>
+      <div class="row">${S({ id: "edge", who: "tech", title: "The table, its edge", bl: "talk", br: tok("tech", "risk", true) + tok("design", "for") + tok("product", "question"), rune: "comb" })}</div>
+      ${note(NOTE, 150, 92, "n1")}
+      ${M({ who: "tech", name: "Tech", sub: "a change · 11:20", text: "gui/ is past its line: split board_host.py and ideas.py.", mat: "Architecture: gui/" })}
+      <span class="cap">At work</span><div class="row">${S({ who: "tech", title: "The Board", bl: "at work 40%", rune: "hook" })}${S({ who: "tech", title: "A leader leads", bl: "at work", rune: "knot" })}</div></section>
+    <section class="lane design"><h3>Design</h3><span class="cap">New since your last look</span>
+      ${M({ who: "design", name: "Design", sub: "a change · 10:05", text: "The lanes keep a card's ratio; a post lies on its side.", mat: "What changed", shape: "two" })}
+      <div class="row">${S({ id: "mine", who: "design", title: "One card, three sizes", bl: "talk", br: tok("q", "question"), rune: "wave" })}</div>
+      ${yourNote(150, 300, "n2")}
+      <span class="cap">At work</span><div class="row">${S({ who: "design", title: "One card", bl: "at work", rune: "spiral" })}</div></section>
+    <section class="lane product"><h3>Product<span class="sw"><span class="on">Feed</span><span>Jobs to be done</span></span></h3><span class="cap">New since your last look</span>
+      ${M({ who: "product", name: "Product", sub: "a change · 09:12", text: "A new job: the person checks what was spent before the week ends.", mat: "Jobs to be done: new job" })}
+      <span class="cap">At work</span><div class="row">${S({ who: "product", title: "A way's own", bl: "at work", rune: "ladder" })}</div></section>
+  </main>
+  <footer class="hand"><span class="lab" style="left:24px">Your hand: what you decide</span>
+    ${S({ who: "product", cls: "asks", title: "Each leader's view", bl: "! waits for you", sign: "question", rune: "comb" })}${S({ who: "tech", cls: "asks", title: "The table, its edge", bl: "! waits for you", sign: "question" })}${S({ who: "product", title: "Product's tree", bl: "put off", sign: "feature", rune: "hook" })}
+    <span class="moves"><span class="grp"><span class="lab">What you do</span><div><span class="it">${tok("q", "question").replace('class="tok q', 'class="tok q')}<span>Question <span class="kbd">Q</span></span></span>
+      <span class="it"><img src="${R}die/die-rest.png" alt=""><span>Play</span></span></div></span><span class="sep"></span>
+      <span class="grp"><span class="lab">What you have</span><div><span class="it"><img src="${R}pack/pack-shut.png" alt=""><span>Inventory</span></span><span class="it"><img src="${R}book/book-shut.png" alt=""><span>History</span></span></div></span></span>
+    <span class="blank up"></span><span class="blank-cap">New goal <span class="kbd">N</span></span></footer>
+  </div>`;
+} else {
+  const fan = ST === "fab", aim = ST === "ask", yours = ST === "yours";
+  html = `<div class="face phone">
+  <header class="ph-head"><span class="crown"><img src="${H.om}" alt=""></span><span class="stopi">■</span>
+    ${bottle(70, true, "CC")}${bottle(35, false, "CX")}<span class="more">+1</span><span class="chain"></span>
+    <span style="margin-left:auto" class="yours${yours ? " on" : ""}"><img src="${R}pack/pack-shut.png" alt=""></span><span class="disc">✓</span></header>
+  <div class="heads"><span class="hd om"><span><img src="${H.om}" alt=""></span>Orkmaster</span><span class="hd tech"><span><img src="${H.tech}" alt=""><i>!</i></span>Tech</span>
+    <span class="hd design"><span><img src="${H.design}" alt=""></span>Design</span><span class="hd product"><span><img src="${H.product}" alt=""></span>Product</span></div>
+  <div class="feed"><span class="cap">New since your last look</span>
+    <div class="row"><div class="${aim ? "lit" : ""}">${S({ who: "tech", title: "The table, its edge", bl: "talk", br: tok("tech", "risk") + tok("design", "for"), rune: "comb" })}</div>
+      <div class="${aim ? "lit" : ""}">${S({ who: "design", title: "One card, three sizes", bl: "talk", rune: "wave" })}</div></div>
+    <div class="${aim ? "dim" : ""}">${M({ who: "tech", name: "Tech", sub: "a change · 11:20", text: "gui/ is past its line: split board_host.py and ideas.py.", mat: "Architecture: gui/" })}</div>
+    <span class="cap">At work</span><div class="shelf">${S({ who: "tech", title: "The Board", bl: "at work", rune: "hook" })}${S({ who: "design", title: "One card", bl: "at work", rune: "spiral" })}${S({ who: "product", title: "A way's own", bl: "at work" })}</div></div>
+  <footer class="foot">${S({ who: "product", cls: "asks", title: "Each leader's view" })}${S({ who: "tech", cls: "asks", title: "The table, its edge" })}${S({ who: "product", title: "Product's tree" })}</footer>
+  ${fan ? `<span class="scrim"></span><div class="fan"><span class="f"><span class="lbl">New goal</span><span class="c" style="background:var(--ork-raised) url(${R}backs/plus-lines-small.svg) center/100% 100%;border-color:var(--ork-success)"></span></span>
+      <span class="f"><span class="lbl">Ask a leader</span><span class="c">${tok("q", "question")}</span></span>
+      <span class="f"><span class="lbl">Play</span><span class="c"><img src="${R}die/die-rest.png" alt=""></span></span></div>` : ""}
+  ${aim ? `<div class="aim">${tok("q", "question")}<span>Tap a card to ask its leader</span><u>Cancel</u></div>` : ""}
+  ${yours ? `<span class="scrim"></span><div class="menu"><div class="mi"><img src="${R}pack/pack-shut.png" alt=""><span>Inventory<small>your tools, agents and skills</small></span></div>
+      <div class="mi"><img src="${R}book/book-shut.png" alt=""><span>History<small>what was decided, what came of it</small></span></div>
+      <div class="mi"><span style="width:34px;text-align:center">⚙</span><span>Settings</span></div></div>` : ""}
+  <span class="fab${fan ? " open" : ""}">${fan ? "✕" : "+"}</span>
+  </div>`;
+}
+document.getElementById("root").innerHTML = html;
+// the threads of the notes (D): from the token to the slip's edge
+const face = document.querySelector(".face"), F = face.getBoundingClientRect();
+const thread = (who, a, b) => { const th = document.createElement("span"); th.className = `thread ${who}`;
+  const x1 = a.x - F.left, y1 = a.y - F.top, x2 = b.x - F.left, y2 = b.y - F.top;
+  th.style.cssText = `left:${x1}px;top:${y1}px;width:${Math.hypot(x2 - x1, y2 - y1)}px;rotate:${Math.atan2(y2 - y1, x2 - x1)}rad`; face.append(th); };
+const mid = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+for (const [card, n, sel] of [["edge", "n1", ".tok.tech"], ["mine", "n2", ".tok.q"]]) {
+  const c = document.getElementById(card), nn = document.getElementById(n);
+  if (!c || !nn) continue;
+  const b = nn.getBoundingClientRect(); thread(card === "mine" ? "you" : "tech", mid(c.querySelector(sel).getBoundingClientRect()), { x: b.left + 4, y: b.top + 24 });
+}
+</script>
+</body>
+</html>
