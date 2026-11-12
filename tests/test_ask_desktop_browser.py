@@ -254,7 +254,8 @@ def test_the_answer_with_the_question_the_sources_make_it_a_goal_and_ask_more_on
     text = box.locator(".table-ask__text")
     assert text.inner_text() == ANSWER and text.evaluate("e => getComputedStyle(e).whiteSpace") == "pre-wrap"                      # its line breaks kept
     faces = pg.evaluate("() => [getComputedStyle(document.querySelector('.table-ask__text')).fontFamily, getComputedStyle(document.querySelector('.table-title__pt')).fontFamily]")
-    assert faces[0] != faces[1]                                                                                                  # the body face, never the pixel face
+    # decisions §291.1: the pixel face is gone; the text and the headings are both Rubik (IBM Plex Mono only for code, paths and ids)
+    assert faces[0].startswith("Rubik") and faces[1].startswith("Rubik"), faces
     assert [s.inner_text() for s in box.locator(".table-ask__src").all()] == ["§142", "Round timer shows on every phone"]
     assert "primary" in box.get_by_role("button", name="Make it a goal").get_attribute("class").split()
     shot(pg, f"{w}-bubble-answer.png")

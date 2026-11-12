@@ -97,8 +97,10 @@ def test_the_label_row_says_the_stage_the_step_of_the_whole_the_pips_and_the_ste
         assert "Doing 2/5 · tests for join" in said and "Tests for join" in said
         assert "worked 1 m" in said and "worked 1 m" in titled and "Let a player rejoin" in titled, "the time worked moved to the card's words"
         assert not re.search(r"\d+ [ms]\b", row.inner_text().lower()), "no time on the label"
-        pixel = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').split(',')[0].trim().replace(/[\"']/g, '')")
-        assert pixel and pixel not in css(c.locator(".table-win__now"), "fontFamily"), "a person's words: the body face"
+        # decisions §291.1: the pixel face is gone (orkUI's --ork-font-pixel is Rubik now), so a person's words are in Rubik, never in the mono face of code
+        mono = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-code').split(',')[0].trim().replace(/[\"']/g, '')")
+        words = css(c.locator(".table-win__now"), "fontFamily")
+        assert mono and mono not in words and words.startswith("Rubik"), "a person's words: the body face"
         box, now = c.bounding_box(), c.locator(".table-win__now").bounding_box()
         assert now["x"] >= box["x"] and now["x"] + now["width"] <= box["x"] + box["width"] and row.bounding_box()["x"] + row.bounding_box()["width"] <= box["x"] + box["width"] + 0.5, "inside the card"
     finally:

@@ -46,8 +46,8 @@
 /* picking on a map (spec 102 §6): the card lies low and short, its window and the rest of its height given up, so the map above it is free to press and *Send* is in view */
 @media (min-width: 760px) {
   .hand .hand-field.is-picking { aspect-ratio: auto; height: auto; top: calc(100dvh - 250px); }
-  .hand .hand-field.is-picking .hand-field__win { display: none; }
 }
+.hand .hand-field.is-picking .hand-field__win { display: none; }      /* at both widths (spec 102 §6): on a phone its 72 px window lay over the part to press */
 
 @media (max-width: 759.98px) {
   .hand .hand-card.hand-lifted--card { width: auto; aspect-ratio: auto; padding: var(--ork-4); gap: var(--ork-3); }
