@@ -303,3 +303,23 @@ def test_the_track_mat_lays_its_stages_as_zones_with_their_labels_on_their_frame
         assert phases.is_visible() and phases.locator(".mf-phase").count() == 5
         assert phases.evaluate("(e) => getComputedStyle(e).backgroundColor") != "rgba(0, 0, 0, 0)"
         b.close()
+
+
+@pytest.mark.parametrize("size", [(1440, 900), (390, 844)], ids=lambda z: f"{z[0]}x{z[1]}")
+def test_every_zone_label_and_meeple_of_the_track_mat_lies_whole_inside_its_field_on_the_desk_and_on_the_phone(turned_url, size):
+    """Goal 171 stage N3: a field taller than its content centres it, one shorter starts it at its top; no zone is cut at the top where scrolling cannot reach.
+    The phone is its own page (/app/), the mat opened as the fit test's open_mat does."""
+    from tests.test_cards_fit_browser import fresh, open_mat
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = fresh(b, turned_url, size)
+        open_mat(pg)
+        pg.wait_for_timeout(500)
+        got = pg.evaluate("""() => { const f = document.querySelector('[data-spread=track] .mf-field'); f.scrollTop = 0; f.scrollLeft = 0;
+          const fr = f.getBoundingClientRect(), out = [];
+          for (const e of f.querySelectorAll('.mf-zl, .mf-zone .sp-meeple')) { const r = e.getBoundingClientRect();
+            out.push({ what: e.className + " " + e.textContent.trim().slice(0, 20), inside: r.top >= fr.top - 0.5 && r.left >= fr.left - 0.5 && r.right <= fr.right + 0.5 && r.bottom <= fr.bottom + 0.5, r: [r.top, r.bottom, r.left, r.right], f: [fr.top, fr.bottom, fr.left, fr.right] }); }
+          return out; }""")
+        assert any("mf-zl" in g["what"] for g in got) and any("sp-meeple" in g["what"] for g in got), got
+        assert all(g["inside"] for g in got), [g for g in got if not g["inside"]]
+        b.close()
