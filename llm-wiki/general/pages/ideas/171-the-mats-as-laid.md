@@ -10,7 +10,7 @@ phase: work
 route: product, design, tech
 by: claude-code
 schema: 3
-gate: c939561 · 151 files · did not finish
+gate: c939561 · 151 files · red
 ---
 # The mats as laid: ten layouts, the move on its mat, the project's deck, the backpack as mats, the team by the hero's steps
 
