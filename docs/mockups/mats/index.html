@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard: the mats, one by one</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mats, one by one (the talk of 12 November 2026 on how each kind of mat is laid, §299.5): a mat is known by its layout and its one
+   move, never by whose it is. Nine: the hand, rating, compare, battle (and the gate, a battle nobody disputes), flow, the scheme, slots,
+   the discard. Each opens over the table as wide as the pane on a desktop, the whole screen on a phone; its move lies on it, at its
+   foot's right; the hand holds a card for each move that waits. ?v=hand|rate|compare|battle|gate|flow|scheme|slots|discard|closed
+   &face=desk|phone (&res=1 compare's pictures, &ok=1 the gate all agreeing). Mockup only. */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 14px/19px var(--ork-font-read); }
+.face { position: relative; overflow: hidden; background: var(--ork-table); }
+.desk { width: 1440px; height: 900px; } .phone { width: 390px; min-height: 844px; }
+.tech { --hue: var(--ork-party-ork); --tool: url(../../../design-system/orkui/tools/drum-gear.svg); }
+.design { --hue: var(--ork-party-elf); --tool: url(../../../design-system/orkui/tools/bow-drip.svg); }
+.product { --hue: var(--ork-party-knight); --tool: url(../../../design-system/orkui/tools/map-cross.svg); }
+.release { --hue: var(--ork-party-undead); --tool: url(../../../design-system/orkui/tools/hourglass-bone.svg); }
+.run { --hue: var(--ork-party-goblin); --tool: url(../../../design-system/orkui/tools/pick-gear.svg); }
+.om { --hue: var(--ork-party-orkmaster); }
+.under { position: absolute; inset: 0; background: url(../table-grammar/shots/desk-rest.png) 0 0 / 1440px 900px; filter: brightness(.3) saturate(.6); }
+
+/* a card, S */
+.s { --w: 132px; position: relative; flex: none; width: var(--w); aspect-ratio: 2.5 / 3.5; padding: calc(var(--w) * .16) 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue, var(--ork-frame)), 0 4px 0 var(--ork-room); }
+.s .tl, .s .tr { position: absolute; top: 6px; width: 14px; } .s .tl { left: 8px; } .s .tr { right: 8px; }
+.s .pic { width: calc(var(--w) * .36); } .s.mini { padding-top: 26px; } .s.mini b { font-size: min(11px, calc(var(--w) * .125)); line-height: 1.3; } .s.res .pic { width: 64%; } .s .pic.sign { opacity: .9; }
+.s b { font: 700 calc(var(--w) * .095)/1.25 var(--ork-font-text); text-align: center; }
+.s .ln { font-size: calc(var(--w) * .08); line-height: 1.3; color: var(--ork-ink-read); text-align: center; }
+.s .foot { position: absolute; left: 7px; right: 7px; bottom: 7px; display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; }
+.s .when { font-size: 10px; line-height: 12px; color: var(--ork-ink-muted); }
+.s .act { position: relative; padding: 3px 6px; font: 700 10px/12px var(--ork-font-text); background: var(--ork-control, var(--ork-frame)); border: 1px solid var(--ork-edge); white-space: nowrap; }
+.s .act.go { background: var(--ork-action); border-color: var(--ork-action); color: var(--ork-on-ink, #111); }
+.s .act .toks { position: absolute; right: -2px; bottom: calc(100% + 3px); }
+.s.down { background: repeating-linear-gradient(45deg, var(--ork-panel) 0 6px, var(--ork-card) 6px 12px); }
+.s.down > * { display: none; }
+.s.lit { outline: 2px solid var(--ork-ink); outline-offset: 3px; }
+.s.faint { opacity: .5; }
+.s.red { box-shadow: inset 0 3px 0 var(--ork-danger), 0 0 0 2px var(--ork-danger), 0 4px 0 var(--ork-room); }
+.s .big { font: 700 calc(var(--w) * .26)/1 var(--ork-font-text); color: var(--ork-ink-read); margin-top: 4px; }
+.pile { position: relative; } .pile::before, .pile::after { content: ""; position: absolute; inset: 0; border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); background: var(--ork-card); }
+.pile::before { translate: 6px 6px; } .pile::after { translate: 3px 3px; } .pile > .s { position: relative; z-index: 1; }
+.pile.thick::before { translate: 10px 10px; box-shadow: 4px 4px 0 var(--ork-card-frame), 7px 7px 0 var(--ork-card); }
+
+/* a token: its craft's tool in its party's ring, its checks as squares (§298.3) */
+.toks { display: flex; gap: 4px; } .tk { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tk .ring { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ork-room); border: 2px solid var(--hue); }
+.tk .ring i { width: 13px; height: 13px; background: var(--hue); -webkit-mask: var(--tool) center / contain no-repeat; mask: var(--tool) center / contain no-repeat; }
+.tk.look .ring { border-style: dashed; opacity: .7; } .tk.big .ring { width: 40px; height: 40px; border-width: 3px; } .tk.big .ring i { width: 24px; height: 24px; }
+.pips { display: flex; gap: 1px; } .p { display: inline-block; flex: none; width: 6px; height: 6px; } .tk.big .p { width: 9px; height: 9px; } .tk.big .pips { gap: 2px; }
+.p.ok { background: var(--ork-success); } .p.q { box-shadow: inset 0 0 0 1.5px var(--ork-alert); } .p.r { background: var(--ork-danger); clip-path: polygon(0 0, 100% 0, 100% 45%, 45% 100%, 0 100%); }
+.p.no { background: var(--ork-danger); }
+
+/* a mat opened over the table (§299.3) */
+.mat { position: absolute; left: 236px; right: 300px; top: 72px; bottom: 196px; padding: 16px 22px 14px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card);
+  box-shadow: inset 0 3px 0 var(--hue), 0 8px 0 var(--ork-room); display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.mat.tall { bottom: 24px; }
+.hd { display: flex; gap: 12px; align-items: center; } .hd > img { width: 44px; } .hd b { font: 700 19px/23px var(--ork-font-text); display: block; } .hd small { display: block; color: var(--ork-ink-read); font-size: 13px; line-height: 17px; }
+.shut { margin-left: auto; align-self: flex-start; padding: 4px 10px; border: 1px solid var(--ork-edge); font: 700 13px/16px var(--ork-font-text); white-space: nowrap; }
+.body { position: relative; min-height: 0; }
+.mat.tall .body > .mid { position: absolute; inset: 0; display: grid; gap: 18px; justify-items: center; align-content: center; }
+.mf { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ork-ink-muted); }
+.mf .kb { padding: 1px 5px; border: 1px solid var(--ork-edge); color: var(--ork-ink-read); }
+.mf .move { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.btn { padding: 7px 14px; font: 700 13px/16px var(--ork-font-text); border: 1px solid var(--ork-edge); background: var(--ork-card); color: var(--ork-ink); white-space: nowrap; }
+.btn.go { background: var(--ork-action); border-color: var(--ork-action); color: var(--ork-on-ink, #111); }
+.btn.off { opacity: .45; } .btn.sm { padding: 4px 9px; font-size: 12px; }
+.why { font-size: 12px; color: var(--ork-ink-read); }
+.lab { font: 700 11px/14px var(--ork-font-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+/* a slip on a thread (§298.4) */
+.slip { position: absolute; width: 250px; padding: 9px 11px 10px 14px; background: var(--ork-plaque); border: 1px solid var(--ork-leather); border-left: 4px solid var(--hue); font-size: 12px; line-height: 16px; }
+.slip .who { display: flex; align-items: center; gap: 8px; } .slip .who img { width: 26px; } .slip .who b { font: 700 13px/16px var(--ork-font-text); }
+.slip ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.slip li { display: grid; grid-template-columns: 10px 1fr; gap: 7px; align-items: baseline; } .slip li small { display: block; color: var(--ork-ink-read); font-size: 11px; line-height: 14px; }
+.slip .rl { margin-top: 7px; display: inline-block; font: 700 12px/15px var(--ork-font-text); text-decoration: underline; }
+.slip.shut-slip { opacity: .85; }
+.reply { margin-top: 8px; display: grid; gap: 6px; } .reply .said { padding: 6px 8px; background: var(--ork-room); border-left: 2px solid var(--ork-ink-muted); color: var(--ork-ink-read); font-size: 11px; line-height: 15px; }
+.field { padding: 6px 8px; border: 1px solid var(--ork-edge); background: var(--ork-room); font-size: 12px; color: var(--ork-ink); }
+.field i { display: inline-block; width: 1px; height: 13px; background: var(--ork-ink); vertical-align: -2px; margin-left: 1px; }
+.reply .row { display: flex; justify-content: flex-end; gap: 6px; }
+
+/* the phone */
+.ph { position: relative; padding: 12px 12px 150px; display: flex; flex-direction: column; gap: 12px; background: var(--ork-panel); min-height: 844px; box-shadow: inset 0 3px 0 var(--hue); }
+.ph .hd > img { width: 34px; } .ph .hd b { font-size: 16px; line-height: 20px; } .ph .hd small { font-size: 12px; line-height: 16px; }
+.ph .pf { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--ork-table); border-top: 1px solid var(--ork-frame); }
+.ph .pf .btn { width: 100%; text-align: center; padding: 11px; font-size: 14px; }
+.ph .slip { position: relative; width: auto; }
+
+/* the hand (desk) */
+.handbar { position: absolute; left: 0; right: 0; bottom: 0; height: 236px; background: var(--ork-table); border-top: 1px solid var(--ork-frame); }
+.groups { position: absolute; left: 24px; bottom: 18px; display: flex; gap: 26px; align-items: flex-end; }
+.grp { display: flex; flex-direction: column; gap: 6px; } .grp .gl { display: flex; align-items: center; gap: 6px; font: 700 12px/15px var(--ork-font-text); color: var(--ork-ink-read); }
+.grp .gl img { width: 14px; } .grp .row { display: flex; gap: 8px; align-items: flex-end; }
+.grp.up { translate: 0 -64px; } .grp.up .gl { color: var(--ork-ink); }
+.way { width: 86px; aspect-ratio: 2.5 / 3.5; display: grid; place-items: center; padding: 8px; text-align: center; font: 700 13px/16px var(--ork-font-text); background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: 0 4px 0 var(--ork-room); }
+.way.go { box-shadow: inset 0 0 0 2px var(--ork-action), 0 4px 0 var(--ork-room); } .way small { display: block; font: 400 10px/13px var(--ork-font-read); color: var(--ork-ink-muted); margin-top: 4px; }
+.way .k { display: inline-block; margin-top: 6px; padding: 0 4px; border: 1px solid var(--ork-edge); font: 400 10px/13px var(--ork-font-read); color: var(--ork-ink-read); }
+.places { position: absolute; right: 170px; bottom: 30px; display: flex; gap: 22px; align-items: flex-end; }
+.place { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: var(--ork-ink-read); } .place img { width: 48px; }
+.deck { position: absolute; right: 22px; bottom: 22px; } .deck .s { --w: 76px; }
+
+/* the closed mats: an M with its slots behind its words (§299.5) */
+.gal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 22px 26px; }
+.gal h2 { grid-column: 1 / -1; margin: 0; font: 700 20px/24px var(--ork-font-text); } .gal .lead { grid-column: 1 / -1; margin: -8px 0 0; color: var(--ork-ink-read); font-size: 13px; }
+.mt { position: relative; aspect-ratio: 3.5 / 2.5; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; background: var(--ork-card); border: 1px solid var(--ork-card-frame);
+  border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.mt .h { position: relative; display: flex; gap: 8px; align-items: center; } .mt .h img { width: 28px; } .mt .h b { font: 700 14px/17px var(--ork-font-text); } .mt .h small { display: block; color: var(--ork-ink-muted); font-size: 11px; line-height: 14px; }
+.mt p { position: relative; margin: 0; font-size: 13px; line-height: 17px; color: var(--ork-ink-read); }
+.mt .ft { position: relative; margin-top: auto; display: flex; justify-content: space-between; font-size: 12px; color: var(--ork-ink-read); }
+.mt.small { aspect-ratio: 3.5 / 1.5; }
+.slots { position: absolute; left: 12px; right: 12px; top: 46%; bottom: 28px; pointer-events: none; }
+.mt.small .slots { top: 58%; bottom: 8px; left: 50%; right: 12px; }
+.slots i { position: absolute; border: 1px dashed var(--ork-edge); border-radius: 4px; opacity: .55; } .slots i.ch { border-radius: 50%; } .slots i.ln { border: 0; border-top: 1px dashed var(--ork-edge); border-radius: 0; height: 0 !important; }
+.phone .gal { grid-template-columns: 1fr; padding: 14px; gap: 12px; } .phone .gal .mt { aspect-ratio: 3.5 / 2.1; } .phone .gal .mt.small { aspect-ratio: 3.5 / 1.3; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search), V = q.get("v") || "rate", FACE = q.get("face") || "desk", DESK = FACE === "desk";
+const RES = q.get("res") === "1", OK = q.get("ok") === "1";
+const R = "../../../design-system/orkui/";
+const H = { run: R + "races/imp-elder.png", tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png", om: R + "races/peon-crown.png", release: R + "races/lich-elder.png" };
+const RU = (n) => `${R}runes/${n}.svg`, SG = (n) => `${R}signs/${n}.svg`;
+const pip = (k) => `<i class="p ${k}"></i>`;
+const tk = (who, ks, cls = "") => `<span class="tk ${who} ${cls}"><span class="ring"><i></i></span><span class="pips">${ks.map(pip).join("")}</span></span>`;
+/* a card S: {who, rune, sign, pic, title, line, when, act, go, toks, w, cls, big} */
+const S = (c) => `<div class="s ${c.who || ""} ${c.cls || ""} ${c.mini ? "mini" : ""}" style="--w:${c.w || 132}px">${c.rune ? `<img class="tl" src="${RU(c.rune)}" alt="">` : ""}${c.sign ? `<img class="tr" src="${SG(c.sign)}" alt="">` : ""}
+  ${c.mini ? "" : c.big ? `<span class="big">${c.big}</span>` : `<img class="pic ${c.picSign ? "sign" : ""}" src="${c.pic || H[c.who]}" alt="">`}<b>${c.title}</b>${c.line ? `<span class="ln">${c.line}</span>` : ""}
+  <span class="foot"><span class="when">${c.when || ""}</span>${c.act ? `<span class="act ${c.go ? "go" : ""}">${c.toks ? `<span class="toks">${c.toks}</span>` : ""}${c.act}</span>` : ""}</span></div>`;
+const hd = (who, title, sub, shut = DESK ? "Close" : "Back") => `<div class="hd"><img src="${H[who]}" alt=""><span><b>${title}</b><small>${sub}</small></span><span class="shut">${shut}</span></div>`;
+const matDesk = (who, head, body, foot, cls = "") => `<div class="face desk"><span class="under"></span><div class="mat ${who} ${cls}">${head}<div class="body">${body}</div><div class="mf">${foot}</div></div></div>`;
+const matPhone = (who, head, body, foot) => `<div class="face phone"><div class="ph ${who}">${head}${body}<div class="pf">${foot}</div></div></div>`;
+const svgLines = (lines) => `<svg class="svg" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="var(--ork-edge)"/></marker>
+  <marker id="ahl" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="var(--ork-action)"/></marker></defs>${lines}</svg>`;
+
+/* ———————————————————— 1. the hand ———————————————————— */
+function hand() {
+  const g1 = `<div class="grp up"><span class="gl"><img src="${RU("ring-dots")}" alt="">Spent today on every card · rated</span><div class="row">
+    ${S({ who: "product", rune: "ring-dots", sign: "feature", title: "Spent today on every card", when: "rated", act: "≈ 9%", toks: tk("product", ["ok", "ok"]) + tk("tech", ["ok", "ok", "ok"]), w: 122, cls: "lit" })}
+    <span class="way go">Play it<small>starts at 14:00</small><span class="k">Enter</span></span><span class="way">Change it<small>back to its leaders</small></span><span class="way">Put off</span><span class="way">Drop<small>face down in the discard</small></span></div></div>`;
+  const g2 = `<div class="grp"><span class="gl"><img src="${RU("comb")}" alt="">One feed… · Tech asks</span><div class="row">
+    ${S({ who: "tech", rune: "comb", sign: "question", title: "Does the phone keep its own order?", when: "at work", act: "Answer", w: 112 })}</div></div>`;
+  const g3 = `<div class="grp"><span class="gl"><img src="${RU("knot")}" alt="">Piles per branch · battle</span><div class="row">
+    ${S({ who: "om", rune: "knot", sign: "sword", pic: SG("sword"), picSign: true, title: "Piles per branch", line: "vs §273", when: "battle", act: "Settle it", w: 112 })}</div></div>`;
+  const g4 = `<div class="grp"><span class="gl"><img src="${RU("hourglass")}" alt="">Heads in rings · at the gate</span><div class="row">
+    <div class="pile">${S({ who: "release", rune: "hourglass", sign: "release", pic: H.release, title: "Heads in rings", line: "4 stages", when: "gate", act: "Send", w: 112 })}</div></div></div>`;
+  if (DESK) return `<div class="face desk"><span class="under" style="filter:brightness(.42) saturate(.6)"></span><div class="handbar"></div>
+    <div class="groups">${g1}${g2}${g3}${g4}</div>
+    <div class="places"><span class="place"><img src="${R}die/die-rest.png" alt="">Play</span><span style="width:1px;height:60px;background:var(--ork-frame)"></span>
+      <span class="place"><img src="${R}pack/pack-shut.png" alt="">Inventory</span><span class="place"><img src="${R}book/book-shut.png" alt="">History</span></div>
+    <div class="deck"><div class="pile">${S({ cls: "down", title: "" })}</div><span class="why" style="display:block;margin-top:8px">New goal <span class="kb" style="border:1px solid var(--ork-edge);padding:0 4px">N</span></span></div></div>`;
+  const row = (label, rune, cards, up) => `<div class="grp ${up ? "up0" : ""}" style="gap:8px"><span class="gl"><img src="${RU(rune)}" alt="">${label}</span><div class="row" style="overflow:hidden;gap:8px">${cards}</div></div>`;
+  return `<div class="face phone"><div class="ph" style="--hue:var(--ork-frame)"><div class="hd"><span><b>Your hand</b><small>a card for each move that waits; one pressed lifts its ways</small></span><span class="shut">Back</span></div>
+    ${row("Spent today on every card · rated", "ring-dots", S({ who: "product", rune: "ring-dots", sign: "feature", title: "Spent today on every card", when: "rated", act: "≈ 9%", toks: tk("product", ["ok", "ok"]) + tk("tech", ["ok", "ok", "ok"]), w: 104, cls: "lit" }) +
+      `<span class="way go" style="width:74px">Play it<small>at 14:00</small></span><span class="way" style="width:74px">Change it</span><span class="way" style="width:74px;opacity:.6">Put off</span>`, true)}
+    ${row("One feed… · Tech asks", "comb", S({ who: "tech", rune: "comb", sign: "question", title: "Does the phone keep its own order?", when: "at work", act: "Answer", w: 104 }))}
+    <div style="display:flex;gap:18px">${row("Piles per branch · battle", "knot", S({ who: "om", rune: "knot", sign: "sword", pic: SG("sword"), picSign: true, title: "Piles per branch", line: "vs §273", when: "battle", act: "Settle it", w: 104 }))}
+    ${row("Heads in rings · gate", "hourglass", `<div class="pile">${S({ who: "release", rune: "hourglass", sign: "release", pic: H.release, title: "Heads in rings", line: "4 stages", when: "gate", act: "Send", w: 104 })}</div>`)}</div>
+    <div class="pf" style="flex-direction:row;justify-content:flex-end;background:transparent;border:0"><span style="width:56px;height:56px;border-radius:50%;background:var(--ork-action);display:grid;place-items:center;font:700 28px/1 var(--ork-font-text);color:#111">+</span></div></div></div>`;
+}
+
+/* ———————————————————— 2. rating ———————————————————— */
+const RATE_CARD = (w) => S({ who: "product", rune: "ring-dots", sign: "feature", title: "Spent today on every card", line: "what each card spent of the week, on the card", when: "new", act: "≈ 9% CC", w });
+const SLIP_P = `<span class="who"><img src="${H.product}" alt=""><b>Product</b></span><ul><li>${pip("ok")}<span>A job people have: see what was spent</span></li><li>${pip("ok")}<span>Fits the card's corner (§296.3)</span></li></ul><span class="rl">Reply to Product</span>`;
+const SLIP_T = `<span class="who"><img src="${H.tech}" alt=""><b>Tech</b></span><ul><li>${pip("ok")}<span>One counter below both faces</span></li><li>${pip("ok")}<span>The tools' usage is read already</span></li>
+  <li>${pip("q")}<span>Is “today” since midnight or the last 24 hours?<small>it cannot be rated without your answer</small></span></li><li>${pip("r")}<span>Every card asks the usage: slow<small>fixed by: read once a minute</small></span></li></ul>
+  <div class="reply"><span class="field">Since midnight, in my time zone<i></i></span><span class="row"><span class="btn sm go">Reply to Tech</span></span></div>`;
+const SLIP_D = `<span class="who"><img src="${H.design}" alt=""><b>Design</b></span><ul><li><span></span><span style="color:var(--ork-ink-muted)">looking at it… its token comes when it has rated</span></li></ul>`;
+function rate() {
+  const head = hd("om", "Rating: Spent today on every card", "the Orkmaster dealt it to Product, Tech and Design and priced it ≈ 9% of Claude Code's week");
+  if (DESK) {
+    /* body is 856 × ~490; the card in the middle, its route's tokens on a ring round it, each its slip */
+    const cx = 428, cy = 232;
+    const body = `${svgLines(`<ellipse cx="${cx}" cy="${cy}" rx="300" ry="205" fill="none" stroke="var(--ork-frame)" stroke-dasharray="4 6"/>
+        <path d="M${cx - 300} ${cy - 40} L${cx - 80} ${cy - 40}" stroke="var(--ork-leather)" stroke-width="1.5"/><path d="M${cx + 255} ${cy - 105} L${cx + 80} ${cy - 60}" stroke="var(--ork-leather)" stroke-width="1.5"/>
+        <path d="M${cx} ${cy + 112} L${cx} ${cy + 150}" stroke="var(--ork-leather)" stroke-width="1.5" stroke-dasharray="3 4"/>`)}
+      <div style="position:absolute;left:${cx - 80}px;top:${cy - 112}px">${RATE_CARD(160)}</div>
+      <span style="position:absolute;left:${cx - 322}px;top:${cy - 62}px">${tk("product", ["ok", "ok"], "big")}</span>
+      <div class="slip product shut-slip" style="left:0;top:${cy + 4}px;width:210px">${SLIP_P}</div>
+      <span style="position:absolute;left:${cx + 236}px;top:${cy - 128}px">${tk("tech", ["ok", "ok", "q", "r"], "big")}</span>
+      <div class="slip tech" style="right:-6px;top:${cy - 72}px;width:250px">${SLIP_T}</div>
+      <span style="position:absolute;left:${cx - 20}px;top:${cy + 152}px">${tk("design", [], "big look")}</span>
+      <div class="slip design shut-slip" style="left:${cx + 34}px;top:${cy + 150}px;width:200px;opacity:.6">${SLIP_D}</div>
+      <div class="slip om" style="left:0;top:0;width:250px;border-left-color:var(--ork-party-orkmaster);background:var(--ork-card);border-color:var(--ork-frame)"><span class="who"><img src="${H.om}" alt=""><b>Its price ≈ 9%</b></span>
+        <ul><li><span></span><span>of Claude Code's week · like the 3 cards of its kind done before</span></li></ul></div>`;
+    const foot = `<span>The ring is its route: a token for each leader it was dealt to.</span><span class="move"><span class="why">Tech waits for your reply; Design still looks. Then it comes to your hand rated.</span></span>`;
+    return matDesk("om", head, body, foot);
+  }
+  const body = `<div style="display:flex;gap:12px;align-items:center;justify-content:center">${RATE_CARD(132)}
+      <div style="display:flex;flex-direction:column;gap:10px">${tk("product", ["ok", "ok"], "big")}${tk("tech", ["ok", "ok", "q", "r"], "big")}${tk("design", [], "big look")}</div></div>
+    <div class="slip om" style="border-left-color:var(--ork-party-orkmaster);background:var(--ork-card);border-color:var(--ork-frame)"><span class="who"><img src="${H.om}" alt=""><b>Its price ≈ 9%</b></span><ul><li><span></span><span>of Claude Code's week</span></li></ul></div>
+    <div class="slip tech">${SLIP_T}</div><div class="slip product shut-slip">${SLIP_P}</div><div class="slip design" style="opacity:.6">${SLIP_D}</div>`;
+  return matPhone("om", head, body, `<span class="why">Tech waits for your reply; Design still looks. Then it comes to your hand rated.</span>`);
+}
+
+/* ———————————————————— 3. compare ———————————————————— */
+const GOALS = [
+  { who: "product", rune: "ring-dots", sign: "feature", title: "Spent today on every card", act: "≈ 9%", toks: tk("product", ["ok", "ok"]) + tk("tech", ["ok", "ok", "ok"]), line: "see what was spent" },
+  { who: "tech", rune: "comb", sign: "restructure", title: "Split gui/ in two", act: "≈ 14%", toks: tk("tech", ["ok", "r"]), line: "gui/ past its line" },
+  { who: "design", rune: "eye", sign: "picture", title: "The runes in the cartoon", act: "≈ 6%", toks: tk("design", ["ok", "ok", "ok"]), line: "no pixel left" },
+  { who: "product", rune: "key", sign: "target", title: "A goal's reach before it starts", act: "≈ 11%", toks: tk("product", ["ok", "q"]) + tk("tech", ["ok"]), line: "§280's map" },
+  { who: "tech", rune: "spiral", sign: "bug", title: "The phone loses its place", act: "≈ 3%", toks: tk("tech", ["ok", "ok"]), line: "a bug, Tech alone" },
+  { who: "design", rune: "wave", sign: "screen", title: "The chain half as tall", act: "≈ 2%", toks: tk("design", ["ok"]), line: "§285" },
+];
+const PICS = [
+  { pic: H.release, who: "design", title: "Take A: the lich", act: "≈ 1%", line: "as drawn" },
+  { pic: R + "races/skeleton-elder.png", who: "design", title: "Take B: a skeleton", act: "≈ 2%", line: "redrawn" },
+  { pic: R + "races/goblin-elder.png", who: "design", title: "Take C: a goblin", act: "≈ 2%", line: "redrawn", toks: tk("product", ["r"]) },
+  { pic: R + "races/imp-elder.png", who: "design", title: "Take D: the imp", act: "≈ 1%", line: "as drawn", toks: tk("product", ["q"]) },
+];
+function compare() {
+  const items = RES ? PICS : GOALS, pick = RES ? 0 : 0;
+  const head = RES ? hd("design", "Compare: the head of Release's leader", "Design drew four takes; pick one, the others go back to Design")
+    : hd("om", "Compare: six new goals, which goes first?", "the Orkmaster laid them with their price in today's mana and their leaders' tokens");
+  const card = (c, i, w) => S({ ...c, w, when: i === pick ? "picked" : "", cls: (i === pick ? "lit " : "") + (RES ? "res" : ""), act: c.act, go: false });
+  if (DESK) {
+    const cols = RES ? 4 : 3, w = RES ? 160 : 128;
+    const body = `<div style="display:grid;grid-template-columns:repeat(${cols}, ${w}px);justify-content:center;column-gap:${RES ? 40 : 64}px;row-gap:22px;padding-top:${RES ? 70 : 4}px">${items.map((c, i) => card(c, i, w)).join("")}</div>`;
+    const foot = `<span>${RES ? "A picture is the card's middle; its price is what drawing it again costs." : "One pressed is picked; press another to change."}</span>
+      <span class="move"><span class="why">${RES ? "Take A picked" : "Spent today on every card picked; the others stay in line"}</span><span class="btn go">${RES ? "Pick take A" : "Start it first"}</span></span>`;
+    return matDesk(RES ? "design" : "om", head, body, foot);
+  }
+  const body = `<div style="display:grid;grid-template-columns:repeat(2, 150px);justify-content:center;gap:14px 18px">${items.map((c, i) => card(c, i, 150)).join("")}</div>`;
+  return matPhone(RES ? "design" : "om", head, body, `<span class="btn go">${RES ? "Pick take A" : "Start Spent today… first"}</span>`);
+}
+
+/* ———————————————————— 4. battle, 5. the gate (a battle nobody disputes) ———————————————————— */
+const AXES = ["Product", "Tech", "Design"], AXC = ["product", "tech", "design"];
+const line = (above, below, w, axes = AXES, axc = AXC) => { const g = `display:grid;grid-template-columns:repeat(${axes.length}, 1fr) 64px;align-items:center;justify-items:center`;
+  const toks = (row) => `<div style="${g}">${row.map((a, i) => (a ? tk(axc[i], a) : "<span></span>")).join("")}<span></span></div>`;
+  return `<div style="width:${w}px;margin:0 auto;display:flex;flex-direction:column;gap:6px">${toks(above)}
+    <div style="${g};position:relative"><span style="position:absolute;left:0;right:64px;top:50%;border-top:2px solid var(--ork-edge)"></span>
+      ${axes.map((a) => `<span class="lab" style="position:relative;padding:0 8px;background:var(--ork-panel)">${a}</span>`).join("")}<span class="why" style="justify-self:end">No total</span></div>
+    ${below.length ? toks(below) : ""}</div>`; };
+const OLD = [
+  { c: { who: "om", big: "§273", sign: "page", title: "Two piles in the discard: dev, main", when: "decision" }, undo: "to undo: a new decision · 2 files" },
+  { c: { who: "design", rune: "tusks", sign: "feature", title: "The discard's two piles", when: "done in main", act: "spent 7%" }, undo: "to undo: ≈ 5% · 4 files" },
+];
+const NEW = (w) => S({ who: "om", rune: "knot", sign: "sword", pic: SG("sword"), picSign: true, title: "Piles per branch", line: "vs §273", when: "battle", act: "Settle it", w });
+const WAYS = [["New wins", "§273 replaced by a new decision; the done goal reopened as a change"], ["Old wins", "the new card changed to fit two piles"], ["Merge", "the leaders write one card of both"], ["Not a battle", "they do not touch"]];
+function battle() {
+  const head = hd("om", "Battle: Piles per branch vs §273", "a new card against what it goes against; its crafts' verdicts axis by axis, no winner said");
+  const ways = (w) => WAYS.map(([t, s], i) => `<span class="way ${i === 0 ? "" : ""}" style="width:${w}px">${t}<small>${s}</small></span>`).join("");
+  if (DESK) {
+    const body = `<div class="mid">
+      <div style="display:flex;gap:48px;align-items:flex-end">${OLD.map((o) => `<div style="display:flex;flex-direction:column;align-items:center;gap:5px">${S({ ...o.c, w: 124 })}<span class="why">${o.undo}</span></div>`).join("")}</div>
+      ${line([["ok", "ok"], ["ok", "r"], ["ok"]], [["ok", "ok"], ["ok", "ok", "q"], ["ok", "ok"]], 420)}
+      <div style="display:flex;gap:14px;align-items:flex-end">${NEW(124)}<span style="width:24px"></span>${ways(100)}</div></div>`;
+    const foot = `<span>Above: what it goes against, each its cost to undo. Below: the new card and its ways.</span><span class="move"><span class="why">A way pressed settles it</span></span>`;
+    return matDesk("om", head, body, foot, "tall");
+  }
+  const body = `<div style="display:flex;gap:16px;justify-content:center">${OLD.map((o) => `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">${S({ ...o.c, w: 112 })}<span class="why" style="text-align:center;max-width:130px;font-size:11px">${o.undo}</span></div>`).join("")}</div>
+    ${line([["ok", "ok"], ["ok", "r"], ["ok"]], [["ok", "ok"], ["ok", "ok", "q"], ["ok", "ok"]], 330)}
+    <div style="display:flex;justify-content:center">${NEW(118)}</div>`;
+  return matPhone("om", head, body, `<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:6px">${WAYS.map(([t]) => `<span class="way" style="width:auto;aspect-ratio:2.5/3;font-size:12px">${t}</span>`).join("")}</div>`);
+}
+const RED = { who: "release", rune: "hourglass", sign: "cross", pic: H.release, title: "test_board_alone: a goal on local", line: "Orkboard starts with a module of Orkline's", when: "fails", w: 112 };
+function gate() {
+  const head = hd("release", "Gate: Heads in rings → claude/heads-rings", OK ? "every check agrees: always, then the tests of what it touched" : "one check disagrees: it guards §50, Orkline imports Orkboard and never the other way round");
+  const agree = (w, n) => `<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div class="pile thick">${S({ who: "release", rune: "hourglass", sign: "check", pic: H.release, title: "The checks that agree", line: n, when: "agree", w })}</div><span class="why" style="margin-top:8px">pressed, it spreads</span></div>`;
+  const stack = (w) => `<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div class="pile">${S({ who: "design", rune: "tusks", sign: "feature", title: "Heads in rings", line: "4 stages · 6 commits", when: "your stack", w })}</div></div>`;
+  const GAX = ["The gate", "Tech", "Design"], GAC = ["release", "tech", "design"];
+  const ln = OK ? line([["ok", "ok"], ["ok", "ok", "ok"], ["ok", "ok"]], [], 420, GAX, GAC) : line([["ok", "ok"], ["ok", "ok", "no"], ["ok", "ok"]], [], 420, GAX, GAC);
+  const ways = (w) => `<span class="way" style="width:${w}px;box-shadow:inset 0 0 0 2px var(--ork-action),0 4px 0 var(--ork-room)">Fix it<small>back to work: its stage again</small></span><span class="way" style="width:${w}px">The test is out of date<small>asks Tech; a new decision first</small></span>`;
+  if (DESK) {
+    const body = `<div class="mid">
+      <div style="display:flex;gap:48px;align-items:flex-end">${agree(124, OK ? "all of them" : "all but one")}${OK ? "" : `<div style="display:flex;flex-direction:column;align-items:center;gap:5px">${S({ ...RED, cls: "red", w: 124 })}<span class="why">guards §50 · Tech&#39;s</span></div>`}</div>
+      ${ln}
+      <div style="display:flex;gap:14px;align-items:flex-end">${stack(124)}${OK ? "" : `<span style="width:24px"></span>${ways(112)}`}</div></div>`;
+    const foot = OK ? `<span>Nobody disputes it: one move.</span><span class="move"><span class="btn go">Send to claude/heads-rings</span></span>`
+      : `<span>The same mat as a battle: what it meets above, your stack below.</span><span class="move"><span class="why">1 check disagrees</span><span class="btn off">Send to claude/heads-rings</span></span>`;
+    return matDesk("release", head, body, foot, "tall");
+  }
+  const body = `<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end">${agree(112, OK ? "all of them" : "all but one")}${OK ? "" : S({ ...RED, cls: "red", w: 112 })}</div>${ln.replace("width:420px", "width:330px")}
+    <div style="display:flex;justify-content:center">${stack(118)}</div>${OK ? "" : `<div style="display:flex;gap:10px;justify-content:center">${ways(150)}</div>`}`;
+  return matPhone("release", head, body, OK ? `<span class="btn go">Send to claude/heads-rings</span>` : `<span class="why">1 check disagrees</span><span class="btn off">Send to claude/heads-rings</span>`);
+}
+
+/* ———————————————————— 6. flow ———————————————————— */
+const NODES = [
+  { id: "a", t: "Open the app", s: "screen", tk: [["ok", "ok"], ["ok"]] },
+  { id: "b", t: "The round button", s: "screen", tk: [["ok", "q"], ["ok"]] },
+  { id: "c", t: "New goal", s: "post", tk: [["ok"], ["ok", "ok"]] },
+  { id: "d", t: "Name it", s: "text", tk: [["r", "r"], ["ok"]], bad: "the keyboard hides the deck" },
+  { id: "e", t: "Rated: in your hand", s: "feature", tk: [["ok"], ["ok"]] },
+  { id: "f", t: "Starts by itself", s: "play", tk: [["ok", "q"], ["ok"]] },
+];
+const ftoks = (n) => tk("design", n.tk[0]) + tk("product", n.tk[1]);
+function flow() {
+  const head = hd("design", "Flow: a new goal on the phone", "Design: the Name it step hides the deck; New goal could be reached from the header");
+  const node = (n, w) => `<div style="display:flex;flex-direction:column;align-items:center;gap:6px">${S({ who: "design", sign: n.s, pic: SG(n.s), picSign: true, title: n.t, w, cls: n.bad ? "red" : "" })}<span class="toks">${ftoks(n)}</span>${n.bad ? `<span class="why" style="color:var(--ork-danger);text-align:center;max-width:${w + 20}px">problem: ${n.bad}</span>` : ""}</div>`;
+  if (DESK) {
+    const W = 100, X = [40, 200, 360, 520, 700, 700], Y = [190, 190, 190, 190, 70, 310];
+    const pos = (i) => `position:absolute;left:${X[i] + 14}px;top:${Y[i]}px`;
+    const cxR = (i) => X[i] + 14 + W, cxL = (i) => X[i] + 14, cy = (i) => Y[i] + 70;
+    const arr = (i, j, dash = "", color = "var(--ork-edge)", m = "ah") => `<path d="M${cxR(i) + 4} ${cy(i)} C${cxR(i) + 30} ${cy(i)}, ${cxL(j) - 30} ${cy(j)}, ${cxL(j) - 6} ${cy(j)}" fill="none" stroke="${color}" stroke-width="2" ${dash} marker-end="url(#${m})"/>`;
+    const body = `${svgLines(arr(0, 1) + arr(1, 2) + arr(2, 3) + arr(3, 4) + arr(3, 5) +
+        `<path d="M${cxL(0) + 50} ${Y[0] - 4} C${cxL(0) + 50} ${Y[0] - 90}, ${cxL(2) + 50} ${Y[0] - 90}, ${cxL(2) + 50} ${Y[2] - 8}" fill="none" stroke="var(--ork-action)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ahl)"/>`)}
+      ${NODES.map((n, i) => `<div style="${pos(i)}">${node(n, W)}</div>`).join("")}
+      <span style="position:absolute;left:${cxL(1) - 10}px;top:${Y[0] - 112}px;padding:4px 8px;background:var(--ork-card);border:1px solid var(--ork-action);font-size:12px">Open the app → New goal · <b style="font-family:var(--ork-font-text)">+ in the header</b> · proposed</span>`;
+    const foot = `<span>A card pressed: <span class="kb">P</span> marks a problem · an arrow pressed: <span class="kb">T</span> changes where it goes</span>
+      <span class="move"><span class="why">1 problem marked, 1 way proposed</span><span class="btn go">Send to Design</span></span>`;
+    return matDesk("design", head, body, foot, "tall");
+  }
+  /* on the phone the tree runs top-down, its branches side by side at its end */
+  const v = (n) => `<div style="display:flex;gap:12px;align-items:center;justify-content:center">${S({ who: "design", sign: n.s, pic: SG(n.s), picSign: true, title: n.t, w: 92, cls: n.bad ? "red" : "" })}
+      <span style="display:flex;flex-direction:column;gap:6px;width:150px"><span class="toks">${ftoks(n)}</span>${n.bad ? `<span class="why" style="color:var(--ork-danger)">problem: ${n.bad}</span>` : ""}</span></div>`;
+  const down = (prop) => `<span style="align-self:center;width:2px;height:16px;background:${prop ? "var(--ork-action)" : "var(--ork-edge)"};position:relative"><i style="position:absolute;left:-4px;bottom:-4px;border:5px solid transparent;border-top-color:${prop ? "var(--ork-action)" : "var(--ork-edge)"}"></i></span>`;
+  const body = `${v(NODES[0])}${down()}${v(NODES[1])}<span style="align-self:center;padding:3px 8px;border:1px dashed var(--ork-action);font-size:11px">+ in the header skips it · proposed</span>${down()}${v(NODES[2])}${down()}${v(NODES[3])}${down()}
+    <div style="display:flex;gap:20px;justify-content:center">${[4, 5].map((i) => `<div style="display:flex;flex-direction:column;align-items:center;gap:6px">${S({ who: "design", sign: NODES[i].s, pic: SG(NODES[i].s), picSign: true, title: NODES[i].t, w: 92 })}<span class="toks">${ftoks(NODES[i])}</span></div>`).join("")}</div>`;
+  return matPhone("design", head, body, `<div style="display:flex;gap:8px"><span class="btn" style="flex:1">Mark a problem</span><span class="btn" style="flex:1">Change a way</span></div><span class="btn go">Send to Design</span>`);
+}
+
+/* ———————————————————— 7. the scheme ———————————————————— */
+const DECKS = [
+  { id: "gui", t: "gui/", l: "the page: desk and phone", n: 3, red: true, x: 330, y: 50 },
+  { id: "core", t: "core/", l: "the Board, the bus, a run", n: 2, x: 110, y: 300 },
+  { id: "realm", t: "realm/", l: "the lexicon, the feed", n: 2, x: 330, y: 330 },
+  { id: "design", t: "design/", l: "orkUI's rules", n: 1, x: 550, y: 300 },
+  { id: "vscode", t: "vscode/", l: "a frame: shows the page", n: 1, x: 660, y: 50 },
+  { id: "orkline", t: "Orkline", l: "another project: imports Orkboard", n: 0, x: 0, y: 50, out: true },
+];
+const EDGES = [["gui", "core"], ["gui", "realm"], ["gui", "design"], ["core", "realm"], ["design", "realm"], ["vscode", "gui"], ["orkline", "core", 1]];
+function scheme() {
+  const head = hd("tech", "Architecture: orkboard", "Tech: gui/ is past its line, split it into shell/ and cards/");
+  const deck = (d, w) => `<div class="${d.n > 1 ? "pile" : ""} ${d.n > 2 ? "thick" : ""}" style="${d.out ? "opacity:.6" : ""}">${S({ who: d.out ? "" : "tech", rune: d.out ? "" : "comb", big: `<span style="font-size:${w * .17}px;font-family:var(--ork-font-code)">${d.t}</span>`, title: "", line: d.l, w, cls: (d.red ? "red " : "") + (d.out ? "down0" : "") })}</div>`;
+  if (DESK) {
+    const W = 110, H2 = W * 1.4, c = (id) => DECKS.find((d) => d.id === id), mx = (d) => d.x + W / 2, my = (d) => d.y + H2 / 2;
+    const clip = (x, y, dx, dy) => { const t = Math.min((W / 2 + 10) / Math.abs(dx || 1e-9), (H2 / 2 + 10) / Math.abs(dy || 1e-9)); return [x + dx * t, y + dy * t]; };
+    const edge = ([a, b, dash]) => { const A = c(a), B = c(b), dx = mx(B) - mx(A), dy = my(B) - my(A), n = Math.hypot(dx, dy), ux = dx / n, uy = dy / n;
+      const [x1, y1] = clip(mx(A), my(A), ux, uy), [x2, y2] = clip(mx(B), my(B), -ux, -uy);
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--ork-edge)" stroke-width="1.5" ${dash ? 'stroke-dasharray="5 5"' : ""} marker-end="url(#ah)"/>`; };
+    const body = `${svgLines(EDGES.map(edge).join(""))}${DECKS.map((d) => `<div style="position:absolute;left:${d.x}px;top:${d.y}px">${deck(d, W)}</div>`).join("")}
+      <div class="slip tech" style="left:468px;top:44px;width:170px;z-index:3"><span class="who"><b style="font-family:var(--ork-font-code)">gui/</b></span><ul><li>${pip("r")}<span>past its line: 3 modules over 600<small>fixed by: shell/ and cards/ apart</small></span></li></ul>
+        <span class="rl">Open its parts</span><br><span class="rl">Ask Tech about this part…</span></div>`;
+    const foot = `<span>A deck is a part, its thickness its size; an arrow is what it uses. A deck pressed opens its parts; an arrow, what crosses it.</span>`;
+    return matDesk("tech", head, body, foot, "tall");
+  }
+  const order = ["vscode", "gui", "core", "design", "realm", "orkline"];
+  const body = `<div style="position:relative;display:flex;flex-direction:column;gap:12px;padding-left:40px">
+    ${svgLines(`<path d="M18 60 L18 700" stroke="var(--ork-frame)"/>`)}
+    ${order.map((id) => { const d = DECKS.find((x) => x.id === id); const uses = EDGES.filter((e) => e[0] === id).map((e) => DECKS.find((x) => x.id === e[1]).t);
+      return `<div style="display:flex;gap:24px;align-items:center;position:relative"><span style="position:absolute;left:-30px;width:16px;height:16px;border-radius:50%;border:2px solid ${d.red ? "var(--ork-danger)" : "var(--ork-edge)"};background:var(--ork-panel)"></span>
+        ${deck(d, 80)}<span style="display:flex;flex-direction:column;gap:3px"><b style="font:700 14px/17px var(--ork-font-code)">${d.t}</b><span class="why">${d.l}</span>${uses.length ? `<span class="why" style="color:var(--ork-ink-muted)">uses ${uses.join(", ")}</span>` : ""}
+        ${d.red ? `<span class="why" style="color:var(--ork-danger)">past its line: split it</span>` : ""}</span></div>`; }).join("")}</div>`;
+  return matPhone("tech", head, body, `<span class="btn">Ask Tech about gui/…</span>`);
+}
+
+/* ———————————————————— 8. slots ———————————————————— */
+const SLOTS = [
+  { k: "When", v: "the week's mana runs low on a Thursday", by: "product" },
+  { k: "I want to", v: "see what each card spent", by: "you" },
+  { k: "So I can", v: null, on: true },
+  { k: "Push", v: "a week ran out without a warning", by: "product" },
+  { k: "Pull", v: null }, { k: "Anxiety", v: null }, { k: "Habit", v: "I look at the bottles only", by: "product" },
+];
+const OFFERS = ["put off what costs most", "start the cheap ones first", "Write my own…"];
+function slots() {
+  const head = hd("product", "Jobs to be done: see what was spent", "Product: fill its slots; I rate the job when every one is filled");
+  const cell = (s, w, h) => s.v ? `<div style="width:${w}px;height:${h}px;padding:10px;background:var(--ork-card);border:1px solid var(--ork-card-frame);border-radius:var(--ork-radius-card);box-shadow:inset 0 3px 0 var(--hue),0 4px 0 var(--ork-room);display:flex;flex-direction:column;gap:6px">
+      <span class="lab">${s.k}</span><span style="font-size:13px;line-height:17px">${s.v}</span><span class="why" style="margin-top:auto;color:var(--ork-ink-muted)">${s.by === "you" ? "by you" : "by Product"}</span></div>`
+    : `<div style="width:${w}px;height:${h}px;padding:10px;border:${s.on ? "2px solid var(--ork-ink)" : "1px dashed var(--ork-edge)"};border-radius:var(--ork-radius-card);display:flex;flex-direction:column;gap:6px;${s.on ? "" : "opacity:.7"}">
+      <span class="lab">${s.k}</span>${s.on ? `<span class="why">pick one of Product's or write your own</span>` : `<span class="why" style="color:var(--ork-ink-muted)">empty</span>`}</div>`;
+  const offers = (w) => OFFERS.map((o, i) => `<span class="way" style="width:${w}px;${i === 2 ? "border-style:dashed" : ""}">${o}${i < 2 ? `<small>Product's</small>` : ""}</span>`).join("");
+  if (DESK) {
+    const body = `<div style="display:grid;gap:16px">
+      <div><span class="lab">The job</span><div style="display:flex;gap:14px;margin-top:6px">${SLOTS.slice(0, 3).map((s) => cell(s, 168, 112)).join("")}
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-left:10px">${offers(72)}</div></div></div>
+      <div><span class="lab">Its forces</span><div style="display:flex;gap:14px;margin-top:6px">${SLOTS.slice(3).map((s) => cell(s, 168, 112)).join("")}</div></div></div>`;
+    const foot = `<span>A slot pressed: pick a card Product offers, or write your own. A filled one pressed: change it.</span><span class="move"><span class="why">3 slots empty</span><span class="btn off">Send to Product</span></span>`;
+    return matDesk("product", head, body, foot);
+  }
+  const body = `<span class="lab">The job</span>${SLOTS.slice(0, 3).map((s) => cell(s, 366, s.v ? 92 : 70)).join("")}<div style="display:flex;gap:8px">${offers(84)}</div>
+    <span class="lab">Its forces</span><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${SLOTS.slice(3).map((s) => cell(s, 178, 104)).join("")}</div>`;
+  return matPhone("product", head, body, `<span class="why">3 slots empty</span><span class="btn off">Send to Product</span>`);
+}
+
+/* ———————————————————— 9. the discard ———————————————————— */
+const PILES = [
+  { b: "claude/heads-rings", into: "dev", cards: ["Heads in rings"], n: 1, ok: true, who: "design" },
+  { b: "claude/one-feed", into: "dev", cards: ["One feed…", "The phone's order"], n: 2, ok: false, who: "tech" },
+  { b: "dev", into: "main", cards: ["The chain half as tall", "Stop all the die's word", "Two bottles at most"], n: 3, ok: true, who: "design", main: true },
+];
+function discard() {
+  const head = hd("om", "The discard", "what is done, a pile for each branch; the Orkmaster gathers them");
+  const pile = (p, w) => `<div class="pile ${p.n > 2 ? "thick" : ""}">${S({ who: p.who, rune: "tusks", sign: "check", title: p.cards[0], line: p.n > 1 ? `and ${p.n - 1} more` : "", when: p.ok ? "gate green" : "1 not through the gate", w })}</div>`;
+  const ctl = (p, open) => `<div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;width:180px;position:relative">
+      <span class="lab">${p.b}</span><span class="field" style="display:flex;justify-content:space-between">into: ${p.into}<span>▾</span></span>
+      ${open ? `<span style="position:absolute;top:58px;left:0;right:0;z-index:4;background:var(--ork-panel);border:1px solid var(--ork-edge);box-shadow:0 6px 0 var(--ork-room)">${["dev", "main", "release/1.4"].map((b) => `<span style="display:block;padding:6px 8px;font-size:12px;${b === p.into ? "background:var(--ork-card)" : ""}">${b}</span>`).join("")}</span>` : ""}
+      <span class="btn ${p.ok ? "go" : "off"}" style="text-align:center">Merge into ${p.into}</span>
+      <span class="why">${p.ok ? (p.main ? "asks first: main is yours" : "its cards passed the gate") : "1 card has not passed the gate"}</span></div>`;
+  const dropped = (w) => `<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span class="lab">Dropped</span><div class="pile thick">${S({ cls: "down", title: "", w })}</div><span class="why" style="margin-top:10px">face down; pressed, it spreads</span></div>`;
+  if (DESK) {
+    const body = `<div style="display:flex;gap:30px;justify-content:center;align-items:flex-start;padding-top:14px">
+      ${PILES.map((p, i) => `<div style="display:flex;flex-direction:column;gap:14px;align-items:center">${ctl(p, i === 0)}${pile(p, 120)}</div>`).join("")}
+      <span style="width:1px;align-self:stretch;background:var(--ork-frame)"></span>${dropped(100)}</div>`;
+    const foot = `<span>A pile is a branch's cards done; its list says where they go. What goes into main leaves the table for the history book.</span>`;
+    return matDesk("om", head, body, foot);
+  }
+  const body = PILES.map((p) => `<div style="display:flex;gap:14px;align-items:flex-start;padding:10px;background:var(--ork-table);border:1px solid var(--ork-frame)">${pile(p, 96)}${ctl(p, false).replace("width:180px", "width:auto;flex:1")}</div>`).join("") +
+    `<div style="display:flex;gap:14px;align-items:center;padding:10px;border:1px dashed var(--ork-frame)"><div class="pile">${S({ cls: "down", title: "", w: 64 })}</div><span><b style="font:700 14px/17px var(--ork-font-text)">Dropped</b><span class="why" style="display:block">face down; pressed, it spreads; a card can come back to the hand</span></span></div>`;
+  return matPhone("om", head, body, `<span class="why">“into” opens a sheet of the branches from below</span>`);
+}
+
+/* ———————————————————— 10. slots on a chart (live ops): a drop's hypotheses are Run's tokens, each closed by a card or Not related ———————————————————— */
+const PTS = [99.6, 99.6, 99.5, 99.6, 99.7, 99.6, 99.6, 99.5, 97.1, 98.6, 99.4, 99.5, 98.2, 99.1];
+const MAINS = [[8, "1.4 → main 14:02"], [12, "dev → main 09:40"]];
+const HYP = [
+  { d: 0, q: "The 1.4 release: One feed asks the usage on every card", st: "card", card: { who: "tech", rune: "comb", sign: "bug", title: "Read the usage once a minute", when: "at work" } },
+  { d: 0, q: "The tools' limits at the week's end", st: "no" },
+  { d: 0, q: "The phone's cache after the update", st: "open" },
+  { d: 1, q: "Heads in rings: the pictures 3× larger", st: "empty" },
+];
+const hypTok = (st) => tk("run", [st === "card" ? "ok" : st === "no" ? "ok" : "q"]);
+function chart() {
+  const head = hd("run", "Stability: crash-free sessions, 14 days", "Run: two drops; under each, what it may be. Close each with a card, a fix or a check, or say it is not related");
+  const svgChart = (W, Hh, pad, small) => { const lo = 96.5, hi = 100, x = (i) => pad + (i * (W - pad * 2)) / (PTS.length - 1), y = (v) => 10 + ((hi - v) * (Hh - 34)) / (hi - lo);
+    const path = PTS.map((v, i) => `${i ? "L" : "M"}${x(i)} ${y(v)}`).join(" ");
+    return `<svg width="${W}" height="${Hh}" style="display:block" aria-label="crash-free sessions, two drops: day 9 and day 13">
+      ${[97, 98, 99, 100].map((v) => `<line x1="${pad}" x2="${W - pad}" y1="${y(v)}" y2="${y(v)}" stroke="var(--ork-frame)" stroke-width="1"/><text x="${pad - 6}" y="${y(v) + 4}" text-anchor="end" fill="var(--ork-ink-muted)" font-size="10">${v}%</text>`).join("")}
+      ${MAINS.map(([i, t]) => `<line x1="${x(i) - 6}" x2="${x(i) - 6}" y1="6" y2="${Hh - 22}" stroke="var(--ork-party-undead)" stroke-dasharray="3 4"/>${small ? "" : `<text x="${x(i) - 10}" y="16" text-anchor="end" fill="var(--ork-party-undead)" font-size="11">${t}</text>`}`).join("")}
+      <path d="${path}" fill="none" stroke="var(--ork-party-goblin)" stroke-width="2.5"/>
+      ${[8, 12].map((i, k) => `<circle cx="${x(i)}" cy="${y(PTS[i])}" r="6" fill="var(--ork-panel)" stroke="var(--ork-danger)" stroke-width="2.5"/><text x="${x(i) + 10}" y="${y(PTS[i]) + 4}" fill="var(--ork-danger)" font-size="12" font-weight="700">${"AB"[k]}</text>`).join("")}
+      ${PTS.map((v, i) => (i % 2 ? "" : `<text x="${x(i)}" y="${Hh - 6}" text-anchor="middle" fill="var(--ork-ink-muted)" font-size="10">${i + 1} Nov</text>`)).join("")}</svg>`; };
+  const close = (h, w) => h.st === "card" ? S({ ...h.card, w, mini: true })
+    : h.st === "no" ? `<span class="why" style="text-decoration:line-through;color:var(--ork-ink-muted)">not related</span><span class="why" style="display:block;color:var(--ork-ink-muted)">by you</span>`
+    : `<div style="width:${w}px;aspect-ratio:2.5/3.5;border:${h.st === "open" ? "2px solid var(--ork-ink)" : "1px dashed var(--ork-edge)"};border-radius:var(--ork-radius-card);display:grid;place-items:center;text-align:center;padding:6px" class="why">${h.st === "open" ? "close it" : "empty"}</div>`;
+  const ways = (w) => [["Check the cache", "a check: Run's"], ["Fix the cache", "a fix: Tech's"], ["New card…", ""], ["Not related", ""]].map(([t, s], i) => `<span class="way" style="width:${w}px;${i === 2 ? "border-style:dashed" : ""}">${t}${s ? `<small>${s}</small>` : ""}</span>`).join("");
+  if (DESK) {
+    const hb = (h) => `<div style="display:flex;flex-direction:column;gap:8px;width:130px;align-items:flex-start;${h.st === "no" ? "opacity:.6" : ""}">${hypTok(h.st)}<span style="font-size:12px;line-height:16px;min-height:48px">${h.q}</span>${close(h, 80)}</div>`;
+    const body = `<div style="display:grid;gap:10px">${svgChart(856, 200, 40)}
+      <div style="position:relative;height:330px">${svgLines(`<path d="M517 -62 L517 6 M296 6 L708 6" stroke="var(--ork-danger)" stroke-dasharray="3 4"/><path d="M757 -115 L757 6 M730 6 L840 6" stroke="var(--ork-danger)" stroke-dasharray="3 4"/>`)}
+        <div style="position:absolute;left:290px;top:16px;display:flex;gap:16px">${HYP.filter((h) => h.d === 0).map(hb).join("")}</div>
+        <div style="position:absolute;left:728px;top:16px">${hb(HYP[3])}</div>
+        <div style="position:absolute;left:0;top:30px;width:270px" class="why">Under each drop, Run's hypotheses: a question each. Closed by a card or Not related.</div>
+        <div style="position:absolute;left:290px;top:236px;display:flex;gap:8px;align-items:flex-end"><span class="why" style="width:96px">the cache's, closed by:</span>${ways(76)}</div></div></div>`;
+    const foot = `<span>A drop pressed: what went to main then. A hypothesis is Run's question; a card answers it.</span><span class="move"><span class="why">2 hypotheses open</span><span class="btn off">Send to Run</span></span>`;
+    return matDesk("run", head, body, foot, "tall");
+  }
+  const row = (h) => `<div style="display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--ork-table);border:1px solid ${h.st === "open" ? "var(--ork-ink)" : "var(--ork-frame)"};${h.st === "no" ? "opacity:.6" : ""}">${hypTok(h.st)}<span style="flex:1;font-size:12px;line-height:16px">${h.q}</span>${close(h, 76)}</div>`;
+  const body = `${svgChart(366, 170, 30, true)}<span class="why" style="color:var(--ork-party-undead)">┆ went to main: 1.4 on 9 Nov, dev on 13 Nov</span>
+    <span class="lab" style="color:var(--ork-danger)">A · 9 Nov</span>${HYP.filter((h) => h.d === 0).map(row).join("")}
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">${ways(82).replaceAll("width:82px", "width:auto")}</div>
+    <span class="lab" style="color:var(--ork-danger)">B · 13 Nov</span>${row(HYP[3])}`;
+  return matPhone("run", head, body, `<span class="why">2 hypotheses open</span><span class="btn off">Send to Run</span>`);
+}
+
+/* ———————————————————— 11. the story map: Product's jobs across (its JTBD), the releases down ———————————————————— */
+const JOBS = [["Start a goal", ""], ["See what waits for me", ""], ["Decide", ""], ["See what was spent", "being filled"], ["Ship it", ""]];
+const C = (title, when, who = "product", rune = "ring-dots", n = 1, cls = "") => ({ title, when, who, rune, n, cls });
+const ROWS = [
+  { r: "MVP", st: "shipped 2 Oct", cells: [C("New goal from the deck", "in main", "product", "key"), C("The hand", "in main", "design", "wave"), C("A question's ways", "in main", "product", "eye"), null, C("To main", "in main", "release", "hourglass")] },
+  { r: "Release 1", st: "at work", act: true, cells: [C("Rating", "in main", "product", "knot"), C("One feed for the phone and the desk", "at work", "tech", "comb", 2), C("Battle", "in dev", "om", "knot"), C("Spent today on every card", "rated", "product", "ring-dots"), C("Piles per branch", "battle", "om", "tusks")] },
+  { r: "Release 2", st: "planned", cells: [null, C("Story map", "new", "product", "ladder"), C("Weigh two in the hand", "new", "om", "diamond"), C("Slots on a chart", "new", "run", "spiral"), null] },
+];
+const LOOSE = [C("Split gui/ in two", "rated", "tech", "comb"), C("The runes in the cartoon", "rated", "design", "eye"), C("The phone loses its place", "new", "tech", "spiral")];
+const mini = (c, w, extra = "") => c ? `<div class="${c.n > 1 ? "pile" : ""}">${S({ who: c.who, rune: c.rune, title: c.title, when: c.when, w, mini: true, cls: (c.when === "in main" ? "faint " : "") + extra })}</div>` : "";
+function storymap() {
+  const head = hd("product", "Story map: Orkboard", "Product: its jobs across, the releases down; a card is put in a release, a release ships when its row is in main");
+  const into = `<span style="position:absolute;left:calc(100% + 10px);top:0;z-index:5;width:170px;background:var(--ork-panel);border:1px solid var(--ork-edge);box-shadow:0 6px 0 var(--ork-room)">
+      <span class="lab" style="display:block;padding:6px 8px 2px">into</span>${["Release 1 · See what waits for me", "Release 2 · See what waits for me", "Not in a release"].map((b, i) => `<span style="display:block;padding:5px 8px;font-size:12px;${i === 1 ? "background:var(--ork-card)" : ""}">${b}</span>`).join("")}</span>`;
+  if (DESK) {
+    const cols = `130px repeat(5, 1fr)`, W = 90;
+    const rowLab = (r) => `<div style="display:flex;flex-direction:column;gap:6px;padding-right:10px"><b style="font:700 15px/18px var(--ork-font-text)">${r.r}</b><span class="why">${r.st}</span>
+      ${r.act ? `<span class="btn sm off">Ship Release 1</span><span class="why" style="font-size:11px">3 cards not in main yet</span>` : ""}</div>`;
+    const body = `<div style="display:grid;grid-template-columns:${cols};column-gap:8px;row-gap:12px;align-items:start">
+      <span class="lab" style="align-self:center">Its jobs</span>${JOBS.map(([j, s]) => `<div style="padding:8px 10px;background:var(--ork-card);border:1px ${s ? "dashed var(--ork-edge)" : "solid var(--ork-card-frame)"};box-shadow:inset 0 3px 0 var(--ork-party-knight);font:700 12px/15px var(--ork-font-text)">${j}${s ? `<span class="why" style="display:block;font-weight:400">${s}</span>` : ""}</div>`).join("")}
+      ${ROWS.map((r) => `<div style="grid-column:1 / -1;height:0;border-top:1px solid var(--ork-frame)"></div>${rowLab(r)}${r.cells.map((c) => `<div style="min-height:${W * 1.4}px;display:flex;justify-content:center">${c ? mini(c, W) : `<span style="width:${W}px;aspect-ratio:2.5/3.5;border:1px dashed var(--ork-frame);border-radius:var(--ork-radius-card)"></span>`}</div>`).join("")}`).join("")}
+      <div style="grid-column:1 / -1;height:0;border-top:1px dashed var(--ork-edge)"></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><b style="font:700 15px/18px var(--ork-font-text)">Not in a release</b><span class="why">rated, not placed</span></div>
+      <div style="grid-column:2 / -1;display:flex;gap:16px;position:relative">${LOOSE.map((c, i) => `<div style="position:relative">${mini(c, W, i === 2 ? "lit" : "")}${i === 2 ? into : ""}</div>`).join("")}</div></div>`;
+    const foot = `<span>A card pressed: <span class="kb">I</span> into a release and a job. A release ships when every card of its row is in main.</span><span class="move"><span class="btn go">Put it in Release 2</span></span>`;
+    return matDesk("product", head, body, foot, "tall");
+  }
+  const tabs = `<div style="display:flex;gap:6px">${["MVP", "Release 1", "Release 2", "Not placed"].map((t, i) => `<span style="flex:1;text-align:center;padding:7px 4px;font:700 12px/15px var(--ork-font-text);border:1px solid ${i === 1 ? "var(--ork-ink)" : "var(--ork-frame)"};${i === 1 ? "background:var(--ork-card)" : "color:var(--ork-ink-read)"}">${t}</span>`).join("")}</div>`;
+  const r = ROWS[1];
+  const body = `${tabs}<span class="why">at work · its jobs down, its cards beside each</span>
+    ${JOBS.map(([j, s], i) => `<div style="display:flex;gap:12px;align-items:center;padding:8px;background:var(--ork-table);border:1px solid var(--ork-frame);box-shadow:inset 3px 0 0 var(--ork-party-knight)">
+      <span style="flex:1"><b style="font:700 13px/16px var(--ork-font-text)">${j}</b>${s ? `<span class="why" style="display:block">${s}</span>` : ""}</span>${r.cells[i] ? mini(r.cells[i], 88) : ""}</div>`).join("")}`;
+  return matPhone("product", head, body, `<span class="why">3 cards not in main yet</span><span class="btn off">Ship Release 1</span>`);
+}
+
+/* ———————————————————— the closed mats ———————————————————— */
+const sl = (x, y, w, h, c = "") => [x, y, w, h, c];
+const LAYOUT = {
+  hand: [sl(0, 10, 12, 80), sl(14, 10, 12, 80), sl(34, 10, 12, 80), sl(54, 10, 12, 80), sl(68, 10, 12, 80), sl(88, 10, 12, 80)],
+  rate: [sl(42, 0, 16, 100), sl(20, 12, 7, 30, "ch"), sl(73, 12, 7, 30, "ch"), sl(20, 62, 7, 30, "ch"), sl(73, 62, 7, 30, "ch")],
+  compare: [0, 1, 2, 3, 4, 5].map((i) => sl(12 + (i % 3) * 28, i < 3 ? 0 : 52, 18, 46)),
+  battle: [sl(30, 0, 14, 40), sl(56, 0, 14, 40), sl(10, 50, 80, 0, "ln"), sl(43, 60, 14, 40)],
+  flow: [sl(0, 30, 13, 44), sl(20, 30, 13, 44), sl(40, 30, 13, 44), sl(62, 0, 13, 44), sl(62, 56, 13, 44), sl(15, 52, 4, 0, "ln"), sl(35, 52, 4, 0, "ln"), sl(55, 52, 6, 0, "ln")],
+  scheme: [sl(40, 0, 14, 42), sl(10, 56, 14, 42), sl(40, 56, 14, 42), sl(70, 56, 14, 42), sl(25, 47, 50, 0, "ln")],
+  slots: [sl(0, 0, 30, 44), sl(34, 0, 30, 44), sl(68, 0, 30, 44), sl(0, 54, 22, 44), sl(25, 54, 22, 44), sl(50, 54, 22, 44), sl(75, 54, 23, 44)],
+  discard: [sl(8, 0, 16, 96), sl(30, 0, 16, 96), sl(52, 0, 16, 96), sl(78, 0, 16, 96)],
+  small: [sl(0, 0, 30, 100), sl(36, 0, 30, 100), sl(72, 0, 28, 100)],
+  chart: [sl(0, 0, 100, 40), sl(30, 54, 12, 44), sl(46, 54, 12, 44), sl(78, 54, 12, 44)],
+  storymap: [0, 1, 2, 3, 4].flatMap((c) => [sl(16 + c * 17, 0, 14, 16), sl(16 + c * 17, 24, 12, 34), sl(16 + c * 17, 64, 12, 34)]).concat([sl(0, 24, 12, 34), sl(0, 64, 12, 34)]),
+};
+const slotsOf = (k) => `<span class="slots" aria-hidden="true">${LAYOUT[k].map(([x, y, w, h, c]) => `<i class="${c}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"></i>`).join("")}</span>`;
+const GAL = [
+  { k: "hand", who: "om", name: "Your hand", sub: "your mat", text: "Four moves wait: a rated card, a question, a battle, a gate.", ft: "The hand" },
+  { k: "rate", who: "om", name: "The Orkmaster", sub: "on Spent today…", text: "Dealt to Product, Tech and Design; ≈ 9%.", ft: "Rating" },
+  { k: "compare", who: "om", name: "The Orkmaster", sub: "its mat", text: "Six new goals: which goes first?", ft: "Compare" },
+  { k: "battle", who: "om", name: "The Orkmaster", sub: "on Piles per branch", text: "A new card against §273 and one done.", ft: "Battle" },
+  { k: "battle", who: "release", name: "The gate", sub: "on Heads in rings", text: "All its checks but one agree.", ft: "Gate" },
+  { k: "flow", who: "design", name: "Design", sub: "a change · 10:05", text: "A new goal on the phone: Name it hides the deck.", ft: "Flow" },
+  { k: "scheme", who: "tech", name: "Tech", sub: "a change · 11:20", text: "gui/ is past its line: split it.", ft: "Architecture" },
+  { k: "slots", who: "product", name: "Product", sub: "a change · 09:12", text: "A new job: see what was spent.", ft: "Jobs to be done" },
+  { k: "discard", who: "om", name: "The discard", sub: "3 branches", text: "Heads in rings is ready for dev.", ft: "The discard" },
+  { k: "chart", who: "run", name: "Run", sub: "a drop · 9 Nov", text: "Crash-free fell to 97.1% after 1.4 went to main.", ft: "Slots on a chart" },
+  { k: "storymap", who: "product", name: "Product", sub: "its story map", text: "Release 1: 3 cards not in main yet.", ft: "Story map" },
+];
+function closed() {
+  const mt = (m) => `<div class="mt ${m.who}">${slotsOf(m.k)}<div class="h"><img src="${H[m.who]}" alt=""><span><b>${m.name}</b><small>${m.sub}</small></span></div><p>${m.text}</p><span class="ft"><span>${m.ft}</span></span></div>`;
+  const small = `<div class="mt small tech">${slotsOf("small")}<div class="h"><img src="${H.tech}" alt=""><span><b>Tech</b><small>a change · 11:20</small></span></div><p style="max-width:48%">gui/ is past its line: split it into shell/ and cards/, each under 600.</p></div>`;
+  return `<div class="face ${FACE}" style="${DESK ? "height:auto;min-height:900px" : ""}"><div class="gal"><h2>The mats closed: each its layout, faint, behind its words</h2>
+    <p class="lead">Nine layouts, one look each; the gate is a battle's. A word has none. Where an M leaves less than a third under its words, its slots go to its right, a simpler form of three.</p>
+    ${GAL.map(mt).join("")}${small}</div></div>`;
+}
+
+const VIEWS = { hand, rate, compare, battle, gate, flow, scheme, slots, discard, chart, storymap, closed };
+document.getElementById("root").innerHTML = (VIEWS[V] || rate)();
+</script>
+</body>
+</html>
