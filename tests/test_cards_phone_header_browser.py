@@ -136,7 +136,7 @@ def test_a_card_of_a_move_that_waits_in_the_foot_opens_its_ways_or_its_mat(base)
         look.get_by_role("button", name="In your own words").click()
         assert look.locator("textarea").is_visible()
         look.get_by_role("button", name="Move it").click()
-        assert [a for n, a in pg.evaluate(SENT) if n == "ideas.answer"] == [{"slug": "172-example-1", "answers": ["Move it"], "from": "hand"}]
+        assert [a for n, a in pg.evaluate(SENT) if n == "ideas.answer_way"] == [{"slug": "172-example-1", "answers": ["Move it"], "from": "hand"}]
         # answered: the hand goes on to the next card by itself and opens it. It is the next card that lies open now, and a tap on it would put it back to the feed (the one opened, tapped again),
         # which is what a tap here once did and read as "the next card does not open".
         nxt = pg.locator(".up-look[data-entry='card:turn/173-example-2/talk'] .hand-lifted[data-kind=turn]")

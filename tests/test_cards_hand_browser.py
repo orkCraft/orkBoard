@@ -131,7 +131,7 @@ def test_a_goal_that_asks_lifts_its_ways_and_one_press_answers_with_from_hand_an
         ways.first.wait_for(timeout=5000)
         assert [t.strip().split("\n")[0] for t in ways.all_inner_texts()] == ["Keep it", "Move it", "Drop it", "In your own words"]
         pg.locator(".hand-ways-row [data-way=way-1]").click()
-        assert sent(pg, "ideas.answer") == [{"slug": ASKS, "answers": ["Move it"], "from": "hand"}]
+        assert sent(pg, "ideas.answer_way") == [{"slug": ASKS, "answers": ["Move it"], "from": "hand"}]
         pg.wait_for_function("(sel) => ![...document.querySelectorAll(sel)].some((c) => c.dataset.goal === '172-example-1' && c.dataset.kind === 'turn' && !c.classList.contains('is-gone'))", arg=HAND, timeout=5000)
         toast = pg.locator(".gui-toast", has_text="Sent: Move it").first
         toast.wait_for(timeout=5000)
@@ -149,10 +149,10 @@ def test_a_goal_that_asks_two_questions_walks_them_and_sends_the_answers_togethe
         pg.locator(f"{HAND}[data-kind=turn][data-goal='{TWO}']").click()
         assert "(1 of 2)" in pg.locator(".hand-lifted").inner_text()
         pg.locator(".hand-ways-row [data-way=way-0]").click()
-        assert sent(pg, "ideas.answer") == []                                                                      # one question answered: nothing is sent yet
+        assert sent(pg, "ideas.answer_way") == []                                                                      # one question answered: nothing is sent yet
         pg.wait_for_function("() => document.querySelector('.hand-lifted')?.innerText.includes('(2 of 2)')", timeout=5000)
         pg.locator(".hand-ways-row [data-way=way-1]").click()
-        assert sent(pg, "ideas.answer") == [{"slug": TWO, "answers": ["Gold", "Ten"], "from": "hand"}]
+        assert sent(pg, "ideas.answer_way") == [{"slug": TWO, "answers": ["Gold", "Ten"], "from": "hand"}]
         b.close()
 
 

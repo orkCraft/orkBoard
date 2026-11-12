@@ -5,29 +5,31 @@
     ideas.tables {}     # each party's framework: {<party>: {architecture | jtbd: its cards}}; what is not laid is empty and says who fills it, never an example
     ideas.undo {idea}   # the goal's last one-press move put back (`core/idea_undo.py`), only while its page is still as the move left it
     ideas.take_back {slug}   # a Drop's Undo
+    ideas.answer_way {slug, answers, from}   # a question's way played from the hand: each answer written under its open question in the page, no pass begun, no model; its Undo is kept
     ideas.ask_cost {}   # what a paid pass of a leader (reply, ask) is capped at, said before it runs: {calls, usd_high}; read only
     ideas.reply {slug, leader, text, sealed}        # the person's reply to a leader's token on a goal: a paid pass (`core/idea_ask.py` `board_ask`), goal named; {ok, cost}, the answer comes as `ask` in the snapshot
     ideas.ask_leader {slug, leader, text, sealed} | {party, framework, card, text, sealed}   # a leader not on the card, or a part of a leader's framework
-    A one-press move (`ideas.drop`, `ideas.queue` for Hold, `ideas.answer`) keeps its Undo and logs `move_played`; a sealed one (Merge into main, Send to a branch, Ship a release) goes only with `sealed: true`.
+    A one-press move (`ideas.drop`, `ideas.queue` for Hold, `ideas.answer_way`) keeps its Undo and logs `move_played`; a sealed one (Merge into main, Send to a branch, Ship a release) goes only with `sealed: true`.
 """
 from __future__ import annotations
 
+import datetime as dt
 from pathlib import Path
 from typing import Any
 
 from orkboard.core import idea_undo
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _device, _text
-from orkboard.realm import board_turns, code_layers, board_ask, event_log, idea_target, ideas, opportunity_tree, page_talk
+from orkboard.realm import board_turns, code_layers, board_ask, event_log, goal_phase, idea_questions, idea_target, ideas, opportunity_tree, page_talk
 
 SEALED_BY = {"ideas.to_main": "merge_main", "ideas.gate_merge": "merge_main", "ideas.goal_to_dev": "send_branch", "ideas.release_out": "ship_release",
              "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass"}
-ONE_PRESS_BY = ("ideas.drop", "ideas.queue", "ideas.answer")
+ONE_PRESS_BY = ("ideas.drop", "ideas.queue", "ideas.answer_way")      # each runs no model (tests/test_ideas_mats_closed.py); `ideas.answer` begins the keeper's pass, so it is none of them
 SEALED_ON_CARDS = {"ideas.start": "start_work"}        # sealed where a card of the hand or a mat plays it (`from: hand|mat`): starting begins paid work that cannot be undone; the older faces' presses of it (no `from`) are as they were
 
 
 def move_kind(name: str, args: dict) -> str:
-    """The kind of the hand's move a command is ("" for any other): a Hold is the queue's `hold` (or the old `night`), an answer is a question's way (not a party's)."""
+    """The kind of the hand's move a command is ("" for any other): a Hold is the queue's `hold` (or the old `night`), an answer_way is a question's way."""
     if name in SEALED_BY:
         return SEALED_BY[name]
     if name in SEALED_ON_CARDS:
@@ -36,7 +38,7 @@ def move_kind(name: str, args: dict) -> str:
         return "drop"
     if name == "ideas.queue":
         return "hold" if args.get("queue") in ("hold", "night") else ""
-    return "answer" if name == "ideas.answer" and args.get("goal") is not True else ""
+    return "answer" if name == "ideas.answer_way" else ""
 
 
 def played(ideas_: Any, name: str, fn: Any) -> Any:
@@ -116,6 +118,34 @@ class Mats:
         self.i.changed(slug.strip())
         return {"ok": True, **got}
 
+    def answer_way(self, args: dict) -> dict:
+        """A question's way played from the hand: each answer (in the order of the open questions) written under its question in the page, as `ideas_phase.py` `outside_answer` writes one,
+        with the page's `asks` followed at once. No keeper pass is begun and no model runs; a leader's pass that must follow is a separate, sealed move (`ideas.reply`)."""
+        slug, answers = _text(args, "slug", 100), args.get("answers")
+        if not isinstance(answers, list) or not all(isinstance(a, str) for a in answers):
+            raise IdeasError("answers are a list of text")
+        root = self.i.root()
+        page = ideas.idea_page(root, slug)
+        if page is None:
+            raise IdeasError("That goal is gone")
+        text, day = page.section("Open questions"), dt.date.today().isoformat()
+        waiting = idea_questions.open_of(text)
+        given = [(n, " ".join(a.split())[:2000]) for (n, _q), a in zip(waiting, answers)]
+        if not waiting:
+            raise IdeasError("This goal asks nothing now")
+        if not any(a for _n, a in given):
+            raise IdeasError("Answer at least one question")
+        for n, a in given:
+            if a:
+                text = idea_questions.with_answer(text, n, a, day, "the person")
+        ideas.set_section(root, slug, "Open questions", text)
+        goal_phase.mirror(root, self.i.state_dir, lambda i, st, plan, asks: self.i._idea_needs(i, st, plan, asks, root), only=slug)
+        self.i._ev(event_log.IDEA_ANSWERED, args, idea=slug, answers=sum(1 for _n, a in given if a), decided=False, round=1, recommended=0, picked=0,
+                   typed=sum(1 for _n, a in given if a), **({"from": args["from"]} if args.get("from") in ("hand", "open") else {}))
+        self.i._what[slug] = "answered"
+        self.i.changed(slug)
+        return {"ok": True}
+
     def ask_cost(self, args: dict | None = None) -> dict:
         """What one paid pass (a quick question's call, the cheaper tier, no tools) is capped at under the Target, read before any model runs."""
         return {"calls": 1, "usd_high": idea_target.budget("ask", idea_target.target_for(self.i.settings_now()))}
@@ -179,4 +209,4 @@ def mats_commands(ideas_: Any) -> dict:
     """The cards' commands by name (`gui/ideas.py` adds them to its table: `**mats_commands(self)`)."""
     m = Mats(ideas_)
     return {"ideas.turns": m.turns, "ideas.verdicts": m.verdicts, "ideas.tables": m.tables,
-            "ideas.undo": m.undo, "ideas.take_back": m.take_back, "ideas.ask_cost": m.ask_cost, "ideas.reply": m.reply, "ideas.ask_leader": m.ask_leader}
+            "ideas.undo": m.undo, "ideas.take_back": m.take_back, "ideas.answer_way": m.answer_way, "ideas.ask_cost": m.ask_cost, "ideas.reply": m.reply, "ideas.ask_leader": m.ask_leader}

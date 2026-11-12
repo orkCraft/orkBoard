@@ -47,11 +47,14 @@ def test_a_hold_is_undone_byte_for_byte(host):
     assert shot(host) == before
 
 
-def test_a_question_s_way_is_undone_byte_for_byte(host):
+def test_a_question_s_way_played_from_the_hand_is_undone_byte_for_byte(host):
+    page = PAGE.replace("phase: talk\n", "phase: talk\nasks: person\n") + "\n## Open questions\n- Which store first? (**App Store** / Google Play) — most users\n- Name it? (**Yes** / No)\n"
+    (host.ideas.root() / ideas.IDEAS / "goal.md").write_text(page, encoding="utf-8")
     before = shot(host)
-    more = before["page"] + "\n- Answered: yes\n"
-    (host.ideas.root() / ideas.IDEAS / "goal.md").write_text(more, encoding="utf-8")
-    idea_undo.keep(host.ideas.state_dir, "goal", "answer", before, shot(host))
+    host.command("ideas.answer_way", {"slug": "goal", "answers": ["Google Play", "Yes"], "from": "hand"})
+    now = shot(host)["page"]
+    assert "Answered: Google Play" in now and "Answered: Yes" in now          # written under its question; no pass began (tests/test_ideas_mats_closed.py)
+    assert idea_undo.read(host.ideas.state_dir, "goal")["kind"] == "answer"
     host.command("ideas.undo", {"idea": "goal"})
     assert shot(host) == before
 
