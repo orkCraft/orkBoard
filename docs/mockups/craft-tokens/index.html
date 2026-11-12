@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard: a craft's token</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* A craft's token (goal 170's talk, 12 November 2026): a leader's token is its craft's tool (orkUI's tools: the orks' drum for Tech,
+   the elves' bow for Design, the knights' map for Product) in its party's ring; under it its checks as squares in the signal's
+   colours: approved green, a question yellow, a risk red; a risk that blocks bigger, crossed, and the card ringed red. Who looked is
+   the ring's colour, what it found the squares'. The tokens a card gets are its route's, and its route its kind's: a feature is
+   looked at by Product, Tech and Design, a bug by Tech alone, a release at the gate. V1: the squares told apart by colour alone;
+   V2: by colour and shape (filled, hollow, a corner cut). ?face=desk|phone. Mockup only. */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 14px/19px var(--ork-font-read); }
+.face { position: relative; overflow: hidden; background: var(--ork-table); }
+.desk { width: 1440px; height: 900px; display: grid; grid-template-columns: 820px 1fr; }
+.phone { width: 390px; min-height: 844px; }
+.tech { --hue: var(--ork-party-ork); --tool: url(../../../design-system/orkui/tools/drum-gear.svg); }
+.design { --hue: var(--ork-party-elf); --tool: url(../../../design-system/orkui/tools/bow-drip.svg); }
+.product { --hue: var(--ork-party-knight); --tool: url(../../../design-system/orkui/tools/map-cross.svg); }
+.col { padding: 20px 26px; display: flex; flex-direction: column; gap: 14px; border-right: 1px solid var(--ork-frame); }
+h2 { margin: 0; font: 700 18px/22px var(--ork-font-text); } h3 { margin: 0; font: 700 13px/16px var(--ork-font-text); letter-spacing: .1em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.lead { margin: 0; font-size: 13px; line-height: 18px; color: var(--ork-ink-read); }
+.vrow { display: grid; grid-template-columns: 110px 1fr; gap: 14px; align-items: start; padding: 12px 0; border-top: 1px solid var(--ork-frame); }
+.vrow .vn b { display: block; font: 700 15px/19px var(--ork-font-text); } .vrow .vn small { color: var(--ork-ink-muted); font-size: 12px; line-height: 16px; display: block; }
+.cards { display: flex; gap: 18px; align-items: flex-end; }
+
+/* an S */
+.s { position: relative; flex: none; width: 168px; aspect-ratio: 2.5 / 3.5; padding: 28px 10px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.s .tl { position: absolute; left: 9px; top: 7px; width: 15px; } .s .tr { position: absolute; right: 9px; top: 7px; width: 16px; }
+.s .pic { width: 50px; } .s b { font: 700 14px/18px var(--ork-font-text); text-align: center; }
+.s .bl { position: absolute; left: 9px; top: 50%; font-size: 11px; color: var(--ork-ink-muted); display: none; }
+.s .foot { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.s .when { font-size: 11px; line-height: 14px; color: var(--ork-ink-muted); padding-bottom: 2px; }
+.s.blocked { box-shadow: inset 0 3px 0 var(--hue), 0 0 0 2px var(--ork-danger); } .s.blocked .when { color: var(--ork-danger); }
+.kind { position: absolute; top: -10px; left: 50%; translate: -50% 0; padding: 1px 8px; background: var(--ork-room); border: 1px solid var(--ork-edge); font: 700 10px/14px var(--ork-font-text); letter-spacing: .08em; text-transform: uppercase; color: var(--ork-ink-read); }
+
+/* a craft's token */
+.toks { display: flex; gap: 5px; align-items: flex-start; }
+.tk { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.tk .ring { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--ork-room); border: 2px solid var(--hue); box-shadow: 0 2px 0 var(--ork-room); }
+.tk .ring i { width: 16px; height: 16px; background: var(--hue); -webkit-mask: var(--tool) center / contain no-repeat; mask: var(--tool) center / contain no-repeat; }
+.tk .pips { display: flex; gap: 1px; max-width: 34px; flex-wrap: wrap; justify-content: center; }
+.p { width: 5px; height: 5px; display: block; }
+.p.ok { background: var(--ork-success); } .p.q { background: var(--ork-alert); } .p.r { background: var(--ork-danger); }
+.p.b { width: 7px; height: 7px; background: var(--ork-danger); position: relative; }
+.p.b::before, .p.b::after { content: ""; position: absolute; left: 3px; top: -1px; width: 1px; height: 9px; background: var(--ork-room); rotate: 45deg; } .p.b::after { rotate: -45deg; }
+.v2 .p.q { background: none; box-shadow: inset 0 0 0 1.5px var(--ork-alert); }
+.v2 .p.r { clip-path: polygon(0 0, 100% 0, 100% 45%, 45% 100%, 0 100%); }
+/* the zoomed token */
+.zoom { display: flex; gap: 16px; align-items: center; padding: 10px 12px; background: var(--ork-panel); border: 1px solid var(--ork-frame); }
+.zoom .tk { transform: scale(2.4); transform-origin: left center; width: 30px; margin-right: 46px; } .zoom .tk .pips { max-width: none; flex-wrap: nowrap; }
+.zoom span.t { font-size: 12px; line-height: 16px; color: var(--ork-ink-read); }
+
+/* an opened card: each craft's note lists its checks */
+.l { display: flex; flex-direction: column; gap: 14px; padding: 20px 26px; }
+.lcard { align-self: center; } .lcard .s { width: 210px; padding: 36px 14px 14px; } .lcard .s .pic { width: 72px; } .lcard .s b { font-size: 18px; line-height: 23px; }
+.note { position: relative; padding: 10px 12px 10px 20px; background: var(--ork-plaque); border: 1px solid var(--ork-leather); border-left: 4px solid var(--hue); box-shadow: 0 4px 0 var(--ork-room); }
+.note .pin { position: absolute; left: -16px; top: -12px; }
+.note .who { display: flex; gap: 8px; align-items: center; font: 700 13px/16px var(--ork-font-text); } .note .who img { width: 22px; } .note .who small { font: 400 12px/15px var(--ork-font-read); color: var(--ork-ink-muted); }
+.note ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 13px; line-height: 17px; }
+.note li { display: grid; grid-template-columns: 14px 1fr; gap: 8px; align-items: baseline; } .note li .p { translate: 0 -1px; }
+.note li.b { color: var(--ork-ink); font-weight: 700; } .note li small { display: block; font-weight: 400; color: var(--ork-ink-read); font-size: 12px; }
+.note .reply { margin-top: 6px; font: 700 12px/15px var(--ork-font-text); text-decoration: underline; }
+.aria { font: 400 11px/15px var(--ork-font-code); color: var(--ork-ink-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const FACE = new URLSearchParams(location.search).get("face") || "desk";
+const R = "../../../design-system/orkui/", H = { tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png" };
+const NAME = { tech: "Tech", design: "Design", product: "Product" };
+const pips = (c) => [..."o".repeat(c.ok || 0)].map(() => '<i class="p ok"></i>').join("") + [..."q".repeat(c.q || 0)].map(() => '<i class="p q"></i>').join("")
+  + [..."r".repeat(c.r || 0)].map(() => '<i class="p r"></i>').join("") + (c.b ? '<i class="p b"></i>' : "");
+const say = (who, c) => `${NAME[who]}: ${[c.ok && `${c.ok} approved`, c.q && `${c.q} question${c.q > 1 ? "s" : ""}`, c.r && `${c.r} risk${c.r > 1 ? "s" : ""}`, c.b && "1 risk that blocks"].filter(Boolean).join(", ")}`;
+const tk = (who, c) => `<span class="tk ${who}" title="${say(who, c)}"><span class="ring"><i></i></span><span class="pips">${pips(c)}</span></span>`;
+const S = (o) => `<div class="s ${o.lead} ${o.cls || ""}">${o.kind ? `<span class="kind">${o.kind}</span>` : ""}<img class="tl" src="${R}runes/${o.rune || "comb"}.svg" alt=""><img class="tr" src="${R}signs/${o.sign}.svg" alt="">
+  <img class="pic" src="${H[o.lead]}" alt=""><b>${o.title}</b><span class="foot"><span class="when">${o.when}</span><span class="toks">${o.toks}</span></span></div>`;
+const FEAT = { product: { ok: 3 }, tech: { ok: 2, q: 1, r: 1 }, design: { ok: 2 } };
+const BUG = { tech: { ok: 2, b: 1 } };
+const REL = { tech: { ok: 5 } };
+const cards = () => `<div class="cards">${S({ lead: "product", kind: "feature", sign: "feature", title: "One feed for the phone and the desk", when: "talk", toks: Object.entries(FEAT).map(([w, c]) => tk(w, c)).join("") })}
+  ${S({ lead: "tech", kind: "bug", sign: "bug", cls: "blocked", title: "The hand loses its focus on Esc", when: "blocked", rune: "hook", toks: tk("tech", BUG.tech) })}
+  ${S({ lead: "tech", kind: "release", sign: "release", title: "Orkboard 0.4", when: "at the gate", rune: "hourglass", toks: tk("tech", REL.tech) })}</div>`;
+const zoom = () => `<div class="zoom">${tk("tech", { ok: 2, q: 1, r: 1, b: 1 })}<span class="t">approved · a question · a risk · a risk that blocks<br><span class="aria">aria-label: "${say("tech", FEAT.tech)}"</span></span></div>`;
+const note = (who, lines, extra = "") => `<div class="note ${who}"><span class="pin">${tk(who, lines.reduce((a, [k]) => ({ ...a, [k]: (a[k] || 0) + 1 }), {}))}</span>
+  <div class="who"><img src="${H[who]}" alt="">${NAME[who]} <small>its checks</small></div><ul>${lines.map(([k, t, s]) => `<li class="${k === "b" ? "b" : ""}"><i class="p ${k}"></i><span>${t}${s ? `<small>${s}</small>` : ""}</span></li>`).join("")}</ul>${extra}</div>`;
+const NOTES = () => [
+  note("product", [["ok", "A person reads one story on both"], ["ok", "It serves the job: see what changed since my last look"], ["ok", "Worth its price: ≈8% Claude"]]),
+  note("tech", [["ok", "One reader, realm/board_feed.py"], ["ok", "No module past 600 lines"], ["q", "Does the phone keep its own order?", "it cannot be rated without your answer"], ["r", "Two faces share one sort", "fixed by: the phone's order kept apart, one reader below"]], `<div class="reply">Reply to Tech</div>`),
+  note("design", [["ok", "The cards share one face"], ["ok", "Readable at 390 px"]]),
+];
+
+let html;
+if (FACE === "desk") html = `<div class="face desk">
+  <section class="col"><h2>A craft's token on an S</h2><p class="lead">Its ring is who looked (the party's colour), its tool the craft (orkUI's tools: Tech's drum, Design's bow, Product's map), its squares what it found. A card gets its route's tokens, its route its kind's: a bug is looked at by Tech alone, a release at the gate.</p>
+    <div class="vrow v1"><span class="vn"><b>V1</b><small>by colour alone</small></span><div style="display:flex;flex-direction:column;gap:14px">${cards()}${zoom()}</div></div>
+    <div class="vrow v2"><span class="vn"><b>V2</b><small>by colour and shape: filled approved, hollow a question, a corner cut a risk, crossed it blocks</small></span><div style="display:flex;flex-direction:column;gap:14px">${cards()}${zoom()}</div></div></section>
+  <section class="l v2"><h2>Opened: each note lists its checks</h2><p class="lead">A square is a line of the leader's checks. The question is the one you answer (reply, or Ask at its head); a risk says what fixes it.</p>
+    <div class="lcard">${S({ lead: "product", kind: "feature", sign: "feature", title: "One feed for the phone and the desk", when: "talk", toks: "" })}</div>${NOTES().join("")}</section></div>`;
+else html = `<div class="face phone v2"><section class="l"><h2>On the phone (V2)</h2>
+  <div class="cards" style="gap:10px;justify-content:center">${S({ lead: "product", kind: "feature", sign: "feature", title: "One feed for both", when: "talk", toks: Object.entries(FEAT).map(([w, c]) => tk(w, c)).join("") }).replace('class="s ', 'style="width:178px" class="s ')}
+    ${S({ lead: "tech", kind: "bug", sign: "bug", cls: "blocked", title: "The hand loses its focus", when: "blocked", rune: "hook", toks: tk("tech", BUG.tech) }).replace('class="s ', 'style="width:150px" class="s ')}</div>
+  <h3 style="margin-top:8px">Opened</h3><div style="display:flex;flex-direction:column;gap:18px;padding-left:12px">${NOTES().join("")}</div></section></div>`;
+document.getElementById("root").innerHTML = html;
+</script>
+</body>
+</html>
