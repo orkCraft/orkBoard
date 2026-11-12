@@ -74,6 +74,17 @@ body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 
 .note .rl { margin-top: 8px; display: inline-block; font: 700 12px/15px var(--ork-font-text); text-decoration: underline; }
 .mfoot { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ork-ink-muted); } .mfoot .kb { padding: 1px 5px; border: 1px solid var(--ork-edge); }
 
+/* a mat's slots: its spread's layout, faint, behind its words (the person, 12 November 2026) */
+.slots { position: absolute; left: 10px; right: 10px; top: 44%; bottom: 30px; pointer-events: none; }
+.slots i { position: absolute; border: 1px dashed var(--ork-edge); border-radius: 4px; opacity: .55; }
+.slots i.ch { border-radius: 50%; }
+.mt > :not(.slots):not(.state) { position: relative; }
+.gal { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding: 24px 28px; }
+.gal h2 { grid-column: 1 / -1; margin: 0; font: 700 20px/24px var(--ork-font-text); } .gal .lead { grid-column: 1 / -1; margin: -8px 0 0; color: var(--ork-ink-read); font-size: 13px; }
+.gal .mt { max-height: none; }
+.gal .word { box-shadow: inset 0 3px 0 var(--hue), 0 4px 0 var(--ork-room); }
+.phone .gal { grid-template-columns: 1fr; padding: 14px; gap: 12px; } .phone .gal .mt { aspect-ratio: 3.5 / 2.2; }
+
 /* the phone */
 .ph { position: relative; padding: 12px; display: flex; flex-direction: column; gap: 12px; background: var(--ork-panel); min-height: 844px; }
 .ph .top { display: flex; align-items: center; gap: 10px; } .ph .top b { font: 700 17px/21px var(--ork-font-text); } .ph .top .shut { margin-left: auto; padding: 4px 9px; border: 1px solid var(--ork-edge); font: 700 13px/16px var(--ork-font-text); }
@@ -88,6 +99,20 @@ body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 
 <script>
 const q = new URLSearchParams(location.search), V = q.get("v") || "card", FACE = q.get("face") || "desk";
 const R = "../../../design-system/orkui/", H = { tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png", om: R + "races/peon-crown.png" };
+const sl = (x, y, w = 16, h = 100, r = 0) => [x, y, w, h, r];
+const LAYOUT = {
+  diff: [sl(18, 0, 26), sl(56, 0, 26)],
+  arch: [[0, 0, 100, 24], ...[0, 1, 2, 3, 4].map((i) => sl(4 + i * 19, 34, 15, 28)), ...[0, 1, 2].map((i) => sl(14 + i * 26, 72, 18, 28))],
+  jtbd: [0, 1, 2, 3].flatMap((c) => [sl(3 + c * 25, 0, 20, 30), sl(3 + c * 25, 36, 20, 30), ...(c % 2 ? [] : [sl(3 + c * 25, 72, 20, 28)])]),
+  track: [0, 1, 2, 3, 4].map((i) => sl(2 + i * 20, 10, 15, 80)),
+  cost: [-14, -7, 0, 7, 14].map((r, i) => [24 + i * 11, 4 + Math.abs(i - 2) * 6, 16, 90, 0, r]),
+  duel: [sl(20, 0, 24), sl(56, 0, 24)],
+  sort: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => sl(4 + (i % 4) * 24, i < 4 ? 0 : 54, 18, 46)),
+  deal: [0, 1, 2, 3].map((i) => [8 + i * 23, 50, 14, 46, 1]).concat([sl(38, -6, 22, 56)]),
+  battle: [sl(8, 0, 24), sl(58, 0, 20, 100, 0), sl(78, 0, 20, 100, 0)],
+  leader: [[0, 0, 30, 100], [35, 0, 30, 100], [70, 0, 30, 100]],
+};
+const slots = (k) => (k ? `<span class="slots" aria-hidden="true">${LAYOUT[k].map(([x, y, w, h, r, rot]) => `<i class="${r ? "ch" : ""}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%;${rot ? `rotate:${rot}deg` : ""}"></i>`).join("")}</span>` : "");
 const pip = (k) => `<i class="p ${k}"></i>`;
 const tk = (who, ks) => `<span class="tk ${who}"><span class="ring"><i></i></span><span class="pips">${ks.map(pip).join("")}</span></span>`;
 const TOKS = tk("product", ["ok", "ok", "ok"]) + tk("tech", ["ok", "ok", "q", "r"]) + tk("design", ["ok", "ok"]);
@@ -95,12 +120,12 @@ const TITLE = "One feed for the phone and the desk";
 const card = (cls = "") => `<div class="s product ${cls}"><img class="tl" src="${R}runes/comb.svg" alt=""><img class="tr" src="${R}signs/feature.svg" alt=""><img class="pic" src="${H.product}" alt=""><b>${TITLE}</b>
   <span class="foot"><span class="when">at work</span><span class="toks">${TOKS}</span></span></div>`;
 const MATS = [
-  { who: "om", name: "The Orkmaster", sub: "its route and stages", text: "Product, then Tech and Design. Stage 2 of 3.", ft: `<span class="bar"><i style="width:45%"></i></span>45%`, state: "dealt" },
-  { who: "product", name: "Product", sub: "its section of the spec", text: "Will be: one feed a person reads on both. Done when: 3 lines.", ft: `<span class="shape"><i></i><i></i><i></i><i></i></span>Jobs to be done: one job`, state: "written" },
-  { who: "tech", name: "Tech", sub: "its section and its stage", text: "Stage 2 of 3 at work: one reader, two faces. 2 of 5 tasks done.", ft: `<span class="bar"><i style="width:40%"></i></span>2 of 5`, state: "at work", on: true },
-  { who: "design", name: "Design", sub: "its section of the spec", text: "Not started: its stage comes after Tech's.", ft: "waits for Tech's stage", state: "waits", idle: true },
+  { who: "om", name: "The Orkmaster", sub: "its route and stages", slots: "track", text: "Product, then Tech and Design. Stage 2 of 3.", ft: `<span class="bar"><i style="width:45%"></i></span>45%`, state: "dealt" },
+  { who: "product", name: "Product", sub: "its section of the spec", slots: "leader", text: "Will be: one feed a person reads on both. Done when: 3 lines.", ft: `Jobs to be done: one job`, state: "written" },
+  { who: "tech", name: "Tech", sub: "its section and its stage", slots: "leader", text: "Stage 2 of 3 at work: one reader, two faces. 2 of 5 tasks done.", ft: `<span class="bar"><i style="width:40%"></i></span>2 of 5`, state: "at work", on: true },
+  { who: "design", name: "Design", sub: "its section of the spec", slots: "leader", text: "Not started: its stage comes after Tech's.", ft: "waits for Tech's stage", state: "waits", idle: true },
 ];
-const mt = (m, i) => `<div class="mt ${m.who}${m.on ? " on" : ""}${m.idle ? " idle" : ""}"><span class="state">${m.state}</span><div class="h"><img src="${H[m.who]}" alt=""><span><b>${m.name}</b><small>${m.sub}</small></span></div><p>${m.text}</p><span class="ft">${m.ft}</span></div>`;
+const mt = (m, i) => `<div class="mt ${m.who}${m.on ? " on" : ""}${m.idle ? " idle" : ""}${m.word ? " word" : ""}">${slots(m.slots)}${m.state ? `<span class="state">${m.state}</span>` : ""}<div class="h"><img src="${H[m.who]}" alt=""><span><b>${m.name}</b><small>${m.sub}</small></span></div><p>${m.text}</p><span class="ft">${m.ft}</span></div>`;
 const ask = `<div class="asks">${["Product", "Tech", "Design"].map((n) => `<span>Ask ${n}…</span>`).join("")}</div>`;
 const SECTION = `<div class="sec"><b>Will be</b>One reader below both faces, realm/board_feed.py; the phone keeps its own order apart.</div>
   <div class="sec"><b>Done when</b>
@@ -114,8 +139,23 @@ const TASKS = `<div class="tasks"><div class="task done"><img src="${H.tech}" al
 const CHECKS = `<div class="note tech"><b style="font:700 13px/16px var(--ork-font-text)">Its checks</b><ul><li>${pip("ok")}<span>One reader</span></li><li>${pip("ok")}<span>No module past 600 lines</span></li>
   <li>${pip("q")}<span>Does the phone keep its own order?<small>it cannot be rated without your answer</small></span></li><li>${pip("r")}<span>Two faces share one sort<small>fixed by: the phone's order kept apart</small></span></li></ul><span class="rl">Reply to Tech</span></div>`;
 
+const GAL = [
+  { who: "design", name: "Design", sub: "a change · 10:05", slots: "diff", text: "The lanes keep a card's ratio.", ft: "What changed" },
+  { who: "tech", name: "Tech", sub: "a change · 11:20", slots: "arch", text: "gui/ is past its line: split it.", ft: "Architecture: gui/" },
+  { who: "product", name: "Product", sub: "a change · 09:12", slots: "jtbd", text: "A new job: see what was spent.", ft: "Jobs to be done: a new job" },
+  { who: "om", name: "The Orkmaster", sub: "its mat", slots: "track", text: "Its stages, one a slot.", ft: "Its stages" },
+  { who: "om", name: "The Orkmaster", sub: "its mat", slots: "cost", text: "What each card costs today.", ft: "What each card costs" },
+  { who: "om", name: "The Orkmaster", sub: "its mat", slots: "duel", text: "Two new goals, which first?", ft: "Weigh two at a time" },
+  { who: "om", name: "The Orkmaster", sub: "its mat", slots: "sort", text: "Eight new goals to sort.", ft: "Sort the new goals" },
+  { who: "om", name: "The Orkmaster", sub: "its mat", slots: "deal", text: "Its route dealt on the chairs.", ft: "The deal" },
+  { who: "om", name: "The Orkmaster", sub: "its mat", slots: "battle", text: "A new card against two.", ft: "A battle" },
+  { who: "tech", name: "Tech", sub: "on One feed…", slots: "leader", text: "Its section, its stage, its verdict.", ft: "Tech on a card" },
+  { who: "design", name: "Design", sub: "news · 09:40", word: true, text: "The heads are drawn in the cartoon now; the runes go next.", ft: "a word: no slots, no mat" },
+];
 let html;
-if (FACE === "desk") {
+if (V === "slots") html = `<div class="face ${FACE}"><div class="gal"><h2>A mat shows its spread's slots, faint, behind its words</h2>
+  <p class="lead">Its layout is what it opens into; a word (the last) has none. The small shape beside its line goes.</p>${GAL.map(mt).join("")}</div></div>`;
+else if (FACE === "desk") {
   html = V === "card"
     ? `<div class="face desk"><span class="under"></span><div class="l product"><span class="shut">Close</span>${card()}
         <div><h2>${TITLE}</h2><p class="sub" style="margin:0">at work · Product leads · its tokens' slips beside it as now (pressed)</p>${ask}
