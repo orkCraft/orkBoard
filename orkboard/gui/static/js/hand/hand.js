@@ -102,7 +102,7 @@ export function Hand() {
   useKeys(root);
   useNight();
   const wide = useWide();
-  const all = stopsOfProject(map, needs, open).filter((x) => wide || (x.kind !== "concern" && x.kind !== "doubt" && x.kind !== "decided" && x.kind !== "night_proposal" && x.kind !== "dev_blocked" && ((x.kind !== "turn" && x.kind !== "battle") || uprightNow.value))), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
+  const all = stopsOfProject(map, needs, open).filter((x) => wide || (x.kind !== "concern" && x.kind !== "doubt" && x.kind !== "decided" && x.kind !== "night_proposal" && x.kind !== "dev_blocked")), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map && !isToolKey(key)) lower(); }, [key, !s]);   // the stop was answered: the card goes with it (a tool's card is no stop: it goes by its own)
   useEffect(() => { liftedStop.value = s || null; }, [s]);                                // the right column's potions hatch the share the lifted card takes (potionrow.js)
   useEffect(() => () => { liftedStop.value = null; }, []);
@@ -138,7 +138,7 @@ export function Hand() {
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
     ${slotOn && html`<${SlotDeal} />`}
-    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "decided" ? html`<${DecidedPlay} s=${s} />` : s.kind === "turn" ? html`<${TurnPlay} s=${s} />` : s.kind === "battle" ? html`<${BattlePlay} s=${s} />` : s.kind === "night_proposal" ? html`<${NightProposalPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
+    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : s.kind === "turn" ? html`<${TurnPlay} s=${s} />` : s.kind === "battle" ? html`<${BattlePlay} s=${s} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "decided" ? html`<${DecidedPlay} s=${s} />` : s.kind === "turn" ? html`<${TurnPlay} s=${s} />` : s.kind === "battle" ? html`<${BattlePlay} s=${s} />` : s.kind === "night_proposal" ? html`<${NightProposalPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
     ${sayOn && (isDevPlay() ? html`<${DevLifted} />` : html`<${SayLifted} />`)}
     ${deal && html`<${ProjectDeal} which=${deal} />`}
     ${key === ADD_TOOL && html`<${AddTool} />`}

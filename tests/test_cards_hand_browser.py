@@ -268,3 +268,23 @@ def test_a_crowded_hand_at_1440_keeps_each_cards_title_from_its_first_letter(cro
         places = pg.evaluate("() => [...document.querySelectorAll('.frame-hand .hand-end button')].map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.right]; })")
         assert places and all(left >= 0 and right <= 1440 for left, right in places), places
         b.close()
+
+
+def test_a_narrow_desktop_window_deals_a_question_as_its_turn_card_and_its_ways_play(turned_url):
+    """A window under 760 px with a mouse (no phone): on the table of cards a goal's question is its turn card, as at any width (the old card of it is not dealt there, goal 171
+    L3), so it is dealt here too: pressed, its ways come up; a move that lies on a mat opens its mat."""
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = b.new_page(viewport={"width": 700, "height": 900})
+        pg.goto(turned_url + "?mock=1&table=cards")
+        card = pg.locator(".frame-hand button.hand-card[data-kind=turn][data-goal='172-example-1']")
+        card.wait_for(timeout=15000)
+        card.click()
+        ways = pg.get_by_role("button", name="Keep it")
+        ways.first.wait_for(timeout=5000)
+        assert ways.first.is_visible()
+        pg.keyboard.press("Escape")
+        pg.locator(".frame-hand button.hand-card[data-kind=turn][data-goal='174-example-3']").focus()      # by keys: the mock's plate lies over the narrow hand's middle
+        pg.keyboard.press("Enter")
+        pg.wait_for_selector("[data-spread=track] .mf", timeout=5000)
+        b.close()
