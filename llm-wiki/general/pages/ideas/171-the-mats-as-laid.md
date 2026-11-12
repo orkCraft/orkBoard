@@ -8,7 +8,6 @@ priority: normal
 short: The mats as laid
 phase: talk
 route: product, design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -58,6 +57,7 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - A way, then the seal? (**Seal only what cannot be undone** / Seal every mat, as drawn / A way pressed is the move) — §300.15 makes a mat's move pick-then-seal while the hand's way is one press (§300.2): one move, two gestures · Seal only what cannot be undone: One press as in the hand; the seal guards a merge into main and New wins · Seal every mat, as drawn: Two presses on every mat and one in the hand, as §300.15 has it · A way pressed is the move: One press everywhere; a merge into main still asks first (§300.9)
   - Answered: Seal only what cannot be undone (Merge into main, Send to a branch, Ship a release); every other move is one press, its Undo in Orkboard's history (the person: «можешь историями оркборда») (the person, 2026-11-12)
 - Each mat checked against its shot? (**Pictures, a stage a mat** / One picture pass at the end / The person presses ?mock=1) — Weaker models drift from a mockup without a picture to hold them (goal 170's risk); docs/mockups/mats/shots holds 44, desk and phone · Pictures, a stage a mat: Each mat accepted on desk and phone pictures before the next begins · One picture pass at the end: Fewer passes; a drift found when all are built, many mats made again · The person presses ?mock=1: No picture kept; the person finds the drift by pressing, after the merge
+  - Answered: Pictures, a stage a mat: each mat drawn on the real page at 1440 and 390, laid beside its shot in docs/mockups/mats/shots, accepted by Design's pass; each mat added to tests/test_cards_fit_browser.py (the person: «давай вариант а») (the person, 2026-11-12)
 
 ## Decisions
 
