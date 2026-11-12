@@ -94,3 +94,4 @@
 .tb-force.is-in b { color: var(--ork-success); } .tb-force.is-out b { color: var(--ork-alert); }
 .tb-force.is-in::before { content: "→"; color: var(--ork-success); } .tb-force.is-out::before { content: "←"; color: var(--ork-alert); }
 .tb-row { display: flex; gap: 12px; align-items: flex-start; }
+.tb-empty { margin: 0; padding: 10px 12px; border: 1px dashed var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-read); }

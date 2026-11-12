@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../../html.js";
 import { Sign } from "../../orkui.js";
+import { AskCost, useAskCost } from "../askcost.js";
 import { Token } from "../card.js";
 import { askLeader, isAt } from "./state.js";
 
 /** The ask on a card's back: a button-link; pressed, a small field and *Send to <leader>*. It lies over the card's foot, not inside the card's own button. */
 function AskPart({ ctx, id }) {
-  const [open, setOpen] = useState(false), [text, setText] = useState(""), [sent, setSent] = useState(false), box = useRef();
+  const [open, setOpen] = useState(false), [text, setText] = useState(""), [sent, setSent] = useState(false), box = useRef(), cost = useAskCost();
   useEffect(() => { if (open) box.current?.focus(); }, [open]);
   const send = (e) => {
     e.preventDefault();
@@ -20,7 +21,8 @@ function AskPart({ ctx, id }) {
     <button type="button" class="tb-asklink" data-ask-part=${id} onClick=${() => { setSent(false); setOpen(true); }}>Ask ${ctx.leader} about this part</button></span>`;
   return html`<form class="tb-askbox" data-ask-form=${id} onSubmit=${send} onKeyDown=${(e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setOpen(false); } }}>
     <input ref=${box} class="ork-input" aria-label=${`Your words to ${ctx.leader} about this part`} value=${text} placeholder="What do you want to ask?" onInput=${(e) => setText(e.currentTarget.value)} />
-    <span class="tb-askbox__acts"><button type="submit" class="ork-btn primary">Send to ${ctx.leader}</button><button type="button" class="ork-btn quiet" onClick=${() => setOpen(false)}>Cancel</button></span></form>`;
+    <${AskCost} words=${cost.words} />
+    <span class="tb-askbox__acts"><button type="submit" class="ork-btn primary" disabled=${!cost.ready}>Send to ${ctx.leader}</button><button type="button" class="ork-btn quiet" onClick=${() => setOpen(false)}>Cancel</button></span></form>`;
 }
 
 /** A card, face up; pressed, it turns over to its back (`back`: lines of what is behind it). `kind`: ext, frame, mod, hired, fired. */

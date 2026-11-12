@@ -1,11 +1,11 @@
 // The discard's third pile, Dropped (decisions §298.8): the goals dropped lie face down under their plate, thickness only and no number; pressed, the pile spreads them face up
-// (S cards with their last tokens), each with *Take back*, which sends `ideas.take_back {slug}` and brings the goal back to the hand (the host answers none of it yet: the mock
-// lays `proposed.dropped`, a list of slugs, and `proposed.dropped_goals` for those the Board no longer lists). A goal dropped on this page (the hand's *Drop*, hand/turncards.js)
+// (S cards with their last tokens), each with *Take back*, which sends `ideas.take_back {slug}` and brings the goal back to the hand (the host answers it: gui/ideas_mats.py, a Drop's Undo).
+// The host keeps no list of the goals dropped, so the pile holds this page's own drops. A goal dropped on this page (the hand's *Drop*, hand/turncards.js)
 // lies here at once, kept in a signal; one taken back is out of the pile and its turn is back in the hand. Dropping a goal stays the person's: nothing here drops one.
 import { useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html } from "../html.js";
-import { command, proposed } from "../link.js";
+import { command } from "../link.js";
 import { CardS } from "./card.js";
 import { nodeOf } from "./feed.js";
 
@@ -13,11 +13,11 @@ export const droppedNow = signal([]);           // the goals dropped on this pag
 export const takenBack = signal([]);            // the goals taken back out of the pile (the host's own list may still name them)
 
 /** The goals in the pile, the last dropped first: this page's, then the host's. */
-export const droppedSlugs = () => [...new Set([...droppedNow.value, ...(proposed("dropped") || [])])].filter((s) => !takenBack.value.includes(s));
+export const droppedSlugs = () => [...new Set(droppedNow.value)].filter((s) => !takenBack.value.includes(s));
 export const dropGoal = (slug) => { droppedNow.value = [slug, ...droppedNow.value.filter((s) => s !== slug)]; takenBack.value = takenBack.value.filter((s) => s !== slug); };
 export const takeBackGoal = (slug) => { droppedNow.value = droppedNow.value.filter((s) => s !== slug); takenBack.value = [...takenBack.value.filter((s) => s !== slug), slug]; };
 
-const nodeIn = (slug) => nodeOf(slug) || proposed("dropped_goals")?.[slug] || null;
+const nodeIn = (slug) => nodeOf(slug) || null;
 
 function One({ slug }) {
   const n = nodeIn(slug) || { slug, title: slug }, card = { slug, title: n.short || n.title || slug, element: n.element, hue: n.hue, sign: n.type?.sign || "check", leader: n.goal };

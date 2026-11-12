@@ -1,12 +1,12 @@
-// A card at its turns, in the hand (decisions §298.6, §298.7; the contract proposed in js/mock/parts/turns.js, `proposed.turns`: `[{goal, kind: "rated" | "spec_rated" | "battle", at}]`):
+// A card at its turns, in the hand (decisions §298.6, §298.7; the host lays none of them yet, hand/turnstops.js):
 // the table of cards only. A goal's idea rated (*Play it*, *Change it*, *Put off*, *Drop*) and its spec rated (*Start* with its price, *Change the spec*, *Drop*) are stops of kind `turn`
 // of the Orkmaster's lane, S cards with the goal's craft tokens (cards/handcards.js); a risk that blocks rings the card and holds *Play it* and *Start*, and says whose risk it is. Pressed,
-// its ways lie in the hand as cards, as a question's do (sayplay.js `PlayWays`); each sends a proposed command with `{slug}` (`ideas.turn_play`, `ideas.turn_change` with its words,
+// its ways lie in the hand as cards, as a question's do (sayplay.js `PlayWays`); each sends a command with `{slug}` (`ideas.turn_play`, `ideas.turn_change` with its words,
 // `ideas.put_off`, `ideas.drop`) and the card goes: a change sends the goal back to the table to be rated again, *Drop* lays it face down in the Dropped pile (cards/dropped.js).
-// A battle (kind `battle`, `proposed.battles`) is a card of its own; pressed it opens the Orkmaster's spread of it (cards/spreads/battle.js), where its ways lie. Wide only.
+// A battle (kind `battle`) is a card of its own; pressed it opens the Orkmaster's spread of it (cards/spreads/battle.js), where its ways lie. Wide only.
 import { useEffect } from "preact/hooks";
 import { html } from "../html.js";
-import { command, proposed } from "../link.js";
+import { command } from "../link.js";
 import { ORKMASTER, lower } from "../frame/state.js";
 import { blockedBy } from "../cards/verdict.js";
 import { dropGoal } from "../cards/dropped.js";
@@ -15,16 +15,12 @@ import { whoOf } from "../table/post.js";
 import { PlayWays } from "./sayplay.js";
 import { settle } from "./turnstops.js";
 
-const toolName = (id) => (proposed("costs")?.tools || []).find((t) => t.id === id)?.name || String(id || "").replace(/^./, (c) => c.toUpperCase());
-/** What starting a goal costs, said as the cost spread says it (*about 12% of Claude*), "" when no price is known. */
-export function priceWords(slug) {
-  const p = proposed("costs")?.goals?.[slug];
-  return p?.tool ? `about ${p.pct}% of ${toolName(p.tool)}` : "";
-}
+/** What starting a goal costs, said as the cost spread says it (*about 12% of Claude*), "" when no price is known: the host prices no goal before it is played (the costs' mat lays them, its own goal's). */
+export const priceWords = () => "";
 
 /** A turn's card as `PlayWays` draws it (and the phone's opened card, turnphone.js): its ways, the Pen of *Change it*. */
 export function turnCard(s) {
-  const { slug, turn } = s.ref, n = s.node, by = blockedBy(slug), lead = by ? whoOf(by).name : "", spec = turn === "spec_rated", price = priceWords(slug);
+  const { slug, turn } = s.ref, n = s.node, by = blockedBy(slug), lead = by ? whoOf(by).name : "", spec = turn === "spec_rated", price = priceWords();
   const send = (name, then, extra = {}) => Promise.resolve(command(name, { slug, ...extra })).then(() => { then(); lower(); }).catch(() => {});      // refused: the host's toast says why, the card stays
   const away = () => settle(slug, turn), why = `${lead}'s risk blocks it until ${lead} lifts it.`;
   const go = { id: "play", name: spec ? "Start" : "Play it", pick: false, kind: "go_on", disabled: !!by, run: () => send("ideas.turn_play", away),

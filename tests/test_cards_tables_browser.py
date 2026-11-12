@@ -127,7 +127,7 @@ def test_the_person_asks_the_leader_about_a_part_and_puts_no_token(page_url):
         pg.locator(".mock-plate__b").click()
         assert "ideas.ask_leader" in pg.locator(".mock-plate__sent").inner_text()
         got = pg.evaluate("""() => import("/static/js/mock/mocklink.js").then((m) => m.sent.value.filter((s) => s.name === "ideas.ask_leader").map((s) => s.args))""")
-        assert got == [{"party": "tech", "framework": "architecture", "card": "gui/board_host.py", "text": "805 lines, past the ~600 a module may grow to. Split it?"}], json.dumps(got)
+        assert got == [{"party": "tech", "framework": "architecture", "card": "gui/board_host.py", "text": "805 lines, past the ~600 a module may grow to. Split it?", "sealed": True}], json.dumps(got)
         # Product's table: the same, Enter sends
         pg.locator('.tb [data-value="feed"]').click()
         open_table(pg, "product", "jtbd")

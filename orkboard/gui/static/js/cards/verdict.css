@@ -89,3 +89,4 @@
 .cards-l .cards-ask__heads { gap: 8px; }
 .cards-l .cards-ask .cards-field { width: 100%; }
 .cards-l .cards-l__acts { margin-top: auto; }
+.cards-cost { font: var(--ork-type-caption); color: var(--ork-ink-read); }

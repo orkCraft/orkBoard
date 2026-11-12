@@ -1,19 +1,20 @@
 // What lies round an opened goal card (decisions §298.4, §298.5; docs/mockups/card-path/ open): the craft tokens on their slips beside it (all open, each
 // with its checks and **Reply to <leader>**), the card's faint marks where each token lay, and under it a row of heads, **Ask <leader>…**, the
-// route's first and, after them, the other parties (*not on its route*). Both send a proposed command (`ideas.reply`, `ideas.ask_leader`: the
-// mock logs it, the host does not answer it yet) and say *Sent to <leader>*.
+// route's first and, after them, the other parties (*not on its route*). Both send the host's command (`ideas.reply`, `ideas.ask_leader`: a paid pass,
+// its cost said beside *Send* before it runs, on its seal) and say *Sent to <leader>*.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { command, toast } from "../link.js";
 import { mapData } from "../shell/store.js";
 import { HeadOf, whoOf } from "../table/post.js";
+import { AskCost, useAskCost } from "./askcost.js";
 import { Slip } from "./slip.js";
 import { CraftToken, raceIn } from "./verdict.js";
 
 /** Sends words to a leader: a field with the focus in it and *Send to <leader>*; the command is the caller's (`send(text)`). Esc closes it (`onClose`) and stops there:
  *  the opened card stays. */
 function Field({ leader, label, send, onClose }) {
-  const [text, setText] = useState(""), [busy, setBusy] = useState(false), name = whoOf(leader).name, area = useRef();
+  const [text, setText] = useState(""), [busy, setBusy] = useState(false), name = whoOf(leader).name, area = useRef(), cost = useAskCost();
   useEffect(() => { area.current?.focus(); }, []);
   const go = async () => {
     if (!text.trim() || busy) return;
@@ -23,7 +24,8 @@ function Field({ leader, label, send, onClose }) {
   return html`<div class="cards-field" data-field=${leader}><label><span>${label}</span>
     <textarea ref=${area} class="ork-field" rows="2" value=${text} onInput=${(e) => setText(e.target.value)}
       onKeyDown=${(e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onClose(); } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); go(); } }}></textarea></label>
-    <button type="button" class="ork-btn" disabled=${!text.trim() || busy} onClick=${go}>Send to ${name}</button></div>`;
+    <${AskCost} words=${cost.words} />
+    <button type="button" class="ork-btn" disabled=${!text.trim() || busy || !cost.ready} onClick=${go}>Send to ${name}</button></div>`;
 }
 
 /** A slip on an opened card: *Reply to <leader>* under its checks (a); pressed, its field opens in this slip only. */

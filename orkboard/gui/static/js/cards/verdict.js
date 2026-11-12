@@ -1,9 +1,11 @@
 // A craft's verdict on a goal and its token (decisions §298.3): what each leader of a goal's route found, `{leader, checks: [{kind, text, fix?}]}`,
-// kind ok (approved), q (a question), r (a risk), b (a risk that blocks). The host does not answer it yet: it is the contract the mock holds
-// (`proposed.verdicts`, js/mock/parts/verdicts.js), so off mocks a goal has none. The token is its leader's tool in its party's ring, its checks
-// as squares under it, always in the order ok, q, r, b: who looked is the ring's colour, what it found the squares'. No total.
+// kind ok (approved), q (a question), r (a risk), b (a risk that blocks). The host answers it (`ideas.verdicts`, gui/ideas_mats.py: each leader's `### Talk`
+// of a goal's page, read free), asked once a snapshot and kept as a signal; a goal whose leaders have said nothing has none. The token is its leader's tool in
+// its party's ring, its checks as squares under it, always in the order ok, q, r, b: who looked is the ring's colour, what it found the squares'. No total.
+import { signal, effect } from "@preact/signals";
 import { html, cls } from "../html.js";
-import { proposed } from "../link.js";
+import { command, town } from "../link.js";
+import { cardsOn } from "./on.js";
 import { raceOf } from "../table/felt.js";
 import { whoOf } from "../table/post.js";
 
@@ -16,8 +18,33 @@ export const WORDS = { ok: ["approved", "approved"], q: ["question", "questions"
 export const TOOLS = { ork: "drum-gear", elf: "bow-drip", knight: "map-cross", goblin: "pick-gem", gnome: "bell-waves", undead: "hourglass-candle" };
 const MOST = 5;                                                 // squares of a kind on an S
 
+/** What the host holds: {goal slug: [a leader's Talk]}, or null before it is asked. */
+export const verdicts = signal(null);
+let asked = null;
+effect(() => {
+  const snap = town.value;
+  if (!cardsOn() || !snap || snap === asked) return;
+  asked = snap;
+  command("ideas.verdicts", {}, true).then((r) => { verdicts.value = r && typeof r === "object" ? r : {}; }).catch(() => { verdicts.value = verdicts.peek() || {}; });
+});
+
+const said = (x) => (typeof x === "string" ? x.trim() : "");
+/** A leader's Talk (`{leader, verdict: go | doubt | no, why, for, against, instead, assumes: {text, signal} | null}`) as a token's checks: what it is for is approved, a
+ *  doubt and what it assumes are questions, what it is against a risk (fixed by its *instead*), a *no* a risk that blocks. */
+export function tokenOf(t) {
+  const why = said(t.why), checks = [];
+  if (said(t.for)) checks.push({ kind: "ok", text: said(t.for) });
+  if (t.verdict === "go" && why) checks.push({ kind: "ok", text: why });
+  if (t.verdict === "doubt") checks.push({ kind: "q", text: why || "a doubt" });
+  if (t.verdict === "no") checks.push({ kind: "b", text: why || "no", fix: said(t.instead) });
+  if (said(t.against)) checks.push({ kind: "r", text: said(t.against), fix: t.verdict === "no" ? "" : said(t.instead) });
+  const assumes = said(t.assumes?.text ?? t.assumes);
+  if (assumes) checks.push({ kind: "q", text: `assumes ${assumes}`, fix: said(t.assumes?.signal) && `shown by ${said(t.assumes.signal)}` });
+  return { leader: t.leader, checks, verdict: t.verdict, stance: said(t.stance) };
+}
+
 /** The verdicts of a goal: [{leader, checks}], in the route's order; [] when none. */
-export const verdictsOf = (slug) => (proposed("verdicts")?.[slug] || []).filter((v) => v?.leader && Array.isArray(v.checks));
+export const verdictsOf = (slug) => (verdicts.value?.[slug] || []).filter((t) => t?.leader).map(tokenOf);
 
 /** The leader whose risk blocks the goal, or "" when none does. */
 export const blockedBy = (slug) => verdictsOf(slug).find((v) => v.checks.some((c) => c.kind === "b"))?.leader || "";

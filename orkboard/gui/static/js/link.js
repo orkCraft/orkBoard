@@ -41,8 +41,6 @@ const MOCK = new URLSearchParams(location.search).get("mock") === "1";
 let mock = null;
 /** Whether this page runs on mocks (`?mock=1`): what it would send is kept, never sent. */
 export const onMocks = () => MOCK;
-/** A part the host does not answer yet and the mock proposes (js/mock/mocklink.js `proposed`): undefined off mocks. */
-export const proposed = (part) => (mock ? mock.proposed(part) : undefined);
 
 /** The frame says this page is paired (spec 94 §4): `connect()` and `command()` then go by the phone's socket. Returns it
  *  ({opened(fn), news(fn), close(), unpair()}) for the frame's push and unpairing. */

@@ -1,10 +1,9 @@
 // A battle, the Orkmaster's spread (decisions §298.6; docs/mockups/card-path/ ?v=battle): a new card against the old cards it goes against, goals at work or done and decisions (a decision a
 // card of its own with its § for its picture). The new card at the left, the old ones at the right (three face up at most, more as a pile), between them one row for each craft on the new
 // card's route, **axis by axis, no total, no winner said**: the new card's token at the left of the row and the old cards' at the right. Under an old card what it costs to undo it
-// (`undo`: `{pct, tool, what}`). The person's hand holds its four ways as cards; each sends `ideas.battle_settle {slug, way}` (the contract proposed, js/mock/parts/turns.js: the host
-// answers none of it yet) and the battle's card is gone from the hand. No victory is drawn. Esc and *Close* put the spread away. On a phone width the field stacks: new card, axes, old cards.
+// (`undo`: `{pct, tool, what}`). The person's hand holds its four ways as cards; each sends `ideas.battle_settle {slug, way}` (the host answers none of it yet, and no battle is laid: this mat lies empty until the battles' goal fills it) and the battle's card is gone from the hand. No victory is drawn. Esc and *Close* put the spread away. On a phone width the field stacks: new card, axes, old cards.
 import { html } from "../../html.js";
-import { command, proposed } from "../../link.js";
+import { command } from "../../link.js";
 import { Index } from "../card.js";
 import { nodeOf } from "../feed.js";
 import { TokenDot } from "../handtokens.js";
@@ -49,7 +48,7 @@ function Old({ a }) {
 const undoWords = (u) => (u ? `to undo: ≈${u.pct}% ${u.tool}${u.what ? ` · ${u.what}` : ""}` : "");
 
 export function Battle({ slug }) {
-  const n = nodeOf(slug), against = proposed("battles")?.[slug]?.against || [];
+  const n = nodeOf(slug), against = [];
   if (!n || !against.length) return null;
   const mine = verdictsOf(slug), up = against.slice(0, FACE_UP), more = against.slice(FACE_UP);
   const settleWith = (way) => Promise.resolve(command("ideas.battle_settle", { slug, way: way.id })).then(() => { settle(slug, "battle"); closeSpread(); }).catch(() => {});
