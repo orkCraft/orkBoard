@@ -75,6 +75,18 @@ body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 
 .v-tag .note.flip { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%); padding: 10px 26px 10px 12px; }
 .v-tag .note.flip::before { left: auto; right: 10px; }
 
+/* 4. the mix of B and C: a slip in orkUI's warm dark (its plaque), held by its token; a thread where the token is not on it */
+.v-mix .note { position: absolute; width: 250px; padding: 12px 14px 12px 22px; background: var(--ork-plaque); border: 1px solid var(--ork-leather);
+  border-left: 4px solid var(--hue); box-shadow: 0 4px 0 var(--ork-room); rotate: -1.2deg; z-index: 3; }
+.v-mix .note.r { rotate: 1.2deg; }
+.v-mix .note .pin { position: absolute; left: -16px; top: -14px; }
+.v-mix .note.focus { outline: 2px solid var(--hue); outline-offset: 3px; }
+.v-mix .note textarea { background: var(--ork-room); }
+.v-mix .thread { position: absolute; z-index: 2; height: 2px; background: var(--hue); transform-origin: 0 50%; pointer-events: none; }
+.v-mix .tok.left { opacity: .35; box-shadow: 0 0 0 2px var(--ork-card), inset 0 0 0 2px var(--ork-room); }
+.v-mix.phone .note { margin-left: 14px; }
+.fcap { position: absolute; font: 400 12px/16px var(--ork-font-read); color: var(--ork-ink-muted); }
+
 /* the dispute: the goal's card opened in the pane */
 .pane { position: relative; display: flex; flex-direction: column; padding: 18px 28px; }
 .oh { display: flex; align-items: center; gap: 12px; } .oh img { width: 48px; }
@@ -124,12 +136,12 @@ const S = (o) => `<div class="s ${o.who} ${o.cls || ""}"><img class="tl" src="${
 
 /** a note at (x, y) in its parent, pointing at a token at (tx, ty); `side` where it opens */
 function note(who, n, x, y, side, tx, ty, extra = "") {
-  const pin = V === "slip" ? `<span class="pin">${tok(who, n.view)}</span>` : "";
-  const tail = V === "balloon" ? ` tail-${side}` : "", flip = V === "tag" && side === "right" ? " flip" : "", r = V === "slip" && side === "right" ? " r" : "";
+  const pin = V === "slip" || V === "mix" ? `<span class="pin">${tok(who, n.view)}</span>` : "";
+  const tail = V === "balloon" ? ` tail-${side}` : "", flip = V === "tag" && side === "right" ? " flip" : "", r = (V === "slip" || V === "mix") && side === "right" ? " r" : "";
   return `<div class="note ${who}${tail}${flip}${r}" data-side="${side}" style="left:${x}px;top:${y}px">${pin}${say(who, n, extra)}</div>`;
 }
 
-const LABEL = { balloon: "A · balloon", slip: "B · slip under the token", tag: "C · tag on a thread" }[V];
+const LABEL = { balloon: "A · balloon", slip: "B · slip under the token", tag: "C · tag on a thread", mix: "D · slip on a thread (B + C)" }[V];
 let html;
 if (FACE === "desk") {
   const laneNote = V === "balloon" ? note("tech", NOTES.tech, 70, 92, "down", 0, 0) : note("tech", NOTES.tech, 182, 128, "left", 152, 344);
@@ -170,6 +182,25 @@ document.getElementById("root").innerHTML = html;
 // a slip: the tokens leave the card and hold their slips down, so the card that is read shows none
 if (V === "slip") document.querySelectorAll(".pane .s.big .br, .ph-body .s.big .br, .lane .row:first-of-type .s:first-child .br").forEach((b) => { b.innerHTML = ""; });
 // a tag: a thread from the token it hangs from to the tag's eye, measured where both are drawn
+if (V === "mix") {
+  const face = document.querySelector(".face"), F = face.getBoundingClientRect();
+  const thread = (who, a, b) => { const th = document.createElement("span"); th.className = `thread ${who}`;
+    const x1 = a.x - F.left, y1 = a.y - F.top, x2 = b.x - F.left, y2 = b.y - F.top;
+    th.style.cssText = `left:${x1}px;top:${y1}px;width:${Math.hypot(x2 - x1, y2 - y1)}px;rotate:${Math.atan2(y2 - y1, x2 - x1)}rad`; face.append(th); };
+  const mid = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+  // in a lane the token stays on its card: the slip slides out on a thread from it (no token on the slip)
+  document.querySelectorAll(".lane .note").forEach((n) => {
+    n.querySelector(".pin")?.remove();
+    const who = [...n.classList].find((c) => NAME[c] || c === "om"), t = who === "om" ? n.closest(".lane").querySelector(".tok.you") : n.closest(".lane").querySelector(`.s .tok.${who}`);
+    if (t) { const b = n.getBoundingClientRect(); thread(who, mid(t.getBoundingClientRect()), { x: b.left + 6, y: b.top + b.height / 2 }); }
+  });
+  // on the opened card the tokens lie on their slips; the card keeps where each lay, faint; the slip in focus draws its thread back
+  document.querySelectorAll(".pane .s.big .tok, .ph-body .s.big .tok").forEach((t) => t.classList.add("left"));
+  const f = document.querySelector(".pane .note.tech");
+  if (f) { f.classList.add("focus"); thread("tech", mid(f.querySelector(".pin .tok").getBoundingClientRect()), mid(document.querySelector(".pane .s.big .tok.tech").getBoundingClientRect()));
+    const c = document.createElement("span"); c.className = "fcap"; const b = f.getBoundingClientRect(); c.style.cssText = `left:${b.left - F.left}px;top:${b.bottom - F.top + 10}px`;
+    c.textContent = "In focus: its thread shows where the token lay"; face.append(c); }
+}
 if (V === "tag") {
   const face = document.querySelector(".face"), F = face.getBoundingClientRect();
   document.querySelectorAll(".note").forEach((n) => {
