@@ -170,7 +170,7 @@ def test_the_gate_raises_the_flag_of_each_done_goal_it_took_into_main(host, repo
     plan(host, working, k1=land(repo, working, "k1", "w.txt"))                                       # in dev too, but not done
     plan(host, other, k1="", k2=git(repo, "rev-parse", "main"))                                      # done and in main before: no backfill
     heard = seen(host)
-    got = host.command("ideas.gate_merge")
+    got = host.command("ideas.gate_merge", {"sealed": True})
     flag = idea_flag.flag_of(host.ideas.state_dir, done)
     assert flag and flag["by"] == "gate" and flag["commit"] == got["commit"] and flag["tasks"] == 2 and flag["first_time"] == 2
     assert idea_flag.flag_of(host.ideas.state_dir, working) is None                                 # not done: it waits
@@ -191,7 +191,7 @@ def test_a_goal_done_after_the_press_with_all_its_commits_in_main_raises_when_it
     slug = goal(host, "Sync the queue", "working")
     c1 = land(repo, slug, "k1", "q.txt")
     plan(host, slug, k1=c1)
-    host.command("ideas.gate_merge")                                                                # its code reaches main while it still works
+    host.command("ideas.gate_merge", {"sealed": True})                                                                # its code reaches main while it still works
     assert events(host) == [] and idea_flag.flag_of(host.ideas.state_dir, slug) is None
     plan(host, slug, k1=c1, ck="")                                                                  # its last task, a clean check, lands nothing
     go_done(host, slug)
@@ -207,7 +207,7 @@ def test_a_goal_done_in_dev_waits_for_main_until_the_press(host, repo):
     plan(host, slug, k1=land(repo, slug, "k1", "q.txt"))
     go_done(host, slug)
     assert idea_flag.flag_of(host.ideas.state_dir, slug) is None and events(host) == []             # its commit is only in dev
-    host.command("ideas.gate_merge")
+    host.command("ideas.gate_merge", {"sealed": True})
     assert idea_flag.flag_of(host.ideas.state_dir, slug)["by"] == "gate"
 
 
@@ -237,5 +237,5 @@ def test_a_flag_never_troubles_the_press(host, repo, monkeypatch):
     slug = goal(host, "Sync the queue", "done")
     plan(host, slug, k1=land(repo, slug, "k1", "q.txt"))
     monkeypatch.setattr(idea_flag, "raise_flag", lambda *a, **k: (_ for _ in ()).throw(OSError("disk")))
-    assert host.command("ideas.gate_merge")["ok"] is True and git(repo, "rev-parse", "main") == git(repo, "rev-parse", "dev")
+    assert host.command("ideas.gate_merge", {"sealed": True})["ok"] is True and git(repo, "rev-parse", "main") == git(repo, "rev-parse", "dev")
     assert events(host) == []

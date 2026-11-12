@@ -13,6 +13,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
+from tests import mock_kit  # noqa: E402
 from tests.browser_kit import launch  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
@@ -24,7 +25,7 @@ SENT = "() => import('/static/js/mock/mocklink.js').then((m) => m.sent.value.map
 
 @pytest.fixture(scope="module")
 def page_url():
-    s = serve_mock.serve(0)
+    s = serve_mock.serve(0, lambda d: (mock_kit.lay_standard(d), mock_kit.lay_limits(d)))
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}/"
     s.shutdown()
@@ -61,34 +62,38 @@ def test_a_concern_with_no_mat_opens_as_an_l_of_words_and_the_retired_who_says_w
         b.close()
 
 
-def test_the_cost_opens_from_the_deck_with_potions_costs_and_a_card_the_tools_cannot_pay(page_url):
+def test_the_cost_opens_from_the_deck_with_the_tools_left_and_each_card_saying_its_cost_is_not_known_yet(page_url):
+    """Was: potions, costs and a card the tools cannot pay (*18% left*, *play it on Claude*, *Wait for 04:00*), all laid by the mock's `proposed.costs`. The host
+    prices no goal before it is played (spec 171 F): the shares lie empty, saying who fills them; the potions are the host's own limits (laid here in the
+    snapshot). The unpaid card and its two ways out wait for the costs' mat (its own goal); `ideas.route_later` is the host's, held by tests/test_gui_route.py."""
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
         opened(pg, page_url)
         pg.get_by_role("button", name="What each card costs").click()
         sp = spread_of(pg, "cost")
-        assert sp.locator(".sp-pots .ork-potion").count() == 2 and "example" in sp.inner_text()          # the costs are the mock's, marked
-        assert sp.locator(".sp-card .sp-cost").count() >= 3 and "about 12% of Claude" in sp.inner_text()
-        assert sp.locator(".sp-card.is-muted").count() == 1 and "18% left" in sp.inner_text() and "play it on Claude" in sp.inner_text()
-        assert sp.get_by_role("button", name="Play", exact=False).first.is_visible()
-        sp.locator(".sp-card.is-muted").click()                                         # the card that cannot be paid: its two ways out in the hand
-        assert sp.get_by_role("button", name="on Claude", exact=False).is_visible() and sp.get_by_role("button", name="Wait for 04:00").is_visible()
-        sp.get_by_role("button", name="Wait for 04:00").click()
-        assert pg.locator(".sp-veil").count() == 0 and "ideas.route_later" in pg.evaluate(SENT)
+        assert sp.locator(".sp-pots .ork-potion").count() == 2 and "62%" in sp.inner_text() and "18%" in sp.inner_text()          # the tools' left today, the host's limits
+        assert sp.locator(".sp-card .sp-cost").count() == 0                                       # no share is laid
+        assert sp.locator(".sp-costw", has_text="Its cost is not known yet").count() >= 3 and sp.locator(".sp-card.is-muted").count() == 0
+        play = sp.get_by_role("button", name="Play", exact=False).first
+        assert play.is_visible()
+        play.click()
+        assert pg.locator(".sp-veil").count() == 0 and "ideas.start" in pg.evaluate(SENT)
         b.close()
 
 
 def test_the_duel_sets_goals_into_the_order_by_pairs_and_sends_it_when_kept(page_url):
+    """The order so far starts with the first goal alone (the host keeps no order of goals); the pairs build it."""
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
         opened(pg, page_url)
         pg.get_by_role("button", name="Weigh two at a time").click()
         sp = spread_of(pg, "duel")
-        assert sp.locator(".sp-dispute, .sp-card.is-xl").count() == 2 and sp.locator(".sp-thick").count() == 1 and sp.locator(".sp-ladder .sp-rung").count() >= 3
+        assert sp.locator(".sp-dispute, .sp-card.is-xl").count() == 2 and sp.locator(".sp-thick").count() == 1 and sp.locator(".sp-ladder .sp-rung").count() >= 2
         assert "still to weigh" in sp.inner_text() and not any(ch.isdigit() for ch in sp.locator(".sp-deckl").inner_text())       # a pile's thickness, no number
         rungs = sp.locator(".sp-ladder .sp-rung:not(.is-gap)").count()
+        assert rungs == 1
         pg.keyboard.press("ArrowLeft")
         pg.keyboard.press("ArrowRight")
         pg.keyboard.press("ArrowLeft")

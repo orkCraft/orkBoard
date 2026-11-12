@@ -1,33 +1,20 @@
-#!/usr/bin/env python3
-"""Record the leaders' tables for the page on mocks (goal 170, stage T): `orkboard/gui/static/mock/tables.json`.
-
-    uv run python tools/record_tables.py
-
-**Architecture** (Tech's table) is read from this repository's real code: `orkboard/`'s packages, each module's line count,
-the imports between the packages, the realm modules that reach up into core, the rule `tests/test_architecture.py` keeps
-(core, realm and design never import gui) and the `~600 lines` rule of CLAUDE.md. **Jobs to be done** (Product's table) is
-proposed: this repository has no personas, so what it holds are examples (the page marks each " · example", js/mock/parts/tables.js).
-The contract is `ideas.tables`, proposed: the host does not answer it yet; the mock lays this file as that reply."""
+"""Tech's Architecture table, read from a project's own code (goal 171, stage C; `ideas.tables`): `orkboard/`'s packages, each module's line count, the
+imports between the packages, the realm modules that reach up into core, the rule `tests/test_architecture.py` keeps (core, realm and design never
+import gui) and the `~600 lines` rule of CLAUDE.md. Pure: it reads files and writes none; the recording of `ideas.tables` (gui/ideas_mats.py) is its host answer."""
 from __future__ import annotations
 
 import ast
-import json
 import re
-import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-PKG = ROOT / "orkboard"
-OUT = PKG / "gui" / "static" / "mock" / "tables.json"
 PACKAGES = ("gui", "core", "realm", "design")
 LIMIT = 600                                                     # CLAUDE.md: split a module before it grows past ~600 lines
 BIGGEST = 4                                                     # a pile spread shows its biggest modules
 
 
-def top_of(path: Path) -> str:
-    parts = path.relative_to(PKG).parts
+def top_of(path: Path, pkg: Path) -> str:
+    parts = path.relative_to(pkg).parts
     return parts[0] if len(parts) > 1 else "top"
 
 
@@ -40,10 +27,10 @@ NOTES = {                                                       # what a big mod
 }
 
 
-def what(path: Path) -> str:
+def what(path: Path, pkg: Path) -> str:
     """A note for a module, else the first sentence of its docstring, short; its own name's words when it has none."""
-    if path.relative_to(PKG).as_posix() in NOTES:
-        return NOTES[path.relative_to(PKG).as_posix()]
+    if path.relative_to(pkg).as_posix() in NOTES:
+        return NOTES[path.relative_to(pkg).as_posix()]
     doc = ast.get_docstring(ast.parse(path.read_text(encoding="utf-8"))) or ""
     first = re.split(r"(?<=[.:;])\s|\n\n", doc.strip(), maxsplit=1)[0].replace("\n", " ").strip().rstrip(".:;")
     first = re.sub(r"^\*\*|\*\*$", "", first)
@@ -66,35 +53,39 @@ def imports(path: Path):
                     yield a.name, id(node) in lazy
 
 
-def walk():
-    files = sorted(PKG.rglob("*.py"))
+def walk(pkg: Path):
+    files = sorted(pkg.rglob("*.py"))
     lines = {p: len(p.read_text(encoding="utf-8").splitlines()) for p in files}
     needs = defaultdict(Counter)                                # package -> package -> imports
     reach = defaultdict(list)                                   # (from, to) -> [(module, lazy, to-module)]
     for p in files:
-        src = top_of(p)
+        src = top_of(p, pkg)
         for mod, lazy in imports(p):
             seg = mod.split(".")
-            dst = seg[1] if len(seg) > 1 and (PKG / seg[1]).is_dir() else "top"
+            dst = seg[1] if len(seg) > 1 and (pkg / seg[1]).is_dir() else "top"
             if dst != src:
                 needs[src][dst] += 1
-                reach[(src, dst)].append((p.relative_to(PKG).as_posix(), lazy, mod))
+                reach[(src, dst)].append((p.relative_to(pkg).as_posix(), lazy, mod))
     return files, lines, needs, reach
 
 
-def module_card(p: Path, lines: dict, needs_of: dict):
-    rel = p.relative_to(PKG).as_posix()
-    return {"id": rel, "title": p.name, "line": what(p), "lines": lines[p], "past": lines[p] > LIMIT, "needs": needs_of.get(rel, {})}
+def module_card(p: Path, pkg: Path, lines: dict, needs_of: dict):
+    rel = p.relative_to(pkg).as_posix()
+    return {"id": rel, "title": p.name, "line": what(p, pkg), "lines": lines[p], "past": lines[p] > LIMIT, "needs": needs_of.get(rel, {})}
 
 
-def main() -> None:
-    files, lines, needs, reach = walk()
-    sizes = {k: (sum(1 for p in files if top_of(p) == k), sum(v for p, v in lines.items() if top_of(p) == k)) for k in PACKAGES}
+def architecture(root: Path) -> dict | None:
+    """Tech's Architecture table of the code under `root` (`<root>/orkboard/`); None when the project has no such package. Reads files only."""
+    pkg = root / "orkboard"
+    if not pkg.is_dir():
+        return None
+    files, lines, needs, reach = walk(pkg)
+    sizes = {k: (sum(1 for p in files if top_of(p, pkg) == k), sum(v for p, v in lines.items() if top_of(p, pkg) == k)) for k in PACKAGES}
     per_module = defaultdict(Counter)
     for (src, dst), rows in reach.items():
         for mod, _, _ in rows:
             per_module[mod][dst] += 1
-    big = lambda pk: [module_card(p, lines, per_module) for p in sorted((p for p in files if top_of(p) == pk), key=lambda p: -lines[p])[:BIGGEST]]
+    big = lambda pk: [module_card(p, pkg, lines, per_module) for p in sorted((p for p in files if top_of(p, pkg) == pk), key=lambda p: -lines[p])[:BIGGEST]]
     pile = lambda pk, line: {"id": f"{pk}/", "title": f"{pk}/", "line": line, "kind": "pile", "modules": sizes[pk][0], "lines": sizes[pk][1],
                              "needs": {k: v for k, v in sorted(needs[pk].items(), key=lambda kv: -kv[1]) if k in PACKAGES}, "biggest": big(pk)}
     # realm modules that reach up into core: the layering the page draws runs gui > core > realm, and realm reaches up
@@ -103,15 +94,11 @@ def main() -> None:
     for mod, lazy, to in reach.get(("realm", "core"), []):
         by_module[mod].append((to, lazy))
     for mod, rows in sorted(by_module.items(), key=lambda kv: -len(kv[1])):
-        p = PKG / mod
+        p = pkg / mod
         stray.append({"id": mod, "title": p.name, "line": "reaches up into core" + (", lazily" if all(z for _, z in rows) else ""), "lines": lines[p], "past": lines[p] > LIMIT,
                       "needs": {"core": len(rows)}, "lazy": all(z for _, z in rows), "imports": sorted({t for t, _ in rows})})
     past = sorted(((p, n) for p, n in lines.items() if n > LIMIT), key=lambda kv: -kv[1])
-    arch_tests = (ROOT / "tests" / "test_architecture.py").read_text(encoding="utf-8")
-    for name in ("test_no_face_in", "test_every_import_of_the_package_is_one_of_its_modules", "test_orkboard_starts_alone", "test_the_terminal_ui_stays_gone"):
-        if f"def {name}" not in arch_tests:
-            sys.exit(f"tests/test_architecture.py no longer holds {name}: the rules below name it")
-    vs = sum(len(p.read_text(encoding="utf-8").splitlines()) for p in sorted((ROOT / "vscode" / "src").rglob("*.ts"))) if (ROOT / "vscode" / "src").is_dir() else 0
+    vs = sum(len(p.read_text(encoding="utf-8").splitlines()) for p in sorted((root / "vscode" / "src").rglob("*.ts"))) if (root / "vscode" / "src").is_dir() else 0
     arch = {
         "title": "Architecture", "line": "Its architecture · this repository's modules", "party": "tech", "limit": LIMIT,
         "layers": [
@@ -129,41 +116,9 @@ def main() -> None:
             {"view": "for", "text": "Nothing imports Textual or Rich", "where": "tests/test_architecture.py · test_the_terminal_ui_stays_gone"},
             {"view": "risk", "text": f"realm/ reaches up into core/ ({len(by_module)} modules" + (", lazily" if stray and all(s["lazy"] for s in stray) else "") + ")",
              "where": ", ".join(s["id"] for s in stray) or "none", "card": stray[0]["id"] if stray else ""},
-            {"view": "risk", "text": f"{len(past)} modules are past the ~{LIMIT} lines a module may grow to", "where": ", ".join(f"{p.relative_to(PKG).as_posix()} {n}" for p, n in past[:3]) + ("…" if len(past) > 3 else ""),
-             "card": past[0][0].relative_to(PKG).as_posix() if past else ""},
+            {"view": "risk", "text": f"{len(past)} modules are past the ~{LIMIT} lines a module may grow to", "where": ", ".join(f"{p.relative_to(pkg).as_posix()} {n}" for p, n in past[:3]) + ("…" if len(past) > 3 else ""),
+             "card": past[0][0].relative_to(pkg).as_posix() if past else ""},
         ],
         "tech_tokens": [{"card": s["id"], "view": "risk"} for s in stray[:1]],
     }
-    jtbd = {
-        "title": "Jobs to be done", "line": "Who hires Orkboard, for what job", "party": "product",
-        "personas": [
-            {"id": "solo", "title": "Solo developer", "line": "Runs AI tools on their own project and wants the work to go on while they look away."},
-            {"id": "lead", "title": "The reviewing lead", "line": "Reads what the orks made and decides what goes into main."},
-        ],
-        "job": {"id": "main", "when": "I have several AI tools going on my project", "want": "one place where each tool's work is a goal I can see and answer",
-                "so": "I stay the one who decides, not the one who watches terminals", "persona": "solo"},
-        "forces": [
-            {"dir": "in", "kind": "Push", "text": "terminals scroll past and I lose what each tool did"},
-            {"dir": "in", "kind": "Pull", "text": "one Board, a card a goal, a gate before main"},
-            {"dir": "out", "kind": "Anxiety", "text": "will the orks break main?"},
-            {"dir": "out", "kind": "Habit", "text": "I just talk to one tool in a terminal"},
-        ],
-        "jobs": [
-            {"id": "waits", "title": "Know what waits for me", "line": "One look says what asks, what is ready."},
-            {"id": "changed", "title": "See what changed before main", "line": "The gate's tests and the diff, then my yes."},
-            {"id": "stop", "title": "Stop a tool that runs away", "line": ""},
-        ],
-        "hired": {"id": "orkboard", "title": "Orkboard", "line": "One Board for the goals: the orks do them, you decide what goes into main."},
-        "fired": [
-            {"id": "tabs", "title": "A terminal tab per tool", "line": "Each tool alone; nothing says what is done or what waits."},
-            {"id": "todo", "title": "A TODO file", "line": "Written once, never read; the tools do not take it."},
-        ],
-    }
-    out = {"recorded": datetime.now(timezone.utc).isoformat(timespec="seconds"), "folder": ROOT.name,
-           "tables": {"tech": {"architecture": arch}, "product": {"jtbd": jtbd}}}
-    OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"{OUT.relative_to(ROOT)}: {sum(n for n, _ in sizes.values())} modules in {', '.join(PACKAGES)}, {len(stray)} reach up, {len(past)} past {LIMIT} lines")
-
-
-if __name__ == "__main__":
-    main()
+    return arch

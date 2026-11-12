@@ -169,7 +169,7 @@ def test_pressing_the_portal_sends_the_goal_alone_with_what_it_stands_on_and_the
         open_portal(pg)
         shot(pg, f"{width}-open")
         portal(pg).click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"})) and [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music"}]
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"})) and [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music", "sealed": True}]
         pg.wait_for_function("() => document.querySelectorAll('[data-portal-card]').length === 1", timeout=WAIT_MS)             # Lobby and Reconnect left the ready goals
         assert card(pg, "menu").count() == 1 and card(pg, "music").count() == 0 and card(pg, "codes").count() == 0
         unchosen(pg)
@@ -193,7 +193,7 @@ def test_the_keyboard_path_tab_to_a_card_enter_chooses_it_and_moves_the_focus_to
         pg.wait_for_function("() => document.querySelector('.portal-host')?.dataset.portal === 'open'", timeout=WAIT_MS)
         assert "Send Reconnect to main" in portal(pg).get_attribute("aria-label")
         pg.keyboard.press("Enter")
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "codes"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "codes"}))
         pg.wait_for_function("() => document.querySelectorAll('[data-portal-card]').length === 2", timeout=WAIT_MS)
         assert card(pg, "music").count() == 1 and card(pg, "menu").count() == 1
     finally:
@@ -219,7 +219,7 @@ def test_a_card_dragged_over_the_portal_takes_it_and_dropped_on_it_is_sent(gui):
         pg.wait_for_function("() => document.querySelector('.ork-portal')?.classList.contains('is-taking')", timeout=WAIT_MS)
         shot(pg, "wide-taking")
         pg.mouse.up()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "codes"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "codes"}))
         pg.wait_for_function("() => document.querySelectorAll('[data-portal-card]').length === 2", timeout=WAIT_MS)
         assert "is-taking" not in (portal(pg).get_attribute("class") if portal(pg).count() else "")
     finally:
@@ -353,7 +353,7 @@ def test_an_error_from_the_host_is_shown_as_a_failed_act_and_the_goal_stays(gui)
         host.refuse = "main moved while it was merging: look again"
         open_portal(pg)
         portal(pg).click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
         pg.get_by_text("main moved while it was merging: look again").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
         assert pg.locator("[data-portal-card]").count() == 3 and portal(pg).count() == 1, "nothing left, the portal is open for another try"
@@ -368,7 +368,7 @@ def test_the_button_to_main_with_no_goal_chosen_takes_the_first_goal_ready_the_p
     pg, host, log = open_view(gui, "narrow")
     try:
         pg.get_by_role("button", name="To main", exact=True).click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
         assert [n for n, _ in host.log if n in ("ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main", "ideas.gate_merge")] == ["ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main"]
     finally:
         pg.close()
@@ -443,7 +443,7 @@ def test_a_ready_card_pressed_is_picked_and_chosen_and_its_to_main_on_the_table_
         assert lane_card(pg, "music").get_attribute("data-picked") == "true"
         shot(pg, "wide-to-main")
         pg.locator("[data-tomain] [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
         assert [n for n, _ in host.log if n in ("ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main")] == ["ideas.to_main_plan", "ideas.to_main_checks", "ideas.to_main"], "the plan, the checks, then the goal"
         pg.wait_for_function("() => document.querySelectorAll('[data-portal-card]').length === 1", timeout=WAIT_MS)             # Lobby and Reconnect went in; Menu stays
         assert pg.locator("[data-portal-card]").get_attribute("data-portal-card") == "menu"
@@ -461,8 +461,8 @@ def test_the_picked_ready_cards_to_main_is_on_every_tab_of_its_route_and_the_rea
         pg.locator('.table-tab[data-tab="design"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
         tomain(pg).wait_for(timeout=WAIT_MS)
         pg.locator("[data-tomain] [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "codes"}))
-        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "codes"}] and [n for n, _ in host.log if n == "ideas.gate_merge"] == []
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "codes"}))
+        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "codes", "sealed": True}] and [n for n, _ in host.log if n == "ideas.gate_merge"] == []
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -516,7 +516,7 @@ def test_an_error_from_the_host_is_shown_and_the_ready_goal_stays_at_the_wide_wi
         lane_card(pg, "music").click()
         pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'open'", timeout=WAIT_MS)
         pg.locator("[data-tomain] [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
         pg.get_by_text("main moved while it was merging: look again").first.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(400)
         assert pg.locator("[data-portal-card]").count() == 3 and tomain(pg).count() == 1, "nothing left, To main is there for another try"

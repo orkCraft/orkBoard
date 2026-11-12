@@ -11,7 +11,7 @@ export const TESTING = "Running the tests…";
 export async function mergeGate() {
   testing.value = true;
   try {
-    const got = await act("ideas.gate_merge", {});
+    const got = await act("ideas.gate_merge", { sealed: true });
     if (got?.note) toast(got.note, "warning");
     return got;
   } finally { testing.value = false; }

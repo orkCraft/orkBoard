@@ -267,7 +267,7 @@ async def test_a_releases_row_says_its_version_and_goals_and_mark_it_out_asks_fi
         await _shot_to(page, "phone-release-ask")
         assert await page.evaluate(NO_SCROLL)
         await r14.get_by_role("button", name="Out", exact=True).click()
-        assert await _called(stub, "ideas.release_out", {"slug": "r14"})
+        assert await _called(stub, "ideas.release_out", {"sealed": True, "slug": "r14"})
         await r14.locator("p", has_text="Out in 1.4").wait_for(timeout=WAIT_MS)
         assert norm(await r14.locator("p").inner_text()) == "Sign-in fixes · Out in 1.4" and await r14.locator("button").count() == 0
         assert await page.evaluate(NO_SCROLL)

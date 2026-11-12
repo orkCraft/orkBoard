@@ -1,35 +1,52 @@
-// The hand's stops of a card at its turns and of a battle (decisions §298.6, §298.7; the contract proposed in js/mock/parts/turns.js: `proposed.turns` `[{goal, kind: "rated" | "spec_rated" | "battle", at}]`
-// and `proposed.battles`), read by hand/data.js; their cards in play are hand/turncards.js's. The table of cards only: nothing else imports the hand's faces here.
-import { signal } from "@preact/signals";
-import { proposed } from "../link.js";
-import { ORKMASTER } from "../frame/state.js";
-import { blockedBy } from "../cards/verdict.js";
-import { droppedSlugs } from "../cards/dropped.js";
+// The hand's cards of the moves that wait for the person (goal 171 stage K; decisions §300.2, §301.2; the table of cards only): `ideas.turns` is the host's, read from the Board's pages with no model and no write
+// (`{turns: [{goal, kind, at, questions?}]}`, kinds `asks` (a question waits), `talk` (its leaders have all said their Talk), `spec` (every section is written)), asked once a snapshot as `ideas.feed` is.
+// One card a goal that waits, grouped by goal (data.js `stackKey`): what is not asked of the person has none, and nothing is dealt that the host did not name. On this table a question is only ever this
+// card (data.js `stopsOfProject` leaves the old Needs you cards of a goal's, a Talk's, a party's and a bug's question out): its ways are one press, `ideas.answer_way`. A party's own question (`party: true`) lies in its lane. Pressed, the card lifts its ways (`asks`: turncards.js) or opens the mat its move lies on (talk, spec).
+// A battle is a card of its own (kind `battle`), laid by a mat of its own goal; none is dealt here. Their cards in play are turncards.js's.
+import { signal, effect } from "@preact/signals";
+import { command, town } from "../link.js";
+import { cardsOn } from "../cards/on.js";
 import { way } from "./ways.js";
 
 way("turn", { sign: "flag", tone: "alert" });
 way("battle", { sign: "flag", tone: "alert" });
 
-export const settled = signal([]);              // `slug:kind` of the turns answered on this page: their cards are gone from the hand
+export const turns = signal(null);               // the host's answer to `ideas.turns`, null until it comes
+export const settled = signal([]);               // `slug:kind` of the turns played on this page: their cards are gone from the hand until the host answers anew (an Undo brings one back)
 
-export const settle = (slug, kind) => { settled.value = [...settled.value, `${slug}:${kind}`]; };
+export const settle = (slug, kind) => { settled.value = [...settled.value.filter((k) => k !== `${slug}:${kind}`), `${slug}:${kind}`]; };
+export const unsettle = (slug, kind) => { settled.value = settled.value.filter((k) => k !== `${slug}:${kind}`); };
+
+let asked = null;
+effect(() => {                                   // only the table of cards asks: the table as it is sends nothing more
+  const snap = town.value;
+  if (!cardsOn() || !snap || snap === asked) return;
+  asked = snap;
+  command("ideas.turns", {}, true).then((r) => { turns.value = r || {}; settled.value = []; }).catch(() => { turns.value = turns.peek() || {}; });
+});
 
 /** What a battle says of what it goes against: a decision by its §, a goal by its title (*vs §240 and The table, its edge*). */
 export const vsWords = (against) => `vs ${(against || []).map((a) => (a.kind === "decision" ? a.ref : a.title)).join(" and ")}`;
 
-/** The hand's stops of the turns that wait, after the other stops, in the Orkmaster's lane. `ctx`: as questions.js `projectStops` has it (`party(slug)`, `open`). */
-export function turnStops(map, ctx) {
-  const out = [], gone = droppedSlugs();
-  for (const t of proposed("turns") || []) {
-    const n = (map?.nodes || []).find((x) => x.slug === t.goal);
-    if (!n || gone.includes(n.slug) || settled.value.includes(`${n.slug}:${t.kind}`)) continue;
-    const party = ctx.party(n.goal), fight = t.kind === "battle", against = proposed("battles")?.[n.slug]?.against || [];
-    if (fight && !against.length) continue;
-    const text = fight ? vsWords(against) : t.kind === "spec_rated" ? "its spec, rated" : "its idea, rated", title = n.short || n.title;
-    out.push({ key: `turn/${n.slug}/${t.kind}`, kind: fight ? "battle" : "turn", ref: { slug: n.slug, turn: t.kind, against }, row: { goal: n.goal, idea: n.slug, kind: fight ? "battle" : "turn", blocks: false }, node: n, task: null,
-      label: fight ? "Battle" : `${t.kind === "spec_rated" ? "Spec rated" : "Rated"}${blockedBy(n.slug) ? ", blocked" : ""}`, gem: "", tone: "alert", gemTip: "", head: party?.head || null, small: true, whoTip: "",
-      title, full: n.title, text, why: "", g: null, party: party || null, other: ctx.open !== ORKMASTER && ctx.open !== n.goal });
+/** What a turn says, for its card's foot and its lifted card. */
+export const TURN_WORDS = {
+  asks: (t) => (t.questions?.length ? t.questions[0].ask : "A question waits for you."),
+  talk: () => "Its leaders have all said their Talk: you decide.",
+  spec: () => "Every part has written its section: you decide.",
+};
+
+const HEAD = { race: "peon", tier: "crown" };      // the Orkmaster's, who deals the moves that wait
+
+/** The hand's stops of the moves that wait: one a goal, in the pages' order. `ctx`: as questions.js `projectStops` has it (`party(slug)`), `goal(slug)`: a party's map entry. */
+export function turnStops(map, ctx = {}) {
+  const out = [];
+  for (const t of turns.value?.turns || []) {
+    if (!TURN_WORDS[t.kind] || settled.value.includes(`${t.goal}:${t.kind}`) || settled.value.includes(`${t.goal}:*`)) continue;      // `*`: the goal's mat played a move that ends all its turns (a Drop, a Hold)
+    const mine = t.party ? ctx.goal?.(t.goal) : null, n = t.party ? null : (map?.nodes || []).find((x) => x.slug === t.goal);
+    if (!n && !mine) continue;                   // a goal the Board does not show has no card to lie on
+    const title = n ? n.short || n.title || t.goal : mine.short || mine.title || t.goal, text = TURN_WORDS[t.kind](t), party = ctx.party?.(n ? n.goal : t.goal) || null;
+    out.push({ key: `turn/${t.goal}/${t.kind}`, kind: "turn", ref: { slug: t.goal, turn: t.kind, questions: t.questions || [], at: t.at || "", party: !!t.party }, row: { goal: n ? n.goal : t.goal, ...(n ? { idea: t.goal } : {}), kind: "turn", blocks: !!n }, node: n, task: null,
+      label: "Waits for you", gem: "", tone: "alert", gemTip: "", head: HEAD, small: true, whoTip: "", title, full: n?.title || title, text, why: "", party, other: false });
   }
   return out;
 }
-

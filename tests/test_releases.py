@@ -246,15 +246,15 @@ def test_mark_it_out_is_refused_before_the_releases_own_flag_for_a_goal_that_is_
     h = board
     r = release(h, "1.4", [h.a1, h.a2])
     with pytest.raises(CommandError, match="Its flag is not raised yet: a release goes out once it is in main"):
-        h.command("ideas.release_out", {"slug": r})
+        h.command("ideas.release_out", {"sealed": True, "slug": r})
     with pytest.raises(CommandError, match="That goal is not a release"):
-        h.command("ideas.release_out", {"slug": h.a1})
+        h.command("ideas.release_out", {"sealed": True, "slug": h.a1})
     flag(h, r, "2026-10-25T09:00:00")
-    got = h.command("ideas.release_out", {"slug": r})
+    got = h.command("ideas.release_out", {"sealed": True, "slug": r})
     assert got["ok"] is True and got["out"] == releases.read(h.state, r)["out"] != ""
     assert releases.read(h.state, r)["goals"] == [h.a1, h.a2] and releases.read(h.state, r)["version"] == "1.4"
     with pytest.raises(CommandError, match="1.4 is out already"):
-        h.command("ideas.release_out", {"slug": r})
+        h.command("ideas.release_out", {"sealed": True, "slug": r})
     (ev,) = events(h, event_log.RELEASE_OUT)
     assert (ev["goal"], ev["goals"], ev["device"]) == (r, 2, "desktop") and isinstance(ev["days"], int) and ev["days"] >= 3      # a1's flag was 20 October
     nodes = {n["slug"]: n for n in board_map.build(h.root, h.state, {}, [], 0.0)["nodes"]}
@@ -269,7 +269,7 @@ def test_a_release_with_no_goal_that_has_a_flag_says_no_days(board):
     h = board
     r = release(h, "1.4", ["gone"])
     flag(h, r)
-    assert h.command("ideas.release_out", {"slug": r})["ok"] is True
+    assert h.command("ideas.release_out", {"sealed": True, "slug": r})["ok"] is True
     (ev,) = events(h, event_log.RELEASE_OUT)
     assert ev["days"] is None and ev["goals"] == 1
 
@@ -282,7 +282,7 @@ def test_the_events_hold_no_goals_words_and_party_shown_comes_from_ideas_shown(b
     got = add_release(h, [secret])
     wait(h, got["slug"])
     flag(h, got["slug"])
-    h.command("ideas.release_out", {"slug": got["slug"]})
+    h.command("ideas.release_out", {"sealed": True, "slug": got["slug"]})
     h.command("ideas.move", {"slug": goal(h, h.app, "SECRET-WORDS again"), "track": h.web})
     assert h.command("ideas.shown", {"party": h.web, "from": h.app}) == {"ok": True}
     h.command("ideas.shown", {"party": h.web, "from": h.web})                            # the same party: nothing

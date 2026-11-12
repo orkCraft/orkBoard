@@ -1,12 +1,12 @@
 // Weigh two at a time (docs/mockups/spreads/, "duel"): two goals side by side, *Which matters more now?*; the pile still to weigh at the left (its
 // thickness, no number), the order so far at the right. Each goal of the pile is set into the order by asking against the one in its middle (a
 // binary insertion: few pairs for many goals), so the order builds itself. Choosing only reorders here; *Done: keep this order* sends it
-// (`ideas.order {order: [slug]}`, the contract proposed: the host keeps no order of goals yet, the mock logs it). ← and → choose, ↓ skips the
+// (`ideas.order {order: [slug]}`: the host keeps no order of goals yet, so the order so far lies empty until the order's mat lays it). ← and → choose, ↓ skips the
 // pair (the goal is asked again after the others; the last one left stays out of the order).
 import { Fragment } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../../html.js";
-import { command, proposed, toast } from "../../link.js";
+import { command, toast } from "../../link.js";
 import { Icon } from "../../orkui.js";
 import { whoOf } from "../../table/post.js";
 import { nodeOf, nodes } from "../feed.js";
@@ -15,8 +15,8 @@ import { Key, SpCard, SpreadFrame, Thick, faceOf } from "./shell.js";
 
 const IN_TALK = new Set(["new", "talk", "spec", "idea"]);
 
-/** The order so far (goals already in line, the contract proposed) and the pile of goals to weigh into it. */
-const start = () => ({ ranked: (proposed("order")?.ranked || []).filter((s) => nodeOf(s)), pile: nodes().filter((n) => IN_TALK.has(n.state)).map((n) => n.slug), lo: 0, hi: null, left: [] });
+/** The order so far (none: the host keeps none yet) and the pile of goals to weigh into it. */
+const start = () => ({ ranked: [], pile: nodes().filter((n) => IN_TALK.has(n.state)).map((n) => n.slug), lo: 0, hi: null, left: [] });
 
 /** One step of the weighing: `win` is "new" (the goal asked about matters more), "old" (the one in the order does), or "skip". Pure. */
 export function step(s, win) {

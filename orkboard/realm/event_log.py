@@ -438,3 +438,6 @@ GOAL_TO_DEV = "goal_to_dev"            # a goal went from its own branch into de
 EVENTS += (GOAL_TO_DEV,)
 BRANCH_SET = "branch_set"              # a discard plate's branch chosen (spec 168 F2, §283.27): which ("dev" · "main"), branch, was, device
 EVENTS += (BRANCH_SET,)
+MOVE_PLAYED = "move_played"            # a one-press move of the hand played, its Undo kept (spec 171 D, §302.4): idea, kind (core/idea_undo.py), from ("hand" · "mat" · ""), device
+MOVE_UNDONE = "move_undone"            # … put back from the history: idea, kind
+EVENTS += (MOVE_PLAYED, MOVE_UNDONE)

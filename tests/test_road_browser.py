@@ -269,7 +269,7 @@ def test_to_main_runs_its_checks_without_release_s_skeletons_and_waits_for_the_l
         settle(pg, 500)
         assert [a for n, a in host.log if n == "ideas.to_main"] == []
         host.step("music", "passed", "passed", "passed")
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"})), "all passed: the goal goes"
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"})), "all passed: the goal goes"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -371,7 +371,7 @@ def test_at_the_narrow_width_no_check_is_asked_and_the_portal_is_as_it_was(gui):
         pg.wait_for_function("() => document.querySelector('.portal-host')?.dataset.portal === 'open'", timeout=WAIT_MS)
         assert pg.locator(".ork-portal-ring").count() == 0 and [n for n, _ in host.log if n == "ideas.to_main_checks"] == []
         pg.locator(".portal-host .ork-portal").click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -405,7 +405,7 @@ def test_the_ring_plays_the_rite_in_the_goals_colour_as_it_goes_in_once_and_neve
         choose(pg, "music")
         pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'open'", timeout=WAIT_MS)
         to_main(pg).click()
-        assert _sent(pg, host, ("ideas.to_main", {"idea": "music"}))
+        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
         seen = pg.evaluate("() => new Promise((done) => { let on = false; const end = Date.now() + 1500; const tick = () => { if (document.querySelector('.ork-portal-ring')?.classList.contains('is-sending')) on = true; if (Date.now() < end) requestAnimationFrame(tick); else done(on); }; tick(); })")
         assert seen is False, "nothing plays under reduced motion"
     finally:

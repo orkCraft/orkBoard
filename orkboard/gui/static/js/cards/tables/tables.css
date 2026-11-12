@@ -6,12 +6,6 @@
 .tb-switch { margin-left: auto; }
 .tb-switch .ork-btn { padding-inline: 10px; }
 
-.tb { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.tb-head { display: flex; align-items: center; gap: 12px; padding: 10px 20px 4px; flex: none; }
-.tb-av { flex: none; display: grid; place-items: center; }
-.tb-t { display: flex; flex-direction: column; min-width: 0; } .tb-t b { font: var(--ork-type-heading); } .tb-t small { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.tb-head .tb-switch { margin-left: auto; }
-.tb-body { flex: 1; min-height: 0; overflow: auto; padding: 6px 20px 12px; }
 .tb-colh { margin: 0; display: flex; align-items: center; gap: 8px; font: var(--ork-type-label); letter-spacing: var(--ork-type-label-track); text-transform: uppercase; color: var(--ork-ink-muted); }
 .tb-colh i { font: var(--ork-type-caption); font-style: normal; letter-spacing: 0; text-transform: none; }
 
@@ -26,7 +20,7 @@
 .tb-slot.is-wide .tb-card, .tb-slot.is-job .tb-card { aspect-ratio: 3.5 / 2.5; }
 .tb-slot.is-xl .tb-card { padding: 32px 14px 24px; gap: 6px; } .tb-slot.is-lg .tb-card { padding: 28px 11px 22px; }
 .tb-slot.is-job .tb-card { padding: 28px 18px 14px; }
-.tb-ix { position: absolute; left: 8px; top: 7px; display: flex; }
+.tb-ix { position: absolute; right: 8px; top: 7px; display: flex; }
 .tb-name { font: var(--ork-type-button); overflow-wrap: anywhere; } .tb-name.is-mono { font-family: var(--ork-font-code); font-size: 12px; line-height: 15px; }
 .tb-slot.is-xl .tb-name { font: var(--ork-type-title); }
 .tb-line, .tb-count { font: var(--ork-type-caption); color: var(--ork-ink-muted); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
@@ -56,8 +50,6 @@
 .tb-pile.is-open .tb-card { box-shadow: inset 0 3px 0 var(--party-hue), 0 0 0 2px var(--ork-ink-muted), 0 4px 0 var(--ork-room); }
 
 /* the hand's place on this table: the person's tokens and the words they take */
-.tb-hand { flex: none; display: flex; align-items: center; gap: 14px; padding: 8px 22px; background: var(--ork-room); border-top: 1px solid var(--ork-frame); min-height: 68px; }
-.tb-note { margin: 0; max-width: 520px; font: var(--ork-type-caption); color: var(--ork-ink-read); }
 .tb-slot.is-over { z-index: 4; }
 .tb-askrow { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 6px; max-width: var(--card-w); }
 .tb-asklink { appearance: none; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; font: var(--ork-type-caption); color: var(--ork-action); text-decoration: underline; }
@@ -94,3 +86,4 @@
 .tb-force.is-in b { color: var(--ork-success); } .tb-force.is-out b { color: var(--ork-alert); }
 .tb-force.is-in::before { content: "→"; color: var(--ork-success); } .tb-force.is-out::before { content: "←"; color: var(--ork-alert); }
 .tb-row { display: flex; gap: 12px; align-items: flex-start; }
+.tb-empty { margin: 0; padding: 10px 12px; border: 1px dashed var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-read); }

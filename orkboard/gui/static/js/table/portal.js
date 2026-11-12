@@ -132,7 +132,7 @@ export async function playUntested(slug) {
 /** Sends the goal (`untested` only from *To main without the tests*); a refusal of the host is said on the card in its words. */
 async function enter(slug, untested) {
   let got = null;
-  try { got = await command("ideas.to_main", { idea: slug, ...(untested ? { untested: true } : {}) }, true); } catch (e) { if (!e.refused) toast(e.message, "error", "ideas.to_main"); stoppedBy(slug, e.message); return; }
+  try { got = await command("ideas.to_main", { idea: slug, sealed: true, ...(untested ? { untested: true } : {}) }, true); } catch (e) { if (!e.refused) toast(e.message, "error", "ideas.to_main"); stoppedBy(slug, e.message); return; }
   if (got?.error) { toast(got.error, "error"); stoppedBy(slug, got.error); return; }
   got = got || {};
   if (got.note) toast(got.note, "warning");

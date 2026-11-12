@@ -2,16 +2,14 @@
 // from `static/mock/board.json`, recorded from a real host on a real project (tools/record_mock.py); a command the
 // recording holds is answered from it (its exact arguments first, then any of its name), and any other is a change: it is
 // kept in `sent` (what would have gone to the host) and said once in a toast, never sent. The faces under it are the real
-// page's; only the link is not. A face drawn for something the host does not answer yet reads it from the recording's
-// `proposed` part, which is the contract the host is to answer later.
+// page's; only the link is not. It holds the tests' fixtures only (decisions §301.1): it answers the host's own command names and
+// no other (tests/test_mock_recording.py reads the recording against gui/ideas.py's table), and a part the host lays no answer for lies
+// empty on the page, never an example; what a test presses that the recording lacks, the test lays in the recording it serves.
 import { signal } from "@preact/signals";
 
 // Beside this module's own folder, so it is found on the desktop (/static/mock/) and on the phone (/app/page/mock/) alike.
 const URL_OF = new URL("../../mock/board.json", import.meta.url).href;
-/** What is laid over the recording, each a module of `parts/` with its own `lay(data)`: examples marked as such, and what the
- *  spreads and the leaders' tables read that the host does not answer yet (the contract proposed). */
-const PARTS = ["examples", "spreads", "tables", "verdicts", "turns"];
-let data = { state: null, replies: [], proposed: {} };
+let data = { state: null, replies: [] };
 const exact = new Map(), byName = new Map();
 /** What the page would have sent to the host, newest last: [{name, args, at}]. */
 export const sent = signal([]);
@@ -32,7 +30,6 @@ export async function open({ town, online, toast }) {
   toastOf = toast;
   const r = await fetch(URL_OF);
   data = await r.json();
-  for (const part of PARTS) await (await import(`./parts/${part}.js`)).lay(data);       // what the recording lacks: the examples, the spreads', the tables'
   for (const x of data.replies || []) {
     exact.set(key(x.name, x.args), x);
     if (!byName.has(x.name)) byName.set(x.name, x);
@@ -41,9 +38,6 @@ export async function open({ town, online, toast }) {
   town.value = data.state;
   online.value = true;
 }
-
-/** A proposed part the host does not answer yet (the contract): `proposed("tokens")`. */
-export const proposed = (part) => (data.proposed || {})[part];
 
 /** Answer a command as the host would have (link.js `command`). */
 export function command(name, args = {}) {

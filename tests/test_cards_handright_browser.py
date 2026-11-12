@@ -12,6 +12,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
+from tests import mock_kit  # noqa: E402
 from tests.browser_kit import launch  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
@@ -22,7 +23,7 @@ pytestmark = pytest.mark.browser
 
 @pytest.fixture(scope="module")
 def page_url():
-    s = serve_mock.serve(0)
+    s = serve_mock.serve(0, mock_kit.lay_standard)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}/?mock=1"
     s.shutdown()
@@ -78,8 +79,7 @@ def test_the_orkmasters_four_mats_open_their_spreads(page_url):
         b, pg = start(p, page_url)
         lane = pg.get_by_role("group", name="The Orkmaster's mats")
         assert pg.locator(".cards-dealer .cards-lab", has_text="Its mats").count() == 1
-        shapes = lane.evaluate("e => [...e.querySelectorAll('.cards-mat__shape')].map(s => [s.dataset.shape, s.children.length])")
-        assert shapes == [["dispute", 3], ["diff", 2], ["table", 4], ["dispute", 3]]
+        assert lane.locator(".cards-mat__shape").count() == 0                                           # no shape beside a mat's line
         for name in ("What each card costs", "Weigh two at a time", "Sort the new goals", "The deal"):
             btn = lane.get_by_role("button", name=name)
             btn.scroll_into_view_if_needed()

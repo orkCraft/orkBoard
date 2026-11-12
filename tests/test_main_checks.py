@@ -217,10 +217,10 @@ def test_to_main_is_refused_while_the_checks_run_and_after_one_is_red_and_goes_w
     toml(repo, '[gate.main]\nchecks = [{name = "Slow", run = "sleep 1.5 && test -f lobby/room.ts"}]\n')
     host.command("ideas.to_main_checks", {"idea": lobby})
     with pytest.raises(CommandError, match="Checking the way into main"):
-        host.command("ideas.to_main", {"idea": lobby})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby})
     assert git(repo, "log", "-1", "--format=%s", "main") == "edit old.txt"
     wait_done(host, lobby)
-    assert host.command("ideas.to_main", {"idea": lobby})["ok"] is True
+    assert host.command("ideas.to_main", {"sealed": True, "idea": lobby})["ok"] is True
 
 
 def test_a_red_check_seals_the_way_and_only_explicit_retry_runs_again(host, repo, work):
@@ -229,14 +229,14 @@ def test_a_red_check_seals_the_way_and_only_explicit_retry_runs_again(host, repo
     host.command("ideas.to_main_checks", {"idea": lobby})
     wait_done(host, lobby)
     with pytest.raises(CommandError, match="Sealed: Regression is red: 2 tests fail"):
-        host.command("ideas.to_main", {"idea": lobby})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby})
     assert worktrees(repo) == [] and git(repo, "log", "-1", "--format=%s", "main") == "edit old.txt"
     kept = host.command("ideas.to_main_checks", {"idea": lobby})                         # asked again: the kept red result
     assert kept["running"] is False and kept["checks"][-1]["state"] == "failed"
     row = next(r for r in host.command("ideas.gate")["ideas"] if r["slug"] == lobby)
     assert row["main_ready"] is False and "2 tests fail" in row["main_reason"]
     with pytest.raises(CommandError, match="Test again"):
-        host.command("ideas.gate_merge")
+        host.command("ideas.gate_merge", {"sealed": True})
     toml(repo, '[gate.main]\nchecks = [{name = "Regression", run = "true"}]\n')
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "fixed")
@@ -244,7 +244,7 @@ def test_a_red_check_seals_the_way_and_only_explicit_retry_runs_again(host, repo
     fresh = host.command("ideas.to_main_checks", {"idea": lobby, "again": True})         # the person chose it anew: run once more
     assert fresh["running"] is True or fresh["checks"][-1]["state"] == "passed"
     wait_done(host, lobby)
-    assert host.command("ideas.to_main", {"idea": lobby})["ok"] is True
+    assert host.command("ideas.to_main", {"sealed": True, "idea": lobby})["ok"] is True
 
 
 def test_results_of_an_older_plan_are_refused_and_a_goal_never_checked_is_refused_too(host, repo, work):
@@ -253,9 +253,9 @@ def test_results_of_an_older_plan_are_refused_and_a_goal_never_checked_is_refuse
     wait_done(host, lobby)
     task(host, repo, lobby, "k3", {"lobby/more.ts": "more\n"})                           # a new commit in the plan
     with pytest.raises(CommandError, match="The way into main changed since its checks passed.*run the checks again"):
-        host.command("ideas.to_main", {"idea": lobby})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby})
     with pytest.raises(CommandError, match="checks have not been run: run the checks"):        # Chat's checks were never asked: it does not go untested
-        host.command("ideas.to_main", {"idea": chat})
+        host.command("ideas.to_main", {"sealed": True, "idea": chat})
     assert git(repo, "log", "-1", "--format=%s", "main") == "edit old.txt" and worktrees(repo) == []
     assert to_main(host, chat)["ok"] is True                                              # asked and green: it goes
 
@@ -266,7 +266,7 @@ def test_checks_that_passed_against_another_head_of_main_are_refused(host, repo,
     wait_done(host, lobby)
     to_main(host, chat)                                                                  # main moves under Lobby's green checks
     with pytest.raises(CommandError, match="The way into main changed.*run the checks again"):
-        host.command("ideas.to_main", {"idea": lobby})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby})
     assert to_main(host, lobby)["ok"] is True                                            # checked on main as it is now
 
 
@@ -286,17 +286,17 @@ def test_the_press_that_takes_dev_whole_runs_the_tests_too_and_a_red_stops_it(ho
     toml(repo, f"[gate]\nrun = '{RED}'\n")
     main, dev = git(repo, "rev-parse", "main"), git(repo, "rev-parse", "dev")
     with pytest.raises(CommandError, match="Sealed: Tests is red: tests/test_room.py::test_join failed"):
-        host.command("ideas.gate_merge")
+        host.command("ideas.gate_merge", {"sealed": True})
     assert git(repo, "rev-parse", "main") == main and git(repo, "rev-parse", "dev") == dev and worktrees(repo) == []
     toml(repo, '[gate]\nrun = "true"\n')
-    assert host.command("ideas.gate_merge")["ok"] is True and git(repo, "rev-parse", "main") != main
+    assert host.command("ideas.gate_merge", {"sealed": True})["ok"] is True and git(repo, "rev-parse", "main") != main
 
 
 def test_the_press_that_takes_dev_whole_is_refused_in_words_when_the_project_has_no_tests(host, repo, work):
     (repo / "orkcraft.toml").unlink()                                                       # no gate: no tests at all
     main, dev = git(repo, "rev-parse", "main"), git(repo, "rev-parse", "dev")
     with pytest.raises(CommandError, match="has no tests.*To main without the tests"):
-        host.command("ideas.gate_merge")
+        host.command("ideas.gate_merge", {"sealed": True})
     assert git(repo, "rev-parse", "main") == main and git(repo, "rev-parse", "dev") == dev and worktrees(repo) == []
 
 
@@ -365,7 +365,7 @@ def test_main_moving_during_pick_cannot_use_the_old_green_result(host, repo, wor
         return result
     monkeypatch.setattr(goal_main, "_pick", raced)
     with pytest.raises(CommandError, match="changed"):
-        host.command("ideas.to_main", {"idea": lobby})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby})
     assert git(repo, "log", "-1", "--format=%s", "main") == "edit raced.txt"
     assert not (repo / "lobby/room.ts").exists()
 
@@ -412,6 +412,6 @@ def test_the_merge_of_dev_runs_its_tests_with_the_repository_free_and_refuses_a_
         return out
     monkeypatch.setattr(main_checks, "verify", raced)
     with pytest.raises(CommandError, match="moved while the tests ran"):
-        host.command("ideas.gate_merge")
+        host.command("ideas.gate_merge", {"sealed": True})
     assert free == [True], "another thread takes the repository's lock while the tests run"
     assert git(repo, "log", "-1", "--format=%s", "main") == "edit raced.txt"

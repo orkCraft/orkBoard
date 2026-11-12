@@ -193,3 +193,11 @@ def test_a_refused_command_and_a_red_toast_are_the_events_of_spec_107(tmp_path):
     assert (refused["command"], refused["device"], refused["kind"], len(refused["error"])) == ("ideas.add", "phone", "broken", event_log.TEXT_MAX)
     assert (shown["title"], shown["text"]) == ("Town clock", "KeyError: 'x'")
     assert event_log.counts(tmp_path)["command_refused"] == 1 and event_log.counts(tmp_path)["error_shown"] == 1
+
+
+def test_the_moves_of_the_hand_are_events(tmp_path):
+    """Spec 171 D: a one-press move played and put back, idea, kind and from only."""
+    assert event_log.MOVE_PLAYED == "move_played" and event_log.MOVE_UNDONE == "move_undone"
+    assert {"move_played", "move_undone"} <= set(event_log.EVENTS) and len(set(event_log.EVENTS)) == len(event_log.EVENTS)
+    assert event_log.record(tmp_path, event_log.MOVE_PLAYED, idea="goal", kind="drop", **{"from": "hand"})
+    assert event_log.counts(tmp_path)["move_played"] == 1

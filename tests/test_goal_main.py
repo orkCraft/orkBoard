@@ -110,7 +110,7 @@ def to_main(host, slug: str, **more) -> dict:
         if got and not got["running"]:
             break
         time.sleep(0.02)
-    return host.command("ideas.to_main", {"idea": slug, **more})
+    return host.command("ideas.to_main", {"sealed": True, "idea": slug, **more})
 
 
 def events(host, name: str) -> list[dict]:
@@ -191,7 +191,7 @@ def test_a_pick_is_in_main_by_its_patch_id_and_the_gate_does_not_count_it_again(
 def test_dev_whole_still_goes_after_a_goal_went_alone(host, repo, work):
     lobby, chat, *_ = work
     to_main(host, lobby)
-    got = host.command("ideas.gate_merge")
+    got = host.command("ideas.gate_merge", {"sealed": True})
     assert got["ok"] is True and git(repo, "merge-base", "--is-ancestor", "dev", "main") == ""
     assert host.command("ideas.gate")["commits"] == 0 and (repo / "chat" / "room.ts").exists() and (repo / "own.txt").exists()
     (e,) = events(host, "gate_merged")
@@ -207,7 +207,7 @@ def test_a_goal_with_a_task_not_landed_is_sealed_in_words(host, repo, work):
     got = plan_of(host, repo, lobby)
     assert got["sealed"] == f"{short(host, lobby)} is not done yet"
     with pytest.raises(CommandError, match="is not done yet"):
-        host.command("ideas.to_main", {"idea": lobby})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby})
     assert git(repo, "log", "-1", "--format=%s", "main") == "edit old.txt"
 
 
@@ -256,7 +256,7 @@ def test_a_goal_in_main_already_and_a_goal_without_commits_have_nothing_to_send(
     to_main(host, lobby)
     assert plan_of(host, repo, lobby)["sealed"] == f"{short(host, lobby)} is in main already"
     with pytest.raises(CommandError, match="is in main already"):
-        host.command("ideas.to_main", {"idea": lobby})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby})
     check = goal(host, "A check only")
     ideas.save_plan(host.ideas.state_dir, check, {"idea": check, "tasks": [{"id": "c1", "state": "merged", "commit": "", "after": []}]})
     assert plan_of(host, repo, check)["sealed"] == f"{short(host, check)} has nothing to send to main"
@@ -359,7 +359,7 @@ def test_it_pushes_when_the_project_pushes_after_merging(host, repo, tmp_path):
 
 def test_the_commands_round_trip_and_the_phone_may_send_them(host, repo, work):
     lobby, chat, l1, c1, own, l2 = work
-    assert BoardPhone.allowed(host, "ideas.to_main_plan", {}) and BoardPhone.allowed(host, "ideas.to_main", {})
+    assert BoardPhone.allowed(host, "ideas.to_main_plan", {}) and BoardPhone.allowed(host, "ideas.to_main", {"sealed": True, "sealed": True})
     depends(host, lobby, chat)
     seen = host.command("ideas.to_main_plan", {"idea": lobby})
     assert seen == {"idea": lobby, "goals": [lobby, chat], "commits": [*l1, *c1, *l2], "sealed": None, "files": 4,
@@ -368,7 +368,7 @@ def test_the_commands_round_trip_and_the_phone_may_send_them(host, repo, work):
     with pytest.raises(CommandError, match="idea is missing"):
         host.command("ideas.to_main_plan", {})
     with pytest.raises(CommandError, match="idea is missing"):
-        host.command("ideas.to_main", {})
+        host.command("ideas.to_main", {"sealed": True, "sealed": True})
     done = to_main(host, lobby)
     assert done["ok"] is True and done["goals"] == [lobby, chat]
     assert host.command("ideas.to_main_plan", {"idea": chat})["sealed"] == f"{short(host, chat)} is in main already"
@@ -404,7 +404,7 @@ def test_the_boards_own_commits_are_no_pile_but_a_code_commit_of_no_goal_is(host
     git(repo, "checkout", "-q", "main")
     got = host.command("ideas.gate")
     assert got["commits"] == 1 and got["files"] == 1, "a commit of code that belongs to no goal still counts, the Board's two do not"
-    host.command("ideas.gate_merge")
+    host.command("ideas.gate_merge", {"sealed": True})
     assert (repo / "wiki" / "pages" / "tracks" / "tech.md").exists(), "they go into main with the next merge"
 
 
@@ -414,13 +414,13 @@ def test_dev_whole_is_refused_in_words_while_a_goal_with_commits_in_dev_is_not_r
     lobby, chat, *_ = work
     unfinished(host, lobby)
     with pytest.raises(CommandError) as e:
-        host.command("ideas.gate_merge")
+        host.command("ideas.gate_merge", {"sealed": True})
     assert str(e.value) == f"{short(host, lobby)} is at 2 of 3: it would reach main half made.", "the words say the goal, how far it is and why"
     assert git(repo, "rev-parse", "main") != git(repo, "rev-parse", "dev") and events(host, "gate_merged") == [], "main is as it was"
     plan = ideas.plan(host.ideas.state_dir, lobby)
     plan["tasks"] = [t for t in plan["tasks"] if t["id"] != "rv"]
     ideas.save_plan(host.ideas.state_dir, lobby, plan)
-    assert host.command("ideas.gate_merge")["ok"] is True, "ready again: the press goes"
+    assert host.command("ideas.gate_merge", {"sealed": True})["ok"] is True, "ready again: the press goes"
     assert idea_flag.flag_of(host.ideas.state_dir, chat) is not None
 
 
@@ -428,7 +428,7 @@ def test_commits_that_belong_to_no_goal_still_go_with_dev_whole_while_a_goal_is_
     git(repo, "checkout", "-q", "dev")
     commit_in(repo, "own.txt", "the person's own commit\n")
     git(repo, "checkout", "-q", "main")
-    assert host.command("ideas.gate")["commits"] == 1 and host.command("ideas.gate_merge")["ok"] is True
+    assert host.command("ideas.gate")["commits"] == 1 and host.command("ideas.gate_merge", {"sealed": True})["ok"] is True
     assert git(repo, "rev-parse", "main") == git(repo, "rev-parse", "dev")
 
 
@@ -448,7 +448,7 @@ def test_a_goal_sent_alone_when_ready_leaves_a_pile_that_says_nothing_after_the_
     lobby, chat, *_ = work
     to_main(host, lobby)
     to_main(host, chat)
-    host.command("ideas.gate_merge")                                                         # the person's own commit goes with dev whole: nothing else is left
+    host.command("ideas.gate_merge", {"sealed": True})                                                         # the person's own commit goes with dev whole: nothing else is left
     git(repo, "checkout", "-q", "dev")
     (repo / "llm-wiki" / "wiki" / "specs").mkdir(parents=True)
     (repo / "llm-wiki" / "wiki" / "specs" / "lobby.md").write_text("# Lobby\n")
@@ -515,7 +515,7 @@ def test_a_normal_send_logs_the_tests_as_run_with_the_checks_time(host, repo, wo
 
 def test_untested_true_sends_without_asking_the_checks_and_logs_skipped(host, repo, work):
     lobby, *_ = work
-    got = host.command("ideas.to_main", {"idea": lobby, "untested": True})
+    got = host.command("ideas.to_main", {"sealed": True, "idea": lobby, "untested": True})
     assert got["ok"] is True and git(repo, "rev-parse", "main") == got["commit"]
     (e,) = events(host, "goal_to_main")
     assert e["tests"] == "skipped" and "checks_s" not in e
@@ -526,7 +526,7 @@ def test_nothing_truthy_but_true_skips_the_checks(host, repo, work, value):
     lobby, *_ = work
     before = git(repo, "rev-parse", "main")
     with pytest.raises(CommandError, match="checks have not been run"):
-        host.command("ideas.to_main", {"idea": lobby, "untested": value})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby, "untested": value})
     assert git(repo, "rev-parse", "main") == before and events(host, "goal_to_main") == []
 
 
@@ -534,7 +534,7 @@ def test_a_sealed_goal_is_refused_even_with_the_skip(host, repo, work):
     lobby, *_ = work
     unfinished(host, lobby)
     with pytest.raises(CommandError, match="is not done yet"):
-        host.command("ideas.to_main", {"idea": lobby, "untested": True})
+        host.command("ideas.to_main", {"sealed": True, "idea": lobby, "untested": True})
 
 
 def test_a_project_with_no_tests_is_refused_in_words_and_only_the_skip_sends_it(host, repo, work, monkeypatch):
@@ -545,5 +545,5 @@ def test_a_project_with_no_tests_is_refused_in_words_and_only_the_skip_sends_it(
     with pytest.raises(CommandError, match="has no tests.*To main without the tests"):
         to_main(host, lobby)
     assert git(repo, "rev-parse", "main") == before and events(host, "goal_to_main") == []
-    got = host.command("ideas.to_main", {"idea": lobby, "untested": True})
+    got = host.command("ideas.to_main", {"sealed": True, "idea": lobby, "untested": True})
     assert got["ok"] is True and events(host, "goal_to_main")[0]["tests"] == "skipped"

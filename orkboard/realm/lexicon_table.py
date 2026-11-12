@@ -28,6 +28,7 @@ WINDOW: tuple[Term, ...] = (
     _t("craft_token", "token", "tokens"),                          # a leader's verdict on a card: its craft's tool in its party's ring, its checks as squares under it (decisions §298.3)
     _t("blocker", "blocks", ""),                                   # a craft's risk that holds a card's start until its leader lifts it (decisions §298.3)
     _t("dropped", "Dropped"),                                      # the discard's third pile: the cards the person dropped, face down, each can be taken back (decisions §298.8)
+    _t("seal", "seal", "seals"),                                   # the stamp at a mat's foot's right that a move which cannot be undone (Merge into main, Send to a branch, Ship a release, a paid pass) asks for: dim with its why until a way is picked, pressed it sends the move with `sealed: true`; every other move is one press with its Undo (decisions §300.15, §302.4)
     _t("battle", "battle", "battles"),                             # the Orkmaster's spread of a new card against the cards it goes against, axis by axis, no winner said (decisions §298.6)
     _t("blank_deck", "deck of blank cards"),                       # at the hand's right edge: a new goal is a card drawn from it and named (decisions §298.2, §298.9)
     _t("concern", "concern", "concerns"),                          # what a party's leader says is wrong or at risk in one part of its map, with why and what would fix it (spec 108, decisions §183.7); not a flag, not a finding
