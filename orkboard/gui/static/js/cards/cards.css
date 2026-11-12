@@ -67,6 +67,7 @@
 .cards-l__title { margin: 0; font: var(--ork-type-title); }
 .cards-l__body { font: var(--ork-type-read); color: var(--ork-ink-read); }
 .cards-l__acts { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+.cards-l__lies { display: inline-flex; align-items: center; gap: 8px; margin-right: auto; font: var(--ork-type-caption); color: var(--ork-ink-read); }
 @keyframes cards-turn { from { transform: rotate(-90deg) scale(.5); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .cards-l { animation: none; } .cards-s { transition: none; } }
 @media (max-width: 600px) { .cards-l { width: 100vw; max-height: 100vh; height: 100%; aspect-ratio: auto; } .cards-lanes { grid-template-columns: 1fr; } }

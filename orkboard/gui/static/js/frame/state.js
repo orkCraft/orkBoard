@@ -122,6 +122,7 @@ if (typeof addEventListener === "function") {
   });
   addEventListener("popstate", () => {
     if (expectPop > 0) { expectPop -= 1; return; }                       // the step back we took ourselves: `picked` is already none
+    if (location.hash.startsWith("#mat=")) return;                       // a mat's address (cards/address.js), not the pick's
     const slug = hashSlug();
     inAddress = slug;
     if (!slug) { wanted = ""; if (picked.peek()) picked.value = ""; return; }

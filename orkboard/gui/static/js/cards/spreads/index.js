@@ -2,6 +2,7 @@
 // `openSpread` (open.js) says which, `track.js`, `gate.js`, `diff.js`, `cost.js`, `duel.js`, `sort.js`, `deal.js` and `battle.js` draw it on `shell.js`'s frame; the sheet is `spreads.css`.
 import { html } from "../../html.js";
 import { spread } from "./open.js";
+import "../address.js";                 // a mat opened has its address in the URL (goal 171 I)
 import { Track } from "./track.js";
 import { Gate } from "./gate.js";
 import { Diff } from "./diff.js";

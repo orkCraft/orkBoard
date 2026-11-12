@@ -20,8 +20,8 @@ export function WorkCard({ n, tilt = 0 }) {
   const card = { slug: n.slug, title: n.short || n.title, element: n.element, hue: n.hue, sign: n.type?.sign || "", leader: n.goal };
   return html`<${CardS} n=${card} when=${line} bar=${shareOf(n) ?? 0} tilt=${tilt}
     onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line, from, acts: [{ label: "Open its plan", main: true, run: () => pick(n.slug) },
-      { label: "Its stages", run: () => openSpread({ kind: "track", slug: n.slug, from }) },
-      ...(n.state === "review" || n.state === "done" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />`;
+      { label: "Its stages", mat: true, run: () => openSpread({ kind: "track", slug: n.slug, from }) },
+      ...(n.state === "review" || n.state === "done" ? [{ label: "At the gate", mat: true, run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />`;
 }
 
 function Lane({ g }) {

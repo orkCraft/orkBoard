@@ -26,7 +26,7 @@ function Waits() {
     const act = start && { label: ACTS.start_now, run: () => command(start.command, start.args || {}) };
     return html`<div class="cards-wait" key=${w.goal}><${CardS} n=${card} when=${w.at ? `starts ${w.at.slice(11, 16)}` : ""} act=${act}
         onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line: "starts by itself", from,
-          acts: [...acts, ...(IN_TALK.has(n.state) ? [{ label: "The deal", run: () => openSpread({ kind: "deal", slug: n.slug, from }) }] : []), ...(w.kind === "main" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />
+          acts: [...acts, ...(IN_TALK.has(n.state) ? [{ label: "The deal", mat: true, run: () => openSpread({ kind: "deal", slug: n.slug, from }) }] : []), ...(w.kind === "main" ? [{ label: "At the gate", mat: true, run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />
       <div class="cards-wait__acts">${acts.filter((a) => a.label !== ACTS.start_now).map((a) => html`<button type="button" class="ork-btn quiet" onClick=${a.run}>${a.label}</button>`)}</div></div>`;
   })}`;
 }

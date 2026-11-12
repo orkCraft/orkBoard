@@ -71,15 +71,12 @@ export const Back = ({ tilt = 0, x = 0 }) => html`<span class="ork-card cards-ba
 
 const subOf = (p) => [KINDS[p.kind] || KINDS.news, when(p.at)].filter(Boolean).join(" · ");
 
-/** The spreads have no phone face yet: on a narrow screen a mat opens as an L of words (decisions §297 points to the spreads' own goal). */
-const narrow = () => !!globalThis.matchMedia?.("(max-width: 700px)").matches;
-
 /** M: a leader's word on its side; its head at the top left, its words, the goal it is about; pressed, it opens as an L.
  *  `more`: the leader's posts after it, its stack (`onMore` spreads them). */
 export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
   const ref = useRef();
   const mat = matOf(p);
-  const open = () => (mat && !narrow() ? mat.open(ref.current) : openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) }] }));
+  const open = () => (mat ? mat.open(ref.current) : openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) }] }));
   return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-stacked": more > 0, "is-mat": !!mat })} data-race=${whoOf(p.leader).race || "orkmaster"}
       data-kind=${p.kind} tabindex="0" data-mat=${mat?.kind} aria-label=${`${whoOf(p.leader).name}: ${p.text}. ${mat ? `${matSays(mat)}. Press to open it.` : "Press to open."}`}
       onClick=${(e) => { if (!e.target.closest("button")) open(); }} onKeyDown=${(e) => { if (e.key === "Enter" && e.target === ref.current) { e.preventDefault(); open(); } }}>
@@ -120,6 +117,7 @@ export function CardL({ onPick }) {
   if (!o) return null;
   const leader = o.kind === "post" ? o.p.leader : o.n.leader || "orkmaster", goal = o.kind === "goal", verdicts = goal ? verdictsOf(o.n.slug) : [];
   const route = goal ? [...new Set([...verdicts.map((v) => v.leader), ...(o.n.leader && o.n.leader !== "orkmaster" ? [o.n.leader] : [])])] : [];
+  const lies = [...(o.acts || [])].reverse().find((a) => a.mat) || null;     // no row of mats: one line says where the card lies now, the latest of its mats (decisions §300.3)
   const card = html`<article ref=${root} class="ork-card cards-l" role="dialog" aria-modal="true" aria-label=${o.kind === "post" ? `${whoOf(leader).name}: ${o.p.text}` : o.n.title}
         data-race=${whoOf(leader).race || "orkmaster"} data-from=${o.kind}>
       <button type="button" class="ork-btn quiet cards-l__shut" onClick=${shut}><${Icon} name="close" /><span>Close</span></button>
@@ -130,7 +128,8 @@ export function CardL({ onPick }) {
           <${Marks} verdicts=${verdicts} />
           ${o.n.slug && html`<${GoalLine} slug=${o.n.slug} onPick=${(s) => { shut(); onPick?.(s); }} />`}
           <${AskRow} slug=${o.n.slug} route=${route} />`}
-      ${o.acts?.length > 0 && html`<div class="cards-l__acts">${o.acts.map((a) => html`<button type="button" class=${cls("ork-btn", { primary: a.main })} onClick=${() => { a.run(); shut(); }}>${a.label}</button>`)}</div>`}
+      ${o.acts?.length > 0 && html`<div class="cards-l__acts">${o.acts.filter((a) => !a.mat).map((a) => html`<button type="button" class=${cls("ork-btn", { primary: a.main })} onClick=${() => { a.run(); shut(); }}>${a.label}</button>`)}
+        ${lies && html`<span class="cards-l__lies"><span>Lies now at</span><button type="button" class="ork-btn quiet" data-lies=${lies.label} onClick=${() => { lies.run(); shut(); }}>${lies.label}</button></span>`}</div>`}
     </article>`;
   if (!goal) return html`<div class="cards-veil" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>${card}</div>`;
   return html`<div class="cards-veil" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>

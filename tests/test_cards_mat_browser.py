@@ -13,7 +13,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
-from tests import mock_kit  # noqa: E402
+from tests import mock_kit, narrow  # noqa: E402
 from tests.browser_kit import launch  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
@@ -159,4 +159,64 @@ def test_a_leaders_table_lies_on_its_leaders_felt_and_on_a_phone_a_mat_is_the_wh
         assert box["x"] <= 1 and box["y"] <= 1 and box["width"] >= 388 and box["height"] >= 842, box
         assert pg.locator(".sp-shut").inner_text().strip() == "Back"
         assert pg.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+        b.close()
+
+
+# -- goal 171 stage I: a mat's address, and on the phone the whole screen (js/cards/address.js; decisions §299.3, §300.3) -------------------------
+
+def at_phone(p, page_url, hash_=""):
+    b = launch(p)
+    pg = b.new_context(viewport={"width": 390, "height": 844}).new_page()
+    pg.goto(page_url + "?mock=1" + hash_)
+    return b, pg
+
+
+def test_a_mat_opened_has_its_address_and_a_reload_opens_it_again_on_the_phone(page_url):
+    with sync_playwright() as p:
+        b, pg = at_phone(p, page_url)
+        pg.locator(".cards-m[data-mat='table']").first.wait_for(timeout=15000)
+        pg.locator(".cards-m[data-mat='table']").first.click(position={"x": 30, "y": 20})
+        pg.locator(".tb[data-framework='architecture']").wait_for(timeout=5000)
+        assert pg.evaluate("location.hash").startswith("#mat=table:") and ":architecture" in pg.evaluate("location.hash")
+        box = pg.locator(".mf-veil > .sp.mf").bounding_box()
+        assert box["x"] <= 1 and box["width"] >= 388 and box["y"] <= 1 and box["height"] >= 840             # the whole screen
+        assert pg.locator(".sp-shut").inner_text().strip() == "Back"
+        narrow.no_sideways(pg)
+        pg.reload()                                                                                         # the address opens it again
+        pg.locator(".tb[data-framework='architecture']").wait_for(timeout=15000)
+        assert pg.locator(".sp-shut").inner_text().strip() == "Back"
+        pg.go_back()                                                                                        # the phone's Back puts it away
+        pg.locator(".tb").wait_for(state="detached", timeout=5000)
+        assert pg.evaluate("location.hash") == ""
+        b.close()
+
+
+def test_a_spread_has_its_address_esc_takes_it_off_and_the_card_opened_shows_one_line_not_a_row_of_mats(page_url):
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = b.new_page(viewport={"width": 1440, "height": 900})
+        pg.goto(page_url + "?mock=1")
+        card = pg.locator(".cards-dealer .cards-row .cards-s[data-goal]").first
+        card.wait_for(timeout=15000)
+        slug = card.get_attribute("data-goal")
+        card.click()
+        assert pg.locator(".cards-l__acts button[data-lies]").count() == 1 and pg.locator(".cards-l__acts button", has_text="At the gate").count() <= 1       # one line, no row of mats
+        assert pg.locator(".cards-l__lies").inner_text().startswith("Lies now at")
+        pg.locator(".cards-l__lies button").click()
+        pg.locator("[data-spread=track], [data-spread=gate]").wait_for(timeout=5000)
+        assert pg.evaluate("location.hash").startswith("#mat=") and pg.evaluate("location.hash").endswith(":" + slug)
+        pg.reload()
+        pg.locator("[data-spread=track], [data-spread=gate]").wait_for(timeout=15000)
+        pg.keyboard.press("Escape")
+        pg.locator(".sp-veil").wait_for(state="detached", timeout=5000)
+        pg.wait_for_function("location.hash === ''")
+        b.close()
+
+
+def test_an_address_of_a_goal_the_board_does_not_have_opens_nothing(page_url):
+    with sync_playwright() as p:
+        b, pg = at_phone(p, page_url, "#mat=gate:no-such-goal")
+        pg.locator(".cards-m").first.wait_for(timeout=15000)
+        pg.wait_for_function("location.hash === ''")
+        assert pg.locator(".sp-veil").count() == 0
         b.close()
