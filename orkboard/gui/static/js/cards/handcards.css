@@ -7,7 +7,12 @@
   .frame[data-cards="1"] .hand { --hc-w: 120px; --hc-shown: var(--hc-h); --hc-seen: var(--hc-h); --hc-rise: 0px; --hc-room: var(--ork-4); --hc-cut: 0px; }
   .frame[data-cards="1"] .hand .hand-row { display: flex; align-items: flex-start; gap: var(--ork-4); }
   .frame[data-cards="1"] .hand .hand-lane { display: contents; }
-  .frame[data-cards="1"] .hand .hand-slot { position: relative; left: auto; top: auto; flex: none; width: var(--hc-w); }
+  .frame[data-cards="1"] .hand .hand-slot { position: relative; left: auto; top: auto; flex: 0 1000 var(--hc-w); min-width: var(--hc-tight, 28px); width: auto; }
+  .frame[data-cards="1"] .hand .hand-slot > * { width: var(--hc-w); }      /* a crowded row tightens its cards to their left edges, so the places at its right stay in the window (goal 171 L) */
+  .frame[data-cards="1"] .hand .hand-row { gap: var(--ork-2); }
+  .frame[data-cards="1"] .hand .hand-row::after { content: ""; order: 50; flex: 0 1 calc(var(--hc-w) - var(--hc-tight, 28px)); min-width: 0; }
+  .frame[data-cards="1"] .hand .hand-end { order: 100; }
+  .frame[data-cards="1"] .hand .hand-slot.is-plus { flex: none; min-width: var(--hc-w); }
   .frame[data-cards="1"] .hand .hand-slot.is-plus, .frame[data-cards="1"] .hand .hand-slot.is-plus:not(:hover, :focus-within) { margin: 0; z-index: var(--z, 1); }
   .frame[data-cards="1"] .hand .hand-end { margin-left: auto; flex: none; }
   .frame[data-cards="1"] .hand .hand-slot:hover, .frame[data-cards="1"] .hand .hand-slot:focus-within, .frame[data-cards="1"] .hand .hand-slot.is-risen { transform: translateY(-6px); }
