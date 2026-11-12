@@ -11,7 +11,7 @@ import { way } from "./ways.js";
 export function TurnLifted({ s }) {
   const [picked, setPicked] = useState([]), [writing, setWriting] = useState(false), [words, setWords] = useState("");
   if (s.ref.turn !== "asks") return html`<div class="up-turn" role="group" aria-label="Answers"><p class="body up-turn__text">${s.text}</p>
-    <button type="button" class="ork-btn primary" data-act="open-move" onClick=${(e) => openSpread({ kind: "track", slug: s.ref.slug, from: e.currentTarget })}>Open it</button></div>`;
+    <button type="button" class="ork-btn primary" data-act="open-move" onClick=${(e) => openSpread({ kind: "track", slug: s.ref.slug, from: e.currentTarget, opened: "hand" })}>Open it</button></div>`;
   const c = turnCard(s, picked, (next) => { setPicked(next); setWriting(false); setWords(""); }), pen = c.pen;
   const send = () => { const text = words.trim(); if (text) pen.send(text); };
   const rows = c.ways.map((w) => html`<div key=${w.id} class="up-turn__way" data-way=${w.id}>

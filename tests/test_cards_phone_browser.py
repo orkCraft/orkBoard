@@ -120,3 +120,31 @@ def test_without_mock_the_phone_loads_no_mock_module(base):
         assert not [u for u in asked if "/mock/" in u and "plate.css" not in u], asked
         assert pg.locator(".mock-plate").count() == 0
         b.close()
+
+
+@pytest.fixture(scope="module")
+def turned_base():
+    s = serve_mock.serve(0, mock_kit.lay_turned)
+    threading.Thread(target=s.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{s.server_port}"
+    s.shutdown()
+
+
+SENT = "() => import('/app/page/js/mock/mocklink.js').then((m) => m.sent.value.map((x) => [x.name, x.args]))"
+
+
+def test_a_move_played_on_the_mat_its_phone_card_opened_is_sent_from_the_hand(turned_base):
+    """H7 counts how the person reached a move (goal 171 O2): on the phone a move's card opened, *Open it* lays its mat, and Drop played there is sent `from: "hand"`, as on the desk."""
+    with sync_playwright() as p:
+        b, pg, errors = phone(p, turned_base + "/app/?mock=1")
+        pg.locator(".up-card[data-key='card:turn/173-example-2/talk']").wait_for(timeout=20000)
+        pg.locator(".up-card[data-key='card:turn/173-example-2/talk']").click()
+        pg.locator(".up-look .hand-lifted[data-kind=turn]").get_by_role("button", name="Open it").click()
+        pg.wait_for_selector("[data-spread=track] .mf-foot", timeout=5000)
+        drop = pg.locator("[data-spread=track] [data-way=drop]")
+        drop.first.click()
+        pg.wait_for_timeout(600)
+        got = [a for n, a in pg.evaluate(SENT) if n == "ideas.drop"]
+        assert got == [{"slug": "173-example-2", "from": "hand"}], got
+        assert not errors, errors
+        b.close()

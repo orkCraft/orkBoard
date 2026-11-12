@@ -105,6 +105,9 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - [x] O2. Product's not accepted: H7's signal counts how the person reached a move
   - party: Tech (a simpler model). A sealed move played from a hand card or a mat (Start the work, Merge into main, Send to a branch, Ship a release, a paid pass) logs `move_played` with its kind and `from` once it goes, and keeps no Undo (gui/ideas_mats.py `played()`); a move on a mat its hand card opened is sent `from: hand`, `from: mat` kept for a mat opened from the table (js/cards/spreads/track.js, trackstart.js; js/hand/turncards.js openMoveMat knows the card that opened it); tests/test_cards_hand_browser.py and the host's tests check both.
   - proves: Product's *Done when* line 5, made again
+- [x] O3. Product's not accepted, the second time: the phone's *Open it* opens its mat from the hand
+  - party: Tech. js/hand/turnphone.js *Open it* opens the track mat with `opened: "hand"`, as the desk's openMoveMat does, so Drop, Hold and Start played there are sent `from: hand`; tests/test_cards_phone_browser.py plays Drop at 390×844 from that mat and finds `from: "hand"` (it found "mat" before).
+  - proves: Product's *Done when* line 5, made again (the last time)
 - [ ] O. Product accepts the step
   - party: Product. Its pass of its own (its role file, its section, the gate's record of A to L, the files they changed), against its *Done when* and *Will be* (H7); what it does not accept is one more stage, twice at most.
   - proves: Product's *Done when* and *Will be*, accepted
@@ -173,7 +176,7 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - met: When the person opens a mat from its hand card and closes it again, then while it is open the hand holds that mat's ways only, and once it is closed every card of the moves that wait is back, none lost
 - met: When the table of cards opens (?table=cards) on a Board that keeps no job, as this repository's, then Product's Jobs to be done lays its zones empty, each naming who fills it, and no word on the page ends in « · example»
 - met: When the person presses a one-press move (Drop, Hold, a question's way) and then Undo, then the goal's page is byte for byte as before; Merge into main, Send to a branch, Ship a release and a paid pass move only on their seal
-- not met: When the person plays a move from a hand card or from its mat, then the event log keeps `move_played` with the goal, the move's kind and where it was pressed (hand or mat), never a word, so H7 can be counted — a sealed move (Start the work on a spec's mat, Merge into main, a paid pass) logs no move_played (gui/ideas_mats.py `played`); a move on a mat its hand card opened is logged from: mat as one opened from the table (cards/spreads/track.js, trackstart.js), which H7 counts as refuting, so every Talk and spec turn played from the hand counts against it
+- not met: When the person plays a move from a hand card or from its mat, then the event log keeps `move_played` with the goal, the move's kind and where it was pressed (hand or mat), never a word, so H7 can be counted — on the desk it is so now (a sealed move logs its kind and from, a hand card's mat sends from: hand); on the phone a move card's *Open it* (hand/turnphone.js `TurnLifted`) opens the track mat with no `opened: "hand"`, so Drop, Hold and Start the work played there are logged from: mat, which H7 counts as refuting, and no test plays it at 390×844
 
 ## Design
 ### Talk
