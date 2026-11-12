@@ -13,7 +13,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
-from tests import mock_kit  # noqa: E402
+from tests import mock_kit, narrow  # noqa: E402
 from tests.browser_kit import launch  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
@@ -21,6 +21,7 @@ import serve_mock  # noqa: E402
 
 pytestmark = pytest.mark.browser
 SIZES = [(1280, 800), (1440, 900)]
+MAT_SIZES = SIZES + [(390, 844)]                      # the mats (goal 171, stage L) are also drawn on the phone: the whole screen
 
 # What is read of the page: every element with a text of its own, its size and its colour against the ground it lies on.
 TEXTS = """(root) => {
@@ -87,16 +88,22 @@ FOCUS = """(root) => { const key = %s, a = document.activeElement; if (!a || a =
 
 @pytest.fixture(scope="module")
 def page_url():
-    s = serve_mock.serve(0, mock_kit.lay_standard)
+    s = serve_mock.serve(0, mock_kit.lay_turned)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}/?mock=1"
     s.shutdown()
 
 
 def fresh(b, url, size):
-    pg = b.new_page(viewport={"width": size[0], "height": size[1]})
-    pg.goto(url)
-    pg.wait_for_selector(".cards-m", timeout=15000)
+    if size[0] <= 700:                                # a phone: its own page (/app/), upright with touch, the mat the whole screen
+        pg = b.new_context(**narrow.NARROW).new_page()
+        pg.goto(url.replace("/?mock=1", "/app/?mock=1"))
+        pg.wait_for_selector(".up-card", timeout=20000)
+        pg.wait_for_selector(".up-ct .cards-m", timeout=20000)
+    else:
+        pg = b.new_page(viewport={"width": size[0], "height": size[1]})
+        pg.goto(url)
+        pg.wait_for_selector(".cards-m", timeout=15000)
     pg.wait_for_timeout(800)
     return pg
 
@@ -123,8 +130,31 @@ def open_gate(pg):
     raise AssertionError("no goal to review on the mock")
 
 
+def open_mat(pg, goal="174-example-3"):
+    """A mat open from the hand's card of a move that waits (a spec all written: its seal lies at the foot): the mat and, under it, the hand's ways. On the phone the card lifts
+    in the feed's foot and *Open it* opens the mat, its ways at the foot of its own screen."""
+    if pg.viewport_size["width"] <= 700:
+        pg.locator(f".up-card[data-key='card:turn/{goal}/spec']").click()
+        pg.locator(".up-look .hand-lifted[data-kind=turn]").get_by_role("button", name="Open it").click()
+        pg.wait_for_selector("[data-spread=track] .mf-foot")
+        return
+    pg.locator(f".frame-hand button.hand-card[data-kind=turn][data-goal='{goal}']").click()
+    pg.wait_for_selector("[data-spread=track] .mf")
+    pg.wait_for_selector(".frame-hand .mathand")
+
+
+def closed_mat(pg):
+    pg.wait_for_selector(".cards-m[data-mat]:visible")
+    pg.locator(".cards-m[data-mat]:visible").first.scroll_into_view_if_needed()
+
+
 SURFACES = {"the table": (lambda pg: None, ".frame"), "an L": (open_l, ".cards-l"),
-            "the gate spread": (open_gate, ".sp-veil"), "a leader's table": (open_table, ".sp-veil")}
+            "the gate spread": (open_gate, ".sp-veil"), "a leader's table": (open_table, ".sp-veil"),
+            "an open mat": (open_mat, "[data-spread=track]"), "a closed mat": (closed_mat, ".cards-m[data-mat]"),
+            "the hand with a mat open": (open_mat, ".frame-hand")}
+PHONE_ROOT = {"a closed mat": ".up-ct .cards-m[data-mat]", "the hand with a mat open": "[data-spread=track] .mf-foot"}      # a phone's hand is the foot of the mat's screen
+ON_PHONE = {"an open mat", "a closed mat", "the hand with a mat open"}
+CASES = [(n, z) for n in SURFACES for z in MAT_SIZES if z in SIZES or n in ON_PHONE]
 
 
 def check_texts(pg, root, what):
@@ -168,10 +198,10 @@ def check_tab(pg, root, what):
     assert not unseen, f"{what}: no visible focus on " + ", ".join(sorted(unseen))
 
 
-@pytest.mark.parametrize("size", SIZES, ids=lambda s: f"{s[0]}x{s[1]}")
-@pytest.mark.parametrize("name", list(SURFACES))
+@pytest.mark.parametrize("name,size", CASES, ids=lambda c: c if isinstance(c, str) else f"{c[0]}x{c[1]}")
 def test_a_surface_fits(page_url, name, size):
     opener, root = SURFACES[name]
+    root = PHONE_ROOT.get(name, root) if size[0] <= 700 else root
     with sync_playwright() as p:
         b = launch(p)
         pg = fresh(b, page_url, size)
@@ -183,15 +213,21 @@ def test_a_surface_fits(page_url, name, size):
         b.close()
 
 
-@pytest.mark.parametrize("size", SIZES, ids=lambda s: f"{s[0]}x{s[1]}")
-@pytest.mark.parametrize("name", list(SURFACES))
+@pytest.mark.parametrize("name,size", CASES, ids=lambda c: c if isinstance(c, str) else f"{c[0]}x{c[1]}")
 def test_every_act_is_a_button_reached_by_tab_with_a_visible_focus(page_url, name, size):
     opener, root = SURFACES[name]
+    root = PHONE_ROOT.get(name, root) if size[0] <= 700 else root
     with sync_playwright() as p:
         b = launch(p)
         pg = fresh(b, page_url, size)
         opener(pg)
         pg.wait_for_timeout(500)
+        if name == "a closed mat":                    # a closed mat is a card (an article), not a button: it takes the focus and shows it
+            pg.locator(root).first.focus()
+            seen = pg.evaluate("(r) => { const a = document.activeElement, cs = getComputedStyle(a); return a.matches(r) && a.tabIndex >= 0 && ((parseFloat(cs.outlineWidth) > 0 && cs.outlineStyle !== 'none') || cs.boxShadow !== 'none'); }", root)
+            assert seen, f"{name} at {size[0]}x{size[1]}: not reached by Tab or no visible focus"
+            b.close()
+            return
         check_tab(pg, root, f"{name} at {size[0]}x{size[1]}")
         b.close()
 
