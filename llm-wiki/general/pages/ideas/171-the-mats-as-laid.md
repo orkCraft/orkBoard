@@ -99,7 +99,7 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - [x] N2. Design's not accepted: zones on the track mat, the hand's titles whole, the gate unscaled on the phone, the fit test measuring a mat's words
   - party: Tech (a simpler model). The track mat lays its done, now and to come as Zones labelled on their frame (`.mf-zl`), the phases' row on a plate (tested in tests/test_cards_mat_browser.py on an open mat); a crowded hand at 1440 keeps each card's title whole from its first letter, the places still in the window (handcards.css `.hand-slot`); the gate mat at 390 is laid unscaled, its words 12 px at least drawn, no check cut at the screen's edge, in the fit test at 390 measuring the size drawn; the fit test's ground() stops at an opaque plate or card so a mat's words are measured at 4.5:1.
   - proves: Design's *Done when* lines 2 and 5, made again
-- [ ] N3. Design's not accepted, the second time: the track mat's zone whole at 390
+- [x] N3. Design's not accepted, the second time: the track mat's zone whole at 390
   - party: Tech (a simpler model). The track mat's field starts at its top as the gate's does, so its zone's label and meeple lie whole on the zone's frame at 390×844; tests/test_cards_mat_browser.py checks the zone labels at 390 too; the fit test flags a word cut off by its field instead of skipping it.
   - proves: Design's *Done when* lines 2 and 5, made again (the last time: what is still not met goes under Not accepted)
 - [ ] O. Product accepts the step
