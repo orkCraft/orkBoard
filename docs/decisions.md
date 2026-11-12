@@ -8330,3 +8330,63 @@ spreads' acts, the switch of a lane's framework); a mat is one. So:
    are drawn for a phone (their goals, §296.9).
 
 The owner's call.
+
+## 298. The table's grammar: a card, a token, a mat; a card made, priced by the Orkmaster and rated by its route's crafts; it comes to the hand at its turns; a strong card starts by itself, one dropped lies face down; a battle is the Orkmaster's spread (12 November 2026, the owner)
+
+Changes: 295.4 (a leader's view a round token of four signs, *for*, *risk*, *question*, *against*), 296.4 (a token pressed says its
+note and moves aside: now its note is a slip), 296.7 (the person's own token on a framework's card), 297.2 (*Who says what* a mat),
+240.1 (what the hand holds), 183.7 (a concern: now a craft's risk with what fixes it), 292.1 and 292.2 (the phone's round button and
+its + card), 292.3 and 285 (the phone's header and its bottles), 273 (the discard's piles). Kept: 145, 240.2, 270.2 and 283.19 (a
+question's ways are the hand's cards), 296.1–296.3, 296.5, 296.6, 296.8–296.10, 297 but its point 2.
+
+Why: goal 170's talk of 12 November 2026, on the mockups `docs/mockups/token-notes/` (D), `table-grammar/`, `card-path/` and
+`craft-tokens/` (V2). The person read the table as one grammar: a card is what is done, a token what is said of it, a mat how a seat
+sees the project; then: *a new idea is in the plain sense making a new card, and the Orkmaster and the leaders weigh its strength*;
+*the hand gets not the leaders' questions but a card when it comes to a stage*; *a full battler: a new idea against the old ones*;
+*the Orkmaster must not put a token: that is a whole mat; only the leaders put tokens, to rate*; *icons of the crafts, and coloured
+dots for the approvals, questions and risks*. So:
+1. **A card, a token, a mat, and every seat has them.** A card (S) is a goal (or a decision, §5); a token is a leader's verdict on a
+   card; a mat (§297) is how a seat sees the project. The person's hand is what it decides; its mats are the backpack and the book;
+   the die is a move, not a mat.
+2. **A new goal is a card made.** Drawn from the deck of blank cards and named, it is born unrated: no picture, no token. The
+   Orkmaster routes it and puts its **price** on its act (§296.3); it puts **no token**: what it lays is a mat (§6).
+3. **Only the leaders put tokens, each its own craft's verdict.** A token is its craft's tool (orkUI's tools: Tech's drum, Design's
+   bow, Product's map, Run's pick, Marketing's bell, Release's hourglass) in its party's ring; under it **its checks as squares in the
+   signal's colours and shapes**: approved green and filled, a question yellow and hollow, a risk red with a corner cut, a risk that
+   blocks red, larger and crossed. Who looked is the ring's colour, what it found the squares'; always in that order, five of a kind
+   at most on an S (the L lists them all), 6 px on an S; its words read by a screen reader (*Tech: 2 approved, 1 question, 1 risk*).
+   **No total**: the crafts are never summed into one strength. A risk says what fixes it; a risk that blocks rings the card red and
+   holds its start until its leader lifts it. The tokens a card gets are its route's, the route its kind's: a feature is looked at by
+   Product, Tech and Design, a bug by Tech alone, a release at the gate. The word is *verdict*: what a craft found, not a score.
+4. **A token's note is a slip on a thread** (D): a slip in orkUI's warm dark (its plaque), its party's stripe, its leader's head, its
+   checks one a line. On an S the token stays and its slip slides out on a thread; on an opened card the tokens lie on their slips
+   round it and the card keeps where each lay, faint; the slip in focus draws its thread back. On a phone the slips stand under the
+   card. A balloon is the Orkmaster's voice only.
+5. **The person asks by replying, never by a token**: (a) on a slip, *Reply to <leader>*, its words under the leader's and its answer
+   back on its token; (b) on an opened card, at each head of its route and any other, *Ask <leader>…*. On a leader's table (§296.7)
+   the same: a card pressed says *Ask <leader> about this part*.
+6. **The Orkmaster lays mats, never tokens**: its price, and its spreads (*What each card costs*, *Weigh two*, *Sort the new goals*,
+   *The deal*, *A battle*) in its lane as mats. **A battle** is a new card against the cards it goes against (goals at work or done,
+   decisions, a decision a card of its own with its §): the new card on one side, the old ones on the other (three face up at most),
+   their crafts' verdicts **axis by axis, no winner said**; on an old card its **cost to undo** (mana, what changes). It comes to the
+   hand: the card's middle picture is the battle's emblem instead of its leader's head, under its name *vs <what>*, its corner
+   *battle*, its act *Settle it*. Its ways: *New wins* (an old goal reopened as a change; an old decision replaced by a new one, never
+   edited), *Old wins* (the new card dropped or changed to fit), *Merge* (the leaders write one card of both), *Not a battle*. No
+   victory is drawn. A card's middle is its leader's head, but a card that came with the Orkmaster's spread: its emblem.
+7. **The hand gets a card at its turns**, and when it cannot go on without the person (§240.1 so read): its idea rated (*Play it*,
+   *Change it*, *Put off*, *Drop*); its spec rated (*Start*, *Change the spec*, *Drop*); a question its craft cannot rate without; a
+   battle; at the gate, *To main* (§273). A change sends it back to the table; its old tokens stay faint beside the new. **A strong
+   card starts by itself**: every check approved, no risk that blocks and within its price, its spec starts at its time from the
+   Orkmaster's lane (*Starts by itself*, §240.2) and never comes to the hand.
+8. **The discard has a third pile, Dropped**, face down, its thickness and no number: a card dropped lies there with its last tokens,
+   pressed it spreads, a card can be taken back to the hand. Dropping a goal stays the person's (the Board's rules).
+9. **The hand's right**: what the person does (the die) and what it has (the backpack, the book), and at the edge **the deck of blank
+   cards**, half hidden, its top card rising when pointed at, *New goal* and the key N. With no goal at all the + card lies large on
+   the table as now. **On a phone** the round button's fan is the moves, *New goal* and *Play*; the header holds what the person has:
+   the crown, Stop all, **two bottles at most** (the default and the one that runs out first) and *+n* for the rest, the chain,
+   **Yours** (a menu: *Inventory*, *History*, and *Settings* when it gave way) and the discard.
+10. **Built** on the table of cards on mocks (`js/cards/`, `?mock=1`), what the host does not answer yet the contract the mocks hold
+   (`js/mock/parts/`): a goal's verdicts, its turns, a battle, the dropped pile. The tools' small silhouettes for 16 px are made in
+   orkUI.
+
+The owner's call.

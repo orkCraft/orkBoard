@@ -25,6 +25,11 @@ WINDOW: tuple[Term, ...] = (
     _t("map", "table", "tables", "map", "maps"),                                   # what a party's tab shows under its header: Tech's is *System* (a part of it is never called a card)
     _t("spread", "spread", "spreads"),                             # cards laid to show one thing at a time: the centre what is talked of, a fan a choice, a pile a group (decisions §296.9)
     _t("mat", "mat", "mats"),                                      # a leader's mat: an M card of the table of cards, a change in the leader's framework or a spread of it, opened as that table or spread (decisions §297)
+    _t("craft_token", "token", "tokens"),                          # a leader's verdict on a card: its craft's tool in its party's ring, its checks as squares under it (decisions §298.3)
+    _t("blocker", "blocks", ""),                                   # a craft's risk that holds a card's start until its leader lifts it (decisions §298.3)
+    _t("dropped", "Dropped"),                                      # the discard's third pile: the cards the person dropped, face down, each can be taken back (decisions §298.8)
+    _t("battle", "battle", "battles"),                             # the Orkmaster's spread of a new card against the cards it goes against, axis by axis, no winner said (decisions §298.6)
+    _t("blank_deck", "deck of blank cards"),                       # at the hand's right edge: a new goal is a card drawn from it and named (decisions §298.2, §298.9)
     _t("concern", "concern", "concerns"),                          # what a party's leader says is wrong or at risk in one part of its map, with why and what would fix it (spec 108, decisions §183.7); not a flag, not a finding
     _t("measure", "measure", "measures"),                          # how the arguing turned out, counted from the project's own event log: a no heeded or overruled, a goal accepted the first time (spec 124 B, decisions §202.3); never a count in the window
     _t("journal", "journal", "journals"),                          # what was said and what came of it, kept for the project and for each leader, and read into the leaders' calls (spec 125, decisions §203.1); not the talk of one goal, not the event log
