@@ -50,12 +50,21 @@ TEXTS = """(root) => {
     const cs = getComputedStyle(el), r = el.getBoundingClientRect();
     if (cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0 || r.width < 1 || r.height < 1 || el.closest("[aria-hidden='true'], [hidden], script, style, .mock-plate")) continue;
     if (el.closest("kbd")) continue;
-    let clipped = false;
-    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const o = getComputedStyle(p); if (o.overflow !== "visible") { const pr = p.getBoundingClientRect(); if (r.bottom < pr.top || r.top > pr.bottom || r.right < pr.left || r.left > pr.right) clipped = true; } }
+    // A word cut off by its field: the rect of its text lies partly outside the rect of the nearest ancestor that scrolls or clips, the ancestor scrolled to its start.
+    // A word wholly outside (a list scrolled away) is not cut: it waits to be scrolled to. A word in a field that is itself out of view is skipped as before.
+    let clipped = false, cut = "";
+    const range = document.createRange(); range.selectNodeContents(n); const wr = range.getBoundingClientRect();
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const o = getComputedStyle(p);
+      if (o.overflowX === "visible" && o.overflowY === "visible") continue;
+      const pr = p.getBoundingClientRect(), l = wr.left + p.scrollLeft, t = wr.top + p.scrollTop, rt = l + wr.width, bt = t + wr.height;
+      if (wr.bottom < pr.top || wr.top > pr.bottom || wr.right < pr.left || wr.left > pr.right) clipped = true;
+      else if (!cut) { const scrolls = /auto|scroll/.test(o.overflowX + o.overflowY), edge = scrolls ? (l < pr.left - 1 || t < pr.top - 1) : (l < pr.left - 1 || t < pr.top - 1 || rt > pr.right + 1 || bt > pr.bottom + 1);
+        // a scroller's far edge is reached by scrolling; a line clamp and an ellipsis are the page's own marks of a truncation, not a cut
+        if (edge && !(el.closest("[style*='line-clamp'], .ellipsis") || /ellipsis/.test(cs.textOverflow) || cs.webkitLineClamp !== "none" && cs.webkitLineClamp !== "" || (p.style && /clamp/.test(p.style.cssText)))) cut = p.tagName.toLowerCase() + "." + String(p.className).slice(0, 30); } }
     if (clipped) continue;
     seen.add(el);
     const fg = parse(cs.color), g = ground(el), under = over(fg, g.c), a = lum(under), b = lum(g.c), ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-    out.push({ text: text.slice(0, 40), cls: (el.className && el.className.baseVal === undefined ? el.className : "").toString().slice(0, 50), tag: el.tagName, size: Math.round(parseFloat(cs.fontSize) * drawn(el) * 100) / 100, ratio: Math.round(ratio * 100) / 100, image: g.image });
+    out.push({ text: text.slice(0, 40), cls: (el.className && el.className.baseVal === undefined ? el.className : "").toString().slice(0, 50), tag: el.tagName, cut, size: Math.round(parseFloat(cs.fontSize) * drawn(el) * 100) / 100, ratio: Math.round(ratio * 100) / 100, image: g.image });
   }
   return out;
 }"""
@@ -169,6 +178,8 @@ def check_texts(pg, root, what):
     for t in pg.evaluate(f"({TEXTS})({root!r})"):
         if t["size"] < 12:
             bad.append(f"{t['size']}px: {t['tag']}.{t['cls']} “{t['text']}”")
+        if t["cut"]:
+            bad.append(f"cut off by {t['cut']}: {t['tag']}.{t['cls']} “{t['text']}”")
         if t["ratio"] < 4.5 and not t["image"]:
             bad.append(f"{t['ratio']}:1: {t['tag']}.{t['cls']} “{t['text']}”")
     assert not bad, f"{what}:\n" + "\n".join(bad)

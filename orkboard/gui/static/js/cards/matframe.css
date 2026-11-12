@@ -19,7 +19,7 @@
 .mf .sp-shut { flex: none; background: var(--_plate); }
 
 /* the field: what the mat is about, in the middle */
-.mf-field { position: relative; min-height: 0; overflow: auto; display: flex; align-items: center; justify-content: center; gap: 28px; padding: 18px 12px 10px; }
+.mf-field { position: relative; min-height: 0; overflow: auto; display: flex; align-items: safe center; justify-content: safe center; gap: 28px; padding: 18px 12px 10px; }
 .mf-field.tb-body { display: block; align-items: initial; }
 
 /* the foot: the hand's cards, a note on a plate, the phases, the acts and the seal at its right */
