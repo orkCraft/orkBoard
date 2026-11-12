@@ -79,8 +79,7 @@ def test_the_orkmasters_four_mats_open_their_spreads(page_url):
         b, pg = start(p, page_url)
         lane = pg.get_by_role("group", name="The Orkmaster's mats")
         assert pg.locator(".cards-dealer .cards-lab", has_text="Its mats").count() == 1
-        shapes = lane.evaluate("e => [...e.querySelectorAll('.cards-mat__shape')].map(s => [s.dataset.shape, s.children.length])")
-        assert shapes == [["dispute", 3], ["diff", 2], ["table", 4], ["dispute", 3]]
+        assert lane.locator(".cards-mat__shape").count() == 0                                           # no shape beside a mat's line
         for name in ("What each card costs", "Weigh two at a time", "Sort the new goals", "The deal"):
             btn = lane.get_by_role("button", name=name)
             btn.scroll_into_view_if_needed()

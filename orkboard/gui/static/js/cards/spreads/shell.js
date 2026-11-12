@@ -4,6 +4,7 @@
 import { html, cls } from "../../html.js";
 import { HeadOf, whoOf } from "../../table/post.js";
 import { Index } from "../card.js";
+import { named, signOf } from "../kind.js";
 import { closeSpread, spread } from "./open.js";
 import { Said } from "../said.js";
 import { MatFrame } from "../matframe.js";
@@ -22,12 +23,12 @@ export const Key = ({ k }) => html`<kbd class="sp-kb">${k}</kbd>`;
 export const Chk = ({ no = false }) => html`<span class=${cls("sp-chk", { "is-no": no })} aria-hidden="true">${no ? "✕" : "✓"}</span>`;
 
 /** A card face up in a spread: its party's colour (`party`), the goal's rune and sign (`n`), its name, a line, and more under them (children).
- *  `size`: xl, lg, md or sm; `tilt`: its turn in degrees; `mark`: "ok" or "no" puts a check on it. */
-export function SpCard({ party, n = null, name, line = "", size = "lg", tilt = 0, mark = "", muted = false, portal = false, label = "", onPress = null, picked = false, children }) {
-  const w = whoOf(party || "orkmaster"), Tag = onPress ? "button" : "div";
+ *  `kind`: goal, decision or part (its sign at the top right and its name, decisions §300.4); `size`: xl, lg, md or sm; `tilt`: its turn in degrees; `mark`: "ok" or "no" puts a check on it. */
+export function SpCard({ party, n = null, kind = "goal", name, line = "", size = "lg", tilt = 0, mark = "", muted = false, portal = false, label = "", onPress = null, picked = false, children }) {
+  const w = whoOf(party || "orkmaster"), Tag = onPress ? "button" : "div", face = { ...n, sign: signOf(kind, n?.sign) };
   return html`<${Tag} type=${onPress ? "button" : undefined} onClick=${onPress || undefined} aria-pressed=${onPress && picked !== null ? String(!!picked) : undefined}
-    class=${cls("ork-card cards-s sp-card", { [`is-${size}`]: true, "is-muted": muted, "is-portal": portal, "is-pick": !!onPress, "is-picked": picked })} data-race=${w.race || "orkmaster"} style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${label || undefined}>
-    ${size !== "sm" && html`<${Index} n=${n} />`}${mark && html`<${Chk} no=${mark === "no"} />`}
+    class=${cls("ork-card cards-s sp-card", { [`is-${size}`]: true, "is-muted": muted, "is-portal": portal, "is-pick": !!onPress, "is-picked": picked })} data-race=${w.race || "orkmaster"} data-cardkind=${kind} style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${named(label || `${name}${line ? `: ${line}` : ""}`, kind)}>
+    <${Index} n=${face} rune=${size !== "sm"} />${mark && html`<${Chk} no=${mark === "no"} />`}
     ${(size === "xl" || size === "lg") && html`<span class="sp-pic"><${HeadOf} w=${w} size=${size === "xl" ? "big" : "mid"} /></span>`}
     <b class="sp-card__name">${name}</b>${line && html`<small class="sp-card__line">${line}</small>`}${children}</${Tag}>`;
 }

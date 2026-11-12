@@ -20,7 +20,7 @@
 .tb-slot.is-wide .tb-card, .tb-slot.is-job .tb-card { aspect-ratio: 3.5 / 2.5; }
 .tb-slot.is-xl .tb-card { padding: 32px 14px 24px; gap: 6px; } .tb-slot.is-lg .tb-card { padding: 28px 11px 22px; }
 .tb-slot.is-job .tb-card { padding: 28px 18px 14px; }
-.tb-ix { position: absolute; left: 8px; top: 7px; display: flex; }
+.tb-ix { position: absolute; right: 8px; top: 7px; display: flex; }
 .tb-name { font: var(--ork-type-button); overflow-wrap: anywhere; } .tb-name.is-mono { font-family: var(--ork-font-code); font-size: 12px; line-height: 15px; }
 .tb-slot.is-xl .tb-name { font: var(--ork-type-title); }
 .tb-line, .tb-count { font: var(--ork-type-caption); color: var(--ork-ink-muted); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }

@@ -8,11 +8,10 @@ import { ACTS } from "../table/post.js";
 import { Back, CardS, openCard } from "./card.js";
 import { feed, nodeOf, nodes } from "./feed.js";
 import { WorkCard } from "./lanes.js";
-import { Shape } from "./mat.js";
 import { openSpread } from "./spreads/open.js";
 
-/** The Orkmaster's mats (decisions §298.6): the spread each opens, its shape on the mat (a fan: the costs and the deal; two: weighing; four: sorting) and its word. */
-const MATS = [["What each card costs", "cost", "dispute"], ["Weigh two at a time", "duel", "diff"], ["Sort the new goals", "sort", "table"], ["The deal", "deal", "dispute"]];
+/** The Orkmaster's mats (decisions §298.6): the spread each opens and its word. */
+const MATS = [["What each card costs", "cost"], ["Weigh two at a time", "duel"], ["Sort the new goals", "sort"], ["The deal", "deal"]];
 const IN_TALK = new Set(["new", "talk", "spec", "idea"]);
 
 function Waits() {
@@ -40,8 +39,8 @@ function Deck() {
       ${deck.slice(0, 5).map((_, i) => html`<${Back} key=${i} tilt=${(i - 2) * 4} x=${i * 30} />`)}</button>
     <p class="cards-read">Being read: <b>${top.short || top.title}</b></p>
     <p class="cards-lab">Its mats</p>
-    <div class="cards-deckacts" role="group" aria-label="The Orkmaster's mats">${MATS.map(([label, kind, shape]) =>
-      html`<button type="button" class="cards-matrow" data-spread-act=${kind} onClick=${(e) => openSpread({ kind, slug: top.slug, from: e.currentTarget })}><${Shape} shape=${shape} /><span>${label}</span></button>`)}</div>`;
+    <div class="cards-deckacts" role="group" aria-label="The Orkmaster's mats">${MATS.map(([label, kind]) =>
+      html`<button type="button" class="cards-matrow" data-spread-act=${kind} onClick=${(e) => openSpread({ kind, slug: top.slug, from: e.currentTarget })}><span>${label}</span></button>`)}</div>`;
 }
 
 export function CardsColumn() {

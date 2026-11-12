@@ -50,7 +50,7 @@ export function Gate({ slug }) {
         ${tokens.length > 0 && html`<span class="cards-toks">${tokens.map((t) => html`<${Token} ...${t} />`)}</span>`}</${SpCard}></div>
       ${checks.map((c, i) => html`<div class=${cls("sp-gk", `is-${c.state}`)} style=${at(i)} key=${i} role="group" aria-label=${`${c.name}: ${WORD[c.state]}`} data-check=${c.state}>
         ${c.state === "passed" || c.state === "failed"
-          ? html`<${SpCard} party=${c.party} name=${c.name} size="sm" mark=${c.state === "passed" ? "ok" : "no"} />`
+          ? html`<${SpCard} party=${c.party} kind="decision" name=${c.name} size="sm" mark=${c.state === "passed" ? "ok" : "no"} />`
           : html`<${SpBack} size="sm" />`}
         <small>${c.state === "passed" || c.state === "failed" ? (c.words || WORD[c.state]) : html`<${Icon} name="clock" /> ${c.name}${c.state === "running" ? ", running" : ""}`}</small></div>`)}
     </div>

@@ -41,7 +41,7 @@ export function waysOf(against) {
 function Old({ a }) {
   const goal = a.kind === "goal", n = goal ? nodeOf(a.ref) : null, w = whoOf(n?.goal || "orkmaster");
   if (goal) return html`<${SpCard} party=${n?.goal} n=${faceOf(n)} name=${a.title} line=${a.state || ""} size="lg" label=${`${a.title}, an old goal`} />`;
-  return html`<div class="ork-card cards-s sp-card is-lg bt-decision" data-race=${w.race || "orkmaster"} role="group" aria-label=${`${a.ref} ${a.title}, a decision`}>
+  return html`<div class="ork-card cards-s sp-card is-lg bt-decision" data-cardkind="decision" data-race=${w.race || "orkmaster"} role="group" aria-label=${`${a.ref} ${a.title}, a decision`}>
     <${Index} n=${{ element: "", hue: "", sign: "balance" }} /><span class="sp-pic bt-sect" aria-hidden="true">§</span>
     <b class="sp-card__name">${a.ref} ${a.title}</b><small class="sp-card__line">${a.state || ""}</small></div>`;
 }

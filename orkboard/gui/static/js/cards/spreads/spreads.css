@@ -124,7 +124,6 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .cards-matrow:hover { color: var(--ork-ink); border-color: var(--ork-edge); }
 .cards-matrow:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .cards-matrow > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.cards-matrow .cards-mat__shape { width: 18px; height: 14px; }
 
 /* a battle (js/cards/spreads/battle.js; decisions §298.6): the new card, the axes, the old cards; on a phone width they stack */
 .bt { display: flex; align-items: center; justify-content: center; gap: 36px; width: 100%; }

@@ -10,6 +10,7 @@ import { Elem, Head, Icon, Sign } from "../orkui.js";
 import { openSpread } from "./spreads/open.js";
 import { giveBack, keepTab } from "./back.js";
 import { MatFoot, matOf, matSays } from "./mat.js";
+import { useSlotsFit } from "./slots.js";
 import { AskRow, Marks, SlipsColumn } from "./around.js";
 import { SlipBeside } from "./slip.js";
 import { CraftToken, blockedBy, verdictsOf } from "./verdict.js";
@@ -27,7 +28,7 @@ export function Token({ leader, view, word = "" }) {
 
 /** A card's two upper corners (the person, 11 November 2026): its goal's rune at the top left, the kind's sign at the top right. A card's
  *  corners each say one thing, so no corner repeats another (`turned` draws nothing: the mirrored index of a playing card is gone). */
-export const Index = ({ n, turned = false }) => (turned ? null : html`<span class="cards-c cards-c--tl" aria-hidden="true"><${Elem} name=${n?.element || ""} hue=${n?.hue || ""} dim=${!n?.element} /></span>
+export const Index = ({ n, turned = false, rune = true }) => (turned ? null : html`${rune && html`<span class="cards-c cards-c--tl" aria-hidden="true"><${Elem} name=${n?.element || ""} hue=${n?.hue || ""} dim=${!n?.element} /></span>`}
   ${n?.sign && html`<span class="cards-c cards-c--tr" aria-hidden="true"><${Sign} name=${n.sign} /></span>`}`);
 
 /** The slip open on an S, one at a time on the page: {id (the card's), leader, token (its element)}, or null. */
@@ -76,6 +77,7 @@ const subOf = (p) => [KINDS[p.kind] || KINDS.news, when(p.at)].filter(Boolean).j
 export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
   const ref = useRef();
   const mat = matOf(p);
+  useSlotsFit(ref, !!mat);
   const open = () => (mat ? mat.open(ref.current) : openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) }] }));
   return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-stacked": more > 0, "is-mat": !!mat })} data-race=${whoOf(p.leader).race || "orkmaster"}
       data-kind=${p.kind} tabindex="0" data-mat=${mat?.kind} aria-label=${`${whoOf(p.leader).name}: ${p.text}. ${mat ? `${matSays(mat)}. Press to open it.` : "Press to open."}`}

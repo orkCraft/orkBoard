@@ -38,14 +38,69 @@ def opened(p, page_url):
     return b, pg
 
 
-def test_a_mat_shows_its_shape_and_one_line_never_a_picture_of_its_spread(page_url):
+def test_a_mat_shows_its_line_and_its_slots_behind_its_words_never_a_picture_of_its_spread(page_url):
     with sync_playwright() as p:
         b, pg = opened(p, page_url)
-        mats = pg.evaluate("[...document.querySelectorAll('.cards-m[data-mat]')].map(m => [m.dataset.mat, m.querySelector('.cards-mat__shape').dataset.shape, m.querySelector('.cards-mat').innerText.trim()])")
-        kinds = {m[0] for m in mats}
-        assert {"table", "diff"} == kinds, mats
-        assert ["table", "table", "Architecture: gui/"] in mats and ["diff", "diff", "What changed"] in mats
+        mats = pg.evaluate("[...document.querySelectorAll('.cards-m[data-mat]')].map(m => [m.dataset.mat, m.querySelector('.cards-mat').innerText.trim()])")
+        assert {"table", "diff"} == {m[0] for m in mats}, mats
+        assert ["table", "Architecture: gui/"] in mats and ["diff", "What changed"] in mats
         assert pg.locator(".cards-m .tb-card, .cards-m .sp-card").count() == 0      # no table drawn in a mat
+        b.close()
+
+
+# -- goal 171 stage J: the closed mats' slots and the three kinds of card (js/cards/slots.js, kind.js; decisions §299.5, §300.1, §300.4) ----------
+
+FACTS = """() => [...document.querySelectorAll('.cards-m')].map((m) => {
+  const s = m.querySelector('.cards-slots'), box = m.getBoundingClientRect();
+  const shown = s ? [...s.querySelectorAll('i')].filter((i) => i.getClientRects().length > 0) : [];
+  const words = [...m.querySelectorAll('.cards-m__body, .cards-mat')];
+  return { mat: m.dataset.mat || '', layout: s?.dataset.layout || '', hidden: s?.getAttribute('aria-hidden'), fit: m.dataset.fit || '', n: shown.length,
+    dashed: shown.length ? getComputedStyle(shown[0]).borderTopStyle : '', behind: words.every((w) => getComputedStyle(w).position === 'relative'),
+    left: shown.length ? Math.min(...shown.map((i) => i.getBoundingClientRect().left)) - box.left : 0, w: box.width, shape: m.querySelectorAll('.cards-mat__shape').length }; })"""
+
+
+def test_a_closed_mat_lays_its_layouts_slots_faint_behind_its_words_aria_hidden_and_a_word_has_none(page_url):
+    with sync_playwright() as p:
+        b, pg = opened(p, page_url)
+        facts = pg.evaluate(FACTS)
+        mats = [f for f in facts if f["mat"]]
+        words = [f for f in facts if not f["mat"]]
+        assert mats and words
+        assert {f["layout"] for f in mats} >= {"two", "layers"}, mats
+        for f in mats:
+            assert f["hidden"] == "true" and f["n"] >= 2 and f["dashed"] == "dashed" and f["behind"] and f["shape"] == 0, f
+            if f["fit"] == "small":
+                assert f["n"] == 3 and f["left"] >= f["w"] / 2 - 2, f               # three, at its right
+        for f in words:
+            assert f["layout"] == "" and f["n"] == 0, f                               # a word has none
+        b.close()
+
+
+def test_where_little_is_left_under_the_words_a_mat_lays_three_slots_at_its_right(page_url):
+    with sync_playwright() as p:
+        b, pg = opened(p, page_url)
+        m = pg.locator(".cards-m[data-mat='diff']").first
+        m.evaluate("e => { e.querySelector('.cards-m__body').style.minHeight = (e.clientHeight * 0.6) + 'px'; e.style.width = (e.clientWidth - 1) + 'px'; }")
+        pg.wait_for_function("document.querySelector(\".cards-m[data-mat='diff']\").dataset.fit === 'small'", timeout=5000)
+        shown = m.evaluate("e => [...e.querySelectorAll('.cards-slots i')].filter((i) => i.getClientRects().length).map((i) => i.getBoundingClientRect().left - e.getBoundingClientRect().left)")
+        assert len(shown) == 3 and min(shown) >= m.bounding_box()["width"] / 2 - 2, shown
+        b.close()
+
+
+def test_every_card_a_mat_draws_is_a_goal_a_decision_or_a_part_its_kind_in_its_top_right_corner_and_its_name(page_url):
+    with sync_playwright() as p:
+        b, pg = opened(p, page_url)
+        pg.locator(".cards-m[data-mat='table']").first.click(position={"x": 30, "y": 20})
+        pg.locator(".tb-card").first.wait_for(timeout=5000)
+        cards = pg.evaluate("() => [...document.querySelectorAll('.tb-card')].map((c) => [c.dataset.cardkind, c.getAttribute('aria-label'), !!c.querySelector('.tb-ix .ork-sign')])")
+        assert cards and all(k == "part" and ", a part" in n and sign for k, n, sign in cards), cards
+        pg.keyboard.press("Escape")
+        pg.locator(".tb").wait_for(state="detached", timeout=5000)
+        pg.evaluate(RED, THREE)
+        pg.locator(".sp-gate").wait_for(timeout=5000)
+        gate = pg.evaluate("() => [...document.querySelectorAll('.sp-card')].map((c) => [c.dataset.cardkind, c.getAttribute('aria-label'), !!c.querySelector('.cards-c--tr .ork-sign')])")
+        assert gate and all(k in ("goal", "decision", "part") and n.endswith(", a " + k) and sign for k, n, sign in gate), gate
+        assert {k for k, _, _ in gate} == {"goal", "decision"}, gate                 # the gate's checks are the decisions they guard
         b.close()
 
 
