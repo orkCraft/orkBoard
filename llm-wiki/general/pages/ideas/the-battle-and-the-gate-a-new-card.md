@@ -19,6 +19,8 @@ The person, 12 November 2026, on the mockups `docs/mockups/mats/` (decisions §3
 
 Goal 171's stage G removed four browser cases of `tests/test_cards_battle_browser.py` that only the mock's battles held (the battle card in the hand with its emblem, *vs §240* and *Settle it*; the spread with its axes and its cost to undo; a way sending `ideas.battle_settle`, Esc giving the focus back; the phone's stack): this goal brings them back on the host's answer.
 
+The first goal taken after 171 (the person, 12 November 2026, on the gate still drawn as a ring after 171's stage H: «давай вариант а»): until it lands, the page's gate goes against §300.8.
+
 ## Why
 
 ## Done when
