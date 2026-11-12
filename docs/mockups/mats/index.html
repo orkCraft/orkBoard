@@ -22,6 +22,18 @@ body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 
 .product { --hue: var(--ork-party-knight); --tool: url(../../../design-system/orkui/tools/map-cross.svg); }
 .release { --hue: var(--ork-party-undead); --tool: url(../../../design-system/orkui/tools/hourglass-bone.svg); }
 .run { --hue: var(--ork-party-goblin); --tool: url(../../../design-system/orkui/tools/pick-gear.svg); }
+.marketing { --hue: var(--ork-party-gnome); --tool: url(../../../design-system/orkui/tools/bell-note.svg); }
+/* a part card: its keeper's tool at the top left (whose), its kind at the top right, its framework's hero in the middle */
+.s .tlt { position: absolute; left: 8px; top: 6px; width: 14px; height: 14px; background: var(--hue); -webkit-mask: var(--tool) center / contain no-repeat; mask: var(--tool) center / contain no-repeat; }
+.shared { box-shadow: inset 0 3px 0 var(--hue), 0 0 0 2px var(--ork-ink), 0 4px 0 var(--ork-room) !important; }
+.kv { display: grid; grid-template-columns: 120px 1fr; gap: 8px 14px; align-items: start; font-size: 13px; line-height: 18px; }
+.kv > .lab { margin-top: 2px; }
+.lies { display: flex; flex-direction: column; gap: 6px; }
+.lie { display: flex; align-items: center; gap: 10px; padding: 7px 10px; background: var(--ork-card); border: 1px solid var(--ork-frame); box-shadow: inset 3px 0 0 var(--hue); font-size: 13px; }
+.lie img { width: 24px; } .lie b { font: 700 13px/16px var(--ork-font-text); } .lie .why { margin-left: auto; text-decoration: underline; }
+.fw { padding: 12px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue); display: flex; flex-direction: column; gap: 10px; }
+.fw .slotrow { display: flex; flex-direction: column; gap: 4px; } .fw .cards { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.fw .txt { font-size: 12px; line-height: 16px; color: var(--ork-ink-read); padding: 6px 8px; border: 1px solid var(--ork-frame); background: var(--ork-card); }
 .om { --hue: var(--ork-party-orkmaster); }
 .under { position: absolute; inset: 0; background: url(../table-grammar/shots/desk-rest.png) 0 0 / 1440px 900px; filter: brightness(.3) saturate(.6); }
 
@@ -29,7 +41,7 @@ body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 
 .s { --w: 132px; position: relative; flex: none; width: var(--w); aspect-ratio: 2.5 / 3.5; padding: calc(var(--w) * .16) 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px;
   background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: inset 0 3px 0 var(--hue, var(--ork-frame)), 0 4px 0 var(--ork-room); }
 .s .tl, .s .tr { position: absolute; top: 6px; width: 14px; } .s .tl { left: 8px; } .s .tr { right: 8px; }
-.s .pic { width: calc(var(--w) * .36); } .s.mini { padding-top: 26px; } .s.mini b { font-size: min(11px, calc(var(--w) * .125)); line-height: 1.3; } .s.res .pic { width: 64%; } .s .pic.sign { opacity: .9; }
+.s .pic { width: calc(var(--w) * .36); } .s.mini { padding-top: 26px; } .s.mini .ln { display: none; } .s.mini b { font-size: min(11px, calc(var(--w) * .125)); line-height: 1.3; } .s.res .pic { width: 64%; } .s .pic.sign { opacity: .9; }
 .s b { font: 700 calc(var(--w) * .095)/1.25 var(--ork-font-text); text-align: center; }
 .s .ln { font-size: calc(var(--w) * .08); line-height: 1.3; color: var(--ork-ink-read); text-align: center; }
 .s .foot { position: absolute; left: 7px; right: 7px; bottom: 7px; display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; }
@@ -127,12 +139,12 @@ body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 
 const q = new URLSearchParams(location.search), V = q.get("v") || "rate", FACE = q.get("face") || "desk", DESK = FACE === "desk";
 const RES = q.get("res") === "1", OK = q.get("ok") === "1";
 const R = "../../../design-system/orkui/";
-const H = { run: R + "races/imp-elder.png", tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png", om: R + "races/peon-crown.png", release: R + "races/lich-elder.png" };
+const H = { marketing: R + "races/fairy-elder.png", run: R + "races/imp-elder.png", tech: R + "races/shaman-elder.png", design: R + "races/dryad-elder.png", product: R + "races/unicorn-elder.png", om: R + "races/peon-crown.png", release: R + "races/lich-elder.png" };
 const RU = (n) => `${R}runes/${n}.svg`, SG = (n) => `${R}signs/${n}.svg`;
 const pip = (k) => `<i class="p ${k}"></i>`;
 const tk = (who, ks, cls = "") => `<span class="tk ${who} ${cls}"><span class="ring"><i></i></span><span class="pips">${ks.map(pip).join("")}</span></span>`;
 /* a card S: {who, rune, sign, pic, title, line, when, act, go, toks, w, cls, big} */
-const S = (c) => `<div class="s ${c.who || ""} ${c.cls || ""} ${c.mini ? "mini" : ""}" style="--w:${c.w || 132}px">${c.rune ? `<img class="tl" src="${RU(c.rune)}" alt="">` : ""}${c.sign ? `<img class="tr" src="${SG(c.sign)}" alt="">` : ""}
+const S = (c) => `<div class="s ${c.who || ""} ${c.cls || ""} ${c.mini ? "mini" : ""}" style="--w:${c.w || 132}px">${c.part ? `<i class="tlt" aria-hidden="true"></i>` : ""}${c.rune ? `<img class="tl" src="${RU(c.rune)}" alt="">` : ""}${c.sign ? `<img class="tr" src="${SG(c.sign)}" alt="">` : ""}
   ${c.mini ? "" : c.big ? `<span class="big">${c.big}</span>` : `<img class="pic ${c.picSign ? "sign" : ""}" src="${c.pic || H[c.who]}" alt="">`}<b>${c.title}</b>${c.line ? `<span class="ln">${c.line}</span>` : ""}
   <span class="foot"><span class="when">${c.when || ""}</span>${c.act ? `<span class="act ${c.go ? "go" : ""}">${c.toks ? `<span class="toks">${c.toks}</span>` : ""}${c.act}</span>` : ""}</span></div>`;
 const hd = (who, title, sub, shut = DESK ? "Close" : "Back") => `<div class="hd"><img src="${H[who]}" alt=""><span><b>${title}</b><small>${sub}</small></span><span class="shut">${shut}</span></div>`;
@@ -488,6 +500,59 @@ function storymap() {
   return matPhone("product", head, body, `<span class="why">3 cards not in main yet</span><span class="btn off">Ship Release 1</span>`);
 }
 
+/* ———————————————————— 12. a project's card shared by frameworks: one card, one keeper, the others put it in their slots ———————————————————— */
+const HERO = { product: R + "races/hero-uni-jtbd-elder.png", design: R + "races/hero-dry-a11y-elder.png", marketing: R + "races/hero-fairy-pos-elder.png" };
+const P = (c) => ({ part: true, pic: HERO[c.who], ...c });
+const PERSONA = P({ who: "product", sign: "character", title: "The solo maker", line: "builds an app alone with AI tools, an evening a day", when: "kept by Product" });
+const JOB = P({ who: "product", sign: "target", title: "See what waits for me", line: "a job", when: "kept by Product" });
+const STRUGGLE = P({ who: "product", sign: "alert", title: "Small text on the phone at night", line: "a struggle · on the screen The hand", when: "kept by Product" });
+const ALT = P({ who: "product", sign: "balance", title: "A terminal and a notes file", line: "hired instead", when: "kept by Product" });
+const SCREEN = P({ who: "design", sign: "screen", title: "The hand", line: "a screen", when: "kept by Design", pic: R + "races/dryad-elder.png" });
+const WHERE = [
+  { who: "product", fw: "Jobs to be done", slot: "The job: whose it is", note: "its keeper" },
+  { who: "design", fw: "WCAG 2.2", slot: "Barriers: who is stopped", note: "with a struggle on The hand" },
+  { who: "marketing", fw: "Positioning", slot: "Who cares", note: "the one who cares most" },
+];
+const SL_D = `<span class="who"><img src="${H.design}" alt=""><b>Design</b></span><ul><li>${pip("q")}<span>Is the solo maker on the phone at night?<small>the barrier on The hand depends on it</small></span></li></ul><span class="rl">Reply to Design</span>`;
+const SL_M = `<span class="who"><img src="${H.marketing}" alt=""><b>Marketing</b></span><ul><li>${pip("ok")}<span>The one who cares most: positioning is said for them</span></li></ul><span class="rl">Reply to Marketing</span>`;
+function persona() {
+  const head = hd("product", "The solo maker", "a persona · in the project's deck · kept by Product: Product changes it, the others answer with a token");
+  const toks = tk("design", ["q"]) + tk("marketing", ["ok"]);
+  const fields = (w) => `<div class="kv"><span class="lab">Who</span><span>One person who builds an app alone with AI tools, an evening a day, often on the phone</span>
+      <span class="lab">Hires it for</span><span class="cards" style="display:flex;gap:8px">${S({ ...JOB, w, mini: true })}</span>
+      <span class="lab">Struggles</span><span style="display:flex;gap:8px">${S({ ...STRUGGLE, w, mini: true })}${S({ ...P({ who: "product", sign: "alert", title: "Too many questions at once", when: "kept by Product" }), w, mini: true })}</span>
+      <span class="lab">Hired instead</span><span style="display:flex;gap:8px">${S({ ...ALT, w, mini: true })}</span></div>`;
+  const lies = `<div class="lies">${WHERE.map((x) => `<div class="lie ${x.who}"><img src="${HERO[x.who]}" alt=""><span><b>${x.who[0].toUpperCase() + x.who.slice(1)} · ${x.fw}</b><span class="why" style="display:block;text-decoration:none;margin:0">${x.slot} · ${x.note}</span></span><span class="why">Open</span></div>`).join("")}</div>`;
+  if (DESK) {
+    const body = `<div style="display:grid;grid-template-columns:200px 1fr 250px;gap:24px;height:100%">
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center">${S({ ...PERSONA, w: 180, act: "Ask Product…", toks })}<span class="why" style="text-align:center">its keeper's tool top left; its kind, a persona, top right; its framework's hero in the middle</span></div>
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">${fields(84)}<div><span class="lab">Where it lies</span><div style="margin-top:6px">${lies}</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><span class="lab">Its tokens</span><div class="slip design" style="position:relative;width:auto">${SL_D}</div><div class="slip marketing shut-slip" style="position:relative;width:auto">${SL_M}</div></div></div>`;
+    const foot = `<span>One card, one keeper. Swapping a hero or taking a party off keeps it: it is the project's, not the framework's.</span><span class="move"><span class="btn">Ask Product…</span></span>`;
+    return matDesk("product", head, body, foot, "tall");
+  }
+  const body = `<div style="display:flex;justify-content:center">${S({ ...PERSONA, w: 150, act: "Ask…", toks })}</div>${fields(78).replace("grid-template-columns: 120px 1fr", "")}
+    <span class="lab">Where it lies</span>${lies}<span class="lab">Its tokens</span><div class="slip design">${SL_D}</div><div class="slip marketing shut-slip">${SL_M}</div>`;
+  return matPhone("product", head, body.replace('class="kv"', 'class="kv" style="grid-template-columns:96px 1fr"'), `<span class="btn">Ask Product…</span>`);
+}
+function shared() {
+  const W = DESK ? 92 : 84;
+  const slot = (name, inner) => `<div class="slotrow"><span class="lab">${name}</span><div class="cards">${inner}</div></div>`;
+  const empty = `<span style="width:${W}px;aspect-ratio:2.5/3.5;border:1px dashed var(--ork-edge);border-radius:var(--ork-radius-card);display:grid;place-items:center" class="why">empty</span>`;
+  const sh = (c) => S({ ...c, w: W, mini: true, cls: "shared" });
+  const fw = (who, name, sub, inner) => `<div class="fw ${who}"><div class="hd"><img src="${HERO[who]}" alt="" style="width:34px"><span><b style="font-size:15px;line-height:18px">${name}</b><small>${sub}</small></span></div>${inner}</div>`;
+  const prod = fw("product", "Product · Jobs to be done", "Jobwise Knight keeps these cards",
+    slot("The job", sh(JOB) + sh(PERSONA)) + slot("Struggles", sh(STRUGGLE)) + slot("Hired instead", sh(ALT)) + slot("Our goals", S({ who: "product", rune: "ring-dots", title: "Spent today on every card", when: "rated", w: W, mini: true })));
+  const des = fw("design", "Design · WCAG 2.2", "Inclusive Dryad",
+    slot("Barriers: who, what, where", sh(PERSONA) + sh(STRUGGLE) + S({ ...SCREEN, w: W, mini: true })) + slot("Contrast and keys", empty) + slot("Fixed", S({ who: "design", rune: "wave", title: "The hand's text 14 px", when: "at work", w: W, mini: true })));
+  const mkt = fw("marketing", "Marketing · Positioning", "Position Gnome",
+    slot("The alternatives", sh(ALT)) + slot("What only it does", `<span class="txt">You decide only what is yours; the orks ask nothing else</span>`) + slot("Who cares", sh(PERSONA)));
+  const lead = `<p style="margin:0;color:var(--ork-ink-read);font-size:13px">Outlined: a card of the project's deck, the same card in each framework, kept by Product. The persona lies in all three; the struggle in Product's and Design's; the alternative in Product's and Marketing's.</p>`;
+  if (DESK) return `<div class="face desk" style="padding:22px 26px;display:flex;flex-direction:column;gap:14px;height:auto;min-height:900px"><h2 style="margin:0;font:700 20px/24px var(--ork-font-text)">One persona, three frameworks</h2>${lead}
+    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:18px;align-items:start">${prod}${des}${mkt}</div></div>`;
+  return `<div class="face phone" style="padding:14px;display:flex;flex-direction:column;gap:12px"><h2 style="margin:0;font:700 17px/21px var(--ork-font-text)">One persona, three frameworks</h2>${lead}${prod}${des}${mkt}</div>`;
+}
+
 /* ———————————————————— the closed mats ———————————————————— */
 const sl = (x, y, w, h, c = "") => [x, y, w, h, c];
 const LAYOUT = {
@@ -525,7 +590,7 @@ function closed() {
     ${GAL.map(mt).join("")}${small}</div></div>`;
 }
 
-const VIEWS = { hand, rate, compare, battle, gate, flow, scheme, slots, discard, chart, storymap, closed };
+const VIEWS = { hand, rate, compare, battle, gate, flow, scheme, slots, discard, chart, storymap, persona, shared, closed };
 document.getElementById("root").innerHTML = (VIEWS[V] || rate)();
 </script>
 </body>
