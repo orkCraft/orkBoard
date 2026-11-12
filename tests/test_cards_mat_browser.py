@@ -42,7 +42,7 @@ def test_a_mat_shows_its_shape_and_one_line_never_a_picture_of_its_spread(page_u
         b, pg = opened(p, page_url)
         mats = pg.evaluate("[...document.querySelectorAll('.cards-m[data-mat]')].map(m => [m.dataset.mat, m.querySelector('.cards-mat__shape').dataset.shape, m.querySelector('.cards-mat').innerText.trim()])")
         kinds = {m[0] for m in mats}
-        assert {"table", "diff", "dispute"} <= kinds, mats
+        assert {"table", "diff"} == kinds, mats
         assert ["table", "table", "Architecture: gui/"] in mats and ["diff", "diff", "What changed"] in mats
         assert pg.locator(".cards-m .tb-card, .cards-m .sp-card").count() == 0      # no table drawn in a mat
         b.close()
@@ -65,7 +65,7 @@ def test_a_framework_mat_lays_its_table_at_its_part_with_the_leaders_words_at_it
         b.close()
 
 
-def test_a_change_opens_what_changed_and_a_concern_who_says_what_no_l_of_words(page_url):
+def test_a_change_opens_what_changed_and_a_concern_is_an_l_of_words(page_url):
     with sync_playwright() as p:
         b, pg = opened(p, page_url)
         pg.locator(".cards-m[data-mat='diff']").first.click(position={"x": 30, "y": 20})
@@ -73,8 +73,9 @@ def test_a_change_opens_what_changed_and_a_concern_who_says_what_no_l_of_words(p
         assert pg.locator(".cards-l").count() == 0
         pg.keyboard.press("Escape")
         pg.locator(".sp-veil").wait_for(state="detached", timeout=5000)
-        pg.locator(".cards-m[data-mat='dispute']").first.focus()
+        assert pg.locator(".cards-m[data-mat='dispute']").count() == 0
+        pg.locator("article.cards-m", has_text="Doubts Product").first.focus()
         pg.keyboard.press("Enter")
-        pg.locator(".sp-veil[data-spread='dispute']").wait_for(timeout=5000)
-        assert pg.locator(".cards-l").count() == 0
+        pg.locator(".cards-l").wait_for(timeout=5000)
+        assert pg.locator(".sp-veil").count() == 0
         b.close()

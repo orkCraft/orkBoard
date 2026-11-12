@@ -1,0 +1,85 @@
+/* A craft's token, its slip and what lies round an opened card (decisions §298; cards/verdict.js, slip.js, around.js). Layout only: every colour
+   and face is orkUI's; a party's colour is `--party-hue` (table/look.css `data-race`). */
+.cards-cts { display: flex; gap: 3px; align-items: flex-start; justify-content: flex-end; }
+.cards-ct { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0; border: 0; background: none; color: var(--party-hue, var(--ork-ink-muted)); cursor: pointer; }
+.cards-ct:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.cards-ct__ring { position: relative; flex: none; width: 22px; height: 22px; clip-path: circle(50%); background: var(--party-hue, var(--ork-ink-muted)); }
+.cards-ct__ring::before { content: ""; position: absolute; inset: 2px; clip-path: circle(50%); background: var(--ork-room); }
+.cards-ct.is-on .cards-ct__ring::before { background: var(--ork-plaque); }
+/* orkUI's tools are drawn 28 px; scaled to about 16 px here until orkUI makes a 16 px silhouette (decisions §298.10) */
+.cards-ct__ring .ork-tool { position: absolute; left: 50%; top: 50%; margin: -14px 0 0 -14px; transform: scale(.57); color: var(--party-hue, var(--ork-ink-muted)); }
+.cards-ct__sq { display: flex; gap: 1px; align-items: flex-end; min-height: 9px; }
+.cards-sq { position: relative; display: inline-block; flex: none; box-sizing: border-box; width: 6px; height: 6px; }
+.cards-sq[data-kind="ok"] { background: var(--ork-success); }
+.cards-sq[data-kind="q"] { box-shadow: inset 0 0 0 1.5px var(--ork-alert); }
+.cards-sq[data-kind="r"] { background: var(--ork-danger); clip-path: polygon(0 0, 100% 0, 100% 55%, 55% 100%, 0 100%); }
+.cards-sq[data-kind="b"] { width: 9px; height: 9px; background: var(--ork-danger); overflow: hidden; }
+.cards-sq[data-kind="b"]::before, .cards-sq[data-kind="b"]::after { content: ""; position: absolute; left: -2px; right: -2px; top: 50%; height: 2px; margin-top: -1px; background: var(--ork-room); rotate: 45deg; }
+.cards-sq[data-kind="b"]::after { rotate: -45deg; }
+
+/* a blocked card: ringed, *blocked* where its time is, its act held */
+.cards-s.is-blocked { border: 2px solid var(--ork-danger); }
+.cards-c--bl.is-blocked { color: var(--ork-danger); }
+.cards-act:disabled { opacity: .55; cursor: not-allowed; }
+.cards-c--br .cards-act { align-self: flex-end; }
+
+/* a slip: orkUI's plaque, its party's stripe at the left, its leader's head, its checks one a line */
+.cards-slip { position: relative; box-sizing: border-box; padding: 8px 10px 8px 14px; background: var(--ork-plaque); color: var(--ork-ink); border: 1px solid var(--ork-leather);
+  box-shadow: inset 4px 0 0 var(--party-hue, var(--ork-leather)), 0 3px 0 var(--ork-room); text-align: left; }
+.cards-slip__head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.cards-slip__head b { font: var(--ork-type-button); } .cards-slip__head small { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.cards-slip__av { display: inline-grid; place-items: center; flex: none; }
+.cards-slip__checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.cards-slip__checks li { display: flex; gap: 8px; align-items: flex-start; font: var(--ork-type-body); color: var(--ork-ink); }
+.cards-slip__checks li .cards-sq { margin-top: 5px; }
+.cards-slip__checks li[data-kind="b"] .cards-sq { margin-top: 4px; }
+.cards-slip__checks small { display: block; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.cards-over { display: contents; }
+.cards-beside__slip { position: fixed; z-index: 850; }
+.cards-beside__slip.is-hidden { visibility: hidden; }
+.cards-thread { position: fixed; z-index: 849; height: 2px; background: var(--party-hue, var(--ork-ink-muted)); transform-origin: 0 50%; pointer-events: none; }
+
+/* an opened goal card: its slips round it, its faint marks, the row of heads under it */
+.cards-stage { display: flex; align-items: center; justify-content: center; gap: 28px; width: 100%; max-height: 100vh; overflow: auto; padding: 16px; box-sizing: border-box; }
+.cards-stage__mid { flex: none; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.cards-slips { flex: 0 1 300px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.cards-slips:empty { display: none; }
+.cards-slips .cards-slip__head { padding-left: 0; }
+.cards-slips .cards-ct { flex: none; margin-right: 4px; }
+.cards-mark { position: absolute; width: 14px; height: 14px; clip-path: circle(50%); background: var(--party-hue, var(--ork-ink-muted)); opacity: .35; }
+.cards-mark[data-side="left"] { left: 8px; } .cards-mark[data-side="right"] { right: 8px; }
+.cards-field { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--ork-leather); }
+.cards-field label { display: flex; flex-direction: column; gap: 4px; font: var(--ork-type-label); color: var(--ork-ink-read); }
+.cards-field textarea.ork-field { min-height: 56px; }
+.cards-field > .ork-btn { align-self: flex-start; }
+.cards-ask { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: min(520px, 92vw); }
+.cards-ask__heads { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; align-items: flex-start; }
+.cards-ask__one { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.cards-ask__one small { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.cards-ask__b { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 2px 4px; border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-caption); text-decoration: underline; cursor: pointer; }
+.cards-ask__b:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.cards-ask__b.is-on { color: var(--party-hue); }
+.cards-ask__ring { display: grid; place-items: center; width: 34px; height: 34px; clip-path: circle(50%); background: var(--party-hue, var(--ork-ink-muted)); }
+.cards-ask__ring .ork-race__head { width: auto; height: 26px; }
+.cards-ask .cards-field { width: 320px; max-width: 92vw; }
+@media (max-width: 600px) {
+  .cards-veil:has(.cards-stage) { place-items: start stretch; overflow: auto; }
+  .cards-stage { flex-direction: column; align-items: stretch; max-height: none; overflow: visible; padding: 0 0 24px; gap: 14px; }
+  .cards-stage__mid { order: 0; align-items: stretch; } .cards-stage__mid .cards-l { height: auto; min-height: 100svh; }
+  .cards-slips { order: 1; flex: none; padding: 0 12px; }
+  .cards-ask { order: 2; align-self: center; }
+  .cards-mark { display: none; }
+}
+
+/* an S with tokens: its picture a little smaller, its *when* above them, its bar above that */
+.cards-s.is-group .cards-s__pic { height: 28px; } .cards-s.is-group .cards-s__pic .ork-race__head { height: 26px; }
+.cards-s.has-toks .cards-c--bl { bottom: 38px; }
+.cards-s.has-toks .cards-bar { margin-bottom: 26px; }
+.cards-c--br .cards-act { min-height: 22px; }
+.cards-s.has-act.has-toks .cards-s__pic { height: 18px; margin: 0; } .cards-s.has-act.has-toks .cards-s__pic .ork-race__head { height: 17px; }
+.cards-stage__mid .cards-l { width: min(430px, 92vw, calc((100vh - 190px) * 2.5 / 3.5)); }
+@media (max-width: 600px) { .cards-stage__mid .cards-l { width: 100vw; } }
+.cards-wait .ork-card.cards-s.has-act { --card-w: 128px; }
+.cards-s.has-act.has-toks .cards-c--bl { bottom: 72px; }
+.cards-stage__mid .cards-l { width: min(430px, 92vw, calc((100vh - 230px) * 2.5 / 3.5)); }
+.cards-s.has-act.has-toks .cards-c--bl { max-width: 90%; }

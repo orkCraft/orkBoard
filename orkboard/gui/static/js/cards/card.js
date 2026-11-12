@@ -1,16 +1,18 @@
 // The table of cards' three sizes (goal 170, the talk of 11 November 2026; docs/mockups/table-cards/): one card ratio, 2.5:3.5.
 // **S**, upright: a goal (at work, in the discard, in the hand). **M**, on its side: a leader's word, a post in its lane, read
 // through table/post.js's head and body. **L**: a card opened; pressed, an M turns back upright and grows over the table
-// (`openCard`), Esc or Close puts it away and the focus goes back to the card it came from. A leader's view of a goal is a
-// **token** on its S: round, its party's colour, its sign, its word beside it (§295.4). Layout only (cards.css).
+// (`openCard`), Esc or Close puts it away and the focus goes back to the card it came from. A craft's verdict on a goal is a
+// **token** on its S (verdict.js, §298.3). Layout only (cards.css).
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon, Sign } from "../orkui.js";
 import { openSpread } from "./spreads/open.js";
 import { giveBack, keepTab } from "./back.js";
-import { viewsOf } from "./feed.js";
 import { MatFoot, matOf, matSays } from "./mat.js";
+import { AskRow, Marks, SlipsColumn } from "./around.js";
+import { SlipBeside } from "./slip.js";
+import { CraftToken, blockedBy, verdictsOf } from "./verdict.js";
 import { GoalLine, PostBody, PostHead, KINDS, TAGS, when, whoOf } from "../table/post.js";
 
 /** A leader's view, its sign and its word (§295.4). */
@@ -28,36 +30,39 @@ export function Token({ leader, view, word = "" }) {
 export const Index = ({ n, turned = false }) => (turned ? null : html`<span class="cards-c cards-c--tl" aria-hidden="true"><${Elem} name=${n?.element || ""} hue=${n?.hue || ""} dim=${!n?.element} /></span>
   ${n?.sign && html`<span class="cards-c cards-c--tr" aria-hidden="true"><${Sign} name=${n.sign} /></span>`}`);
 
-/** The views that lie on a card's act until the person has read them: a risk, a question, a stance against (a view *for* does not). */
-export const BLOCKS = new Set(["risk", "question", "against"]);
+/** The slip open on an S, one at a time on the page: {id (the card's), leader, token (its element)}, or null. */
+const slipNow = signal(null);
+let cardIds = 0;
 
 /** S: a goal upright (the person, 11 November 2026). Its corners: the rune top left, the kind's sign top right, **when** bottom left
- *  (`when`: put off, starts by itself at a time, at work), **its act** bottom right (`act`: {label, cost, run}, or its share done when
- *  `bar` is given); the head of the leader who does it is its picture in the middle, its name and `line` under it. A leader's risk,
- *  question or stance against (`tokens`: [{leader, view, note}]) lies **on its act**: the person reads it first, and a token pressed
- *  moves aside, its note said; a view *for* and the views read are said in the card's L. A card with an act of its own is a group of buttons; else the card is one. */
-export function CardS({ n, line = "", when = "", bar = null, tokens = [], act = null, asks = false, ready = false, onOpen = null, tilt = 0, ...rest }) {
-  const w = whoOf(n.leader || "orkmaster"), [read, setRead] = useState([]);
-  const lying = tokens.filter((t) => BLOCKS.has(t.view) && !read.includes(t.leader));      // a view for, or one read, is said in the card's L (no room on an S)
-  const group = !!act || tokens.some((t) => BLOCKS.has(t.view));
+ *  (`when`: put off, starts by itself at a time, at work), **its act** and **its craft tokens** bottom right (`act`: {label, cost, run}, or its share done when
+ *  `bar` is given); the head of the leader who does it is its picture in the middle, its name and `line` under it. The tokens are the goal's verdicts
+ *  (cards/verdict.js, decisions §298.3), read here: a token pressed lays its slip beside the card on a thread (slip.js). A risk that blocks rings the card,
+ *  says *blocked* where *when* is and holds its act. A card with an act or tokens of its own is a group of buttons; else the card is one. */
+export function CardS({ n, line = "", when = "", bar = null, act = null, asks = false, ready = false, onOpen = null, tilt = 0, ...rest }) {
+  const w = whoOf(n.leader || "orkmaster"), root = useRef(), id = useRef(null);
+  if (!id.current) id.current = ++cardIds;
+  const verdicts = verdictsOf(n.slug), by = blockedBy(n.slug), held = !!by, now = slipNow.value, shown = now?.id === id.current ? verdicts.find((v) => v.leader === now.leader) : null;
+  const group = !!act || verdicts.length > 0;
   const Tag = group ? "div" : "button";
-  const label = `${n.title}${line ? `: ${line}` : ""}${when ? `, ${when}` : ""}`;
+  const label = `${n.title}${line ? `: ${line}` : ""}${held ? ", blocked" : when ? `, ${when}` : ""}`;
   const own = group ? { role: "group", tabindex: "0", onKeyDown: (e) => { if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); onOpen?.(e); } },
     onClick: (e) => { if (!e.target.closest("button")) onOpen?.(e); } } : { type: "button", onClick: onOpen };
-  const top = lying[0];
-  return html`<${Tag} class=${cls("ork-card cards-s", { "is-asks": asks, "is-ready": ready, "is-group": group })} data-race=${w.race || "orkmaster"} data-goal=${n.slug}
+  const press = (v, e) => { const el = e.currentTarget; slipNow.value = now?.id === id.current && now.leader === v.leader ? null : { id: id.current, leader: v.leader, token: el }; };
+  const close = (back) => { const t = slipNow.peek()?.token; slipNow.value = null; if (back) t?.focus?.(); };
+  return html`<${Tag} ref=${root} class=${cls("ork-card cards-s", { "is-asks": asks, "is-ready": ready, "is-group": group, "has-toks": verdicts.length > 0, "has-act": !!act, "is-blocked": held })} data-race=${w.race || "orkmaster"} data-goal=${n.slug}
       style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${label} ...${own} ...${rest}>
     <${Index} n=${n} />
     <span class="cards-s__pic" aria-hidden="true">${w.head && html`<${Head} race=${w.head.race} tier=${w.head.tier} />`}</span>
     <b class="cards-s__name">${n.title}</b>${line && html`<small class="cards-s__line">${line}</small>`}
     ${bar !== null && html`<span class="cards-bar" aria-hidden="true"><i style=${`width:${Math.round(bar * 100)}%`}></i></span>`}
-    <span class="cards-c cards-c--bl">${asks && !when ? html`<span class="cards-s__asks" aria-hidden="true">!</span><span>waits for you</span>` : when}</span>
-    <span class="cards-c cards-c--br">${top ? html`<button type="button" class="cards-lie" data-race=${whoOf(top.leader).race || "orkmaster"} data-view=${top.view}
-          aria-label=${`${whoOf(top.leader).name}: ${VIEWS[top.view].word}${top.note ? `: ${top.note}` : ""}. Read it first; pressed, it moves aside`} title=${top.note || ""}
-          onClick=${(e) => { e.stopPropagation(); setRead([...read, top.leader]); if (top.view === "question") answerInHand(n.slug); }}>
-          ${lying.slice(1).map(() => html`<span class="cards-lie__under" aria-hidden="true"></span>`)}<i aria-hidden="true">${VIEWS[top.view].mark}</i><span>${VIEWS[top.view].word}</span></button>`
-        : act ? html`<button type="button" class="ork-btn cards-act" onClick=${(e) => { e.stopPropagation(); act.run(); }}><span>${act.label}</span>${act.cost && html`<small>${act.cost}</small>`}</button>`
-        : bar !== null ? html`<span class="cards-pct">${Math.round(bar * 100)}%</span>` : ""}</span>
+    <span class=${cls("cards-c cards-c--bl", { "is-blocked": held })}>${held ? "blocked" : asks && !when ? html`<span class="cards-s__asks" aria-hidden="true">!</span><span>waits for you</span>` : when}</span>
+    <span class="cards-c cards-c--br">
+      ${act ? html`<button type="button" class="ork-btn cards-act" disabled=${held} title=${held ? `Blocked: ${whoOf(by).name}'s risk blocks it until ${whoOf(by).name} lifts it` : undefined}
+          onClick=${(e) => { e.stopPropagation(); act.run(); }}><span>${act.label}</span>${act.cost && html`<small>${act.cost}</small>`}</button>`
+        : bar !== null ? html`<span class="cards-pct">${Math.round(bar * 100)}%</span>` : ""}
+      ${verdicts.length > 0 && html`<span class="cards-cts">${verdicts.map((v) => html`<${CraftToken} key=${v.leader} leader=${v.leader} checks=${v.checks} on=${shown === v} onPress=${(e) => press(v, e)} />`)}</span>`}</span>
+    ${shown && html`<${SlipBeside} v=${shown} card=${root.current} token=${now.token} onClose=${close} />`}
   <//>`;
 }
 
@@ -74,8 +79,7 @@ const narrow = () => !!globalThis.matchMedia?.("(max-width: 700px)").matches;
 export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
   const ref = useRef();
   const mat = matOf(p);
-  const open = () => (mat && !narrow() ? mat.open(ref.current) : openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) },
-    ...(p.goal && viewsOf(p.goal).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: p.goal, from: ref.current }) }] : [])] }));
+  const open = () => (mat && !narrow() ? mat.open(ref.current) : openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) }] }));
   return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-stacked": more > 0, "is-mat": !!mat })} data-race=${whoOf(p.leader).race || "orkmaster"}
       data-kind=${p.kind} tabindex="0" data-mat=${mat?.kind} aria-label=${`${whoOf(p.leader).name}: ${p.text}. ${mat ? `${matSays(mat)}. Press to open it.` : "Press to open."}`}
       onClick=${(e) => { if (!e.target.closest("button")) open(); }} onKeyDown=${(e) => { if (e.key === "Enter" && e.target === ref.current) { e.preventDefault(); open(); } }}>
@@ -98,7 +102,7 @@ export function answerInHand(slug) {
   }, 0);
 }
 
-/** The card opened: `{kind: "post", p, from}` or `{kind: "goal", n, line, tokens, acts, from}`; null when none. */
+/** The card opened: `{kind: "post", p, from}` or `{kind: "goal", n, line, acts, from}`; null when none. */
 export const opened = signal(null);
 export const openCard = (what) => { opened.value = what; };
 const shut = () => { const was = opened.peek(); opened.value = null; giveBack(was?.from); };
@@ -109,22 +113,28 @@ export function CardL({ onPick }) {
   useLayoutEffect(() => {   // the keys at once, before the first paint: an Esc pressed as the card opens closes it
     if (!o) return undefined;
     root.current?.querySelector(".cards-l__shut")?.focus();
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); shut(); } else keepTab(root.current, e); };
+    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); shut(); } else keepTab(root.current?.closest(".cards-veil"), e); };
     addEventListener("keydown", key, true);
     return () => removeEventListener("keydown", key, true);
   }, [o]);
   if (!o) return null;
-  const leader = o.kind === "post" ? o.p.leader : o.n.leader || "orkmaster";
-  return html`<div class="cards-veil" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>
-    <article ref=${root} class="ork-card cards-l" role="dialog" aria-modal="true" aria-label=${o.kind === "post" ? `${whoOf(leader).name}: ${o.p.text}` : o.n.title}
+  const leader = o.kind === "post" ? o.p.leader : o.n.leader || "orkmaster", goal = o.kind === "goal", verdicts = goal ? verdictsOf(o.n.slug) : [];
+  const card = html`<article ref=${root} class="ork-card cards-l" role="dialog" aria-modal="true" aria-label=${o.kind === "post" ? `${whoOf(leader).name}: ${o.p.text}` : o.n.title}
         data-race=${whoOf(leader).race || "orkmaster"} data-from=${o.kind}>
       <button type="button" class="ork-btn quiet cards-l__shut" onClick=${shut}><${Icon} name="close" /><span>Close</span></button>
-      ${o.kind === "post" ? html`<${PostHead} leader=${o.p.leader} sub=${subOf(o.p)} tag=${TAGS[o.p.kind] || ""} />
+      ${!goal ? html`<${PostHead} leader=${o.p.leader} sub=${subOf(o.p)} tag=${TAGS[o.p.kind] || ""} />
           <div class="cards-l__body"><${PostBody} p=${o.p} onPick=${(s) => { shut(); onPick?.(s); }} /></div>`
         : html`<${PostHead} leader=${leader} sub=${o.line || ""} />
           <h2 class="cards-l__title">${o.n.title}</h2>
-          ${o.tokens?.length > 0 && html`<div class="cards-toks is-big">${o.tokens.map((t) => html`<${Token} ...${t} />`)}</div>`}
+          <${Marks} verdicts=${verdicts} />
           ${o.n.slug && html`<${GoalLine} slug=${o.n.slug} onPick=${(s) => { shut(); onPick?.(s); }} />`}`}
       ${o.acts?.length > 0 && html`<div class="cards-l__acts">${o.acts.map((a) => html`<button type="button" class=${cls("ork-btn", { primary: a.main })} onClick=${() => { a.run(); shut(); }}>${a.label}</button>`)}</div>`}
-    </article></div>`;
+    </article>`;
+  if (!goal) return html`<div class="cards-veil" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>${card}</div>`;
+  const route = [...new Set([...(verdicts.map((v) => v.leader)), ...(o.n.leader && o.n.leader !== "orkmaster" ? [o.n.leader] : [])])];
+  return html`<div class="cards-veil" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>
+    <div class="cards-stage" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>
+      <${SlipsColumn} slug=${o.n.slug} verdicts=${verdicts} side=${0} />
+      <div class="cards-stage__mid">${card}<${AskRow} slug=${o.n.slug} route=${route} /></div>
+      <${SlipsColumn} slug=${o.n.slug} verdicts=${verdicts} side=${1} /></div></div>`;
 }

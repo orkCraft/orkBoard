@@ -1,4 +1,4 @@
-"""**The other five spreads** (goal 170, docs/mockups/spreads/): who says what on a goal, what each card costs, which of two matters more,
+"""**The other spreads** (goal 170, docs/mockups/spreads/): what each card costs, which of two matters more,
 the new goals sorted, and the Orkmaster's deal, drawn over the table of cards on mocks (`?mock=1`). Each opens from its act (a goal's L or the
 deck's), shows its parts, has its acts as buttons with their words, plays by its keys, says what it sends (the mock keeps it) and closes with
 Esc. The proposed commands (`ideas.order`, `ideas.sort`, `ideas.way`, `ideas.tool_for`) are logged by the mock, never sent."""
@@ -47,63 +47,17 @@ def closes_with_esc(pg):
     assert pg.locator(".sp-veil").count() == 0
 
 
-def test_the_dispute_opens_from_a_goals_l_with_the_leaders_views_and_their_ways_in_the_hand(page_url):
+def test_a_concern_with_no_mat_opens_as_an_l_of_words_and_the_retired_who_says_what_is_gone(page_url):
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
         opened(pg, page_url)
-        pg.locator(".cards-wait .cards-s").first.click()
-        pg.get_by_role("button", name="Who says what").click()
-        sp = spread_of(pg, "dispute")
-        assert sp.locator(".sp-voice").count() >= 2 and sp.locator(".sp-dispute > .sp-card.is-xl").count() == 1
-        assert sp.locator(".sp-dispute .cards-tok").count() >= 2 * 2            # the goal's tokens and each view's own
-        ways = sp.locator(".sp-cards button.cards-s")
-        assert ways.count() == sp.locator(".sp-voice").count() + 1                # each leader's way, and *Your own words…*
-        assert "Your own words" in ways.last.inner_text()
-        pg.keyboard.press("Tab")
-        assert pg.evaluate("document.activeElement.tagName") == "BUTTON"
-        closes_with_esc(pg)
-        b.close()
-
-
-def test_a_way_played_is_only_kept_by_the_mock_and_key_1_plays_the_first(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.locator(".cards-wait .cards-s").first.click()
-        pg.get_by_role("button", name="Who says what").click()
-        spread_of(pg, "dispute")
-        pg.keyboard.press("1")
+        pg.locator("article.cards-m .post-card__text", has_text="Doubts Product").first.click()       # a concern: decisions §298 retires its mat
+        pg.locator(".cards-l").wait_for(timeout=5000)
         assert pg.locator(".sp-veil").count() == 0
-        assert "ideas.answer" in pg.evaluate(SENT)                                # the goal asks a question: the existing answer command
-        b.close()
-
-
-def test_your_own_words_open_a_field_and_send_them(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
+        pg.keyboard.press("Escape")
         pg.locator(".cards-wait .cards-s").first.click()
-        pg.get_by_role("button", name="Who says what").click()
-        sp = spread_of(pg, "dispute")
-        sp.get_by_role("button", name="Your own words").click()
-        sp.get_by_role("textbox", name="Your own words").fill("Both, in turn")
-        sp.get_by_role("button", name="Send these words").click()
-        assert pg.locator(".sp-veil").count() == 0 and "ideas.answer" in pg.evaluate(SENT)
-        b.close()
-
-
-def test_the_dispute_opens_from_a_leaders_post_about_a_goal_three_leaders_spoke_of(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.locator("article.cards-m .post-card__text", has_text="Doubts Product").first.click()       # a concern's mat (decisions §297.2)
-        sp = spread_of(pg, "dispute")
-        assert sp.locator(".sp-voice").count() == 3 and sp.locator(".sp-cards button.cards-s").count() == 4
-        closes_with_esc(pg)
+        assert pg.get_by_role("button", name="Who says what").count() == 0
         b.close()
 
 

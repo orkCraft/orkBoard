@@ -6,7 +6,7 @@ import { command, proposed } from "../link.js";
 import { pick } from "../frame/state.js";
 import { ACTS } from "../table/post.js";
 import { Back, CardS, openCard } from "./card.js";
-import { feed, nodeOf, nodes, tokensOf, viewsOf } from "./feed.js";
+import { feed, nodeOf, nodes } from "./feed.js";
 import { WorkCard } from "./lanes.js";
 import { openSpread } from "./spreads/open.js";
 
@@ -21,10 +21,9 @@ function Waits() {
     const acts = (w.acts || []).map((a) => ({ label: ACTS[a.act] || a.act, main: a.act !== "change_spec", run: () => command(a.command, a.args || {}) }));
     const start = (w.acts || []).find((a) => a.act === "start_now"), price = proposed("costs")?.goals?.[n.slug];
     const act = start && { label: ACTS.start_now, cost: price ? `≈${price.pct}% ${price.tool === "codex" ? "Codex" : "Claude"}` : "", run: () => command(start.command, start.args || {}) };
-    return html`<div class="cards-wait" key=${w.goal}><${CardS} n=${card} when=${w.at ? `starts ${w.at.slice(11, 16)}` : ""} act=${act} tokens=${tokensOf(n.slug)}
+    return html`<div class="cards-wait" key=${w.goal}><${CardS} n=${card} when=${w.at ? `starts ${w.at.slice(11, 16)}` : ""} act=${act}
         onOpen=${(e) => { const from = e.currentTarget; openCard({ kind: "goal", n: { ...card, title: n.title }, line: "starts by itself", from,
-          acts: [...acts, ...(viewsOf(n.slug).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: n.slug, from }) }] : []),
-            ...(IN_TALK.has(n.state) ? [{ label: "The deal", run: () => openSpread({ kind: "deal", slug: n.slug, from }) }] : []), ...(w.kind === "main" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />
+          acts: [...acts, ...(IN_TALK.has(n.state) ? [{ label: "The deal", run: () => openSpread({ kind: "deal", slug: n.slug, from }) }] : []), ...(w.kind === "main" ? [{ label: "At the gate", run: () => openSpread({ kind: "gate", slug: n.slug, from }) }] : [])] }); }} />
       <div class="cards-wait__acts">${acts.filter((a) => a.label !== ACTS.start_now).map((a) => html`<button type="button" class="ork-btn quiet" onClick=${a.run}>${a.label}</button>`)}</div></div>`;
   })}`;
 }
