@@ -124,7 +124,7 @@ def open_gate(pg):
 
 
 SURFACES = {"the table": (lambda pg: None, ".frame"), "an L": (open_l, ".cards-l"),
-            "the gate spread": (open_gate, ".sp-veil"), "a leader's table": (open_table, ".frame")}
+            "the gate spread": (open_gate, ".sp-veil"), "a leader's table": (open_table, ".sp-veil")}
 
 
 def check_texts(pg, root, what):

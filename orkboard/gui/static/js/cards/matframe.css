@@ -1,0 +1,64 @@
+/* The frame every mat lies in (goal 171 stage H; js/cards/matframe.js; docs/mockups/mats/, the shots battle-2 and gate): a dialog over the pane on its owner's felt
+   (orkUI's `.ork-table[data-party]`: the lamp's steps and the bronze frame come from it), every word on a plate (`.ork-plate`), the zones printed in bronze with their
+   labels on their frame, the phases along the foot, the seal at the foot's right. Layout only: every colour, face and corner is orkUI's (`--ork-bronze*`, `--ork-gilt*`,
+   `--_plate` from the felt); no gradient, no blurred shadow, no motion. Labels 12 px at least (the type tokens' label). */
+.mf-veil { position: fixed; inset: 0; z-index: 800; background: var(--ork-scrim); }
+.mf-veil > .sp.mf { position: absolute; top: 40px; bottom: 20px; left: 0; right: 0; margin-inline: auto; width: min(1240px, calc(100% - 48px)); box-sizing: border-box;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 22px 30px 16px; }
+.mf-veil > .sp.mf:has(> .cards-said) { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.mf > .cards-said { margin: 10px 8px 0; }
+
+/* the head: the avatar, one plate with the title and its line, what the Orkmaster says on a plate, the way out */
+.mf-h { display: flex; align-items: center; gap: 12px; padding: 0 4px; }
+.mf-h .sp-av { flex: none; width: 52px; height: 52px; display: grid; place-items: center; }
+.mf-t { flex: 1; min-width: 0; padding: 6px 12px; }
+.mf-t b { display: block; font: var(--ork-type-title); } .mf-t small { display: block; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.mf-h .sp-say { max-width: 420px; padding: 6px 10px; font: var(--ork-type-caption); }
+.mf-h .tb-switch { margin-left: 0; }
+.mf .sp-shut { flex: none; background: var(--_plate); }
+
+/* the field: what the mat is about, in the middle */
+.mf-field { position: relative; min-height: 0; overflow: auto; display: flex; align-items: center; justify-content: center; gap: 28px; padding: 18px 12px 10px; }
+.mf-field.tb-body { display: block; align-items: initial; }
+
+/* the foot: the hand's cards, a note on a plate, the phases, the acts and the seal at its right */
+.mf-foot { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 14px; padding: 8px 4px 0; }
+.mf-foot .sp-note { align-self: center; margin: 0; max-width: 300px; padding: 4px 10px; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.mf-foot .sp-acts { margin-left: auto; align-self: center; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end; }
+.mf-phases { align-self: center; display: flex; align-items: center; margin: 0; padding: 0; list-style: none; }
+.mf-phase { padding: 2px 10px; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-bronze-hi); }
+.mf-phase + .mf-phase::before { content: "\203A"; margin-right: 10px; color: var(--ork-bronze); }
+.mf-phase.is-on { background: var(--_plate); color: var(--ork-gilt-hi); border: 1px solid var(--ork-gilt); }
+
+/* words laid on the felt lie on a plate: its ground is one colour, so its contrast is one number (decisions §275.2) */
+.mf-field :is(.sp-cap, .sp-costw, .sp-field__say, .bt-undo, .bt-axis, .cards-lab, .sp-or, .sp-arrow, .sp-gk > small, .sp-chair__n, .sp-chair > small, .bt-head > span, .sp-pot > b,
+  .tb-colh, .tb-legend, .tb-ln, .tb-empty, .tb-asked) { background: var(--_plate); padding: 2px 8px; }
+.mf-field .bt-row, .mf-field .bt-row.bt-head { background: var(--_plate); }
+
+/* a zone printed in bronze on the felt, its label on its frame; empty, a faint card's outline and what it waits for lie inside */
+.mf-zone { position: relative; display: flex; gap: 18px; align-items: flex-end; justify-content: center; padding: 24px 14px 14px; border: 1px solid var(--ork-bronze);
+  box-shadow: inset 0 0 0 3px var(--_plate), inset 0 0 0 4px var(--ork-bronze-lo); }
+.mf-zl { position: absolute; left: 12px; top: -9px; padding: 0 8px; background: var(--_plate); border: 1px solid var(--ork-bronze-lo);
+  font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-gilt); }
+.mf-zone.is-empty { flex-direction: column; align-items: center; min-width: 160px; }
+.mf-slot { width: 64px; aspect-ratio: 2.5 / 3.5; border: 1px solid var(--ork-bronze-lo); }
+.mf-zs { font: var(--ork-type-caption); color: var(--ork-ink-read); text-align: center; }
+
+/* the seal: a stamp at the foot's right. Lit it is bronze-rimmed and gilt; dim it is flat on the plate with a dashed bronze rim and its why in the read ink, never faded */
+.mf-seal { appearance: none; display: grid; place-items: center; align-content: center; gap: 3px; min-width: 112px; min-height: 100px; max-width: 260px; padding: 12px 22px; margin: 0; text-align: center; cursor: pointer;
+  border: 0; background: var(--ork-bronze-lo); color: var(--ork-gilt-hi); font: var(--ork-type-button);
+  box-shadow: inset 0 0 0 3px var(--ork-bronze), inset 2px 2px 0 3px var(--ork-bronze-hi), inset 0 0 0 7px var(--ork-bronze-lo), inset 0 0 0 8px var(--ork-bronze), 0 4px 0 var(--ork-room); }
+.mf-seal b { font: var(--ork-type-button); font-size: 15px; line-height: 18px; }
+.mf-seal small { font: var(--ork-type-caption); color: var(--ork-ink-read); overflow-wrap: anywhere; }
+.mf-seal.is-dim { background: var(--_plate); color: var(--ork-ink-read); cursor: default; box-shadow: inset 0 0 0 2px var(--ork-bronze-lo), 0 2px 0 var(--ork-room); outline: 2px dashed var(--ork-bronze); outline-offset: -6px; }
+.mf-seal:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 3px; }
+
+/* a phone: the mat is the whole screen */
+@media (max-width: 700px) {
+  .mf-veil { background: var(--ork-room); }
+  .mf-veil > .sp.mf { inset: 0; top: 0; bottom: 0; width: auto; margin: 0; padding: 14px 14px 12px; }
+  .mf-h { flex-wrap: wrap; } .mf-t { flex-basis: 0; min-width: 120px; } .mf-h .sp-say { max-width: none; }
+  .mf-field { padding: 14px 4px 8px; gap: 16px; }
+  .mf-foot .sp-acts { margin-left: 0; width: 100%; justify-content: center; }
+  .mf-phases { flex-wrap: wrap; justify-content: center; width: 100%; }
+}

@@ -4,7 +4,7 @@
 // of these is no mat: it opens as an L of words. On the table a mat shows its spread's shape and one line, never a picture of it.
 import { html } from "../html.js";
 import { openSpread } from "./spreads/open.js";
-import { FRAMEWORKS, laid, laidAt, tables } from "./tables/state.js";
+import { FRAMEWORKS, laid, laidAt, laidFrom, tables } from "./tables/state.js";
 
 /** The name of a part of a leader's framework, read from its table (a module, a job), or its id. */
 function partName(t) {
@@ -20,7 +20,7 @@ export function matOf(p) {
   if (!p) return null;
   if (p.table?.party && FRAMEWORKS[p.table.framework])
     return { kind: "table", shape: "table", line: `${FRAMEWORKS[p.table.framework]}: ${partName(p.table)}`,
-      open: () => { laidAt.value = { ...p.table, p }; laid.value = p.table.party; } };
+      open: (from) => { laidAt.value = { ...p.table, p, from }; laidFrom.value = from || null; laid.value = p.table.party; } };
   if (p.kind === "change") return { kind: "diff", shape: "diff", line: "What changed", open: (from) => openSpread({ kind: "diff", p, from }) };
   return null;
 }

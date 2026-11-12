@@ -51,7 +51,7 @@ def test_the_switch_shows_each_leaders_framework_and_feed_brings_the_lanes_back(
         assert pg.locator('.cards-lane[data-party="design"] .tb-switch').count() == 0
         assert [t.strip() for t in pg.locator('.cards-lane[data-party="tech"] .tb-switch .ork-btn').all_inner_texts()] == ["Feed", "Architecture"]
         open_table(pg, "tech", "architecture")
-        assert pg.locator(".cards-lanes").count() == 0
+        assert pg.locator(".cards-lanes").evaluate("el => !!el.closest('[inert]')")           # the lanes lie under the mat, inert (goal 171 H)
         assert pg.get_by_text("Tech's table", exact=True).is_visible()
         assert [t.strip() for t in pg.locator(".tb-layer .tb-ln").all_inner_texts()][0].startswith("Outside")
         for layer in ("outside", "faces", "engine", "words"):

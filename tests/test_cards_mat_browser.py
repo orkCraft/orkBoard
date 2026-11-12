@@ -80,3 +80,83 @@ def test_a_change_opens_what_changed_and_a_concern_is_an_l_of_words(page_url):
         pg.locator(".cards-l").wait_for(timeout=5000)
         assert pg.locator(".sp-veil").count() == 0
         b.close()
+
+
+# -- goal 171 stage H: the frame every mat lies in (js/cards/matframe.js, matframe.css; decisions §300.15) ---------------------------------
+
+THREE = "163-products-tree-on-the-board"
+RED = """async (slug) => { const link = await import("/static/js/link.js"), sp = await import("/static/js/cards/spreads/open.js");
+  const names = ["Critical tests", "Tests of what it touched"];
+  link.town.value = { ...link.town.value, main_checks: { [slug]: names.map((name, i) => ({ name, state: i ? "failed" : "passed", words: i ? "2 tests fail" : "312 passed" })) } };
+  sp.openSpread({ kind: "gate", slug, from: document.querySelector(".cards-m, .cards-s") }); }"""
+
+
+def test_a_mat_lies_on_its_owners_felt_with_its_words_on_plates_and_the_table_under_it_inert_and_dimmed(page_url):
+    with sync_playwright() as p:
+        b, pg = opened(p, page_url)
+        pg.evaluate(RED, THREE)
+        mat = pg.locator(".sp.mf.ork-table[data-party='orkmaster']")
+        mat.wait_for(timeout=5000)
+        assert mat.locator(".mf-t.ork-plate").count() == 1 and mat.locator(".sp-say.ork-plate").count() == 1       # the head's words on plates
+        assert mat.locator(".sp-note.ork-plate").count() == 1
+        assert pg.locator(".mf-phase.is-on").count() == 1                                     # the phases lie along the foot of a mat about one goal
+        assert pg.locator(".frame-table").evaluate("e => e.hasAttribute('inert')")
+        assert not pg.locator(".frame-hand").evaluate("e => e.hasAttribute('inert')")                               # the hand stays live
+        assert pg.evaluate("getComputedStyle(document.querySelector('.mf-veil')).backgroundColor") != "rgba(0, 0, 0, 0)"     # the scrim dims the table
+        assert pg.evaluate("document.activeElement.classList.contains('sp-shut')")
+        b.close()
+
+
+def test_the_seal_is_dim_with_its_why_told_by_its_rim_never_by_opacity(page_url):
+    with sync_playwright() as p:
+        b, pg = opened(p, page_url)
+        pg.evaluate(RED, THREE)
+        seal = pg.locator(".mf-foot .mf-seal")
+        seal.wait_for(timeout=5000)
+        assert seal.get_attribute("aria-disabled") == "true" and "sealed" in seal.inner_text()
+        look = seal.evaluate("e => [e, ...e.querySelectorAll('*')].map((x) => getComputedStyle(x).opacity).join()")
+        assert set(look.split(",")) == {"1"}, look                                                                  # told by its rim, not faded
+        assert seal.evaluate("e => getComputedStyle(e).outlineStyle") == "dashed"
+        box = seal.bounding_box()
+        acts = pg.locator(".mf-foot").bounding_box()
+        assert box["x"] + box["width"] >= acts["x"] + acts["width"] - 12                                            # at the foot's right
+        b.close()
+
+
+def test_tab_goes_through_the_mat_only_and_esc_gives_the_focus_back_to_the_card_that_opened_it(page_url):
+    with sync_playwright() as p:
+        b, pg = opened(p, page_url)
+        pg.locator(".cards-m").first.focus()
+        pg.evaluate(RED, THREE)
+        pg.locator(".sp-veil[data-spread='gate']").wait_for(timeout=5000)
+        seen = []
+        for _ in range(8):
+            pg.keyboard.press("Tab")
+            seen.append(pg.evaluate("() => !!document.activeElement.closest('.sp-veil')"))
+        assert all(seen), seen
+        pg.keyboard.press("Escape")
+        pg.locator(".sp-veil").wait_for(state="detached", timeout=5000)
+        assert pg.evaluate("() => !document.querySelector('[inert]')")
+        assert pg.evaluate("() => document.activeElement.matches('.cards-m, .cards-s')")
+        b.close()
+
+
+def test_a_leaders_table_lies_on_its_leaders_felt_and_on_a_phone_a_mat_is_the_whole_screen_with_back(page_url):
+    with sync_playwright() as p:
+        b, pg = opened(p, page_url)
+        pg.locator(".cards-m[data-mat='table']").first.click(position={"x": 30, "y": 20})
+        tb = pg.locator(".tb.sp.mf.ork-table[data-framework='architecture']")
+        tb.wait_for(timeout=5000)
+        assert tb.get_attribute("data-party") == "ork" and tb.get_attribute("data-race") == "ork" and tb.locator(".mf-t.ork-plate").inner_text().startswith("Tech's table")
+        pg.keyboard.press("Escape")
+        pg.locator(".tb").wait_for(state="detached", timeout=5000)
+        assert pg.evaluate("() => document.activeElement.matches('.cards-m')")
+        pg.set_viewport_size({"width": 390, "height": 844})
+        pg.evaluate(RED, THREE)
+        mat = pg.locator(".sp.mf")
+        mat.wait_for(timeout=5000)
+        box = mat.bounding_box()
+        assert box["x"] <= 1 and box["y"] <= 1 and box["width"] >= 388 and box["height"] >= 842, box
+        assert pg.locator(".sp-shut").inner_text().strip() == "Back"
+        assert pg.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+        b.close()

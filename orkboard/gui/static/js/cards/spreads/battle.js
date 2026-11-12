@@ -10,6 +10,7 @@ import { TokenDot } from "../handtokens.js";
 import { verdictsOf } from "../verdict.js";
 import { settle } from "../../hand/turnstops.js";
 import { whoOf } from "../../table/post.js";
+import { phaseOf } from "../../table/data.js";
 import { closeSpread } from "./open.js";
 import { SpBack, SpCard, SpreadFrame, faceOf } from "./shell.js";
 
@@ -57,7 +58,7 @@ export function Battle({ slug }) {
   const title = `A new card against ${NUMBER[against.length] || against.length}`;
   return html`<${SpreadFrame} kind="battle" title=${title} line="The Orkmaster's spread: a battle · nothing is decided for you"
       say=${`It goes against ${againstWords(against)}. Read each axis; the old cards carry what it costs to undo them.`}
-      note="Play a way: every leader is told, the Orkmaster writes it in the journal." hand=${hand}>
+      note="Play a way: every leader is told, the Orkmaster writes it in the journal." hand=${hand} phase=${phaseOf(slug) || "talk"}>
     <div class="bt">
       <section class="bt-side bt-new" aria-label="The new card"><p class="cards-lab" data-race="orkmaster">The new card</p>
         <${SpCard} party=${n.goal} n=${faceOf(n)} name=${n.short || n.title} line=${n.state === "talk" ? "talk" : n.state} size="xl" label=${`${n.title}, the new card`} /></section>

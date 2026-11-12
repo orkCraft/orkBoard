@@ -1,16 +1,6 @@
 /* The spreads (goal 170, the talk of 11 November 2026; docs/mockups/spreads/, desktop): cards laid out so a person looks at one thing at a
    time, over the table. A veil, the Orkmaster's head with its line, the field, the hand's strip under it. Layout only: every colour, face and
    corner is orkUI's (`.ork-card`, `.ork-btn`), a party's colour comes from table/look.css `--party-hue` (`data-race`). */
-.sp-veil { position: fixed; inset: 0; z-index: 800; background: var(--ork-scrim); }
-.sp { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) 196px; background: var(--ork-scrim); }   /* two scrims over the table: it shows, dimmed, as in the mockup */
-.sp-h { display: flex; align-items: center; gap: 12px; padding: 22px 40px 0; }
-.sp-av { flex: none; width: 52px; height: 52px; display: grid; place-items: center; }
-.sp-t { flex: 1; min-width: 0; } .sp-t b { display: block; font: var(--ork-type-title); } .sp-t small { display: block; font: var(--ork-type-caption); color: var(--ork-ink-read); }
-.sp-say { position: relative; max-width: 560px; padding: 8px 12px; background: var(--ork-panel); border: 1px solid var(--ork-card-frame); font: var(--ork-type-caption); color: var(--ork-ink); }
-.sp-field { position: relative; min-height: 0; overflow: auto; display: flex; align-items: center; justify-content: center; gap: 28px; padding: 18px 40px 10px; }
-.sp-hand { display: flex; align-items: flex-end; gap: 14px; padding: 0 24px 14px; border-top: 1px solid var(--ork-frame); }
-.sp-note { align-self: center; margin: 0; max-width: 260px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.sp-acts { margin-left: auto; align-self: center; display: flex; gap: 10px; align-items: center; }
 .sp-kb { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; margin: 0 2px; border: 1px solid var(--ork-edge); font: var(--ork-type-label); text-transform: none; letter-spacing: 0; color: var(--ork-ink-read); }
 .sp-cap { font: var(--ork-type-label); text-transform: none; letter-spacing: 0; color: var(--ork-ink-read); text-align: center; }
 .sp-col { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
@@ -135,8 +125,6 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .cards-matrow:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .cards-matrow > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .cards-matrow .cards-mat__shape { width: 18px; height: 14px; }
-.sp:has(> .cards-said) { grid-template-rows: auto auto minmax(0, 1fr) 196px; }      /* a spread a mat opened: the leader's words under its head (decisions §297.4) */
-.sp > .cards-said { margin: 10px 40px 0; }
 
 /* a battle (js/cards/spreads/battle.js; decisions §298.6): the new card, the axes, the old cards; on a phone width they stack */
 .bt { display: flex; align-items: center; justify-content: center; gap: 36px; width: 100%; }
@@ -165,13 +153,10 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
   .bt-axes { width: 100%; max-width: none; }
 }
 @media (max-width: 700px) {
-  [data-spread="battle"] .sp { background: var(--ork-room); }
   [data-spread="battle"] .sp-t small { display: none; } [data-spread="battle"] .sp-t b { font: var(--ork-type-heading); }
   .bt-new .sp-card.is-xl { --card-w: 150px; padding: 28px 12px 24px; } .bt-new .sp-card .cards-s__name, .bt-new .sp-card .sp-card__name { font-size: 16px; line-height: 20px; }
   [data-spread="battle"] .sp-h { padding: 12px 16px 0; } [data-spread="battle"] .sp-say { display: none; }
   [data-spread="battle"] .sp-field { align-items: flex-start; justify-content: flex-start; padding: 12px 16px; }
   [data-spread="battle"] .sp-cards { flex-wrap: wrap; gap: 8px; align-self: center; width: 100%; }
   .sp-cards .bt-way.ork-card { width: auto; height: auto; padding: 8px 12px; } .bt-way small { display: none; }
-  [data-spread="battle"] .sp { grid-template-rows: auto minmax(0, 1fr) auto; }
-  [data-spread="battle"] .sp-note { display: none; }
 }

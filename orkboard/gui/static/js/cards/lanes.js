@@ -9,8 +9,8 @@ import { raceOf } from "../table/felt.js";
 import { CardM, CardS, openCard } from "./card.js";
 import { openSpread } from "./spreads/open.js";
 import { nodes, postsOf, shareOf } from "./feed.js";
-import { FrameSwitch, TablesView } from "./tables/index.js";      // a leader's framework instead of the lanes (goal 170 T)
-import { frameworkOf, laid } from "./tables/state.js";
+import { FrameSwitch } from "./tables/index.js";      // a leader's framework, a mat over the pane (goal 171 H)
+import { frameworkOf } from "./tables/state.js";
 
 export const AT_WORK = new Set(["ready", "running", "testing", "picking", "failed", "review"]);
 
@@ -38,6 +38,5 @@ function Lane({ g }) {
 
 /** The lanes, one a party, in the tabs' order. */
 export function CardsLanes({ parties }) {
-  if (laid.value && parties.some((g) => g.slug === laid.value)) return html`<${TablesView} parties=${parties} />`;
   return html`<div class="cards-lanes" style=${`--lanes:${Math.max(parties.length, 1)}`}>${parties.map((g) => html`<${Lane} key=${g.slug} g=${g} />`)}</div>`;
 }

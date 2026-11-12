@@ -25,6 +25,9 @@ export function frameworkOf(g) {
 /** Which party's table is laid in the pane in place of the lanes: a party slug, or "" for the lanes (Feed). */
 export const laid = signal("");
 
+/** The element the focus goes back to when the table is put away (the card or the switch that laid it), or null. */
+export const laidFrom = signal(null);
+
 /** The part a mat laid the table at (mat.js): {party, framework, card, p} (`p`: the leader's post, said at the table's head), or null. */
 export const laidAt = signal(null);
 
