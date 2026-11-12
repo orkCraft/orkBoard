@@ -132,11 +132,21 @@ def test_an_opened_goal_lies_on_its_slips_reply_and_ask_send_their_commands(page
         assert pg.locator(".cards-l .cards-ct").count() == 0 and pg.locator(".cards-l .cards-mark").count() == 3
         assert pg.locator(".cards-stage .cards-slip .cards-ct").count() == 3
         slip = pg.locator("[data-slip='tech']")
+        assert pg.locator(".cards-stage textarea").count() == 0                       # every reply is closed until its button is pressed
+        slip.get_by_role("button", name="Reply to Tech").click()
+        assert pg.locator(".cards-stage textarea").count() == 1 and pg.evaluate("() => document.activeElement.tagName") == "TEXTAREA"
+        pg.keyboard.press("Escape")                                                    # closes the field only, the card stays, the focus is back on the button
+        assert pg.locator(".cards-stage textarea").count() == 0 and pg.locator(".cards-stage").count() == 1
+        assert pg.evaluate("() => document.activeElement.dataset.reply") == "tech"
+        slip.get_by_role("button", name="Reply to Tech").click()
         slip.locator("textarea").fill("Does the phone keep its own order?")
         slip.get_by_role("button", name="Send to Tech").click()
         pg.wait_for_function("() => document.body.innerText.includes('Sent to Tech')")
         sent = pg.evaluate(SENT)
         assert {"name": "ideas.reply", "args": {"slug": slug, "leader": "tech", "text": "Does the phone keep its own order?"}} in sent
+        card, ask = pg.locator(".cards-l").bounding_box(), pg.locator(".cards-ask").bounding_box()
+        assert pg.locator(".cards-l .cards-ask").count() == 1 and ask["y"] + ask["height"] <= card["y"] + card["height"] + 1      # inside the card, never over the hand
+        assert pg.locator(".cards-ask textarea").count() == 0
         heads = pg.locator(".cards-ask__b")
         assert heads.count() >= 4 and pg.locator(".cards-ask__one small").count() >= 1 and "not on its route" in pg.locator(".cards-ask__one small").first.inner_text()
         pg.locator(".cards-ask__b[data-ask='design']").click()
@@ -161,4 +171,15 @@ def test_on_a_phone_the_slips_stand_in_a_column_under_the_card(page_url):
         pg.locator(".cards-stage").wait_for()
         card, slip = pg.locator(".cards-l").bounding_box(), pg.locator(".cards-slip").first.bounding_box()
         assert slip["y"] >= card["y"] + card["height"] - 2
+        b.close()
+
+
+def test_every_party_has_its_races_tool_and_colour(page_url):
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = b.new_page(viewport={"width": 1440, "height": 900})
+        opened(pg, page_url)
+        got = pg.evaluate("""() => Promise.all([import('/static/js/cards/verdict.js'), import('/static/js/table/post.js')]).then(([v]) =>
+            ['tech', 'design', 'product', 'release'].map((s) => [s, v.raceIn(s), v.TOOLS[v.raceIn(s)]]))""")
+        assert got == [["tech", "ork", "drum-gear"], ["design", "elf", "bow-drip"], ["product", "knight", "map-cross"], ["release", "undead", "hourglass-candle"]]
         b.close()

@@ -4,7 +4,11 @@
 // as squares under it, always in the order ok, q, r, b: who looked is the ring's colour, what it found the squares'. No total.
 import { html, cls } from "../html.js";
 import { proposed } from "../link.js";
+import { raceOf } from "../table/felt.js";
 import { whoOf } from "../table/post.js";
+
+/** A leader's race: the party's (post.js), else the one its slug names (felt.js), so a party the page has not loaded yet still has its tool and colour. */
+export const raceIn = (leader) => whoOf(leader).race || raceOf({ slug: leader });
 
 export const KINDS = ["ok", "q", "r", "b"];
 export const WORDS = { ok: ["approved", "approved"], q: ["question", "questions"], r: ["risk", "risks"], b: ["risk that blocks", "risks that block"] };
@@ -33,8 +37,8 @@ export const Square = ({ kind }) => html`<i class="cards-sq" data-kind=${kind} r
 
 /** A craft's token: a button, its leader's tool in its party's ring, its checks as squares under it. `on`: its slip is open. */
 export function CraftToken({ leader, checks, onPress = null, on = false }) {
-  const w = whoOf(leader), tool = TOOLS[w.race] || TOOLS.ork;
-  return html`<button type="button" class=${cls("cards-ct", { "is-on": on })} data-race=${w.race || "orkmaster"} data-leader=${leader} data-ct=${leader}
+  const race = raceIn(leader), tool = TOOLS[race] || TOOLS.ork;
+  return html`<button type="button" class=${cls("cards-ct", { "is-on": on })} data-race=${race || "orkmaster"} data-leader=${leader} data-ct=${leader}
       aria-label=${saysOf(leader, checks)} aria-expanded=${on ? "true" : "false"} title=${saysOf(leader, checks)}
       onClick=${(e) => { e.stopPropagation(); onPress?.(e); }} onKeyDown=${(e) => { if (e.key === "Enter" || e.key === " ") e.stopPropagation(); }}>
     <span class="cards-ct__ring"><span class=${`ork-tool ${tool}`} aria-hidden="true"></span></span>

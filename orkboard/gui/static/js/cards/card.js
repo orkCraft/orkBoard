@@ -113,12 +113,13 @@ export function CardL({ onPick }) {
   useLayoutEffect(() => {   // the keys at once, before the first paint: an Esc pressed as the card opens closes it
     if (!o) return undefined;
     root.current?.querySelector(".cards-l__shut")?.focus();
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); shut(); } else keepTab(root.current?.closest(".cards-veil"), e); };
+    const key = (e) => { if (e.key === "Escape") { if (e.target.closest?.(".cards-field")) return; e.preventDefault(); shut(); } else keepTab(root.current?.closest(".cards-veil"), e); };
     addEventListener("keydown", key, true);
     return () => removeEventListener("keydown", key, true);
   }, [o]);
   if (!o) return null;
   const leader = o.kind === "post" ? o.p.leader : o.n.leader || "orkmaster", goal = o.kind === "goal", verdicts = goal ? verdictsOf(o.n.slug) : [];
+  const route = goal ? [...new Set([...verdicts.map((v) => v.leader), ...(o.n.leader && o.n.leader !== "orkmaster" ? [o.n.leader] : [])])] : [];
   const card = html`<article ref=${root} class="ork-card cards-l" role="dialog" aria-modal="true" aria-label=${o.kind === "post" ? `${whoOf(leader).name}: ${o.p.text}` : o.n.title}
         data-race=${whoOf(leader).race || "orkmaster"} data-from=${o.kind}>
       <button type="button" class="ork-btn quiet cards-l__shut" onClick=${shut}><${Icon} name="close" /><span>Close</span></button>
@@ -127,14 +128,14 @@ export function CardL({ onPick }) {
         : html`<${PostHead} leader=${leader} sub=${o.line || ""} />
           <h2 class="cards-l__title">${o.n.title}</h2>
           <${Marks} verdicts=${verdicts} />
-          ${o.n.slug && html`<${GoalLine} slug=${o.n.slug} onPick=${(s) => { shut(); onPick?.(s); }} />`}`}
+          ${o.n.slug && html`<${GoalLine} slug=${o.n.slug} onPick=${(s) => { shut(); onPick?.(s); }} />`}
+          <${AskRow} slug=${o.n.slug} route=${route} />`}
       ${o.acts?.length > 0 && html`<div class="cards-l__acts">${o.acts.map((a) => html`<button type="button" class=${cls("ork-btn", { primary: a.main })} onClick=${() => { a.run(); shut(); }}>${a.label}</button>`)}</div>`}
     </article>`;
   if (!goal) return html`<div class="cards-veil" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>${card}</div>`;
-  const route = [...new Set([...(verdicts.map((v) => v.leader)), ...(o.n.leader && o.n.leader !== "orkmaster" ? [o.n.leader] : [])])];
   return html`<div class="cards-veil" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>
     <div class="cards-stage" onClick=${(e) => { if (e.target === e.currentTarget) shut(); }}>
       <${SlipsColumn} slug=${o.n.slug} verdicts=${verdicts} side=${0} />
-      <div class="cards-stage__mid">${card}<${AskRow} slug=${o.n.slug} route=${route} /></div>
+      <div class="cards-stage__mid">${card}</div>
       <${SlipsColumn} slug=${o.n.slug} verdicts=${verdicts} side=${1} /></div></div>`;
 }

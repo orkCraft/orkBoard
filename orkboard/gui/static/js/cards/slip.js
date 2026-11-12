@@ -5,7 +5,7 @@ import { render } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { HeadOf, whoOf } from "../table/post.js";
-import { CraftToken, Square, saysOf } from "./verdict.js";
+import { CraftToken, Square, raceIn, saysOf } from "./verdict.js";
 
 /** The slip's lines: a square and its words, a risk's *Fixed by* under it. */
 export const Checks = ({ checks }) => html`<ul class="cards-slip__checks">${checks.map((c, i) => html`<li key=${i} data-kind=${c.kind}><${Square} kind=${c.kind} />
@@ -14,7 +14,7 @@ export const Checks = ({ checks }) => html`<ul class="cards-slip__checks">${chec
 /** A slip: its leader's head and name, its token when given (`token`), its checks, `children` under them (a reply). */
 export function Slip({ leader, checks, token = null, children = null, ...rest }) {
   const w = whoOf(leader);
-  return html`<section class="cards-slip" data-race=${w.race || "orkmaster"} data-slip=${leader} aria-label=${`${saysOf(leader, checks)}: its checks`} ...${rest}>
+  return html`<section class="cards-slip" data-race=${raceIn(leader) || "orkmaster"} data-slip=${leader} aria-label=${`${saysOf(leader, checks)}: its checks`} ...${rest}>
     <header class="cards-slip__head">${token}<span class="cards-slip__av"><${HeadOf} w=${w} /></span><b>${w.name}</b><small>its checks</small></header>
     <${Checks} checks=${checks} />${children}</section>`;
 }
@@ -33,7 +33,7 @@ const WIDE = 264, GAP = 22;
 /** The slip of an S's token, beside the card on a thread of its party's colour: on the card's right, else its left; the thread from the token to the slip.
  *  Measured after layout, and again when the page scrolls or is resized. Esc, a second press or a press elsewhere puts it away (`onClose`). */
 export function SlipBeside({ v, card, token, onClose }) {
-  const [at, setAt] = useState(null), me = useRef(null), w = whoOf(v.leader);
+  const [at, setAt] = useState(null), me = useRef(null);
   const place = () => {
     if (!card?.isConnected || !token?.isConnected || !me.current) return;
     const c = card.getBoundingClientRect(), t = token.getBoundingClientRect(), h = me.current.offsetHeight;
@@ -49,7 +49,7 @@ export function SlipBeside({ v, card, token, onClose }) {
     addEventListener("keydown", key, true); addEventListener("pointerdown", down, true); addEventListener("resize", place); addEventListener("scroll", place, true);
     return () => { removeEventListener("keydown", key, true); removeEventListener("pointerdown", down, true); removeEventListener("resize", place); removeEventListener("scroll", place, true); };
   }, [v, card, token]);
-  return html`<${Overlay}><div class="cards-beside" data-race=${w.race || "orkmaster"}>
+  return html`<${Overlay}><div class="cards-beside" data-race=${raceIn(v.leader) || "orkmaster"}>
     ${at && html`<i class="cards-thread" aria-hidden="true" style=${`left:${at.x1}px;top:${at.y1}px;width:${at.len}px;transform:rotate(${at.deg}deg)`}></i>`}
     <div ref=${me} class=${cls("cards-beside__slip", { "is-hidden": !at })} style=${at ? `left:${at.x}px;top:${at.y}px;width:${WIDE}px` : `left:0;top:0;width:${WIDE}px`}>
       <${Slip} leader=${v.leader} checks=${v.checks} /></div></div><//>`;

@@ -81,5 +81,11 @@
 @media (max-width: 600px) { .cards-stage__mid .cards-l { width: 100vw; } }
 .cards-wait .ork-card.cards-s.has-act { --card-w: 128px; }
 .cards-s.has-act.has-toks .cards-c--bl { bottom: 72px; }
-.cards-stage__mid .cards-l { width: min(430px, 92vw, calc((100vh - 230px) * 2.5 / 3.5)); }
+.cards-stage__mid .cards-l { width: min(430px, 92vw, calc((100vh - 60px) * 2.5 / 3.5)); }
 .cards-s.has-act.has-toks .cards-c--bl { max-width: 90%; }
+.cards-linkb { margin-top: 8px; padding: 0; border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-button); text-decoration: underline; cursor: pointer; }
+.cards-linkb:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.cards-l .cards-ask { margin-top: 6px; max-width: none; }
+.cards-l .cards-ask__heads { gap: 8px; }
+.cards-l .cards-ask .cards-field { width: 100%; }
+.cards-l .cards-l__acts { margin-top: auto; }
