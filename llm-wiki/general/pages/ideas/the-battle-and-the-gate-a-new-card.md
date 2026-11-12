@@ -17,6 +17,8 @@ The battle and the gate: a new card against the decisions it goes against, the g
 
 The person, 12 November 2026, on the mockups `docs/mockups/mats/` (decisions §300, §301): «битва (твоя карта снизу, а над ней 1+ карты прошлых решений), действие - соглашаешься или нет переписать прошлые решения»; «Гейт в теории тогда можно объединить с битвой, тоже карты тестов сверху». Split from goal 171 (the person: «да», on a goal for each mat), built on the Board's own data with its logic in the host, no mock data on the page (§301.1).
 
+Goal 171's stage G removed four browser cases of `tests/test_cards_battle_browser.py` that only the mock's battles held (the battle card in the hand with its emblem, *vs §240* and *Settle it*; the spread with its axes and its cost to undo; a way sending `ideas.battle_settle`, Esc giving the focus back; the phone's stack): this goal brings them back on the host's answer.
+
 ## Why
 
 ## Done when
