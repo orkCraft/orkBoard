@@ -152,6 +152,36 @@ body { margin: 0; background: var(--ork-room); color: var(--ork-ink); font: 400 
 .chip img { width: 16px; height: 16px; } .chip.plain { padding-left: 7px; }
 .pop { position: absolute; z-index: 6; padding: 10px; background: var(--ork-panel); border: 1px solid var(--ork-edge); box-shadow: 0 8px 0 var(--ork-room); display: flex; flex-direction: column; gap: 8px; }
 .pop .row { display: flex; gap: 8px; }
+
+/* the battle as a playmat (steps 1, 2): orkUI's felt and bronze (.ork-table), words on plates (.ork-plate), zones printed in bronze */
+.mat.ork-table { border: 0; padding: 18px 26px 16px; }
+.mat.ork-table .shut { background: var(--_plate); }
+.zone { position: relative; border: 1px solid var(--ork-bronze); border-radius: 10px; box-shadow: inset 0 0 0 3px var(--_plate, var(--ork-room)), inset 0 0 0 4px var(--ork-bronze-lo); padding: 22px 14px 14px; display: flex; gap: 18px; align-items: flex-end; justify-content: center; }
+.zone > .zl { position: absolute; left: 12px; top: -8px; padding: 0 8px; background: var(--_plate, var(--ork-room)); font: 700 10px/16px var(--ork-font-text); letter-spacing: .16em; text-transform: uppercase; color: var(--ork-gilt); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; }
+.zone .wm { position: absolute; inset: 0; margin: auto; width: 64px; height: 64px; background: var(--ork-bronze-lo); -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; opacity: .8; pointer-events: none; }
+.zone .slot { width: var(--w); aspect-ratio: 2.5 / 3.5; border: 1px solid var(--ork-bronze-lo); border-radius: var(--ork-radius-card); position: relative; }
+.undo { margin-top: 6px; display: inline-block; padding: 2px 8px; font-size: 11px; line-height: 15px; background: var(--_plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; color: var(--ork-ink-read); }
+.bline { position: relative; display: grid; grid-template-columns: repeat(3, 1fr) 90px; align-items: center; }
+.bline .col { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0; border-left: 1px solid var(--ork-bronze-lo); }
+.bline .col:first-child { border-left: 0; }
+.bline .mid { position: absolute; left: 0; right: 90px; top: 50%; height: 0; border-top: 3px double var(--ork-bronze); }
+.bline .ax { position: relative; z-index: 1; padding: 1px 10px; background: var(--_plate); border: 1px solid var(--ork-bronze); border-radius: 4px; font: 700 10px/15px var(--ork-font-text); letter-spacing: .16em; text-transform: uppercase; color: var(--ork-gilt); }
+.bline .nt { justify-self: end; font: 700 10px/14px var(--ork-font-text); letter-spacing: .14em; text-transform: uppercase; color: var(--ork-bronze-hi); text-align: right; }
+/* step 2: the thick token, the cards lying, the ways in a fan, the seal, the phases */
+.tk.thick .ring { width: 30px; height: 30px; border-width: 3px; box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--hue) 35%, var(--ork-room)), inset 0 2px 0 color-mix(in srgb, var(--hue) 25%, var(--ork-ink)), 0 2px 0 color-mix(in srgb, var(--hue) 45%, var(--ork-room)), 0 4px 0 var(--ork-room); }
+.tk.thick .ring i { width: 16px; height: 16px; } .tk.thick .pips { padding: 2px 4px; background: var(--_plate); border: 1px solid var(--ork-bronze-lo); border-radius: 3px; gap: 2px; } .tk.thick .p { width: 7px; height: 7px; }
+.illo { position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; translate: -50% -50%; pointer-events: none; z-index: 0; }
+.illo i { position: absolute; inset: 0; background: var(--_s1); -webkit-mask: url(../../../design-system/orkui/signs/sword.svg) center / contain no-repeat; mask: url(../../../design-system/orkui/signs/sword.svg) center / contain no-repeat; opacity: .9; }
+.illo i:first-child { rotate: -38deg; } .illo i:last-child { rotate: 38deg; }
+.wayc { width: 96px; aspect-ratio: 2.5 / 3.5; padding: 10px 8px; display: flex; flex-direction: column; justify-content: center; text-align: center; gap: 6px; font: 700 13px/16px var(--ork-font-text);
+  background: var(--ork-card); border-radius: var(--ork-radius-card); box-shadow: inset 0 0 0 2px var(--ork-bronze), inset 0 0 0 4px var(--ork-card), inset 0 0 0 5px var(--ork-bronze-lo), 0 4px 0 var(--ork-room); }
+.wayc small { font: 400 10px/13px var(--ork-font-read); color: var(--ork-ink-read); }
+.wayc.pick { translate: 0 -18px; box-shadow: inset 0 0 0 2px var(--ork-gilt), inset 0 0 0 4px var(--ork-card), inset 0 0 0 5px var(--ork-bronze), 0 0 0 2px var(--ork-gilt-hi), 0 6px 0 var(--ork-room); }
+.seal { width: 112px; height: 112px; border-radius: 50%; display: grid; place-items: center; text-align: center; padding: 14px; background: var(--ork-bronze-lo); color: var(--ork-gilt-hi);
+  box-shadow: inset 0 0 0 3px var(--ork-bronze), inset 2px 2px 0 3px var(--ork-bronze-hi), inset 0 0 0 7px var(--ork-bronze-lo), inset 0 0 0 8px var(--ork-bronze), 0 4px 0 var(--ork-room); font: 700 15px/18px var(--ork-font-text); }
+.seal small { display: block; font: 400 11px/14px var(--ork-font-read); color: var(--ork-ink-read); margin-top: 3px; } .seal.dim { opacity: .45; }
+.phases { display: flex; gap: 0; align-items: center; } .phases span { padding: 2px 10px; font: 700 10px/15px var(--ork-font-text); letter-spacing: .14em; text-transform: uppercase; color: var(--ork-bronze-hi); }
+ .phases .on { background: var(--_plate); color: var(--ork-gilt-hi); border: 1px solid var(--ork-gilt); border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -280,6 +310,8 @@ const OLD = [
 const NEW = (w) => S({ who: "om", rune: "knot", sign: "sword", pic: SG("sword"), picSign: true, title: "Piles per branch", line: "vs §273", when: "battle", act: "Settle it", w });
 const WAYS = [["New wins", "§273 replaced by a new decision; the done goal reopened as a change"], ["Old wins", "the new card changed to fit two piles"], ["Merge", "the leaders write one card of both"], ["Not a battle", "they do not touch"]];
 function battle() {
+  const STEP = +(q.get("step") || 0);
+  if (STEP) return battleMat(STEP);
   const head = hd("om", "Battle: Piles per branch vs §273", "a new card against what it goes against; its crafts' verdicts axis by axis, no winner said");
   const ways = (w) => WAYS.map(([t, s], i) => `<span class="way ${i === 0 ? "" : ""}" style="width:${w}px">${t}<small>${s}</small></span>`).join("");
   if (DESK) {
@@ -295,6 +327,34 @@ function battle() {
     <div style="display:flex;justify-content:center">${NEW(118)}</div>`;
   return matPhone("om", head, body, `<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:6px">${WAYS.map(([t]) => `<span class="way" style="width:auto;aspect-ratio:2.5/3;font-size:12px">${t}</span>`).join("")}</div>`);
 }
+/* the battle as a playmat: step 1 the felt, the plates and the zones printed; step 2 the emblem under them, the cards lying, thick tokens, the ways in a fan, the seal, the phases */
+function battleMat(step) {
+  const two = step > 1, W = DESK ? 116 : 96, rot = (d) => (two ? `rotate:${d}deg;` : "");
+  const NEW = (w) => S({ who: "om", rune: "knot", sign: "sword", pic: SG("sword"), picSign: true, title: "Piles per branch", line: "vs §273", when: "new", w });
+  const tkx = (who, ks) => tk(who, ks, two ? "thick" : "");
+  const old = (o, i) => `<div style="display:flex;flex-direction:column;align-items:center;${rot(i ? 1.4 : -1.8)}">${S({ ...o.c, w: W })}<span class="undo">${o.undo}</span></div>`;
+  const line = (w) => `<div class="bline" style="width:${w}px">${["Product", "Tech", "Design"].map((a, i) => `<div class="col">${tkx(AXC[i], [["ok", "ok"], ["ok", "r"], ["ok"]][i])}<span class="ax">${a}</span>${tkx(AXC[i], [["ok", "ok"], ["ok", "ok", "q"], ["ok", "ok"]][i])}</div>`).join("")}<span class="mid"></span><span class="nt">No<br>total</span></div>`;
+  const ways = (w) => WAYS.map(([t, sub], i) => two ? `<span class="wayc ${i === 0 ? "pick" : ""}" style="width:${w}px;rotate:${[-5, -1.5, 1.5, 5][i]}deg">${t}<small>${sub}</small></span>`
+    : `<span class="way" style="width:${w}px">${t}<small>${sub}</small></span>`).join("");
+  const head = `<div class="hd"><img src="${H.om}" alt=""><span class="ork-plate" style="padding:6px 12px"><b>Battle: Piles per branch vs §273</b><small>a new card against what it goes against; its crafts' verdicts axis by axis, no winner said</small></span><span class="shut">Close</span></div>`;
+  const phases = `<span class="phases">${["New", "Talk", "Spec", "Work", "Done"].map((p, i) => `${i ? '<i style="color:var(--ork-bronze);font-style:normal">›</i>' : ""}<span class="${i === 1 ? "on" : ""}">${p}</span>`).join("")}</span>`;
+  const seal = `<span class="seal ${two ? "" : "dim"}">${two ? `Settle it<small>New wins</small>` : `Settle it<small>pick a way</small>`}</span>`;
+  if (DESK) {
+    const body = `${two ? `<span class="illo" aria-hidden="true"><i></i><i></i></span>` : ""}<div style="position:relative;z-index:1;display:grid;gap:22px;justify-items:center;padding-top:6px">
+      <div class="zone" style="--m:url(${SG("page")})"><span class="zl">What it goes against</span>${OLD.map(old).join("")}<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span class="slot" style="--w:${W}px;opacity:.6"></span><span class="undo" style="opacity:.7">a third face up at most</span></div></div>
+      ${line(500)}
+      <div style="display:flex;gap:22px;align-items:flex-end"><div class="zone"><span class="zl">Yours</span><div style="${rot(0.8)}">${NEW(W)}</div></div>
+        <div class="zone" style="align-items:flex-end;gap:${two ? 4 : 10}px;${two ? "padding-top:38px" : ""}"><span class="zl">Its ways</span>${ways(two ? 96 : 92)}</div>${seal}</div></div>`;
+    const foot = `<span class="ork-plate" style="font-size:12px;padding:3px 10px">${two ? "Pick a way, then the seal settles it" : "Above: what it goes against, each its cost to undo. Below: yours and its ways."}</span><span class="move">${two ? phases : ""}</span>`;
+    return `<div class="face desk"><span class="under"></span><div class="mat tall ork-table" data-party="orkmaster">${head}<div class="body">${body}</div><div class="mf">${foot}</div></div></div>`;
+  }
+  const body = `${two ? `<span class="illo" style="top:430px;width:240px;height:240px" aria-hidden="true"><i></i><i></i></span>` : ""}<div style="position:relative;z-index:1;display:flex;flex-direction:column;gap:20px;align-items:stretch">
+    <div class="zone" style="gap:14px"><span class="zl">What it goes against</span>${OLD.map(old).join("")}</div>${line(340)}
+    <div style="display:flex;gap:14px;align-items:flex-end;justify-content:center"><div class="zone"><span class="zl">Yours</span><div style="${rot(0.8)}">${NEW(W)}</div></div>${seal.replace('class="seal', 'style="width:100px;height:100px" class="seal')}</div>
+    <div class="zone" style="gap:${two ? 2 : 6}px;padding-left:8px;padding-right:8px;${two ? "padding-top:38px" : ""}"><span class="zl">Its ways</span>${ways(two ? 78 : 76)}</div>${two ? `<div style="display:flex;justify-content:center">${phases}</div>` : ""}</div>`;
+  return `<div class="face phone"><div class="ph ork-table" data-party="orkmaster" style="padding:16px 16px 24px">${head.replace("Close", "Back")}${body}</div></div>`;
+}
+
 const RED = { who: "release", rune: "hourglass", sign: "cross", pic: H.release, title: "test_board_alone: a goal on local", line: "Orkboard starts with a module of Orkline's", when: "fails", w: 112 };
 function gate() {
   const head = hd("release", "Gate: Heads in rings → claude/heads-rings", OK ? "every check agrees: always, then the tests of what it touched" : "one check disagrees: it guards §50, Orkline imports Orkboard and never the other way round");
