@@ -1,6 +1,6 @@
 // A card of a move that waits, in play (goal 171 stage K; decisions §300.2, §302.4; the host's `ideas.turns`, hand/turnstops.js): the table of cards only.
 // A goal that asks (kind `asks`) lifts its ways as a question's do (sayplay.js `PlayWays`): the ways of its question, one question after the other when it asks several, and *In your own
-// words*; the last answer sends `ideas.answer {slug, answers, from: "hand"}`, one press, its toast saying what it sent with **Undo** (cards/played.js). A goal whose Talk is all said or whose spec
+// words*; the last answer sends `ideas.answer_way {slug, answers, from: "hand"}` (the answers written under their questions, no keeper pass begun), one press, its toast saying what it sent with **Undo** (cards/played.js). A goal whose Talk is all said or whose spec
 // is all written (kinds `talk`, `spec`) opens the mat its move lies on, the goal's stages (cards/spreads/track.js), where its ways lie in the hand. A battle (kind `battle`) opens its own spread.
 // `turnCard` is the descriptor `PlayWays` draws (and the phone's opened card, turnphone.js draws the same ways). Wide only.
 import { useEffect, useState } from "preact/hooks";
@@ -22,7 +22,7 @@ export function turnCard(s, picked = [], pick = () => {}) {
   const take = (text) => {
     const next = [...picked, text];
     if (next.length < qs.length) { pick(next); return Promise.resolve(); }
-    return playMove("ideas.answer", { slug, answers: next }, { from: "hand", goal: slug, said: sentWords(next), done: () => { settle(slug, "asks"); lower(); }, back: () => unsettle(slug, "asks") });
+    return playMove("ideas.answer_way", { slug, answers: next }, { from: "hand", goal: slug, said: sentWords(next), done: () => { settle(slug, "asks"); lower(); }, back: () => unsettle(slug, "asks") });
   };
   const ways = (q.ways || []).map((w, k) => ({ id: `way-${k}`, name: w, line: "", pick: false, kind: "", run: () => take(w) }));
   return { title: s.title, foot: `${q.ask}${qs.length > 1 ? ` (${i + 1} of ${qs.length})` : ""}`, sign: "question", element: n?.element || "", hue: n?.hue || "", head: s.head, tab: ORKMASTER, whole: true, ways,

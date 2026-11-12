@@ -67,7 +67,7 @@ def test_the_host_answers_ideas_turns_and_a_card_that_waits_is_ringed_with_its_t
         pg.locator("[data-way=own]").click()                                                               # its own words in a field, sent as the answer
         pg.locator(".hand-pen textarea").fill("Make it two coins")
         pg.keyboard.press("Enter")
-        assert sent(pg, "ideas.answer") == [{"slug": ASKS, "answers": ["Make it two coins"], "from": "hand"}]
+        assert sent(pg, "ideas.answer_way") == [{"slug": ASKS, "answers": ["Make it two coins"], "from": "hand"}]
         b.close()
 
 
