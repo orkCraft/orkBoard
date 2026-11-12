@@ -6,7 +6,8 @@ order: 113
 size:
 priority: normal
 short: The battle and the gate
-phase: new
+phase: talk
+route: product, design, tech
 by: claude-code
 schema: 3
 ---
