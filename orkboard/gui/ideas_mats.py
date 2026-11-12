@@ -20,7 +20,7 @@ from typing import Any
 from orkboard.core import idea_undo
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _device, _text
-from orkboard.realm import board_turns, code_layers, board_ask, event_log, goal_phase, idea_questions, idea_target, ideas, opportunity_tree, page_talk
+from orkboard.realm import board_map, board_turns, code_layers, board_ask, event_log, goal_phase, idea_questions, idea_target, ideas, opportunity_tree, page_talk
 
 SEALED_BY = {"ideas.to_main": "merge_main", "ideas.gate_merge": "merge_main", "ideas.goal_to_dev": "send_branch", "ideas.release_out": "ship_release",
              "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass"}
@@ -57,11 +57,11 @@ def played(ideas_: Any, name: str, fn: Any) -> Any:
         slug = args.get("slug") if isinstance(args.get("slug"), str) else ""
         if not slug:
             return fn(args)
-        i = ideas_
-        before = idea_undo.snapshot(i.root(), i.state_dir, slug)
+        i, party = ideas_, args.get("party") is True and name == "ideas.answer_way"      # a party's own question (its reading asked it) is answered as a goal's, on its own page
+        before = idea_undo.snapshot(i.root(), i.state_dir, slug, party)
         got = fn(args)
         origin = args["from"] if args.get("from") in ("hand", "mat") else ""
-        if idea_undo.keep(i.state_dir, slug, kind, before, idea_undo.snapshot(i.root(), i.state_dir, slug), i.host.publish, origin):
+        if idea_undo.keep(i.state_dir, slug, kind, before, idea_undo.snapshot(i.root(), i.state_dir, slug, party), i.host.publish, origin, party):
             i._ev(event_log.MOVE_PLAYED, args, idea=slug, kind=kind, **{"from": origin})
         return got
     return run
@@ -78,7 +78,23 @@ class Mats:
         found, pages = ideas.ideas_and_pages(root)
         parties = [{"slug": t["slug"], "title": t["title"]} for t in ideas.tracks(root, make=False)]
         at = {i["slug"]: ideas.touched_at(root, self.i.state_dir, i["slug"]) for i in found}
-        return {"turns": board_turns.turns({i["slug"]: pages[i["slug"]] for i in found}, parties, at)}
+        waiting = {i["slug"]: w for i in found if (w := self.waiting(i["slug"]))}
+        asking = {t["slug"]: page for t in parties if ideas.goal_state(self.i.state_dir, t["slug"])["state"] == "asks" and (page := ideas.track_page(root, t["slug"])) is not None}
+        return {"turns": board_turns.turns({i["slug"]: pages[i["slug"]] for i in found}, parties, at, waiting, asking)}
+
+    def waiting(self, slug: str) -> list[dict]:
+        """The cards the keeper's record holds for the person at a goal's Talk, as `talk_rows` lays them (a leader's question; a bug's case questions, then its guess as a yes-or-no question):
+        read only. They are what the old Needs you card asked, and the page does not hold them until they are answered."""
+        if ideas.state(self.i.state_dir, slug)["state"] != "talk":
+            return []
+        out: list[dict] = []
+        for row in board_map.talk_rows(self.i.state_dir, slug):
+            if row["kind"] == "talk":
+                out += row["questions"]
+            elif row["kind"] == "cause":
+                out += row["q"]
+                out.append({"q": f"Is this the cause? {row['cause']}".strip()[:200], "choices": [CAUSE_YES, CAUSE_NO], "pick": 0})
+        return out
 
 
     def verdicts(self, args: dict) -> dict:
@@ -112,38 +128,47 @@ class Mats:
         slug = args.get(key)
         if not isinstance(slug, str) or not slug.strip():
             raise IdeasError(f"{key} is not text")
-        got = idea_undo.undo(self.i.root(), self.i.state_dir, slug.strip(), self.i.host.publish, kind)
-        self.i.tree_note(slug.strip(), "undone")
+        party = args.get("party") is True
+        got = idea_undo.undo(self.i.root(), self.i.state_dir, slug.strip(), self.i.host.publish, kind, party)
+        self.i.tree_note(f"goal:{slug.strip()}" if party else slug.strip(), "undone")
         self.i._ev(event_log.MOVE_UNDONE, args, idea=slug.strip(), kind=got["kind"])
-        self.i.changed(slug.strip())
+        self.i.changed(f"goal:{slug.strip()}" if party else slug.strip())
         return {"ok": True, **got}
 
     def answer_way(self, args: dict) -> dict:
-        """A question's way played from the hand: each answer (in the order of the open questions) written under its question in the page, as `ideas_phase.py` `outside_answer` writes one,
-        with the page's `asks` followed at once. No keeper pass is begun and no model runs; a leader's pass that must follow is a separate, sealed move (`ideas.reply`)."""
+        """A question's way played from the hand: each answer (in the order of the questions that wait, `board_turns.asking`) written under its question in the page, as `ideas_phase.py`
+        `outside_answer` writes one, with the page's `asks` followed at once. A leader's question to the person (Talk's, a bug's cause) is written as `talk_answer` writes it
+        (`answers_written`: under its line, added where the page lacks it) and the keeper's record is left as it is. No keeper pass is begun and no model runs; a leader's pass that must follow is
+        a separate, sealed move (`ideas.reply`). `party: true`: the questions of a party's own page."""
         slug, answers = _text(args, "slug", 100), args.get("answers")
         if not isinstance(answers, list) or not all(isinstance(a, str) for a in answers):
             raise IdeasError("answers are a list of text")
-        root = self.i.root()
-        page = ideas.idea_page(root, slug)
+        root, party = self.i.root(), args.get("party") is True
+        page = ideas.track_page(root, slug) if party else ideas.idea_page(root, slug)
         if page is None:
-            raise IdeasError("That goal is gone")
+            raise IdeasError("That party is gone" if party else "That goal is gone")
         text, day = page.section("Open questions"), dt.date.today().isoformat()
-        waiting = idea_questions.open_of(text)
-        given = [(n, " ".join(a.split())[:2000]) for (n, _q), a in zip(waiting, answers)]
+        waiting = board_turns.asking(page, () if party else self.waiting(slug))
+        given = [(q, " ".join(a.split())[:2000]) for q, a in zip(waiting, answers)]
         if not waiting:
             raise IdeasError("This goal asks nothing now")
-        if not any(a for _n, a in given):
+        if not any(a for _q, a in given):
             raise IdeasError("Answer at least one question")
-        for n, a in given:
+        for q, a in given:
             if a:
-                text = idea_questions.with_answer(text, n, a, day, "the person")
-        ideas.set_section(root, slug, "Open questions", text)
-        goal_phase.mirror(root, self.i.state_dir, lambda i, st, plan, asks: self.i._idea_needs(i, st, plan, asks, root), only=slug)
-        self.i._ev(event_log.IDEA_ANSWERED, args, idea=slug, answers=sum(1 for _n, a in given if a), decided=False, round=1, recommended=0, picked=0,
-                   typed=sum(1 for _n, a in given if a), **({"from": args["from"]} if args.get("from") in ("hand", "open") else {}))
-        self.i._what[slug] = "answered"
-        self.i.changed(slug)
+                text = idea_questions.with_answer(text, q["n"] if "n" in q else q["line"], a, day, "the person")
+        with ideas.LOCK:
+            if party:
+                page.set_section("Open questions", text, ideas.TRACK_SECTIONS)
+                ideas._write(root / ideas.TRACKS / f"{slug}.md", page.text())
+            else:
+                ideas.set_section(root, slug, "Open questions", text)
+        if not party:
+            goal_phase.mirror(root, self.i.state_dir, lambda i, st, plan, asks: self.i._idea_needs(i, st, plan, asks, root), only=slug)
+        self.i._ev(event_log.IDEA_ANSWERED, args, idea=slug, answers=sum(1 for _q, a in given if a), decided=False, round=1, recommended=0, picked=0,
+                   typed=sum(1 for _q, a in given if a), **({"from": args["from"]} if args.get("from") in ("hand", "open") else {}))
+        self.i._what[f"goal:{slug}" if party else slug] = "answered"
+        self.i.changed(f"goal:{slug}" if party else slug)
         return {"ok": True}
 
     def ask_cost(self, args: dict | None = None) -> dict:
@@ -186,6 +211,7 @@ class Mats:
         return self.undo(args, "drop", "slug")
 
 
+CAUSE_YES, CAUSE_NO = "Yes, that is the cause", "No, it is elsewhere"
 ASKS_JOBS = "Product lays its jobs"
 ASKS_PEOPLE = "Product asks the person who the people are"
 

@@ -22,14 +22,14 @@ pytestmark = pytest.mark.browser
 BOXES = """() => { const h = document.querySelector('.frame-hand').getBoundingClientRect();
   return { hand: [h.top, h.bottom], old: !!document.querySelector('.hand-card--face'),
     cards: [...document.querySelectorAll('.frame-hand button.hand-card--stop')].map((c) => { const r = c.getBoundingClientRect();
-    return { w: r.width, h: r.height, top: r.top, bottom: r.bottom, asks: c.classList.contains('is-asks') && !['turn', 'battle'].includes(c.dataset.kind), bang: !!c.querySelector('.hands-asks'), goal: c.dataset.goal }; }) }; }"""
+    return { w: r.width, h: r.height, top: r.top, bottom: r.bottom, asks: c.classList.contains('is-asks') && c.dataset.kind !== 'battle', bang: !!c.querySelector('.hands-asks'), goal: c.dataset.goal }; }) }; }"""
 ALERT = """() => { const d = document.createElement('i'); d.style.color = 'var(--ork-alert)'; document.body.append(d);
   const c = getComputedStyle(d).color; d.remove(); return c; }"""
 
 
 @pytest.fixture(scope="module")
 def page_url():
-    s = serve_mock.serve(0, mock_kit.lay_standard)
+    s = serve_mock.serve(0, mock_kit.lay_turned)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}/"
     s.shutdown()
@@ -65,7 +65,7 @@ def test_pressing_a_question_card_opens_no_l_and_its_ways_are_cards(page_url):
         card = pg.locator(".frame-hand button.hand-card--stop.is-asks").first
         card.wait_for(timeout=15000)
         card.click()
-        pg.locator(".q-choose__row").first.wait_for(timeout=5000)
+        pg.locator(".hand-ways-row [data-way]").first.wait_for(timeout=5000)             # since goal 171 L3 a question is its turn card: its ways are one press (turncards.js)
         assert pg.locator(".cards-l").count() == 0
         b.close()
 
@@ -110,8 +110,8 @@ def test_each_goal_that_waits_is_one_card_in_the_hand_grouped_by_goal_and_a_goal
         for goal in (ASKS, TALK, SPEC, TWO):
             assert pg.locator(f"{HAND}[data-kind=turn][data-goal='{goal}']").count() == 1, goal                   # one card a goal
             assert pg.locator(f"[data-stack*='{goal}']").count() == 1                                              # in the goal's stack
-        assert pg.locator(f"{HAND}[data-kind=turn][data-goal='{COVERED}']").count() == 0                          # its question is its card already: no second
-        assert pg.locator(f"{HAND}[data-goal='{COVERED}']").count() == 1
+        assert pg.locator(f"{HAND}[data-goal='{COVERED}']").count() == 1                                            # a question that was an old card is its turn card only (L3)
+        assert pg.locator(f"{HAND}[data-kind=turn][data-goal='{COVERED}']").count() == 1
         assert pg.locator(f"{HAND}[data-goal^='150-']").count() == 0                                                 # a goal at work waits for nobody: no card
         card = pg.locator(f"{HAND}[data-kind=turn][data-goal='{ASKS}']")
         assert card.evaluate("(el) => getComputedStyle(el).borderTopColor") == pg.evaluate(ALERT)                  # ringed as a card that asks is

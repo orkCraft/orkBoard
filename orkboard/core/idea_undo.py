@@ -42,17 +42,20 @@ def _slug(slug: str) -> str:
     return slug
 
 
-def record_path(state_dir: Path, slug: str) -> Path:
-    return Path(state_dir) / "goals" / _slug(slug) / "undo.json"
+def record_path(state_dir: Path, slug: str, party: bool = False) -> Path:
+    return Path(state_dir) / "goals" / _slug(slug) / ("party-undo.json" if party else "undo.json")
 
 
-def _files(root: Path, state_dir: Path, slug: str) -> dict[str, Path]:
+def _files(root: Path, state_dir: Path, slug: str, party: bool = False) -> dict[str, Path]:
+    """The page and state a move changes: a goal's, or (`party`) a party's own page and state, whose questions were once called a goal's."""
+    if party:
+        return {"page": Path(root) / ideas.TRACKS / f"{_slug(slug)}.md", "state": ideas.goal_folder(Path(state_dir), slug) / "state.json"}
     return {"page": Path(root) / ideas.IDEAS / f"{_slug(slug)}.md", "state": ideas.state_folder(Path(state_dir), slug) / "state.json"}
 
 
-def snapshot(root: Path, state_dir: Path, slug: str) -> dict[str, str | None]:
+def snapshot(root: Path, state_dir: Path, slug: str, party: bool = False) -> dict[str, str | None]:
     out: dict[str, str | None] = {}
-    for name, path in _files(root, state_dir, slug).items():
+    for name, path in _files(root, state_dir, slug, party).items():
         try:
             out[name] = path.read_text(encoding="utf-8")
         except OSError:
@@ -60,13 +63,13 @@ def snapshot(root: Path, state_dir: Path, slug: str) -> dict[str, str | None]:
     return out
 
 
-def keep(state_dir: Path, slug: str, kind: str, before: dict, after: dict, publish: Callable[..., None] | None = None, origin: str = "") -> bool:
+def keep(state_dir: Path, slug: str, kind: str, before: dict, after: dict, publish: Callable[..., None] | None = None, origin: str = "", party: bool = False) -> bool:
     """The Undo of a one-press move just played: the bytes before and after. False when the move changed nothing (nothing to undo). KeyError for a sealed kind."""
     if way(kind) != "press":
         raise KeyError(kind)
     if before == after:
         return False
-    path = record_path(state_dir, slug)
+    path = record_path(state_dir, slug, party)
     with ideas.LOCK:
         ideas._write(path, json.dumps({"kind": kind, "before": before, "after": after}, ensure_ascii=False, indent=1) + "\n")
     if publish is not None:
@@ -74,23 +77,23 @@ def keep(state_dir: Path, slug: str, kind: str, before: dict, after: dict, publi
     return True
 
 
-def read(state_dir: Path, slug: str) -> dict | None:
+def read(state_dir: Path, slug: str, party: bool = False) -> dict | None:
     try:
-        row = json.loads(record_path(state_dir, slug).read_text(encoding="utf-8"))
+        row = json.loads(record_path(state_dir, slug, party).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     ok = isinstance(row, dict) and row.get("kind") in ONE_PRESS and isinstance(row.get("before"), dict) and isinstance(row.get("after"), dict)
     return row if ok else None
 
 
-def undo(root: Path, state_dir: Path, slug: str, publish: Callable[..., None] | None = None, kind: str = "") -> dict:
+def undo(root: Path, state_dir: Path, slug: str, publish: Callable[..., None] | None = None, kind: str = "", party: bool = False) -> dict:
     """The last one-press move of a goal put back, byte for byte, only while what it changed is still as the move left it. ValueError in plain words
     where there is nothing to undo or the goal changed since (nothing is written then)."""
     with ideas.LOCK:
-        row = read(state_dir, slug)
+        row = read(state_dir, slug, party)
         if row is None or (kind and row["kind"] != kind):
             raise ValueError(NOTHING)
-        now, files = snapshot(root, state_dir, slug), _files(root, state_dir, slug)
+        now, files = snapshot(root, state_dir, slug, party), _files(root, state_dir, slug, party)
         names = [n for n in files if row["before"].get(n) != row["after"].get(n)]
         if any(now.get(n) != row["after"].get(n) for n in names):
             raise ValueError(CHANGED_SINCE)
@@ -100,7 +103,7 @@ def undo(root: Path, state_dir: Path, slug: str, publish: Callable[..., None] | 
             else:
                 ideas._write(files[n], row["before"][n])
         ideas._reindex(Path(root))
-        record_path(state_dir, slug).unlink(missing_ok=True)
+        record_path(state_dir, slug, party).unlink(missing_ok=True)
     if publish is not None:
         publish(bus.MOVE_UNDONE, idea=slug, kind=row["kind"])
     return {"kind": row["kind"]}

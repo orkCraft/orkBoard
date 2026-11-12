@@ -127,7 +127,7 @@ def test_a_card_of_a_move_that_waits_in_the_foot_opens_its_ways_or_its_mat(base)
         b, pg, errors = phone(p, base + "/app/?mock=1")
         cards = pg.locator(".up-card[data-key^='card:turn/']")
         cards.first.scroll_into_view_if_needed()
-        assert cards.count() == 4 and pg.locator(".up-card[data-kind=stops][data-key$='/battle']").count() == 0
+        assert cards.count() == 5 and pg.locator(".up-card[data-kind=stops][data-key$='/battle']").count() == 0
         pg.locator(".up-card[data-key='card:turn/172-example-1/asks']").click()
         look = pg.locator(".up-look .hand-lifted[data-kind=turn]")
         look.wait_for(timeout=5000)

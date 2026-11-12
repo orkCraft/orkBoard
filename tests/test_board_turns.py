@@ -86,3 +86,13 @@ def test_ideas_turns_on_a_fixture_board_runs_no_model_and_writes_no_file(host):
 def test_the_module_is_pure():
     text = Path(board_turns.__file__).read_text(encoding="utf-8")
     assert "subprocess" not in text and "write_text" not in text and "open(" not in text
+
+
+def test_a_card_the_record_holds_is_a_question_until_the_page_answers_it():
+    card = {"q": "Keep the timer?", "choices": ["Keep it", "Move it"], "pick": 0}
+    bare = idea_page.parse(page("talk", "asks: person\n", "## Open questions\n"))
+    got = board_turns.turn_of("g", bare, PARTIES, "", [card])
+    assert got["kind"] == "asks" and got["questions"] == [{"ask": "Keep the timer?", "ways": ["Keep it", "Move it"]}]
+    answered = idea_page.parse(page("talk", "asks: person\n", "## Open questions\n- Keep the timer?\n  - Answered: Move it (the person, 2026-11-12)\n"))
+    assert board_turns.turn_of("g", answered, PARTIES, "", [card]) is None          # the record still holds it; the page has its answer
+    assert board_turns.turn_of("g", bare, PARTIES, "") is None                      # no card, no question: no turn that has no way
