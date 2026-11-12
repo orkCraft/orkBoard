@@ -8,6 +8,7 @@ import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { HeadOf, whoOf } from "../table/post.js";
 import { keepTab } from "./back.js";
+import { handRoots, matHand } from "./mathand.js";
 
 const NARROW = "(max-width: 700px)";
 
@@ -62,13 +63,17 @@ function useInertBehind(root) {
 export function MatFrame({ kind, party = "orkmaster", title, line = "", say = "", note = "", acts = null, hand = null, seal = null, phase = "", onClose, head = null, extra = null, frame = {}, fieldCls = "", footCls = "", children }) {
   const root = useRef(), narrow = useNarrowMat(), felt = feltOf(party);
   const release = useInertBehind(root), close = () => { release(); onClose(); };
+  useLayoutEffect(() => {   // the hand is the open mat's (cards/mathand.js): its ways lie there, the moves that wait a pile; the mat closed, it is gone. A phone keeps the ways in the foot of the mat's screen.
+    if (!narrow) matHand.value = { ways: hand, close };
+  });
+  useLayoutEffect(() => () => { matHand.value = null; }, []);
   useLayoutEffect(() => {   // the keys at once, before the first paint: an Esc pressed as the mat opens closes it
     root.current?.querySelector(".sp-shut")?.focus();
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); } else keepTab(root.current, e); };
+    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); } else keepTab([root.current, ...handRoots()], e); };
     addEventListener("keydown", key, true);
     return () => removeEventListener("keydown", key, true);
   }, []);
-  return html`<div ref=${root} class="sp-veil mf-veil" role="dialog" aria-modal="true" aria-label=${title} data-spread=${kind}>
+  return html`<div ref=${root} class=${cls("sp-veil mf-veil", { "has-hand": !narrow })} role="dialog" aria-modal="true" aria-label=${title} data-spread=${kind}>
     <div ...${frame} class=${cls("sp mf ork-table", frame.class)} data-party=${felt}>
       <header class="sp-h mf-h"><span class="sp-av"><${HeadOf} w=${whoOf(felt === "orkmaster" ? "orkmaster" : party)} size="big" /></span>
         <span class="sp-t mf-t ork-plate"><b>${title}</b>${line && html`<small>${line}</small>`}</span>
@@ -76,7 +81,7 @@ export function MatFrame({ kind, party = "orkmaster", title, line = "", say = ""
         <button type="button" class="ork-btn sp-shut" onClick=${close}><${Icon} name=${narrow ? "arrow-left" : "close"} /><span>${narrow ? "Back" : "Close"}</span></button></header>
       ${extra}
       <div class=${cls("sp-field mf-field", fieldCls)}>${children}</div>
-      <footer class=${cls("sp-hand mf-foot", footCls)}>${hand && html`<div class="sp-cards" role="group" aria-label="Your hand">${hand}</div>`}${note && html`<p class="sp-note ork-plate">${note}</p>`}
+      <footer class=${cls("sp-hand mf-foot", footCls)}>${hand && narrow && html`<div class="sp-cards" role="group" aria-label="Your hand">${hand}</div>`}${note && html`<p class="sp-note ork-plate">${note}</p>`}
         ${phase && html`<${Phases} at=${phase} />`}${(acts || seal) && html`<div class="sp-acts">${acts}${seal}</div>`}</footer>
     </div></div>`;
 }

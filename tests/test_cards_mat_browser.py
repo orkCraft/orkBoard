@@ -187,7 +187,7 @@ def test_tab_goes_through_the_mat_only_and_esc_gives_the_focus_back_to_the_card_
         seen = []
         for _ in range(8):
             pg.keyboard.press("Tab")
-            seen.append(pg.evaluate("() => !!document.activeElement.closest('.sp-veil')"))
+            seen.append(pg.evaluate("() => !!document.activeElement.closest('.sp-veil, .mathand')"))
         assert all(seen), seen
         pg.keyboard.press("Escape")
         pg.locator(".sp-veil").wait_for(state="detached", timeout=5000)

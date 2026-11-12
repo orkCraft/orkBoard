@@ -14,7 +14,7 @@ import { blockedBy } from "./verdict.js";
 export const raceOfStop = (s) => (s.party?.slug ? whoOf(s.party.slug).race : "") || "orkmaster";
 
 /** The S face of a stop of the hand: `sign` the kind's sign (stopcard.js `actionOf`), `asks` it waits for the person (its "!"), `head` the asker's head, `line` the line under the title.
- *  A card's turn (`kind` turn: its idea or spec rated) says *blocked* where its time is when a leader's risk blocks it, else *rated*, and wears its craft tokens; a battle (`kind` battle) has
+ *  A move that waits (`kind` turn, turnstops.js) says *blocked* where its time is when a leader's risk blocks it, else *waits for you* with its "!", and wears its craft tokens; a battle (`kind` battle) has
  *  the battle's emblem for its picture, *battle* in its corner and its act *Settle it* (decisions §298.6, §298.7). */
 export function HandFace({ s, sign, asks = false, head = null, line = "" }) {
   const n = { element: s.node?.element || "", hue: s.node?.hue || s.node?.element || "", sign }, turn = s.kind === "turn", fight = s.kind === "battle", slug = s.node?.slug || "";
@@ -26,6 +26,6 @@ export function HandFace({ s, sign, asks = false, head = null, line = "" }) {
     ${line ? html`<small class=${`hand-card__foot hands-line${fight ? " is-vs" : ""}`}>${line}</small>` : null}
     ${fight ? html`<span class="cards-c cards-c--bl hands-when"><span>battle</span></span>
         <span class="cards-c cards-c--br"><span class="ork-btn cards-act hands-act" aria-hidden="true">Settle it</span></span>`
-      : turn ? html`<span class=${`cards-c cards-c--bl hands-when${held ? " is-blocked" : ""}`}><span>${held ? "blocked" : "rated"}</span></span><span class="cards-c cards-c--br"><${TokenDots} slug=${slug} /></span>`
+      : turn ? html`<span class=${`cards-c cards-c--bl hands-when${held ? " is-blocked" : ""}`}><span class="cards-s__asks hands-asks" aria-hidden="true">!</span><span>${held ? "blocked" : "waits for you"}</span></span><span class="cards-c cards-c--br"><${TokenDots} slug=${slug} /></span>`
       : asks && html`<span class="cards-c cards-c--bl hands-when"><span class="cards-s__asks hands-asks" aria-hidden="true">!</span><span>waits for you</span></span>`}`;
 }

@@ -48,7 +48,8 @@ import { columnOn } from "../table/data.js";
 import { laidNow, layLine } from "../table/laying.js";
 import { said } from "./motion.js";
 import { cardsOn } from "../cards/on.js";
-import { HandRight } from "../cards/handright.js";                  // the table of cards: the hand's two groups and the deck of blank cards at its right (decisions §298.9)
+import { HandRight } from "../cards/handright.js";
+import { MatHand, matHand } from "../cards/mathand.js";               // a mat open: the hand is its ways, the moves that wait a pile at its left (goal 171 K, decisions §302.1)                  // the table of cards: the hand's two groups and the deck of blank cards at its right (decisions §298.9)
 if (typeof document !== "undefined") {                         // the places' sheet (places.css), as every sheet loads its own
   const href = new URL("./places.css", import.meta.url).href;
   if (!document.querySelector(`link[href="${href}"]`)) {
@@ -129,7 +130,8 @@ export function Hand() {
   const deckOn = cardsOn() && wide && !bare;                                                                    // the table of cards: no + card at the hand's left, the deck of blank cards at its right (cards/handright.js)
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
-    ${!middle && html`<div class="hand-places"><div class=${sunk ? "hand-row is-sunk" : "hand-row"} inert=${sunk ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
+    ${!middle && matHand.value && html`<${MatHand} waiting=${stops.length} />`}
+    ${!middle && !matHand.value && html`<div class="hand-places"><div class=${sunk ? "hand-row is-sunk" : "hand-row"} inert=${sunk ? true : undefined} style=${`--hc-rest:${Math.max(1, lanesBeforeEnd())}`}>
       <${Stacks} stacks=${stacks} plus=${bare || deckOn ? null : html`<${PlusCard} onPress=${plus} />`} />
       ${deckOn ? html`<${HandRight} places=${places} pots=${pots} onPress=${plus} />` : html`<div class="hand-end">${!bare && html`<${PlayDie} />`}${places}${pots}</div>`}
     </div></div>`}
