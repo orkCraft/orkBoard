@@ -90,7 +90,7 @@ export function WayCard({ w, s, head, rune, btn = null, on = undefined }) {
   const cost = w.cost, much = cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null, leader = w.id === "decide";
   const kind = leader && head ? html`<${Head} race=${head.race} tier=${head.tier} title=${headWords(head)} />` : null;
   return html`<button type="button" ref=${btn} class=${cls(`ork-card hand-ans el-${rune.hue}`, { "is-pick": w.pick, "is-decide": leader, "hand-ans--pen": w.id === "own" })} aria-expanded=${on === undefined ? undefined : String(on)} data-way=${w.id} data-way-kind=${w.kind || undefined} data-pick=${w.pick ? "1" : undefined} data-cost=${cost?.gem || undefined}
-      aria-label=${`${w.name}${w.pick ? `, ${ITS_PICK}` : ""}${w.own ? `, ${w.line}` : ""}: ${s.full}`} title=${w.line} onClick=${w.run}>
+      aria-label=${`${w.name}${w.pick ? `, ${ITS_PICK}` : ""}${w.own || w.disabled ? `, ${w.line}` : ""}: ${s.full}`} title=${w.line} disabled=${w.disabled || undefined} onClick=${w.run}>
     <${CornerTop} rune=${rune} kind=${w.sign} kindNode=${kind} />
     <span class="hand-ans__name">${w.name}</span>
     <span class="hand-ans__line">${w.line}</span>

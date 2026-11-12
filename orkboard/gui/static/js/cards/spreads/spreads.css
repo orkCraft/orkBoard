@@ -132,3 +132,41 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .cards-deckacts .ork-btn { height: auto; min-height: 28px; max-width: 100%; white-space: normal; text-align: left; justify-content: flex-start; }
 .sp:has(> .cards-said) { grid-template-rows: auto auto minmax(0, 1fr) 196px; }      /* a spread a mat opened: the leader's words under its head (decisions §297.4) */
 .sp > .cards-said { margin: 10px 40px 0; }
+
+/* a battle (js/cards/spreads/battle.js; decisions §298.6): the new card, the axes, the old cards; on a phone width they stack */
+.bt { display: flex; align-items: center; justify-content: center; gap: 36px; width: 100%; }
+.bt-side { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: none; }
+.bt-olds { display: flex; gap: 14px; align-items: flex-start; }
+.bt-one { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 150px; }
+.bt-undo { font: var(--ork-type-caption); color: var(--ork-ink-read); text-align: center; }
+.bt-pile { flex-direction: row; max-width: none; } .bt-pile .sp-back { margin-left: -70px; } .bt-pile .sp-back:first-child { margin-left: 0; }
+.bt-axes { flex: 1 1 auto; min-width: 0; max-width: 520px; display: flex; flex-direction: column; gap: 8px; }
+.bt-row { display: grid; grid-template-columns: 1fr minmax(120px, 1.2fr) 1fr; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--ork-frame); background: var(--ork-panel); }
+.bt-row.bt-head { border: 0; background: none; padding-block: 0; font: var(--ork-type-label); text-transform: uppercase; letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); text-align: center; }
+.bt-cell { display: flex; gap: 8px; justify-content: center; align-items: flex-start; }
+.bt-axis { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.bt-axis b { font: var(--ork-type-label); text-transform: uppercase; letter-spacing: var(--ork-type-label-track); }
+.bt-axis small { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.bt-none { color: var(--ork-ink-faint); }
+.bt-note { margin: 4px 0 0; }
+.bt-decision .bt-sect { display: grid; place-items: center; height: 44px; font: var(--ork-type-title); color: var(--ork-alert); }
+.sp-cards .bt-way.ork-card { flex: none; display: flex; flex-direction: column; gap: 6px; width: 148px; height: 150px; aspect-ratio: auto; padding: 12px 10px; text-align: left; cursor: pointer; border: 1px solid var(--ork-card-frame); color: var(--ork-ink);
+  box-shadow: inset 0 3px 0 var(--ork-card-frame), 0 4px 0 var(--ork-room); }
+.bt-way b { font: var(--ork-type-button); } .bt-way small { font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow: hidden; }
+.bt-way:hover, .bt-way:focus-visible { border-color: var(--ork-ink); } .bt-way:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+[data-spread="battle"] .sp-cards { align-self: flex-end; }
+@media (max-width: 900px) {
+  .bt { flex-direction: column; gap: 14px; }
+  .bt-axes { width: 100%; max-width: none; }
+}
+@media (max-width: 700px) {
+  [data-spread="battle"] .sp { background: var(--ork-room); }
+  [data-spread="battle"] .sp-t small { display: none; } [data-spread="battle"] .sp-t b { font: var(--ork-type-heading); }
+  .bt-new .sp-card.is-xl { --card-w: 150px; padding: 28px 12px 24px; } .bt-new .sp-card .cards-s__name, .bt-new .sp-card .sp-card__name { font-size: 16px; line-height: 20px; }
+  [data-spread="battle"] .sp-h { padding: 12px 16px 0; } [data-spread="battle"] .sp-say { display: none; }
+  [data-spread="battle"] .sp-field { align-items: flex-start; justify-content: flex-start; padding: 12px 16px; }
+  [data-spread="battle"] .sp-cards { flex-wrap: wrap; gap: 8px; align-self: center; width: 100%; }
+  .sp-cards .bt-way.ork-card { width: auto; height: auto; padding: 8px 12px; } .bt-way small { display: none; }
+  [data-spread="battle"] .sp { grid-template-rows: auto minmax(0, 1fr) auto; }
+  [data-spread="battle"] .sp-note { display: none; }
+}

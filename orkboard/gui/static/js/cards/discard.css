@@ -9,3 +9,12 @@
 .cards-ready__acts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-2); align-items: stretch; }
 .cards-ready__acts .ork-btn { justify-content: center; }
 .cards-lower { border-top: 0; padding-top: 0; }
+
+/* the third pile, Dropped (js/cards/dropped.js; decisions §298.8): the goals face down, thickness only; pressed, they spread face up, each with *Take back* */
+.cards-dropped { display: flex; flex-direction: column; gap: var(--ork-3); }
+.cards-dropped__pile { position: relative; display: block; flex: none; width: 78px; aspect-ratio: 2.5 / 3.5; margin: 6px 0 8px 8px; padding: 0; border: 0; background: none; cursor: pointer; }
+.cards-dropped__pile span { position: absolute; inset: 0; border: 1px solid var(--ork-card-frame); background: var(--ork-raised) url(/ds/orkui/backs/back.svg) center / 100% 100%; transform: translate(var(--dx, 0), var(--dy, 0)); }
+.cards-dropped__pile:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 4px; }
+.cards-dropped__one { display: flex; flex-direction: column; gap: var(--ork-2); width: calc(50% - 5px); }
+.cards-dropped__one .ork-card.cards-s { --card-w: 100%; }
+.cards-dropped__one .ork-btn { justify-content: center; }

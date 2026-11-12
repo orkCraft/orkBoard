@@ -12,6 +12,7 @@ import { PLATE_WORDS, Plate } from "../table/plates.js";
 import { alongOf, chosenSlug, dissolving, going, toMain } from "../table/portal.js";
 import { RingAround } from "../table/ring.js";
 import { CardS } from "./card.js";
+import { Dropped } from "./dropped.js";
 
 /** One goal of the discard as an S card; `g` as table/lane.js has it (`slug`, `title`, `party` or `goal`, `element`, `hue`, `type`). */
 function GoalCard({ g, line, picked = false, ready = false, along = false, moon = false, onOpen }) {
@@ -43,5 +44,6 @@ export function CardsPiles({ p }) {
     ${own}
     ${done.length + lowerGoals.length > 0 && html`<section class="discard-pile cards-lower" data-pile="lower" aria-label=${`Waiting for ${dev}`}><${Plate} which="dev" /><p class="discard-pile__words">${PLATE_WORDS.dev}</p>
       <div class="cards-row is-wrap">${done.map((g) => html`<${GoalCard} key=${g.slug} g=${g} line=${mainLine(g) || (moons.has(g.slug) ? "done in the night" : "done")} moon=${moons.has(g.slug)} picked=${now === g.slug} onOpen=${() => press(g.slug)} />`)}${lowerGoals.map((g) => html`<${GoalCard} key=${g.slug} g=${g} line="done" picked=${playingNow === g.slug} onOpen=${() => { if (playingNow === g.slug) lower(); else playCard({ dev: "card", slug: g.slug }); }} />`)}</div></section>`}
+    <${Dropped} />
   </div>`;
 }

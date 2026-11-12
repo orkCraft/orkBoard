@@ -21,7 +21,7 @@ pytestmark = pytest.mark.browser
 BOXES = """() => { const h = document.querySelector('.frame-hand').getBoundingClientRect();
   return { hand: [h.top, h.bottom], old: !!document.querySelector('.hand-card--face'),
     cards: [...document.querySelectorAll('.frame-hand button.hand-card--stop')].map((c) => { const r = c.getBoundingClientRect();
-    return { w: r.width, h: r.height, top: r.top, bottom: r.bottom, asks: c.classList.contains('is-asks'), bang: !!c.querySelector('.hands-asks'), goal: c.dataset.goal }; }) }; }"""
+    return { w: r.width, h: r.height, top: r.top, bottom: r.bottom, asks: c.classList.contains('is-asks') && !['turn', 'battle'].includes(c.dataset.kind), bang: !!c.querySelector('.hands-asks'), goal: c.dataset.goal }; }) }; }"""
 ALERT = """() => { const d = document.createElement('i'); d.style.color = 'var(--ork-alert)'; document.body.append(d);
   const c = getComputedStyle(d).color; d.remove(); return c; }"""
 

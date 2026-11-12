@@ -33,3 +33,20 @@
 /* the person's tokens at the left of the hand's cards while a leader's table is open (cards/tables/parts.js `TokenTakes`; decisions §145) */
 .hand .tb-takes { pointer-events: auto; flex: none; display: flex; align-self: center; gap: var(--ork-3); padding-right: var(--ork-3); }
 .frame[data-cards="1"] .hand .hand-card--s .hands-when { max-width: calc(100% - 16px); }
+
+/* a card's turn and a battle in the hand (hand/turncards.js; decisions §298.6, §298.7): its tokens small at the corner, a blocked card ringed in the danger's colour, the battle's emblem in the middle */
+.frame[data-cards="1"] .hand .hand-card--s .hands-toks { gap: 1px; }
+.frame[data-cards="1"] .hand .hand-card--s .hands-toks .cards-ct__ring { width: 14px; height: 14px; }
+.frame[data-cards="1"] .hand .hand-card--s .hands-toks .cards-ct__ring .ork-tool { transform: scale(.34); }
+.hands-toks .cards-ct.is-still { cursor: inherit; }
+.hands-act { padding: 2px 6px; font: var(--ork-type-caption); }
+.hands-emblem { display: grid; place-items: center; }
+.cards-emblem { position: relative; display: block; flex: none; width: 46px; height: 38px; margin: 0 auto; }
+.cards-emblem i { position: absolute; left: 50%; top: 3px; width: 22px; aspect-ratio: 2.5 / 3.5; margin-left: -11px; border: 1px solid var(--ork-card-frame); transform-origin: 50% 100%; transform: rotate(var(--rot, 0deg));
+  background: var(--ork-raised) url(/ds/orkui/backs/back.svg) center / 100% 100%; }
+.cards-emblem .is-b1 { --rot: -26deg; } .cards-emblem .is-b2 { --rot: 26deg; }
+.cards-emblem .is-f { border-color: var(--ork-ink); background: var(--ork-ink-muted); }
+.frame[data-cards="1"] .hand .hand-card--s.is-blocked { border-color: var(--ork-danger); }
+.hand .hand-ans.ork-card:disabled { cursor: not-allowed; border-color: var(--ork-danger); color: var(--ork-ink-muted); }
+.hand .hand-ans:disabled .hand-ans__name { color: var(--ork-ink-muted); }
+.frame[data-cards="1"] .hand .hand-card--s .hands-line.is-vs { -webkit-line-clamp: 1; line-clamp: 1; max-height: 1.4em; }

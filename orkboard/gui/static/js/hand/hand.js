@@ -34,6 +34,7 @@ import { DevLifted, DevPlay, isDevPlay } from "./devplay.js";        // a goal's
 import { LiftedWide } from "./liftedwide.js";                  // any other card lifted on the desktop: the 144 x 202 card and a body in the hand's place (spec 168 D1)
 import { ProjectDeal, dealt as headerDeal } from "../table/projectdeal.js";                       // the header's kind or stage dealt to the hand (spec 161 J)
 import { ChairDeal, dealing } from "./chairdeal.js";                                     // the new chair deals its crafts (spec 161 I)
+import { BattlePlay, TurnPlay } from "./turncards.js";                  // a card at its turns and a battle (the table of cards, decisions §298.6, §298.7)
 import { AnswerLifted, answerSet, useWide } from "./answercards.js";           // a lifted question or failure stays a hand card, its ways the hand (spec 158 F, decisions §270)
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
@@ -101,7 +102,7 @@ export function Hand() {
   useKeys(root);
   useNight();
   const wide = useWide();
-  const all = stopsOfProject(map, needs, open).filter((x) => wide || (x.kind !== "concern" && x.kind !== "doubt" && x.kind !== "decided" && x.kind !== "night_proposal" && x.kind !== "dev_blocked")), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
+  const all = stopsOfProject(map, needs, open).filter((x) => wide || (x.kind !== "concern" && x.kind !== "doubt" && x.kind !== "decided" && x.kind !== "night_proposal" && x.kind !== "dev_blocked" && x.kind !== "turn" && x.kind !== "battle")), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map && !isToolKey(key)) lower(); }, [key, !s]);   // the stop was answered: the card goes with it (a tool's card is no stop: it goes by its own)
   useEffect(() => { liftedStop.value = s || null; }, [s]);                                // the right column's potions hatch the share the lifted card takes (potionrow.js)
   useEffect(() => () => { liftedStop.value = null; }, []);
@@ -136,7 +137,7 @@ export function Hand() {
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${chair && html`<${ChairDeal} />`}
     ${slotOn && html`<${SlotDeal} />`}
-    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "decided" ? html`<${DecidedPlay} s=${s} />` : s.kind === "night_proposal" ? html`<${NightProposalPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
+    ${s && (cards ? html`<${AnswerLifted} s=${s} anchor=${anchor} set=${cards} />` : wide ? (s.kind === "conflict" ? html`<${ConflictPlay} s=${s} />` : s.kind === "concern" ? html`<${ConcernPlay} s=${s} />` : s.kind === "doubt" ? html`<${DoubtPlay} s=${s} />` : s.kind === "decided" ? html`<${DecidedPlay} s=${s} />` : s.kind === "turn" ? html`<${TurnPlay} s=${s} />` : s.kind === "battle" ? html`<${BattlePlay} s=${s} />` : s.kind === "night_proposal" ? html`<${NightProposalPlay} s=${s} />` : s.kind === "dev_blocked" ? html`<${DevPlay} s=${s} />` : html`<${LiftedWide} s=${s} />`) : html`<${Lifted} s=${s} anchor=${anchor} />`)}
     ${sayOn && (isDevPlay() ? html`<${DevLifted} />` : html`<${SayLifted} />`)}
     ${deal && html`<${ProjectDeal} which=${deal} />`}
     ${key === ADD_TOOL && html`<${AddTool} />`}

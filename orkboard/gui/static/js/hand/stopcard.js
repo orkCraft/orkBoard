@@ -34,6 +34,7 @@ import { footCost } from "./waycost.js";
 import { StopWindow, hasWindow } from "./handwindow.js";
 import { cardsOn } from "../cards/on.js";
 import { HandFace, raceOfStop } from "../cards/handcards.js";
+import { blocked } from "../cards/verdict.js";
 
 /** The action's sign of a stop and its tone: the alert of a failure and of a sign-in, the question of a question, the check (or cross) of a result, else the sign of what is asked (a plan's page, a pick's picture, a to-do's flag). */
 export function actionOf(s) {
@@ -94,7 +95,7 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
     el.classList.add("ork-play");
   }, [gone]);
   return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop ${on ? "hand-card--s cards-s" : "hand-card--face"}${element ? ` el-${hue}` : ""}`, { asks: ["asks", "goal", "pick", "collide", "conflict"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
-        "is-slot": slot, "is-gone": gone, "ork-deal": plain, "is-asks": on && signalOf(s) === "alert" })}
+        "is-slot": slot, "is-gone": gone, "ork-deal": plain, "is-asks": on && signalOf(s) === "alert", "is-blocked": on && s.kind === "turn" && blocked(s.node?.slug || "") })}
       data-race=${on ? raceOfStop(s) : undefined} data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined} data-from=${from || undefined}
       style=${dealt ? `--ork-deal-i:${dealt.i}` : undefined} aria-label=${`${labelOf(s)}${from ? `, from ${from}` : ""}`} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>

@@ -10,7 +10,7 @@ import { signal } from "@preact/signals";
 const URL_OF = new URL("../../mock/board.json", import.meta.url).href;
 /** What is laid over the recording, each a module of `parts/` with its own `lay(data)`: examples marked as such, and what the
  *  spreads and the leaders' tables read that the host does not answer yet (the contract proposed). */
-const PARTS = ["examples", "spreads", "tables", "verdicts"];
+const PARTS = ["examples", "spreads", "tables", "verdicts", "turns"];
 let data = { state: null, replies: [], proposed: {} };
 const exact = new Map(), byName = new Map();
 /** What the page would have sent to the host, newest last: [{name, args, at}]. */

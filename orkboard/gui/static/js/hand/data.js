@@ -19,6 +19,8 @@ import { devStops, waitsForDev } from "./devcard.js";
 import { hypothesisStops } from "./hypothesiscard.js";
 import { cascadeStops } from "./cascadecard.js";
 import { projectStops, questionStops } from "./questions.js";
+import { cardsOn } from "../cards/on.js";
+import { turnStops } from "./turnstops.js";
 
 /** The parties of the map in the Board's order. */
 export const partiesOf = (map = mapData.value) => goalsOf(map, goalList().map((x) => x.slug));
@@ -70,18 +72,19 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork), ...inCodeStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...decidedStops(map, after), ...nightProposalStops(needs, { ...after, window: String(board.value?.night || "") }), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
+  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...decidedStops(map, after), ...(cardsOn() ? turnStops(map, after) : []), ...nightProposalStops(needs, { ...after, window: String(board.value?.night || "") }), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 
 /** The goal a stop belongs to ("" for a stop of no goal), and the stack it lies in: a goal's; a party's own question (`party:<slug>`); a sign-in alone. */
 export const goalOfStop = (s) => (s.kind === "sign_in" ? "" : s.node?.slug || s.row?.idea || (s.kind === "pick" ? s.row?.slug : "") || s.result?.idea || "");
 export function stackKey(s) {
+  if (s.kind === "turn" || s.kind === "battle") return s.key;                        // a card at its turns or a battle is a stack of its own, beside its goal's questions (decisions §298.7)
   const goal = goalOfStop(s);
   return goal || (s.kind === "sign_in" ? s.key : s.kind === "concern" ? `concerns:${s.row.goal}` : s.row?.goal ? `party:${s.row.goal}` : s.key);      // a leader's concerns are one stack of their own (spec 168 D4)
 }
 
 /** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, the Orkmaster's collision (docs/specs/101 §4.2) and its *Go on paid?* (docs/specs/105 §3): they lie under the first lane. */
-const WHOLE = new Set(["route", "talk", "hearing", "decision", "fork", "conflict", "collide", "paid", "in_code", "groups", "spec_change"]);
+const WHOLE = new Set(["route", "talk", "hearing", "decision", "fork", "conflict", "collide", "paid", "in_code", "groups", "spec_change", "turn", "battle"]);
 
 /** The party a row belongs to ("" for a row of no party of its own). */
 const partyOfRow = (row) => row?.g?.slug || row?.row?.goal || row?.goal || "";
