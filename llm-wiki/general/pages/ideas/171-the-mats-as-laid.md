@@ -90,10 +90,10 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - [x] L3. Tech's not accepted, the second time: every question's way dealt on the table of cards is one press or sealed
   - party: Tech (a simpler model). On ?table=cards a goal whose question is an old Needs-you card (asks, goal, talk or cause: hand/data.js) gets its turn card from ideas.turns instead, so no way the hand deals there sends ideas.talk_answer or ideas.answer (a pass); every question's way there is ideas.answer_way, one press with its Undo, and a leader's pass after it a sealed move with its cost said. Tested on the gui fixture's real host, no ?mock=1, not on a turn laid by hand.
   - proves: Tech's *Done when* line 5, made again (the last time: what is still not met goes under Not accepted)
-- [ ] M. Tech accepts the step
+- [x] M. Tech accepts the step
   - party: Tech. Its pass of its own (its role file, its section, the gate's record of B to L, the files they changed), against its *Done when* and *Will be*; what it does not accept is one more stage, twice at most.
   - proves: Tech's *Done when* and *Will be*, accepted
-- [ ] N. Design accepts on pictures
+- [x] N. Design accepts on pictures
   - party: Design. The real page drawn at 1440 and 390 (an open mat with its seal, closed mats, the hand with no mat open and with one): laid beside closed, hand and battle-2 (desk and phone) in docs/mockups/mats/shots, the frame unchanged (§104.0, §145); its *Done when* tests and checks read on the gate's record; what it does not accept is one more stage, twice at most.
   - proves: Design's "When the frame, a closed mat and the hand are drawn on the real page at 1440 and 390, then laid beside closed, hand and battle-2 … they read as drawn"; Design's *Done when* and *Will be* (changed home), accepted
 - [x] N2. Design's not accepted: zones on the track mat, the hand's titles whole, the gate unscaled on the phone, the fit test measuring a mat's words
@@ -108,7 +108,7 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - [x] O3. Product's not accepted, the second time: the phone's *Open it* opens its mat from the hand
   - party: Tech. js/hand/turnphone.js *Open it* opens the track mat with `opened: "hand"`, as the desk's openMoveMat does, so Drop, Hold and Start played there are sent `from: hand`; tests/test_cards_phone_browser.py plays Drop at 390×844 from that mat and finds `from: "hand"` (it found "mat" before).
   - proves: Product's *Done when* line 5, made again (the last time)
-- [ ] O. Product accepts the step
+- [x] O. Product accepts the step
   - party: Product. Its pass of its own (its role file, its section, the gate's record of A to L, the files they changed), against its *Done when* and *Will be* (H7); what it does not accept is one more stage, twice at most.
   - proves: Product's *Done when* and *Will be*, accepted
 
