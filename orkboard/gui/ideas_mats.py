@@ -5,6 +5,9 @@
     ideas.tables {}     # each party's framework: {<party>: {architecture | jtbd: its cards}}; what is not laid is empty and says who fills it, never an example
     ideas.undo {idea}   # the goal's last one-press move put back (`core/idea_undo.py`), only while its page is still as the move left it
     ideas.take_back {slug}   # a Drop's Undo
+    ideas.ask_cost {}   # what a paid pass of a leader (reply, ask) is capped at, said before it runs: {calls, usd_high}; read only
+    ideas.reply {slug, leader, text, sealed}        # the person's reply to a leader's token on a goal: a paid pass (`core/idea_ask.py` `board_ask`), goal named; {ok, cost}, the answer comes as `ask` in the snapshot
+    ideas.ask_leader {slug, leader, text, sealed} | {party, framework, card, text, sealed}   # a leader not on the card, or a part of a leader's framework
     A one-press move (`ideas.drop`, `ideas.queue` for Hold, `ideas.answer`) keeps its Undo and logs `move_played`; a sealed one (Merge into main, Send to a branch, Ship a release) goes only with `sealed: true`.
 """
 from __future__ import annotations
@@ -13,8 +16,9 @@ from pathlib import Path
 from typing import Any
 
 from orkboard.core import idea_undo
-from orkboard.gui.ideas_args import IdeasError, _device
-from orkboard.realm import board_turns, code_layers, event_log, ideas, opportunity_tree, page_talk
+from orkboard.core.idea_keeper import KeeperError
+from orkboard.gui.ideas_args import IdeasError, _device, _text
+from orkboard.realm import board_turns, code_layers, board_ask, event_log, idea_target, ideas, opportunity_tree, page_talk
 
 SEALED_BY = {"ideas.to_main": "merge_main", "ideas.gate_merge": "merge_main", "ideas.goal_to_dev": "send_branch", "ideas.release_out": "ship_release",
              "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass"}
@@ -109,6 +113,42 @@ class Mats:
         self.i.changed(slug.strip())
         return {"ok": True, **got}
 
+    def ask_cost(self, args: dict | None = None) -> dict:
+        """What one paid pass (a quick question's call, the cheaper tier, no tools) is capped at under the Target, read before any model runs."""
+        return {"calls": 1, "usd_high": idea_target.budget("ask", idea_target.target_for(self.i.settings_now()))}
+
+    def _pass(self, party: str, about: str, text: str) -> dict:
+        """The question to `party`'s leader, `about` named first, begun through the keeper's `board_ask`; its cost is returned with it (the page said it on the tool's potion before)."""
+        if not ideas.track_page(self.i.root(make=False), party):
+            raise IdeasError("That party is gone")
+        q = f"{about} {text}"
+        if len(q) > board_ask.Q_CHARS:
+            q = f"{about} {text[:max(0, board_ask.Q_CHARS - len(about) - 1)]}"
+        try:
+            self.i.keeper.board_ask(party, q)
+        except KeeperError as e:
+            raise IdeasError(str(e)) from None
+        self.i.changed("")
+        return {"ok": True, **self.ask_cost()}
+
+    def _goal(self, args: dict) -> tuple[str, str]:
+        slug = _text(args, "slug", 100)
+        page = ideas.idea_page(self.i.root(make=False), slug)
+        if page is None:
+            raise IdeasError(f"No goal {slug!r}")
+        return slug, page.title
+
+    def reply(self, args: dict) -> dict:
+        slug, title = self._goal(args)
+        return self._pass(_text(args, "leader", 100), f"About the goal «{title}» ({slug}), in answer to your word:", _text(args, "text", board_ask.Q_CHARS))
+
+    def ask_leader(self, args: dict) -> dict:
+        if isinstance(args.get("slug"), str) and args["slug"].strip():
+            slug, title = self._goal(args)
+            return self._pass(_text(args, "leader", 100), f"About the goal «{title}» ({slug}):", _text(args, "text", board_ask.Q_CHARS))
+        party, framework, card = _text(args, "party", 100), _text(args, "framework", 100), _text(args, "card", 100)
+        return self._pass(party, f"About {framework}, its part «{card}»:", _text(args, "text", board_ask.Q_CHARS))
+
     def take_back(self, args: dict) -> dict:
         return self.undo(args, "drop", "slug")
 
@@ -136,4 +176,4 @@ def mats_commands(ideas_: Any) -> dict:
     """The cards' commands by name (`gui/ideas.py` adds them to its table: `**mats_commands(self)`)."""
     m = Mats(ideas_)
     return {"ideas.turns": m.turns, "ideas.verdicts": m.verdicts, "ideas.tables": m.tables,
-            "ideas.undo": m.undo, "ideas.take_back": m.take_back}
+            "ideas.undo": m.undo, "ideas.take_back": m.take_back, "ideas.ask_cost": m.ask_cost, "ideas.reply": m.reply, "ideas.ask_leader": m.ask_leader}

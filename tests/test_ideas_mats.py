@@ -89,3 +89,69 @@ def test_on_this_repository_each_token_is_a_talk_architecture_is_its_code_and_no
 def test_the_reader_of_the_code_writes_nothing():
     text = Path(code_layers.__file__).read_text(encoding="utf-8")
     assert "write_text" not in text and "subprocess" not in text and "orkboard.gui" not in text
+
+
+# -- stage E: ideas.reply and ideas.ask_leader (a paid pass, sealed; the model faked as tests/test_idea_ask.py fakes it) ---------------------
+
+def _faked(host, calls):
+    def call(tier, prompt, effort="", budget=None):
+        calls.append(prompt)
+        return json.dumps({"answer": "Fine.", "sources": ["§301"], "goal": ""}), 0.01, 10, ""
+    host.ideas.keeper.call = call
+
+
+def _wait_ask(host):
+    import time
+    for _ in range(1000):
+        if not host.ideas.keeper.busy("ask"):
+            return
+        time.sleep(0.01)
+    raise AssertionError("the keeper never finished")
+
+
+def _record(host):
+    from orkboard.realm import board_ask
+    return board_ask.record(host.ideas.state_dir)
+
+
+def test_a_reply_is_refused_unsealed_and_nothing_is_begun(host):
+    from orkboard.gui.board_host import CommandError
+    lay(host, PAGE.format(p="x", t=TALK))
+    calls: list = []
+    _faked(host, calls)
+    for name, args in (("ideas.reply", {"slug": "goal", "leader": "tech", "text": "Why?"}), ("ideas.ask_leader", {"slug": "goal", "leader": "product", "text": "Why?"})):
+        with pytest.raises(CommandError, match="a paid pass cannot be undone"):
+            host.command(name, args)
+    assert not calls and _record(host) is None
+
+
+def test_its_cost_is_said_first_and_the_call_begins_with_the_goal_named(host):
+    lay(host, PAGE.format(p="x", t=TALK))
+    calls: list = []
+    _faked(host, calls)
+    cost = host.command("ideas.ask_cost", {})
+    assert cost["calls"] == 1 and cost["usd_high"] and not calls                       # read before any model runs
+    got = host.command("ideas.reply", {"slug": "goal", "leader": "tech", "text": "Why one writer?", "sealed": True})
+    assert got["ok"] is True and got["usd_high"] == cost["usd_high"]
+    _wait_ask(host)
+    rec = _record(host)
+    assert rec["status"] == "answered" and rec["party"] == "tech" and "(goal)" in rec["q"] and "Why one writer?" in rec["q"]
+    assert "Why one writer?" in calls[0]
+
+
+def test_a_leader_not_on_the_card_and_a_part_of_a_framework_are_asked_the_same_way(host):
+    from orkboard.gui.board_host import CommandError
+    lay(host, PAGE.format(p="x", t=TALK))
+    calls: list = []
+    _faked(host, calls)
+    host.command("ideas.ask_leader", {"slug": "goal", "leader": "product", "text": "And you?", "sealed": True})
+    _wait_ask(host)
+    assert _record(host)["party"] == "product"
+    host.command("ideas.ask_leader", {"party": "tech", "framework": "Architecture", "card": "core/", "text": "Why here?", "sealed": True})
+    _wait_ask(host)
+    q = _record(host)["q"]
+    assert _record(host)["party"] == "tech" and "Architecture" in q and "core/" in q and "Why here?" in q
+    with pytest.raises(CommandError, match="That party is gone"):
+        host.command("ideas.ask_leader", {"party": "nobody", "framework": "A", "card": "b", "text": "?", "sealed": True})
+    with pytest.raises(CommandError, match="No goal"):
+        host.command("ideas.reply", {"slug": "nope", "leader": "tech", "text": "?", "sealed": True})
