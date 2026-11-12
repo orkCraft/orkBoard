@@ -6,7 +6,9 @@ order: 18
 size:
 priority: normal
 short: The mats as laid
-phase: new
+phase: talk
+route: product, design, tech
+asks: person
 by: claude-code
 schema: 3
 ---
@@ -38,5 +40,27 @@ points 1 to 10 and 12 to 17), on the table of cards on mocks (`js/cards/`, `?moc
 ## Stages
 
 ## Open questions
+- Where does Product's persona come from? (**A job's segment, as its card** / A persona card of its own / Examples until people are heard) — §300.12 makes the persona Product's card, yet the tree (§172) gives a job only a segment; one keeper wants one source · A job's segment, as its card: A job names its persona; the segment's words are the card, no new field · A persona card of its own: Its own words, set on each job; segment and persona kept in step · Examples until people are heard: Example personas only; Design and Marketing lay no real one yet
+- What fills the story map on mocks? (**Real goals under proposed jobs** / Examples only, marked example / Real goals, no job kept) — the mocks are to be as near the real page as can be (goal 170 M); a proposed card lies faint until kept (§300.12) · Real goals under proposed jobs: This Board's goals laid faint under jobs read from its specs, until kept · Examples only, marked example: Example jobs and goals; its layout judged, not this product's map · Real goals, no job kept: The Board as it is: every goal in one column, no job kept yet
+- A way, then the seal? (**Seal only what cannot be undone** / Seal every mat, as drawn / A way pressed is the move) — §300.15 makes a mat's move pick-then-seal while the hand's way is one press (§300.2): one move, two gestures · Seal only what cannot be undone: One press as in the hand; the seal guards a merge into main and New wins · Seal every mat, as drawn: Two presses on every mat and one in the hand, as §300.15 has it · A way pressed is the move: One press everywhere; a merge into main still asks first (§300.9)
+- Each mat checked against its shot? (**Pictures, a stage a mat** / One picture pass at the end / The person presses ?mock=1) — Weaker models drift from a mockup without a picture to hold them (goal 170's risk); docs/mockups/mats/shots holds 44, desk and phone · Pictures, a stage a mat: Each mat accepted on desk and phone pictures before the next begins · One picture pass at the end: Fewer passes; a drift found when all are built, many mats made again · The person presses ?mock=1: No picture kept; the person finds the drift by pressing, after the merge
 
 ## Decisions
+
+## Product
+### Talk
+- verdict: go
+- stance: Product keeps the story map (§300.10) and the persona, job, struggle and measure cards (§300.12); its jobs across must be the tree's (§172), and its into a job the tree's attach
+- for: One move a mat makes each screen a decision the person takes; the hand, Discussion, battle, gate and discard lie on every goal's path, pressed on mocks before the host is written
+- against: Ten layouts, a deck, a backpack and a team at once, on goal 170's stage T still open; §297 to §300 each changed the one before in a day, many points taken by default
+- instead: the mats on every goal's path first (hand, Discussion, battle, gate, discard); the story map, the deck and the team once goal 163 keeps the jobs on the Board
+- assumes: the person settles a goal's turns faster on its mats than on today's pane — shown by: on ?mock=1 one goal rated, gated and merged from the hand alone, the old pane never opened
+
+## Design
+### Talk
+- verdict: doubt — go only if each mat lands in a stage of its own, in test_cards_fit_browser.py's surfaces and accepted on its pictures beside its shot; on weaker models a mat drifts unseen
+- stance: Design wants the mats: one layout a kind, one move at its foot's right, learnt once on both faces; held to its 44 shots a mat at a time, read in one order by keys and a screen reader
+- for: A mat is known by its layout, its move always at its foot's right (Nielsen 4, 6); an opened card loses its row of mats (8); no total on a battle; every gesture a button with its word and a key
+- against: The seal makes a mat's move two presses and the hand's one (§300.2, §300.15; Nielsen 4, 7); the phone's battle shot lays the seal before its ways, its ways turned (WCAG 2.4.3, §300.15)
+- instead: The mats on a goal's path first (hand, Discussion, battle and gate, discard), each accepted on desk and phone pictures; the grid, scheme, flow and backpack once those pass
+- assumes: a closed mat is told by its faint slots alone at an M's size (§300.1) — shown by: on ?mock=1 at 1440 the person names five closed mats' kinds with their lines covered
