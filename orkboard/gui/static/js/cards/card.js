@@ -10,6 +10,7 @@ import { Elem, Head, Icon, Sign } from "../orkui.js";
 import { openSpread } from "./spreads/open.js";
 import { giveBack, keepTab } from "./back.js";
 import { viewsOf } from "./feed.js";
+import { MatFoot, matOf, matSays } from "./mat.js";
 import { GoalLine, PostBody, PostHead, KINDS, TAGS, when, whoOf } from "../table/post.js";
 
 /** A leader's view, its sign and its word (§295.4). */
@@ -65,17 +66,22 @@ export const Back = ({ tilt = 0, x = 0 }) => html`<span class="ork-card cards-ba
 
 const subOf = (p) => [KINDS[p.kind] || KINDS.news, when(p.at)].filter(Boolean).join(" · ");
 
+/** The spreads have no phone face yet: on a narrow screen a mat opens as an L of words (decisions §297 points to the spreads' own goal). */
+const narrow = () => !!globalThis.matchMedia?.("(max-width: 700px)").matches;
+
 /** M: a leader's word on its side; its head at the top left, its words, the goal it is about; pressed, it opens as an L.
  *  `more`: the leader's posts after it, its stack (`onMore` spreads them). */
 export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
   const ref = useRef();
-  const open = () => openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) },
-    ...(p.goal && viewsOf(p.goal).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: p.goal, from: ref.current }) }] : [])] });
-  return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-stacked": more > 0 })} data-race=${whoOf(p.leader).race || "orkmaster"}
-      data-kind=${p.kind} tabindex="0" aria-label=${`${whoOf(p.leader).name}: ${p.text}. Press to open.`}
+  const mat = matOf(p);
+  const open = () => (mat && !narrow() ? mat.open(ref.current) : openCard({ kind: "post", p, from: ref.current, acts: [{ label: "What changed", main: p.kind === "change", run: () => openSpread({ kind: "diff", p, from: ref.current }) },
+    ...(p.goal && viewsOf(p.goal).length > 1 ? [{ label: "Who says what", run: () => openSpread({ kind: "dispute", slug: p.goal, from: ref.current }) }] : [])] }));
+  return html`<article ref=${ref} class=${cls("ork-card cards-m", { "is-stacked": more > 0, "is-mat": !!mat })} data-race=${whoOf(p.leader).race || "orkmaster"}
+      data-kind=${p.kind} tabindex="0" data-mat=${mat?.kind} aria-label=${`${whoOf(p.leader).name}: ${p.text}. ${mat ? `${matSays(mat)}. Press to open it.` : "Press to open."}`}
       onClick=${(e) => { if (!e.target.closest("button")) open(); }} onKeyDown=${(e) => { if (e.key === "Enter" && e.target === ref.current) { e.preventDefault(); open(); } }}>
     <${PostHead} leader=${p.leader} sub=${subOf(p)} tag=${TAGS[p.kind] || ""} />
     <div class="cards-m__body"><${PostBody} p=${p} onPick=${onPick} /></div>
+    ${mat && html`<${MatFoot} mat=${mat} />`}
     ${more > 0 && onMore && html`<button type="button" class="cards-m__more" onClick=${onMore}><${Icon} name="chevron-down" /><span>More from ${whoOf(p.leader).name}</span></button>`}
   </article>`;
 }

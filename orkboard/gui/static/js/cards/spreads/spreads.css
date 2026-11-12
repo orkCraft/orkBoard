@@ -130,3 +130,5 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 /* the deck's acts: the spreads of the goals in line, beside the deck */
 .cards-deckacts { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 4px 0; }
 .cards-deckacts .ork-btn { height: auto; min-height: 28px; max-width: 100%; white-space: normal; text-align: left; justify-content: flex-start; }
+.sp:has(> .cards-said) { grid-template-rows: auto auto minmax(0, 1fr) 196px; }      /* a spread a mat opened: the leader's words under its head (decisions §297.4) */
+.sp > .cards-said { margin: 10px 40px 0; }

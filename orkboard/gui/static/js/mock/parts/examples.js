@@ -17,7 +17,7 @@ export function lay(data) {
   // one goal at work comes to review: the gate can be opened from it
   const [rev] = latest(data, "ready", 1).map(mark);
   if (rev) rev.state = "review";
-  // the dealer's wait, a leader's ask and a change with its words before it, in the feed
+  // the dealer's wait, a leader's ask, a change with its words before it and a change in Tech's architecture (a mat, decisions §297), in the feed
   const feed = ensure(data, "ideas.feed", { since: "", heads: [], waits: [], posts: [], seen: null });
   const [talk] = latest(data, "talk", 1);
   if (talk) feed.waits = [{ kind: "starts", goal: talk.slug, short: (talk.short || talk.title) + EXAMPLE, leader: "orkmaster", at: at(13, 40),
@@ -27,6 +27,9 @@ export function lay(data) {
     { leader: "tech", post: { leader: "tech", at: at(11, 58), kind: "concern", goal, asks: true, text: "Which way does the table open first, the lanes or the dealer?" + EXAMPLE, acts: [] }, more: [] },
     { leader: "design", post: { leader: "design", at: at(10, 5), kind: "change", goal, text: "The lanes keep a card's ratio; a post lies on its side, an open card stands up." + EXAMPLE,
       before: "The lanes draw a post as tall as its words; an open post is a drawer.", acts: [] }, more: [] },
+    { leader: "tech", post: { leader: "tech", at: at(11, 20), kind: "change", text: "gui/ is past its line: board_host.py and ideas.py are over 600 lines; split before they grow." + EXAMPLE,
+      why: "CLAUDE.md: split a module before it grows past ~600 lines.", table: { party: "tech", framework: "architecture", card: "gui/" }, acts: [] }, more: [] },
+    { leader: "design", post: { leader: "design", at: at(9, 40), kind: "news", text: "The heads are drawn in the cartoon now; the runes go next." + EXAMPLE, acts: [] }, more: [] },
     ...(feed.posts || []),
   ];
   // the same question waits in the hand (decisions §145): a goal's open question, as the host keeps it in the Board's needs;

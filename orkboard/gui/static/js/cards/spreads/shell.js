@@ -6,7 +6,8 @@ import { html, cls } from "../../html.js";
 import { Icon } from "../../orkui.js";
 import { HeadOf, whoOf } from "../../table/post.js";
 import { Index } from "../card.js";
-import { closeSpread } from "./open.js";
+import { closeSpread, spread } from "./open.js";
+import { Said } from "../said.js";
 import { keepTab } from "../back.js";
 
 /** `kind`: the spread (its `data-spread`); `title`, `line`, `say`: its head; `note`: the hand's words; `acts`: the hand's buttons; children: the field. */
@@ -24,6 +25,7 @@ export function SpreadFrame({ kind, title, line = "", say = "", note = "", acts 
         <span class="sp-t"><b>${title}</b>${line && html`<small>${line}</small>`}</span>
         ${say && html`<span class="sp-say">${say}</span>`}
         <button type="button" class="ork-btn sp-shut" onClick=${closeSpread}><${Icon} name="close" /><span>Close</span></button></header>
+      ${spread.value?.said && html`<${Said} p=${spread.value.said} />`}
       <div class="sp-field">${children}</div>
       <footer class="sp-hand">${hand && html`<div class="sp-cards" role="group" aria-label="Your hand">${hand}</div>`}${note && html`<p class="sp-note">${note}</p>`}${acts && html`<div class="sp-acts">${acts}</div>`}</footer>
     </div></div>`;

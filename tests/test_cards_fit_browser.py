@@ -106,7 +106,7 @@ def open_table(pg):
 
 
 def open_l(pg):
-    pg.locator(".cards-m").nth(2).focus()
+    pg.locator(".cards-m:not([data-mat])").first.focus()        # a word, no mat: it opens as an L (decisions §297.1)
     pg.keyboard.press("Enter")
     pg.wait_for_selector(".cards-l")
 
@@ -202,7 +202,7 @@ def test_the_focus_goes_back_to_the_card_that_opened_an_l_or_a_spread_and_tab_st
         b = launch(p)
         pg = fresh(b, page_url, SIZES[1])
         on = "() => document.activeElement.matches('.cards-m, .cards-s, .frame-hand .hand-card')"
-        m = pg.locator(".cards-m").nth(2)
+        m = pg.locator(".cards-m:not([data-mat])").first
         m.focus()
         pg.keyboard.press("Enter")
         pg.wait_for_selector(".cards-l")

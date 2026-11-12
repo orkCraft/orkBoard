@@ -100,8 +100,7 @@ def test_the_dispute_opens_from_a_leaders_post_about_a_goal_three_leaders_spoke_
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
         opened(pg, page_url)
-        pg.locator("article.cards-m .post-card__text", has_text="Doubts Product").first.click()
-        pg.get_by_role("button", name="Who says what").click()
+        pg.locator("article.cards-m .post-card__text", has_text="Doubts Product").first.click()       # a concern's mat (decisions §297.2)
         sp = spread_of(pg, "dispute")
         assert sp.locator(".sp-voice").count() == 3 and sp.locator(".sp-cards button.cards-s").count() == 4
         closes_with_esc(pg)

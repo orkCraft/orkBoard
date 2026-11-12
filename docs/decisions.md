@@ -8307,3 +8307,26 @@ without saying so (the table of this talk); the person took each way recommended
    on and the old faces go; what the host does not answer yet is the contract the mocks hold (`js/mock/parts/`).
 
 The owner's call.
+
+## 297. A leader's M is its mat: a change in its framework or a spread of it, opened as that table or spread, its words its head (12 November 2026, the owner)
+
+Changes: 296.1 (an M a word, an L read: an M with a mat opens as its table or spread, not as words), 296.7 and 296.9 (a leader's
+framework and the spreads reached through its mat, not through acts of their own beside the card). Kept: 296.2–296.6, 296.8, 296.10.
+
+Why: goal 170's talk of 12 November 2026: the person saw that an M is no card of play (nobody plays a leader's word) but a piece of
+its leader's table, *in theory it can show the state of the leaders' tables or a hard spread of cards when it opens*, and asked whether
+that complicates. It simplifies if bounded: the table of cards had three ways into something large beside an M (its L of words, the
+spreads' acts, the switch of a lane's framework); a mat is one. So:
+1. **A mat** (`mat` in the glossary) is a leader's M that is a change in its framework, or a spread of the cards of its framework
+   (one and the same: a framework is laid as cards). A word with neither (a note, a view alone) stays an M of words, opened as an L.
+2. **What a mat opens is fixed by the post's kind**, a closed list: a change → its *What changed* spread; a concern or views that
+   differ → *Who says what*; a change in a leader's framework (Architecture, Jobs to be done) → that table, laid at the part it is
+   about. Nothing else is drawn in a mat.
+3. **On the table a mat shows its spread's shape, never a picture of it**: a small mark of the spread's form and one line (*Architecture:
+   2 parts changed*); its words as an M's. A table of 250 px is not read, so none is drawn.
+4. **Opened, the leader's words are its head**: who said it, what and why, over the table or the spread; nothing of the post is lost.
+5. The acts beside the cards that open the same spreads stay until goal 170's last step, when the old ways go.
+6. **On a phone** the spreads have no face of their own yet: there a mat opens as an L of words with its acts, until the spreads
+   are drawn for a phone (their goals, §296.9).
+
+The owner's call.

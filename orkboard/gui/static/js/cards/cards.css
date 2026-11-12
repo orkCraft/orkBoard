@@ -104,3 +104,21 @@
 .cards-lie__under { position: absolute; left: 4px; top: -4px; width: 20px; height: 20px; clip-path: circle(50%); background: var(--ork-raised); }
 .cards-lie:focus-visible, .cards-act:focus-visible, .cards-s.is-group:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .cards-s .cards-s__name { -webkit-line-clamp: 2; line-clamp: 2; }
+
+/* A leader's mat (decisions §297; cards/mat.js): its spread's shape and one line at the M's foot, never a picture of the spread */
+.cards-m.is-mat .cards-m__body .post-card__text > span { -webkit-line-clamp: 2; }
+.cards-mat { margin-top: auto; display: flex; align-items: center; gap: 8px; min-width: 0; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.cards-mat > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cards-mat__shape { flex: none; position: relative; display: inline-grid; gap: 2px; width: 26px; height: 18px; }
+.cards-mat__shape i { display: block; border: 1px solid var(--party-hue, var(--ork-ink-muted)); background: var(--ork-panel); }
+.cards-mat__shape[data-shape="diff"] { grid-template-columns: 1fr 1fr; } .cards-mat__shape[data-shape="diff"] i:first-child { border-color: var(--ork-ink-muted); }
+.cards-mat__shape[data-shape="dispute"] { grid-template-columns: repeat(3, 1fr); align-items: end; }
+.cards-mat__shape[data-shape="dispute"] i:nth-child(1) { height: 80%; rotate: -10deg; } .cards-mat__shape[data-shape="dispute"] i:nth-child(2) { height: 100%; } .cards-mat__shape[data-shape="dispute"] i:nth-child(3) { height: 80%; rotate: 10deg; }
+.cards-mat__shape[data-shape="table"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+/* the leader's words at the head of what its mat opened (cards/said.js) */
+.cards-said { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; margin: 8px 20px; padding: 8px 12px;
+  background: var(--ork-panel); border: 1px solid var(--ork-card-frame); box-shadow: inset 3px 0 0 var(--party-hue, var(--ork-card-frame)); }
+.cards-said__av { grid-row: span 2; } .cards-said__t b { font: var(--ork-type-label); } .cards-said__t small { margin-left: 8px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.cards-said__words { margin: 0; font: var(--ork-type-body); color: var(--ork-ink); } .cards-said__words small { display: block; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.tb-card.is-at { box-shadow: inset 0 3px 0 var(--party-hue), 0 0 0 2px var(--party-hue), 0 4px 0 var(--ork-room); }

@@ -75,7 +75,7 @@ def test_the_phone_on_mocks_draws_its_feed_in_cards(base):
 def test_a_card_pressed_opens_as_an_l_over_the_whole_screen_and_close_puts_it_away(base):
     with sync_playwright() as p:
         b, pg, errors = phone(p, base + "/app/?mock=1")
-        m = pg.locator(".up-ct .cards-m").first
+        m = pg.locator(".up-ct .cards-m:not([data-mat])").first      # a word, no mat (decisions §297.1)
         m.wait_for(timeout=20000)
         m.click(position={"x": 24, "y": 14})                      # its head: the goal's own link in its body is another press
         card = pg.locator(".cards-l")

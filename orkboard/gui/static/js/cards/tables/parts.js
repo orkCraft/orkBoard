@@ -5,7 +5,7 @@ import { html, cls } from "../../html.js";
 import { Sign } from "../../orkui.js";
 import { whoOf } from "../../table/post.js";
 import { Token } from "../card.js";
-import { WORDS, asking, held, placed, putToken } from "./state.js";
+import { WORDS, asking, held, isAt, placed, putToken } from "./state.js";
 
 /** The person's token: bone with a brass rim, never a leader's round colour (tables.css `.tb-you`). */
 export const YouToken = ({ view, big = false }) => html`<span class=${cls("tb-you", { "is-big": big })} data-view=${view} aria-hidden="true"><i>${(WORDS[view] || WORDS.question).mark}</i></span>`;
@@ -25,8 +25,9 @@ const press = (ctx, id, name, own) => () => {
 /** A card, face up; pressed, it turns over to its back (`back`: lines of what is behind it). `kind`: ext, frame, mod, hired, fired. */
 export function TCard({ ctx, id, title, line = "", sign = "work", size = "md", kind = "", tilt = 0, back = [], tokens = [], mono = false, extra = null, face = null }) {
   const [over, setOver] = useState(false), marked = placed.value.some((t) => t.party === ctx.party && t.framework === ctx.framework && t.card === id);
+  const at = isAt(ctx, id);      // the part a mat laid the table at (mat.js)
   return html`<div class=${cls(`tb-slot is-${size}`, { "is-marked": marked })}>
-    <button type="button" class=${cls("ork-card tb-card", { "is-over": over, "is-marked": marked, [`is-${kind}`]: !!kind })} data-card=${id} data-kind=${kind} data-race=${ctx.race} aria-pressed=${String(over)}
+    <button type="button" class=${cls("ork-card tb-card", { "is-over": over, "is-marked": marked, "is-at": at, [`is-${kind}`]: !!kind })} data-card=${id} data-kind=${kind} data-race=${ctx.race} aria-pressed=${String(over)}
         style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${`${title}${line ? `: ${line}` : ""}. ${held.value ? "Press to put your token here." : over ? "Press to turn it back." : "Press to turn it over."}`}
         onClick=${press(ctx, id, title, () => setOver(!over))}>
       <span class="tb-ix" aria-hidden="true"><${Sign} name=${sign} /></span>
@@ -38,10 +39,10 @@ export function TCard({ ctx, id, title, line = "", sign = "work", size = "md", k
 
 /** A pile of cards: its top card and the backs under it. Pressed, it spreads (`onSpread`); `n` the backs. */
 export function TPile({ ctx, id, title, line = "", sign = "work", n = 3, open = false, onSpread, kind = "", size = "md", mono = false, count = "" }) {
-  const marked = placed.value.some((t) => t.party === ctx.party && t.framework === ctx.framework && t.card === id);
+  const marked = placed.value.some((t) => t.party === ctx.party && t.framework === ctx.framework && t.card === id), at = isAt(ctx, id);
   return html`<div class=${cls(`tb-slot tb-pile is-${size}`, { "is-open": open, "is-marked": marked })} style=${`--ov:${n}`}>
     ${Array.from({ length: n }, (_, i) => html`<span key=${i} class="ork-card tb-under" style=${`--dx:${(n - i) * 4}px`} aria-hidden="true"></span>`).reverse()}
-    <button type="button" class=${cls("ork-card tb-card", { "is-marked": marked, [`is-${kind}`]: !!kind })} data-card=${id} data-pile="true" data-race=${ctx.race} aria-expanded=${String(open)}
+    <button type="button" class=${cls("ork-card tb-card", { "is-marked": marked, "is-at": at, [`is-${kind}`]: !!kind })} data-card=${id} data-pile="true" data-race=${ctx.race} aria-expanded=${String(open)}
         aria-label=${`${title}, a pile${count ? ` of ${count}` : ""}. ${held.value ? "Press to put your token here." : open ? "Press to close it." : "Press to spread it."}`}
         onClick=${press(ctx, id, title, onSpread)}>
       <span class="tb-ix" aria-hidden="true"><${Sign} name=${sign} /></span>

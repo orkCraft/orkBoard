@@ -120,7 +120,7 @@ def test_a_posts_words_open_before_and_after_from_its_act_and_close_with_esc(pag
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
         opened(pg, page_url)
-        pg.locator("article.cards-m .post-card__text").first.click()
+        pg.locator("article.cards-m:not([data-mat]) .post-card__text").first.click()       # a word, no mat: its L's act
         pg.get_by_role("button", name="What changed").click()
         diff = pg.locator("[data-spread=diff]")
         diff.wait_for()

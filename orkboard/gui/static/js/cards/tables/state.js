@@ -25,6 +25,12 @@ export function frameworkOf(g) {
 /** Which party's table is laid in the pane in place of the lanes: a party slug, or "" for the lanes (Feed). */
 export const laid = signal("");
 
+/** The part a mat laid the table at (mat.js): {party, framework, card, p} (`p`: the leader's post, said at the table's head), or null. */
+export const laidAt = signal(null);
+
+/** Whether the card `id` of a table is the part a mat laid it at. */
+export const isAt = (ctx, id) => { const a = laidAt.value; return !!a && a.party === ctx.party && a.framework === ctx.framework && a.card === id; };
+
 /** The person's token held in the hand ("question" or "concern", "" none), the card it is about to be put on, and the tokens put. */
 export const held = signal("");
 export const asking = signal(null);                     // {party, framework, card, name}
