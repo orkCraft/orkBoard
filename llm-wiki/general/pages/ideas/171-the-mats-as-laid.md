@@ -32,6 +32,12 @@ Then, after Product's and Design's Talk (decision §301): «мы снимаем 
 mats are built on the Board's own data, their logic in the host, no mock data on the page; compare shows above its cards what the
 card in focus would make.
 
+Split (the person: «да»): this goal builds what every mat stands on, the mat's frame as a playmat (§300.15: the felt, the plates,
+the printed zones, the seal, the phases), its address and its slots closed (§299.3, §299.5, §300.1), the move on its mat and the hand
+a card for each move that waits (§300.2, §300.3), the cards' three kinds (§300.4), and the page's mats reading the host, not mocks
+(§301.1, §301.2). Each mat is a goal of its own: the discussion, compare, the battle and the gate, the discard, the project's deck,
+the backpack and the team, the frameworks' mats, the story map, the history book.
+
 ## Why
 
 ## Done when
@@ -46,9 +52,11 @@ card in focus would make.
 
 ## Open questions
 - Where does Product's persona come from? (**A job's segment, as its card** / A persona card of its own / Examples until people are heard) — §300.12 makes the persona Product's card, yet the tree (§172) gives a job only a segment; one keeper wants one source · A job's segment, as its card: A job names its persona; the segment's words are the card, no new field · A persona card of its own: Its own words, set on each job; segment and persona kept in step · Examples until people are heard: Example personas only; Design and Marketing lay no real one yet
+  - Answered: From a question to the person: Product asks the person who the people are, and the person's answer is the persona's card (the person: «вообще из вопроса игроку») (the person, 2026-11-12)
 - What fills the story map on mocks? (**Real goals under proposed jobs** / Examples only, marked example / Real goals, no job kept) — the mocks are to be as near the real page as can be (goal 170 M); a proposed card lies faint until kept (§300.12) · Real goals under proposed jobs: This Board's goals laid faint under jobs read from its specs, until kept · Examples only, marked example: Example jobs and goals; its layout judged, not this product's map · Real goals, no job kept: The Board as it is: every goal in one column, no job kept yet
   - Answered: Real goals, no mock data: a mat with nothing yet lays its empty zones with who fills them (decided by §301, 2026-11-12)
 - A way, then the seal? (**Seal only what cannot be undone** / Seal every mat, as drawn / A way pressed is the move) — §300.15 makes a mat's move pick-then-seal while the hand's way is one press (§300.2): one move, two gestures · Seal only what cannot be undone: One press as in the hand; the seal guards a merge into main and New wins · Seal every mat, as drawn: Two presses on every mat and one in the hand, as §300.15 has it · A way pressed is the move: One press everywhere; a merge into main still asks first (§300.9)
+  - Answered: Seal only what cannot be undone (Merge into main, Send to a branch, Ship a release); every other move is one press, its Undo in Orkboard's history (the person: «можешь историями оркборда») (the person, 2026-11-12)
 - Each mat checked against its shot? (**Pictures, a stage a mat** / One picture pass at the end / The person presses ?mock=1) — Weaker models drift from a mockup without a picture to hold them (goal 170's risk); docs/mockups/mats/shots holds 44, desk and phone · Pictures, a stage a mat: Each mat accepted on desk and phone pictures before the next begins · One picture pass at the end: Fewer passes; a drift found when all are built, many mats made again · The person presses ?mock=1: No picture kept; the person finds the drift by pressing, after the merge
 
 ## Decisions
