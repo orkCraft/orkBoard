@@ -8,7 +8,6 @@ priority: normal
 short: The mats as laid
 phase: talk
 route: product, design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -64,6 +63,7 @@ the backpack and the team, the frameworks' mats, the story map, the history book
 - Which table do the mats land on? (**Behind ?table=cards until the last mat** / The cards the default now / Both tables kept a while) — cards/on.js draws the cards on ?mock=1 and ?table=cards only; §299.4 retires the goal's pane, yet its acts' mats are later goals · Behind ?table=cards until the last mat: Today's table stays; cards/on.js flipped once the discard and battle land · The cards the default now: One table now; acts with no mat yet (the gate, To main) gone until theirs land · Both tables kept a while: 170's D to F go on; every goal changes two tables until one goes
   - Answered: Behind ?table=cards until goal 170's last step turns the table of cards on and the old faces go (decided by §296.10, 2026-11-12)
 - Does §302's hand come in here? (**§302.1 and .4 here, zones later** / All of §302 here / §302 a goal of its own) — §302 came after this Gist and changes §300.2's hand; a zone's narrowing reads the project's deck (§300.12), a goal of its own · §302.1 and .4 here, zones later: The hand follows the open mat now; a zone narrows it once the deck lands · All of §302 here: The hand reads the project's deck early; this goal takes the deck's host part · §302 a goal of its own: This goal builds §300.2's hand; §302 rewrites the same hand right after
+  - Answered: §302.1 and §302.4 here: the hand follows the open mat and holds its ways; a zone narrows it once the project's deck lands, in that goal (the person: «давай вариант а») (the person, 2026-11-12)
 
 ## Decisions
 
