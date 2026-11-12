@@ -8549,3 +8549,29 @@ So:
    swap, a set of items each, with where each set stands; the mats' sets (N1, E1 to E3) are added there.
 
 The owner's call.
+
+## 302. The hand follows the mat open: the cards that can be played on it now; a zone in focus narrows it to its kind, the blank card of that kind at its edge (12 November 2026, the owner)
+
+Changes: 300.2 (the hand a card for each move that waits: so while no mat is open), 300.12 (a keeper's offers for a slot lie on the
+mat), 300.15 (the ways a fan of cards on the mat), 298.9 (the deck of blank cards one deck). Kept: 300 but these, 270.2 and 296.2
+(a question's ways lie in the hand), 301.
+
+Why: the person, 12 November 2026: «по руке - по сути рука будет меняться в зависимости от выбранного планшета, например если нужно
+вставить персону - мы даем руку только с персонами и возможностью добавлять персону». The mat is where cards are played, the hand
+what can be played there now, as in a collectible card game. So:
+1. **While a mat is open the hand is that mat's**: the cards that can be played on it now. With no mat open it is the hand of the
+   moves that wait (§300.2); those lie meanwhile as a pile at the hand's left, its thickness and no number, pressed it comes back.
+2. **A zone in focus narrows the hand to its kind**, read from the project's deck (§300.12): a persona's zone, the personas; a
+   screen's, the screens; a seat's step, the seats; a seat's tool, the AI tools. A card already lying on the mat is not in the hand
+   (one life, §300.3); a card proposed lies faint in it, *proposed by <leader>*; a keeper's offers for that zone are its first cards.
+3. **The blank card of that kind stands at the hand's edge**, *New <kind>* and the key N: drawn, it is written there and played; the
+   person's own card enters the deck at once, kept by its kind's keeper, who may put a token on it (a persona so is the person's
+   answer, §300.12's question: «из вопроса игроку»).
+4. **A mat's ways lie in the hand** (the battle's, the gate's, a turn's, a question's: §296.2 kept), a fan; the mat keeps its zones
+   and, where a move cannot be undone, its seal (goal 171's answer: *Merge into main*, *Send to <branch>*, *Ship <release>*); every
+   other move is one press, its Undo in the history.
+5. **A card is played** by pressing it (onto the zone in focus) or by dragging it onto a zone, the gesture a button with its word
+   and a key (§296.9); the hand closes up. Closing the mat brings the hand of the moves that wait back.
+6. **On a phone** the hand is the foot of the mat's screen, a row that scrolls; a zone pressed narrows it.
+
+The owner's call.
