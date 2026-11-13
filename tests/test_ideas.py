@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import stat
 
 import pytest
 
-from orkboard.realm import idea_secrets, ideas, wiki
+from orkboard.realm import idea_secrets, ideas
 
 
 @pytest.fixture
@@ -146,11 +147,10 @@ def test_thesis_is_the_first_line_without_markdown():
     assert ideas.items("- a\n- b\n") == ["a", "b"] and ideas.items("one\ntwo") == ["one", "two"]
 
 
-def test_the_librarian_never_rewrites_a_board_page(root):
+def test_a_goals_and_a_partys_pages_say_the_board_owns_them(root):
     slug = ideas.add_idea(root, "kept by the board")
-    pages = wiki.manual_pages(root)
-    assert f"pages/ideas/{slug}.md" in pages and "pages/tracks/general.md" in pages
-    assert wiki.is_manual("---\nowner: board\n---\n") and not wiki.is_manual("---\nowner: orc\n---\n")
+    for rel in (f"pages/ideas/{slug}.md", "pages/tracks/general.md"):
+        assert re.search(r"^owner:\s*[\"']?board[\"']?\s*$", (root / rel).read_text(encoding="utf-8")[:1500], re.M), rel
 
 
 def test_a_secret_goes_to_the_store_never_to_the_plan(tmp_path):

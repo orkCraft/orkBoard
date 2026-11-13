@@ -1,25 +1,7 @@
-"""Configuration and environment helpers for orkcraft."""
+"""Where the project is: its root, found by walking up from a folder (`find_project_root`)."""
 from __future__ import annotations
 
-import os
-from dataclasses import dataclass, field
 from pathlib import Path
-
-from orkboard.env import getenv
-
-TOWN_SCROLL = ".orkcraft.json"
-
-
-def default_layout_file(repo_root: Path | None = None) -> Path:
-    """`$ORKCRAFT_LAYOUT_FILE`, else the Town Scroll `<workspace>/.orkcraft.json`,
-    else `$XDG_CONFIG_HOME/orkcraft/layout.json` when there is no workspace."""
-    env = getenv("LAYOUT_FILE")
-    if env:
-        return Path(env).expanduser()
-    if repo_root is not None:
-        return repo_root / TOWN_SCROLL
-    base = os.environ.get("XDG_CONFIG_HOME", "").strip() or str(Path.home() / ".config")
-    return Path(base) / "orkcraft" / "layout.json"
 
 
 def find_project_root(start_path: Path | None = None) -> Path:
@@ -35,29 +17,3 @@ def find_project_root(start_path: Path | None = None) -> Path:
     raise FileNotFoundError(
         f"orkcraft: project root (.orkcraft.json or .git) not found starting from {p}"
     )
-
-
-def default_town_root() -> Path:
-    """Where the town settles when `orkcraft` opens outside any project: `~/Orkcraft`."""
-    return Path.home() / "Orkcraft"
-
-
-NOT_A_PROJECT_HINT = "Run it inside your project (cd <project> && orkline ...) or pass --repo <project>."
-
-
-@dataclass
-class Config:
-    """orkcraft configuration settings."""
-    repo_root: Path = field(default_factory=find_project_root)
-    auto_commit: bool = True
-    git_co_author: str = "Co-Authored-By: orkcraft <noreply@local>"
-    layout_file: Path | None = None  # None → the Town Scroll of repo_root
-
-    def __post_init__(self) -> None:
-        if self.layout_file is None:
-            self.layout_file = default_layout_file(self.repo_root)
-        env_commit = getenv("AUTO_COMMIT").lower()
-        if env_commit in ("0", "false", "no", "off"):
-            self.auto_commit = False
-        elif env_commit in ("1", "true", "yes", "on"):
-            self.auto_commit = True

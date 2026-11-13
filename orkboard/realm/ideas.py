@@ -1,7 +1,7 @@
 """The board's tracks and ideas as Wiki pages (spec 29 §2, spec 29a §2), and each idea's state beside them.
 
 The Wiki joined to the board holds two sections: `pages/tracks/<slug>.md` and `pages/ideas/<slug>.md`, front matter
-`owner: board` (the librarian reads them and never rewrites them: realm/wiki.py). The file is the truth: a hand edit
+`owner: board` (a librarian reads them and never rewrites them). The file is the truth: a hand edit
 is read as it is, and a write keeps every section and front matter key it does not know.
 
     tracks(root)                          # in order, General made on demand

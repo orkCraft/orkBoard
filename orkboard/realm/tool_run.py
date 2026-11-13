@@ -220,8 +220,7 @@ def ask(harness_id: str, prompt: str, model: str | None = None,
     h = harnesses.need(harness_id)
     start = time.monotonic()
     ran = _ran_model(h, model)                               # what a call's record names: the model the tool ran, never a tier word
-    replayed = call_log.answer("ask", prompt)                # a recorded answer, when a check plays one back
-    proc = subprocess.CompletedProcess([], *replayed) if replayed is not None else call(h, prompt, model)
+    proc = call(h, prompt, model)
     if proc.returncode != 0:
         call_log.record(None, "ask", h.id, ran, prompt, proc.stdout, proc.stderr, proc.returncode,
                         time.monotonic() - start, who=f"{h.id} -p")

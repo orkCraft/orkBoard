@@ -3,8 +3,7 @@
 `SECTIONS` names the sections of each topic (`general`, `codebase`, `team`, `design`) with a line on what each
 holds; `SCHEMA_TEMPLATE` is the `WIKI.md` a wiki is scaffolded with, `TOPIC_ABOUT` the topic's one-line purpose, and
 `INDEX_TEMPLATE`, `SECTION_INDEX`, `SECTION_RULES`, `POINTER` and `LOG_TEMPLATE` the other files `scaffold` writes.
-Text only, filled in with `str.format`; the functions that write them are in realm/wiki.py, which re-exports every
-name here. Pure module, no Textual.
+Text only, filled in with `str.format`; realm/wiki.py `scaffold` writes them. Pure module, no face.
 """
 from __future__ import annotations
 

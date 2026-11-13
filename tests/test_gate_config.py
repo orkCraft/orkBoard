@@ -115,11 +115,9 @@ def test_without_a_gate_table_the_files_are_those_of_today(tmp_path):
         *idea_git.CRITICAL_TESTS, "tests/test_ideas.py", "tests/test_x.py"]
 
 
-def test_test_argv_comes_from_gate_config_for_the_jobs():
-    from orkboard.realm import jobs
+def test_test_argv_splits_a_command_or_hands_a_chain_to_the_shell():
     assert gate_config.test_argv("pytest -q") == ["pytest", "-q"]
     assert gate_config.test_argv("pytest -q && ruff check .") == ["sh", "-c", "pytest -q && ruff check ."]
-    assert jobs.test_argv is gate_config.test_argv
 
 
 # -- the run -----------------------------------------------------------------------------------------------------
