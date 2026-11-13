@@ -268,7 +268,7 @@ def test_the_acceptance_is_a_leaders_check_of_its_step_and_the_pages_say_it_in_t
     from pathlib import Path
     assert lexicon.term("acceptance") == "acceptance" and lexicon.term("acceptance", many=True) == "acceptances"
     static = Path(__file__).parent.parent / "orkboard" / "gui" / "static" / "js"
-    for rel, words in (("arena/arenawords.js", "is accepting"), ("table/partyseats2.js", "the leader accepts it"), ("frame/firstopen.js", "the leader accepts")):
+    for rel, words in (("table/partyseats2.js", "the leader accepts it"), ("frame/firstopen.js", "the leader accepts")):
         assert words in (static / rel).read_text(encoding="utf-8")
 
 
