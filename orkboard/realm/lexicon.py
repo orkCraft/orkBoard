@@ -100,7 +100,7 @@ TERMS: tuple[Term, ...] = (
     _t("war_tent", "Terminals", "", "War Tent"),
     _t("orders", "Answers", "", "Orders"),
     _t("war_raven", "Phone", "Phones", "War Raven", "War Ravens"),   # a phone paired with the town (docs/design/mobile.md)
-    _t("place", "place", "places"),                                # an area a phone says it came to or left (docs/design/phone-places.md)
+    _t("place", "place", "places"),                                # one at the hand's right, each opening a table: the die, the backpack, the history book (decisions §145)
     _t("update", "update", "updates"),                             # a newer Orkline (core/updates.py, docs/updates.md)
     _t("critical_update", "critical update", "critical updates"),  # …that installs by itself when the town opens
     _t("major_update", "major update", "major updates"),           # …that starts a later line (0.1 → 0.2), offered louder

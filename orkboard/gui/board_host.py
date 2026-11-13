@@ -239,7 +239,6 @@ class Orkboard:
             "presence.set": self._presence_set,       # the door: Here or Away, held until the hours' next edge (spec 139 C.1)
             "link.open": open_link,
             "crash.window": self._crash_window,       # the page's own errors (js/crashes.js, core/crashes.py)
-            "usage.share": self._share_usage,         # the one answer, asked on the first screen (js/onboarding.js)
             "mobile.hello": self._hello,
             "mobile.snapshot": self._mobile_snapshot,
             "tools.sign_in": self._sign_in,                # desktop only: a phone opens nothing on the computer (BoardPhone)
@@ -252,7 +251,7 @@ class Orkboard:
         self.commands.update(self.updates.commands())
         self.repair = repair.Repair(self)             # Fix it: Claude Code started on Orkboard's own code (spec 119)
         self.commands.update(self.repair.commands())
-        # Anonymous usage stats and crash reports, one answer per machine with Orkline (core/usage.py, core/crashes.py)
+        # Anonymous usage stats and crash reports, one answer per machine (core/usage.py, core/crashes.py; `orkboard usage on|off`)
         self.usage = usage.Usage(_Answer(self), face="gui", demo=demo)
         self.crashes = crashes.install(_Answer(self), face="gui", demo=demo)
         self.onboarding = onboarding.Onboarding(self)
@@ -367,15 +366,15 @@ class Orkboard:
         gold, _gold_level, lumber, _lumber_level = treasury.words(self.spend, gold_usd, lumber_tokens)
         _quota, _level, show_gold = treasury.quota(self.machine, self.limits())
         board = self.ideas.snapshot() if self.ideas is not None else {
-            "focus": "board", "ideas_rev": 0, "needs_you": 0, "idea_states": [], "review_count": 0,
+            "ideas_rev": 0, "needs_you": 0, "idea_states": [], "review_count": 0,
             "review_results": [], "preview": "", "play_face": "", "new_n": 0, "limits": [], "mana": self._mana(), "laid": False, "ask": None, "reserve": {"share": idea_target.reserve({}, False), "night": False}}
         sign_in = self.sign_ins.snapshot()
         board = {**board, "needs_you": int(board.get("needs_you") or 0) + len(board_map.sign_in_needs(sign_in))}
-        return {**board, "focus": "board", "onboarding": self.onboarding.snapshot(), "tools": self.tools_host.snapshot(), "sign_in": sign_in,
+        return {**board, "onboarding": self.onboarding.snapshot(), "tools": self.tools_host.snapshot(), "sign_in": sign_in,
                 "hud": {"show_gold": show_gold, "gold": gold, "lumber": lumber}, "rate": window_rate.shown(self.machine),
                 "repo": str(root) if root is not None else "", "projects": self.projects.list(),
                 "update": self.updates.snapshot(), "repair": self.repair.snapshot(), "update_policy": self.machine.updates, "version": __version__,
-                "usage_ask": self.usage.should_ask(), "presence": self._presence(), "stopped": bool(self.ideas.stopped()) if self.ideas is not None else False, **self._board_status()}
+                "presence": self._presence(), "stopped": bool(self.ideas.stopped()) if self.ideas is not None else False, **self._board_status()}
 
     def _board_status(self) -> dict[str, Any]:
         """`board_held` (another worker holds the Board: by, kind, until) and `board_aside`, for the shown project; nothing without `[board]` (spec 137 B.2)."""
@@ -386,20 +385,14 @@ class Orkboard:
             return {}
 
     # What the page reads of the snapshot and a phone has no use for: the computer's own (spec 94 §2.3).
-    COMPUTER_ONLY = ("onboarding", "tools", "laid", "sign_in", "main_checks", "repo", "usage_ask", "update_policy", "ask", "passing", "preview", "play_face", "new_n", "keep_off_offered")      # "keep_off_offered": the new goal's card is the computer's (spec 151 F.4); "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8); "passing": so is the Orkmaster's column (spec 128 D.3)
+    COMPUTER_ONLY = ("onboarding", "tools", "laid", "sign_in", "main_checks", "repo", "update_policy", "ask", "passing", "preview", "play_face", "new_n", "keep_off_offered")      # "keep_off_offered": the new goal's card is the computer's (spec 151 F.4); "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8); "passing": so is the Orkmaster's column (spec 128 D.3)
 
     def phone_snapshot(self) -> dict[str, Any]:
         """The snapshot as a phone gets it (spec 94 §2.3): the page's own (`snapshot()`: the Board's counts, the limits, the mana
         with `paid`, the reserve, the projects) less the computer's (`COMPUTER_ONLY`: the onboarding, the sign-ins' flows, the
-        repository's path); `rev` names its content (gui/phones.py sends it again only when it moved). `v`, `project`, `look`,
-        `sleep`, `version` and `canvases_*` are what the phone's old face read (removed, spec 94 E); `update` is `_phone_update`'s."""
+        repository's path); `rev` names its content (gui/phones.py sends it again only when it moved); `update` is `_phone_update`'s."""
         s = self.snapshot()
-        root = self.repo_root
-        out = {**{k: v for k, v in s.items() if k not in self.COMPUTER_ONLY},
-               "v": 1, "project": root.name if root is not None else "", "focus": "board", "look": "office",
-               "sleep": self.keep_awake.phone_line(), "hud": dict(s["hud"]), "version": __version__,
-               "canvases_new": int(s.get("canvases_new") or 0), "canvases_rev": int(s.get("canvases_rev") or 0),   # spec 78 §4
-               "update": self._phone_update(s["update"])}
+        out = {**{k: v for k, v in s.items() if k not in self.COMPUTER_ONLY}, "hud": dict(s["hud"]), "update": self._phone_update(s["update"])}
         out["rev"] = hashlib.sha256(json.dumps(out, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
         return out
 
@@ -415,15 +408,15 @@ class Orkboard:
                 "state": u.get("state", "idle"), "error": "\n".join(str(u.get("error") or "").splitlines()[-6:])}
 
     def _hello(self, args: dict) -> dict[str, Any]:
-        """The phone's handshake, as Orkline's (gui/mobile.py `hello`): what this host speaks, the mobile API's version
-        among it, so a phone built for another version says so."""
+        """The phone's handshake: what this host speaks, the mobile API's version among it, so a phone built for another
+        version says so."""
         from orkboard.gui.phones import API          # phones imports this module
         return {"name": "orkcraft", "version": __version__, "api": API, "commands": sorted(self.commands)}
 
     def _mobile_snapshot(self, args: dict) -> dict[str, Any]:
         snap = self.phone_snapshot()
         if isinstance(args.get("since"), str) and args["since"] == snap["rev"]:
-            return {"v": snap["v"], "rev": snap["rev"], "same": True}
+            return {"rev": snap["rev"], "same": True}
         return snap
 
     def detail(self, building_id: str) -> None:
@@ -506,17 +499,6 @@ class Orkboard:
     def opened(self) -> None:
         """`app_opened`: the window opened, with the AI tools on (Orkboard's schema: nothing else)."""
         self.usage.track("app_opened", face="gui", tools=[t for t, c in self.machine.tools.items() if c.enabled])
-
-    def _share_usage(self, args: dict) -> bool:
-        """The operator's answer (`share`: true | false), one for this machine; a first yes says hello."""
-        was = self.usage.enabled()
-        usage.share(self.machine, args.get("share") is True)
-        settings.save(self.machine)
-        if self.usage.enabled() and not was:
-            self.opened()
-            self.crashes.start()                 # the same yes: this run's session begins now
-        self.on_change()
-        return self.machine.usage is True
 
     def _crash_window(self, args: dict) -> None:
         self.crashes.capture_window(str(args.get("message", ""))[:2000], str(args.get("stack", ""))[:8000])

@@ -230,11 +230,11 @@ def test_a_secret_todo_is_stored_and_the_plan_says_stored(host):
     assert idea_secrets.get(host.ideas.state_dir, slug, "t1") is None
 
 
-def test_the_snapshot_carries_focus_and_the_phone_hears_an_idea(host):
+def test_the_snapshot_carries_the_board_and_the_phone_hears_an_idea(host):
     snap = host.snapshot()
-    assert snap["focus"] == "board" and "ideas_rev" in snap and snap["needs_you"] == 0
+    assert "ideas_rev" in snap and snap["needs_you"] == 0
     before = BoardPhone.phone_snapshot(host)
-    assert before["focus"] == "board" and before["needs_you"] == 0
+    assert before["needs_you"] == 0
     slug = _add(host, "phone idea")["slug"]
     mid = BoardPhone.phone_snapshot(host)
     assert mid["ideas_rev"] > before["ideas_rev"] and mid["rev"] != before["rev"]

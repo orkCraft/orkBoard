@@ -1,12 +1,9 @@
-"""The machine's settings that are cleaned on load and kept apart from the Board's: keeping the computer awake, Do not disturb, the phones,
-the push notifications, the growth and the person's profile. Pure; `orkboard/settings.py` says them as its own (it was past 600 lines:
-CLAUDE.md, *Where code goes*)."""
+"""The machine's settings that are cleaned on load and kept apart from the Board's: keeping the computer awake, Do not disturb, the phones
+and the push notifications. Pure; `orkboard/settings.py` says them as its own (it was past 600 lines: CLAUDE.md, *Where code goes*)."""
 from __future__ import annotations
 
 import re
 
-PROFILE_TEXT = ("orchestration", "role", "role_other", "industry", "industry_other", "day_other", "kin")
-PROFILE_LISTS = ("day", "mcp")   # mcp: the MCP servers the orks may use (gui/onboarding.py)
 KEEP_AWAKE = ("off", "carts", "phone")
 
 
@@ -63,37 +60,3 @@ def clean_push(raw: object) -> dict | None:
         return None
     return {"endpoint": endpoint, "p256dh": p256dh, "auth": auth, "at": str(raw.get("at") or "")[:32], "morning": morning}
 
-
-def clean_growth(raw: object) -> dict:
-    """The mascot's stage (1–4) and the deeds done with their dates; {} for anything else."""
-    if not isinstance(raw, dict):
-        return {}
-    out: dict = {}
-    if isinstance(raw.get("stage"), int) and 1 <= raw["stage"] <= 4:
-        out["stage"] = raw["stage"]
-    deeds = raw.get("deeds")
-    if isinstance(deeds, dict):
-        out["deeds"] = {str(k)[:40]: str(v)[:20] for k, v in list(deeds.items())[:40] if isinstance(v, str)}
-    return out
-
-
-def clean_profile(raw: object) -> dict:
-    """Only the known keys, as strings and lists of strings; {} for anything else."""
-    if not isinstance(raw, dict):
-        return {}
-    out: dict = {k: str(raw[k])[:200] for k in PROFILE_TEXT if isinstance(raw.get(k), str) and raw[k].strip()}
-    for k in PROFILE_LISTS:
-        if isinstance(raw.get(k), list):
-            out[k] = [str(x)[:40] for x in raw[k] if isinstance(x, str)][:20]
-    tools_ = raw.get("ai_tools")
-    if isinstance(tools_, dict):
-        rated = {}
-        for t, r in list(tools_.items())[:20]:
-            if not isinstance(r, dict):
-                continue
-            keep: dict = {k: bool(r.get(k)) for k in ("like", "dislike")}
-            keep.update({k: str(r[k])[:40] for k in ("title", "good", "weak") if isinstance(r.get(k), str) and r[k]})
-            rated[str(t)[:40]] = keep
-        if rated:
-            out["ai_tools"] = rated
-    return out

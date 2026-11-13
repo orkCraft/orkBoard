@@ -3,33 +3,24 @@
     s = settings.load()              # never raises; defaults for anything missing or broken
     s.tools["claude"].billing        # "subscription" | "api"
     s.quiet                          # 🌙 do-not-disturb hours (schedule.py)
-    s.work                           # the person's working hours (Orkline's): kept as the file has it, not read here
-    s.autonomy                       # 0 ⛓️ in chains · 1 🕰 on the clock · 2 ⛓️‍💥 unchained (autonomy.py)
-    s.autonomy_wait                  # minutes a question waits for the operator (1..60)
-    s.rebuild_wait                   # hours (the operator around) a rebuild waits (1..48)
-    s.profile                        # who the operator is and how their day goes (realm/intents.py)
-    s.growth                         # the operator's mascot stage and deeds (realm/growth.py)
     s.usage, s.install_id            # anonymous usage stats: None not asked yet (core/usage.py)
     s.updates                        # auto | critical | ask: which updates install by themselves (core/updates.py)
     s.phones, s.phone_port           # the paired phones (only their tokens' hashes) and their listener's port (gui/pairing.py)
-    s.dnd_until                      # Do not disturb: "" off, "on" until turned off, else an ISO time (disturb.py)
-    s.focus                          # "board": the window and the phone show only the board (spec 29a §1); "" the town
+    s.dnd_until                      # Do not disturb: "" off, "on" until turned off, else an ISO time (gui/phone_push.py)
     s.ideas                          # the board's keeper and runner: batch_minutes, idle_hours, max_parallel, … (IDEAS;
                                      # `wiki`, the Board's Wiki folder, only when set: spec 37 §3.5); a project's own
                                      # Board settings start from them (`board_of`)
     s.projects_open                  # the open projects' folders, in the switcher's order (spec 37 §8)
     s.projects_recent                # the projects last shown, newest first (at most PROJECTS_RECENT)
-    s.ops                            # Operations, the person's (docs/specs/38-operations.md §1): target, trust_after, … (OPS)
     settings.save(s)
 
     board_of(repo_root, s.ideas)     # a project's Board settings: `<repo>/.orkcraft/board.json` over the machine's
     save_board(repo_root, values)    # … written there (machine-local, git-ignored)
 
 The tools the operator leads and how each is paid for, and the quiet hours of their day (design:
-docs/design/onboarding.md). There is one look, orkUI's: `mode`, `office` and `office_days` of older
-settings files still load and are ignored, and are no longer written; `look` (Orkline's camp | office | shift)
-is kept as the file has it, never read here.
-Orkline never stores an API key here: `billing` only says how the CLI is paid for.
+docs/design/onboarding.md). A key an older settings file has that is not read here (`look`, `mode`, `work`,
+`autonomy`, `profile`, `focus`, `ops`, …) still loads, is ignored, and is no longer written.
+Orkboard never stores an API key here: `billing` only says how the CLI is paid for.
 """
 from __future__ import annotations
 
@@ -40,13 +31,11 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from orkboard import autonomy as autonomy_
 from orkboard.env import getenv
 from orkboard.realm import harnesses, hours, look_wait
 from orkboard.settings_ways import (PUSH_WAYS, NIGHT_RUNGS, push_way, clean_push_way, pushes_dev, pushes_main,  # noqa: F401  (said from here as before)
                                     clean_night_leaders, night_rung, night_leaders, night_values)
-from orkboard.settings_clean import (PROFILE_TEXT, PROFILE_LISTS, KEEP_AWAKE, PUSH_KEY, awake_mode, clean_dnd,  # noqa: F401
-                                     clean_phones, clean_push, clean_growth, clean_profile)
+from orkboard.settings_clean import (KEEP_AWAKE, PUSH_KEY, awake_mode, clean_dnd, clean_phones, clean_push)  # noqa: F401
 from orkboard.schedule import Span
 
 TOOLS = harnesses.ids()
@@ -73,13 +62,6 @@ IDEAS = {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1, "merge_into":
 IDEA_TARGETS = ("thrift", "balance", "quality")
 LOOK_WAITS = ("30m", "2h", "tonight", "none")           # spec 144 A.1: *Give me time to look*
 NIGHT = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$")
-FOCUSES = ("", "board")
-RECENT_FOLDERS = 8                       # the recent folders a Wiki's picker offers
-# Operations (docs/specs/38-operations.md §1): the tier and effort of its calls, the clean checks in a row before a
-# template goes by itself, the most it does by itself a day, how long a finished operation keeps its texts, and each
-# template's server key → the MCP server's name on this machine; how long the last kept brief of a person or a team is
-# kept for the next one to start from (docs/specs/66-team-briefs.md §2, §4).
-OPS = {"target": "balance", "trust_after": 1, "daily_alone": 20, "keep_days": 14, "servers": {}, "follow_days": 90}
 PROJECTS_RECENT = 10                     # the projects the switcher's Recent remembers (spec 37 §8)
 PROJECTS_OPEN = 20                       # the most projects open at once
 # The Board's settings that are the project's (spec 37 §8): read from `<repo>/.orkcraft/board.json`, the machine's
@@ -100,55 +82,33 @@ class MachineSettings:
     tools: dict[str, ToolChoice] = field(default_factory=lambda: {t: ToolChoice() for t in TOOLS})
     onboarded: bool = False       # the machine's part of onboarding is done
     quiet: Span | None = None     # 🌙 do-not-disturb hours; None = off
-    work: Span | None = None      # the person's working hours (no push or toast for questions); None = not set
-    autonomy: int = autonomy_.DEFAULT_LEVEL   # 0 chains · 1 clock · 2 free; kept as a word (autonomy.py)
-    autonomy_wait: int = autonomy_.DEFAULT_WAIT   # a question: minutes
-    rebuild_wait: int = autonomy_.DEFAULT_REBUILD   # a rebuild: hours the operator is around
-    profile: dict = field(default_factory=dict)   # orchestration, role, industry (+ _other), day, ai_tools
-    growth: dict = field(default_factory=dict)    # stage (1–4) and deeds {id: date}: the operator's, every camp's
-    # The 🛡 Warder's agy hook was checked on a live agy here (docs/design/agy-guard.md, smoke test):
-    # only then does onboarding say the Warder guards agy and install its hook. Off until someone does.
-    agy_warder_checked: bool = False
     usage: bool | None = None     # anonymous usage stats (core/usage.py): None until the operator answers
     install_id: str = ""          # a random id while they share them; forgotten when they stop
-    keep_awake: str = "carts"     # KEEP_AWAKE: when the computer does not sleep by itself, on power (gui/keep_awake.py; Orkline's gui/away.py)
+    keep_awake: str = "carts"     # KEEP_AWAKE: when the computer does not sleep by itself, on power (gui/keep_awake.py)
     review_notice: bool = False   # "results that hold now land in dev by themselves" is to be said once (spec 84 §1; the faces clear it)
     awake_offered: bool = False   # "keep it awake for the phone" was asked once, when a phone paired (js/phones.js; gui/keep_awake.py `offer`)
-    fire: bool = True             # flames over a building whose ork has waited a minute or more (the GUI's huts)
-    updates: str = "critical"     # which updates install by themselves when the town opens (core/updates.py)
+    updates: str = "critical"     # which updates install by themselves when Orkboard opens (core/updates.py)
     repair_command: list = field(default_factory=lambda: list(REPAIR_COMMAND))   # what Fix it starts on Orkboard's own code (core/repair.py, spec 119)
     main_tool: str = ""           # the tool decisions run on (realm/harnesses.py); "" the first one on
     tool_order: list = field(default_factory=list)   # the order the work moves on in: the AI tools in the person's order (the potions', left to right; decisions §232.5); [] the registry's
-    # The phones paired with this machine's towns (docs/design/mobile.md §2): id, name, the SHA-256 of the
-    # device token (never the token), when paired and when last seen. The Town Scroll never holds them.
+    # The phones paired with this machine (docs/design/mobile.md §2): id, name, the SHA-256 of the device token
+    # (never the token), when paired and when last seen. No project's file ever holds them.
     phones: list = field(default_factory=list)
     phone_port: int = 0           # the phone listener's port, kept so a paired phone finds it again; 0 not chosen
-    look: str = ""                # Orkline's look (camp | office | shift) as the shared file has it: kept, never read here
-    dnd_until: str = ""           # Do not disturb: "" off, "on" until turned off, else when it ends (disturb.py)
-    recent_folders: list = field(default_factory=list)   # the folders last connected to a Wiki, newest first (gui/folders.py)
+    dnd_until: str = ""           # Do not disturb: "" off, "on" until turned off, else when it ends (gui/phone_push.py)
     # The model a tier runs on, per tool, chosen in Settings → AI tools: {"agy": {"elder": "gemini-3.1-pro-high"}}.
     # A family (`gemini-flash-high`) is its newest model; absent, the tier's own family (realm/harnesses.py `pick`).
     tier_models: dict = field(default_factory=dict)
-    focus: str = "board"          # FOCUSES: "board" shows only the board (alpha's default), "" the whole town
     ideas: dict = field(default_factory=lambda: dict(IDEAS))   # the board's keeper and runner (IDEAS)
     projects_open: list = field(default_factory=list)     # the open projects' folders, in the switcher's order
     projects_recent: list = field(default_factory=list)   # the projects last shown, newest first
-    ops: dict = field(default_factory=lambda: clean_ops(None))   # Operations (OPS)
 
     def to_dict(self) -> dict:
         return {
             "tools": {t: {"enabled": c.enabled, "billing": c.billing} for t, c in self.tools.items()},
             "onboarded": self.onboarded,
             "quiet": self.quiet.to_dict() if self.quiet else None,
-            "work": self.work.to_dict() if self.work else None,
-            "autonomy": autonomy_.word(self.autonomy),
-            "autonomy_wait": self.autonomy_wait,
-            "rebuild_wait": self.rebuild_wait,
-            "profile": self.profile,
-            "growth": self.growth,
-            "agy_warder_checked": self.agy_warder_checked,
             "usage": {"share": self.usage, "id": self.install_id},
-            "fire": self.fire,
             "keep_awake": self.keep_awake,
             "awake_offered": self.awake_offered,
             "review_notice": self.review_notice,
@@ -158,15 +118,11 @@ class MachineSettings:
             "tool_order": list(self.tool_order),
             "phones": [dict(p) for p in self.phones],
             "phone_port": self.phone_port,
-            "look": self.look,
             "dnd_until": self.dnd_until,
-            "recent_folders": list(self.recent_folders),
             "tier_models": {t: dict(m) for t, m in self.tier_models.items()},
-            "focus": self.focus,
             "ideas": dict(self.ideas),
             "projects_open": list(self.projects_open),
             "projects_recent": list(self.projects_recent),
-            "ops": {**self.ops, "servers": dict(self.ops.get("servers") or {})},
         }
 
     @classmethod
@@ -181,16 +137,8 @@ class MachineSettings:
                                         billing=billing if billing in BILLINGS else "subscription")
         s.onboarded = bool(data.get("onboarded", False))
         s.quiet = Span.from_dict(data.get("quiet"))
-        s.work = Span.from_dict(data.get("work"))
-        s.autonomy = autonomy_.of(data.get("autonomy"))
-        s.autonomy_wait = autonomy_.wait_of(data.get("autonomy_wait"))
-        s.rebuild_wait = autonomy_.rebuild_of(data.get("rebuild_wait"))
-        s.profile = clean_profile(data.get("profile"))
-        s.growth = clean_growth(data.get("growth"))
-        s.agy_warder_checked = data.get("agy_warder_checked") is True
         usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
         s.usage = usage.get("share") if isinstance(usage.get("share"), bool) else None
-        s.fire = data.get("fire") is not False
         s.keep_awake = awake_mode(data.get("keep_awake"))
         s.awake_offered = data.get("awake_offered") is True
         s.review_notice = data.get("review_notice") is True
@@ -201,13 +149,8 @@ class MachineSettings:
         s.phones = clean_phones(data.get("phones"))
         port = data.get("phone_port")
         s.phone_port = port if isinstance(port, int) and not isinstance(port, bool) and 1024 <= port <= 65535 else 0
-        s.look = data["look"][:20] if isinstance(data.get("look"), str) else ""
         s.dnd_until = clean_dnd(data.get("dnd_until"))
-        recent = data.get("recent_folders")
-        s.recent_folders = [str(x)[:1000] for x in recent if isinstance(x, str) and x.strip()][:RECENT_FOLDERS] \
-            if isinstance(recent, list) else []
         s.tier_models = clean_tier_models(data.get("tier_models"))
-        s.focus = data["focus"] if data.get("focus") in FOCUSES else "board"
         s.ideas = clean_ideas(data.get("ideas"))
         raw = data.get("ideas") if isinstance(data.get("ideas"), dict) else {}
         if raw.get("review_v") != REVIEW_V:                       # spec 84 §1: once, a file moved off the old default is read as off
@@ -216,7 +159,6 @@ class MachineSettings:
             s.ideas["review"] = False
         s.projects_open = clean_folders(data.get("projects_open"), PROJECTS_OPEN)
         s.projects_recent = clean_folders(data.get("projects_recent"), PROJECTS_RECENT)
-        s.ops = clean_ops(data.get("ops"))
         install_id = usage.get("id")
         if s.usage:                   # a broken id is drawn again: the stats never carry what was in the file
             ok = isinstance(install_id, str) and re.fullmatch(r"[0-9a-f]{32}", install_id)
@@ -276,7 +218,7 @@ def clean_ideas(raw: object) -> dict:
         out["night_leaders"] = picked
     if raw.get("look_wait") in LOOK_WAITS:          # an unknown value reads as the default, 2 h (spec 144 A.1)
         out["look_wait"] = raw["look_wait"]
-    if raw.get("build_start") in look_wait.BUILD_STARTS:     # spec 168 H2: *The build starts* as one value, read when a file says it; the two keys stay the ones kept (Orkline reads them)
+    if raw.get("build_start") in look_wait.BUILD_STARTS:     # spec 168 H2: *The build starts* as one value, read when a file says it; the two keys stay the ones kept
         out.update(look_wait.build_start_keys(raw["build_start"], out["look_wait"]))
     if isinstance(raw.get("night_low"), bool):       # spec 83: Low work may run at night; None = not asked yet
         out["night_low"] = raw["night_low"]
@@ -296,25 +238,6 @@ def clean_ideas(raw: object) -> dict:
     if isinstance(wiki, str) and (wiki := wiki.strip().strip("/")) and re.fullmatch(r"[\w. /-]{1,200}", wiki) \
             and ".." not in wiki.split("/"):
         out["wiki"] = wiki
-    return out
-
-
-def clean_ops(raw: object) -> dict:
-    """Operations' settings: every key of OPS, a broken value as its default; `servers` keeps a key of a word and a
-    server's name as `claude mcp list` prints it."""
-    raw = raw if isinstance(raw, dict) else {}
-    out = {**OPS, "servers": {}}
-    if raw.get("target") in IDEA_TARGETS:
-        out["target"] = raw["target"]
-    for k, lo, hi in (("trust_after", 1, 5), ("daily_alone", 1, 100), ("keep_days", 1, 365), ("follow_days", 14, 365)):
-        v = raw.get(k)
-        if isinstance(v, int) and not isinstance(v, bool) and lo <= v <= hi:
-            out[k] = v
-    servers = raw.get("servers")
-    for key, name in (servers.items() if isinstance(servers, dict) else ()):
-        if isinstance(key, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,39}", key) and isinstance(name, str) \
-                and name.strip() and len(name.strip()) <= 100 and name.isprintable():
-            out["servers"][key] = name.strip()
     return out
 
 
@@ -428,7 +351,7 @@ _CACHE: dict = {}
 
 def cached() -> MachineSettings:
     """The machine settings on disk, read again only when the file changed (the map, a step's tool and its tiers
-    ask often). Orkboard's and the line's: `realm/builders.py` `_machine()` reads it."""
+    ask often)."""
     file = path()
     try:
         key = (str(file), file.stat().st_mtime_ns)
@@ -443,7 +366,7 @@ def main_tool(machine: MachineSettings | None = None) -> str:
     """The machine's main tool (read from disk when not given: the chosen one if it is on, else the first on);
     Claude Code when none is on, as before there was a choice."""
     machine = machine or cached()
-    return harnesses.main([t for t, c in machine.tools.items() if c.enabled], machine.main_tool, getattr(machine, "tool_order", ()) or ()) or "claude"     # settings of before spec 130 (Orkline's copy, a test's) have no order
+    return harnesses.main([t for t, c in machine.tools.items() if c.enabled], machine.main_tool, getattr(machine, "tool_order", ()) or ()) or "claude"     # settings of before spec 130 (a test's) have no order
 
 
 def tool_order(machine: MachineSettings | None = None) -> list[str]:
@@ -454,18 +377,6 @@ def tool_order(machine: MachineSettings | None = None) -> list[str]:
     on = [t for t, c in machine.tools.items() if c.enabled]
     order = list(getattr(machine, "tool_order", ()) or ())                 # settings of before spec 130 have none
     return sorted(on, key=lambda t: order.index(t) if t in order else len(order))   # a stable sort: the registry's order within the rest
-
-
-def preset_role(role_id: str, file: Path | None = None, kin: str = "") -> bool:
-    """`orkcraft --role`: the role the landing page was told, kept for the onboarding to open on.
-    `kin`: the page named a class with two roles (gnome), so the GUI's onboarding asks which of the two.
-    It never overrides a role the operator picked in an onboarding they finished. True when kept."""
-    s = load(file)
-    if s.onboarded and s.profile.get("role"):
-        return False
-    s.profile = {k: v for k, v in {**s.profile, "role": role_id, "kin": kin}.items() if k != "kin" or kin}
-    save(s, file)
-    return True
 
 
 def _raw(file: Path) -> dict:
@@ -485,7 +396,7 @@ def _write(file: Path, data: dict) -> None:
 
 def save(s: MachineSettings, file: Path | None = None) -> None:
     """The settings as `s` has them, but the paired phones as the file has them: only `save_phones`
-    writes those, so a town that loaded the settings before a phone was forgotten never brings it back."""
+    writes those, so a host that loaded the settings before a phone was forgotten never brings it back."""
     file = file or path()
     data = s.to_dict()
     raw = _raw(file)

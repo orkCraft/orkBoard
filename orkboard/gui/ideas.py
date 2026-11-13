@@ -44,7 +44,6 @@ from __future__ import annotations
 
 import base64
 import datetime as dt
-import os
 import re
 import threading
 import time
@@ -122,13 +121,6 @@ RUNNER_TICK_S = 3.0               # how often the runner looks at its tasks
 SNAPSHOT_S = 10.0                 # the most a cached Needs you count is kept without a change
 PHONE_ZIP_MAX = 8 * 1024 * 1024   # a zip the phone is handed in a message: larger waits for the computer
 OPENED = ("idea", "plan", "todo", "task", "result", "tab", "map", "recap", "flag", "week", "push", "party", "gate", "today", "pick")
-
-
-def focus_of(machine) -> str:
-    """The focus the window and the phone show: `ORKCRAFT_FOCUS` when set ("" the whole town, "board"), else the
-    machine's setting. Tests set it to "" (tests/conftest.py), so the town's own suites see the town."""
-    env = os.environ.get("ORKCRAFT_FOCUS")
-    return env if env in settings.FOCUSES else machine.focus
 
 
 class _Settings:
@@ -369,8 +361,8 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
                 pass
 
     def snapshot(self) -> dict[str, Any]:
-        """What the page's snapshot carries of the board: the focus, the rev, how many ideas need the person, and
-        each idea's state (what a push says when it changes: gui/mobile.py `news`)."""
+        """What the page's snapshot carries of the board: the rev, how many ideas need the person, and each idea's
+        state."""
         now = time.monotonic()
         if self._cache is None or self._cache[0] != self.rev or now - self._cache[1] > SNAPSHOT_S:
             try:
@@ -383,10 +375,10 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
                         "preview": self.preview_kind(),                  # whether the project has a preview to play (spec 113 §2)
                         "laid": first_open.laid(self.state_dir, self.root(False)),
                         "keep_off_offered": board_in_code.keepable(self.host.repo_root, self.state_dir)}      # whether the new goal's card offers *Keep off the repository*: a public or unreadable repository with the yes (spec 151 F.4)
-            except Exception:                   # a broken page never breaks the town's snapshot
+            except Exception:                   # a broken page never breaks the host's snapshot
                 data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": "", "laid": True, "keep_off_offered": False}      # a broken page never hides the table
             self._cache = (self.rev, now, data)
-        return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
+        return {"ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
                 "play_face": self.play_face(),                   # what the die's up face says: Play's state changes without the Board's rev (spec 118 §3)
                 "new_n": self.new_n(),                           # …and how many goals landed in dev since Play last tried it: the pips of the up face (decisions §200.5)
                 "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "passing": self.passing_rows(), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),

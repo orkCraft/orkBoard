@@ -178,19 +178,6 @@ def test_no_offer_in_the_mode_phone_when_it_cannot_or_in_the_demo(awake):
     assert awake.keep.offer() == ""
 
 
-def test_the_phone_says_battery_and_off(awake):
-    assert awake.keep.phone_line() == ""
-    awake.host.machine.keep_awake = "off"
-    assert awake.keep.phone_line() == "Your computer may sleep: keeping it awake is off in its Settings."
-    awake.host.machine.keep_awake = "carts"
-    awake.power.on = False
-    awake.clock.go(POWER_S)
-    awake.keep.reason()
-    assert awake.keep.phone_line() == "Your computer is on battery and may sleep."
-    awake.fake.platform = "darwin"
-    assert awake.keep.phone_line() == "Your Mac is on battery and may sleep."
-
-
 def test_run_hands_stop_to_show_and_it_lets_go_when_the_window_closes(fake_repo, monkeypatch):
     shown = {}
 

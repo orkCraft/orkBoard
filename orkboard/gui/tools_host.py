@@ -1,6 +1,6 @@
 """The AI tools' own commands (docs/specs/130-the-first-open-is-the-orkmasters.md part A; decisions §232.4, §232.5): the tools found on this computer, a
 short request to one (Check), adding one to the hand (Test & add), the order, how each is paid, and putting one back. They were the onboarding's
-(`onboarding.check`, `.detect`, `.request`), whose form and names went with spec 130 D. Orkline's onboarding composes this too.
+(`onboarding.check`, `.detect`, `.request`), whose form and names went with spec 130 D.
 
     th = ToolsHost(host)                    # `host.town`: the machine, `call` and `on_change` (Orkboard's host is its own town)
     host.commands.update(th.commands())     # tools.look · card · check · test_add · put_back · put_back_undo · order · billing · request
@@ -31,7 +31,7 @@ from orkboard import brand, settings, tools
 from orkboard.realm import goal_team, harnesses, ideas, tool_errors, tool_hand, tool_run
 from orkboard.realm.sign_in import CHECK_PROMPT
 
-ISSUES = "https://github.com/orkWorks/orkLine/issues/new"
+ISSUES = "https://github.com/orkCraft/orkBoard/issues/new"
 
 
 class ToolsError(Exception):
@@ -177,7 +177,7 @@ class ToolsHost:
             self.host.on_change()
             return
         tool_hand.add(self.machine, tid, billing)
-        self.machine.onboarded = True                               # the machine is set up: Orkline's onboarding reads the same settings
+        self.machine.onboarded = True                               # the machine is set up
         self._saved()
         n = len(tool_hand.hand(self.machine))
         self.adding[tid] = {"state": "added", "ms": out.get("ms"), "title": harnesses.title(tid), "n": n, "full": n >= tool_hand.HAND_MAX,

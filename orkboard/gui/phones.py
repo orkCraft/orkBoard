@@ -8,20 +8,17 @@ is paired or a pairing code is shown: a machine with no phone opens no port on t
          ← {"name": "orkcraft", "version": "0.1.0", "protocol": 1, "api": 1}
     POST /api/pair      {"code": "<pairing code>", "name": "Vadim's phone"}   (Content-Type: application/json)
          ← {"id": "<device id>", "token": "<device token>", "name": "Vadim's phone"}
-    POST /api/place     Authorization: Bearer <device token>; {"id", "place", "change", "at"} (gui/places.py)
-         ← {"outcome": "asked"}      for a client with no socket: Shortcuts, Tasker (docs/design/phone-places.md)
-    GET  /app/          the town in a phone's browser, on the tailnet (gui/pwa.py; its socket names the token
+    GET  /app/          the page in a phone's browser, on the tailnet (gui/pwa.py; its socket names the token
                         as a subprotocol, `bearer.<token>`, since a browser cannot set Authorization)
     GET  /media/<goal>/<pick-id>/<file>?s=<signature>   a pick's file (gui/media.py, spec 51 §3): the address is signed by the host
                         and is the proof, so an <img>, <audio> or <video> loads it without a header; Range is served (206)
     GET  /ws            Authorization: Bearer <device token>; a WebSocket:
-         ← {"t": "state", "state": {...}}     the compact snapshot (gui/mobile.py), at most every PUSH_S
-         → {"t": "cmd", "id": 7, "name": "orders.answer", "args": {"id": "…", "key": "1"}}
-         ← {"t": "reply", "id": 7, "ok": true, "result": true}
-         ← {"t": "news", "news": [...]}       what came, while the app is open (gui/notify.py)
+         ← {"t": "state", "state": {...}}     the compact snapshot (gui/board_host.py `phone_snapshot`), at most every PUSH_S
+         → {"t": "cmd", "id": 7, "name": "halt", "args": {}}
+         ← {"t": "reply", "id": 7, "ok": true, "result": 0}
 
-A command reaches `host.command` only when the host's `phone_face` allows it (Orkline's is gui/mobile.py, Orkboard's
-gui/board_host.py `BoardPhone`; spec 37 §4), at most a few a second per device
+A command reaches `host.command` only when the host's `phone_face` allows it (gui/board_host.py `BoardPhone`;
+spec 37 §4), at most a few a second per device
 (`pairing.Bucket`); it never sends the page's `state`, `detail` or a terminal's frames and takes no
 `watch`, `term.attach` or `term.replay`. Forget (Settings → Phones) closes the device's socket at once.
 
@@ -60,7 +57,6 @@ from orkboard.gui.phone_http import (
     _parse_head,
     _response,
 )
-from orkboard.realm import places
 
 API = 1                  # the mobile API's version: a change that breaks a client raises it
 PUSH_S = 2.0             # a phone gets the compact snapshot at most this often, and only when its rev changed
@@ -162,11 +158,9 @@ class Listener:
         self.phones: set[Phone] = set()
         if hasattr(host, "attach_phones"):
             host.attach_phones(self)               # the Board's notifications (gui/phone_push.py) need its devices and sockets
-        self.on_push: Callable[[dict | None], None] = lambda snap: None   # gui/notify.py: what came, said once
         self._pushed = 0.0
         self._snap: dict | None = None             # the last compact snapshot, while one is open
         self._said_locked = False                  # the desktop was told pairing locked (once a code)
-        self._place_buckets: dict[str, Bucket] = {}  # a device's place reports (POST /api/place)
 
     # -- its life ------------------------------------------------------------------------------------
 
@@ -290,10 +284,9 @@ class Listener:
             return
         if self.phones and now - self._pushed >= PUSH_S:
             self._pushed = now
-            self.on_push(self.push())
+            self.push()
         elif not self.phones:
             self._snap = None
-            self.on_push(None)
 
     def open_ids(self) -> set[str]:
         """The devices with a socket open now: an open page says what waits for itself, so no push goes to it."""
@@ -372,10 +365,6 @@ class Listener:
             return phone_journal.github_repo(project.root)
         except Exception:
             return ""
-
-    async def _place(self, method: str, headers: dict[str, str], reader: asyncio.StreamReader) -> bytes:
-        post = getattr(self.host, "place_post", None)            # Orkline's places (gui/places.py); none in Orkboard
-        return await post(self, method, headers, reader) if post is not None else _response(HTTPStatus.NOT_FOUND)
 
     def _locked(self) -> None:
         if not self._said_locked:
@@ -525,30 +514,12 @@ class Listener:
         if not self.pairing.forget(device_id):
             raise PhoneError("No such phone")
         self.close_device(device_id)
-        self._place_buckets.pop(device_id, None)
-        places.forget_device(device_id)                # what it said of places goes with it
         if not self.wanted():
             self.stop()
         return self.read()
 
-    def recipe(self, name: str) -> dict[str, Any]:
-        """A token for a Shortcuts or Tasker recipe (docs/design/phone-places.md §7): a device of its own,
-        listed and forgotten like a phone, shown once with the address and the call to make."""
-        device_id, token, label = self.pairing.add(name or "Shortcuts")
-        try:
-            self.start()
-        except PhoneError:
-            self.pairing.forget(device_id)
-            raise
-        address = self.tail_address or self.address
-        self.host.town.toast(f"{label} can report places", title="Phones")
-        return {**self.read(), "recipe": {"id": device_id, "name": label, "token": token,
-                                          "url": f"{address}/api/place" if address else "",
-                                          "trusted": bool(self.tail_address and self.tail_trusted)}}
-
     def commands(self) -> dict[str, Callable[[dict], Any]]:
         return {"phones.list": lambda a: self.read(), "phones.pair": lambda a: self.pair(),
-                "phones.recipe": lambda a: self.recipe(clean_name(a.get("name") or "Shortcuts")),
                 "phones.pair_stop": lambda a: self.pair_stop(),
                 "phones.forget": lambda a: self.forget(str(a.get("id") or ""))}
 

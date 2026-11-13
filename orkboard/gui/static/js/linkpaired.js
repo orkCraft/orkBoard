@@ -1,6 +1,6 @@
 // The page's link when it is paired with a computer (docs/specs/94-one-page-fitted-to-the-width.md §2): the phone's socket,
 // `wss://<host>/ws` with the device's bearer and the protocol `orkcraft.v1` (gui/phones.py): the snapshot (`state`), a
-// command and its `reply`, and `news` while it is open. Moved from the phone's old face (removed, spec 94 E); js/link.js
+// command and its `reply`. Moved from the phone's old face (removed, spec 94 E); js/link.js
 // picks it (`pairWith`) and no other module knows.
 //
 // Away from the computer the page shows what it last saw, greyed and said "As of 14:02."; an answer or an idea given with
@@ -89,13 +89,13 @@ export const store = {
  * - `connect()` opens the phone's socket with the stored device (nothing to open with: `forgotten` stays "");
  * - `command(name, args, quiet)` as link.js's, refused with `offline` when there is no socket;
  * - `deliver(name, args, label)` sends now, or keeps it for later (`{ok, kept}`);
- * - `opened(fn)` runs `fn(send)` each time the socket opens (the frame's push renewal), `news(fn)` each news item.
+ * - `opened(fn)` runs `fn(send)` each time the socket opens (the frame's push renewal).
  */
 export function makePaired(page, device = store.get()) {
   let ws = null, opened = false, retry = 1, retryTimer = 0, nextId = 1, board = null, seenAt = 0, flushing = false, closed = false, toldAt = 0;
   const TELL_S = 10;                               // "Not connected to the town" is toasted at most this often
   const waits = new Map();
-  const onOpen = new Set(), onNews = new Set();
+  const onOpen = new Set();
 
   const fail = (error) => ({ ok: false, error });
 
@@ -172,17 +172,6 @@ export function makePaired(page, device = store.get()) {
     status.value = board && at ? `As of ${clock(at)}. ${why}` : why;
   }
 
-  function news(items) {
-    for (const item of items) {
-      page.toast(item.line);
-      for (const fn of onNews) fn(item);
-      if (document.visibilityState === "hidden" && "Notification" in window && Notification.permission === "granted") {
-        navigator.serviceWorker?.ready.then((reg) => reg.showNotification(page.product, { body: item.line, tag: item.id || item.kind, icon: "icon-192.png" }));
-      }
-    }
-    if (items.length && navigator.vibrate) navigator.vibrate(80);
-  }
-
   function connect() {
     clearTimeout(retryTimer);
     closed = false;
@@ -207,7 +196,6 @@ export function makePaired(page, device = store.get()) {
       try { msg = JSON.parse(e.data); } catch { return; }
       if (msg.t === "state") { render(msg.state); stale.value = false; page.online.value = true; status.value = ""; }
       else if (msg.t === "reply") { const w = waits.get(msg.id); waits.delete(msg.id); w?.(msg); }
-      else if (msg.t === "news") news(msg.news || []);
     };
     socket.onclose = (e) => {
       if (ws === socket) ws = null;
@@ -239,7 +227,6 @@ export function makePaired(page, device = store.get()) {
   return {
     connect, command, deliver, send,
     opened(fn) { onOpen.add(fn); return () => onOpen.delete(fn); },
-    news(fn) { onNews.add(fn); return () => onNews.delete(fn); },
     /** Close the socket and stay closed (the frame forgets the pairing here). */
     close() { closed = true; clearTimeout(retryTimer); ws?.close(1000); },
     /** Forget the pairing on this phone. */

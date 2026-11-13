@@ -199,7 +199,7 @@ async def test_a_paired_phone_reads_the_compact_town_and_sends_only_what_a_phone
 
         async with connect(_ws_url(server), ssl=_pinned(), additional_headers=auth) as ws:
             first = json.loads(await asyncio.wait_for(ws.recv(), 5))
-            assert first["t"] == "state" and first["state"]["v"] == phones.API and "projects" in first["state"]
+            assert first["t"] == "state" and "rev" in first["state"] and "projects" in first["state"]
             assert not set(Orkboard.COMPUTER_ONLY) & set(first["state"])        # the computer's own stay on the computer
 
             async def cmd(i, name, args=None):
@@ -634,15 +634,14 @@ async def test_a_phone_with_its_socket_open_is_known_and_its_push_commands_carry
 
 def test_the_phones_snapshot_is_the_pages_less_the_computers_own(fake_repo):
     """Spec 94 §2.3: the snapshot() Board, the projects, the limits, the mana with `paid` and the update; not the
-    onboarding, the sign-ins' flows, the repository's path or the usage ask; the fields the old phone face reads stay."""
+    onboarding, the sign-ins' flows or the repository's path; none of the fields only the old phone face read (spec 94 E)."""
     host = Orkboard(fake_repo)
     full, snap = host.snapshot(), BoardPhone.phone_snapshot(host)
-    assert {"onboarding", "sign_in", "repo", "usage_ask", "update_policy"} <= set(full)
+    assert {"onboarding", "sign_in", "repo", "update_policy"} <= set(full)
     assert not set(Orkboard.COMPUTER_ONLY) & set(snap)
     for key in ("projects", "mana", "limits", "reserve", "hud", "rate", "needs_you", "ideas_rev", "idea_states",
-                "review_count", "review_results", "canvases_new", "canvases_rev", "focus", "update", "version"):
+                "review_count", "review_results", "update", "version", "rev"):
         assert key in snap, key
     assert "paid" in snap["mana"]
-    for key in ("v", "project", "look", "sleep", "rev"):                  # what the phone's old face read (spec 94 E), still sent
-        assert key in snap, key
-    assert snap["project"] == fake_repo.name and snap["rev"] == BoardPhone.phone_snapshot(host)["rev"]
+    assert not {"v", "project", "focus", "look", "sleep", "usage_ask", "ops_rev", "ops_team"} & set(snap)   # what only the phone's old face read (spec 94 E)
+    assert snap["rev"] == BoardPhone.phone_snapshot(host)["rev"]

@@ -140,15 +140,6 @@ class KeepAwake:
             return ""
         return self.machine() if self.awake.can() else ""
 
-    def phone_line(self) -> str:
-        """What the phone says of this computer's sleep (one line or "")."""
-        machine = self.machine()
-        if self.state()["battery"]:
-            return f"Your {machine} is on battery and may sleep."
-        if self.mode == "off":
-            return f"Your {machine} may sleep: keeping it awake is off in its Settings."
-        return ""
-
     # -- the page's commands (desktop only) ----------------------------------------------------------------------
 
     def commands(self) -> dict[str, Callable[[dict], Any]]:

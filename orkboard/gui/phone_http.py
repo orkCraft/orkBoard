@@ -79,15 +79,15 @@ async def handle_conn(listener: Any, reader: asyncio.StreamReader, writer: async
                 return
 
             # Requests with a body close the connection: any request with a body or a Content-Length
-            # header (including every early 403/413/415/429 answer in phones.py _pair and places.py
-            # post) answers with Connection: close and ends the keep-alive loop. Only body-less GETs
+            # header (including every early 403/413/415/429 answer in phones.py _pair) answers with
+            # Connection: close and ends the keep-alive loop. Only body-less GETs
             # are kept alive.
             has_body = (method != "GET") or ("content-length" in headers) or ("transfer-encoding" in headers)
             # a list of options ("keep-alive, Upgrade"); HTTP/1.0 closes unless it asked for keep-alive,
             # HTTP/1.1 keeps it unless it asked to close
             conn = {o.strip() for o in headers.get("connection", "").lower().split(",")}
             close_conn = "close" in conn or (version == "HTTP/1.0" and "keep-alive" not in conn)
-            is_post_endpoint = path in ("/api/pair", "/api/place")
+            is_post_endpoint = path == "/api/pair"
             is_last = (req_count == max_reqs - 1) or close_conn or has_body or is_post_endpoint
             keep = not is_last
 
@@ -95,8 +95,6 @@ async def handle_conn(listener: Any, reader: asyncio.StreamReader, writer: async
                 writer.write(listener._version(method, headers, keep_alive=keep))
             elif path == "/api/pair":
                 writer.write(await listener._pair(method, headers, reader))
-            elif path == "/api/place":
-                writer.write(await listener._place(method, headers, reader))
             elif path.startswith(media.PREFIX):                 # a pick's files, by a signed address (spec 51 §3): no token, the address is the proof
                 await media.write(writer, media.serve(method, target, headers.get("range", ""), media.state_dirs(listener.host)), keep)
             elif pwa.wants(path):

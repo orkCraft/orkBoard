@@ -1,8 +1,8 @@
-"""Orkboard on its own (docs/specs/37-board-and-line.md §3, §4, §9, Tests → B): a tool's run, the machine's tools and
-tiers read without the town, its Wiki, its snapshot, its phone, its first screen and its command.
+"""Orkboard on its own (docs/specs/37-board-and-line.md §3, §4, Tests → B): a tool's run, the machine's tools and tiers
+read on their own, its Wiki, its snapshot, its phone, its first screen and its command.
 
 The Board's own suites (tests/test_gui_ideas.py, tests/test_gui_goals.py) run on Orkboard's host (`gui/board_host.py`
-`Orkboard`); in Orkline they ran on its town's host too."""
+`Orkboard`)."""
 from __future__ import annotations
 
 import json
@@ -30,7 +30,7 @@ def host(fake_repo) -> Orkboard:
     sys.modules.pop("orkboard.core.idea_runner", None)
 
 
-# -- the line cut (§3, §4) ------------------------------------------------------------------------------------
+# -- a tool's run and the machine's settings (§3, §4) ----------------------------------------------------------
 
 def test_a_run_faked_where_tool_run_starts_it_is_the_boards(monkeypatch):
     """`tool_run.run_proc = fake` reaches the Board's runs (realm/jobs.py reads realm/tool_run.py)."""
@@ -53,14 +53,6 @@ def test_the_machines_main_tool_and_tiers_are_read_cached_from_settings(tmp_path
     assert settings.cached() is settings.cached()                     # one read, kept until the file changes
 
 
-def test_an_orkspaces_worktree_is_orklines():
-    """`link`, `unlink` and `cwd_for` (an orkspace's worktree) stay in Orkline: Orkboard's worktrees has none."""
-    from orkboard.realm import worktrees
-    assert not any(hasattr(worktrees, name) for name in ("link", "unlink", "cwd_for"))
-    with pytest.raises(AttributeError):
-        worktrees.nothing_here
-
-
 # -- the Wiki (§3.5) --------------------------------------------------------------------------------------------
 
 def test_orkboards_wiki_is_the_setting_else_the_general_one(fake_repo):
@@ -76,9 +68,9 @@ def test_orkboards_wiki_is_the_setting_else_the_general_one(fake_repo):
 
 def test_the_snapshot_holds_only_what_the_shell_reads(host):
     snap = host.snapshot()
-    assert set(snap) == {"focus", "onboarding", "ideas_rev", "needs_you", "idea_states", "review_count",
+    assert set(snap) == {"onboarding", "ideas_rev", "needs_you", "idea_states", "review_count",
                          "review_results", "limits", "reserve", "rate", "hud", "repo", "projects", "update",
-                         "update_policy", "version", "usage_ask",          # Settings → Updates, the first screen's ask
+                         "update_policy", "version",                       # Settings → Updates
                          "canvases_new", "canvases_rev",                   # spec 78 §3: the Canvases row
                          "sign_in",                                        # spec 45: a tool's own sign-in
                          "mana",                                           # spec 105 §2.5: the tool now, beside the limits
@@ -96,7 +88,7 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
     assert set(snap["reserve"]) == {"share", "night"}                                  # spec 49 §2.3
     assert snap["rate"] is None                                                      # no window learnt yet (decisions §82)
     assert snap["projects"] == host.command("projects.list")                         # the switcher (spec 37 §8)
-    assert snap["focus"] == "board" and set(snap["hud"]) == {"show_gold", "gold", "lumber"}
+    assert set(snap["hud"]) == {"show_gold", "gold", "lumber"}
     assert snap["repo"] == str(host.repo_root) and snap["onboarding"] is None      # a machine set up: no first screen
     json.dumps(snap)
 
@@ -111,17 +103,15 @@ def test_the_commands_are_the_boards_stop_all_updates_and_links(host):
         host.command("town.build", {})
 
 
-def test_awake_is_the_desktops_command_and_the_phones_snapshot_says_sleep(host):
-    """Spec 47 §3: `awake.*` among the host's commands and not the phone's; `sleep` only in the phone's snapshot."""
+def test_awake_is_the_desktops_command(host):
+    """Spec 47 §3: `awake.*` among the host's commands and not the phone's."""
     for name in ("awake.state", "awake.set", "awake.offer"):
         assert name in host.commands and not BoardPhone.allowed(host, name, {})
-    assert "sleep" not in host.snapshot() and BoardPhone.phone_snapshot(host)["sleep"] == ""
     host.command("awake.set", {"mode": "off"})
-    assert "may sleep" in BoardPhone.phone_snapshot(host)["sleep"]
     assert host.keep_awake.state()["mode"] == "off"
 
 
-def test_the_budget_is_the_towns_cap_on_this_runs_spend(fake_repo):
+def test_the_budget_is_the_projects_cap_on_this_runs_spend(fake_repo):
     board = Orkboard(fake_repo)
     assert board.budget_ok()
     (fake_repo / ".orkcraft.json").write_text(json.dumps({"budget": {"gold_session_limit_usd": 1.5}}), encoding="utf-8")
@@ -150,8 +140,8 @@ def test_a_phone_may_send_the_boards_commands_and_stop_all_only(host):
     assert BoardPhone.guard("ideas.add", {"text": "x", "link": "lan"}, {"id": "d1"}) == {
         "text": "x", "device": "phone", "link": "paired"}
     snap = BoardPhone.phone_snapshot(host)
-    assert snap["focus"] == "board" and snap["rev"] == BoardPhone.phone_snapshot(host)["rev"]
-    assert host.command("mobile.snapshot", {"since": snap["rev"]}) == {"v": 1, "rev": snap["rev"], "same": True}
+    assert snap["rev"] == BoardPhone.phone_snapshot(host)["rev"]
+    assert host.command("mobile.snapshot", {"since": snap["rev"]}) == {"rev": snap["rev"], "same": True}
 
 
 def test_the_page_is_board_js_in_offices_look_and_the_phones_the_same_page_in_its_frame(host):
@@ -176,7 +166,7 @@ def test_orkboard_starts_on_the_project_and_board_is_the_old_habit(fake_repo, mo
     assert started == [(fake_repo.resolve(), True, 8765)]
     assert board_host.main(["--repo", str(fake_repo), "--browser"]) == 0
     assert started[-1] == (fake_repo.resolve(), True, 0)
-    monkeypatch.chdir(fake_repo / "src")                                  # the folder it was started in, as Orkline's
+    monkeypatch.chdir(fake_repo / "src")                                  # the folder it was started in
     assert board_host.main([]) == 0 and started[-1] == (fake_repo.resolve(), False, 0)
 
 
@@ -193,7 +183,7 @@ def test_outside_a_project_it_starts_on_the_start_screen_and_a_refused_folder_is
 
 
 def test_a_machine_never_set_up_opens_on_no_form_and_a_tool_added_or_refused_sets_it_up(fake_repo, tmp_path, monkeypatch):
-    """Spec 130 D.2: the first open is the Orkmaster's; the machine counts as set up once a tool is added or the card is closed, as Orkline's onboarding reads it."""
+    """Spec 130 D.2: the first open is the Orkmaster's; the machine counts as set up once a tool is added or the card is closed."""
     monkeypatch.setenv("ORKCRAFT_SETTINGS_FILE", str(tmp_path / "s.json"))
     monkeypatch.setenv("ORKCRAFT_ONBOARDING", "1")
     board = Orkboard(fake_repo)

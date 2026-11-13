@@ -1,6 +1,6 @@
 """Usage stats and crash reports in Orkboard (docs/specs/41-orkget.md §7): orkGet's copy bound to Orkboard's profile,
-one answer per machine with Orkline, `app_opened` and `app_closed` only, the page's own errors reported, and
-`orkboard usage …` from the terminal. Nothing leaves the machine here: what would be sent is caught."""
+one answer per machine (`orkboard usage …` from the terminal), `app_opened` and `app_closed` only, and the page's own
+errors reported. Nothing leaves the machine here: what would be sent is caught."""
 from __future__ import annotations
 
 import json
@@ -33,10 +33,17 @@ def test_orkboard_sends_only_its_two_events():
         == {"face": "gui", "tools": ["claude"]}
 
 
+def _share(yes: bool) -> None:
+    """The machine's one answer, as `orkboard usage on|off` gives it (gui/board_cli.py)."""
+    machine = settings.load()
+    usage.share(machine, yes)
+    settings.save(machine)
+
+
 def test_nothing_is_sent_before_a_yes(fake_repo, sent):
     from orkboard.gui.board_host import Orkboard
     host = Orkboard(fake_repo)
-    assert host.snapshot()["usage_ask"] is True
+    assert "usage_ask" not in host.snapshot() and "usage.share" not in host.commands      # the page asks nothing: the terminal answers
     host.opened()
     host.close()
     assert sent == []
@@ -44,10 +51,10 @@ def test_nothing_is_sent_before_a_yes(fake_repo, sent):
 
 def test_a_yes_says_hello_as_orkboard_and_a_close_says_goodbye(fake_repo, sent):
     from orkboard.gui.board_host import Orkboard
-    host = Orkboard(fake_repo)
-    assert host.command("usage.share", {"share": True}) is True
+    _share(True)
     assert settings.load().usage is True and len(settings.load().install_id) == 32      # one answer for the machine
-    assert host.snapshot()["usage_ask"] is False
+    host = Orkboard(fake_repo)
+    host.opened()
     host.close()
     events = [e for url, body in sent if url.endswith("/v1/events") for e in body["events"]]
     assert [e["event"] for e in events] == ["app_opened", "app_closed"]
@@ -59,9 +66,9 @@ def test_a_yes_says_hello_as_orkboard_and_a_close_says_goodbye(fake_repo, sent):
 
 def test_a_no_forgets_the_id_and_sends_nothing(fake_repo, sent):
     from orkboard.gui.board_host import Orkboard
+    _share(True)
+    _share(False)
     host = Orkboard(fake_repo)
-    host.command("usage.share", {"share": True})
-    host.command("usage.share", {"share": False})
     sent.clear()
     host.opened()
     host.close()
@@ -70,8 +77,8 @@ def test_a_no_forgets_the_id_and_sends_nothing(fake_repo, sent):
 
 def test_the_pages_error_is_kept_and_reported_as_orkboards(fake_repo, sent, tmp_path):
     from orkboard.gui.board_host import Orkboard
+    _share(True)
     host = Orkboard(fake_repo)
-    host.command("usage.share", {"share": True})
     host.command("crash.window", {"message": "TypeError: x is undefined at /home/me/secret.js",
                                   "stack": "at draw (http://127.0.0.1:5/static/js/shell/update.js:12:3)"})
     reports = [item for url, body in sent if url.endswith("/v1/crash") for item in body["items"]
