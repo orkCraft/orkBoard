@@ -243,3 +243,24 @@ def test_a_look_now_begins_one_call_and_a_second_ask_while_it_runs_begins_none(h
     _wait(host, tech)
     assert {c["key"] for c in model.steps("journal")} == {f"goal:{tech}"}
 
+
+
+def test_product_with_no_tree_has_its_view_say_so_by_code_a_long_journal_gives_its_newest_entries_and_a_busy_or_failing_leader_is_passed_over(host, tech, model):
+    product = _party(host, "Product", "product-manager", ["pm"], "product")
+    assert "Product's tree is not on the Board." in host.ideas.keeper.journal_prompt(product, {}, [])
+    for i in range(DIGEST_AFTER):
+        journals.add(host.ideas.state_dir, product, "stance", f"You said go on “G{i}”.", idea="cache-goal")
+    model.answer = {"works": ["The cache is cached, cache-goal."]}
+    assert host.ideas.keeper.journal_digest(product) is True
+    _wait(host, product)
+    got = journals.digest(host.ideas.state_dir, product)
+    assert "Hurts: Product's tree is not on the Board yet (163-products-tree-on-the-board)." in got["text"] and "163-products-tree-on-the-board" in got["read"]
+    for i in range(80):
+        journals.add(host.ideas.state_dir, tech, "stance", f"You said go on “Goal {i}” " + "w" * 250, idea=f"goal-{i}")
+    host.ideas.keeper.journal_digest(tech)
+    _wait(host, tech)
+    p = model.calls[-1]["prompt"]
+    assert "Goal 79" in p and "Goal 0”" not in p
+    _fill(host, tech, start=100)
+    host.ideas.keeper._claim(f"goal:{tech}", "busy")                                      # a party the keeper is busy with is skipped, never an error
+    assert host.ideas.keeper.journal_digest(tech) is False

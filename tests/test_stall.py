@@ -189,6 +189,20 @@ def test_a_partys_size_is_taken_with_its_seats_tiers_and_no_target_and_how_it_an
         host.command("ideas.stall_take", {"chair": party, "slot": "answers", "value": "shout"})
 
 
+def test_a_chair_of_a_gone_party_a_slot_it_has_not_a_maker_not_for_it_are_refused_and_a_party_has_its_hero_table(host):
+    party = _party(host, "tech")
+    for call, args in (("ideas.stall", {"chair": "no-such-party"}), ("ideas.stall", {"chair": 3}), ("ideas.stall_take", {"chair": party, "slot": "night", "value": "off"}),
+                       ("ideas.stall_take", {"chair": party, "slot": "craft_tools", "value": "no-such-maker"}), ("ideas.hero_table", {"party": ""}),
+                       ("ideas.stall_take", {"chair": party, "slot": "tier", "value": "no-such-tier"}), ("ideas.stall_take", {"chair": party, "slot": "tier"})):
+        with pytest.raises(CommandError):
+            host.command(call, args)
+    got = host.command("ideas.hero_table", {"party": party})
+    assert got["party"] == party and got["layout"] and isinstance(got["places"], list) and isinstance(got["elements"], dict)
+    release = _party(host, "release")
+    with pytest.raises(CommandError):
+        host.command("ideas.stall_take", {"chair": release, "slot": "hero", "value": "release"})
+
+
 def test_release_has_its_chair_locked(host):
     (host.repo_root / "orkcraft.toml").write_text("[gate]\nalways = [\"tests/test_architecture.py\", \"tests/test_updates.py\"]\n")
     party = _party(host, "release")

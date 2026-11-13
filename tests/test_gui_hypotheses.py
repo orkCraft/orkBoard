@@ -9,6 +9,7 @@ import sys
 
 import pytest
 
+from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import decisions_log, hypotheses, ideas, opportunity_tree as tree
 
@@ -86,6 +87,24 @@ def test_a_proposed_hypothesis_is_kept_or_dropped(host):
     other = hypotheses.add(host.ideas.state_dir, "Teams want sharing", "they ask", by="leader", party="product")
     assert host.command("ideas.hypothesis_drop", {"id": other["id"]}) == {"ok": True}
     assert [i["id"] for i in host.command("ideas.hypotheses", {})["items"]] == [proposed["id"]]
+
+
+def test_a_verdict_is_refused_unless_the_hypothesis_is_kept_and_open_and_the_leaders_proposal_is_asked_or_said_why_not(host, monkeypatch):
+    proposed = hypotheses.add(host.ideas.state_dir, "Founders pay for it", "ten say so", by="leader", party="product")
+    refused(host, "ideas.hypothesis_judge", {"id": proposed["id"], "state": "held"}, "Keep the hypothesis")
+    refused(host, "ideas.hypothesis_judge", {"id": "nobody", "state": "held"}, "gone")
+    item_id, _goal = with_test(host, state="done")
+    assert hold(host)["id"] != item_id                                               # the same words, a hypothesis of its own
+    refused(host, "ideas.hypothesis_judge", {"id": item_id, "state": "maybe"}, "held, was refuted")
+    host.command("ideas.hypothesis_judge", {"id": item_id, "state": "held", "why": "yes"})
+    refused(host, "ideas.hypothesis_judge", {"id": item_id, "state": "held"}, "judged already")
+    host.ideas.hypothesis_marked(make_goal(host, "A goal"), [{"map": "product", "id": "hyp:nobody"}], True)          # a gone one is left out, the goal stays
+    monkeypatch.setattr(host.ideas.keeper, "hypotheses_propose", lambda: True, raising=False)
+    assert host.command("ideas.hypotheses_propose") == {"ok": True, "asked": True}
+    def refuse():
+        raise KeeperError("Nothing to propose from yet")
+    monkeypatch.setattr(host.ideas.keeper, "hypotheses_propose", refuse, raising=False)
+    assert host.command("ideas.hypotheses_propose") == {"ok": True, "asked": False, "why": "Nothing to propose from yet"}
 
 
 # -- the goals: rests on, tests, and the state as shown ---------------------------------------------------------------------------------------

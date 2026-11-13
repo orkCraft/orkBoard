@@ -497,3 +497,29 @@ def test_a_phone_may_start_stop_and_update_a_fix_and_sees_its_state(fix):
     assert host.phone_snapshot()["repair"]["state"] == "working"
     assert host.command("mobile.snapshot")["repair"]["state"] == "working"
 
+
+
+def test_a_fix_that_cannot_start_or_update_says_so_never_raises_and_a_rollback_is_told_once(world, monkeypatch, tmp_path):
+    repair.start("", b"not a zip", popen=Popen())                                      # a bad zip still starts the fix, its logs said as lost
+    assert (repair.worktree_dir() / ".orkcraft-repair" / "logs" / "README.txt").is_file()
+    place = tmp_path / "bin"
+    place.mkdir()
+    (place / "claude").write_text("#!/bin/sh\n")
+    (place / "claude").chmod(0o755)
+    assert repair.find("claude", which=lambda name: None, places=(str(place),)) == str(place / "claude") and repair.find("./x", which=lambda name: "/x") == "/x"
+    assert repair.update(way=updates.Method("none", why="brew is not on PATH")).output == "brew is not on PATH"
+    (world.checkout / "README.md").write_text("changed\n", encoding="utf-8")
+    assert "the checkout has changes of its own" in repair.update().output
+    git(world.checkout, "checkout", "-q", "--", "README.md")
+    assert "no git here" in repair.update(run=lambda cmd, **kw: (_ for _ in ()).throw(OSError("no git here"))).output
+    world.push("a.py", "the fix")
+    failing = SimpleNamespace(returncode=1, stdout="", stderr="no")
+    result = repair.update(run=lambda cmd, **kw: failing if cmd[0] != "git" else subprocess.run(cmd, **kw))
+    assert not result.ok
+    monkeypatch.setattr(updates, "method", lambda *a, **k: updates.Method("brew", (("brew", "upgrade", "x"),)))
+    with pytest.raises(repair.RepairError, match="not installed from git"):
+        begin(world)
+    repair.remember_good("abc")
+    repair.mark_rolled_back("abc")
+    repair.told()
+    assert repair.rolled_back() == ""

@@ -10,6 +10,7 @@ import time
 
 import pytest
 
+from orkboard.core import idea_keeper
 from orkboard.gui.board_host import Orkboard
 from orkboard.realm import goal_team, idea_target, ideas, library, map_text, spec_sections
 
@@ -240,6 +241,25 @@ def test_the_persons_own_words_write_again_every_side_and_win_over_a_side(host, 
     redone = [(c["step"], c["party"]) for c in model.calls[before:] if c["step"].startswith("section")]
     assert sorted(redone) == sorted([("section_first", parties["product"]), ("section", parties["tech"])])
     assert "Fork — How many waves: Eight waves, no more [sections: Product, Tech]" in _page(host, slug).section("Decisions")
+
+
+def test_a_fork_answered_wrongly_is_refused_and_sections_that_cannot_be_written_again_reopen_the_fork_for_the_person(host, parties, model):
+    model.said[("join", "")] = {"gist": "Waves", "forks": [_fork(parties["product"], parties["tech"])]}
+    slug = _confirmed(host, parties, model, ("product", "tech"), until="sections")
+    k = host.ideas.keeper
+    with pytest.raises(idea_keeper.KeeperError, match="Pick a side"):
+        k.fork_answer(slug, "design", "")
+    with pytest.raises(idea_keeper.KeeperError, match="gone"):
+        k.fork_answer("nobody", parties["tech"])
+    assert _row(host, slug, "fork") is not None                                                                                 # nothing was taken
+    model.said[("section", parties["tech"])] = "not json at all"
+    host.command("ideas.fork_answer", {"idea": slug, "side": parties["product"]})
+    for _ in range(1000):
+        if _row(host, slug, "fork"):
+            break
+        time.sleep(0.01)
+    assert _row(host, slug, "fork") is not None and "The sections failed" in _state(host, slug)["error"] and _state(host, slug)["state"] == "sections"
+    assert _page(host, slug).parts("Tech")["Why"] == "Tech's why."                                                              # the section it was is kept
 
 
 # -- a leader that does not answer, the short way, a bug's cause ----------------------------------------------------------------------------------

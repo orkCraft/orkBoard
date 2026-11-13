@@ -272,3 +272,31 @@ def test_a_base_sent_back_makes_its_dependants_wait_for_its_fixes_and_for_the_se
 
 
 # -- a step nobody looked at; a screen's line (spec 155 B) ---------------------------------------------------------------------------------
+
+
+# -- a call that fails, the limit of the looks ---------------------------------------------------------------------------------------------
+
+def test_a_call_that_fails_goes_on_with_one_finding_and_a_step_sent_back_twice_leaves_its_last_look_as_findings_and_goes_on(work):
+    h, slug, p = work.host, work.slug, work.parties
+    work.model.said[("accept_step", "")] = "no json at all"
+    work.merge("k1")
+    work.runner.tick()
+    work.tick()
+    rows = findings.of_goal(h.ideas.state_dir, slug)
+    assert len(rows) == 1 and rows[0]["source"] == "accept" and "could not accept this step: its call failed" in rows[0]["what"]
+    assert work.plan()["accepts"]["1"]["verdict"] == "gone_on" and not idea_route.due(work.plan()) and "accepted" not in _kinds(work, p["product"])
+    work.model.said[("accept_step", "")] = lambda row: BACK                                   # the next step: sent back twice, then what is left is the goal's findings
+    work.tick()
+    work.merge("k2")
+    work.runner.tick()
+    work.tick()
+    work.merge("k3")
+    work.runner.tick()
+    work.tick()
+    work.merge("k4")
+    work.runner.tick()
+    work.tick()
+    acc = work.plan()["accepts"]["2"]
+    assert acc["round"] == 3 and acc["verdict"] == "gone_on" and idea_route.accepted(work.plan(), 2)
+    left = [r for r in findings.of_goal(h.ideas.state_dir, slug) if r["what"] == "The setting is not saved"]
+    assert len(left) == 1 and left[0]["source"] == "accept" and left[0]["status"] == "told"

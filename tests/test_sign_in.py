@@ -181,6 +181,52 @@ def test_the_terminal_way_writes_a_script_and_opens_it_in_a_window(tmp_path):
     assert run.told() == Outcome("done") and run.poll() == Outcome("done")      # the Check answered
 
 
+def test_a_sign_in_that_goes_wrong_ends_as_failed_with_its_reason_and_the_terminal_way_has_its_own_script(tmp_path):
+    def poll_until(run, clock=None):
+        for _ in range(100):
+            out = run.poll()
+            if out is not None or clock is not None:
+                return out
+            time.sleep(0.02)
+
+    clock = Clock()
+    run, _ = begin("claude", tmp_path, Spawner(["Paste code here: "]), clock=clock)           # the browser did not open
+    assert poll_until(run) == Outcome("failed", "no_browser")
+    run, _ = begin("claude", tmp_path, Spawner(["waiting"]), clock=clock)
+    assert run.poll() is None
+    clock.now += sign_in.WAIT_S + 1
+    assert run.poll() == Outcome("failed", "timeout")
+    run, _ = begin("claude", tmp_path, Spawner(["boom", "It broke "], code=2))
+    assert poll_until(run) == Outcome("failed", "It broke")
+    run, _ = begin("claude", tmp_path, Spawner(code=3))
+    assert poll_until(run) == Outcome("failed", "exit 3")
+    run, _ = begin("claude", tmp_path, Spawner(["x"]))
+    assert run.cancel() == Outcome("failed", "cancelled") and run.cancel().why == "cancelled"
+    # the terminal way: asks the tool until it is signed in, gives up after the wait; a window per system
+    state = {"v": None}
+    clock = Clock()
+    run = sign_in.start("pi", {"PATH": "/bin"}, tmp_path / "s", "linux", lambda n: f"/bin/{n}", Spawner(), clock=clock,
+                        signed_in=lambda h, e=None: state["v"], home=tmp_path)
+    assert run.poll() is None
+    clock.now += sign_in.POLL_S + 1
+    state["v"] = True
+    assert run.poll() == Outcome("done")
+    run = sign_in.start("pi", {}, tmp_path / "s", "linux", lambda n: f"/bin/{n}", Spawner(), clock=clock,
+                        signed_in=lambda h, e=None: None, home=tmp_path)
+    clock.now += sign_in.WAIT_S + 1
+    assert run.poll() == Outcome("failed", "timeout")
+    win, mac = Spawner(), Spawner()
+    sign_in.start("pi", {"PATH": "C:\\bin"}, tmp_path / "w", "win32", lambda n: n, win, home=tmp_path)
+    sign_in.start("pi", {}, tmp_path / "m", "darwin", lambda n: n, mac, home=tmp_path)
+    assert win.procs[0].argv[:3] == ["cmd", "/c", "start"] and mac.procs[0].argv[:3] == ["open", "-a", "Terminal"]
+    assert (tmp_path / "w" / "sign-in" / "pi.cmd").read_bytes().startswith(b"@echo off\r\n")
+    none = sign_in.start("pi", {}, tmp_path / "n", "linux", lambda n: f"/bin/{n}" if n == "pi" else None, Spawner(), home=tmp_path)
+    assert none.outcome.state == "none" and none.outcome.command
+    for bad in (dict(which=lambda n: None), dict(popen=Spawner(fail=True))):
+        with pytest.raises(sign_in.SignInError):
+            begin("claude", tmp_path, bad.pop("popen", Spawner()), **bad)
+
+
 # -- when a sign-in helps (§3) --------------------------------------------------------------------------------------
 
 def test_helps_unless_a_key_is_set_or_another_claude_renews_or_only_weak_words_and_signed_in():
@@ -278,6 +324,45 @@ def test_done_is_the_persons_word_for_a_tool_that_cannot_be_told(tmp_path):
     assert s.entry("agy")["state"] == "done" and topics(s, b.SIGNED_IN) == [{"harness": "agy"}]
     with pytest.raises(SignInError):
         s.done("agy")
+
+
+def test_a_codex_sign_in_waits_for_the_port_a_tool_signed_in_elsewhere_is_done_and_a_bad_way_is_refused(tmp_path):
+    s, _ = fresh(tmp_path)
+    busy = {"v": True}
+    s._port_busy = lambda: busy["v"]
+    login_error("codex", "401 unauthorized")
+    assert s.start("codex")["state"] == "open" and s.spawn.procs == []                 # one Codex sign-in at a time
+    s.clock_.now += 7
+    s.tick()
+    assert s.spawn.procs == []
+    busy["v"] = False
+    s.clock_.now += 7
+    s.tick()
+    assert len(s.spawn.procs) == 1 and s.entry("codex")["state"] == "open"            # the port is free: it opens
+    s.cancel("codex")
+    busy["v"] = True
+    s.start("codex")
+    s.clock_.now += sign_in.WAIT_S + 7
+    s.tick()
+    assert s.entry("codex")["state"] == "failed" and s.entry("codex")["why"] == "timeout"
+    with pytest.raises(SignInError):
+        s.start("claude", by="window")
+    # the terminal's window when asked for; a computer with no terminal says the command to run
+    login_error()
+    s.start("claude", by="terminal")
+    assert s.entry("claude")["by"] == "terminal" and s.spawn.procs[-1].argv[0] == "x-terminal-emulator"
+    # signed in elsewhere: asked now and then, told "not yet" and then "yes"
+    s.cancel("claude")
+    s.state["signed"] = False
+    s.clock_.now += 100
+    s.tick()
+    assert s.entry("claude")["state"] == "failed"
+    s.state["signed"] = True
+    s.clock_.now += 100
+    s.tick()
+    assert s.snapshot() == [] and topics(s, b.SIGNED_IN)[-1] == {"harness": "claude"}
+    login_error()                                       # a failure just after a sign-in the tool says it holds: nothing
+    assert s.snapshot() == []
 
 
 def test_the_events_are_written_to_the_shown_projects_log_only(tmp_path):

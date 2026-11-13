@@ -167,6 +167,21 @@ def test_a_goal_laid_comes_with_its_photos(world):
     assert [base64.b64decode(p["data"]) for p in board.goal["photos"]] == [PNG]
 
 
+def test_a_goal_with_its_route_is_laid_whole_and_one_unreadable_or_refused_is_taken_with_its_error(world):
+    origin, a, _, phone = world
+    drop(phone, {"inbox/phone1/01JC0000000000000001.json": json.dumps(goal_file(
+                     "01JC0000000000000001", party="tech", type="bug", asks={"where": "the table", "empty": " "}, marks=["x"], element="nope")),
+                 "inbox/phone1/01JC0000000000000002.json": "not json",
+                 "inbox/phone1/01JC0000000000000003.json": json.dumps(goal_file("01JC0000000000000003", "refuse me"))})
+    board = Board(refuse="refuse")
+    got = tick(a, board, "host-a")
+    assert (got["taken"], got["laid"], got["errors"]) == (3, 1, 2)
+    assert (board.goal["party"], board.goal["type"], board.goal["asks"], board.goal["marks"]) == ("tech", "bug", {"where": "the table"}, ["x"])
+    assert "element" not in board.goal
+    errors = {r["id"]: r["error"] for r in journal_taken(origin)}
+    assert errors["01JC0000000000000001"] == "" and errors["01JC0000000000000002"] and "needs a party" in errors["01JC0000000000000003"]
+
+
 # -- clean ------------------------------------------------------------------------------------------------------------------
 
 E = ri.Entry("01JC0000000000000001", "phone1", "inbox/phone1/01JC0000000000000001.json")

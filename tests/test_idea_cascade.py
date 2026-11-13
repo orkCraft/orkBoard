@@ -325,3 +325,25 @@ def test_put_it_back_changes_nothing_and_the_slice_may_be_proposed_on_again(host
     with pytest.raises(CommandError, match="No change of a decision waits here"):
         host.command("ideas.cascade_confirm", {"id": cid})
     assert host.ideas.keeper.cascade_propose(tech, top["id"], "Another way.", "Shown.", None, "ask") is not None
+
+
+def test_a_slice_with_a_cascade_open_or_lost_with_the_process_is_not_held_a_party_gone_is_dropped_and_a_point_changed_twice_is_a_fork(host, tech, design, marketing, model):
+    old = _cut(host, 6, tech, "Your builds are quick.", ["6.2"])
+    k = host.ideas.keeper
+    assert k.cascade_propose("ghost", old["id"], "Faster.", "Shown.", None, "ask") is None
+    first = _run(host, tech, old["id"])
+    assert cascades.get(host.ideas.state_dir, first)["status"] == "ready"
+    assert k.cascade_propose(tech, old["id"], "Another way.", "Because.", None, "ask") is None and len(cascades.read(host.ideas.state_dir)) == 1
+    assert [e["dropped"] for e in _events(host, event_log.SLICE_PROPOSED)] == ["gone", "", "open"]
+    cascades.save(host.ideas.state_dir, {**cascades.get(host.ideas.state_dir, first), "status": "put_back"})
+    stale = cascades.add(host.ideas.state_dir, tech, cascades.clean_proposal({"slice": old["id"], "says": "Faster.", "why": "Shown."}, tech, slices.standing(host.ideas.state_dir, tech)), "ask")
+    assert k.cascade_propose(tech, old["id"], "Faster still.", "Shown.", None, "ask") is not None      # the one lost with the process does not hold the slice
+    _wait(host)
+    assert cascades.get(host.ideas.state_dir, stale["id"])["status"] == "failed"
+    top = _cut(host, 15, tech, "Your builds hold 10 seconds.", ["5.1"])
+    _cut(host, 16, design, "Your art fits 10 seconds.", ["5.1", "6.1"])
+    _cut(host, 17, marketing, "Your trailers show 10 seconds.", ["5.1", "6.1"])
+    model.said["cascade"] = _agree
+    rec = cascades.get(host.ideas.state_dir, _run(host, tech, top["id"], points=["5.1"]))
+    (fork,) = rec["forks"]
+    assert fork["party"] == design and "a second time" in fork["why"] and rec["steps"][1]["forked"] is True

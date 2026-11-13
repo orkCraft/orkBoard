@@ -80,3 +80,18 @@ def test_the_limits_are_the_calls_own_and_a_doubt_with_no_why_reads_as_go():
     assert all(len(x["line"]) <= pt.LINE_CHARS for x in pt.read_accepted(p, "Tech")) and "### Accepted" not in p.section("Art")
     long = pt.write_accepted(p, "Art", [{"line": "y " * 300, "status": "met", "why": "z " * 300}])[0]
     assert len(long["line"]) <= pt.LINE_CHARS and len(long["why"]) <= pt.LINE_CHARS
+
+
+def test_a_talk_written_again_replaces_its_part_before_the_accepted_one_a_slug_makes_its_titled_section_and_check_reads_the_accepted_lines():
+    p = page()
+    pt.write_accepted(p, "Tech", LINES)
+    pt.write_talk(p, "Tech", SAY)                                                          # the Talk comes before the Accepted part
+    assert p.section("Tech").index("### Talk") < p.section("Tech").index("### Accepted")
+    pt.write_talk(p, "Tech", {"verdict": "go", "stance": "Fine."})                         # written again: replaced, the Accepted part kept
+    assert pt.read_talk(p, "Tech")["stance"] == "Fine." and "cache" not in p.section("Tech") and pt.read_accepted(p, "Tech") == LINES
+    pt.write_talk(p, "live-ops", {"verdict": "go"})
+    assert p.sections[-2][0] == "Live ops"
+    assert pt.talk_problems(["- stance: x"]) == [(-1, "this Talk has no `- verdict:` line")]
+    dones = ["the board loads", "a tie is ordered"]
+    problems = pt.accepted_problems(["", "- met: the board loads", "free words", "- not met: nothing of the section — why"], dones)
+    assert [i for i, _ in problems] == [2, 3]

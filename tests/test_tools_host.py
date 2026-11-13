@@ -155,3 +155,36 @@ def test_a_tool_in_the_hand_is_paid_by_its_key_only_when_the_key_is_there(board,
     assert board.command("tools.billing", {"tool": "codex", "billing": "subscription"})["hand"][0]["billing"] == "subscription"
     with pytest.raises(CommandError, match="not in your hand"):
         board.command("tools.billing", {"tool": "claude", "billing": "subscription"})
+
+
+def test_check_says_how_long_a_tool_took_or_why_it_failed_and_a_request_is_a_filled_in_issue(board):
+    looked(board)
+    for tool in ("nobody", ""):
+        with pytest.raises(CommandError, match="Say which AI tool"):
+            board.command("tools.check", {"tool": tool})
+    with pytest.raises(CommandError, match="not found here"):
+        board.command("tools.check", {"tool": "cursor"})
+    board.command("tools.check", {"tool": "claude"})
+    board.tools_host._worker.join(5)
+    assert board.tools_host.checks["claude"]["state"] in ("running", "ok")
+    board.tools_host.checks["claude"] = {"state": "running"}                         # asked again meanwhile: one request only
+    board.command("tools.check", {"tool": "claude"})
+    board.tools_host.checks.pop("claude")
+
+    def refused(tool, prompt, model=None):
+        raise tool_errors.ToolError(tool, "Not logged in · Please run /login", 1)
+
+    board.tools_host._ask = refused
+    board.command("tools.check", {"tool": "claude"})
+    board.tools_host._worker.join(5)
+    board.tools_host.host.town.call(lambda: None)
+    out = board.tools_host.checks["claude"]
+    assert out["state"] == "failed" and out["line"] and "sign_in" in out
+    with pytest.raises(CommandError, match="Name the tool"):
+        board.command("tools.request", {"name": " "})
+    url = board.command("tools.request", {"name": "Foo", "link": "https://x.y", "note": "review"})["url"]
+    assert "Support+Foo" in url and "https%3A%2F%2Fx.y" in url and "tool+request" in url
+    for tool in ("hermes", "cursor"):                                                # signed out, not found: refused in words, nothing added
+        with pytest.raises(CommandError):
+            board.command("tools.test_add", {"tool": tool})
+    assert board.snapshot()["tools"]["order"] == []

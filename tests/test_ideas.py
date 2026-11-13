@@ -102,6 +102,52 @@ def test_a_secret_goes_to_the_store_never_to_the_plan(tmp_path):
         idea_secrets.put(state, "../x", "t1", "v")
 
 
+def test_a_secret_goes_to_the_keychain_and_an_old_copy_moves_to_the_project_account(tmp_path, monkeypatch):
+    class Keychain:
+        def __init__(self):
+            self.items = {}
+
+        def set_password(self, service, name, value):
+            self.items[(service, name)] = value
+
+        def get_password(self, service, name):
+            return self.items.get((service, name))
+
+        def delete_password(self, service, name):
+            if (service, name) not in self.items:
+                raise RuntimeError("gone")
+            del self.items[(service, name)]
+
+    kc = Keychain()
+    monkeypatch.setattr(idea_secrets, "_keychain", lambda: kc)
+    state = tmp_path / ".orkcraft"
+    old = ("orkcraft-ideas", "idea/t1")
+    kc.items[old] = "sk-old"
+    assert idea_secrets.get(state, "idea", "t1") == "sk-old"                   # read once, and moved
+    new = ("orkcraft-ideas", idea_secrets.account(state, "idea", "t1"))
+    assert kc.items == {new: "sk-old"}
+    state.mkdir()
+    (state / "secrets.json").write_text('{"idea/t2": "sk-file"}')               # an old copy in the file
+    assert idea_secrets.get(state, "idea", "t2") == "sk-file"
+    assert idea_secrets.put(state, "idea", "t1", "sk-new") == "keychain" and kc.items[new] == "sk-new"
+    idea_secrets.forget(state, "idea", ["t1", "t2"])
+    assert kc.items == {} and idea_secrets.get(state, "idea", "t2") is None
+    monkeypatch.setattr(kc, "set_password", lambda *a: 1 / 0)                  # no secret service: the file
+    assert idea_secrets.put(state, "idea", "t3", "sk-3") == "file"
+
+
+def test_a_file_to_do_keeps_its_file_private_and_the_task_gets_its_path(tmp_path):
+    state = tmp_path / ".orkcraft"
+    path = idea_secrets.put_file(state, "idea", "t1", "../my key!.PEM", b"abc", accept=["pem"])
+    assert path.name == "t1-my_key_.PEM" and path.read_bytes() == b"abc" and stat.S_IMODE(os.stat(path).st_mode) == 0o600
+    assert idea_secrets.put_file(state, "idea", "t1", "b.pem", b"x") != path and not path.exists()   # an earlier file goes
+    plan = {"todos": [{"id": "t1", "kind": "file", "for": ["a"]}, {"id": "t2", "kind": "file", "for": ["a"]}]}
+    assert idea_secrets.file_env(state, "idea", plan, "a") == {"ORKCRAFT_FILE_T1": str(idea_secrets.file_path(state, "idea", "t1"))}
+    for name, data, accept in (("a.txt", b"x", ["pem"]), ("a.pem", b"x" * (idea_secrets.FILE_MAX + 1), []), ("...", b"x", [])):
+        with pytest.raises(ValueError):
+            idea_secrets.put_file(state, "idea", "t1", name, data, accept)
+
+
 def test_a_goal_has_a_short_name_from_its_words_then_the_reading_unless_the_person_titled_it(root):
     # spec 41 §3
     slug, _new = ideas.save_goal(root, None, about="Давай сделаем оплату картой. Stripe first.")

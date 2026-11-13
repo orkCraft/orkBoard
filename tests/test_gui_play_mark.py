@@ -287,6 +287,27 @@ def test_a_mark_added_to_a_goal_joins_its_lens_picture_of_the_same_page_and_its_
     assert len([i for i in ideas.ideas(host.ideas.root()) if i["slug"] == first["slug"]]) == 1            # a goal, not a new one
 
 
+def test_a_play_that_stopped_keeps_its_hints_and_a_bad_mark_or_a_phone_or_a_started_goal_is_refused(host, parties, drawn):
+    send(host, err(), req())
+    host.ideas._play.state = "stopped"                                               # the play ends: its hints stay for the morning's card
+    assert {h["kind"] for h in host.ideas.last_play_hints()} == {"error", "failed"}
+    assert send(host, err())["kept"] == 0 and host.command("ideas.play_hints", {"path": "/orders"})["hints"] == []
+    host.ideas._play.state = "playing"
+    base = host.ideas._play.path.as_posix()
+    placed = host.command("ideas.play_place", {"path": "/orders", "files": [f"file://{base}/src/Orders.tsx", "src/a.js", 7]})
+    assert set(placed) == {"screen", "parts"}
+    for call, args in (("play_events", {"events": [], "device": "phone"}), ("play_events", {"events": "x"}), ("play_mark", {"text": "t", "kind": "bug", "box": None})):
+        with pytest.raises(CommandError):
+            host.command(f"ideas.{call}", args)
+    got = mark(host, text="Broken save")                                             # a bug with no party goes to Tech's
+    assert got["type"] == "bug" and got["party"]
+    with pytest.raises(CommandError, match="gone"):
+        mark(host, add_to="no-such-goal")
+    ideas.save_state(host.ideas.state_dir, got["slug"], state="working")
+    with pytest.raises(CommandError, match="started"):
+        mark(host, add_to=got["slug"])
+
+
 # -- the offer ---------------------------------------------------------------------------------------------------------------------------------
 
 def test_the_offer_is_the_goal_not_started_with_a_mark_of_the_kind_on_the_screen(host, parties, drawn):

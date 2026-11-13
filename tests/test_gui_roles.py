@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from orkboard.gui.board_host import Orkboard
+from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import library
 
 
@@ -31,3 +31,17 @@ def test_ideas_roles_answers_every_leaders_stages_and_the_default(host):
     assert stages["default"]["build"] == "Implementation" and stages["default"]["seats"] == {"lead": 1, "build": 5, "check": 2}
     assert set(stages) == {a.id for a in library.LIBRARY if a.band == "lead"} | {"default"}
 
+
+
+def test_an_agent_of_the_library_is_added_given_a_kind_and_dropped_and_the_spend_is_asked_of_a_goal_or_a_party(host):
+    slug = host.command("ideas.role_add", {"id": "tester"})["slug"]
+    assert slug == "tester" and any(r["slug"] == "tester" for r in host.command("ideas.roles")["roles"])
+    for again, bad in (("ideas.role_add", {"id": "tester"}), ("ideas.role_add", {"id": "no-such"}), ("ideas.kind_set", {"kind": "nope", "role": "tester"})):
+        with pytest.raises(CommandError):
+            host.command(again, bad)
+    assert host.command("ideas.kind_set", {"kind": "tests", "role": "tester"}) == {"ok": True}
+    assert host.command("ideas.role_drop", {"slug": "tester"}) == {"ok": True}
+    assert all(r["slug"] != "tester" for r in host.command("ideas.roles")["roles"])
+    for args in ({"idea": "no-goal"}, {"goal": "no-party"}):
+        with pytest.raises(CommandError, match="gone"):
+            host.command("ideas.spend", args)

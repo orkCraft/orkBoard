@@ -89,3 +89,13 @@ def test_the_map_gives_each_task_its_partys_kind_and_none_where_a_craft_has_none
     assert by["pic"][0]["craft_made"] == {"kind": "screen", "before": "", "after": "/media/pic/p/shot.png?s=1"}
     assert by["ship"][0]["craft_made"] == {"kind": "checks", "items": [{"name": "Tests", "state": "passed"}]}
     assert "craft_made" not in by["watch"][0] and "craft_made" not in by["none"][0] and "craft_made" not in by["flat"][0], "Run has no kind yet; a party with no craft none; no shot none"
+
+
+def test_a_gif_and_a_jpeg_are_sized_from_their_bytes_a_bad_numstat_line_is_skipped_and_a_craft_with_nothing_made_or_a_task_not_landed_has_none(tmp_path):
+    gif = b"GIF89a" + (30).to_bytes(2, "little") + (20).to_bytes(2, "little") + b"\x00" * 4
+    jpeg = b"\xff\xd8" + b"\xff\xe0\x00\x04ab" + b"\xff\xc0\x00\x0b\x08" + (20).to_bytes(2, "big") + (30).to_bytes(2, "big") + b"\x00" * 8
+    assert task_made.image_size(gif) == (30, 20) and task_made.image_size(jpeg) == (30, 20) and task_made.image_size(b"\xff\xd8\xff\xd9") is None
+    assert [f["path"] for f in task_made.parse_numstat("3\t1\ta.py\nnot a line\n2\t0\t \n")] == ["a.py"]
+    assert task_made.git_made(tmp_path, "g", {"state": "merged", "commit": "c" * 40}, "design", lambda c, p: p) is None
+    assert task_made.git_made(tmp_path, "g", {"state": "running"}, "tech", lambda c, p: p) is None
+    assert task_made.git_made(tmp_path, "g", {"state": "merged", "commit": "c" * 40}, "tech", lambda c, p: p) in (None, {})

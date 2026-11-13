@@ -103,6 +103,34 @@ def test_the_areas_are_the_first_folders_under_the_common_prefix_and_the_layout_
     assert cols(again) == {".": ["."], "audio": ["app/src/audio"], "game": ["app/src/game"], "ui": ["app/src/ui"]}
 
 
+def test_many_areas_fold_into_other_and_a_crowded_column_stacks_its_least_changed(tmp_path):
+    paths = [".", *(f"src/a{i}" for i in range(10)), *(f"src/a0/p{i}" for i in range(16))]
+    project_map.place(tmp_path, [".", "src/a0", "src/a1"])
+    lay = project_map.place(tmp_path, paths)                                    # new areas after the first look: beyond 8, Other
+    assert len(lay["columns"]) <= project_map.COLUMNS and project_map.OTHER in lay["columns"]
+    assert all(v["column"] in lay["columns"] for v in lay["parts"].values())
+    parts = {p: {"count": 1} for p in paths}
+    recent = {"src/a0/p15": "2026-11-01", "src/a0/p14": "2026-10-01"}
+    by = {c["name"]: c for c in project_map.table(lay, parts, marked={"src/a0/p3"}, recent=recent)}
+    crowded = by["a0"]
+    shown = [c["path"] for c in crowded["parts"]]
+    assert len(shown) == project_map.CARDS and len(crowded["stack"]) == 17 - project_map.CARDS
+    assert {"src/a0/p3", "src/a0/p15", "src/a0/p14"} <= set(shown)             # the marked and the newest stay on the table
+
+
+def test_a_snapshot_kept_without_its_overview_is_given_one_and_a_failed_landing_is_an_event(repo):
+    commit(repo, "src/ui/hud.py", HUD)
+    sha = head(repo)
+    snap = project_map.snapshot(state(repo), repo, sha)
+    path = project_map.folder(state(repo)) / f"{sha}.json"
+    path.write_text(json.dumps({**snap, "overview": None}), encoding="utf-8")
+    assert project_map.snapshot(state(repo), repo, sha)["overview"]["containers"]
+    assert project_map.read(state(repo), sha)["overview"] is not None
+    assert project_map.landed(state(repo), repo, repo, "not a sha") is None
+    (failed,) = [r for r in event_log.read(repo) if r["event"] == event_log.MAP_SNAPSHOT_FAILED]
+    assert failed["commit"] == "not a sha"
+
+
 # -- §3 what changed ----------------------------------------------------------------------------------------------------------------
 
 def test_the_parts_and_uses_new_changed_and_gone_since_a_look_with_their_goals(repo):

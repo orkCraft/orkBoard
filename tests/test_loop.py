@@ -257,3 +257,33 @@ def test_with_since_the_text_ends_with_what_changed_under_the_steps_files_and_th
     assert got.rsplit("\n\n", 1)[1] == "Changed under the loop since your last call:\n- Spawn: config/waves.yml (goal tougher-waves)\n- Fight: levels/three.json (by you)"
     assert "src/game.ts" not in got                                                     # a file no step rests on is not said
     assert loop.text(s, game, "not a commit").endswith("Changed under the loop since your last call: not known (no map was kept at that commit).")
+
+
+def test_a_version_1_file_reads_as_one_core_loop_and_the_configs_the_leader_reads_come_from_devs_tree_bounded(game):
+    s = state(game)
+    s.mkdir(exist_ok=True)
+    (s / "loop.json").write_text(json.dumps(V1))
+    got = loop.read(s)
+    assert [lp["span"] for lp in got["loops"]] == ["core"] and (got["by"], got["at"]) == ("person", "2026-10-24T08:00:00")
+    assert [x["id"] for x in steps_of(got)] == ["c0", "c1", "c2", "c3", "c4"] and {x["intensity"] for x in steps_of(got)} == {3}
+    (s / "loop.json").write_text(json.dumps({"cards": [{"name": "", "line": "x"}]}))                  # a version 1 file with no card to read is nothing
+    assert not loop.kept(loop.read(s))
+    (game / "node_modules" / "pkg").mkdir(parents=True)
+    (game / "node_modules" / "pkg" / "balance.json").write_text("{}")
+    (game / "config" / "big.png").write_text("png")
+    (game / "config" / "long.json").write_text("\n".join(f'"k{n}": "{"v" * 200}"' for n in range(50)))
+    (game / "config" / "huge.json").write_text("x" * (loop.READ_BYTES + 1))
+    (game / "config" / "bin.json").write_bytes(b"\0\1\2")
+    for n in range(30):
+        (game / "levels" / "deep").mkdir(parents=True, exist_ok=True)
+        (game / "levels" / "deep" / f"l{n:02}.json").write_text("{}")
+        (game / f"area{n}").mkdir(exist_ok=True)
+        (game / f"area{n}" / "balance.json").write_text("{}")
+    git(game, "add", "-Af")
+    git(game, "commit", "-q", "-m", "more")
+    files = loop.config_files(game)
+    assert "config/big.png" not in files and not any("node_modules" in f for f in files)
+    assert len(files) == loop.CONFIGS and sum(p.startswith("levels/deep/") for p in files) <= loop.PER_FOLDER
+    (game / "config" / "balance.json").write_text("EDITED, NOT ON DEV")
+    got = loop.heads(game, ["config/balance.json", "config/long.json", "config/huge.json", "config/bin.json", "ghost.json", ".env"])
+    assert got["config/balance.json"] == '{"hp": 10,\n "dmg": 3}' and got["config/long.json"].endswith("…") and set(got) == {"config/balance.json", "config/long.json"}

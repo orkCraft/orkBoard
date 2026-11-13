@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import Orkboard
+from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import event_log
 
 
@@ -68,6 +68,23 @@ def test_status_with_ahead_behind_and_counts(host, repos):
     assert files["app.py"] == {"path": "app.py", "status": "modified", "added": 2, "removed": 1}
     assert files["new.py"] == {"path": "new.py", "status": "untracked", "added": 2, "removed": 0}
     assert ".env" not in files                                                # a secret-looking file is never offered
+
+
+def test_branches_and_a_files_diff(host, repos):
+    repo = repos[1]
+    git(repo, "branch", "feature")
+    rows = {b["name"]: b for b in host.command("git.branches")["branches"]}
+    assert rows["main"]["current"] and rows["main"]["upstream"] == "origin/main" and not rows["feature"]["current"]
+    (repo / "app.py").write_text("a = 1\nb = 3\n", encoding="utf-8")
+    (repo / "new.py").write_text("x\ny\n", encoding="utf-8")
+    (repo / ".env").write_text("K=1\n", encoding="utf-8")
+    one = host.command("git.diff", {"path": "app.py"})["files"][0]
+    assert (one["added"], one["removed"]) == (1, 1) and "+b = 3" in one["patch"]
+    new = host.command("git.diff", {"path": "new.py"})["files"][0]
+    assert (new["added"], new["removed"]) == (2, 0)
+    for bad in (".env", "README.md", "../x"):
+        with pytest.raises(CommandError):
+            host.command("git.diff", {"path": bad})
 
 
 def test_a_commit_takes_the_ticked_files_only(host, repos):

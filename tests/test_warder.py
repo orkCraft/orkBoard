@@ -47,9 +47,29 @@ def test_asked(cmd):
     "git reset --soft HEAD~1", "git status", "git log --oneline -5", "ls -la .env", "test -f .env && echo yes",
     "cat .env.example", "cat ~/.ssh/id_ed25519.pub", "cd orkcraft && .venv/bin/pytest -q", "env FOO=1 python3 x.py",
     "python3 scripts/mg.py check", "curl -s https://example.com -o page.html", "echo 'rm -rf /' > notes.txt",
+    "cat <<EOF > notes.txt\nrm -rf /\nEOF", "cat <<-'EOF'\n\tcat .env\n\tEOF\nls",
 ])
 def test_left_alone(cmd):
     assert bash(cmd) is None, cmd
+
+
+def test_file_tools_agy_and_shell_edits_of_its_own_configuration_or_secrets_are_judged(tmp_path):
+    judge = lambda tool, inp: (warder.judge(tool, inp, CWD) or (None,))[0]
+    assert judge("Write", {"file_path": ".claude/settings.json"}) == "ask"
+    assert judge("Edit", {"file_path": "orkboard/hooks/warder.py"}) == "ask"
+    assert judge("Read", {"file_path": ".claude/settings.json"}) is None
+    assert judge("Grep", {"path": "src", "glob": ".env"}) == "deny" and judge("Glob", {"path": "src"}) is None
+    assert judge("Read", {"file_path": ".env"}) == "deny"
+    assert judge("apply_patch", {"command": "*** Update File: .codex/hooks.json\n+x"}) == "ask"
+    assert judge("apply_patch", {"command": "*** Add File: .env\n+A=1"}) == "deny"
+    assert warder.patch_paths("*** Add File: a.py\n*** Move to: b.py") == ["a.py", "b.py"]
+    assert bash("sed -i s/a/b/ .claude/settings.json") == "ask" and bash("echo x > .codex/config.toml") == "ask"
+    assert warder.self_name(warder.AGY_GLOBAL) == "~/.gemini/config/hooks.json"
+    tool, inp, cwd = warder.from_agy(_call("run_command", tmp_path, CommandLine="git status", Cwd=str(tmp_path / "sub")))
+    assert (tool, inp["command"], cwd) == ("Bash", "git status", tmp_path / "sub")
+    tool, inp, cwd = warder.from_agy(_call("write_to_file", tmp_path, TargetFile=".env", CodeContent="A=1"))
+    assert tool == "Write" and list(inp.values()) == [".env"] and cwd == tmp_path
+    assert warder.from_agy({})[0] == ""
 
 
 def test_redaction_keeps_tokens_out_of_the_log():
