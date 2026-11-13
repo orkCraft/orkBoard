@@ -48,27 +48,6 @@ def sent(pg, name):
     return [a for n, a in pg.evaluate(SENT) if n == name]
 
 
-def test_the_host_answers_ideas_turns_and_a_card_that_waits_is_ringed_with_its_tokens_and_lifts_its_ways(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        got = pg.evaluate("() => import('/static/js/link.js').then((l) => l.command('ideas.turns', {}))")
-        assert got and got["turns"] and all({"goal", "kind", "at"} <= set(t) for t in got["turns"])         # the host's own answer
-        assert "ideas.turns" not in [n for n, _ in pg.evaluate(SENT)]                                      # answered, never "not sent"
-        card = pg.locator(f"{HAND}[data-kind=turn][data-goal='{ASKS}']")
-        assert card.evaluate("(el) => getComputedStyle(el).borderTopColor") == pg.evaluate(ALERT)          # ringed as a card that asks is
-        assert card.locator(".hands-toks .cards-ct").count() >= 1 and card.locator(".cards-sq").count() >= 1      # with its leaders' tokens
-        assert pg.locator(f"{HAND}[data-kind=battle]").count() == 0                                        # the host lays no battle: none is drawn
-        card.click()
-        assert pg.locator(".hand-ways-row [data-way]").count() == 4                                        # its question's three ways and one of its own words
-        text = pg.locator(".hand-ways-row").inner_text()
-        assert "Keep it" in text and "In your own words" in text
-        pg.locator("[data-way=own]").click()                                                               # its own words in a field, sent as the answer
-        pg.locator(".hand-pen textarea").fill("Make it two coins")
-        pg.keyboard.press("Enter")
-        assert sent(pg, "ideas.answer_way") == [{"slug": ASKS, "answers": ["Make it two coins"], "from": "hand"}]
-        b.close()
 
 
 def test_drop_sends_ideas_drop_and_the_goal_lies_face_down_in_the_dropped_pile_where_take_back_brings_its_card_back(page_url):

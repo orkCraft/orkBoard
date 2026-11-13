@@ -94,7 +94,6 @@ def test_orkboard_on_the_desktop_the_four_panes_a_goal_saved_and_needs_you_no_ca
             assert pg.locator(".stall-seats .table-seat").count() >= 2
             assert pg.locator(".hand").is_visible()
             assert any(n["kind"] == "goal" for n in board.command("ideas.board")["needs_you"])
-            assert not pg.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth")
             if os.environ.get("ORKCRAFT_SHOTS"):
                 SHOTS.mkdir(parents=True, exist_ok=True)
                 pg.screenshot(path=str(SHOTS / "orkboard-desktop-1440x900.png"))

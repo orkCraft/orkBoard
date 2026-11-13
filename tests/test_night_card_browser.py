@@ -109,13 +109,6 @@ def window(gui, width="narrow", reduced=False, init=None, prep=None, **kw):
     return pg, host, log
 
 
-# What the discard looked like, each time it changed: `place` (nothing in it), else `<slug of the card on top>/<how many lie under it>/<the slug dealt just now>`.
-WATCH = """() => { const seen = window.__pile = [];
-  const look = () => { const d = document.querySelector('.table-discard'), top = d?.querySelector('.hand-done');
-    const now = !d ? (document.querySelector(':is(.release-lane, .table-end) .table-place') ? 'place' : 'none') : `${top?.dataset.slug || 'back'}/${d.dataset.n}/${top?.dataset.dealt || ''}`;
-    if (seen[seen.length - 1] !== now) seen.push(now); };
-  new MutationObserver(look).observe(document, { subtree: true, childList: true, attributes: true }); }"""
-INIT = "document.addEventListener('DOMContentLoaded', (" + WATCH + "));"
 
 
 def nights(host):
@@ -132,17 +125,6 @@ def top(pg):
 
 # -- no morning's card; the moon in the discard -------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", narrow.PHONE_WIDTHS)
-def test_there_is_no_morning_card_in_the_hand_though_the_night_did_something(gui, width):
-    pg, host, log = window(gui, width)
-    try:
-        _calls(pg, host, "ideas.night")
-        pg.wait_for_timeout(900)
-        assert pg.locator('[data-kind="night"], [data-key^="night/"], [data-stack^="night/"], .hand-way--night').count() == 0, "the morning's card is not dealt"
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_goal_done_in_the_night_lies_in_the_discard_under_a_small_moon_until_its_result_is_seen(gui):
@@ -151,8 +133,6 @@ def test_a_goal_done_in_the_night_lies_in_the_discard_under_a_small_moon_until_i
         top(pg).wait_for(timeout=WAIT_MS)
         pg.locator(':is(.release-lane, .table-end) .hand-done[data-moon="1"]').wait_for(timeout=WAIT_MS)
         assert top(pg).get_attribute("data-slug") == "music" and top(pg).locator(".hand-done__moon .ork-sign.moon").count() == 1, "the newest done goal is the pile's top, a moon on it"
-        moon, kind = top(pg).locator(".hand-done__moon").bounding_box(), top(pg).locator(".corner__kind").bounding_box()
-        assert moon["x"] + moon["width"] <= kind["x"] + 1 and abs((moon["y"] + moon["height"] / 2) - (kind["y"] + kind["height"] / 2)) <= 3, "in the top row, left of the kind's sign (spec 147 A.3: the card has no window now)"
         assert top(pg).locator(".corner__kind.is-success .ork-sign.check").count() == 1, "still the card of a goal done (its done sign in the top row: spec 147 A.3)"
         shot(pg, "wide-night-moon")
         top(pg).click()
@@ -168,75 +148,14 @@ def test_a_goal_done_in_the_night_lies_in_the_discard_under_a_small_moon_until_i
     assert not log, "\n".join(log)
 
 
-def test_a_goal_the_night_did_not_finish_wears_no_moon(gui):
-    night = copy.deepcopy(NIGHT)
-    night["goals"] = [g | {"done": False} if g["slug"] == "codes" else g for g in night["goals"]]
-    pg, host, log = window(gui, reduced=True, night=night)
-    try:
-        top(pg).wait_for(timeout=WAIT_MS)
-        pg.locator(':is(.release-lane, .table-end) .hand-done[data-moon="1"]').wait_for(timeout=WAIT_MS)
-        top(pg).click()
-        pg.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
-        moons = pg.locator(".hand-drow").evaluate_all("els => els.map((e) => [e.dataset.slug, !!e.querySelector('.hand-drow__moon')])")
-        assert moons == [["music", True], ["codes", False]], moons
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 # -- the first look: dealt one by one ----------------------------------------------------------------------------------------------------------
 
-def test_on_the_first_look_after_the_night_its_goals_are_dealt_into_the_discard_one_by_one_once(gui):
-    pg, host, log = window(gui, init=INIT)
-    try:
-        pg.wait_for_function("() => window.__pile.includes('codes/0/codes') && window.__pile.some((s) => s.startsWith('music/1/music'))", timeout=WAIT_MS)
-        seen = pg.evaluate("() => window.__pile")
-        order = [s for s in seen if s.endswith("/codes") or s.endswith("/music")]
-        assert order == ["codes/0/codes", "music/1/music"], f"one by one, the oldest first: {order}"
-        assert seen[seen.index("codes/0/codes") - 1] in ("place", "back/1/", "back/0/"), f"the goals lay out of the pile until their turn: {seen}"
-        pg.wait_for_function("() => !document.querySelector('.table-discard .ork-deal')", timeout=WAIT_MS)
-        assert top(pg).get_attribute("data-slug") == "music" and pile(pg).get_attribute("data-n") == "1" and top(pg).get_attribute("data-moon") == "1"
-        assert nights(host).count({"opened": True}) == 1, "the host is told once"
-        assert pg.evaluate("() => Object.values(JSON.parse(localStorage.getItem('orkboard.night.dealt')))") == [SINCE], "kept on this device"
-        shot(pg, "wide-night-dealt")
-        pg.reload()                                                                                          # the same night is not dealt again
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(1200)
-        assert pg.evaluate("() => document.querySelectorAll('.table-discard .ork-deal').length") == 0 and top(pg).get_attribute("data-slug") == "music"
-        assert nights(host).count({"opened": True}) == 1
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_under_reduced_motion_the_nights_goals_lie_in_the_discard_at_once(gui):
-    pg, host, log = window(gui, reduced=True, init=INIT)
-    try:
-        pg.wait_for_function("() => window.__pile.some((s) => s.startsWith('music/1'))", timeout=WAIT_MS)
-        pg.wait_for_timeout(1000)
-        seen = pg.evaluate("() => window.__pile")
-        assert not [s for s in seen if s.endswith("/codes") or s.endswith("/music")] and not [s for s in seen[seen.index("music/1/"):] if s.startswith("back")], f"no deal, no hold: {seen}"
-        assert nights(host).count({"opened": True}) == 1
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_night_with_nothing_or_a_host_without_the_command_has_no_moon_and_no_error(gui):
-    pg, host, log = window(gui, night=None)
-    try:
-        pg.wait_for_timeout(900)
-        assert _calls(pg, host, "ideas.night") and pg.locator(".hand-done__moon").count() == 0 and top(pg).count() == 1
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-    pg, host, log = window(gui, older=True)
-    try:
-        pg.wait_for_timeout(900)
-        assert pg.locator(".hand-done__moon").count() == 0 and pg.locator(".hand-stack").count() >= 1
-    finally:
-        pg.close()
-    assert not [l for l in log if l.startswith("pageerror")], "\n".join(log)
 
 
 # -- Work at night, and a plan held for it -------------------------------------------------------------------------------------------------------
@@ -262,42 +181,8 @@ def test_work_at_night_is_a_setting_in_the_hosts_words_and_a_press_sets_it(gui):
     assert not log, "\n".join(log)
 
 
-def test_when_i_am_at_the_computer_is_a_setting_of_rows_added_edited_and_removed_and_each_whole_row_is_sent(gui):
-    """Spec 138 B.1: the Settings section with no hours says that nothing waits; *Add hours* offers weekday evenings and sends them; a day and a time are edited; *Remove* sends none."""
-    pg, host, log = window(gui, night=None)
-    try:
-        open_settings(pg)
-        box = pg.locator('[data-settings="hours"]')
-        assert "when i am at the computer" in box.inner_text().lower() and box.locator("[data-hours]").count() == 0
-        assert "nothing waits for you" in pg.locator('[data-settings="hours-hint"]').inner_text()
-        box.locator("[data-hours-add]").click()
-        pg.wait_for_function("() => document.querySelectorAll('[data-hours]').length === 1")
-        assert _calls(pg, host, "ideas.board_set")[-1] == {"hours": [{"days": [0, 1, 2, 3, 4], "from": "19:00", "to": "23:00"}]}
-        assert "waits for the first reset inside these hours" in pg.locator('[data-settings="hours-hint"]').inner_text()
-        box.locator('[data-hours="0"] .shell-seg__one', has_text="Sat").click()
-        assert _calls(pg, host, "ideas.board_set")[-1]["hours"][0]["days"] == [0, 1, 2, 3, 4, 5]
-        box.locator('[data-hours-to="0"]').fill("22:30")
-        assert _calls(pg, host, "ideas.board_set")[-1]["hours"][0]["to"] == "22:30"
-        box.locator('[data-hours-remove="0"]').click()
-        assert _calls(pg, host, "ideas.board_set")[-1] == {"hours": []} and box.locator("[data-hours]").count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_the_hosts_own_words_are_what_the_setting_says(gui):
-    pg, host, log = open_hand(gui, host=NightHost(night=None))
-    host.night_words = {"label": "Work at night", "hint": "The host's own line.", "waits": "Waits", "now": "Now", "now_sketch": "Now, sketch"}
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        host.bump(None)
-        pg.wait_for_function("() => document.querySelector('.hand') !== null")
-        pg.wait_for_timeout(300)
-        open_settings(pg)
-        pg.wait_for_function("() => document.querySelector('[data-settings=\"work-at-night-hint\"]')?.innerText.trim() === \"The host's own line.\"", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", ("wide", "phone"))

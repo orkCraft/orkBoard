@@ -48,38 +48,8 @@ def closes_with_esc(pg):
     assert pg.locator(".sp-veil").count() == 0
 
 
-def test_a_concern_with_no_mat_opens_as_an_l_of_words_and_the_retired_who_says_what_is_gone(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.locator("article.cards-m .post-card__text", has_text="Doubts Product").first.click()       # a concern: decisions §298 retires its mat
-        pg.locator(".cards-l").wait_for(timeout=5000)
-        assert pg.locator(".sp-veil").count() == 0
-        pg.keyboard.press("Escape")
-        pg.locator(".cards-wait .cards-s").first.click()
-        assert pg.get_by_role("button", name="Who says what").count() == 0
-        b.close()
 
 
-def test_the_cost_opens_from_the_deck_with_the_tools_left_and_each_card_saying_its_cost_is_not_known_yet(page_url):
-    """Was: potions, costs and a card the tools cannot pay (*18% left*, *play it on Claude*, *Wait for 04:00*), all laid by the mock's `proposed.costs`. The host
-    prices no goal before it is played (spec 171 F): the shares lie empty, saying who fills them; the potions are the host's own limits (laid here in the
-    snapshot). The unpaid card and its two ways out wait for the costs' mat (its own goal); `ideas.route_later` is the host's, held by tests/test_gui_route.py."""
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.get_by_role("button", name="What each card costs").click()
-        sp = spread_of(pg, "cost")
-        assert sp.locator(".sp-pots .ork-potion").count() == 2 and "62%" in sp.inner_text() and "18%" in sp.inner_text()          # the tools' left today, the host's limits
-        assert sp.locator(".sp-card .sp-cost").count() == 0                                       # no share is laid
-        assert sp.locator(".sp-costw", has_text="Its cost is not known yet").count() >= 3 and sp.locator(".sp-card.is-muted").count() == 0
-        play = sp.get_by_role("button", name="Play", exact=False).first
-        assert play.is_visible()
-        play.click()
-        assert pg.locator(".sp-veil").count() == 0 and "ideas.start" in pg.evaluate(SENT)
-        b.close()
 
 
 def test_the_duel_sets_goals_into_the_order_by_pairs_and_sends_it_when_kept(page_url):
@@ -104,19 +74,6 @@ def test_the_duel_sets_goals_into_the_order_by_pairs_and_sends_it_when_kept(page
         b.close()
 
 
-def test_the_duel_skips_a_pair_with_the_down_key_and_has_its_buttons_with_words(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.get_by_role("button", name="Weigh two at a time").click()
-        sp = spread_of(pg, "duel")
-        before = sp.locator(".sp-card.is-xl .sp-card__name").first.inner_text()
-        pg.keyboard.press("ArrowDown")
-        assert sp.locator(".sp-card.is-xl .sp-card__name").first.inner_text() != before
-        assert sp.get_by_role("button", name="This one").count() == 2
-        closes_with_esc(pg)
-        b.close()
 
 
 def test_the_sort_puts_new_goals_on_three_piles_by_keys_takes_one_back_and_sends(page_url):
@@ -163,11 +120,3 @@ def test_the_deal_opens_from_a_goal_in_talks_l_and_the_deck_and_deals_the_route_
         b.close()
 
 
-def test_the_new_spreads_wear_orkuis_tokens_and_the_page_without_cards_has_none_of_them(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        pg.goto(page_url)
-        pg.wait_for_timeout(1500)
-        assert pg.locator(".sp-veil, .cards-deckacts, .cards-s").count() == 0
-        b.close()

@@ -12,17 +12,6 @@ from tests.test_window_desktop_browser import WindowHost  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
-SMALLEST = """() => {
-  let min = 999, who = "";
-  for (const e of document.body.querySelectorAll("*")) {
-    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
-    const r = e.getBoundingClientRect(); const s = getComputedStyle(e);
-    if (!r.width || !r.height || s.visibility === "hidden" || s.display === "none" || +s.opacity === 0) continue;
-    const px = parseFloat(s.fontSize);
-    if (px < min) { min = px; who = e.className + " :: " + e.textContent.trim().slice(0, 30); }
-  }
-  return [min, who];
-}"""
 FAMILY = "(e) => getComputedStyle(e).fontFamily"
 
 
@@ -46,21 +35,7 @@ def rubik(pg, selector):
     return loc.first.evaluate(FAMILY).strip("\"' ").startswith("Rubik")
 
 
-def test_headings_buttons_and_card_text_are_rubik(gui):
-    pg = open_window(gui)
-    assert rubik(pg, ".cards-lab")
-    assert rubik(pg, "button")
-    fams = pg.evaluate("""() => { for (const c of document.querySelectorAll(".ork-card")) for (const e of c.querySelectorAll("*"))
-      if ([...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && e.getBoundingClientRect().width) return getComputedStyle(e).fontFamily; return ""; }""")
-    assert fams.strip("\"' ").startswith("Rubik"), fams
 
 
-def test_no_visible_text_is_under_twelve_px(gui):
-    pg = open_window(gui)
-    smallest, who = pg.evaluate(SMALLEST)
-    assert smallest >= 12, (smallest, who)
 
 
-def test_a_card_has_ten_px_corners(gui):
-    pg = open_window(gui)
-    assert pg.locator(".ork-card").first.evaluate("(e) => getComputedStyle(e).borderTopLeftRadius") == "10px"

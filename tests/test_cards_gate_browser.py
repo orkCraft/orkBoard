@@ -84,56 +84,10 @@ INSIDE = """() => { const f = document.querySelector('[data-spread=gate] .mf-fie
   return out; }"""
 
 
-@pytest.mark.parametrize("size", SIZES)
-def test_a_red_gate_lies_upright_every_card_inside_its_field_with_the_decision_it_guards_face_up_and_no_ring(gui, size):
-    server, _ = gui
-    lay(server, "red-goal", red=True)
-    spy = Spy(server)
-    try:
-        pg, seen = open_gate(gui, "red-goal", size)
-        gate = pg.locator("[data-spread=gate]")
-        assert gate.locator(".sp-ring, .sp-gate, .sp-gk").count() == 0 and pg.evaluate("document.querySelector('[data-spread=gate] svg circle') === null")
-        assert gate.locator(".mf-zl").all_text_contents() == ["What its tests guard", "Yours"]
-        d = gate.locator(".gt-guards .sp-card[data-cardkind=decision]")                             # §2 face up with the gate's no
-        assert d.count() == 1 and "§2" in d.inner_text() and "Second, the old card" in d.inner_text() and d.locator(".sp-chk.is-no").count() == 1
-        assert ", a decision" in d.get_attribute("aria-label") and d.locator(".cards-c--tr .ork-sign").count() == 1
-        part = gate.locator(".gt-guards .sp-card[data-cardkind=part]")                              # the test naming none: its file, in the code face
-        assert part.count() == 1 and "tests/test_bare.py" in part.inner_text() and ", a part" in part.get_attribute("aria-label")
-        assert "Plex Mono" in part.locator(".sp-card__name").evaluate("e => getComputedStyle(e).fontFamily")
-        pile = gate.locator(".gt-agree")                                                            # the agreeing §M a pile by its thickness, never a number
-        assert pile.count() == 1 and pile.locator(".sp-thick span").count() >= 1 and not any(ch.isdigit() for ch in pile.inner_text())
-        line = gate.locator(".gt-line")
-        assert "No total" in line.text_content() and line.locator(".cards-ct").count() == 1
-        assert gate.locator(".gt-yours .sp-card[data-cardkind=goal]").count() == 1 and "red-goal" in gate.locator(".gt-yours").text_content().lower()
-        top = lambda s: gate.locator(s).bounding_box()["y"]                                         # upright: guards, the line, Yours
-        assert top(".gt-guards") < top(".gt-line") < top(".gt-yours")
-        assert gate.locator(".mf-phase.is-on").inner_text().strip().lower() == "work"                    # the goal's own phase, as the phone reads it
-        assert pg.evaluate(INSIDE) == [], pg.evaluate(INSIDE)
-        hand = pg.locator(".frame-hand .mathand")                                                   # the ways lie in the hand
-        assert hand.locator("[data-way=fix]").count() == 1 and hand.locator("[data-way=stale]").count() == 1
-        assert "Fix it" in hand.locator("[data-way=fix]").inner_text() and "The test is out of date" in hand.locator("[data-way=stale]").inner_text()
-        seal = gate.locator(".mf-seal")
-        assert seal.get_attribute("aria-disabled") == "true" and "Send to" in seal.inner_text() and "2 checks disagree" in seal.inner_text()
-        seal.click(force=True)
-        pg.wait_for_timeout(300)
-        assert spy.log == [] and not seen
-        pg.close()
-    finally:
-        spy.close()
 
 
-SIGN_HIT = """() => [...document.querySelectorAll('[data-spread=gate] .gt-guards .sp-card')].map((c) => { const s = c.querySelector('.cards-c--tr'), r = s.getBoundingClientRect(),
-  hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return [c.dataset.cardkind, s.contains(hit), !!r.width]; })"""
 
 
-@pytest.mark.parametrize("size", SIZES + [(390, 844)])
-def test_the_no_token_never_hides_the_kind_sign_of_a_decision_or_a_part(gui, size):
-    server, _ = gui
-    lay(server, "sign-goal", red=True)
-    pg, _seen = open_gate(gui, "sign-goal", size)
-    hits = pg.evaluate(SIGN_HIT)
-    assert {k for k, _, _ in hits} == {"decision", "part"} and all(ok and w for _, ok, w in hits), hits
-    pg.close()
 
 
 @pytest.mark.parametrize("size", SIZES)
@@ -218,27 +172,3 @@ def test_fix_it_on_a_done_goal_makes_a_fix_goal_in_one_press_and_its_toast_offer
         spy.close()
 
 
-def test_the_test_is_out_of_date_asks_tech_on_the_seal_with_its_cost_said_never_in_one_press(gui):
-    server, _ = gui
-    lay(server, "stale-goal", red=True)
-    spy = Spy(server)
-    try:
-        pg, _seen = open_gate(gui, "stale-goal")
-        way = pg.locator(".frame-hand .mathand [data-way=stale]")
-        way.click()
-        pg.wait_for_timeout(300)
-        assert spy.log == []
-        seal = pg.locator("[data-spread=gate] .mf-seal")
-        pg.wait_for_function("() => /Ask Tech/.test(document.querySelector('[data-spread=gate] .mf-seal').innerText)", timeout=WAIT_MS)
-        pg.wait_for_function("() => /A paid pass/.test(document.querySelector('[data-spread=gate] .mf-seal').innerText)", timeout=WAIT_MS)
-        seal.click()
-        for _ in range(60):
-            if spy.sent("ideas.ask_leader"):
-                break
-            pg.wait_for_timeout(50)
-        got = spy.sent("ideas.ask_leader")
-        assert len(got) == 1 and got[0]["slug"] == "stale-goal" and got[0]["leader"] == "tech" and got[0]["sealed"] is True and got[0]["from"] == "mat"
-        assert "tests/test_red.py::test_a" in got[0]["text"]
-        pg.close()
-    finally:
-        spy.close()

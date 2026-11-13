@@ -140,19 +140,8 @@ def test_a_decision_opens_its_entry_over_the_pane_its_links_are_walked_and_one_g
     finish(pg, log)
 
 
-def test_a_decision_named_by_the_conflict_or_the_bubble_opens_its_entry(gui):
-    pg, host, log = open_past(gui)
-    pg.evaluate("() => import('/static/js/table/chronicle.js').then((m) => m.openChronicle({ decision: 212 }))")
-    pg.locator('.chr-decision-page[data-decision="212"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator("[data-title]").text_content().strip().endswith("Decision §212 · through Design")
-    finish(pg, log)
 
 
-def test_never_looked_at_nothing_is_new_the_first_read_is_taken_as_seen(gui):
-    pg, host, log = open_past(gui, tab="orkmaster", host=PastHost(newest=241))
-    pg.wait_for_function("() => localStorage.getItem('orkboard.past.seen.design') === '241'", timeout=WAIT_MS)
-    assert pg.locator(".table-tab__new").count() == 0
-    finish(pg, log)
 
 
 # -- a first open over the real host (spec 162 J; decisions §277): the past from history lies once ---------------------------------------------------

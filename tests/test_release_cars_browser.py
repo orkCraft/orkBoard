@@ -34,48 +34,10 @@ def test_the_goals_are_cars_oldest_first_each_with_its_age(maps):
     assert [a.strip() for a in pg.locator(".mp-goal .mp-age").all_text_contents()] == ["2 weeks", "9 days", "5 days", "3 days", "2 days", "1 day"]
     assert pg.locator(".mp-batch").count() == 0                                # six cars: the batch is not big
     assert pg.locator(".mp-goal.mp-card[data-id]").count() == 6 and pg.locator(".mp-goal .mp-tick").count() == 6
-    if w == "wide":
-        ys = {round(b["y"]) for b in (c.bounding_box() for c in pg.locator(".mp-goal").all())}
-        assert len(ys) == 1                                                    # one row
     shot(pg, f"release-cars-{w}.png")
 
 
-def test_past_the_eighth_car_a_mark_says_where_the_big_batch_starts(maps):
-    pg, host, w = maps
-    host.goals = goals(list(range(1, 12)))
-    go(pg, "release")
-    pg.locator(".mp-goal").first.wait_for(timeout=WAIT_MS)
-    marks = pg.locator(".mp-batch")
-    assert marks.count() == 1
-    label = marks.get_attribute("aria-label")
-    assert label and label == marks.get_attribute("title") and "batch is big" in label and "To main takes every goal in dev" in label and "car" not in label.lower()
-    assert not any(ch.isdigit() for ch in label)                               # no count
-    before = pg.locator(".mp-cars > *").evaluate_all("els => els.findIndex((e) => e.classList.contains('mp-batch'))")
-    assert before == 8                                                         # eight cars, then the mark
-    shot(pg, f"release-cars-batch-{w}.png")
 
 
-def test_a_goal_with_no_age_read_has_no_age_line_and_keeps_its_place_after_the_aged(maps):
-    pg, host, w = maps
-    host.goals = goals([4, 2])
-    host.goals.insert(0, {**host.goals[0], "idea": "none", "title": "Unaged", "at": None})
-    go(pg, "release")
-    pg.locator(".mp-goal").first.wait_for(timeout=WAIT_MS)
-    assert names(pg, ".mp-cars") == ["Goal 0", "Goal 1", "Unaged"]
-    assert pg.locator(".mp-goal .mp-age").count() == 2
-    assert card(pg, "none").count() == 1
 
 
-def test_a_car_reads_whole_its_seven_character_commit_and_a_long_goal_name(maps):
-    pg, host, w = maps
-    host.goals = goals([1, 2, 3])
-    long = "Make the lobby remember every player who left before the round began and ask them back"[:60]
-    host.goals[0]["title"] = long
-    go(pg, "release")
-    pg.locator(".mp-goal").first.wait_for(timeout=WAIT_MS)
-    for sel, want in ((".mp-card__l", "0000000"), (".mp-card__nm", long)):
-        got = pg.locator(f".mp-goal[data-id='g0'] {sel}").first
-        assert got.text_content().strip() == want
-        assert got.evaluate("e => e.scrollWidth <= e.clientWidth + 1 && e.scrollHeight <= e.clientHeight + 1")     # nothing cut: no ellipsis, no clamp
-    assert pg.locator(".mp-goal[data-id='g0']").bounding_box()["width"] >= 150
-    shot(pg, f"release-cars-long-{w}.png")

@@ -56,26 +56,6 @@ def test_the_stages_open_from_a_goals_act_and_close_with_esc(page_url):
         b.close()
 
 
-def test_the_stages_of_a_route_are_a_pile_the_one_now_and_the_ones_to_come_face_down(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.evaluate("""async (slug) => { const st = await import("/static/js/shell/store.js"), sp = await import("/static/js/cards/spreads/open.js");
-          const m = st.mapData.value; const route = ["tech", "design", "product", "release"].map((party, i) => ({ step: "party", party, goal: slug, at: "", state: i === 0 ? "done" : i === 1 ? "running" : "waiting", done: 1, total: 2 }));
-          st.mapData.value = { ...m, nodes: m.nodes.map((n) => n.slug === slug ? { ...n, state: "running", route } : n) }; sp.openSpread({ kind: "track", slug }); }""", THREE)
-        spread = pg.locator("[data-spread=track]")
-        spread.wait_for()
-        assert spread.locator(".sp-pile .sp-card").count() == 1 and spread.locator(".sp-pile .sp-chk").count() == 1
-        assert spread.locator(".sp-now .sp-card.is-xl").count() == 1
-        assert spread.locator("button.sp-back").count() == 2                     # two to come, face down, each pressed to turn
-        spread.locator("button.sp-back").first.click()
-        assert spread.locator("button.sp-back").count() == 1 and spread.locator(".sp-ahead .sp-card").count() == 1
-        pg.get_by_role("button", name="Show what comes").click()
-        assert spread.locator(".sp-back").count() == 0
-        pg.keyboard.press("Escape")
-        assert pg.locator(".sp-veil").count() == 0
-        b.close()
 
 
 def test_the_gate_opens_from_a_goal_to_review_upright_with_what_its_tests_guard_and_its_seal_dim_while_a_check_disagrees(page_url):
@@ -100,46 +80,7 @@ def test_the_gate_opens_from_a_goal_to_review_upright_with_what_its_tests_guard_
         b.close()
 
 
-def test_a_posts_words_open_before_and_after_from_its_act_and_close_with_esc(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.locator("article.cards-m:not([data-mat]) .post-card__text").first.click()       # a word, no mat: its L's act
-        pg.get_by_role("button", name="What changed").click()
-        diff = pg.locator("[data-spread=diff]")
-        diff.wait_for()
-        assert diff.locator(".sp-l").count() == 2
-        assert "Before: not recorded" in diff.locator(".sp-l.is-before").inner_text()       # the recording holds no words before
-        assert diff.locator(".sp-l.is-before").get_attribute("class").count("is-lit") == 0
-        pg.keyboard.press("ArrowLeft")
-        assert "is-lit" in diff.locator(".sp-l.is-before").get_attribute("class")
-        pg.keyboard.press("Escape")
-        assert pg.locator(".sp-veil").count() == 0
-        assert pg.evaluate("document.activeElement.classList.contains('cards-m')")
-        b.close()
 
 
-def test_a_post_that_carries_its_words_before_marks_what_was_taken_out_and_put_in(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.evaluate("""async () => { const sp = await import("/static/js/cards/spreads/open.js");
-          sp.openSpread({ kind: "diff", p: { leader: "tech", at: "2026-11-11T11:42:51+00:00", kind: "change", goal: "163-products-tree-on-the-board",
-            text: "It jumps again, half as high, once.", before: "It jumps again, as high as the first, any number of times." } }); }""")
-        diff = pg.locator("[data-spread=diff]")
-        diff.wait_for()
-        assert diff.locator(".sp-l.is-before del").count() >= 1 and diff.locator(".sp-l:not(.is-before) ins").count() >= 1
-        assert "Before: not recorded" not in diff.inner_text()
-        b.close()
 
 
-def test_the_page_without_cards_has_no_spread_and_no_new_act(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        pg.goto(page_url)
-        pg.wait_for_timeout(1500)
-        assert pg.locator(".sp-veil, .cards-s").count() == 0
-        b.close()

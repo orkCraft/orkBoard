@@ -8,8 +8,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_quality_browser import QualityHost, start  # noqa: E402
-from tests.test_table_desktop_browser import ROUTE_ROW, open_tab, pick, way  # noqa: E402
+from tests.test_table_desktop_browser import open_tab, pick, way  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -39,13 +38,6 @@ def test_a_goal_in_talk_shows_techs_stance_and_the_marks_are_no_buttons(gui):
     finish(pg, errors)
 
 
-def test_a_goal_in_spec_shows_techs_section_and_earlier_talk(gui):
-    pg, host, errors = phased(gui, "sections")
-    pg.locator('[data-view="spec"] .spec-section').wait_for(timeout=WAIT_MS)
-    assert pg.locator('[data-view="spec"] .spec-section').get_attribute("data-party") == "tech"
-    assert "The seat is kept" in pg.locator('[data-view="spec"]').inner_text()
-    assert pg.locator(".phase-earlier__line").inner_text().replace("\n", " ").strip().lower() == "earlier: talk"
-    finish(pg, errors)
 
 
 def test_a_goal_at_work_shows_the_goal_view_and_earlier_unfolds_talk_in_place_and_folds(gui):
@@ -68,28 +60,5 @@ def test_a_goal_at_work_shows_the_goal_view_and_earlier_unfolds_talk_in_place_an
     finish(pg, errors)
 
 
-def test_a_goal_done_shows_the_result_and_under_it_the_quality_record(gui):
-    host = QualityHost([])
-    pg, errors = start(gui, "wide", host)
-    open_tab(pg, "tech")
-    pick(pg, "seat")
-    pg.locator(".gv").wait_for(timeout=WAIT_MS)
-    pg.locator('.phase-quality .quality-page[data-kind="quality"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator(".gv").get_attribute("data-view") == "changed"
-    assert pg.locator(".table-over").count() == 0 and pg.locator("button[data-phase]").count() == 0
-    assert pg.locator('.table-phase[data-phase="done"]').get_attribute("aria-current") == "step"
-    assert pg.locator('[data-earlier="talk"]').count() == 1
-    finish(pg, errors)
 
 
-def test_through_the_orkmaster_a_routed_goal_not_talked_shows_its_route_and_cost(gui):
-    errors: list[str] = []
-    pg, host = way(gui, "wide", errors, state="routed", needs=[ROUTE_ROW])
-    pick(pg, "seat")
-    view = pg.locator('[data-view="route"]')
-    view.wait_for(timeout=WAIT_MS)
-    assert [e.get_attribute("data-party") for e in view.locator(".phase-route__step").all()] == ["game", "tech"]
-    assert "then" in view.locator(".phase-route__words").inner_text()
-    assert view.locator(".hand-way__cost").count() == 1 and "6 calls" in view.inner_text()
-    assert pg.locator(".phase-earlier").count() == 0 and pg.locator("button[data-phase]").count() == 0
-    finish(pg, errors)

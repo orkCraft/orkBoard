@@ -11,7 +11,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, PNG, open_hand, sig  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, open_hand, sig  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -84,19 +84,3 @@ def test_enter_sends_shift_enter_is_a_new_line_and_esc_lays_the_card_back_keepin
     assert not log, "\n".join(log)
 
 
-def test_a_picture_dropped_on_the_field_is_attached_and_shown_in_the_cards_window(gui):
-    pg, host, log = opened(gui)
-    try:
-        import base64  # noqa: PLC0415
-        assert pg.locator(".hand-field__win .hand-pic").count() == 0
-        pg.evaluate("""(b64) => {
-          const f = new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], 'p.png', { type: 'image/png' }), dt = new DataTransfer();
-          dt.items.add(f);
-          document.querySelector('.hand-fieldbox textarea').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
-        }""", base64.b64encode(PNG).decode())
-        pg.locator(".hand-field__win .hand-pic img").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-field__win .hand-pic").count() == 1
-        shot(pg, "new-goal-picture")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

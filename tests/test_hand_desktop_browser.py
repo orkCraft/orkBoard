@@ -10,7 +10,6 @@ from __future__ import annotations
 import base64
 import copy
 import os
-import re
 from pathlib import Path
 
 import pytest
@@ -259,36 +258,8 @@ def lane(pg, i):
     return pg.locator(f'.hand-lane[data-lane="{i}"]')
 
 
-def test_a_row_lies_under_the_lane_of_who_asks(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        lanes = pg.evaluate("""async () => {
-          const { laneOf } = await import('/static/js/hand/data.js'), parties = ['tech', 'design', 'product', 'release'].map((slug) => ({ slug }));
-          return [laneOf({ kind: 'failed', g: { slug: 'design' } }, parties), laneOf({ kind: 'asks', row: { goal: 'product' } }, parties), laneOf({ kind: 'goal', row: { goal: 'tech', idea: '' } }, parties),
-            laneOf({ kind: 'route', row: { goal: 'tech' } }, parties), laneOf({ kind: 'collide', g: { slug: 'tech' } }, parties), laneOf({ kind: 'sign_in', g: null, row: {} }, parties),
-            laneOf({ kind: 'asks', row: { goal: 'gone' } }, parties), laneOf({ kind: 'failed', goal: 'release' }, parties)];
-        }""")
-        assert lanes == [2, 3, 1, 0, 0, 0, 0, 4]        # a failure its task's party, a party's question and the project's questions their leader's party; the route, a fork, a sign-in and a gone party's the first lane
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_tap_on_the_discard_opens_it_over_the_pane_at_the_narrow_width(gui):
-    pg, host, log = open_hand(gui, width="narrow")
-    try:
-        done = pg.locator(".table-end .hand-done")
-        done.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(900)
-        b = done.bounding_box()
-        pg.mouse.click(b["x"] + b["width"] / 2, b["y"] + 30)
-        pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value?.kind === 'discard')", timeout=WAIT_MS)
-        assert pg.evaluate("() => document.activeElement?.classList.contains('hand-done')")
-        shot(pg, "narrow-tap-discard")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def _plus(pg):
@@ -304,52 +275,12 @@ def _field(pg):
 
 # -- the deck -------------------------------------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", ["narrow"])                                                           # at the wide width the discard is Release's lane (test_discard_table_browser.py)
-def test_no_part_with_nothing_to_hold(gui, width):
-    pg, host, log = open_hand(gui, host=HandHost(bare=True), width=width)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-plus").count() == 1 and lane(pg, 0).locator(".hand-slot").count() == 1 and lane(pg, 0).locator(".hand-slot").get_attribute("data-at") == "0"   # the + card alone at the first lane's left end
-        assert pg.locator(".hand-done").count() == 0                                                                    # nothing done, nothing ready for main: no discard
-        shot(pg, f"{width}-bare")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-    host = HandHost()                                                            # nothing done, but two goals ready for main: that line alone on a back
-    host.nodes = [n for n in host.nodes if n["place"] != "discard"]
-    pg, host, log = open_hand(gui, host=host, width=width)
-    try:
-        back = pg.locator(".hand-done.ork-card-back")
-        back.wait_for(timeout=WAIT_MS)
-        assert back.locator(".ork-race__head").count() == 1 and back.get_attribute("aria-label") == "Done. 2 goals ready for main"
-        if width == "wide":
-            assert "2 goals ready for main" in back.inner_text()
-        shot(pg, f"{width}-ready-only")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 # -- the + card and its field -------------------------------------------------------------------------------------------------------------
 
-def _seal(pg, large=False):
-    """The element lying in the + card's seal: its class name ("" when the place is empty)."""
-    inner = pg.locator(f".hand .hand-plus{'.is-large' if large else ''} > .ork-sigil > .ork-sigil__seal > .ork-elem")
-    return inner.get_attribute("class").replace("ork-elem", "").strip() if inner.count() else ""
 
 
-def test_the_large_plus_card_keeps_the_full_seal_and_the_first_partys_rune(gui):
-    pg, host, log = open_hand(gui, host=HandHost(empty=True))
-    try:
-        big = pg.locator(".hand-plus.is-large")
-        big.wait_for(timeout=WAIT_MS)
-        sigil = big.locator("> .ork-sigil")
-        assert sigil.count() == 1 and "small" not in sigil.get_attribute("class").split()
-        assert round(sigil.bounding_box()["width"]) >= 136 and big.bounding_box()["width"] > 136
-        assert _seal(pg, large=True) == "ice", "no goal, no party addressed: the first party's next element (§253.10)"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", ["narrow"])      # wide: the card in play and the field as large as the hand (tests/test_new_goal_card_browser.py)
@@ -364,8 +295,7 @@ def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_e
         pg.keyboard.press("Shift+Enter")
         pg.keyboard.type("above the timer")
         assert area.input_value() == "Show the round number\nabove the timer" and not host.added
-        box, size = field.bounding_box(), pg.viewport_size
-        assert box["x"] >= 0 and box["x"] + box["width"] <= size["width"] and box["y"] >= 0, "the field lies inside the window"
+        size = pg.viewport_size
         shot(pg, f"{width}-field")
         pg.keyboard.press("Escape")                                              # Esc closes it, its text kept
         assert pg.locator(".hand-field").count() == 0
@@ -387,9 +317,6 @@ def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_e
     assert not log, "\n".join(log)
 
 
-def _frees(pg):
-    """The free runes lying in the + card's seal, in the places of the band: `[place, element]`."""
-    return pg.locator(".hand .hand-plus .ork-sigil > .ork-sigil__free:not(.hand-deco)").evaluate_all("els => els.map((e) => [e.classList[1], e.firstElementChild.classList[1]])")     # the three of orkUI's own runes (`.hand-deco`) are the ring's whole, not free runes
 
 
 def _radios(pg):
@@ -405,94 +332,10 @@ def _checked(pg):
     return [r.get_attribute("data-rune") for r in _radios(pg).all() if r.get_attribute("aria-checked") == "true"]
 
 
-def test_the_narrow_seal_is_small_and_holds_no_free_rune(gui):
-    pg, host, log = open_hand(gui, width="narrow")
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        call(pg, "frame/state.js", "openTab", "tech")
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
-        assert "small" in pg.locator(".hand .hand-plus .ork-sigil").get_attribute("class").split() and _frees(pg) == []        # `.small` has none (orkUI 0.21.0)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", ["narrow"])      # wide: the runes are dealt to the hand (tests/test_new_goal_card_browser.py)
-def test_the_field_holds_a_row_of_five_runes_the_default_checked_the_used_faint_arrows_move_it_and_the_seal_follows(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        call(pg, "frame/state.js", "openTab", "tech")                                                                      # free: ice (the default), void, lava; meadow and dust are used
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
-        _plus(pg).click(position={"x": 8, "y": 60})
-        field, area = _field(pg)
-        assert field.locator(".hand-field__runes").count() == 0, "the five stand in a row only once the card's rune is pressed"
-        assert field.locator(".hand-field__rune").get_attribute("aria-label") == "Its rune: Rune 2, change it"
-        radios = _radios(pg)
-        group = field.locator(".hand-field__runes")
-        assert group.get_attribute("role") == "radiogroup" and group.get_attribute("aria-label") == "Its rune"
-        assert [r.get_attribute("aria-label") for r in radios.all()] == ["Rune 1", "Rune 2", "Rune 3", "Rune 4", "Rune 5"]      # the elements are never named (§63.4)
-        assert [r.get_attribute("data-rune") for r in radios.all()] == ["meadow", "ice", "dust", "void", "lava"]
-        assert all(r.get_attribute("role") == "radio" and r.locator(".ork-elem.big").count() == 1 for r in radios.all()) and _checked(pg) == ["ice"], "the default checked"
-        box = radios.first.bounding_box()
-        assert abs(box["width"] - 40) <= 1 and abs(box["height"] - 40) <= 1, box                                          # 40 x 40 (44 under a touch pointer)
-        assert radios.first.locator(".ork-elem").evaluate("e => e.offsetWidth") == 28                                      # the rune at 28 px
-        faint = lambda e: float(pg.locator(f'.hand-rune[data-rune="{e}"] .ork-elem').evaluate("e => getComputedStyle(e).opacity"))  # noqa: E731
-        assert faint("meadow") == faint("dust") < faint("void") < faint("ice") == 1.0, "the used ones faint, the free ones bright, the chosen one full"
-        assert [r.get_attribute("tabindex") for r in radios.all()] == ["-1", "0", "-1", "-1", "-1"]                         # one stop in the row
-        assert group.evaluate("e => e.scrollWidth <= e.clientWidth + 1")
-        shot(pg, f"{width}-field-runes")
-        radios.nth(1).focus()
-        pg.keyboard.press("ArrowRight")                                                                                    # the arrows move the choice and the focus
-        assert _checked(pg) == ["dust"] and radios.nth(2).evaluate("e => e === document.activeElement")
-        assert _seal(pg) == "dust", "the seal follows the choice"
-        if width == "wide":
-            assert [f[1] for f in _frees(pg)] == ["ice", "void", "lava"], "and the default is among the free ones again"
-        pg.keyboard.press("ArrowLeft"); pg.keyboard.press("ArrowLeft")
-        assert _checked(pg) == ["meadow"]
-        pg.keyboard.press("ArrowLeft")
-        assert _checked(pg) == ["lava"], "it goes round"
-        pg.keyboard.press("ArrowUp")
-        assert _checked(pg) == ["void"]
-        pg.keyboard.press("Tab")                                                                                           # Tab leaves the row
-        assert pg.evaluate("() => !document.activeElement.closest('.hand-field__runes')") and _checked(pg) == ["void"]
-        radios.nth(0).click()                                                                                              # a press chooses too
-        assert _checked(pg) == ["meadow"] and _seal(pg) == "meadow"
-        area.fill("The rune is meadow")
-        area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "The rune is meadow", "party": "tech", "element": "meadow"}))         # sent: the choice differs from the default
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-        _plus(pg).click(position={"x": 8, "y": 60})
-        _field(pg)
-        assert _checked(pg) == ["ice"], "the next goal starts from the default again"
-        _field(pg)[1].fill("The default")
-        _field(pg)[1].press("Enter")
-        assert "element" not in _calls(pg, host, "ideas.add", 2)[-1], "the default is not sent"
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_party_named_in_the_text_changes_the_default_and_the_used_runes_and_all_five_used_are_none_faint(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        _plus(pg).click()
-        field, area = _field(pg)
-        area.fill("@Design ")
-        _radios(pg)
-        pg.wait_for_function("() => document.querySelector('.hand-dealt [data-rune=\"dust\"][aria-checked=\"true\"]')", timeout=WAIT_MS)
-        assert [r.get_attribute("data-rune") for r in pg.locator(".hand-dealt .hand-deal.is-faint").all()] == ["meadow", "ice", "void"]       # Design's free runes are dust and lava
-        pg.keyboard.press("Escape")                                                                                         # the row put back: the words with it
-        area.wait_for(timeout=WAIT_MS)
-        area.fill("@Release ")
-        _radios(pg)
-        pg.wait_for_function("() => document.querySelector('.hand-dealt [data-rune=\"lava\"][aria-checked=\"true\"]')", timeout=WAIT_MS)
-        assert pg.locator(".hand-dealt .hand-deal.is-faint").count() == 0, "all five used: nothing tells them apart"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_key_typed_with_nothing_focused_opens_the_field_and_a_key_in_a_button_does_not(gui):
@@ -513,40 +356,6 @@ def test_a_key_typed_with_nothing_focused_opens_the_field_and_a_key_in_a_button_
     assert not log, "\n".join(log)
 
 
-def test_the_field_is_addressed_by_the_open_tab_and_by_an_at_sign_and_a_press_takes_it_off(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        call(pg, "frame/state.js", "openTab", "tech")                              # Tech's tab
-        _plus(pg).click()
-        field, area = _field(pg)
-        chip = field.locator(".hand-chip")
-        assert chip.inner_text().strip() == "Tech" and chip.get_attribute("data-by") == "tab"
-        shot(pg, "wide-field-addressed")
-        area.fill("Reset the clock after a reconnect")
-        area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "Reset the clock after a reconnect", "party": "tech"}))
-        _plus(pg).click()
-        field, area = _field(pg)
-        field.get_by_role("button", name="Take off Tech").click()                  # one press takes it off: general
-        assert field.locator(".hand-chip").count() == 0
-        area.fill("A general goal")
-        area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "A general goal"}))
-        _plus(pg).click()
-        field, area = _field(pg)
-        assert field.locator(".hand-chip").count() == 0                            # taken off for that tab: still off on it
-        call(pg, "frame/state.js", "openTab", "design")
-        assert field.locator(".hand-chip").inner_text().strip() == "Design"       # another tab addresses its own party
-        call(pg, "frame/state.js", "openTab", "orkmaster")
-        area.fill("@Product pick the first theme")                                # *@Product* in the text addresses it, on the Orkmaster's tab
-        chip = field.locator(".hand-chip")
-        assert chip.inner_text().strip() == "Product" and chip.get_attribute("data-by") == "text"
-        area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "pick the first theme", "party": "product"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_picture_pasted_goes_with_the_goal(gui):
@@ -582,51 +391,12 @@ def _press(pg, goal):
     _stack(pg, goal).locator('.hand-card[data-top="1"]').first.click(position={"x": 10, "y": 24})
 
 
-def test_a_stacks_edges_hint_how_many_five_at_most_and_never_a_number(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _stack(pg, "export").wait_for(timeout=WAIT_MS)
-        todo = {"id": "t0", "title": "KEY", "kind": "secret", "why": "", "choices": [], "steps": [], "accept": [], "done": False}
-        for i in range(7):
-            host.needs.append(need("todo", "tech", "export", "Export the round scores", f"KEY_{i}", todo={**todo, "id": f"t{i}", "title": f"KEY_{i}"}, at=f"2026-10-20T09:{20 + i}:00"))
-        host.bump({})
-        pg.wait_for_function("() => document.querySelector('.hand-stack[data-stack=\"export@1\"]')?.dataset.cards === '9'", timeout=WAIT_MS)
-        assert _stack(pg, "export").locator(".ork-card-back.edge").count() == 5
-        assert all(not e.inner_text() for e in _stack(pg, "export").locator(".ork-card-back.edge").all())                                  # a back says nothing: no count
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-FAN_JS = """(sel) => [...document.querySelectorAll(sel)].map((e) => { const m = new DOMMatrix(getComputedStyle(e).transform); return [Math.round(Math.atan2(m.b, m.a) * 1800 / Math.PI) / 10, Math.round(m.e * 10) / 10]; })"""
 
 
-def _deepen(pg, host, n=6):
-    """Cards added to the `export` stack until it holds n + 3 (more than the five edges show)."""
-    todo = {"id": "t0", "title": "KEY", "kind": "secret", "why": "", "choices": [], "steps": [], "accept": [], "done": False}
-    for i in range(n):
-        host.needs.append(need("todo", "tech", "export", "Export the round scores", f"KEY_{i}", todo={**todo, "id": f"t{i}", "title": f"KEY_{i}"}, at=f"2026-10-20T09:{20 + i}:00"))
-    host.bump({})
-    pg.wait_for_function(f"() => document.querySelector('.hand-stack[data-stack=\"export@1\"]')?.dataset.cards === '{n + 2}'", timeout=WAIT_MS)
-    pg.wait_for_timeout(700)
 
 
-def test_a_fan_stands_still_under_reduced_motion(gui):
-    server, browser = gui
-    ctx = browser.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce")
-    pg = ctx.new_page()
-    host = HandHost()
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    try:
-        _stack(pg, "export").wait_for(timeout=WAIT_MS)
-        _deepen(pg, host)
-        sel = '.hand-stack[data-stack="export@1"] > .ork-card-back.edge'
-        turns = pg.evaluate(FAN_JS, sel)
-        assert len(turns) == 5 and all(t != 0 and a != 0 for t, a in turns), "the turn stands (a turn is not a motion)"
-        assert pg.locator(sel).first.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"
-    finally:
-        ctx.close()
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -638,8 +408,6 @@ def test_a_stack_pressed_picks_its_goal_and_lifts_its_top_card_with_its_answers_
         lifted = pg.locator(".hand-lifted")
         lifted.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(300)
-        box = lifted.bounding_box()
-        assert box["x"] >= 0 and box["x"] + box["width"] <= pg.viewport_size["width"] + 1 and box["y"] >= 0
         assert sig(pg, "frame/state.js", "picked") == "export" and sig(pg, "frame/state.js", "lifted") == "hand:plan/export/"
         assert lifted.get_by_role("button", name="Start the work").count() == 1 and lifted.get_by_role("button", name="Put it back").count() == 1
         assert lifted.locator(".hand-spend__words").inner_text() == "about 2–4% of Claude's week" and lifted.locator(".hand-spend .ork-gem.share").count() == 1 and lifted.locator(".corner--foot .corner__much .ork-gem.share").count() == 1       # its cost's words, and its gem at the foot's right (spec 147 D.1)
@@ -661,81 +429,12 @@ def test_a_stack_pressed_picks_its_goal_and_lifts_its_top_card_with_its_answers_
     assert not log, "\n".join(log)
 
 
-def test_the_cards_of_the_table_a_lifted_card_is_about_rise(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(".frame-table").evaluate("""(t) => t.insertAdjacentHTML('beforeend',
-          '<div id="a" data-about="idea:timer task:timer/t1">its task</div><div id="b" data-about="idea:timer task:timer/t2">another</div><div id="c" data-about="idea:export">a plan</div>')""")
-        _press(pg, "timer")                                                                # a failure is about its task
-        pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-        pg.wait_for_function("() => document.getElementById('a').classList.contains('is-about')", timeout=WAIT_MS)
-        assert not pg.locator("#b").evaluate("e => e.classList.contains('is-about')") and not pg.locator("#c").evaluate("e => e.classList.contains('is-about')")
-        assert sig(pg, "hand/about.js", "aboutNow") == {"task": "timer/t1"}
-        pg.wait_for_timeout(300)
-        assert pg.locator("#a").evaluate("e => getComputedStyle(e).transform") != "none"
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.getElementById('a').classList.contains('is-about')", timeout=WAIT_MS)
-        assert sig(pg, "hand/about.js", "aboutNow") is None
-        _press(pg, "export")                                                               # a plan is about its goal's cards
-        pg.wait_for_function("() => document.getElementById('c').classList.contains('is-about')", timeout=WAIT_MS)
-        assert not pg.locator("#a").evaluate("e => e.classList.contains('is-about')")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_open_on_a_lifted_card_opens_the_stop_over_the_pane_and_it_goes_back_when_answered(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _press(pg, "timer")
-        pg.locator(".hand-ways-row").get_by_role("button", name="Open…").click()
-        over = sig(pg, "frame/state.js", "over")
-        assert over["kind"] == "stop" and over["props"]["key"].startswith("failed/timer/") and sig(pg, "frame/state.js", "lifted") == ""
-        box = pane(pg)
-        box.locator(".hand-stopface").wait_for(timeout=WAIT_MS)
-        box.get_by_text("the reset test failed", exact=False).first.wait_for(timeout=WAIT_MS)
-        box.locator(".shell-logview").wait_for(timeout=WAIT_MS)
-        assert "reset the clock" in box.inner_text().lower() and "== round 1" in box.locator(".shell-logview").inner_text()          # the task, its error and its log
-        assert box.get_by_role("button", name="Start again").count() == 1 and box.locator(".hand-spend__words").inner_text() == "about 4% of Claude's week"
-        shot(pg, "wide-stop-over-the-pane")
-        host.needs = [n for n in host.needs if n["idea"] != "timer"]
-        host.nodes = [n for n in host.nodes if n["slug"] != "timer"]
-        host.bump({})
-        pg.wait_for_function("async () => (await import('/static/js/frame/state.js')).over.value === null", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 # -- the discard ----------------------------------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", ["narrow"])                                                           # at the wide width the discard is Release's lane: no view over the pane (spec 156 D.3)
-def test_the_discard_shows_the_last_goal_done_and_what_is_ready_for_main_and_opens_over_the_pane(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        done = pg.locator(".hand-done")
-        done.wait_for(timeout=WAIT_MS)
-        assert "Lobby music loop" in done.inner_text() and done.locator(".ork-sign.check").count() == 1 and done.locator(".ork-elem.void").count() == 1
-        assert done.locator(".ork-race__head").count() == 1 and "Done" in done.get_attribute("aria-label") and "2 goals ready for main" in done.get_attribute("aria-label")
-        if width == "wide":
-            assert "2 goals ready for main" in done.inner_text()
-        assert pg.locator(".table-discard > .ork-card-back.edge").count() == 1                                                    # the other goal's back under it
-        done.click()
-        over = sig(pg, "frame/state.js", "over")
-        assert over["kind"] == "discard" and "is-on" in done.get_attribute("class")
-        box = pg.locator("#table-pane")
-        box.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
-        assert box.get_by_role("region", name="Done, not yet seen").locator(".hand-drow").count() == 2                            # the goal seen is in the history, not here
-        ready = box.get_by_role("region", name="Ready for main")
-        assert ready.locator("[data-portal-card]").count() == 2 and ready.get_by_role("button", name="To main").count() == 1
-        shot(pg, f"{width}-discard-over-the-pane")
-        ready.get_by_role("button", name="To main").click()                                                                        # the portal's way (spec 149 G.1): the first goal ready is chosen, dev whole is not merged
-        assert _sent(pg, host, ("ideas.to_main_plan", {"idea": ready.locator("[data-portal-card]").first.get_attribute("data-portal-card")})) and not [n for n, _ in host.log if n == "ideas.gate_merge"]
-        done.click()                                                                                                                # pressed again, it closes
-        assert sig(pg, "frame/state.js", "over") is None
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_goal_pressed_in_the_discard_opens_its_result_is_seen_and_leaves_the_discard(gui):
@@ -770,158 +469,25 @@ def test_a_goal_pressed_in_the_discard_opens_its_result_is_seen_and_leaves_the_d
 
 # -- the other cards of the hand --------------------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_pick_a_sign_in_and_a_card_of_an_unknown_kind_are_cards_of_the_hand_too(gui, width):
-    pg, host, log = open_hand(gui, host=HandHost(extra=True), width=width)
-    try:
-        _stack(pg, "look").wait_for(timeout=WAIT_MS)
-        assert _stack(pg, "sign_in/claude").count() == 1 and _stack(pg, "fresh").count() == 1                      # a stop of no goal is a stack of its own; the route card lies with its goal
-        assert _stack(pg, "sign_in/claude").evaluate("e => e.closest('.hand-lane').dataset.lane") == "0" and _stack(pg, "fresh").evaluate("e => e.closest('.hand-lane').dataset.lane") == "0"   # both under the first lane
-        _press(pg, "fresh")                                                                                       # the route card (spec 100 A: tests/test_route_card_desktop_browser.py): a press lifts it
-        lifted = pg.locator(".hand-lifted")
-        lifted.wait_for(timeout=WAIT_MS)
-        assert lifted.get_by_role("button", name="Talk").count() == 1 and lifted.get_by_role("button", name="Put it back").count() == 1
-        lifted.get_by_role("button", name="Put it back").click()
-        pg.mouse.move(pg.viewport_size["width"] / 2, 20)                                                         # the pointer off the cards: one under it would rise over its neighbour's edge
-        pg.wait_for_timeout(400)
-        _press(pg, "sign_in/claude")
-        pg.locator(".hand-lifted").get_by_role("button", name="Sign in").wait_for(timeout=WAIT_MS)
-        pg.keyboard.press("Escape")
-        pg.evaluate("() => document.activeElement.blur()")                                                         # the card that had the focus lies risen, whole, over its neighbours
-        pg.mouse.move(pg.viewport_size["width"] / 2, 20)
-        pg.wait_for_timeout(400)
-        _press(pg, "look")                                                                                        # a pick: its variants as small tiles, *Take B* once one is picked
-        lifted = pg.locator(".hand-lifted")
-        lifted.locator(".pick-tile").first.wait_for(timeout=WAIT_MS)
-        assert lifted.locator(".pick-tile").count() == 2 and lifted.get_by_role("button", name="Take A").count() == 0
-        shot(pg, f"{width}-lifted-pick")
-        lifted.locator('.pick-tile__label[data-variant="A"]').click()
-        lifted.get_by_role("button", name="Take A").click()
-        assert _sent(pg, host, ("ideas.pick", {"slug": "look", "task": "p1", "key": "A", "via": "hand"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_pick_opened_over_the_pane_is_the_variants_large_and_a_note(gui):
-    pg, host, log = open_hand(gui, host=HandHost(extra=True))
-    try:
-        _press(pg, "look")
-        pg.locator(".hand-lifted").get_by_role("button", name="Pick, with a note").click()
-        assert sig(pg, "frame/state.js", "over")["kind"] == "stop"
-        box = pane(pg)
-        box.get_by_role("textbox", name="Note").wait_for(timeout=WAIT_MS)
-        assert box.locator(".pick-tile").count() == 2 and box.get_by_role("button", name="None of them: make new ones").count() == 1
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 # -- the words of the goal's way and the one place of the parties (spec 100 E) -------------------------------------------------------------------------------------
 
-def test_every_kind_of_a_goals_way_has_its_plain_word_and_no_word_of_a_race(gui):
-    pg, host, log = open_hand(gui, host=HandHost(bare=True))
-    try:
-        words = pg.evaluate("() => import('/static/js/arena/arenawords.js').then((m) => m.KIND_WORD)")
-        assert {k: words[k] for k in ("route", "start", "talk", "cause", "decision", "fork", "project_q")} == {
-            "route": "Route", "start": "Start", "talk": "Talk", "cause": "The cause", "decision": "Decision", "fork": "A fork", "project_q": "About the project"}
-        mine = " ".join(words[k] for k in ("route", "start", "talk", "cause", "decision", "fork", "project_q")).lower()
-        assert not re.search(r"\b(ork|orks|elf|elves|goblin|gnome|knight|lich|skeleton|undead)\b", mine)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_edit_the_party_on_a_plan_that_misses_a_member_opens_the_one_place_of_the_parties_at_its_party(gui, width):
-    host = HandHost(bare=True)
-    next(n for n in host.needs if n["kind"] == "plan")["missing"] = [{"agent": "artist", "name": "Artist", "free": False}]
-    pg, host, log = open_hand(gui, host=host, width=width)
-    try:
-        _stack(pg, "export").first.wait_for(timeout=WAIT_MS)
-        pg.locator('.hand-card[data-kind="plan"]').first.click(position={"x": 10, "y": 24}, force=True)
-        pg.locator(".hand-lifted").get_by_role("button", name="Edit the party").click()
-        pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
-        want = "Tech's table · Parties" if width == "wide" else "Board · Parties"        # wide: the card in play opened its asker's tab (spec 168 D1); the narrow page keeps the tab it had
-        assert " ".join(pg.locator(".table-title__pt").text_content().split()) == want and pg.locator(".place").count() == 0
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_start_again_says_the_tasks_work_is_thrown_away_only_where_its_branch_holds_commits(gui):
-    """Spec 149 D.4: the failure card's *Start again* says in its title that the task's work is thrown away and made again, when the host says the branch holds commits."""
-    words = "The task's work is thrown away and made again"
-    pg, host, log = open_hand(gui)
-    try:
-        _press(pg, "timer")
-        btn = pg.locator(".hand-ways-row").get_by_role("button", name=re.compile("^Start again"))
-        btn.wait_for(timeout=WAIT_MS)
-        assert words not in (btn.get_attribute("title") or ""), "no commits: nothing is thrown away"
-        pg.keyboard.press("Escape")
-        next(n for n in host.nodes if n["slug"] == "timer")["tasks"][0]["holds_commits"] = True
-        host.bump({})
-        _press(pg, "timer")
-        btn = pg.locator(".hand-ways-row").get_by_role("button", name=re.compile("^Start again"))
-        btn.wait_for(timeout=WAIT_MS)
-        assert words in btn.get_attribute("title")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 # -- the goal under the pointer (spec 165 I, decisions §280.1) -------------------------------------------------------------------------------
 
-REACH = "hand/reachhover.js"
 
 
-def _card(pg, goal):
-    return pg.locator(f'.hand-card[data-goal="{goal}"][data-top="1"]')
 
 
-def test_a_pointer_passing_over_a_card_without_resting_names_nothing(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        box = _card(pg, "timer").bounding_box()
-        pg.mouse.move(box["x"] + 10, box["y"] + 24)
-        pg.mouse.move(5, 5)
-        pg.wait_for_timeout(400)
-        assert sig(pg, REACH, "reachGoal") == ""
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_focus_names_the_goal_at_once_and_blur_and_esc_clear_it(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        _card(pg, "timer").focus()
-        assert sig(pg, REACH, "reachGoal") == "timer"
-        pg.evaluate("() => document.activeElement.blur()")
-        assert sig(pg, REACH, "reachGoal") == ""
-        _card(pg, "timer").focus()
-        assert sig(pg, REACH, "reachGoal") == "timer"
-        pg.keyboard.press("Escape")
-        assert sig(pg, REACH, "reachGoal") == ""
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_touch_press_on_a_hand_card_names_no_goal_and_lifts_it_as_before(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.evaluate("""() => { const el = document.querySelector('.hand-card[data-goal="timer"][data-top="1"]');
-          for (const t of ['pointerover', 'pointerdown']) el.dispatchEvent(new PointerEvent(t, { bubbles: true, pointerType: 'touch' })); }""")
-        pg.wait_for_timeout(400)
-        assert sig(pg, REACH, "reachGoal") == ""
-        assert pg.locator(".hand-card.is-slot").count() == 0
-        _press(pg, "timer")                                                                          # the press as today lifts the card
-        pg.wait_for_selector(".hand-ways-row", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

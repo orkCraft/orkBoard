@@ -10,7 +10,6 @@ pressed (`post(pg, slug)`); the cards that dissolve into the ring are posts with
 (the pane's To main, tomain.js, is still held by test_to_main_lights_the_goals_...). No case was dropped here."""
 from __future__ import annotations
 
-import copy
 import os
 from pathlib import Path
 
@@ -18,7 +17,6 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import node, task  # noqa: E402
 from tests.test_portal_browser import PortalHost  # noqa: E402

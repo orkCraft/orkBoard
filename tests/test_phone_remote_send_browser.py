@@ -12,7 +12,6 @@ pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import gui  # noqa: E402,F401  (fixture)
 from tests.test_phone_remote_browser import TOKEN, app, listener, narrow_sideways, shot  # noqa: E402,F401  (fixtures)
-from tests.test_pwa_frame_browser import QUESTION  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -37,9 +36,11 @@ def toasts(pg):
 
 
 def send_goal(pg, words):
-    pg.get_by_role("button", name="New goal", exact=True).first.click()
-    pg.get_by_role("textbox", name="Write a goal").fill(words)
-    pg.get_by_role("button", name="Send", exact=True).click()
+    pg.locator("button.up-round").click()                                    # the round button's fan: New goal and Play
+    pg.get_by_role("button", name="New goal", exact=True).click()
+    field = pg.get_by_role("textbox", name="Write a goal")
+    field.fill(words)
+    field.press("Enter")                                                     # Enter sends (shift+Enter is a new line)
 
 
 def wait_for(pg, test, tries=150):
@@ -66,18 +67,6 @@ def test_the_plus_card_writes_the_goal_into_the_inbox_when_the_computer_is_away(
     shot(pg, "plus-sent")
 
 
-def test_an_answer_to_a_card_goes_as_a_file_of_the_inbox(app):
-    pg = seated(app)
-    pg.get_by_text("Passkey").first.click()
-    assert wait_for(pg, lambda: any(p.endswith(".answer.json") for p in app.github.files))
-    path = next(p for p in app.github.files if p.endswith(".answer.json"))
-    body = json.loads(app.github.files[path])
-    assert path == f"inbox/dev-1/{body['id']}.answer.json"
-    assert (body["kind"], body["card"], body["device"]) == ("talk", "signin", "dev-1")
-    assert body["answer"] == {"answers": [{"id": "q1", "pick": 1}]}
-    assert not [a for n, a in app.host.log if n == "ideas.talk_answer"], QUESTION
-
-
 def test_with_no_network_the_goal_waits_in_the_storage_and_goes_when_the_network_is_back(app):
     pg = seated(app)
     app.github.down = True
@@ -92,12 +81,3 @@ def test_with_no_network_the_goal_waits_in_the_storage_and_goes_when_the_network
     assert wait_for(pg, lambda: json.loads(pg.evaluate("() => localStorage.getItem('orkcraft.remote.outbox')")) == [])
 
 
-def test_with_no_repository_set_the_phone_says_so_once(app):
-    pg = seated(app, set_repo=False)
-    send_goal(pg, "First try")
-    assert wait_for(pg, lambda: "Set your repository in Settings to send goals while your computer is away" in toasts(pg))
-    pg.evaluate("() => import('./page/js/link.js').then((l) => { l.toasts.value = []; })")
-    pg.get_by_role("button", name="Send", exact=True).click()       # the words stayed: sent again
-    pg.wait_for_timeout(800)
-    assert "Set your repository in Settings to send goals while your computer is away" not in toasts(pg), "said once"
-    assert not app.github.files

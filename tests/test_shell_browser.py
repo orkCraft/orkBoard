@@ -58,9 +58,6 @@ PARTY = {"ideas": 9, "leader": {"slug": "product-manager", "name": "Product mana
          "checks": [{"by": "accessibility-reviewer", "name": "Accessibility reviewer", "head": {"craft": "design", "race": "elf", "tier": "warrior"}, "applied": 6,
                      "skipped": 1, "clean": 4, "caught": 2, "left": 1, "before": 2, "usd": 1.8},
                     {"by": "reviewer", "name": "Reviewer", "head": _HEAD, "applied": 1, "skipped": 0, "clean": 1, "caught": 0, "left": 0, "before": 0, "usd": None}]}
-PARTY_LINES = ["Product manager (leads): ≈$4.10 for the party, the drafts and the plans", "Grunt: 14 tasks, 12 merged the first time · ≈$9.20",
-               "Accessibility reviewer: checked 6 goals: 4 clean, caught 2 (1 left) · ≈$1.80 · skipped 1 · 2 ended without findings",
-               "Reviewer: checked 1 goal: 1 clean, caught 0"]
 def party_price(a, learned=True, hints=()):
     """What `ideas.party_price` answers for a party (spec 43 §3): $0.35 a check, about half of the ideas, all of them with `every`."""
     from orkboard.realm import library

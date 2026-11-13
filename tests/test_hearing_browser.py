@@ -38,7 +38,6 @@ SMALLER = side("up", "smaller", ["design"], ["Design lead"], "A crown over a nam
 LATER = side("left", "later", ["tech"], ["Tech lead"], "First needs the server's clock; the timer goal brings it.", "After Round timer", after="timer", after_title="Round timer")
 SIDES = [GO, DROP, SMALLER]
 PAGE = [{"name": "Gist", "text": "Players see who answered first."}]
-PAGE_DONE = [{"name": "Gist", "text": "Players see who answered first."}, {"name": "Done when", "text": "- The first answer's player wears a mark\n- The mark is gone when the next round starts"}]
 
 
 def hearing(idea="night", title="Night mode for the lobby", sides=None, heading="Product and Design disagree with Tech", **more):
@@ -147,137 +146,18 @@ def no_throw(pg, host, ms=400):
     assert not [a for n, a in host.log if n == "ideas.throw"], "nothing was thrown"
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_lifted_over_the_pane_the_goals_card_stands_in_the_middle_and_the_sides_around_it(gui, width):
-    pg, host, log = open_hearing(gui, width, page=PAGE_DONE)
-    try:
-        hr = lift(pg, width=width)
-        assert pg.locator('.table-over[data-kind="choose"]').count() == 1, "it is the pane's, not an aside"
-        assert hr.locator(".hr-title").text_content().strip() == "Product and Design disagree with Tech"
-        c = card(pg)
-        assert c.locator(".hr-card__name").text_content().strip() == "Night mode for the lobby" and c.locator(".ork-elem.ice").count() == 1
-        pg.wait_for_function("() => document.querySelectorAll('.hr-card__done li').length === 2", timeout=WAIT_MS)
-        assert c.locator(".hr-card__lab").text_content().strip().lower() == "done when"
-        assert c.locator(".hr-own").text_content().strip() == "Or say it in your own words"
-        sides = {s.get_attribute("data-dir"): s for s in hr.locator(".hr-side").all()}
-        assert sorted(sides) == ["left", "right", "up"]
-        right = sides["right"]
-        assert right.locator(".hr-says").text_content().strip() == GO["line"] and right.locator(".hr-out__words").text_content().strip() == "Do it"
-        assert right.locator(".hr-who__names").text_content().strip() == "Product lead and Design lead"
-        heads = right.locator(".hr-head .ork-race__head")
-        assert heads.count() == 2 and heads.nth(0).bounding_box()["width"] == 28 and heads.nth(1).bounding_box()["width"] == 16, "the first leader's head at 28 px, the others' at 16"
-        assert sides["left"].locator(".hr-out__words").text_content().strip() == "Drop it" and sides["left"].locator(".ork-sign.cross").count() == 1
-        assert sides["up"].locator(".hr-out__words").text_content().strip() == "Do the smaller one: a gold frame, no crown"
-        for dir_, s in sides.items():
-            label = s.locator(".hr-side__btn").get_attribute("aria-label")
-            assert label.startswith(s.locator(".hr-out__words").text_content().strip()) and "argued by" in label, "a button with its outcome in its aria-label"
-        cb, rb, lb, ub = c.bounding_box(), right.bounding_box(), sides["left"].bounding_box(), sides["up"].bounding_box()
-        if width == "wide":
-            assert rb["x"] > cb["x"] + cb["width"] and lb["x"] + lb["width"] < cb["x"] and ub["y"] + ub["height"] <= cb["y"] + 1, "→ at the right, ← at the left, ↑ above"
-        else:
-            assert ub["y"] + ub["height"] <= cb["y"] + 1 and lb["y"] >= cb["y"] + cb["height"] - 1 and rb["y"] >= cb["y"] + cb["height"] - 1 and lb["x"] < rb["x"], "the phone-sized layout: ↑ above, ← and → under"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.hr-card')).touchAction") == "none"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.hr[data-kind=hearing]')).touchAction") != "none", "the page scrolls everywhere but on the card"
-        assert hr.locator(".hr-hint").text_content().strip() == "Swipe the card to the side you take, or press it"
-        shot(pg, f"{width}-hearing")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_card_whose_sections_are_not_written_says_its_gist_and_a_goal_alone_says_nobody_argued_for_it(gui):
-    pg, host, log = open_hearing(gui, "wide", sides=[side("right", "go", [], [], "", "Go on anyway"), DROP])
-    try:
-        hr = lift(pg)
-        pg.wait_for_function("() => document.querySelector('.hr-card__gist')?.textContent.trim() === 'Players see who answered first.'", timeout=WAIT_MS)
-        assert card(pg).locator(".hr-card__done").count() == 0
-        go = hr.locator('.hr-side[data-dir="right"]')
-        assert go.locator(".hr-head").count() == 0 and go.locator(".hr-who__names").text_content().strip() == "No one"
-        assert go.locator(".hr-says").text_content().strip() == "Nobody argued for it: the goal as you wrote it." and go.locator(".hr-out__words").text_content().strip() == "Go on anyway"
-        assert hr.locator('.hr-side[data-dir="up"]').count() == 0, "a side that is not there is not drawn"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_swipe_past_a_third_of_the_way_throws_the_side_and_the_toast_says_where(gui, width):
-    pg, host, log = open_hearing(gui, width)
-    try:
-        lift(pg, width=width)
-        far = way(pg, "right")
-        drag(pg, far / 3 + 30, 0)
-        thrown(pg, host, dir="right")
-        assert toast_text(pg).startswith("Thrown to Product lead: Do it")
-        assert pg.locator(".gui-toast").first.get_by_role("button", name="Undo").count() == 1, "a Talk's throw is said with Undo"
-        pg.wait_for_function("() => !document.querySelector('.hr[data-kind=hearing]')", timeout=WAIT_MS)
-        assert pg.locator('.hand-stack[data-goal="night"]').count() == 0, "the card left the hand"
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_swipe_short_of_a_third_brings_the_card_back_and_it_tilts_and_stamps_the_outcome_while_it_nears(gui, width):
-    pg, host, log = open_hearing(gui, width)
-    try:
-        lift(pg, width=width)
-        short = max(20, min(way(pg, "right") / 3 - 30, 40))
-        drag(pg, short, 0, release=False)
-        assert pg.locator('.hr-side[data-dir="right"].is-near').count() == 1 and pg.locator(".hr-stamp").text_content().strip() == "Do it", "the side grows and its outcome is stamped on the card"
-        transform = pg.evaluate("() => document.querySelector('.hr-card').style.transform")
-        assert "rotate(" in transform and "translate(" in transform, "the card follows the pointer and tilts toward the side"
-        pg.mouse.up()
-        pg.wait_for_function("() => !document.querySelector('.hr-card').style.transform && !document.querySelector('.hr-side.is-near')", timeout=WAIT_MS)
-        assert pg.locator(".hr-stamp").text_content().strip() == ""
-        no_throw(pg, host)
-        assert pg.locator(".hr[data-kind=hearing]").count() == 1 and card(pg).evaluate("(el) => getComputedStyle(el).opacity") == "1"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_down_is_no_side_and_a_card_dragged_down_comes_back(gui):
-    pg, host, log = open_hearing(gui, "wide")
-    try:
-        lift(pg)
-        drag(pg, 0, 300, release=False)
-        assert pg.locator(".hr-side.is-near").count() == 0 and pg.locator(".hr-stamp").text_content().strip() == ""
-        assert pg.evaluate("() => parseFloat(document.querySelector('.hr-card').style.transform.match(/translate\\([^,]+, ([-\\d.]+)px/)[1])") < 100, "it holds back"
-        pg.mouse.up()
-        pg.wait_for_function("() => !document.querySelector('.hr-card').style.transform", timeout=WAIT_MS)
-        no_throw(pg, host)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_card_flung_toward_a_side_is_thrown_though_it_went_but_a_little_way(gui):
-    pg, host, log = open_hearing(gui, "wide")
-    try:
-        lift(pg)
-        drag(pg, 0, -45, steps=2)                                                                       # a flick up: fast, and nowhere near a third of the way
-        thrown(pg, host, dir="up")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_drag_starting_on_the_sides_or_the_words_button_is_no_gesture(gui):
-    pg, host, log = open_hearing(gui, "wide")
-    try:
-        lift(pg)
-        x, y = centre(pg.locator(".hr-own"))
-        pg.mouse.move(x, y)
-        pg.mouse.down()
-        pg.mouse.move(x + 400, y, steps=8)
-        pg.mouse.up()
-        no_throw(pg, host)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -306,17 +186,6 @@ def test_the_arrow_keys_throw_a_side(gui, key, dir_):
     assert not log, "\n".join(log)
 
 
-def test_a_key_for_a_side_that_is_not_there_throws_nothing(gui):
-    pg, host, log = open_hearing(gui, "wide", sides=[GO, SMALLER])
-    try:
-        lift(pg)
-        pg.keyboard.press("ArrowLeft")
-        no_throw(pg, host)
-        pg.keyboard.press("ArrowDown")
-        no_throw(pg, host)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -340,19 +209,6 @@ def test_enter_on_the_card_opens_the_field_for_the_persons_own_words_and_sends_t
     assert not log, "\n".join(log)
 
 
-def test_the_words_button_opens_the_field_and_esc_closes_it_with_the_card_kept(gui):
-    pg, host, log = open_hearing(gui, "wide")
-    try:
-        lift(pg)
-        pg.get_by_role("button", name="Or say it in your own words").click()
-        pg.locator(".hr-field__text").fill("later")
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.hr-field')", timeout=WAIT_MS)
-        assert pg.locator(".hr[data-kind=hearing]").count() == 1, "Esc closes the field, not the hearing"
-        no_throw(pg, host, 100)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_drop_is_sent_at_once_and_undo_takes_it_back_with_the_hosts_command(gui):
@@ -377,64 +233,12 @@ def test_a_drop_is_sent_at_once_and_undo_takes_it_back_with_the_hosts_command(gu
     assert not log, "\n".join(log)
 
 
-def test_on_a_phone_a_drop_picks_the_next_goal_and_undo_brings_the_hearing_back(gui):
-    pg, host, log = open_hearing(gui, "phone", second=True)
-    try:
-        lift(pg, width="phone")
-        pg.locator('.hr-side[data-dir="left"] .hr-side__btn').click()
-        assert toast_text(pg) == "Thrown to Tech lead: Drop it"
-        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'lobby'", timeout=WAIT_MS)
-        pg.locator(".gui-toast").get_by_role("button", name="Undo").click()
-        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'night' && document.querySelector('.hr[data-goal=\"night\"]')", timeout=WAIT_MS)
-        assert _calls(pg, host, "ideas.unthrow") == [{"idea": "night", "moment": "talk"}]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_an_undo_the_host_refuses_says_so_in_its_words_and_the_throw_stands(gui):
-    pg, host, log = open_hearing(gui, "wide")
-    try:
-        host.went_on = True
-        lift(pg)
-        pg.keyboard.press("ArrowRight")
-        thrown(pg, host, dir="right")
-        toast_text(pg)
-        pg.locator(".gui-toast").first.get_by_role("button", name="Undo").click()
-        assert _calls(pg, host, "ideas.unthrow") == [{"idea": "night", "moment": "talk"}]
-        pg.wait_for_function("() => [...document.querySelectorAll('.gui-toast__text')].some((e) => e.textContent.includes('It went on already'))", timeout=WAIT_MS)
-        pg.wait_for_timeout(500)
-        assert pg.locator(".hr[data-kind=hearing]").count() == 0 and front(pg).count() == 0, "the hearing stays thrown"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_throw_not_undone_sends_nothing_more_when_its_toast_goes(gui):
-    pg, host, log = open_hearing(gui, "wide")
-    try:
-        lift(pg)
-        pg.keyboard.press("ArrowLeft")
-        thrown(pg, host, dir="left")
-        toast_text(pg)
-        pg.wait_for_function("() => !document.querySelector('.gui-toast')", timeout=DROP_MS + 3000)
-        assert [n for n, a in host.log if n in ("ideas.throw", "ideas.unthrow")] == ["ideas.throw"]
-        assert pg.locator('.hand-stack[data-goal="night"]').count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_throw_to_the_other_left_side_after_a_goal_is_sent_at_once(gui):
-    pg, host, log = open_hearing(gui, "wide", sides=[GO, LATER])
-    try:
-        lift(pg)
-        pg.locator('.hr-side[data-dir="left"] .hr-side__btn').click()
-        thrown(pg, host, dir="left")
-        assert toast_text(pg).startswith("Thrown to Tech lead: After Round timer")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -453,135 +257,19 @@ def test_a_refused_throw_keeps_the_hearing_and_the_card_comes_back(gui, width):
     assert not [m for m in log if "pageerror" in m], "\n".join(log)
 
 
-def test_on_a_phone_the_hearing_is_the_goals_top_card_in_the_middle_and_thrown_the_next_goal_is_picked(gui):
-    pg, host, log = open_hearing(gui, "phone", second=True)
-    try:
-        hr = lift(pg, width="phone")
-        assert pg.locator(".up-look[data-look='goal'] .hr[data-kind=hearing]").count() == 1 and pg.locator(".table-over").count() == 0, "in the middle, not over the pane"
-        assert pg.locator(".up-look .hand-lifted > .hand-card__head").count() == 0 and pg.locator(".up-look .hand-lifted .hand-lifted__body .hr[data-kind=hearing]").count() == 1, "the hearing is in the opened card's body, between its corners (spec 147 F.3)"
-        says = hr.locator(".hr-says").first
-        assert says.evaluate("(el) => getComputedStyle(el).webkitLineClamp") == "3", "a side's line wraps to three lines"
-        shot(pg, "phone-hearing")
-        narrow.no_sideways(pg)
-        pg.locator('.hr-side[data-dir="right"] .hr-side__btn').click()
-        thrown(pg, host, dir="right")
-        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'lobby' && document.querySelector('.hr[data-goal=\"lobby\"]')", timeout=WAIT_MS)
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_on_a_phone_a_line_cut_at_three_lines_opens_whole_on_more(gui):
-    long = side("left", "drop", ["tech"], ["Tech lead"], "It adds a third caller to server/ws and a fourth to the lobby, and every one of them has to be kept in step with the rooms, which nobody has the time to do this month.", "Drop it")
-    pg, host, log = open_hearing(gui, "phone", sides=[GO, long, SMALLER])
-    try:
-        hr = lift(pg, width="phone")
-        more = hr.locator('.hr-side[data-dir="left"] .hr-more')
-        more.wait_for(timeout=WAIT_MS)
-        cut = hr.locator('.hr-side[data-dir="left"] .hr-says').bounding_box()["height"]
-        more.click()
-        assert hr.locator('.hr-side[data-dir="left"] .hr-says').bounding_box()["height"] > cut and more.text_content().strip() == "Less"
-        no_throw(pg, host, 100)
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_touch_swipe_on_the_phone_throws_and_does_not_scroll_the_page(gui):
-    pg, host, log = open_hearing(gui, "phone")
-    try:
-        lift(pg, width="phone")
-        cdp = pg.context.new_cdp_session(pg)
-        x, y = centre(card(pg))
-        cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x, "y": y}]})
-        for i in range(1, 9):
-            cdp.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": x + i * 12, "y": y + 10}]})
-            pg.wait_for_timeout(16)
-        cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
-        thrown(pg, host, dir="right")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_under_reduced_motion_nothing_follows_the_pointer_and_nothing_flies(gui, width):
-    pg, host, log = open_hearing(gui, width, reduced=True)
-    try:
-        lift(pg, width=width)
-        drag(pg, 28, 0, release=False)
-        assert pg.evaluate("() => document.querySelector('.hr-card').style.transform") == "", "the card follows nothing"
-        assert pg.locator(".hr-stamp").text_content().strip() == "Do it", "the side it nears is still said"
-        pg.mouse.up()
-        pg.locator('.hr-side[data-dir="right"] .hr-side__btn').click()
-        assert pg.evaluate("() => document.querySelector('.hr-card')?.style.transform ?? ''") == "", "no flight"
-        assert pg.evaluate("() => document.getAnimations().filter((a) => a.effect?.target?.closest?.('.hr[data-kind=hearing]')).length") == 0
-        thrown(pg, host, dir="right")
-        assert pg.locator(".hr-card").evaluate("(el) => getComputedStyle(el).transitionDuration") in ("0s", "0s, 0s")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_no_sideways_scroll_while_the_card_is_dragged_or_thrown(gui, width):
-    pg, host, log = open_hearing(gui, width)
-    try:
-        lift(pg, width=width)
-        narrow.no_sideways(pg)
-        drag(pg, -200, -60, release=False)
-        narrow.no_sideways(pg)
-        assert pg.evaluate("() => { const b = document.querySelector('.table-over, .up-look') || document.body; return b.scrollWidth - b.clientWidth }") <= 0
-        pg.mouse.up()
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 # -- a fork is a hearing too -------------------------------------------------------------------------------------------------------------
 
-FORK_SIDES = [side("right", "side", ["design"], ["Design lead"], "The game is no fun with six.", "A room holds ten players", party="design"),
-              side("left", "side", ["tech"], ["Tech lead"], "One server process cannot carry more.", "The server holds six players in a room", party="tech")]
 
 
-class ForkHost(HearingHost):
-    def __init__(self):
-        super().__init__()
-        self.nodes = [n for n in self.nodes if n["slug"] != "night"]
-        self.nodes.append(node("rooms", "tech", "Rooms hold more players", "hand", state="sections", element="dust", route=["design", "tech"]))
-        self.needs = [need("fork", "tech", "rooms", "Rooms hold more players", "How many players a room holds", id="f1", about="How many players a room holds", sides=[
-            {"party": "design", "leader": "Design lead", "says": "A room holds ten players", "why": "The game is no fun with six."},
-            {"party": "tech", "leader": "Tech lead", "says": "The server holds six players in a room", "why": "One server process cannot carry more."}],
-            hearing={"moment": "fork", "id": "f1", "about": "How many players a room holds", "title": "Design lead and Tech lead disagree", "sides": FORK_SIDES, "left_out": [], "own": True})]
-
-    def handle(self, name, a):
-        if name == "ideas.throw" and a["moment"] == "fork":
-            self.log.append((name, a))
-            self.needs = []
-            return self.bump({"ok": True})
-        return super().handle(name, a)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_fork_lifted_is_a_hearing_with_its_sides_and_a_press_throws_it(gui, width):
-    pg, host, log = open_hearing(gui, width, host=ForkHost())
-    try:
-        c = front(pg, "rooms")
-        assert c.get_attribute("data-kind") == "fork" and c.get_attribute("aria-label").startswith("A fork: ")
-        c.click(position={"x": 10, "y": 24})
-        hr = pg.locator('.hr[data-goal="rooms"]')
-        hr.wait_for(timeout=WAIT_MS)
-        assert hr.get_attribute("data-moment") == "fork" and hr.locator(".hr-title").text_content().strip() == "Design lead and Tech lead disagree"
-        assert hr.locator(".hr-side").count() == 2 and hr.locator('.hr-side[data-dir="right"] .hr-out__words').text_content().strip() == "A room holds ten players"
-        pg.locator('.spec-page[data-kind="spec"]').wait_for(timeout=WAIT_MS)
-        hr.locator('.hr-side[data-dir="left"] .hr-side__btn').click()
-        assert _calls(pg, host, "ideas.throw") == [{"idea": "rooms", "moment": "fork", "dir": "left"}]
-        toast_text(pg)
-        assert pg.locator(".gui-toast").first.get_by_role("button", name="Undo").count() == 0, "a fork's throw has no Undo: its leaders write at once"
-        pg.wait_for_function("() => !document.querySelector('.hr[data-kind=hearing]')", timeout=WAIT_MS)
-        assert toast_text(pg).startswith("Thrown to Tech lead: The server holds six players in a room")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

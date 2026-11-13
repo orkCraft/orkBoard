@@ -116,14 +116,6 @@ def test_paired_the_link_speaks_the_phones_protocol_and_reads_the_phones_snapsho
     assert [n for n, _ in phone.got] == ["ideas.board", "ideas.add"]
 
 
-def test_paired_what_a_phone_may_not_do_is_not_offered(paired):
-    pg, _phone = paired
-    start(pg)
-    pg.wait_for_function("() => window.L.allowed.value !== null", timeout=WAIT_MS)
-    assert pg.evaluate("() => window.L.can('ideas.add') && window.L.can('halt') && window.L.can('projects.use')")
-    assert pg.evaluate("() => window.L.can('files.read')")                         # a Markdown file is read
-    for name in ("phones.pair", "git.status", "tools.sign_in", "onboarding.skip", "files.write", "settings.set"):
-        assert not pg.evaluate("(n) => window.L.can(n)", name), name
 
 
 def test_no_signal_the_kept_snapshot_is_greyed_as_of_and_an_answer_waits_for_the_computer(paired):
@@ -151,16 +143,6 @@ def test_no_signal_the_kept_snapshot_is_greyed_as_of_and_an_answer_waits_for_the
     assert pg.evaluate("() => window.L.toasts.value.some((t) => t.message === 'Sent: Your answer')")
 
 
-def test_a_page_opened_with_no_signal_draws_the_last_snapshot_kept_on_the_phone(paired):
-    pg, phone = paired
-    start(pg)
-    rev = pg.evaluate("() => window.L.town.value.rev")
-    phone.mode = "dead"
-    pg.reload()                                                                     # a new page: only the phone's storage remains
-    pg.evaluate(START, DEVICE)
-    pg.wait_for_function("() => window.L.town.value !== null && window.L.stale.value", timeout=WAIT_MS)
-    assert pg.evaluate("() => window.L.town.value.rev") == rev
-    assert pg.evaluate("() => window.L.offlineLine.value").startswith("As of ")
 
 
 def test_a_phone_forgotten_on_the_computer_says_so_and_keeps_nothing(paired):
@@ -174,10 +156,3 @@ def test_a_phone_forgotten_on_the_computer_says_so_and_keeps_nothing(paired):
     assert pg.evaluate("() => window.L.allowed.value") is None
 
 
-def test_on_the_computer_the_link_is_not_paired(gui):
-    server, browser = gui
-    pg = narrow.page(browser, "wide")
-    pg.goto(server.url)
-    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    assert pg.evaluate("() => import('/static/js/link.js').then((l) => [l.isPaired(), l.can('phones.pair'), l.stale.value])") == [False, True, False]
-    pg.context.close()

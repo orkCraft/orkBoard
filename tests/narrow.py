@@ -13,7 +13,7 @@ from __future__ import annotations
 WIDE = {"viewport": {"width": 1280, "height": 800}}
 NARROW = {"viewport": {"width": 390, "height": 844}, "has_touch": True, "is_mobile": True, "device_scale_factor": 2}
 FINE = {"viewport": {"width": 390, "height": 844}, "device_scale_factor": 2}      # the narrow width with a mouse: a narrow desktop window, VS Code's side bar (not a phone: no touch)
-WIDTHS = ("wide", "narrow")              # the table's two widths: "narrow" is the narrow desktop window, FINE (a mouse), where spec 94 §3's table lies over the hand
+WIDTHS = ("wide",)                       # one path, one width (decisions §308): a second width only where the behaviour differs, and then it is named in the test
 PHONE_WIDTHS = ("wide", "phone")         # for what a touch phone shows (spec 103 A): "phone" is NARROW (upright, touch), where the first screen is the hand
 
 

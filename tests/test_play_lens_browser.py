@@ -21,7 +21,6 @@ pytest.importorskip("playwright.sync_api")
 
 from orkboard.gui import play_proxy  # noqa: E402
 from orkboard.realm import lens_rubrics  # noqa: E402
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_owners_day_desktop_browser import Host  # noqa: E402
 from tests.test_table_desktop_browser import open_tab, title  # noqa: E402
@@ -221,8 +220,6 @@ def strip_text(pg) -> str:
     return " ".join(pg.locator(".play-lens").first.inner_text().split())
 
 
-def chip_states(pg) -> dict:
-    return pg.evaluate("() => Object.fromEntries([...document.querySelectorAll('.play-lens .cn-aspect')].map((e) => [e.dataset.aspect, e.dataset.state]))")
 
 
 def frame_box(pg) -> dict:
@@ -256,90 +253,14 @@ def test_play_stays_open_when_the_tab_changes_and_the_frame_is_never_reloaded(gu
 
 # -- 2. the strip -----------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_strip_names_the_leader_the_screen_and_the_aspects_for_this_screens_parts_only(gui, rig):
-    rig.host.hints = [{"kind": "dead_press", "on": {"selector": "button#snooze", "rect": SNOOZE}, "words": "A press did nothing", "at": 1}]
-    pg, errors = open_play(gui, rig.host, "art")
-    wait_place(pg, "The Product designer on Today · Step 1")
-    assert strip_text(pg).startswith("The Product designer on Today · Step 1") and "Nielsen · WCAG 2.2" in strip_text(pg)
-    assert pg.locator(".play-lens .ork-race__head").count() == 1 and pg.locator(".play-lens").get_attribute("data-party") == "art"
-    pg.wait_for_function("() => document.querySelector('.cn-aspect[data-aspect=flow]')?.dataset.state === 'hint'", timeout=WAIT_MS)
-    # access: this screen's alert; status: a note on the *settings* screen, not this one; flow: a hint of code here; the others looked at and clear
-    assert chip_states(pg) == {"flow": "hint", "status": "clear", "access": "alert", "consistency": "clear", "seen": "clear"}
-    assert [c.get_attribute("aria-label") for c in pg.locator(".play-lens .cn-aspect").all()][2] == "Accessibility: 1 concern"
-    assert pg.locator(".play-lens .cn-aspect").first.inner_text().strip() == "The way through"
-    shot(pg, "e115-strip-design.png")
-    open_tab(pg, "tech")
-    wait_place(pg, "The Architect on Today")
-    assert "web/src/components" in strip_text(pg) and "C4 · ISO 25010 · hotspots" in strip_text(pg)
-    assert chip_states(pg)["hotspots"] == "alert" and chip_states(pg)["safety"] == "clear" and "access" not in chip_states(pg)
-    finish(pg, errors)
 
 
-def test_a_path_with_no_screen_says_it_is_not_on_the_map_and_a_press_of_the_page_moves_the_place(gui, rig):
-    pg, errors = open_play(gui, rig.host, "art")
-    wait_place(pg, "on Today")
-    pg.frame_locator(".play-frame").locator("#push").click()                                                       # the page pushes /nowhere: the probe says `place`, the host answers no screen
-    wait_place(pg, "on /nowhere")
-    assert "Not on Design's table" in strip_text(pg) and pg.locator(".play-lens .cn-aspect").count() == 0 and pg.locator(".play-lens").get_attribute("data-state") == "off"
-    asked = [a for n, a in rig.host.calls if n == "ideas.play_place" and a["path"] == "/nowhere"]
-    assert asked and "web/src/components/Plants.tsx" in asked[-1]["files"]                                         # the files the probe named for the elements it found go with the place
-    shot(pg, "e115-strip-not-on.png")
-    open_tab(pg, "tech")
-    wait_place(pg, "The Architect on /nowhere")
-    assert "Not on Tech's table" in strip_text(pg)
-    finish(pg, errors)
 
 
 # -- 3. the marks on the frame --------------------------------------------------------------------------------------------------------------------
 
-def test_a_concern_and_a_hint_stand_on_their_elements_and_let_presses_through(gui, rig):
-    rig.host.hints = [{"kind": "dead_press", "on": {"selector": "button#snooze", "rect": SNOOZE}, "words": "A press did nothing", "at": 1},
-                      {"kind": "failed", "on": None, "words": "A request failed: POST /api/water 500", "at": 2}]
-    pg, errors = open_play(gui, rig.host, "tech")
-    concern_mark = pg.locator('.play-mark[data-kind="concern"]')
-    concern_mark.wait_for(timeout=WAIT_MS)
-    assert rect_of(pg, concern_mark) == MAIN                                                                       # the part's folder is the file the probe named for <main>: its rect, not a child's
-    assert concern_mark.evaluate("e => getComputedStyle(e).outlineColor") == pg.evaluate("() => { const e = document.createElement('i'); e.style.color = 'var(--ork-alert)'; document.body.append(e); return getComputedStyle(e).color; }")
-    assert concern_mark.locator(".ork-race__head").count() == 1 and concern_mark.locator(".ork-sign.alert").count() == 1             # the leader's small head at its corner
-    assert pg.locator(".play-marks").evaluate("e => getComputedStyle(e).pointerEvents") == "none" and pg.locator(".play-tag").first.evaluate("e => getComputedStyle(e).pointerEvents") == "auto"
-    f = frame_box(pg)                                                                                              # a press inside the outline reaches the product: the layer is not under it
-    assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y).tagName", [f["x"] + 100, f["y"] + 100]) == "IFRAME"
-    loose = pg.locator(".play-lens__item")                                                                          # a hint with no element stands in the strip
-    assert loose.count() == 1 and loose.first.inner_text().strip() == "A request failed: POST /api/water 500" and pg.locator('.play-mark[data-kind="hint"]').count() == 0
-    shot(pg, "e115-marks-tech.png")
-    concern_mark.locator(".play-tag").click()                                                                       # a press on the tag: the back, as a lifted card's (ConcernsBack)
-    back = pg.locator(".play-back")
-    back.wait_for(timeout=WAIT_MS)
-    assert "Plants.tsx is 610 lines" in back.inner_text() and back.get_by_role("button", name="Make it a goal").count() == 1 and back.get_by_role("button", name="Not a problem").count() == 1
-    assert "hotspots" in back.inner_text().lower()
-    shot(pg, "e115-back-concern.png")
-    back.get_by_role("button", name="Close").click()
-    assert pg.locator(".play-back").count() == 0
-    loose.first.click()                                                                                             # the loose hint's back
-    assert "A request failed" in pg.locator(".play-back").inner_text() and pg.locator(".play-back").get_by_role("button", name="Make it a goal").count() == 1
-    finish(pg, errors)
 
 
-def test_a_hint_on_an_element_has_a_dotted_outline_and_a_hollow_square_and_not_a_problem_hides_it_for_this_play(gui, rig):
-    rig.host.hints = [{"kind": "dead_press", "on": {"selector": "button#snooze", "rect": SNOOZE}, "words": "A press did nothing", "at": 1}]
-    pg, errors = open_play(gui, rig.host, "art")
-    hint = pg.locator('.play-mark[data-kind="hint"]')
-    hint.wait_for(timeout=WAIT_MS)
-    assert rect_of(pg, hint) == SNOOZE and hint.evaluate("e => getComputedStyle(e).outlineStyle") == "dotted" and hint.locator(".cn-hint").count() == 1 and hint.locator(".ork-race__head").count() == 0
-    assert pg.locator('.play-mark[data-kind="concern"]').count() == 0                                               # the screen's concern has no element: it is in the strip
-    assert "The Watered buttons are 20 px tall." in pg.locator(".play-lens__item").first.inner_text()
-    shot(pg, "e115-marks-design.png")
-    hint.locator(".play-tag").click()
-    back = pg.locator(".play-back")
-    assert "A press did nothing" in back.inner_text() and back.get_by_role("button", name="Make it a goal").count() == 1
-    back.get_by_role("button", name="Not a problem").click()
-    pg.wait_for_selector('.play-mark[data-kind="hint"]', state="detached", timeout=WAIT_MS)
-    assert pg.locator(".play-back").count() == 0
-    open_tab(pg, "tech")                                                                                            # and not under another tab, nor again when the hints are asked again
-    open_tab(pg, "art")
-    pg.wait_for_timeout(500)
-    assert pg.locator('.play-mark[data-kind="hint"]').count() == 0
-    finish(pg, errors)
 
 
 def told(pg, host, call, tries: int = 60) -> bool:
@@ -351,51 +272,13 @@ def told(pg, host, call, tries: int = 60) -> bool:
     return False
 
 
-def test_the_concerns_back_makes_a_goal_or_lets_it_be_by_the_concerns_own_commands(gui, rig):
-    pg, errors = open_play(gui, rig.host, "tech")
-    pg.locator('.play-mark[data-kind="concern"] .play-tag').click()
-    pg.get_by_role("button", name="Make it a goal").click()
-    assert told(pg, rig.host, ("ideas.concern_goal", {"party": "tech", "id": "c-3"}))                              # the host is told as a map's card tells it (table/concerns.js)
-    pg.get_by_role("button", name="Not a problem").click()
-    assert told(pg, rig.host, ("ideas.concern_dismiss", {"party": "tech", "id": "c-3"}))
-    finish(pg, errors)
 
 
-def test_hide_the_marks_hides_them_and_shows_them_again_with_no_count_and_no_badge(gui, rig):
-    rig.host.hints = [{"kind": "failed", "on": None, "words": "A request failed: POST /api/water 500", "at": 2}]
-    pg, errors = open_play(gui, rig.host, "tech")
-    pg.locator('.play-mark[data-kind="concern"]').wait_for(timeout=WAIT_MS)
-    button = pg.get_by_role("button", name="Hide the marks")
-    assert button.get_attribute("aria-pressed") == "false" and button.inner_text().strip() == "Hide the marks"
-    button.click()
-    assert pg.locator(".play-marks").count() == 0 and pg.get_by_role("button", name="Show the marks").get_attribute("aria-pressed") == "true"
-    assert pg.locator(".play-lens__item").count() == 1                                                              # the strip is the lens's, not a mark on the frame
-    pg.get_by_role("button", name="Show the marks").click()
-    assert pg.locator('.play-mark[data-kind="concern"]').count() == 1
-    bar = pg.locator(".play-bar")
-    assert not [t for t in bar.locator("*").all_inner_texts() if t.strip().isdigit()] and bar.locator(".ork-count").count() == 0
-    finish(pg, errors)
 
 
 # -- 4. no probe ----------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_play_with_no_probe_says_marks_keep_the_picture_and_the_place_only_on_every_tab(gui, bare):
-    pg, errors = open_play(gui, bare.host)
-    for slug in ("orkmaster", "art", "tech"):
-        open_tab(pg, slug)
-        assert strip_text(pg) == "Marks keep the picture and the place only" and pg.locator(".play-lens").get_attribute("data-state") == "noprobe"
-    assert pg.locator(".play-marks").count() == 0 and pg.get_by_role("button", name="Mark", exact=True).count() == 1
-    assert not any(n == "ideas.play_hints" for n, _ in bare.host.log) and bare.host.events == []                  # nothing is asked of a probe that is not there
-    shot(pg, "e115-no-probe.png")
-    finish(pg, errors)
 
 
 # -- the phone-width window keeps the strip inside the pane ---------------------------------------------------------------------------------------------
 
-def test_the_strip_wraps_inside_the_pane_at_the_narrow_width(gui, rig):
-    pg, errors = open_play(gui, rig.host, "art", width={"width": 390, "height": 844})
-    wait_place(pg, "on Today")
-    narrow.no_sideways(pg)
-    box, pane = pg.locator(".play-lens").bounding_box(), pg.locator("#table-pane").bounding_box()
-    assert box["x"] >= pane["x"] and box["x"] + box["width"] <= pane["x"] + pane["width"] + 1
-    finish(pg, errors)

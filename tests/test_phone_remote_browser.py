@@ -264,40 +264,7 @@ def test_a_public_repository_and_a_token_that_cannot_write_are_refused_and_the_t
     assert [e for e in app.errors if "api.github.com" not in e] == [], "the browser's own note of the 401 is the only noise"
 
 
-def test_remove_forgets_the_token_at_once(app):
-    pg = open_settings(app)
-    fill(pg)
-    pg.locator(".remote-line", has_text=READY).wait_for()
-    pg.get_by_role("button", name="Remove").click()
-    pg.locator(".remote-line", has_text="gone from this phone").wait_for()
-    assert not (app.stored() or {}).get("token")
-    assert row_state(pg) == "Not set"
-    assert pg.evaluate("() => orkboardPhone.remote.ready()") is False
 
 
-def test_the_computers_repository_fills_the_field_at_pairing_and_unpairing_forgets_it_all(app):
-    pg = app.open("#pair=code-of-the-qr")
-    app.ready()
-    assert app.stored()["repo"] == "me/shop", "the pairing's answer carried the computer's repository"
-    pg.get_by_role("button", name="The leaders and their goals", exact=True).click()
-    pg.get_by_role("button", name="Your repository").click()
-    assert pg.locator(".remote-settings input[name=repo]").input_value() == "me/shop"
-    fill(pg, token=TOKEN)
-    pg.locator(".remote-line", has_text=READY).wait_for()
-    pg.get_by_role("button", name="Unpair this phone").click()
-    pg.get_by_role("button", name="Press again to unpair").click()
-    pg.get_by_text("This phone is not paired with the board yet.").wait_for()
-    assert app.stored() is None, "unpairing wiped the repository and its token"
-    assert not app.errors, "\n".join(app.errors)
 
 
-def test_before_pairing_the_first_card_takes_the_repository_too(app):
-    pg = app.open()
-    pg.get_by_text("This phone is not paired with the board yet.").wait_for()
-    pg.get_by_text("Your repository, for away from home").click()
-    fill(pg)
-    pg.locator(".remote-line", has_text=READY).wait_for()
-    assert app.stored()["token"] == TOKEN
-    narrow_sideways(pg)
-    shot(pg, "settings-unpaired")
-    assert app.foreign() == [] and not app.errors, "\n".join(app.errors)

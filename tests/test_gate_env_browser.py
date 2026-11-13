@@ -62,40 +62,8 @@ def test_a_result_that_could_not_run_says_why_offers_install_and_test_again_firs
     assert not log, "\n".join(log)
 
 
-def test_with_nothing_to_install_it_is_test_again_and_several_folders_are_joined_by_then(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        box = draw(pg, {**COULD_NOT, "install": []})
-        again = box.get_by_role("button", name="Test again", exact=True)
-        again.wait_for(timeout=WAIT_MS)
-        assert again.get_attribute("title") == "Runs the tests again: install what they need in your project first"
-        again.click()
-        assert _sent(pg, host, ("ideas.regate", {"slug": "sync", "task": "k1", "install": False}))
-        box = draw(pg, {**COULD_NOT, "install": ROWS})
-        assert box.get_by_role("button", name="Install and test again").get_attribute("title") == \
-            "Runs `npm ci` in prototypes/ar, then `npm ci` in server in your project, then the tests again"
-        box = draw(pg, {**COULD_NOT, "env": "The install failed: npm ERR! network is down"})
-        assert box.locator("[data-env]").inner_text() == "The install failed: npm ERR! network is down"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_pytest_that_is_missing_offers_test_again_and_the_command_to_run_never_install_and_test_again(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        box = draw(pg, {**COULD_NOT, "env": "The tests could not run: `pytest` is not installed.", "install": [], "setup": "uv sync --extra dev"})
-        again = box.get_by_role("button", name="Test again", exact=True)
-        again.wait_for(timeout=WAIT_MS)
-        assert box.get_by_role("button", name="Install and test again").count() == 0
-        assert box.locator("[data-setup]").inner_text() == "Run this in the project's folder, then Test again: uv sync --extra dev"
-        assert box.locator("[data-setup] code").inner_text() == "uv sync --extra dev"
-        again.click()
-        assert _sent(pg, host, ("ideas.regate", {"slug": "sync", "task": "k1", "install": False}))
-        assert draw(pg, COULD_NOT).locator("[data-setup]").count() == 0                       # a missing vitest has its rows and no command line
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_red_result_is_still_red_with_fix_suggesting_its_line_and_the_line_sent_unchanged_is_told_suggested(gui):
@@ -120,16 +88,3 @@ def test_a_red_result_is_still_red_with_fix_suggesting_its_line_and_the_line_sen
     assert not log, "\n".join(log)
 
 
-def test_the_same_failure_again_is_said_and_fix_opens_empty(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        box = draw(pg, {**RED, "same": True}, round=2)
-        box.get_by_role("button", name="Fix", exact=True).wait_for(timeout=WAIT_MS)
-        assert box.locator("[data-same]").inner_text() == "The last fix changed nothing: the tests failed the same way."
-        assert "Its tests are red" in box.locator(".shell-actions__why").first.inner_text()
-        box.get_by_role("button", name="Fix", exact=True).click()
-        assert box.get_by_label("What to fix, in one line").input_value() == ""
-        assert box.get_by_role("button", name="Merge into dev").is_disabled()
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

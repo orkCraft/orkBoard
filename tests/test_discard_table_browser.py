@@ -19,12 +19,8 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, node as hand_node, open_hand, sig  # noqa: E402
-from tests.test_portal_browser import PortalHost  # noqa: E402
-from tests.test_maps_desktop_browser import MapsHost  # noqa: E402
-from tests.test_table_desktop_browser import node  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, open_hand, sig  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -42,21 +38,6 @@ def box(pg, selector):
     return pg.locator(selector).first.bounding_box()
 
 
-def open_maps(gui, width, done=True):
-    """The window against the maps' host (a party of each craft) with goals done, at `width`, on the Orkmaster's tab."""
-    server, browser = gui
-    host = MapsHost()
-    if done:
-        host.nodes.append(node("music", "tech", "Lobby music loop", "done", element="void", place="discard", updated="2026-10-20T12:00:00"))
-        host.nodes.append(node("codes", "game", "Room codes are four letters", "done", element="dust", place="discard", updated="2026-10-19T12:00:00"))
-    pg = narrow.page(browser, width)
-    log: list[str] = []
-    pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
-    pg.on("console", lambda m: m.type == "error" and log.append(f"console: {m.text} {m.location.get('url', '')}"))
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
-    return pg, host, log
 
 
 NARROW = ("narrow",)
@@ -82,26 +63,6 @@ def test_the_piles_press_opens_the_face_over_the_pane_and_a_second_press_closes_
     assert not log, "\n".join(log)
 
 
-def test_nothing_done_and_nothing_ready_for_main_lays_no_end_at_the_narrow_width_and_the_wide_lane_is_empty_with_no_ring(gui):
-    pg, host, log = open_hand(gui, host=HandHost(bare=True), width="narrow")
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(400)
-        assert pg.locator(".table-discard, .hand-done, .table-end, .table-end__label, .ork-card-place, .portal-host, .ork-portal-ring").count() == 0, "no pile, no frame, no word (decisions §247.1)"
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-    pg, host, log = open_hand(gui, host=HandHost(bare=True), width="wide")
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(400)
-        assert pg.locator(".release-lane").count() == 1 and pg.locator(".release-lane .post-card, .release-lane .ork-portal-ring, .release-lane [data-portal-card]").count() == 0, "the lane is there and holds no post and no ring"
-        assert pg.locator(".table-end, .frame-edge").count() == 0
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_ready_for_main_alone_is_a_back_at_the_narrow_width(gui):
@@ -119,69 +80,10 @@ def test_ready_for_main_alone_is_a_back_at_the_narrow_width(gui):
     assert not log, "\n".join(log)
 
 
-def test_the_discard_is_drawn_from_its_first_goal_done_and_not_before_at_the_narrow_width(gui):
-    pg, host, log = open_hand(gui, host=HandHost(bare=True), width="narrow")
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert pg.locator(".table-end, .ork-card-place, .table-end__label").count() == 0, "empty: nothing lies there"
-        host.nodes.append(hand_node("music", "tech", "Lobby music loop", "discard", state="done", element="void", updated="2026-10-20T12:00:00"))
-        host.bump({})
-        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".ork-card-place").count() == 0 and pg.locator(".table-discard").count() == 1 and pg.locator(".table-end__label").text_content() == "Discard"
-        pile = box(pg, ".table-discard")
-        assert (round(pile["width"]), round(pile["height"])) == CARD["narrow"]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_card_lifted_from_the_hand_stands_over_the_pile(gui):
-    pg, host, log = open_hand(gui, width="narrow")
-    try:
-        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
-        pg.locator('.hand-card[data-kind="failed"]').first.click(position={"x": 10, "y": 20})
-        lifted = pg.locator(".hand-lifted")
-        lifted.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        z = pg.evaluate("() => [getComputedStyle(document.querySelector('.hand')).zIndex, getComputedStyle(document.querySelector('.table-end')).zIndex].map(Number)")
-        assert z[0] > z[1], "the hand's layer is above the pile's"
-        l, p = lifted.bounding_box(), pg.locator(".table-discard").bounding_box()
-        x0, x1 = max(l["x"], p["x"]), min(l["x"] + l["width"], p["x"] + p["width"])
-        y0, y1 = max(l["y"], p["y"]), min(l["y"] + l["height"], p["y"] + p["height"])
-        if x1 > x0 and y1 > y0:                                                                                              # where they meet, the card is on top
-            assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y)?.closest('.hand-lifted') !== null", [(x0 + x1) / 2, (y0 + y1) / 2])
-        else:
-            pytest.fail("at the narrow width the lifted card spans the screen and meets the pile")
-        shot(pg, "narrow-lifted-over-the-pile")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_at_the_narrow_width_the_piles_words_wrap_inside_its_window_not_cut(gui):
-    """Spec 149 G.5 (decisions §250.7, §253.8): at the narrow width (a pile 80 px wide) *12 commits ready for main* was cut at the card's edge (*1 commi*, *ready for*): every word lies whole inside the card, wrapped, and no line is cut."""
-    server, browser = gui
-    host = HandHost()
-    host.nodes = [n for n in host.nodes if n["place"] != "discard"]
-    host.gate_doc = {"into": "dev", "main": "main", "same": False, "commits": 12, "files": 9, "ideas": []}
-    pg = narrow.page(browser, "narrow")
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    try:
-        pg.wait_for_selector(".table-discard .hand-back__ready .cap", timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        cap, card = pg.locator(".table-discard .hand-back__ready .cap"), pg.locator(".table-discard .hand-done").first
-        c, k = cap.bounding_box(), card.bounding_box()
-        shot(pg, "narrow-discard-words")
-        assert cap.text_content() == "12 commits ready for main" and cap.get_attribute("title") == "12 commits ready for main"
-        assert c["x"] >= k["x"] - 1 and c["x"] + c["width"] <= k["x"] + k["width"] + 1, f"the words lie inside the card: {c} in {k}"
-        assert cap.evaluate("e => e.scrollWidth <= e.clientWidth + 1 && e.scrollHeight <= e.clientHeight + 1"), f"no word is cut: {cap.evaluate('e => [e.scrollWidth, e.clientWidth, e.scrollHeight, e.clientHeight]')}"
-        inside = """() => { const r = document.createRange(), n = document.querySelector('.table-discard .hand-back__ready .cap'), k = document.querySelector('.table-discard .hand-done').getBoundingClientRect();
-            r.selectNodeContents(n); return [...r.getClientRects()].every((q) => q.left >= k.left + 10 && q.right <= k.right - 10 && q.top >= k.top + 8 && q.bottom <= k.bottom - 8); }"""
-        assert pg.evaluate(inside), "every line of the words is drawn inside the art's window (10 px in from the card's sides, 8 px from its top and foot)"
-    finally:
-        pg.context.close()
 
 
 # -- Release's lane at the wide width (spec 156 D.3) ------------------------------------------------------------------------------------------

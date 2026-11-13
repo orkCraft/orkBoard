@@ -9,8 +9,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_ask_desktop_browser import AskHost, bubble, field, head, opened, settled, start  # noqa: E402
-from tests.test_table_desktop_browser import open_tab  # noqa: E402
+from tests.test_ask_desktop_browser import AskHost, bubble, field, settled, start  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -66,34 +65,8 @@ def pick(pg, slug):
 
 # -- the field on the Orkmaster's head ----------------------------------------------------------------------------------------------------
 
-def test_the_field_says_where_the_words_go_before_they_are_sent_and_change_the_spec_sends_them(asked):
-    pg, host = asked
-    pick(pg, "results")
-    opened(pg)
-    change = bubble(pg).get_by_role("button", name="Change the spec")
-    assert change.count() == 1 and change.is_disabled() and bubble(pg).locator("[data-spec-goes]").count() == 0, "nothing typed: nothing said"
-    field(pg).fill(SAID)
-    goes = bubble(pg).locator("[data-spec-goes]")
-    goes.wait_for(timeout=WAIT_MS)
-    assert goes.inner_text().strip() == "It goes to Tech, Art · about 3 calls" and host.sent("ideas.spec_change") == []
-    assert host.sent("ideas.spec_change_preview")[-1] == {"idea": "results", "text": SAID}
-    assert change.is_enabled()
-    change.click()
-    bubble(pg).wait_for(state="detached", timeout=WAIT_MS)
-    assert host.sent("ideas.spec_change") == [{"idea": "results", "text": SAID}]
-    assert host.sent("ideas.ask") == [], "it was a change, not a question"
 
 
-def test_a_leaders_tab_and_a_goal_not_picked_have_no_change_the_spec(asked):
-    pg, host = asked
-    opened(pg)
-    assert bubble(pg).get_by_role("button", name="Change the spec").count() == 0, "no goal picked"
-    head(pg).click()
-    bubble(pg).wait_for(state="detached", timeout=WAIT_MS)
-    open_tab(pg, "tech")
-    pick(pg, "results")
-    opened(pg, "tech")
-    assert bubble(pg).get_by_role("button", name="Change the spec").count() == 0, "a leader's tab: its own change, as built"
 
 
 # -- the card in the hand -----------------------------------------------------------------------------------------------------------------
@@ -107,14 +80,6 @@ def lifted_card(pg):
     return lifted
 
 
-def test_with_the_limits_low_accept_says_it_starts_after_the_reset(asked):
-    pg, host = asked
-    host.needs = [row(low=True, reset="2026-11-09T09:00:00")]
-    host.push()
-    lifted = lifted_card(pg)
-    assert lifted.get_by_role("button", name="Accept and start").count() == 0
-    accept = lifted.locator('[data-act="accept"]')
-    assert accept.inner_text().startswith("Accept · starts after the reset, Mon 09:00"), accept.inner_text()
 
 
 def test_drop_it_changes_nothing_and_talk_more_opens_the_bubble_again_with_the_words_kept(asked):

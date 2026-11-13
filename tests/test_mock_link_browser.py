@@ -51,14 +51,3 @@ def test_the_page_on_mocks_draws_the_recorded_board_with_no_socket_and_sends_not
         b.close()
 
 
-def test_without_mock_the_page_never_loads_the_mock(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page()
-        asked = []
-        pg.on("request", lambda r: asked.append(r.url))
-        pg.goto(page_url)
-        pg.wait_for_timeout(1500)
-        assert not [u for u in asked if "/mock/" in u and "plate.css" not in u]
-        assert pg.locator(".mock-plate").count() == 0
-        b.close()

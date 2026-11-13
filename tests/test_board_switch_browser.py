@@ -79,11 +79,3 @@ def test_the_cloud_run_settings_write_nothing_until_the_yes_and_then_the_workflo
     assert not d.errors, d.errors
 
 
-def test_not_now_leaves_turn_it_on_alone(desk, tmp_path):
-    root, d = project(desk, tmp_path)
-    pg = d.open()
-    box = open_settings(pg)
-    box.locator('[data-board="not-now"]').click()
-    box.locator('[data-board="not-now"]').wait_for(state="detached", timeout=WAIT_MS)
-    assert box.locator('[data-board="on"]').count() == 1 and board_branch.read_config(root) is None
-    assert not d.errors, d.errors

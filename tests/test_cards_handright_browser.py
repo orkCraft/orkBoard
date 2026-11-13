@@ -38,17 +38,6 @@ def start(p, url):
     return b, pg
 
 
-def test_two_groups_with_their_labels_and_a_line_between(page_url):
-    with sync_playwright() as p:
-        b, pg = start(p, page_url)
-        do, have = pg.get_by_role("group", name="What you do"), pg.get_by_role("group", name="What you have")
-        assert do.locator(".hr-lab").inner_text().lower() == "what you do" and have.locator(".hr-lab").inner_text().lower() == "what you have"
-        assert do.locator("[data-die], .hand-die").count() >= 1 or "Play" in do.inner_text()
-        assert "Inventory" in have.inner_text() and "History" in have.inner_text()
-        assert pg.locator(".hr-sep").count() == 1
-        a, c = do.bounding_box(), have.bounding_box()
-        assert a["x"] + a["width"] <= c["x"]
-        b.close()
 
 
 def test_the_deck_of_blank_cards_lies_at_the_edge_and_opens_the_field_by_press_and_by_n(page_url):

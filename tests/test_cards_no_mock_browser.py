@@ -33,14 +33,3 @@ def test_nothing_under_the_mock_is_fetched_and_no_word_says_example(gui):
     pg.close()
 
 
-def test_products_jobs_lie_empty_each_saying_who_fills_it(gui):
-    pg, _seen = open_cards(gui)
-    pg.locator('.cards-lane[data-party="product"] [data-value="jtbd"]').click(timeout=WAIT_MS)
-    pg.wait_for_selector('.tb[data-framework="jtbd"]', timeout=WAIT_MS)
-    zones = pg.locator(".tb-empty")
-    assert {z.get_attribute("data-empty") for z in zones.all()} >= {"personas", "job", "jobs"}
-    words = " ".join(zones.all_inner_texts())
-    assert "Product lays its jobs" in words and "Product asks the person who the people are" in words
-    assert pg.locator(".tb-card").count() == 0
-    assert "· example" not in pg.inner_text("body")
-    pg.close()

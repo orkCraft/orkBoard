@@ -70,91 +70,16 @@ def test_a_tool_that_needs_a_sign_in_is_asked_to_open_it_once_when_the_page_is_v
     assert not errors, "\n".join(errors)
 
 
-def test_nothing_opens_while_the_page_is_hidden_or_not_focused_it_opens_on_the_next_focus(gui):
-    host = StubHost()
-    host.sign_in = [entry()]
-    pg, errors = _page(gui, host, AWAY)
-    try:
-        pg.wait_for_timeout(800)
-        assert _opened(host) == []                                        # not at 3 a.m. into a browser no one answers
-        pg.evaluate("() => { window.__at = true; window.dispatchEvent(new Event('focus')); }")
-        assert _calls(pg, host, "tools.sign_in") == [{"harness": "claude", "auto": True}]
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_a_hidden_page_opens_nothing_and_a_press_on_it_once_it_is_back_opens_it(gui):
-    host = StubHost()
-    host.sign_in = [entry()]
-    hidden = AT_PAGE + "Object.defineProperty(document, 'visibilityState', {configurable: true, get: () => window.__hide ? 'hidden' : 'visible'}); window.__hide = true;"
-    pg, errors = _page(gui, host, hidden)
-    try:
-        pg.wait_for_timeout(800)
-        assert _opened(host) == []
-        pg.evaluate("() => { window.__hide = false; }")
-        pg.mouse.click(4, 4)                                              # a press
-        assert _calls(pg, host, "tools.sign_in") == [{"harness": "claude", "auto": True}]
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_two_tools_open_one_at_a_time_the_next_once_the_first_is_no_longer_open(gui):
-    host = StubHost()
-    host.sign_in = [entry(), entry("codex", "Codex")]
-    pg, errors = _page(gui, host)
-    try:
-        assert _calls(pg, host, "tools.sign_in") == [{"harness": "claude", "auto": True}]
-        pg.wait_for_timeout(800)
-        assert _opened(host) == [{"harness": "claude", "auto": True}]     # Codex waits for Claude Code's
-        host.handle("tools.sign_in_cancel", {"harness": "claude"})        # Claude Code's is no longer open
-        assert _calls(pg, host, "tools.sign_in", at_least=2) == [{"harness": "claude", "auto": True}, {"harness": "codex", "auto": True}]
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_a_terminal_sign_in_says_to_type_what_the_entry_names(gui):
-    host = StubHost()
-    host.sign_in = [entry("claude", "Claude Code", "open", "terminal", auto=False, type="/login now")]
-    pg, errors = _page(gui, host)
-    try:
-        assert "Type /login now there." in _toast(pg, "Sign in to Claude Code").inner_text()
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_a_sign_in_in_a_terminal_says_where_and_has_copy_done_and_cancel(gui):
-    host = StubHost()
-    host.sign_in = [entry("pi", "pi", "open", "terminal", auto=False)]
-    pg, errors = _page(gui, host)
-    try:
-        toast = _toast(pg, "Sign in to pi")
-        assert "pi signs in in its own window: a terminal opened with pi. Type /login there." in toast.inner_text()
-        assert [b.inner_text() for b in toast.locator(".ork-btn").all()] == ["Copy", "Done", "Cancel"]
-        toast.locator(".ork-btn", has_text="Copy").click()
-        _toast(pg, "Sign in to pi")                                       # Copy keeps it up
-        _toast(pg, "Sign in to pi").get_by_role("button", name="Done").click()
-        assert _sent(pg, host, ("tools.sign_in_done", {"harness": "pi"}))
-        assert _opened(host) == []                                        # it was open already: nothing asked
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_no_terminal_says_the_words_to_type_with_copy(gui):
-    host = StubHost()
-    host.sign_in = [entry("pi", "pi", "none", "terminal", auto=False, command="pi  (then /login)")]
-    pg, errors = _page(gui, host)
-    try:
-        toast = _toast(pg, "No terminal was found")
-        assert " ".join(toast.inner_text().split()).count("Open one and run: pi (then /login)") == 1
-        assert [b.inner_text() for b in toast.locator(".ork-btn").all()] == ["Copy"]
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
 
 
 def test_a_sign_in_done_says_the_tool_is_signed_in_and_how_many_tasks_go_on(gui):
@@ -196,59 +121,15 @@ def test_a_sign_in_that_did_not_finish_says_why_and_offers_sign_in_again_and_det
     assert not errors, "\n".join(errors)
 
 
-def test_a_browser_that_did_not_open_offers_the_terminal(gui):
-    host = StubHost()
-    host.sign_in = [entry(state="open", auto=False)]
-    pg, errors = _page(gui, host)
-    try:
-        _toast(pg, "Sign in to Claude Code")
-        host.sign_in[0].update(state="failed", why="no_browser")
-        host.bump({})
-        toast = _toast(pg, "The browser did not open.")
-        assert [b.inner_text() for b in toast.locator(".ork-btn").all()] == ["Sign in in a terminal"]
-        toast.get_by_role("button", name="Sign in in a terminal").click()
-        assert _calls(pg, host, "tools.sign_in") == [{"harness": "claude", "by": "terminal"}]
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_a_cancelled_sign_in_says_nothing(gui):
-    host = StubHost()
-    host.sign_in = [entry(state="open", auto=False)]
-    pg, errors = _page(gui, host)
-    try:
-        _toast(pg, "Sign in to Claude Code")
-        host.sign_in[0].update(state="failed", why="cancelled")
-        host.bump({})
-        pg.wait_for_function("() => !document.querySelector('.gui-toast')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
 
 
 # -- Sign in beside every failure that a sign-in helps ---------------------------------------------------------------------------
 
-def test_the_need_is_a_stop_of_the_hand_with_sign_in(gui):
-    host = StubHost()
-    host.sign_in = [entry(auto=False, waiting=2)]
-    host.sign_in_needs = [{"kind": "sign_in", "harness": "claude", "tool": "Claude Code", "title": "Claude Code", "blocks": True, "priority": "normal",
-                           "at": "2026-10-20T01:00:00", "text": "Claude Code is not signed in, or its sign-in has expired.", "waiting": 2}]
-    pg, errors = _page(gui, host)
-    try:
-        card = pg.locator('.hand-card[data-kind="sign_in"]')
-        card.wait_for(timeout=WAIT_MS)
-        card.click()                                                       # lifted with its answer (docs/specs/98-the-table-and-the-hand.md §4.4)
-        lifted = pg.locator(".hand-lifted[data-kind=\"sign_in\"]")
-        lifted.wait_for(timeout=WAIT_MS)
-        lifted.locator(".hand-more").first.click()                         # one sentence, the rest behind its … (spec 140 A4, decisions §247.6)
-        text = " ".join(lifted.inner_text().split())
-        assert "Sign in" in text and "Claude Code" in text and "is not signed in, or its sign-in has expired" in text and "2 tasks wait for it" in text
-        lifted.get_by_role("button", name="Sign in to Claude Code").click()
-        assert _sent(pg, host, ("tools.sign_in", {"harness": "claude"}))
-        pg.keyboard.press("Escape")
-        pg.locator(".table-tab").nth(1).click()                             # it holds every party's work: it is in every party's hand
-        pg.locator('.hand-card[data-kind="sign_in"]').wait_for(timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
+
+
+# -- a goal or a task held by it ----------------------------------------------------------------------------------------------------
+
+
+

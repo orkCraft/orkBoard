@@ -35,39 +35,8 @@ def page_url():
     s.shutdown()
 
 
-def test_the_hands_cards_are_whole_s_cards_and_the_asking_one_is_ringed(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        pg.goto(page_url + "?mock=1")
-        pg.locator(".frame-hand button.hand-card--stop").first.wait_for(timeout=15000)
-        pg.wait_for_timeout(800)
-        got = pg.evaluate(BOXES)
-        assert len(got["cards"]) >= 3 and not got["old"]
-        assert got["hand"][1] - got["hand"][0] < 230                      # a row for whole cards, not the whole window
-        for c in got["cards"]:
-            assert abs(c["w"] / c["h"] - 2.5 / 3.5) < 0.03, c
-            assert 100 <= c["w"] <= 140, c
-            assert c["top"] >= got["hand"][0] - 12 and c["bottom"] <= got["hand"][1] + 1, (c, got["hand"])      # wholly in the hand's row (a lifted one by a few px)
-        asking = [c for c in got["cards"] if c["asks"]]
-        assert asking and all(c["bang"] for c in asking)
-        ring = pg.locator(".frame-hand button.hand-card--stop.is-asks").first.evaluate("(e) => getComputedStyle(e).borderTopColor")
-        assert ring == pg.evaluate(ALERT)
-        b.close()
 
 
-def test_pressing_a_question_card_opens_no_l_and_its_ways_are_cards(page_url):
-    """Decisions §296.2: no L over the table for a question; its ways are cards (a talk question's lie by its question today, q-choose)."""
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        pg.goto(page_url + "?mock=1")
-        card = pg.locator(".frame-hand button.hand-card--stop.is-asks").first
-        card.wait_for(timeout=15000)
-        card.click()
-        pg.locator(".hand-ways-row [data-way]").first.wait_for(timeout=5000)             # since goal 171 L3 a question is its turn card: its ways are one press (turncards.js)
-        assert pg.locator(".cards-l").count() == 0
-        b.close()
 
 
 # ---- goal 171 stage K: a card for each move that waits (ideas.turns), the open mat's ways -------------------------------------------------------------------
@@ -99,25 +68,6 @@ def keys(pg):
     return pg.evaluate("(sel) => [...document.querySelectorAll(sel)].map((c) => c.dataset.key)", HAND)
 
 
-def test_each_goal_that_waits_is_one_card_in_the_hand_grouped_by_goal_and_a_goal_waiting_for_nobody_has_none(turned_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        turned(pg, turned_url)
-        waits = pg.evaluate("() => import('/static/js/link.js').then((l) => l.command('ideas.turns', {}))")["turns"]
-        for t in waits:
-            assert pg.locator(f"{HAND}[data-goal='{t['goal']}']").count() >= 1, t                                  # every goal the host says waits has a card
-        for goal in (ASKS, TALK, SPEC, TWO):
-            assert pg.locator(f"{HAND}[data-kind=turn][data-goal='{goal}']").count() == 1, goal                   # one card a goal
-            assert pg.locator(f"[data-stack*='{goal}']").count() == 1                                              # in the goal's stack
-        assert pg.locator(f"{HAND}[data-goal='{COVERED}']").count() == 1                                            # a question that was an old card is its turn card only (L3)
-        assert pg.locator(f"{HAND}[data-kind=turn][data-goal='{COVERED}']").count() == 1
-        assert pg.locator(f"{HAND}[data-goal^='150-']").count() == 0                                                 # a goal at work waits for nobody: no card
-        card = pg.locator(f"{HAND}[data-kind=turn][data-goal='{ASKS}']")
-        assert card.evaluate("(el) => getComputedStyle(el).borderTopColor") == pg.evaluate(ALERT)                  # ringed as a card that asks is
-        assert card.locator(".hands-toks .cards-ct").count() >= 1 and "waits for you" in card.inner_text()         # with its craft tokens
-        assert pg.evaluate("() => document.body.innerText.match(/\\d+ (moves?|cards?) (wait|waits)/)") is None        # no count of what waits
-        b.close()
 
 
 def test_a_goal_that_asks_lifts_its_ways_and_one_press_answers_with_from_hand_and_an_undo(turned_url):
@@ -172,9 +122,6 @@ def test_a_goal_whose_talk_is_said_opens_its_mat_and_the_hand_is_that_mats_ways_
         assert pg.locator(f"{HAND}, [data-spread] .sp-cards").count() == 0                                         # no card of the moves that wait, and no ways in the mat's foot
         pile = hand.locator("[data-act=pile]")
         assert pile.count() == 1 and not pile.inner_text().strip().isdigit() and pile.locator(".mathand__backs span").count() == 6      # a pile by its thickness, no number
-        box = hand.bounding_box()
-        mat = pg.locator("[data-spread=track] .mf").bounding_box()
-        assert mat["y"] + mat["height"] <= box["y"] + 1                                                           # the mat leaves the hand its room: nothing lies over it
         seen = []
         for _ in range(12):                                                                                          # the focus goes through the mat and the hand's ways only
             pg.keyboard.press("Tab")
@@ -191,26 +138,6 @@ def test_a_goal_whose_talk_is_said_opens_its_mat_and_the_hand_is_that_mats_ways_
         b.close()
 
 
-def test_a_spec_all_written_has_start_the_work_on_its_seal_with_its_cost_said_and_a_talk_has_none(turned_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        turned(pg, turned_url)
-        pg.locator(f"{HAND}[data-kind=turn][data-goal='{TALK}']").click()
-        pg.locator("[data-spread=track]").wait_for(timeout=5000)
-        assert pg.locator("[data-seal]").count() == 0                                                              # a Talk said: nothing that cannot be undone
-        pg.keyboard.press("Escape")
-        pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
-        pg.locator(f"{HAND}[data-kind=turn][data-goal='{SPEC}']").click()
-        seal = pg.locator("[data-spread=track] [data-seal=start]")
-        seal.wait_for(timeout=5000)
-        assert "Start the work" in seal.inner_text() and "cost not known yet" in seal.inner_text()                  # the host gives no estimate here: said so
-        assert pg.locator(".mathand [data-way=start]").count() == 0 and pg.locator(".mathand [data-way=drop]").count() == 1      # Start is no way of the hand
-        seal.click()
-        assert sent(pg, "ideas.start") == [{"slug": SPEC, "from": "hand", "sealed": True}]
-        pg.locator("[data-spread=track]").wait_for(state="detached", timeout=5000)
-        assert pg.locator(f"{HAND}[data-goal='{SPEC}']").count() == 0
-        b.close()
 
 
 def test_drop_on_the_mat_its_hand_card_opened_sends_from_hand_and_undo_puts_the_page_back(turned_url):
@@ -247,17 +174,6 @@ def test_a_mat_opened_from_the_table_sends_from_mat(turned_url):
         b.close()
 
 
-@pytest.fixture(scope="module")
-def crowded_url():
-    def crowded(data):                                                     # many cards in the hand: a crowded row (goal 171 stage N2)
-        mock_kit.lay_turned(data)
-        more = [{"goal": g, "kind": "spec", "at": mock_kit.at(12, i)} for i, g in enumerate(
-            ("160-the-tools-of-a-craft", "159-a-ways-own-line", "158-the-window-as-a-table", "157-the-inventory-a-merchants-stall"))]
-        mock_kit.reply(data, "ideas.turns")["result"]["turns"] += more
-    s = serve_mock.serve(0, crowded)
-    threading.Thread(target=s.serve_forever, daemon=True).start()
-    yield f"http://127.0.0.1:{s.server_port}/?mock=1"
-    s.shutdown()
 
 
 TITLES = """() => [...document.querySelectorAll('.frame-hand button.hand-card--stop')].map((c) => {
@@ -266,38 +182,5 @@ TITLES = """() => [...document.querySelectorAll('.frame-hand button.hand-card--s
   return { title: t.textContent.slice(0, 30), x, y, ok: !!hit && c.contains(hit) }; })"""
 
 
-def test_a_crowded_hand_at_1440_keeps_each_cards_title_from_its_first_letter(crowded_url):
-    """Each card's title lies whole from its first letter: no card covers the left edge of the one after it, and the places stay in the window."""
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        pg.goto(crowded_url)
-        pg.locator(".frame-hand button.hand-card--stop").first.wait_for(timeout=15000)
-        pg.wait_for_timeout(800)
-        got = pg.evaluate(TITLES)
-        edges = pg.evaluate("() => [...document.querySelectorAll('.frame-hand button.hand-card--stop')].map((c) => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")
-        assert len(got) >= 5 and any(a[1] > b[0] + 1 for a, b in zip(edges, edges[1:])), edges   # crowded indeed: the cards lie over each other
-        assert all(g["ok"] for g in got), [g for g in got if not g["ok"]]
-        places = pg.evaluate("() => [...document.querySelectorAll('.frame-hand .hand-end button')].map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.right]; })")
-        assert places and all(left >= 0 and right <= 1440 for left, right in places), places
-        b.close()
 
 
-def test_a_narrow_desktop_window_deals_a_question_as_its_turn_card_and_its_ways_play(turned_url):
-    """A window under 760 px with a mouse (no phone): on the table of cards a goal's question is its turn card, as at any width (the old card of it is not dealt there, goal 171
-    L3), so it is dealt here too: pressed, its ways come up; a move that lies on a mat opens its mat."""
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 700, "height": 900})
-        pg.goto(turned_url + "?mock=1")
-        card = pg.locator(".frame-hand button.hand-card[data-kind=turn][data-goal='172-example-1']")
-        card.wait_for(timeout=15000)
-        card.click()
-        ways = pg.get_by_role("button", name="Keep it")
-        ways.first.wait_for(timeout=5000)
-        assert ways.first.is_visible()
-        pg.keyboard.press("Escape")
-        pg.locator(".frame-hand button.hand-card[data-kind=turn][data-goal='174-example-3']").focus()      # by keys: the mock's plate lies over the narrow hand's middle
-        pg.keyboard.press("Enter")
-        pg.wait_for_selector("[data-spread=track] .mf", timeout=5000)
-        b.close()

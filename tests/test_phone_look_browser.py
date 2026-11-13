@@ -14,7 +14,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_context_narrow_browser import TIMER_Q, UprightHost, box, context_of, css_colour, open_up, wait_title  # noqa: E402
+from tests.test_hand_context_narrow_browser import UprightHost  # noqa: E402
 from tests.test_hand_desktop_browser import head, node, task  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -96,93 +96,11 @@ def raised(pg):
     return pg.locator('.hand-up .up-card[aria-pressed="true"]')
 
 
-def test_the_phases_the_past_ones_muted_its_own_in_the_ink_and_a_press_opens_the_goals_page(gui):
-    pg, host, log = open_up(gui, host=LookHost())
-    try:
-        pick_from_menu(pg, "goal", SEAT)
-        ph = pg.locator(".up-phases")
-        assert [p.inner_text().strip() for p in ph.locator(".up-phase").all()] == ["Talk", "Spec", "Work", "Done"] and box(ph)["height"] >= 44
-        assert [p.get_attribute("class") for p in ph.locator(".up-phase").all()] == ["up-phase is-past", "up-phase is-past", "up-phase is-now", "up-phase"]
-        colours = ph.evaluate("(e) => [...e.children].map((c) => getComputedStyle(c).borderTopColor)")
-        assert colours[0] == colours[1] != colours[2] and colours[2] == css_colour(pg, "--ork-ink") and colours[3] != colours[2], "the past ones muted, its own in the ink"
-        ph.click()
-        pg.wait_for_selector(".table-over", timeout=WAIT_MS)
-        assert pg.locator(".table-over").get_attribute("data-kind") == "spec" and pg.locator(".hand-up").is_hidden(), "the goal's page of the phase it is in"
-        pg.get_by_role("button", name="Back").click()
-        pg.wait_for_selector(".hand-up", state="visible", timeout=WAIT_MS)
-        assert look(pg).get_attribute("data-goal") == "seat", "the same goal"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_task_that_asks_or_failed_is_in_the_alerts_frame_and_the_goals_card_is_on_its_way(gui):
-    pg, host, log = open_up(gui, host=LookHost(calm=False))
-    try:
-        pg.locator('.hand-up .up-card[data-key="goal:seat"]').click()
-        pg.wait_for_function("() => document.querySelector('.up-look')?.dataset.goal === 'seat'", timeout=WAIT_MS)
-        assert raised(pg).get_attribute("data-key") == "goal:seat", "a failed task is a card: its goal's card pressed in the row"
-        assert pg.locator(".hand-up .hand-lifted").count() == 1 and pg.locator(".up-tasks").count() == 1
-        tasks = pg.locator(".up-tasks .up-task")
-        assert [t.locator(".up-task__name").inner_text().strip() for t in tasks.all()] == ["Reset the round timer", "Keep the seat", "Pick the wording"]
-        assert [t.locator(".up-task__stage").inner_text().strip() for t in tasks.all()] == ["Doing, failed", "Doing", "Planning, asks you to pick"]
-        alert = css_colour(pg, "--ork-alert")
-        assert [t.evaluate("(e) => getComputedStyle(e).borderTopColor") == alert for t in tasks.all()] == [True, False, True], "a task that asks or failed in the alert's frame"
-        shot(pg, "phone-look-tasks")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_goal_in_line_shows_its_phases_and_why_and_the_moon_with_its_hour_no_feed_no_tasks(gui):
-    pg, host, log = open_up(gui, host=LookHost())
-    try:
-        pick_from_menu(pg, "goal", "Chat in the lobby")
-        assert look(pg).get_attribute("data-goal") == "chat" and pg.locator(".up-gh__type").inner_text().strip() == "Feature · In line"
-        assert [p.get_attribute("class") for p in pg.locator(".up-phase").all()] == ["up-phase"] * 4, "none past, none its own"
-        wait = pg.locator(".up-wait")
-        assert wait.locator(".ork-sign.moon").count() == 1 and wait.inner_text().strip() == "Waits for the reset, from 21:40", "the moon and its hour"
-        assert pg.locator(".up-gfeed, .up-tasks").count() == 0 and pg.locator(".up-why").inner_text().strip() == "About chat."
-        assert not [a for n, a in host.log if n == "ideas.feed" and a.get("route")], "a goal in line asks no feed of its route (goal 169 G)"
-        shot(pg, "phone-look-line")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_card_of_no_goal_is_its_context_and_its_card_and_the_ready_goal_has_its_way_under_the_portal(gui):
-    pg, host, log = open_up(gui, "paid", first=True)
-    try:
-        assert look(pg).get_attribute("data-look") == "card" and context_of(pg).count() == 1 and pg.locator(".hand-up .hand-lifted").count() == 1 and pg.locator(".up-gh, .up-phases").count() == 0
-    finally:
-        pg.close()
-    pg, host, log = open_up(gui, "ready")
-    try:
-        pg.locator('.up-card[data-kind="ready"]').first.click()
-        pg.locator(".hand-ready").wait_for(timeout=WAIT_MS)
-        assert look(pg).get_attribute("data-goal") == "music" and pg.locator(".up-gh__name").inner_text().strip() == "Lobby"
-        assert [p.get_attribute("class") for p in pg.locator(".up-phase").all()] == ["up-phase is-past", "up-phase is-past", "up-phase is-past", "up-phase is-now"], "a goal done: its last phase its own"
-        assert pg.locator(".up-tasks").count() == 0
-        shot(pg, "phone-look-ready")
-    finally:
-        pg.close()
 
 
-READABLE = """() => {
-  const rgb = (s) => { const m = s.match(/rgba?\\(([^)]+)\\)/); const p = m[1].split(/[ ,\\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
-  const lum = ({ r, g, b }) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
-  const bgOf = (el) => { for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c.a > 0.5) return c; if (e.classList.contains("ork-btn")) { const q = rgb(getComputedStyle(e, "::before").backgroundColor); if (q.a > 0.5) return q; } } return { r: 0, g: 0, b: 0, a: 1 }; };
-  const sizes = [], low = [], small = [];
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-    if (!n.textContent.trim()) continue;
-    const el = n.parentElement, cs = getComputedStyle(el), r = el.getBoundingClientRect();
-    if (!r.width || !r.height || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0 || el.closest("script,style,noscript,[hidden]")) continue;
-    const size = parseFloat(cs.fontSize); sizes.push(size); if (size < 14) small.push(`${el.tagName}.${el.className} ${size}px ${n.textContent.trim().slice(0, 20)}`);
-    const f = rgb(cs.color), b = bgOf(el), a = f.a;
-    const mix = { r: f.r * a + b.r * (1 - a), g: f.g * a + b.g * (1 - a), b: f.b * a + b.b * (1 - a) };
-    const l1 = lum(mix), l2 = lum(b), ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-    if (ratio < 4.5) low.push(`${el.tagName}.${el.className} ${n.textContent.trim().slice(0, 30)} ${ratio.toFixed(2)} fg=${cs.color} bg=${JSON.stringify(b)} dis=${el.disabled}`);
-  }
-  return { body: getComputedStyle(document.body).fontSize, min: Math.min(...sizes), count: sizes.length, low, small };
-}"""

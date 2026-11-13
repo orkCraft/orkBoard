@@ -15,7 +15,7 @@ from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_shell_browser import QR  # noqa: E402
 from tests.test_hand_desktop_browser import need, node as hand_node, task as hand_task  # noqa: E402
-from tests.test_table_desktop_browser import TableHost, open_menu, open_tab, tab, title  # noqa: E402
+from tests.test_table_desktop_browser import TableHost, open_menu, open_tab, title  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -130,21 +130,6 @@ def test_the_page_is_the_table_over_the_hand_and_nothing_else(window):
     shot(pg, f"window-board-{w}.png")
 
 
-def test_a_press_that_opened_a_dialog_opens_a_place_over_the_pane_never_a_dialog(window):
-    pg, host, w = window
-    open_menu(pg)
-    pg.get_by_role("menuitem", name="Settings").click()
-    over(pg, "settings")
-    nothing_modal(pg)
-    assert title(pg) == "Board · Settings" and pg.locator('.place[aria-label="Settings"]').count() == 1
-    pg.get_by_role("button", name="Pair a phone").click()                                                               # Pair a phone was a dialog of Settings: a place of its own
-    over(pg, "pair")
-    assert title(pg).endswith("Pair a phone") and pg.locator(".shell-pair").count() == 1
-    nothing_modal(pg)
-    pg.get_by_role("button", name="← Settings").click()
-    over(pg, "settings")
-    pg.get_by_role("button", name="Done", exact=True).click()
-    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
 
 
 def test_every_place_is_reached_over_the_pane(window):
@@ -160,12 +145,7 @@ def test_every_place_is_reached_over_the_pane(window):
         over(pg, kind)
         nothing_modal(pg)
         back(pg)
-    # + : the one place of the parties; the party's …: Edit (the same place, at that party) and Remove party
-    pg.get_by_role("button", name="New party").click()
-    over(pg, "parties")
-    assert title(pg) == "Board · Parties" and pg.get_by_role("button", name="Save party").count() == 0
-    nothing_modal(pg)
-    back(pg)
+    # the party's …: Edit (the one place of the parties, at that party) and Remove party (New party deals a seat, decisions §304)
     open_tab(pg, "art")
     pg.get_by_role("button", name="Art's menu").click()
     pg.get_by_role("menuitem", name="Edit").click()
@@ -211,22 +191,18 @@ def test_every_place_is_reached_over_the_pane(window):
         shot(pg, f"window-discard-{w}.png")
         nothing_modal(pg)
         back(pg)
-    pg.locator('.hand-card[data-kind="todo"]').click(position=EDGE)
-    pg.get_by_role("button", name="Open…").click()
-    over(pg, "stop")
-    pg.locator('.board-todo-dialog[data-kind="secret"]').wait_for(timeout=WAIT_MS)
-    nothing_modal(pg)
-    back(pg)
 
 
 def test_the_place_of_the_parties_is_in_the_pane_and_esc_goes_back(window):
     pg, host, w = window
-    pg.get_by_role("button", name="New party").click()
+    open_tab(pg, "art")
+    pg.get_by_role("button", name="Art's menu").click()
+    pg.get_by_role("menuitem", name="Edit").click()
     over(pg, "parties")
     nothing_modal(pg)
     assert pg.locator(".place").count() == 0 and pg.locator(".table-over--form").count() == 0
     pg.keyboard.press("Escape")
-    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
+    pg.locator(".table-head").wait_for(timeout=WAIT_MS)
 
 
 # -- the keyboard -------------------------------------------------------------------------------------------------------------------------------------
@@ -245,9 +221,3 @@ def test_ctrl_o_opens_the_projects_over_the_pane(window):
 # -- a card of the hand lifted raises its card of the table -------------------------------------------------------------------------------------------
 
 
-def test_tech_with_a_hand_card_lifted(window):
-    pg, host, w = window
-    open_tab(pg, "tech")
-    pg.locator('.hand-card[data-kind="failed"]').click(position=EDGE)
-    pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-    shot(pg, f"window-tech-lifted-{w}.png")

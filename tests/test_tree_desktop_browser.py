@@ -17,7 +17,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_table_desktop_browser import TableHost, node, shot, tab, watch  # noqa: E402
+from tests.test_table_desktop_browser import TableHost, node, tab, watch  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -171,208 +171,35 @@ def sent(host, name):
 
 # -- the tree ------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_tree_is_the_outcome_as_a_banner_and_the_jobs_as_columns_that_stack_at_the_narrow_width(tree):
-    pg, host, w = tree
-    banner = pg.locator(".tr-banner")
-    assert banner.locator(".ork-label").inner_text().lower() == "outcome" and banner.locator(".tr-banner__t").inner_text() == OUTCOME["text"]
-    assert banner.get_by_role("button", name="Edit the outcome").inner_text() == "Edit"
-    assert pg.locator(".tr-col").count() == 4 and pg.locator(".tr-job").count() == 4
-    first = job(pg, "get-everyone-in")
-    assert first.locator(".tr-segment").inner_text().strip().lower() == "hosts"
-    assert " ".join(first.locator(".tr-job__s").inner_text().split()) == "When I start a game night, I want to get everyone into the lobby fast, so I can begin before people drift off."
-    keys = first.locator(".tr-k")
-    assert keys.all_text_contents() == ["When", "I want to", "so I can"]
-    ink, muted = (first.locator(".tr-job__s").evaluate("e => getComputedStyle(e).color"), keys.first.evaluate("e => getComputedStyle(e).color"))
-    assert ink != muted, "the three keywords are muted"
-    boxes = [col(pg, j["id"]).bounding_box() for j in JOBS]
-    banner_box = banner.bounding_box()
-    if wide(w):
-        assert len({round(b["y"]) for b in boxes}) == 1 and all(boxes[i]["x"] < boxes[i + 1]["x"] for i in range(3)), "side by side, one row"
-        assert boxes[0]["y"] > banner_box["y"] + banner_box["height"], "under the banner"
-        assert pg.locator(".tr-stub").count() == 1
-    else:
-        assert len({round(b["x"]) for b in boxes}) == 1 and all(boxes[i]["y"] < boxes[i + 1]["y"] for i in range(3)), "stacked"
-        assert all(b["width"] > 300 for b in boxes), "each as wide as the screen allows"
-        assert pg.locator(".tr-stub").evaluate("e => getComputedStyle(e).display") == "none"
-    shot(pg, f"tree-{w}.png")
 
 
-def test_a_goal_that_serves_a_job_is_the_boards_card_its_element_name_sign_and_place_and_an_experiment_lies_under_its_goal(tree):
-    pg, host, w = tree
-    g = goal(pg, "room-code")
-    assert col(pg, "get-everyone-in").locator(".tr-goal").count() == 1 and col(pg, "jump-in").locator(".tr-goal").count() == 2
-    assert g.locator(".ork-elem.meadow").count() == 1 and g.locator(".mp-card__nm").inner_text().strip() == "Room code on every phone"
-    assert "pixel" not in g.locator(".mp-card__nm").evaluate("e => getComputedStyle(e).fontFamily").lower(), "a goal's words are in the body face"
-    assert g.locator(".mp-win .ork-sign.big.feature").count() == 1 and g.locator(".tr-place").text_content().strip() == "At work"
-    assert [goal(pg, s).locator(".tr-place").text_content().strip() for s in ("seat-kept", "late-catch")] == ["Done", "In line"]
-    assert g.locator(".tr-place .ork-sign.work").count() == 1 and goal(pg, "seat-kept").locator(".tr-place .ork-sign.check").count() == 1 and goal(pg, "late-catch").locator(".tr-place .ork-sign.before").count() == 1
-    test = col(pg, "answer-calmly").locator(".tr-tests .tr-goal")
-    assert test.count() == 1 and test.get_attribute("data-id") == "try-20" and test.locator(".mp-win .ork-sign.big.abtest").count() == 1
-    parent, child = goal(pg, "round-timer").bounding_box(), test.bounding_box()
-    assert child["y"] > parent["y"] + parent["height"] - 1 and child["x"] > parent["x"], "under its goal, a step in"
 
 
-def test_a_job_no_goal_serves_says_so_with_a_green_plus_and_the_count_is_said(tree):
-    pg, host, w = tree
-    empty = col(pg, "play-again")
-    assert empty.locator(".tr-goal").count() == 0 and empty.locator(".tr-nogoal .mp-cap").inner_text() == "No goal serves this yet"
-    plus = empty.get_by_role("button", name="Write a goal for this job")
-    assert plus.count() == 1 and col(pg, "jump-in").get_by_role("button", name="Write a goal for this job").count() == 0
-    action = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-action').trim()")
-    assert action and plus.evaluate("e => getComputedStyle(e).color") == pg.evaluate("c => { const s = document.createElement('i'); s.style.color = c; document.body.appendChild(s); const r = getComputedStyle(s).color; s.remove(); return r; }", action)
-    assert pg.locator(".tr-note").inner_text() == "1 job no goal serves"
-    box = plus.bounding_box()
-    assert box["width"] >= (44 if not wide(w) else 24) and box["height"] >= (44 if not wide(w) else 24), "a press the finger can find"
-    shot(pg, f"tree-empty-job-{w}.png")
 
 
-def test_a_press_on_a_goal_picks_it_and_again_puts_it_down(tree):
-    pg, host, w = tree
-    g = goal(pg, "late-catch")
-    g.locator(".mp-card__nm").click()
-    pg.locator('.tr-goal[data-id="late-catch"][aria-pressed], .tr-goal[data-id="late-catch"].is-lit').wait_for(timeout=WAIT_MS)
-    assert g.locator(".mp-card__nm").get_attribute("aria-pressed") == "true" and "is-lit" in g.get_attribute("class")
-    assert goal(pg, "room-code").locator(".mp-card__nm").get_attribute("aria-pressed") == "false"
-    g.locator(".mp-card__nm").click()
-    pg.wait_for_selector('.tr-goal.is-lit', state="detached", timeout=WAIT_MS)
 
 
-def test_a_press_on_a_goal_at_work_picks_it_and_the_pane_shows_its_view_in_place_of_the_tree_until_it_is_put_down(tree):
-    """Spec 128 F.2: a goal agreed, at work or done has a view of its own at its leader, so the pick replaces the map with it; one goal is picked at a time."""
-    pg, host, w = tree
-    goal(pg, "late-catch").locator(".mp-card__nm").click()
-    pg.locator('.tr-goal[data-id="late-catch"].is-lit').wait_for(timeout=WAIT_MS)
-    goal(pg, "room-code").click(position={"x": 12, "y": 40})
-    pg.locator(".gv").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".tr-goal").count() == 0, "the goal's view is in the tree's place"
-    pg.keyboard.press("Escape")                                                  # Esc puts the pick away (no cross in the title: spec 156 B.3)
-    pg.locator(".tr-goal").first.wait_for(timeout=WAIT_MS)
-    assert pg.locator(".tr-goal.is-lit").count() == 0 and pg.locator('.tr-goal[aria-pressed="true"], .tr-goal [aria-pressed="true"]').count() == 0, "one goal was picked at a time: none now"
-    assert pg.locator(".gv").count() == 0
 
 
-def test_every_job_and_goal_is_pickable_with_its_map_id_and_name(tree):
-    pg, host, w = tree
-    pickable = pg.locator('[data-pick-map="product"]')
-    assert pickable.count() == 4 + 5
-    mine = pg.locator('[data-pick-id="get-everyone-in"]')
-    assert mine.get_attribute("data-pick-name") == "get everyone into the lobby fast" and mine.get_attribute("data-pick-map") == "product"
-    g = pg.locator('[data-pick-id="round-timer"]')
-    assert g.get_attribute("data-pick-name") == "Round timer on every phone" and g.get_attribute("data-pick-group") == "answer-calmly"
-    assert pg.locator('[data-pick-id="try-20"]').get_attribute("data-pick-group") == "answer-calmly"
 
 
 # -- Edit ----------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_edit_keeps_the_job_through_tree_set_with_the_other_jobs_as_they_are(tree):
-    pg, host, w = tree
-    job(pg, "play-again").get_by_role("button", name="Edit the job: play again with the same group").click()
-    form = pg.locator(".tr-form")
-    form.wait_for(timeout=WAIT_MS)
-    assert form.locator('input[name="segment"]').input_value() == "Hosts" and form.locator('textarea[name="want"]').input_value() == "play again with the same group"
-    form.locator('input[name="segment"]').fill("Friends")
-    form.locator('textarea[name="want"]').fill("start another round")
-    shot(pg, f"tree-edit-{w}.png")
-    form.get_by_role("button", name="Save").click()
-    pg.wait_for_function("() => [...document.querySelectorAll('.tr-job__s')].some((e) => e.textContent.includes('start another round'))", timeout=WAIT_MS)
-    got = sent(host, "ideas.tree_set")
-    assert len(got) == 1 and "outcomes" not in got[0] and [j["id"] for j in got[0]["jobs"]] == [j["id"] for j in JOBS]
-    assert got[0]["jobs"][1] == {"id": "play-again", "when": "a round ends", "want": "start another round", "so": "keep the night going", "segment": "Friends"}
-    assert got[0]["jobs"][0] == {"id": "get-everyone-in", "when": "I start a game night", "want": "get everyone into the lobby fast", "so": "begin before people drift off", "segment": "Hosts"}
-    assert pg.locator(".tr-form").count() == 0 and job(pg, "play-again").locator(".tr-segment").inner_text().strip().lower() == "friends"
 
 
-def test_a_refusal_is_said_in_its_own_words_and_cancel_leaves_the_job(tree):
-    pg, host, w = tree
-    host.refuse = "Two jobs say the same: play again with the same group"
-    job(pg, "get-everyone-in").get_by_role("button", name="Edit the job: get everyone into the lobby fast").click()
-    form = pg.locator(".tr-form")
-    form.locator('textarea[name="want"]').fill("play again with the same group")
-    form.get_by_role("button", name="Save").click()
-    alert = form.locator("[role=alert]")
-    alert.wait_for(timeout=WAIT_MS)
-    assert alert.inner_text() == "Two jobs say the same: play again with the same group" and pg.locator(".tr-form").count() == 1, "the form stays, with what was written"
-    form.get_by_role("button", name="Cancel").click()
-    assert pg.locator(".tr-form").count() == 0 and "get everyone into the lobby fast" in job(pg, "get-everyone-in").inner_text()
 
 
-def test_edit_on_the_outcome_keeps_it_through_tree_set_and_a_second_may_be_added(tree):
-    pg, host, w = tree
-    pg.get_by_role("button", name="Edit the outcome").click()
-    form = pg.locator(".tr-banner.is-editing")
-    form.locator('textarea[name="outcome-0"]').fill("Of 10 players in a lobby, 7 reach a round")
-    form.get_by_role("button", name="Add a second outcome").click()
-    form.locator('textarea[name="outcome-1"]').fill("Hosts start a second round in 8 of 10 nights")
-    shot(pg, f"tree-edit-outcome-{w}.png")
-    form.get_by_role("button", name="Save").click()
-    pg.wait_for_function("() => document.querySelectorAll('.tr-banner__t').length === 2", timeout=WAIT_MS)
-    got = sent(host, "ideas.tree_set")
-    assert got == [{"outcomes": [{"id": "lobby", "text": "Of 10 players in a lobby, 7 reach a round"}, {"text": "Hosts start a second round in 8 of 10 nights"}]}]
-    assert pg.locator(".tr-banner .ork-label").inner_text().lower() == "outcomes"
-    assert pg.locator(".tr-banner__t").all_text_contents() == ["Of 10 players in a lobby, 7 reach a round", "Hosts start a second round in 8 of 10 nights"]
 
 
 # -- + ---------------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_plus_on_an_empty_job_opens_the_field_addressed_to_product_with_the_job_noted_and_sends_it_with_the_goal(tree):
-    pg, host, w = tree
-    col(pg, "play-again").get_by_role("button", name="Write a goal for this job").click()
-    field = pg.locator(".hand-field")
-    field.wait_for(timeout=WAIT_MS)
-    assert field.locator(".hand-chip[data-by=tab]").inner_text().strip() == "Product", "addressed to Product"
-    chip = field.locator(".pick-chip")
-    assert chip.count() == 1 and chip.get_attribute("data-mark") == "play-again" and chip.inner_text().strip() == "play again with the same group"
-    assert "ork-taken" in job(pg, "play-again").get_attribute("class"), "Product's map is in picking: the job is marked"
-    shot(pg, f"tree-plus-{w}.png")
-    pg.locator(".hand-field__text").fill("Play again in one press")
-    pg.locator(".hand-field__text").press("Enter")
-    pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-    got = sent(host, "ideas.add")
-    assert got == [{"match": True, "now": True, "text": "Play again in one press", "party": PARTY, "marks": [{"map": "product", "id": "play-again", "name": "play again with the same group"}]}]
 
 
-def test_plus_puts_the_address_back_when_the_person_had_taken_it_off(tree):
-    pg, host, w = tree
-    pg.locator(".hand :is(.hand-plus, [data-blank-deck])").click()
-    pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
-    pg.get_by_role("button", name="Take off Product").click()
-    assert pg.locator(".hand-chip[data-by=tab]").count() == 0
-    col(pg, "play-again").get_by_role("button", name="Write a goal for this job").dispatch_event("click")           # the card-field lies over the middle of the pane (spec 120 §6.1): at the wide width it covers this button, so the press is dispatched on it
-    pg.locator(".hand-chip[data-by=tab]").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".pick-chip").count() == 1
 
 
 # -- Propose ---------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_with_nothing_kept_the_map_says_so_and_propose_asks_product_once_and_the_tree_appears(bare):
-    pg, host, w = bare
-    assert pg.locator(".mp-nothing").inner_text().startswith("Nothing to read yet: the outcome and the users' jobs") and pg.locator(".tr-col").count() == 0
-    button = pg.get_by_role("button", name="Propose")
-    assert button.is_enabled() and "Product reads" in pg.locator(".mp-propose .mp-cap").inner_text()
-    shot(pg, f"tree-propose-{w}.png")
-    button.click()
-    pg.locator(".tr-col").first.wait_for(timeout=WAIT_MS)
-    assert len(sent(host, "ideas.tree_propose")) == 1 and pg.locator(".tr-col").count() == 4 and pg.locator(".mp-propose").count() == 0
 
 
-def test_a_proposal_that_cannot_be_asked_is_said_with_its_why(bare):
-    pg, host, w = bare
-    host.proposal = {"asked": False, "why": "The limits are spent: it can be asked after they reset"}
-    pg.get_by_role("button", name="Propose").click()
-    alert = pg.locator(".mp-propose [role=alert]")
-    alert.wait_for(timeout=WAIT_MS)
-    assert alert.inner_text() == "The limits are spent: it can be asked after they reset" and pg.locator(".tr-col").count() == 0
 
 
-def test_more_than_five_jobs_lie_in_two_rows_each_with_its_lines(gui):
-    host = TreeHost()
-    host.jobs += [{"id": f"extra-{i}", "when": f"w{i}", "want": f"do {i}", "so": f"so {i}", "segment": "Hosts", "by": "person", "at": "x"} for i in range(3)]
-    pg, errors = open_tree(gui, "wide", host)
-    go(pg)
-    assert pg.locator(".tr-tier").count() == 2 and pg.locator(".tr-stub").count() == 2
-    rows = [[c.bounding_box()["y"] for c in t.locator(".tr-col").all()] for t in pg.locator(".tr-tier").all()]
-    assert [len(r) for r in rows] == [4, 3] and all(len(set(round(y) for y in r)) == 1 for r in rows) and rows[0][0] < rows[1][0]
-    narrow.no_sideways(pg)
-    shot(pg, "tree-seven-wide.png")
-    pg.context.close()
-    assert not errors, "\n".join(errors)

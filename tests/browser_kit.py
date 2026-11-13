@@ -20,7 +20,7 @@ from orkboard.gui.server import Server  # noqa: E402
 
 CHROMIUM = next((p for p in (os.environ.get("ORKCRAFT_CHROMIUM", ""), "/opt/pw-browsers/chromium") if p and Path(p).exists()),
                 None)
-WAIT_MS = 10_000
+WAIT_MS = 20_000                                  # a ceiling, not a wait: under four workers a page of this suite takes up to twice as long as alone
 
 
 def open_pane(pg, kind: str) -> None:

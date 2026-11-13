@@ -6,7 +6,6 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import open_hand  # noqa: E402
 from tests.test_stall_browser import StallHost  # noqa: E402
@@ -21,24 +20,6 @@ def boxes(pg):
     return pg.locator(BOXES).evaluate_all("els => els.map((e) => { const b = e.getBoundingClientRect(); return [Math.round(b.x), Math.round(b.y), Math.round(b.width * 10) / 10, Math.round(b.height * 10) / 10]; })")
 
 
-def test_the_three_places_are_one_size_with_their_words_under_them_at_the_hands_right_end(gui):
-    pg, host, log = open_hand(gui, host=StallHost())
-    try:
-        pg.locator(".hand-book").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        b = boxes(pg)
-        assert len(b) == 3 and all(x[2:] == [48, 60] for x in b), b                                                                  # a box of 48 × 60 each
-        assert len({x[1] for x in b}) == 1 and b[0][0] < b[1][0] < b[2][0], "the die, the backpack, the book: side by side, the same top"
-        assert pg.locator(WORDS).all_inner_texts() == ["Play", "Inventory", "History"]
-        words = pg.locator(WORDS).evaluate_all("els => els.map((e) => Math.round(e.getBoundingClientRect().y))")
-        assert len(set(words)) == 1 and words[0] >= b[0][1] + 60, "each word under its box"
-        end, vw = pg.locator(".hand-end").bounding_box(), pg.viewport_size["width"]
-        assert end["x"] + end["width"] <= vw + 1 and all(x[0] + x[2] <= vw for x in b)
-        assert pg.locator(".release-lane__head .stall-pack, .release-lane__head .hand-book").count() == 0, "none in the column's head"
-        assert pg.locator(".hand-end .ork-die.small").count() == 1 and pg.locator(".hand-end .ork-pack").evaluate("e => [e.offsetWidth, e.offsetHeight]") == [42, 54] and pg.locator(".hand-end .ork-book").evaluate("e => [e.offsetWidth, e.offsetHeight]") == [48, 50]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_the_backpack_opens_the_inventory_the_book_the_past_and_each_is_drawn_open_while_its_table_is_on(gui):
@@ -66,26 +47,5 @@ def test_the_backpack_opens_the_inventory_the_book_the_past_and_each_is_drawn_op
     assert not log, "\n".join(log)
 
 
-def test_the_places_sink_with_the_hand_while_a_card_is_lifted(gui):
-    pg, host, log = open_hand(gui, host=StallHost())
-    try:
-        pg.locator(".hand-book").wait_for(timeout=WAIT_MS)
-        pg.locator('.hand-card[data-kind="failed"]').first.click(position={"x": 10, "y": 24})
-        pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert pg.locator(".hand-row.is-sunk .hand-end .hand-book").count() == 1 and pg.locator(".hand-row[inert]").count() == 1, "the places lie in the sunk, inert row"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_under_760_px_the_places_stay_as_they_were(gui):
-    pg, host, log = open_hand(gui, host=StallHost(), width="narrow")
-    try:
-        pg.locator(".hand-die").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-book, [data-book]").count() == 0
-        assert pg.locator(".table-tabs__end .stall-pack").count() == 1 and pg.locator(".hand-end .stall-pack").count() == 0, "the backpack at the tabs' end"
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

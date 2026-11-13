@@ -65,26 +65,6 @@ def flights(pg):
     return pg.evaluate("() => import('/static/js/table/passing.js').then((m) => ({ ...m.passFlights }))")
 
 
-def test_a_question_passing_is_a_small_card_over_the_columns_foot_with_its_rune_two_heads_the_question_and_its_seconds(gui):
-    pg, host, log = start(gui, [row()])
-    try:
-        card = pg.locator(".frame-column .col-pass")
-        card.wait_for(timeout=WAIT_MS)
-        assert card.get_attribute("data-goal") == "talk"
-        assert card.locator(".ork-elem").count() == 1 and card.locator(".ork-race__head").count() == 2, "the goal's rune and the two heads: who asked, who it is passed to"
-        assert QUESTION in card.inner_text()
-        text = card.locator(".col-pass__left").inner_text()
-        assert text.startswith("passing on · ") and text.endswith(" s") and 1 <= int(text.split("· ")[1].split(" ")[0]) <= 6, text
-        c, col, hand = card.bounding_box(), pg.locator(".frame-column").bounding_box(), pg.locator(".frame-hand").bounding_box()
-        assert col["x"] <= c["x"] and c["x"] + c["width"] <= col["x"] + col["width"] and c["y"] + c["height"] <= hand["y"] + 1, "inside the column, over its foot"
-        assert pg.locator(".col-pass .ork-btn").count() == 0, "its choices are shown when it is pressed"
-        assert abs(c["width"] - 144) <= 1 and abs(c["height"] - 202) <= 1, f"a card, 144 x 202 (spec 168 A1): {c}"
-        shot(pg, "passing")
-        pg.wait_for_timeout(2300)
-        assert int(card.locator(".col-pass__left").get_attribute("data-left")) <= 4, "the seconds count down between snapshots"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_pressed_it_offers_answer_it_myself_and_pass_it_now_with_its_id(gui):

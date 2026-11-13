@@ -15,7 +15,6 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import HandHost, PNG, head, need, node, open_hand  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
@@ -87,8 +86,6 @@ def open_pane(pg):
     pg.locator(".sk-pane iframe.sk-frame").nth(2).wait_for(timeout=WAIT_MS)
 
 
-def pane_frame(pg, key):
-    return pg.frame_locator(f'.sk-pane iframe[title="Sketch {key} by {LEADER}"]')
 
 
 def pick_args(pg, host, at_least=1):
@@ -101,20 +98,6 @@ def pick_args(pg, host, at_least=1):
 # -- the desktop: side by side over the pane --------------------------------------------------------------------------------------------------
 
 
-def test_a_sketchs_page_runs_in_its_frame_and_cannot_reach_the_boards_page(gui):
-    pg, host, log = window(gui)
-    try:
-        open_pane(pg)
-        a = pane_frame(pg, "A")
-        a.locator("#name").wait_for(timeout=WAIT_MS)
-        assert a.locator("#name").text_content() == "the crown"
-        assert a.locator("#sandbox").text_content() == "blocked", "its script ran and could not read parent.document"
-        a.locator("#b").click()
-        assert a.locator("#b").text_content() == "pressed", "pressed as the real thing would be"
-        assert pane_frame(pg, "B").locator("#name").text_content() == "the gold frame"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_pick_this_one_under_a_variant_sends_its_letter_and_the_note_and_the_pane_goes_with_the_card(gui):
@@ -131,25 +114,6 @@ def test_pick_this_one_under_a_variant_sends_its_letter_and_the_note_and_the_pan
     assert not log, "\n".join(log)
 
 
-def test_pick_and_build_now_only_with_work_at_night_on_and_it_sends_now(gui):
-    off, host, log = window(gui)
-    try:
-        open_pane(off)
-        assert off.locator('[data-answer="pick-now"]').count() == 0 and off.get_by_role("button", name="Pick and build now").count() == 0
-    finally:
-        off.close()
-    assert not log
-    pg, host, log = window(gui, work_at_night=True)
-    try:
-        open_pane(pg)
-        now = pg.locator('.sk-one[data-variant="C"] [data-answer="pick-now"]')
-        assert now.text_content().strip() == "Pick and build now" and "primary" not in now.get_attribute("class") and "primary" in pg.locator('.sk-one[data-variant="C"] [data-answer="pick"]').get_attribute("class"), "quieter than Pick this one"
-        assert pg.locator('.sk-one[data-variant="C"] [data-answer="pick"]').bounding_box()["x"] < now.bounding_box()["x"], "beside it"
-        now.click()
-        assert pick_args(pg, host)[0] == {"slug": "party", "task": "sketch", "key": "C", "note": "", "via": "hand", "now": True}
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_sketch_again_asks_what_to_change_and_sends_new_ones_with_the_note(gui):
@@ -168,27 +132,8 @@ def test_sketch_again_asks_what_to_change_and_sends_new_ones_with_the_note(gui):
     assert not log, "\n".join(log)
 
 
-def test_no_sketch_go_on_sends_none_and_skip(gui):
-    pg, host, log = window(gui)
-    try:
-        open_pane(pg)
-        pg.get_by_role("button", name="No sketch: go on").click()
-        assert pick_args(pg, host)[0] == {"slug": "party", "task": "sketch", "key": None, "skip": True, "via": "hand"}
-        pg.locator(".sk-pane").wait_for(state="detached", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_after_three_rounds_it_says_so_and_offers_no_fourth(gui):
-    pg, host, log = window(gui, round_=3)
-    try:
-        open_pane(pg)
-        assert pg.locator('[data-part="rounds"]').text_content().strip() == "Three rounds: pick one or go on"
-        assert pg.locator('[data-answer="again-open"]').count() == 0 and pg.get_by_role("button", name="No sketch: go on").count() == 1
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 # -- the phone: one variant at a time at the screen's width ---------------------------------------------------------------------------------------
@@ -200,94 +145,13 @@ def phone(gui, **kw):
     return pg, host, log
 
 
-def test_on_the_phone_one_variant_shows_at_the_screens_width_and_a_b_c_are_buttons_that_change_it(gui):
-    pg, host, log = phone(gui)
-    try:
-        assert pg.locator(".sk-pane").count() == 0 and pg.locator("iframe.sk-frame").count() == 1, "one at a time"
-        f = pg.locator("iframe.sk-frame")
-        assert f.get_attribute("title") == f"Sketch A by {LEADER}" and f.get_attribute("sandbox") == "allow-scripts"
-        card = pg.locator(".hand-lifted--up").bounding_box()
-        box = f.bounding_box()
-        assert box["width"] >= card["width"] - 40 and box["width"] <= 390 and box["x"] >= 0 and box["x"] + box["width"] <= 391, (box, card)
-        abc = pg.locator(".sk-abc button")
-        assert [b.text_content().strip() for b in abc.all()] == ["A", "B", "C"] and abc.nth(0).get_attribute("aria-pressed") == "true"
-        assert all(b.bounding_box()["height"] >= 43 for b in abc.all()), "a target of 44 px"
-        assert pg.locator(".sk-line").text_content().strip().startswith("A · the crown")
-        pg.frame_locator("iframe.sk-frame").locator("#name").wait_for(timeout=WAIT_MS)
-        assert pg.frame_locator("iframe.sk-frame").locator("#sandbox").text_content() == "blocked"
-        abc.nth(2).click()
-        assert abc.nth(2).get_attribute("aria-pressed") == "true" and abc.nth(0).get_attribute("aria-pressed") == "false"
-        assert pg.locator("iframe.sk-frame").count() == 1 and pg.locator("iframe.sk-frame").get_attribute("title") == f"Sketch C by {LEADER}"
-        pg.frame_locator("iframe.sk-frame").locator("#name").wait_for(timeout=WAIT_MS)
-        assert pg.frame_locator("iframe.sk-frame").locator("#name").text_content() == "the moment"
-        assert pg.locator(".sk-line").text_content().strip().startswith("C · the moment")
-        narrow.no_sideways(pg)
-        shot(pg, "phone-sketch")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_on_the_phone_pick_this_one_sends_the_variant_shown_with_the_note(gui):
-    pg, host, log = phone(gui)
-    try:
-        pg.locator('.sk-abc [data-variant="B"]').click()
-        pg.get_by_role("textbox", name="A note (optional)").fill("Gold, but thinner")
-        pg.locator('[data-answer="pick"]').click()
-        assert pick_args(pg, host)[0] == {"slug": "party", "task": "sketch", "key": "B", "note": "Gold, but thinner", "via": "hand"}
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_on_the_phone_pick_and_build_now_sits_under_pick_this_one_with_work_at_night_on(gui):
-    pg, host, log = phone(gui, work_at_night=True)
-    try:
-        pick, now = pg.locator('[data-answer="pick"]'), pg.locator('[data-answer="pick-now"]')
-        assert now.text_content().strip() == "Pick and build now" and "primary" not in now.get_attribute("class")
-        assert pick.bounding_box()["y"] < now.bounding_box()["y"] and pick.bounding_box()["height"] >= 43 and now.bounding_box()["height"] >= 43
-        now.click()
-        assert pick_args(pg, host)[0] == {"slug": "party", "task": "sketch", "key": "A", "note": "", "via": "hand", "now": True}
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_on_the_phone_sketch_again_and_no_sketch_are_answers_too(gui):
-    pg, host, log = phone(gui)
-    try:
-        pg.locator('[data-answer="again-open"]').click()
-        pg.get_by_role("textbox", name="What to change").fill("Less green")
-        pg.locator('[data-answer="again"]').click()
-        assert pick_args(pg, host)[0] == {"slug": "party", "task": "sketch", "key": None, "note": "Less green", "via": "hand"}
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-    pg, host, log = phone(gui)
-    try:
-        pg.get_by_role("button", name="No sketch: go on").click()
-        assert pick_args(pg, host)[0] == {"slug": "party", "task": "sketch", "key": None, "skip": True, "via": "hand"}
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 # -- a picture is drawn as Pick one draws it ------------------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", ("wide", "phone"))
-def test_a_picture_sketch_is_pick_ones_tiles_with_the_sketchs_answers(gui, width):
-    pg, host, log = window(gui, width, media="image")
-    try:
-        if width == "wide":
-            lift(pg)
-        else:
-            pg.locator(".hand-up .up-card").first.click()                 # goal 169 F: the middle is the feed until a card of the row is pressed
-        pg.locator(".hand-way--sketch .pick-tiles").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-way--sketch .pick-tile").count() == 2 and pg.locator("iframe").count() == 0 and pg.locator(".sk-pane").count() == 0
-        assert pg.locator('[data-answer="pick"]').is_disabled(), "nothing picked yet"
-        pg.locator('.pick-tile__label[data-variant="B"]').click()
-        pg.locator('[data-answer="pick"]').click()
-        assert pick_args(pg, host)[0] == {"slug": "party", "task": "sketch", "key": "B", "note": "", "via": "hand"}
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

@@ -79,74 +79,12 @@ def ids(pg, day):
     return [c.get_attribute("data-goal") for c in row(pg, day).locator(".hist-card [data-goal]").all()]
 
 
-def test_the_grid_is_a_row_a_day_newest_first_with_a_versions_plate_on_its_day_the_cards_56_by_78_and_it_scrolls(gui):
-    pg, host, log = open_history(gui)
-    assert asked(host, "ideas.history") == [{}], "through the Orkmaster's tab: the whole project"
-    days = [r.get_attribute("data-day") for r in pg.locator(".hist-row").all()]
-    assert days[-1] == "none" and days[:-1] == sorted(days[:-1], reverse=True), "newest day first, the goals with no such day last"
-    assert days[0] == "2026-10-30" and days.index("2026-10-29") < days.index("2026-10-28") < days.index("2026-10-24"), "newest day first"
-    assert len(days) == len(set(days)), "one row a day"
-    assert ids(pg, "2026-10-28") == ["seat", "lobby"] and ids(pg, "2026-10-29") == ["words"]
-    assert row(pg, "2026-10-29").locator('.hist-plate[data-version="v:v0.2"]').inner_text().lower() == "v0.2", "the version's plate on the day it was released"
-    assert row(pg, "2026-10-10").locator('.hist-plate[data-version="v:v0.1"]').count() == 1 and row(pg, "2026-10-10").locator(".hist-card").count() == 1
-    boxes = pg.locator(".hist-row[data-day='2026-10-28'] .hist-card .ork-card.sm").evaluate_all("els => els.map((e) => { const b = e.getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height), Math.round(b.x)]; })")
-    assert [b[:2] for b in boxes] == [[56, 78], [56, 78]], boxes
-    assert boxes[1][2] - boxes[0][2] >= 56, "two cards of a day lie side by side"
-    big = pg.locator(".hist-row[data-day='2026-10-30'] .hist-card .ork-card.sm").evaluate_all("els => els.map((e) => { const b = e.getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height), b.x]; })")
-    assert len(big) == 20 and all(b[:2] == [56, 78] for b in big), "twenty on one day: still 56 × 78 each"
-    assert big[1][2] - big[0][2] < 56 and big[-1][2] > big[0][2], "a day's many lie across each other, the last whole to the right"
-    row_ = pg.locator(".hist-row[data-day='2026-10-30'] .hist-cards").bounding_box()
-    last = pg.locator(".hist-row[data-day='2026-10-30'] .hist-card").last.bounding_box()
-    assert last["x"] + last["width"] <= row_["x"] + row_["width"] + 1, "the cascade stays inside its row"
-    box = pg.locator("[data-scroll]").evaluate("e => ({sh: e.scrollHeight, ch: e.clientHeight})")
-    assert box["sh"] > box["ch"], "the grid scrolls"
-    assert pg.evaluate("() => document.documentElement.scrollWidth <= innerWidth"), "no sideways scroll"
-    shot(pg, "orkmaster")
-    finish(pg, log)
 
 
-def test_one_card_size_a_row_of_the_pane_holds_a_dozen_side_by_side_at_1366(gui):
-    pg, host, log = open_history(gui)
-    pane = pg.locator(".hist-cards").first.bounding_box()
-    assert pane["width"] >= 12 * 56, f"the pane's row holds at least a dozen 56-wide cards ({pane['width']} px)"
-    finish(pg, log)
 
 
-def test_the_switch_dates_the_grid_by_agreed_done_or_in_main_and_a_goal_missing_the_day_lies_in_the_last_row(gui):
-    pg, host, log = open_history(gui)
-    assert pg.locator(".hist-by__b").all_inner_texts() == ["agreed", "done", "in main"] and pg.locator('.hist-by [data-by="agreed"]').get_attribute("aria-pressed") == "true", "agreed is the default"
-    assert row(pg, "none").locator('[data-goal="lamp"]').count() == 1 and row(pg, "none").locator(".hist-day__nm").inner_text() == "No date", "the lamp's chain was never agreed in the window: the last row"
-    assert pg.locator(".hist-row").last.get_attribute("data-day") == "none"
-    pg.locator('.hist-by [data-by="done"]').click()
-    row(pg, "2026-11-01").wait_for(timeout=WAIT_MS)
-    assert ids(pg, "2026-11-01") == ["lobby", "lamp"] and pg.locator('.hist-by [data-by="done"]').get_attribute("aria-pressed") == "true" and pg.locator('.hist-by [data-by="agreed"]').get_attribute("aria-pressed") == "false"
-    assert row(pg, "none").locator('[data-goal="words"]').count() == 1 and row(pg, "none").locator('[data-goal="lamp"]').count() == 0, "now the one without a done day is the last row"
-    pg.locator('.hist-by [data-by="main"]').click()
-    row(pg, "2026-11-05").wait_for(timeout=WAIT_MS)
-    assert ids(pg, "2026-11-04") == ["words", "lamp"] and row(pg, "none").count() == 0, "every goal has its day in main"
-    assert pg.locator(".hist-row").first.get_attribute("data-day") == "2026-11-05"
-    assert pg.locator(".hist-by").get_attribute("aria-label") == "Dated by"
-    shot(pg, "in-main")
-    finish(pg, log)
 
 
-def test_a_search_lights_the_cards_found_and_dims_the_rest(gui):
-    pg, host, log = open_history(gui)
-    assert pg.locator(".hist-card.is-lit, .hist-card.is-dim").count() == 0, "nothing lit before a search"
-    pg.locator(".hist-search").fill("seat")
-    pg.wait_for_function("() => document.querySelectorAll('.hist-card.is-lit').length === 1", timeout=WAIT_MS)
-    assert asked(host, "ideas.chronicle_find") == [{"query": "seat"}]
-    assert pg.locator(".hist-card.is-lit [data-goal]").get_attribute("data-goal") == "seat"
-    assert pg.locator(".hist-card.is-dim").count() == pg.locator(".hist-card").count() - 1, "the rest dim"
-    pg.wait_for_timeout(400)
-    assert pg.locator(".hist-card.is-dim").first.evaluate("e => getComputedStyle(e).opacity") == "0.3" and pg.locator(".hist-card.is-lit").evaluate("e => getComputedStyle(e).opacity") == "1"
-    shot(pg, "search")
-    pg.locator(".hist-search").fill("")
-    pg.wait_for_function("() => document.querySelectorAll('.hist-card.is-dim').length === 0", timeout=WAIT_MS)
-    pg.locator(".hist-search").fill("zzzz")
-    pg.locator(".hist-scroll .chr-none").first.wait_for(timeout=WAIT_MS)
-    assert "Nothing in the history has those words" in pg.locator(".hist-scroll").inner_text() and pg.locator(".hist-card.is-lit").count() == 0
-    finish(pg, log)
 
 
 def test_through_a_leaders_tab_the_history_holds_only_the_goals_its_party_worked_on(gui):
@@ -174,16 +112,3 @@ def test_a_card_pressed_puts_the_history_away_and_opens_the_goals_result(gui):
     finish(pg, log)
 
 
-def test_the_discard_holds_no_past_deck_and_the_card_hovered_shows_at_144_by_202(gui):
-    pg, host, log = open_history(gui)
-    pg.locator("[data-book]").click()                                                                      # shut: the table with the discard
-    pg.locator(".table-over[data-kind='history']").wait_for(state="detached", timeout=WAIT_MS)
-    pg.locator(".release-lane").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".release-lane__past, .release-lane__deck, .release-lane__deal, .release-lane [data-deck], .release-lane [data-version]").count() == 0
-    assert asked(host, "ideas.chronicle") == [], "the discard no longer reads the past"
-    pg.locator("[data-book]").click()
-    pg.locator(".hist-card [data-goal='seat']").hover()
-    pg.locator(".pv-host .ork-card, .pv-host [class*=pv]").first.wait_for(timeout=WAIT_MS)
-    big = pg.locator(".pv-host .ork-card").first.bounding_box()
-    assert (round(big["width"]), round(big["height"])) == (144, 202)
-    finish(pg, log)

@@ -7841,3 +7841,32 @@ Accept and the Board's bookkeeping to cheaper models: «Да, сделай». So
    session's model: the person picks it, Sonnet at a low effort enough for a conductor that writes nothing of the seats'.
 
 The owner's call.
+
+## 308. A browser test checks a person's path, not pixels: what they pressed and what changed on the Board; one path, one width; pure logic runs in node; a test never stays red (13 November 2026, the owner)
+
+Changes: the browser tests that checked the old table's sizes and markup (§304.1 removed 554 of them and left their kind),
+and every earlier decision's habit of a test for each size, colour and animation of a face. Kept: 268, 291 (the look
+itself, held by `tests/test_design_system.py`), 296's *no pixel picture*, and the wording tests (`tests/test_gui_wording.py`).
+
+Why: the person, 13 November 2026: the browser tests were 149 files, 1,367 tests and 40 minutes (the other 5,300 run in
+five), unstable under load (19 failures and 91 errors on untouched code, 12 phone tests red always), and removing the old
+table had broken 554 of them, nearly all about pixels and markup, not behaviour. Each rebuild of a face cost more than
+the face. The aim: what is new is added fast. So:
+1. **A browser test is a person's path**: what they pressed or typed and what changed on the Board (a command sent, a card
+   dealt or put away, a place opened, a word said). It does not check pixels, exact sizes, computed styles or colours,
+   the timing of an animation or a card's flight, or the order of nodes in the markup. Whether a face fits, reads and
+   keeps its look is orkUI's (`design-system/orkui`) and the owner's eye, not a test's.
+2. **One path, one width.** A path is checked at one window width (`narrow.WIDTHS` is the wide one). A second width is
+   taken only where the behaviour is different (the phone's first screen is the hand, a narrow window deals a question
+   as a turn card), never for another layout of the same behaviour.
+3. **Pure logic of the page is checked without a browser**: a rule (a leader's mood, the strip's counts, a phone's way
+   through the remote) is a function called by node, as `tests/test_phone_remote_js.py` and `tests/test_page_logic_js.py`
+   do. If a browser test is removed and it was the only check of such a function, the check moves there.
+4. **A test that is red always is mended or removed, never kept red.** A suite that has red it ignores hides the red that
+   matters; the gate of a goal reads green or it says why.
+5. **The paths held**, one or two tests each: the first open; sending a goal from the deck (N); answering a leader;
+   Talk and the throw; opening a mat and playing a card from the hand; the gate as a battle, To main from the discard,
+   Release; Stop all; the projects (Ctrl+O) and Esc back; the phone (pairing, sending a goal, the offline queue). The
+   VS Code frame is `tests/test_extension.py` and `vscode`'s own tests.
+
+The owner's call.

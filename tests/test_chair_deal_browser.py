@@ -10,7 +10,6 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import open_hand, party  # noqa: E402
 from tests.test_stall_browser import StallHost  # noqa: E402
@@ -79,27 +78,8 @@ def press_chair(pg):
     pg.wait_for_timeout(500)
 
 
-def test_with_no_pick_in_the_presets_the_first_reached_unseated_craft_is_the_orkmasters_pick(gui):
-    """Spec 161 I: no preset says a pick, so the Orkmaster's is the first unseated craft whose stage is reached, in the presets' order."""
-    pg, host, log = open_hand(gui, host=ChairHost(pick=False))
-    try:
-        press_chair(pg)
-        assert pg.locator(".hand-craft").count() == 2 and pg.locator("[data-star]").count() == 1
-        pick = pg.locator('.hand-craft[data-pick="1"]')
-        assert pick.count() == 1 and pick.get_attribute("data-craft") == "marketing" and pick.locator("[data-pick-words]").inner_text() == "the Orkmaster's pick"
-        assert not log, log
-    finally:
-        pg.close()
 
 
-def test_the_first_pick_skips_a_craft_whose_stage_is_not_reached(gui):
-    pg, host, log = open_hand(gui, host=ChairHost(pick=False, stage="being_made"))
-    try:
-        press_chair(pg)
-        assert pg.locator(".hand-craft").count() == 1 and pg.locator('.hand-craft[data-pick="1"]').get_attribute("data-craft") == "marketing"
-        assert pg.locator("[data-star]").count() == 1
-    finally:
-        pg.close()
 
 
 def test_put_it_back_and_esc_send_nothing_and_seat_nothing(gui):
@@ -136,16 +116,3 @@ def test_a_crafts_card_seats_it_once_and_the_backpack_opens_on_its_chair(gui):
         pg.close()
 
 
-def test_the_narrow_page_keeps_the_parties_place(gui):
-    server, browser = gui
-    host = ChairHost()
-    pg = narrow.page(browser, "narrow")
-    pg.route_web_socket("**/ws*", host.on_socket)
-    try:
-        pg.goto(server.url)
-        pg.locator(".table-chair").wait_for(timeout=WAIT_MS)
-        pg.locator(".table-chair").click()
-        pg.wait_for_timeout(300)
-        assert pg.locator("[data-chair-deal]").count() == 0 and pg.locator(".parties-wrap").count() == 1
-    finally:
-        pg.close()

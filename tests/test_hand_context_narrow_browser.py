@@ -166,60 +166,21 @@ def name_of(pg):
     return pg.locator(".hand-lifted .hand-card__name").inner_text().strip()
 
 
-def wait_title(pg, text):
-    pg.wait_for_function("(t) => document.querySelector('.hand-lifted .hand-card__name')?.textContent.trim() === t", arg=text, timeout=WAIT_MS)
 
 
 def css_colour(pg, token):
     return pg.evaluate("(t) => { const e = document.createElement('i'); e.style.color = 'var(' + t + ')'; document.body.append(e); const c = getComputedStyle(e).color; e.remove(); return c; }", token)
 
 
-def test_the_screen_is_the_notice_the_top_row_the_middle_and_the_hand_row_from_the_top_with_no_board_no_arrows_no_deck(gui):
-    pg, host, log = open_up(gui)
-    try:
-        assert pg.locator(".frame").get_attribute("data-upright") == "1"
-        assert pg.locator(".frame-table").is_hidden() and pg.locator(".table-tabs").is_hidden(), "no Board on a phone"
-        top, look, row, w, h = box(pg.locator(".up-top")), box(pg.locator(".up-look")), box(pg.locator(".up-row")), pg.viewport_size["width"], pg.viewport_size["height"]
-        assert top["y"] < look["y"] < row["y"], "the top row, the middle, the hand's row"
-        assert round(top["height"]) == 61 or round(top["height"]) == 60, "the top row is 60 px (and its line)"
-        assert round(row["height"]) == 73 and abs(row["y"] + row["height"] - h) <= 1, "the hand's row (its rim, a gutter and a card cut at 62) lies at the screen's foot"
-        assert look["y"] >= top["y"] + top["height"] - 1 and look["y"] + look["height"] <= row["y"] + 1
-        for gone in (".up-nav", ".up-edge", ".up-deck", ".up-stack", ".up-navrow"):
-            assert pg.locator(gone).count() == 0, gone
-        assert pg.get_by_role("button", name="The Board").count() == 0 and "Turn the phone" not in pg.locator("body").inner_text()
-        text = pg.locator(".hand-up").inner_text().lower()
-        assert "deck" not in text and "stack" not in text and "menu" not in text, "never those words in the interface"
-        shot(pg, "phone-question")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_the_crown_is_a_44_px_button_at_the_left_of_the_top_row_and_opens_the_menu_of_the_leaders(gui):       # the menu itself: tests/test_phone_menu_browser.py
-    pg, host, log = open_up(gui)
-    try:
-        c = crown(pg)
-        r = box(c)
-        assert r["width"] >= 44 and r["height"] >= 44 and r["x"] < 16 and "/races/peon-crown" in c.locator("img").get_attribute("src"), "the Orkmaster's crowned head at the left"
-        assert c.get_attribute("aria-expanded") == "false" and box(pots(pg).first)["x"] > r["x"] + r["width"] - 1
-        c.click()
-        pg.locator(".up-menu").wait_for(timeout=WAIT_MS)
-        assert c.get_attribute("aria-expanded") == "true" and pg.locator(".up-menu").get_attribute("aria-label") == "The leaders and their goals"
-        pg.keyboard.press("Escape")
-        pg.locator(".up-menu").wait_for(state="detached", timeout=WAIT_MS)
-        assert pg.get_by_role("menu").count() == 0, "no **…** menu any more"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_the_die_says_play_it_on_the_computer_and_throws_nothing(gui):        # goal 169 H: the die is the round button's face at the foot's right, Play one of its three (was: a small die in the top row)
     pg, host, log = open_up(gui)
     try:
         die = pg.locator(".hand-up .up-round")
-        r, row = box(die), box(pg.locator(".up-row"))
-        assert die.count() == 1 and pg.locator(".up-top .up-die, .up-top .ork-die").count() == 0 and r["width"] >= 44 and r["height"] >= 44 and r["x"] + r["width"] >= pg.viewport_size["width"] - 16 and r["y"] >= row["y"] - 8, "at the foot's right"
+        assert die.count() == 1 and pg.locator(".up-top .up-die, .up-top .ork-die").count() == 0
         assert "/ds/orkui/die/die-" in die.locator("img").get_attribute("src"), "orkUI's cartoon die on its face"
         die.click()
         pg.get_by_role("button", name=PLAY_UP, exact=True).click()
@@ -232,38 +193,8 @@ def test_the_die_says_play_it_on_the_computer_and_throws_nothing(gui):        # 
     assert not log, "\n".join(log)
 
 
-def test_the_discard_is_a_small_pile_that_opens_the_goals_done_and_ready_over_the_pane_none_with_nothing(gui):
-    pg, host, log = open_up(gui, "question")
-    try:
-        assert pg.locator(".hand-up .up-pile").count() == 0, "none while nothing is done and nothing waits for main"
-    finally:
-        pg.close()
-    pg, host, log = open_up(gui, "ready")
-    try:
-        pile = pg.locator(".hand-up .up-pile")
-        r, top = box(pile), box(pile.locator(".up-pile__top"))
-        assert pile.count() == 1 and r["width"] >= 44 and r["x"] + r["width"] > pg.viewport_size["width"] - 24 and box(pots(pg).last)["x"] < r["x"], "at the top row's right end, after the bottles (goal 169 H: the die left the row)"
-        assert round(top["width"]) == 32 and round(top["height"]) == 44, "its top card 32 x 44"
-        assert pile.get_attribute("aria-label").startswith("Done: Lobby music loop") and "2 goals ready for main" in pile.get_attribute("aria-label")
-        shot(pg, "phone-pile")
-        pile.click()
-        pg.wait_for_selector(".table-over", timeout=WAIT_MS)
-        assert pg.locator(".table-over").get_attribute("data-kind") == "discard" and pg.locator(".hand-up").is_hidden()
-        assert "ready for main" in pg.locator(".hand-discardview").inner_text().lower()
-        pg.get_by_role("button", name="Back").click()
-        pg.wait_for_selector(".hand-up", state="visible", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_a_card_of_no_goal_has_no_goal_header_no_way_and_its_card_is_in_the_row(gui):
-    pg, host, log = open_up(gui, "paid", first=True)
-    try:
-        assert pg.locator(".up-gh, .up-phases, .up-gfeed").count() == 0 and pg.locator(".up-look").get_attribute("data-look") == "card" and cards(pg).count() == 1 and cards(pg).first.get_attribute("aria-pressed") == "true"
-        assert cards(pg).first.locator(".up-card__name").inner_text().strip() == "Go on paid?"
-    finally:
-        pg.close()
 
 
 def ready_card(pg):
@@ -276,26 +207,6 @@ def to_ready(pg):
     pg.wait_for_function("() => document.querySelector('.hand-ready')?.dataset.portal !== 'wait'", timeout=WAIT_MS)
 
 
-def test_a_sealed_goal_says_its_reason_in_danger_and_a_press_sends_nothing(gui):
-    host = UprightHost("readyonly")
-    host.plans["music"]["sealed"] = "Lobby does not apply to main cleanly: player.ts"
-    pg, host, log = open_up(gui, host=host)
-    try:
-        to_ready(pg)
-        door = ready_card(pg).locator("button.ork-portal")
-        assert "is-sealed" in door.get_attribute("class") and door.get_attribute("aria-label").startswith("Sealed: ")
-        reason = ready_card(pg).locator(".hand-ready__sealed")
-        assert reason.inner_text().strip() == "Sealed: Lobby does not apply to main cleanly: player.ts"
-        assert reason.evaluate("(e) => getComputedStyle(e).color") == css_colour(pg, "--ork-danger")
-        assert ready_card(pg).locator(".hand-ready__hint").count() == 0, "no first-time line over a sealed portal"
-        shot(pg, "phone-sealed")
-        door.click()
-        pg.wait_for_timeout(300)
-        assert _calls(pg, host, "ideas.to_main") == [] and ready_card(pg).count() == 1
-        assert reason.inner_text().strip().startswith("Sealed: ")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_later_puts_the_card_back_and_the_next_comes_while_the_goal_stays_ready(gui):
@@ -313,13 +224,3 @@ def test_later_puts_the_card_back_and_the_next_comes_while_the_goal_stays_ready(
         pg.close()
 
 
-def test_the_first_time_line_is_not_said_again_once_seen(gui):
-    pg, host, log = open_up(gui, "readyonly")
-    try:
-        pg.evaluate("() => localStorage.setItem('orkboard.portal.seen', '1')")
-        pg.reload()
-        pg.wait_for_selector(".hand-up .up-card", timeout=WAIT_MS)
-        to_ready(pg)
-        assert ready_card(pg).locator(".hand-ready__hint").count() == 0 and "is-new" not in ready_card(pg).locator("button.ork-portal").get_attribute("class")
-    finally:
-        pg.close()

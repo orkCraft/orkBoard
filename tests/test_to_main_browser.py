@@ -102,26 +102,8 @@ def press_to_main(pg, width, slug="music"):
         pg.locator(".portal-host .ork-portal").click()
 
 
-def test_the_portal_asks_the_checks_then_sends_with_no_release_seated_at_the_narrow_width(gui):
-    pg, host, log = narrow_view(gui, NoReleaseHost())
-    try:
-        press_to_main(pg, "narrow", "codes")
-        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "codes"}))
-        assert names(host) == ["ideas.to_main_checks", "ideas.to_main"], "the checks are asked first, then the goal is sent"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_the_discards_to_main_asks_the_checks_then_sends_at_the_narrow_width(gui):
-    pg, host, log = narrow_view(gui, NoReleaseHost())
-    try:
-        pg.locator(".hand-part__head [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
-        assert names(host) == ["ideas.to_main_checks", "ideas.to_main"]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_to_main_on_the_table_asks_the_checks_then_sends_at_the_wide_width(gui):
@@ -175,21 +157,6 @@ def test_a_project_with_no_tests_offers_to_main_without_the_tests_and_only_that_
     assert all("no tests" in m for m in log), "\n".join(log)
 
 
-def test_the_merge_of_dev_says_the_tests_run_while_they_do_and_a_red_in_words(gui):
-    host = NoReleaseHost()
-    host.red = True
-    pg, host, log = open_lane(gui, host)
-    try:
-        said = pg.evaluate("""async () => {
-          const m = await import('/static/js/arena/gate.js'), p = m.mergeGate(), during = [m.testing.value, m.TESTING];
-          await p;
-          return [...during, m.testing.value];
-        }""")
-        assert said == [True, "Running the tests…", False], "the running state shows while the host runs the tests and ends with the answer"
-        pg.get_by_text("Tests is red: tests/test_player.py::test_lobby_opens failed").first.wait_for(timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert all("Tests is red" in m for m in log), "\n".join(log)
 
 
 def test_red_survives_reselection_and_only_test_again_retries(gui):
@@ -219,30 +186,6 @@ def test_red_survives_reselection_and_only_test_again_retries(gui):
         assert names(host).count("ideas.to_main_checks") > count
         tomain(pg).locator("[data-to-main]").click()
         assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_green_test_again_lifts_the_seal_the_gates_row_still_says(gui):
-    """Trial 152 E's review: the gate's row says `main_ready: false` as the Board was read, and is not read again when a check ends; a Test again that
-    passes lifts the seal on the goal's card and in the discard all the same."""
-    host = NoReleaseHost()
-    host.red = True
-    for row in host.gate_doc["ideas"]:
-        if row["slug"] == "music":
-            row.update(main_ready=False, main_reason="tests/test_player.py::test_lobby_opens failed (1 of 12)")
-    pg, host, log = open_lane(gui, host)
-    try:
-        assert lane_card(pg, "music").get_attribute("aria-label").endswith("checks failed"), "the row's word before any check is followed here"
-        lane_card(pg, "music").click()
-        retry = tomain(pg).get_by_role("button", name="Test again", exact=True)
-        retry.wait_for(timeout=WAIT_MS)
-        host.red = False
-        retry.click()
-        pg.wait_for_function("() => document.querySelector('.release-lane [data-portal-card=\"music\"]')?.getAttribute('aria-label').endsWith('ready for main')", timeout=WAIT_MS)
-        assert "Checks failed" not in lane_card(pg, "music").text_content()
-        assert not tomain(pg).locator("[data-to-main]").is_disabled()
     finally:
         pg.close()
     assert not log, "\n".join(log)

@@ -105,25 +105,6 @@ def size(loc):
 
 # -- an idea ------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_an_idea_through_a_leader_is_one_row_of_three_groups_of_big_cards_that_fit_the_window(gui):
-    pg, host, errors = start(gui, "talk")
-    pg.locator('[data-view="say"] .say-group').first.wait_for(timeout=WAIT_MS)
-    groups = pg.locator(".say-group")
-    assert [g.get_attribute("data-group") for g in groups.all()] == ["verdict", "needs", "better"]
-    assert [g.locator(".ork-label").first.inner_text().strip().lower() for g in groups.all()] == ["its verdict", "needs your answer", "could be better"]
-    assert len({round(g.bounding_box()["y"]) for g in groups.all()}) == 1, "one row"
-    assert [pg.locator(f'.say-group[data-group="{k}"] .say-card').count() for k in ("verdict", "needs", "better")] == [1, 2, 2]
-    for c in pg.locator(".say-card").all():
-        assert size(c) == (144, 202), "the big card, no other size"
-    assert pg.locator('.say-card[data-group="needs"].is-alert').count() == 2, "an open need asks you"
-    assert pg.locator('.say-card[data-group="verdict"] [data-verdict="doubt"]').count() == 1
-    assert [c.get_attribute("data-weight") for c in pg.locator('.say-card[data-group="better"]').all()] == ["lighter", "heavier"]
-    assert "lighter" in pg.locator('.say-card[data-weight="lighter"]').inner_text() and "§208" in pg.locator('.say-card[data-kind="conflict"]').inner_text()
-    last = max(c.bounding_box()["y"] + c.bounding_box()["height"] for c in pg.locator(".say-card").all())
-    assert last < 768 - 140, "the row ends above the hand"
-    assert pg.locator(".table-over").count() == 0
-    shot(pg, "c4-idea.png")
-    finish(pg, errors)
 
 
 def test_a_better_is_taken_and_a_way_is_taken_through_the_commands_and_the_rewrite_is_undone(gui):
@@ -147,41 +128,10 @@ def test_a_better_is_taken_and_a_way_is_taken_through_the_commands_and_the_rewri
     finish(pg, errors)
 
 
-def test_an_open_fork_lies_first_among_the_needs_and_its_choice_answers_it(gui):
-    pg, host, errors = start(gui, "talk")
-    host.seat["say"]["fork"] = {"id": "fork-1", "at": "", "ids": ["b1", "b2"], "card": {"q": "Lighter or heavier?", "choices": ["Lighter", "Heavier"], "pick": 0, "why": "", "lines": []}}
-    host.rev += 1
-    host.push()
-    pg.locator('.say-card[data-say="fork-1"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator('.say-group[data-group="needs"] .say-card').first.get_attribute("data-say") == "fork-1"
-    assert pg.locator('.say-group[data-group="needs"] .say-card').count() == 3, "three a group at most"
-    pg.locator('.say-card[data-say="fork-1"]').click()
-    pg.locator('.hand-ways-row [data-way="way-1"]').click(position={"x": 20, "y": 30})
-    pg.locator('.say-card[data-say="fork-1"]').wait_for(state="detached", timeout=WAIT_MS)
-    assert ("ideas.say_fork", {"idea": "seat", "pick": 1}) in host.log
-    finish(pg, errors)
 
 
 # -- a spec -------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_spec_through_a_leader_has_the_steps_header_with_the_seat_that_cannot_marked_and_the_parts_now_and_as_they_will_be(gui):
-    pg, host, errors = start(gui, "sections")
-    pg.locator(".spec-steps .spec-step").first.wait_for(timeout=WAIT_MS)
-    assert [s.get_attribute("data-step") for s in pg.locator(".spec-step").all()] == ["game", "tech", "art"]
-    for c in pg.locator(".spec-step .ork-card.sm").all():
-        assert size(c) == (56, 78), "the small card"
-    tester = pg.locator('.spec-step[data-step="tech"] .spec-seat[data-seat="tester"]')
-    assert tester.get_attribute("data-tool") == "codex" and tester.get_attribute("data-lacks") == "network"       # its tests are made on Codex (the host commits, the gate runs the browser); its research is not
-    assert tester.locator(".spec-seat__lack").count() == 1 and "Codex" in tester.inner_text()
-    assert pg.locator('.spec-step[data-step="tech"] .spec-seat[data-seat="grunt"] .spec-seat__lack').count() == 0, "code needs nothing of the tool"
-    assert pg.locator('.spec-step[data-step="art"][data-marked="1"]').count() == 0, "pixel art is made on Codex: its commit is the host's"
-    pg.locator('.spec-parts .spec-part').first.wait_for(timeout=WAIT_MS)
-    part = pg.locator('.spec-part[data-kind="changed"]')
-    assert part.locator('[data-side="now"]').count() == 1 and part.locator('[data-side="will"]').count() == 1
-    assert "lobby.ts" in part.inner_text()
-    assert "The seat is kept" in pg.locator('[data-view="spec"]').inner_text(), "its section as written stays under them"
-    shot(pg, "c4-spec.png")
-    finish(pg, errors)
 
 
 # -- the implementation -------------------------------------------------------------------------------------------------------------------------------

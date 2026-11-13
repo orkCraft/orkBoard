@@ -10,7 +10,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, need, open_hand, shot  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, open_hand, shot  # noqa: E402
 from tests.test_night_card_browser import open_settings  # noqa: E402
 from tests.test_shell_browser import _sent  # noqa: E402
 

@@ -77,29 +77,8 @@ def buttons(card):
     return [b.inner_text().strip() for b in card.locator(".hand-answers .ork-btn").all()]
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_lifted_it_says_the_sentence_the_pages_and_what_waits_and_has_the_two_answers(gui, width):
-    pg, host, log = open_card(gui, width, pages=12)
-    try:
-        card = lift(pg)
-        assert card.locator('[data-line="ask"]').inner_text().strip() == SAY + " 12 pages of the Board are already in its history."
-        assert card.locator('[data-line="held"]').inner_text().strip() == HELD
-        assert buttons(card) == ["Publish the Board", "Keep the Board off the repository"] and card.locator(".hand-answers .ork-btn.primary").count() == 1
-        shot(pg, f"{width}-in-code-lifted")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_with_no_page_in_the_history_and_nothing_held_the_card_says_only_the_sentence(gui):
-    pg, host, log = open_card(gui, held="")
-    try:
-        card = lift(pg)
-        assert card.locator('[data-line="ask"]').inner_text().strip() == SAY and card.locator('[data-line="held"]').count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -126,32 +105,5 @@ def test_keep_the_board_off_sends_the_no_and_the_card_goes(gui, width):
     assert not log, "\n".join(log)
 
 
-def test_a_remote_orkboard_cannot_read_asks_if_it_is_private_first_and_private_is_the_yes(gui):
-    pg, host, log = open_card(gui, step="private")
-    try:
-        assert front(pg).locator(".hand-card__name").text_content().strip() == "Is this repository private?"
-        card = lift(pg)
-        assert card.locator('[data-line="ask"]').inner_text().strip() == "Is this repository private?" and buttons(card) == ["Private", "Public"]
-        shot(pg, "wide-in-code-private")
-        card.get_by_role("button", name="Private").click()
-        assert _calls(pg, host, "ideas.in_code") == [{"answer": "private"}]
-        pg.wait_for_function("() => !document.querySelector('.hand-card[data-kind=\"in_code\"]')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-def test_public_sends_nothing_and_goes_on_to_the_publish_question(gui):
-    pg, host, log = open_card(gui, step="private", pages=3)
-    try:
-        card = lift(pg)
-        card.get_by_role("button", name="Public").click()
-        assert not host.log or all(name != "ideas.in_code" for name, _a in host.log), "Public is no answer yet"
-        card.locator('[data-in-code="publish"]').wait_for(timeout=WAIT_MS)
-        assert card.locator('[data-line="ask"]').inner_text().strip() == SAY + " 3 pages of the Board are already in its history."
-        assert buttons(card) == ["Publish the Board", "Keep the Board off the repository"]
-        card.get_by_role("button", name="Keep the Board off the repository").click()
-        assert _calls(pg, host, "ideas.in_code") == [{"answer": "off"}]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

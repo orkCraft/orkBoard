@@ -25,8 +25,7 @@ pytest.importorskip("playwright.sync_api")
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_maps_desktop_browser import MapsHost, Refused  # noqa: E402
-from tests.test_picking_desktop_browser import open_field, part  # noqa: E402
-from tests.test_table_desktop_browser import node, party, shot, tab, title, watch  # noqa: E402
+from tests.test_table_desktop_browser import node, tab, watch  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -181,10 +180,6 @@ def look(pg, party="tech"):
     return pg.evaluate("p => import('/static/js/table/concerns.js').then((m) => m.lookOf(p))", party)
 
 
-def wait_look(pg, party="tech", **want):
-    """Waits until `lookOf(party)` has these fields."""
-    cn(pg)
-    pg.wait_for_function("([p, w]) => { const l = window.__cn.lookOf(p); return Object.entries(w).every(([k, v]) => l[k] === v); }", arg=[party, want], timeout=WAIT_MS)
 
 
 def step(pg, party="tech", level="", aspect=""):
@@ -196,25 +191,8 @@ def row(pg):
     return pg.locator(".table-head .cn-aspects")
 
 
-def menu_item(pg, name, party_name="Tech"):
-    pg.get_by_role("button", name=f"{party_name}'s menu").click()
-    return pg.get_by_role("menuitem", name=name)
 
 
-def bubble_of(pg, tab="tech"):
-    """The leader's bubble of a tab, open: a stand-in for the tabs' head (spec 123 F) carrying `data-ask-head` presses `openAsk`, and the bubble stands under it."""
-    pg.evaluate("""(tab) => {
-        if (!document.querySelector(`[data-ask-head="${tab}"]`)) {
-          const b = document.createElement('button');
-          b.type = 'button'; b.dataset.askHead = tab; b.textContent = 'head';
-          Object.assign(b.style, { position: 'fixed', left: '920px', top: '4px', width: '48px', height: '44px', zIndex: 5 });
-          document.body.append(b);
-        }
-        return import('/static/js/table/ask.js').then((m) => { if (m.askOpen.value === null) m.openAsk(tab); });
-    }""", tab)
-    box = pg.locator(".table-ask__bubble")
-    box.wait_for(timeout=WAIT_MS)
-    return box
 
 
 def chip(pg, aid):
@@ -241,346 +219,48 @@ def wide(w):
 
 # -- the marks -----------------------------------------------------------------------------------------------------------------------------------------
 
-def test_an_alert_wears_the_alert_sign_and_the_leaders_head_a_note_a_dot_on_a_part_of_the_system_inside_its_scaled_box(desk):
-    pg, host, w = desk
-    system(pg)
-    lobby, rooms = marks(pg).locator("xpath=.").filter(has=pg.locator(".ork-sign.alert")), marks(pg).filter(has=pg.locator(".cn-dot"))
-    pg.locator('.cn-mark[data-level="alert"]').first.wait_for(timeout=WAIT_MS)
-    assert lobby.count() == 1 and rooms.count() == 1, "an alert on lobby.ts, a note on rooms.ts"
-    alert = pg.locator('.cn-mark[data-level="alert"]')
-    assert "peon-elder" in alert.locator(".ork-race__head").get_attribute("src"), "the leader's small head beside the sign"
-    assert alert.get_attribute("aria-label") == "2 concerns of the Architect", "two on one card: the highest level, the count in the label only"
-    assert alert.inner_text().strip() == "" and rooms.get_attribute("aria-label") == "1 concern of the Architect"
-    assert rooms.locator(".ork-race__head").count() == 0 and rooms.locator(".ork-sign").count() == 0, "a note is a dot, no head"
-    assert pg.locator(".arch .cn-slot").count() == 2, "the marks lie inside the System's scaled box, so they scale with it"
-    card, mark = part(pg, LOBBY).bounding_box(), alert.bounding_box()
-    assert card["x"] + card["width"] / 2 < mark["x"] and mark["x"] + mark["width"] <= card["x"] + card["width"] + 1, "at the card's top right"
-    assert card["y"] - 1 <= mark["y"] <= card["y"] + card["height"] / 3
-    assert part(pg, LOBBY).get_attribute("data-concern") == "alert" and part(pg, ROOMS).get_attribute("data-concern") == "note" and part(pg, INDEX).get_attribute("data-concern") is None
-    assert pg.locator(".cn-slot button, button .cn-slot").count() == 0, "a button holds no button"
-    shot(pg, f"concerns-system-{w}.png")
 
 
-def test_a_step_of_the_loop_and_a_currency_wear_theirs(desk):
-    pg, host, w = desk
-    loop(pg)
-    hold, join, coins = (pg.locator(f'.mp-card[data-id="{i}"]') for i in ("hold-the-tower", "join-a-match", "cur:coins"))
-    hold.locator('.cn-mark[data-level="alert"]').wait_for(timeout=WAIT_MS)
-    assert hold.locator(".ork-sign.alert").count() == 1 and "knight-elder" in hold.locator(".ork-race__head").get_attribute("src")
-    assert hold.locator(".cn-mark").get_attribute("aria-label") == "1 concern of the Game design lead"
-    assert join.locator('.cn-mark[data-level="note"] .cn-dot').count() == 1 and coins.locator('.cn-mark[data-level="note"] .cn-dot').count() == 1
-    assert pg.locator(".mp-card:not([data-concern])").count() > 0 and pg.locator(".mp-card[data-concern]").count() == 3
-    assert hold.locator(".mp-card__nm").bounding_box()["width"] > 0
-    shot(pg, f"concerns-loop-{w}.png")
 
 
-def test_a_map_marked_by_one_record_loses_the_marks_when_the_record_changes(desk):
-    pg, host, w = desk
-    loop(pg)
-    pg.locator(".cn-mark").first.wait_for(timeout=WAIT_MS)
-    host.records["game"] = record(copy.deepcopy(GAME[1]), rubric=GAME_RUBRIC)
-    host.rev += 1
-    host.ws.send(json.dumps(host.snapshot()))
-    pg.locator('.cn-mark[data-level="alert"]').wait_for(state="detached", timeout=WAIT_MS)
-    assert pg.locator(".cn-slot").count() == 1 and pg.locator(".mp-card[data-concern]").count() == 1
 
 
 # -- what the strip said: lookOf, Ask again, stepMarked ------------------------------------------------------------------------------------------------------
 
-def test_lookof_says_the_counts_the_looking_the_none_and_the_failure(desk):
-    pg, host, w = desk
-    system(pg)
-    assert look(pg) == {"status": "ready", "alerts": 1, "notes": 2, "error": "", "since": None}
-    assert pg.locator(".cn-strip").count() == 0, "no strip over the map: the leader says it at the table"
-    host.records["tech"] = record(*[concern(f"a{i}", INDEX, "alert", f"alert {i}") for i in range(2)], *[concern(f"n{i}", ROOMS, "note", f"note {i}") for i in range(3)])
-    push(pg, host)
-    wait_look(pg, alerts=2, notes=3)
-    host.records["tech"] = record()
-    push(pg, host)
-    wait_look(pg, alerts=0, notes=0)
-    pg.wait_for_function("() => !document.querySelector('.cn-slot .cn-mark, [data-concern]')", timeout=WAIT_MS)
-    assert look(pg)["status"] == "ready"
-    host.records["tech"] = record(status="looking")
-    push(pg, host)
-    wait_look(pg, status="looking")
-    host.records["tech"] = record(status="failed", error="The window of Claude is spent: it will look again after the reset.")
-    push(pg, host)
-    wait_look(pg, status="failed")
-    assert look(pg)["error"] == "The window of Claude is spent: it will look again after the reset."
-    host.records["tech"] = record(since={"way": "toward", "line": "A clearer way through.", "at": "2026-11-01T18:00:00", "map_hash": "h2"})
-    push(pg, host)
-    wait_look(pg, status="ready")
-    assert look(pg)["since"]["line"] == "A clearer way through."
 
 
-def test_lookof_falls_back_to_the_snapshots_counts_while_there_is_no_record(gui):
-    host = ConcernHost()
-    host.refuse = True                                                                                         # the commands are refused, the Board still carries each goal's counts
-    pg, host, errors = start(gui, "wide", host)
-    try:
-        go(pg, "tech")
-        pg.locator(".table-sys .sys[data-state=shown]").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert look(pg, "tech") == {"status": "ready", "alerts": 1, "notes": 2, "error": "", "since": None}
-        assert look(pg, "game") == {"status": "ready", "alerts": 1, "notes": 2, "error": "", "since": None}
-        assert look(pg, "art") == {"status": "ready", "alerts": 0, "notes": 0, "error": "", "since": None}
-        assert look(pg, "nobody") == {"status": "", "alerts": 0, "notes": 0, "error": "", "since": None}
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_ask_again_is_in_the_partys_menu_sends_the_command_and_waits_for_the_look(desk):
-    pg, host, w = desk
-    system(pg)
-    assert pg.locator(".cn-strip__again").count() == 0
-    item = menu_item(pg, "Ask again")
-    assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all() if i.inner_text().strip() != "Seats and tools"] == ["Edit", "Ask again", "Remove party"]      # at the wide width the menu also has *Seats and tools* (spec 168 E1)
-    assert item.get_attribute("title") == "The Architect looks at the table again" and item.is_enabled()
-    item.click()
-    wait_look(pg, status="looking")
-    assert host.sent("ideas.concerns_again") == [{"party": "tech"}]
-    assert menu_item(pg, "Ask again").is_disabled(), "while it looks it cannot be asked again"
-    pg.keyboard.press("Escape")
-    wait_look(pg, status="ready")                                                                              # the look ends: the page asked again while it was under way
-    assert len(host.sent("ideas.concerns")) >= 3
-    host.records["tech"] = record(status="failed", error="spent")
-    push(pg, host)
-    wait_look(pg, status="failed")
-    pg.keyboard.press("Escape")
-    assert menu_item(pg, "Ask again").is_enabled(), "a failed look can be asked for again"
 
 
-def test_a_party_with_no_record_has_no_ask_again(gui):
-    host = ConcernHost()
-    host.older = True
-    pg, host, errors = start(gui, "wide", host)
-    try:
-        go(pg, "tech")
-        pg.locator(".table-head").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(400)
-        pg.get_by_role("button", name="Tech's menu").click()
-        assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all() if i.inner_text().strip() != "Seats and tools"] == ["Edit", "Remove party"], "a host that does not know the look has nothing to ask again"
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_stepmarked_steps_through_the_marked_cards_the_alerts_first(desk):
-    pg, host, w = desk
-    system(pg)
-    lower = lambda: pg.keyboard.press("Escape") if wide(w) else back(pg).get_by_role("button", name="Back").click()  # noqa: E731  (narrow: the back is a screen over the head)
-    assert step(pg) is True
-    back(pg).wait_for(timeout=WAIT_MS)
-    assert part(pg, LOBBY).get_attribute("aria-pressed") == "true" and back(pg).get_attribute("data-lifted") == f"t:part:tech:{LOBBY}"
-    assert pg.evaluate("() => window.__scrolls.at(-1)") == "smooth"
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    assert step(pg) is True
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{ROOMS}"]').wait_for(timeout=WAIT_MS)                # then the note
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    assert step(pg) is True
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{LOBBY}"]').wait_for(timeout=WAIT_MS)                # and round again
 
 
-def test_stepmarked_by_level_steps_only_through_the_alerts_or_only_the_notes(desk):
-    pg, host, w = desk
-    system(pg)
-    lower = lambda: pg.keyboard.press("Escape") if wide(w) else back(pg).get_by_role("button", name="Back").click()  # noqa: E731
-    assert step(pg, "tech", "note") is True
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{ROOMS}"]').wait_for(timeout=WAIT_MS)                # the only card that is marked a note (lobby.ts shows its highest level)
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    assert step(pg, "tech", "note") is True
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{ROOMS}"]').wait_for(timeout=WAIT_MS)                # its one card, round again
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    assert step(pg, "tech", "alert") is True
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{LOBBY}"]').wait_for(timeout=WAIT_MS)
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    host.records["tech"] = record(concern("c1", LOBBY, "note", "a note only"))
-    push(pg, host)
-    pg.wait_for_function("() => !document.querySelector('.cn-mark[data-level=alert]')", timeout=WAIT_MS)
-    assert step(pg, "tech", "alert") is False, "no card marked an alert: nothing to step to"
 
 
 # -- the card's back -----------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_marked_part_pressed_lifts_and_its_back_lists_each_concern(desk):
-    pg, host, w = desk
-    system(pg)
-    part(pg, LOBBY).click()
-    back(pg).locator("[data-concerns-back]").wait_for(timeout=WAIT_MS)
-    items = back(pg).locator(".cn-item")
-    assert items.count() == 2 and items.nth(0).get_attribute("data-level") == "alert" and items.nth(1).get_attribute("data-level") == "note"
-    assert "Every room goes through lobby.ts" in items.nth(0).locator(".cn-item__what").inner_text()
-    assert "Eleven parts use it and it holds the sockets too." in items.nth(0).locator(".cn-item__why").inner_text()
-    assert "Split the sockets out of it." in items.nth(0).locator(".cn-item__fix").inner_text()
-    assert back(pg).locator(".cn-back > .ork-label").inner_text().lower() == "2 concerns of the architect"
-    assert items.nth(0).get_by_role("button", name="Make it a goal").get_attribute("class").split().count("primary") == 1
-    assert items.nth(0).get_by_role("button", name="Not a problem").count() == 1
-    assert back(pg).locator(".table-back__part").count() == 1, "the part's own back is kept"
-    shot(pg, f"concerns-back-{w}.png")
-    pg.keyboard.press("Escape")
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    part(pg, INDEX).click()                                                                                 # a part with no concern: today's back alone
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{INDEX}"]').wait_for(timeout=WAIT_MS)
-    assert back(pg).locator("[data-concerns-back]").count() == 0
 
 
-def test_a_marked_step_of_the_loop_lifted_lists_its_concern_and_not_a_problem_sends_the_command(desk):
-    pg, host, w = desk
-    loop(pg)
-    pg.locator('.mp-card[data-id="hold-the-tower"] .mp-card__nm').click()
-    back(pg).locator("[data-concerns-back]").wait_for(timeout=WAIT_MS)
-    assert "Nothing in the loop pays for holding the tower" in back(pg).locator(".cn-item__what").inner_text()
-    back(pg).get_by_role("button", name="Not a problem").click()
-    back(pg).locator("[data-concerns-back]").wait_for(state="detached", timeout=WAIT_MS)
-    assert host.sent("ideas.concern_dismiss") == [{"party": "game", "id": "g1"}]
-    assert pg.locator('.mp-card[data-id="hold-the-tower"][data-concern]').count() == 0 and pg.locator('.mp-card[data-id="hold-the-tower"] .cn-mark').count() == 0
-    wait_look(pg, "game", alerts=0, notes=2)
 
 
-def test_make_it_a_goal_sends_the_command_and_the_mark_becomes_a_link_to_the_goal_in_its_element(desk):
-    pg, host, w = desk
-    system(pg)
-    part(pg, ROOMS).click()
-    back(pg).get_by_role("button", name="Make it a goal").click()
-    pg.locator(".cn-mark.is-made").wait_for(timeout=WAIT_MS)
-    assert host.sent("ideas.concern_goal") == [{"party": "tech", "id": "c3"}]
-    link = pg.locator(".cn-mark.is-made")
-    assert link.evaluate("e => e.tagName") == "BUTTON" and link.get_attribute("data-elem") == "ice" and "rooms.ts grows" in link.get_attribute("aria-label")
-    ice = pg.evaluate("""() => { const s = document.createElement('i'); s.style.color = 'var(--ork-elem-ice)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }""")
-    assert link.evaluate("e => getComputedStyle(e).color") == ice, "the goal's element's colour"
-    assert back(pg).locator(".cn-item__goal").count() == 1 and back(pg).get_by_role("button", name="Make it a goal").count() == 0
-    pg.keyboard.press("Escape")                                                                             # the back lies over the card: lowered, the mark is pressed
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    link.click()
-    assert "rooms.ts grows" in title(pg), "the goal is picked"
-    assert pg.locator(".cn-mark.is-made").count() == 1
 
 
 # -- the tab -------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_party_tab_shows_a_bang_when_its_map_has_an_alert_and_no_count(desk):
-    pg, host, w = desk
-    pg.locator('.table-tab[data-tab="tech"] .table-tab__alert').wait_for(timeout=WAIT_MS)
-    assert pg.locator(".table-tab__alert").count() == 2, "Tech's and Game design's"
-    bang = tab(pg, "tech").locator(".table-tab__alert")
-    assert bang.locator(".ork-sign.alert").count() == 1 and bang.get_attribute("aria-label") == "The Architect has an alert on the table"
-    assert not any(ch.isdigit() for ch in bang.inner_text()) and bang.inner_text().strip() == "", "no count on a tab (decisions §145.3)"
-    assert tab(pg, "art").locator(".table-tab__alert").count() == 0 and tab(pg, "orkmaster").locator(".table-tab__alert").count() == 0
-    host.records["game"] = record(copy.deepcopy(GAME[1]), rubric=GAME_RUBRIC)                                                      # only a note: no mark
-    host.rev += 1
-    host.ws.send(json.dumps(host.snapshot()))
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab__alert').length === 1", timeout=WAIT_MS)
-    assert tab(pg, "game").locator(".table-tab__alert").count() == 0
-    shot(pg, f"concerns-tabs-{w}.png")
 
 
 # -- reduced motion, touch, picking, an older host ----------------------------------------------------------------------------------------------------
 
-def test_nothing_moves_under_reduced_motion(gui):
-    pg, host, errors = start(gui, "wide", reduced_motion="reduce")
-    try:
-        system(pg)
-        host.records["tech"]["status"] = "looking"
-        push(pg, host)
-        wait_look(pg, status="looking")
-        moves = pg.evaluate("""() => [...document.querySelectorAll('.cn-aspects, .cn-aspects *, .cn-slot, .cn-slot *, .table-tab__alert, .ork-busy')].filter((e) => {
-            const s = getComputedStyle(e); const parts = (a) => a.split(',').map((x) => x.trim());
-            return s.animationName !== 'none' || parts(s.transitionDuration).some((d) => d !== '0s');
-          }).map((e) => e.className)""")
-        assert moves == [], moves
-        assert step(pg) is True
-        assert pg.evaluate("() => window.__scrolls.at(-1)") == "auto", "stepping jumps, it does not glide"
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_every_target_is_44_px_at_the_narrow_width(gui):
-    pg, host, errors = start(gui, "narrow")
-    try:
-        loop(pg)                                                                                            # the loop is drawn at its own size (the System's fit scales what it holds)
-        for b in pg.locator(".table-head .table-seat, .table-head .cn-aspects button").all():
-            assert b.bounding_box()["height"] >= 43.9 and b.bounding_box()["width"] >= 43.9, b.inner_text()
-        pg.locator('.mp-card[data-id="hold-the-tower"] .mp-card__nm').click()
-        back(pg).get_by_role("button", name="Make it a goal").wait_for(timeout=WAIT_MS)
-        for b in back(pg).locator(".cn-item .ork-btn").all():
-            assert b.bounding_box()["height"] >= 44 and b.bounding_box()["width"] >= 44, b.inner_text()
-        back(pg).get_by_role("button", name="Make it a goal").click()
-        back(pg).get_by_role("button", name="Back").click()
-        back(pg).wait_for(state="detached", timeout=WAIT_MS)
-        link = pg.locator(".cn-mark.is-made")
-        link.wait_for(timeout=WAIT_MS)
-        box = link.bounding_box()
-        assert box["width"] >= 43.9 and box["height"] >= 43.9
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_picking_still_works_on_a_marked_card_and_wins_over_the_back(desk):
-    pg, host, w = desk
-    system(pg)
-    open_field(pg)
-    pg.locator(".pick-strip").wait_for(timeout=WAIT_MS)
-    # spec 168 D1/D2: the new goal's card in play stands at the table's foot, left (144 x 202) and the map runs under it: a press lands on the part's free corner, never under the card
-    free = {"x": 110, "y": 20} if w == "wide" else {"x": 8, "y": 8}
-    part(pg, LOBBY).click(position=free)
-    assert part(pg, LOBBY).get_attribute("data-picked") == "true" and "ork-taken" in part(pg, LOBBY).get_attribute("class")
-    assert back(pg).count() == 0, "a press in picking is a pick: the card does not lift"
-    assert part(pg, LOBBY).get_attribute("data-concern") == "alert" and pg.locator('.cn-mark[data-level="alert"]').count() == 1
-    assert pg.locator('.cn-mark[data-level="alert"]').evaluate("e => getComputedStyle(e).pointerEvents") == "none"
-    part(pg, LOBBY).click(position=free)
-    assert part(pg, LOBBY).get_attribute("data-picked") is None
 
 
-def test_an_older_host_without_the_commands_shows_no_row_and_no_mark_and_throws_nothing(gui):
-    host = ConcernHost()
-    host.older = True
-    pg, host, errors = start(gui, "wide", host)
-    try:
-        go(pg, "tech")
-        pg.locator(".table-sys .sys[data-state=shown]").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(500)
-        assert pg.locator(".cn-aspects").count() == 0 and pg.locator(".cn-slot").count() == 0 and pg.locator("[data-concern]").count() == 0
-        assert look(pg) == {"status": "", "alerts": 0, "notes": 0, "error": "", "since": None}
-        assert pg.locator(".table-tab__alert").count() == 0 and pg.locator(".ork-toast, .gui-toast").count() == 0
-        part(pg, LOBBY).click()
-        back(pg).wait_for(timeout=WAIT_MS)
-        assert back(pg).locator("[data-concerns-back]").count() == 0
-        go(pg, "game")
-        pg.locator(".mp-st").first.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".cn-aspects").count() == 0 and pg.locator(".mp-card[data-concern]").count() == 0
-        assert [n for n, _ in host.log if n == "ideas.concerns"], "it asked, and was refused quietly"
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_the_orkmasters_tab_and_a_party_with_no_map_read_no_record_and_have_no_row(gui):
-    host = ConcernHost()
-    host.parties.append(party("ops", len(host.parties)))                                                      # no craft, not led by the Architect: no map
-    pg, host, errors = start(gui, "wide", host)
-    try:
-        go(pg, "game")
-        row(pg).wait_for(timeout=WAIT_MS)
-        go(pg, "ops")
-        pg.locator(".table-head").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert row(pg).count() == 0 and not [a for n, a in host.log if n == "ideas.concerns" and a["party"] == "ops"]
-        pg.get_by_role("button", name="ops's menu").click()
-        assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all() if i.inner_text().strip() != "Seats and tools"] == ["Edit", "Remove party"], "no map: nothing for its leader to look at again"
-        pg.keyboard.press("Escape")
-        go(pg, "orkmaster")
-        assert pg.locator(".cn-aspects, .table-head").count() == 0
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
 # -- the aspects (spec 109 part C) ----------------------------------------------------------------------------------------------------------------------
@@ -589,191 +269,22 @@ STATES = {"modularity": "hint", "coupling": "alert", "hotspots": "note", "testab
 WORDS = {"modularity": "Modularity: a hint from code", "coupling": "Coupling: 1 concern", "hotspots": "Hotspots: 1 concern", "testability": "Testability: 1 concern", "safety": "Security and reliability: nothing wrong"}
 
 
-def test_the_aspects_row_lies_in_the_partys_header_each_chip_in_its_state_with_its_mark_and_words(desk):
-    pg, host, w = desk
-    system(pg)
-    row(pg).wait_for(timeout=WAIT_MS)
-    assert row(pg).get_attribute("role") == "group" and row(pg).get_attribute("aria-label") == "What the Architect looks at"
-    assert pg.locator(".table-head .cn-aspects").count() == 1 and pg.locator(".cn-strip").count() == 0, "in the party's header: no strip under it"
-    shown = list(STATES) if wide(w) else ["coupling", "hotspots", "testability"]                                  # under 760 px only the aspects with an open concern
-    if wide(w):
-        assert row(pg).locator(".cn-aspects__short").inner_text() == "C4 · ISO 25010 · hotspots", "the rubric's short words first, in the muted caption"
-    else:
-        assert row(pg).locator(".cn-aspects__short").count() == 0
-    assert [c.get_attribute("data-aspect") for c in row(pg).locator(".cn-aspect").all()] == shown, "the rubric's order"
-    for aid in shown:
-        c = chip(pg, aid)
-        assert "ork-chip" in c.get_attribute("class").split() and c.get_attribute("data-state") == STATES[aid]
-        assert c.get_attribute("aria-label") == WORDS[aid], aid
-        assert not any(ch.isdigit() for ch in c.inner_text()), "no count is drawn on a chip (decisions §145.3)"
-    assert chip(pg, "coupling").locator(".ork-sign.alert").count() == 1 and chip(pg, "coupling").inner_text().strip() == "Coupling"
-    assert chip(pg, "hotspots").locator(".cn-dot").count() == 1 and chip(pg, "testability").locator(".cn-dot").count() == 1, "a note's muted dot"
-    if wide(w):
-        assert chip(pg, "modularity").locator(".cn-hint").count() == 1 and chip(pg, "modularity").locator(".ork-sign").count() == 0, "a hint: a hollow square"
-        assert chip(pg, "safety").locator(".ork-sign.check").count() == 1, "clear: a small tick"
-        assert chip(pg, "safety").inner_text().strip() == "Security and reliability"
-        hint = chip(pg, "modularity").locator(".cn-hint")
-        assert hint.evaluate("e => getComputedStyle(e).backgroundColor") in ("rgba(0, 0, 0, 0)", "transparent") and hint.evaluate("e => getComputedStyle(e).borderTopWidth") == "1px"
-        dot = chip(pg, "hotspots").locator(".cn-dot")
-        assert hint.evaluate("e => getComputedStyle(e).borderTopColor") == dot.evaluate("e => getComputedStyle(e).backgroundColor"), "the hint is in the muted ink, as the note's dot"
-        assert "server/index imports 9 parts" in chip(pg, "modularity").get_attribute("title"), "its ask, then the hints' words"
-    alert_ink = pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-alert)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
-    assert chip(pg, "coupling").locator(".ork-sign").evaluate("e => getComputedStyle(e).color") == alert_ink, "the alert sign in the alert tone"
-    assert "Does a change ripple" in chip(pg, "coupling").get_attribute("title")
-    head_box = pg.locator(".table-head").bounding_box()
-    for c in row(pg).locator(".cn-aspect").all():
-        box = c.bounding_box()
-        assert box["x"] >= head_box["x"] - 1 and box["x"] + box["width"] <= head_box["x"] + head_box["width"] + 1, "every chip inside the header: the row wraps"
-    assert pg.locator(".table-head").evaluate("e => e.scrollWidth - e.clientWidth") <= 0
-    shot(pg, f"concerns-aspects-system-{w}.png")
-    host.records["tech"]["concerns"].append(concern("c4", INDEX, "note", "index.ts is big", "", "", "", "hotspots"))      # two concerns of one aspect: the label counts them
-    host.records["tech"]["rubric"]["aspects"][2]["n"] = 2
-    push(pg, host)
-    pg.locator('.cn-aspect[data-aspect="hotspots"][aria-label="Hotspots: 2 concerns"]').wait_for(timeout=WAIT_MS)
 
 
-def test_only_an_aspect_with_a_card_on_the_map_is_a_button_the_others_are_spans_that_are_not_focusable(desk):
-    pg, host, w = desk
-    system(pg)
-    row(pg).wait_for(timeout=WAIT_MS)
-    for aid in ("coupling", "hotspots", "testability"):
-        assert chip(pg, aid).evaluate("e => e.tagName") == "BUTTON", aid
-    assert row(pg).get_by_role("button").count() == 3
-    if wide(w):
-        for aid in ("modularity", "safety"):
-            assert chip(pg, aid).evaluate("e => e.tagName") == "SPAN" and chip(pg, aid).get_attribute("tabindex") is None, aid
-        assert row(pg).get_by_role("img").count() == 2
-        chip(pg, "modularity").click(force=True)
-        chip(pg, "safety").click(force=True)
-        pg.wait_for_timeout(150)
-        assert back(pg).count() == 0, "a hint of no part, or a clear aspect, is pressed to nothing more than its title"
-    else:
-        assert chip(pg, "modularity").count() == 0 and chip(pg, "safety").count() == 0, "under 760 px the aspects with no open concern are not drawn"
 
 
-def test_a_press_on_an_aspect_steps_through_only_its_cards(desk):
-    pg, host, w = desk
-    system(pg)
-    row(pg).wait_for(timeout=WAIT_MS)
-    lower = lambda: pg.keyboard.press("Escape") if wide(w) else back(pg).get_by_role("button", name="Back").click()  # noqa: E731
-    chip(pg, "hotspots").click()                                                                              # Hotspots has one concern, on rooms.ts: not lobby.ts, the alert
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{ROOMS}"]').wait_for(timeout=WAIT_MS)
-    assert part(pg, ROOMS).get_attribute("aria-pressed") == "true" and part(pg, LOBBY).get_attribute("aria-pressed") != "true"
-    assert pg.evaluate("() => window.__scrolls.at(-1)") == "smooth"
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    chip(pg, "coupling").click()
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{LOBBY}"]').wait_for(timeout=WAIT_MS)
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    chip(pg, "coupling").click()                                                                              # its one card, round again
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{LOBBY}"]').wait_for(timeout=WAIT_MS)
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    assert step(pg) is True                                                                                   # stepping through all of them still goes from the first
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{LOBBY}"]').wait_for(timeout=WAIT_MS)
 
 
-def test_a_press_on_an_aspect_with_two_cards_steps_from_one_to_the_other(desk):
-    pg, host, w = desk
-    host.records["tech"]["concerns"][1]["aspect"] = "hotspots"                                               # lobby.ts's note joins rooms.ts's
-    host.records["tech"]["rubric"]["aspects"][2]["n"] = 2
-    system(pg)
-    row(pg).wait_for(timeout=WAIT_MS)
-    lower = lambda: pg.keyboard.press("Escape") if wide(w) else back(pg).get_by_role("button", name="Back").click()  # noqa: E731
-    chip(pg, "hotspots").click()
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{LOBBY}"]').wait_for(timeout=WAIT_MS)                 # the alert-marked card first
-    lower()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    chip(pg, "hotspots").click()
-    pg.locator(f'.table-back[data-lifted="t:part:tech:{ROOMS}"]').wait_for(timeout=WAIT_MS)
 
 
-def test_a_marked_cards_back_names_each_concerns_aspect_beside_its_level(desk):
-    pg, host, w = desk
-    system(pg)
-    part(pg, LOBBY).click()
-    back(pg).locator("[data-concerns-back]").wait_for(timeout=WAIT_MS)
-    labels = back(pg).locator(".cn-item__what .ork-label")
-    assert [x.text_content().strip() for x in labels.all()] == ["Alert · Coupling", "Note · Testability"]
-    shot(pg, f"concerns-aspects-back-{w}.png")
-    pg.keyboard.press("Escape") if wide(w) else back(pg).get_by_role("button", name="Back").click()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    part(pg, ROOMS).click()
-    back(pg).locator("[data-concerns-back]").wait_for(timeout=WAIT_MS)
-    assert back(pg).locator(".cn-item__what .ork-label").text_content().strip() == "Note · Hotspots"
 
 
-def test_a_loop_step_says_its_aspect_too_and_the_loops_row_is_its_rubrics(desk):
-    pg, host, w = desk
-    loop(pg)
-    row(pg).wait_for(timeout=WAIT_MS)
-    assert chip(pg, "loop").get_attribute("aria-label") == "Core loop: 1 concern"
-    if wide(w):
-        assert row(pg).locator(".cn-aspects__short").inner_text() == "MDA · loops · economy" and row(pg).locator(".cn-aspect").count() == 5
-        assert chip(pg, "retention").get_attribute("aria-label") == "Retention: nothing wrong"
-    else:
-        assert [c.get_attribute("data-aspect") for c in row(pg).locator(".cn-aspect").all()] == ["loop", "economy", "pacing"], "only those with an open concern"
-    assert row(pg).get_attribute("aria-label") == "What the Game design lead looks at"
-    chip(pg, "economy").click()                                                                               # a currency's card is lifted
-    pg.locator('.table-back[data-lifted*="cur:coins"]').wait_for(timeout=WAIT_MS)
-    assert back(pg).locator(".cn-item__what .ork-label").text_content().strip() == "Note · Economy"
-    shot(pg, f"concerns-aspects-loop-{w}.png")
 
 
-def test_an_aspect_not_looked_at_yet_is_a_muted_chip_with_no_mark_and_no_button(desk):
-    pg, host, w = desk
-    system(pg)
-    row(pg).wait_for(timeout=WAIT_MS)
-    host.records["tech"] = record(rubric={**TECH_RUBRIC, "aspects": [aspect(a["id"], a["name"], a["ask"], "unlooked") for a in TECH_RUBRIC["aspects"]]})
-    host.records["tech"]["at"] = ""
-    push(pg, host)
-    if not wide(w):
-        row(pg).wait_for(state="detached", timeout=WAIT_MS)
-        assert pg.locator(".cn-aspect").count() == 0, "under 760 px an aspect not looked at has no open concern: no row"
-        return
-    pg.locator('.cn-aspect[data-state="unlooked"]').first.wait_for(timeout=WAIT_MS)
-    assert row(pg).locator(".cn-aspect").count() == 5 and row(pg).locator("button").count() == 0
-    assert chip(pg, "coupling").get_attribute("aria-label") == "Coupling: not looked at yet"
-    assert chip(pg, "coupling").locator(".ork-sign, .cn-dot, .cn-hint").count() == 0 and chip(pg, "coupling").inner_text().strip() == "Coupling"
-    assert chip(pg, "coupling").evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-ink-muted)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
-    shot(pg, f"concerns-aspects-unlooked-{w}.png")
 
 
-def test_a_record_with_no_rubric_draws_no_row_and_the_back_names_no_aspect(desk):
-    pg, host, w = desk
-    system(pg)
-    row(pg).wait_for(timeout=WAIT_MS)
-    del host.records["tech"]["rubric"]                                                                        # an older host: the record has none
-    push(pg, host)
-    row(pg).wait_for(state="detached", timeout=WAIT_MS)
-    assert look(pg)["alerts"] == 1 and look(pg)["notes"] == 2 and pg.locator(".cn-aspect").count() == 0
-    part(pg, LOBBY).click()
-    back(pg).locator("[data-concerns-back]").wait_for(timeout=WAIT_MS)
-    assert [x.text_content().strip() for x in back(pg).locator(".cn-item__what .ork-label").all()] == ["Alert", "Note"]
-    pg.keyboard.press("Escape") if wide(w) else back(pg).get_by_role("button", name="Back").click()
-    back(pg).wait_for(state="detached", timeout=WAIT_MS)
-    host.records["tech"]["rubric"] = None                                                                     # or a craft with none: null
-    push(pg, host)
-    pg.wait_for_timeout(300)
-    assert pg.locator(".cn-aspects").count() == 0 and look(pg)["alerts"] == 1
 
 
-def test_every_aspect_chip_that_is_a_button_is_44_px_at_the_narrow_width(gui):
-    pg, host, errors = start(gui, "narrow")
-    try:
-        system(pg)
-        row(pg).wait_for(timeout=WAIT_MS)
-        for b in row(pg).locator("button").all():
-            box = b.bounding_box()
-            assert box["height"] >= 43.9 and box["width"] >= 43.9, b.inner_text()
-        assert row(pg).locator("button").count() == 3
-        assert row(pg).evaluate("e => e.scrollWidth - e.clientWidth") <= 0
-        shot(pg, "concerns-aspects-touch-narrow.png")
-        narrow.no_sideways(pg)
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
 # -- spec 121 part F (docs/specs/121-the-day-the-morning-and-the-night.md §6, §7.4), spec 123 §6.3: the evening line, at the top of the leader's bubble ---------------------------------------------
@@ -789,95 +300,13 @@ def evening(pg):
     return pg.locator(".table-ask__bubble .cn-since")
 
 
-@pytest.fixture
-def deskw(gui):
-    """The wide window against a ConcernHost (the bubble is the desktop's): `(page, host, "wide")`."""
-    pg, host, errors = start(gui, "wide")
-    yield pg, host, "wide"
-    narrow.no_sideways(pg)
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_the_evening_line_is_at_the_top_of_the_bubble_with_the_check_in_the_ink_for_toward(deskw):
-    pg, host, w = deskw
-    host.records["tech"]["since"] = since("toward")
-    system(pg)
-    bubble_of(pg, "tech")
-    line = evening(pg)
-    line.wait_for(timeout=WAIT_MS)
-    assert line.get_attribute("data-way") == "toward" and " ".join(line.locator(".cn-since__line").inner_text().split()) == f"Since your last look: {SINCE_LINE}"
-    mark = line.locator(".cn-since__way")
-    assert mark.get_attribute("role") == "img" and mark.get_attribute("aria-label") == "toward", "its way as a word for a screen reader"
-    assert mark.locator(".ork-sign.check").count() == 1
-    assert mark.locator(".ork-sign").evaluate("e => getComputedStyle(e).color") == line.locator("b").evaluate("e => getComputedStyle(e).color"), "the check is in the ink, as the words are"
-    assert line.evaluate("e => getComputedStyle(e).fontFamily") == pg.evaluate("() => getComputedStyle(document.body).fontFamily"), "the line is in the body face (orkUI 0.40: one face, Rubik, for every word)"
-    who, box = pg.locator(".table-ask__who").bounding_box(), line.bounding_box()
-    assert who["y"] + who["height"] <= box["y"] + 1 and pg.locator(".table-ask__field").bounding_box()["y"] >= box["y"] + box["height"] - 1, "under the leader's name, over the field"
-    narrow.no_sideways(pg)
-    shot(pg, f"concerns-evening-toward-{w}.png")
 
 
-def test_away_is_the_alert_sign_in_the_alert_tone_and_unclear_the_muted_dot(deskw):
-    pg, host, w = deskw
-    host.records["tech"]["since"] = since("away", "The lobby lost its back button and the room codes broke.")
-    system(pg)
-    bubble_of(pg, "tech")
-    evening(pg).wait_for(timeout=WAIT_MS)
-    away = evening(pg)
-    assert away.get_attribute("data-way") == "away" and away.locator(".cn-since__way").get_attribute("aria-label") == "away" and away.locator(".ork-sign.alert").count() == 1
-    alert_ink = pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-alert)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
-    assert away.locator(".ork-sign.alert").evaluate("e => getComputedStyle(e).color") == alert_ink, "the alert's tone"
-    assert away.locator(".ork-sign.alert").evaluate("e => getComputedStyle(e).color") != away.locator("b").evaluate("e => getComputedStyle(e).color")
-    shot(pg, f"concerns-evening-away-{w}.png")
-    host.records["tech"]["since"] = since("unclear", "Nothing it can tell yet.")
-    push(pg, host)
-    pg.wait_for_function("() => document.querySelector('.cn-since')?.dataset.way === 'unclear'", timeout=WAIT_MS)
-    dot = evening(pg).locator(".cn-since__way")
-    assert dot.get_attribute("aria-label") == "unclear" and dot.locator(".cn-dot").count() == 1 and dot.locator(".ork-sign").count() == 0
-    muted = pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-ink-muted)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c; }")
-    assert dot.locator(".cn-dot").evaluate("e => getComputedStyle(e).backgroundColor") == muted, "the muted ink"
-    host.records["tech"]["since"] = since("sideways")                                                           # a way out of the three is read as unclear
-    push(pg, host)
-    pg.wait_for_function("() => document.querySelector('.cn-since__way')?.getAttribute('aria-label') === 'unclear'", timeout=WAIT_MS)
-    assert evening(pg).get_attribute("data-way") == "unclear"
 
 
-def test_no_line_without_since_and_one_that_goes_when_the_next_look_has_none(deskw):
-    pg, host, w = deskw
-    system(pg)
-    bubble_of(pg, "tech")
-    assert evening(pg).count() == 0, "the map did not change since the look before"
-    host.records["tech"]["since"] = since("toward")
-    push(pg, host)
-    evening(pg).wait_for(timeout=WAIT_MS)
-    host.records["tech"]["since"] = None
-    push(pg, host)
-    evening(pg).wait_for(state="detached", timeout=WAIT_MS)
-    host.records["tech"]["since"] = {"way": "toward", "line": "   "}                                              # a line that says nothing is no line
-    push(pg, host)
-    pg.wait_for_timeout(300)
-    assert evening(pg).count() == 0
 
 
-def test_the_evening_line_is_drawn_for_a_record_with_no_aspects_too(deskw):
-    pg, host, w = deskw
-    del host.records["tech"]["rubric"]
-    host.records["tech"]["since"] = since("away")
-    system(pg)
-    bubble_of(pg, "tech")
-    evening(pg).wait_for(timeout=WAIT_MS)
-    assert row(pg).count() == 0 and evening(pg).locator(".ork-sign.alert").count() == 1
 
 
-def test_the_bubble_opens_by_itself_once_when_a_party_has_an_evening_line(deskw):
-    pg, host, w = deskw
-    host.records["tech"]["since"] = since("toward")
-    pg.evaluate("""() => {
-        const b = document.createElement('button');
-        b.type = 'button'; b.dataset.askHead = 'tech'; Object.assign(b.style, { position: 'fixed', left: '920px', top: '4px', width: '48px', height: '44px', zIndex: 5 });
-        document.body.append(b);
-    }""")
-    go(pg, "tech")
-    pg.locator(".table-ask__bubble").wait_for(timeout=WAIT_MS)
-    assert evening(pg).count() == 1

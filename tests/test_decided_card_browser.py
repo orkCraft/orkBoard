@@ -12,7 +12,7 @@ pytest.importorskip("playwright.sync_api")
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_concerns_desktop_browser import ConcernHost, start  # noqa: E402
 from tests.test_maps_desktop_browser import Refused  # noqa: E402
-from tests.test_table_desktop_browser import node as board_node, shot  # noqa: E402
+from tests.test_table_desktop_browser import node as board_node  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -75,12 +75,6 @@ def play(pg, key):
     return lifted
 
 
-def test_played_it_says_what_was_decided_and_why_and_has_accepted_and_replay_by_their_kinds(decided):
-    pg, host = decided
-    lifted = play(pg, f"decided/{SLUG}/q1")
-    assert box(lifted) == (120, 168) and "a new file" in lifted.text_content() and "rooms.ts is full" in lifted.text_content()
-    ways = pg.locator(".hand-ways-cards button[data-way-kind]")
-    assert [(ways.nth(i).get_attribute("data-way-kind"), ways.nth(i).locator(".hand-ans__name").inner_text()) for i in range(ways.count())] == [("go_on", "Accepted"), ("ask_more", "Replay")]
 
 
 def test_accepted_sends_its_command_and_only_that_card_goes(decided):
@@ -99,37 +93,9 @@ def test_replay_sends_its_command_and_the_card_goes_back_as_a_question(decided):
     assert host.sent("ideas.decided_replay") == [{"idea": SLUG, "id": "q1"}]
 
 
-def test_a_replay_the_keeper_refuses_leaves_the_card_where_it_is(decided):
-    pg, host = decided
-    host.gone_on = True
-    play(pg, f"decided/{SLUG}/q1")
-    pg.locator('.hand-ways-cards button[data-way-kind="ask_more"]').click()
-    pg.wait_for_timeout(600)
-    assert host.sent("ideas.decided_replay") == [{"idea": SLUG, "id": "q1"}] and pg.locator('.hand-lifted[data-kind="decided"]').count() == 1
-    assert pg.locator(CARD).count() >= 1
 
 
-def test_the_cards_leave_by_themselves_when_the_goal_moves_to_its_next_stage(decided):
-    pg, host = decided
-    assert pg.locator(CARD).count() == 1
-    host.advance()
-    pg.wait_for_function("() => document.querySelectorAll('.hand-card[data-kind=\"decided\"]').length === 0", timeout=WAIT_MS)
-    assert host.sent("ideas.decided_accept") == [] and host.sent("ideas.decided_replay") == []                  # nobody pressed anything
 
 
-def test_the_narrow_page_deals_no_decision_card(gui):
-    pg, host, errors = start(gui, "narrow", DecidedHost())
-    pg.wait_for_timeout(600)
-    assert pg.locator(CARD).count() == 0
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_pictures_at_1366_by_768(gui):
-    pg, host, errors = start(gui, "wide", DecidedHost(), **LIT)
-    pg.locator(CARD).first.wait_for(timeout=WAIT_MS)
-    shot(pg, "h4-veto-cards-in-the-hand.png")
-    play(pg, f"decided/{SLUG}/q1")
-    shot(pg, "h4-veto-card-played.png")
-    pg.context.close()
-    assert not errors, "\n".join(errors)

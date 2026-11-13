@@ -81,51 +81,9 @@ def test_todays_spend_opens_this_week_over_the_pane_with_its_lines_in_order(gui)
     assert not errors, "\n".join(errors)
 
 
-def test_a_null_part_and_a_missing_price_are_left_out(gui):
-    host = WeekHost()
-    host.week.update(usd_per_merged=None)
-    pg, host, errors = _show(gui, host)
-    assert _lines(pg) == ["≈$46 of work at API prices in this project: not your bill", "12 results in dev, 10 the first time"]
-    pg.keyboard.press("Escape")
-    host.week.update(usd=None, merged=0, first_time=0)
-    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
-    _spend(pg).click()
-    pg.locator('.place[aria-label="This week"] .week').wait_for(timeout=WAIT_MS)
-    assert _lines(pg) == ["No results in dev in the last 7 days"]
-    pg.close()
-    assert not errors, "\n".join(errors)
 
 
 # -- spec 44 B: the week's pace ---------------------------------------------------------------------------------------
 
-def test_the_week_line_says_when_low_work_waits_and_last_weeks_unused_share(gui):
-    host = WeekHost()
-    host.week.update(week={"left": 0.55, "rest": 2 / 7, "pace": "ahead", "reset": 0}, last_unused=0.3)
-    pg, host, errors = _show(gui, host)
-    assert _lines(pg)[-2:] == ["The week: 55 % left with 2 days to go", "Last week ended with 30 % unused"]
-    for pace, words in (("even", ""), ("behind", ": Low work waits until the week comes back")):
-        host.week.update(week={"left": 0.2, "rest": 1 / 7, "pace": pace, "reset": 0}, last_unused=None)
-        pg.keyboard.press("Escape")
-        pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
-        _spend(pg).click()
-        pg.locator('.place[aria-label="This week"] .week').wait_for(timeout=WAIT_MS)
-        got = _lines(pg)
-        assert f"The week: 20 % left with 1 day to go{words}" in got and not [x for x in got if x.startswith("Last week ended")]
-    host.week.update(week=None)
-    pg.keyboard.press("Escape")
-    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
-    _spend(pg).click()
-    pg.locator('.place[aria-label="This week"] .week').wait_for(timeout=WAIT_MS)
-    assert not [x for x in _lines(pg) if x.startswith("The week")]                                     # no week read: no line
-    pg.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_a_week_wait_says_until_when_and_without_a_time_says_none(gui):
-    pg, host, errors = _open(gui)
-    got = pg.evaluate("""async () => {
-      const m = await import('/static/js/arena/arenawords.js');
-      return [m.waitsWords({ kind: "week", until: "2026-10-26T09:00" }), m.waitsWords({ kind: "week", until: "" })]; }""")
-    assert got == ["waits: the week is behind · until Mon 09:00", "waits: the week is behind"]
-    pg.close()
-    assert not errors, "\n".join(errors)

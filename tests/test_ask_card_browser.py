@@ -9,7 +9,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_ask_desktop_browser import ANSWER, AskHost, GOAL, bubble, head, opened, record, start  # noqa: E402
+from tests.test_ask_desktop_browser import GOAL, record, start  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -36,27 +36,8 @@ def lifted(pg):
     return box
 
 
-def test_an_answered_question_is_a_card_in_the_hand_and_a_question_being_answered_is_none(card):
-    pg, host = card
-    assert pg.locator(CARD).count() == 0
-    host.put(record("asking", "tech", tab="tech"))
-    pg.wait_for_timeout(300)
-    assert pg.locator(CARD).count() == 0, "being answered: no card yet"
-    answered(host)
-    pg.locator(CARD).first.wait_for(timeout=WAIT_MS)
-    assert pg.locator(CARD).count() == 1
-    host.put(None)
-    pg.wait_for_function("() => !document.querySelector('.hand-card[data-kind=\"ask\"]')", timeout=WAIT_MS)
 
 
-def test_lifted_it_has_the_answer_and_three_ways_by_their_kinds(card):
-    pg, host = card
-    answered(host)
-    box = lifted(pg)
-    assert box.locator('[data-part="question"]').inner_text() == "Why does the timer run on the server?"
-    assert "Tech decided the timer runs on the server" in box.locator('[data-part="answer"]').inner_text() and ANSWER.split("\n")[1] in box.locator('[data-part="answer"]').inner_text()
-    ways = box.locator("button[data-way-kind]")
-    assert [(ways.nth(i).get_attribute("data-way-kind"), ways.nth(i).inner_text()) for i in range(ways.count())] == WAYS
 
 
 def test_got_it_puts_the_card_away_and_is_told_to_the_host(card):
@@ -76,21 +57,5 @@ def test_make_it_a_goal_opens_the_field_with_the_line_the_answer_suggests(card):
     assert area.input_value() == GOAL and host.sent("ideas.ask_goal") == [{}]
 
 
-def test_ask_more_puts_the_answer_away_and_opens_the_bubble_on_the_tab_it_was_asked_on(card):
-    pg, host = card
-    answered(host, party="tech", tab="")                                         # asked on the Orkmaster's tab, passed on to Tech's leader
-    lifted(pg).locator('button[data-way-kind="ask_more"]').click()
-    bubble(pg).wait_for(timeout=WAIT_MS)
-    assert host.sent("ideas.ask_clear") == [{}] and bubble(pg).get_attribute("data-ask") == "orkmaster" and bubble(pg).get_attribute("data-state") == "asking"
 
 
-def test_the_bubble_says_the_answer_on_the_tab_it_was_asked_on_with_got_it_too(card):
-    pg, host = card
-    answered(host, party="tech", tab="")                                         # a hop: Tech answered a question asked on the Orkmaster's tab
-    opened(pg)
-    assert bubble(pg).get_attribute("data-state") == "answered"
-    ways = bubble(pg).locator("button[data-way-kind]")
-    assert [ways.nth(i).get_attribute("data-way-kind") for i in range(ways.count())] == ["make_it_a_goal", "ask_more", "take"]
-    bubble(pg).locator('button[data-way-kind="take"]').click()
-    pg.wait_for_function("() => !document.querySelector('.table-ask__bubble')", timeout=WAIT_MS)
-    assert host.sent("ideas.ask_clear") == [{"got_it": True}]

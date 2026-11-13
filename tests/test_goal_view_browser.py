@@ -98,28 +98,6 @@ def texts(pg, selector):
     return [t.strip() for t in pg.locator(selector).all_inner_texts()]
 
 
-def test_at_design_the_screens_a_goal_changes_are_cards_with_now_and_will_be_and_a_leader_it_does_not_touch_says_so(gui):
-    pg, host, log = open_goals(gui)
-    try:
-        pick_music(pg)
-        open_tab(pg, "design")
-        view = pg.locator('.gv[data-view="will"][data-party="design"]')
-        view.wait_for(timeout=WAIT_MS)
-        pg.wait_for_selector('.gv-card[data-part="results"]', timeout=WAIT_MS)
-        assert pg.locator(".scr-map").count() == 0
-        results, podium = view.locator('.gv-card[data-part="results"]'), view.locator('.gv-card[data-part="podium"]')
-        assert results.locator(".gv-kind").text_content().strip() == "Changes" and podium.locator(".gv-kind").text_content().strip() == "New"
-        assert texts(pg, '.gv-card[data-part="results"] .gv-pair figcaption') == ["Now", "Will be"], "the screen now and as it will be"
-        assert podium.locator(".gv-pair .gv-ph em").first.inner_text().strip() == "none", "a new screen has no picture now"
-        assert pg.locator(".gv-diff").count() == 0, "the contract's diff is Tech's"
-        assert pg.locator(".gv-mini[data-kind='screens']").count() == 1 and pg.locator(".gv-mini__b.is-lit").count() >= 1
-        assert texts(pg, ".gv-done li") == ["The winner shows first"] and texts(pg, ".gv-tasks li") == ["Draw the winner first · working"]
-        open_tab(pg, "release")
-        pg.wait_for_selector('.gv[data-party="release"] .gv-empty[data-state="none"]', timeout=WAIT_MS)
-        assert "nothing of it is on Release’s table" in pg.locator(".gv-empty").inner_text()
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_esc_and_the_titles_cross_pick_nothing_and_the_leaders_map_is_back(gui):
@@ -149,13 +127,9 @@ def test_the_play_die_wears_the_picked_goals_rune_says_play_and_the_goal_and_pla
         play = pg.locator(".hand-die__play")
         die.wait_for(timeout=WAIT_MS)
         assert die.get_attribute("data-elem") is None and play.get_attribute("aria-label").startswith("Play"), "nothing picked: the die as it was"
-        plain = pg.evaluate("() => getComputedStyle(document.querySelector('.hand-die .ork-die')).getPropertyValue('--_pip')")
         pick_music(pg)
         pg.wait_for_selector('.hand-die[data-elem="meadow"]', timeout=WAIT_MS)
         assert play.get_attribute("aria-label") == "Play: Music in the lobby" and play.get_attribute("title") == "Play: Music in the lobby"
-        token = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-elem-meadow').trim()")
-        worn = pg.evaluate("() => [getComputedStyle(document.querySelector('.hand-die .ork-die')).getPropertyValue('--_pip').trim(), getComputedStyle(document.querySelector('.hand-die .ork-die')).getPropertyValue('--_edge').trim()]")
-        assert token and worn == [token, token] and worn[0] != plain.strip(), "the pips and the edge in orkUI's element token"
         play.click()
         pg.wait_for_function("() => document.querySelector('.hand-die[data-open]')", timeout=WAIT_MS)
         for _ in range(100):

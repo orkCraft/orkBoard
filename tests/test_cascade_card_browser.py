@@ -12,11 +12,8 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_ask_desktop_browser import AskHost, bubble, head, opened, record, start  # noqa: E402
-from tests.test_hand_context_narrow_browser import UprightHost, open_up  # noqa: E402
-from tests.test_table_desktop_browser import open_tab  # noqa: E402
+from tests.test_ask_desktop_browser import AskHost, start  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -77,25 +74,6 @@ def lift(pg):
     return lifted
 
 
-def test_lifted_with_no_fork_it_says_one_line_more_opens_the_chain_and_confirm_sends_the_id(table):
-    pg, host = table
-    host.needs = [cascade()]
-    host.push()
-    lifted = lift(pg)
-    text = " ".join(lifted.text_content().split())                 # the kind's word is drawn in the label face (capitals): read the text itself
-    assert "Proposes" in text and TITLE in text and "the lobby test showed ten seconds is too long" in text and "Tech and Art agree" in text
-    assert "Written again:" in text
-    assert lifted.locator("[data-fork]").count() == 0 and lifted.locator("[data-part=chain]").count() == 0
-    lifted.get_by_role("button", name="More").click()
-    chain = lifted.locator("[data-part=chain]")
-    assert [li.get_attribute("data-party") for li in chain.locator("li").all()] == ["tech", "art"]
-    assert "Your screens hold 10 seconds" in chain.inner_text() and "The timer ring has six ticks." in chain.inner_text()
-    assert lifted.get_by_role("button", name="Put it back").count() == 1, "one Put it back: the host's"
-    assert lifted.locator(".hand-spend").count() == 1, "the cost, in words"
-    shot(pg, "cascade-lifted.png")
-    lifted.get_by_role("button", name="Confirm and start").click()
-    pg.wait_for_function(GONE, timeout=WAIT_MS)
-    assert host.sent("ideas.cascade_confirm") == [{"id": "c-1", "via": "hand"}]
 
 
 def test_put_it_back_sends_the_id_and_the_card_goes(table):
@@ -127,44 +105,5 @@ def test_a_fork_comes_first_confirm_waits_for_its_answer_and_stopped_is_said(tab
     assert host.sent("ideas.cascade_confirm") == [{"id": "c-1", "via": "hand", "fork_answers": {"s-3": "Your look shows the ring half full."}}]
 
 
-def test_a_decision_number_in_the_bubble_answer_and_its_sources_opens_that_decision(table):
-    pg, host = table
-    open_tab(pg, "tech")
-    host.put(record("answered", "tech", answer="The timer holds 6 seconds (§240.2).", sources=["§240.2", "Round timer shows on every phone"]))
-    opened(pg, "tech")
-    links = bubble(pg).locator(".table-ask__link")
-    assert [b.inner_text() for b in links.all()] == ["§240.2", "§240.2"] and bubble(pg).locator(".table-ask__src", has_text="Round timer").count() == 1
-    links.first.click()
-    pg.locator('[data-decision="240"]').wait_for(timeout=WAIT_MS)
-    assert host.sent("ideas.chronicle_decision") == [{"number": 240}]
-    assert "Screens hold the timer" in pg.locator(".table-over__chronicle").inner_text()
-    assert bubble(pg).count() == 0, "the bubble gives way to the page"
 
 
-def test_the_phones_hand_draws_the_same_card_and_answers_it(gui):
-    class Phone(UprightHost):
-        def handle(self, name, a):
-            if name == "ideas.cascade_confirm":
-                self.log.append((name, a))
-                self.needs = [n for n in self.needs if n.get("id") != a["id"]]
-                return self.bump({"ok": True, "number": 241, "title": TITLE, "slices": 2, "sections": [], "left": []})
-            return super().handle(name, a)
-
-    host = Phone()
-    host.needs = [cascade()]
-    pg, host, log = open_up(gui, host=host)
-    try:
-        pg.locator(".hand-up .up-card", has_text=TITLE).first.click()                       # its entry on the screen, the card inline on it
-        lifted = pg.locator('.hand-lifted[data-kind="cascade"]')
-        lifted.wait_for(timeout=WAIT_MS)
-        assert TITLE in lifted.inner_text() and "Tech and Art agree" in lifted.inner_text()
-        lifted.get_by_role("button", name="More").click()
-        assert lifted.locator("[data-part=chain] li").count() == 2
-        shot(pg, "cascade-phone.png")
-        narrow.no_sideways(pg)
-        lifted.get_by_role("button", name="Confirm and start").click()
-        pg.wait_for_function("() => !document.querySelector('.hand-lifted[data-kind=\"cascade\"]')", timeout=WAIT_MS)
-        assert [a for n, a in host.log if n == "ideas.cascade_confirm"] == [{"id": "c-1", "via": "hand"}]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

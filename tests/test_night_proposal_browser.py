@@ -69,13 +69,6 @@ def play(pg):
     return lifted
 
 
-def test_the_proposal_is_a_card_in_its_leaders_stack_under_its_lane(night):
-    pg, host = night
-    cards = pg.locator(CARD)
-    assert cards.count() == 1 and cards.first.get_attribute("data-key") == f"night/{PID}"
-    assert "Proposed: Faster start" in cards.first.text_content() and box(cards.first) == (120, 168)
-    lane = pg.locator(f".hand-lane:has({CARD})").get_attribute("data-lane")
-    assert lane not in (None, "0"), "under the proposing leader's lane, not the project's"
 
 
 def test_take_sends_its_command_and_the_mark_and_the_card_go(night):
@@ -98,9 +91,3 @@ def test_drop_sends_its_command_and_the_goal_leaves_the_pile(night):
     pg.wait_for_function("() => !document.querySelector('.col-card--spec[data-goal=\"faster-start\"]')", timeout=WAIT_MS)
 
 
-def test_the_narrow_page_deals_no_proposal_card(gui):
-    pg, host, errors = start(gui, "narrow", NightHost())
-    pg.wait_for_timeout(600)
-    assert pg.locator(CARD).count() == 0 and pg.locator(".col-spec__proposed").count() == 0
-    pg.context.close()
-    assert not errors, "\n".join(errors)

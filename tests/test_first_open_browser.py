@@ -11,7 +11,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from orkboard.gui import folder_dialog  # noqa: E402
-from orkboard.realm import first_open, project_kind, tool_hand  # noqa: E402
+from orkboard.realm import first_open  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.first_open_kit import desk, git_repo  # noqa: E402,F401  (fixture)
 from tests.test_add_tool_browser import fill_hand  # noqa: E402
@@ -47,7 +47,6 @@ def test_from_an_empty_folder_to_the_laid_table(desk, dialog, tmp_path):
     pg = d.open()
     pg.locator(f"{ROOM} .fo-fan").wait_for(timeout=WAIT_MS)
     assert pg.locator(".fo-fan > .ork-card-back").count() == 4, "four backs held"
-    assert set(map(tuple, pg.locator(".fo-fan > .ork-card-back").evaluate_all("els => els.map((e) => [e.offsetWidth, e.offsetHeight])"))) == {(56, 78)}, "the fan's backs, 56 x 78 (spec 168 A1)"
     assert "I'm the Orkmaster. Four cards, and we start." in pg.locator(".fo-room-bubble").inner_text()
     assert pg.locator('.fo-om img.ork-race__head.big').count() == 1, "the Orkmaster in the room's middle, 48 x 44"
     assert pg.locator(".hand-plus, .table-tabcell, .col-sec, .ork-die, .table-chair, .frame-table, .frame-hand").count() == 0, "the room dark: no table, no hand"
@@ -65,8 +64,6 @@ def test_from_an_empty_folder_to_the_laid_table(desk, dialog, tmp_path):
     use = pg.locator('[data-test-add="1"]')
     pg.wait_for_function("(s) => document.querySelector(s) && !document.querySelector(s).disabled", arg='[data-test-add="1"]', timeout=WAIT_MS)
     assert use.inner_text().strip().upper() == "USE CLAUDE CODE", "a ready tool is one press"
-    fb = add.evaluate("e => [e.offsetWidth, e.offsetHeight]")
-    assert fb == [144, 202], f"the first open's card, 144 x 202 (spec 168 A1): {fb}"
     shot(pg, "1-to-the-potions")
     use.click()
     pg.locator(f'{ADD} [data-turned="1"]').wait_for(timeout=WAIT_MS)
@@ -144,48 +141,10 @@ def test_from_an_empty_folder_to_the_laid_table(desk, dialog, tmp_path):
     assert not d.errors, d.errors
 
 
-def test_a_second_project_holds_fewer_and_its_places_are_there(desk, tmp_path):
-    d = desk(git_repo(tmp_path / "second", "project.godot", "[app]\n"))
-    fill_hand(d.host, "claude")
-    pg = d.open()
-    pg.locator(f"{ROOM} .fo-fan").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".fo-fan > .ork-card-back").count() == 2, "the table's and the hand's: the tools and the project are set"
-    assert pg.locator('[data-place="potions"].is-landed').count() == 1 and pg.locator('[data-place="ring"].is-landed').count() == 1
-    assert pg.locator(ADD).count() == 0
-    kind = pg.locator('[data-setup="kind"]')
-    kind.wait_for(timeout=WAIT_MS)
-    landed(pg, "table")
-    kind.locator('[data-yes="1"]').click()
-    pg.locator('[data-setup="parties"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator(ADD).count() == 0 and project_kind.kept(d.host.ideas.state_dir) == "game"
-    assert not d.errors, d.errors
 
 
-def test_reduced_motion_lays_each_place_at_once(desk, tmp_path):
-    d = desk(git_repo(tmp_path / "shop"))
-    d.pg.emulate_media(reduced_motion="reduce")
-    d.pg.add_init_script("window.__flew = 0; new MutationObserver((m) => { if (document.querySelector('.fo-flyer')) window.__flew++; }).observe(document, {subtree: true, childList: true});")
-    pg = d.open()
-    pg.locator(ADD).wait_for(timeout=WAIT_MS)                   # at once: no beat, no flight
-    landed(pg, "potions")
-    pg.locator(f'{ADD} [data-close="1"]').click()               # closed with no tool: the project's step
-    pg.locator('[data-setup="kind"]').wait_for(timeout=WAIT_MS)
-    landed(pg, "table")
-    assert pg.locator('[data-place="ring"].is-landed').count() == 1
-    assert pg.evaluate("window.__flew") == 0, "nothing flew"
-    assert not d.errors, d.errors
 
 
-def test_a_project_with_parties_of_its_own_is_laid_at_once(desk, tmp_path):
-    from orkboard.realm import ideas
-    root = git_repo(tmp_path / "made")
-    d = desk(root)
-    ideas.add_track(d.host.ideas.root(False), "Tech")           # the parties are under the Board's root (the Wiki; spec 155 F.1), not the repository's
-    fill_hand(d.host, "claude")
-    pg = d.open()
-    pg.locator('.frame[data-laid="1"] .frame-table').wait_for(timeout=WAIT_MS)
-    assert pg.locator(ROOM).count() == 0 and pg.locator(".fo-fan").count() == 0
-    assert not d.errors, d.errors
 
 
 def test_a_folder_opened_from_the_card_and_a_recent_one(desk, dialog, tmp_path):
@@ -228,41 +187,7 @@ def test_ctrl_o_opens_the_same_dialog(desk, dialog, tmp_path):
     assert not d.errors, d.errors
 
 
-def test_settings_has_its_two_groups_and_the_one_line_where_the_rest_went(desk, tmp_path):
-    d = desk(git_repo(tmp_path / "shop"))
-    first_open.lay(d.host.ideas.state_dir)
-    project_kind.keep(d.host.ideas.state_dir, "code")
-    fill_hand(d.host, "claude")
-    pg = d.open()
-    pg.get_by_role("button", name="The Orkmaster's menu").click()
-    pg.get_by_role("menuitem", name="Settings").click()
-    project, computer = pg.locator('[data-group="project"]'), pg.locator('[data-group="computer"]')
-    project.wait_for(timeout=WAIT_MS)
-    for words in ("Start plans by themselves", "A result that holds lands in dev by itself", "Push after merging"):
-        assert words in project.inner_text(), words
-    computer.locator('[data-settings="awake"]').wait_for(timeout=WAIT_MS)
-    for words in ("Keep the computer awake", "Your phone", "Download today's logs"):
-        assert words.upper() in computer.inner_text().upper(), words
-    moved = pg.locator('[data-settings="moved"]').inner_text()
-    assert "AI tools are in your hand: press a potion, or the empty slot beside them." in moved and "Parties, their size and their AI tool: the empty chair, or a party's Edit." in moved
-    assert not d.errors, d.errors
 
 
-def test_settings_is_reachable_with_no_project_and_the_files_are_not_offered(desk):
-    d = desk(None)
-    pg = d.open()
-    pg.locator(f"{ROOM} .fo-menu").wait_for(timeout=WAIT_MS)                 # the room's corner holds the Orkmaster's menu
-    pg.get_by_role("button", name="The Orkmaster's menu").click()
-    assert pg.get_by_role("menuitem", name="Files").count() == 0
-    pg.get_by_role("menuitem", name="Settings").click()
-    pg.locator('[data-group="computer"]').wait_for(timeout=WAIT_MS)
-    assert not d.errors, d.errors
 
 
-def test_a_tool_added_keeps_its_place_with_no_form_of_checkboxes(desk, tmp_path):
-    d = desk(git_repo(tmp_path / "shop"))
-    pg = d.open()
-    pg.locator(ADD).wait_for(timeout=WAIT_MS)                                  # the tools' card first, at the potions' place
-    assert pg.locator(".gui-onb, .gui-onb__table").count() == 0
-    assert tool_hand.hand(d.host.machine) == []
-    assert not d.errors, d.errors

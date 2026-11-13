@@ -12,7 +12,6 @@ from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import HandHost, open_hand  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
-from tests.test_table_desktop_browser import shot  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -65,29 +64,8 @@ def lifted(pg):
     return pg.locator(".hand-lifted")
 
 
-def test_lifted_each_group_lists_its_goals_with_their_heads_its_why_and_its_two_answers_and_not_now_is_at_the_foot(groups):
-    pg, host, w = groups
-    card_ = lifted(pg)
-    assert card_.locator(".hand-way > .ork-label").first.inner_text().lower() == "these look like one goal"
-    blocks = card_.locator(".hand-group")
-    assert blocks.count() == 2
-    first = blocks.nth(0)
-    assert [" ".join(li.inner_text().split()) for li in first.locator("li").all()] == ["Add a dark mode option", "Dark mode needs a timer"]
-    assert first.locator("li .ork-race__head").count() == 2 and first.locator('[data-part="why"]').inner_text() == "Both change how dark mode is switched"
-    assert [b.inner_text().strip() for b in first.locator(".ork-btn").all()] == ["Join", "Keep apart"]
-    assert blocks.nth(1).locator('[data-part="adds"]').inner_text().startswith("Brings in ") and blocks.nth(0).locator('[data-part="adds"]').count() == 0
-    assert [b.inner_text().strip() for b in card_.locator(".hand-group__foot .ork-btn").all()] == ["Not now"]
-    shot(pg, f"groups-hand-{w}.png")
-    narrow.no_sideways(pg)
 
 
-def test_lifting_tells_the_host_and_putting_it_back_lets_it_go(groups):
-    pg, host, w = groups
-    card_ = lifted(pg)
-    assert _calls(pg, host, "ideas.groups_open") == [{"id": ROW["id"], "open": True}]
-    card_.get_by_role("button", name="Put it back").click() if w == "wide" else pg.keyboard.press("Escape")
-    pg.wait_for_function("() => !document.querySelector('.hand-lifted')", timeout=WAIT_MS)
-    assert _calls(pg, host, "ideas.groups_open", at_least=2) == [{"id": ROW["id"], "open": True}, {"id": ROW["id"], "open": False}]
 
 
 def test_every_group_is_answered_then_the_answer_goes_and_the_card_leaves(groups):
@@ -111,24 +89,5 @@ def test_not_now_sends_it_and_the_card_leaves(groups):
     pg.wait_for_function("() => !document.querySelector('.hand-card[data-kind=\"groups\"]')", timeout=WAIT_MS)
 
 
-def test_a_refused_answer_keeps_the_card_lifted(groups):
-    pg, host, w = groups
-    host.refuse = True
-    card_ = lifted(pg)
-    card_.get_by_role("button", name="Not now").click()
-    assert _calls(pg, host, "ideas.groups_now") == [{"id": ROW["id"]}]
-    pg.wait_for_timeout(300)
-    assert pg.locator(".hand-lifted").count() == 1 and pg.locator('.hand-card[data-kind="groups"]').count() >= 1
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_worded_decision_says_its_cost_as_a_share_under_the_buttons(gui, width):
-    row = {**ROW, "groups": ROW["groups"][:1], "cost": {"calls": 1, "usd_high": 0.08}}
-    pg, host, log = open_hand(gui, host=GroupsHost(row), width=width)
-    pg.locator('.hand-card[data-kind="groups"]').first.wait_for(timeout=WAIT_MS)
-    card_ = lifted(pg)
-    words = card_.locator(".hand-spend").inner_text()
-    assert "of Claude's" in words or "at API prices" in words
-    assert card_.locator(".hand-group").count() == 1
-    pg.close()
-    assert not log, "\n".join(log)

@@ -52,18 +52,3 @@ def test_save_logs_sends_the_pages_state_and_its_last_twenty_errors(gui):
     pg.context.close()
 
 
-def test_the_pages_face_is_the_editors_in_a_frame_and_the_apps_in_its_window(gui):
-    server, browser = gui
-    host = LogsHost()
-    pg = browser.new_page(viewport={"width": 1280, "height": 800})
-    pg.route_web_socket("**/ws*", host.on_socket)
-    face = "import('/static/js/shell/errors.js').then((m) => m.pageState().face)"
-    pg.goto(server.url + "&app=1")
-    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    assert pg.evaluate(face) == "app"
-    pg.evaluate("(url) => { const f = document.createElement('iframe'); f.id = 'f'; f.src = url; document.body.append(f); }",
-                server.url + "&app=1")                                  # the editor's panel shows the page in a frame
-    frame = pg.wait_for_selector("#f").content_frame()
-    frame.wait_for_load_state()
-    assert frame.evaluate(face) == "vscode"
-    pg.context.close()

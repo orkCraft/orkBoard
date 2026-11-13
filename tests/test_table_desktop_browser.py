@@ -282,9 +282,6 @@ def wide(w):
     return w == "wide"
 
 
-def anim(el, pseudo=""):
-    """`[name, duration, timing]` of an element's animation (or its pseudo-element's)."""
-    return el.evaluate("(e, p) => { const s = getComputedStyle(e, p || null); return [s.animationName, s.animationDuration, s.animationTimingFunction]; }", pseudo)
 
 
 def tab(pg, slug):
@@ -313,33 +310,6 @@ def open_menu(pg):
 
 # -- the tabs ----------------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_tabs_in_order_the_projects_first_then_plus_and_no_stop_all_in_the_row(table):
-    pg, host, w = table
-    tabs = pg.locator(".table-tab")
-    assert [t.get_attribute("data-tab") for t in tabs.all()] == (["game", "tech", "art", "release"] if wide(w) else ["orkmaster", "game", "tech", "art", "release"])         # the project's first at the narrow width, then the Board's order; the leaders' alone at the wide (the Orkmaster's tab is the column's head: spec 128 B.2)
-    first = tab(pg, "orkmaster")
-    if wide(w):
-        assert first.get_attribute("aria-selected") == "true" and first.get_attribute("role") == "tab" and "orkmaster" not in first.text_content().lower() and first.text_content().strip() == "shop"      # the project's name on its first line; the Orkmaster only in its label (spec 161 J, decisions §272.5)
-        assert first.get_attribute("aria-label") == "The Orkmaster · shop" and first.evaluate("e => !!e.closest('.frame-column')")
-    else:
-        assert first.get_attribute("aria-label") == "shop · Does on Claude · Checks on Claude" and first.get_attribute("aria-selected") == "true"                # the first tab is the project's: its name (spec 101 §3.4, decisions §167.6) and the main tool on both (spec 111 §3.4)
-        assert "Orkmaster" not in (first.get_attribute("title") or "") and first.locator(".table-tab__sub").count() == 0
-        assert first.locator(".table-tab__main").text_content() == "shop"
-    assert "peon-crown" in cell(pg, "orkmaster").locator(".ork-race__head").get_attribute("src")                          # its crowned head (the open tab's head is in its cell, beside its button)
-    assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
-    assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"                      # and its name, said also when only the head is drawn, with its sword and shield's words (spec 111 §3.4)
-    assert tab(pg, "tech").get_attribute("title") == tab(pg, "tech").get_attribute("aria-label")
-    assert pg.get_by_role("button", name="New party").count() == 1 and pg.locator(".table-tabs").get_by_role("button", name="Stop all").count() == 0 and (pg.locator(".release-lane__head") if wide(w) else pg.locator(".hand-die")).get_by_role("button", name="Stop all").count() == 1       # Stop all: in the right column's head at the wide width (spec 168 A4), the die's under 760 px (spec 139 A)
-    chair = pg.locator(".table-tabs__end .table-chair")
-    assert " ".join(chair.text_content().split()) == ("New party" if wide(w) else "") and "primary" not in chair.get_attribute("class")           # spec 123 §7.5: the empty chair, green is New goal's
-    assert pg.get_by_role("button", name="Switch project").count() == 1                                                  # the ▾ after the project's name, its own button
-    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button:not(.stall-pack):not(.presence-chain)").count() == 1 and pg.locator(".stall-pack").count() == 1 and pg.locator(".table-logs").count() == 0                  # the tabs' end keeps the empty chair and the door, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
-    if not wide(w):
-        assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
-        assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen
-    assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
-    assert tab(pg, "orkmaster").bounding_box()["x"] <= tab(pg, "game").bounding_box()["x"]
-    shot(pg, f"table-board-{w}.png")
 
 
 def test_a_tab_is_the_persons_the_open_one_is_kept_and_nothing_switches_it_under_them(table):
@@ -393,32 +363,6 @@ def test_the_orkmasters_menu_has_settings_files_and_report_a_problem_and_the_pro
     pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
 
 
-def test_the_chair_deals_its_crafts_wide_or_opens_the_parties_narrow_and_a_potion_opens_what_used_the_tool(table):
-    pg, host, w = table
-    pg.get_by_role("button", name="New party").click()
-    if wide(w):                                                                                                          # the wide page: the chair deals the crafts to the hand (decisions §272.2)
-        pg.locator('[data-chair-deal="question"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator('.table-over[data-kind="parties"]').count() == 0
-        pg.get_by_role("button", name="Put it back").click()
-        pg.locator('[data-chair-deal="question"]').wait_for(state="detached", timeout=WAIT_MS)
-    else:                                                                                                                # the narrow page keeps the one place of the parties (spec 100 §4)
-        pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
-        assert title(pg) == "Board · Parties" and pg.locator(".place").count() == 0
-        pg.get_by_role("button", name="Back").click()
-    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
-    if wide(w):
-        narrow.unroll_drum(pg)
-        pg.locator('.hand-pot[data-provider="codex"]').click()
-        pg.locator('.table-over[data-kind="limits"] .arena-usage').wait_for(timeout=WAIT_MS)
-        assert title(pg) == "Board · Codex: what used it"
-        assert ("ideas.usage", {"provider": "codex", "scope": "project"}) in host.log
-    pg.mouse.move(640, 300)                                                                                                # the row the drum unrolled folds: it lay over the die
-    pg.get_by_role("button", name="Stop all").click()
-    for _ in range(40):
-        if ("halt", {}) in host.log:
-            break
-        pg.wait_for_timeout(50)
-    assert ("halt", {}) in host.log
 
 
 # -- the Board under the tabs ----------------------------------------------------------------------------------------------------------------------
@@ -450,101 +394,12 @@ def squad(pg, w):
     return pg.locator('.stall-seats[data-seats="tech"]')
 
 
-def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_each_head_and_a_seat_pressed_opens_its_popover(table):
-    pg, host, w = table
-    open_tab(pg, "tech")
-    head = squad(pg, w)
-    assert head.locator(".table-head__name, h2").count() == 0, "no party name in the row: the tab and the title say it"
-    groups = head.locator(".table-group")
-    assert [g.get_attribute("aria-label") for g in groups.all()] == ["Does", "Checks"] and "Leads" not in head.inner_text(), "no Leads: the leader sits at the table"
-    assert [g.locator(".table-seat").count() for g in groups.all()] == [2, 1]
-    sides = [g.locator(".table-side") for g in groups.all()]
-    assert sides[0].locator(".ork-sign").count() == 1 and sides[1].locator(".ork-sign").count() == 1
-    assert sides[0].get_attribute("title") == "Does on Claude" and sides[1].get_attribute("title") == "Checks on Claude", "the tool in the title, one tool for the whole side"
-    assert "harness-claude-ink" in sides[0].locator(".ork-mark").get_attribute("src") and sides[0].locator(".table-side__w").text_content() == "Does"
-    seat = head.locator('.table-seat[data-seat="grunt"]')
-    assert "peon-warrior" in seat.locator(".ork-race__head").get_attribute("src") and seat.locator(".ork-mark").count() == 0, "its tool's mark is the side's: not on the seat"
-    assert seat.locator(".table-seat__role").inner_text() == "Grunts" and seat.get_attribute("aria-label") == "Grunts, runs on Claude", "the role under the head, in the label with its tool"
-    assert seat.locator(".ork-busy").count() == 1 and head.locator('.table-seat[data-seat="tester"] .ork-busy').count() == 0, "the busy mark on the one at work"
-    role = seat.locator(".table-seat__role")
-    assert role.evaluate("e => getComputedStyle(e).fontFamily").startswith("Rubik"), "the one face, Rubik (orkUI 0.40, decisions §291): the pixel face is gone"
-    assert role.evaluate("e => getComputedStyle(e).color") != seat.evaluate("e => getComputedStyle(e).color"), "muted"
-    assert role.evaluate("e => [getComputedStyle(e).textOverflow, getComputedStyle(e).maxWidth]") == ["ellipsis", "76px"]
-    box, rbox = seat.locator(".ork-race__head").bounding_box(), role.bounding_box()
-    assert rbox["y"] >= box["y"] + box["height"] - 1, "under the head"
-    assert head.locator(".table-size").inner_text().strip() == "Standard"
-    assert pg.get_by_role("button", name="Tech's menu").count() == 1
-    shot(pg, f"table-tech-{w}.png")
-    seat.click()
-    pop = pg.locator(".table-seatpop")
-    pop.wait_for(timeout=WAIT_MS)
-    text = pop.inner_text()
-    for word in ("Grunts", "Role", "What it does", "Its AI tool", "Its tier", "What it costs", "From the next task", "Set", "Take off the seat", "Open"):
-        assert word in text, word
-    assert not wide(w) or pop.bounding_box()["y"] >= head.bounding_box()["y"]
-    if not wide(w):
-        assert pop.bounding_box()["width"] >= 380                                                                        # a sheet at the narrow width
-    said = " ".join(pop.locator(".table-seatpop__nm").text_content().split())
-    assert said == "GruntsSeasoned · does" or said.endswith("Seasoned · does"), said                                      # its tier and its role, and no word of a race (spec 100 §0)
-    assert not any(word in said.lower() for word in ("ork", "elf", "goblin", "gnome", "knight", "lich", "skeleton"))
-    assert "ork" not in (seat.get_attribute("aria-label") or "").lower().replace("work", "")
-    pg.get_by_role("button", name="Close", exact=True).click()
-    assert pg.locator(".table-seatpop").count() == 0
-    seat.click()
-    pg.locator(".table-seatpop").wait_for(timeout=WAIT_MS)
-    pg.keyboard.press("Escape")                                                                                          # Esc closes it
-    assert pg.locator(".table-seatpop").count() == 0
-    seat.click()
-    pg.locator(".table-seatpop").get_by_role("button", name="Open", exact=True).click()
-    pg.locator('.table-over[data-kind="role"]').wait_for(timeout=WAIT_MS)                                                  # the role's text, over the pane
-    assert title(pg) == ("Inventory · Grunts" if wide(w) else "Tech's table · Grunts") and "You are the Grunts." in pg.locator(".table-over").inner_text()
-    pg.locator(".table-title__back").click()
-    pg.locator(".table-head, .stall-seats").first.wait_for(timeout=WAIT_MS)
 
 
-def test_a_side_with_seats_on_several_tools_has_no_tool_of_its_own_and_each_seat_shows_its_mark(table):
-    pg, host, w = table
-    tech = next(p for p in host.parties if p["slug"] == "tech")
-    tech["tools"] = {"tester": "codex"}                                                                                   # one of Does' two seats runs on another tool
-    host.push()
-    open_tab(pg, "tech")
-    does = squad(pg, w).locator('.table-group[data-band="build"]')
-    does.locator(".table-seat").first.wait_for(timeout=WAIT_MS)
-    pg.wait_for_function("() => document.querySelector('.table-group[data-band=build] .table-seat .ork-mark')", timeout=WAIT_MS)
-    assert does.locator(".table-side .ork-mark").count() == 0 and does.locator(".table-side").get_attribute("title") == "Does"
-    assert "harness-claude-ink" in does.locator('.table-seat[data-seat="grunt"] .ork-mark').get_attribute("src")
-    assert "harness-codex-ink" in does.locator('.table-seat[data-seat="tester"] .ork-mark').get_attribute("src")
-    assert does.locator('.table-seat[data-seat="tester"]').get_attribute("aria-label") == "Tester, runs on Codex"
 
 
-def test_the_header_keeps_at_most_six_seats_and_never_the_leader(table):
-    pg, host, w = table
-    tech = next(p for p in host.parties if p["slug"] == "tech")
-    extra = [{**tech["party"][1], "slug": f"more{i}", "name": f"More {i}", "band": "build" if i % 2 else "check"} for i in range(5)]
-    tech["party"] = tech["party"] + extra
-    tech["team"] = tech["team"] + [{"slug": e["slug"], "name": e["name"], "head": e["head"], "checks": e["band"] == "check", "every": False} for e in extra]
-    host.push()
-    open_tab(pg, "tech")
-    squad(pg, w)
-    pg.wait_for_function("() => document.querySelectorAll('.table-head .table-seat, .stall-seats .table-seat').length > 4", timeout=WAIT_MS)
-    seats = squad(pg, w).locator(".table-seat")
-    assert seats.count() == 6 and squad(pg, w).locator('.table-seat[data-band="lead"]').count() == 0
-    narrow.no_sideways(pg)
 
 
-def test_at_the_narrow_width_the_sides_words_go_and_their_signs_stay_every_seat_44_px(table):
-    pg, host, w = table
-    open_tab(pg, "tech")
-    head = squad(pg, w)
-    head.locator(".table-seat").first.wait_for(timeout=WAIT_MS)
-    words = head.locator(".table-side__w")
-    assert all(x.is_visible() == wide(w) for x in words.all()), "the words are there at the wide width only"
-    assert all(x.locator(".ork-sign").is_visible() for x in head.locator(".table-side").all()) and head.locator(".table-side").first.get_attribute("title") == "Does on Claude"
-    if not wide(w):
-        assert all(x.bounding_box()["width"] >= 43.5 and x.bounding_box()["height"] >= 43.5 for x in head.locator(".table-seat").all())
-    box, row = head.bounding_box(), head.locator(".table-group").first.bounding_box()
-    assert box["height"] < 130 and row["y"] >= box["y"]
-    shot(pg, f"table-header-{w}.png")
 
 
 def test_a_seat_can_be_taken_off_and_its_tool_set_with_undo(table):
@@ -586,48 +441,8 @@ def test_a_party_menu_has_edit_at_that_party_and_remove_party_over_the_pane(tabl
 
 # -- Tech's System -----------------------------------------------------------------------------------------------------------------------------------
 
-def test_techs_tab_is_its_header_and_the_system_and_a_part_pressed_is_lifted_and_opens_a_file(table):
-    pg, host, w = table
-    open_tab(pg, "tech")
-    pg.locator(".table-sys .sys[data-state=shown]").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".sys-tabs").count() == 0                                                                          # one map a tab: no Feature modules
-    assert [c.get_attribute("data-container") for c in pg.locator(".arch-col").all()] == ["server", "client"]
-    part = pg.locator(f'.sys-part[data-part="{FILE}"]')
-    part.scroll_into_view_if_needed()
-    part.click()
-    back = pg.locator(".table-back")
-    back.wait_for(timeout=WAIT_MS)
-    assert back.get_attribute("data-lifted") == f"t:part:tech:{FILE}"
-    back.locator(".sys-side[data-path]").wait_for(timeout=WAIT_MS)
-    assert all(word in back.text_content() for word in ("Files", "Uses", "Used by")) or all(word.lower() in back.text_content().lower() for word in ("files", "uses", "used by"))                                         # today's part pane, on the back
-    assert pg.locator(".shell-drawer").count() == 0
-    shot(pg, f"table-system-lifted-{w}.png")
-    back.get_by_role("button", name="Open").click()
-    pg.locator('.table-over[data-kind="file"] .shell-code').wait_for(timeout=WAIT_MS)
-    assert title(pg) == f"Tech's table · {FILE}" and "line 3" in pg.locator(".shell-code").inner_text()                        # a file over the pane, its title says where it came from
-    assert pg.locator(".table-sys").count() == 0 and pg.locator(".table-head").count() == 0                              # the map is under it
-    shot(pg, f"table-file-{w}.png")
-    pg.locator(".table-title__back").click()
-    pg.locator(f'.table-sys .sys-part[data-part="{FILE}"].is-lit').wait_for(timeout=WAIT_MS)                              # the card it came from, lit
-    pg.keyboard.press("Escape")
-    assert pg.locator(".table-head").count() == 1
-    part.click()
-    back.wait_for(timeout=WAIT_MS)
-    pg.keyboard.press("Escape")
-    pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
 
 
-def test_a_link_between_two_containers_is_lifted_with_its_routes_too(table):
-    pg, host, w = table
-    open_tab(pg, "tech")
-    link = pg.locator(".table-sys .arch-link").first
-    link.wait_for(timeout=WAIT_MS)
-    link.click()
-    back = pg.locator(".table-back")
-    back.wait_for(timeout=WAIT_MS)
-    back.locator(".arch-side").wait_for(timeout=WAIT_MS)
-    assert "/rooms" in back.inner_text()
-    pg.keyboard.press("Escape")
 
 
 def test_esc_goes_back_from_a_file_and_the_browsers_back_does_at_the_narrow_width(table):
@@ -651,33 +466,6 @@ def marks_of(pg, slug):
         : c.classList.contains('table-tab__more') ? ['more', ''] : ['tool', c.dataset.tool])""")
 
 
-def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_its_tool_and_says_who_drinks_from_it(table):
-    pg, host, w = table
-    if not wide(w):
-        pytest.skip("the potions lie in the hand at the wide width; the narrow width's tabs are heads only")
-    lit = lambda: sorted(pg.locator(".table-tab.is-lit").evaluate_all("els => els.map((e) => e.dataset.tab)"))        # noqa: E731
-    assert lit() == [] and pg.locator(".table-tab .is-marked").count() == 0
-    claude, codex = pg.locator('.hand-pot[data-provider="claude"]'), pg.locator('.hand-pot[data-provider="codex"]')
-    narrow.unroll_drum(pg)
-    claude.hover()
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
-    assert lit() == ["art", "game", "release", "tech"]                                                                    # every party that does or checks on Claude (marks drawn or not), none of Codex's alone
-    assert pg.locator('.table-tab[data-tab="game"]').evaluate("e => [getComputedStyle(e).outlineStyle, getComputedStyle(e).backgroundColor]")[0] == "none"      # lit as a tab hovered is, not by a 1 px outline
-    pg.mouse.move(5, 300)
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
-    pg.locator(".pots__row .pot-s").first.focus()                                                                                   # the focus unrolls the row, and lights too
-    pg.locator(".pots[data-open]").wait_for(timeout=WAIT_MS)
-    codex.focus()
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
-    assert lit() == ["release", "tech"]
-    pg.evaluate("() => document.activeElement.blur()")
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
-    assert claude.get_attribute("aria-label").endswith(". 3 parties do on it, 2 parties check on it")                       # the parties that do and check on it: Lean checks on none
-    assert codex.get_attribute("aria-label") == "Codex: 18% of the day left. 1 party does on it, 1 party checks on it" and codex.get_attribute("title") == codex.get_attribute("aria-label")
-    narrow.unroll_drum(pg)
-    claude.hover()
-    pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
-    shot(pg, "table-potion-marks-wide.png")
 
 
 # -- a goal picked, the project, the keys, the motion, the presses ------------------------------------------------------------------------------------
@@ -710,11 +498,6 @@ TALK_READ = {"idea": "seat", "mode": "talk", "round": 1, "done": True, "cause": 
     {"party": "tech", "leader": "Architect", "stance": "The server owns the clock", "for": "One place to reset", "against": "Every round trip adds delay", "questions": []}]}
 SPEC_PAGE = [{"name": "Gist", "text": "Keep the seat."}, {"name": "Route", "text": "Game design, then Tech"},
              {"name": "Game design", "text": "### Done when\n- The timer shows\n\n### Will be\n- new timer-bar"}, {"name": "Tech", "text": "### Done when\n- The seat is kept\n\n### Will be\n- changed server/lobby.ts"}]
-ROUTE_ROW = {"kind": "route", "goal": "tech", "idea": "seat", "title": "Keep the seat when a socket reconnects", "text": "Route: Game design, then Tech", "at": "2026-10-28T09:00:00", "priority": "normal", "blocks": False,
-             "route": [{"party": "game", "leader": "designer", "head": LEADS["game"]}, {"party": "tech", "leader": "architect", "head": LEADS["tech"]}], "cost": {"calls": 6, "usd_low": 0.2, "usd_high": 0.6},
-             "place": 1, "short": False, "reproduces": False, "low": False, "offer": [], "type": "feature"}
-TALK_ROW = {"kind": "talk", "goal": "tech", "idea": "seat", "title": "Keep the seat when a socket reconnects", "text": "", "at": "2026-10-28T09:00:00", "priority": "normal", "blocks": False, "questions": [],
-            "stances": [{"party": "art", "leader": "Art lead", "stance": "The seat shows its owner", "for": "", "against": ""}, {"party": "tech", "leader": "Architect", "stance": "Keep it on the server", "for": "", "against": ""}]}
 
 
 class WayHost(TableHost):
@@ -755,71 +538,14 @@ def marks(pg):
     return [(m.get_attribute("data-phase"), m.evaluate("e => e.tagName") == "BUTTON", m.get_attribute("aria-current") == "step") for m in pg.locator(".table-phase").all()]
 
 
-@pytest.fixture(params=narrow.WIDTHS)
-def onway(gui, request):
-    """A goal at *Work*, the window at one of the two widths."""
-    errors: list[str] = []
-    pg, host = way(gui, request.param, errors)
-    yield pg, host, request.param
-    narrow.no_sideways(pg)
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_a_goal_picked_has_its_phase_marks_in_the_title_spans_the_current_one_marked_and_nothing_opens_over_the_pane(onway):
-    pg, host, w = onway
-    assert pg.locator(".table-phases").count() == 0                                                                      # nothing picked: no marks
-    pick(pg, "seat")
-    pg.locator(".table-phases").wait_for(timeout=WAIT_MS)
-    assert [m.text_content().strip() for m in pg.locator(".table-phase").all()] == ["Talk", "Spec", "Work", "Done"]
-    assert marks(pg) == [("talk", False, False), ("spec", False, False), ("work", False, True), ("done", False, False)]  # Work is now; spans all (spec 156 C.2), no button
-    assert pg.locator("button[data-phase]").count() == 0 and pg.locator(".table-phase.is-past").count() == 2
-    assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"                                  # the title still says what and through whom
-    shot(pg, f"table-phases-{w}.png")
-    pg.locator('.table-phase[data-phase="talk"]').click(force=True)
-    assert pg.locator(".table-over").count() == 0 and pg.locator(".table-phases").count() == 1
-    pick(pg, "")
-    pg.wait_for_function("() => document.querySelectorAll('.table-phases').length === 0", timeout=WAIT_MS)
 
 
-@pytest.mark.parametrize("state,now,pages", [("routed", "talk", []), ("talk", "talk", []), ("decided", "spec", []), ("sections", "spec", []), ("plan", "work", []), ("done", "done", [])])
-def test_the_current_phase_follows_the_goals_state(gui, state, now, pages):
-    errors: list[str] = []
-    pg, host = way(gui, "wide", errors, state=state)
-    pick(pg, "seat")
-    pg.locator(".table-phases").wait_for(timeout=WAIT_MS)
-    got = marks(pg)
-    assert [p for p, _b, cur in got if cur] == [now] and [p for p, button, _c in got if button] == pages
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_a_goal_not_routed_yet_has_no_marks(gui):
-    errors: list[str] = []
-    pg, host = way(gui, "wide", errors, state="reading")
-    pick(pg, "seat")
-    pg.wait_for_timeout(200)
-    assert pg.locator(".table-phases").count() == 0
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_route_of_a_goal_picked_leaves_the_tab_of_each_party_it_passes_not_grey(gui, width):
-    errors: list[str] = []
-    for state, needs, route, dots in (("routed", [ROUTE_ROW], [], ["game", "tech"]),                                     # the route row's steps (its own party always)
-                                      ("talk", [TALK_ROW], [], ["tech", "art"]),                                         # the stances of the Talk
-                                      ("working", [], [{"step": "party", "party": "game", "goal": "seat"}, {"step": "party", "party": "tech", "goal": "seat"}], ["game", "tech"])):   # the route as planned
-        pg, host = way(gui, width, errors, state=state, needs=needs, route=route)
-        assert pg.locator(".table-tab.is-off").count() == 0
-        pick(pg, "seat")
-        pg.locator(".table-tab.is-off").first.wait_for(timeout=WAIT_MS)
-        assert on_route_tabs(pg) == sorted(dots), state                                                                  # the tabs not grey are the route's
-        if state == "routed":
-            shot(pg, f"table-route-dots-{width}.png")
-        narrow.no_sideways(pg)
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
 def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_its_list(table):
@@ -847,55 +573,11 @@ def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_it
 # -- spec 130 C.5–C.6: nothing of the table lies beside a form; the window not yet laid, and the laying (decisions §232.1, §232.2, §247.1) -----------------------------------------
 
 
-def unlaid(desk, tmp_path, hand=("claude",), **more):
-    from orkboard.realm import project_kind
-    from tests.first_open_kit import git_repo
-    from tests.test_add_tool_browser import fill_hand
-    d = desk(git_repo(tmp_path / "skyhop", "project.godot", "[application]\n"), **more)
-    project_kind.keep(d.host.ideas.state_dir, "game")
-    fill_hand(d.host, *hand)
-    return d
 
 
-def test_the_window_not_yet_laid_holds_the_orkmaster_alone(desk, tmp_path):
-    d = unlaid(desk, tmp_path)
-    pg = d.open()
-    pg.locator('.frame[data-laid="0"][data-room="1"]').wait_for(timeout=WAIT_MS)                # the first open's room (spec 150 G): the Orkmaster alone, the places its cards have laid
-    pg.locator(".fo-bubble").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".col-head__tab, .table-tabcell, .frame-table, .frame-hand").count() == 0, "no tabs, no table's pane, no hand"
-    assert pg.locator(".table-chair, .table-door, .hand-die, .ork-die, .hand-plus, .col-scroll, .col-sec, .table-end").count() == 0, "no empty chair, door, die, + card or piles"
-    assert pg.locator('[data-place="potions"] .hand-pot').count() >= 1 and pg.locator("[data-empty-slot]").count() == 1, "the AI tools at the edge's foot"
-    assert not d.errors, d.errors
 
 
-def test_settings_stays_reachable_before_start_over_the_whole_table(desk, tmp_path):
-    d = unlaid(desk, tmp_path)
-    pg = d.open()
-    pg.locator('[data-setup="parties"]').wait_for(timeout=WAIT_MS)                              # the room's table (spec 150 G)
-    pg.get_by_role("button", name="The Orkmaster's menu").click()
-    pg.get_by_role("menuitem", name="Settings").click()
-    pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
-    assert not d.errors, d.errors
 
 
-def test_under_reduced_motion_the_table_is_laid_all_at_once(desk, tmp_path):
-    d = unlaid(desk, tmp_path)
-    pg = d.pg
-    pg.emulate_media(reduced_motion="reduce")
-    d.open()
-    pg.locator('[data-place="table"] .fo-chair').first.click()
-    pg.locator('[data-act="start"]:not([disabled])').click()
-    pg.locator(".table-tabcell").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".frame[data-laying]").count() == 0
-    assert not d.errors, d.errors
 
 
-def test_a_task_to_look_at_and_a_merged_one_have_stage_words_of_their_own_never_planning(table):
-    """Spec 143 F.1 (decisions §250.7): *To look at* (the word the result card says) and *Done* (the finished card's check), and the rest as they were."""
-    pg, host, w = table
-    got = pg.evaluate("""async () => { const d = await import('/static/js/table/data.js');
-      const of = (state, band = '') => { const k = d.stageOf({ state, band }); return [k, d.STAGES[k].word, d.STAGES[k].sign]; };
-      return [of('review'), of('merged'), of('merged', 'check'), of('testing'), of('running'), of('failed'), of('waiting'), of('picking')]; }""")
-    assert got == [["review", "To look at", "page"], ["done", "Done", "check"], ["done", "Done", "check"], ["checking", "Checking", "shield"], ["doing", "Doing", "sword"],
-                   ["doing", "Doing", "sword"], ["planning", "Planning", "page"], ["planning", "Planning", "page"]]

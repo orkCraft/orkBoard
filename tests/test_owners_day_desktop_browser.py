@@ -14,7 +14,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_table_desktop_browser import TableHost, open_tab, shot, system_doc, tab, title, watch  # noqa: E402
+from tests.test_table_desktop_browser import TableHost, system_doc, watch  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -70,59 +70,15 @@ def start(gui, width, errors, host, **ctx):
     return pg
 
 
-def scale_of(pg) -> float:
-    return float(pg.locator(".arch").get_attribute("data-scale"))
 
 
-def open_system(pg):
-    open_tab(pg, "tech")
-    pg.locator(".table-sys .sys[data-state=shown] .arch").wait_for(timeout=WAIT_MS)
-    pg.wait_for_function("() => document.querySelectorAll('.arch-col').length > 0 && document.querySelector('.arch').dataset.scale")
 
 
 # -- F: the System fits ------------------------------------------------------------------------------------------------------------------------------
 
 
-def test_a_system_that_would_pass_half_scrolls_sideways_marks_its_edge_and_a_drag_on_empty_ground_pans(gui):
-    errors: list[str] = []
-    pg = start(gui, {"width": 1280, "height": 800}, errors, Host(n=6))
-    open_system(pg)
-    assert scale_of(pg) == 0.5                                                                                         # never under 0.5
-    scroller = pg.locator(".sys-scroll")
-    assert scroller.evaluate("e => e.scrollWidth > e.clientWidth + 10")
-    assert "right" in (scroller.get_attribute("data-more") or "").split() and "left" not in (scroller.get_attribute("data-more") or "").split()
-    box = scroller.bounding_box()
-    y = box["y"] + box["height"] - 6                                                                                   # the empty ground under the cards
-    pg.mouse.move(box["x"] + 600, y)
-    pg.mouse.down()
-    for dx in range(0, 300, 20):
-        pg.mouse.move(box["x"] + 600 - dx, y)
-    pg.mouse.up()
-    assert scroller.evaluate("e => e.scrollLeft") > 100, "a drag on the empty ground pans"
-    assert "left" in (scroller.get_attribute("data-more") or "").split()
-    assert pg.locator(".table-back").count() == 0                                                                      # and presses nothing
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_a_system_refused_its_storage_still_fits(gui):
-    errors: list[str] = []
-    server, browser = gui
-    host = Host(n=3)
-    context = browser.new_context(viewport={"width": 1280, "height": 800})
-    context.add_init_script("Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });")
-    pg = context.new_page()
-    watch(pg, errors)
-    pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    open_system(pg)
-    assert scale_of(pg) < 1
-    pg.get_by_role("button", name="100 %").click()
-    pg.wait_for_function("() => document.querySelector('.arch').dataset.scale === '1.000'")
-    pg.context.close()
-    assert not [e for e in errors if "blocked" not in e], "\n".join(errors)
 
 
 # -- H: + Party, the project ▾, a working party's head ---------------------------------------------------------------------------------------------------
@@ -138,52 +94,10 @@ def tabs(gui, request):
     assert not errors, "\n".join(errors)
 
 
-def test_plus_party_and_the_arrow_after_the_project_name_open_the_parties_and_the_projects(tabs):
-    pg, host, w = tabs
-    plus = pg.locator(".table-tabs__end .table-chair")
-    assert " ".join(plus.text_content().split()) == ("New party" if w == "wide" else "") and plus.get_attribute("aria-label") == "New party"      # the empty chair (spec 123 §7.5); a row of heads says the chair alone
-    assert "primary" not in plus.get_attribute("class")
-    arrow = pg.get_by_role("button", name="Switch project")
-    assert arrow.count() == 1 and arrow.get_attribute("title") == "Switch project" and arrow.locator("use").get_attribute("href").endswith("#chevron-down")
-    first = pg.locator('.table-tabcell[data-cell="orkmaster"], .col-head').bounding_box()                              # the Orkmaster's tab: the column's head at the wide width (spec 128 B.2)
-    box = arrow.bounding_box()
-    assert first["x"] <= box["x"] and box["x"] + box["width"] <= first["x"] + first["width"] + 1                       # after the name, inside the first tab's place
-    shot(pg, f"owners-day-tabs-{w}.png")
-    arrow.click()
-    pg.locator('.table-over[data-kind="projects"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · Projects" and pg.locator(".table-projects__one").count() == 3
-    pg.locator(".table-title__back").click()
-    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
-    assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"                                               # the ▾ is no tab
-    plus.click()
-    pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
 
 
-def test_a_party_with_an_ork_at_work_has_data_working_and_its_leaders_head_stands_still(gui):
-    errors: list[str] = []
-    host = Host(n=3)
-    pg = start(gui, {"width": 1280, "height": 800}, errors, host)
-    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
-    assert tab(pg, "tech").get_attribute("data-working") is not None and tab(pg, "game").get_attribute("data-working") is not None
-    assert tab(pg, "release").get_attribute("data-working") is None and tab(pg, "orkmaster").get_attribute("data-working") is None
-    assert tab(pg, "tech").locator(".ork-race__head").evaluate("e => getComputedStyle(e).animationName") == "none"          # a face changes with its state and stands still (spec 123 §7.3: the leader's *focused* face is what says it, the step is gone)
-    assert tab(pg, "release").locator(".ork-race__head").evaluate("e => getComputedStyle(e).animationName") == "none"
-    host.nodes = [n for n in host.nodes if not n.get("tasks")]                                                         # nothing at work any more: the heads stand still
-    host.rev += 1
-    host.ws.send(__import__("json").dumps(host.snapshot()))
-    pg.wait_for_function("() => !document.querySelector('.table-tab[data-tab=\"tech\"][data-working]')", timeout=WAIT_MS)
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_the_head_stands_still_under_reduced_motion(gui):
-    errors: list[str] = []
-    pg = start(gui, {"width": 1280, "height": 800}, errors, Host(n=3), reduced_motion="reduce")
-    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
-    assert tab(pg, "tech").get_attribute("data-working") is not None
-    assert tab(pg, "tech").locator(".ork-race__head").evaluate("e => getComputedStyle(e).animationName") == "none"
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
 # -- I: Play ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -193,80 +107,9 @@ def open_play(pg):
     pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
 
 
-def test_plays_frame_fills_the_pane_and_full_screen_lays_its_stage_over_the_screen(gui):
-    errors: list[str] = []
-    pg = start(gui, {"width": 1280, "height": 800}, errors, Host(play=PLAYING))
-    open_play(pg)
-    frame = pg.locator(".play-frame")
-    frame.wait_for(timeout=WAIT_MS)
-    box, pane = frame.bounding_box(), pg.locator(".table-over").bounding_box()
-    assert box["height"] > 300 and box["width"] > 300, box                                                              # not the browser's 300 x 150
-    assert box["width"] >= pane["width"] - 2 and box["y"] + box["height"] <= pane["y"] + pane["height"] + 1
-    assert box["height"] >= pane["height"] - 80                                                                         # the bar over it is all that is not the build
-    assert pg.locator(".play-bar").bounding_box()["height"] < 80
-    assert pg.get_by_role("button", name="Stop the build").count() == 1
-    shot(pg, "owners-day-play.png")
-    full = pg.get_by_role("button", name="Full screen")
-    assert full.count() == 1 and full.get_attribute("title")
-    full.click()
-    pg.wait_for_function("() => document.fullscreenElement && document.fullscreenElement.classList.contains('play-stage')", timeout=WAIT_MS)
-    pg.keyboard.press("Escape")
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_the_start_screen_is_the_projects_logo_with_its_name_under_it_else_the_name_alone(gui):
-    """Spec 112 §3.4: the logo no longer shows while the build starts (the die is thrown then: tests/test_play_die_browser.py); it comes up after the die's landing on the tick, as it did before. Under reduced motion it is today's screen."""
-    errors: list[str] = []
-    starting = {"state": "starting", "commit": "a" * 40, "short": "aaaaaaa", "stage": "page", "command": "npm run dev", "ports": [5173], "since": 3.0}
-    host = Host(play={**starting, "logo": LOGO})
-    pg = start(gui, {"width": 1280, "height": 800}, errors, host)
-    open_play(pg)
-    pg.locator(".play-throw[data-phase=roll]").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".play-logo").count() == 0                                                                        # the die rolls, the logo waits
-    host.play = {**PLAYING, "logo": LOGO}
-    logo = pg.locator(".play-intro .play-logo__img")
-    logo.wait_for(timeout=WAIT_MS)
-    pg.wait_for_function("() => { const i = document.querySelector('.play-logo__img'); return i && i.complete && i.naturalWidth > 0; }")
-    assert logo.bounding_box()["height"] == 128 and logo.get_attribute("src") == LOGO
-    assert logo.evaluate("e => getComputedStyle(e).imageRendering") == "pixelated"                                      # 32 px wide: whole pixels
-    assert pg.locator(".play-logo").evaluate("e => getComputedStyle(e).animationName") == "play-logo-in"
-    assert pg.locator(".play-logo__sweep").evaluate("e => [getComputedStyle(e).animationName, getComputedStyle(e).animationDuration, getComputedStyle(e).animationIterationCount]") == ["play-logo-sweep", "2.4s", "infinite"]
-    assert pg.locator(".play-intro .play-title").is_visible() and pg.locator(".play-intro.has-logo").count() == 1
-    assert logo.bounding_box()["y"] + 128 <= pg.locator(".play-title").bounding_box()["y"] + 1                          # the name under it
-    shot(pg, "owners-day-play-start.png")
-    pg.context.close()
-    host = Host(play={**starting, "logo": ""})
-    plain = start(gui, {"width": 1280, "height": 800}, errors, host)
-    open_play(plain)
-    plain.locator(".play-throw[data-phase=roll]").wait_for(timeout=WAIT_MS)
-    host.play = PLAYING
-    plain.locator(".play-intro:not(.play-throw) .play-title").wait_for(timeout=WAIT_MS)
-    assert plain.locator(".play-logo").count() == 0 and plain.locator(".play-intro.has-logo").count() == 0
-    plain.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_under_reduced_motion_the_start_screen_is_the_logo_while_it_starts_as_before(gui):
-    errors: list[str] = []
-    starting = {"state": "starting", "commit": "a" * 40, "short": "aaaaaaa", "stage": "page", "command": "npm run dev", "ports": [5173], "since": 3.0, "logo": LOGO}
-    pg = start(gui, {"width": 1280, "height": 800}, errors, Host(play=starting), reduced_motion="reduce")
-    open_play(pg)
-    logo = pg.locator(".play-intro .play-logo__img")
-    logo.wait_for(timeout=WAIT_MS)
-    assert logo.bounding_box()["height"] == 128 and pg.locator(".play-intro.has-logo .play-title").is_visible() and pg.locator(".playpane .ork-die").count() == 0
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
-def test_the_logo_stands_still_under_reduced_motion(gui):
-    errors: list[str] = []
-    starting = {"state": "starting", "commit": "a" * 40, "short": "aaaaaaa", "stage": "worktree", "command": "", "ports": [], "since": 0, "logo": LOGO}
-    pg = start(gui, {"width": 1280, "height": 800}, errors, Host(play=starting), reduced_motion="reduce")
-    open_play(pg)
-    pg.locator(".play-logo__img").wait_for(timeout=WAIT_MS)
-    for sel in (".play-logo", ".play-logo__img", ".play-intro .play-title"):
-        assert pg.locator(sel).evaluate("e => getComputedStyle(e).animationName") == "none", sel
-    assert pg.locator(".play-logo__sweep").evaluate("e => getComputedStyle(e).display") == "none"
-    pg.context.close()
-    assert not errors, "\n".join(errors)

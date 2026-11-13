@@ -14,7 +14,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, call, node, need, open_hand  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, node, need, open_hand  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -117,33 +117,6 @@ def box(loc):
     return loc.bounding_box()
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_lifted_the_decision_says_why_and_its_numbered_points_and_has_one_button_that_confirms(gui, width):
-    pg, host, log = open_decision(gui, width)
-    try:
-        press(pg, "chat")
-        lifted(pg).wait_for(timeout=WAIT_MS)
-        card = lifted(pg)
-        assert "Players chat in the lobby, one room each" in card.locator(".hand-card__name").inner_text()
-        assert card.locator(".hand-way__why .body").inner_text().startswith("Players talk before a round starts")
-        pts = card.locator(".hand-way__points li")
-        assert pts.count() == 3 and pts.first.inner_text().startswith("The lobby has one chat room"), "the points numbered, the Orkmaster's words"
-        assert card.locator(".hand-way__points").evaluate("e => e.tagName") == "OL"
-        assert card.locator(".hand-spend").count() == 0, "no gem, no cost line"
-        assert " ".join(card.locator(".hand-lifted__kind").text_content().split()) == "Decision 118" and " ".join(card.text_content().split()).count("Decision 118") == 1, "its number is said once, beside what the card is"
-        primaries = card.locator(".hand-answers .ork-btn.primary")
-        assert primaries.count() == 1 and primaries.inner_text().strip() == "Confirm and start", "one button"
-        assert [b.inner_text().strip() for b in card.locator(".hand-answers .ork-btn").all()] == ["Confirm and start", "Change…"]
-        shot(pg, f"{width}-decision-lifted")
-        narrow.no_sideways(pg)
-        primaries.click()
-        got = _calls(pg, host, "ideas.confirm")
-        assert got == [{"idea": "chat"}], got
-        pg.wait_for_function("() => !document.querySelector('.hand-lifted')", timeout=WAIT_MS)
-        pg.wait_for_function("() => !document.querySelector('.hand-stack[data-goal=\"chat\"]')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -168,39 +141,8 @@ def test_change_opens_the_entry_as_a_field_on_the_card_and_what_is_written_is_se
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_change_then_cancel_and_confirm_sends_no_text_and_a_refusal_keeps_the_card(gui, width):
-    pg, host, log = open_decision(gui, width)
-    try:
-        host.refuse = True
-        press(pg, "chat")
-        lifted(pg).get_by_role("button", name="Change…").click()
-        lifted(pg).locator("textarea").fill("changed my mind")
-        lifted(pg).get_by_role("button", name="Cancel").click()
-        assert lifted(pg).locator("textarea").count() == 0 and lifted(pg).locator(".hand-way__points li").count() == 3, "back to the decision as worded"
-        lifted(pg).get_by_role("button", name="Confirm and start").click()
-        assert _calls(pg, host, "ideas.confirm") == [{"idea": "chat"}]
-        pg.wait_for_timeout(300)
-        assert lifted(pg).count() == 1, "refused: the card stays lifted"
-    finally:
-        pg.close()
-    assert not [m for m in log if "pageerror" in m], "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_decision_written_already_asks_the_sections_again_and_has_no_change(gui, width):
-    pg, host, log = open_decision(gui, width, confirmed=True)
-    try:
-        press(pg, "chat")
-        card = lifted(pg)
-        card.wait_for(timeout=WAIT_MS)
-        assert card.get_by_role("button", name="Change").count() == 0
-        assert "written already" in card.locator('[data-note="written"]').inner_text() and "limits are spent" in card.locator('[data-note="written"]').inner_text()
-        card.get_by_role("button", name="Confirm and start").click()
-        assert _calls(pg, host, "ideas.confirm") == [{"idea": "chat"}]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -252,77 +194,7 @@ def test_lifted_a_fork_is_a_hearing_over_the_pane_with_the_spec_lit_under_it_and
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_persons_own_words_throw_a_fork_as_text_and_the_next_fork_takes_the_pane(gui, width):
-    pg, host, log = open_decision(gui, width, two=True)
-    try:
-        press(pg, "rooms")
-        pg.locator('.table-over[data-kind="choose"] .hr[data-kind=hearing]').wait_for(timeout=WAIT_MS)
-        pg.get_by_role("button", name="Or say it in your own words").click()
-        field = pg.locator(".hr-field__text")
-        field.wait_for(timeout=WAIT_MS)
-        shot(pg, f"{width}-fork-other")
-        field.fill("Eight players, and the server is told")
-        pg.locator(".hr-field .ork-btn.primary").click()
-        got = _calls(pg, host, "ideas.throw")
-        assert got == [{"idea": "rooms", "moment": "fork", "text": "Eight players, and the server is told"}], got
-        pg.wait_for_function("() => document.querySelector('.hr-title')?.textContent.trim() === 'Design lead and Tech lead disagree' && document.querySelector('.hr-side[data-dir=\"right\"] .hr-out__words')?.textContent.trim() === 'Show the clock on every phone'", timeout=WAIT_MS)
-        assert pg.locator(".hr-card").evaluate("(el) => !el.classList.contains('is-away')"), "the next fork's card is on the pane"
-        pg.get_by_role("button", name="Put it back").click()
-        pg.wait_for_function("() => !document.querySelector('.table-over[data-kind=\"choose\"]')", timeout=WAIT_MS)
-        assert [n for n, _a in host.log if n == "ideas.throw"] == ["ideas.throw"], "put back throws nothing"
-        assert front(pg, "rooms").count() == 1, "the fork is still in the hand"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_spec_page_alone_lights_nothing_and_reads_a_page_of_before_as_one_section_of_its_party(gui, width):
-    pg, host, log = open_decision(gui, width)
-    try:
-        call(pg, "frame/state.js", "openOver", "spec", {"idea": "chat"}, {"title": "Board", "key": ""}, "Spec")
-        page = pg.locator('.table-over[data-kind="spec"] .spec-page')
-        page.wait_for(timeout=WAIT_MS)
-        page.locator(".spec-section").first.wait_for(timeout=WAIT_MS)
-        secs = page.locator(".spec-section")
-        assert secs.count() == 1 and secs.first.get_attribute("data-party") == "design" and secs.first.get_attribute("data-lit") is None
-        assert [x.inner_text().strip() for x in secs.first.locator(".spec-line").all()] == ["Messages show in the lobby", "The last fifty are kept"]
-        assert secs.first.locator('.spec-col[data-part="will"]').count() == 0 and page.locator(".spec-line.is-lit").count() == 0
-        shot(pg, f"{width}-spec-alone")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_one_change_keeps_the_field_as_written_and_words_the_line_again(gui, width):
-    """Spec 132 A, decisions §237.3: under the field one line, *Or say what to change*; Change sends `ideas.decision_change` with the field as `text` and the line as `say`."""
-    pg, host, log = open_decision(gui, width)
-    try:
-        press(pg, "chat")
-        lifted(pg).get_by_role("button", name="Change…").click()
-        field = lifted(pg).locator("textarea.hand-way__entry")
-        field.wait_for(timeout=WAIT_MS)
-        line = lifted(pg).get_by_label("Or say what to change")
-        assert line.count() == 1 and "or say what to change" in lifted(pg).inner_text().lower()
-        change = lifted(pg).get_by_role("button", name="Change", exact=True)
-        assert change.is_disabled(), "nothing changed, nothing to send"
-        line.fill("Make it three rooms")
-        assert lifted(pg).get_by_role("button", name="Confirm and start").is_disabled(), "a line to be worded is sent by Change, not lost by Confirm"
-        shot(pg, f"{width}-decision-change")
-        narrow.no_sideways(pg)
-        change.click()
-        got = _calls(pg, host, "ideas.decision_change")
-        assert got == [{"idea": "chat", "say": "Make it three rooms"}], got
-        pg.wait_for_function("() => !document.querySelector('.hand-lifted textarea')", timeout=WAIT_MS)
-        lifted(pg).get_by_role("button", name="Change…").click()
-        lifted(pg).locator("textarea.hand-way__entry").fill("## 118. Chat\n\nWhy: x.\n\n1. One room.")
-        lifted(pg).get_by_label("Or say what to change").fill("and quieter")
-        lifted(pg).get_by_role("button", name="Change", exact=True).click()
-        got = _calls(pg, host, "ideas.decision_change")
-        assert got[-1] == {"idea": "chat", "text": "## 118. Chat\n\nWhy: x.\n\n1. One room.", "say": "and quieter"}, got
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

@@ -10,7 +10,6 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import HandHost, open_hand  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
@@ -66,28 +65,6 @@ def sent(host, name):
     return [a for n, a in host.log if n == name]
 
 
-def test_the_header_says_the_projects_name_then_its_kind_and_stage_and_the_orkmaster_only_in_its_label(gui):
-    pg, host, log = opened(gui)
-    try:
-        head = pg.locator(".col-head")
-        tab = head.locator(".col-head__tab")
-        name = tab.locator(".col-head__nm")
-        sub = head.locator(".col-head__sub")
-        assert sub.text_content().strip() == "Game · Being made"
-        assert name.inner_text().strip() and "orkmaster" not in head.inner_text().lower(), "The Orkmaster leaves the visible header"
-        assert tab.get_attribute("aria-label").startswith("The Orkmaster · ") and tab.get_attribute("title").startswith("The Orkmaster: "), "its label and title still name it"
-        assert head.get_attribute("aria-label") == "The Orkmaster"
-        assert head.locator(".ork-pennant").count() == 1 and tab.locator(".ork-race__head").count() == 1, "its head and pennant stay"
-        a, b = name.bounding_box(), sub.bounding_box()
-        assert b["y"] > a["y"] + a["height"] - 2, "the kind and stage on the second line"
-        assert abs(a["x"] - b["x"]) <= 2, "under the name"
-        assert sub.evaluate("e => getComputedStyle(e).fontSize") in ("12px", "13px", "11px", "14px")
-        box = head.bounding_box()
-        assert b["y"] + b["height"] <= box["y"] + box["height"], "inside the head"
-        shot(pg, "header")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 LONG = "The long-running party game for twelve friends who all play across three time zones every Friday"
@@ -102,23 +79,6 @@ class LongHost(ProjectHost):
         return doc
 
 
-def test_a_long_projects_name_takes_two_lines_then_is_cut_whole_in_its_title_and_the_kind_and_stage_stay_on_one_line(gui):
-    """Spec 168 B3 (decisions §283.13): the column keeps its 160 px; the name in its head takes two lines, then is cut with an ellipsis, whole in its `title`; *Game · Being made* is one line, cut."""
-    pg, host, log = open_hand(gui, host=LongHost(), width="wide")
-    try:
-        pg.locator(".col-head__sub").wait_for(timeout=WAIT_MS)
-        name, sub, head = pg.locator(".col-head__nm"), pg.locator(".col-head__sub"), pg.locator(".col-head")
-        assert name.get_attribute("title") == LONG, "whole in its title (and so on hover)"
-        lines = name.evaluate("e => { const s = getComputedStyle(e); return [Math.round(e.getBoundingClientRect().height / parseFloat(s.lineHeight)), s.webkitLineClamp || s.lineClamp, e.scrollHeight > e.clientHeight + 1]; }")
-        assert lines[0] == 2 and str(lines[1]) == "2" and lines[2] is True, f"two lines, then cut ({lines})"
-        assert pg.locator(".frame-column").bounding_box()["width"] == 160, "the column keeps its 160 px"
-        a, b, box = name.bounding_box(), sub.bounding_box(), head.bounding_box()
-        assert b["y"] >= a["y"] + a["height"] - 2 and b["y"] + b["height"] <= box["y"] + box["height"], "the kind and stage under the two lines, inside the head"
-        assert sub.evaluate("e => [getComputedStyle(e).whiteSpace, getComputedStyle(e).overflowX, Math.round(e.getBoundingClientRect().height)]")[:2] == ["nowrap", "hidden"] and b["height"] <= 16, "one line, cut"
-        shot(pg, "header-long")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_the_stage_pressed_deals_three_cards_the_present_marked_and_a_card_sends_stage_set_once(gui):
@@ -128,8 +88,6 @@ def test_the_stage_pressed_deals_three_cards_the_present_marked_and_a_card_sends
         ways = pg.locator(".hand-ways-row .hand-ans")
         ways.first.wait_for(timeout=WAIT_MS)
         assert ways.count() == 3 and [w.locator(".hand-ans__name").inner_text().strip() for w in ways.all()] == ["Idea", "Being made", "Live"]
-        for w in ways.all():
-            assert w.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [120, 168]
         marked = pg.locator(".hand-ways-row .hand-ans[data-pick='1']")
         assert marked.count() == 1 and marked.locator(".hand-ans__name").inner_text().strip() == "Being made"
         assert ways.nth(2).locator(".hand-ans__line").inner_text().strip() == "LiveOps and Marketing join the chair's crafts"
@@ -197,12 +155,3 @@ def test_the_kind_pressed_deals_the_kinds_the_present_marked_and_a_card_sends_th
     assert not log, "\n".join(log)
 
 
-def test_the_narrow_page_keeps_its_head(gui):
-    pg, host, log = opened(gui, width="narrow")
-    try:
-        assert pg.locator(".col-head__sub:visible").count() == 0 and pg.locator(".col-head__pick:visible").count() == 0
-        assert pg.locator('.table-tab[data-tab="orkmaster"]').count() == 1
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

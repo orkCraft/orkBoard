@@ -66,7 +66,8 @@ def test_every_question_deals_a_turn_card_whose_way_is_one_press_with_its_undo_a
     for entry in ENTRIES:
         if hasattr(host.keeper, entry):
             monkeypatch.setattr(host.keeper, entry, boom(f"keeper.{entry}"))
-    monkeypatch.setattr(harnesses.Harness, "call", boom("Harness.call"))
+    for entry in ("ask", "read", "work"):                                                                      # every way the AI tool is reached
+        monkeypatch.setattr(harnesses.Harness, entry, boom(f"Harness.{entry}"))
 
     pg = browser.new_page(viewport={"width": 1440, "height": 900})
     sent: list[dict] = []

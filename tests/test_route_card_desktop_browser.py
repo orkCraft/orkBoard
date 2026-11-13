@@ -130,29 +130,6 @@ def fits(pg):
     assert (inside if inside.count() else pg.locator(".hand-lifted")).evaluate("e => e.scrollWidth <= e.clientWidth + 1"), "nothing sideways inside it"
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_lifted_route_card_has_the_heads_the_words_the_cost_its_place_and_talk(gui, width):
-    host = RouteHost()
-    pg, log = open_route(gui, host, width)
-    try:
-        lifted = lift(pg)
-        assert lifted.locator(".hand-route__step:not(.is-add)").count() == 3 and lifted.locator(".hand-route__step .ork-race__head").count() == 3, "the leaders' heads in order"
-        assert lifted.locator(".hand-route__off").count() == 3, "a × at each"
-        assert lifted.locator(".hand-way__words").inner_text() == "Product, then Design, then Tech"
-        assert lifted.locator(".hand-way__cost .hand-spend__words").inner_text() == "about 6 calls, about 3–9% of Claude's week" and lifted.locator(".hand-way__cost .ork-gem.share").inner_text() == "3–9%"
-        assert pg.locator(".hand-lifted .hand-spend:visible").count() == 1, "the cost is said once"
-        assert lifted.locator(".hand-way__place").inner_text() == "3rd in line"
-        assert lifted.get_by_role("button", name="Talk").count() == 1 and lifted.get_by_role("button", name="Later").count() == 0, "Later only when the limits run low"
-        assert lifted.get_by_role("button", name="Put it back").count() == 1
-        assert lifted.locator("img[src*='/races/peon-crown']").count() >= 1
-        fits(pg)
-        shot(pg, f"{width}-route-lifted")
-        lifted.get_by_role("button", name="Talk").click()
-        assert _sent(pg, host, ("ideas.talk", {"idea": "fresh"}))
-        pg.locator(".hand-lifted").wait_for(state="detached", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -184,49 +161,8 @@ def test_an_edit_sends_route_set_and_says_the_cost_again_from_the_answer_and_the
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_head_pressed_opens_its_popover_and_esc_closes_it_before_the_card(gui, width):
-    host = RouteHost()
-    pg, log = open_route(gui, host, width)
-    try:
-        lifted = lift(pg)
-        lifted.get_by_role("button", name="Tech’s leader").click()
-        pop = lifted.locator(".table-seatpop")
-        pop.wait_for(timeout=WAIT_MS)
-        assert pop.get_attribute("data-seat") == "tech-lead" and pop.bounding_box()["x"] >= lifted.bounding_box()["x"] - 1, "the table's seat popover, in the card"
-        assert _calls(pg, host, "ideas.route_set", ms=300) == [], "a press on a head takes no party off"
-        fits(pg)
-        shot(pg, f"{width}-route-popover")
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.hand-lifted .table-seatpop')", timeout=WAIT_MS)
-        assert pg.locator(".hand-lifted").count() == 1, "the first Esc closes the popover only"
-        lifted.get_by_role("button", name="Tech’s leader").click()                       # pressed again, it opens again; a third press closes
-        pop.wait_for(timeout=WAIT_MS)
-        lifted.get_by_role("button", name="Tech’s leader").click()
-        pg.wait_for_function("() => !document.querySelector('.hand-lifted .table-seatpop')", timeout=WAIT_MS)
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.hand-lifted')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_later_by_itself_is_offered_only_when_the_limits_run_low(gui, width):
-    host = RouteHost(low=True)
-    pg, log = open_route(gui, host, width)
-    try:
-        lifted = lift(pg)
-        later = lifted.get_by_role("button", name="Later")
-        assert later.count() == 1 and lifted.get_by_role("button", name="Talk").count() == 1
-        fits(pg)
-        shot(pg, f"{width}-route-low")
-        later.click()
-        assert _sent(pg, host, ("ideas.route_later", {"idea": "fresh"}))
-        pg.locator(".hand-lifted").wait_for(state="detached", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -247,146 +183,15 @@ def test_hold_is_offered_at_any_time_beside_talk_and_says_what_it_does(gui, widt
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_bug_alone_is_talk_to_find_the_cause_or_start_with_the_long_way_beside_it(gui, width):
-    host = RouteHost("cause")
-    pg, log = open_route(gui, host, width)
-    try:
-        lifted = lift(pg)
-        assert lifted.locator(".hand-way__words").inner_text() == "Tech alone: finding the cause"
-        assert lifted.get_by_role("button", name="Talk").count() == 1 and lifted.get_by_role("button", name="Start").count() == 0 and lifted.get_by_role("button", name="The long way").count() == 0
-        assert lifted.locator(".hand-way__place").inner_text() == "3rd in line"
-        nobug = lifted.get_by_role("button", name="It is no bug")
-        assert nobug.count() == 1 and "quiet" in nobug.get_attribute("class"), "beside Talk and Hold, quiet (spec 149 A.4)"
-        fits(pg)
-        shot(pg, f"{width}-bug-cause")
-        lifted.get_by_role("button", name="Talk").click()
-        assert _sent(pg, host, ("ideas.talk", {"idea": "fresh"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-    host = RouteHost("report")
-    pg, log = open_route(gui, host, width)
-    try:
-        lifted = lift(pg)
-        assert lifted.locator(".hand-way__words").inner_text() == "Tech alone: the report has a failing test"
-        assert lifted.get_by_role("button", name="Talk", exact=True).count() == 0 and lifted.get_by_role("button", name="Start", exact=True).count() == 1
-        assert lifted.get_by_role("button", name="It is no bug").count() == 0, "a report with a failure keeps The long way"
-        long = lifted.get_by_role("button", name="The long way")
-        assert long.count() == 1 and "quiet" in long.get_attribute("class"), "a quiet link"
-        fits(pg)
-        shot(pg, f"{width}-bug-report")
-        long.click()
-        assert _sent(pg, host, ("ideas.talk", {"idea": "fresh"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-    host = RouteHost("report")
-    pg, log = open_route(gui, host, width)
-    try:
-        lift(pg).get_by_role("button", name="Start", exact=True).click()
-        assert _sent(pg, host, ("ideas.route_start", {"idea": "fresh"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-@pytest.mark.parametrize("scenario,words", [("tidy", "Tech alone: a small clean-up"), ("balance", "Tech alone: a small change to the numbers")])
-def test_a_short_goal_that_is_no_bug_says_its_own_line_and_has_talk_alone(gui, width, scenario, words):
-    host = RouteHost(scenario)
-    pg, log = open_route(gui, host, width)
-    try:
-        lifted = lift(pg)
-        assert lifted.locator(".hand-way__words").inner_text() == words
-        assert lifted.get_by_role("button", name="Talk", exact=True).count() == 1 and lifted.get_by_role("button", name="Start", exact=True).count() == 0 and lifted.get_by_role("button", name="The long way").count() == 0
-        assert "cause" not in lifted.inner_text() and "failing test" not in lifted.inner_text(), "the bug's words are the bug's"
-        fits(pg)
-        shot(pg, f"{width}-short-{scenario}")
-        lifted.get_by_role("button", name="Talk", exact=True).click()
-        assert _sent(pg, host, ("ideas.talk", {"idea": "fresh"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_route_row_of_a_host_that_sends_no_type_is_read_as_before(gui, width):
-    host = RouteHost("legacy")
-    pg, log = open_route(gui, host, width)
-    try:
-        assert lift(pg).locator(".hand-way__words").inner_text() == "Tech alone: finding the cause"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_cards_kind_is_said_in_plain_words(gui, width):
-    for scenario, word in (("route", "Route"), ("start", "Start")):
-        host = RouteHost(scenario)
-        pg, log = open_route(gui, host, width)
-        try:
-            lifted = lift(pg, scenario)
-            assert " ".join(lifted.locator(".hand-lifted__kind").text_content().split()) == word and lifted.get_attribute("aria-label").startswith(f"Lifted: {word}:")
-        finally:
-            pg.close()
-        assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_goal_of_a_product_party_says_what_job_it_serves_with_a_choice_of_the_jobs_and_none_chosen_none_attached(gui, width):
-    host = RouteHost("serves")
-    pg, log = open_route(gui, host, width)
-    try:
-        lifted = lift(pg)
-        serves = lifted.locator(".hand-way__serves")
-        serves.wait_for(timeout=WAIT_MS)
-        assert serves.locator(".cap").inner_text() == "Serves:"
-        select = serves.get_by_label("Serves")
-        assert select.input_value() == "" and select.locator("option:checked").inner_text() == "No job", "none chosen, none attached"
-        assert select.locator("option").all_text_contents() == ["No job", "get everyone into the lobby fast", "play again with the same group", "see where the round is"]
-        assert _calls(pg, host, "ideas.tree_attach", ms=300) == []
-        fits(pg)
-        shot(pg, f"{width}-route-serves")
-        select.select_option("play-again")
-        assert _calls(pg, host, "ideas.tree_attach")[-1] == {"job": "play-again", "goal": "fresh"}
-        pg.wait_for_function("() => document.querySelector('.hand-way__serves select').value === 'play-again'", timeout=WAIT_MS)
-        assert pg.locator(".hand-lifted").count() == 1, "the card stays lifted"
-        select.select_option("")
-        assert _calls(pg, host, "ideas.tree_attach", at_least=2)[-1] == {"job": "", "goal": "fresh"}, "an empty job takes it off"
-        fits(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_job_a_goal_already_serves_is_the_one_shown(gui, width):
-    host = RouteHost("serves-kept")
-    pg, log = open_route(gui, host, width)
-    try:
-        select = lift(pg).get_by_label("Serves")
-        select.wait_for(timeout=WAIT_MS)
-        pg.wait_for_function("() => document.querySelector('.hand-way__serves select').value === 'play-again'", timeout=WAIT_MS)
-        assert select.locator("option:checked").inner_text() == "play again with the same group"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("scenario", ["route", "serves-none"])
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_no_serves_for_a_goal_of_another_craft_or_with_no_job_kept(gui, width, scenario):
-    host = RouteHost(scenario)
-    pg, log = open_route(gui, host, width)
-    try:
-        lifted = lift(pg)
-        pg.wait_for_timeout(400)
-        assert lifted.locator(".hand-way__serves").count() == 0
-        assert [n for n, _ in host.log if n == "ideas.tree"] == (["ideas.tree"] if scenario == "serves-none" else []), "a goal of another craft never asks for the tree"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
