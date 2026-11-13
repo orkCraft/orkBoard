@@ -125,3 +125,26 @@ def test_a_page_keeps_the_keys_it_does_not_know_and_an_answered_question_is_not_
     assert [page.get(k) for k in ("phase", "by", "spec")] == ["work", "Codex", "docs/specs/9-x.md"]
     assert ideas.items(page.section("Open questions")) == ["Two?"]
 
+
+def test_order_after_a_move_and_to_another_track(root):
+    a, b, c = (ideas.add_idea(root, w) for w in ("alpha", "beta", "gamma"))
+    ideas.move(root, c, before=a)
+    assert [i["slug"] for i in ideas.ideas(root, "general")] == [c, a, b]
+    ux = ideas.add_track(root, "UX polish")
+    assert ux == "ux-polish"
+    ideas.move(root, a, track=ux)
+    assert [i["slug"] for i in ideas.ideas(root, "general")] == [c, b]
+    assert [(i["slug"], i["order"]) for i in ideas.ideas(root, ux)] == [(a, 1)]
+    assert {t["slug"]: t["count"] for t in ideas.tracks(root)} == {"general": 2, ux: 1}
+    with pytest.raises(ValueError):
+        ideas.move(root, a, track="nowhere")
+
+
+def test_a_track_is_set_and_a_deadline_is_a_date(root):
+    slug = ideas.add_track(root, "Phone first")
+    ideas.set_track(root, slug, about="The phone is where ideas start.", criteria=["drop in 2 taps", " "],
+                    deadline="2026-11-01")
+    t = next(t for t in ideas.tracks(root) if t["slug"] == slug)
+    assert (t["about"], t["criteria"], t["deadline"]) == ("The phone is where ideas start.", ["drop in 2 taps"], "2026-11-01")
+    with pytest.raises(ValueError):
+        ideas.set_track(root, slug, deadline="soon")

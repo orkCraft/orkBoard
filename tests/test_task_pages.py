@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 
-from orkboard.realm import event_log
+from orkboard.realm import event_log, library, roles
 
 from tests.test_idea_runner import git, plan_of, town  # noqa: F401  (the fixture repository with a stub claude)
 from tests.test_runner_35 import _runner

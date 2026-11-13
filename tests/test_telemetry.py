@@ -118,3 +118,32 @@ def test_by_purpose_sums_the_last_week_and_its_buildings(tmp_path: Path):
     assert [b["building"] for b in week[0]["buildings"]] == ["forge", "mill"]
     assert telemetry.by_purpose(tmp_path / "none") == []
 
+
+def test_prices_match_the_published_table():
+    # Spot checks against https://platform.claude.com/docs/en/about-claude/pricing (2026-09-29).
+    assert pricing.price_for("claude-opus-5-5") == pricing.Price(4, 5, 8, 0.20, 20, fast_input=8, fast_output=40)
+    assert pricing.price_for("claude-fable-5-1").cache_read == 0.25
+    assert pricing.price_for("claude-sonnet-4-5-20250929").input == 3          # dated id
+    assert pricing.price_for("claude-opus-4-5@20251101").output == 25          # Vertex spelling
+    assert pricing.price_for("us.anthropic.claude-haiku-4-5-20251001-v1:0").input == 1   # Bedrock
+    assert pricing.price_for("claude-opus-5-5[1m]").input == 4                 # Claude Code suffix
+    assert pricing.price_for("claude-sonnet-4-0").input == 3                   # alias
+    assert pricing.price_for("gemini-3.8-flash") is None
+    assert pricing.price_for(None) is None
+    # every write/read price is the documented multiple of the base input price
+    for model, p in pricing.PRICES.items():
+        assert p.cache_5m == pytest.approx(p.input * 1.25), model
+        assert p.cache_1h == pytest.approx(p.input * 2), model
+
+
+def test_the_light_calls_charge_the_ledger(monkeypatch):
+    import subprocess
+    from orkboard.realm import tool_run
+    telemetry.reset_charges()
+    since = dt.datetime.now().astimezone()
+    answer = json.dumps({"result": "ok", "total_cost_usd": 0.02})
+    from orkboard.realm import halt
+    monkeypatch.setattr(halt, "run", lambda *a, **k: subprocess.CompletedProcess(a, 0, answer, ""))
+    assert tool_run.ask("claude", "hi", model="haiku") == ("ok", 0.02)
+    assert [(usd, src) for _, usd, src, *_ in telemetry.charges(since)] == [(0.02, "claude -p haiku")]
+    telemetry.reset_charges()
