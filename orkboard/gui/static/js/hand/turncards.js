@@ -51,7 +51,7 @@ export function TurnPlay({ s }) {
 export function BattlePlay({ s }) {
   useEffect(() => {
     const from = document.querySelector(`.frame-hand button.hand-card[data-key="${CSS.escape(s.key)}"]`);
-    openSpread({ kind: "battle", slug: s.ref.slug, from });
+    openSpread({ kind: "battle", slug: s.ref.slug, from, opened: "hand" });
     lower();
   }, [s.key]);
   return null;

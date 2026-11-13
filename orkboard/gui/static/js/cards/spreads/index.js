@@ -22,6 +22,6 @@ export function Spreads() {
   if (s.kind === "duel") return html`<${Duel} />`;
   if (s.kind === "sort") return html`<${Sort} />`;
   if (s.kind === "deal") return html`<${Deal} key=${s.slug} slug=${s.slug} />`;
-  if (s.kind === "battle") return html`<${Battle} key=${s.slug} slug=${s.slug} />`;
+  if (s.kind === "battle") return html`<${Battle} key=${s.slug} slug=${s.slug} opened=${s.opened} />`;
   return null;
 }
