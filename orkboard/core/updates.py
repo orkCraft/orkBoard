@@ -18,13 +18,10 @@ A major one (a later line, 0.2 → 0.3) is offered louder. `ORKCRAFT_NO_UPDATE` 
 """
 from __future__ import annotations
 
-from orkboard.product import PRODUCT
+from orkboard.product import PRODUCT  # noqa: F401  (the import binds the updater's copy to Orkboard's profile)
 from orkboard.orkget.updates import *  # noqa: F401,F403  (the updater's names, as before orkGet)
 from orkboard.orkget.updates import (  # noqa: F401  (the names `*` leaves out, read by the window and the tests)
     BRANCHES, CHECK_EVERY_S, FETCH_TIMEOUT_S, INSTALL_TIMEOUT_S, MAX_BYTES, POLICIES, RESTART, RETRY_FAILED_S,
     UPDATED_ENV, Method, Offer, Release, Result, State, at_launch, blocked, check, check_later, due, fetch, install,
     installed_version, load_state, major, method, newer, offer, releases, remember, restart, save_state, series,
     state_path, url, version_key)
-
-SOURCE = PRODUCT.source
-NAMES = PRODUCT.names

@@ -31,7 +31,6 @@ from orkboard.realm.hours import in_hours, next_edge, next_start      # noqa: F4
 
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
-EFFORTS = ("low", "medium", "high", "xhigh", "max")      # the Claude CLI's `--effort` levels
 STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "fork", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "talk_verdict", "diagnose", "ground", "settle", "decide", "section_first", "section", "join",  "rewrite", "project_q", "loop", "tree", "hypotheses", "ask", "concerns", "sketch", "journal", "fold", "slice", "slice_digest", "finding", "finding_level", "cascade", "measure_read", "groups", "accept_step")
 SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its seats' cells and how many work at once (realm/goal_team.py `WAY`); no Target of its own (spec 168 H4, decisions §283.33)
 OWN_TIERS = ("laborer", "warrior", "elder")              # a leader's own tier for its own calls; "" follows *How deep*

@@ -10,7 +10,7 @@ its own. The faces draw it and never name it.
     idea_element.of(state_dir, "dark-mode")                    # "" before one is given
     idea_element.hue_of(state_dir, "dark-mode")                # its colour; its element when it has no hue of its own; "" before one is given
     idea_element.give(root, state_dir, "dark-mode")            # the shape it has, else the one it is given now (stored with its hue)
-    idea_element.next_rune_for(root, state_dir)                # (shape, hue) a new goal would be given (the + card's seal shows it)
+    idea_element.pick_rune(idea_element.open_runes(root, state_dir))   # (shape, hue) a new goal would be given (the + card's seal shows it)
     idea_element.free(idea_element.open_elements(root, state_dir))   # the shapes no goal holds, in ELEMENTS' order; [] when none is free (the + card's free runes)
     idea_element.give(root, state_dir, "dark-mode", want="void")   # the shape chosen, when the goal has none yet; its hue is picked
 
@@ -83,11 +83,6 @@ def open_runes(root: Path, state_dir: Path, besides: str | tuple[str, ...] = "")
 def open_elements(root: Path, state_dir: Path, besides: str | tuple[str, ...] = "") -> list[str]:
     """The shapes the project's goals hold, without `besides`'s."""
     return [s for s, _h in open_runes(root, state_dir, besides)]
-
-
-def next_rune_for(root: Path, state_dir: Path) -> Rune:
-    """The rune a new goal would be given now (decisions §186.3, §206.10): the rule `give` uses, so the rune the + card's seal shows is the one the goal gets. Reads, stores nothing."""
-    return pick_rune(open_runes(root, state_dir))
 
 
 def free(used: list[str]) -> list[str]:

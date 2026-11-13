@@ -105,10 +105,6 @@ def watch_ok(fn: Callable[[str], object]) -> Callable[[], None]:
     return lambda: _OK_WATCHERS.remove(fn) if fn in _OK_WATCHERS else None
 
 
-def watching() -> bool:
-    return bool(_WATCHERS)
-
-
 def ran(harness: str) -> None:
     """A run of `harness` ended without a failure (realm/tool_run.py calls it)."""
     if _OK_WATCHERS:

@@ -143,11 +143,11 @@ def test_a_done_goal_whose_result_is_seen_frees_its_rune(host):
     slugs = [raw(host, p, f"Goal number {n}", "working") for n in range(5)]
     for s in slugs:
         idea_element.give(root, state, s)
-    assert idea_element.free(idea_element.open_elements(root, state)) == [] and idea_element.next_rune_for(root, state)[0] == "meadow"
+    assert idea_element.free(idea_element.open_elements(root, state)) == [] and idea_element.pick_rune(idea_element.open_runes(root, state))[0] == "meadow"
     ideas.save_state(state, slugs[2], state="done")                                           # done, its result not seen: still held
     assert idea_element.free(idea_element.open_elements(root, state)) == [] and idea_element.of(state, slugs[2]) == "dust"
     ideas.save_state(state, slugs[2], seen_at=SEEN)                                           # seen: the rune is free
-    assert idea_element.free(idea_element.open_elements(root, state)) == ["dust"] and idea_element.next_rune_for(root, state)[0] == "dust" and idea_element.next_rune_for(root, state)[1] == "meadow"
+    assert idea_element.free(idea_element.open_elements(root, state)) == ["dust"] and idea_element.pick_rune(idea_element.open_runes(root, state))[0] == "dust" and idea_element.pick_rune(idea_element.open_runes(root, state))[1] == "meadow"
     assert idea_element.give(root, state, raw(host, p, "A new one", "working")) == "dust"
 
 
@@ -218,21 +218,21 @@ def test_a_goal_not_yet_read_has_one_too(host):
     assert node["state"] == "raw" and node["element"] == a["element"] != "" and node["hue"] == a["hue"] != ""
 
 
-# -- next_rune_for -----------------------------------------------------------------------------------------------------
+# -- the next goal's rune -----------------------------------------------------------------------------------------------------
 
-def test_next_rune_for_is_what_give_gives_the_next_goal(host):
+def test_the_next_rune_is_what_give_gives_the_next_goal(host):
     root, state = host.ideas.root(), host.ideas.state_dir
     p, q = party(host), party(host, "Second party")
-    assert idea_element.next_rune_for(root, state)[0] == "meadow" and idea_element.next_rune_for(root, state)[1] == "meadow"
+    assert idea_element.pick_rune(idea_element.open_runes(root, state))[0] == "meadow" and idea_element.pick_rune(idea_element.open_runes(root, state))[1] == "meadow"
     for n in range(7):
-        want = idea_element.next_rune_for(root, state)
-        assert idea_element.next_rune_for(root, state) == want                                # it reads and stores nothing
+        want = idea_element.pick_rune(idea_element.open_runes(root, state))
+        assert idea_element.pick_rune(idea_element.open_runes(root, state)) == want                                # it reads and stores nothing
         slug = raw(host, p if n % 2 else q, f"Goal number {n}", "working")
         got = idea_element.give(root, state, slug)
         assert (got, idea_element.hue_of(state, slug)) == want
     done = raw(host, p, "Finished", "done")
     ideas.save_state(state, done, element="lava", seen_at=SEEN)
-    assert idea_element.next_rune_for(root, state)[0] == idea_element.pick(idea_element.open_elements(root, state))   # a done goal seen does not count
+    assert idea_element.pick_rune(idea_element.open_runes(root, state))[0] == idea_element.pick(idea_element.open_elements(root, state))   # a done goal seen does not count
 
 
 def test_every_party_of_the_map_carries_the_rune_the_next_goal_would_be_given(host):
@@ -246,8 +246,8 @@ def test_every_party_of_the_map_carries_the_rune_the_next_goal_would_be_given(ho
     parties = {g["slug"]: g for g in got["goals"]}
     assert {p, q, empty} <= set(parties)
     for slug, g in parties.items():
-        assert g["next_element"] == idea_element.next_rune_for(root, state)[0], slug
-        assert g["next_hue"] == idea_element.next_rune_for(root, state)[1], slug
+        assert g["next_element"] == idea_element.pick_rune(idea_element.open_runes(root, state))[0], slug
+        assert g["next_hue"] == idea_element.pick_rune(idea_element.open_runes(root, state))[1], slug
     assert all((g["next_element"], g["next_hue"], g["free_elements"]) == ("meadow", "ice", []) for g in parties.values())     # five goals of the project (the done one not seen) hold the five shapes: meadow again, in the next hue
     one = host.command("ideas.map", {"goal": p})                                              # one party's Map says the same
     assert [(g["next_element"], g["next_hue"]) for g in one["goals"]] == [("meadow", "ice")]

@@ -126,8 +126,3 @@ def drop(state_dir: Path, slug: str) -> None:
     """The wait forgotten (the decision was worded again, or the goal left its decision)."""
     if of(state_dir, slug) is not None:
         _keep(state_dir, slug, None)
-
-
-def ripening(state_dir: Path, slugs: list[str]) -> list[str]:
-    """Which of `slugs` have a wait that counts down now."""
-    return [s for s in slugs if running(state_dir, s)]

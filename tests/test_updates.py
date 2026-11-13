@@ -92,7 +92,7 @@ def test_orkboard_reads_its_own_list_never_orklines():
     """The list's address is written in every installed copy: it never changes (spec 41 §6)."""
     assert PRODUCT.manifest == "https://raw.githubusercontent.com/orkWorks/orkBoard/main/updates.json"
     assert updates.url() == PRODUCT.manifest
-    assert updates.SOURCE == "git+https://github.com/orkWorks/orkBoard"
+    assert PRODUCT.source == "git+https://github.com/orkWorks/orkBoard"
     assert updates.state_path().name == "orkboard-updates.json"            # Orkline's cache is updates.json
 
 
@@ -190,7 +190,7 @@ def test_homebrew_has_no_formula_of_orkboard(tmp_path, monkeypatch):
 def test_a_copy_from_elsewhere_says_what_to_run(tmp_path, monkeypatch):
     monkeypatch.setattr(copy, "_direct_url", lambda: "")
     way = updates.method(tmp_path / "site" / "orkboard", prefix="/usr", which=lambda n: None)
-    assert not way.can and updates.SOURCE in way.why
+    assert not way.can and PRODUCT.source in way.why
     monkeypatch.setattr(copy, "_direct_url", lambda: "https://github.com/orkWorks/orkBoard")
     pip = updates.method(tmp_path / "site" / "orkboard", prefix="/usr", which=lambda n: None)
     assert pip.kind == "pip" and pip.steps[0][-1] == "orkboard @ git+https://github.com/orkWorks/orkBoard"

@@ -64,10 +64,6 @@ def _megabytes(n: int) -> str:
     return f"{n / (1 << 20):.1f} MB"
 
 
-def _folder(path: str) -> str:
-    return path.rpartition("/")[0] + "/" if "/" in path else "./"
-
-
 # -- Art: the assets ------------------------------------------------------------------------------------------------------------------
 
 def _named(root: Path, sha: str, names: list[str]) -> set[str] | None:
