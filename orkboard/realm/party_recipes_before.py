@@ -96,13 +96,6 @@ BEFORE: dict[str, list[dict]] = {
 }
 
 
-# The Team party (spec 92 §3): the person's Operations (decisions §51) put in one project of their choosing. Its leader is the Product manager (a lich); it has no builders and no checkers:
-# the work is the Operations' templates, which run as they always did. It is New party's, under *By craft*, for every kind; proposed to no one, and only one may exist across the person's projects.
-TEAM_ID = "team"
-TEAM = _recipe(TEAM_ID, "Team", "Your work with people: the daily, 1:1s, the retro, mail and Jira", "product-manager", [], [],
-               "your work with people belongs to you, not to a project")
-
-
 STAGES = ("ideation", "concept", "build", "release", "liveops")      # New party's *By stage of the project*, in the order they are shown (spec 91 §7)
 STAGE_NAMES = {"ideation": "Ideation", "concept": "Concept", "build": "Build", "release": "Release", "liveops": "Run"}
 RUNNING_NAMES = {"game": "LiveOps", "wiki": "Upkeep", "design": "Upkeep", "texts": "Upkeep"}      # the fifth stage's name by kind (spec 92 §1); the rest run: *Run*

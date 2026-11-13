@@ -1,5 +1,5 @@
 """Spec 92 (docs/specs/92-running-and-the-team.md, decisions §108), the host's part, as spec 99 §1 changed it: running the project is the Run party (a game's LiveOps) with the recurring goals of its
-kind it proposes when it is made; the Team party is no longer offered nor made (decisions §122.2), but one the project has stays, and holds no goals. Code, no model."""
+kind it proposes when it is made; the Team party is not offered. Code, no model."""
 from __future__ import annotations
 
 import datetime as dt
@@ -8,7 +8,7 @@ import time
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import goal_team, ideas, library, party_presets, party_recipes, party_recipes_before, pitches, project_kind, recurring
+from orkboard.realm import goal_team, ideas, library, party_presets, party_recipes, party_recipes_before, project_kind, recurring
 
 RUNNING = [(k, party_recipes.get(f"{k}-liveops")) for k in project_kind.KINDS if k != "empty"]
 
@@ -19,16 +19,6 @@ def host(fake_repo):
     h.root = h.ideas.root()
     yield h
     h.close()
-
-
-def _team(host):
-    """A Team party as it was made before spec 99 (a command no longer makes one): its page and its recipe."""
-    slug, _new = ideas.save_goal(host.root, None, "Team", "", craft="product")
-    library.install(host.ideas.state_dir, ["product-manager"])
-    goal_team.set_team(host.root, slug, [], leader="product-manager")
-    goal_team.set_size(host.root, slug, "standard")
-    goal_team.set_recipe(host.root, slug, "team")
-    return slug
 
 
 # -- the project's running, by the project's kind ------------------------------------------------------------------------------------------------------------------
@@ -77,35 +67,6 @@ def test_the_presets_of_a_kind_carry_the_recurring_goals_of_its_running_party_an
     assert rows["tech"]["routines"] == [] and rows["product"]["routines"] == [] and rows["release"]["routines"] == []
     assert not any(r["id"] == "team" for k in project_kind.KINDS for r in party_presets.listed(k))             # Team is not offered on any kind (decisions §122.2)
     assert [r["id"] for r in party_presets.listed("game")[:6]][4] == "liveops" and party_presets.listed("game")[4]["routines"]
-
-
-# -- a Team party the project has ------------------------------------------------------------------------------------------------------------------------------------------
-
-def test_a_team_party_the_project_has_keeps_the_recipe_and_its_map_row_says_it_holds_no_goals(host, fake_repo):
-    slug = _team(host)
-    assert goal_team.recipe_of(host.root, slug) == "team" and goal_team.leader_of(host.root, slug) == "product-manager" and goal_team.team_of(host.root, slug) == []
-    goals = {g["slug"]: g for g in host.command("ideas.map", {})["goals"]}
-    assert goals[slug]["ops"] is True
-
-
-def test_the_team_party_is_not_read_by_the_keeper_and_has_no_goals_of_its_own(host):
-    slug = _team(host)
-    assert host.ideas.goal_state(slug)["state"] == "raw"
-    assert ideas.ideas(host.root, slug) == []
-
-
-def test_a_new_team_party_is_refused_whoever_has_one_and_the_one_the_project_has_stays(host):
-    _team(host)
-    with pytest.raises(Exception, match="General, Team and Ideation are not made any more"):
-        host.command("ideas.goal_save", {"title": "Team", "about": "", "leader": "product-manager", "team": [], "every": [], "proposal": "team"})
-    assert not any(r["id"] == "team" for r in host.command("ideas.party_presets", {})["presets"])
-
-
-def test_removing_the_team_party_leaves_the_others(host):
-    slug = _team(host)
-    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": ["grunt"], "every": []})["slug"]
-    host.command("ideas.track_drop", {"slug": slug})
-    assert {t["slug"] for t in ideas.tracks(host.root, make=False)} >= {other} and slug not in {t["slug"] for t in ideas.tracks(host.root, make=False)}
 
 
 # -- recurring goals --------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,18 +165,3 @@ def test_a_repeat_is_set_and_stopped_by_the_person(host):
         host.command("ideas.repeat", {"slug": got, "every": "hour"})
     with pytest.raises(Exception, match="gone"):
         host.command("ideas.repeat", {"slug": "nothing", "every": "week"})
-
-
-# -- the Team party holds no goals -----------------------------------------------------------------------------------------------------------------------------------------
-
-def test_no_goal_goes_to_the_team_party_not_by_add_not_by_move_and_no_pitch_is_offered_it(host):
-    slug = _team(host)
-    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": ["grunt"], "every": []})["slug"]
-    with pytest.raises(Exception, match="Team holds your Operations"):
-        host.command("ideas.add", {"text": "Call the bank", "track": slug})
-    goal = host.command("ideas.add", {"text": "Fix the login", "track": other})["slug"]
-    with pytest.raises(Exception, match="Team holds your Operations"):
-        host.command("ideas.move", {"slug": goal, "track": slug})
-    offers = pitches.offers(host.root, host.ideas.state_dir)
-    assert slug not in offers and other in offers
-

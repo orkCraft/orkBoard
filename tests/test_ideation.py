@@ -360,7 +360,7 @@ def _events(host, name):
 def test_the_party_is_made_only_whole_and_a_view_is_refused_elsewhere(host):
     with pytest.raises(CommandError, match="Ideation reads every pitch from all four sides"):        # the party the project has is edited whole
         host.command("ideas.goal_save", {"slug": host.party, "leader": "investor", "team": TEAM[1:]})
-    with pytest.raises(CommandError, match="General, Team and Ideation are not made any more"):     # a new one is not made (spec 99 §1.1)
+    with pytest.raises(CommandError, match="General and Ideation are not made any more"):     # a new one is not made (spec 99 §1.1)
         host.command("ideas.goal_save", {"about": "Fewer.", "leader": "investor", "team": TEAM})
     with pytest.raises(CommandError, match="The views judge pitches: they are in Ideation only"):
         host.command("ideas.goal_save", {"about": "Mixed.", "leader": "architect", "team": ["grunt", "market-view"]})

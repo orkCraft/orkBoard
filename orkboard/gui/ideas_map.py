@@ -20,7 +20,7 @@ from pathlib import Path
 from orkboard import settings as machine
 from orkboard.gui import media
 from orkboard.gui.ideas_args import IdeasError, _opt
-from orkboard.realm import board_map, collide, goal_team, goal_types, hypotheses, idea_element, idea_photos, ideas, library, orkmaster, party_recipes, task_made
+from orkboard.realm import board_map, collide, goal_team, goal_types, hypotheses, idea_element, idea_photos, ideas, library, orkmaster, task_made
 
 
 class MapMixin:
@@ -65,7 +65,6 @@ class MapMixin:
             g["types"] = self.types_of(root, g["slug"], [n["slug"] for n in got["nodes"] if n["goal"] == g["slug"]])
             g["stages"] = self.stages_of(root, g["slug"])
             g["concerns"] = self.concerns_counts(g["slug"])                              # its leader's concerns on its map, for its tab (spec 108 §2.5)
-            g["ops"] = goal_team.recipe_of(root, g["slug"]) == party_recipes.TEAM_ID         # the Team party: its Board is the person's Operations (spec 92 §3)
         got["project"] = self.project_of(root, got, goal)
         return got
 

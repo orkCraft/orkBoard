@@ -19,7 +19,7 @@ from orkboard.realm import (event_log, goal_team, goal_types, goal_verdict, harn
 
 DOC_CHARS = 100_000
 NO_SECRETS = "That file may hold secrets: open it in your own editor"
-UNMADE = "General, Team and Ideation are not made any more: pick a party of the project's crafts"
+UNMADE = "General and Ideation are not made any more: pick a party of the project's crafts"
 HIDDEN_DIRS = (".git", ".orkcraft")           # git's own and the machine's own: never shown
 
 
@@ -95,7 +95,7 @@ class GoalsMixin:
         before = next((t for t in ideas.tracks(self.root(), make=False) if t["slug"] == slug), None) if slug else None
         recipe = _opt(args, "proposal") or _opt(args, "preset")
         if not slug:
-            self._unmade(args, title, recipe)                  # General, Team and Ideation are not made (spec 99 §1.1)
+            self._unmade(args, title, recipe)                  # General and Ideation are not made (spec 99 §1.1)
         routines = self.routines_asked(args, party_recipes.routines_of(recipe, project_kind.read(self.host.repo_root)["kind"])) if not slug else []        # the running party's recurring goals the person kept (spec 92 §2)
         metrics, links = args.get("metrics"), args.get("links")
         if metrics is not None and not isinstance(metrics, list) or links is not None and not isinstance(links, list):
@@ -235,10 +235,10 @@ class GoalsMixin:
             goal_team.set_tools(root, got, {a: t for a, t in mine.items() if a in seats})
 
     def _unmade(self, args: dict, title: object, recipe: str) -> None:
-        """General, Team and Ideation are never made (spec 99 §1.1, decisions §122): a new party of their recipe, their leader or their name is refused. A party of
+        """General and Ideation are never made (spec 99 §1.1, decisions §122): a new party of their recipe, their leader or their name is refused. A party of
         theirs the project has stays until the person removes it, and is edited as it was."""
         name = " ".join(str(title or "").split()).lower()
-        if recipe in ("ideation", party_recipes.TEAM_ID) or _opt(args, "leader") == library.INVESTOR or name in (ideas.GENERAL, "team", "ideation"):
+        if recipe == "ideation" or _opt(args, "leader") == library.INVESTOR or name in (ideas.GENERAL, "ideation"):
             raise IdeasError(UNMADE)
 
     def _tiers_kept(self, got: str) -> None:

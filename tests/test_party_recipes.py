@@ -29,12 +29,12 @@ def test_a_game_has_game_design_tech_art_release_liveops_and_marketing_and_every
                     "marketing": "growth", "game-design": "game-designer", "art": "art-director", "liveops": "analyst"}
 
 
-def test_ideation_team_and_the_mixed_recipes_are_not_offered_but_a_party_made_from_one_is_found_by_its_recipe():
+def test_ideation_and_the_mixed_recipes_are_not_offered_but_a_party_made_from_one_is_found_by_its_recipe():
     offered = {r["id"] for _k, r in ALL}
-    for gone in ("ideation", "team", "game", "mobile-features", "web-pages", "mobile-architecture", "backend", "backend-data", "data-work", "wiki", "design-screens", "texts",
+    for gone in ("ideation", "game", "mobile-features", "web-pages", "mobile-architecture", "backend", "backend-data", "data-work", "wiki", "design-screens", "texts",
                  "engineering-code", "game-build", "mobile-liveops"):
         assert gone not in offered and party_recipes.get(gone) is not None, gone         # not offered, but its recipe is found
-    assert party_recipes.get("ideation")["leader"] == "investor" and party_recipes.get("team") is party_recipes.TEAM
+    assert party_recipes.get("ideation")["leader"] == "investor"
     assert party_recipes.get("mobile-features")["leader"] == "product-manager" and party_recipes.get("game-build")["leader"] == "game-designer"
     assert party_recipes.get("nope") is None and party_recipes.get("tech") is party_recipes.CRAFTS["tech"] and party_recipes.get("release")["leader"] == "release-manager"
     assert party_recipes_before.BEFORE["mobile"][0]["id"] == "mobile-features"
@@ -137,12 +137,12 @@ def test_a_party_the_project_has_is_of_the_recipe_kept_on_its_page_else_the_same
     assert party_recipes.has(release, [{"leader": "release-manager", "team": [], "recipe": ""}]) and not party_recipes.has(release, [{"leader": "architect", "team": []}])
 
 
-def test_the_craft_of_a_party_is_its_recipes_else_its_leaders_and_none_for_the_taskmasters_ideations_and_teams():
+def test_the_craft_of_a_party_is_its_recipes_else_its_leaders_and_none_for_the_taskmasters_and_ideations():
     assert party_recipes.craft_of("tech", "architect") == "tech" and party_recipes.craft_of("run", "") == "run"
     assert party_recipes.craft_of("mobile-features", "product-manager") == "product" and party_recipes.craft_of("", "product-designer") == "design"
     assert party_recipes.craft_of("", "game-designer") == "game-design" and party_recipes.craft_of("", "art-director") == "art" and party_recipes.craft_of("", "analyst") == "run"
     assert party_recipes.craft_of("", "growth") == "marketing" and party_recipes.craft_of("", "release-manager") == "release"
-    assert party_recipes.craft_of("", "taskmaster") == "" and party_recipes.craft_of("", "investor") == "" and party_recipes.craft_of("team", "product-manager") == ""
+    assert party_recipes.craft_of("", "taskmaster") == "" and party_recipes.craft_of("", "investor") == ""
     assert party_recipes.is_release({"recipe": "release", "leader": ""}) and party_recipes.is_release({"recipe": "", "leader": "release-manager"})
     assert not party_recipes.is_release({"recipe": "tech", "leader": "architect"})
 

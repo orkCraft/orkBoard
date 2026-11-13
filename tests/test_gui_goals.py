@@ -385,7 +385,7 @@ def test_the_partys_reading_asks_no_metrics_and_keeps_those_written_before_spec_
 def test_general_team_and_ideation_are_not_made_and_a_party_of_a_craft_is(host):
     for bad in ({"title": "General", "about": "x"}, {"title": "Team", "about": "x"}, {"title": "Ideas", "about": "x", "proposal": "ideation"},
                 {"title": "Ideas", "about": "x", "preset": "team"}, {"title": "Ideas", "about": "x", "leader": "investor", "team": []}):
-        with pytest.raises(CommandError, match="General, Team and Ideation are not made any more"):
+        with pytest.raises(CommandError, match="General and Ideation are not made any more"):
             host.command("ideas.goal_save", bad)
     assert [t for t in ideas.tracks(host.ideas.root(), make=False) if t["slug"] != "general"] == []               # nothing was made
     slug = host.command("ideas.goal_save", {"title": "Design", "about": "Screens.", "leader": "product-designer", "team": ["ui-kit"], "proposal": "design"})["slug"]

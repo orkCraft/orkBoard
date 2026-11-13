@@ -49,7 +49,7 @@ export function sinceWords(iso, now = Date.now()) {
 /** The map's goals in the Board's order (`order`: the Board's goal slugs, by priority); a goal the Board does not list goes last. */
 export function goalsOf(map, order = []) {
   const goals = map?.goals || [], at = (g) => (order.includes(g.slug) ? order.indexOf(g.slug) : order.length);
-  return [...goals].filter((g) => !g.ops).sort((a, b) => at(a) - at(b));       // the Team party holds Operations, not goals (spec 92 §3): the desktop has none
+  return [...goals].sort((a, b) => at(a) - at(b));
 }
 
 export const nodesOf = (map, slug) => (map?.nodes || []).filter((n) => n.goal === slug);

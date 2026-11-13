@@ -37,7 +37,7 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 
-from orkboard.realm import goal_team, goal_types, idea_play, idea_route, idea_spend, idea_target, ideas, library, orkmaster, party_recipes, roles
+from orkboard.realm import goal_team, goal_types, idea_play, idea_route, idea_spend, idea_target, ideas, library, orkmaster, roles
 from orkboard.sources import pricing
 
 CRAFT_ORDER = ("product", "design", "engineering", "data", "marketing")      # the product's craft, the look's, the code's, the running's, the marketing's
@@ -54,11 +54,11 @@ GOAL_CHARS = 2_000                                                             #
 # -- the parties a route may name ---------------------------------------------------------------------------------------------
 
 def parties(root: Path) -> list[dict]:
-    """The project's parties a route may name, in the Board's order: all but General, Team (it holds Operations), Ideation (it judges pitches)
+    """The project's parties a route may name, in the Board's order: all but General, Ideation (it judges pitches)
     and Release (never a step: §137.1)."""
     out = []
     for t in ideas.tracks(root, make=False):
-        if t["slug"] == ideas.GENERAL or party_recipes.is_team(t) or (t.get("leader") or "") in (library.INVESTOR, library.RELEASE_MANAGER):
+        if t["slug"] == ideas.GENERAL or (t.get("leader") or "") in (library.INVESTOR, library.RELEASE_MANAGER):
             continue
         out.append(t)
     return out

@@ -52,7 +52,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import board_ask, board_in_code, board_map, event_log, first_open, goal_team, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, party_recipes, pitches, recurring, wiki
+from orkboard.realm import board_ask, board_in_code, board_map, event_log, first_open, goal_team, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, journal_notes, pitches, recurring, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_halt import STARTS, HaltMixin
@@ -460,8 +460,6 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
             raise IdeasError("A goal needs a party")
         if track not in goals:
             raise IdeasError("That party is gone")
-        if party_recipes.is_team(goals[track]):
-            raise IdeasError("Team holds your Operations, not goals: add the goal to another party")          # spec 92 §3
         priority = _opt(args, "priority").lower() or goals[track]["priority"]
         if priority not in ideas.PRIORITIES:
             raise IdeasError("Priority is High, Normal or Low")

@@ -1,7 +1,7 @@
 """The parties each kind of project is proposed, one craft a party, and their three sizes (docs/specs/99-a-goals-way.md §1, decisions §109.1, §122, §137.1, §151, §158).
 
     RECIPES["game"]                    # [{id, name, line, leader, build, check, squad, craft, whole, because, when}, …] in the order they are proposed
-    for_kind("mobile")                 # a kind's recipes (an unknown kind: code's); General, Team and Ideation are in none
+    for_kind("mobile")                 # a kind's recipes (an unknown kind: code's); General and Ideation are in none
     get("tech")                        # one recipe by its id: a craft's, else one made before (`party_recipes_before`: it keeps its seats and its name); None for none
     craft_of("tech", "architect")      # "tech": the craft of a party (its recipe's, else its leader's); "" for a party with none (the Taskmaster's, Ideation's)
     sized(recipe, "standard")          # {"leader", "team": the squad, "tiers": {…}, "size", "basis": the squad's part a price counts}
@@ -21,7 +21,7 @@ sets how a task goes (`goal_team.WAY`) and the seats' tiers by default (`tiers_f
 from __future__ import annotations
 
 from orkboard.realm import idea_target, library
-from orkboard.realm.party_recipes_before import BEFORE, STAGE_RECIPES, TEAM, TEAM_ID
+from orkboard.realm.party_recipes_before import BEFORE, STAGE_RECIPES
 
 TECH, TECH_LINE = library.TECH, library.TECH_LINE
 SIZES = idea_target.SIZES
@@ -67,7 +67,7 @@ LEADER_CRAFT = {"product-manager": "product", "game-designer": "game-design", "p
 def craft_of(recipe: str = "", leader: str = "") -> str:
     """The craft of a party (`roles.PARTY_RACES` has its races): its recipe's when it is a craft's, else its leader's; "" for a party of the Taskmaster's or
     Ideation's (the Investor), whose seats wear their roles' own heads."""
-    return recipe if recipe in CRAFTS else "" if recipe == TEAM_ID else LEADER_CRAFT.get(leader, "")
+    return recipe if recipe in CRAFTS else LEADER_CRAFT.get(leader, "")
 
 
 def is_release(track: dict) -> bool:
@@ -86,17 +86,10 @@ def for_kind(kind: str, facts: dict | None = None) -> list[dict]:
     return [r for r in rows if not r["when"] or (facts or {}).get(r["when"])]
 
 
-def is_team(track: dict) -> bool:
-    """Whether a party of `ideas.tracks` is the Team party: it holds the person's Operations, not goals (spec 92 §3). Never made since decisions §122.2."""
-    return track.get("recipe") == TEAM_ID
-
-
 def get(recipe_id: str) -> dict | None:
     """A recipe by id: a craft's, else one of before (the Team party's, a kind's of before, a stage's)."""
     if recipe_id in CRAFTS:
         return CRAFTS[recipe_id]
-    if recipe_id == TEAM_ID:
-        return TEAM
     return next((r for rows in (*BEFORE.values(), *STAGE_RECIPES.values()) for r in rows if r["id"] == recipe_id), None)
 
 
