@@ -1,0 +1,109 @@
+"""Goal "The battle and the gate", stages D and F (decisions §303): `ideas.battle` and `ideas.gate_guards` on a fixture Board, read only: no model, no write, nothing in the snapshot."""
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.realm import goal_branch, harnesses, ideas, spec_sections
+
+LOG = "# Decisions\n\n## 1. First\nPlain.\n\n## 2. Second, the old card\nIt stands.\n\n## 3. Third\nAlso stands.\n"
+PAGE = "---\nowner: board\nkind: idea\ntrack: tech\norder: 1\nphase: talk\nschema: 3\n---\n# {t}\n\n## Gist\nA goal.\n"
+ENTRIES = ("ask", "call", "work_call", "_claude", "_claude_work", "board_ask", "read_now", "draft", "answer", "reword", "ripe_begin", "decide")
+
+
+def _boom(*a, **k):
+    raise AssertionError("a model was reached")
+
+
+def _w(repo: Path, rel: str, text: str) -> None:
+    p = repo / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+
+
+@pytest.fixture
+def host(fake_repo, monkeypatch):
+    h = Orkboard(fake_repo)
+    root = h.ideas.root()
+    ideas.add_track(root, "Tech")
+    (root / ideas.IDEAS).mkdir(parents=True, exist_ok=True)
+    for slug in ("goal", "skills"):
+        (root / ideas.IDEAS / f"{slug}.md").write_text(PAGE.format(t=slug), encoding="utf-8")
+        ideas.save_state(h.ideas.state_dir, slug, state="decided")
+    way = spec_sections.record(h.ideas.state_dir, "goal")
+    way["decision"] = {"number": 9, "title": "New", "text": "x", "conflicts": [{"number": 2, "point": "It goes against the old card", "answer": ""},
+                                                                              {"number": 3, "point": "answered", "answer": "keep"}]}
+    spec_sections.save_record(h.ideas.state_dir, "goal", way)
+    _w(fake_repo, "docs/decisions.md", LOG)
+    _w(fake_repo, "llm-wiki/general/pages/ideas/rests.md", "It rests on §2.\n")
+    _w(fake_repo, "tests/test_red.py", '"""Guards decisions §2."""\n\ndef test_a():\n    assert 0\n\ndef test_b():\n    assert 0\n')
+    _w(fake_repo, "tests/test_bare.py", '"""Nothing named."""\n\ndef test_c():\n    assert 0\n')
+    _w(fake_repo, "tests/test_ok.py", '"""Guards decisions §3."""\n\ndef test_d():\n    pass\n')
+    for entry in ENTRIES:
+        if hasattr(h.ideas.keeper, entry):
+            monkeypatch.setattr(h.ideas.keeper, entry, _boom)
+    monkeypatch.setattr(harnesses.Harness, "call", _boom)
+    yield h
+    sys.modules.pop("orkboard.core.idea_runner", None)
+
+
+def _bytes(repo: Path, state: Path):
+    return {p.as_posix(): hashlib.sha1(p.read_bytes()).hexdigest() for base in (repo, state) for p in sorted(base.rglob("*")) if p.is_file() and "/.git/" not in p.as_posix()}
+
+
+def test_a_battle_lays_each_open_conflict_with_what_rests_on_it(host, fake_repo):
+    before = _bytes(fake_repo, host.ideas.state_dir)
+    got = host.command("ideas.battle", {"idea": "goal"})
+    assert [a["number"] for a in got["against"]] == [2] and got["against"][0]["title"] == "Second, the old card"
+    assert got["against"][0]["point"] == "It goes against the old card"
+    assert got["against"][0]["rests"] == {"goals": ["rests"], "decisions": [], "tests": ["tests/test_red.py"]}
+    assert got["cost"]["calls"] == 1 and "usd_high" in got["cost"]
+    assert _bytes(fake_repo, host.ideas.state_dir) == before            # nothing written, no model reached (the keeper's entries fail)
+
+
+def test_a_goal_laid_by_the_skills_has_no_battle(host):
+    assert host.command("ideas.battle", {"idea": "skills"})["against"] == []
+    with pytest.raises(CommandError):
+        host.command("ideas.battle", {"idea": "nope"})
+
+
+def test_the_snapshot_holds_no_rests(host):
+    assert "rests" not in json.dumps(host.command("ideas.board", {}), default=str)
+
+
+def _red_dev(host):
+    goal_branch.update(host.ideas.state_dir, "goal", branch="goal/goal",
+                       failing=["tests/test_red.py::test_a", "tests/test_red.py::test_b", "tests/test_bare.py::test_c"],
+                       files=["tests/test_red.py", "tests/test_bare.py", "tests/test_ok.py"])
+
+
+def test_a_red_gate_on_the_way_to_dev_lays_the_decisions_its_tests_name(host, fake_repo):
+    _red_dev(host)
+    before = _bytes(fake_repo, host.ideas.state_dir)
+    got = host.command("ideas.gate_guards", {"idea": "goal"})
+    assert got["way"] == "dev"
+    assert got["failing"] == [{"number": 2, "title": "Second, the old card", "ids": ["tests/test_red.py::test_a", "tests/test_red.py::test_b"]}]
+    assert got["files"] == [{"file": "tests/test_bare.py", "ids": ["tests/test_bare.py::test_c"]}]
+    assert got["agreeing"] == [{"number": 3, "title": "Third"}] and got["cost"]["calls"] == 1
+    assert _bytes(fake_repo, host.ideas.state_dir) == before
+
+
+def test_a_red_gate_on_the_way_to_main_reads_the_tests_step(host):
+    host.ideas._main_checks["goal"] = {"running": False, "checks": [
+        {"name": "The merge", "state": "passed", "words": ""},
+        {"name": "Tests", "state": "failed", "words": "x", "files": ["tests/test_red.py", "tests/test_bare.py", "tests/test_ok.py"],
+         "failures": [{"id": "tests/test_red.py::test_a", "classification": "new"}, {"id": "tests/test_bare.py::test_c", "classification": "new"}]}]}
+    got = host.command("ideas.gate_guards", {"idea": "goal"})
+    assert got["way"] == "main" and got["cost"] is None
+    assert [f["number"] for f in got["failing"]] == [2] and got["files"][0]["file"] == "tests/test_bare.py" and [a["number"] for a in got["agreeing"]] == [3]
+
+
+def test_an_all_green_gate_lays_nothing_failing(host):
+    goal_branch.update(host.ideas.state_dir, "goal", branch="goal/goal", failing=[], files=["tests/test_ok.py"])
+    got = host.command("ideas.gate_guards", {"idea": "goal"})
+    assert got["failing"] == [] and got["files"] == [] and got["agreeing"] == [{"number": 3, "title": "Third"}]
