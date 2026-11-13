@@ -44,6 +44,11 @@ def add(host, goal, text, tasks):
     return s
 
 
+def quiet(host, goal, n=8, by="reviewer", kind="review", base=0.5):
+    """`n` clean checks of the checker, one an idea, the oldest first (a few hours apart)."""
+    return [add(host, goal, f"Idea {by} {i}", [check("k1", by, kind, finished=at(base, hours=n - i))]) for i in range(n)]
+
+
 def waiting(state, goal, by="reviewer", usd=None):
     """A proposal that waits, as the night wrote it before it went (`<state_dir>/goals/<slug>/party-proposal.json`)."""
     folder = state / "goals" / goal
