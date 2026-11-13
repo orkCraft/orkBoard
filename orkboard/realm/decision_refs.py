@@ -24,7 +24,8 @@ _NUM = r"§(\d+)(?:\.\d+)?"
 _GROUP = re.compile(r"(?P<lead>(?:spec\s+\d+(?:\s+part\s+\w+)?|\S+\.md|decisions?)?)[ \t]*(?P<body>" + _NUM
                     + r"(?:[ \t]*(?:,|;|and|–|-|/)[ \t]*" + _NUM + r")*)", re.I)
 _ONE = re.compile(_NUM)
-_CHANGES = re.compile(r"^\s*Changes:\s*(.+)$", re.I | re.M)
+_CHANGES = re.compile(r"^\s*Changes:[ \t]*(.*?)(?:\n[ \t]*\n|\Z)", re.I | re.M | re.S)
+_ITEM_N = re.compile(r"\s*§?(\d+)(?:\.\d+)?\b")
 
 
 def _read(path: Path) -> str:
@@ -73,6 +74,17 @@ def _files(root, rel: str, pattern: str) -> list[Path]:
         return []
 
 
+def _changed(text: str) -> set[int]:
+    """The decisions a *Changes:* paragraph (up to its blank line) replaces: each comma- or semicolon-separated item's N (`N` or `N.k`); an item that starts `spec` is a spec's, never a decision."""
+    out: set[int] = set()
+    for para in _CHANGES.findall(text):
+        for item in re.split(r"[,;]", para):
+            m = _ITEM_N.match(item)
+            if m:
+                out.add(int(m.group(1)))
+    return out
+
+
 def rests_on(root, n: int) -> dict:
     """The goals whose pages name §n, the other decisions whose text names it and the test files naming `decisions §n`, each once, §n itself never."""
     root = Path(root)
@@ -81,7 +93,7 @@ def rests_on(root, n: int) -> dict:
         return {"goals": [], "decisions": [], "tests": []}
     goals = sorted({p.stem for p in _files(root, PAGES, "*.md") if n in _named(_read(p), True)})
     decisions = sorted(k for k, text in log.items() if k != n and (
-        n in _named(text, True) or any(n in {int(x) for x in re.findall(r"\d+", c)} for c in _CHANGES.findall(text))))
+        n in _named(text, True) or n in _changed(text)))
     tests = sorted(p.relative_to(root).as_posix() for p in _files(root, TESTS, "*.py") if n in _named(_read(p), False))
     return {"goals": goals, "decisions": decisions, "tests": tests}
 

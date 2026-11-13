@@ -121,6 +121,8 @@ def _checked(git, path, base, check, cancel, timeout, alone: bool = False):
                  else _command(path, check.run, cancel, timeout, details))
     run = details.get("run")
     record = {}
+    if ok and run is not None and run.files:                    # a green run keeps the test files it ran too: `ideas.gate_guards` lays its agreeing pile from them
+        record = {"files": list(run.files)}
     if not ok and run is not None:
         ids = gate_rerun.ids_failing(run.out)
         try:
