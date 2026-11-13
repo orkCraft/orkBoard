@@ -2,7 +2,7 @@
 import { h } from "preact";
 import htm from "htm";
 // A template's own text is written in today's words (realm/lexicon.py), never an old Camp spelling:
-// tests/test_gui_wording.py reads every template. What the town's data says goes through say().
+// tests/test_gui_wording.py reads every template.
 export const html = htm.bind(h);
 
 /** Class names from an object of flags: cls("ok-hut", {"is-alert": true}) → "ok-hut is-alert". */

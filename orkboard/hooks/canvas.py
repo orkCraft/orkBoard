@@ -2,7 +2,7 @@
 """Canvas hook (docs/specs/78-canvases.md §5): a PostToolUse hook that tells Orkboard at once when a tool drew a canvas.
 
     .claude/settings.json → hooks.PostToolUse, matcher `Artifact|mcp__Claude_Docs__batch|mcp__Figma__create_new_file`
-                            → python3 -m orkboard.hooks.canvas                      (`orkcraft hooks install`)
+                            → python3 -m orkboard.hooks.canvas
     .codex/hooks.json     → hooks.PostToolUse, matcher `mcp__(figma|tldraw|canva)__.*`
                             → python3 -m orkboard.hooks.canvas codex
     .agents/hooks.json    → orkcraft.PostToolUse, matcher `generate_image`

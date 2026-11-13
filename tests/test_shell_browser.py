@@ -7,8 +7,6 @@ from __future__ import annotations
 import copy
 import datetime as dt
 import json
-import os
-import re
 from pathlib import Path
 
 import pytest
@@ -84,7 +82,6 @@ class StubHost:
         self.into, self.push = "dev", False
         self.paired = [{"id": "p1", "name": "Pixel 8", "seen": "2026-10-17T09:30:00"}]
         self.target, self.autostart, self.night = "balance", True, "01:00-07:00"
-        self.night_low = True                    # spec 83: Low work may run at night (None: not asked yet, False: no); a test of the question sets None
         self.awake = {"mode": "carts", "why": "", "holding": False, "battery": False, "can": True, "how": "systemd-inhibit", "machine": "Mac", "paired": True}   # awake.state (spec 47 §3)
         self.awake_offer = ""                         # phones.list's awake_offer: "Mac" while the offer is to be asked
         self.goals = {"general": self.goal("general", "General", "normal", "ready", order=0),
@@ -263,7 +260,7 @@ class StubHost:
             ideas = [i | {"thesis": "Gist in one line", "progress": {"done": 1, "total": 5} if i["slug"] == "sync" else {"done": 0, "total": 0}}
                      for i in self.ideas.values()]
             return {"tracks": [g | {"count": sum(1 for i in ideas if i["track"] == g["slug"])} for g in self.goals.values()],
-                    "ideas": ideas, "needs_you": self.needs_you(), "target": self.target, "autostart": self.autostart, "night": self.night, "night_low": getattr(self, "night_low", None), "review": getattr(self, "review", False),
+                    "ideas": ideas, "needs_you": self.needs_you(), "target": self.target, "autostart": self.autostart, "night": self.night, "review": getattr(self, "review", False),
                     "review_notice": getattr(self, "review_notice", False),
                     "rev": self.rev}
         if name == "ideas.page":
@@ -393,9 +390,6 @@ class StubHost:
             if a.get("review_notice") is False:
                 self.review_notice = False
             return self.bump({"target": self.target, "autostart": self.autostart, "night": self.night})
-        if name == "ideas.night_allow":               # spec 83: the one standing permission
-            self.night_low = a["allow"]
-            return self.bump({"ok": True, "moved": 0})
         if name == "ideas.todo":
             return self.bump({"ok": True})
         if name == "ideas.doc":
@@ -569,30 +563,6 @@ def _stop(pg, kind, nth=0):
     return item
 
 
-def _look_card(pg, title):
-    """A result to look at: its card in the hand (docs/specs/90-what-the-first-look-said.md §2.3), raised (its answers then in reach)."""
-    item = pg.locator(f'.arena-hc[data-kind=result]:has(.arena-hc__open[aria-label="To look at: {title}"])')
-    item.wait_for(timeout=WAIT_MS)
-    item.locator(".arena-hc__open").focus()
-    pg.wait_for_function("(el) => getComputedStyle(el).transform === 'matrix(1, 0, 0, 1, 0, -184)'", arg=item.element_handle(), timeout=WAIT_MS)
-    return item
-
-
-def _look_open(pg, title):
-    """A result to look at opened from its card: its code, tests and answers in the right column."""
-    _look_card(pg, title).locator(".arena-hc__open").press("Enter")
-    pg.wait_for_function("(t) => document.querySelector('.shell-drawer .shell-ptab.is-on')?.textContent.includes(t)", arg=title, timeout=WAIT_MS)
-    got = pg.locator(".shell-drawer .shell-result")
-    got.wait_for(timeout=WAIT_MS)
-    return got
-
-
-def _drawer(pg):
-    """The right column (the drawer that was), once it is out."""
-    pg.locator(".shell-drawer").wait_for(timeout=WAIT_MS)
-    return pg.locator(".shell-drawer")
-
-
 def _new_ideas(pg):
     """The goals list's *New · n* row, its fold open: its rows (a goal is a row of the list: `.arena-goal`)."""
     fold = pg.locator(".arena-raw .arena-frow__main")
@@ -606,78 +576,9 @@ def _goal_row(pg, title):
     return pg.locator(".arena-goal", has_text=title)
 
 
-def _said(row):
-    """What a goal's row says besides its title (spec 73 §1.2): its old second line, in the title of its button, after the goal's whole title."""
-    return row.locator(".arena-goal__main").get_attribute("title")
-
-
-def _open_goal(pg, title):
-    """A goal's row opens its screen in the drawer (its spec, its plan when the plan waits): a press picks it, a second press on the picked row opens it (spec 73 §1.2);
-    a goal not yet read opens on a press."""
-    _press_row(_goal_row(pg, title).locator(".arena-goal__main"))
-
-
-def _press_row(main):
-    """The presses that open a goal's screen, as › did (spec 73 §1.2): the first picks the row, the second opens it; a raw goal has no pick, its press opens. The pick that
-    the first made is taken out again (Show all), so the board stands as it did when › opened a goal."""
-    picked = main.get_attribute("aria-pressed")
-    if picked == "false":
-        main.click()
-    main.click()
-    if picked == "false":
-        main.page.locator(".arena-showall").get_by_role("button", name="Show all").click()
-
-
-def _open_slug(pg, slug):
-    """A goal's screen, by its slug: a press picks its row, a second press opens it (spec 73 §1.2)."""
-    _press_row(pg.locator(f'.arena-goal[data-slug="{slug}"] .arena-goal__main'))
-
-
-def _new_goal(pg):
-    """New goal: the + in the project line (spec 73 §4); a host with no goal types opens the dialog at once."""
-    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
-    dlg = pg.get_by_role("dialog", name="New goal")
-    dlg.wait_for(timeout=WAIT_MS)
-    return dlg
-
-
 @pytest.fixture
 def shell(gui):
     pg, host, errors = _open(gui)
     yield pg, host
     pg.close()
     assert not errors, "\n".join(errors)
-
-
-def box(pg, selector):
-    return pg.locator(selector).first.bounding_box()
-
-
-
-# -- spec 34 round 2: dialogs, agents by task type, the phone from the shell -----------------------------------------
-
-def adds(host):
-    return [a for n, a in host.log if n == "ideas.add"]
-
-
-def _awake_field(pg):
-    pg.get_by_role("button", name="Settings").click()
-    group = pg.get_by_role("group", name="Keep the computer awake")
-    group.wait_for(timeout=WAIT_MS)
-    return group
-
-
-def _after_pairing(pg, host, answer):
-    host.awake_offer = "Mac"
-    pg.get_by_role("button", name="Settings").click()
-    pg.get_by_role("button", name="Pair a phone").click()
-    dlg = pg.get_by_role("dialog", name="Pair a phone")
-    dlg.locator("img.gui-phones__qr").wait_for(timeout=WAIT_MS)
-    host.paired = host.paired + [{"id": "p2", "name": "iPhone 15", "seen": "2026-10-20T09:30:00"}]       # a phone scans the code
-    offer = dlg.get_by_role("group", name="Keep the computer awake")
-    offer.wait_for(timeout=5000)
-    assert "Paired: iPhone 15." in dlg.inner_text()
-    assert "Keep this Mac awake so your phone can reach it all day? Only on power." in offer.inner_text()
-    offer.get_by_role("button", name=answer).click()
-    offer.wait_for(state="detached", timeout=WAIT_MS)
-    return dlg

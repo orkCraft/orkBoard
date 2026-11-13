@@ -6,7 +6,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { clearWay, pickWay, wayCostOf } from "./waycost.js";
 import { html, cls } from "../html.js";
-import { say, toast } from "../link.js";
+import { toast } from "../link.js";
 import { act } from "../shell/store.js";
 import { ResultActions } from "../shell/review.js";
 import { TodoWays, named } from "./todoform.js";
@@ -44,7 +44,7 @@ function Decide({ s, target, isGoal, name }) {
     setBusy(true);
     const got = await act("ideas.answer", { slug: target, decide: true, from: "hand", ...(isGoal ? { goal: true } : {}) });
     setBusy(false);
-    if (got) toast(say(`Sent: ${named(name)} decides.`));
+    if (got) toast(`Sent: ${named(name)} decides.`);
   };
   return html`<button type="button" class="ork-btn quiet" disabled=${busy} aria-label=${`Let ${named(name)} decide: ${s.full}`} title="It answers with what it recommends"
     onClick=${decide}>Let ${named(name)} decide</button>`;
@@ -104,14 +104,14 @@ export function askedInfo(s) {
 /** Answers the stop `s` from the hand (`from: "hand"`, stage E of spec 158): the hand's way cards press it too. */
 export async function sendAnswers(s, answers) {
   const { isGoal, target } = askedInfo(s), got = await act("ideas.answer", { slug: target, answers, from: "hand", ...(isGoal ? { goal: true } : {}) });
-  if (got) toast(say(SENT));
+  if (got) toast(SENT);
   return got;
 }
 
 /** *Let <name> decide* as a card of the hand presses it: the one who asks answers with what it recommends. */
 export async function decideStop(s) {
   const { isGoal, target, name } = askedInfo(s), got = await act("ideas.answer", { slug: target, decide: true, from: "hand", ...(isGoal ? { goal: true } : {}) });
-  if (got) toast(say(`Sent: ${named(name)} decides.`));
+  if (got) toast(`Sent: ${named(name)} decides.`);
   return got;
 }
 

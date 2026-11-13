@@ -95,7 +95,7 @@ def test_outside_a_bench_run_a_call_goes_to_its_buildings_day(tmp_path, tool):
     today = dt.date.today().isoformat()
     lines = call_log.read(call_log.day_folder(tmp_path, today, "pool"))
     assert [(x["who"], x["side"], x["mode"]) for x in lines] == [("Grub", "", "work")]
-    assert [x["who"] for x in call_log.read(call_log.day_folder(tmp_path, today, call_log.TOWN))] == ["agent"]
+    assert [x["who"] for x in call_log.read(call_log.day_folder(tmp_path, today, call_log.UNPLACED))] == ["agent"]
 
 
 def test_a_claude_call_keeps_how_it_worked_from_its_transcript(tmp_path, tool, monkeypatch):

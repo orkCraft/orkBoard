@@ -57,21 +57,6 @@ export function deliver(name, args, label = name) {
 
 const TOAST_S = { information: 5, warning: 8, error: 10 };
 
-// The town's words as the page says them (realm/lexicon.py): an old Camp spelling in today's word —
-// say("🗼 Watchtower") is "🗼 External listeners", say("Garrison") "Orks"; ork, town and road stay.
-let saying = { words: null, re: null, to: null };
-export function say(text) {
-  const t = town.value;
-  if (!text || !t || !t.words?.length) return text;
-  if (saying.words !== t.words) {
-    const esc = (w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    saying = { words: t.words, to: new Map(t.words),
-               // as lexicon._WORD: not inside a word nor a path (./loot/, src/roads.py)
-               re: new RegExp(`(?<![\\p{L}\\p{N}_\\-/\\\\.])(?:${t.words.map(([w]) => esc(w)).join("|")})(?![\\p{L}\\p{N}_\\-/\\\\]|\\.[\\p{L}\\p{N}_])`, "gu") };
-  }
-  return String(text).replace(saying.re, (w) => saying.to.get(w) ?? w);
-}
-
 /** A toast; `acts`: its buttons beside Copy and Close ([{label, run}], e.g. Show on the logs saved). */
 export function toast(message, severity = "information", title = "", timeout = null, tool = null, acts = null) {
   const id = nextId++;

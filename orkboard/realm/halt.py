@@ -1,4 +1,4 @@
-"""🛑 Halt All for everything the camp runs: agents, model calls, scripts, tests and browsers.
+"""🛑 Halt All for everything the Board runs: agents, model calls, scripts, tests and browsers.
 
 Every child process orkcraft starts for work is registered here (`started` / `ended`, or the
 `running` context), with who runs it (`who`: "<building>/<ork>" or the tool) and whether it is an agent

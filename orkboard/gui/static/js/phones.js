@@ -7,17 +7,17 @@
 // reach it all day (gui/keep_awake.py `awake.offer`; Settings → Keep the computer awake changes it later).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "./html.js";
-import { command, say, PRODUCT } from "./link.js";
+import { command, PRODUCT } from "./link.js";
 
 /** "Keep this Mac awake so your phone can reach it all day?" Yes / Not now, once (`machine`: "Mac" or ""). */
 export function AwakeOffer({ machine, onDone }) {
   const [gone, setGone] = useState(false);
   if (!machine || gone) return null;
   const answer = (yes) => { setGone(true); command("awake.offer", { yes }).then(() => onDone && onDone(), () => {}); };
-  return html`<span class="gui-phones__awake" role="group" aria-label=${say("Keep the computer awake")}>
-    <span class="ok-font-status">${say(`Keep this ${machine} awake so your phone can reach it all day? Only on power.`)}</span>
-    <span><button class="ork-btn primary" onClick=${() => answer(true)}>${say("Yes")}</button>
-      <button class="ork-btn" onClick=${() => answer(false)}>${say("Not now")}</button></span>
+  return html`<span class="gui-phones__awake" role="group" aria-label="Keep the computer awake">
+    <span class="ok-font-status">Keep this ${machine} awake so your phone can reach it all day? Only on power.</span>
+    <span><button class="ork-btn primary" onClick=${() => answer(true)}>Yes</button>
+      <button class="ork-btn" onClick=${() => answer(false)}>Not now</button></span>
   </span>`;
 }
 
@@ -34,31 +34,31 @@ export function useAppStep(offer, left) {
     return () => clearInterval(timer);
   }, [offer]);
   if (!offer) return null;
-  if (!t) return { qr: null, link: "", alt: "", lines: [say("Looking for Tailscale…")] };
-  const again = say("Then Cancel and Pair a phone again: the town looks for Tailscale anew.");
+  if (!t) return { qr: null, link: "", alt: "", lines: ["Looking for Tailscale…"] };
+  const again = "Then Cancel and Pair a phone again: the town looks for Tailscale anew.";
   if (!offer.app_link && !t.running) {
-    return { qr: t.install_qr, link: t.install, alt: say("QR code to install Tailscale"), lines: [
-      say(t.installed ? "Tailscale is on this computer but not running or not logged in: start it and log in."
-        : "The phone reaches the town through Tailscale, and it is not on this computer: install it here (tailscale.com/download) and log in."),
-      say("On the phone: scan this code, install Tailscale and log in with the same account."), again] };
+    return { qr: t.install_qr, link: t.install, alt: "QR code to install Tailscale", lines: [
+      t.installed ? "Tailscale is on this computer but not running or not logged in: start it and log in."
+        : "The phone reaches the town through Tailscale, and it is not on this computer: install it here (tailscale.com/download) and log in.",
+      "On the phone: scan this code, install Tailscale and log in with the same account.", again] };
   }
   if (!offer.app_link) {
-    return { qr: t.dns_qr, link: t.dns, alt: say("QR code to the tailnet's DNS settings"), lines: [
-      say("Tailscale runs, but the tailnet gives this computer no HTTPS certificate, and the phone's browser needs one."),
-      say("Turn on MagicDNS and HTTPS Certificates in the tailnet's DNS settings (this code opens them; login.tailscale.com/admin/dns)."), again] };
+    return { qr: t.dns_qr, link: t.dns, alt: "QR code to the tailnet's DNS settings", lines: [
+      "Tailscale runs, but the tailnet gives this computer no HTTPS certificate, and the phone's browser needs one.",
+      "Turn on MagicDNS and HTTPS Certificates in the tailnet's DNS settings (this code opens them; login.tailscale.com/admin/dns).", again] };
   }
   const phone = t.phones.find((p) => p.online);
   if (!phone) {
-    return { qr: t.install_qr, link: t.install, alt: say("QR code to install Tailscale"), lines: [
-      say("1. Scan it with the phone's camera and install Tailscale."),
-      say(t.account ? `2. Log in to Tailscale on the phone as ${t.account} and turn it on.` : "2. Log in to Tailscale on the phone with this computer's account and turn it on."),
-      say(`3. When the phone is in the tailnet, this code turns into the link that opens ${PRODUCT} on it.`),
-      say(`The pairing code is good for ${left} s; show a new one if it runs out.`)] };
+    return { qr: t.install_qr, link: t.install, alt: "QR code to install Tailscale", lines: [
+      "1. Scan it with the phone's camera and install Tailscale.",
+      t.account ? `2. Log in to Tailscale on the phone as ${t.account} and turn it on.` : "2. Log in to Tailscale on the phone with this computer's account and turn it on.",
+      `3. When the phone is in the tailnet, this code turns into the link that opens ${PRODUCT} on it.`,
+      `The pairing code is good for ${left} s; show a new one if it runs out.`] };
   }
-  return { qr: offer.app_qr, link: offer.app_link, alt: say(`QR code to open ${PRODUCT} on the phone`), lines: [
-    say(`${phone.name} (${phone.os}) is in the tailnet. Scan it with the phone's camera: ${PRODUCT} opens in its browser and pairs.`),
-    say(phone.os === "iOS" ? "Then Share → Add to Home Screen." : "Then Install app (or Add to Home screen) in the browser's menu."),
-    say(`Good for ${left} s, once.`)] };
+  return { qr: offer.app_qr, link: offer.app_link, alt: `QR code to open ${PRODUCT} on the phone`, lines: [
+    `${phone.name} (${phone.os}) is in the tailnet. Scan it with the phone's camera: ${PRODUCT} opens in its browser and pairs.`,
+    phone.os === "iOS" ? "Then Share → Add to Home Screen." : "Then Install app (or Add to Home screen) in the browser's menu.",
+    `Good for ${left} s, once.`] };
 }
 
 /** Pair a phone (shell/pair.js): a code while it is good, the time left and the phone that paired with it, named
@@ -93,6 +93,6 @@ export function PairQr({ pairing: { step } }) {
   if (!step) return null;
   return step.qr
     ? html`<img class="gui-phones__qr gui-you__qr" src=${step.qr} width="128" height="128" alt=${step.alt} />`
-    : step.link && html`<div class="gui-you__qr"><p class="ok-font-status ok-tone-wait">${say("No QR code: this install lacks segno. Run pip install segno and open the town again — or type this link on the phone:")}</p>
+    : step.link && html`<div class="gui-you__qr"><p class="ok-font-status ok-tone-wait">No QR code: this install lacks segno. Run pip install segno and open the town again — or type this link on the phone:</p>
       <code class="gui-phones__link">${step.link}</code></div>`;
 }

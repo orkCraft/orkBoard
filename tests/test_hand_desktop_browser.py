@@ -128,7 +128,7 @@ class HandHost(StubHost):
         if name == "ideas.board":
             self.log.append((name, a))
             tracks = [{"slug": p["slug"], "title": p["title"], "priority": "normal", "order": i, "recipe": "", "count": 0} for i, p in enumerate(self.parties)]
-            return {"tracks": tracks, "ideas": [], "needs_you": copy.deepcopy(self.needs), "target": "balance", "autostart": True, "night": "01:00-07:00", "night_low": None,
+            return {"tracks": tracks, "ideas": [], "needs_you": copy.deepcopy(self.needs), "target": "balance", "autostart": True, "night": "01:00-07:00",
                     "review": False, "review_notice": False, "rev": self.rev}
         if name == "ideas.add":
             self.log.append((name, a))

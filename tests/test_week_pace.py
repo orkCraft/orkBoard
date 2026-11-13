@@ -117,7 +117,6 @@ def test_the_hour_before_the_five_hours_come_back_eases_their_reserve_by_day_whi
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
-    h.ideas.save_settings({**h.ideas.settings_now(), "night_low": True})          # spec 83: Low work may run at night
     return h
 
 

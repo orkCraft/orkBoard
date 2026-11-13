@@ -2,7 +2,6 @@
 // day's name when it is not today), and a goal at work held by a spent window says **the work goes on at 14:00**. Always the earliest hour, never a span and never a countdown (§224). Pure: a node in, words out; "" when the goal
 // is not held, or its hour has passed (it waits for its turn in the queue, and a past hour would say a thing that is not so). Drawn by `column.js`'s list rows alone.
 
-import { say } from "../link.js";
 
 const two = (n) => String(n).padStart(2, "0");
 
@@ -29,5 +28,5 @@ export function holdWords(n, now = new Date()) {
 export function waitsWords(nodes, now = new Date()) {
   const at = nodes.filter((n) => n.state === "routed" && n.held_until && !n.held_for).map((n) => n.held_until).filter((iso) => new Date(iso).getTime() > now.getTime())
     .sort((a, b) => new Date(a) - new Date(b))[0];
-  return at ? `${say("waits for the reset")} · ${hourOf(at, now)}` : "";
+  return at ? `waits for the reset · ${hourOf(at, now)}` : "";
 }

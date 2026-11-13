@@ -34,7 +34,6 @@ BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
-    h.ideas.save_settings({**h.ideas.settings_now(), "night_low": True})          # stored and read by nothing here (spec 99 §3)
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 

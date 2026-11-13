@@ -31,9 +31,8 @@ package (`orkcraft`).
 - **Orks by their orkish names, everything else by what it does**: the Taskmaster, a Grunt; the Board, Play, Release,
   Stop all. Never the other way round: no ork gets a job title, no window a camp name.
   `orkboard/realm/lexicon.py` `TERMS` is the glossary: a new concept gets its one word there, and new code writes that
-  word. A renamed concept keeps its old spelling in `was`, and the interface says an old spelling in today's word: the
-  page through `say()` for attributes and data. A `html` template's own text is written in today's word at the source
-  (`tests/test_gui_wording.py` checks). What people or agents wrote keeps its words; Markdown, inputs, logs and
+  word. A renamed concept keeps its old spelling in `was`, and the interface says today's word: a `html` template's own text is
+  written in today's word at the source (`tests/test_gui_wording.py` checks); the page has no `say()` and rewrites nothing. What people or agents wrote keeps its words; Markdown, inputs, logs and
   terminals keep theirs.
 - **Parties and goals** (decisions §63): the interface says *party* for what the code calls a goal or a track, and *goal*
   for what the code calls an idea; a task stays a task. Code, files, commands, keys and events keep their names.

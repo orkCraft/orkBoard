@@ -1,5 +1,5 @@
 """Orc tiers: how heavy a model an orc thinks with. The code keeps its words; a person reads how seasoned the
-mind is, with as many chevrons (docs/design/warchief-line-and-cards.md §6; the Camp's old words in realm/lexicon.py):
+mind is, with as many chevrons (realm/lexicon.py):
 
     ★★★ elder     Veteran: the heavy models: opus, gemini pro, gpt astra
     ★★  warrior   Seasoned: the middle: sonnet, gemini flash with high reasoning, gpt sol
@@ -7,26 +7,21 @@ mind is, with as many chevrons (docs/design/warchief-line-and-cards.md §6; the 
 
 A harness step picks its tier (`{"role": "run", "harness": "claude", "tier": "elder"}`) and the
 model follows from the harness; a step may name its `model` outright, and the tier is read from
-it. An orc's tier is its heaviest step. Stewards carry no tier of their own: they keep the building; the
-GUI shows the chevrons of the tier their road rules run at on the steward that comes out (gui/state.py `rank`).
+it.
 """
 from __future__ import annotations
 
-from orkboard.realm import harnesses, model_families
+from orkboard.realm import harnesses
 
 TIERS = ("elder", "warrior", "laborer")          # heaviest first
-TIER_ICONS = {"elder": "★★★", "warrior": "★★", "laborer": "★"}     # chevrons: icons/rank-1..3.png in Camp
+TIER_ICONS = {"elder": "★★★", "warrior": "★★", "laborer": "★"}     # chevrons
 TIER_LABELS = {"elder": "Veteran", "warrior": "Seasoned", "laborer": "Novice"}
-TIER_STYLES = {"elder": "bold #c084fc", "warrior": "bold #f87171", "laborer": "#a8a29e"}
 # The model family of each tier, per harness (realm/harnesses.py holds them; a run names its newest model).
 MODELS = {h.id: dict(h.models) for h in harnesses.REGISTRY.values()}
 # What a step runs on when it names neither: agy's own default is flash-high.
 DEFAULT_MODEL = {h.id: h.default_model for h in harnesses.REGISTRY.values() if h.default_model}
 
 
-def model_label(model: str) -> str:
-    """What a person reads for a model: a family with the version it runs on (`Gemini Flash High (3.8)`)."""
-    return model_families.label(model)
 
 
 def tool_of(step: dict) -> str:
@@ -59,9 +54,6 @@ def resolve(harness: str, model: str) -> str:
     return MODELS.get(tool_of({"harness": harness}), {}).get(model, model) if model in TIERS else model
 
 
-def model_icon(harness: str, model: str) -> str:
-    """The tier icon of one harness:model pair (barracks orcs, council members)."""
-    return icon(step_tier({"harness": harness, "model": model}))
 
 
 def step_tier(step: dict) -> str | None:
@@ -69,12 +61,6 @@ def step_tier(step: dict) -> str | None:
     return tier_of_model(model) or (step.get("tier") if step.get("tier") in TIERS else None)
 
 
-def orc_tier(harness: list[dict] | None, kind: str = "agent") -> str | None:
-    """The heaviest tier among the steps; None for chains, scripts and unknown models."""
-    if kind in ("chain", "script"):
-        return None
-    found = {t for t in (step_tier(s) for s in harness or []) if t}
-    return next((t for t in TIERS if t in found), None)
 
 
 def icon(tier: str | None) -> str:
@@ -83,14 +69,3 @@ def icon(tier: str | None) -> str:
 
 def label(tier: str | None) -> str:
     return f"{TIER_ICONS[tier]} {TIER_LABELS[tier]}" if tier in TIER_ICONS else ""
-
-
-def with_tier(harness: list[dict], tier: str | None) -> list[dict]:
-    """The steps moved to `tier` (None: back to the CLI's default); a named model gives way."""
-    out = []
-    for s in harness:
-        step = {k: v for k, v in s.items() if k not in ("tier", "model")}
-        if tier in TIERS:
-            step["tier"] = tier
-        out.append(step)
-    return out

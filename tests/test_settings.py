@@ -76,7 +76,7 @@ def test_the_boards_settings_are_cleaned():
                                               "merge_into": "dev", "push": False, "review": False, "review_v": 2,      # spec 84 §1: off by default
                                               # spec 35 §12: the Board's Target, autostart, night, reserves, own paths
                                               "target": "balance", "autostart": True, "night": "01:00-07:00",
-                                              "reserve_day": 0.3, "reserve_night": 0.1, "risk_paths": [], "night_low": None,
+                                              "reserve_day": 0.3, "reserve_night": 0.1, "risk_paths": [],
                                               "work_at_night": False,      # spec 121 §4.1: off until the person says
                                               "look_wait": "2h",           # spec 144 A.1: Give me time to look
                                               "hours": [], "presence": None}      # spec 138 B.1, spec 139 C.1: no hours, no press

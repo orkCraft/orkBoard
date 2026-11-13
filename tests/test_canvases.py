@@ -101,10 +101,10 @@ def test_the_cards_their_head_and_seen(host, fake_repo):
     assert (first["tool_word"], first["kind"], first["url"], first["link_text"]) == ("Codex", "picture", "", "https://evil.com/x")
     assert (second["host"], second["url"], second["head"]) == ("claude.ai", ART, {"craft": "design", "race": "elf", "tier": "elder"})
     assert first["head"]["race"] == "elf" and first["head"]["tier"] == "warrior"        # no model: warrior
-    assert host.snapshot()["canvases_new"] == 2
+    assert host.ideas.canvas_store.new_count() == 2
     host.command("ideas.canvas_seen", {"key": second["key"]})
     got = host.command("ideas.canvases")
-    assert [c["key"] for c in got["seen"]] == [second["key"]] and host.snapshot()["canvases_new"] == 1
+    assert [c["key"] for c in got["seen"]] == [second["key"]] and host.ideas.canvas_store.new_count() == 1
     with pytest.raises(CommandError):
         host.command("ideas.canvas_seen", {"key": "claude:https://claude.ai/artifact/gone"})
 
@@ -194,11 +194,3 @@ def test_a_canvas_says_its_time_in_one_spelling():
     assert _c("2026-10-25T10:00:00.123Z").at == "2026-10-25T10:00:00+00:00" == norm_at("2026-10-25T12:00:00+02:00")
     assert norm_at("not a time") == "not a time"
 
-
-def test_the_phones_snapshot_carries_the_count_and_a_canvas_moves_its_rev(host):
-    from orkboard.gui.board_host import BoardPhone
-    before = BoardPhone.phone_snapshot(host)
-    assert (before["canvases_new"], before["canvases_rev"]) == (0, 0)
-    host.ideas.canvas_store.add(_c("2026-10-25T10:00:00+00:00"))
-    after = BoardPhone.phone_snapshot(host)
-    assert after["canvases_new"] == 1 and after["rev"] != before["rev"]      # the phone is sent it again

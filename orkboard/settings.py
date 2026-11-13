@@ -49,14 +49,13 @@ REPAIR_COMMAND = ("claude", "remote-control", "--name", "Fix Orkboard", "--permi
 # itself, spec 84; `review_v` 2 marks a file that was moved to that default once, the notice said once: `review_notice`).
 # Spec 35: the Board's Target (thrift · balance · quality), whether a safe plan starts by itself, the night's window
 # (local time), the share of the window kept for the person by day and at night, and the repository's own risky paths.
-# Spec 83: `night_low`, the one standing permission for Low work (and the leaders' night) to run at night: None = not asked yet.
 # `batch_minutes` is kept, unused (the batch went in spec 35), so older settings keep loading.
 REVIEW_V = 2
 LOOK_WAIT_DEFAULT = "2h"            # spec 144 A.1: Give me time to look
 IDEAS = {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1, "merge_into": "dev", "push": False, "review": False,
          "review_v": REVIEW_V,
          "target": "balance", "autostart": True, "night": "01:00-07:00", "reserve_day": 0.3, "reserve_night": 0.1,
-         "risk_paths": [], "night_low": None, "work_at_night": False,   # spec 121 C: plans that would start by themselves wait for the night's window (off until the person says)
+         "risk_paths": [], "work_at_night": False,   # spec 121 C: plans that would start by themselves wait for the night's window (off until the person says)
          "look_wait": LOOK_WAIT_DEFAULT,   # spec 144 A: how long a spec made waits for the person's look before its plan is passed by itself (realm/look_wait.py)
          "hours": [], "presence": None}   # spec 138 B.1, spec 139 C.1: the person's hours (realm/hours.py) and the door's hold
 IDEA_TARGETS = ("thrift", "balance", "quality")
@@ -66,7 +65,7 @@ PROJECTS_RECENT = 10                     # the projects the switcher's Recent re
 PROJECTS_OPEN = 20                       # the most projects open at once
 # The Board's settings that are the project's (spec 37 §8): read from `<repo>/.orkcraft/board.json`, the machine's
 # `ideas` being the defaults a new project starts from; `risk_paths` is the tracked `orkcraft.toml`'s `[board]`.
-BOARD = ("target", "autostart", "night", "night_low", "work_at_night", "merge_into", "push", "review", "review_v", "wiki", "max_parallel", "reserve_day",
+BOARD = ("target", "autostart", "night", "work_at_night", "merge_into", "push", "review", "review_v", "wiki", "max_parallel", "reserve_day",
          "reserve_night", "hours", "presence", "look_wait", "night_rung", "night_leaders")
 BOARD_FILE = Path(".orkcraft") / "board.json"
 
@@ -220,8 +219,6 @@ def clean_ideas(raw: object) -> dict:
         out["look_wait"] = raw["look_wait"]
     if raw.get("build_start") in look_wait.BUILD_STARTS:     # spec 168 H2: *The build starts* as one value, read when a file says it; the two keys stay the ones kept
         out.update(look_wait.build_start_keys(raw["build_start"], out["look_wait"]))
-    if isinstance(raw.get("night_low"), bool):       # spec 83: Low work may run at night; None = not asked yet
-        out["night_low"] = raw["night_low"]
     night = raw.get("night")
     if isinstance(night, str) and NIGHT.match(night.strip()) and night.strip()[:5] != night.strip()[6:]:
         out["night"] = night.strip()

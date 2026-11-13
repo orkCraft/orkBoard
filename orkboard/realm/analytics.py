@@ -1,4 +1,4 @@
-"""📊 The town's analytics: every building's day logs over a period (realm/day_log.py), with what each day added up
+"""📊 The Board's analytics: every building's day logs over a period (realm/day_log.py), with what each day added up
 to, as one zip — to hand to someone (or an agent) who checks how the buildings work and what they cost.
 
     analytics.days_kept(root)                        the days with logs, newest first
@@ -92,7 +92,7 @@ def readme(s: dict) -> str:
     days = [d["day"] for d in s["days"]]
     period = f"{days[0]} – {days[-1]}" if len(days) > 1 else (days[0] if days else "no day")
     out = [f"# {brand.name()} analytics · {period}", "",
-           "Every model call the town's buildings made in these days, and what they decided. Each",
+           "Every model call the Board's projects made in these days, and what they decided. Each",
            "`<day>/<building>/` holds `calls.jsonl` (a line each call: who, what for, model, seconds, tokens, cost,",
            "the tool's usage), `calls/<n>-<who>.json` (the call itself: `prompt` what went in, `stdout` what came out,",
            "`stderr`, `trail` how it worked when the AI tool keeps a session), `decisions.jsonl` (an Agent pool's",

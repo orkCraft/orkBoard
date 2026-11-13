@@ -205,5 +205,5 @@ def test_it_imports_nothing_heavy():
 # -- the Warder guards it ------------------------------------------------------------------------------------------
 
 def test_the_warder_guards_the_hooks_own_file():
-    assert {"orkcraft/hooks/canvas.py", "orkboard/hooks/canvas.py"} <= set(warder.SELF)
+    assert "orkboard/hooks/canvas.py" in warder.SELF
     assert warder.self_name(warder.REPO / "orkboard" / "hooks" / "canvas.py") == "orkboard/hooks/canvas.py"

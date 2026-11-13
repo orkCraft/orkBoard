@@ -4,7 +4,7 @@
 // This module keeps the answers given and not yet sent (`given`), the rows sent and not yet gone from the Board (`sent`), makes the stops of the cards (`questionStops` for a talk and a cause row, `projectStops` for the project's),
 // and sends. data.js `stopsOfProject` calls the two; the faces are questioncard.js and causecard.js; the cards are dealt over the pane by choose.js. Nothing here draws.
 import { signal } from "@preact/signals";
-import { say, toast } from "../link.js";
+import { toast } from "../link.js";
 import { act } from "../shell/store.js";
 import { ORKMASTER } from "../frame/state.js";
 import { named } from "./todoform.js";
@@ -102,7 +102,7 @@ export async function sendRow(row, lead, decide = false) {
   const got = row.kind === "project_q" ? await act("ideas.project_answer", { answers, ...(decide ? { decide: true } : {}) })
     : await act("ideas.talk_answer", { idea: row.idea, answers, ...(decide ? { decide: true } : {}) });
   if (!got) { undo(row); return null; }
-  toast(say(row.kind === "project_q" ? "Kept: the answers are the project’s." : decide ? `Sent: ${named(lead)} decides.` : `Sent: ${named(lead)} reads the answers.`));
+  toast(row.kind === "project_q" ? "Kept: the answers are the project’s." : decide ? `Sent: ${named(lead)} decides.` : `Sent: ${named(lead)} reads the answers.`);
   return got;
 }
 
@@ -112,6 +112,6 @@ export async function sendCause(row, lead, yes, text = "") {
   sent.value = { ...sent.value, [sigOfRow(row)]: true };
   const got = await act("ideas.cause_answer", { idea: row.idea, yes, ...(text ? { text } : {}), answers });
   if (!got) { undo(row); return null; }
-  toast(say(`Sent: ${named(lead)} reads the answers.`));
+  toast(`Sent: ${named(lead)} reads the answers.`);
   return got;
 }

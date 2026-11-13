@@ -6,13 +6,13 @@
     event_log.summary(root, since=…)               # the counts the owner reads after a week (`orkcraft usage local`)
 
 It sits beside the anonymous usage stats (core/usage.py) and is not them: whatever the person said to sharing,
-these lines are written to `.orkcraft/usage/events.jsonl` in the town's folder and no longer leave the machine by
+these lines are written to `.orkcraft/usage/events.jsonl` in the project's folder and no longer leave the machine by
 themselves — no proxy, no batch: they go to the project's own remote only when `[journal]` in orkcraft.toml asks for
-it (realm/remote_journal.py, decisions §229). They may hold the town's own words (a question an ork asked, its options), because
-only the person who owns the town reads them, by hand or in the analytics zip (realm/analytics.py).
+it (realm/remote_journal.py, decisions §229). They may hold the Board's own words (a question an ork asked, its options), because
+only the person who owns the project reads them, by hand or in the analytics zip (realm/analytics.py).
 
 A closed list of events (`EVENTS`); an unknown one is not written. A field is kept as it is when it is plain data
-(a string, a number, a bool, a list of strings); a string is cut at `TEXT_MAX`. Writing never troubles the town:
+(a string, a number, a bool, a list of strings); a string is cut at `TEXT_MAX`. Writing never troubles the Board:
 a disk that refuses is ignored. Nothing is written in the demo (the caller passes no root).
 
 No face here: a service records, a face reads (decisions §8: these counts size the way to ask after a week).
@@ -38,14 +38,14 @@ STOPPED = "run_stopped_on_question"   # building, ork, task, harness: the run en
 WAIT_SKIPPED = "wait_skipped"     # building, task, wait, waited_s
 # Quiet working hours (audience.md §2a): a question's toast or push held for "since your last look".
 HELD_AT_WORK = "question_held_at_work"   # how ("toast" | "push"), title
-# Leaving the camp (audience.md §2a): "I'm off", and back (by the person, at evening, or the work done).
+# Leaving the Board (audience.md §2a): "I'm off", and back (by the person, at evening, or the work done).
 CAMP_LEFT = "camp_left"           # carts, first, cap_pct, until, on_power
 CAMP_BACK = "camp_back"           # why ("person" | "evening"), minutes, window_pct, capped, carts_left
 # Mission 1 (first-mission.md): a quest started, done or skipped.
 QUEST_STARTED = "quest_started"   # quest
 QUEST_DONE = "quest_done"         # quest, seconds
 QUEST_SKIPPED = "quest_skipped"   # quest
-# "Since your last look" (audience.md §2a): what the town made while the person was away, and their looks.
+# "Since your last look" (audience.md §2a): what the Board made while the person was away, and their looks.
 BUILT = "result_built"            # building, kind ("passed" | "launched" | "done"), title, ref, tokens, cost (None: unrecorded)
 CART_MOVED = "cart_moved"         # source, target, title: a cart delivered along a road
 LOOKED = "look"                   # started, seconds: the GUI in front of the person (looks a day, their length)
@@ -352,7 +352,7 @@ def line(event: str, at: dt.datetime | None = None, **fields: Any) -> dict | Non
 
 
 def record(root: Path | None, event: str, **fields: Any) -> bool:
-    """One event, appended to the town's local log. False when nothing was written (no root, an unknown event,
+    """One event, appended to the Board's local log. False when nothing was written (no root, an unknown event,
     a disk that refused)."""
     row = line(event, **fields)
     if root is None or row is None:

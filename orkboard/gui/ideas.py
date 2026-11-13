@@ -35,7 +35,7 @@ open goals; a goal's `depends_on` across parties holds its start until a flag): 
 Spec 115 §5: a mark on the live product (`ideas.play_events`, `ideas.play_place`, `ideas.play_hints`, `ideas.play_mark`, `ideas.play_mark_offer`): gui/ideas_play_mark.py.
 
 Spec 78: what the AI tools drew outside the code, its canvases (`ideas.canvases`, `ideas.canvas_seen`, `ideas.canvas_open`,
-`ideas.canvas_file`; `canvases_new` and `canvases_rev` in the snapshot): gui/ideas_canvases.py.
+`ideas.canvas_file`): gui/ideas_canvases.py.
 
 Spec 37 §8: the Board's settings are the project's (`BoardHost.board_settings`: `<repo>/.orkcraft/board.json` over the
 machine's `ideas`), read through `settings_now()` and written with `save_settings()`.
@@ -378,8 +378,7 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
         return {"ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
                 "play_face": self.play_face(),                   # what the die's up face says: Play's state changes without the Board's rev (spec 118 §3)
                 "new_n": self.new_n(),                           # …and how many goals landed in dev since Play last tried it: the pips of the up face (decisions §200.5)
-                "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "passing": self.passing_rows(), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
-                "canvases_rev": self.canvas_store.rev}
+                "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "passing": self.passing_rows(), "reserve": self.reserve()}
 
     def passing_rows(self) -> list[dict[str, Any]]:
         """The snapshot's `passing` (spec 128 D.2, `realm/idea_pass.row`): the leaders' questions waiting to be passed on, read at each snapshot (the clock moves `left_s`, not a change)."""

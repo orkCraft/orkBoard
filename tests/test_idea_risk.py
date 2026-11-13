@@ -60,7 +60,7 @@ def test_the_nine_cells_of_autostart(risk, priority, what):
     ("medium", "high", "start"), ("medium", "normal", "wait"), ("medium", "low", "wait"),
     ("high", "high", "wait"), ("high", "normal", "wait"), ("high", "low", "wait")])
 def test_without_the_night_a_low_goal_starts_by_day(risk, priority, what):
-    """Spec 83 §2: `night_low` null or false: nothing goes at night; low/low reads "start", after the other priorities."""
+    """Spec 83 §2: with no night, nothing goes at night; low/low reads "start", after the other priorities."""
     assert idea_risk.decide(risk, priority) == what == idea_risk.decide(risk, priority, night=False)
 
 
@@ -69,7 +69,7 @@ def test_without_the_night_a_low_goal_starts_by_day(risk, priority, what):
     ("medium", "high", "night"), ("medium", "normal", "wait"), ("medium", "low", "wait"),
     ("high", "high", "wait"), ("high", "normal", "wait"), ("high", "low", "wait")])
 def test_work_at_night_holds_what_would_start_by_itself_and_what_waits_for_the_person_still_waits(risk, priority, what):
-    """Spec 121 §4.2: `held_for_night`: `start` and `night` are "night" (held for the window); `wait` stays `wait`, whatever `night_low` says."""
+    """Spec 121 §4.2: `held_for_night`: `start` and `night` are "night" (held for the window); `wait` stays `wait`."""
     assert idea_risk.decide(risk, priority, held_for_night=True) == what == idea_risk.decide(risk, priority, night=True, held_for_night=True)
     assert (idea_risk.decide(risk, priority) == "wait") == (what == "wait")                    # the table's own rules are unchanged
     assert idea_risk.decide(risk, priority, held_for_night=False) == idea_risk.decide(risk, priority)

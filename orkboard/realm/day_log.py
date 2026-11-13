@@ -7,8 +7,7 @@ out, how it worked) and what it decided, as one zip.
 
 The calls are written by realm/call_log.py into `.orkcraft/logs/<day>/<building>/`. A day is cleared at the start
 of the next one, building by building, unless its log was asked for (`pack` marks it) or the building got a 👎 that
-day: then it is kept for KEEP_DAYS, for whoever looks into it. While the town keeps its logs for analysis (`keep`:
-the Council's `logs_for_analysis`, a switch in Town settings) every day is kept, KEEP_ANALYSIS days, for a period
+day: then it is kept for KEEP_DAYS, for whoever looks into it. While the Board keeps its logs for analysis (`keep`) every day is kept, KEEP_ANALYSIS days, for a period
 to be downloaded at once (realm/analytics.py). No face here: the GUI serves the zip (gui/server.py).
 """
 from __future__ import annotations

@@ -134,7 +134,7 @@ class BoardLogs:
             if not event_log.read(self.root, since) and not analytics._board_files(self.root):
                 return None
             kept = [(today - dt.timedelta(days=n)).isoformat() for n in range(days)]
-        data = analytics.pack(self.root, kept, {call_log.TOWN: "The Board"}, lambda bid, day: [], lambda bid, day: [])
+        data = analytics.pack(self.root, kept, {call_log.UNPLACED: "The Board"}, lambda bid, day: [], lambda bid, day: [])
         return f"orkcraft-analytics-{kept[-1]}-to-{kept[0]}.zip", data
 
     def close(self) -> None:

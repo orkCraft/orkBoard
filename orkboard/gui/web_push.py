@@ -116,7 +116,7 @@ def send(sub: dict, message: dict, folder: Path | None = None) -> int:
         endpoint = str(sub["endpoint"])
         request = urllib.request.Request(endpoint, data=seal(body, sub["p256dh"], sub["auth"]), method="POST", headers={
             "Authorization": vapid(endpoint, folder=folder), "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream",
-            "TTL": "43200", "Urgency": URGENCY.get(str(message.get("tag")), "normal"), "Topic": str(message.get("tag") or "orkline")})
+            "TTL": "43200", "Urgency": URGENCY.get(str(message.get("tag")), "normal"), "Topic": str(message.get("tag") or "orkboard")})
         with OPENER(request, timeout=10) as answer:
             return int(answer.status)
     except urllib.error.HTTPError as e:

@@ -1,4 +1,4 @@
-"""🛡️ Warder (orkcraft/hooks/warder.py): what it denies, what it asks about, and what it leaves alone."""
+"""🛡️ Warder (orkboard/hooks/warder.py): what it denies, what it asks about, and what it leaves alone."""
 from __future__ import annotations
 
 import importlib.util

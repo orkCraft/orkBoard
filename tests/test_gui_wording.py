@@ -1,6 +1,5 @@
 """The GUI's templates are written in today's words (CLAUDE.md → Wording): no `html` template's own text
-says an old Camp spelling, since the page no longer rewrites them. What the town's data says goes through
-`say()` in the page, and is not checked here."""
+says an old Camp spelling, since the page does not rewrite them; what people or agents wrote keeps its words."""
 from __future__ import annotations
 
 import re

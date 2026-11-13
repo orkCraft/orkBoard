@@ -46,7 +46,7 @@ from orkboard.sources import telemetry
 
 LINES = "calls.jsonl"
 DAYS = Path(".orkcraft") / "logs"
-TOWN = "town"                     # the day's folder of a call no building made
+UNPLACED = "town"                 # the day's folder of a call no project made: its name stays on disk, where machines already keep it
 TRAIL_MAX = 8 * 1024 * 1024       # characters of a session's trail kept with a call (its end)
 _LOCK = threading.Lock()
 _KEPT: dict = {"folder": None, "side": "", "days": None}
@@ -115,7 +115,7 @@ def days_root() -> Path | None:
 
 
 def day_folder(root: Path, day: str, building: str) -> Path:
-    return root / DAYS / day / (_SAFE.sub("-", building)[:80] or TOWN)
+    return root / DAYS / day / (_SAFE.sub("-", building)[:80] or UNPLACED)
 
 
 def usage_of(stdout: str) -> dict:
@@ -196,7 +196,7 @@ def record(env: dict | None, mode: str, harness: str, model: str, prompt: str, s
             return
         if folder is None:
             side = ""
-            folder = day_folder(days, dt.date.today().isoformat(), building or telemetry.building_now() or TOWN)
+            folder = day_folder(days, dt.date.today().isoformat(), building or telemetry.building_now() or UNPLACED)
         if folder not in _COUNT:
             _COUNT[folder] = len(read(folder))
         _COUNT[folder] += 1

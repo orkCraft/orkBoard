@@ -108,7 +108,6 @@ class BoardMixin:
         return {"target": s.get("target", settings.IDEAS["target"]), "autostart": bool(s.get("autostart", True)),
                 "night": s.get("night", settings.IDEAS["night"]), "review": bool(s.get("review", settings.IDEAS["review"])),
                 "review_notice": bool(getattr(getattr(self.host, "machine", None), "review_notice", False)),
-                "night_low": s.get("night_low") if isinstance(s.get("night_low"), bool) else None,      # None: not asked yet (spec 83)
                 "work_at_night": s.get("work_at_night") is True,                                         # spec 121 §4.1
                 "look_wait": look_wait.clean(s.get("look_wait")),                                        # spec 144 A.1: Give me time to look
                 "build_start": look_wait.build_start(s.get("autostart", True), s.get("look_wait")),      # spec 168 H2: *The build starts*, autostart and the look's wait as one

@@ -3,7 +3,7 @@
 // this computer, and the paired phones with Forget. Closing the place voids a code not used.
 import { useEffect, useState } from "preact/hooks";
 import { html, linked } from "../html.js";
-import { command, say } from "../link.js";
+import { command } from "../link.js";
 import { usePairing, PairQr, AwakeOffer } from "../phones.js";
 import { Place, closePlace, openPlace } from "../frame/place.js";
 
@@ -26,7 +26,7 @@ export function PairPlace() {
       <div class="shell-pair__code" aria-live="polite">
         ${offer ? html`<${PairQr} pairing=${pairing} /><span class="ok-font-status shell-pair__left">The code is good for ${left} s, once.</span>
             <button type="button" class="ork-btn" onClick=${cancel}>Cancel the code</button>`
-          : html`<p class="ok-font-status">${paired ? say(`Paired: ${paired}.`) : "No code is showing."}</p>
+          : html`<p class="ok-font-status">${paired ? `Paired: ${paired}.` : "No code is showing."}</p>
             ${paired && html`<${AwakeOffer} machine=${awake} />`}
             <button type="button" class="ork-btn primary" onClick=${pair}>${paired ? "Pair another phone" : "Show a code"}</button>`}
       </div>

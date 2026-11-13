@@ -3,7 +3,6 @@
 // the choice *Pictures you like* (docs/specs/85-the-elf-asks-and-shows.md §1) takes pictures: *Add a picture* under its box, sent with the answers.
 import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { say } from "../link.js";
 import { PictureAdd, usePictures } from "./pictures.js";
 
 const PICTURES = "Pictures you like";               // realm/idea_look.py PICTURES
@@ -33,6 +32,6 @@ export function Questions({ questions, onSend, busy = false, initial = [], hints
           onClick=${() => set(n, c)}>${c}</button>`)}</div>`}
       ${takes && (choices[n] || []).includes(PICTURES) && html`<${PictureAdd} pictures=${pictures} />`}</div>`)}
     <div class="board-row"><button type="submit" class="ork-btn primary" disabled=${sending || busy}>Send</button>
-      <span class="ok-font-status ok-tone-muted">${say("The Taskmaster reads all your answers at once and asks nothing more.")}</span></div>
+      <span class="ok-font-status ok-tone-muted">The Taskmaster reads all your answers at once and asks nothing more.</span></div>
   </form>`;
 }

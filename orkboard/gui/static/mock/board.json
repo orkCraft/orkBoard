@@ -7310,7 +7310,6 @@
     "night": "01:00-07:00",
     "review": false,
     "review_notice": false,
-    "night_low": null,
     "work_at_night": false,
     "look_wait": "2h",
     "build_start": "2h",

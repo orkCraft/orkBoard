@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""🛡️ Warder — the Council's security orc, as a PreToolUse hook of every AI tool orkcraft leads.
+"""🛡️ Warder — the guard of Orkboard's AI tools, as a PreToolUse hook of each of them.
 
-    .claude/settings.json → hooks.PreToolUse → python3 -m orkboard.hooks.warder        (`orkcraft hooks install`)
+    .claude/settings.json → hooks.PreToolUse → python3 -m orkboard.hooks.warder
     .codex/hooks.json     → hooks.PreToolUse → python3 -m orkboard.hooks.warder codex
     .agents/hooks.json    → orkcraft.PreToolUse → python3 -m orkboard.hooks.warder agy
     .cursor/hooks.json    → hooks.preToolUse → python3 -m orkboard.hooks.warder cursor
@@ -19,7 +19,7 @@ Reads the hook payload (`tool_name`, `tool_input`, `cwd`) on stdin and decides:
   files (.env, private keys, .ssh, .aws credentials, .netrc, …);
 - ask  — destructive but legitimate: `git reset --hard`, `git clean -f`, discarding all changes,
   `git branch -D`, dropping stashes, `sudo`, dumping the environment, and edits to Warder itself
-  (`orkcraft/hooks/warder.py` and `orkboard/hooks/warder.py`, `scripts/warder_hook.py`, `.claude/settings*.json`,
+  (`orkboard/hooks/warder.py`, `scripts/warder_hook.py`, `.claude/settings*.json`,
   `.codex/hooks.json`, `.codex/config.toml`). Codex cannot ask yet, so for Codex an ask is a deny that says why;
 - nothing — everything else goes through the agent's normal permission flow.
 
@@ -32,7 +32,7 @@ is nothing to say — never `allow`, which agy ignores in headless runs (agy iss
 only ever restricts. The same rules judge every harness (docs/design/agy-guard.md).
 
 Every deny / ask is appended to `.orkcraft/warder.jsonl` of the project the session works in
-(redacted, cut to 160 chars) so the Warder orc in orkcraft shows ❓ with the reason. An internal error never blocks a tool call (the
+(redacted, cut to 160 chars) so the Board can show the reason. An internal error never blocks a tool call (the
 error is logged) — a guard must not brick the sessions it guards. Standard library only.
 """
 from __future__ import annotations
@@ -50,8 +50,8 @@ REPO = Path(__file__).resolve().parent.parent
 
 
 def main_repo(root: Path) -> Path:
-    """The main checkout even when this copy runs in a git worktree (orkcraft orkspaces), so every
-    orkspace's Warder log lands where orkcraft reads it."""
+    """The main checkout even when this copy runs in a git worktree (an AI tool's worktree), so every
+    worktree's Warder log lands where Orkboard reads it."""
     dot_git = root / ".git"
     try:
         if dot_git.is_file():
@@ -86,7 +86,7 @@ SECRET_NAMES = ("id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", ".netrc", ".pgpass
 SECRET_GLOBS = ("*.pem", "*.key", "*.p12", "*.pfx", "*.keystore", "*.jks")
 SECRET_DIRS = (".ssh", ".gnupg")
 ENV_OK = (".env.example", ".env.sample", ".env.template", ".env.dist")
-SELF = ("orkcraft/hooks/warder.py", "orkboard/hooks/warder.py", "orkcraft/hooks/canvas.py", "orkboard/hooks/canvas.py",
+SELF = ("orkboard/hooks/warder.py", "orkboard/hooks/canvas.py",
         "scripts/warder_hook.py", ".claude/settings.json", ".claude/settings.local.json", ".codex/hooks.json",
         ".codex/config.toml", ".agents/hooks.json", ".cursor/hooks.json", ".pi/extensions/orkcraft.ts")
 AGY_GLOBAL = Path.home() / ".gemini" / "config" / "hooks.json"   # agy's hooks for every folder, headless steps' too

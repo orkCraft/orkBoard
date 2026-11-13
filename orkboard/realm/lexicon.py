@@ -30,7 +30,6 @@ TERMS: tuple[Term, ...] = (
     _t("ork", "ork", "orks"),
     _t("orkestration", "orkestration"),
     _t("orkestrate", "orkestrate"),
-    _t("keeper", "steward", "stewards", "keeper", "keepers"),     # a building's steward, asked in plain words
     _t("dnd", "Do not disturb"),                                   # pushes to a paired phone wait, until it is turned off or its time ends (settings `dnd_until`, gui/phone_push.py)
     # -- what a thing does, costs or risks: plain words ---------------------------------------------
     # today's spend under the AI tools' limits (the snapshot's `hud.gold`, `hud.lumber`: table/over.js)
@@ -134,7 +133,6 @@ TERMS: tuple[Term, ...] = (
     _t("record", "record"),                                        # what an agent did in the last 30 days, in its dialog (spec 42 §4)
     _t("this_week", "This week"),                                  # the work of the last seven days, at API prices, beside today's spend (spec 42 §6)
     _t("last_week", "Last week"),                                  # the card of the week before this one, Monday to Sunday (spec 42 §7)
-    _t("night_low", "Low work may run at night"),                  # the one standing permission for the night (spec 83, decisions §100): asked once, changed in Settings
     _t("nights_in_a_row", "nights in a row"),                     # the Board's nights with work done, one after another, up to last night (spec 42 §8)
     _t("short_name", "short name", "short names"),                 # a goal's, a party's or a task's name in 24 characters (spec 41 §3)
     _t("recommended_answer", "recommended answer", "recommended answers"),   # the choice the Taskmaster picks for its question (spec 41 §9)

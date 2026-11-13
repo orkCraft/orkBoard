@@ -71,7 +71,6 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
     assert set(snap) == {"onboarding", "ideas_rev", "needs_you", "idea_states", "review_count",
                          "review_results", "limits", "reserve", "rate", "hud", "repo", "projects", "update",
                          "update_policy", "version",                       # Settings → Updates
-                         "canvases_new", "canvases_rev",                   # spec 78 §3: the Canvases row
                          "sign_in",                                        # spec 45: a tool's own sign-in
                          "mana",                                           # spec 105 §2.5: the tool now, beside the limits
                          "presence", "stopped",                                     # spec 139 C.1: Here or Away, from the hours and the door's hold
