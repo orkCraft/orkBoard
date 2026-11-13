@@ -1,5 +1,6 @@
 """Goal "The battle and the gate", stages D and F (decisions §303): `ideas.battle` and `ideas.gate_guards` on a fixture Board, read only: no model, no write, nothing in the snapshot.
-Stage G (decisions §303.5): `ideas.gate_fix_goal` on a goal done whose way to main went red lays a Fix goal in one press, which its Undo removes."""
+Stage G (decisions §303.5): `ideas.gate_fix_goal` on a goal done whose way to main went red lays a Fix goal in one press, which its Undo removes.
+Stage N3: `ideas.gate_guards` answers the §N read where the gate ran, on what the real way to dev and the real checks on the way to main leave."""
 from __future__ import annotations
 
 import hashlib
@@ -81,12 +82,65 @@ def test_the_snapshot_holds_no_rests(host):
 
 
 def _red_dev(host):
+    """A red on the way to dev as stage E wrote it, before the §N were kept with it (stage N3): no `named`."""
     goal_branch.update(host.ideas.state_dir, "goal", branch="goal/goal",
                        failing=["tests/test_red.py::test_a", "tests/test_red.py::test_b", "tests/test_bare.py::test_c"],
                        files=["tests/test_red.py", "tests/test_bare.py", "tests/test_ok.py"])
 
 
-def test_a_red_gate_on_the_way_to_dev_lays_the_decisions_its_tests_name(host, fake_repo):
+def _git(repo: Path, *a: str) -> str:
+    return subprocess.run(["git", *a], cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+
+
+def _python(repo: Path) -> None:
+    """The repository's own Python, as the gate looks for it (untracked): ours, with pytest."""
+    py = repo / ".venv/bin/python"
+    py.parent.mkdir(parents=True)
+    py.write_text(f'#!/bin/sh\nexec "{Path(sys.prefix) / "bin/python"}" "$@"\n', encoding="utf-8")
+    py.chmod(0o755)
+
+
+GUARD = '"""The goal\'s own test."""\n\n\ndef test_guarded():\n    """It holds decisions §2."""\n    assert False\n'      # fails, naming §2 in its own text
+AGREES = '"""Guards decisions §3."""\n\n\ndef test_fine():\n    pass\n'                                                       # passes, naming §3
+
+
+def _committed(repo: Path) -> None:
+    """The decisions log and a gate of the project's own pytest (`always` one passing test), committed; the fixture's other test files stay untracked."""
+    (repo / "orkcraft.toml").write_text('[gate]\nalways = ["tests/test_base.py"]\n', encoding="utf-8")
+    _w(repo, "tests/test_base.py", "def test_base():\n    pass\n")
+    _git(repo, "add", "orkcraft.toml", "docs/decisions.md", "tests/test_base.py")
+    _git(repo, "commit", "-q", "-m", "the log and the gate")
+    _python(repo)
+
+
+def test_a_red_gate_on_the_way_to_dev_lays_the_decisions_its_tests_name_where_it_ran(host, fake_repo):
+    """Stage N3, on what `goal_branch.to_dev` really leaves: the goal's branch adds a failing test naming `decisions §2` and a passing file naming §3, which the
+    person's checkout (dev) never holds; the gate's worktree is gone when `ideas.gate_guards` is asked, and it answers them as the branch wrote them."""
+    from orkboard.realm.idea_git import IdeaGit
+    from tests.test_goal_branch import land_task
+    _committed(fake_repo)
+    _git(fake_repo, "checkout", "-q", "-B", "dev")                                        # the person's checkout is dev (the host may have made it already)
+    g, state = IdeaGit(fake_repo), host.ideas.state_dir
+    goal_branch.begin(g, state, "goal", {"tasks": []}, "dev", 1)
+    land_task(g, "goal", "k1", "goal/goal", "tests/test_goal_guard.py", GUARD)
+    land_task(g, "goal", "k2", "goal/goal", "tests/test_goal_agrees.py", AGREES)
+    goal_branch.ready(state, "goal")
+    with pytest.raises(goal_branch.GoalRed):
+        goal_branch.to_dev(g, state, "goal", "dev")
+    assert not (fake_repo / "tests/test_goal_guard.py").exists() and not (fake_repo / "tests/test_goal_agrees.py").exists()
+    assert not [ln for ln in _git(fake_repo, "worktree", "list").splitlines() if "goal-dev-" in ln]
+    before = _bytes(fake_repo, state)
+    got = host.command("ideas.gate_guards", {"idea": "goal"})
+    assert got["way"] == "dev"
+    assert got["failing"] == [{"number": 2, "title": "Second, the old card", "ids": ["tests/test_goal_guard.py::test_guarded"]}]
+    assert got["files"] == []
+    assert got["agreeing"] == [{"number": 3, "title": "Third"}]
+    assert got["cost"] == {"calls": None, "usd_high": None} == idea_fix_stage.COST       # its stage again has no cap in the runner: the seal says its cost is not known yet
+    assert _bytes(fake_repo, state) == before                                             # read only: nothing written
+
+
+def test_a_record_kept_before_the_decisions_were_is_read_in_the_persons_checkout(host, fake_repo):
+    """A red kept before stage N3 has no `named`: its §N are read in `host.repo_root`, as they were then."""
     _red_dev(host)
     before = _bytes(fake_repo, host.ideas.state_dir)
     got = host.command("ideas.gate_guards", {"idea": "goal"})
@@ -94,24 +148,34 @@ def test_a_red_gate_on_the_way_to_dev_lays_the_decisions_its_tests_name(host, fa
     assert got["failing"] == [{"number": 2, "title": "Second, the old card", "ids": ["tests/test_red.py::test_a", "tests/test_red.py::test_b"]}]
     assert got["files"] == [{"file": "tests/test_bare.py", "ids": ["tests/test_bare.py::test_c"]}]
     assert got["agreeing"] == [{"number": 3, "title": "Third"}]
-    assert got["cost"] == {"calls": None, "usd_high": None} == idea_fix_stage.COST       # its stage again has no cap in the runner: the seal says its cost is not known yet
     assert _bytes(fake_repo, host.ideas.state_dir) == before
 
 
-def test_a_red_gate_on_the_way_to_main_reads_the_tests_step(host):
-    host.ideas._main_checks["goal"] = {"running": False, "checks": [
-        {"name": "The merge", "state": "passed", "words": ""},
-        {"name": "Tests", "state": "failed", "words": "x", "files": ["tests/test_red.py", "tests/test_bare.py", "tests/test_ok.py"],
-         "failures": [{"id": "tests/test_red.py::test_a", "classification": "new"}, {"id": "tests/test_bare.py::test_c", "classification": "new"}]}]}
+def test_a_red_gate_on_the_way_to_main_lays_the_decisions_its_tests_name_in_its_trial(host, fake_repo):
+    """Stage N3, on what the checks on the way to main really leave: they run in a trial worktree of their own (main's head with the goal's picks,
+    realm/goal_main.py `trial`), never the person's checkout (main here, which lacks the goal's tests), and the trial is gone after."""
+    import time
+    from tests.test_goal_main import task
+    _committed(fake_repo)
+    _git(fake_repo, "branch", "-M", "main")
+    _git(fake_repo, "branch", "-f", "dev", "main")                                         # the person's checkout is main; dev is cut from it
+    task(host, fake_repo, "goal", "k1", {"tests/test_goal_guard.py": GUARD, "tests/test_goal_agrees.py": AGREES})
+    ideas.save_state(host.ideas.state_dir, "goal", state="done")
+    host.command("ideas.to_main_checks", {"idea": "goal"})
+    for _ in range(3000):
+        got = host.ideas._main_checks.get("goal")
+        if got and not got["running"]:
+            break
+        time.sleep(0.02)
+    tests = got["checks"][1]
+    assert (tests["name"], tests["state"]) == ("Tests", "failed") and [f["id"] for f in tests["failures"]] == ["tests/test_goal_guard.py::test_guarded"]
+    assert not (fake_repo / "tests/test_goal_guard.py").exists() and not [ln for ln in _git(fake_repo, "worktree", "list").splitlines() if "gate-main" in ln]
+    shown = host.ideas.snapshot()["main_checks"]["goal"]                                   # the snapshot carries the steps, never what their tests name
+    assert shown[1]["failures"] == tests["failures"] and "named" in tests and not [s for s in shown if "named" in s]
     got = host.command("ideas.gate_guards", {"idea": "goal"})
     assert got["way"] == "main" and got["cost"] is None
-    assert [f["number"] for f in got["failing"]] == [2] and got["files"][0]["file"] == "tests/test_bare.py" and [a["number"] for a in got["agreeing"]] == [3]
-
-
-def test_an_all_green_gate_lays_nothing_failing(host):
-    goal_branch.update(host.ideas.state_dir, "goal", branch="goal/goal", failing=[], files=["tests/test_ok.py"])
-    got = host.command("ideas.gate_guards", {"idea": "goal"})
-    assert got["failing"] == [] and got["files"] == [] and got["agreeing"] == [{"number": 3, "title": "Third"}]
+    assert got["failing"] == [{"number": 2, "title": "Second, the old card", "ids": ["tests/test_goal_guard.py::test_guarded"]}]
+    assert got["files"] == [] and got["agreeing"] == [{"number": 3, "title": "Third"}]
 
 
 

@@ -178,7 +178,7 @@ def test_a_red_gate_keeps_its_failing_ids_and_files_and_a_green_one_after_clears
     land_task(g, "demo", "k2", "goal/demo", "tests/test_ok.py", "def test_ok():\n    assert True\n")
     goal_branch.to_dev(g, state, "demo", "dev")
     got = goal_branch.read(state, "demo")
-    assert got["failing"] == [] and got["files"] == [] and got["blocked"] == ""
+    assert got["failing"] == [] and got["files"] == [] and got["named"] == {} and got["blocked"] == ""
 
 
 def test_a_dropped_goal_forgets_what_its_red_gate_kept(repo, state):
@@ -190,7 +190,31 @@ def test_a_dropped_goal_forgets_what_its_red_gate_kept(repo, state):
         goal_branch.to_dev(g, state, "demo", "dev")
     goal_branch.drop(g, state, "demo")
     got = goal_branch.read(state, "demo")
-    assert got["failing"] == [] and got["files"] == []
+    assert got["failing"] == [] and got["files"] == [] and got["named"] == {}
+
+
+GUARDED_LOG = "# Decisions\n\n## 1. One\nPlain.\n\n## 2. The one the goal's test guards\nPlain.\n\n## 3. The one its passing test names\nPlain.\n"
+
+
+def test_a_red_gate_keeps_the_decisions_its_tests_name_read_in_the_worktree_it_ran_in(repo, state):
+    """Stage N3: the goal's branch adds a failing test naming `decisions §2` and a passing file naming §3, which the checkout (dev) never holds. The red keeps,
+    beside `failing` and `files`, what they name as the worktree the gate ran in held them, and that worktree is gone after."""
+    commit_in(repo, "docs/decisions.md", GUARDED_LOG)
+    g = IdeaGit(repo)
+    goal_branch.begin(g, state, "demo", {"tasks": []}, "dev", 1)
+    land_task(g, "demo", "k1", "goal/demo", "tests/test_guard.py",
+              '"""The goal\'s own test."""\n\n\ndef test_guarded():\n    """It holds decisions §2."""\n    assert False\n')
+    land_task(g, "demo", "k2", "goal/demo", "tests/test_agrees.py", '"""Guards decisions §3."""\n\n\ndef test_fine():\n    pass\n')
+    goal_branch.ready(state, "demo")
+    with pytest.raises(goal_branch.GoalRed):
+        goal_branch.to_dev(g, state, "demo", "dev")
+    assert not (repo / "tests/test_guard.py").exists() and not (repo / "tests/test_agrees.py").exists()      # only the branch holds them
+    assert not [ln for ln in git(repo, "worktree", "list").splitlines() if "goal-dev-" in ln]                # the gate's worktree is gone
+    got = goal_branch.read(state, "demo")
+    assert got["failing"] == ["tests/test_guard.py::test_guarded"]
+    assert sorted(got["files"]) == ["tests/test_agrees.py", "tests/test_guard.py", "tests/test_ok.py"]
+    assert got["named"] == {"failing": [{"id": "tests/test_guard.py::test_guarded", "file": "tests/test_guard.py", "decisions": [2], "from": "function"}],
+                            "files": [2, 3], "titles": {"2": "The one the goal's test guards", "3": "The one its passing test names"}}
 
 
 def test_the_gate_is_run_on_the_tip_dev_will_become_with_dev_as_its_base(repo, state, monkeypatch):
