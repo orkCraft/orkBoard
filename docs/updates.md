@@ -13,8 +13,8 @@ the same code as Orkline's, with Orkboard's profile (`orkboard/product.py`).
   opens again).
 - **Settings → Updates**: the version, what is out with *Update…*, *Check now*, and which updates install by
   themselves when Orkboard opens: *Critical ones* (the default), *All*, or *None*.
-- **On a paired phone** (`pwa/shell-update.js`): a bar under the top says a newer version is out; its sheet's
-  **Update and restart** installs it on the computer. The computer restarts on it: what ran is cut off, and the tasks
+- **On a paired phone** (the same page in the phone's frame, its crown's menu: `js/hand/upphone.js`): **Update and
+  restart** installs a newer version on the computer. The computer restarts on it: what ran is cut off, and the tasks
   cut off start again by themselves. The phone shows *The board went away: trying again…*, comes back by itself in a
   few seconds and says *Updated: the computer runs Orkline X*. The menu's *Check for updates* asks the computer to read
   the list again. Which updates install by themselves stays the computer's to say. For this the computer stays on

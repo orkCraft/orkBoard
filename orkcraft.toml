@@ -4,7 +4,7 @@ always = ["tests/test_architecture.py", "tests/test_board_alone.py", "tests/test
 # A touched page file (.js, .css, .html) brings the browser tests of its folder and of its name (spec 143 B): table/pane.js the table's, table/column.js test_column_browser.py too.
 browser = ["tests/test_{stem}*_browser.py", "tests/test_{leaf}*_browser.py"]
 # A pattern that finds more modules than this is not taken whole: only the modules named after the touched file come, and the rest are left for the way into
-# main (spec 149 C). `pwa/` finds 56: 569 tests, 16 minutes at six workers (99 minutes of CPU) against a gate of 15, so no change to a file of the phone could pass.
+# main (spec 149 C): a pattern as wide as the phone's old face once was (56 modules, 16 minutes at six workers) could never pass a gate of 15.
 browser_max = 12
 
 [gate.main]

@@ -48,7 +48,7 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   repository's Board is in its code (`[board] in_code` in `orkcraft.toml`), and the rules any AI tool follows for it are
   Orkboard's block in `AGENTS.md`; this file's own rules win over them (its *Alpha* over the block's *main is the person's*).
 - **The page is the one face** (`orkboard/gui/`): the desktop's `static/board.js` with the shell (`js/shell/*`,
-  `js/board/*`), the phone's `static/pwa/board-app.js` with `pwa/shell-*.js`. Nothing imports Textual or Rich, and
+  `js/board/*`); the phone draws the same page in `static/pwa/frame.js`'s frame (spec 94). Nothing imports Textual or Rich, and
   `tests/test_architecture.py` keeps it so.
 - `orkboard/core/`, `orkboard/realm/`, `orkboard/design/` have no face: they never import `gui/`
   (`tests/test_architecture.py` checks it). A service changes the Board and publishes on the bus (`core/bus.py`). It
