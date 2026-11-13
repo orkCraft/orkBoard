@@ -6,7 +6,8 @@ order: 20
 size:
 priority: normal
 short: The compare mat
-phase: new
+phase: talk
+route: product, design, tech
 by: claude-code
 schema: 3
 ---

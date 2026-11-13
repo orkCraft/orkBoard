@@ -6,7 +6,8 @@ order: 19
 size:
 priority: normal
 short: The discussion mat
-phase: new
+phase: talk
+route: product, design, tech
 by: claude-code
 schema: 3
 ---

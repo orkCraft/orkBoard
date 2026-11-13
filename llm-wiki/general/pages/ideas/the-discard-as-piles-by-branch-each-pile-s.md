@@ -6,7 +6,8 @@ order: 114
 size:
 priority: normal
 short: The discard as piles
-phase: new
+phase: talk
+route: product, design, tech
 by: claude-code
 schema: 3
 ---
