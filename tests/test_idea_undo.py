@@ -76,7 +76,8 @@ def test_take_back_is_a_drop_s_undo_only(host):
 
 def test_every_kind_is_one_press_with_its_reverse_or_sealed():
     assert not set(idea_undo.ONE_PRESS) & set(idea_undo.SEALED)
-    assert set(idea_undo.SEALED) == {"merge_main", "send_branch", "ship_release", "paid_pass", "start_work"}
+    assert set(idea_undo.SEALED) == {"merge_main", "send_branch", "ship_release", "paid_pass", "start_work", "fix_stage"}
+    assert set(idea_undo.ONE_PRESS) == {"drop", "hold", "answer", "fix_goal"}          # goal "The battle and the gate" G, H: Fix it after dev one press, its stage again sealed
     for kind in {*idea_undo.ONE_PRESS, *idea_undo.SEALED}:
         assert idea_undo.way(kind) in ("press", "sealed")
     assert all(idea_undo.ONE_PRESS.values())                         # a reverse for each
@@ -90,6 +91,35 @@ def test_a_sealed_kind_moves_only_on_its_seal(host):
     for name in ("ideas.to_main", "ideas.goal_to_dev", "ideas.release_out"):
         with pytest.raises(IdeasError, match="only on its seal"):
             host.command(name, {"slug": "goal"})
+    with pytest.raises(IdeasError, match="only on its seal"):
+        host.command("ideas.gate_fix_stage", {"idea": "goal", "from": "mat"})
+
+
+def _lay(h, slug: str) -> dict:
+    """A goal laid by a move on another (Fix it after dev): its page and state, none before."""
+    (h.ideas.root() / ideas.IDEAS / f"{slug}.md").write_text(PAGE.replace("# Goal", "# Fix: a test"), encoding="utf-8")
+    ideas.save_state(h.ideas.state_dir, slug, state="routed")
+    return idea_undo.snapshot(h.ideas.root(), h.ideas.state_dir, slug)
+
+
+def test_a_goal_a_move_laid_is_kept_on_the_goal_it_was_played_on_and_removed_by_its_undo(host):
+    """Goal "The battle and the gate" G: `fix_goal` keeps the Fix goal laid (its page and state, none before) on the done goal's record; its reverse removes them."""
+    goal = shot(host)
+    seen = []
+    assert idea_undo.keep(host.ideas.state_dir, "goal", "fix_goal", {"page": None, "state": None}, _lay(host, "fix-a"), lambda topic, **f: seen.append((topic, f)), "mat", laid="fix-a")
+    assert seen == [(bus.MOVE_PLAYED, {"idea": "goal", "kind": "fix_goal", "origin": "mat"})]          # the move is the done goal's: it was played on its gate
+    assert idea_undo.read(host.ideas.state_dir, "goal")["laid"] == "fix-a" and idea_undo.read(host.ideas.state_dir, "fix-a") is None
+    host.command("ideas.undo", {"idea": "goal"})
+    assert ideas.idea_page(host.ideas.root(), "fix-a") is None and not ideas.state_folder(host.ideas.state_dir, "fix-a").exists()
+    assert shot(host) == goal                                                       # the goal it was played on, as it was
+
+
+def test_a_goal_a_move_laid_that_changed_since_is_not_removed(host):
+    idea_undo.keep(host.ideas.state_dir, "goal", "fix_goal", {"page": None, "state": None}, _lay(host, "fix-a"), None, "hand", laid="fix-a")
+    ideas.save_state(host.ideas.state_dir, "fix-a", state="talk")
+    with pytest.raises(IdeasError, match="It changed since: nothing undone"):
+        host.command("ideas.undo", {"idea": "goal"})
+    assert ideas.idea_page(host.ideas.root(), "fix-a") is not None and ideas.state(host.ideas.state_dir, "fix-a")["state"] == "talk"
 
 
 def test_start_is_sealed_where_a_card_plays_it_and_as_it_was_for_the_older_faces(host):
