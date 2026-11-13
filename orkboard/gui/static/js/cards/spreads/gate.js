@@ -32,7 +32,8 @@ export function checksFor(slug, n) {
 
 const WORD = { passed: "passed", failed: "failed", running: "running", waiting: "waits to run" };
 
-export function Gate({ slug }) {
+export function Gate({ slug, opened }) {
+  const from = opened === "hand" ? "hand" : "mat";
   const n = nodeOf(slug), checks = checksFor(slug, n), g = gateData.value;
   const title = n?.short || n?.title || slug, tokens = tokensOf(slug);
   const green = checks.filter((c) => c.state === "passed").length, red = checks.find((c) => c.state === "failed"), open = checks.filter((c) => c.state !== "passed" && c.state !== "failed");
@@ -44,7 +45,7 @@ export function Gate({ slug }) {
   const card = { element: n?.element, hue: n?.hue, sign: n?.type?.sign || "" };
   return html`<${SpreadFrame} kind="gate" title=${`${title} at the gate`} line=${line} say=${say} note="A red check stays face up with what failed and who mends it."
       phase=${phaseOf(slug) || "work"}
-      seal=${html`<${Seal} word="To main" why=${reason || "Merge into main: it cannot be undone"} lit=${!reason} kind="merge" onPress=${() => toMain(slug).then(closeSpread).catch(() => {})} />`}>
+      seal=${html`<${Seal} word="To main" why=${reason || "Merge into main: it cannot be undone"} lit=${!reason} kind="merge" onPress=${() => toMain(slug, from).then(closeSpread).catch(() => {})} />`}>
     <div class="sp-gate"><svg class="sp-ring" viewBox="0 0 420 420" aria-hidden="true"><circle cx="210" cy="210" r="208" /></svg>
       <div class="sp-gate__mid"><${SpCard} party=${n?.goal} n=${card} name=${title} line=${n?.state === "review" ? "to review" : "ready for main"} size="xl" portal=${true}>
         ${tokens.length > 0 && html`<span class="cards-toks">${tokens.map((t) => html`<${Token} ...${t} />`)}</span>`}</${SpCard}></div>

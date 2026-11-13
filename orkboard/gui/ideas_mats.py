@@ -55,7 +55,8 @@ def played(ideas_: Any, name: str, fn: Any) -> Any:
                 raise IdeasError(f"{idea_undo.SEALED[kind]} cannot be undone: it goes only on its seal")
             got = fn(args)      # a refusal raised above: nothing logged; it keeps no Undo
             origin = args["from"] if args.get("from") in ("hand", "mat") else ""
-            ideas_._ev(event_log.MOVE_PLAYED, args, idea=args["slug"] if isinstance(args.get("slug"), str) else "", kind=kind, **{"from": origin})
+            goal = next((args[k] for k in ("slug", "idea") if isinstance(args.get(k), str)), "")      # as `ideas.to_main`, `ideas.goal_to_dev` and `ideas.conflict` send it
+            ideas_._ev(event_log.MOVE_PLAYED, args, idea=goal, kind=kind, **{"from": origin})
             return got
         slug = args.get("slug") if isinstance(args.get("slug"), str) else ""
         if not slug:
