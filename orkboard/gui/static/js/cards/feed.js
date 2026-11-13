@@ -3,13 +3,12 @@
 import { signal, effect } from "@preact/signals";
 import { command, town } from "../link.js";
 import { mapData } from "../shell/store.js";
-import { cardsOn } from "./on.js";
 
 export const feed = signal(null);
 let asked = null;
-effect(() => {                                          // only the table of cards asks: the table as it is sends nothing more
+effect(() => {
   const snap = town.value;
-  if (!cardsOn() || !snap || snap === asked) return;
+  if (!snap || snap === asked) return;
   asked = snap;
   command("ideas.feed", {}, true).then((r) => { feed.value = r || {}; }).catch(() => { feed.value = feed.peek() || {}; });
 });

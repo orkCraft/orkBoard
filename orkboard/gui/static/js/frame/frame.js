@@ -5,7 +5,6 @@ import { Table } from "../table/table.js";
 import { DiscardColumn, laneShown } from "../table/lane.js";
 import { Hand } from "../hand/hand.js";
 import { Column } from "../table/column.js";
-import { cardsOn } from "../cards/on.js";          // the table of cards (goal 170, the talk of 11 November 2026), on mocks and with ?table=cards
 import { CardL } from "../cards/card.js";
 import { Spreads } from "../cards/spreads/index.js";
 import { TablesView } from "../cards/tables/index.js";
@@ -32,6 +31,7 @@ if (typeof document !== "undefined") {
   }
 }
 
+// `data-cards="1"` always: the table of cards is the only table (decisions §304.1); the cards' sheets keep it in their selectors, so their rules keep their weight over the older ones.
 // A touch phone (frame/upright.js, upright or on its side) shows the hand as its one screen and the table only as a thing opened over the pane (a limit's story, a goal's way, the settings): `data-upright`, `data-over` (upright.css).
 // One grid for the tabs, the Board and the hand (decisions §167.7): `--lanes` columns of one width, a party's each, then the tabs' end; the project's lane is the Orkmaster's column pinned at the window's left (table/column.js, spec 128 B,
 // decisions §206.2) at the wide width, and at the narrow one the Board's first lane (its tab the first), counted in `--lanes`.
@@ -43,11 +43,11 @@ export function Frame() {
       <${Room} /><${SetupWatch} /><${CrashNote} /><${ReportPanel} />
     </div>`;
   }
-  return html`<div class="frame" data-frame="1" data-cards=${cardsOn() ? "1" : undefined} data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-discard=${column && laneShown() ? "1" : undefined} data-live=${live ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && (over.value || inventory.value !== null) ? "1" : undefined} style=${`--lanes:${lanesBeforeEnd() + (column ? 0 : 1)}`}>
+  return html`<div class="frame" data-frame="1" data-cards="1" data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-discard=${column && laneShown() ? "1" : undefined} data-live=${live ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && (over.value || inventory.value !== null) ? "1" : undefined} style=${`--lanes:${lanesBeforeEnd() + (column ? 0 : 1)}`}>
     ${column && html`<aside class="frame-column" aria-label="The Orkmaster's goals"><${Column} /><${Balloon} /></aside>`}
     <div class="frame-table"><${Table} column=${column} /></div>
     <${DiscardColumn} />
     <div class="frame-hand"><${Hand} /></div>
-    <${SetupWatch} /><${FirstGoal} /><${CrashNote} /><${ReportPanel} />${cardsOn() && html`<${CardL} onPick=${pick} /><${Spreads} /><${TablesView} parties=${partiesNow()} />`}
+    <${SetupWatch} /><${FirstGoal} /><${CrashNote} /><${ReportPanel} /><${CardL} onPick=${pick} /><${Spreads} /><${TablesView} parties=${partiesNow()} />
   </div>`;
 }

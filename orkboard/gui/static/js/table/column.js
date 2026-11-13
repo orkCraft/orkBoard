@@ -23,8 +23,7 @@ import { holdWords, offWords, waitsWords } from "./holdwords.js";
 import { SetupBubble } from "../hand/setupcards.js";
 import { laidNow } from "./laying.js";
 import { Passing, askedWords } from "./passing.js";
-import { cardsOn } from "../cards/on.js";                 // the table of cards: the dealer's lane in the column (goal 170 D)
-import { CardsColumn } from "../cards/dealer.js";
+import { CardsColumn } from "../cards/dealer.js";         // the table of cards: the dealer's lane in the column (goal 170 D)
 import { ProjectLine, useProjectNow } from "./projectdeal.js";
 
 const CROWN = { race: "peon", tier: "crown" };                   // the Orkmaster's head
@@ -137,39 +136,17 @@ function useGiveWay(root, count, laid) {
 }
 
 export function Column() {
-  const root = useRef(), nodes = mapData.value?.nodes || [], piles = pilesOf(nodes), parties = partiesNow(), all = partiesAll(), [lift, setLift] = useState(null);
-  useColumnMotion(root);
-  const laid = laidNow(), way = useGiveWay(root, piles.work.length, laid);
-  const gone = lift?.kind === "acts" && (!nodes.some((n) => n.slug === lift.slug) || picked.value !== lift.slug);                 // the choices go with the pick
-  useEffect(() => { if (gone) setLift(null); });
-  useEffect(() => {                                                                    // Esc or a press away puts the lifted thing away
-    if (!lift) return undefined;
-    const key = (e) => { if (e.key === "Escape" && !e.defaultPrevented && !e.target.closest?.(".table-drop")) { e.preventDefault(); setLift(null); if (lift.kind === "acts" && picked.peek() === lift.slug) pick(""); } };      // the card's choices go with its pick: one Esc puts both away (spec 156 Done when 1)
-    const away = (e) => { if (!e.target.closest?.(".col-lift, .col-card")) setLift(null); };
-    addEventListener("keydown", key, true);                                             // first: what the column lifted is the topmost thing (a question asked in it takes its own Esc first)
-    document.addEventListener("pointerdown", away, true);
-    return () => { removeEventListener("keydown", key, true); document.removeEventListener("pointerdown", away, true); };
-  }, [lift?.kind, lift?.slug]);
-  const press = (n, pile, off) => {                                                                          // any card picks its goal, face down too; the same card again puts the pick away (state.js)
-    const was = picked.value === n.slug, acts = !(pile === "work" && !off);                                 // a card at work has no choices; every other picked card has its choices (and its menu) beside it
-    setLift(!was && acts ? { kind: "acts", slug: n.slug, off, pile } : null);
-    pick(n.slug);
-  };
+  const root = useRef(), parties = partiesNow(), all = partiesAll(), laid = laidNow();
   useEffect(() => {                                                                                          // a press on an empty place of the column puts the pick away
     const away = (e) => { if (picked.value && e.target.matches?.(".col, .col-scroll, .col-sec, .col-room, .col-pile, .col-plab, .col-under")) pick(picked.value); };
     const host = root.current;
     host?.addEventListener("click", away);
     return () => host?.removeEventListener("click", away);
   }, []);
-  const place = useBeside(root, `${lift?.kind}:${lift?.slug}`, `.col-card[data-goal="${lift?.slug}"]`);
-  const behind = piles.analysis.find(({ n }) => askedWords(n.slug));                                          // a goal asked of another leader: its line is the pile's (a back of the hand has no room to say it)
-  const wrote = writingWords(piles.review), next = nextWords(piles.review);                                  // Specs: what is being written, then (a second line) the next to start by itself
-  const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: wrote || next, work: atWorkWords(piles.work) }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
   return html`<div class="col" ref=${root} data-col="1">
     <${Top} parties=${parties} all=${all} />
     <${SetupBubble} />
-    ${laid && cardsOn() && html`<div class="col-scroll"><${CardsColumn} /></div>`}${laid && !cardsOn() && html`<div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : id === "review" && wrote ? next : ""} onPress=${press} way=${id === "work" ? way : null} />`)}</div>`}
+    ${laid && html`<div class="col-scroll"><${CardsColumn} /></div>`}
     <${Passing} />
-    ${item && !gone && html`<${Acts} n=${item} off=${lift.off} pile=${lift.pile} place=${place} close=${() => setLift(null)} />`}
   </div>`;
 }

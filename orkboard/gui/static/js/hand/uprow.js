@@ -19,7 +19,6 @@ import { pickEntry, toFeed } from "./entries.js";
 import { PlusCard } from "./pluscard.js";
 import { Round, roundOpen } from "./upround.js";
 import { useScrollCue } from "../scrollcue.js";
-import { cardsOn } from "../cards/on.js";
 import { openSpread } from "../cards/spreads/open.js";
 import { mapData } from "../shell/store.js";
 
@@ -81,7 +80,7 @@ function press(e, cur, from) {
 
 /** The row: the entries' cards laid by leader, the picked one (`cur`) raised and kept in view, the + card at the end. On the table of cards the + card is the round button's *New goal* (upround.js), drawn here only while there is no goal at all (decisions §298.9). */
 export function Row({ entries, cur, plus }) {
-  const lone = !cardsOn() || !(mapData.value?.nodes || []).length;
+  const lone = !(mapData.value?.nodes || []).length;
   const cards = useRef(), seen = useRef(null), [cue, setCue] = useState(""), dealt = useHanded(entries.filter((e) => e.kind !== "ready").map((e) => ({ key: e.key, top: true, ...whoOf(e.stops[0]), name: askerOf(e.stops[0]), words: handsWords(e.stops[0]) })));
   useEffect(() => {                                              // the picked card is kept inside the row's clear part (the + card lies over its left end, the round button over its right)
     const row = cards.current, el = row?.querySelector('[aria-pressed="true"]');

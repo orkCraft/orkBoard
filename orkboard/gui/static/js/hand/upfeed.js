@@ -18,8 +18,7 @@ import { HeadOf, PostBody, PostCard, PostHead, Stack, Wait, when, whoOf } from "
 import { pickGoal } from "./entries.js";
 import { workOf } from "./upmenu.js";
 import { Concerns } from "./upparty.js";
-import { cardsOn } from "../cards/on.js";                 // the table of cards on the phone (goal 170 P): the feed in cards (cards/phone.js)
-import { PhoneCards } from "../cards/phone.js";
+import { PhoneCards } from "../cards/phone.js";           // the feed in cards (goal 170 P)
 
 export const FEED = "ideas.feed";
 export const onlyOrk = signal(false);                        // the Orkmaster's head pressed: the feed narrowed to its posts (a party's head narrows by `tab`)
@@ -118,19 +117,8 @@ export function Feed({ g, entries }) {
   const work = only && only !== ORKMASTER ? [] : atWork(), mineWork = g ? atWork(g) : [];
   const news = feed?.since ? `New since your last look · ${when(feed.since)}` : "News";
   const empty = feed && !waits.length && !stacks.length && !work.length && !mineWork.length && !seen;
-  if (cardsOn()) return html`<${PhoneCards} only=${only} party=${g ? g.slug : ""} heads=${html`<${Heads} heads=${heads} only=${only} press=${(l) => pressHead(l, only)} />`} waits=${waits} stacks=${stacks}
+  return html`<${PhoneCards} only=${only} party=${g ? g.slug : ""} heads=${html`<${Heads} heads=${heads} only=${only} press=${(l) => pressHead(l, only)} />`} waits=${waits} stacks=${stacks}
     news=${news} seen=${seen && html`<${Seen} seen=${seen} onPick=${onPick} />`} empty=${empty} onPick=${onPick} reload=${reload} concerns=${g && html`<${ConcernsBlock} g=${g} />`} />`;
-  return html`<div class="up-look up-feed" data-look="feed" data-only=${only || undefined} data-since=${since ?? undefined}>
-    <${Heads} heads=${heads} only=${only} press=${(l) => pressHead(l, only)} />
-    ${only && html`<p class="up-fd__only" role="status">The feed shows only ${whoOf(only).name}</p>`}
-    ${waits.length > 0 && html`<p class="up-lab up-fd__lab">Waits for you</p>${waits.map((w) => html`<${Wait} key=${`${w.kind}:${w.goal}`} w=${w} onPick=${onPick} onDone=${reload} />`)}`}
-    ${g && mineWork.length > 0 && html`<${Work} goals=${mineWork} onPick=${onPick} leader=${g.slug} />`}
-    ${g && html`<${ConcernsBlock} g=${g} />`}
-    ${stacks.length > 0 && html`<p class="up-lab up-fd__lab">${news}</p>${stacks.map((s, i) => html`<${Stack} key=${`${s.leader}:${s.post.at}:${i}`} s=${s} onPick=${onPick} />`)}`}
-    ${work.length > 0 && html`<${Work} goals=${work} onPick=${onPick} leader=${ORKMASTER} />`}
-    ${seen && html`<${Seen} seen=${seen} onPick=${onPick} />`}
-    ${empty && html`<p class="up-none" role="status">Nothing waits for you.</p>`}
-  </div>`;
 }
 
 /** A party's concerns as a block of its leader's, in the feed narrowed to it. */

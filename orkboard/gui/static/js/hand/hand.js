@@ -47,7 +47,6 @@ import { SetupBubble, SetupCard, setupNow } from "./setupcards.js";
 import { columnOn } from "../table/data.js";
 import { laidNow, layLine } from "../table/laying.js";
 import { said } from "./motion.js";
-import { cardsOn } from "../cards/on.js";
 import { HandRight } from "../cards/handright.js";
 import { MatHand, matHand } from "../cards/mathand.js";               // a mat open: the hand is its ways, the moves that wait a pile at its left (goal 171 K, decisions §302.1)                  // the table of cards: the hand's two groups and the deck of blank cards at its right (decisions §298.9)
 if (typeof document !== "undefined") {                         // the places' sheet (places.css), as every sheet loads its own
@@ -89,7 +88,7 @@ function useKeys(root) {
       if (typing(on) || aloud(on) || document.querySelector("[aria-modal='true']") || fieldOpen.value || !mapData.value || !partiesOf().length) return;
       e.preventDefault();
       lower();
-      openField(cardsOn() && /^n$/i.test(e.key) ? "" : e.key);        // on the table of cards the key N is the deck of blank cards: it opens the field, and is not the goal's first letter
+      openField(/^n$/i.test(e.key) ? "" : e.key);        // the key N is the deck of blank cards: it opens the field, and is not the goal's first letter
     };
     document.addEventListener("pointerdown", away, true);
     window.addEventListener("keydown", key);
@@ -127,7 +126,7 @@ export function Hand() {
   const sunk = !!(slotOn || cards || deal || chair || (s && wide) || fieldWide || sayOn);                                    // what the person plays lies in the hand's place: the hand's own cards sink (spec 168 D1, D2)
   const places = columnOn() && !bare ? html`<${Backpack} /><${Book} />` : null;                                // the places that change the table: the die, the backpack, the book (spec 168 A5)
   const pots = !columnOn() ? html`<${Mana} lifted=${s} />` : bare ? html`<${PotionRow} above=${true} />` : null;
-  const deckOn = cardsOn() && wide && !bare;                                                                    // the table of cards: no + card at the hand's left, the deck of blank cards at its right (cards/handright.js)
+  const deckOn = wide && !bare;                                                                    // no + card at the hand's left, the deck of blank cards at its right (cards/handright.js)
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${!middle && matHand.value && html`<${MatHand} waiting=${stops.length} />`}

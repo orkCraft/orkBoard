@@ -19,7 +19,6 @@ import { devStops, waitsForDev } from "./devcard.js";
 import { hypothesisStops } from "./hypothesiscard.js";
 import { cascadeStops } from "./cascadecard.js";
 import { projectStops, questionStops } from "./questions.js";
-import { cardsOn } from "../cards/on.js";
 import { battleStops, turnStops } from "./turnstops.js";
 
 /** The parties of the map in the Board's order. */
@@ -75,9 +74,9 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork), ...inCodeStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  const asked = cardsOn() ? battleStops(out.filter((s) => !QUESTIONS.has(s.kind))) : out;      // on the table of cards a question is its turn card (turnstops.js): its way is one press with its Undo, no pass; the old card of it is not dealt
+  const asked = battleStops(out.filter((s) => !QUESTIONS.has(s.kind)));      // a question is its turn card (turnstops.js): its way is one press with its Undo, no pass; the old card of it is not dealt
   const first = [...todoLast(byUrgency(asked)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after), ...cascadeStops(needs, after), ...askStops(ask, after), ...concernStops(map, after), ...doubtStops(map, after), ...decidedStops(map, after)];
-  const moves = cardsOn() ? turnStops(map, after) : [];      // the moves that wait (ideas.turns, turnstops.js)
+  const moves = turnStops(map, after);      // the moves that wait (ideas.turns, turnstops.js)
   return [...first, ...moves, ...nightProposalStops(needs, { ...after, window: String(board.value?.night || "") }), ...devStops(map, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 

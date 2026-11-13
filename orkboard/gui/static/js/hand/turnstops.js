@@ -5,7 +5,6 @@
 // A battle is a card of its own (kind `battle`), laid by a mat of its own goal; none is dealt here. Their cards in play are turncards.js's.
 import { signal, effect } from "@preact/signals";
 import { command, town } from "../link.js";
-import { cardsOn } from "../cards/on.js";
 import { way } from "./ways.js";
 
 way("turn", { sign: "flag", tone: "alert" });
@@ -18,9 +17,9 @@ export const settle = (slug, kind) => { settled.value = [...settled.value.filter
 export const unsettle = (slug, kind) => { settled.value = settled.value.filter((k) => k !== `${slug}:${kind}`); };
 
 let asked = null;
-effect(() => {                                   // only the table of cards asks: the table as it is sends nothing more
+effect(() => {
   const snap = town.value;
-  if (!cardsOn() || !snap || snap === asked) return;
+  if (!snap || snap === asked) return;
   asked = snap;
   command("ideas.turns", {}, true).then((r) => { turns.value = r || {}; settled.value = []; }).catch(() => { turns.value = turns.peek() || {}; });
 });

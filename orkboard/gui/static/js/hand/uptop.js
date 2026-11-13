@@ -18,14 +18,12 @@ import { Who, framedOf, paidWordsOf, potionOf } from "./mana.js";
 import { STOP_WORDS } from "./playdie.js";
 import { Crown, menuOpen } from "./upmenu.js";
 import { PresenceChain } from "../table/presence.js";
-import { cardsOn } from "../cards/on.js";
 import { windowsOf } from "./windows.js";
 import { Yours } from "./upyours.js";
 
 export { PLAY_UP } from "./upround.js";
-const PLACES_UP = 4;                                    // the potions' places on a phone (the desktop's six, two rows of three, do not fit a row of the top)
 export const FOLD_AT = 48, FOLD_BACK = 8;               // the middle scrolled past 48 px folds the row; back within 8 px of its top it unfolds
-const PLACES_CARDS = 2;                                 // on the table of cards (decisions §298.9): the default and the one that runs out first; *+n* for the rest
+const PLACES_CARDS = 2;                                 // the potions' places on a phone (decisions §298.9): the default and the one that runs out first; *+n* for the rest
 const ROOM = 64;                                        // the least the project's name is drawn at
 
 /** One tool as a bottle: its mark small at the corner, the bottle in a slot of the large one's size, its now share (at the danger's level *back 14:00*, spec 138 A.5; an unread tool no bottle, spec 140 C1) under it, in the warn or the danger colour as it runs low. A press opens what used it over the pane. */
@@ -61,18 +59,14 @@ export function twoBottles(limits, mana) {
 
 /** The tools' bottles, the default framed. */
 function Bottles() {
-  const limits = town.value?.limits || [], mana = town.value?.mana || null, paid = mana?.paid || null, cards = cardsOn();
-  const slots = PLACES_UP - (paid ? 1 : 0), over = cards ? false : limits.length > slots, many = cards ? twoBottles(limits, mana) : null;
-  const shown = many ? many.shown : over ? limits.slice(0, slots - 1) : limits, more = cards ? limits.length + (paid ? 1 : 0) - shown.length - (many?.paidFirst ? 1 : 0) : limits.length - shown.length;
-  const key = many ? many.key : framedOf({ limits, mana, open: ORKMASTER, parties: [], shown }), from = { title: "", key: "" };         // the Board is not reached upright: the opened place says its own title
+  const limits = town.value?.limits || [], mana = town.value?.mana || null, paid = mana?.paid || null, many = twoBottles(limits, mana);
+  const shown = many.shown, more = limits.length + (paid ? 1 : 0) - shown.length - (many.paidFirst ? 1 : 0), key = many.key, from = { title: "", key: "" };         // the Board is not reached upright: the opened place says its own title
   if (!limits.length && !paid) return html`<div class="up-pots"></div>`;
-  const tail = cards ? many.paidFirst : !!paid;
-  return html`<div class="up-pots" role="group" aria-label="What is left of your AI tools" data-n=${shown.length + (more > 0 && (over || cards) ? 1 : 0) + (tail ? 1 : 0)} data-default=${key || undefined}>
-    ${many?.paidFirst && html`<${PaidBottle} key="paid" paid=${paid} from=${from} framed=${true} />`}
+  return html`<div class="up-pots" role="group" aria-label="What is left of your AI tools" data-n=${shown.length + (more > 0 ? 1 : 0) + (many.paidFirst ? 1 : 0)} data-default=${key || undefined}>
+    ${many.paidFirst && html`<${PaidBottle} key="paid" paid=${paid} from=${from} framed=${true} />`}
     ${shown.map((l) => html`<${Bottle} key=${l.provider} l=${l} from=${from} framed=${key === l.provider} />`)}
-    ${(over || (cards && more > 0)) && html`<button type="button" class="up-pot up-pot--more" title=${`${more} more tools: what is left of them`} aria-label=${`${more} more tools: what is left of them`}
+    ${more > 0 && html`<button type="button" class="up-pot up-pot--more" title=${`${more} more tools: what is left of them`} aria-label=${`${more} more tools: what is left of them`}
       onClick=${() => openOver("limits", {}, from, "What is left of your AI tools")}><span class="up-pot__initial" aria-hidden="true">+${more}</span></button>`}
-    ${paid && !cards && html`<${PaidBottle} key="paid" paid=${paid} from=${from} framed=${key === "paid"} />`}
   </div>`;
 }
 
@@ -123,15 +117,15 @@ function useRoom(row) {
   });
 }
 
-/** The top row. */
+/** The top row. `is-cards` always: the table of cards is the only table (decisions §304.1); upright.css keeps it in its selectors, so its rules keep their weight. */
 export function Top() {
   const row = useRef(), thin = useFold(row), project = currentProject.value?.name || "The project", from = { title: "", key: "" }, inert = menuOpen.value;
   useRoom(row);
-  return html`<div ref=${row} class=${cls("up-top", { "is-thin": thin, "is-cards": cardsOn() })} data-thin=${thin ? "1" : undefined}>
+  return html`<div ref=${row} class=${cls("up-top is-cards", { "is-thin": thin })} data-thin=${thin ? "1" : undefined}>
     <${Crown} />
     <button type="button" class="up-name" inert=${inert || undefined} aria-hidden=${inert ? "true" : undefined} aria-label=${`Switch project: ${project}`} title="Switch project" onClick=${() => openOver("projects", {}, from, "Projects")}><span>${project}</span></button>
     <button type="button" class="up-ico up-set" inert=${inert || undefined} aria-hidden=${inert ? "true" : undefined} aria-label="Settings" title="Settings" onClick=${() => openOver("settings", {}, from, "Settings")}><${Icon} name="sliders" /></button>
     <button type="button" class="up-ico up-stop" inert=${inert || undefined} aria-hidden=${inert ? "true" : undefined} aria-label="Stop all" title=${STOP_WORDS} onClick=${() => halt()}><${Icon} name="boarded" /></button>
-    <${Bottles} /><${PresenceChain} pic=${true} />${cardsOn() && html`<${Yours} />`}<${Pile} />
+    <${Bottles} /><${PresenceChain} pic=${true} /><${Yours} /><${Pile} />
   </div>`;
 }
