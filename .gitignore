@@ -23,3 +23,4 @@ venv/
 
 # The beta's run (docs/beta/run-the-whole-way.md): its pictures and report stay local
 beta-run/
+.coverage

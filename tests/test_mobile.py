@@ -141,3 +141,50 @@ async def test_the_server_serves_the_page_and_its_files_and_answers_the_sockets_
     finally:
         server.stop()
         await asyncio.wait_for(task, 10)
+
+
+def test_the_window_falls_back_to_the_browser_the_launcher_refuses_a_bad_folder_and_the_door_and_links_are_checked(
+        fake_repo, tmp_path, monkeypatch, capsys):
+    import sys
+    from types import SimpleNamespace
+
+    from orkboard.gui import board_host
+
+    host = Orkboard(fake_repo)
+    with pytest.raises(Exception, match="Only web links"):
+        host.command("link.open", {"url": "javascript:alert(1)"})
+    opened = []
+    monkeypatch.setattr(board_host.webbrowser, "open", lambda url: opened.append(url) or True)
+    assert host.command("link.open", {"url": "https://example.com/x"}) is True and opened == ["https://example.com/x"]
+    with pytest.raises(Exception, match="Here or Away"):
+        host.command("presence.set", {"here": "yes"})
+    # no window toolkit, no pywebview, or a window that cannot start: the page opens in the browser, and the run ends clean
+    calls = []
+    server = SimpleNamespace(url="http://127.0.0.1:9/?t=k", stop=lambda: calls.append("server"))
+    thread = SimpleNamespace(join=lambda t=None: calls.append("join"))
+    shown = SimpleNamespace(updates=SimpleNamespace(quit=None))
+    board_host.show(shown, server, thread, False, toolkit=lambda: False, stop=lambda: calls.append("stop"))
+    assert "no window here" in capsys.readouterr().err and opened[-1] == server.url and calls[-1] == "stop"
+    monkeypatch.setitem(sys.modules, "webview", None)
+    board_host.show(shown, server, thread, False, toolkit=lambda: True)
+    assert "no window toolkit" in capsys.readouterr().err
+
+    class Window:
+        destroy = staticmethod(lambda: None)
+
+    made = {}
+    fake = SimpleNamespace(create_window=lambda title, url, **kw: made.update(url=url) or Window(), start=lambda: None)
+    monkeypatch.setitem(sys.modules, "webview", fake)
+    dressed, attached = [], []
+    board_host.show(shown, server, thread, False, toolkit=lambda: True, attach=attached.append, dress=lambda: dressed.append(1))
+    assert made["url"].endswith("&app=1") and dressed and len(attached) == 1 and shown.updates.quit is Window.destroy
+    fake.start = lambda: (_ for _ in ()).throw(RuntimeError("no GTK"))
+    board_host.show(shown, server, thread, False, toolkit=lambda: True)
+    assert "no window here (no GTK)" in capsys.readouterr().err
+    # the folder `orkboard` opens: the last shown project, else none
+    gone = SimpleNamespace(projects_recent=[str(tmp_path / "gone")])
+    monkeypatch.chdir(tmp_path)
+    assert board_host.start_folder(None, gone) is None
+    assert board_host.start_folder(None, SimpleNamespace(projects_recent=[str(fake_repo)])) == fake_repo.resolve()
+    monkeypatch.setattr(board_host.core_updates, "at_launch", lambda *a, **k: None)
+    assert board_host.main([str(tmp_path / "not-a-folder")]) == 1 and "orkboard:" in capsys.readouterr().err
