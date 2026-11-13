@@ -20,7 +20,7 @@ def top_of(path: Path, pkg: Path) -> str:
 
 NOTES = {                                                       # what a big module is, in a few words where its docstring says it in none
     "gui/board_host.py": "the host", "gui/ideas.py": "the Board's commands", "gui/drive.py": "the command line's drive",
-    "gui/ideas_board.py": "the Board as the page asks it", "core/op_runner.py": "an operation's run", "core/idea_runner.py": "a plan's run",
+    "gui/ideas_board.py": "the Board as the page asks it", "core/idea_runner.py": "a plan's run",
     "core/idea_plan.py": "a goal's plan", "core/idea_keeper.py": "the Board's keeper", "realm/ideas.py": "the goals and parties as files",
     "realm/hypotheses.py": "Product's hypotheses", "realm/loop.py": "a game's core loop", "realm/board_map.py": "the Board's map",
     "design/mark.py": "the mark", "design/tokens.py": "the tokens",

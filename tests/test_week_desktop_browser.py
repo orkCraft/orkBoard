@@ -13,7 +13,7 @@ from tests.test_table_desktop_browser import TableHost  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
-WEEK = {"usd": 46.1, "ops_usd": 3.2, "merged": 12, "first_time": 10, "usd_per_merged": 3.84, "nights": {"worked": 4, "idle": 2, "off": 1},
+WEEK = {"usd": 46.1, "merged": 12, "first_time": 10, "usd_per_merged": 3.84, "nights": {"worked": 4, "idle": 2, "off": 1},
         "tonight": 0, "night_on": True, "into": "dev"}
 
 
@@ -83,11 +83,11 @@ def test_todays_spend_opens_this_week_over_the_pane_with_its_lines_in_order(gui)
 
 def test_a_null_part_and_a_missing_price_are_left_out(gui):
     host = WeekHost()
-    host.week.update(ops_usd=None, usd_per_merged=None)
+    host.week.update(usd_per_merged=None)
     pg, host, errors = _show(gui, host)
     assert _lines(pg) == ["≈$46 of work at API prices in this project: not your bill", "12 results in dev, 10 the first time"]
     pg.keyboard.press("Escape")
-    host.week.update(usd=None, ops_usd=None, merged=0, first_time=0)
+    host.week.update(usd=None, merged=0, first_time=0)
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
     _spend(pg).click()
     pg.locator('.place[aria-label="This week"] .week').wait_for(timeout=WAIT_MS)

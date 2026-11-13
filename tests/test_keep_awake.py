@@ -31,7 +31,7 @@ class Power:
 
 @pytest.fixture
 def awake(fake_repo):
-    """A host that is running (its Awake fake), a clock, the power, and what the Board and Operations are doing."""
+    """A host that is running (its Awake fake), a clock, the power, and what the Board is doing."""
     host = Orkboard(fake_repo)
     clock, power = Clock(), Power()
     keep = host.keep_awake
@@ -40,10 +40,9 @@ def awake(fake_repo):
     keep.phones = False
     box = type("Box", (), {})()
     box.host, box.keep, box.clock, box.power, box.fake = host, keep, clock, power, host.awake
-    box.working, box.ops = False, False
+    box.working = False
     (project,) = host.projects.open_ones
     project.ideas.working = lambda: box.working
-    host.ops.runner.busy = lambda: box.ops
     keep.start()
     return box
 
@@ -82,13 +81,11 @@ def test_the_power_is_read_at_most_every_minute_and_none_counts_as_on_power(awak
     assert len(reads) == 1 and awake.keep.state()["battery"] is False
 
 
-def test_carts_holds_while_the_keeper_a_task_or_an_operation_is_at_work(awake):
+def test_carts_holds_while_the_keeper_or_a_task_is_at_work(awake):
     assert awake.keep.reason() == ""
     awake.working = True                                   # a draft, a plan, a read, a check, a task
     assert awake.keep.reason() == "work"
-    awake.working, awake.ops = False, True                 # an operation running or waiting
-    assert awake.keep.reason() == "work"
-    awake.ops = False
+    awake.working = False
     assert awake.keep.reason() == ""                       # a task at Review, a held plan, a question: none of them
 
 

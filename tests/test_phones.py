@@ -639,7 +639,7 @@ def test_the_phones_snapshot_is_the_pages_less_the_computers_own(fake_repo):
     full, snap = host.snapshot(), BoardPhone.phone_snapshot(host)
     assert {"onboarding", "sign_in", "repo", "usage_ask", "update_policy"} <= set(full)
     assert not set(Orkboard.COMPUTER_ONLY) & set(snap)
-    for key in ("projects", "mana", "limits", "reserve", "hud", "rate", "needs_you", "ideas_rev", "ops_rev", "ops_team", "idea_states",
+    for key in ("projects", "mana", "limits", "reserve", "hud", "rate", "needs_you", "ideas_rev", "idea_states",
                 "review_count", "review_results", "canvases_new", "canvases_rev", "focus", "update", "version"):
         assert key in snap, key
     assert "paid" in snap["mana"]

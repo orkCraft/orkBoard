@@ -287,11 +287,6 @@ def by_idea_between(state_dir: Path, since: dt.datetime, now: dt.datetime) -> di
     return out
 
 
-def between_file(path: Path, since: dt.datetime, now: dt.datetime) -> float | None:
-    """The same over one ledger file (Operations', `ops/spend.jsonl`)."""
-    return _in(read(path), since, now)
-
-
 def _finished(state_dir: Path, gone: list[dict]) -> dict[tuple[str, str], dict]:
     """(idea, task) → {"state", "finished", "round", "role"} of every task that ended (merged, failed or dropped): the plans'
     and the deleted ideas' (from their lines in `spend-gone.jsonl`)."""

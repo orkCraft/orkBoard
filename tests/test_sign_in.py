@@ -17,14 +17,11 @@ from orkboard import settings, tools
 from orkboard.core import bus as b
 from orkboard.core.idea_keeper import IdeaKeeper
 from orkboard.core.idea_runner import IdeaRunner
-from orkboard.core.op_runner import OpRunner
 from orkboard.core.sign_ins import HOLD_H, SignInError, SignIns
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import board_map, event_log, harnesses, ideas, jobs, op_runs, sign_in, tool_errors
+from orkboard.realm import board_map, event_log, harnesses, ideas, jobs, sign_in, tool_errors
 from orkboard.realm.sign_in import CHECK_PROMPT, WAIT_S, Outcome
-from tests.ops_stub import Stub, stream
 from tests.test_idea_runner import plan_of, tasks_of, town  # noqa: F401  (the runner's repository and stub claude)
-from tests.test_op_runner import WHAT, prepared, wait as wait_op
 
 LOGIN = "Not logged in · Please run /login"
 
@@ -736,53 +733,6 @@ def test_a_key_fails_the_draft_as_today(tmp_path):
     k.draft_one(slug)
     st = ideas.state(state, slug)
     assert st["state"] == "raw" and st["held_for"] == "" and "not signed in" in st["error"]
-
-
-@pytest.fixture
-def ops(tmp_path, monkeypatch):
-    stub = Stub(tmp_path, monkeypatch)
-    signins, _ = fresh(tmp_path / "cfg")
-    r = OpRunner(tmp_path / "ops", settings=lambda: settings.clean_ops({"servers": {"jira": "Atlassian"}}),
-                 limits=lambda: [], sign_ins=signins)
-    r.stub, r.signins = stub, signins
-    yield r
-    r.stop_all()
-    r.wait_idle()
-
-
-def test_an_operations_prepare_that_hit_a_refused_sign_in_is_held_and_goes_on(ops):
-    ops.stub.answer(stream([], text=LOGIN, error=True), code=1)
-    op_id = ops.add("jira-task", WHAT)
-    run = wait_op(ops, op_id, "held")
-    assert run["held"] == "prepare" and run["held_for"] == "sign_in" and ops.held_for("claude") == 1
-    assert dt.datetime.fromisoformat(run["held_until"]) > dt.datetime.now() + dt.timedelta(hours=HOLD_H - 1)
-    ops.tick(0)
-    assert op_runs.load(ops.base, op_id)["state"] == "held"        # still signed out
-    prepared(ops.stub)
-    tool_errors.ran("claude")
-    ops.tick(100)
-    assert wait_op(ops, op_id, "check")["state"] == "check"
-    assert op_runs.load(ops.base, op_id)["held_for"] in ("", None)
-
-
-def test_an_operations_action_that_did_nothing_for_a_refused_sign_in_is_held_not_failed(ops):
-    prepared(ops.stub)
-    run = wait_op(ops, ops.add("jira-task", WHAT), "check")
-    ops.stub.answer(stream([], text=LOGIN, error=True), code=1)
-    ops.act(run["id"], {}, {})
-    held = wait_op(ops, run["id"], "held")
-    assert held["held"] == "act" and held["held_for"] == "sign_in" and held["acted"] is not True
-
-
-def test_an_operations_run_held_a_day_fails_with_its_line(ops):
-    ops.stub.answer(stream([], text=LOGIN, error=True), code=1)
-    op_id = ops.add("jira-task", WHAT)
-    run = wait_op(ops, op_id, "held")
-    run["held_until"] = (dt.datetime.now() - dt.timedelta(minutes=1)).isoformat(timespec="seconds")
-    op_runs.save(ops.base, run)
-    ops.tick(0)
-    failed = op_runs.load(ops.base, op_id)
-    assert failed["state"] == "failed" and "not signed in" in failed["why"]
 
 
 # -- the Map, the needs, the Check row (§7) -------------------------------------------------------------------------

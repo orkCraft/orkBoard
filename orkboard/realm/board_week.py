@@ -2,7 +2,7 @@
 log and the ledgers: no face, no model, it writes nothing.
 
     board_week.nights(root, settings, now)             # [{"date", "kind": "worked" | "idle" | "off"}], newest first
-    board_week.this_week(root, state_dir, settings, now, rows, ops_base=None)    # §6.2's object
+    board_week.this_week(root, state_dir, settings, now, rows)    # §6.2's object
 
 `root` is the project's folder (where the event log is), `settings` the Board's (`night`: "01:00-07:00"), `rows` the `ideas.board`
 object. Times are the machine's.
@@ -91,17 +91,16 @@ def last_unused(root: Path) -> float | None:
     return left[-1] if left else None
 
 
-def this_week(root: Path, state_dir: Path, settings: dict, now: dt.datetime, rows: dict, ops_base: Path | None = None,
+def this_week(root: Path, state_dir: Path, settings: dict, now: dt.datetime, rows: dict,
               into: str = "dev", limits=()) -> dict[str, Any]:
     now = now.astimezone()
     since = now - WEEK
     spent = idea_spend.between(state_dir, since, now)
-    ops = idea_spend.between_file(Path(ops_base) / "spend.jsonl", since, now) if ops_base is not None else None
     merged, first = board_recap.merges(board_recap.events_between(root, since, now, event_log.TASK_STATE))
     kinds = [x["kind"] for x in nights(root, settings, now)]
     tonight = sum(1 for i in rows.get("ideas") or [] if (i.get("state") == "raw" and i.get("queue") == "night")
                   or (i.get("state") == "plan" and i.get("start_at") == "night"))      # the night's own rule: a draft or a start still to come
-    return {"usd": None if spent is None else round(spent, 2), "ops_usd": None if ops is None else round(ops, 2), "merged": merged,
+    return {"usd": None if spent is None else round(spent, 2), "merged": merged,
             "first_time": first,
             "usd_per_merged": round(spent / merged, 2) if merged >= idea_spend.TOO_FEW and spent is not None else None,
             "nights": {k: kinds.count(k) for k in ("worked", "idle", "off")}, "tonight": tonight,

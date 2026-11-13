@@ -561,12 +561,11 @@ class BoardMixin:
 
 
 def sort_needs(needs: list[dict]) -> list[dict]:
-    """What blocks work in progress first, then the priority, then the oldest; proposals last (§10), Operations' rules
-    proposals with them (spec 38 §8). A plan change (spec 62 §4.2) sits as a plan does: it blocks nothing and is not last. A
+    """What blocks work in progress first, then the priority, then the oldest; proposals last (§10). A plan change (spec 62 §4.2) sits as a plan does: it blocks nothing and is not last. A
     judged pitch (spec 65 §5) comes after the goals' own, before the proposals. A conflict (spec 150 E1.2) sits where its goal's
     `decision` does, and before it."""
     def key(n: dict) -> tuple:
         prio = n.get("priority") if n.get("priority") in ideas.PRIORITIES else "normal"
-        last = 2 if n["kind"] in ("proposal", "op_rules", "party", "project_q", "hypothesis", "quality", "finding", "cascade", "groups") else 1 if n["kind"] == "pitch" else 0
+        last = 2 if n["kind"] in ("proposal", "party", "project_q", "hypothesis", "quality", "finding", "cascade", "groups") else 1 if n["kind"] == "pitch" else 0
         return last, not n.get("blocks"), ideas.PRIORITIES.index(prio), str(n.get("at") or ""), n["kind"] != "conflict"
     return sorted(needs, key=key)

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import board_week, event_log, idea_spend, ideas, op_runs
+from orkboard.realm import board_week, event_log, idea_spend, ideas
 
 SETTINGS = {"night": "01:00-07:00"}
 NOW = dt.datetime(2026, 10, 20, 12, 0).astimezone()
@@ -68,13 +68,10 @@ def _ledger(state: Path, slug: str, when: dt.datetime, cost):
         f.write(json.dumps({"at": when.replace(tzinfo=None).isoformat(), "step": "task", "task": "k1", "round": 1, "role": "grunt", "cost": cost}) + "\n")
 
 
-def test_this_week_sums_the_seven_days_the_ops_ledger_and_what_waits_for_tonight(root, tmp_path):
+def test_this_week_sums_the_seven_days_and_what_waits_for_tonight(root, tmp_path):
     state = tmp_path / "state"
-    ops = tmp_path / "ops"
-    ops.mkdir()
     _ledger(state, "a", NOW - dt.timedelta(days=3), 40.0)
     _ledger(state, "a", NOW - dt.timedelta(days=9), 99.0)                         # older than a week
-    (ops / "spend.jsonl").write_text(json.dumps({"at": (NOW - dt.timedelta(days=1)).replace(tzinfo=None).isoformat(), "cost": 3.2}) + "\n")
     for n, rnd in enumerate((1, 1, 2, 1)):
         log(root, "task_state", NOW - dt.timedelta(days=2, hours=n), idea="a", task=f"k{n}", state="merged", was="review", round=rnd)
     log(root, "task_state", NOW - dt.timedelta(days=8), idea="a", task="old", state="merged", was="review", round=1)
@@ -82,11 +79,11 @@ def test_this_week_sums_the_seven_days_the_ops_ledger_and_what_waits_for_tonight
                       {"slug": "z", "state": "working", "queue": "", "start_at": ""}, {"slug": "d", "state": "done", "queue": "night", "start_at": ""},
                       {"slug": "p", "state": "plan", "queue": "night", "start_at": ""},          # drafted: its queue is still `night`
                       {"slug": "w", "state": "working", "queue": "", "start_at": "night"}]}     # started: its plan still says `night`
-    got = board_week.this_week(root, state, SETTINGS, NOW, rows, ops_base=ops)
-    assert got["usd"] == 40.0 and got["ops_usd"] == 3.2 and (got["merged"], got["first_time"]) == (4, 3)
+    got = board_week.this_week(root, state, SETTINGS, NOW, rows)
+    assert got["usd"] == 40.0 and (got["merged"], got["first_time"]) == (4, 3)
     assert got["usd_per_merged"] == 10.0 and got["tonight"] == 2 and got["night_on"] is True and got["into"] == "dev"
     assert sum(got["nights"].values()) == 7 and set(got["nights"]) == {"worked", "idle", "off"}
-    assert set(got) == {"usd", "ops_usd", "merged", "first_time", "usd_per_merged", "nights", "tonight", "night_on", "into", "streak", "week", "last_unused"}
+    assert set(got) == {"usd", "merged", "first_time", "usd_per_merged", "nights", "tonight", "night_on", "into", "streak", "week", "last_unused"}
 
 
 def test_the_price_of_a_result_is_said_from_three_merged_on_and_null_when_unpriced(root, tmp_path):

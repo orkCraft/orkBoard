@@ -29,8 +29,7 @@ from orkboard import brand
 TICK_S = 30.0
 PUSH_GAP_S = 900.0
 MORNING_H = 3                                   # the morning is the first tick within this many hours after the quiet hours end
-KIND_WORDS = {"goal": "A party asks", "asks": "A spec asks", "plan": "A plan waits for you", "change": "A plan change waits for you", "leader_change": "A leader proposes a change", "spec_change": "The Orkmaster proposes a change to a spec", "todo": "A to-do", "failed": "Failed",
-              "op": "At your check", "op_failed": "Failed"}      # js/board/today.js KIND_WORDS, the kinds that wait for an answer
+KIND_WORDS = {"goal": "A party asks", "asks": "A spec asks", "plan": "A plan waits for you", "change": "A plan change waits for you", "leader_change": "A leader proposes a change", "spec_change": "The Orkmaster proposes a change to a spec", "todo": "A to-do", "failed": "Failed"}      # js/board/today.js KIND_WORDS, the kinds that wait for an answer
 
 
 AWAY_KINDS = ("paid", "start")        # the cards pushed while the person is Away: money's (*Go on paid?* = `paid`; a cost grown past what was agreed = `start`, goal_route.rows)
@@ -83,10 +82,7 @@ class Pusher:
                 n += int(p.ideas.snapshot().get("needs_you") or 0)
             except Exception:                                  # a broken Board never stops the clock
                 pass
-        try:
-            return n + self.host.ops.count()                   # Operations are the person's: counted once
-        except Exception:
-            return n
+        return n
 
     def _first_row(self, kinds: tuple = ()) -> dict | None:
         """The first row of the shown project's Needs you that waits for an answer (of `kinds` only, when given)."""
@@ -94,7 +90,6 @@ class Pusher:
         rows: list[dict] = []
         try:
             rows += ideas.board(make=False)["needs_you"] if ideas is not None else []
-            rows += self.host.ops.needs()
         except Exception:
             pass
         return next((n for n in rows if (n.get("kind") in kinds if kinds else n.get("kind") in KIND_WORDS or n.get("kind") in ("pick", "paid"))), None)

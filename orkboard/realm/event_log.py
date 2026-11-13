@@ -122,23 +122,6 @@ PROJECT_CLOSED = "project_closed"   # stopped (its running tasks were stopped)
 FILE_SAVED = "file_saved"         # kind (markdown · text), bytes: never the path or the text
 GIT_COMMITTED = "git_committed"   # files (how many), device
 GIT_PUSHED = "git_pushed"         # branch, device
-# Spec 38 §11: Operations, the person's (in `~/.config/orkcraft/ops/events.jsonl`, never a project's): names,
-# counts and states, never a field's, a draft's, a mail's or an issue's words.
-OP_ADDED = "op_added"             # op, template, version, device
-OP_PREPARED = "op_prepared"       # op, doubts (how many), step, tier, effort, prompt_chars, tokens, cost, seconds
-OP_CHECKED = "op_checked"         # op, edited (the names corrected), again (prepared again), device
-OP_DONE = "op_done"               # op, alone, step, tokens, cost, seconds
-OP_FAILED = "op_failed"           # op, step, acted (true · false · null)
-OP_DROPPED = "op_dropped"         # op, from (check · failed)
-OP_NOT_RIGHT = "op_not_right"     # op, has_reason
-OP_LEARNED = "op_learned"         # template, lines (how many), step, tokens, cost
-OP_RULES_ANSWERED = "op_rules_answered"   # template, take, has_reason
-OP_TRUST = "op_trust"             # template, alone, why (clean · edit · rules · not_right · version · reset)
-# Spec 66 §1–§3: briefs, the person's alone. A template about people's events carry no field's value: never who, never a
-# channel's name.
-OP_KEPT = "op_kept"               # op, alone, edited (how many parts corrected), device (desktop · phone · alone)
-OP_FORGOT = "op_forgot"           # template, runs (how many removed), standing (how many stopped): never the value
-OP_STANDING = "op_standing"       # standing (its id), template, what (set · changed · stopped · added · skipped), device
 
 # Spec 43 §4: the night's proposal to take a checker out of a goal's party, and the person's answer.
 PARTY_PROPOSED = "party_proposed"   # no longer written (the night proposed them); old lines are still read: goal, by (the checker's slug), runs
@@ -252,8 +235,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, GATE_RAN, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, GOAL_TO_MAIN, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
           ROLE_DROPPED, KIND_SET, BOARD_SET, IDEA_DRAFTED, KEEPER_STOPPED, NIGHT_RUN, PROPOSAL_MADE, PROPOSAL_ANSWERED,
           IDEA_ANSWERED, GOAL_ANSWERED, PLAN_STARTED_NOW, IDEA_QUEUED, RESULT_SEEN, BOARD_COMMITTED, BOARD_HELD, PROJECT_OPENED, PROJECT_CLOSED, FILE_SAVED, GIT_COMMITTED,
-          GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
-          OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
+          GIT_PUSHED, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,
           PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, ASK_GOT_IT, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED, CONCERN_LATER, HEARING_THROWN, TALK_HEARD, TALK_GROUND, TALK_VERDICT, RIPE_STARTED, ROUTE_HELD, RIPE_HELD, RIPE_DONE)
 EVENTS += (NIGHT_HELD, NIGHT_STARTED, BUILT_NOW)       # spec 121 C

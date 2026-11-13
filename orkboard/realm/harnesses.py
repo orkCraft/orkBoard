@@ -5,8 +5,6 @@
     h.read(prompt, workdir, model, web)      # argv of an agent that reads (the repository when `in_repo`)
     h.work(prompt, workdir, model, resume)   # argv of an agent that may change files in `workdir`
     h.read(…, effort="high")                 # … with the model's reasoning effort, where the tool takes one (spec 35 §1)
-    h.call(prompt, workdir, allow, model)    # argv of an agent allowed only the MCP tools in `allow` (None: it cannot)
-                                             # (effort, budget, one_shot as `read`: an operation's calls, spec 38 §4)
     h.result(stdout, before)                 # (text, cost USD | None, tokens | None, session id)
     h.outcome(stdout, before, model)         # … priced from `model` when the tool prints tokens, no price
     harnesses.main(enabled, chosen, order)   # the tool decisions run on: the chosen one, else the first on in the person's order (`machine.tool_order`), else the registry's
@@ -38,7 +36,7 @@ from typing import Callable, Iterable
 from orkboard.env import getenv
 from orkboard.realm import model_families
 from orkboard.realm.harness_claude import (  # noqa: F401  (re-exported: the names callers and tests use)
-    CLAUDE_NO_TOOLS, CLAUDE_READ_ONLY, CLAUDE_READ_WEB, EFFORTS, READ_DENIED, _HELP, _claude_ask, _claude_call, _claude_mcp,
+    CLAUDE_NO_TOOLS, CLAUDE_READ_ONLY, CLAUDE_READ_WEB, EFFORTS, READ_DENIED, _HELP, _claude_ask, _claude_mcp,
     _claude_read, _claude_read_dirs, _claude_run, _claude_work, _claude_work_rules, claude_envelope, claude_error, claude_events,
     claude_floor, claude_reads, cli_has)
 from orkboard.realm.harness_tools import (  # noqa: F401
@@ -161,18 +159,14 @@ class Harness:
     network: bool = True             # … and reach the network (Codex's `workspace-write` sandbox has none: a step that fetches fails there, spec 168 C4)
     priced: bool = False             # its answers say what they cost
     model_priced: bool = False       # its result is priced from the model it ran on: result(stdout, before, model)
-    # (h, prompt, workdir, model, allow) → argv: an agent allowed exactly the MCP tools in `allow` and
-    # nothing else, its events as JSON lines (a Catapult's carrier, docs/design/catapult-mcp.md §3).
-    # None until the tool's headless mode is checked to hold to them.
-    call_cmd: Cmd | None = None
     # (session id, reopen) → what a reading agent's argv gets to name its session up front, or to reopen
     # it after it was stopped (a Review board's Go on). None: a stopped turn starts again.
     read_session: Callable[[str, bool], list[str]] | None = None
     # (folders outside the workdir) → what a working agent's argv gets to read them, never write them (the
     # Wiki's folders outside the project: docs/design/wiki-folders-rules.md §1). None: it reads anywhere.
     read_dirs: Callable[[list[str]], list[str]] | None = None
-    # What a working agent's argv gets when its building is unchained (autonomy.FREE): a tool that cannot ask
-    # in a headless run and refuses what it would have asked about.
+    # What a working agent's argv gets when it is run `free` (asks nothing): a tool that cannot ask in a headless
+    # run and refuses what it would have asked about.
     free_args: tuple[str, ...] = ()
     # (h) → the commands that print the models it has, tried in order, and the reader of their output.
     # None: it cannot say, and a family in its table runs on its own default.
@@ -258,19 +252,6 @@ class Harness:
         dirs = [str(d) for d in dirs if str(d)]
         return cmd + self.read_dirs(dirs) if dirs and self.read_dirs else cmd
 
-    @property
-    def carries(self) -> bool:
-        """It can carry a Catapult's shot: held to one MCP tool."""
-        return self.call_cmd is not None
-
-    def call(self, prompt: str, workdir: str | Path, allow: list[str], model: str = "", effort: str = "",
-             budget: float | None = None, one_shot: bool = False) -> list[str] | None:
-        """`effort`, `budget` (USD), `one_shot` (no session kept) as `read` has them (spec 38 §4)."""
-        if self.call_cmd is None:
-            return None
-        return self.call_cmd(self, prompt, str(workdir), self.pick(model), list(allow)) + self._run(model, effort,
-                                                                                                    budget, one_shot)
-
     def outcome(self, stdout: str, before=0, model: str = "") -> tuple[str, float | None, int | None, str]:
         """`result`, given the model the run was asked for when the tool is priced from it."""
         if self.model_priced:
@@ -312,7 +293,7 @@ register(Harness(
     {"elder": "opus", "warrior": "sonnet", "laborer": "haiku"},
     _claude_ask, _claude_read, _claude_work,
     resumable=True, deploys=True, web=True, priced=True, mark="✻", color="bold #f59e0b", error=claude_error, result=claude_result,
-    resume_cmd=lambda h, sid: [h.bin, "--resume", sid], call_cmd=_claude_call, read_dirs=_claude_read_dirs,
+    resume_cmd=lambda h, sid: [h.bin, "--resume", sid], read_dirs=_claude_read_dirs,
     read_session=lambda sid, reopen: ["--resume", sid] if reopen else ["--session-id", sid], run_args=_claude_run,
     work_rules=_claude_work_rules, no_tools=("--disallowedTools", CLAUDE_NO_TOOLS), sign_in=("auth", "login"), sign_in_by="browser"))
 register(Harness(

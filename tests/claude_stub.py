@@ -1,15 +1,13 @@
-"""A stub `claude` for Operations' tests (docs/specs/38-operations.md, Tests → A): it prints stream-json as a real
-`claude -p --output-format stream-json` does, from answers the test queues, and keeps every command line it got.
+"""A stub `claude` for the tests that need a tool's calls (tests/test_calls_per_project.py): it prints stream-json as a
+real `claude -p --output-format stream-json` does, from answers the test queues, and keeps every command line it got.
 
     stub = Stub(tmp_path, monkeypatch, help="--effort --max-budget-usd --no-session-persistence")
     stub.answer(stream(tools=[...], text='{"args": {}}'))     # the next call's events, in order
-    stream(uses=[(ACT, ARGS)])                                # … a tool called with the arguments it was told
     stub.calls()                                              # [{"argv", "cwd", "task"}] of the calls made
 """
 from __future__ import annotations
 
 import json
-import os
 import stat
 import sys
 from pathlib import Path
@@ -20,9 +18,6 @@ d = {folder!r}
 args = sys.argv[1:]
 if args == ["--help"]:
     print(open(os.path.join(d, "help")).read())
-    sys.exit(0)
-if args[:2] == ["mcp", "list"]:
-    print(open(os.path.join(d, "mcp")).read())
     sys.exit(0)
 seen = os.path.join(d, "seen")
 n = len(os.listdir(seen))
@@ -36,12 +31,6 @@ path = os.path.join(d, "answers", queue[0])
 spec = json.load(open(path))
 if not spec.get("keep"):
     os.remove(path)
-prompt = args[args.index("-p") + 1] if "-p" in args else ""
-checked = json.loads(prompt.split("Arguments:\n", 1)[1]) if "Arguments:\n" in prompt else None
-for event in spec["events"]:                  # "__ARGS__": the arguments the action was told to call with
-    for part in (event.get("message") or {}).get("content") or []:
-        if part.get("input") == "__ARGS__":
-            part["input"] = checked
 for event in spec.get("before", []):
     print(json.dumps(event), flush=True)
 time.sleep(spec.get("sleep", 0))
@@ -50,18 +39,16 @@ for event in spec["events"]:
 sys.exit(spec.get("code", 0))
 '''
 
-ARGS = "__ARGS__"
 ALL_FLAGS = "--effort <level> --max-budget-usd <amount> --no-session-persistence"
 
 
 class Stub:
-    def __init__(self, tmp_path: Path, monkeypatch, help: str = ALL_FLAGS, mcp: str = "") -> None:
+    def __init__(self, tmp_path: Path, monkeypatch, help: str = ALL_FLAGS) -> None:
         from orkboard.realm import harnesses
         self.dir = tmp_path / "stub"
         for sub in ("seen", "answers"):
             (self.dir / sub).mkdir(parents=True, exist_ok=True)
         (self.dir / "help").write_text(help, encoding="utf-8")
-        (self.dir / "mcp").write_text(mcp, encoding="utf-8")
         self.bin = self.dir / "claude"
         self.bin.write_text(SCRIPT.replace("{python}", sys.executable).replace("{folder!r}", repr(str(self.dir))),
                             encoding="utf-8")
@@ -98,6 +85,3 @@ def stream(tools: list[str] = (), uses: list[tuple] = (), text: str = "", cost: 
                 "usage": {"input_tokens": 100, "output_tokens": 20, "cache_read_input_tokens": 5}})
     return out
 
-
-def mode(path: Path) -> int:
-    return stat.S_IMODE(os.stat(path).st_mode)

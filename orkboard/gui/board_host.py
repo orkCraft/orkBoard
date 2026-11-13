@@ -85,11 +85,6 @@ class BoardHost:
         """The host's sign-ins (core/sign_ins.py), which the keeper and the runner hold work for; None in a host with none."""
         return getattr(self._owner, "sign_ins", None)
 
-    @property
-    def ops(self) -> Any:
-        """The host's Operations (gui/ops.py), which are the person's, one for all projects; None in a host with none (Orkline's page has no Operations)."""
-        return getattr(self._owner, "ops", None)
-
     def faces(self) -> int:
         """How many faces are open on this host now (the page's sockets and a paired phone's: the owner's `faces`, which `gui/server.py` sets); 0 in a host with none. A goal the leaders
         agreed on starts by itself only while one is open (spec 120 §3.5)."""
@@ -169,7 +164,7 @@ class BoardPhone:
         if name == "files.read":
             path = (args or {}).get("path")
             return isinstance(path, str) and path.lower().endswith(cls.MARKDOWN)
-        return name in cls.COMMANDS or (name.startswith(("ideas.", "ops.")) and name in host.commands)
+        return name in cls.COMMANDS or (name.startswith("ideas.") and name in host.commands)
 
     @staticmethod
     def guard(name: str, args: dict, device: dict | None = None) -> dict:
@@ -179,7 +174,7 @@ class BoardPhone:
             args.pop("device_id", None)                 # whose subscription it is: the listener's to say (gui/phone_push.py)
             if (device or {}).get("id"):
                 args["device_id"] = device["id"]
-        if name.startswith(("ideas.", "ops.", "projects.", "files.")) or name in ("halt", "resume"):
+        if name.startswith(("ideas.", "projects.", "files.")) or name in ("halt", "resume"):
             args["device"] = "phone"
             args.pop("link", None)
             if (device or {}).get("id"):
@@ -206,14 +201,13 @@ class Orkboard:
     The page is `static/board.js`, on the desktop and, in its frame (`pwa/frame.js`), on a paired phone.
 
     What is the host's is built once per host, beside the projects: the AI tools' limits, this run's spend, the
-    phones, updates, the onboarding and Operations (gui/ops.py, spec 38: `ops.*`, its rows in the shown project's
-    Needs you); what is a project's is its Board. With no project open it is the start screen: `ideas.*` say *Open a
-    folder first*, Operations works as with one."""
+    phones, updates and the onboarding; what is a project's is its Board. With no project open it is the start screen:
+    `ideas.*` say *Open a folder first*."""
 
     def __init__(self, repo_root: Path | None = None, demo: bool = False, restore: bool = False) -> None:
         """`repo_root`: the folder opened and shown (refused in words: `ideas.IdeasError`); `restore`: the projects
         open when Orkboard last closed are opened again too (`orkboard` does it; a test's host has only its own)."""
-        from orkboard.gui import awake, board_files, board_git, board_projects, first_open_cards, folder_dialog, keep_awake, logs_save, onboarding, ops, phone_push, repair, updates
+        from orkboard.gui import awake, board_files, board_git, board_projects, first_open_cards, folder_dialog, keep_awake, logs_save, onboarding, phone_push, repair, updates
         self.demo = demo
         self.machine = settings.load()
         self.bus = b.Bus()
@@ -272,8 +266,6 @@ class Orkboard:
         self.commands.update(board_git.Git(self.projects).commands())
         self.commands.update(folder_dialog.commands())   # Open folder's system dialog (desktop only: not BoardPhone's)
         self.commands.update(logs_save.commands(self))   # Save logs into the Downloads folder (desktop only, as well)
-        self.ops = ops.Ops(self)                  # the person's, one per host: showing a project changes nothing of it
-        self.commands.update(self.ops.commands())
         self.commands.update(self.keep_awake.commands())   # awake.* (desktop only: not BoardPhone's)
         from orkboard.gui import board_sync
         self.board_sync = board_sync.BoardSync(self)      # spec 137 B: the Board's branch, held and pushed (nothing runs without `[board]`)
@@ -288,7 +280,7 @@ class Orkboard:
         from orkboard.gui import agent_rules_switch
         self.commands.update(agent_rules_switch.commands(self))    # rules.switch · write · not_now: Settings' Let any AI tool work the Board (spec 151 C)
         shown_board = self.commands["ideas.board"]
-        self.commands["ideas.board"] = lambda a: self._with_ops(shown_board(a))
+        self.commands["ideas.board"] = lambda a: self._with_sign_ins(shown_board(a))
         if restore:
             self.projects.restore()
         if repo_root is not None:
@@ -323,8 +315,7 @@ class Orkboard:
 
     def shown(self, project: Any) -> None:
         """Another project is shown (gui/board_projects.py): this run's spend, the limits' reader, and the log and
-        ledger of a call no one placed follow it (a Board's own calls and Operations' keep their own: realm/call_log.py
-        `of_project`, `apart`)."""
+        ledger of a call no one placed follow it (a Board's own calls keep their own: realm/call_log.py `of_project`)."""
         root = project.root if project is not None else None
         telemetry.keep_ledger(root)
         call_log.keep_days(root)
@@ -352,10 +343,10 @@ class Orkboard:
             return
         self.on_change()
 
-    def _with_ops(self, board: dict) -> dict:
-        """The shown project's Board, Operations' rows in its Needs you (spec 38 §8)."""
+    def _with_sign_ins(self, board: dict) -> dict:
+        """The shown project's Board, the sign-ins' rows in its Needs you (spec 45 §7)."""
         from orkboard.gui.ideas_board import sort_needs
-        needs = [*board.get("needs_you", []), *self.ops.needs(), *board_map.sign_in_needs(self.sign_ins.snapshot())]
+        needs = [*board.get("needs_you", []), *board_map.sign_in_needs(self.sign_ins.snapshot())]
         return {**board, "needs_you": sort_needs(needs)}
 
     def budget_ok(self, root: Path | None = None) -> bool:
@@ -364,11 +355,6 @@ class Orkboard:
         if self.demo or root is None:
             return False
         return not treasury.over(self.spend.spent_usd, treasury.budget(root)[0])
-
-    def persons_cap(self, ops_ledger: Path) -> tuple[float, float]:
-        """(the day's spend, the cap) Operations' calls are held by (spec 38 §1): across the open projects and
-        Operations' own ledger, against the smallest cap among the open projects (the default with none open)."""
-        return treasury.persons_cap([p.root for p in self.projects.open_ones], ops_ledger)
 
     # -- what the page sees ----------------------------------------------------------------------------------
 
@@ -383,15 +369,8 @@ class Orkboard:
         board = self.ideas.snapshot() if self.ideas is not None else {
             "focus": "board", "ideas_rev": 0, "needs_you": 0, "idea_states": [], "review_count": 0,
             "review_results": [], "preview": "", "play_face": "", "new_n": 0, "limits": [], "mana": self._mana(), "laid": False, "ask": None, "reserve": {"share": idea_target.reserve({}, False), "night": False}}
-        try:
-            ops_needs = self.ops.count()
-        except Exception:                      # Operations never breaks the snapshot
-            ops_needs = 0
         sign_in = self.sign_ins.snapshot()
-        if self.ideas is not None:
-            self.ideas.team_heal()               # a Team party taken out of its project's Board by hand gives Operations back
-        board = {**board, "needs_you": int(board.get("needs_you") or 0) + ops_needs + len(board_map.sign_in_needs(sign_in)),
-                 "ops_rev": self.ops.rev, "ops_team": self.ops.team(root)}      # the Team party, if the person has one (spec 92 §3)
+        board = {**board, "needs_you": int(board.get("needs_you") or 0) + len(board_map.sign_in_needs(sign_in))}
         return {**board, "focus": "board", "onboarding": self.onboarding.snapshot(), "tools": self.tools_host.snapshot(), "sign_in": sign_in,
                 "hud": {"show_gold": show_gold, "gold": gold, "lumber": lumber}, "rate": window_rate.shown(self.machine),
                 "repo": str(root) if root is not None else "", "projects": self.projects.list(),
@@ -467,7 +446,6 @@ class Orkboard:
         self.repair.tick(now)
         self.usage.tick(now)
         self.projects.tick(now)           # every open project's Board: showing another stops nothing
-        self.ops.tick(now)
         self.pusher.tick()
         self._door_tick()
         self.keep_awake.tick(now)
@@ -518,7 +496,6 @@ class Orkboard:
         from orkboard.gui import goal_take_host
         goal_take_host.close(self)        # the goals Orkboard held, given back (spec 151 D)
         self.sign_ins.close()             # quitting stops the sign-ins it opened
-        self.ops.close()
         self.projects.close_all()
         call_log.keep_days(None)
         self.usage.close()                       # app_closed, and what waits goes, briefly
@@ -547,14 +524,13 @@ class Orkboard:
     # -- the page's commands ---------------------------------------------------------------------------------
 
     def command(self, name: str, args: dict | None = None) -> Any:
-        from orkboard.core.op_commands import OpsError
         from orkboard.gui import ideas, onboarding, phone_push, repair, tools_host, updates
         fn = self.commands.get(name)
         if fn is None:
             raise CommandError(f"Unknown command: {name}")
         try:
             return fn(dict(args or {}))
-        except (ideas.IdeasError, onboarding.OnboardingError, tools_host.ToolsError, updates.UpdateError, repair.RepairError, OpsError, phone_push.PushRefused,
+        except (ideas.IdeasError, onboarding.OnboardingError, tools_host.ToolsError, updates.UpdateError, repair.RepairError, phone_push.PushRefused,
                 SignInError) as e:
             raise CommandError(str(e)) from None
 
@@ -587,14 +563,13 @@ class Orkboard:
         return self.sign_ins.done(self._harness(args))
 
     def _sign_in_waiting(self, harness: str) -> int:
-        """How much waits for this tool's sign-in now: tasks, ideas and operations, in every open project."""
+        """How much waits for this tool's sign-in now: tasks and ideas, in every open project."""
         n = 0
         for p in self.projects.open_ones:
             for part in (getattr(p.ideas, "_runner", None), p.ideas.keeper):
                 if part is not None:
                     n += part.held_for(harness)
-        ops = getattr(self, "ops", None)
-        return n + (ops.runner.held_for(harness) if ops is not None else 0)
+        return n
 
     def _presence(self) -> dict:
         """`{here, until, held}` (spec 139 C.1): the person's hours and the press on the door that holds the other state until their next edge; *Here* with no hours and no press
@@ -615,15 +590,13 @@ class Orkboard:
         return self._presence()
 
     def _halt(self, args: dict) -> int:
-        """🛑 Stop all: every open project's keeper and runner stop, every operation's call, every agent process is
-        killed."""
+        """🛑 Stop all: every open project's keeper and runner stop, every agent process is killed."""
         again = []
         for p in self.projects.open_ones:       # the project is stopped before anything stops, so the clock starts nothing meanwhile; the tasks that run are kept to start again (spec 139 B.2)
             running = p.ideas.running_tasks()
             again += [(str(p.ideas.state_dir), s, t) for s, t in running]
             p.ideas.mark_stopped(running)
         self.projects.stop_all(device="phone" if args.get("device") == "phone" else "desktop")
-        self.ops.stop_all()
         self.sign_ins.stop_all()
         stopped = halt.halt_all(again=again)
         self.toast(f"Stopped {stopped} run{'s' if stopped != 1 else ''}" if stopped else "Nothing was running",

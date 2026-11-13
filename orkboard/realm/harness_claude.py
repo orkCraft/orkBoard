@@ -99,15 +99,8 @@ def _claude_read(h, prompt, workdir, model, web):
             *_model("--model", model), *claude_floor(h)[0], *claude_system(h)]
 
 
-# Every built-in tool a carrier must not have; MCP tools not in --allowedTools are refused in -p (their schemas are
-# still shown: an operation's prepare writes its action's arguments from one, spec 38 §4). None allowed: no list.
+# Every built-in tool a call with no tools must not have (`no_tools`).
 CLAUDE_NO_TOOLS = "Bash,Edit,Write,MultiEdit,NotebookEdit,WebFetch,WebSearch,Read,Grep,Glob,Task,TodoWrite"
-
-
-def _claude_call(h, prompt, workdir, model, allow):
-    return [h.bin, "-p", prompt, "--output-format", "stream-json", "--verbose",
-            *(["--allowedTools", ",".join(allow)] if allow else []), "--disallowedTools", CLAUDE_NO_TOOLS, *_model("--model", model),
-            *_claude_mcp()]
 
 
 def claude_envelope(stdout: str) -> dict | None:

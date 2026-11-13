@@ -31,7 +31,7 @@ def test_the_presets_of_a_kind_are_its_crafts_under_their_stages_and_the_persons
             assert got == party_recipes.sized({"leader": r["leader"], "build": r["build"], "check": r["check"], "squad": r["squad"]}, size)
             assert got["team"] == r["squad"], (kind, r["id"], size)                                      # the squad and the size are apart
             assert goal_team.seats(got["team"], got["leader"]) == "", (kind, r["id"], size)
-        assert r["ops"] is False and r["blocked"] == "" and r["whole"] is False
+        assert r["blocked"] == "" and r["whole"] is False
 
 
 def test_a_row_says_its_stage_its_proposed_size_the_roles_to_tick_and_the_squad_ticked_and_release_is_locked_and_alone():
@@ -66,7 +66,6 @@ def test_a_running_party_carries_the_recurring_goals_of_its_kind_and_team_is_no_
     assert [x["id"] for x in web["run"]["routines"]] and web["run"]["routines"] == party_presets.recurring.listed("web-liveops")
     game = {r["id"]: r for r in party_presets.listed("game")}
     assert game["liveops"]["routines"] == party_presets.recurring.listed("game-liveops") and game["tech"]["routines"] == []
-    assert party_presets.listed("web", team_at="Mars", ops=True) == party_presets.listed("web")                         # Team says nothing now
 
 
 # -- the command ---------------------------------------------------------------------------------------------------------------------------------------------------

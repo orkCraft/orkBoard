@@ -274,7 +274,7 @@ def test_a_tasks_title_is_asked_short_kept_to_eighty_and_a_longer_one_cut_at_a_w
     assert long.startswith(titles[2][:-1])                                                        # a cut, never a rewrite
 
 
-def test_a_keeper_call_runs_inside_its_steps_bound_and_its_line_says_when_it_read_more_spec_97(keeper, tmp_path):
+def test_a_keeper_call_runs_inside_its_steps_bound_and_its_line_says_when_it_read_more_spec_97(keeper, tmp_path, monkeypatch):
     """Spec 97 §3: `ask` sets the bound the step's prompt names (`idea_target.READS`); the call's line in the day's log says
     the files it read, the bound and `over` (a stub call that read 3 files on `talk`, bounded at 2)."""
     from orkboard.realm import call_log, idea_target
@@ -290,14 +290,15 @@ def test_a_keeper_call_runs_inside_its_steps_bound_and_its_line_says_when_it_rea
             return "{}", 0.01, 1000, "s"
         return call
 
-    assert idea_target.READS["talk"] == 2 and "kind" in idea_target.READS and "op_prepare" not in idea_target.READS
+    assert idea_target.READS["talk"] == 2 and "kind" in idea_target.READS
+    monkeypatch.delitem(idea_target.READS, "goal")                         # a step that names no number
     with call_log.kept(folder, "board"):
         keeper.call = reading(["a.py", "b.py", "c.py"])
         keeper.ask("talk", "talk")
         keeper.call = reading(["a.py", "b.py"])
         keeper.ask("talk", "talk")
         keeper.call = reading(["a.py", "b.py", "c.py"])
-        keeper.ask("op_prepare", "prepare")                                  # a step that names no number: no bound
+        keeper.ask("goal", "goal")                                           # a step that names no number: no bound
         keeper.call = reading([])
         keeper.ask("kind", "kind", tools=False)                              # reads no file: a bound of none
     over, within, unbounded, none = call_log.read(folder)

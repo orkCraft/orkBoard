@@ -49,7 +49,7 @@ def test_the_compact_snapshot_is_small_and_names_its_content(fake_repo):
     json.dumps(snap)
     assert snap["v"] == phones.API and snap["project"] == fake_repo.name
     assert len(json.dumps(snap)) < len(json.dumps(full))
-    assert set(snap) == {"v", "project", "focus", "look", "ideas_rev", "ops_rev", "ops_team", "needs_you", "idea_states",
+    assert set(snap) == {"v", "project", "focus", "look", "ideas_rev", "needs_you", "idea_states",
                          "review_count", "review_results", "limits", "reserve", "rate", "hud", "version", "update", "rev",
                          "canvases_new", "canvases_rev", "sleep", "mana", "projects",
                          "repair", "presence", "stopped"}   # spec 139 B.2: stopped; C.1: Here or Away, the phone reads it too; spec 94 B: the page's, less COMPUTER_ONLY; spec 119: Fix it is the phone's too

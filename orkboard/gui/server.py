@@ -330,7 +330,7 @@ class Server:
                 result = self._replay(ws, args)
             else:
                 args.pop("device_id", None)                 # a paired phone's to say (`BoardPhone.guard`), never the page's
-                if name.startswith(("ideas.", "ops.", "projects.", "files.")) or name in ("halt", "resume"):
+                if name.startswith(("ideas.", "projects.", "files.")) or name in ("halt", "resume"):
                     args.pop("link", None)                  # (the onboarding's `link` is a person's own words)
                 result = self.host.command(name, args)
             return {"t": "reply", "id": cid, "ok": True, "result": result}

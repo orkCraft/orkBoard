@@ -220,50 +220,12 @@ def test_logins_of_the_new_tools_are_told_from_disk(tmp_path):
     assert [s.id for s in found if s.found] == ["pi", "cursor"] and found[4].logged_in
 
 
-def test_autonomy_says_what_each_new_tool_changes():
-    from orkboard import autonomy
-    free = autonomy.guide(autonomy.FREE, ("hermes", "pi", "cursor"))
-    assert "hermes --yolo" in free and "cursor-agent --force" in free and "never asks" in free
-    chains = autonomy.guide(0, ("hermes", "cursor"))
-    assert "--yolo" not in chains and "--force" not in chains
-
-
 def test_a_tool_that_names_its_cache_its_own_way_counts_what_it_read_from_it():
     """agy: a warm cache's call reads most of its input from the cache, apart; counted, it weighs as a cold one."""
     cold = {"input_tokens": 21_900, "output_tokens": 100}
     warm = {"input_tokens": 2_000, "output_tokens": 100, "cache_read_tokens": 19_800, "cachedContentTokenCount": 0}
     assert harnesses._tokens_of(cold) == 22_000 and harnesses._tokens_of(warm) == 21_900
     assert harnesses._tokens_of({"input_tokens": 5, "cache_read_input_tokens": 7, "cache_hit": True}) == 12
-
-
-def test_a_call_is_held_to_its_tools_and_takes_effort_budget_and_one_shot(monkeypatch, tmp_path):
-    """Spec 38 §4: `call` gains effort, budget and one shot as `read` has them; with no tool allowed, no list."""
-    h = harnesses.get("claude")
-    from orkboard.realm import harness_claude
-    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: True)     # where `_claude_run` looks it up
-    argv = h.call("do it", tmp_path, ["mcp__a__b"], "warrior", effort="medium", budget=0.3, one_shot=True)
-    assert argv[argv.index("--allowedTools") + 1] == "mcp__a__b"
-    assert argv[argv.index("--disallowedTools") + 1] == harnesses.CLAUDE_NO_TOOLS
-    assert argv[-5:] == ["--effort", "medium", "--max-budget-usd", "0.30", "--no-session-persistence"]
-    bare = h.call("learn", tmp_path, [], "laborer", effort="low", one_shot=True)
-    assert "--allowedTools" not in bare and "--effort" not in bare and bare[-1] == "--no-session-persistence"
-
-
-def test_a_calls_stream_is_read_into_its_events():
-    from orkboard.realm import jobs
-    out = "\n".join(json.dumps(e) for e in [
-        {"type": "system", "subtype": "init", "tools": ["mcp__a__b", "Read"]},
-        {"type": "assistant", "message": {"content": [{"type": "text", "text": "…"},
-                                                      {"type": "tool_use", "id": "t1", "name": "mcp__a__b",
-                                                       "input": {"x": 1}}]}},
-        {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "t1", "is_error": True,
-                                                  "content": [{"type": "text", "text": "no such field"}]}]}},
-        {"type": "result", "result": "{}", "total_cost_usd": 0.02}])
-    events, result = jobs.call_events(out + "\nnot json")
-    assert events == [{"type": "init", "tools": ["mcp__a__b", "Read"]},
-                      {"type": "tool_use", "id": "t1", "name": "mcp__a__b", "input": {"x": 1}},
-                      {"type": "tool_result", "id": "t1", "is_error": True, "text": "no such field"}]
-    assert result["total_cost_usd"] == 0.02
 
 
 # -- spec 97 part A: the read-only call bounded in fact, its floor bare, its reads counted ---------------------------------
@@ -307,8 +269,8 @@ def test_a_read_only_call_is_denied_the_files_no_leader_needs_in_its_one_list(tm
         assert ("WebSearch" in rules) is (not web)                              # the lists it had are kept whole
         assert set(harnesses.READ_DENIED) <= set(rules)
     assert "--disallowedTools" in h.read("p", tmp_path, "opus", tools=False)    # no tools at all: still the lists it had
-    for argv in (h.work("p", tmp_path, "opus"), h.call("p", tmp_path, ["mcp__a__b"], "opus"), h.ask("p", tmp_path, "opus")):
-        assert "Read(**" not in " ".join(argv)                                  # a work, call or ask keeps its flags
+    for argv in (h.work("p", tmp_path, "opus"), h.ask("p", tmp_path, "opus")):
+        assert "Read(**" not in " ".join(argv)                                  # a work or an ask keeps its flags
 
 
 def test_a_read_only_calls_floor_is_no_mcp_and_no_skills_only_when_the_cli_lists_them(tmp_path, monkeypatch):
@@ -330,7 +292,7 @@ def test_a_read_only_calls_floor_is_no_mcp_and_no_skills_only_when_the_cli_lists
     argv = h.read("p", tmp_path, "opus")
     assert _flag_values(argv, "--mcp-config") == [str(tmp_path / "bench.json")] and '{"mcpServers":{}}' not in argv
     assert harnesses.claude_floor(h)[1] == ["skills"]
-    for other in (h.work("p", tmp_path, "opus"), h.call("p", tmp_path, [], "opus"), h.ask("p", tmp_path, "opus")):
+    for other in (h.work("p", tmp_path, "opus"), h.ask("p", tmp_path, "opus")):
         assert "--disable-slash-commands" not in other                          # only the read-only call is bare
 
 
@@ -348,7 +310,7 @@ def test_a_read_only_calls_system_prompt_is_appended_only_when_asked_for_and_the
         with harness_claude.system_prompt(""):
             assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")                               # a block that says none says none
         assert _flag_values(h.read("p", tmp_path, "opus"), "--append-system-prompt")                          # …and the outer one is back
-        for other in (h.work("p", tmp_path, "opus"), h.call("p", tmp_path, [], "opus"), h.ask("p", tmp_path, "opus")):
+        for other in (h.work("p", tmp_path, "opus"), h.ask("p", tmp_path, "opus")):
             assert "--append-system-prompt" not in other                                                       # only the read-only call
         listed.clear()
         assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")                                   # an installed CLI that lists no such flag gets none
