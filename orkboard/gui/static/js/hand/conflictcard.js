@@ -2,8 +2,8 @@
 // a card of the kind *conflict* into the hand under the first lane, before *Confirm and start*, so nothing of the spec is paid. The row is `{kind: "conflict", idea, goal, title, number, point, title_then, why_then, text}`, one for each conflict open
 // (the decision's row has `conflicted` while one is). Its face is the hand's card (stopcard.js): the sign `conflict` (orkUI 0.30.0: two cards crossed; it draws nothing until that copy is in), the Orkmaster's crowned head as its asker, *Goes against
 // §<n>* at its foot and the alert's edge (it asks you). Lifted, there are **two L cards side by side over the pane**: the new goal's side (its title, its why, *Goes against §<n>: <point>*, the three choices) and **the earlier decision, come out of the
-// portal** (its title, its why, and *Open in the past*): it flies once from the ring in the table's edge to its place, and under reduced motion it lies there. The choices send `ideas.conflict {idea, number, choice, text?}`: **The new one replaces §<n>**,
-// **Keep §<n>**, **Other…** (the person's own words, in a field). Nothing is decided without a press; answered, the conflict leaves the hand and the last one lets *Confirm and start* show. The earlier card lies outside the lifted card (its body clips),
+// portal** (its title, its why, and *Open in the past*): it flies once from the ring in the table's edge to its place, and under reduced motion it lies there. The choices send `ideas.conflict {idea, number, choice, text?}`: **New wins**,
+// **Old wins**, **Your words** (the person's own words, in a field). Nothing is decided without a press; answered, the conflict leaves the hand and the last one lets *Confirm and start* show. The earlier card lies outside the lifted card (its body clips),
 // drawn into a box of the hand's own (`render`), the way a portal is. Its sheet is conflictcard.css, linked as the hand's are.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { h, render } from "preact";
@@ -31,11 +31,11 @@ if (typeof document !== "undefined") {                                  // the s
   }
 }
 
-// the words, as realm/lexicon.py says them (goes_against, new_one_replaces, keep_decision, conflict_other: tests/test_conflict_browser.py keeps them so)
+// the words, as realm/lexicon.py says them (goes_against, new_wins, old_wins, your_words: tests/test_conflict.py keeps them so; the battle's ways are the same words, goal "The battle and the gate" K)
 export const goesAgainst = (n) => `Goes against §${n}`;
-export const replacesWords = (n) => `The new one replaces §${n}`;
-export const keepWords = (n) => `Keep §${n}`;
-export const OTHER = "Other…";
+export const replacesWords = () => "New wins";
+export const keepWords = () => "Old wins";
+export const OTHER = "Your words";
 export const FLY_MS = 420;                                                // the earlier card's flight out of the ring (conflictcard.css `conflict-out`)
 
 /** The new goal's why: the first lines of its decision's *Why* (the decision row of the same goal), else nothing. */
@@ -98,7 +98,7 @@ async function conflictChoose(row, choice, words, close) {
   close?.();
 }
 
-/** The conflict as a card in play on the desktop (spec 168 D1): its ways are the hand's row, *Other…* the Pen (sayplay.js `PlayWays`), the earlier decision a second card beside it. */
+/** The conflict as a card in play on the desktop (spec 168 D1): its ways are the hand's row, *Your words* the Pen (sayplay.js `PlayWays`), the earlier decision a second card beside it. */
 export function ConflictPlay({ s }) {
   const row = s.row || {}, n = row.number, [box, setBox] = useState(null);
   useLayoutEffect(() => { setBox(document.querySelector(`.hand-lifted[data-key="${CSS.escape(s.key)}"]`)); }, [s.key]);

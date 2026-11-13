@@ -152,3 +152,160 @@ def test_on_a_phone_the_battle_is_the_whole_screen_after_a_reload_upright_with_b
     assert pg.evaluate("() => document.documentElement.scrollWidth") <= 390
     assert json.loads(sp.evaluate("(el) => JSON.stringify([...el.querySelectorAll('.bt *')].filter((n) => n.children.length === 0 && n.textContent.trim() && parseFloat(getComputedStyle(n).fontSize) < 12).length)")) == 0
     pg.close()
+
+
+# -- stage K: the battle's ways in the hand (decisions §303.4) -------------------------------------------------------------------------------------
+
+class Spy:
+    """`ideas.conflict` and `ideas.undo`, answered by stubs that log what the page sent (the host's own effect and events are tests/test_conflict.py's); `lefts` the conflicts each answer leaves."""
+
+    def __init__(self, host, lefts):
+        self.commands, self.log, self.lefts = host.commands, [], list(lefts)
+        self.was = {n: self.commands.get(n) for n in ("ideas.conflict", "ideas.undo")}
+        self.commands["ideas.conflict"] = self.conflict
+        self.commands["ideas.undo"] = lambda args: (self.log.append(("ideas.undo", dict(args))), {"ok": True})[1]
+
+    def conflict(self, args):
+        self.log.append(("ideas.conflict", dict(args)))
+        return {"ok": True, "left": self.lefts.pop(0) if self.lefts else 0, "reworded": args.get("choice") != "replace"}
+
+    def sent(self, name):
+        return [a for n, a in self.log if n == name]
+
+    def close(self):
+        self.commands.update({k: v for k, v in self.was.items() if v})
+
+
+def battle_open(gui, how="hand", width=1440, height=900, lefts=(1, 0), **kw):
+    pg, _host = opened(gui, width, height, **kw)
+    spy = Spy(gui[0].host, lefts)
+    if how == "hand":
+        pg.locator(CARD).first.click(timeout=WAIT_MS)
+    else:
+        pg.evaluate("() => import('/static/js/cards/spreads/open.js').then((m) => m.openSpread({ kind: 'battle', slug: 'timer' }))")
+    pg.locator("[data-spread=battle] [data-old]").first.wait_for(timeout=WAIT_MS)
+    return pg, spy
+
+
+def test_the_hand_holds_the_three_ways_each_with_its_line_and_the_seal_is_dim_until_a_way_that_asks_is_picked(gui):
+    pg, spy = battle_open(gui)
+    try:
+        ways = pg.locator(".frame-hand .mathand [data-way]")
+        assert [w.locator("b").inner_text() for w in ways.all()] == ["New wins", "Old wins", "Your words"]
+        lines = [w.locator("small").inner_text() for w in ways.all()]
+        assert "replaces it" in lines[0] and "One press" in lines[0] and "§212" in lines[0]
+        assert "worded again within §212" in lines[1] and "Asks first" in lines[1] and "yours" in lines[2].lower()
+        seal = pg.locator("[data-spread=battle] .mf-seal")
+        assert seal.get_attribute("aria-disabled") == "true" and "pick Old wins or Your words" in seal.inner_text()
+        seal.click(force=True)
+        pg.wait_for_timeout(200)
+        assert not spy.log
+        shot(pg, "K-battle-desk")
+    finally:
+        spy.close()
+        pg.close()
+
+
+def test_new_wins_is_one_press_from_the_hand_the_toast_offers_undo_and_the_next_old_card_is_laid(gui):
+    pg, spy = battle_open(gui, "hand")
+    try:
+        pg.locator(".frame-hand .mathand [data-way=new]").click()
+        pg.wait_for_function("() => document.body.innerText.includes('Undo')", timeout=WAIT_MS)
+        assert spy.sent("ideas.conflict") == [{"idea": "timer", "number": 212, "choice": "replace", "from": "hand"}]
+        assert pg.locator("[data-spread=battle]").count() == 1                                      # one left: the mat stays and lays the next
+        pg.get_by_role("button", name="Undo", exact=True).click()
+        pg.wait_for_timeout(300)
+        assert spy.sent("ideas.undo") == [{"idea": "timer"}]
+        pg.locator(".frame-hand .mathand [data-way=new]").click()                                   # the last one: the mat closes
+        pg.locator("[data-spread=battle]").wait_for(state="detached", timeout=WAIT_MS)
+        assert [a["choice"] for a in spy.sent("ideas.conflict")] == ["replace", "replace"]
+    finally:
+        spy.close()
+        pg.close()
+
+
+def test_old_wins_lights_the_seal_with_its_cost_said_before_anything_is_sent_and_goes_sealed_from_the_mat(gui):
+    pg, spy = battle_open(gui, "mat", lefts=(0,))
+    try:
+        pg.locator(".frame-hand .mathand [data-way=old]").click()
+        seal = pg.locator("[data-spread=battle] .mf-seal")
+        assert seal.get_attribute("aria-disabled") is None and "Old wins" in seal.inner_text() and "A paid pass" in seal.inner_text() and "$" in seal.inner_text()
+        assert not spy.log                                                                          # nothing is sent before the seal
+        seal.click()
+        pg.locator("[data-spread=battle]").wait_for(state="detached", timeout=WAIT_MS)
+        assert spy.sent("ideas.conflict") == [{"idea": "timer", "number": 212, "choice": "keep", "sealed": True, "from": "mat"}]
+        assert not spy.sent("ideas.undo") and "Undo" not in pg.locator("body").inner_text()      # a sealed move offers no Undo
+    finally:
+        spy.close()
+        pg.close()
+
+
+def test_your_words_opens_its_field_in_the_hands_place_then_the_seal_sends_them_and_esc_in_the_field_leaves_the_mat(gui):
+    pg, spy = battle_open(gui, "hand", lefts=(0,))
+    try:
+        pg.locator(".frame-hand .mathand [data-way=words]").click()
+        field = pg.get_by_role("textbox", name="Your words for the new decision")
+        field.wait_for(timeout=WAIT_MS)
+        assert pg.locator(".frame-hand .mathand [data-way=new]").count() == 0                       # the field lies in the ways' place
+        shot(pg, "K-battle-words")
+        pg.keyboard.press("Escape")                                                                 # closes the field only
+        pg.locator(".frame-hand .mathand [data-way=words]").wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.activeElement?.dataset?.way === 'words'", timeout=3000)
+        assert pg.locator("[data-spread=battle]").count() == 1
+        pg.locator(".frame-hand .mathand [data-way=words]").click()
+        pg.get_by_role("textbox", name="Your words for the new decision").fill("Eight seconds, the server keeps the end only")
+        seal = pg.locator("[data-spread=battle] .mf-seal")
+        assert seal.get_attribute("aria-disabled") == "true"                                        # written is not sent: the seal is still dim
+        pg.keyboard.press("Enter")
+        pg.wait_for_function("() => !document.querySelector('.hand-pen')", timeout=WAIT_MS)
+        assert not spy.log and seal.get_attribute("aria-disabled") is None and "Your words" in seal.inner_text() and "$" in seal.inner_text()
+        seal.click()
+        pg.locator("[data-spread=battle]").wait_for(state="detached", timeout=WAIT_MS)
+        assert spy.sent("ideas.conflict") == [{"idea": "timer", "number": 212, "choice": "other", "text": "Eight seconds, the server keeps the end only", "sealed": True, "from": "hand"}]
+    finally:
+        spy.close()
+        pg.close()
+
+
+def test_tab_goes_through_the_old_cards_the_line_yours_the_hands_ways_and_the_seal_and_close_each_with_a_visible_focus(gui):
+    pg, spy = battle_open(gui, "hand")
+    try:
+        seen = []                                                                                   # the focus starts on Close
+        for _ in range(30):
+            pg.keyboard.press("Tab")
+            seen.append(pg.evaluate("""() => { const a = document.activeElement;
+              return [(a.closest('[data-old]') || a).dataset.old || a.dataset.way || a.dataset.seal || (a.classList.contains('sp-shut') ? 'close' : a.closest('.bt-line') ? 'line' : a.closest('.bt-yours') ? 'yours' : a.tagName),
+                      a.matches(':focus-visible')]; }"""))
+            if len(seen) > 1 and seen[-1] == seen[0]:
+                break
+        names = [s[0] for s in seen]
+        assert all(s[1] for s in seen), seen
+        for want in ("§212", "§213", "line", "new", "old", "words", "reword", "close"):
+            assert want in names, names
+        assert names.index("§212") < names.index("§213") < names.index("line") < names.index("new") < names.index("old") < names.index("words") < names.index("reword") < names.index("close")
+    finally:
+        spy.close()
+        pg.close()
+
+
+def test_the_ways_lie_in_a_row_at_the_foot_on_a_phone_and_the_seal_follows_them(gui):
+    pg, spy = battle_open(gui, "mat", 390, 844, has_touch=True, is_mobile=True)
+    try:
+        ways = pg.locator("[data-spread=battle] .sp-hand [data-way]")
+        assert [w.locator("b").inner_text() for w in ways.all()] == ["New wins", "Old wins", "Your words"]
+        assert ways.first.locator("small").is_hidden() and "One press" in ways.first.get_attribute("aria-label")
+        assert pg.evaluate("() => document.documentElement.scrollWidth") <= 390
+        pg.locator("[data-spread=battle] .sp-hand [data-way=old]").click()
+        assert "Old wins" in pg.locator("[data-spread=battle] .mf-seal").inner_text()
+        shot(pg, "K-battle-phone")
+    finally:
+        spy.close()
+        pg.close()
+
+
+def test_the_wording_is_the_lexicons():
+    from orkboard.realm import lexicon
+    src = (Path(__file__).resolve().parents[1] / "orkboard" / "gui" / "static" / "js" / "cards" / "spreads" / "battle.js").read_text(encoding="utf-8")
+    for key, word in (("new_wins", "New wins"), ("old_wins", "Old wins"), ("your_words", "Your words")):
+        assert lexicon.term(key) == word and f'"{word}"' in src
+    assert "battle_settle" not in src

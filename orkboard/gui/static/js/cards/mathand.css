@@ -11,3 +11,4 @@
 .mathand__ways { flex: 1 1 auto; min-width: 0; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; align-self: stretch; align-items: center; padding: var(--ork-2); }
 .mathand__ways .bt-way.ork-card { height: 140px; }
 .mathand__ways .bt-way small { color: var(--ork-ink-read); }
+.mathand__ways .hand-pen.is-play { position: static; flex: 1 1 auto; min-width: 0; }

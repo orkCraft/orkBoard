@@ -25,6 +25,7 @@
 //   chooseFor(source, Component)   registers who fills the pane's `choose` kind for `openOver("choose", {source, …}, from, title)`: `Component({props, close}) -> html` reads its own data and draws a <Choose>;
 //                                  `source` "question" is questioncard.js's. The kind `choose` is drawn here (frame/kinds.js).
 import { useEffect, useRef, useState } from "preact/hooks";
+const OTHER_CHOICE = "Other…";      // realm/lexicon.py other_choice: a question card's own last choice (a conflict's third way is *Your words*)
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon, Sign } from "../orkui.js";
 import { drawn } from "../frame/kinds.js";
@@ -78,7 +79,7 @@ export function OtherCard({ i, seed, onOther, alone = false }) {
   const send = () => { const said = text.trim(); if (said) onOther(said); };
   if (!open) {
     return html`<button type="button" class="ork-card q-card q-card--blank ork-deal" data-choice="other" style=${`--ork-deal-i:${i}`} aria-label="Other…" onClick=${() => { setText(seed); setOpen(true); }} ...${leans}>
-      <span class="q-card__head"><span class="q-card__name">Other…</span></span>
+      <span class="q-card__head"><span class="q-card__name">${OTHER_CHOICE}</span></span>
       <span class="q-card__window"><${Icon} name="plus" /></span>
       <span class="q-card__label"></span><span class="q-card__foot"></span>
     </button>`;
@@ -88,7 +89,7 @@ export function OtherCard({ i, seed, onOther, alone = false }) {
     else if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   };
   return html`<div class="ork-card q-card q-card--blank is-open" data-choice="other" role="group" aria-label="Other…">
-    <span class="q-card__head"><span class="q-card__name">Other…</span></span>
+    <span class="q-card__head"><span class="q-card__name">${OTHER_CHOICE}</span></span>
     <textarea ref=${box} class="ork-field q-card__field" aria-label="Your own answer" rows="3" value=${text} onInput=${(e) => setText(e.target.value)} onKeyDown=${key}></textarea>
     <span class="q-card__label q-card__label--acts">${!alone && html`<button type="button" class="ork-btn quiet" onClick=${() => setOpen(false)}>Cancel</button>`}
       <button type="button" class="ork-btn primary" disabled=${!text.trim()} onClick=${send}>Send</button></span>

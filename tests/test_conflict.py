@@ -190,7 +190,9 @@ def test_two_conflicts_are_answered_one_at_a_time_and_confirm_waits_for_the_last
 
 
 def test_the_words_of_a_conflict_are_in_the_glossary():
-    assert [lexicon.term(k) for k in ("goes_against", "new_one_replaces", "keep_decision", "conflict_other")] == ["Goes against §<n>", "The new one replaces §<n>", "Keep §<n>", "Other…"]
+    assert [lexicon.term(k) for k in ("goes_against", "new_wins", "old_wins", "your_words", "keep_decision")] == ["Goes against §<n>", "New wins", "Old wins", "Your words", "Keep §<n>"]
+    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
+    assert [rows[k][1] for k in ("new_wins", "old_wins", "your_words")] == ["The new one replaces §<n>", "Keep §<n>", "Other…"]       # each keeps its old spelling
 
 
 # -- goal "The battle and the gate" I: the battle's three ways from a card or a mat (decisions §303.4) -----------------------------------------------
