@@ -6,7 +6,8 @@ order: 113
 size:
 priority: normal
 short: The battle and the gate
-phase: work
+gate: f3e9bf25 · 82 files · green
+phase: done
 route: product, design, tech
 by: claude-code
 schema: 3
