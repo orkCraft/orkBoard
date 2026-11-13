@@ -10,7 +10,7 @@
     goal_branch.row(state_dir, slug, review)                    # `{goal_branch, waits_for_dev, dev_why}` for the Board's row (empty for a goal with none)
 
 **The branch is `goal/<slug>`, never `idea/<slug>`**: git cannot hold a ref `idea/x` and `idea/x/k1` (a task's), so the goal's is under `goal/`.
-**Old goals and new ones are told apart by a file**: `<state>/ideas/<slug>/goal_branch.json` (`branch`, `from`, `at`, `synced`, `ready`, `blocked`, `blocked_kind`, `untested_ok`, `merged`).
+**Old goals and new ones are told apart by a file**: `<state>/ideas/<slug>/goal_branch.json` (`branch`, `from`, `at`, `synced`, `ready`, `blocked`, `blocked_kind`, `untested_ok`, `merged`; a red gate on the way to dev adds `failing`, the failing test ids, and `files`, the test files the gate ran).
 It is laid when a goal's first task starts and nothing of it has landed in dev (no task `merged` with a commit); a goal with such a task and no file is
 an old goal at work in dev, and its tasks land in dev as before. Once `merged` is set (the branch is gone) the goal lands in dev as before, so a goal
 sent back to work after dev goes on there. Nothing here pushes a goal's branch; dev is pushed when the project pushes after merging.
@@ -28,13 +28,14 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard import brand
-from orkboard.realm import dep_links, gate_config, lexicon, worktrees
+from orkboard.realm import dep_links, gate_config, gate_rerun, lexicon, worktrees
 from orkboard.realm.idea_git import GateRun, IdeaGit, _git, _ok
 
 PREFIX = "goal/"
 FILE = "goal_branch.json"
 TRIES = 3                                   # dev moved while the tests ran: the merge and the tests are made again, this many times
 WHY_MAX = 600
+_NO_RED = {"failing": [], "files": []}      # what a red gate kept (stage E): the failing test ids and the test files it ran, cleared with the block
 
 
 def words(key: str, **fill: str) -> str:
@@ -174,15 +175,15 @@ def step_started(git: IdeaGit, state_dir: Path, slug: str, n: int, dev: str) -> 
         try:
             sync(git, branch, dev)
         except GoalConflict as e:
-            update(state_dir, slug, blocked=str(e)[:WHY_MAX], blocked_kind="conflict")
+            update(state_dir, slug, blocked=str(e)[:WHY_MAX], blocked_kind="conflict", **_NO_RED)
             raise
-        update(state_dir, slug, synced=sorted({*(got.get("synced") or []), int(n)}), blocked="", blocked_kind="")
+        update(state_dir, slug, synced=sorted({*(got.get("synced") or []), int(n)}), blocked="", blocked_kind="", **_NO_RED)
 
 
 def ready(state_dir: Path, slug: str, yes: bool = True) -> None:
     """The last step was accepted (`yes`), or the goal is at work again."""
     if in_use(state_dir, slug):
-        update(state_dir, slug, ready=bool(yes), **({} if yes else {"blocked": "", "blocked_kind": ""}))
+        update(state_dir, slug, ready=bool(yes), **({} if yes else {"blocked": "", "blocked_kind": "", **_NO_RED}))
 
 
 def accepted_untested(state_dir: Path, root: Path, slug: str) -> bool:
@@ -226,7 +227,7 @@ def to_dev(git: IdeaGit, state_dir: Path, slug: str, dev: str, cancel: threading
     if not untested and gate_config.read(git.root).none:
         if not got.get("untested_ok"):                              # a project with no test: asked once a goal, at its result's Merge or here (`accepted_untested`)
             why = words("dev_no_tests", dev=dev)
-            update(state_dir, slug, blocked=why, blocked_kind="no_tests")
+            update(state_dir, slug, blocked=why, blocked_kind="no_tests", **_NO_RED)
             raise GoalRed(why)
         untested = True
     last = "dev moved while the tests ran"
@@ -239,7 +240,7 @@ def to_dev(git: IdeaGit, state_dir: Path, slug: str, dev: str, cancel: threading
                 tip = _ok(_git(git.root, "rev-parse", f"refs/heads/{branch}"))
                 old = _ok(_git(git.root, "rev-parse", f"refs/heads/{dev}"))
         except GoalConflict as e:
-            update(state_dir, slug, blocked=str(e)[:WHY_MAX], blocked_kind="conflict")
+            update(state_dir, slug, blocked=str(e)[:WHY_MAX], blocked_kind="conflict", **_NO_RED)
             raise
         if tip == old:                                           # dev holds everything the goal has: nothing to move
             return _done(git, state_dir, slug, branch, tip, [], "")
@@ -252,7 +253,9 @@ def to_dev(git: IdeaGit, state_dir: Path, slug: str, dev: str, cancel: threading
                 git.remove(path)
             if not run.ok or run.env or not (run.ran or run.docs or got.get("untested_ok")):         # a gate that ran no test is no green (a goal of documents only has none to run), unless the person merged a result no test ran on
                 why = _red(run, dev)
-                update(state_dir, slug, blocked=why, blocked_kind="env" if run.env else "red" if not run.ok else "no_tests")
+                red = not run.ok and not run.env
+                update(state_dir, slug, blocked=why, blocked_kind="env" if run.env else "red" if not run.ok else "no_tests",
+                       failing=gate_rerun.ids_failing(run.out) if red else [], files=list(run.files) if red else [])
                 raise GoalRed(why)
         with git.lock:
             if _ok(_git(git.root, "rev-parse", f"refs/heads/{dev}")) != old \
@@ -262,17 +265,17 @@ def to_dev(git: IdeaGit, state_dir: Path, slug: str, dev: str, cancel: threading
             try:
                 git._fast_forward(dev, old, tip)
             except RuntimeError as e:
-                update(state_dir, slug, blocked=" ".join(str(e).split())[:WHY_MAX], blocked_kind="other")
+                update(state_dir, slug, blocked=" ".join(str(e).split())[:WHY_MAX], blocked_kind="other", **_NO_RED)
                 raise
             note = git.push(dev) if push else ""
             return _done(git, state_dir, slug, branch, tip, subjects, note)
-    update(state_dir, slug, blocked=last, blocked_kind="other")
+    update(state_dir, slug, blocked=last, blocked_kind="other", **_NO_RED)
     raise RuntimeError(last)
 
 
 def _done(git: IdeaGit, state_dir: Path, slug: str, branch: str, tip: str, subjects: list[str], note: str) -> dict:
     with git.lock:
-        update(state_dir, slug, merged=tip, blocked="", blocked_kind="", ready=False)
+        update(state_dir, slug, merged=tip, blocked="", blocked_kind="", ready=False, **_NO_RED)
         _git(git.root, "branch", "-D", branch)                  # merged: the ref is no more use (it can fail where the branch is checked out; it is left then)
     return {"commit": tip, "subjects": subjects, "note": note}
 
@@ -285,7 +288,7 @@ def drop(git: IdeaGit, state_dir: Path, slug: str) -> bool:
         return False
     with git.lock:
         gone = not worktrees.branch_exists(git.root, branch) or _git(git.root, "branch", "-D", branch).returncode == 0
-        update(state_dir, slug, dropped=True, ready=False)
+        update(state_dir, slug, dropped=True, ready=False, **_NO_RED)
     return gone
 
 

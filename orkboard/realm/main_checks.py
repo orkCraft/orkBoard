@@ -130,7 +130,7 @@ def _checked(git, path, base, check, cancel, timeout, alone: bool = False):
             raise
         except Exception:
             found = None
-        record = {"failures": [{"id": i, "classification":
+        record = {"files": list(run.files), "failures": [{"id": i, "classification":
                    "flaky" if found and i in found.flaky else
                    "pre-existing" if found and i in found.red_before else
                    "new" if found and i in found.left else "unresolved"} for i in ids]} if ids else {}

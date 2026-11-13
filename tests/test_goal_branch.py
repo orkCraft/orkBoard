@@ -165,6 +165,34 @@ def test_the_gate_runs_on_dev_with_the_goal_and_a_red_one_moves_nothing(repo, st
     assert goal_branch.to_dev(g, state, "demo", "dev")["commit"] == git(repo, "rev-parse", "dev")
 
 
+def test_a_red_gate_keeps_its_failing_ids_and_files_and_a_green_one_after_clears_them(repo, state):
+    """The battle and the gate, stage E: a red on the way to dev keeps what failed and what ran, beside `blocked`."""
+    g = IdeaGit(repo)
+    goal_branch.begin(g, state, "demo", {"tasks": []}, "dev", 1)
+    land_task(g, "demo", "k1", "goal/demo", "tests/test_ok.py", "def test_ok():\n    assert False\n")
+    goal_branch.ready(state, "demo")
+    with pytest.raises(goal_branch.GoalRed):
+        goal_branch.to_dev(g, state, "demo", "dev")
+    got = goal_branch.read(state, "demo")
+    assert got["blocked_kind"] == "red" and got["failing"] == ["tests/test_ok.py::test_ok"] and got["files"] == ["tests/test_ok.py"]
+    land_task(g, "demo", "k2", "goal/demo", "tests/test_ok.py", "def test_ok():\n    assert True\n")
+    goal_branch.to_dev(g, state, "demo", "dev")
+    got = goal_branch.read(state, "demo")
+    assert got["failing"] == [] and got["files"] == [] and got["blocked"] == ""
+
+
+def test_a_dropped_goal_forgets_what_its_red_gate_kept(repo, state):
+    g = IdeaGit(repo)
+    goal_branch.begin(g, state, "demo", {"tasks": []}, "dev", 1)
+    land_task(g, "demo", "k1", "goal/demo", "tests/test_ok.py", "def test_ok():\n    assert False\n")
+    goal_branch.ready(state, "demo")
+    with pytest.raises(goal_branch.GoalRed):
+        goal_branch.to_dev(g, state, "demo", "dev")
+    goal_branch.drop(g, state, "demo")
+    got = goal_branch.read(state, "demo")
+    assert got["failing"] == [] and got["files"] == []
+
+
 def test_the_gate_is_run_on_the_tip_dev_will_become_with_dev_as_its_base(repo, state, monkeypatch):
     g = IdeaGit(repo)
     finished(g, state)
