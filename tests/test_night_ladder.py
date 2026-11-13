@@ -56,12 +56,6 @@ def test_each_rung_does_what_the_one_below_does():
     got = {r: [s for s in ("talk", "spec", "build", "propose") if idea_risk.night_allows(r, s)] for r in settings.NIGHT_RUNGS}
     assert got == {"off": [], "ideas": ["talk", "spec"], "builds": ["talk", "spec", "build"], "proposals": ["talk", "spec", "build", "propose"]}
     assert not idea_risk.night_allows("nonsense", "talk")
-    assert [idea_risk.holds_for_night(r) for r in settings.NIGHT_RUNGS] == [False, False, True, True]       # plans are held for the window from the builds up
-
-
-@pytest.mark.parametrize("risk, priority", [("low", "high"), ("low", "normal"), ("medium", "high"), ("high", "low")])
-def test_a_proposal_is_never_built_without_a_press(risk, priority):
-    assert idea_risk.decide_proposed() == "wait"
 
 
 # -- the caps and the reserve ----------------------------------------------------------------------------------------------------------------------

@@ -33,7 +33,6 @@ SKIP = set(code_map.SKIP) | {"vendor", "Pods", ".dart_tool", "ios", "android", "
 CODE = (".js", ".jsx", ".ts", ".tsx", ".mjs", ".vue", ".svelte")
 FILES = CODE + (".dart",)
 NOT_SCREEN = re.compile(r"\.(test|spec|stories|story|d|styles?|module|config)\.|\.(css|scss|less|json|md|snap)$|^_|^\+(layout|error|server)")
-FOLDERS = ("screens", "views", "pages")
 SUFFIXES = {"screen", "page", "view", "route"}
 BARE = {"Scaffold", "MaterialPageRoute", "CupertinoPageRoute", "Builder", "Center", "Container"}
 

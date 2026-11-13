@@ -25,9 +25,6 @@ LINES = {"pen": "It asks, and you answer in your own words each time.",
          "choice": "It offers its ways; you pick one.",
          "fork": "Its ways worked out, with their gains, costs and risks: one more call a question, on the elder tier.",
          "silent": "It decides and lays a card you can overrule; going into main, money and dropping a goal are still asked."}
-ACCEPTED, REPLAY = lexicon.term("way.accepted"), lexicon.term("way.replay")
-ACCEPTED_LINE = "The decision stands as it is."
-REPLAY_LINE = "The question comes back with its ways, and you answer it."
 KIND_LOCKS = {"drop": "dropping a goal", "later": "holding a goal"}      # a way's kind (realm/way_kinds.py) that is a lock on its own
 TEXT_LOCKS = (
     ("going into main", re.compile(r"\b(?:into|to|onto)\s+main\b|\bmain branch\b|\bmerge[sd]?\s+(?:it\s+)?(?:in)?to\s+main\b|\bpush(?:ed|ing)?\s+(?:it\s+)?to\s+(?:main|origin|the remote)\b", re.I)),
@@ -57,11 +54,6 @@ def lock_of(card: dict) -> str:
         if rx.search(text):
             return why
     return ""
-
-
-def may_decide(card: dict) -> bool:
-    """Whether a Silent leader may decide this question by itself: it is no lock."""
-    return not lock_of(card)
 
 
 def fork_price(target: str, tool: str = "claude") -> dict[str, float]:

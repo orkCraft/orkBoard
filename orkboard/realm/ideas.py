@@ -39,7 +39,7 @@ MAX_METRICS, MAX_LINKS = 12, 12
 KEEPER_METRICS, KEEPER_LINKS = 3, 8   # what the keeper writes of a goal (spec 35 §2)
 STATES = ("raw", "reading", "asks", "ready", "planning", "plan", "working", "done", "failed", "proposed",
           "judging", "judged", "sent", "passed", "routed", "talk", "decided", "sketch", "sections")      # four a pitch's (spec 65 §2: realm/pitches.py), never a plan's; the last five a goal's way (spec 99 §4: realm/goal_route.py; `sketch`: spec 121 §2.2)
-TASK_STATES = ("waiting", "ready", "held", "running", "testing", "picking", "review", "merged", "failed", "dropped")   # a task of a plan (core/idea_runner.py); `picking`: it left variants of one kind for the person to pick from, and waits, spending nothing (spec 51); `dropped`: the person dropped it, and nothing waits for it any more
+# A task of a plan (core/idea_runner.py) is waiting, ready, held, running, testing, picking, review, merged, failed or dropped; `picking`: it left variants of one kind for the person to pick from, and waits, spending nothing (spec 51); `dropped`: the person dropped it, and nothing waits for it any more
 QUEUES = ("now", "night", "hold")    # a raw idea: drafted at once, tonight, or stopped by the person (spec 35 §3)
 TITLE_KEEPER = 60                    # a goal's title as the keeper writes it
 SIZES = ("S", "M", "L")

@@ -42,7 +42,6 @@ BOARD_PAGES = ("pages/tracks", "pages/ideas")   # the Wiki's pages of the Board 
 EMPTY_OK = {"readme", "license", "licence", "orkcraft.toml"}      # a stem: a README (any extension), a licence, the gate's file
 WEB_DEPS = ("react", "next", "vue", "svelte", "vite", "astro")
 MOBILE_DEPS = ("react-native", "expo")
-MOBILE_FILES = ("pubspec.yaml", "AndroidManifest.xml")
 GAME_FILES = ("project.godot",)
 BACKEND_FILES = ("pyproject.toml", "requirements.txt", "go.mod", "Cargo.toml", "pom.xml", "Gemfile", "Dockerfile")
 CODE = {".py", ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".go", ".rs", ".java", ".kt", ".kts", ".swift", ".c", ".h", ".cc", ".cpp", ".hpp",

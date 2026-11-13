@@ -21,7 +21,6 @@ from typing import NamedTuple
 from orkboard.realm import dep_links, jobs, worktrees
 from orkboard.realm.idea_git import GateRun, IdeaGit, _git, _ok, has_summary, parse_tests, plain
 
-MAX_IDS = 20
 MIN_BUDGET_S = 10                    # less of the gate's clock than this left: nothing is run again
 
 

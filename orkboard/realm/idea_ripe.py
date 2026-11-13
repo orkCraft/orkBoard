@@ -18,7 +18,6 @@ from pathlib import Path
 from orkboard.realm import idea_risk, ideas, spec_sections
 
 HURRY_S, USUAL_S = 60, 600        # a high priority at low risk waits a minute; what the plan's autostart would start waits ten (spec 120 §3.5)
-OUTCOMES = ("hearing", "agreed", "decision")
 
 
 def _craft_of(s: dict, key: str, craft: str) -> bool:

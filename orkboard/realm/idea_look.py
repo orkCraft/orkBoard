@@ -82,11 +82,6 @@ def questions(answer: dict, limit: int, on: bool, look_by: str = "", lead_by: st
     return [idea_questions.line(q) for q in [*mine, *rest]], [look_by] * len(mine) + [lead_by] * len(rest), len(mine)
 
 
-def takes_pictures(question: str) -> bool:
-    """Whether a question (a page line) offers *Pictures you like* as an answer."""
-    return PICTURES in idea_questions.parse(question)["choices"]
-
-
 def screens(state_dir: Path, slug: str) -> bool:
     """Whether the goal's plan begins with a pick of the main screen's look (§2)."""
     return _type(state_dir, slug) in SCREENS

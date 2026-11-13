@@ -1,6 +1,6 @@
 """A goal's rune (docs/specs/50-parties-and-goals.md §2.3; spec 128 G, decisions §206.10): `pick`, `give` and what stores it (realm/idea_element.py), the
 `element` (shape) and `hue` (colour) of `ideas.add`'s answer, and the Map giving one, once, to a goal of before. Spec 111 B (decisions §187.3): the shapes no goal
-holds (`free`, `free_for`, the party nodes' `free_elements`) and the shape the person chose, which `ideas.add` takes and `give` stores. Spec 128 G: a rune is a shape
+holds (`free` of `open_elements`, the party nodes' `free_elements`) and the shape the person chose, which `ideas.add` takes and `give` stores. Spec 128 G: a rune is a shape
 in a colour, unique across the project (its open goals and its done goals whose result is not yet seen). Code, no model."""
 from __future__ import annotations
 
@@ -143,11 +143,11 @@ def test_a_done_goal_whose_result_is_seen_frees_its_rune(host):
     slugs = [raw(host, p, f"Goal number {n}", "working") for n in range(5)]
     for s in slugs:
         idea_element.give(root, state, s)
-    assert idea_element.free_for(root, state) == [] and idea_element.next_for(root, state) == "meadow"
+    assert idea_element.free(idea_element.open_elements(root, state)) == [] and idea_element.next_rune_for(root, state)[0] == "meadow"
     ideas.save_state(state, slugs[2], state="done")                                           # done, its result not seen: still held
-    assert idea_element.free_for(root, state) == [] and idea_element.of(state, slugs[2]) == "dust"
+    assert idea_element.free(idea_element.open_elements(root, state)) == [] and idea_element.of(state, slugs[2]) == "dust"
     ideas.save_state(state, slugs[2], seen_at=SEEN)                                           # seen: the rune is free
-    assert idea_element.free_for(root, state) == ["dust"] and idea_element.next_for(root, state) == "dust" and idea_element.next_hue_for(root, state) == "meadow"
+    assert idea_element.free(idea_element.open_elements(root, state)) == ["dust"] and idea_element.next_rune_for(root, state)[0] == "dust" and idea_element.next_rune_for(root, state)[1] == "meadow"
     assert idea_element.give(root, state, raw(host, p, "A new one", "working")) == "dust"
 
 
@@ -218,12 +218,12 @@ def test_a_goal_not_yet_read_has_one_too(host):
     assert node["state"] == "raw" and node["element"] == a["element"] != "" and node["hue"] == a["hue"] != ""
 
 
-# -- next_for -----------------------------------------------------------------------------------------------------
+# -- next_rune_for -----------------------------------------------------------------------------------------------------
 
-def test_next_for_is_what_give_gives_the_next_goal(host):
+def test_next_rune_for_is_what_give_gives_the_next_goal(host):
     root, state = host.ideas.root(), host.ideas.state_dir
     p, q = party(host), party(host, "Second party")
-    assert idea_element.next_for(root, state) == "meadow" and idea_element.next_hue_for(root, state) == "meadow"
+    assert idea_element.next_rune_for(root, state)[0] == "meadow" and idea_element.next_rune_for(root, state)[1] == "meadow"
     for n in range(7):
         want = idea_element.next_rune_for(root, state)
         assert idea_element.next_rune_for(root, state) == want                                # it reads and stores nothing
@@ -232,7 +232,7 @@ def test_next_for_is_what_give_gives_the_next_goal(host):
         assert (got, idea_element.hue_of(state, slug)) == want
     done = raw(host, p, "Finished", "done")
     ideas.save_state(state, done, element="lava", seen_at=SEEN)
-    assert idea_element.next_for(root, state) == idea_element.pick(idea_element.open_elements(root, state))   # a done goal seen does not count
+    assert idea_element.next_rune_for(root, state)[0] == idea_element.pick(idea_element.open_elements(root, state))   # a done goal seen does not count
 
 
 def test_every_party_of_the_map_carries_the_rune_the_next_goal_would_be_given(host):
@@ -246,8 +246,8 @@ def test_every_party_of_the_map_carries_the_rune_the_next_goal_would_be_given(ho
     parties = {g["slug"]: g for g in got["goals"]}
     assert {p, q, empty} <= set(parties)
     for slug, g in parties.items():
-        assert g["next_element"] == idea_element.next_for(root, state), slug
-        assert g["next_hue"] == idea_element.next_hue_for(root, state), slug
+        assert g["next_element"] == idea_element.next_rune_for(root, state)[0], slug
+        assert g["next_hue"] == idea_element.next_rune_for(root, state)[1], slug
     assert all((g["next_element"], g["next_hue"], g["free_elements"]) == ("meadow", "ice", []) for g in parties.values())     # five goals of the project (the done one not seen) hold the five shapes: meadow again, in the next hue
     one = host.command("ideas.map", {"goal": p})                                              # one party's Map says the same
     assert [(g["next_element"], g["next_hue"]) for g in one["goals"]] == [("meadow", "ice")]
@@ -265,10 +265,10 @@ def test_free_is_what_no_open_goal_has_in_the_order_and_empty_when_none_is_free(
     assert free(used) == ["meadow", "dust", "void", "lava"] and used == ["ice"]            # pure
 
 
-def test_free_for_reads_the_projects_goals(host):
+def test_the_free_shapes_read_the_projects_goals(host):
     root, state = host.ideas.root(), host.ideas.state_dir
     p, q = party(host), party(host, "Second party")
-    assert idea_element.free_for(root, state) == list(idea_element.ELEMENTS)
+    assert idea_element.free(idea_element.open_elements(root, state)) == list(idea_element.ELEMENTS)
     a, b = raw(host, p, "Open one", "working"), raw(host, p, "Open two", "working")
     ideas.save_state(state, a, element="meadow")
     ideas.save_state(state, b, element="dust")
@@ -276,11 +276,11 @@ def test_free_for_reads_the_projects_goals(host):
     ideas.save_state(state, done, element="lava", seen_at=SEEN)
     other = raw(host, q, "Another party's", "working")
     ideas.save_state(state, other, element="ice")
-    assert idea_element.free_for(root, state) == ["void", "lava"]                          # another party's counts; a done goal seen does not
+    assert idea_element.free(idea_element.open_elements(root, state)) == ["void", "lava"]                          # another party's counts; a done goal seen does not
     ideas.save_state(state, done, seen_at="")
-    assert idea_element.free_for(root, state) == ["void"]                                  # a done goal not yet seen does
+    assert idea_element.free(idea_element.open_elements(root, state)) == ["void"]                                  # a done goal not yet seen does
     ideas.save_state(state, raw(host, q, "Five", "working"), element="void")
-    assert idea_element.free_for(root, state) == []                                        # all five are used: empty, never "all"
+    assert idea_element.free(idea_element.open_elements(root, state)) == []                                        # all five are used: empty, never "all"
 
 
 def test_give_takes_the_shape_asked_for_picks_its_hue_stores_it_once_and_ignores_what_is_no_element(host):
@@ -306,7 +306,7 @@ def test_every_party_of_the_map_carries_the_projects_free_shapes(host):
     raw(host, q, "Only one", "working")
     parties = {g["slug"]: g for g in host.command("ideas.map", {})["goals"]}
     for slug, g in parties.items():
-        assert g["free_elements"] == idea_element.free_for(root, state), slug
+        assert g["free_elements"] == idea_element.free(idea_element.open_elements(root, state)), slug
     assert all(g["free_elements"] == ["lava"] for g in parties.values())                   # four goals hold four shapes (the done one is not seen), one for all parties
     assert all(g["next_element"] == g["free_elements"][0] for g in parties.values())       # the default is a free one while one is free
     for n in range(2):

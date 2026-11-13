@@ -3,9 +3,6 @@
     span = Span.parse("23:00", "08:00")      # start + length in minutes; may wrap past midnight
     span.contains(30)                        # 00:30 → True
     quiet_now(machine, now)                  # do-not-disturb: no fires, later no sound, no push
-    quiet_started(machine, now)              # when tonight's quiet hours began (None: not quiet)
-    at_work(machine, now)                    # the person's working hours hold: questions wait, no push or toast
-    work_ends(machine, now)                  # when today's working hours end (None: not at work)
 
 Times are local and snap to `STEP` minutes (the day bar has one cell per step).
 """
@@ -16,7 +13,6 @@ from dataclasses import dataclass
 
 DAY = 24 * 60
 STEP = 30
-DAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 
 def fmt(minute: int) -> str:
@@ -63,16 +59,6 @@ class Span:
     def contains(self, minute: int) -> bool:
         return (minute - self.start) % DAY < self.length
 
-    def with_start(self, minute: int) -> Span:
-        """The start moved, the end kept (never shorter than a step, never the whole day)."""
-        return Span.between(minute, self.end) or self
-
-    def with_end(self, minute: int) -> Span:
-        return Span.between(self.start, minute) or self
-
-    def shifted(self, by: int) -> Span:
-        return Span((self.start + snap(by)) % DAY, self.length)
-
     def label(self) -> str:
         return f"{fmt(self.start)}–{fmt(self.end)}"
 
@@ -87,9 +73,6 @@ class Span:
 
 
 DEFAULT_QUIET = Span(23 * 60, 9 * 60)            # 23:00–08:00
-# The person's working hours, quiet for their own project (docs/design/audience.md §2a, work-and-play.md §4):
-# 10:00–19:00 when they turn them on; off until they do. Every day of the week: a weekend is not guessed.
-DEFAULT_WORK = Span(10 * 60, 9 * 60)
 
 
 def _minute(now: dt.datetime) -> int:
@@ -99,32 +82,6 @@ def _minute(now: dt.datetime) -> int:
 def quiet_now(machine, now: dt.datetime | None = None) -> bool:
     now = now or dt.datetime.now()
     return machine.quiet is not None and machine.quiet.contains(_minute(now))
-
-
-def quiet_started(machine, now: dt.datetime | None = None) -> dt.datetime | None:
-    """When the quiet hours that hold now began (yesterday evening for a night past midnight); None
-    when it is not quiet."""
-    now = now or dt.datetime.now()
-    if not quiet_now(machine, now):
-        return None
-    back = (_minute(now) - machine.quiet.start) % DAY
-    return (now - dt.timedelta(minutes=back)).replace(second=0, microsecond=0)
-
-
-def at_work(machine, now: dt.datetime | None = None) -> bool:
-    """The person is at work: no push or toast for an ork's question, the orks assume and mark where safe."""
-    now = now or dt.datetime.now()
-    work = getattr(machine, "work", None)
-    return work is not None and work.contains(_minute(now))
-
-
-def work_ends(machine, now: dt.datetime | None = None) -> dt.datetime | None:
-    """When the working hours that hold now end (later today, or tomorrow for hours past midnight)."""
-    now = now or dt.datetime.now()
-    if not at_work(machine, now):
-        return None
-    ahead = (machine.work.end - _minute(now)) % DAY or DAY
-    return (now + dt.timedelta(minutes=ahead)).replace(second=0, microsecond=0)
 
 
 def status(machine, now: dt.datetime | None = None) -> str:

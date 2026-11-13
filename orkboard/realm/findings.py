@@ -3,7 +3,6 @@ files. The gathering where each thing is found is `realm/findings_gather.py`; th
 
     findings.add(state_dir, finding)                 # one finding a source's thing (`source` + `on` + `idea`): kept once; the stored finding (the old one when it was there)
     findings.of_goal(state_dir, idea)                # the goal's findings, the oldest first (`idea` "": the findings of no goal)
-    findings.open_of_goal(state_dir, idea)           # …those not answered
     findings.get(state_dir, fid)                     # the finding of that id, wherever it lies; None when there is none
     findings.told(state_dir, idea, fid, content)     # the finder's content in (`what`, `shows`, `promised`, `cause`): status `told`
     findings.sorted_(state_dir, idea, fid, level, change)   # the Orkmaster's level in: status `sorted`
@@ -150,10 +149,6 @@ def add(state_dir: Path, finding: dict) -> dict | None:
 
 def of_goal(state_dir: Path, idea: str) -> list[dict]:
     return record(state_dir, idea)["findings"]
-
-
-def open_of_goal(state_dir: Path, idea: str) -> list[dict]:
-    return [f for f in of_goal(state_dir, idea) if f["status"] != "answered"]
 
 
 def get(state_dir: Path, fid: str) -> dict | None:

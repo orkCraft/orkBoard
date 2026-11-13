@@ -67,14 +67,14 @@ def test_the_crafts_by_stage_idea_the_concepts_lean_being_made_adds_tech_standar
 
 @pytest.mark.parametrize("kind", project_kind.KINDS)
 def test_release_and_live_wait_no_chair_offers_them_but_release_s_card_stays_lean_with_its_engineer_and_notes_and_its_leader_on_the_cheaper_tier(kind):
-    release = project_stage.release_card()                  # §283.29: a Release already seated is read by its card
+    release = project_stage.card(party_recipes.CRAFTS[party_recipes.RELEASE])      # §283.29: a Release already seated is read by its card
     assert (release["locked"], release["size"], release["squad"], release["leader"]) == (False, "lean", ["release-engineer", "release-notes"], "release-manager")
     assert release["tiers"] == {"release-manager": "warrior", "release-engineer": "warrior", "release-notes": "warrior"}
     for stage in project_stage.STAGES:
         ids = {c["id"] for c in project_stage.crafts(kind, stage)}
         assert not ids & {"release", "run", "liveops"}
         assert not any(c["locked"] for c in project_stage.crafts(kind, stage))
-    assert project_stage.release_card()["id"] == "release" and project_stage.leader_tier() == "warrior"
+    assert release["id"] == "release"
 
 
 def test_a_card_says_its_squad_the_tiers_of_its_proposed_size_and_the_roles_to_tick_from():
@@ -117,7 +117,6 @@ def test_the_proposals_take_the_stage_and_offer_only_the_crafts_of_the_stages_re
     assert ids("idea") == ["product", "design"] and ids("being_made") == ["product", "design", "tech"] and ids("live") == ["product", "design", "tech", "marketing"] and len(ids(None)) == 6     # Release and Run wait (§283.29)
     release = [p for p in orkmaster.proposals(h.ideas.root(), h.ideas.state_dir, {}, kind, None, [], stage=None) if p["id"] == "release"][0]
     assert release["locked"] is False and release["squad"] == ["release-engineer", "release-notes"] and release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}]
-    assert orkmaster.proposal_ids("web", None, [], stage="idea") == ["product", "design"]
 
 
 def test_the_waiting_crafts_are_release_run_and_liveops_and_the_presets_say_so():

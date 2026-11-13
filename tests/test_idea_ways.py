@@ -109,14 +109,14 @@ def test_a_silent_leader_is_told_to_decide_in_the_talk_call(host, parties, model
 ])
 def test_a_question_that_is_a_lock_says_why(ask, choices, why, lock):
     c = {"q": ask, "choices": choices, "why": why, "pick": 0}
-    assert answer_ways.lock_of(c) == lock and not answer_ways.may_decide(c)
+    assert answer_ways.lock_of(c) == lock
 
 
 def test_a_way_whose_kind_is_drop_or_later_is_a_lock_and_an_ordinary_question_is_none():
     assert answer_ways.lock_of({"q": "What next?", "choices": ["A", "B"], "kinds": ["replace", "drop"]}) == "dropping a goal"
     assert answer_ways.lock_of({"q": "What next?", "choices": ["A", "B"], "kinds": ["later", "keep"]}) == "holding a goal"
     c = {"q": "Which container holds the rooms?", "choices": ["rooms.ts", "a new file"], "why": "the map shows one", "pick": 0, "kinds": ["keep", "replace"]}
-    assert answer_ways.lock_of(c) == "" and answer_ways.may_decide(c)
+    assert answer_ways.lock_of(c) == ""
 
 
 # -- Silent -------------------------------------------------------------------------------------------------------------------------

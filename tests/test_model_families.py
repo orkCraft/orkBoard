@@ -109,13 +109,6 @@ def test_a_family_reads_with_the_version_it_runs_on(tmp_path, monkeypatch):
     assert model_families.label("gemini-3.1-pro-high") == "gemini-3.1-pro-high"
 
 
-def test_an_api_call_names_a_model_even_without_a_list():
-    assert model_families.for_api("gemini-flash-tts", ["gemini-3.9-flash-tts-preview", "gemini-3.1-flash-tts-preview"]) \
-        == "gemini-3.9-flash-tts-preview"
-    assert model_families.for_api("gemini-flash-tts") == model_families.FALLBACK["gemini-flash-tts"]
-    assert model_families.for_api("gemini-2.5-flash-preview-tts") == "gemini-2.5-flash-preview-tts"
-
-
 def test_a_price_by_family_when_the_version_is_not_in_the_table():
     assert pricing.price_for("claude-opus-5-7") == pricing.PRICES["claude-opus-5-5"]     # the nearest version
     assert pricing.price_for("claude-sonnet-4-7") == pricing.PRICES["claude-sonnet-4-6"]

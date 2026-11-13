@@ -13,7 +13,7 @@ import contextvars
 import json
 from pathlib import Path
 
-from orkboard.realm.harness_tools import EFFORTS, _HELP, _model, cli_has, effort_supported, json_lines  # noqa: F401
+from orkboard.realm.harness_tools import EFFORTS, _HELP, _model, cli_has, json_lines  # noqa: F401
 
 
 # Claude Code ---------------------------------------------------------------------------------------

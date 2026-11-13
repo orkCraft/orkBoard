@@ -56,7 +56,7 @@ class MapMixin:
         self.pictures_for(got)
         main = machine.main_tool(getattr(self.host, "machine", None))              # what a party with no tool of its own runs on
         next_element, next_hue = idea_element.pick_rune(used)                           # what a new goal would be given (`idea_element.next_rune_for`, from the runes read above)
-        free_elements = idea_element.free([e for e, _h in used])                        # the shapes no goal holds (`idea_element.free_for`): [] when none is free
+        free_elements = idea_element.free([e for e, _h in used])                        # the shapes no goal holds: [] when none is free
         next_hues = {shape: idea_element.pick_hue(used, shape) for shape in idea_element.ELEMENTS}  # predictions only; includes the legacy assignments above
         for g in got["goals"]:
             g["next_element"], g["next_hue"], g["free_elements"] = next_element, next_hue, free_elements       # the project's, the same at every party

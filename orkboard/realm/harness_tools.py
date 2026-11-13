@@ -37,10 +37,6 @@ def cli_has(h, flag: str) -> bool:
     return flag in _HELP[path]
 
 
-def effort_supported(h) -> bool:
-    return cli_has(h, "--effort")
-
-
 def _model(flag: str, model: str) -> list[str]:
     return [flag, model] if model else []
 

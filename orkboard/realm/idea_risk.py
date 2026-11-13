@@ -160,13 +160,3 @@ NIGHT_STEPS = {"off": (), "ideas": ("talk", "spec"), "builds": ("talk", "spec", 
 def night_allows(rung: str, step: str) -> bool:
     """Whether the night at `rung` may do `step` ("talk", "spec", "build" or "propose"); each rung does what the one below does, and a rung out of the four is off."""
     return step in NIGHT_STEPS.get(rung, ())
-
-
-def holds_for_night(rung: str) -> bool:
-    """A plan that would start by itself is held for the night's window (`decide(held_for_night=)`) from the builds up; below them the night builds nothing, so nothing is held for it."""
-    return night_allows(rung, "build")
-
-
-def decide_proposed() -> str:
-    """A leader's night proposal is never built without a press (decisions §283.32): whatever its risk and priority, the board's answer is "wait"."""
-    return "wait"

@@ -105,7 +105,7 @@ def test_never_is_checked_again_over_a_listed_folder(tmp_path):
     files, _ = bb.pack(state, WIKI)
     assert not [p for p in files if "secrets" in p or "worktree" in p or "sign-in" in p]
     assert "ideas/dark-mode/state.json" in files
-    assert "secrets.json" in bb.NEVER and "worktrees/" in bb.NEVER and "lease.json" in bb.GOES
+    assert "secrets.json" in bb.NEVER and "worktrees/" in bb.NEVER and bb.allowed("lease.json")
 
 
 def test_a_path_that_leaves_the_folder_is_never_listed():

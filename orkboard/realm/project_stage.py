@@ -20,7 +20,7 @@ import json
 import os
 from pathlib import Path
 
-from orkboard.realm import ideas, library, party_recipes, project_kind
+from orkboard.realm import ideas, party_recipes, project_kind
 
 STAGES = ("idea", "being_made", "live")
 FROM = {"product": "idea", "game-design": "idea", "design": "idea", "art": "idea", "release": "idea",
@@ -117,13 +117,3 @@ def crafts(kind: str, stage: str) -> list[dict]:
 def offered(kind: str) -> dict[str, list[dict]]:
     """`{stage: cards}` for the three stages: what is offered when the project is at each."""
     return {stage: crafts(kind, stage) for stage in STAGES}
-
-
-def release_card() -> dict:
-    """Release's card (offered at every stage, not locked): Lean, its leader and the two who do."""
-    return card(party_recipes.CRAFTS[party_recipes.RELEASE])
-
-
-def leader_tier() -> str:
-    """The tier Release's leader runs on (§151.6, §157.2): its own, the cheaper one, Seasoned, at every size."""
-    return party_recipes.tiers_for(library.RELEASE_MANAGER, [], "standard")[library.RELEASE_MANAGER]

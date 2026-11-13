@@ -40,7 +40,7 @@ from orkboard.realm import model_families
 from orkboard.realm.harness_claude import (  # noqa: F401  (re-exported: the names callers and tests use)
     CLAUDE_NO_TOOLS, CLAUDE_READ_ONLY, CLAUDE_READ_WEB, EFFORTS, READ_DENIED, _HELP, _claude_ask, _claude_call, _claude_mcp,
     _claude_read, _claude_read_dirs, _claude_run, _claude_work, _claude_work_rules, claude_envelope, claude_error, claude_events,
-    claude_floor, claude_reads, cli_has, effort_supported)
+    claude_floor, claude_reads, cli_has)
 from orkboard.realm.harness_tools import (  # noqa: F401
     AGY_NO_COMMANDS, AGY_WORK_FREE, CODEX_USAGE_KEYS, CODEX_WEB, HERMES_READ, HERMES_WORK, NOWHERE, PI_READ, PI_WORK, _agy,
     _agy_reads, _agy_works, _cursor, _hermes, _hermes_env, _model, _pi, _plain_tokens, agy_error, codex_config_model, codex_error, codex_exec,
