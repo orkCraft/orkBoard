@@ -77,7 +77,7 @@ def test_take_back_is_a_drop_s_undo_only(host):
 def test_every_kind_is_one_press_with_its_reverse_or_sealed():
     assert not set(idea_undo.ONE_PRESS) & set(idea_undo.SEALED)
     assert set(idea_undo.SEALED) == {"merge_main", "send_branch", "ship_release", "paid_pass", "start_work", "fix_stage"}
-    assert set(idea_undo.ONE_PRESS) == {"drop", "hold", "answer", "fix_goal"}          # goal "The battle and the gate" G, H: Fix it after dev one press, its stage again sealed
+    assert set(idea_undo.ONE_PRESS) == {"drop", "hold", "answer", "fix_goal", "new_wins"}          # I: New wins, a battle's one press, its decision back; goal "The battle and the gate" G, H: Fix it after dev one press, its stage again sealed
     for kind in {*idea_undo.ONE_PRESS, *idea_undo.SEALED}:
         assert idea_undo.way(kind) in ("press", "sealed")
     assert all(idea_undo.ONE_PRESS.values())                         # a reverse for each
