@@ -346,15 +346,17 @@ def test_each_seats_subagent_has_its_tools_and_model_and_a_grunt_every_tool_in_a
         assert fields["tools"] == "Read, Grep, Glob, Edit, Write" and "Bash" not in fields["tools"] and "isolation" not in fields
         assert body.startswith(f"Read `{WIKI}/BOARD.md` first, then `{WIKI}/roles/{role}.md`")
     models = {r: front(root / f".claude/agents/ork-{r}.md")[0]["model"] for r in ("orkmaster", "tech-leader", "design-leader", "taskmaster", "grunt")}
-    assert models == {"orkmaster": "inherit", "tech-leader": harnesses.model_on("claude", "elder"), "design-leader": "opus", "taskmaster": "opus", "grunt": "sonnet"}
+    assert models == {"orkmaster": "sonnet", "tech-leader": harnesses.model_on("claude", "warrior"), "design-leader": "sonnet", "taskmaster": "opus", "grunt": "sonnet"}
     grunt, _ = front(root / ".claude/agents/ork-grunt.md")
     assert grunt["isolation"] == "worktree" and "tools" not in grunt and "disallowedTools" not in grunt           # left out: every tool
     assert agent_rules_text.CLAUDE_OWN_AGENT in (root / ".claude/agents/ork-grunt.md").read_text(encoding="utf-8").split("\n---\n")[0]
 
 
-def test_the_release_leader_runs_on_the_cheaper_tier_and_a_model_no_table_names_is_inherit(tmp_path, monkeypatch):
-    from orkboard.realm import harnesses
-    assert agent_rules.model_of("release-leader") == "sonnet" and agent_rules.model_of("tech-leader") == "opus" and agent_rules.model_of("orkmaster") == "inherit"
+def test_the_seats_of_words_run_on_the_cheaper_tier_the_taskmaster_on_its_own_and_a_model_no_table_names_is_inherit(tmp_path, monkeypatch):
+    from orkboard.realm import harnesses, party_recipes
+    assert {r: agent_rules.model_of(r) for r in ("release-leader", "tech-leader", "product-leader", "orkmaster", "taskmaster", "grunt")} == {
+        "release-leader": "sonnet", "tech-leader": "sonnet", "product-leader": "sonnet", "orkmaster": "sonnet", "taskmaster": "opus", "grunt": "sonnet"}
+    assert party_recipes.tiers_for("tech-leader", [], "standard")["tech-leader"] == "elder"          # the party's tier, its gear and its price, stays the leader's
     monkeypatch.setattr(harnesses, "model_on", lambda harness, tier: "gemini-pro-high")
     assert agent_rules.model_of("tech-leader") == "inherit"
 

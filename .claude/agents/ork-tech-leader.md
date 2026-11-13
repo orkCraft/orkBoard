@@ -3,9 +3,9 @@ name: ork-tech-leader
 description: "Speaks for the tech party of this project's Board: its view in Talk and its section of a goal's spec. Use it for a goal in phase talk or spec."
 # `tools`, `model` and `isolation` are Claude Code's own fields of a subagent (not the Agent Skills standard's); other tools ignore them.
 tools: Read, Grep, Glob, Edit, Write
-model: opus
+model: sonnet
 schema: 3
-hash: 6df3a708f4d4
+hash: 19a7d7212487
 ---
 Read `llm-wiki/general/BOARD.md` first, then `llm-wiki/general/roles/tech-leader.md`, which is who you are on this project's Board. What follows is the same text.
 
