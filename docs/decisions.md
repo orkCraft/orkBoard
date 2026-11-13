@@ -8620,3 +8620,22 @@ that spec 37 §9 left in Orkline. Each new face was made for both. So:
    named where the switch is written.
 
 The owner's call.
+
+## 305. Orkboard keeps nothing for Orkline: no code, setting, branch or comment of it; the state keeps its names (13 November 2026, the owner)
+
+Changes: 50 (Orkline imports Orkboard's modules, never the other way round: Orkline no longer counts here), 121.4 and 147.1
+(Operations and the modules kept, frozen, for Orkline: they go), spec 37 §9 (a fix the testers need made in both the same
+day; the Orkboard/Orkline boundary kept by tests). Kept: 95 (Orkboard published on its own), CLAUDE.md's state names.
+
+Why: the person, 13 November 2026: «Давай удалим все что связано с orkline, пока это излишне». Orkboard still carried what
+only Orkline used: Operations, the town's onboarding steps, the Treasury, Orkline's places and guard step, settings only
+Orkline read, a switch of the product's name, and the tests that kept the boundary while Orkline froze its copy. Each was
+one more thing a change had to step around. So:
+1. **Nothing is kept for Orkline** or for another product that might run these modules: code, settings, commands,
+   snapshot fields, comments and tests that exist only for it go. Orkline, if it comes back, takes what it needs then.
+2. **The state keeps its names** (`~/.config/orkcraft/`, `<project>/.orkcraft/`, `.orkcraft.json`, `orkcraft.toml`, the
+   `ORKCRAFT_*` variables, the keychain's `orkcraft-ideas`, the phone's `orkcraft.v1` and `orkcraft-app-v*`): renaming
+   them would lose a machine's settings, a project's Board and its paired phones, so that is a decision of its own.
+3. **One guard stays**: the package imports nothing named `orkcraft`.
+
+The owner's call.

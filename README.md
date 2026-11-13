@@ -110,8 +110,7 @@ It is drawn in [orkUI](https://github.com/orkCraft/orkUI)'s office look: dark, w
 signal. Its pictures are the races' heads, being redrawn as a humorous flat cartoon, and the pictures on the cards, which are
 pixel pictures for now.
 
-It shares Orkline's settings (`~/.config/orkcraft/`) and a project's Board (`<project>/.orkcraft/`, `orkcraft.toml`):
-switching between the two loses nothing.
+Its settings are in `~/.config/orkcraft/`, a project's Board in `<project>/.orkcraft/` and `orkcraft.toml`.
 
 ## Without the app
 

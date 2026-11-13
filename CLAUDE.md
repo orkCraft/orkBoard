@@ -1,19 +1,18 @@
 # Orkboard — notes for contributors and agents
 
-Orkboard is Orkline's Board on its own, published as a product of its own (docs/specs/37-board-and-line.md,
-docs/decisions.md §50, §95): the Board with its parties and goals, the hand and Play, on the desktop, in VS Code and on a
-paired phone; the window as decided is docs/specs/95-the-window-as-decided.md. **Orkline imports Orkboard, never the
-other way round**: nothing here imports Orkline's package (`orkcraft`).
+Orkboard is the Board with its parties and goals, the hand and Play, on the desktop, in VS Code and on a paired phone; the
+window as decided is docs/specs/95-the-window-as-decided.md. It began as Orkline's Board (docs/specs/37-board-and-line.md)
+and keeps nothing for Orkline now (decisions §305): no code, setting or branch of it, and nothing imports Orkline's
+package (`orkcraft`).
 
 ## Wording
 
 - In everything a person reads — the interface (labels, hints, toasts, errors), the docs, the README — write **ork** /
   **orks** / **Ork** and **orkestration** / **orkestrate**, never "orc" or "orchestration". The product's name in the
-  interface is **Orkboard**, published on its own (decisions §95); *Orkline* is the line's name. Where a page is shared
-  with Orkline it says its host's name, never a fixed one.
+  interface is **Orkboard**, published on its own (decisions §95).
 - Code keeps its names: identifiers, module and file names (`orc_id`), CSS ids, dict keys, event ids and config values
-  stay as they are. The state keeps Orkline's names, so Orkboard and Orkline read the same settings and the same Board
-  of a project, and switching between them loses nothing: `~/.config/orkcraft/`, `<project>/.orkcraft/`,
+  stay as they are. The state keeps its first names, so a machine's settings, a project's Board and a paired phone
+  carry on as they were: `~/.config/orkcraft/`, `<project>/.orkcraft/`,
   `.orkcraft.json`, `orkcraft.toml`, the `ORKCRAFT_*` variables, the keychain's `orkcraft-ideas`, the phone's
   `orkcraft.v1` and its `orkcraft-app-v*` cache. Only the package is `orkboard`.
 - **One look, orkUI's office** (dark; colour is the party, the element and a signal, decisions §268; its pictures are orkUI's
@@ -54,11 +53,8 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   (`tests/test_architecture.py` checks it). A service changes the Board and publishes on the bus (`core/bus.py`). It
   never shows a toast or a dialog itself.
 - Split a module before it grows past ~600 lines.
-- **Orkboard and Orkline** (decisions §50): Orkline imports Orkboard's modules, never the other way round. Every import
-  of the package (a lazy one too) names one of its own modules, and Orkboard starts with no module of Orkline's
-  (`tests/test_architecture.py`). New engine code (the Board, a tool's run, the gate) is written here. While Orkline
-  keeps its frozen copy of these modules (the testers' week, spec 37 §9), a fix the testers need is made here first and
-  in Orkline the same day, this repository's commit named in Orkline's.
+- **Nothing for Orkline** (decisions §305): no code, setting, comment or branch is kept for Orkline or another product
+  that might run these modules; the package imports nothing named `orkcraft` (`tests/test_architecture.py`).
 - **The VS Code extension** (`vscode/`) is a frame, not a second face: it starts `orkboard --serve <folder>`
   (`gui/extension.py`) and shows the page in an editor tab. It draws nothing of the Board itself; a change to what the
   Board shows is made in `gui/`. Its tests: `cd vscode && npm test`.
