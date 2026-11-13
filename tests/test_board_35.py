@@ -145,7 +145,6 @@ def test_a_goal_needs_a_party_and_is_drafted_at_once_whatever_its_priority_for_t
     with pytest.raises(CommandError, match="^A goal needs a party$"):
         host.command("ideas.add", {"text": "x", "track": "general"})
     g = _goal(host)
-    host.command("ideas.night_allow", {"allow": True})          # stored for the phone and Orkline, read by nothing here (spec 99 §3)
     seen = len(model.seen)
     high = _sent(host, "a high one", g, priority="high")
     _wait(host, high["slug"])
@@ -198,7 +197,6 @@ def test_autostart_off_or_a_question_or_a_stopped_plan_waits_for_the_person(host
 
 def test_a_low_safe_plan_starts_at_once_and_a_plan_of_before_the_night_went_waits_for_start_now_or_the_clock(host, model, runner):
     g = _goal(host, priority="low")
-    host.command("ideas.night_allow", {"allow": True})          # stored, read by nothing here (spec 99 §3)
     slug = host.command("ideas.add", {"text": "low and safe", "track": g, "priority": "low"})["slug"]
     ideas.save_state(host.ideas.state_dir, slug, state="raw")
     host.ideas.keeper.draft_one(slug)
@@ -264,7 +262,6 @@ def test_a_proposal_that_waits_is_taken_and_drafted_at_once_or_dropped_and_none_
 
 def test_queue_read_stop_and_board_set(host, model, runner):
     g = _goal(host)
-    host.command("ideas.night_allow", {"allow": True})          # stored, read by nothing here (spec 99 §3)
     slug = host.command("ideas.add", {"text": "kept", "track": g, "hold": True})["slug"]
     host.command("ideas.read_stop", {"slug": slug})
     assert ideas.state(host.ideas.state_dir, slug)["queue"] == "hold"
@@ -277,7 +274,7 @@ def test_queue_read_stop_and_board_set(host, model, runner):
     assert [(e["queue"], e["via"]) for e in _events(host, "idea_queued")] == [("hold", "idea"), ("now", "map")]   # spec 41 §4
     assert ideas.state(host.ideas.state_dir, slug)["state"] != "raw"
     got = host.command("ideas.board_set", {"target": "quality", "night": "22:00-05:00", "device": "phone"})
-    assert got == {"target": "quality", "autostart": True, "night": "22:00-05:00", "review": False, "review_notice": False, "night_low": True,
+    assert got == {"target": "quality", "autostart": True, "night": "22:00-05:00", "review": False, "review_notice": False, "night_low": None,
                    "work_at_night": False, "look_wait": "none", "build_start": "now", "night_rung": "off", "max_parallel": 1, "hours": []}      # spec 168 H2: the build starts as one value, the night's rung and goals at once; spec 121 §4.1: off by default; spec 84 §4: review is off by default; spec 144: the tests do not wait to look (tests/conftest.py)
     board = host.command("ideas.board")
     assert (board["target"], board["autostart"], board["night"]) == ("quality", True, "22:00-05:00")
@@ -286,17 +283,12 @@ def test_queue_read_stop_and_board_set(host, model, runner):
     (e,) = _events(host, "board_set")
     assert e["target"] == "quality" and e["night"] == "22:00-05:00" and e["device"] == "phone"
     assert [e["idea"] for e in _events(host, "keeper_stopped")] == [slug]
-    assert _events(host, "night_allowed") == []                                         # the answer is stored and nothing more
 
 
-def test_the_nights_answer_is_stored_for_the_phone_and_orkline_and_read_by_nothing(host, model, runner):
+def test_the_nights_answer_has_no_command_any_more(host, model, runner):
     assert host.command("ideas.board")["night_low"] is None
-    assert host.command("ideas.night_allow", {"allow": True}) == {"ok": True, "moved": 0}
-    assert host.command("ideas.board")["night_low"] is True
-    host.command("ideas.night_allow", {"allow": False})
-    assert host.command("ideas.board")["night_low"] is False
-    with pytest.raises(CommandError, match="on or off"):
-        host.command("ideas.night_allow", {"allow": "yes"})
+    with pytest.raises(CommandError, match="Unknown command"):
+        host.command("ideas.night_allow", {"allow": True})
 
 
 def test_a_file_todo_is_kept_outside_the_repository_and_off_the_plan(host, model, runner):

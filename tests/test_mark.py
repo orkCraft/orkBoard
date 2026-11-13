@@ -1,5 +1,5 @@
 """Orkboard's mark, the Orkmaster's crowned head (docs/specs/107-what-the-owners-day-said.md §12; orkboard/design/mark.py): the files `python -m orkboard.design.mark` makes are there at their sizes, drawn by whole
-numbers with no smoothing (every pixel is one of the head's colours or the office's canvas), the svg is a valid, titled drawing, and the product that runs says which of the two marks it shows (Orkboard's or Orkline's).
+numbers with no smoothing (every pixel is one of the head's colours or the office's canvas), the svg is a valid, titled drawing, and it is the mark the phone, the Dock and the favicon show.
 The pixel checks need Pillow (a dev extra) and are skipped without it."""
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ import pytest
 
 from orkboard.design import logo, mark, tokens
 from orkboard.gui import mac_app, pwa
-from orkboard.orkget import profile
 
 SIZES = {"icon-192.png": 192, "icon-512.png": 512, "apple-touch-icon.png": 180, "icon-256.png": 256}
 PNG = b"\x89PNG\r\n\x1a\n"
@@ -93,10 +92,7 @@ def test_the_mark_is_made_again_the_same(tmp_path):
             assert path.read_bytes() == (logo.BOARD / path.name).read_bytes(), path.name
 
 
-# -- served by the brand ---------------------------------------------------------------------------------------
-
-ORKLINE = profile.Profile(product="orkline", name="Orkline", package="orkcraft", version="0", agent="orkline", manifest="", source="")
-
+# -- served ----------------------------------------------------------------------------------------------------
 
 def _body(raw: bytes) -> bytes:
     return raw.partition(b"\r\n\r\n")[2]
@@ -106,13 +102,6 @@ def test_orkboard_shows_its_own_mark_to_the_phone_and_the_dock():
     for name in logo.PHONE:
         assert _body(pwa.serve("GET", f"/app/{name}")) == (logo.BOARD / name).read_bytes(), name
     assert mac_app.ICON == logo.BOARD / "icon-512.png" and logo.favicon() == logo.BOARD / "favicon.ico"
-
-
-def test_where_orkline_runs_them_it_keeps_its_ork(monkeypatch):
-    monkeypatch.setattr(profile, "_current", ORKLINE)
-    for name in logo.PHONE:
-        assert _body(pwa.serve("GET", f"/app/{name}")) == (pwa.ROOT / name).read_bytes(), name
-    assert logo.favicon() == logo.ROOT / "favicon.ico"
 
 
 def _favicon(repo) -> bytes:
@@ -131,7 +120,5 @@ def _favicon(repo) -> bytes:
         thread.join(10)
 
 
-def test_the_servers_favicon_is_by_the_brand(fake_repo, monkeypatch):
+def test_the_servers_favicon_is_orkboards_mark(fake_repo):
     assert _favicon(fake_repo) == (logo.BOARD / "favicon.ico").read_bytes()
-    monkeypatch.setattr(profile, "_current", ORKLINE)
-    assert _favicon(fake_repo) == (logo.ROOT / "favicon.ico").read_bytes()

@@ -22,7 +22,7 @@ snapshot adds them to the same 🪙, so every limit and gate sees the whole spen
 
 Each call is also a line of `.orkcraft/spend/calls.jsonl`: when, building, purpose, model, tokens, $ — the numbers
 the Spend window's *By purpose* reads (docs/design/simplify.md §2). The ledger is the call's own: the one its caller
-named on its thread (`ledger_at`: a project's Board, Operations'), else the shown project's (`keep_ledger`).
+named on its thread (`ledger_at`: a project's Board), else the shown project's (`keep_ledger`).
 """
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def ledger_of(repo_root: Path) -> Path:
 @contextlib.contextmanager
 def ledger_at(path: Path | None):
     """The model calls made in this block, on this thread, write their line to `path` (a ledger file; None: no line),
-    whichever project is shown: concurrent calls of two projects and of Operations each go to their own."""
+    whichever project is shown: concurrent calls of two projects each go to their own."""
     token = _PLACE.set((path,))
     try:
         yield
@@ -183,11 +183,6 @@ def noted(usd: float | None, source: str, purpose: str = "", tokens: int | None 
 def charged(env: dict | None) -> bool:
     """Whether a call run with `env` leaves a transcript this run already counts (it carries `ORKCRAFT_RUN`)."""
     return bool((env or {}).get("ORKCRAFT_RUN"))
-
-
-def purpose_env(purpose: str = "") -> dict[str, str]:
-    """The env a transcript run carries so the session hook records what it was for."""
-    return {"ORKCRAFT_PURPOSE": purpose if purpose in PURPOSES else purpose_now()}
 
 
 def charges(since: dt.datetime) -> list[Charge]:

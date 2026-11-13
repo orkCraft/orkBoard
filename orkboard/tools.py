@@ -28,9 +28,6 @@ from orkboard.realm import harnesses
 VERSION_TIMEOUT_S = 5
 # The oldest claude with `claude auth status`: an older one would take "auth status" for a prompt.
 CLAUDE_AUTH_MIN = (2, 1, 41)
-# The oldest agy the 🛡 Warder guards: `--mode` is honoured in `-p` runs and a project's
-# `.agents/hooks.json` loads once the folder is trusted (docs/design/agy-guard.md).
-AGY_WARDER_MIN = (1, 1, 12)
 
 
 @dataclass(frozen=True)
@@ -113,18 +110,6 @@ def version_tuple(version: str) -> tuple[int, ...] | None:
     """"1.2.17" (or "v1.2.17-beta") as (1, 2, 17); None when it holds no number."""
     m = re.match(r"v?(\d+(?:\.\d+)*)", (version or "").strip())
     return tuple(int(x) for x in m.group(1).split(".")) if m else None
-
-
-def agy_guardable(version: str) -> bool:
-    """Whether the 🛡 Warder can guard this agy: 1.1.12 or later. An unknown version cannot be."""
-    v = version_tuple(version)
-    return v is not None and v >= AGY_WARDER_MIN
-
-
-def agy_version(which: Callable[[str], str | None] | None = None, run: Callable | None = None) -> str | None:
-    """Blocking: the agy on PATH's version ("" when it does not say), or None when agy is not installed."""
-    path = (which or shutil.which)(_bin("agy"))
-    return None if not path else _version(path, run or subprocess.run)
 
 
 def _claude_login(env: dict, home: Path, path: str = "", run: Callable | None = None,

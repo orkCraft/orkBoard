@@ -115,21 +115,12 @@ class BoardMixin:
                 "night_rung": night_slot.way(s), "max_parallel": int(s.get("max_parallel") or settings.IDEAS["max_parallel"]),
                 "hours": list(s.get("hours") or [])}                                                     # spec 138 B.1: When I am at the computer
 
-    def night_allow(self, args: dict) -> dict:
-        """`{"allow": bool}`: the answer of the phone's and Orkline's *Low work may run at night*, stored as `night_low` and read by
-        nothing here (spec 99 §3: the night is gone; Orkline reads the setting). Nothing moves, so `moved` is always 0."""
-        if not isinstance(args.get("allow"), bool):
-            raise IdeasError("Low work may run at night is on or off")
-        self.save_settings({**self.settings_now(), "night_low": args["allow"]})
-        self.changed("")
-        return {"ok": True, "moved": 0}
-
     def board_set(self, args: dict) -> dict:
         mine = dict(self.settings_now())
         if args.get("review_notice") is False and getattr(getattr(self.host, "machine", None), "review_notice", False):      # said once (spec 84 §1)
             self.host.machine.review_notice = False
             settings.save(self.host.machine)
-        if "build_start" in args:                            # spec 168 H2: the one setting writes the two keys the Board keeps (Orkline reads them)
+        if "build_start" in args:                            # spec 168 H2: the one setting writes the two keys the Board keeps
             keys = look_wait.build_start_keys(args["build_start"], mine.get("look_wait"))
             if not keys:
                 raise IdeasError(look_wait.BUILD_REFUSED)

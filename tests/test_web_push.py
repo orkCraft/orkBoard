@@ -42,7 +42,7 @@ def test_seal_gives_the_body_of_rfcs_appendix_a_byte_for_byte():
 def test_a_receiver_opens_what_is_sealed_to_it():
     receiver = ec.generate_private_key(ec.SECP256R1())
     auth = b"0123456789abcdef"
-    body = w.seal(b'{"title":"Orkline"}', w.b64(w.point(receiver.public_key())), w.b64(auth))
+    body = w.seal(b'{"title":"Orkboard"}', w.b64(w.point(receiver.public_key())), w.b64(auth))
     salt, size, idlen = body[:16], int.from_bytes(body[16:20], "big"), body[20]
     sender = body[21:21 + idlen]
     assert size == 4096 and idlen == 65
@@ -51,7 +51,7 @@ def test_a_receiver_opens_what_is_sealed_to_it():
     ikm = HKDF(hashes.SHA256(), 32, auth, b"WebPush: info\x00" + ua + sender).derive(shared)
     cek = HKDF(hashes.SHA256(), 16, salt, b"Content-Encoding: aes128gcm\x00").derive(ikm)
     nonce = HKDF(hashes.SHA256(), 12, salt, b"Content-Encoding: nonce\x00").derive(ikm)
-    assert AESGCM(cek).decrypt(nonce, body[21 + idlen:], None) == b'{"title":"Orkline"}\x02'
+    assert AESGCM(cek).decrypt(nonce, body[21 + idlen:], None) == b'{"title":"Orkboard"}\x02'
     assert w.seal(b"x", w.b64(ua), w.b64(auth)) != w.seal(b"x", w.b64(ua), w.b64(auth))      # a salt and a key each time
 
 
@@ -89,14 +89,14 @@ def test_send_posts_the_sealed_message_with_its_headers_and_gives_the_status(mon
         def __exit__(self, *a):
             return False
     monkeypatch.setattr(w, "OPENER", lambda request, timeout: (seen.append((request, timeout)), Answer())[1])
-    assert w.send(_sub(), {"title": "Orkline", "body": "A spec asks · Offline mode", "tag": "needs", "badge": 2, "url": "./#needs"}) == 201
+    assert w.send(_sub(), {"title": "Orkboard", "body": "A spec asks · Offline mode", "tag": "needs", "badge": 2, "url": "./#needs"}) == 201
     request, timeout = seen[0]
     headers = {k.lower(): v for k, v in request.header_items()}
     assert timeout == 10 and request.get_method() == "POST" and request.full_url == "https://push.example.com/send/abc"
     assert headers["content-encoding"] == "aes128gcm" and headers["content-type"] == "application/octet-stream"
     assert headers["ttl"] == "43200" and headers["urgency"] == "high" and headers["topic"] == "needs"
     assert headers["authorization"].startswith("vapid t=") and len(request.data) < 1024
-    w.send(_sub(), {"title": "Orkline", "body": "x", "tag": "recap"})
+    w.send(_sub(), {"title": "Orkboard", "body": "x", "tag": "recap"})
     assert {k.lower(): v for k, v in seen[1][0].header_items()}["urgency"] == "normal"
 
 
@@ -104,12 +104,12 @@ def test_send_gives_the_error_status_zero_when_none_and_never_raises(monkeypatch
     def gone(request, timeout):
         raise urllib.error.HTTPError(request.full_url, 410, "Gone", {}, None)
     monkeypatch.setattr(w, "OPENER", gone)
-    assert w.send(_sub(), {"title": "Orkline", "tag": "needs"}) == 410
+    assert w.send(_sub(), {"title": "Orkboard", "tag": "needs"}) == 410
 
     def down(request, timeout):
         raise OSError("no network")
     monkeypatch.setattr(w, "OPENER", down)
-    assert w.send(_sub(), {"title": "Orkline", "tag": "needs"}) == 0
+    assert w.send(_sub(), {"title": "Orkboard", "tag": "needs"}) == 0
     assert w.send({"endpoint": "x"}, {"tag": "needs"}) == 0                                   # a broken subscription
     assert w.send(_sub(), {"title": "x" * 2000, "tag": "needs"}) == 0                          # over a kilobyte: not sent
 

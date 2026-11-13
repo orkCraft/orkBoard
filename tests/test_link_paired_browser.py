@@ -104,7 +104,7 @@ def test_paired_the_link_speaks_the_phones_protocol_and_reads_the_phones_snapsho
     assert sock["url"].startswith("wss://") and sock["url"].endswith("/ws")
     assert sock["protocols"] == ["orkcraft.v1", f"bearer.{DEVICE['token']}"]
     town = pg.evaluate("() => window.L.town.value")
-    assert town["rev"] == phone.snapshot()["rev"] and town["focus"] == "board"
+    assert town["rev"] == phone.snapshot()["rev"] and "focus" not in town
     assert "mana" in town and "projects" in town
     assert not {"onboarding", "sign_in", "repo", "usage_ask"} & set(town)         # the computer's own stay there
     assert pg.evaluate("() => window.L.isPaired() && window.L.online.value")

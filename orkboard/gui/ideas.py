@@ -147,8 +147,7 @@ class _Hop:
 class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, GroupsFace, FindingsFace, ChronicleMixin, ConflictMixin, InCodeMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, StallMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
-        """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
-        host makes one from its town, Orkboard its own."""
+        """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4)."""
         self.host = host
         self.state_dir = Path(self.host.repo_root) / ".orkcraft"
         self.rev = 0
@@ -208,15 +207,13 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
         return self.tree_root(wiki, make=used)
 
     def wiki(self) -> Path:
-        """The Wiki joined to the board: `ideas.wiki` (a folder in the repository) when it is set, else the one the
-        host finds (Orkline's: the Task board's `wiki`, else the camp's first Wiki, `BoardHost.wiki_of`), else
+        """The Wiki joined to the board: `ideas.wiki` (a folder in the repository) when it is set, else
         `llm-wiki/general/` in the repository (spec 37 §3.5). The keeper reads its index here."""
         repo = Path(self.host.repo_root)
         own = str(self.settings_now().get("wiki") or "")
         if own:
             return repo / own
-        found = self.host.wiki_of() if self.host.wiki_of is not None else None
-        return Path(found) if found is not None else wiki.root_of(repo, None, "general")
+        return wiki.root_of(repo, None, "general")
 
     # -- the bus, the clock, the snapshot ------------------------------------------------------------------
 
@@ -752,7 +749,7 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
                  "ideas.goal": self.goal, "ideas.read_now": self.read_now, "ideas.doc": self.doc, "ideas.roles": self.roles,
                  "ideas.role_save": self.role_save, "ideas.role_add": self.role_add, "ideas.role_drop": self.role_drop,
                  "ideas.kind_set": self.kind_set,
-                 "ideas.queue": self.queue, "ideas.night_allow": self.night_allow, "ideas.read_stop": self.read_stop, "ideas.seen": self.seen, "ideas.start_now": self.start_now,
+                 "ideas.queue": self.queue, "ideas.read_stop": self.read_stop, "ideas.seen": self.seen, "ideas.start_now": self.start_now,
                  "ideas.proposal": self.proposal, "ideas.board_set": self.board_set, "ideas.answer": self.answer,
                  "ideas.spend": self.spend, "ideas.lens": self.lens, "ideas.lens_code": self.lens_code,
                  "ideas.lens_screen": self.lens_screen, "ideas.check_skip": self.check_skip,

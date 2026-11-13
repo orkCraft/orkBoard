@@ -1,15 +1,12 @@
-"""Orkboard on its own (docs/specs/37-board-and-line.md §4, decisions §50): what the Board needs from its host, and the
-host `orkboard` serves, built without the town.
+"""Orkboard's host (docs/specs/37-board-and-line.md §4, decisions §50): what the Board needs from its host, and the
+host `orkboard` serves.
 
-    board = BoardHost(repo_root, owner, bus=…, toast=…, call=…, budget_ok=…, limits=…, day_logs=…, wiki_of=…)
+    board = BoardHost(repo_root, owner, bus=…, toast=…, call=…, budget_ok=…, limits=…, day_logs=…)
     ideas = Ideas(board)                   # gui/ideas.py and its mixins use only what BoardHost has
 
     host = Orkboard(repo_root)             # the Board's own host: Ideas, Stop all, phones, updates, the first screen
-    Server(host).start_thread()            # gui/server.py serves it as it serves Orkline's (gui/host.py)
+    Server(host).start_thread()            # gui/server.py serves it
     main([])                               # `orkboard` (and `orkboard board`): in a window, else the browser
-
-Orkline's host (gui/host.py) builds the town and gives the Board a `BoardHost` made from it, `wiki_of` set (the town's
-Wiki); Orkboard's has none (§3.5). Both read the same machine settings and the same `<repo>/.orkcraft/`.
 """
 from __future__ import annotations
 
@@ -33,7 +30,7 @@ from orkboard.gui import board_cli, command_log
 from orkboard.realm import analytics, board_map, call_log, day_log, event_log, halt, hours, idea_target, tool_now
 from orkboard.sources import telemetry, window_rate
 
-TELEMETRY_REFRESH_S = 5.0       # as Orkline's host: this run's spend read again
+TELEMETRY_REFRESH_S = 5.0       # this run's spend is read again this often
 SIZE = (1440, 900)
 
 
@@ -61,14 +58,13 @@ class _Answer:
 
 
 class BoardHost:
-    """What the Board (gui/ideas.py and its mixins) needs from whoever runs it, and nothing of the town: the repository,
-    the machine's settings (held by `owner.machine`, which a save may replace), the demo, the bus, a toast, a call on the
-    host's thread, whether the budget lets work start, the AI tools' limits, the day logs, and the town's Wiki
-    (`wiki_of`, None in Orkboard)."""
+    """What the Board (gui/ideas.py and its mixins) needs from whoever runs it: the repository, the machine's settings
+    (held by `owner.machine`, which a save may replace), the demo, the bus, a toast, a call on the host's thread, whether
+    the budget lets work start, the AI tools' limits and the day logs."""
 
     def __init__(self, repo_root: Path, owner: Any, *, bus: Any, toast: Callable[..., None],
                  call: Callable[..., None], budget_ok: Callable[[], bool], limits: Callable[[], list],
-                 day_logs: Any, demo: bool = False, wiki_of: Callable[[], Path | None] | None = None) -> None:
+                 day_logs: Any, demo: bool = False) -> None:
         self.repo_root = Path(repo_root)
         self._owner = owner
         self.bus = bus
@@ -78,7 +74,6 @@ class BoardHost:
         self.limits = limits
         self.day_logs = day_logs
         self.demo = demo
-        self.wiki_of = wiki_of
 
     @property
     def sign_ins(self) -> Any:
@@ -124,8 +119,7 @@ class BoardHost:
 
 class BoardLogs:
     """The Board's day logs (`/api/analytics`, `ideas.logs`): every model call of the last days and the Board's events
-    and ideas, as one zip (realm/analytics.py). Orkline's are the town's (gui/day_logs.py), with its buildings. The
-    project's keeper and runner keep their calls here themselves (`call_log.of_project`); a call no one placed goes to
+    and ideas, as one zip (realm/analytics.py). The project's keeper and runner keep their calls here themselves (`call_log.of_project`); a call no one placed goes to
     the shown project's (`Orkboard.shown`)."""
 
     def __init__(self, root: Path) -> None:
@@ -148,8 +142,8 @@ class BoardLogs:
 
 
 class BoardPhone:
-    """What a paired phone may do in Orkboard and what it sees (gui/phones.py reads it as the host's `phone_face`;
-    Orkline's is gui/mobile.py): the Board's commands and Stop all, the project switcher, a Markdown file read-only
+    """What a paired phone may do in Orkboard and what it sees (gui/phones.py reads it as the host's `phone_face`): the
+    Board's commands and Stop all, the project switcher, a Markdown file read-only
     (spec 37 §8: no edit and no git from the phone), a newer version checked and installed (the computer restarts on
     it and the phone comes back by itself; which updates install by themselves stays the computer's to say), and the
     snapshot's Board, small."""
@@ -168,7 +162,7 @@ class BoardPhone:
 
     @staticmethod
     def guard(name: str, args: dict, device: dict | None = None) -> dict:
-        """As Orkline's (gui/mobile.py `guard`): the event log says the phone, and the link is the listener's to say."""
+        """The event log says the phone, and the link is the listener's to say."""
         args = dict(args)
         if name.startswith("mobile.push_"):
             args.pop("device_id", None)                 # whose subscription it is: the listener's to say (gui/phone_push.py)
@@ -197,7 +191,7 @@ class Orkboard:
     """The Board's own host (spec 37 §4, §8): the open projects (gui/board_projects.py, one Board each, one shown) and
     the Board's commands (`ideas.*`, to the shown one), the Files pane (`files.*`) and its Git section (`git.*`), Stop
     all (`halt`, every project's), pairing a phone (`phones.*`, added by the server), updates, `link.open`,
-    `crash.window` and the onboarding's first screen (trust, the AI tools found); no class, no Mission 1, no town.
+    `crash.window` and the onboarding's first screen (the AI tools found).
     The page is `static/board.js`, on the desktop and, in its frame (`pwa/frame.js`), on a paired phone.
 
     What is the host's is built once per host, beside the projects: the AI tools' limits, this run's spend, the
@@ -214,16 +208,14 @@ class Orkboard:
         self.call: Callable[..., None] = lambda fn, *a: fn(*a)    # the server's loop, once it runs (gui/server.py)
         self.on_change: Callable[[], None] = lambda: None
         self.on_toast: Callable[[dict], None] = lambda data: None
-        self.on_detail: Callable[[str], None] = lambda building_id: None
         self.faces: Callable[[], int] = lambda: 0                     # how many faces are open (the server's sockets and the phones': gui/server.py)
-        self.sessions = None                                          # no terminal sessions in Orkboard
         self.run_id = telemetry.new_run_id()
         self.telemetry: telemetry.Telemetry | None = None             # this run's spend, in the shown project
         self.spend = telemetry.Snapshot()
         self._spend_at = float("-inf")
         self.limits = BoardLimits(Path.home(), lambda fn, *a: self.call(fn, *a), demo)
-        self.town = self                # what gui/updates.py, gui/onboarding.py and gui/server.py read as `host.town`:
-        self.phone_face = BoardPhone    # the machine, demo, call and toast — the host's own here, there is no town
+        self.town = self                # what gui/updates.py, gui/onboarding.py, gui/repair.py and gui/server.py read as `host.town`:
+        self.phone_face = BoardPhone    # the machine, demo, call and toast — the host's own
         self.bus.subscribe(b.ANY, self._event)
         self.awake = awake.Awake()                    # the system's hold (spec 47): never before `run` serves
         self.keep_awake = keep_awake.KeepAwake(self)  # when it holds
@@ -419,10 +411,6 @@ class Orkboard:
             return {"rev": snap["rev"], "same": True}
         return snap
 
-    def detail(self, building_id: str) -> None:
-        """No building windows in Orkboard (gui/server.py asks only for a page that watches one)."""
-        return None
-
     # -- the clock -------------------------------------------------------------------------------------------
 
     def tick(self, now: float | None = None) -> None:
@@ -611,13 +599,13 @@ def show(host: Any, server: Any, thread: Any, browser: bool, title: str = "",
     returns when it closed. `attach(window)`: what the window offers the page (a folder dialog); `dress()`: the app's
     name and icon, called only when a window opens (a Mac's menu bar and Dock: gui/mac_app.py)."""
     if not browser and not toolkit():
-        sys.stderr.write("orkline: no window here (GTK or Qt for Python is not installed); opening the browser\n")
+        sys.stderr.write("orkboard: no window here (GTK or Qt for Python is not installed); opening the browser\n")
         browser = True
     if not browser:
         try:
             import webview
         except ImportError:
-            sys.stderr.write("orkcraft: no window toolkit (pip install 'orkboard[gui]'); opening the browser\n")
+            sys.stderr.write("orkboard: no window toolkit (pip install 'orkboard[gui]'); opening the browser\n")
             browser = True
     if browser:
         _in_browser(host, server, thread, stop)
@@ -634,7 +622,7 @@ def show(host: Any, server: Any, thread: Any, browser: bool, title: str = "",
     try:
         webview.start()
     except Exception as e:                       # pywebview is there, a toolkit for it is not (Linux without GTK or Qt)
-        sys.stderr.write(f"orkline: no window here ({e}); opening the browser\n")
+        sys.stderr.write(f"orkboard: no window here ({e}); opening the browser\n")
         _in_browser(host, server, thread, stop)
         return
     except BaseException:
@@ -734,7 +722,7 @@ def main(argv: list[str] | None = None) -> int:
     if root is not None:
         why = project_folder.refusal(root)
         if why:
-            sys.stderr.write(f"orkline: {root}: {why}\n")
+            sys.stderr.write(f"orkboard: {root}: {why}\n")
             return 1
     repaired = os.environ.pop(core_repair.REPAIRED_ENV, "")      # set by the restart that followed a fix's update (spec 119 §3.4)
     again = [*(["--repo", str(root)] if root is not None else []),

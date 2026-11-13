@@ -46,7 +46,6 @@ from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import parse_qs, quote, urlsplit
 
-from orkboard import brand
 from orkboard.design import logo, tokens
 from orkboard.gui import tailnet
 
@@ -84,7 +83,7 @@ def files() -> dict[str, Path]:
     its race heads under races/, its marks under marks/, its elements under elements/, its moons under moons/, its signs under signs/ and its pixel icons as icons/icons.svg: the same look as the desktop's, from one place
     (docs/specs/40-design-system.md). Orkboard's phone is the shell alone (spec 37 §4): no camp file, no sprite but the heads and the marks."""
     own = {p.name: p for p in sorted(ROOT.iterdir()) if p.is_file() and p.suffix in TYPES}
-    own |= {name: path for name in logo.PHONE if (path := logo.phone_icon(name))}      # Orkboard's mark, not Orkline's ork (spec 107 §12)
+    own |= {name: path for name in logo.PHONE if (path := logo.phone_icon(name))}      # Orkboard's mark (spec 107 §12)
     return {**own, **page_files(), **ds_files()}
 
 
@@ -202,8 +201,6 @@ def serve(method: str, target: str, keep_alive: bool = False) -> bytes:
         body = manifest(body, parts.query)
     if name == "sw.js":                      # the page's files, for the worker to keep (`page_shell`): they change with the page, not with this file
         body = body.replace(b"const PAGE = [];", f"const PAGE = {json.dumps(page_shell())};".encode())
-    if name in ("index.html", "manifest.webmanifest", "sw.js") and brand.name() != brand.DEFAULT:   # Orkline's (§95)
-        body = body.replace(brand.DEFAULT.encode(), brand.name().encode())
     extra = f"Content-Security-Policy: {csp(body)}\r\n" if suffix == ".html" else ""
     if name == "sw.js":
         extra += f"Service-Worker-Allowed: {PREFIX}\r\n"

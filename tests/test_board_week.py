@@ -111,7 +111,6 @@ def test_ideas_week_work_is_the_hosts_and_a_phones_and_needs_a_project(fake_repo
     json.dumps(got)
     assert got["merged"] == 0 and got["night_on"] is True and got["tonight"] == 0 and got["into"] == "dev"
     goal = ideas.save_goal(host.ideas.root(), None, "Offline", "About", None, "low")[0]
-    host.command("ideas.night_allow", {"allow": True})                     # stored, read by nothing here (spec 99 §3)
     host.command("ideas.add", {"text": "Drafted at once", "track": goal})        # the party is Low: nothing waits for the night
     assert host.command("ideas.week_work", {})["tonight"] == 0
 

@@ -142,13 +142,6 @@ def test_a_cli_that_cannot_say_its_version(tmp_path: Path):
     assert claude.found and claude.version == ""
 
 
-def test_the_warder_guards_agy_from_1_1_12():
-    assert tools.agy_guardable("1.1.12") and tools.agy_guardable("v1.2.17") and tools.agy_guardable("1.10.0")
-    assert not tools.agy_guardable("1.1.11") and not tools.agy_guardable("1.0.16")
-    assert not tools.agy_guardable("") and not tools.agy_guardable("unknown")     # cannot tell: not guarded
+def test_a_version_is_read_as_numbers():
     assert tools.version_tuple("agy") is None and tools.version_tuple("1.2.3-beta") == (1, 2, 3)
-
-
-def test_agy_version_is_none_when_agy_is_missing():
-    assert tools.agy_version(_which(set()), _run) is None
-    assert tools.agy_version(_which({"agy"}), _run) == "1.3.0"
+    assert tools.version_tuple("v1.2.17") == (1, 2, 17)
