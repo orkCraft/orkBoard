@@ -7824,4 +7824,20 @@ and specs of things since removed (Orkline, the town, Operations, the phone's ol
 5. **The numbers stay**: a section keeps its number, a gap in the log is a section that left; `git log -p docs/decisions.md`
    shows it.
 
+## 307. In Claude Code the seats of words run on the cheaper model: the Orkmaster and the leaders on Sonnet, the Taskmaster's plan on Opus (13 November 2026, the owner)
+
+Changes: spec 154 C.1's `model` for the Orkmaster (`inherit`) and the leaders (their party's tier). Kept: a seat's tier in its party
+(`party_recipes.tiers_for`: a leader Veteran, the Release manager Seasoned), its gear and the price of Orkboard's own runs; the
+Taskmaster's and a Grunt's model, their roles' tiers (Opus, Sonnet).
+
+Why: the person, 13 November 2026, to the measure of the project's 2212 commits (Opus nine in ten of them; a stage by Sonnet sent
+back about twice as often as one by Opus, the Board's own bookkeeping and orkUI's copy on Opus too) and the proposal to move Talk,
+Accept and the Board's bookkeeping to cheaper models: «Да, сделай». So:
+1. **In Claude Code, a seat that reads and writes words runs on Seasoned's model** (`agent_rules.WORDS_TIER`): the Orkmaster's
+   route, a leader's Talk, its section and its Accept, `sonnet`. A leader is one subagent for its three steps, so its section goes
+   with them; the Taskmaster, still on Opus, reads every section when it plans.
+2. **The Taskmaster plans on its role's tier** (Opus) and **a Grunt works on its own** (Sonnet), as before.
+3. **The Board's bookkeeping is the conductor's** (`/orkboard`: taking a goal, its phase, the gate's record) and runs on the
+   session's model: the person picks it, Sonnet at a low effort enough for a conductor that writes nothing of the seats'.
+
 The owner's call.

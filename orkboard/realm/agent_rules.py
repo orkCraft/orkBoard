@@ -113,14 +113,17 @@ def _front(pairs: list[tuple[str, str]]) -> str:
     return "---\n" + "".join(f"{v}\n" if k == "#" else f"{k}: {v}\n" for k, v in pairs) + f"schema: {T.SCHEMA}\nhash: \n---\n"
 
 
+WORDS_TIER = "warrior"     # decisions §307: in Claude Code a seat that reads and writes words (the Orkmaster's route, a leader's Talk, section and Accept) runs on Seasoned's model
+
+
 def model_of(role_id: str) -> str:
-    """The model a seat's subagent names in Claude Code (spec 154 C.1): the seat's tier through Orkboard's own tier table for Claude Code (`harnesses.model_on`), one of `opus`, `sonnet`, `haiku`; `inherit`
-    where it names none. A leader's tier is its party's (`party_recipes.tiers_for`: Veteran, the Release manager's Seasoned), the Taskmaster's and a Grunt's their roles' (`library`); the Orkmaster has no role in the library."""
-    from orkboard.realm import harnesses, library, party_recipes
-    seat, craft = _seat(role_id)
-    if seat == "leader":
-        lead = library.RELEASE_MANAGER if craft == party_recipes.RELEASE else role_id
-        tier = party_recipes.tiers_for(lead, [], "standard").get(lead, "")
+    """The model a seat's subagent names in Claude Code (spec 154 C.1, decisions §307): the seat's tier through Orkboard's own tier table for Claude Code (`harnesses.model_on`), one of `opus`, `sonnet`,
+    `haiku`; `inherit` where it names none. The Orkmaster and a leader are seats of words, `WORDS_TIER` (their tier in the party, the gear and the price of Orkboard's own runs, stays theirs:
+    `party_recipes.tiers_for`); the Taskmaster's and a Grunt's tiers are their roles' (`library`)."""
+    from orkboard.realm import harnesses, library
+    seat, _craft = _seat(role_id)
+    if seat in ("leader", "orkmaster"):
+        tier = WORDS_TIER
     else:
         agent = library.get(seat)
         tier = agent.tier if agent is not None else ""
