@@ -157,9 +157,9 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 /* a battle (js/cards/spreads/battle.js; decisions §298.6, §303): upright in the mat's frame: what it goes against above, the line of the crafts across the middle (a craft's token under its name),
    Yours below. The cards are small so the three zones lie whole in a desktop mat, which ends above the hand; on a phone the mat is the whole screen and its field scrolls. */
 [data-spread="battle"] .mf-field { padding: 6px 12px; }
-.bt { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.bt { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
 .bt-against, .bt-yours { align-items: flex-start; padding-top: 18px; padding-bottom: 8px; }
-.bt .sp-card { --card-w: 108px; padding: 24px 8px 12px; justify-content: flex-start; } .bt .sp-card .sp-card__name { font-size: 13px; line-height: 16px; }
+.bt .sp-card { --card-w: 96px; padding: 22px 8px 10px; justify-content: flex-start; } .bt .sp-card .sp-card__name { font-size: 13px; line-height: 16px; }
 .bt-one { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 200px; }
 .bt-rests { font: var(--ork-type-caption); color: var(--ork-ink-read); text-align: center; background: var(--_plate); padding: 0 6px; }
 .bt-pile { flex-direction: row; max-width: none; } .bt-pile .sp-back { margin-left: -50px; } .bt-pile .sp-back:first-child { margin-left: 0; }

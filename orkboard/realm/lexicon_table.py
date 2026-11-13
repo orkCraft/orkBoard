@@ -95,9 +95,10 @@ WINDOW: tuple[Term, ...] = (
     _t("agree_line", "<A> and <B> agree"),                         # the card's one line when no leader disagreed: *Tech and Art agree* (decisions §237.6)
     _t("answer_the_fork_first", "Answer the fork first"),          # what Confirm says while a leader's disagreement has no answer
     _t("goes_against", "Goes against §<n>"),                       # a conflict's line: the goal's decision goes against a standing decision, the point in conflict beside it (spec 150 E1, decisions §254.6)
-    _t("new_one_replaces", "The new one replaces §<n>"),           # … its first choice: the decision says it changes §N, and its slices replace §N's (§233.2)
-    _t("keep_decision", "Keep §<n>"),                              # … its second: the goal is talked again within §N
-    _t("conflict_other", "Other…"),                                # … its third: the person's own words, the decision worded again with them
+    _t("new_wins", "New wins", was="The new one replaces §<n>"),   # a battle's first way (the old table's conflict card too): §N gives way, the new decision replaces it; one press with its Undo (goal "The battle and the gate" K, decisions §303.4)
+    _t("old_wins", "Old wins", was="Keep §<n>"),                   # … its second: the new decision is worded again within §N; sealed, its cost said first
+    _t("keep_decision", "Keep §<n>"),                              # the line the keeper is given when the old one wins (*Keep §N: <point>*), not a way's name
+    _t("your_words", "Your words", was="Other…"),                  # … its third: the new decision is worded again with the person's own words; written first, then sealed
     _t("aspect", "aspect", "aspects"),                            # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
     _t("reach", "reach", "reaches"),                               # what a goal not yet started would change on a leader's map, one and two steps out (spec 165, decisions §280.1)
