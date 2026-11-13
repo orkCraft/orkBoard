@@ -285,3 +285,16 @@ def test_decision_refs_is_pure_and_short():
     assert not {m for m in mods if m.split(".")[0] in {"subprocess", "os", "shutil", "socket", "urllib", "http", "requests"}
                 or m.startswith(("orkboard.gui", "orkboard.core", "orkboard.realm.harnesses"))}, mods
     assert not any(w in text for w in ("write_text", "write_bytes", ".unlink(", ".mkdir(", "Popen"))
+
+
+def test_the_stage_again_is_a_mixin_of_the_runner_which_grows_by_its_line_only():
+    """Goal "The battle and the gate" H: core/idea_runner.py (618 lines, a hotspot) grows only by its mixin's import, the mixin named among its bases and nothing else of it there;
+    core/idea_fix_stage.py and gui/ideas_battle.py stay under 600 lines, and gui/ideas.py registers the battle's commands by its one line."""
+    text = (ROOT / "core/idea_runner.py").read_text(encoding="utf-8")
+    assert len(text.splitlines()) <= 619
+    assert "\nfrom orkboard.core.idea_fix_stage import FixStageMixin\n" in text and "\nclass IdeaRunner(FixStageMixin, GoalDevMixin, " in text
+    assert text.count("FixStageMixin") == 2 and text.count("idea_fix_stage") == 1 and "fix_stage(" not in text
+    for rel in ("core/idea_fix_stage.py", "gui/ideas_battle.py"):
+        assert len((ROOT / rel).read_text(encoding="utf-8").splitlines()) < 600, rel
+    ideas_py = (ROOT / "gui/ideas.py").read_text(encoding="utf-8")
+    assert ideas_py.count("battle_commands") == 2 and "gate_fix" not in ideas_py           # its import and its one registering line

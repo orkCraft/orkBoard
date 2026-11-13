@@ -218,6 +218,16 @@ WINDOW: tuple[Term, ...] = (
     _t("dev_task_running", "That goal still has a task running"),                                          # refused: a task of the goal is at work
     _t("dev_no_branch", "That goal has no branch waiting for <dev>"),                                      # refused: the goal is in dev already or never had a branch
     _t("dev_not_done", "That goal is not done: its last step is not accepted yet"),                       # refused: more steps to go
+    # -- a red gate's Fix it, by where the goal is (goal "The battle and the gate" G, H; decisions §303.5). <tests> the failing tests, <way> dev or main --------
+    _t("fix_stage", "Run its stage again"),                        # Fix it on a goal unmerged on its own branch whose way to dev went red: sealed, one task added, the goal at work (`ideas.gate_fix_stage`)
+    _t("fix_stage_task", "Make the failing tests pass: <tests>"),   # … the one task it adds to the goal's plan
+    _t("fix_goal_title", "Fix: <tests>"),                           # Fix it on a goal done whose way to main went red: the new goal it lays in one press, its first line (`ideas.gate_fix_goal`)
+    _t("fix_goal_named", "The failing tests: <tests>"),             # … its Gist's line naming every failing test
+    _t("fix_goal_of", "The goal whose way to main went red: <goal>"),     # … and the goal it fixes (`fixes: <slug>` in its page)
+    _t("fix_not_done", "That goal is not in dev yet: Fix it runs its stage again"),                        # refused: `ideas.gate_fix_goal` on a goal not done in dev
+    _t("fix_in_dev", "That goal is in dev already: Fix it lays a new Fix goal"),                           # refused: `ideas.gate_fix_stage` on a goal done in dev
+    _t("fix_not_red", "No test failed on its way to <way>: nothing to fix"),                              # refused: its gate is not red, or named no failing test
+    _t("fix_no_party", "This project has no Tech party to fix it"),                                       # refused: a Fix goal is routed to Tech
     _t("to_main_runes", "its goals go through the portal's ring of runes"),                                # what To main does with the cards it takes (nothing moves under reduced motion)
     _t("step_lacks", "its tool cannot do what this step needs"),    # a seat marked ! on a spec's header of steps (spec 168 C4, decisions §283.16.6)
     _t("spec_now", "Now"),                                         # a spec's part as it is, and ...

@@ -23,8 +23,8 @@ from orkboard.gui.ideas_args import IdeasError, _device, _text
 from orkboard.realm import board_map, board_turns, code_layers, board_ask, event_log, goal_phase, idea_questions, idea_target, ideas, opportunity_tree, page_talk
 
 SEALED_BY = {"ideas.to_main": "merge_main", "ideas.gate_merge": "merge_main", "ideas.goal_to_dev": "send_branch", "ideas.release_out": "ship_release",
-             "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass"}
-ONE_PRESS_BY = ("ideas.drop", "ideas.queue", "ideas.answer_way")      # each runs no model (tests/test_ideas_mats_closed.py); `ideas.answer` begins the keeper's pass, so it is none of them
+             "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass", "ideas.gate_fix_stage": "fix_stage"}
+ONE_PRESS_BY = ("ideas.drop", "ideas.queue", "ideas.answer_way", "ideas.gate_fix_goal")      # each runs no model (tests/test_ideas_mats_closed.py); `ideas.answer` begins the keeper's pass, so it is none of them; gate_fix_goal keeps its own Undo (gui/ideas_battle.py)
 SEALED_ON_CARDS = {"ideas.start": "start_work"}        # sealed where a card of the hand or a mat plays it (`from: hand|mat`): starting begins paid work that cannot be undone; the older faces' presses of it (no `from`) are as they were
 
 
@@ -38,7 +38,7 @@ def move_kind(name: str, args: dict) -> str:
         return "drop"
     if name == "ideas.queue":
         return "hold" if args.get("queue") in ("hold", "night") else ""
-    return "answer" if name == "ideas.answer_way" else ""
+    return "answer" if name == "ideas.answer_way" else "fix_goal" if name == "ideas.gate_fix_goal" else ""
 
 
 def played(ideas_: Any, name: str, fn: Any) -> Any:
