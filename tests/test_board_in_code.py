@@ -95,6 +95,14 @@ def ever_committed(repo, needle):
 
 # -- the word in orkcraft.toml ---------------------------------------------------------------------------------------
 
+def test_in_code_alone_is_no_yes_to_the_boards_branch_and_the_branch_goes_in_beside_it(tmp_path):
+    board_in_code.write(tmp_path, True)
+    assert board_branch.read_config(tmp_path) is None
+    board_branch.turn_on(tmp_path)
+    assert board_branch.read_config(tmp_path) == board_branch.BoardConfig("origin", "orkboard/board") and board_in_code.read(tmp_path) is True
+    assert (tmp_path / "orkcraft.toml").read_text().count("[board]") == 1
+
+
 def test_in_code_is_written_and_read_and_every_other_line_is_kept(tmp_path):
     (tmp_path / "orkcraft.toml").write_text('[gate]\nalways = ["x"]\n')
     assert board_in_code.read(tmp_path) is None

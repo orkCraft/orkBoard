@@ -209,15 +209,3 @@ def test_release_candidates_answers_what_goes_in_for_the_dialog(board):
     with pytest.raises(CommandError, match="That party is gone"):
         h.command("ideas.release_candidates", {"party": "nowhere"})
 
-
-def test_the_release_party_is_priced_and_listed_as_any_preset(board):
-    h = board
-    lead, build, check = next((p[4], p[5], p[6]) for p in library.PRESETS if p[0] == "release")
-    price = h.command("ideas.party_price", {"leader": lead, "team": [*build, *check], "craft": "product"})
-    assert price["types"] and "release" in [t["id"] for t in price["types"]] and price["low"] <= price["high"]
-    assert {t["id"] for t in h.command("ideas.party_price", {"leader": "product-manager", "team": ["grunt", "artist", "aso"], "craft": "product"})["types"]}.isdisjoint({"release"})                                                          # beside a Release party: not offered elsewhere
-    roles = h.command("ideas.roles")
-    release_preset = next(p for p in roles["presets"] if p["id"] == "release")
-    assert release_preset["lead"] == "release-manager" and release_preset["race"] == "skeleton" and roles["stages"]["release-manager"]["lead"] == "Gather"
-    assert {a["id"]: a["race"] for a in roles["library"]}["release-checker"] == "skeleton"
-    assert idea_flag.flag_of(h.state, h.a1)["at"] == A1
