@@ -5,9 +5,8 @@ import pytest
 
 from orkboard import settings
 from orkboard.gui import board_host, keep_awake
-from orkboard.gui.keep_awake import LINGER_S, POWER_S, TICK_S
+from orkboard.gui.keep_awake import LINGER_S
 from orkboard.gui.board_host import Orkboard
-from tests.conftest import FakeAwake
 
 
 class Clock:

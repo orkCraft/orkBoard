@@ -6,7 +6,14 @@ import json
 
 
 from orkboard.realm import party_hints
-from tests.test_party_proposals import add, check, goal, host, quiet  # noqa: F401  (fixtures and helpers)
+from tests.test_party_proposals import add, at, check, goal, host  # noqa: F401  (fixtures and helpers)
+
+
+
+def quiet(host, goal, n=8, by="reviewer", kind="review", base=0.5):
+    """`n` clean checks of the checker, one an idea, the oldest first (a few hours apart)."""
+    return [add(host, goal, f"Idea {by} {i}", [check("k1", by, kind, finished=at(base, hours=n - i))]) for i in range(n)]
+
 
 NO_CODE = "No one in the party writes code: code tasks go to this project's agent for code (the Grunt when none)."
 NO_BUILDERS = "No builders: each task goes to this project's agent for its type (the Grunt when none)."

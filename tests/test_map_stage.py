@@ -1,9 +1,8 @@
 """Spec 48 A (docs/specs/48-map-ideas.md §1.1): an idea's stage, round and waves, and a task's role: pure, no board."""
 from __future__ import annotations
 
-import pytest
 
-from orkboard.realm import idea_checks, map_stage, roles
+from orkboard.realm import idea_checks, map_stage
 
 CHECK = idea_checks.TAGS[0]
 

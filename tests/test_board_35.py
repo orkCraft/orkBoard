@@ -2,7 +2,6 @@
 the queue, autostart and Start now, Needs you as one list, proposals, a file to-do, the Board's commands and events."""
 from __future__ import annotations
 
-import base64
 import json
 import sys
 import time
@@ -11,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import event_log, idea_secrets, ideas, jobs
+from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.realm import event_log, ideas, jobs
 
 NEW = {"ideas.answer", "ideas.queue", "ideas.read_stop", "ideas.start_now", "ideas.proposal", "ideas.board_set"}
 

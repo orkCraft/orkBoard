@@ -3,6 +3,7 @@ task's prompt, and how a check task ends with a stub `claude` that writes its fi
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 
 from orkboard.core.idea_task import FINDINGS_ASK
@@ -112,3 +113,62 @@ def test_the_findings_of_the_place_are_kept_with_their_kind_and_wait_at_review(t
     task = wait_task(runner, "k1", "review")
     assert [f["kind"] for f in task["findings"]] == ["env"] and task["look"] == "findings left" and task["same_as_before"] is False
 
+
+def test_all_fixed_with_changes_takes_todays_path_and_lands_when_review_is_off(town, monkeypatch):
+    monkeypatch.setenv("STUB_MODE", "k1=check_fixed")
+    plan_of(town, [{"id": "k1", "kind": "review"}])
+    runner, _ = runner_of(town, review=False)
+    runner.start("demo")
+    assert wait_idle(runner)["state"] == "done"
+    task = tasks_of(town)["k1"]
+    assert task["state"] == "merged" and task["commit"] and task["note"] == "" and task["findings"][0]["fixed"] is True
+    assert (town.repo / "k1.txt").read_text() == "fixed by k1\n"
+    assert not (town.repo / idea_checks.FINDINGS_FILE).exists()
+    assert idea_checks.FINDINGS_FILE not in git(town.repo, "log", "--all", "--name-only", "--format=")
+
+
+def test_the_review_list_carries_the_kind_the_reason_and_the_flag(town, monkeypatch):
+    """What the faces read: `findings[].kind`, `look`, `same`, `tests.none` (gui/ideas_review.py)."""
+    from orkboard.gui.ideas_review import ReviewMixin
+    monkeypatch.setenv("STUB_MODE", "k1=check_env")
+    plan_of(town, [{"id": "k1", "kind": "review"}])
+    runner, _ = runner_of(town, review=False)
+    runner.start("demo")
+    task = wait_task(runner, "k1", "review")
+    row = ReviewMixin._check_of(SimpleNamespace(state_dir=town.state), task)
+    assert row["findings"][0]["kind"] == "env" and row["same"] is False
+
+
+def test_the_checks_a_plan_holds_follow_the_partys_size_spec_152_a_4(tmp_path):
+    """Lean none, Standard the first check that applies in the squad's order, Full every one that applies, no size (a party of before) every one."""
+    checks = idea_checks.of_team(tmp_path, ["grunt", "reviewer", "security-reviewer"], [])
+    assert [c["by"] for c in checks] == ["reviewer", "security-reviewer"]
+    tasks = [{"id": "k1", "title": "Do", "kind": "code", "after": []}]
+    make = lambda i, title, brief, tag, tier, after: {"id": i, "kind": tag, "after": after}          # noqa: E731
+    both = idea_checks.kept(None, checks)
+    ids = lambda size, kept_: [t["kind"] for t in idea_checks.with_check_tasks(tasks, kept_, checks, make, size)[1:]]          # noqa: E731
+    assert ids("lean", both) == []
+    assert ids("standard", both) == ["review"]
+    assert ids("full", both) == ["review", "security"] and ids("", both) == ["review", "security"]
+    assert idea_checks.with_check_tasks(tasks, both, checks, make) == idea_checks.with_check_tasks(tasks, both, checks, make, "")
+    only_second = [{"by": "reviewer", "applies": False, "why": "small"}, {"by": "security-reviewer", "applies": True, "why": ""}]
+    assert ids("standard", only_second) == ["security"]                                                # the first that applies, not the first of the squad
+    skipped = [{"by": "reviewer", "applies": True, "why": "", "skipped": True}, {"by": "security-reviewer", "applies": True, "why": ""}]
+    assert ids("standard", skipped) == ["security"] and ids("lean", skipped) == []
+
+
+def test_a_task_that_has_files_starts_its_prompt_with_where_to_start_a_check_and_a_pick_too_spec_153_b3(town):
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "kind": "review", "after": ["k1"]},
+                   {"id": "k3"}, {"id": "k4"}])
+    path = town.state / "ideas" / "demo" / "plan.json"                       # plan_of keeps no `files`, `pick`: they are put in as the plan keeps them
+    data = json.loads(path.read_text())
+    for t, more in zip(data["tasks"], ({"files": ["a.py", "b/c.py"]}, {"files": ["a.py"]}, {"files": ["d.py"], "pick": {"n": 2, "kind": "text", "ask": "A name", "target": "n.txt"}}, {})):
+        t.update(more)
+    path.write_text(json.dumps(data))
+    runner, _ = runner_of(town)
+    plan = runner.plan("demo")
+    work, check, pick, plain = (runner._prompt("demo", plan, plan["tasks"][i]) for i in range(4))
+    assert "\n\nStart at: `a.py`, `b/c.py` (its planner read them; read more as you need)\n\n# The idea" in work, "just before the spec's part"
+    assert not work.startswith("Start at:"), "the role and the rules stay the prompt's stable head (spec 36 §6)"
+    assert "Start at: `a.py` (its planner read it" in check and "Start at: `d.py`" in pick
+    assert "Start at:" not in plain

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import event_log, idea_pick, lexicon, media_sniff
+from orkboard.realm import event_log, idea_pick, media_sniff
 from tests import pick_files as pf
 from tests.pick_files import ask, leave, task  # noqa: F401
 
@@ -394,9 +394,9 @@ def test_none_of_them_needs_a_note_then_runs_the_task_again_as_its_next_round_an
 import sys  # noqa: E402
 import types  # noqa: E402
 
-from orkboard.gui import media, phone_push  # noqa: E402
-from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard  # noqa: E402
-from orkboard.realm import board_today, ideas  # noqa: E402
+from orkboard.gui import media  # noqa: E402
+from orkboard.gui.board_host import CommandError, Orkboard  # noqa: E402
+from orkboard.realm import ideas  # noqa: E402
 
 
 @pytest.fixture

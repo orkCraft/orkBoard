@@ -4,7 +4,6 @@ its task a Claude session whose commit waits at Review; the person merges it int
 pushed. A real Orkboard host on a temp repository with a bare origin; `claude` is a stub on PATH that answers each kind of call."""
 from __future__ import annotations
 
-import json
 import os
 import stat
 import subprocess

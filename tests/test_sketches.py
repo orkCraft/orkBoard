@@ -7,7 +7,7 @@ import subprocess
 
 import pytest
 
-from orkboard.realm import idea_pick, sketches
+from orkboard.realm import sketches
 from tests import pick_files as pf
 
 PAGE = "<!doctype html><html><head><style>body{margin:0}</style></head><body><button onclick=\"this.textContent='Done'\">Press</button></body></html>"

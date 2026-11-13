@@ -3,9 +3,7 @@ reads back (`realm/remote_inbox.py clean`), its photos first, the branch made on
 sent when it comes back; an answer through the same writer, its file read back by `realm/remote_answers.py`. No network."""
 from __future__ import annotations
 
-import json
 
-from orkboard.realm import remote_answers as ra, remote_inbox as ri
 from tests.test_phone_remote_js import REPO, run
 
 SETUP = f"""

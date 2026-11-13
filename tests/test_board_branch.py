@@ -6,7 +6,6 @@ import json
 import subprocess
 from pathlib import Path
 
-import pytest
 
 from orkboard.realm import board_branch as bb
 

@@ -81,11 +81,6 @@ def events(host, name: str = "idea_flagged") -> list[dict]:
     return [r for r in event_log.read(Path(host.repo_root)) if r["event"] == name]
 
 
-def go_done(host, slug: str) -> None:
-    """What the runner does when its last task is merged: the state moves to `done` and the bus says so (the host sees the move)."""
-    host.ideas.changed(slug)                                           # the host has seen it at work first (a restart sees no move)
-    ideas.save_state(host.ideas.state_dir, slug, state="done")
-    host.ideas.changed(slug)
 
 
 # -- the tally and the file ---------------------------------------------------------------------------------------

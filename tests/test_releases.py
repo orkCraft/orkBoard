@@ -194,3 +194,30 @@ def test_the_release_partys_work_says_releases_out_goals_a_release_and_the_days_
     party_work.forget()
     assert "releases" not in h.command("ideas.party", {"goal": h.app}) and "pitches" not in h.command("ideas.party", {"goal": h.rel})
 
+
+
+
+def test_release_candidates_answers_what_goes_in_for_the_dialog(board):
+    h = board
+    r = release(h, "1.3", [h.a1], out="2026-10-21T12:00:00")
+    open_ = release(h, "1.4", [h.a2])
+    got = h.command("ideas.release_candidates", {"party": h.rel})
+    assert set(got) == {"since", "releases_from", "candidates"} and got["since"] == {"version": "1.3", "out": "2026-10-21T12:00:00"}
+    assert got["releases_from"] == [] and [(c["goal"], c["held"]) for c in got["candidates"]] == [(h.a2, "1.4")]
+    assert set(got["candidates"][0]) == {"goal", "title", "party", "party_name", "element", "hue", "at", "commit", "held"}
+    assert h.command("ideas.release_candidates", {"party": h.app})["since"] is None and r and open_
+    with pytest.raises(CommandError, match="That party is gone"):
+        h.command("ideas.release_candidates", {"party": "nowhere"})
+
+
+def test_the_release_party_is_priced_and_listed_as_any_preset(board):
+    h = board
+    lead, build, check = next((p[4], p[5], p[6]) for p in library.PRESETS if p[0] == "release")
+    price = h.command("ideas.party_price", {"leader": lead, "team": [*build, *check], "craft": "product"})
+    assert price["types"] and "release" in [t["id"] for t in price["types"]] and price["low"] <= price["high"]
+    assert {t["id"] for t in h.command("ideas.party_price", {"leader": "product-manager", "team": ["grunt", "artist", "aso"], "craft": "product"})["types"]}.isdisjoint({"release"})                                                          # beside a Release party: not offered elsewhere
+    roles = h.command("ideas.roles")
+    release_preset = next(p for p in roles["presets"] if p["id"] == "release")
+    assert release_preset["lead"] == "release-manager" and release_preset["race"] == "skeleton" and roles["stages"]["release-manager"]["lead"] == "Gather"
+    assert {a["id"]: a["race"] for a in roles["library"]}["release-checker"] == "skeleton"
+    assert idea_flag.flag_of(h.state, h.a1)["at"] == A1

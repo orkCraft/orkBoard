@@ -1,11 +1,10 @@
 """Spec 157 A (docs/specs/157-the-inventory-a-merchants-stall.md): the heroes' catalog, a party's hero, and the lens following the hero."""
 from __future__ import annotations
 
-import re
 
 import pytest
 
-from orkboard.realm import goal_team, heroes, ideas, lens_rubrics, lexicon, map_parts, party_recipes
+from orkboard.realm import goal_team, heroes, ideas, lens_rubrics
 
 
 @pytest.fixture

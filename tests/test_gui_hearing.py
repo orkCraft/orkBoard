@@ -7,8 +7,8 @@ import time
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, CommandError
-from orkboard.realm import event_log, idea_questions, ideas, spec_sections
+from orkboard.gui.board_host import CommandError
+from orkboard.realm import idea_questions, ideas, spec_sections
 from tests.test_idea_decide import git  # noqa: F401
 from tests.test_idea_talk import DECIDED, TECH_NO, _noes, _objections, _row, _state, _talk, _until_state, host, model, parties  # noqa: F401  (the fixtures)
 

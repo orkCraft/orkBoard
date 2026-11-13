@@ -200,3 +200,38 @@ def page_key(pages: Path, slug: str, key: str, value: str) -> None:
     head, rest = p.read_text().split("\n---\n", 1)
     p.write_text(f"{head}\n{key}: {value}\n---\n{rest}")
 
+
+def test_with_no_tag_the_changelogs_headings_with_a_version_and_a_day_are_the_versions(repo):
+    (repo / "CHANGELOG.md").write_text("# Changelog\n\n## [Unreleased]\n\n## [1.1.0] - 2026-10-20\n- x\n\n## v1.0.0 (17 October 2026)\n\n## 0.9.0\n\n## [0.8.0] - not a day\n")
+    got = chronicle_versions.read(repo)
+    assert got["kind"] == "changelog" and [(v["name"], v["day"]) for v in got["versions"]] == [("1.0.0", "2026-10-17"), ("1.1.0", "2026-10-20")]
+    tag(repo, "v2.0", "2026-10-30")
+    assert chronicle_versions.read(repo)["kind"] == "tag"                                      # the tags first
+
+
+def test_with_neither_the_weeks_and_a_folder_that_is_no_git_has_no_version(tmp_path, repo):
+    assert chronicle_versions.read(repo) == {"kind": "week", "versions": []}
+    assert chronicle_versions.read(tmp_path / "nowhere") == {"kind": "week", "versions": []}
+    assert chronicle_versions.week_of("2026-11-04") == "2026-11-02" and chronicle_versions.week_of("2026-11-02") == "2026-11-02"
+    assert chronicle_versions.week_of("nonsense") == ""
+
+
+def test_a_folder_of_records_reads_as_a_log(tmp_path):
+    folder = tmp_path / "adr"
+    folder.mkdir()
+    (folder / "0001-one.md").write_text("---\nstatus: accepted\ndate: 2026-10-01\n---\n# One\n\n## Decision Outcome\n\nA.\n")
+    (folder / "0002-two.md").write_text("---\nstatus: accepted\ndate: 2026-10-05\nork-changes: [1]\n---\n# Two\n\n## Decision Outcome\n\nB.\n")
+    rows = chronicle_decisions.read(folder)
+    assert [(r["number"], r["day"]) for r in rows] == [(1, "2026-10-01"), (2, "2026-10-05")]
+    assert rows[1]["changes"] == [{"n": 1, "point": 0, "title": "One"}] and rows[0]["changed_by"][0]["number"] == 2
+
+
+def test_with_no_version_the_chapters_are_the_weeks_that_have_something(repo, pages):
+    a = through(pages, repo, "A", "2026-11-03")
+    b = through(pages, repo, "B", "2026-11-04")
+    c = through(pages, repo, "C", "2026-10-13")
+    got = chronicle.read(state(repo), pages, repo, "## 7. Seven (5 November 2026, the owner)\n\nWhy.\n")
+    assert got["kind"] == "week" and got["unreleased"] is None
+    assert [(ch["id"], ch["name"], ch["day"]) for ch in got["chapters"]] == [("w:2026-11-02", "", "2026-11-02"), ("w:2026-10-12", "", "2026-10-12")]
+    assert [g["idea"] for g in got["chapters"][0]["goals"]] == [b, a] and [g["idea"] for g in got["chapters"][1]["goals"]] == [c]
+    assert [d["number"] for d in got["chapters"][0]["decisions"]] == [7]

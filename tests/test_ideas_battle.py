@@ -4,17 +4,15 @@ Stage N3: `ideas.gate_guards` answers the §N read where the gate ran, on what t
 from __future__ import annotations
 
 import hashlib
-import json
 import subprocess
 import sys
-import threading
 from pathlib import Path
 
 import pytest
 
 from orkboard.core import idea_fix_stage, idea_undo
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, gate_config, goal_branch, harnesses, ideas, main_checks, spec_sections
+from orkboard.realm import event_log, goal_branch, harnesses, ideas, spec_sections
 
 LOG = "# Decisions\n\n## 1. First\nPlain.\n\n## 2. Second, the old card\nIt stands.\n\n## 3. Third\nAlso stands.\n"
 PAGE = "---\nowner: board\nkind: idea\ntrack: tech\norder: 1\nphase: talk\nschema: 3\n---\n# {t}\n\n## Gist\nA goal.\n"

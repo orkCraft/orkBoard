@@ -4,7 +4,6 @@ is passed by itself, `look_tick` ends it at its clock time, a press passes at on
 from __future__ import annotations
 
 import datetime as dt
-import time
 
 import pytest
 

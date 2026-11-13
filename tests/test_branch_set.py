@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import branch_offer, event_log, first_open, goal_branch
-from orkboard.realm.idea_git import IdeaGit
+from orkboard.realm import event_log, first_open
 
 
 def git(cwd: Path, *args: str) -> str:

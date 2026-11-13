@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import board_back, goal_route, idea_questions, idea_ripe, ideas, spec_sections
+from orkboard.realm import board_back, goal_route, idea_ripe, ideas
 
 ROUTE = [{"party": "design", "leader": "ux", "head": {"race": "dryad", "tier": "elder"}}, {"party": "tech", "leader": "architect", "head": {"race": "shaman", "tier": "elder"}}]
 

@@ -2,7 +2,6 @@
 a party does it, and what a party misses for a type or a plan. Code, no model, no face."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -33,8 +32,6 @@ def _goal(root, state, party, tasks, state_="working"):
     return slug
 
 
-def _all():
-    return list(goal_types.CATALOG)
 
 
 def _offer(board, craft_or_preset):

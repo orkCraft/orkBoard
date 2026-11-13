@@ -7,9 +7,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
 
-from orkboard.realm import idea_lens, idea_shots, ideas, screen_map, screen_routes
+from orkboard.realm import idea_lens, idea_shots, ideas, screen_map
 from tests.test_commit_goal import commit, git, repo, state  # noqa: F401  (the fixture)
 from tests.test_system_overview import write
 

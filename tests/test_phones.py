@@ -16,7 +16,7 @@ from websockets.asyncio.client import connect
 from websockets.exceptions import ConnectionClosed, InvalidStatus
 
 from orkboard import settings
-from orkboard.gui import pairing, phone_http, phone_tls, phones
+from orkboard.gui import pairing, phone_tls, phones
 from orkboard.gui.board_host import BoardPhone, Orkboard
 from orkboard.gui.server import PROTOCOL, Server
 
@@ -282,16 +282,6 @@ async def test_two_get_requests_on_one_connection_both_answered_keep_alive(fake_
         await asyncio.wait_for(task, 10)
 
 
-def _raw_exchange(address: str, data: bytes) -> bytes:
-    """Send `data` on one TLS connection and read until the listener closes it: all it answered."""
-    import socket
-    host, port = address.removeprefix("https://").rsplit(":", 1)
-    with socket.create_connection((host, int(port)), timeout=5) as raw, _pinned().wrap_socket(raw) as tls:
-        tls.sendall(data)
-        out = b""
-        while chunk := tls.recv(65536):           # b"": the listener closed the connection
-            out += chunk
-    return out
 
 
 # -- spec 42 C: a phone's Web Push subscription ---------------------------------------------------------------
@@ -300,8 +290,6 @@ _PUSH = {"endpoint": "https://push.example.com/send/abc", "p256dh": "BCVxsr7N_eN
          "morning": "2026-10-19"}
 
 
-def _device(**more):
-    return {"id": "0123456789abcdef", "name": "Pixel", "hash": "a" * 64, "paired": "", "seen": "", **more}
 
 
 

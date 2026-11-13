@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -15,7 +14,7 @@ from orkboard.gui import goal_take_host as gth
 from orkboard.gui.ideas_args import IdeasError
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_route import RouteMixin
-from orkboard.realm import board_branch as bb, event_log, goal_route, goal_take as gt, ideas
+from orkboard.realm import event_log, goal_route, goal_take as gt, ideas
 from tests.test_board_branch import git, make_clone, make_origin
 
 T0 = dt.datetime(2026, 11, 6, 12, 0, 0, tzinfo=dt.timezone.utc)

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import goal_main, map_reach, map_reach_crafts, release_map
+from orkboard.realm import goal_main, map_reach, release_map
 
 S, R, P = Path("s"), Path("r"), Path("p")
 

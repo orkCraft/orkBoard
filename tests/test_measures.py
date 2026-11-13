@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 
-from orkboard.gui import board_cli
 from orkboard.realm import event_log, measures
 
 

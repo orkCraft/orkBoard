@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui import ideas_assets, play_lines, play_proxy
+from orkboard.gui import play_lines, play_proxy
 from orkboard.gui.board_host import Orkboard
 from orkboard.realm import event_log
 

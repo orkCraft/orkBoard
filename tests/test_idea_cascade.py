@@ -12,8 +12,6 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.core import idea_cascade
-from orkboard.core.idea_cascade import CascadeMixin
 from orkboard.gui.board_host import CommandError
 from orkboard.realm import board_ask, cascades, decisions_log, event_log, idea_target, ideas, slices, spec_sections
 from tests.test_idea_slices import LOG, _log, _party, design, goal, host, release, tech  # noqa: F401  (the fixtures)
@@ -213,11 +211,6 @@ class Week:
         self.remaining, self.reset = remaining, dt.datetime.now() + dt.timedelta(days=3)
 
 
-def _four(host, tech, design, marketing, release, data):
-    top = _cut(host, 5, tech, "Your builds hold 10 seconds.", ["5.1"])
-    for n, party in ((6, design), (7, marketing), (8, release), (9, data)):
-        _cut(host, n, party, f"{party} holds 10 seconds.", ["5.1"])
-    return top
 
 
 # -- the decision, what follows ---------------------------------------------------------------------------------------------------------------

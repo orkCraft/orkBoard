@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import library, roles
+from orkboard.realm import library
 
 
 @pytest.fixture

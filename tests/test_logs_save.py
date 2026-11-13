@@ -4,11 +4,6 @@ from __future__ import annotations
 
 import io
 import json
-import logging
-import logging.handlers
-import os
-import re
-import time
 import types
 import zipfile
 
@@ -16,7 +11,7 @@ import pytest
 
 from orkboard import tools
 from orkboard.gui import logs_save
-from orkboard.gui.board_host import BoardPhone, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.realm import diagnostics, event_log
 
 ABOUT = {"orkboard": "x", "tools": [], "env": {}}
@@ -86,13 +81,6 @@ def test_an_environments_values_are_never_written():
 
 # -- spec 107 §2: the logs say the whole day -------------------------------------------------------------------------
 
-def _crash(folder, name, text, age_days=0):
-    folder.mkdir(parents=True, exist_ok=True)
-    path = folder / name
-    path.write_text(text, encoding="utf-8")
-    then = time.time() - age_days * 86400
-    os.utime(path, (then, then))
-    return path
 
 
 def test_the_page_says_its_window_and_its_last_errors_and_nothing_else(tmp_path):

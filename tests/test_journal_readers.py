@@ -10,7 +10,7 @@ import pytest
 
 from orkboard.core import idea_journal
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import concerns as concern_store, event_log, goal_team, idea_questions, idea_target, ideas, journals, library, measures, project_facts
+from orkboard.realm import event_log, goal_team, ideas, journals, library, measures, project_facts
 
 MAP = "THE MAP TEXT"
 

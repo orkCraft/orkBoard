@@ -5,14 +5,13 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-import threading
 import time
 from types import SimpleNamespace
 
 import pytest
 
 from orkboard.core.idea_runner import IdeaRunner
-from orkboard.realm import event_log, idea_secrets, idea_target
+from orkboard.realm import event_log, idea_target
 from orkboard.sources.limits import Limit
 
 from tests.test_idea_runner import git, plan_of, town  # noqa: F401  (the fixture repository with a stub claude)

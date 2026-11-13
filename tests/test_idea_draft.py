@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-import threading
 import time
 
 import pytest
 
-from orkboard.core import idea_draft, idea_keeper
 from orkboard.core.idea_keeper import IdeaKeeper, KeeperError
-from orkboard.realm import event_log, idea_target, idea_words, ideas
+from orkboard.realm import event_log, ideas
 from orkboard.sources.limits import Limit
 
 STEPS = (("write its spec", "draft"), ("answered the questions", "answer"), ("turn it into a plan", "plan"),
