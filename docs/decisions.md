@@ -8575,3 +8575,24 @@ what can be played there now, as in a collectible card game. So:
 6. **On a phone** the hand is the foot of the mat's screen, a row that scrolls; a zone pressed narrows it.
 
 The owner's call.
+
+## 303. The table of cards is the only table; one look, orkUI's, leaning to the game, and no switch of looks; the code an old decision left is removed (13 November 2026, the owner)
+
+Changes: 296.10 (the table of cards drawn on mocks and with `?table=cards` until goal 170's last step turns it: it is the
+only table, the old one goes). Kept: 268, 291 and 296's *no pixel picture*; 298–302.
+
+Why: the person, 13 November 2026, on why each new thing costs more to add: «Делаем новый стол единственным» and «сейчас
+orkUI все больше уходит в camp и я думаю в целом это правильно, кажется что наша ЦА не работают в офисе с десктопа, а на
+мобиле camp лучше». The code kept two tables (`js/cards/on.js` `cardsOn()`, 26 branches in 19 files), three looks
+(`settings.LOOKS`: camp, office, shift) while the page drew one, and Orkline's town (its onboarding, sprites and ground)
+that spec 37 §9 left in Orkline. Each new face was made for both. So:
+1. **The table of cards is the only table.** `?table=cards` and `cardsOn()` go, and with them the old table and its tests;
+   a new face is made for the table of cards alone. Done after the tablets' work is merged, so the two do not collide.
+2. **One look, orkUI's.** Orkboard has no setting of looks and no code of a second one; it draws what orkUI ships. Our
+   people work from a phone more than from an office desk, so the look leans to the game, as orkUI's cartoon pictures do
+   (0.39–0.43: no pixel left); that is made in orkUI (CLAUDE.md, *The design system is orkUI*) and copied here. Orkline's
+   `look` in the shared settings file is kept as it is, never read.
+3. **A switch between an old way and a new one comes with its end**: the goal or the step that removes the losing side is
+   named where the switch is written.
+
+The owner's call.
