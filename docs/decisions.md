@@ -7896,6 +7896,6 @@ to a small feature, so a rebuild of a feature meant mending dozens of tests that
    person's that only the removed test ran gets one test back.
 
 Done the same day: 5336 ordinary tests became 2699 (76k lines of test files became 52k), a run of 6:47 became 2:23, and the lines of
-`orkboard/` the suite runs went from 92.7% to 89.1%; the lines lost are the inside's, the paths of 6 were given a test back.
+`orkboard/` the suite runs went from 92.7% to 89.1%; the lines lost are the inside's, and the lost lines of a person's paths were given back 26 compact tests.
 
 The owner's call.
