@@ -3,7 +3,7 @@
     s = settings.load()              # never raises; defaults for anything missing or broken
     s.tools["claude"].billing        # "subscription" | "api"
     s.quiet                          # 🌙 do-not-disturb hours (schedule.py)
-    s.work                           # the person's working hours: quiet for questions (schedule.py `at_work`)
+    s.work                           # the person's working hours (Orkline's): kept as the file has it, not read here
     s.autonomy                       # 0 ⛓️ in chains · 1 🕰 on the clock · 2 ⛓️‍💥 unchained (autonomy.py)
     s.autonomy_wait                  # minutes a question waits for the operator (1..60)
     s.rebuild_wait                   # hours (the operator around) a rebuild waits (1..48)
