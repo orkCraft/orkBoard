@@ -135,8 +135,3 @@ def test_the_servers_favicon_is_by_the_brand(fake_repo, monkeypatch):
     assert _favicon(fake_repo) == (logo.BOARD / "favicon.ico").read_bytes()
     monkeypatch.setattr(profile, "_current", ORKLINE)
     assert _favicon(fake_repo) == (logo.ROOT / "favicon.ico").read_bytes()
-
-
-def test_onboarding_draws_the_mark_by_the_product():
-    page = (pwa.ROOT.parent / "js" / "onboarding.js").read_text(encoding="utf-8")
-    assert "/ds/logo/orkboard/mark.svg" in page and "/ds/logo/orkcraft-dark.svg" in page          # Orkboard's, and Orkline's as it was

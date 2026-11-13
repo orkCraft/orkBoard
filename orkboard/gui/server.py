@@ -86,18 +86,12 @@ def named(page: bytes) -> bytes:
 
 
 def resolve(path: str, preview: Path | None = None) -> Path | None:
-    """The file a static path names, never one outside its folder; a design-system picture this machine has its own
-    of (a UX bench applied it, design/tokens.py `assets_dir`) is that one; with a fix's page in preview (gui/fixes.py),
-    its copy's file first."""
+    """The file a static path names, never one outside its folder; with a fix's page in preview (gui/fixes.py), its
+    copy's file first."""
     if preview is not None and path.startswith("/static/"):
         page = preview.resolve()
         mine = (page / path[len("/static/"):]).resolve()
         if mine.is_file() and mine.is_relative_to(page):
-            return mine
-    if path.startswith("/ds/sprites/"):
-        own = tokens.assets_dir().resolve()
-        mine = (own / path[len("/ds/"):]).resolve()
-        if mine.is_file() and mine.is_relative_to(own):
             return mine
     for prefix, root in ROUTES.items():
         if path.startswith(prefix):

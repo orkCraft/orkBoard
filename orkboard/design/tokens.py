@@ -21,19 +21,6 @@ from pathlib import Path
 PATH = Path(__file__).with_name("tokens.json")
 SYSTEM = Path(__file__).with_name("system")       # → design-system/: orkUI's copy and the ork mark
 ORKUI = SYSTEM / "orkui"                          # orkUI's office look (design/orkui.py)
-THEMES = ("camp", "office")                       # the TUI's colour sets (tokens.json `colors`)
-
-
-def assets_dir() -> Path:
-    """This machine's own pictures, served before the design system's at the same path (`/ds/…`): what a UX bench
-    applied (docs/design/improve-buildings.md §6). $ORKCRAFT_ASSETS_DIR, else ~/.config/orkcraft/assets."""
-    import os
-    from orkboard.env import getenv
-    env = getenv("ASSETS_DIR")
-    if env:
-        return Path(env).expanduser()
-    base = os.environ.get("XDG_CONFIG_HOME", "").strip() or str(Path.home() / ".config")
-    return Path(base) / "orkcraft" / "assets"
 
 
 @functools.lru_cache(maxsize=1)
@@ -74,10 +61,6 @@ def style(role: str) -> str:
     return load()["gui"]["fonts"][role]
 
 
-def color(role: str, theme: str) -> str:
-    return load()["colors"][theme][role]
-
-
 def css_var(tone: str) -> str:
     """orkUI's colour token of a colour role, as a CSS variable (`fire` → `--ork-alert`)."""
     return "--" + load()["gui"]["colors"][tone]
@@ -108,13 +91,9 @@ def space(step: int, unit: str = "px") -> int:
 
 
 def problems() -> list[str]:
-    """What is wrong with tokens.json itself: every theme has every colour role, every font role names a type style
-    of orkUI and every colour role a colour orkUI's tokens.css declares. (The tests run it.)"""
+    """What is wrong with tokens.json itself: every font role names a type style of orkUI and every colour role a colour
+    orkUI's tokens.css declares. (The tests run it.)"""
     data, out = load(), []
-    for theme in THEMES:
-        missing = set(TONES) - set(data["colors"].get(theme, {}))
-        if missing:
-            out.append(f"colors.{theme}: no {sorted(missing)}")
     gui, styles = data["gui"], set(system()["type"])
     for role in FONTS:
         if gui["fonts"].get(role) not in styles:

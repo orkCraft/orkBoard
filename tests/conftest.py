@@ -84,7 +84,6 @@ def isolated_layout_file(tmp_path: Path, tmp_path_factory: pytest.TempPathFactor
     monkeypatch.setenv("ORKCRAFT_SETTINGS_FILE", str(tmp_path / "orkcraft-settings.json"))
     monkeypatch.setenv("ORKCRAFT_ONBOARDING", "0")      # the first screen's tests opt in
     monkeypatch.setenv("ORKCRAFT_LOGINS_FILE", str(tmp_path / "orkcraft-logins.json"))   # never the keychain
-    monkeypatch.setenv("ORKCRAFT_ASSETS_DIR", str(tmp_path / "orkcraft-assets"))
     monkeypatch.setenv("ORKCRAFT_STATE_DIR", str(tmp_path / "orkcraft-state"))
     monkeypatch.delenv("ORKCRAFT_FOCUS", raising=False)
     # No real model is asked anything: no limits read, no model list, no update list (test_updates.py opts in),
