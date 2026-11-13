@@ -80,7 +80,7 @@ from orkboard.realm import (call_log, commit_goal, event_log, goal_team, idea_ch
 CHANGED = "ideas.changed"          # the bus's topic: slug
 HARNESS = "claude"                 # the tool when a step's party has none and the machine names none (spec 81: the Main tool is the default)
 MAX_TASKS, MAX_TODOS, MAX_QUESTIONS = 8, 5, 3
-INDEX_CHARS, PAGE_CHARS, REPLY_CHARS = 6000, 30_000, 4000
+REPLY_CHARS = 4000
 TICK_S = 20.0                      # how often the clock looks for what the limits held
 
 Call = Callable[[str, str, str, Any], tuple[str, Any, Any, str]]   # (tier, prompt, effort, budget) → (text, cost, tokens, session)

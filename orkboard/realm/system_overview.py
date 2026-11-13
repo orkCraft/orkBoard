@@ -32,7 +32,6 @@ MOUNTS = 20                                # the most mounts (`app.use("/api", â
 RESERVED = {"connect", "connection", "disconnect", "disconnecting", "connect_error", "error", "reconnect", "reconnect_attempt",
             "reconnect_error", "reconnect_failed", "ping", "pong", "newListener", "removeListener", "open", "close"}
 SOCKET_NAMES = {"io", "sio", "sock", "ws", "nsp", "namespace", "socketio"}
-VERBS = ("get", "post", "put", "patch", "delete", "head", "options")
 
 _STR = r"""["'`]([^"'`\n]{1,300})["'`]"""                 # a string literal (a quote of any kind each side)
 _FETCH = re.compile(r"(?<![\w.$])fetch\s*\(\s*" + _STR)

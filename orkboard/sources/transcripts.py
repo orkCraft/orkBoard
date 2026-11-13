@@ -57,12 +57,6 @@ class Run:
     error: str = ""
 
     @property
-    def duration_s(self) -> float | None:
-        if self.started and self.ended:
-            return (self.ended - self.started).total_seconds()
-        return None
-
-    @property
     def context_tokens(self) -> int:
         """🪵 — the context of the last turn (not the sum over turns: every turn re-reads it)."""
         return self.last_context_tokens
@@ -73,11 +67,6 @@ class Run:
         if self.unpriced and not self.cost_usd:
             return None
         return self.cost_usd
-
-    @property
-    def diffs(self) -> list[Step]:
-        return [s for s in self.steps if s.diff]
-
 
 def _ts(value: object) -> dt.datetime | None:
     if not isinstance(value, str):

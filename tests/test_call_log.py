@@ -398,12 +398,8 @@ def test_the_talk_command_prints_the_last_seven_days_of_a_project(tmp_path, caps
     assert call_log.main(["talk"]) == 2 and call_log.main(["nothing", str(tmp_path)]) == 2
 
 
-def test_a_recorded_read_of_before_the_one_json_object_still_plays_back_and_reads(tmp_path):
-    """A cassette recorded before spec 97 holds the single JSON envelope; the read argv now asks for stream-json, and the reader takes both."""
-    calls = tmp_path / "calls"
-    calls.mkdir()
-    (calls / "building-1-keeper.json").write_text(json.dumps({"line": {"mode": "read", "purpose": "plan", "code": 0},
-                                                              "prompt": "read it", "stdout": ENVELOPE, "stderr": ""}))
-    with call_log.replaying(calls):
-        got = jobs.run_read("claude", "read it", tmp_path, threading.Event())
+def test_a_read_that_answers_the_one_json_object_of_before_still_reads(tmp_path, monkeypatch):
+    """Before spec 97 a read answered the single JSON envelope; the read argv now asks for stream-json, and the reader takes both."""
+    monkeypatch.setattr(tool_run, "run_proc", lambda cmd, *a, **k: (0, ENVELOPE, ""))
+    got = jobs.run_read("claude", "read it", tmp_path, threading.Event())
     assert got == ("done", 0.03, 5000, "s1") and jobs.last_usage() == {"in": 900, "out": 100, "cache_read": 4000}

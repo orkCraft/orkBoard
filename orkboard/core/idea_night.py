@@ -26,7 +26,7 @@ from typing import Any
 from orkboard import settings as board_settings
 from orkboard.realm import idea_risk, idea_target, ideas
 
-PER_LEADER, PER_NIGHT = 1, 3         # one proposal a leader, three a night at most (decisions §283.32)
+PER_NIGHT = 3                        # three proposals a night at most, one a leader (decisions §283.32)
 STAGE = "spec"                       # a proposal is taken to a ready spec at most: the stage never moves past it without the person's Take
 FILE = "proposals.json"
 LOCK = threading.Lock()

@@ -35,7 +35,6 @@ VARIANTS = (2, 3)                              # a round's variants: at least, a
 NAME_CHARS, WHY_CHARS = 24, 300                # as a pick's (realm/idea_pick.py NAME_MAX, WHY_MAX)
 FILE = "sketch.json"                           # in the goal's state folder: where its sketch stands
 CRAFTS = ("design", "game-design", "art")      # the crafts that sketch: a screen, a loop on a page, a picture or a sound
-CRAFT_KIND = {"design": "page", "game-design": "page", "art": "art"}      # what each makes: a page (Design's screen, Game design's loop) or a pick task's pictures and sounds
 TYPE_CRAFT = {"screen": "design", "flow-feature": "design", "icon": "art", "logo": "art", "character": "art", "sound": "art", "balance": "game-design"}     # a goal type that is seen or heard names its craft
 NOT_SKETCHED = ("bug", "tidy", "pitch")        # the short way, and a pitch (judged, never built)
 MEDIA = {"image": ("python3", "node", "ffmpeg"), "audio": ("ffmpeg", "sox")}      # a tool of each kind of pick (realm/task_commands.py `MEDIA`): one of them on the machine is the media tools set up

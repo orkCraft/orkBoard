@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import idea_git
+from orkboard.realm import gate_config, idea_git
 from orkboard.realm.idea_git import IdeaGit
 
 
@@ -40,8 +40,8 @@ def test_the_gate_runs_the_critical_tests_and_those_of_touched_modules(tmp_path)
     (tmp_path / "tests").mkdir()
     for name in ("test_architecture.py", "test_cli.py", "test_updates.py", "test_ideas.py", "test_x.py"):
         (tmp_path / "tests" / name).write_text("")
-    files = idea_git.test_files(["orkcraft/realm/ideas.py", "orkcraft/gone.py", "tests/test_x.py", "README.md",
-                                 "orkcraft/__init__.py"], tmp_path)
+    files = gate_config.gate_files(gate_config.Gate(), ["orkcraft/realm/ideas.py", "orkcraft/gone.py", "tests/test_x.py", "README.md",
+                                                        "orkcraft/__init__.py"], tmp_path)
     assert files == [*idea_git.CRITICAL_TESTS, "tests/test_ideas.py", "tests/test_x.py"]
 
 

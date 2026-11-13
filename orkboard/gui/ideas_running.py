@@ -14,7 +14,7 @@ import datetime as dt
 import logging
 
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import goal_team, ideas, ops_team, party_presets, party_recipes, recurring
+from orkboard.realm import goal_team, ideas, ops_team, party_recipes, recurring
 
 log = logging.getLogger(__name__)
 ROUTINES_S = 60.0                      # the clock looks for a recurring goal that is due this often
@@ -45,11 +45,6 @@ class RunningMixin:
         here = ideas.tracks(self.root(False), make=False)
         if here and not any(t["slug"] == got["party"] and party_recipes.is_team(t) for t in here):
             ops_team.clear(base, got["project"], got["party"])
-
-    def team_refuse(self) -> None:
-        """A second Team party is refused, in plain words: *Team is in <project>*."""
-        if self.team_at():
-            raise IdeasError(party_presets.team_words(self.team_at()))
 
     def team_made(self, slug: str) -> None:
         """The Team party was saved here: the person's note says where it is. The left column and the phone read it from the snapshot."""

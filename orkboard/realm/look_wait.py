@@ -18,7 +18,6 @@ import datetime as dt
 CHOICES = ("30m", "2h", "tonight", "none")
 DEFAULT = "2h"
 SECONDS = {"30m": 30 * 60, "2h": 2 * 3600}
-LABELS = {"30m": "30 min", "2h": "2 h", "tonight": "until tonight", "none": "do not wait"}
 LINES = {"30m": "If you do not look, it starts: you give every spec 30 minutes",
          "2h": "If you do not look, it starts: you give every spec 2 hours",
          "tonight": "If you do not look, it starts: you give every spec until tonight",

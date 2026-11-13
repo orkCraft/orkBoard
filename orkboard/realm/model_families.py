@@ -31,12 +31,6 @@ TTL_S = 24 * 3600            # a tool's list is asked again after a day
 FAILED_TTL_S = 3600          # … after an hour when it could not be had
 ASK_TIMEOUT_S = 30
 
-# Where a model must be named (an API call: the Gramophone's speech), the family's model when no list
-# can be had. A CLI never needs it: it runs on its own default. Update here when a family moves on.
-FALLBACK: dict[str, str] = {
-    "gemini-flash-tts": "gemini-3.1-flash-tts-preview",
-}
-
 _FAMILY = re.compile(r"^[a-z]+(?:-[a-z]+)+$")
 _TAIL = r"(?P<tail>-preview|-latest|-exp)?"
 _lock = threading.Lock()
@@ -207,13 +201,6 @@ def known(family: str) -> str:
         lists = [e.get("models") or [] for e in _read_cache().values() if isinstance(e, dict)]
         lists += [e.get("models") or [] for e in _memory.values() if isinstance(e, dict)]
     return newest(family, [m for ms in lists for m in ms])
-
-
-def for_api(family: str, models: Iterable[str] = ()) -> str:
-    """A model an API call must name: the newest of `models`, else the cache's, else FALLBACK."""
-    if not is_family(family):
-        return family
-    return newest(family, models) or known(family) or FALLBACK.get(family, "")
 
 
 _UPPER = {"gpt": "GPT", "tts": "TTS"}

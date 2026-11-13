@@ -19,7 +19,6 @@ words are today's (party, goal, pitch); the files keep the code's names (track, 
 """
 from __future__ import annotations
 
-import datetime as dt
 import re
 from pathlib import Path
 from typing import Any
@@ -47,10 +46,6 @@ SENT_CHARS = 2000                        # what a goal sent from a pitch gives i
 BEFORE = 2                               # the decisions kept from before a pitch was judged again
 SIZES = ("S", "M", "L")
 _EMPTY = {"views": {}, "case": None, "decision": None, "before": [], "judged_at": "", "passed": None, "sent": None}
-
-
-def _now() -> str:
-    return dt.datetime.now().isoformat(timespec="seconds")
 
 
 def _line(value: object, limit: int) -> str:

@@ -5,19 +5,16 @@
     tool_errors.plainly(err)                  # the failure in one line for a page: what happened, its words, what to do
     tool_errors.claude_sign_in(said)          # Claude Code's refused sign-in: a key set here, another config folder,
                                               # a renewal it was refused (the sign-in deleted) or another claude's
-    tool_errors.report(err, enabled, main)    # what the failure says on the bus (core: Town.tool_failed)
 
-A face shows the report as a toast: "<Tool> hit an error", the line, and Switch to another tool that is
-installed, Retry, Details (the tool's own words, kept whole to copy). A service never shows it itself.
+A face shows the failure, never a service itself.
 """
 from __future__ import annotations
 
 import os
 import re
-import shutil
 import threading
 from contextlib import contextmanager
-from typing import Callable, Iterable, Iterator
+from typing import Callable, Iterator
 
 from orkboard import brand, tools
 from orkboard.realm import harnesses
@@ -108,10 +105,6 @@ def watch_ok(fn: Callable[[str], object]) -> Callable[[], None]:
     return lambda: _OK_WATCHERS.remove(fn) if fn in _OK_WATCHERS else None
 
 
-def watching() -> bool:
-    return bool(_WATCHERS)
-
-
 def ran(harness: str) -> None:
     """A run of `harness` ended without a failure (realm/tool_run.py calls it)."""
     if _OK_WATCHERS:
@@ -156,32 +149,6 @@ def classify(text: str, code: int | None = None) -> str:
 def missing(harness: str, command: str) -> ToolError:
     """The tool's command is not on this computer."""
     return ToolError(harness, f"{command} not found", kind=MISSING)
-
-
-def installed(harness_id: str, which: Callable[[str], str | None] | None = None) -> bool:
-    h = harnesses.get(harness_id)
-    return bool(h and (which or shutil.which)(h.bin))
-
-
-def others(failed: str, enabled: Iterable[str], which: Callable[[str], str | None] | None = None,
-           broken: Iterable[str] = ()) -> list[dict]:
-    """The tools to switch to: installed here, not the one that failed nor one that failed to start or
-    sign in (`broken`), nor an experimental one that is off (agy: on only past its warning, in Settings); the
-    ones turned on in Settings first, in the registry's order."""
-    on, broken, which = set(enabled), set(broken) | {failed}, which or shutil.which
-    found = [h for h in harnesses.REGISTRY.values()
-             if h.id not in broken and (h.id in on or not h.experimental) and which(h.bin)]
-    found.sort(key=lambda h: h.id not in on)
-    return [{"id": h.id, "title": h.title, "mark": h.mark, "on": h.id in on} for h in found]
-
-
-def install_hint(failed: str, which: Callable[[str], str | None] | None = None) -> str:
-    """How to get a second tool to switch to, when there is none."""
-    which = which or shutil.which
-    for h in harnesses.REGISTRY.values():
-        if h.id != failed and not which(h.bin):
-            return f"No other AI tool is installed. To have one to switch to, install {h.title}: {h.install}"
-    return "No other AI tool is installed."
 
 
 def helps(err: ToolError, env: dict | None = None, signed_in: Callable[..., bool | None] = tools.signed_in) -> bool:
@@ -261,23 +228,3 @@ def claude_sign_in(said: str, env: dict | None = None) -> str:
         return ("Claude Code could not renew its sign-in and removed it, so Retry fails until you sign in again in a "
                 "terminal: claude, then /login.")
     return "Sign in again in a terminal: claude, then /login."
-
-
-def report(err: ToolError, enabled: Iterable[str], main: str, where: str = "",
-           which: Callable[[str], str | None] | None = None, broken: Iterable[str] = ()) -> dict:
-    """What a tool's failure says on the bus (`bus.TOOL_ERROR`). `main`: the machine's main tool —
-    Switch changes it, so it is offered only when the tool that failed was the main one."""
-    title = harnesses.title(err.harness)
-    is_main = err.harness == main
-    switch = others(err.harness, enabled, which, broken) if is_main else []
-    if not is_main:
-        hint = f"This step is set to use {title}. Choose another tool in its building's settings."
-    elif not switch:
-        hint = install_hint(err.harness, which)
-    else:
-        hint = ""
-    h = harnesses.get(err.harness)
-    return {"harness": err.harness, "tool": title, "mark": h.mark if h else "", "kind": err.kind, "where": where,
-            "title": f"{title} hit an error", "line": LINES[err.kind].format(tool=title, product=brand.name()),
-            "action": what_to_do(err), "detail": err.detail or str(err), "code": err.code,
-            "switch": switch, "hint": hint, "main": is_main}

@@ -42,7 +42,6 @@ AGY_PER_SESSION = 50                  # pictures read from one conversation's fo
 # What agy's brain folder holds that is not a drawing: a screenshot or a browser recording says how the work went.
 _AGY_NOT_DRAWN = re.compile(r"screen[-_ ]?shot|recording|click[-_ ]?feedback|scroll|browser|video", re.IGNORECASE)
 _AGY_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
-_ROLLOUT_ID = re.compile(r"^rollout-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-(.+)$")
 
 
 def _sessions():

@@ -28,7 +28,6 @@ UNDO_S = 8                                      # how long a throw can be taken 
 SNAP_BYTES = 4_000_000                          # a goal's folder larger than this is not kept for an Undo
 GO_ALONE = "Go on anyway"                       # the `go` side when no leader said go
 KINDS = ("go", "drop", "smaller", "later")
-TITLE_CHARS = 80
 LEFT_FIRST = ("drop", "later")                  # what the left takes, first of
 UP_FIRST = ("smaller", "later", "drop")         # what the top takes, next of
 

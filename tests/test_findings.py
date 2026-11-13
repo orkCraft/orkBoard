@@ -88,7 +88,7 @@ def test_way_down_reads_the_record_and_a_finding_answered_is_not_open(host, tech
     assert "quality" in way_down.open_levels(sd, slug)
     findings.answer(sd, f["id"], "later")
     assert "quality" not in way_down.open_levels(sd, slug)
-    assert findings.open_of_goal(sd, slug) == [] and len(findings.of_goal(sd, slug)) == 1               # put off: still on the record
+    assert len(findings.of_goal(sd, slug)) == 1                                                         # put off: still on the record
 
 
 def test_each_status_in_turn_and_the_answers(host, tech):

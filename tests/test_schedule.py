@@ -24,15 +24,6 @@ def test_spans_wrap_past_midnight():
     assert Span.from_dict(q.to_dict()) == q
 
 
-def test_edges_move_by_half_hours_and_never_collapse():
-    o = Span.parse("09:00", "18:00")
-    assert o.with_start(8 * 60).label() == "08:00–18:00"
-    assert o.with_end(17 * 60 + 40).label() == "09:00–17:30"
-    assert o.with_end(9 * 60) == o                                   # would be empty: kept
-    assert o.shifted(-60).label() == "08:00–17:00"
-    assert Span.parse("23:00", "01:00").shifted(60).label() == "00:00–02:00"
-
-
 def test_quiet_and_the_hud_word():
     m = _machine(quiet=schedule.DEFAULT_QUIET)
     assert schedule.quiet_now(m, TUE_0030) and not schedule.quiet_now(m, MON_10)

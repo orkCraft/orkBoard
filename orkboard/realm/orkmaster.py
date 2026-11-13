@@ -7,7 +7,6 @@ and suggests a goal's party. By rules, with no model; it plans nothing, moves no
     suggested(parties)                          # the slug `party_for`'s answer suggests
     install(state_dir) / role(state_dir)        # its role for a collision's judge (spec 71 §2): `orkmaster`, a warrior, takes no task
     proposals(root, state_dir, settings, kind, facts, tracks, ideation_first, told, stage)   # the parties the project's kind needs, each in three sizes (spec 75 §4.1)
-    proposal_ids(kind_id, facts, tracks)        # their ids, the ones the project has last: for the deal (spec 75 §4.3)
 
 `why` of a deal row: `flags_wait` (Release first: no party releases and `n` flags wait), `have` (the project has one: last), else "". Ideation is never dealt nor
 proposed (decisions §122.3), nor are the mixed parties of before (spec 99 §1.1): a deal row is a craft's party. No face, no model, no write.
@@ -139,11 +138,6 @@ def _ordered(rows: list[dict], tracks: list[dict]) -> list[tuple[dict, bool]]:
     """[(recipe, have)]: those the project has not, in their order, then those it has."""
     got = [(r, party_recipes.has(r, tracks)) for r in rows]
     return [x for x in got if not x[1]] + [x for x in got if x[1]]
-
-
-def proposal_ids(kind_id: str, facts: dict | None, tracks: list[dict], ideation_first: bool = False, stage: str | None = None) -> list[str]:
-    """The ids of the proposals in the order they are shown, those the project has last (no price, no call)."""
-    return [r["id"] for r, _h in _ordered(recipes_of(kind_id, facts, ideation_first, stage), tracks)]
 
 
 def deal_first(deal: list[dict], tracks: list[dict], kind_id: str, facts: dict | None) -> list[dict]:

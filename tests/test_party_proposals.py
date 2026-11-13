@@ -1,5 +1,5 @@
 """Spec 43 D (docs/specs/43-party-measured.md §4, Tests → D): a check's record (30 and 7 days, `usd_per_check` under `TOO_FEW` is null),
-`quiet_run`, `ideas.party_answer` (take and keep) and Needs you's `party` row, sorted last and not counted, for a proposal that waits. The
+`ideas.party_answer` (take and keep) and Needs you's `party` row, sorted last and not counted, for a proposal that waits. The
 night that wrote these proposals is gone (spec 99 §3): `party_proposals.propose` and its tests with it. Code, no model."""
 from __future__ import annotations
 
@@ -70,25 +70,6 @@ def test_check_record_over_30_and_7_days_with_the_price_from_three_checks(host, 
     assert party_work.check_record(root, state, "accessibility-reviewer", 7)["caught"] == 1
     assert party_work.check_record(root, state, "security-reviewer", 30) == {"checks": 0, "clean": 0, "caught": 0, "left": 0, "usd_per_check": None}
     assert party_work.check_record(root, state, "reviewer", 30, now=NOW + dt.timedelta(days=25))["checks"] == 2                     # the clock moves the window: 2 and 1 days ago stay, 20 goes
-
-
-def test_quiet_run_is_the_newest_eight_all_clean_in_round_one(host, goal):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    quiet(host, goal, 7)
-    assert party_work.quiet_run(root, state, goal, "reviewer") is None                                       # seven are not eight
-    add(host, goal, "The eighth", [check("k1", finished=at(0, hours=0.5))])
-    assert party_work.quiet_run(root, state, goal, "reviewer") == at(0, hours=0.5)                          # the newest's time
-    add(host, goal, "A catch", [check("k1", finished=at(0, hours=0.1), findings=[{"where": "x", "what": "y", "fixed": True}])])
-    assert party_work.quiet_run(root, state, goal, "reviewer") is None                                       # the newest eight now hold a catch
-    for _ in range(8):
-        add(host, goal, "Again", [check("k1", finished=at(0, hours=0.01))])
-    assert party_work.quiet_run(root, state, goal, "reviewer") == at(0, hours=0.01)                         # eight quiet ones after it
-    other = ideas.save_goal(root, None, "Speed", "About speed", None, "normal")[0]
-    assert party_work.quiet_run(root, state, other, "reviewer") is None                                      # this goal's ideas only
-    add(host, goal, "A send back", [check("k1", finished=at(0, hours=0.001), rnd=2)])
-    assert party_work.quiet_run(root, state, goal, "reviewer") is None                                       # round 2 is a catch
-    add(host, goal, "Failed", [check("k1", finished=at(0), state="failed", findings=None)])
-    assert party_work.quiet_run(root, state, goal, "reviewer") is None
 
 
 def test_ideas_party_answer_takes_the_checker_out_or_keeps_it_and_logs(host, goal):

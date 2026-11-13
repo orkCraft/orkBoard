@@ -18,7 +18,6 @@ from pathlib import Path
 from orkboard.realm import idea_risk, ideas, spec_sections
 
 HURRY_S, USUAL_S = 60, 600        # a high priority at low risk waits a minute; what the plan's autostart would start waits ten (spec 120 §3.5)
-OUTCOMES = ("hearing", "agreed", "decision")
 
 
 def _craft_of(s: dict, key: str, craft: str) -> bool:
@@ -127,8 +126,3 @@ def drop(state_dir: Path, slug: str) -> None:
     """The wait forgotten (the decision was worded again, or the goal left its decision)."""
     if of(state_dir, slug) is not None:
         _keep(state_dir, slug, None)
-
-
-def ripening(state_dir: Path, slugs: list[str]) -> list[str]:
-    """Which of `slugs` have a wait that counts down now."""
-    return [s for s in slugs if running(state_dir, s)]

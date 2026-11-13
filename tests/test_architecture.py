@@ -67,7 +67,6 @@ def test_the_terminal_ui_stays_gone():
 STARTS_WITHOUT_HALT = {
     "gui/drive.py": "a browser for a picture of the page (Node's Playwright); it names the agent tools only to hide them",
     "realm/model_families.py": "asks a tool for its model list; no model runs",
-    "sources/sessions.py": "git log",
     "tools.py": "a tool's version and login state",
 }
 _STARTS = {("subprocess", "Popen"), ("subprocess", "run"), ("subprocess", "call"), ("subprocess", "check_output"),

@@ -25,7 +25,6 @@ END = "<!-- orkboard:end -->"
 FILE_MARK = "<!-- orkboard:file schema={schema} hash={hash} -->"
 BEGIN_RE = re.compile(r"<!-- orkboard:begin schema=(\d+) hash=([0-9a-f]+) -->")
 FILE_RE = re.compile(r"<!-- orkboard:file schema=(\d+) hash=([0-9a-f]*) -->")
-COMMIT_MESSAGE = "board: the Board's rules (schema {schema})"
 OWN_LINE = "This project's own rules go above or below Orkboard's block."
 OWN_WIN = "The Board's rules are in AGENTS.md; this project's own rules in this file win over them."
 POINTER = "This folder is the Board. Read BOARD.md before you change a goal."

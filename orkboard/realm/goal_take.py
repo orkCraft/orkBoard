@@ -36,7 +36,6 @@ LOCAL_REF = "refs/orkboard/taken"
 REMOTE_REF = "refs/orkboard/taken-remote"
 TRIES = 3
 ORKBOARD, TOOL = "orkboard", "tool"
-RULES_MARK = "<!-- orkboard:begin"
 TAKEN_LINE = "Taken by {by} until {time}"            # the words of a goal's card while another holds it (the author adds its TERMS entry)
 _SLUG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}")
 

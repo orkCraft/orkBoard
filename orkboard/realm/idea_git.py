@@ -78,12 +78,6 @@ def _worktree_id(slug: str, task_id: str) -> str:
     return raw[:64].rstrip("-") or "idea"
 
 
-def test_files(touched: list[str], root: Path) -> list[str]:
-    """The critical tests, and the test files named after the modules the diff touches (CLAUDE.md "Alpha"):
-    `orkcraft/realm/ideas.py` → `tests/test_ideas.py`, a touched test file itself; only those that exist."""
-    return gate_config.gate_files(gate_config.Gate(), touched, root)
-
-
 class GateRun(NamedTuple):
     """What the gate did: `ran` is False when it found nothing to run (never green), `code` the command's exit code, `seconds` its time, `env` why a red run
     could not test anything (realm/gate_env.py, "" when it did), `docs` that a derived gate was not run: the task changed only documents (spec 107 §1.2)."""
@@ -335,9 +329,6 @@ class IdeaGit:
                 _git(path, "merge", "--abort")
                 raise RuntimeError((done.stderr or done.stdout).strip()[:300] or "the merge failed")
             return files
-
-    def merging(self, path: Path) -> bool:
-        return _git(path, "rev-parse", "-q", "--verify", "MERGE_HEAD").returncode == 0
 
     # -- what a task changed -----------------------------------------------------------------------
 

@@ -146,7 +146,7 @@ def test_the_answer_clears_who_asked_and_a_picture_given_with_it_is_read_by_the_
 
 def test_pictures_you_like_is_one_answer_that_takes_pictures_and_is_told_by_its_words():
     out, by, looks = idea_look.questions({"look": LOOK}, 3, True, "elf", "lead")
-    assert [idea_look.takes_pictures(x) for x in out] == [False, False, True] and by == ["elf"] * 3 and looks == 3
+    assert [idea_look.PICTURES in idea_questions.parse(x)["choices"] for x in out] == [False, False, True] and by == ["elf"] * 3 and looks == 3
 
 
 def test_the_look_is_at_most_three_and_never_over_the_limit_in_all():

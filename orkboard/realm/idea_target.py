@@ -31,9 +31,7 @@ from orkboard.realm.hours import in_hours, next_edge, next_start      # noqa: F4
 
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
-EFFORTS = ("low", "medium", "high", "xhigh", "max")      # the Claude CLI's `--effort` levels
 STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "fork", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "talk_verdict", "diagnose", "ground", "settle", "decide", "section_first", "section", "join",  "rewrite", "project_q", "loop", "tree", "hypotheses", "ask", "concerns", "sketch", "journal", "fold", "slice", "slice_digest", "finding", "finding_level", "cascade", "measure_read", "groups", "accept_step")
-PITCH_STEPS = ("pitch_view", "pitch_case", "pitch_decide")   # a pitch's three calls (spec 65 §3, core/idea_judge.py)
 SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its seats' cells and how many work at once (realm/goal_team.py `WAY`); no Target of its own (spec 168 H4, decisions §283.33)
 OWN_TIERS = ("laborer", "warrior", "elder")              # a leader's own tier for its own calls; "" follows *How deep*
 OWN_STEPS = ("talk", "talk_round", "talk_verdict", "section_first", "section", "accept", "accept_step")      # a leader's own calls: Talk, its section, its acceptance (spec 168 H4)
@@ -123,7 +121,6 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "op_act": {"thrift": ("laborer", ""), "balance": ("laborer", ""), "quality": ("warrior", "low")},
     "op_learn": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
 }
-OP_STEPS = ("op_prepare", "op_act", "op_learn")
 
 
 # §0: one call, one job. What a keeper call is given is built by code and cut to a cap (characters of the prompt, the

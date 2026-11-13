@@ -48,7 +48,6 @@ IMAGES = (".jpg", ".jpeg", ".png", ".webp", ".gif")
 
 TOP_DIRS = ("ideas", "goals", "roles")
 TOP_FILES = ("kinds.json", "segments.json", "project.json", "checks.toml", "canvases.jsonl", "slices.json", "cascades.json")
-GOES = (*TOP_DIRS, *TOP_FILES, LEASE)                    # and the pages: `board/<wiki_rel>/pages` and `/specs`
 NEVER_FILES = frozenset({"secrets.json", "drive.json", "claims.json", "journal.json"})
 NEVER_DIRS = frozenset({"sign-in", "worktree", "worktrees", "logs", "usage", "crashes", "repair", "screens", ".git"})
 NEVER = (*sorted(NEVER_FILES), *(d + "/" for d in sorted(NEVER_DIRS)))
@@ -172,7 +171,7 @@ def _page_roots(wiki_rel: str) -> tuple[str, str]:
 
 
 def allowed(rel: str, wiki_rel: str = "") -> bool:
-    """Whether `rel` (a path from the state folder, `/`-separated) goes to the branch: listed in `GOES`, the pages included, and not
+    """Whether `rel` (a path from the state folder, `/`-separated) goes to the branch: listed in `TOP_DIRS`, `TOP_FILES` or the lease, the pages included, and not
     `NEVER` anywhere in its path."""
     parts = rel.split("/")
     if not rel or rel.startswith("/") or any(p in ("", ".", "..") for p in parts):

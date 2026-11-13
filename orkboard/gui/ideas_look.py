@@ -48,17 +48,6 @@ class LookMixin:
         if ideas.plan(self.state_dir, slug) is not None:
             self._look_set(slug, float(reset), "reset")
 
-    def look_drop(self, slug: str) -> None:
-        """A plan passed by the person: its wait is dropped with it."""
-        plan = ideas.plan(self.state_dir, slug)
-        if plan and (plan.get("look_until") or plan.get("look_done")):
-            def lift(p: dict) -> None:
-                if p.get("look_until") and p.get("start_at") == look_wait.iso(p["look_until"]):
-                    p["start_at"] = None
-                p.pop("look_until", None)
-                p.pop("look_done", None)
-            ideas.edit_plan(self.state_dir, slug, lift)
-
     def look_tick(self, now: float | None = None) -> int:
         """The host's clock (A.3): each plan with `look_until <= now`, not passed, not stopped, in `plan`, and with no change open on its goal, is decided again by `autostart`, so the money rule, the
         night, the collisions and the open questions still hold it. A clock time, not a countdown: it passes with no face open. How many ended."""

@@ -19,7 +19,6 @@ from collections import Counter
 MIN_CHARS = 4
 MAX_WORDS = 200
 PHRASE_CHARS = 60
-CARD_TITLE_WORDS = 7                                         # a card's title, in words (spec 150 C.3)
 CARD_LINE_CHARS = 140                                        # what a card says under its title: three short lines
 CARD_RULE = ("A card's title is at most seven words; what a card says under it is at most three short lines "
              "(140 characters); the whole is kept for the card lifted.")

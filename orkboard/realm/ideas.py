@@ -1,7 +1,7 @@
 """The board's tracks and ideas as Wiki pages (spec 29 §2, spec 29a §2), and each idea's state beside them.
 
 The Wiki joined to the board holds two sections: `pages/tracks/<slug>.md` and `pages/ideas/<slug>.md`, front matter
-`owner: board` (the librarian reads them and never rewrites them: realm/wiki.py). The file is the truth: a hand edit
+`owner: board` (a librarian reads them and never rewrites them). The file is the truth: a hand edit
 is read as it is, and a write keeps every section and front matter key it does not know.
 
     tracks(root)                          # in order, General made on demand
@@ -39,7 +39,7 @@ MAX_METRICS, MAX_LINKS = 12, 12
 KEEPER_METRICS, KEEPER_LINKS = 3, 8   # what the keeper writes of a goal (spec 35 §2)
 STATES = ("raw", "reading", "asks", "ready", "planning", "plan", "working", "done", "failed", "proposed",
           "judging", "judged", "sent", "passed", "routed", "talk", "decided", "sketch", "sections")      # four a pitch's (spec 65 §2: realm/pitches.py), never a plan's; the last five a goal's way (spec 99 §4: realm/goal_route.py; `sketch`: spec 121 §2.2)
-TASK_STATES = ("waiting", "ready", "held", "running", "testing", "picking", "review", "merged", "failed", "dropped")   # a task of a plan (core/idea_runner.py); `picking`: it left variants of one kind for the person to pick from, and waits, spending nothing (spec 51); `dropped`: the person dropped it, and nothing waits for it any more
+# A task of a plan (core/idea_runner.py) is waiting, ready, held, running, testing, picking, review, merged, failed or dropped; `picking`: it left variants of one kind for the person to pick from, and waits, spending nothing (spec 51); `dropped`: the person dropped it, and nothing waits for it any more
 QUEUES = ("now", "night", "hold")    # a raw idea: drafted at once, tonight, or stopped by the person (spec 35 §3)
 TITLE_KEEPER = 60                    # a goal's title as the keeper writes it
 SIZES = ("S", "M", "L")
