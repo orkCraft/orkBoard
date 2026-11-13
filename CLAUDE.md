@@ -62,7 +62,6 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
 - **The VS Code extension** (`vscode/`) is a frame, not a second face: it starts `orkboard --serve <folder>`
   (`gui/extension.py`) and shows the page in an editor tab. It draws nothing of the Board itself; a change to what the
   Board shows is made in `gui/`. Its tests: `cd vscode && npm test`.
-- The rules a model gets for a UI document are `design/ui.py` `RULES`.
 - **The design system is orkUI** (github.com/orkCraft/orkUI): `design-system/orkui` is its copy, stamped and never edited
   here; a change to the look is made in orkUI, then copied (`python -m orkboard.design.orkui <orkUI>`). Orkboard's sheets
   read orkUI's tokens and carry no colour, font or corner of their own (`tests/test_design_system.py`).

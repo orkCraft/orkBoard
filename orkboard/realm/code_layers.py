@@ -23,7 +23,7 @@ NOTES = {                                                       # what a big mod
     "gui/ideas_board.py": "the Board as the page asks it", "core/op_runner.py": "an operation's run", "core/idea_runner.py": "a plan's run",
     "core/idea_plan.py": "a goal's plan", "core/idea_keeper.py": "the Board's keeper", "realm/ideas.py": "the goals and parties as files",
     "realm/hypotheses.py": "Product's hypotheses", "realm/loop.py": "a game's core loop", "realm/board_map.py": "the Board's map",
-    "design/ui.py": "a UI document", "design/mark.py": "the mark", "design/tokens.py": "the tokens",
+    "design/mark.py": "the mark", "design/tokens.py": "the tokens",
 }
 
 
