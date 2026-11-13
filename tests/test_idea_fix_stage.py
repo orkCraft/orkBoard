@@ -86,7 +86,7 @@ def test_its_stage_runs_again_on_the_seal_one_task_of_the_failing_tests(host, la
     kept = goal_branch.read(state, "goal")
     assert goal_branch.in_use(state, "goal") == "goal/goal" and not kept["blocked"] and kept["failing"] == [] and kept["ready"] is False
     played = [r for r in event_log.read(host.repo_root) if r["event"] == "move_played"]
-    assert [(r["kind"], r["from"]) for r in played] == [("fix_stage", "mat")]
+    assert [(r["idea"], r["kind"], r["from"]) for r in played] == [("goal", "fix_stage", "mat")]       # B: played() reads the goal from `idea`
     assert idea_undo.read(state, "goal") is None                                                                 # sealed: it keeps no Undo
 
 
