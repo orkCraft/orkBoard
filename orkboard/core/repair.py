@@ -11,7 +11,7 @@ passes a fake or a real temporary repository.
     repair.remember_good(old)                    # the sha the restart comes from (board_host.main sets ORKCRAFT_REPAIRED to it)
     repair.rollback(old)                         # git reset --keep <old> and the install step again (board_host.main)
 
-The place is `~/.orkcraft/repair/` (the state folder's name stays Orkline's): `worktree/` (one fixed folder, so Claude Code asks
+The place is `~/.orkcraft/repair/` (the state folder keeps its first name): `worktree/` (one fixed folder, so Claude Code asks
 once whether to trust it), `state.json`, `claude.log` and `last-good.json`. The worktree is a git worktree of the checkout this copy
 runs from: `CLAUDE.local.md` is the brief (Claude Code reads it by itself), `.orkcraft-repair/logs/` the logs; both are kept out of git
 through the repository's `info/exclude`. The launched process outlives Orkboard's restart, so the person follows it in the Claude app.

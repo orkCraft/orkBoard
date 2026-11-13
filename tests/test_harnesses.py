@@ -151,7 +151,7 @@ def test_a_claude_sign_in_it_could_not_renew_says_retry_waits_for_a_new_one():
         "fails until you sign in again in a terminal: claude, then /login.")
     assert tool_errors.claude_sign_in("Login expired · Please run /login", env={}).startswith(
         "Claude Code could not renew its sign-in and removed it")
-    # another claude was renewing it (Orkline runs several at once): wait, no new sign-in needed
+    # another claude was renewing it (Orkboard runs several at once): wait, no new sign-in needed
     busy = tool_errors.claude_sign_in("Failed to refresh OAuth token: another Claude Code process is refreshing it or "
                                       "exited mid-refresh. This is usually transient; retry in a minute", env={})
     assert busy.startswith("Another Claude Code was renewing the sign-in: Retry in a minute.")
@@ -193,7 +193,7 @@ def test_a_decision_runs_on_any_tool(tool, answer, expect, tmp_path, monkeypatch
                     f"sys.stdout.write({answer!r})\n", encoding="utf-8")
     fake.chmod(0o755)
     monkeypatch.setenv(f"ORKCRAFT_{tool.upper()}_BIN", str(fake))
-    assert tool_run.ask(tool, "plan it") == expect          # what builders.ask in Orkline wraps
+    assert tool_run.ask(tool, "plan it") == expect
     rec = json.loads(record.read_text())
     assert ("plan it" in rec["argv"]) != (rec["stdin"] == "plan it")
     assert not any(k.startswith("ORKCRAFT_") for k in rec["env"])

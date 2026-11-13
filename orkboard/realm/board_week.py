@@ -40,7 +40,7 @@ def _span(day: dt.date, win: tuple[int, int]) -> tuple[dt.datetime, dt.datetime]
 
 def nights(root: Path, settings: dict, now: dt.datetime, n: int = 7) -> list[dict]:
     """The last `n` nights that have ended, newest first; each `worked` (a result reached Review or merged, or a night run that did
-    something), `idle` (a night run, nothing worked) or `off` (no night run: Orkline was not running, or the night was turned off)."""
+    something), `idle` (a night run, nothing worked) or `off` (no night run: Orkboard was not running, or the night was turned off)."""
     win = window((settings or {}).get("night"))
     if win is None:
         return []

@@ -1,4 +1,4 @@
-"""The agents that come with Orkline (a party's members are picked from them, decisions §53): makers and checkers of each craft,
+"""The agents that come with Orkboard (a party's members are picked from them, decisions §53): makers and checkers of each craft,
 each with the kinds of work it takes (the tags the Taskmaster puts on a task), its tier, one line of what it does and
 its instruction. A checker brings its `check` to a party: the party sets how deep a goal is worked (a party with an
 Accessibility reviewer holds every goal that changes a screen to its check): when it applies, the line it adds to the

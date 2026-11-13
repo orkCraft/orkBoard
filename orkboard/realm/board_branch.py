@@ -14,8 +14,8 @@
     board_branch.files_at(root, ref)                              # {path: bytes}
     board_branch.unpack(state_dir, files, board_tree)             # a worker takes the Board (B): written whole, a listed file the branch dropped removed
 
-The branch's tree is `<state_dir>`'s own paths, so a working copy is the branch's files and nothing is renamed (Orkline reads the same
-Board). **Goes** (`allowed`, an allow list): `board/<wiki_rel>/pages/` and `board/<wiki_rel>/specs/` (the pages, never the Board tree's
+The branch's tree is `<state_dir>`'s own paths, so a working copy is the branch's files and nothing is
+renamed. **Goes** (`allowed`, an allow list): `board/<wiki_rel>/pages/` and `board/<wiki_rel>/specs/` (the pages, never the Board tree's
 `.git`), `ideas/<slug>/`, `goals/`, `roles/`, `kinds.json`, `segments.json`, `project.json`, `checks.toml`, `canvases.jsonl`, `slices.json`,
 `cascades.json`, and `lease.json` (realm/board_lease.py writes it: `pack` never reads it, `unpack` never writes it). **Never** (`NEVER`,
 checked again over what goes): `secrets.json`, `sign-in/`, `drive.json`, `worktrees/`, `logs/`, `usage/`, `crashes/`, `repair/`,

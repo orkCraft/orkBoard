@@ -5,8 +5,8 @@
     run.told()          # a person's Done (a tool that cannot be told it is signed in): the answer, then the Outcome
     run.cancel()        # the process stops (a terminal's window stays the person's)
 
-**By browser** (Claude Code, Codex): `[bin, *sign_in]` with stdin closed, in the home folder, with Orkline's own
-environment, so the sign-in lands where Orkline's runs look for it (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`…). Its words go to
+**By browser** (Claude Code, Codex): `[bin, *sign_in]` with stdin closed, in the home folder, with Orkboard's own
+environment, so the sign-in lands where Orkboard's runs look for it (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`…). Its words go to
 `<state>/sign-in/<tool>.log`, every URL cut to its host: a sign-in link carries a one-time state, which is not kept.
 **In a terminal** (pi, and the tools not checked yet): a script `<tool>.command` opened in a terminal window; the window
 is the person's and is never closed; the run ends when `tools.signed_in` says so.

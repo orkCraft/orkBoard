@@ -176,7 +176,7 @@ def test_no_match_adds_as_today_and_keep_apart_adds_and_says_so(host, tech, call
 def test_only_the_field_matches_a_plain_add_a_hold_a_type_a_recurring_goal_never(host, tech, calls):
     _held(host, tech, "Add a dark mode switch to the settings page")
     same = {"text": "dark mode toggle for the settings", "track": tech}
-    assert host.command("ideas.add", dict(same))["slug"]                                   # a phone's, a script's, Orkline's: no `match`, never matched
+    assert host.command("ideas.add", dict(same))["slug"]                                   # a phone's, a script's: no `match`, never matched
     assert host.command("ideas.add", {**same, "match": True, "hold": True})["slug"]
     assert host.command("ideas.add", {**same, "match": True, "recurring": True})["slug"]
     assert not _events(host, event_log.GOAL_MATCHED)

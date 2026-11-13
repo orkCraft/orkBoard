@@ -1,9 +1,7 @@
 """A tool's run (spec 37 §3.1): the tool a step names as it runs, what goes on its stdin, the process itself and its
 wait under Stop all, and what came of it (text, cost, tokens, session) or the error it ended with; and one answer of
-a tool in an empty folder (`ask`, the onboarding's Check and the town's decisions through `realm/builders.py`).
-
-Orkboard's: the Board's keeper and runner run a tool through `realm/jobs.py`, the town's roads through
-`realm/road_agents.py`; both read these from here (`road_agents` and `roads` re-export them for the line).
+a tool in an empty folder (`ask`, the AI tools' Check). The Board's keeper and runner run a tool through `realm/jobs.py`,
+which reads these from here.
 """
 from __future__ import annotations
 

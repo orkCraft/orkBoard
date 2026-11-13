@@ -3,7 +3,7 @@
     cloud_run_host.command(root, usd=1.0, out=sys.stdout)     # the whole command: its lines on `out`, the exit status
 
 A host with no window and no faces, made as `drive start` makes it, but its clock is only the Board's own (`Ideas.tick`: the keeper, the route, Talk);
-the updates, repair, Operations and the phone's pushes are not ticked. `CloudReading` is what `realm/cloud_run.py` asks of it. **The work cannot
+the updates, repair and the phone's pushes are not ticked. `CloudReading` is what `realm/cloud_run.py` asks of it. **The work cannot
 start here**: the project's runner is never made (`Ideas._runner_error`), so a task waits and the command that would start it is refused in the words
 *Planned: the work starts on your computer*. A ceiling in dollars (`usd`) stops the keeper's next call once what this run spent has reached it.
 """

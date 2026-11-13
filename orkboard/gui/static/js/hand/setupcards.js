@@ -1,6 +1,6 @@
 // The Orkmaster's setup cards (docs/specs/130-the-first-open-is-the-orkmasters.md B.4, decisions §232.3, §232.8, §206.6; mockup docs/mockups/setup/ #ask, #read): the first open as a talk: the Orkmaster's bubble says `first_open.ask`'s `line` (`ork-think` while it reads) and the answers are cards in the hand, as every question for the person is: the project (**Open a folder…**, the
 // system's dialog; **A new, empty folder…**; the recent projects), a folder with no git (**Start git here**, **Choose another folder**), what the project is (the signs read as chips, **Yes**, **It is something else…**; an empty folder *What is it for?* in one line). The AI tools' step lifts the adding card (addtool.js) and lights the empty slot. They have no rune and are not picked, only lifted (§248). The page asks
-// when the project, its git, `laid`, the hand or the kind change, never on a timer; a host with no `tools` in its snapshot (an older one, Orkline's) asks nothing.
+// when the project, its git, `laid`, the hand or the kind change, never on a timer; a snapshot with no `tools` (a paired phone's) asks nothing.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html } from "../html.js";

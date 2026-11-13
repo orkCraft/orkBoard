@@ -1,5 +1,5 @@
 """The person's own parties (docs/specs/43-party-measured.md §6): a goal's party saved from its screen and picked again for a goal in any
-project. Kept as Operations are (decisions §51.1), for every project: `parties.json` beside the machine's settings
+project. Kept for every project (decisions §51.1): `parties.json` beside the machine's settings
 (`~/.config/orkcraft/parties.json`), written whole and atomically, mode 600, never in a repository. No face, no model.
 
     own_parties.list()                                   # [{"id", "name", "craft", "leader", "team", "every", "own", "saved", "uses", "preset"?}]

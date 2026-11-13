@@ -1,5 +1,5 @@
 """Spec 168 F3 (decisions §283.28, §283.31): `push` takes three ways, *no*, *main only* and *dev and main*, and the old boolean reads as it pushed: `True` is dev and main (a landing in dev was pushed, and so was
-main after To main), `False` is no. The setting is kept as a boolean where it can be, so Orkline's frozen copy and an older file read it the same."""
+main after To main), `False` is no. The setting is kept as a boolean where it can be, so an older file reads it the same."""
 from __future__ import annotations
 
 import sys

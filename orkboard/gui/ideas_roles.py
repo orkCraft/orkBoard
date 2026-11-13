@@ -26,7 +26,7 @@ CHECK_WEEK = 7                     # a checker's check, the muted line under its
 
 class RolesMixin:
     def _target(self) -> str:
-        """The Board's Target (the setting): for what is the whole Board's, Operations' and a party with no size of its own."""
+        """The Board's Target (the setting): for what is the whole Board's and a party with no size of its own."""
         return idea_target.target_of(self.board_settings())
 
     def size_of_idea(self, slug: str) -> str:

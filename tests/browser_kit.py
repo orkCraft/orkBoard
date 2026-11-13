@@ -1,5 +1,4 @@
-"""What the browser tests share (they came with Orkline's tests/test_gui_browser.py and tests/test_pwa_browser.py, which
-drive the town and stay there): Chromium through Playwright, the preinstalled one (`/opt/pw-browsers/chromium`, or
+"""What the browser tests share: Chromium through Playwright, the preinstalled one (`/opt/pw-browsers/chromium`, or
 $ORKCRAFT_CHROMIUM) else Playwright's own; the desktop's page served by Orkboard's host on a fixture project; and the
 certificate pin a phone's browser is given.
 

@@ -8,7 +8,7 @@
 // share); under the potion the now share alone (docs/specs/140 C1, decisions §247.3): *week 80%* muted under it only while the week is the window that runs out first (its share the lower), else only in the words, which say both and when each comes back;
 // at the danger's level or empty the now share's place says *back 14:00* (spec 138 A.5, decisions §245.3: the lower window's reset in the machine's local time, *back Mon 09:00* when it is not today); on a crowded narrow width the share stays (mana.css). One to three tools lie in one row at the default size; four in two rows of two and five or six in two rows of three, small (decisions §177.8); more than six: the first five and a sixth place *+n* that opens all of them over the pane. At the narrow
 // width (under 760 px, spec 94) every potion is small.
-// A potion is a button, its words the chip's (*Claude Code: 62% of the week left*, `potionOf`); a press lifts its tool's card (toolcard.js, spec 130 B.3), on a host with no `tools` (Orkline's) it opens what used it over the pane, as the chip did.
+// A potion is a button, its words the chip's (*Claude Code: 62% of the week left*, `potionOf`); a press lifts its tool's card (toolcard.js, spec 130 B.3), on a snapshot with no `tools` (a paired phone's) it opens what used it over the pane, as the chip did.
 // **The hand's tools, the empty slot** (spec 130 B.1, decisions §232.4–5): the potions are the tools in the hand in the person's order, the limits' rows and a tool with no limits read muted; dragging one changes the order (`tools.order`); the row ends with an empty slot, faint at rest, lit while the Orkmaster asks for a tool, gone at six; its press lifts the adding card (addtool.js). A tool whose limits were not read is its mark, muted, with no bottle, its words *Limits not read* (spec 140 C1).
 // A card lifted that spends (`costOf`) hatches its share off its tool's top, and the share reads `62% −4%`. The words are said on the control, the potion itself is `aria-hidden` (orkUI's potion/README.md).
 // The default (docs/specs/105-the-default-tool-moving-on-and-the-portal.md §4, decisions §177.1): the potion of the tool the open tab's work goes to carries a frame, a hotbar's chosen slot (orkUI's ink and edge, its notch, on the
@@ -85,7 +85,7 @@ export function Who({ l }) {
     : html`<span class="hand-pot__initial" aria-hidden="true">${(l.name || l.provider || "?").charAt(0).toUpperCase()}</span>`;
 }
 
-/** The potions in the hand's order (spec 130 B.1): a tool in the hand with no limits read is a muted potion; a tool not in the hand has none. A host with no `tools` (Orkline's): the limits as they come. */
+/** The potions in the hand's order (spec 130 B.1): a tool in the hand with no limits read is a muted potion; a tool not in the hand has none. A snapshot with no `tools` (a paired phone's): the limits as they come. */
 export function potionsOf(limits, tools) {
   if (!tools) return limits;
   const by = new Map(limits.map((l) => [l.provider, l]));

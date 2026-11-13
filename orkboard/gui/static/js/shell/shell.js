@@ -1,5 +1,5 @@
 // The one window (docs/specs/98-the-table-and-the-hand.md §7, decisions §145.1): the table (the leaders' tabs and the pane) over the hand (the deck, the stacks, the discard), nothing else — no top bar, no left column,
-// no right column, no dialog (frame/frame.js). What was a dialog or the drawer lies over the pane (frame/state.js `openOver`). With no project the window is drawn not yet laid, the Orkmaster's first card in the hand (docs/specs/130 D.3; a host with no first open, Orkline's, keeps the start screen in the pane). Always Office's calm look; no camp.
+// no right column, no dialog (frame/frame.js). What was a dialog or the drawer lies over the pane (frame/state.js `openOver`). With no project the window is drawn not yet laid, the Orkmaster's first card in the hand (docs/specs/130 D.3; a snapshot with no first open, a paired phone's, keeps the start screen in the pane). Always Office's calm look; no camp.
 // Keyboard: Esc lowers a lifted card, else closes what is over the pane, else picks none (frame/state.js alone puts the pick away, decisions §262.4; the table and the hand each take their own step and mark the key `defaultPrevented`; this is the last one); Ctrl/⌘+O opens the projects.
 import { useEffect, useRef } from "preact/hooks";
 import { html } from "../html.js";
@@ -35,7 +35,7 @@ function Start() {
 
 export function Shell() {
   const t = town.value;
-  const project = projectsOn.value ? currentProject.value?.path || "" : "-";   // "-": Orkline's one fixed project
+  const project = projectsOn.value ? currentProject.value?.path || "" : "-";   // "-": no snapshot yet
   // Another project is shown: nothing of the last one stays (its Board, its tree, its git).
   const was = useRef(null);
   if (was.current !== project) { was.current = project; resetForProject(project); resetFiles(); resetGit(); }

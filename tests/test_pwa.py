@@ -392,7 +392,7 @@ def _rules(css: str) -> list[tuple[str, str]]:
 def test_the_phone_wears_the_design_system_and_no_camp_file():
     """The app's page loads orkUI (fonts.css, tokens.css, components.css: the desktop's files, design-system/orkui) in its
     office look; every picture a rule of frame.css draws is served, no rule of it is Camp's, and Camp's pictures (the fence
-    round a window, v4's kit, the HUD's resources: Orkline's) never are."""
+    round a window, v4's kit, the HUD's resources) never are."""
     from orkboard.design import tokens
 
     head, body = _split(pwa.serve("GET", "/app/"))

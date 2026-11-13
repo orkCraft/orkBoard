@@ -24,8 +24,7 @@ TEST_PRICE = pricing.OpenAIPrice(input=2, cached_input=0.5, output=10, cache_wri
 
 
 def fake_codex(tmp_path: Path, monkeypatch, *, exit_code: int = 0, noise: int = 0) -> Path:
-    """A `codex` on ORKCRAFT_CODEX_BIN that answers with where it ran, its argv and its stdin (as Orkline's
-    tests/test_codex.py has it: that file tests the town's Codex workers and stays there)."""
+    """A `codex` on ORKCRAFT_CODEX_BIN that answers with where it ran, its argv and its stdin."""
     script = tmp_path / "codex"
     script.write_text(f"""#!{sys.executable}
 import json, os, sys

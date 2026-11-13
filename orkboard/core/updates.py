@@ -2,8 +2,7 @@
 (`orkboard/orkget/updates.py`, the copy) bound to Orkboard's profile (`orkboard/product.py`).
 
 The list of releases is `updates.json` at the root of Orkboard's repository (orkWorks/orkBoard), read from its `main`
-branch; while it has none, nothing is offered. Orkline's list is Orkline's: Orkboard never reads it, and keeps what it
-read in a cache file of its own.
+branch; while it has none, nothing is offered. What it read is kept in a cache file of its own.
 
     s = updates.load_state()                  # what was read last, from the cache: no network
     offer = updates.offer(s.manifest)         # what is newer than this version

@@ -28,7 +28,7 @@ def sent(monkeypatch):
 def test_orkboard_sends_only_its_two_events():
     assert set(usage.events("orkboard")) - {"install_started", "install_step", "install_finished"} \
         == {"app_opened", "app_closed"}
-    assert usage.clean("building_built", {"type": "lake"}) is None                 # Orkline's own: never Orkboard's
+    assert usage.clean("building_built", {"type": "lake"}) is None                 # not an event of Orkboard's
     assert usage.clean("app_opened", {"face": "gui", "tools": ["claude"], "project": "secret"}) \
         == {"face": "gui", "tools": ["claude"]}
 

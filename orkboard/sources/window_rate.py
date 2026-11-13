@@ -31,7 +31,7 @@ MAX_BYTES = 20 * 1024 * 1024     # of a transcript read (its end: the window is 
 
 
 def file() -> Path:
-    """Beside the machine's settings (`~/.config/orkcraft/`): Orkboard's and Orkline's."""
+    """Beside the machine's settings (`~/.config/orkcraft/`)."""
     from orkboard import settings
     return settings.path().parent / "window-rate.json"
 

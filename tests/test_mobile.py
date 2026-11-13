@@ -89,7 +89,7 @@ async def test_the_version_handshake_takes_the_token(fake_repo):
 
 
 def test_the_phone_sees_a_newer_version_small_and_installs_it(fake_repo, monkeypatch):
-    """A newer Orkline on the phone (js/shell/update.js): what it is and a few notes, then `update.install` from the
+    """A newer Orkboard on the phone (js/shell/update.js): what it is and a few notes, then `update.install` from the
     phone installs it on the computer, which restarts on it (gui/updates.py)."""
     from types import SimpleNamespace
     from orkboard.core import updates

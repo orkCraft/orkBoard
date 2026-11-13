@@ -74,7 +74,7 @@ def fake_python(folder: Path, name: str, has_pytest: bool) -> Path:
     return exe
 
 
-def test_python_is_the_venvs_then_a_path_python_with_pytest_then_orklines_own(tmp_path, monkeypatch):
+def test_python_is_the_venvs_then_a_path_python_with_pytest_then_its_own(tmp_path, monkeypatch):
     root = tmp_path / "repo"
     root.mkdir()
     bin_ = tmp_path / "bin"

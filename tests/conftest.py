@@ -72,7 +72,7 @@ def _path_without_real_tools(factory: pytest.TempPathFactory) -> str:
 def isolated_layout_file(tmp_path: Path, tmp_path_factory: pytest.TempPathFactory,
                          monkeypatch: pytest.MonkeyPatch) -> Path:
     """Every test on a home, a config and a cache of its own: the machine's settings, logins, keychain, update list
-    and AI tools' folders are never read or written. Returns the layout file's path (the name is Orkline's)."""
+    and AI tools' folders are never read or written. Returns the layout file's path (an older name, kept)."""
     path = tmp_path / "orkcraft-layout.json"
     path_without_tools = _path_without_real_tools(tmp_path_factory)    # before HOME moves: it reads the real PATH
     home = tmp_path / "home"

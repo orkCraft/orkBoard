@@ -1,5 +1,5 @@
 """Anonymous usage stats (docs/specs/41-orkget.md §7): orkGet's usage client (`orkboard/orkget/usage.py`, the copy)
-bound to Orkboard's profile. Off until the operator says yes, one answer per machine for Orkline and Orkboard
+bound to Orkboard's profile. Off until the operator says yes, one answer per machine
 (`machine.usage`, `machine.install_id`); then Orkboard sends only `app_opened` and `app_closed`, the events its schema
 lists (`orkboard/orkget/schemas/orkboard.json`), never what is in a project.
 

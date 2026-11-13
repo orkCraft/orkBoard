@@ -32,7 +32,7 @@ _LOGIN_STRONG = (r"not logged in|log ?in again|please (run )?/?log ?in|/login|lo
                  r"|no credentials")
 _LOGIN_WEAK = r"oauth|sign ?in|authenticat"
 _STRONG = re.compile(_LOGIN_STRONG)
-# The keys a tool takes before its sign-in, where Orkline runs: a sign-in cannot help while one is set.
+# The keys a tool takes before its sign-in, where Orkboard runs: a sign-in cannot help while one is set.
 TAKES_KEYS = {"claude": ("ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY"), "codex": ("CODEX_API_KEY",),
               "cursor": ("CURSOR_API_KEY",)}
 RENEWING = "another claude code process is refreshing"
@@ -153,7 +153,7 @@ def missing(harness: str, command: str) -> ToolError:
 
 def helps(err: ToolError, env: dict | None = None, signed_in: Callable[..., bool | None] = tools.signed_in) -> bool:
     """Whether the tool's own sign-in can help with this failure (spec 45 §3): it is a refused sign-in, unless a key the
-    tool takes before its sign-in is set where Orkline runs, another Claude Code was renewing the sign-in, or only the
+    tool takes before its sign-in is set where Orkboard runs, another Claude Code was renewing the sign-in, or only the
     weak words matched and the tool says it is signed in."""
     if err.kind != LOGIN or harnesses.get(err.harness) is None:
         return False
@@ -220,7 +220,7 @@ def claude_sign_in(said: str, env: dict | None = None) -> str:
         return (f"If claude works in your terminal, {brand.name()} runs it with another config folder (CLAUDE_CONFIG_DIR) or "
                 "another claude: Save logs shows which. Else sign in in a terminal: claude, then /login.")
     if "another claude code process is refreshing" in low:
-        # its sign-in was being renewed by another claude (Orkline runs several at once): no sign-in was refused
+        # its sign-in was being renewed by another claude (Orkboard runs several at once): no sign-in was refused
         return ("Another Claude Code was renewing the sign-in: Retry in a minute. If it keeps happening, close other "
                 "Claude Code windows, or sign in again in a terminal: claude, then /login.")
     if "could not be refreshed" in low or "login expired" in low:

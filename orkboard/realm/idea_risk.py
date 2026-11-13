@@ -142,7 +142,7 @@ AUTOSTART = {  # risk → priority → what the board does
 
 def decide(risk: str, priority: str, night: bool = False, held_for_night: bool = False) -> str:
     """"start" (passed by the board), "night" (passed, starts inside the night window) or "wait" (for the person).
-    `night`: the person's standing word that Low work may run at night (`night_low`, spec 83); without it a Low goal of
+    `night`: whether Low work may run at night (spec 83); without it a Low goal of
     low risk starts by day, after the other priorities.
     `held_for_night`: *Work at night* is on (spec 121 §4.2): what would start by itself, `start` or `night`, is "night", held for the
     night's window; what waits for the person still waits (the table's own rules are unchanged)."""

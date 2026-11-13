@@ -371,7 +371,7 @@ def test_a_failure_a_sign_in_helps_begins_an_episode_with_auto(tmp_path):
     assert [x["harness"] for x in s.snapshot()] == ["claude"]
 
 
-def test_a_key_set_where_orkline_runs_keeps_no_episode(tmp_path):
+def test_a_key_set_where_orkboard_runs_keeps_no_episode(tmp_path):
     s, _ = fresh(tmp_path, env={"ANTHROPIC_API_KEY": "k"})
     login_error()
     assert s.snapshot() == [] and not s.blocked("claude")

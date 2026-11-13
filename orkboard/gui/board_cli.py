@@ -1,5 +1,5 @@
 """`orkboard usage …` and `orkboard update …` (docs/specs/41-orkget.md §7): the machine's answer about usage stats and
-crash reports, and the updates, from the terminal, as Orkline's `orkcraft usage` and `orkcraft update`. `orkboard measures` and
+crash reports, and the updates, from the terminal. `orkboard measures` and
 `orkboard trial` (docs/specs/124-the-brief-the-measures-and-the-trial.md B, C): how the leaders' arguing turned out in a project, read
 from its own event log, and hypothesis H1's head-to-head tallied. `main` in gui/board_host.py hands them over; a folder named `usage`,
 `update`, `measures` or `trial` opens as `orkboard ./usage`.
@@ -190,7 +190,7 @@ def _trial(what: list[str], tasks: str | None, seed: int | None, as_json: bool) 
 
 
 def _usage(action: str, install_id: str | None = None) -> int:
-    """One answer for this computer, for Orkline and Orkboard alike (`machine.usage`); `on --id` keeps the id the
+    """One answer for this computer (`machine.usage`); `on --id` keeps the id the
     installer drew, so the install and the app's events are one install."""
     machine = settings.load()
     if install_id is not None and not usage.ID.fullmatch(install_id):

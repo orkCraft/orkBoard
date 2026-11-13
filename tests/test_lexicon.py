@@ -1,5 +1,4 @@
-"""One word for each concept: the Camp's when it says who, a plain one when it says what a thing does. The town's
-building types (realm/catalog.py) and its plain labels (realm/modes.py) are Orkline's, and their checks stay there."""
+"""One word for each concept: the Camp's when it says who, a plain one when it says what a thing does."""
 from __future__ import annotations
 
 from orkboard.realm import lexicon
