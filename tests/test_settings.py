@@ -55,6 +55,15 @@ def test_the_old_look_and_office_hours_load_and_are_not_written_again(tmp_path: 
     assert not {"mode", "office", "office_days"} & set(json.loads(f.read_text(encoding="utf-8")))
 
 
+def test_orklines_look_is_kept_in_the_shared_file_and_never_read(tmp_path: Path):
+    """Orkboard draws orkUI's one look; Orkline reads `look` from the same file, so a save keeps what it picked."""
+    f = tmp_path / "settings.json"
+    f.write_text(json.dumps({"onboarded": True, "look": "camp"}), encoding="utf-8")
+    settings.save(settings.load(f), f)
+    assert json.loads(f.read_text(encoding="utf-8"))["look"] == "camp"
+    assert not hasattr(settings, "look_now") and not hasattr(settings, "LOOKS")
+
+
 def test_the_board_is_in_focus_by_default_and_its_settings_are_cleaned():
     s = settings.MachineSettings()
     assert s.focus == "board" and s.ideas == {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1,

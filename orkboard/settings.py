@@ -12,7 +12,6 @@
     s.usage, s.install_id            # anonymous usage stats: None not asked yet (core/usage.py)
     s.updates                        # auto | critical | ask: which updates install by themselves (core/updates.py)
     s.phones, s.phone_port           # the paired phones (only their tokens' hashes) and their listener's port (gui/pairing.py)
-    s.look                           # camp | office: how the GUI draws the town for this person (docs/design/portrait.md)
     s.dnd_until                      # Do not disturb: "" off, "on" until turned off, else an ISO time (disturb.py)
     s.focus                          # "board": the window and the phone show only the board (spec 29a §1); "" the town
     s.ideas                          # the board's keeper and runner: batch_minutes, idle_hours, max_parallel, … (IDEAS;
@@ -27,9 +26,9 @@
     save_board(repo_root, values)    # … written there (machine-local, git-ignored)
 
 The tools the operator leads and how each is paid for, and the quiet hours of their day (design:
-docs/design/onboarding.md). There is one look now: `mode`, `office` and `office_days` of older
-settings files still load and are ignored, and are no longer written. `look` is not a mode: it changes
-only how the GUI draws (docs/design/portrait.md §3).
+docs/design/onboarding.md). There is one look, orkUI's: `mode`, `office` and `office_days` of older
+settings files still load and are ignored, and are no longer written; `look` (Orkline's camp | office | shift)
+is kept as the file has it, never read here.
 Orkline never stores an API key here: `billing` only says how the CLI is paid for.
 """
 from __future__ import annotations
@@ -55,32 +54,6 @@ BILLINGS = ("subscription", "api")
 UPDATES = ("auto", "critical", "ask")   # core/updates.py POLICIES
 # Fix it (spec 119 §2.4, core/repair.py): the command that starts Claude Code's Remote Control on Orkboard's own code.
 REPAIR_COMMAND = ("claude", "remote-control", "--name", "Fix Orkboard", "--permission-mode", "auto")
-LOOKS = ("camp", "office", "shift")
-# When the computer is kept from sleeping (Orkboard's gui/keep_awake.py, Orkline's gui/away.py): never, while carts are
-# in work, or also while a phone is
-# paired, so it can reach the town all day (decisions-2026-10 §18). Both only on power.
-# "shift": Office while the work day lasts, Camp the rest of the day (docs/design/portrait.md §3) — the default.
-SHIFT = (9 * 60, 17 * 60)                # the work day, in minutes from midnight: 09:00–17:00
-
-
-def default_look() -> str:
-    """The look of a machine that has picked none: by the shift (`ORKCRAFT_LOOK` names another: the tests' Camp)."""
-    look = getenv("LOOK")
-    return look if look in LOOKS else "shift"
-
-
-def look_now(s: "MachineSettings", now=None) -> str:
-    """The look the GUI draws now: camp | office; by the shift, Office within its hours."""
-    if s.look != "shift":
-        return s.look
-    import datetime as dt
-    t = now or dt.datetime.now()
-    return "office" if shift(s).contains(t.hour * 60 + t.minute) else "camp"
-
-
-def shift(s: "MachineSettings") -> Span:
-    """The work day the look follows: the person's working hours once set, else 09:00–17:00."""
-    return s.work or Span(SHIFT[0], SHIFT[1] - SHIFT[0])
 # The board's keeper and runner (spec 29a): how often the batch reads new ideas, when a talk's session is
 # compacted, how many tasks run at once, which branch they merge into (`dev`: the testers' default, spec 33 §4),
 # whether it is pushed (off), and whether every result waits for the person at Review (off: a result that holds lands by
@@ -101,7 +74,7 @@ IDEA_TARGETS = ("thrift", "balance", "quality")
 LOOK_WAITS = ("30m", "2h", "tonight", "none")           # spec 144 A.1: *Give me time to look*
 NIGHT = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$")
 FOCUSES = ("", "board")
-RECENT_FOLDERS = 8                       # the recent folders a Wiki's picker offers               # the GUI's two looks; camp the default
+RECENT_FOLDERS = 8                       # the recent folders a Wiki's picker offers
 # Operations (docs/specs/38-operations.md §1): the tier and effort of its calls, the clean checks in a row before a
 # template goes by itself, the most it does by itself a day, how long a finished operation keeps its texts, and each
 # template's server key → the MCP server's name on this machine; how long the last kept brief of a person or a team is
@@ -150,7 +123,7 @@ class MachineSettings:
     # device token (never the token), when paired and when last seen. The Town Scroll never holds them.
     phones: list = field(default_factory=list)
     phone_port: int = 0           # the phone listener's port, kept so a paired phone finds it again; 0 not chosen
-    look: str = field(default_factory=default_look)   # how the GUI draws the town: camp | office | shift (portrait.md §3)
+    look: str = ""                # Orkline's look (camp | office | shift) as the shared file has it: kept, never read here
     dnd_until: str = ""           # Do not disturb: "" off, "on" until turned off, else when it ends (disturb.py)
     recent_folders: list = field(default_factory=list)   # the folders last connected to a Wiki, newest first (gui/folders.py)
     # The model a tier runs on, per tool, chosen in Settings → AI tools: {"agy": {"elder": "gemini-3.1-pro-high"}}.
@@ -228,7 +201,7 @@ class MachineSettings:
         s.phones = clean_phones(data.get("phones"))
         port = data.get("phone_port")
         s.phone_port = port if isinstance(port, int) and not isinstance(port, bool) and 1024 <= port <= 65535 else 0
-        s.look = data["look"] if data.get("look") in LOOKS else default_look()
+        s.look = data["look"][:20] if isinstance(data.get("look"), str) else ""
         s.dnd_until = clean_dnd(data.get("dnd_until"))
         recent = data.get("recent_folders")
         s.recent_folders = [str(x)[:1000] for x in recent if isinstance(x, str) and x.strip()][:RECENT_FOLDERS] \
@@ -491,20 +464,6 @@ def preset_role(role_id: str, file: Path | None = None, kin: str = "") -> bool:
     if s.onboarded and s.profile.get("role"):
         return False
     s.profile = {k: v for k, v in {**s.profile, "role": role_id, "kin": kin}.items() if k != "kin" or kin}
-    save(s, file)
-    return True
-
-
-def preset_look(look: str, file: Path | None = None) -> bool:
-    """`orkcraft --look`: the look the landing page was told (camp | office), so the town first opens in it.
-    Like `preset_role`, it never overrides a look the operator has lived with since a finished onboarding
-    (they switch it in Settings). True when kept."""
-    if look not in LOOKS:
-        raise ValueError(look)
-    s = load(file)
-    if s.onboarded:
-        return False
-    s.look = look
     save(s, file)
     return True
 

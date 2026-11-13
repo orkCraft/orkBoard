@@ -87,7 +87,6 @@ def isolated_layout_file(tmp_path: Path, tmp_path_factory: pytest.TempPathFactor
     monkeypatch.setenv("ORKCRAFT_ASSETS_DIR", str(tmp_path / "orkcraft-assets"))
     monkeypatch.setenv("ORKCRAFT_STATE_DIR", str(tmp_path / "orkcraft-state"))
     monkeypatch.delenv("ORKCRAFT_FOCUS", raising=False)
-    monkeypatch.setenv("ORKCRAFT_LOOK", "camp")         # never by the shift: a test runs at any hour
     # No real model is asked anything: no limits read, no model list, no update list (test_updates.py opts in),
     # no usage stats or crash report sent.
     monkeypatch.setenv("ORKCRAFT_LIMITS", "0")

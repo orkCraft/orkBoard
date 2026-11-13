@@ -235,14 +235,8 @@ class Server:
         return resp
 
     def page(self) -> bytes:
-        """The page: `static/index.html`, its script the host's `entry` when it names one (Orkboard's `board.js`, in
-        Office's look from the first paint: no camp file is asked for before the script runs)."""
-        html = (STATIC / "index.html").read_bytes()
-        entry = getattr(self.host, "entry", "")
-        if entry:
-            html = html.replace(b'src="/static/app.js"', f'src="/static/{entry}"'.encode()) \
-                       .replace(b'data-theme="camp" data-look="camp"', b'data-theme="office" data-look="office"')
-        return named(html)
+        """The page: `static/index.html`, its script `board.js`."""
+        return named((STATIC / "index.html").read_bytes())
 
     # -- the socket ----------------------------------------------------------------------------
 

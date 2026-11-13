@@ -210,7 +210,6 @@ class Orkboard:
     Needs you); what is a project's is its Board. With no project open it is the start screen: `ideas.*` say *Open a
     folder first*, Operations works as with one."""
 
-    entry = "board.js"              # the desktop page's script (gui/server.py)
     phone_entry = "board-app.js"    # the phone's (gui/pwa.py)
 
     def __init__(self, repo_root: Path | None = None, demo: bool = False, restore: bool = False) -> None:

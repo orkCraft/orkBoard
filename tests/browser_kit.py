@@ -64,7 +64,7 @@ def gui(tmp_path_factory):
     pw = playwright.sync_playwright().start()
     browser = launch(pw)
     mp = pytest.MonkeyPatch()
-    for key, value in {"ORKCRAFT_SETTINGS_FILE": tmp / "settings.json", "ORKCRAFT_LOOK": "office",
+    for key, value in {"ORKCRAFT_SETTINGS_FILE": tmp / "settings.json",
                        "XDG_CACHE_HOME": tmp / "cache", "XDG_CONFIG_HOME": tmp / "config", "ORKCRAFT_ONBOARDING": "0",
                        "ORKCRAFT_LIMITS": "0", "ORKCRAFT_NO_UPDATE": "1", "ORKCRAFT_MODEL_LIST": "0",
                        "ORKCRAFT_STATE_DIR": tmp / "state"}.items():
