@@ -8639,3 +8639,25 @@ one more thing a change had to step around. So:
 3. **One guard stays**: the package imports nothing named `orkcraft`.
 
 The owner's call.
+
+## 306. The log and the specs keep what holds: a decision or spec wholly replaced, or about what was removed, leaves the files; git keeps it (13 November 2026, the owner)
+
+Changes: the rule that a past decision is never edited, only replaced by a new one (AGENTS.md's Board block, *Never*).
+Kept: a new decision still says what it changes and what it keeps (*Changes:*, *Kept:*); a decision is still never
+rewritten to say something it did not.
+
+Why: the person, 13 November 2026: «Продолжай удалять устаревший код и решения/спецификации». The log had 261 sections
+(8,600 lines) and the specs 136 files (23,000 lines), and an AI tool starting a goal read through decisions long replaced
+and specs of things since removed (Orkline, the town, Operations, the phone's old face) to find what holds. So:
+1. **A section of this log leaves it** when every point of it was changed by later sections, or when it is about
+   something Orkboard no longer has. A section a live test or live code still names stays (it still holds, at least in
+   part).
+2. **A spec leaves `docs/specs/`** when its goal is done and what it specifies was removed or wholly replaced by a later
+   spec or decision, and live code or tests do not name it as the reference for what they do.
+3. **What only a removed spec or decision showed** (a mockup's folder, a trial's record) leaves with it.
+4. **A goal's page stays** (it is the Board's record): a link from a done goal's page to a removed spec or picture is
+   history, read in git.
+5. **The numbers stay**: a section keeps its number, a gap in the log is a section that left; `git log -p docs/decisions.md`
+   shows it.
+
+The owner's call.

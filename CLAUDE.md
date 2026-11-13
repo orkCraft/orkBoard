@@ -53,6 +53,8 @@ package (`orkcraft`).
   (`tests/test_architecture.py` checks it). A service changes the Board and publishes on the bus (`core/bus.py`). It
   never shows a toast or a dialog itself.
 - Split a module before it grows past ~600 lines.
+- **The log and the specs keep what holds** (decisions §306): a decision or spec wholly replaced, or about something
+  removed, is removed from `docs/` (git keeps it); this wins over the Board block's *never edit a past decision*.
 - **Nothing for Orkline** (decisions §305): no code, setting, comment or branch is kept for Orkline or another product
   that might run these modules; the package imports nothing named `orkcraft` (`tests/test_architecture.py`).
 - **The VS Code extension** (`vscode/`) is a frame, not a second face: it starts `orkboard --serve <folder>`
