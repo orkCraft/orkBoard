@@ -74,7 +74,7 @@ export function groupsOf(entries, parties = partiesNow()) {
 
 /** A card of the row pressed: a battle opens the Orkmaster's spread of it (cards/spreads/battle.js; decisions §298.7), any other is picked, and pressed again goes back to the feed. `from`: the card, where the focus goes back. */
 function press(e, cur, from) {
-  if (e.stops?.[0]?.kind === "battle") openSpread({ kind: "battle", slug: e.stops[0].ref.slug, from });
+  if (e.stops?.[0]?.kind === "battle") openSpread({ kind: "battle", slug: e.stops[0].ref.slug, from, opened: "hand" });
   else if (cur?.key === e.key) toFeed();
   else pickEntry(e);
 }

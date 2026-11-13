@@ -96,7 +96,7 @@ export function Battle({ slug, opened }) {
   const up = against.slice(0, FACE_UP), more = against.slice(FACE_UP), title = n.short || n.title || slug, nums = against.map((a) => `§${a.number}`).join(" and ");
   const old = up.find((a) => `§${a.number}` === open), tok = mine.find((v) => v.leader === token);
   return html`<${SpreadFrame} kind="battle" title=${`${title} vs ${nums}`} line="A new card against what it goes against; nothing is decided by opening it"
-      say=${`It goes against ${againstWords(against.map((a) => ({ kind: "decision", ...a })))}. Read what rests on it.`} hand=${ways} seal=${seal} phase=${phaseOf(slug) || "talk"}>
+      say=${`It goes against ${againstWords(against.map((a) => ({ kind: "decision", ...a })))}. Read what rests on it.`} hand=${ways} seal=${seal} phase=${phaseOf(slug)}>
     <div class="bt">
       <${Zone} label="What it goes against" class="bt-against">
         ${up.map((a) => html`<${Old} key=${a.number} a=${a} on=${open === `§${a.number}`} press=${() => setOpen(open === `§${a.number}` ? "" : `§${a.number}`)} />`)}

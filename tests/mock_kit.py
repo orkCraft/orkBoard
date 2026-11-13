@@ -190,14 +190,36 @@ def lay_limits(data: dict) -> None:
     data["state"]["limits"] = [row("Claude", 0.62), row("Codex", 0.18)]
 
 
+CHRONICLE = "134-release-keeps-the-chronicle"       # a goal done in dev: the way to main, every check agreeing
+
+
 def lay_gate(data: dict) -> None:
-    """The host's `ideas.gate_guards` (goal "The battle and the gate" L) for any goal: on the way to dev, one test failing under a decision, one failing test naming none (a file), one decision agreeing."""
+    """The host's `ideas.gate_guards` (goal "The battle and the gate" L, N) for any goal, as `gui/ideas_battle.py` answers it: on the way to dev, one test failing under a decision, one failing test naming
+    none (a file), one decision agreeing; and for a goal done in dev (`CHRONICLE`) the way to main with every check agreeing, the seal lit. Each text is an example."""
     ensure(data, "ideas.gate_guards", {})
-    reply(data, "ideas.gate_guards")["result"] = {"idea": "", "way": "dev", "cost": {"calls": 1, "usd_high": 0.25},
-        "failing": [{"number": 50, "title": "Orkline imports Orkboard and never the other way round", "ids": ["tests/test_board_alone.py::test_a"]}],
-        "files": [{"file": "tests/test_bare.py", "ids": ["tests/test_bare.py::test_c"]}], "agreeing": [{"number": 273, "title": "Two piles in the discard"}]}
-    data["replies"].append({"name": "ideas.gate_guards", "args": {"idea": "134-release-keeps-the-chronicle"}, "ok": True,      # a goal done in dev whose every check agrees: the way to main, the seal lit
-                            "result": {"idea": "134-release-keeps-the-chronicle", "way": "main", "cost": None, "failing": [], "files": [], "agreeing": [{"number": 273, "title": "Two piles in the discard"}]}})
+    reply(data, "ideas.gate_guards")["result"] = {"idea": "", "way": "dev", "cost": {"calls": None, "usd_high": None},
+        "failing": [{"number": 50, "title": "Orkline imports Orkboard and never the other way round" + EXAMPLE, "ids": ["tests/test_board_alone.py::test_a"]}],
+        "files": [{"file": "tests/test_bare.py", "ids": ["tests/test_bare.py::test_c"]}], "agreeing": [{"number": 273, "title": "Two piles in the discard" + EXAMPLE}]}
+    data["replies"].append({"name": "ideas.gate_guards", "args": {"idea": CHRONICLE}, "ok": True, "error": None,
+                            "result": {"idea": CHRONICLE, "way": "main", "cost": None, "failing": [], "files": [], "agreeing": [{"number": 273, "title": "Two piles in the discard" + EXAMPLE}]}})
+
+
+def lay_battle(data: dict, against: int = 3) -> str:
+    """A goal whose decision goes against `against` standing decisions (the fit test lays three, the most that lie face up): the snapshot's `conflict` rows (`realm/board_map.py conflict_rows`, one for each,
+    the hand's battle card) and the host's `ideas.battle` for it (`gui/ideas_battle.py`): each old card with its point and what rests on it by kind. Each text is an example. Returns the goal's slug."""
+    goal = latest(data, "talk", 1)[0]
+    slug = goal["slug"]
+    olds = [(212, "The server owns every clock", {"goals": ["33-v1-shell"], "decisions": ["§250", "§261"], "tests": ["tests/test_clock.py", "tests/test_round.py"]}),
+            (213, "A second old card", {"goals": [], "decisions": [], "tests": []}),
+            (214, "A third old card, held by tests only", {"goals": [], "decisions": ["§215"], "tests": ["tests/test_third.py"]})][:against]
+    rows = [{"kind": "conflict", "idea": slug, "goal": goal["goal"], "title": goal["title"], "priority": "normal", "blocks": False, "at": at(11, 30), "number": n,
+             "point": f"the new decision goes against it{EXAMPLE}", "title_then": t + EXAMPLE, "why_then": "It stands" + EXAMPLE, "text": f"the new decision goes against it{EXAMPLE}"} for n, t, _ in olds]
+    board = reply(data, "ideas.board")["result"]
+    board["needs_you"] = [*rows, *(board.get("needs_you") or [])]
+    ensure(data, "ideas.battle", {})
+    reply(data, "ideas.battle")["result"] = {"idea": slug, "cost": {"calls": 1, "usd_high": 0.15},
+        "against": [{"number": n, "title": t + EXAMPLE, "point": f"the new decision goes against it{EXAMPLE}", "rests": r} for n, t, r in olds]}
+    return slug
 
 
 def lay_standard(data: dict) -> None:
@@ -226,6 +248,12 @@ def lay_turned(data: dict) -> None:
     """The standard lays and the moves that wait."""
     lay_standard(data)
     lay_turns(data)
+
+
+def lay_battled(data: dict) -> None:
+    """The turned Board with a battle in the hand (the fit test's)."""
+    lay_turned(data)
+    lay_battle(data)
 
 
 def recording() -> dict:

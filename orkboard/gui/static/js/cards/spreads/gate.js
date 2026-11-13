@@ -46,7 +46,7 @@ export function DecisionCard({ number, title, mark = "", note = "" }) {
 }
 
 /** A test naming no decision, as the part it lives in: its file in the code face. */
-export const PartCard = ({ file, ids }) => html`<${SpCard} kind="part" size="md" party="orkmaster" n=${{ sign: "compass" }} name=${file} line="fails" mark="no" label=${`${file}: ${testsWords(ids)}`} />`;
+export const PartCard = ({ file, ids }) => html`<${SpCard} kind="part" size="md" party="orkmaster" n=${{ sign: "compass" }} name=${file.split("/").flatMap((w, i) => (i ? [html`/<wbr />`, w] : [w]))} line="fails" mark="no" label=${`${file}: ${testsWords(ids)}`} />`;
 
 export function Gate({ slug, opened }) {
   const from = opened === "hand" ? "hand" : "mat";
@@ -85,7 +85,7 @@ export function Gate({ slug, opened }) {
   const nothing = ready && !agreeing.length && !failing.length && !files.length;
 
   return html`<${SpreadFrame} kind="gate" title=${`Gate: ${title} → ${branch}`} line="always, then the tests of what it touched" say=${say} note=${pick === "stale" ? "Tech is asked first; a new decision comes before the test changes." : bad ? "Above: what its tests guard. Below: your stack." : "Nobody disputes it: one move."}
-      phase=${phaseOf(slug) || "work"} hand=${hand} seal=${seal}>
+      phase=${phaseOf(slug)} hand=${hand} seal=${seal}>
     <div class="gt" data-way=${g?.way || ""} data-red=${bad ? "1" : "0"}>
       <${Zone} label="What its tests guard" empty=${nothing ? "no test names a decision" : ""} class="gt-guards">
         ${agreeing.length > 0 && (spread

@@ -33,7 +33,7 @@ def lay(server, slug: str, *, red: bool, branch: bool = True) -> None:
         ideas.add_track(root, "Tech")
     (root / ideas.IDEAS).mkdir(parents=True, exist_ok=True)
     (root / ideas.IDEAS / f"{slug}.md").write_text(PAGE.format(t=slug), encoding="utf-8")
-    ideas.save_state(host.ideas.state_dir, slug, state="decided")
+    ideas.save_state(host.ideas.state_dir, slug, state="ready" if branch else "done")
     _w(repo, "docs/decisions.md", LOG)
     _w(repo, "tests/test_red.py", '"""Guards decisions §2."""\n\ndef test_a():\n    assert 0\n')
     _w(repo, "tests/test_bare.py", '"""Nothing named."""\n\ndef test_c():\n    assert 0\n')
@@ -108,6 +108,7 @@ def test_a_red_gate_lies_upright_every_card_inside_its_field_with_the_decision_i
         assert gate.locator(".gt-yours .sp-card[data-cardkind=goal]").count() == 1 and "red-goal" in gate.locator(".gt-yours").text_content().lower()
         top = lambda s: gate.locator(s).bounding_box()["y"]                                         # upright: guards, the line, Yours
         assert top(".gt-guards") < top(".gt-line") < top(".gt-yours")
+        assert gate.locator(".mf-phase.is-on").inner_text().strip().lower() == "work"                    # the goal's own phase, as the phone reads it
         assert pg.evaluate(INSIDE) == [], pg.evaluate(INSIDE)
         hand = pg.locator(".frame-hand .mathand")                                                   # the ways lie in the hand
         assert hand.locator("[data-way=fix]").count() == 1 and hand.locator("[data-way=stale]").count() == 1
