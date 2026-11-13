@@ -1,7 +1,7 @@
 // The page's link when it is paired with a computer (docs/specs/94-one-page-fitted-to-the-width.md §2): the phone's socket,
 // `wss://<host>/ws` with the device's bearer and the protocol `orkcraft.v1` (gui/phones.py): the snapshot (`state`), a
-// command and its `reply`, and `news` while it is open. Moved from pwa/board-app.js and pwa/util.js, which the phone's
-// old face keeps a copy of until it is removed (spec 94 E); js/link.js picks it (`pairWith`) and no other module knows.
+// command and its `reply`, and `news` while it is open. Moved from the phone's old face (removed, spec 94 E); js/link.js
+// picks it (`pairWith`) and no other module knows.
 //
 // Away from the computer the page shows what it last saw, greyed and said "As of 14:02."; an answer or an idea given with
 // no signal is kept on the phone (`outbox`) and sent when the computer answers again, said "Sent when the computer answers".

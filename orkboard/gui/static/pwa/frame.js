@@ -2,8 +2,7 @@
 // desktop's page (page/board.js, which gui/pwa.py serves beside it). It pairs the phone (the code from the QR or the link, the key an iOS Home Screen app is handed),
 // tells js/link.js it is paired (`pairWith`) and only then imports the page, which speaks the phone's protocol through that link; it registers the worker, keeps the
 // push subscription, and takes the arrival from a notification. It draws nothing of the Board: the only things it draws are the cards before the page is paired and
-// after the computer forgot the phone. The computer's update is the page's own (js/shell/update.js `UpdateAsk`: the snapshot carries it). The old face (old.html,
-// board-app.js) keeps its own copy of all this until spec 94 E.
+// after the computer forgot the phone. The computer's update is the page's own (js/shell/update.js `UpdateAsk`: the snapshot carries it).
 import { effect } from "@preact/signals";
 import { forgotten, offlineLine, onMocks, pairWith, unreached } from "./page/js/link.js";
 import { store } from "./page/js/linkpaired.js";

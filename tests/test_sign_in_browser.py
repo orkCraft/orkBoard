@@ -2,8 +2,7 @@
 snapshot's `sign_in` and the three commands. A tool `needed` with `auto` is asked to sign in once when the person is at the page
 (visible and focused), not while it is hidden or unfocused, on its next focus or press; one tool at a time; the toasts of a sign-in
 that is open (in the browser, in a terminal, no terminal), done with what goes on, failed, and a browser that did not open; **Sign
-in** on the first screen's Check row, on an error line and on the need; *waits: Claude Code's sign-in* on a row and a stop. The
-phone's side is in tests/test_pwa_shell_browser.py."""
+in** on the first screen's Check row, on an error line and on the need; *waits: Claude Code's sign-in* on a row and a stop."""
 from __future__ import annotations
 
 import pytest
