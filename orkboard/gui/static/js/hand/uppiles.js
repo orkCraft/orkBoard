@@ -14,6 +14,6 @@ export function Piles({ onPress }) {
   const behind = piles.analysis.find(({ n }) => askedWords(n.slug));
   const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: nextWords(piles.review), work: "" };
   return html`<section class="up-piles" aria-label="The Orkmaster's piles" data-piles="1">
-    ${PILES_OLD.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : ""} onPress=${(n) => onPress(n)} open=${false} way=${null} legacy=${true} />`)}
+    ${PILES_OLD.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} asked=${id === "analysis" && behind ? askedWords(behind.n.slug) : ""} onPress=${(n) => onPress(n)} />`)}
   </section>`;
 }

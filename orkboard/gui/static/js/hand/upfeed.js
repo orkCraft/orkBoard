@@ -8,12 +8,11 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
-import { Elem, Head, Icon, Sign } from "../orkui.js";
+import { Icon, Sign } from "../orkui.js";
 import { command, looked, town } from "../link.js";
 import { ORKMASTER, openTab, picked, tab } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
-import { nameOf, partiesAll } from "../table/data.js";
-import { raceOf } from "../table/felt.js";
+import { partiesAll } from "../table/data.js";
 import { HeadOf, PostBody, PostCard, PostHead, Stack, Wait, when, whoOf } from "../table/post.js";
 import { pickGoal } from "./entries.js";
 import { workOf } from "./upmenu.js";
@@ -50,28 +49,6 @@ function useLook(project) {
     return () => { document.removeEventListener("visibilitychange", hide); looked.set(project); };
   }, [project]);
   return since;
-}
-
-/** Goals laid as sideways cards, a button each way (44 px) beside the row that scrolls; a press on a card picks its goal. */
-function Work({ goals, onPick, leader }) {
-  const row = useRef(), [ends, setEnds] = useState({ l: false, r: goals.length > 1 });
-  const edge = () => { const e = row.current; if (e) setEnds({ l: e.scrollLeft > 2, r: e.scrollLeft + e.clientWidth < e.scrollWidth - 2 }); };
-  useEffect(edge, [goals.length]);
-  const by = (dir) => {
-    const e = row.current, c = e?.querySelector(".up-fd__gc");
-    if (!e) return;
-    const still = matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    e.scrollBy({ left: dir * ((c?.offsetWidth || 150) + 8), behavior: still ? "auto" : "smooth" });
-  };
-  return html`<${PostCard} leader=${leader} kind="work" label=${`${whoOf(leader).name}: goals at work`}>
-    <${PostHead} leader=${leader} sub="at work" />
-    <div class="up-fd__car" ref=${row} role="group" aria-label="Goals at work" onScroll=${edge}>${goals.map((r) => html`<button key=${r.slug} type="button" class="ork-card up-fd__gc" data-goal=${r.slug} data-race=${raceOf(r.g) || undefined}
-        aria-label=${`${r.name}: ${r.phase}, ${nameOf(r.g)}`} onClick=${() => onPick(r.slug)}>
-      <span class="up-fd__gtop"><${Elem} name=${r.element} hue=${r.hue} dim=${!r.element} />${r.sign && html`<${Sign} name=${r.sign} />`}</span><span class="up-fd__gcn">${r.name}</span>
-      <span class="up-fd__gfoot">${r.g?.leader?.head && html`<${Head} race=${r.g.leader.head.race} tier=${r.g.leader.head.tier} />`}<span>${r.phase}</span></span></button>`)}</div>
-    ${goals.length > 1 && html`<div class="up-fd__arrows"><button type="button" class="ork-btn up-fd__arrow" aria-label="Previous goals" disabled=${!ends.l} onClick=${() => by(-1)}><${Icon} name="chevron-left" /></button>
-      <button type="button" class="ork-btn up-fd__arrow" aria-label="Next goals" disabled=${!ends.r} onClick=${() => by(1)}><${Icon} name="chevron-right" /></button></div>`}
-  </${PostCard}>`;
 }
 
 /** The one seen line: what came before the last look, its heads small; pressed it spreads its cards, each card's head showing. */

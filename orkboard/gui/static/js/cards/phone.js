@@ -2,7 +2,7 @@
 // as the table of cards draws it: no section of what asks (decisions §296.5: the person's move lies in the hand only); a spec that starts by itself (table/post.js `Wait`, §240.2); what is
 // at work a shelf of S cards that scrolls sideways; the news M cards, one leader's posts in a row one stack. The heads in rings above and the
 // seen line below are upfeed.js's own, given here as nodes. A card pressed opens as an L over the whole screen (card.js `CardL`, which frame.js
-// lays when `cardsOn()`; cards.css makes it fill a phone). Drawn only while `cardsOn()` (cards/on.js); layout in phone.css.
+// lays; cards.css makes it fill a phone). Layout in phone.css.
 import { useState } from "preact/hooks";
 import { html } from "../html.js";
 import { Wait, whoOf } from "../table/post.js";

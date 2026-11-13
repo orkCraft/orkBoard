@@ -1,10 +1,7 @@
 // The Orkmaster's tables by the stage of the goal picked (docs/specs/168-the-window-played-as-a-card-games-table.md C3, decisions §283.16.1, .3, .5, .7; mockup docs/mockups/table-template/ shots 1 and 3): through the Orkmaster the table is a lane for each leader and
 // what lies in it is the stage's:
-//  - **The project** (nothing picked, `StageRows` over each lane of boardmap.js): the leader's goals in Talk as small cards (the verdict's sign face up once the leader has said it, a back while it assesses), then its goals' specs as small cards; the lane's
-//    implementation is the cascade boardmap.js lays under them.
 //  - **An idea** (a goal picked in Talk, `IdeaTable`): the route and its price on a plate with *Judge again now* (`ideas.judge_again`), under each leader of the route a small card with its verdict's sign (corners.js `Verdict`).
 //  - **A spec** (a goal picked in its spec, `SpecTable`): a big card, 144 x 202, under each leader of the route, face up once its section is written, a back before.
-//  The implementation (a goal picked at work) is planboard.js, which lays a later leader's step as a placeholder.
 // A card pressed picks its goal and opens that leader's tab (`open`), where the leader's own table of that stage is (talkpage.js, specpage.js). Two card sizes only: 144 x 202 and the small 56 x 78 (smallcard.js). Layout is stageboard.css; this file reads the Board and draws.
 import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -12,13 +9,10 @@ import { Elem, Head, Sign } from "../orkui.js";
 import { command } from "../link.js";
 import { openTab, picked } from "../frame/state.js";
 import { board } from "../board/store.js";
-import { mapData } from "../shell/store.js";
 import { costLine, partyName, routeWords } from "../hand/routecard.js";
 import { nameOf, partiesAll, partiesNow, phaseOf } from "./data.js";
 import { SmallCard } from "./smallcard.js";
 import { CornerFoot, CornerTop, Verdict } from "./corners.js";
-import { everBack } from "./backcard.js";
-import { PILES } from "./stages.js";
 import { backSpec, withPreview } from "./preview.js";
 import { readSpec, usePage } from "./specpage.js";
 import { Lanes } from "./stagelanes.js";
@@ -33,9 +27,7 @@ if (typeof document !== "undefined") {                                  // the s
   }
 }
 
-const TALK = ["routed", "talk"], SPEC = ["decided", "sections"];
-
-/** Which of the stages' tables a goal's state lies in: `idea` (Talk), `spec`, else "" (the plan, planboard.js). */
+/** Which of the stages' tables a goal's state lies in: `idea` (Talk), `spec`, else "". */
 const STARTED = ["running", "testing", "picking", "review", "failed", "merged"];            // a task past waiting: the goal is at work, whatever its state says (its sections joined while its party works)
 export const stageKind = (n) => (!n || (n.tasks || []).some((t) => STARTED.includes(t.state)) ? "" : phaseOf(n.slug) === "talk" ? "idea" : phaseOf(n.slug) === "spec" ? "spec" : "");
 
@@ -73,7 +65,6 @@ export function verdictWords(l) {
 /** The small back of a leader that has not said its verdict yet (56 x 78): orkUI's small back with the goal's rune on its seal; a press is the same as the face's. */
 export function SmallBack({ n, g, onPress, extra = {} }) {
   const el = n.element || "", hue = n.hue || el;
-  everBack.add(n.slug);
   const props = withPreview({ class: "ork-card sb-back", "data-goal": n.slug, "data-party": g.slug, "data-assessing": "1", "aria-label": `${n.title}: assessing`, ...extra }, backSpec(n.title, "Assessing…", n));
   return html`<button type="button" ...${props} onClick=${onPress}><span class="ork-card-back small" aria-hidden="true"><span class="ork-card-back__seal"><${Elem} name=${el} hue=${hue} dim=${!el} /></span></span></button>`;
 }
@@ -86,25 +77,6 @@ export function SaidCard({ n, g, dots }) {
   const waits = opens(l) > 0;
   return html`<${SmallCard} n=${n} parties=${parties} done=${done} signal=${waits ? "alert" : ""} picture=${html`<${Verdict} verdict=${l.verdict} label=${verdictWords(l)} />`} onPress=${press}
     extra=${{ "data-party": g.slug, "data-verdict": l.verdict, "data-leader": l.leader || undefined }} />`;
-}
-
-/** The goals of the Board that lie at a stage (`TALK` or `SPEC` states) with this leader on their route, in the Board's order. */
-const goalsAt = (states, g) => (mapData.value?.nodes || []).filter((n) => states.includes(n.state) && n.place === "table" && !n.folded && leadersOf(n).includes(g.slug));
-
-/** Whether the leader has a goal in Talk or in its spec to lay as a row. */
-export const hasRows = (g) => goalsAt(TALK, g).length + goalsAt(SPEC, g).length > 0;
-
-/** The project's lane over the cascade: the leader's goals in Talk as small cards, then its goals' specs as small cards (each a face once it writes, as the Orkmaster's column's). Nothing when it has none. */
-export function StageRows({ g }) {
-  const talk = goalsAt(TALK, g), spec = goalsAt(SPEC, g);
-  if (!talk.length && !spec.length) return null;
-  return html`<div class="sb-rows" data-rows=${g.slug}>
-    ${talk.length > 0 && html`<section class="sb-row" data-row="ideas" aria-label=${PILES[0][1]}><span class="ork-label sb-row__label">${PILES[0][1]}</span>
-      <div class="sb-row__cards">${talk.map((n) => html`<${SaidCard} key=${n.slug} n=${n} g=${g} dots=${leadersOf(n)} />`)}</div></section>`}
-    ${spec.length > 0 && html`<section class="sb-row" data-row="specs" aria-label=${PILES[1][1]}><span class="ork-label sb-row__label">${PILES[1][1]}</span>
-      <div class="sb-row__cards">${spec.map((n) => html`<${SmallCard} key=${n.slug} n=${n} parties=${leadersOf(n).map(partyOf).filter(Boolean)} signal=${n.asks_you ? "alert" : ""} onPress=${() => open(n.slug, g.slug)}
-        extra=${{ "data-party": g.slug, "data-spec": "1" }} />`)}</div></section>`}
-  </div>`;
 }
 
 // -- an idea ---------------------------------------------------------------------------------------------------------------------
@@ -154,7 +126,6 @@ function SpecFace({ n, g, sec }) {
 /** A leader's section not written yet: orkUI's back, the goal's rune on its seal, *writing* under it. */
 function SpecBack({ n, g }) {
   const el = n.element || "", hue = n.hue || el;
-  everBack.add(n.slug);
   const props = withPreview({ class: "sb-spec sb-spec--back", "data-spec-card": g.slug, "data-state": "writing", "data-goal": n.slug, "aria-label": `${nameOf(g)}: its section is being written` }, backSpec(n.title, "writing", n));
   return html`<button type="button" ...${props} onClick=${() => open(n.slug, g.slug)}><span class="ork-card-back" aria-hidden="true"><span class="ork-card-back__seal"><${Elem} name=${el} hue=${hue} dim=${!el} /></span></span><span class="sb-spec__say">writing</span></button>`;
 }

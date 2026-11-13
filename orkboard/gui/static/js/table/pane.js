@@ -25,7 +25,7 @@ import { Earlier, PhaseView, RouteView, phaseKind } from "./phaseview.js";   // 
 import { nodeOf } from "./goalmap.js";
 import { ResultTable } from "./resultboard.js";             // the Orkmaster's table of a goal done (spec 168 G2)
 import { IdeaTable, SpecTable, stageKind } from "./stageboard.js";   // the Orkmaster's tables of a goal in Talk and in its spec (spec 168 C3)
-import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
+import { Lifted, TaskBack, litKey, mineKey } from "./card.js";
 import { LimitChip } from "./tabs.js";
 import { uprightNow } from "../frame/upright.js";
 import { Stall } from "./stall.js";
@@ -60,10 +60,6 @@ function backOf(key, parties, tab) {
   if (kind === "task") {
     const [goal, task] = rest.join(":").split("/"), n = nodes.find((x) => x.slug === goal), t = n?.tasks.find((x) => x.id === task);
     return n && t ? [t.title, html`<${TaskBack} n=${n} t=${t} mapName=${map} />`] : null;
-  }
-  if (kind === "orc") {
-    const n = nodes.find((x) => x.slug === rest.join(":"));
-    return n ? [n.title, html`<${OwnBack} n=${n} />`] : null;
   }
   if (kind === "part") {
     const party = rest[0], path = rest.slice(1).join(":");

@@ -1,6 +1,6 @@
 // The table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; decisions §104.0, §145.1): the leaders' tabs over the pane — *what and why, through whose eyes*. `frame/frame.js` draws `Table` over the hand: the page's window. The open tab and the goal picked are `frame/state.js`'s (the person's: nothing here switches a tab under them; a pick whose route lacks the open tab opens the Orkmaster's, in frame/state.js); what is
 // open over the pane is its `over`. This file holds the tabs and the pane together with what they share: the width (under 760 px the tabs are heads and what opens over the pane is a screen, ← the browser's back),
-// Esc (lowers a lifted card, else goes back from what is over the pane; the pick's own Esc and its address are frame/state.js's) and the project shown (the tab kept for it). Each part is its own module: tabs.js, pane.js (title, over, lifted), boardmap.js, header.js,
+// Esc (lowers a lifted card, else goes back from what is over the pane; the pick's own Esc and its address are frame/state.js's) and the project shown (the tab kept for it). Each part is its own module: tabs.js, pane.js (title, over, lifted), header.js,
 // seatpop.js, syspane.js, card.js and over.js (the kinds); the forms that were dialogs lie in frame/place.js.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";

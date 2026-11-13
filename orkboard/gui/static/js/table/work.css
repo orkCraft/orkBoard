@@ -2,23 +2,10 @@
    (frame/frame.js); orkUI's tokens only. */
 
 /* -- a goal's **…** and the question it asks in place ---------------------------------------------------------------------------------------- */
-.table-cardwrap { position: relative; }
 .table-dropper { position: relative; display: inline-flex; flex: none; }
-/* on a card (the lane's, the line's front card, a fan's edge) the **…** lies over the card's lower right (an edge's upper right) and its list and its question over the card, where it lies: the card is the box they are placed in */
-.table-dropper.is-card, .table-dropper.is-edge { display: contents; }
-.table-dropper.is-card > .table-menu, .table-dropper.is-edge > .table-menu { display: contents; }
-.table-dropper.is-card .table-menu__btn, .table-dropper.is-edge .table-menu__btn { position: absolute; z-index: 20; right: var(--ork-1); }
-.table-dropper.is-card .table-menu__btn { bottom: var(--ork-1); }
-.table-dropper.is-edge .table-menu__btn { top: 0; min-height: 0; padding-top: 0; padding-bottom: 0; }
-.table-dropper.is-card .table-menu__list { left: 0; right: auto; top: auto; bottom: 0; min-width: 100%; width: max-content; }
-.table-dropper.is-edge .table-menu__list { left: 0; right: auto; top: 0; min-width: 100%; width: max-content; }
 .table-dropper.is-inline { display: flex; flex-direction: column; align-items: flex-end; gap: var(--ork-3); width: 100%; }
 .table-dropper.is-inline .table-menu__list { top: auto; bottom: 100%; }
-.table-fan__slot:has(.table-menu.is-open), .table-fan__slot:has(.table-drop) { z-index: 40; }
 .table-drop { position: absolute; z-index: 60; right: 0; display: flex; flex-direction: column; gap: var(--ork-3); box-sizing: border-box; width: min(240px, calc(100vw - 2 * var(--ork-4))); padding: var(--ork-4); text-align: left; }
-.table-dropper.is-card .table-drop, .table-dropper.is-edge .table-drop { left: 0; right: auto; width: max(100%, 176px); }
-.table-dropper.is-card .table-drop { bottom: 0; }
-.table-dropper.is-edge .table-drop { top: 0; }
 .table-dropper.is-head .table-drop { top: 100%; }
 .table-dropper.is-inline .table-drop { position: static; width: 100%; }
 .table-drop__title { margin: 0; font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); }
@@ -26,16 +13,11 @@
 .table-drop__acts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--ork-3); }
 .table-drop .is-danger { color: var(--ork-danger); }
 .hand-stopface__head { position: relative; }
-/* the stage word with the time a task has worked (*Doing · 1 m 12 s*) in the card's 120 px: its small sign gives way and its tracking closes, an ellipsis if it is still long */
-.table-stage__w { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.table-stage.is-timed { letter-spacing: 0; }
-.table-stage.is-timed .ork-sign { display: none; }
 .hand-way__more { display: flex; justify-content: flex-end; }
 
 /* a press is at least 44 x 44 on a touch screen (spec 94 §1.3) */
 @media (pointer: coarse) {
   .table-drop .ork-btn, .table-dropper.is-edge .table-menu__btn { min-height: var(--ork-tap); }
-  .table-dropper.is-card .table-menu__btn, .table-dropper.is-edge .table-menu__btn { right: 0; }
 }
 
 /* -- what works moves (decisions §187.2, docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.1): a task at work shows its goal's rune glowing in the stage's sign's place (orkUI's `.ork-elem.is-glowing`: its opacity from about 62 % to full and back, six steps over 2.4 s,

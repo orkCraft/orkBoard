@@ -16,12 +16,3 @@
 
 .up-round__scrim { position: fixed; inset: 0; z-index: 7; background: var(--ork-scrim); }
 .up-sel { position: absolute; right: var(--ork-4); bottom: calc(100% + var(--ork-4)); z-index: 9; display: flex; flex-direction: column; align-items: flex-end; gap: var(--ork-5); }
-.up-sel__opt { appearance: none; position: relative; isolation: isolate; box-sizing: border-box; min-height: 56px; margin: 0; padding: 0 var(--ork-4) 0 var(--ork-6); display: flex; align-items: center; gap: var(--ork-5);
-  border: 0; background: var(--ork-edge); color: var(--ork-ink); clip-path: inset(0 round var(--ork-tap)); cursor: pointer; text-align: right; }
-.up-sel__opt::before { content: ""; position: absolute; inset: var(--ork-line); z-index: -1; background: var(--ork-card); clip-path: inset(0 round var(--ork-tap)); }
-.up-sel__opt:focus-visible { outline: 0; background: var(--ork-ink); }
-.up-sel__opt:focus-visible::before { inset: var(--ork-1); }
-.up-sel__words { display: flex; flex-direction: column; align-items: flex-end; }
-.up-sel__word { font: var(--ork-type-heading); font-size: 17px; line-height: 20px; }
-.up-sel__line { font: var(--ork-type-caption); font-size: 14px; line-height: 18px; color: var(--ork-ink-muted); white-space: nowrap; }
-.up-sel__opt .up-round__pic { flex: none; width: 40px; height: 40px; object-fit: contain; }

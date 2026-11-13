@@ -1,7 +1,7 @@
 // A mat opened has its address (goal 171 stage I; decisions §299.3, §300): its seat and its goal in the page's URL, `#mat=<seat>:<goal>` (a spread of a goal: track, gate, deal,
 // battle), `#mat=<seat>` (cost, duel, sort), `#mat=table:<party>:<framework>[:<part>]` (a leader's table). Opening a mat pushes a step of the history, so a phone's Back (or the
 // browser's) puts it away; closing it by Esc or *Close* takes the step off again; a reload, a link from the feed or the journal opens the mat again once the Board is there.
-// The pick's own `#goal=` (frame/state.js) is another address and is left alone. Only the table of cards (cards/on.js) reads or writes it.
+// The pick's own `#goal=` (frame/state.js) is another address and is left alone. Only the table of cards reads or writes it.
 import { effect, untracked } from "@preact/signals";
 import { mapData } from "../shell/store.js";
 import { giveBack } from "./back.js";

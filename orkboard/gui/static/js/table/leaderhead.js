@@ -14,7 +14,6 @@ import { ConcernCards } from "./concernrow.js";
 import { partiesAll } from "./data.js";
 import { SmallCard } from "./smallcard.js";
 import { backSpec, withPreview } from "./preview.js";
-import { everBack } from "./backcard.js";
 import { kindOf } from "./stages.js";
 import { leadersOf, open } from "./stageboard.js";
 import { useTakingParts } from "./askparts.js";
@@ -48,7 +47,6 @@ const BACK_LINE = { analysis: "Idea · its leaders talk it over", review: "Spec 
 /** A goal's small back: its rune on the seal; face down, as an idea and a spec lie in the Board's column. */
 function GoalBack({ n, g, pile }) {
   const el = n.element || "", hue = n.hue || el, name = n.title || n.short || "";
-  everBack.add(n.slug);
   const props = withPreview({ class: "ork-card sb-back hd-back", "data-goal": n.slug, "data-party": g.slug, "data-stage": pile === "analysis" ? "idea" : "spec", "aria-label": `${name}: ${pile === "analysis" ? "idea" : "spec"}` }, backSpec(name, BACK_LINE[pile], n));
   return html`<button type="button" ...${props} onClick=${() => open(n.slug, g.slug)}><span class="ork-card-back small" aria-hidden="true"><span class="ork-card-back__seal"><${Elem} name=${el} hue=${hue} dim=${!el} /></span></span></button>`;
 }

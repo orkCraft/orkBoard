@@ -7,7 +7,7 @@ import { html } from "../html.js";
 import { CornerFoot, CornerTop } from "../table/corners.js";
 import { lower, playAt, playing } from "../frame/state.js";
 import { sayCard } from "../table/sayask.js";
-import { OWN_LINE, WayCard, useRing } from "./answercards.js";
+import { OWN_LINE, WayCard } from "./answercards.js";
 import { PenField } from "./penfield.js";
 import { usePlace } from "./handplace.js";
 
@@ -24,7 +24,6 @@ export function PlayWays({ card: c, id, idea, kind }) {
   useEffect(() => { if (c) playAt(c.tab, idea); }, [id]);
   useEffect(() => { setPen(false); }, [id]);
   useEffect(() => { if (wasPen.current && !pen) penBtn.current?.focus({ preventScroll: true }); wasPen.current = pen; }, [pen]);
-  useRing(idea, "asks");
   const at = usePlace(box, row, [id], pen);
   useEffect(() => { box.current?.focus({ preventScroll: true }); }, [id]);
   if (!c) return null;

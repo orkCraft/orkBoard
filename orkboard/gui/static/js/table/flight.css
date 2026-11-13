@@ -4,8 +4,6 @@
 .table-thrown__words { color: var(--ork-ink-faint); }   /* on orkUI's flat plate (§275.2) */
 .table-thrown i { font-style: normal; color: var(--ork-ink-muted); }
 
-/* A card that turns on its way (turnfly.js; spec 147 D.2 and E, decisions §251.7, §70): orkUI's `.ork-turn` laid at the box where the card lands, its back the Orkmaster's hand's back (the small seal and the goal's rune in the middle, column.css `.col-fan__seal`), its face a copy of the card.
-   A goal that asks the person has the back's ring in the alert. Layout only. */
+/* A card that turns on its way (hand/fieldturn.js; spec 147 D.2 and E, decisions §251.7, §70): orkUI's `.ork-turn` laid at the box where the card lands, its back the Orkmaster's hand's back (the small seal and the goal's rune in the middle, column.css `.col-fan__seal`), its face a copy of the card.
+   Layout only. */
 .table-turned > .ork-turn__back { width: 100%; height: 100%; aspect-ratio: auto; }
-.table-turned > .ork-turn__back.is-asking { border-color: var(--ork-alert); }
-.table-turned__rune { transform-origin: 50% 50%; }

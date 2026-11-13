@@ -8,7 +8,6 @@ import { lowerOf } from "../hand/data.js";
 import { devName, lowerOn } from "../hand/devcard.js";
 import { gateData } from "../shell/store.js";
 import { Icon } from "../orkui.js";
-import { DonePost } from "./donepost.js";
 
 /** The word under the lower plate's cards and in a card's foot. */
 const WAITS_DEV = (dev) => `Waiting for ${dev}`, PRESS = "Choose the branch";
@@ -27,11 +26,3 @@ export function Plate({ which }) {
 /** The goals of the lower pile that the open tab's eyes hold (`held`: lane.js), the last one first; none while *Lands in dev by itself* is on. */
 export const lowerHeld = (held) => (lowerOn() ? lowerOf().filter((g) => held(g.slug)) : []);
 
-/** The lower pile: its plate, the words under it and its posts, each pressed to be played. */
-export function LowerPile({ goals }) {
-  if (!goals.length) return null;
-  const dev = devName(), now = playing.value?.dev === "card" ? playing.value.slug : "";
-  return html`<section class="discard-pile" data-pile="lower" aria-label=${WAITS_DEV(dev)}><${Plate} which="dev" /><p class="discard-pile__words">${PLATE_WORDS.dev}</p>
-    <ul class="discard-posts" aria-label=${WAITS_DEV(dev)}>${goals.map((g) => html`<li key=${g.slug}><${DonePost} g=${g} kind="lower" sub="done" picked=${now === g.slug} label=${`${g.full}, ${WAITS_DEV(dev).toLowerCase()}`}
-      onPick=${() => { if (now === g.slug) lower(); else playCard({ dev: "card", slug: g.slug }); }} /></li>`)}</ul></section>`;
-}

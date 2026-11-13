@@ -15,8 +15,6 @@
 .ork-pips.table-pips > i.is-glowing { animation: ork-glow 2.4s steps(6) infinite; }
 @media (prefers-reduced-motion: reduce) { .ork-pips.table-pips > i.is-glowing { animation: none; opacity: 1; } }
 /* under 760 px a goal is a token a tap wide: its pips alone, in 4 px squares so six lie in its 36 px */
-.table-token .ork-pips.table-pips { max-width: 100%; }
-.table-token .ork-pips.table-pips.is-small > i { width: var(--ork-2); height: var(--ork-2); }
 
 /* -- the lifted card's steps: ✓ done in the muted ink, the one now lit, the next faint, and where they come from said small --------------------------------------------------------------- */
 .table-steps { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }

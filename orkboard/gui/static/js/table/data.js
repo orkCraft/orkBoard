@@ -163,25 +163,6 @@ export function laneOf(g) {
   return out.sort((a, b) => a.at - b.at);
 }
 
-/** The goals the Orkmaster does itself, in the Board's order: being read (`reading`), routed (`planning`), or their sections joined while their party works (`sections`) — and, from the moment it is sent (spec 107 §5), every goal
- *  on the table whose route has no party at work yet: routed and waiting for Talk (`routed`), in Talk (`talk`), decided (`decided`). A goal whose party has tasks at work lies in that party's lane, not here. [{n, g, stage}] */
-const OWN = { reading: "reading", planning: "routing", sections: "joining", routed: "routed", talk: "talking", decided: "decided" };
-const BEFORE_WORK = ["routed", "talk", "decided"];
-export function ownOf(parties) {
-  const out = [];
-  for (const g of parties) {
-    for (const n of nodesFor(g)) {
-      if (!OWN[n.state]) continue;
-      if (BEFORE_WORK.includes(n.state) && (n.place !== "table" || cascadeOf(n).length)) continue;
-      out.push({ n, g, stage: OWN[n.state] });
-    }
-  }
-  return out;
-}
-
-/** What the Orkmaster does with a goal, in a word. */
-export const doingWords = (n) => STAGES[OWN[n.state] || "routing"].word;
-
 /** A task's words for a label: *Doing, failed*. */
 export const footWords = (t) => `${STAGES[stageOf(t)].word}${t.state === "failed" ? ", failed" : t.state === "picking" ? ", asks you to pick" : ""}`;
 
@@ -224,8 +205,6 @@ export function gemOf(t) {
 }
 
 // -- the goals in line (the first lane's last cascade) --------------------------------------------------------------------------------
-
-export const MANY = 7;                         // the line's cascade shows this many goals, then *All · search*
 
 /** The goals in line, in the Orkmaster's order (the order of the map's nodes): the nodes whose `place` is `deck`; `reset` when one waits for the window's reset. */
 export function lineNow(map = mapData.value) {

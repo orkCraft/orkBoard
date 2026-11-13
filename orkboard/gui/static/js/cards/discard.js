@@ -1,4 +1,4 @@
-// The discard in the table of cards' look (goal 170, the talk of 11 November 2026; docs/mockups/table-cards/ the right column), drawn only while `cardsOn()` (cards/on.js; table/lane.js switches). Its goals are S cards (card.js):
+// The discard in the table of cards' look (goal 170, the talk of 11 November 2026; docs/mockups/table-cards/ the right column), drawn in table/lane.js. Its goals are S cards (card.js):
 // under the plate *main* (done in dev · waits for main) the goal ready for main with the portal's ring and its act **To main** beside it, the other goals ready; under the plate *dev* (done · waits for dev) the goals done and not yet seen (the person, 11 November
 // 2026: «Перенести под дев»), then the goals waiting on their branch, two to a row. The act, the pick, the portal and the plates are the lane's own (portal.js `toMain`, plates.js); only the look of the goals changes. No count anywhere. Layout only: discard.css.
 import { useState } from "preact/hooks";

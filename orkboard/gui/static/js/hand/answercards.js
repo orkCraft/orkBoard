@@ -1,7 +1,7 @@
 // **Spec 168 D1 (decisions §283.19, §286): the card in play stands at the table's foot at its left, 144 x 202 (openedcard.css `is-play`, handplace.js), its goal picked and its asker's tab opened (frame/state.js `playAt`); its ways are the hand's row from the same left edge,
 // cut by the hand's rim and rising when hovered (each carries `data-way-kind`, the leader's kind of it, J1, for the pictures to come); *Your own words…* lays a field as large as the hand in the ways' place; a goal of several questions asks them one after another, each its own card.**
 // A lifted card stays a hand card and its ways are the hand (docs/specs/158-the-window-as-a-table.md part F, decisions §270; the mockup docs/mockups/answer-cards/). On the desktop a card with open questions, or a failure, is
-// not opened at 404 x 566: it rises out of its slot onto the table's foot as the 144 x 202 hand card it was, in its signal's ring (orkUI's `asks` and `fails`); its goal's card in the Orkmaster's column is ringed the same.
+// not opened at 404 x 566: it rises out of its slot onto the table's foot as the 144 x 202 hand card it was, in its signal's ring (orkUI's `asks` and `fails`).
 // Its answers are the hand: each way a card of the same size where the hand's cards lie, its name (the pixel face) and its whole line (the body face) at rest, the leader's pick marked by its head and by its words, a priced way's cost
 // in its corner; pressing a way answers at once (`from: "hand"`). Then *<Leader> decides* (a way as any), and *Open…* (today's form, askform.js) and *Put it back* at the row's end. The rest of the hand sinks, grey and inert
 // (hand.js). Under reduced motion nothing rises. The narrow page and the phone keep the inline lifted card (stopcard.js `Lifted`, decisions §270.7).
@@ -71,20 +71,6 @@ export function stepWays(s, asked, i, kept, keep) {
   });
 }
 
-/** Rings the goal's card in the Orkmaster's column in the lifted card's signal while the card is up (`data-ringed`, table/column.css). */
-export function useRing(goal, tone) {
-  useEffect(() => {
-    if (!goal) return undefined;
-    const column = document.querySelector(".frame-column");
-    if (!column) return undefined;
-    const mark = () => column.querySelectorAll(`.col-card[data-goal="${CSS.escape(goal)}"]`).forEach((el) => { if (el.dataset.ringed !== tone) el.dataset.ringed = tone; });
-    mark();
-    const watch = typeof MutationObserver === "function" ? new MutationObserver(mark) : null;
-    watch?.observe(column, { childList: true, subtree: true });
-    return () => { watch?.disconnect(); column.querySelectorAll("[data-ringed]").forEach((el) => el.removeAttribute("data-ringed")); };
-  }, [goal, tone]);
-}
-
 /** One way as a hand card: its goal's rune and the way's sign at the top, its name (the pixel face), its whole line, and at the foot who (its pick) and what it costs. */
 export function WayCard({ w, s, head, rune, btn = null, on = undefined }) {
   const cost = w.cost, much = cost ? { ...muchOf({ cost: cost.gem }), share: !!cost.share } : null, leader = w.id === "decide";
@@ -109,11 +95,10 @@ export function usePlay(s) {
 /** The lifted question or failure: the hand card it was, 144 x 202, risen onto the table's foot at its left, in its signal's ring; and under it, in the hand's row from the same left edge, its ways (`set`: `answerSet`), cut by the hand's rim. */
 export function AnswerLifted({ s, anchor, set }) {
   const box = useRef(), row = useRef(), element = s.node?.element || "", hue = s.node?.hue || element, head = headOf(s);
-  const rune = { name: element, hue, dim: !element }, goal = s.node?.slug || s.row?.idea || "";
+  const rune = { name: element, hue, dim: !element };
   const [step, setStep] = useState(0), [kept, setKept] = useState([]), [pen, setPen] = useState(false), penBtn = useRef(), from = useRef(null), wasPen = useRef(false);
   useAbout(s);
   usePlay(s);
-  useRing(goal, set.tone === "fails" ? "fails" : "asks");
   const at = usePlace(box, row, [s.key, anchor], pen);                  // the card and the ways from the table's left edge; the ways cut by the hand's rim; the sunk hand shrinks into the strip right of the ways (or of the field)
   useEffect(() => { box.current?.focus({ preventScroll: true }); }, [s.key]);
   const { decide } = set, tone = set.tone, asking = tone === "asks", own = asking ? askedInfo(s).name : "", many = set.asked.length > 1, q = many ? set.asked[Math.min(step, set.asked.length - 1)] : set.asked[0] || null;

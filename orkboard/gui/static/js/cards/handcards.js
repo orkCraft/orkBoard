@@ -1,8 +1,8 @@
-// The hand as whole cards (goal 170, stage M; docs/mockups/table-cards/ ?face=desk): on the table of cards (`cardsOn()`) a stop of the
+// The hand as whole cards (goal 170, stage M; docs/mockups/table-cards/ ?face=desk): a stop of the
 // hand is an S card, upright 2.5:3.5, wholly seen and about 120 px wide: its goal's rune and the kind's sign in two corners, its title,
 // the line under it, the asker's head its picture in the middle (the person, 11 November 2026); the card that asks is lifted and ringed in the alert's yellow, its "!" and *waits for you* at its foot.
 // This is only the card's face: the press, the keys, the stacks and every command stay hand/stopcard.js's and hand/stacks.js's, which
-// draw this face in place of their own where `cardsOn()` says so. Layout: handcards.css.
+// draw this face. Layout: handcards.css.
 import { html } from "../html.js";
 import { Head, headWords } from "../orkui.js";
 import { Index } from "./card.js";

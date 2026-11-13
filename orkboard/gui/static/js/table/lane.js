@@ -11,14 +11,12 @@ import { TESTING, mergeGate, testing } from "../arena/gate.js";
 import { ORKMASTER, pick, picked, tab } from "../frame/state.js";
 import { readyOf, readyWords } from "../hand/data.js";
 import { nightMoons } from "../hand/nightcard.js";
-import { mainLine, shownDone, useNightDeal } from "./discard.js";
-import { DonePost, ReadyPosts } from "./donepost.js";
+import { shownDone, useNightDeal } from "./discard.js";
 import { columnOn, isLive, isRelease, nameOf, noGate, openTabOf, partiesAll, roadParties, routeParties } from "./data.js";
 import { laidNow } from "./laying.js";
-import { LowerPile, PLATE_WORDS, Plate, lowerHeld } from "./plates.js";            // the two piles and the plates over them (spec 168 F2)
+import { lowerHeld } from "./plates.js";            // the two piles and the plates over them (spec 168 F2)
 import { discardLabel } from "./chroniclewords.js";
-import { choose, chosenSlug, close, sending } from "./portal.js";
-import { RingAround } from "./ring.js";
+import { choose, chosenSlug, close } from "./portal.js";
 import { PotionRow } from "../hand/potionrow.js";
 import { StopAll } from "./stopall.js";
 import { PresenceChain } from "./presence.js";
@@ -31,7 +29,8 @@ export const laneShown = () => laidNow();
 const eyesOf = (g) => (g && !isRelease(g) && !isLive(g) ? g.slug : "");
 
 export function ReleaseLane({ tab, parties }) {
-  const g = parties.find((x) => x.slug === tab) || null, party = eyesOf(g), scroll = useRef(), dealing = useNightDeal(), moons = nightMoons();
+  const g = parties.find((x) => x.slug === tab) || null, party = eyesOf(g), scroll = useRef(), moons = nightMoons();
+  useNightDeal();                                                                                   // the night's goals are dealt into the pile one by one (discard.js `shownDone`)
   const headless = !roadParties().release, label = headless || tab === ORKMASTER || !g ? discardLabel() : discardLabel(nameOf(g));
   const held = (slug) => !party || routeParties(slug).has(party);                                    // a goal is a party's when its route held it
   const ready = noGate() ? null : readyOf(), goals = (ready?.goals || []).filter((x) => held(x.slug)), top = goals[0] || null, own = !!ready && !ready.goals.length && !party && ready.commits > 0;

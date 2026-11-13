@@ -1,6 +1,6 @@
 // The phone's *Yours* (decisions §298.9; the mockup docs/mockups/table-grammar/ ?face=phone&s=yours): in the header, after the lamp's chain, a 44 px button whose face is orkUI's backpack (`aria-label="Yours"`, `aria-haspopup="menu"`). Pressed, a small menu opens under it
 // with what the person has: **Inventory** (the backpack: *your tools, agents and skills*), **History** (the book: *what was decided, what came of it*) and **Settings** when the header gave Settings way for room (the row's `data-fit`, uptop.js `useRoom`). Each opens what it opens today. Esc, a press outside or a pick closes it, the focus back on the button; the arrows walk the items.
-// The table of cards only (cards/on.js): uptop.js draws it there and the round button's fan (upround.js) no longer holds the backpack and the book. Layout only (cards/phone.css); every colour, face and corner is orkUI's.
+// uptop.js draws it, and the round button's fan (upround.js) no longer holds the backpack and the book. Layout only (cards/phone.css); every colour, face and corner is orkUI's.
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
