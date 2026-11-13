@@ -55,6 +55,9 @@
 .hand .hand-ans:disabled .hand-ans__name { color: var(--ork-ink-muted); }
 .frame[data-cards="1"] .hand .hand-card--s .hands-line.is-vs { -webkit-line-clamp: 1; line-clamp: 1; max-height: 1.4em; }
 
+/* a question's way card is one card ratio (decisions §296.1): its name takes two lines at most, so its leader's line of 80 characters (five lines) lies whole under it (spec 159 D); the full name is in its accessible name */
+.hand .hand-ways-row.is-play .hand-ans__name { -webkit-line-clamp: 2; line-clamp: 2; }
+
 /* a turn's or a battle's ways lie whole inside the hand, none cut by its rim, and the hand's own cards under them are put away (hand/turncards.js; decisions §298.7) */
 @media (min-width: 760px) {
   .hand .hand-ways-row.is-play.is-whole { top: var(--ork-3); bottom: var(--ork-3); align-items: stretch; }

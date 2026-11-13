@@ -53,7 +53,8 @@ def test_the_small_card_is_56_by_78_with_its_rune_its_dots_and_its_picture(gui):
         assert pic.locator(".sm-dot.is-done").count() == 3
         assert pic.get_attribute("data-signal") == "alert" and bad.get_attribute("data-signal") == "danger"
         ring = cards.evaluate_all("els => els.map((e) => getComputedStyle(e).boxShadow)")
-        assert ring[0] == "none" and ring[1] != "none" and ring[2] != "none" and ring[1] != ring[2], "the signal is the card's own frame"
+        # decisions §291.3: every card's top edge is a faint light line, so a plain card's shadow is that line alone, never none
+        assert "0px 1px 0px 0px inset" in ring[0] and "2px" not in ring[0] and "2px" in ring[1] and "2px" in ring[2] and ring[1] != ring[2], "the signal is the card's own frame"
         assert plain.get_attribute("title") is None and plain.get_attribute("aria-label") == "Goal plain"
     finally:
         pg.close()

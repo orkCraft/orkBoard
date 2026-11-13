@@ -41,6 +41,9 @@ def _split(raw: bytes) -> tuple[str, bytes]:
     return head.decode("ascii"), body
 
 
+PIXEL_SIGNS = {"landing", "post", "tagline", "mechanic", "level", "balance", "character", "release", "store", "tune"}   # orkUI 0.43: the signs with no new take yet
+
+
 def test_the_app_is_its_own_files_and_nothing_else():
     names = set(pwa.files())
     assert {"index.html", "old.html", "frame.js", "frame.css", "board-app.js", "app.css", "manifest.webmanifest", "sw.js", "icon-192.png", "icon-512.png",
@@ -74,9 +77,13 @@ def test_the_app_is_its_own_files_and_nothing_else():
     for folder, names in (("elements", ("meadow", "ice", "dust", "void", "lava")), ("signs", ("check", "cross", "work", "night", "alert", "flag", "before", "after", "play", "pause", "sound", "film", "text",
                                                                          "feature", "bug", "tidy", "screen", "picture", "logo", "target", "flask", "horn", "chart", "page", "restructure", "abtest", "landing", "post", "tagline",
                                                                          "mechanic", "level", "balance", "character", "release", "store", "tune"))):
-        for name in names:                                                                       # orkUI's elements and signs (spec 50 §1, §1.6): masks need the page's own origin
+        for name in names:                                                                       # orkUI's elements and signs (spec 50 §1, §1.6; since 0.42 traced: a 64 viewBox, one evenodd path): masks need the page's own origin
             head, body = _split(pwa.serve("GET", f"/app/{folder}/{name}.svg"))
-            assert head.startswith("HTTP/1.1 200") and "Content-Type: image/svg+xml" in head and b"<svg" in body and b'viewBox="0 0 7 7"' in body, f"{folder}/{name}"
+            assert head.startswith("HTTP/1.1 200") and "Content-Type: image/svg+xml" in head and b"<svg" in body, f"{folder}/{name}"
+            if name in PIXEL_SIGNS:                                                              # still the pixels: 7 x 7 unit squares
+                assert b'viewBox="0 0 7 7"' in body, f"{folder}/{name}"
+            else:                                                                                # traced (orkUI 0.42): a 64 viewBox, one evenodd path, fill #000
+                assert b'viewBox="0 0 64 64"' in body and body.count(b"<path") == 1 and b'fill-rule="evenodd"' in body and b'fill="#000"' in body, f"{folder}/{name}"
         assert _split(pwa.serve("GET", f"/app/{folder}/README.md"))[0].startswith("HTTP/1.1 404")
     css = _split(pwa.serve("GET", "/app/components.css"))[1].decode()                          # every mask of components.css resolves beside it
     masks = set(re.findall(r"url\(((?:elements|signs)/[a-z]+\.svg)\)", css))

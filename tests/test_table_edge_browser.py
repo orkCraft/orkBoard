@@ -21,7 +21,7 @@ SHOTS = Path(os.environ["TABLE_EDGE_SHOTS"]) if os.environ.get("TABLE_EDGE_SHOTS
 SIZES = {"1280x800": {"viewport": {"width": 1280, "height": 800}}, "1366x768": {"viewport": {"width": 1366, "height": 768}}}
 
 
-RELEASE_IN_ROW = ["tech", "design", "product", "release", "live"]
+ROW = ["tech", "design", "product", "live"]                                            # Release has no tab (decisions §283.29, which changes §261.7 and §273.2)
 
 
 class LaneHost(RoadHost):
@@ -90,19 +90,16 @@ def test_there_is_no_edge_the_discard_is_the_windows_right_column_beside_the_tab
     assert not log, "\n".join(log)
 
 
-def test_release_is_a_tab_in_the_leaders_row_in_the_routes_order_and_live_stands_at_its_end(gui):
+def test_release_has_no_tab_and_live_stands_at_the_leaders_rows_end(gui):
     pg, log = open_at(gui, LaneHost())
     try:
         tabs = pg.evaluate("() => [...document.querySelectorAll('.table-tab[data-tab]')].map((e) => e.dataset.tab)")
-        assert tabs == RELEASE_IN_ROW, "Release in the leaders' row in the route's order, Live at the row's end"
-        live, release, lane = box(pg, '[data-cell="live"]'), box(pg, '[data-cell="release"]'), box(pg, ".release-lane")
-        product = box(pg, '[data-cell="product"]')
-        assert release["x"] > product["x"] and release["x"] < live["x"], "Release's tab stands among the leaders', before Live's"
+        assert tabs == ROW, "no tab for Release (decisions §283.29), Live at the row's end"
+        live, lane = box(pg, '[data-cell="live"]'), box(pg, ".release-lane")
+        assert pg.locator('[data-cell="release"], .table-tab[data-tab="release"]').count() == 0, "Release waits: no tab, its lane is the discard"
         assert round(live["x"] + live["width"]) <= round(lane["x"]), "no tab stands over the discard: it is beside the table"
         assert pg.locator(".ork-portal-ring__before, .ork-portal-ring__after, .portal__past, .pyramid").count() == 0, "their heads have left the ring; no past line, no pyramid"
         assert round(box(pg, '.table-board [data-live]')["x"]) == round(live["x"]), "Live's lane under Live's tab"
-        pg.locator('.table-tab[data-tab="release"]').click()
-        pg.locator('.table-tab[data-tab="release"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -111,20 +108,18 @@ def test_release_is_a_tab_in_the_leaders_row_in_the_routes_order_and_live_stands
 def test_the_road_tabs_heads_wake_by_the_old_corners_rules(gui):
     pg, log = open_at(gui, LaneHost(bare=True))                                          # nothing ready, nothing at work
     try:
-        for slug in ("release", "live"):
-            assert "is-asleep" in pg.locator(f'.table-tab[data-tab="{slug}"]').get_attribute("class"), f"{slug} asleep while it has nothing to do"
+        assert "is-asleep" in pg.locator('.table-tab[data-tab="live"]').get_attribute("class"), "live asleep while it has nothing to do"
     finally:
         pg.close()
-    pg, log = open_at(gui, LaneHost())                                                    # a goal is ready for main: Release wakes, Live stays asleep
+    pg, log = open_at(gui, LaneHost())                                                    # a goal is ready for main: Release has no tab to wake (decisions §283.29), Live stays asleep
     try:
-        assert "is-asleep" not in pg.locator('.table-tab[data-tab="release"]').get_attribute("class")
         assert "is-asleep" in pg.locator('.table-tab[data-tab="live"]').get_attribute("class")
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("tab,label", [("orkmaster", "Discard"), ("tech", "Tech's discard"), ("design", "Design's discard"), ("live", "Live's discard"), ("release", "Release's discard")])
+@pytest.mark.parametrize("tab,label", [("orkmaster", "Discard"), ("tech", "Tech's discard"), ("design", "Design's discard"), ("live", "Live's discard")])
 def test_the_discard_lane_is_on_every_tab_through_its_eyes(gui, tab, label):
     pg, log = open_at(gui, LaneHost())
     try:

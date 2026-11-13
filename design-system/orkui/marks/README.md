@@ -23,3 +23,7 @@ whole multiple (16, 32), `image-rendering: pixelated`, never resampled. Copied u
 `tools/icon_sprites.py` and copied over whole, never edited here (`tests/test_orkui.py` compares them with orkLine's when
 a checkout is beside this one). Their colours (the coloured ones) are the tools' own, not the look's tokens: a person tells the tools apart by them; the ink
 versions say it by their shape.
+
+**Since 0.42.0 the three rank marks** (`rank-1.png`, `rank-2.png`, `rank-3.png`: one bronze chevron, two silver, three gold under a star) **are the owner's cartoon take**, cut (not traced) from
+`races/art/cartoon/w3-tiers-marks.jpg` by `tools/build_things_from_art.py`: 16 x 16 and `@2x` 32 x 32, smooth, with a real alpha, replacing the pixel chevrons. Their `-ink` versions are made from them by `tools/build_icons.py`
+(the `@2x` ink from the `@2x` picture, no longer the 1x doubled).

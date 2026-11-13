@@ -202,7 +202,7 @@ async def test_the_goals_bar_is_one_quiet_line_and_its_sheet_lists_what_is_at_wo
         await bar.wait_for(timeout=WAIT_MS)
         assert norm(await bar.inner_text()) == "Passkey · 2 of 9 goals done" and await bar.locator(".ork-chev").count() == 1          # ⌄ the party · k of n goals done
         box = await bar.bounding_box()
-        assert round(box["height"]) == 44 and await bar.evaluate("e => getComputedStyle(e).fontSize") == "13px"                    # one quiet line, 44 px
+        assert round(box["height"]) == 44 and await bar.evaluate("e => getComputedStyle(e).fontSize") == "15px"                    # one quiet line, 44 px, in a phone's caption size of 15 (decisions §291.1 with §226.2)
         await bar.click()
         sheet = page.get_by_role("dialog", name="Goals")
         await sheet.wait_for(timeout=WAIT_MS)
@@ -626,7 +626,8 @@ def flagged(slug="kept", at="2026-10-21T11:00:00"):
 async def test_the_flag_line_is_said_once_after_a_gate_merge_that_raised_flags_and_its_press_opens_its_flags(fake_repo, monkeypatch):
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         await page.locator(".gbar").wait_for(timeout=WAIT_MS)
-        await page.wait_for_timeout(500)
+        # waits for the state it checks (the newest flag seen is stored once the first draw has read the flags), not a fixed half second that a loaded machine overruns
+        await page.wait_for_function("() => !!localStorage.getItem('orkcraft.flags.goals')", timeout=WAIT_MS)
         assert await page.locator(".flagline").count() == 0                                                                           # the first start keeps the flags of before and says none
         key = json.loads(await page.evaluate("() => localStorage.getItem('orkcraft.flags.goals')"))
         assert len(key) == 1 and list(key.values())[0] > 0                                                                           # the newest seen, per project

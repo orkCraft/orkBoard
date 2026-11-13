@@ -14,6 +14,10 @@ lozenge at its middle**, **a moon in a circle at the top and at the bottom** of 
     plus-lines-small.svg the small back's sides as a mask, for a + card whose seal is `.small`
     ork.svg         orkUI's ork mark: a 7 x 7 head on the signs' grid (one path of unit squares, a mask like a sign); kept as the mark, no longer drawn by the back
 
+**Since 0.43.0 the backs also have the owner's cartoon take** (O5, kept as drawn: plum ground, the gold filigree, the soft glow round the seal), beside the SVGs: `back.png` (the big card's back), `back-small.png` and `plus.png` (the + card's back, with its gold plus), each
+`@2x` and `@3x`, transparent, trimmed to the card with its cream rim and rounded corners, cut from `races/art/cartoon/o5-backs.jpg` by `tools/build_things_from_art.py` (the flat ground and the faint plates under two of the cards are cut away). 1x: `back.png` and
+`plus.png` fit in 144 x 202 (the card at 144 px wide), `back-small.png` in 96 x 134 (a back under about 100 px wide); **the sheet's cards are about 9 : 14, a little narrower than the CSS card's 5 : 7**, so each fits by its height. Nothing in `components.css` draws them yet; `.ork-card-back` still draws the SVGs.
+
 **Generated** (`tools/build_back.py`, `--check`): the drawing is made of strokes (arcs, spirals, lines, lozenges, stars) in the top left quarter and mirrored about
 the card's two middle lines, so the four corners, the two sides, the top and the bottom are one drawing. It leaves the ring's room (58% of the width round the
 centre) empty. Change the drawing there, never the SVGs.

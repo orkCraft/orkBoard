@@ -782,8 +782,12 @@ def test_open_on_a_task_card_opens_its_log_or_its_task_over_the_pane_and_back_li
     failed = pg.locator('[data-lkey="t:task:seat/s2"]')
     failed.click()
     pg.locator(".table-back .table-back__open").click()                                                                  # a failure: its lines
-    pg.locator('.table-over[data-kind="log"] .shell-logterm .xterm-rows').wait_for(timeout=WAIT_MS)                    # the log in a terminal's face (spec 168 I1)
-    pg.wait_for_function("() => document.querySelector('.shell-logterm .xterm-rows')?.textContent.includes('tests: 3 failed')", timeout=WAIT_MS)
+    if wide(w):
+        pg.locator('.table-over[data-kind="log"] .shell-logterm .xterm-rows').wait_for(timeout=WAIT_MS)                # the log in a terminal's face from 760 px up (spec 168 I1)
+        pg.wait_for_function("() => document.querySelector('.shell-logterm .xterm-rows')?.textContent.includes('tests: 3 failed')", timeout=WAIT_MS)
+    else:                                                                                                                # the narrow page keeps its log as it was (spec 168 *Every stage keeps*, shell/preview.js)
+        pg.locator('.table-over[data-kind="log"] .shell-logview pre').wait_for(timeout=WAIT_MS)
+        assert pg.locator(".shell-logterm").count() == 0 and "tests: 3 failed" in pg.locator(".shell-logview pre").text_content()
     assert title(pg) == "Board · Reset the round timer when a player rejoins"
     assert pg.locator(".table-board").count() == 0 and pg.locator(".table-back").count() == 0                          # the map is under it, not drawn
     pg.locator(".table-title__back").click()

@@ -528,12 +528,14 @@ def test_picking_still_works_on_a_marked_card_and_wins_over_the_back(desk):
     system(pg)
     open_field(pg)
     pg.locator(".pick-strip").wait_for(timeout=WAIT_MS)
-    part(pg, LOBBY).click()
+    # spec 168 D1/D2: the new goal's card in play stands at the table's foot, left (144 x 202) and the map runs under it: a press lands on the part's free corner, never under the card
+    free = {"x": 110, "y": 20} if w == "wide" else {"x": 8, "y": 8}
+    part(pg, LOBBY).click(position=free)
     assert part(pg, LOBBY).get_attribute("data-picked") == "true" and "ork-taken" in part(pg, LOBBY).get_attribute("class")
     assert back(pg).count() == 0, "a press in picking is a pick: the card does not lift"
     assert part(pg, LOBBY).get_attribute("data-concern") == "alert" and pg.locator('.cn-mark[data-level="alert"]').count() == 1
     assert pg.locator('.cn-mark[data-level="alert"]').evaluate("e => getComputedStyle(e).pointerEvents") == "none"
-    part(pg, LOBBY).click()
+    part(pg, LOBBY).click(position=free)
     assert part(pg, LOBBY).get_attribute("data-picked") is None
 
 

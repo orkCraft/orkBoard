@@ -149,7 +149,10 @@ export function Lifted({ s, anchor, inline = false, typing = false }) {
     if (!typing) return;
     const look = el.closest(".up-look");
     if (look) look.scrollTop = 0;
-    el.style.setProperty("--up-h", `${Math.max(160, Math.floor(typing - el.getBoundingClientRect().top - 8))}px`);
+    const fit = () => el.style.setProperty("--up-h", `${Math.max(160, Math.floor(typing - el.getBoundingClientRect().top - 8))}px`);
+    fit();
+    const again = requestAnimationFrame(() => requestAnimationFrame(fit));                                  // the card's top settles a frame after it gives up its window and text: measured again, the card ends above the keyboard
+    return () => cancelAnimationFrame(again);
   }, [typing, inline, s.key]);
   const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted || (isSketch(s) ? SketchLifted : null);
   const shown = footCost(s.key, cost), asker = askerOf(s), party = s.party?.name || "";                  // the opened card (spec 147 D.1; on the phone F.3): its corners large, the title, a body that scrolls, the answers above its foot
