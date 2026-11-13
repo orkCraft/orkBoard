@@ -87,3 +87,57 @@ def test_the_phone_sees_a_newer_version_small_and_installs_it(fake_repo, monkeyp
     after = host.command("mobile.snapshot")
     assert after["update"]["state"] == "installed" and after["rev"] != before
     host.close()
+
+
+@pytest.mark.asyncio
+async def test_the_server_serves_the_page_and_its_files_and_answers_the_sockets_commands(fake_repo):
+    from websockets.asyncio.client import connect
+    from websockets.exceptions import InvalidStatus
+
+    server = Server(_host(fake_repo))
+    task = asyncio.create_task(server.run())
+    for _ in range(100):
+        if server.ready.is_set():
+            break
+        await asyncio.sleep(0.02)
+
+    def get(path: str) -> tuple[int, str, bytes]:
+        try:
+            with urllib.request.urlopen(f"{server.origin}{path}", timeout=5) as r:
+                return r.status, r.headers.get("Content-Type", ""), r.read()
+        except urllib.error.HTTPError as e:
+            return e.code, "", b""
+
+    try:
+        status, kind, body = await asyncio.to_thread(get, "/")
+        assert status == 200 and kind.startswith("text/html") and b"<html" in body.lower()
+        assert (await asyncio.to_thread(get, "/favicon.ico"))[:2] == (200, "image/x-icon")
+        assert (await asyncio.to_thread(get, "/roles.css"))[1].startswith("text/css")
+        assert (await asyncio.to_thread(get, "/no/such/file.js"))[0] == 404
+        assert (await asyncio.to_thread(get, "/api/analytics"))[0] == 403
+        ws_url = f"ws://127.0.0.1:{server.port}/ws"
+        for url, origin in ((ws_url, server.origin), (f"{ws_url}?t={server.token}", "http://evil.example")):
+            with pytest.raises(InvalidStatus):
+                async with connect(url, origin=origin):
+                    pass
+        async with connect(f"{ws_url}?t={server.token}", origin=server.origin) as ws:
+            assert json.loads(await ws.recv())["t"] == "state"
+
+            async def say(text: str) -> dict:
+                await ws.send(text)
+                while True:
+                    msg = json.loads(await asyncio.wait_for(ws.recv(), 5))
+                    if msg["t"] == "reply":
+                        return msg
+
+            assert (await say("{"))["error"] == "Not a command"
+            assert (await say(json.dumps({"t": "cmd", "id": 1, "name": "halt", "args": [1]})))["error"] == "Arguments are an object"
+            assert (await say(json.dumps({"t": "cmd", "id": 2, "name": "no.such"})))["ok"] is False
+            server.host.command = lambda name, args=None: 1 / 0
+            broken = await say(json.dumps({"t": "cmd", "id": 3, "name": "halt"}))
+            assert broken["ok"] is False and "ZeroDivisionError" in broken["error"]          # the page stays open
+            del server.host.command
+            assert (await say(json.dumps({"t": "cmd", "id": 4, "name": "halt"})))["ok"] is True
+    finally:
+        server.stop()
+        await asyncio.wait_for(task, 10)

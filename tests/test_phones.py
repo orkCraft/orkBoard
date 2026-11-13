@@ -341,7 +341,7 @@ async def test_pairing_refuses_what_is_not_a_json_post_a_bad_command_never_close
         address = server.phones.address
         assert (await asyncio.to_thread(_https, address, "GET", "/api/pair"))[0] == 405
         assert (await asyncio.to_thread(_https, address, "POST", "/api/pair", None, {"Content-Type": "text/plain"}))[0] == 415
-        assert (await asyncio.to_thread(_https, address, "POST", "/api/pair", None, {"Content-Length": "0"}))[0] in (411, 413)
+        assert (await asyncio.to_thread(_https, address, "POST", "/api/pair", None, {"Content-Type": "application/json", "Content-Length": "0"}))[0] in (411, 413)
         assert (await asyncio.to_thread(_https, address, "POST", "/api/pair", {"code": "x" * 20, "name": "p"}))[0] in (400, 401, 403)
         auth = {"Authorization": f"Bearer {token}"}
         async with connect(_ws_url(server), ssl=_pinned(), additional_headers=auth) as ws:
@@ -364,14 +364,13 @@ async def test_pairing_refuses_what_is_not_a_json_post_a_bad_command_never_close
             del server.host.command
             assert (await say(json.dumps({"t": "cmd", "id": 5, "name": "ideas.board"})))["ok"]
             with pytest.raises(Exception, match="No such phone"):
-                server.host.command("phones.forget", {"device_id": "nobody"})
-            server.host.command("phones.forget", {"device_id": device_id})
+                server.host.command("phones.forget", {"id": "nobody"})
+            server.host.command("phones.forget", {"id": device_id})
             with pytest.raises(ConnectionClosed):
                 await asyncio.wait_for(ws.recv(), 5)
         assert server.host.command("phones.list")["phones"] == []
         server.host.command("phones.pair")
         server.host.command("phones.pair_stop")
-        assert not server.phones.pairing.attempt() or True
     finally:
         server.stop()
         await asyncio.wait_for(task, 10)

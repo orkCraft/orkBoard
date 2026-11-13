@@ -243,3 +243,22 @@ def test_start_now_lets_the_reserves_held_task_go_as_the_persons_press_and_says_
     with pytest.raises(CommandError, match="does not wait for the night or for your reserve"):
         ideas.edit_plan(sd, a, lambda p: p.update(tasks=[task("k1", "held", "after 12:00")]))      # a tool's own window is not the person's to override
         host.command("ideas.start_now", {"slug": a})
+
+
+def test_a_proposal_that_waits_is_taken_with_a_priority_and_drafted_or_declined_and_dropped(host, monkeypatch):
+    drafted = []
+    monkeypatch.setattr(host.ideas.keeper, "draft", lambda slug: drafted.append(slug))
+    take = ideas.add_idea(host.ideas.root(), "Offered by the night", "general", host.ideas.state_dir)
+    no = ideas.add_idea(host.ideas.root(), "Also offered", "general", host.ideas.state_dir)
+    for slug in (take, no):
+        ideas.save_state(host.ideas.state_dir, slug, state="proposed")
+    with pytest.raises(CommandError, match="Priority"):
+        host.command("ideas.proposal", {"slug": take, "take": True, "priority": "urgent"})
+    assert host.command("ideas.proposal", {"slug": take, "take": True, "priority": "high"}) == {"ok": True}
+    assert drafted == [take] and ideas.state(host.ideas.state_dir, take)["state"] == "raw"
+    assert host.command("ideas.proposal", {"slug": no, "reason": "not now"}) == {"ok": True}
+    assert ideas.idea_page(host.ideas.root(), no) is None
+    with pytest.raises(CommandError, match="gone"):
+        host.command("ideas.proposal", {"slug": take, "take": True})                 # no longer a proposal
+    answered = [r for r in event_log.read(host.repo_root) if r["event"] == event_log.PROPOSAL_ANSWERED]
+    assert [(r["take"], r["has_reason"]) for r in answered] == [(True, False), (False, True)]
