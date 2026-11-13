@@ -235,10 +235,10 @@ class GoalsMixin:
             goal_team.set_tools(root, got, {a: t for a, t in mine.items() if a in seats})
 
     def _unmade(self, args: dict, title: object, recipe: str) -> None:
-        """General and Ideation are never made (spec 99 §1.1, decisions §122): a new party of their recipe, their leader or their name is refused. A party of
+        """General, Team and Ideation are never made (spec 99 §1.1, decisions §122): a new party of their recipe, their leader or their name is refused. A party of
         theirs the project has stays until the person removes it, and is edited as it was."""
         name = " ".join(str(title or "").split()).lower()
-        if recipe == "ideation" or _opt(args, "leader") == library.INVESTOR or name in (ideas.GENERAL, "ideation"):
+        if recipe in ("ideation", "team") or _opt(args, "leader") == library.INVESTOR or name in (ideas.GENERAL, "team", "ideation"):
             raise IdeasError(UNMADE)
 
     def _tiers_kept(self, got: str) -> None:
