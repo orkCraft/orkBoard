@@ -13,8 +13,6 @@ The three ways: macOS `caffeinate -i -w <pid>`; Linux `systemd-inhibit --what=sl
 `tail --pid=<pid>`; Windows `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)` on a thread of its own.
 A hold refused (no logind, no right to inhibit, a container) ends at once: `how` stays "".
 
-Written from the spec's description: Orkline's `orkcraft/gui/awake.py` was not at hand, and Orkboard imports no module
-of Orkline's.
 """
 from __future__ import annotations
 

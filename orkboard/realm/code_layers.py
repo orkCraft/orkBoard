@@ -20,7 +20,7 @@ def top_of(path: Path, pkg: Path) -> str:
 
 NOTES = {                                                       # what a big module is, in a few words where its docstring says it in none
     "gui/board_host.py": "the host", "gui/ideas.py": "the Board's commands", "gui/drive.py": "the command line's drive",
-    "gui/ideas_board.py": "the Board as the page asks it", "core/op_runner.py": "an operation's run", "core/idea_runner.py": "a plan's run",
+    "gui/ideas_board.py": "the Board as the page asks it", "core/idea_runner.py": "a plan's run",
     "core/idea_plan.py": "a goal's plan", "core/idea_keeper.py": "the Board's keeper", "realm/ideas.py": "the goals and parties as files",
     "realm/hypotheses.py": "Product's hypotheses", "realm/loop.py": "a game's core loop", "realm/board_map.py": "the Board's map",
     "design/mark.py": "the mark", "design/tokens.py": "the tokens",
@@ -102,8 +102,6 @@ def architecture(root: Path) -> dict | None:
     arch = {
         "title": "Architecture", "line": "Its architecture · this repository's modules", "party": "tech", "limit": LIMIT,
         "layers": [
-            {"id": "outside", "name": "Outside", "line": "imports Orkboard", "cards": [
-                {"id": "orkline", "title": "Orkline", "line": "imports Orkboard's modules, never the other way round", "kind": "ext", "needs": {}}]},
             {"id": "faces", "name": "Faces", "line": "the page is the one face", "cards": [
                 pile("gui", "the page, its server"),
                 {"id": "vscode/", "title": "vscode/", "line": "a frame: it starts the page", "kind": "frame", "lines": vs, "needs": {"gui": 1}}]},
@@ -112,7 +110,7 @@ def architecture(root: Path) -> dict | None:
         ],
         "rules": [
             {"view": "for", "text": "Nothing under core/, realm/ or design/ imports gui/", "where": "tests/test_architecture.py · test_no_face_in"},
-            {"view": "for", "text": "Orkline imports Orkboard, never back; Orkboard starts with none of Orkline's", "where": "tests/test_architecture.py · test_orkboard_starts_alone"},
+            {"view": "for", "text": "Nothing imports the old package, orkcraft", "where": "tests/test_architecture.py · test_nothing_imports_the_old_package"},
             {"view": "for", "text": "Nothing imports Textual or Rich", "where": "tests/test_architecture.py · test_the_terminal_ui_stays_gone"},
             {"view": "risk", "text": f"realm/ reaches up into core/ ({len(by_module)} modules" + (", lazily" if stray and all(s["lazy"] for s in stray) else "") + ")",
              "where": ", ".join(s["id"] for s in stray) or "none", "card": stray[0]["id"] if stray else ""},

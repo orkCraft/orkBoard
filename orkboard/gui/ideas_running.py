@@ -1,11 +1,9 @@
-"""The project's running and the person's Team (docs/specs/92-running-and-the-team.md, decisions §108) as `gui/ideas.py`'s `Ideas` has them.
+"""The project's running (docs/specs/92-running-and-the-team.md, decisions §108) as `gui/ideas.py`'s `Ideas` has it.
 
     ideas.repeat {slug, every, words?}   # a goal comes back every "day", "week" or "month" once it is done; "" stops it
-    ideas.team                           # {at: "" | "here" | <project>, party, name}: where the person's Team party is (Operations are the person's, decisions §51)
 
 The recurring goals a running party proposes (`ideas.party_presets` rows' `routines`) are added when the party is made (`goal_save {routines: [ids]}`), each a goal of the
-party with a repeat; the host's clock renews a done one when its period has passed (`routines_tick`, realm/recurring.py). Only one Team party may exist across the person's
-projects: `goal_save` refuses a second (*Team is in <project>*), and the note of which project it is in (realm/ops_team.py) lives with Operations' state in the person's folder.
+party with a repeat; the host's clock renews a done one when its period has passed (`routines_tick`, realm/recurring.py).
 Split from ideas.py to keep it under ~600 lines.
 """
 from __future__ import annotations
@@ -14,65 +12,19 @@ import datetime as dt
 import logging
 
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import goal_team, ideas, ops_team, party_recipes, recurring
+from orkboard.realm import goal_team, ideas, party_recipes, recurring
 
 log = logging.getLogger(__name__)
 ROUTINES_S = 60.0                      # the clock looks for a recurring goal that is due this often
 
 
 class RunningMixin:
-    # -- the person's Team party ---------------------------------------------------------------------------------------
-
-    def _ops_base(self):
-        ops = getattr(self.host, "ops", None)
-        return getattr(ops, "base", None)
-
-    def team_at(self) -> str:
-        """Where the person's Team party is: "" nowhere (or this host has no Operations), "here", or the other project's name."""
-        base = self._ops_base()
-        if base is None:
-            return ""
-        self.team_heal()
-        return ops_team.where(base, self.host.repo_root)
-
-    def team_heal(self) -> None:
-        """The person's note says the Team party is in this project but the Board has parties and none is it (its file was removed by hand): the note goes, and Operations are in the left
-        column again. A Board with no parties yet (its tree is still being made) is left alone."""
-        base = self._ops_base()
-        got = ops_team.get(base) if base is not None else None
-        if got is None or got["project"] != str(self.host.repo_root):
-            return
-        here = ideas.tracks(self.root(False), make=False)
-        if here and not any(t["slug"] == got["party"] and party_recipes.is_team(t) for t in here):
-            ops_team.clear(base, got["project"], got["party"])
-
-    def team_made(self, slug: str) -> None:
-        """The Team party was saved here: the person's note says where it is. The left column and the phone read it from the snapshot."""
-        base = self._ops_base()
-        if base is None:
-            return
-        ops_team.set(base, self.host.repo_root, self.host.repo_root.name, slug)
-        self.host.ops.moved()
-
-    def team_dropped(self, slug: str) -> None:
-        """A party was removed here: when it was the Team party the note goes, and Operations are in the left column again."""
-        base = self._ops_base()
-        if base is not None and ops_team.clear(base, self.host.repo_root, slug):
-            self.host.ops.moved()
-
-    def team(self, args: dict) -> dict:
-        """`ideas.team`: where the Team party is, to say so: `{at, party, name}`; `at` is "" with none, "here" or the project's name."""
-        got = ops_team.get(self._ops_base()) if self._ops_base() is not None else None
-        return {"at": self.team_at(), "party": (got or {}).get("party", ""), "name": (got or {}).get("name", "")}
-
     # -- recurring goals -------------------------------------------------------------------------------------------------
 
     def running_made(self, party: str, recipe: str, routines: list[dict], args: dict) -> None:
-        """A new party of a recipe that has to be told of (the Team party, a running party with recurring goals): the recipe kept, Team's note written, the goals added."""
+        """A new party of a recipe that has to be told of (a running party with recurring goals): the recipe kept, the goals added."""
         if party_recipes.get(recipe) is not None and not goal_team.recipe_of(self.root(), party):
             goal_team.set_recipe(self.root(), party, recipe)
-        if recipe == party_recipes.TEAM_ID:
-            self.team_made(party)
         if routines:
             self.routines_started(party, routines, args)
 

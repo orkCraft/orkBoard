@@ -86,7 +86,7 @@ def parse(target: str) -> tuple[str, str, str, str] | None:
 
 
 def state_dirs(host: Any) -> list[Path]:
-    """The state folders of the projects the host has open, the shown one first (Orkline's host: its one Board's)."""
+    """The state folders of the projects the host has open, the shown one first."""
     found: list[Path] = []
     shown = getattr(host, "ideas", None)
     projects = getattr(getattr(host, "projects", None), "open_ones", None) or []

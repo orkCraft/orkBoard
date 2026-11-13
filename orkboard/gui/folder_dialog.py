@@ -5,7 +5,7 @@ A page (in the app's window or a browser) gets no path from a picker of its own,
 dialog in the app's window (`attach` hands it the window, board_host.run), else the system's (`osascript`,
 `zenity`/`kdialog`, PowerShell). A dialog runs on a thread of its own, so the socket never waits for it:
 `folders.pick` gives a token, `folders.picked` what came of it. With no dialog on the machine the path is typed, as
-before. The same as Orkline's Wiki folders (orkcraft/gui/folders.py), for a project's folder; desktop only (a phone
+before. For a project's folder; desktop only (a phone
 never opens a dialog on the computer: gui/board_host.py `BoardPhone`).
 
     attach(window)                         # the app's window: its own folder dialog

@@ -80,9 +80,7 @@ def test_a_note_alone_makes_no_commit_and_a_stale_one_is_taken_away(tmp_path):
     assert not (path / steps_git.COMMIT_FILE).exists()
 
 
-def test_the_commits_the_product_makes_say_its_name_and_the_boards_pages_say_its_board(monkeypatch):
+def test_the_commits_the_product_makes_say_its_name_and_the_boards_pages_say_its_board():
     assert brand.board_author() == (f"{brand.name()} board", f"board@{brand.name().lower()}.local")
-    monkeypatch.setattr(brand, "name", lambda: "Orkline")
-    assert brand.git_identity() == ["-c", "user.name=Orkline", "-c", "user.email=orkline@localhost"]
-    assert brand.board_author() == ("Orkline board", "board@orkline.local")
+    assert brand.git_identity() == ["-c", "user.name=Orkboard", "-c", "user.email=orkboard@localhost"]
     assert idea_task.CANNOT_COMMIT.startswith("Git cannot write in this sandbox")

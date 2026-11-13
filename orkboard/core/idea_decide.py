@@ -13,7 +13,7 @@ confirms it with one button, and it is committed, numbered, to the project's dec
   them as the file words its entries. A call that cannot be had never stops the goal: the decision is then worded by code from the same things, for the person to read and
   correct. Kept in `way.json` (`realm/spec_sections.py` `record`): `decision: {title, text, number, confirmed}`. Each leader's **no** the person went on against and each
   **doubt** is given to the call (`idea_objections.lines`) and is among the entry's points word for word, whoever worded it (`named`; spec 108 §4.4): *Against <Leader>: <why>*.
-- **Confirm** appends `## <n>. <title> (<date>, the person and <host>)` to the decisions file (`<host>`: `brand.name()`, Orkboard here, Orkline where Orkline runs these modules; `decisions_log.path(root, chosen)`: the path the project chose in
+- **Confirm** appends `## <n>. <title> (<date>, the person and <host>)` to the decisions file (`<host>`: `brand.name()`, Orkboard; `decisions_log.path(root, chosen)`: the path the project chose in
   `<state_dir>/project.json` `decisions`, else `docs/decisions.md`; the file made with a one-line head when missing). The number is read again **at the commit**, inside
   the repository's lock, from the file as dev holds it (`BoardTree.edit_file`), so two goals never take one. The commit is the Board's (its pages and that one file) and moves
   dev. Without the Board's tree (the demo, a folder with no history) the file is written in the working copy and nothing is committed (the keeper never commits).
@@ -147,7 +147,7 @@ def corrected(text: str, title: str) -> tuple[str, str]:
 
 def entry_of(n: int, title: str, body: str, today: dt.date | None = None, host: str = "", by: str = "person") -> str:
     """The entry as the file has it: `## <n>. <title> (<day> <month> <year>, the person and <host>)` (the year since spec 127 A), a blank line, the body. `host`: the name of the product that runs the Board
-    (decisions §169; `brand.name()`: Orkboard, or Orkline where Orkline runs these modules), else that. `by` "leaders": a goal the leaders all agreed on and the wait
+    (decisions §169; `brand.name()`: Orkboard), else that. `by` "leaders": a goal the leaders all agreed on and the wait
     confirmed by itself (spec 120 §3.5): `(<date>, the leaders, all agreed; <host>)`."""
     day = today or dt.date.today()
     who = "the leaders, all agreed;" if by == "leaders" else "the person and"

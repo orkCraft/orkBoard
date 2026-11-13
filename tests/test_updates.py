@@ -88,12 +88,12 @@ def test_what_installs_by_itself_follows_the_policy():
     assert not updates.due(None, "auto")
 
 
-def test_orkboard_reads_its_own_list_never_orklines():
+def test_orkboard_reads_its_own_list():
     """The list's address is written in every installed copy: it never changes (spec 41 §6)."""
     assert PRODUCT.manifest == "https://raw.githubusercontent.com/orkWorks/orkBoard/main/updates.json"
     assert updates.url() == PRODUCT.manifest
     assert PRODUCT.source == "git+https://github.com/orkWorks/orkBoard"
-    assert updates.state_path().name == "orkboard-updates.json"            # Orkline's cache is updates.json
+    assert updates.state_path().name == "orkboard-updates.json"            # a cache of its own
 
 
 def test_the_repositorys_list_names_this_version_last():

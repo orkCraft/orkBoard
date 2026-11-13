@@ -131,7 +131,7 @@ def test_the_light_calls_charge_the_ledger(monkeypatch):
     answer = json.dumps({"result": "ok", "total_cost_usd": 0.02})
     from orkboard.realm import halt
     monkeypatch.setattr(halt, "run", lambda *a, **k: subprocess.CompletedProcess(a, 0, answer, ""))
-    assert tool_run.ask("claude", "hi", model="haiku") == ("ok", 0.02)      # what builders.ask in Orkline wraps
+    assert tool_run.ask("claude", "hi", model="haiku") == ("ok", 0.02)
     assert [(usd, src) for _, usd, src, *_ in telemetry.charges(since)] == [(0.02, "claude -p haiku")]
     telemetry.reset_charges()
 
@@ -169,15 +169,6 @@ def test_a_call_its_transcript_counts_is_a_line_but_not_twice_in_gold(tmp_path: 
 def test_no_ledger_kept_writes_nothing(tmp_path: Path):
     telemetry.charge(0.02, "claude -p haiku", purpose="build")
     assert telemetry.calls(tmp_path) == [] and not (tmp_path / telemetry.CALLS).exists()
-
-
-def test_a_transcript_run_tells_its_hook_the_purpose():
-    """What a run's session hears in its environment (ORKCRAFT_PURPOSE), for the hook to record (Orkline's
-    hooks/session.py, whose own tests stay there)."""
-    assert telemetry.purpose_env("look") == {"ORKCRAFT_PURPOSE": "look"}
-    with telemetry.tagged("plan"):
-        assert telemetry.purpose_env() == {"ORKCRAFT_PURPOSE": "plan"}
-    assert telemetry.purpose_env() == {"ORKCRAFT_PURPOSE": "work"}
 
 
 def test_by_purpose_sums_the_last_week_and_its_buildings(tmp_path: Path):

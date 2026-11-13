@@ -57,8 +57,8 @@ def test_without_critical_tests_always_is_empty_and_only_the_files_that_exist_co
 
 
 def test_this_repository_names_its_three_critical_tests_in_always():
-    """Orkboard's own critical tests (CLAUDE.md, Alpha); Orkline's (`idea_git.CRITICAL_TESTS`) stay the default of a
-    repository with no file."""
+    """Orkboard's own critical tests (CLAUDE.md, Alpha); `idea_git.CRITICAL_TESTS` stays the default of a repository with
+    no file."""
     gate = gate_config.read(ROOT)
     assert gate.always == ("tests/test_architecture.py", "tests/test_board_alone.py", "tests/test_updates.py")
     assert not gate.error and not gate.custom and all((ROOT / t).is_file() for t in gate.always)

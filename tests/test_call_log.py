@@ -197,8 +197,7 @@ def test_a_period_is_one_zip_with_each_day_added_up(tmp_path, tool):
 
 
 def test_orkboard_keeps_its_logs_and_serves_a_period(fake_repo, tool):
-    """Orkboard keeps the day logs always (gui/board_host.py `BoardLogs`) and its server gives a period as one zip;
-    Orkline's switch for them and its clearing by dislikes are the town's (gui/town_settings.py, gui/day_logs.py)."""
+    """Orkboard keeps the day logs always (gui/board_host.py `BoardLogs`) and its server gives a period as one zip."""
     from orkboard.gui.board_host import Orkboard
     from orkboard.gui.server import Server
     host = Orkboard()                                                    # the start screen: no project, no logs

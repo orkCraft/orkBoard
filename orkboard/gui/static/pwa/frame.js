@@ -11,7 +11,7 @@ import { makeRemote } from "./shell-remote.js";
 import { settingsNode } from "./shell-remote-settings.js";
 import { journalScreen } from "./shell-remote-view.js";
 
-const PRODUCT = document.documentElement.dataset.product || "Orkboard";
+const PRODUCT = "Orkboard";
 const API = 1;
 const IOS = "standalone" in navigator;                // only iOS Safari has navigator.standalone
 const STANDALONE = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;

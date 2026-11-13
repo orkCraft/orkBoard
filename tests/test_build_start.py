@@ -1,4 +1,4 @@
-"""Spec 168 H2 (decisions §283.31): *The build starts*, `autostart` and `look_wait` as one setting. Both old keys are read and kept (Orkline reads them); the new value is derived from them."""
+"""Spec 168 H2 (decisions §283.31): *The build starts*, `autostart` and `look_wait` as one setting. Both old keys are read and kept; the new value is derived from them."""
 from __future__ import annotations
 
 import pytest

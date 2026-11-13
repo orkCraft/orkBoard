@@ -1,11 +1,11 @@
-"""Git worktrees for orkspaces: each orkspace can work on its own branch in its own folder.
+"""Git worktrees: a task can work on its own branch in its own folder.
 
-    <repo>/.orkcraft/worktrees/<orkspace_id>   (git-ignored, like all of .orkcraft/)
+    <repo>/.orkcraft/worktrees/<id>   (git-ignored, like all of .orkcraft/)
 
 `create` checks the branch name with `git check-ref-format`, reuses an existing branch or starts
 a new one from `base`; `remove` refuses while the worktree has uncommitted or untracked work
 unless forced, and keeps the branch. Every git call uses fixed arguments (no shell) and runs in the
-repository. The Board's tasks use it; an orkspace's worktree (`link`, `unlink`, `cwd_for`) is Orkline's.
+repository. The Board's tasks use it.
 """
 from __future__ import annotations
 

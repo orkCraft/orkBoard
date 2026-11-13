@@ -45,7 +45,7 @@ def host(fake_repo, monkeypatch):
     for entry in ENTRIES:
         if hasattr(h.ideas.keeper, entry):
             monkeypatch.setattr(h.ideas.keeper, entry, _boom)
-    monkeypatch.setattr(harnesses.Harness, "call", _boom)
+    monkeypatch.setattr(harnesses.Harness, "ask", _boom)
     monkeypatch.setattr(jobs, "run_work", _boom)
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)

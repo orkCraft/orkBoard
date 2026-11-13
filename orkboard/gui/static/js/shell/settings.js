@@ -23,7 +23,7 @@ import { nightWordsOf, workAtNight } from "../hand/nightwords.js";
 const AWAKE_MODES = [["off", "Never"], ["carts", "While the orks work"], ["phone", "Stay reachable from your phone"]];
 const AWAKE_LINES = {
   off: "The computer sleeps as its power settings say. While it sleeps the orks stop, the night's work waits, and a phone cannot reach it.",
-  carts: "On power, it does not sleep by itself while an ork or an operation is at work, or while the Board has work waiting for tonight. "
+  carts: "On power, it does not sleep by itself while an ork is at work, or while the Board has work waiting for tonight. "
     + "With nothing to do, or on battery, it sleeps as its power settings say.",
   phone: `On power, it does not sleep by itself while ${PRODUCT} is open and a phone is paired, work or not. `
     + "On battery it sleeps as its power settings say, and the phone says so.",

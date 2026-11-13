@@ -115,21 +115,12 @@ class BoardMixin:
                 "night_rung": night_slot.way(s), "max_parallel": int(s.get("max_parallel") or settings.IDEAS["max_parallel"]),
                 "hours": list(s.get("hours") or [])}                                                     # spec 138 B.1: When I am at the computer
 
-    def night_allow(self, args: dict) -> dict:
-        """`{"allow": bool}`: the answer of the phone's and Orkline's *Low work may run at night*, stored as `night_low` and read by
-        nothing here (spec 99 §3: the night is gone; Orkline reads the setting). Nothing moves, so `moved` is always 0."""
-        if not isinstance(args.get("allow"), bool):
-            raise IdeasError("Low work may run at night is on or off")
-        self.save_settings({**self.settings_now(), "night_low": args["allow"]})
-        self.changed("")
-        return {"ok": True, "moved": 0}
-
     def board_set(self, args: dict) -> dict:
         mine = dict(self.settings_now())
         if args.get("review_notice") is False and getattr(getattr(self.host, "machine", None), "review_notice", False):      # said once (spec 84 §1)
             self.host.machine.review_notice = False
             settings.save(self.host.machine)
-        if "build_start" in args:                            # spec 168 H2: the one setting writes the two keys the Board keeps (Orkline reads them)
+        if "build_start" in args:                            # spec 168 H2: the one setting writes the two keys the Board keeps
             keys = look_wait.build_start_keys(args["build_start"], mine.get("look_wait"))
             if not keys:
                 raise IdeasError(look_wait.BUILD_REFUSED)
@@ -561,12 +552,11 @@ class BoardMixin:
 
 
 def sort_needs(needs: list[dict]) -> list[dict]:
-    """What blocks work in progress first, then the priority, then the oldest; proposals last (§10), Operations' rules
-    proposals with them (spec 38 §8). A plan change (spec 62 §4.2) sits as a plan does: it blocks nothing and is not last. A
+    """What blocks work in progress first, then the priority, then the oldest; proposals last (§10). A plan change (spec 62 §4.2) sits as a plan does: it blocks nothing and is not last. A
     judged pitch (spec 65 §5) comes after the goals' own, before the proposals. A conflict (spec 150 E1.2) sits where its goal's
     `decision` does, and before it."""
     def key(n: dict) -> tuple:
         prio = n.get("priority") if n.get("priority") in ideas.PRIORITIES else "normal"
-        last = 2 if n["kind"] in ("proposal", "op_rules", "party", "project_q", "hypothesis", "quality", "finding", "cascade", "groups") else 1 if n["kind"] == "pitch" else 0
+        last = 2 if n["kind"] in ("proposal", "party", "project_q", "hypothesis", "quality", "finding", "cascade", "groups") else 1 if n["kind"] == "pitch" else 0
         return last, not n.get("blocks"), ideas.PRIORITIES.index(prio), str(n.get("at") or ""), n["kind"] != "conflict"
     return sorted(needs, key=key)

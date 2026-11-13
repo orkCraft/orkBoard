@@ -1,7 +1,6 @@
 // Orkboard's page (docs/specs/37-board-and-line.md §4, docs/specs/98-the-table-and-the-hand.md §7): the window — the table over the hand, nothing else (js/shell/shell.js) — the
 // onboarding's first screen (trust, the AI tools found), the update's offer and the toasts, in Office's calm look, and no camp module.
-// gui/server.py serves it as the page's script when its host is Orkboard (gui/board_host.py); Orkline's page is
-// app.js, which draws the same shell when `focus` is "board".
+// gui/server.py serves it as the page's script (gui/board_host.py is its host).
 import { render } from "preact";
 import { html, cls, linked } from "./js/html.js";
 import { town, connect, openLink, copyText, toasts, dismiss, holdToast, onMocks } from "./js/link.js";
@@ -15,8 +14,7 @@ import { UpdateAsk } from "./js/shell/update.js";
 const SEVERITY = { warning: "is-warn", error: "is-error", information: "is-ok" };
 const MARK = { information: "✓", warning: "⚠", error: "✗" };
 
-/** The toasts as Orkline's (js/chrome.js `Toasts`), without its tool-failure card: Orkboard reports no tool failure
- *  through the town's Switch and Retry (gui/failures.py). */
+/** The toasts, without a tool-failure card: Orkboard reports no tool failure through a Switch and Retry. */
 function Toasts() {
   return html`<div class="gui-toasts" role="status" aria-live="polite">
     ${toasts.value.map((x) => html`<div key=${x.id} data-toast=${x.id}

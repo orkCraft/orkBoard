@@ -63,7 +63,7 @@ def test_a_one_press_command_runs_no_model(host, monkeypatch, name):
     for entry in ENTRIES:
         if hasattr(host.ideas.keeper, entry):
             monkeypatch.setattr(host.ideas.keeper, entry, fail(f"keeper.{entry}"))
-    monkeypatch.setattr(harnesses.Harness, "call", fail("Harness.call"))
+    monkeypatch.setattr(harnesses.Harness, "ask", fail("Harness.ask"))
     LAID.get(name, lambda h: None)(host)
     before, board = idea_undo.snapshot(host.ideas.root(), host.ideas.state_dir, "goal"), _board(host)
     host.command(name, {**PLAYED[name], "from": "hand"})
@@ -100,7 +100,7 @@ def test_new_wins_is_one_press_runs_no_model_and_its_reverse_puts_the_decision_b
     for entry in ENTRIES:
         if hasattr(host.ideas.keeper, entry):
             monkeypatch.setattr(host.ideas.keeper, entry, boom)
-    monkeypatch.setattr(harnesses.Harness, "call", boom)
+    monkeypatch.setattr(harnesses.Harness, "ask", boom)
     sd = host.ideas.state_dir
     ideas.save_state(sd, "goal", state="decided")
     spec_sections.save_record(sd, "goal", {"decision": {"title": "T", "confirmed": False, "changes": [], "conflicts": [{"number": 2, "point": "p", "answer": ""}]}})

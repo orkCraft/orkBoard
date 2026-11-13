@@ -9,7 +9,7 @@ question the Orkmaster asks now, and whether the table is laid. Pure reads of th
     first_open.keep_release_branch(state_dir, name)           # kept in `<state_dir>/project.json` (`main_branch`); "" forgets it, the git default is read again
 
 **A table is laid at Start.** Until the project's first Start the window is in its frame but not laid (§232.1); a project that has parties of its
-own (made by Orkline or an earlier Orkboard) is laid at once. `laid` is the project's, so it lives with the project's other facts and travels with the
+own (made by an earlier version) is laid at once. `laid` is the project's, so it lives with the project's other facts and travels with the
 Board's branch (realm/board_branch.py `TOP_FILES`).
 """
 from __future__ import annotations

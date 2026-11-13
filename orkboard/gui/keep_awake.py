@@ -6,10 +6,9 @@
     host.keep_awake.stop()                 # the window closed, Ctrl+C, an update's restart: let go for good
     host.commands: awake.state · awake.set {mode} · awake.offer {yes}      (desktop only)
 
-The setting is Orkline's (`keep_awake` off | carts | phone, `awake_offered`): switching between the two loses nothing.
-The hold itself is `gui/awake.py`; here is only *why* and *for how long*. The hold's reason, in this order: the mode
-is `off` or the computer is on battery: none; a phone is paired and the mode says so: `phone`; an ork or an operation
-is at work: `work`. It lets go only after LINGER_S with no reason (the Board's work for the night is gone, spec 99 §3:
+The setting is the machine's (`keep_awake` off | carts | phone, `awake_offered`). The hold itself is `gui/awake.py`;
+here is only *why* and *for how long*. The hold's reason, in this order: the mode is `off` or the computer is on
+battery: none; a phone is paired and the mode says so: `phone`; an ork is at work: `work`. It lets go only after LINGER_S with no reason (the Board's work for the night is gone, spec 99 §3:
 it was `tonight`).
 """
 from __future__ import annotations
@@ -69,10 +68,7 @@ class KeepAwake:
                     return True
             except Exception:
                 continue
-        try:
-            return bool(self.host.ops.runner.busy())
-        except Exception:
-            return False
+        return False
 
     def reason(self, now: float | None = None) -> str:
         """"work" | "phone" | "" (spec 47 §2)."""
@@ -143,15 +139,6 @@ class KeepAwake:
         if self.host.demo or self.mode == "phone" or self.host.machine.awake_offered or not self.paired():
             return ""
         return self.machine() if self.awake.can() else ""
-
-    def phone_line(self) -> str:
-        """What the phone says of this computer's sleep (one line or "")."""
-        machine = self.machine()
-        if self.state()["battery"]:
-            return f"Your {machine} is on battery and may sleep."
-        if self.mode == "off":
-            return f"Your {machine} may sleep: keeping it awake is off in its Settings."
-        return ""
 
     # -- the page's commands (desktop only) ----------------------------------------------------------------------
 

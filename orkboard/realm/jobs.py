@@ -5,9 +5,8 @@ passes a `cancel` event and gets (text, cost, tokens) back or an exception.
     agy      `agy --print` in a sandbox limited to `workdir` (a scratch dir when none is given)
     codex    `codex exec` in a read-only sandbox; may write only inside `workdir` when one is given
 
-`run_work` changes files in a worktree, `run_read` reads; `run_call` is a call held to the MCP tools it is given, its events
-read back (an operation's, spec 38 §4). `ensure_repo` makes a folder a git repository with a first commit, so agents can
-work in worktrees of it.
+`run_work` changes files in a worktree, `run_read` reads. `ensure_repo` makes a folder a git repository with a first commit,
+so agents can work in worktrees of it.
 """
 from __future__ import annotations
 
@@ -36,7 +35,7 @@ def work_cmd(harness: str, prompt: str, workdir: Path, model: str = "", resume: 
              dirs: tuple = (), free: bool = False, effort: str = "", task: dict | None = None,
              root: Path | None = None) -> list[str]:
     """An agent that may change files — only inside `workdir` (a Barracks worktree); `dirs` it may read too;
-    `free`: its building is unchained (autonomy.FREE), so it asks nothing. A tool that takes a list of commands (Claude
+    `free`: it asks nothing (the tool's `free_args`). A tool that takes a list of commands (Claude
     Code in `-p`, where nobody can be asked) gets the project's at `root` (default: `workdir`, a checkout of it) and
     the task's (`task["pick"]`: also the media tools), spec 86 §2."""
     h = harnesses.get(tool_run.resolve(harness))
@@ -142,88 +141,6 @@ def run_read(harness: str, prompt: str, workdir: Path, cancel: threading.Event, 
     return text, cost, tokens, session
 
 
-CALL_TIMEOUT_S = 600
-
-
-class CallFailed(RuntimeError):
-    """A call that ended with an error: `events` are what it did before (a tool it called still counts)."""
-
-    def __init__(self, why: str, events: list[dict]) -> None:
-        super().__init__(why)
-        self.events = events
-
-
-RESULT_CHARS = 2000                        # a tool_result's text as kept in the events
-
-
-def call_events(stdout: str, result_chars: int = RESULT_CHARS) -> tuple[list[dict], dict | None]:
-    """What a call's stream-json says (spec 38 §4): the `init` event's tools, each `tool_use` (name, input) and each
-    `tool_result` (is_error, its text, at most `result_chars`), in order; and its `result` event (None when it gave
-    none). A brief's bound reads (spec 66 §2) read a lookup's whole answer, so they ask for more."""
-    out: list[dict] = []
-    result = None
-    for event in harnesses.json_lines(stdout):
-        kind = event.get("type")
-        if kind == "system" and event.get("subtype") == "init":
-            out.append({"type": "init", "tools": [str(t) for t in event.get("tools") or [] if isinstance(t, str)]})
-        elif kind in ("assistant", "user"):
-            msg = event.get("message") if isinstance(event.get("message"), dict) else {}
-            for part in msg.get("content") or [] if isinstance(msg.get("content"), list) else []:
-                if not isinstance(part, dict):
-                    continue
-                if part.get("type") == "tool_use":
-                    out.append({"type": "tool_use", "id": str(part.get("id") or ""), "name": str(part.get("name") or ""),
-                                "input": part.get("input")})
-                elif part.get("type") == "tool_result":
-                    content = part.get("content")
-                    if isinstance(content, list):
-                        content = "\n".join(str(c.get("text") or "") for c in content if isinstance(c, dict))
-                    out.append({"type": "tool_result", "id": str(part.get("tool_use_id") or ""),
-                                "is_error": part.get("is_error") is True, "text": str(content or "")[:result_chars]})
-        elif kind == "result":
-            result = event
-    return out, result
-
-
-def run_call(harness: str, prompt: str, workdir: Path, cancel: threading.Event, allow: list[str], model: str = "",
-             env: dict | None = None, effort: str = "", budget: float | None = None,
-             timeout_s: int = CALL_TIMEOUT_S, result_chars: int = RESULT_CHARS) -> tuple[str, float | None, int | None, list[dict]]:
-    """(text, cost, tokens, events) of one call allowed only the MCP tools in `allow` (spec 38 §4): one shot, in
-    `workdir`, no built-in tool, `effort` and `budget` where the tool takes them. `events`: `call_events`. Raises
-    `CallFailed` (with its events) when it ended in an error, InterruptedError when it was stopped."""
-    harness = tool_run.resolve(harness)
-    h = harnesses.get(harness)
-    cmd = h.call(prompt, workdir, allow, model, effort, budget, True) if h is not None else None
-    if cmd is None:
-        raise RuntimeError(f"harness {harness!r} cannot be held to the tools it is given")
-    run_env = {**os.environ, **h.env("read", workdir), **(env or {})}
-    start = time.monotonic()
-    code, out, err = tool_run.run_proc(
-        cmd, workdir, run_env, tool_run.harness_stdin(harness, prompt),
-        lambda proc: _wait(proc, cancel, timeout_s, run_env.get("ORKCRAFT_ORC") or harness, True), harness)
-    events, result = call_events(out, result_chars)
-    LAST.usage = None
-    cost = tokens = None
-    text = ""
-    if result is not None:
-        text = str(result.get("result") or "")
-        cost = float(result["total_cost_usd"]) if isinstance(result.get("total_cost_usd"), (int, float)) else None
-        tokens = harnesses._tokens_of(result.get("usage"))
-        usage = result.get("usage") if isinstance(result.get("usage"), dict) else None
-        if usage is not None:
-            n = lambda k: usage.get(k) if isinstance(usage.get(k), int) and not isinstance(usage.get(k), bool) else 0  # noqa: E731
-            LAST.usage = {"in": n("input_tokens") + n("cache_creation_input_tokens"), "out": n("output_tokens"),
-                          "cache_read": n("cache_read_input_tokens")}
-    call_log.record(env, "call", harness, model, prompt, out, err, code, time.monotonic() - start, cost, tokens,
-                    workdir=workdir)
-    what = dict(tokens=tokens, building=telemetry.building_of(run_env), model=model)
-    telemetry.charge(cost, f"{harness} call", **what)
-    if code != 0 or (result is not None and result.get("is_error") is True):
-        why = str(tool_run.failure(harness, code, out, err)) if code != 0 else (text or "the call ended in an error")
-        raise CallFailed(why, events)
-    return text, cost, tokens, events
-
-
 # -- git: a folder made a repository the agents can work in -------------------------------------------
 
 GIT_TIMEOUT_S = 60
@@ -241,8 +158,8 @@ def _ok(proc: subprocess.CompletedProcess) -> str:
 
 
 # A folder with no git yet: what its first commit leaves out when it has no .gitignore of its own — secrets, the
-# town's own state, what a build or an install makes again.
-FIRST_IGNORE = """# written by Orkline when it started git here: what the first commit left out
+# Board's own state, what a build or an install makes again.
+FIRST_IGNORE = """# written by Orkboard when it started git here: what the first commit left out
 .env
 .env.*
 *.pem
@@ -280,6 +197,6 @@ def ensure_repo(repo_root: Path) -> str:
             done.append("wrote a .gitignore (.env, keys, caches and .orkcraft/ left out)")
         _ok(_git(repo_root, "add", "-A"))
         who = () if _git(repo_root, "config", "user.email").stdout.strip() else FIRST_AUTHOR
-        _ok(_git(repo_root, *who, "commit", "--allow-empty", "-m", "Orkline: the first commit, so agents can work in worktrees"))
+        _ok(_git(repo_root, *who, "commit", "--allow-empty", "-m", "Orkboard: the first commit, so agents can work in worktrees"))
         done.append("made a first commit of the files as they are")
     return "; ".join(done)

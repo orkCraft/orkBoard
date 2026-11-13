@@ -72,7 +72,7 @@ def _path_without_real_tools(factory: pytest.TempPathFactory) -> str:
 def isolated_layout_file(tmp_path: Path, tmp_path_factory: pytest.TempPathFactory,
                          monkeypatch: pytest.MonkeyPatch) -> Path:
     """Every test on a home, a config and a cache of its own: the machine's settings, logins, keychain, update list
-    and AI tools' folders are never read or written. Returns the layout file's path (the name is Orkline's)."""
+    and AI tools' folders are never read or written. Returns the layout file's path (an older name, kept)."""
     path = tmp_path / "orkcraft-layout.json"
     path_without_tools = _path_without_real_tools(tmp_path_factory)    # before HOME moves: it reads the real PATH
     home = tmp_path / "home"
@@ -85,7 +85,6 @@ def isolated_layout_file(tmp_path: Path, tmp_path_factory: pytest.TempPathFactor
     monkeypatch.setenv("ORKCRAFT_ONBOARDING", "0")      # the first screen's tests opt in
     monkeypatch.setenv("ORKCRAFT_LOGINS_FILE", str(tmp_path / "orkcraft-logins.json"))   # never the keychain
     monkeypatch.setenv("ORKCRAFT_STATE_DIR", str(tmp_path / "orkcraft-state"))
-    monkeypatch.delenv("ORKCRAFT_FOCUS", raising=False)
     # No real model is asked anything: no limits read, no model list, no update list (test_updates.py opts in),
     # no usage stats or crash report sent.
     monkeypatch.setenv("ORKCRAFT_LIMITS", "0")

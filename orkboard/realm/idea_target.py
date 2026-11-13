@@ -2,7 +2,6 @@
 (effort) of every step of the Board, the keeper's and the orks'; and the clock the Board's reserve reads.
 
     pick("draft", "balance")                       # ("elder", "medium")
-    pick("op_act", "balance")                      # ("laborer", ""): an operation's action (spec 38 §4)
     keeper_pick("talk", "quality", "haiku")        # ("haiku", "high"): the Taskmaster's own model wins
     task_pick("warrior", "thrift", "")             # ("laborer", "low"): Grunt runs on the shifted tier
     target_for(settings, party)                    # the Target a party's goals work at: the setting's, *How deep* (spec 168 H4: a size is no Target of its own any more)
@@ -116,10 +115,6 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     # A goal's sketch (spec 121 §2.3): its craft's leader makes two or three throwaway pages in one call, no tools (Design's reads the one picture of the screen it changes), on the party's tier as the first section
     # (a page of 60 KB is written whole: the cheaper tier would draw it badly)
     "sketch": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
-    # Operations' calls (docs/specs/38-operations.md §4), under Operations' own Target: no effort on the laborer tier
-    "op_prepare": {"thrift": ("warrior", "low"), "balance": ("warrior", "medium"), "quality": ("elder", "medium")},
-    "op_act": {"thrift": ("laborer", ""), "balance": ("laborer", ""), "quality": ("warrior", "low")},
-    "op_learn": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
 }
 
 
@@ -127,7 +122,6 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
 # call's own instructions not counted); how many files it may read; its budget in USD (`--max-budget-usd`) in balance,
 # half in thrift, double in quality.
 CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan": 11_200, "accept": 11_200,
-           "op_prepare": 12_000, "op_act": 6_000, "op_learn": 6_000,
            "pitch_view": 6_000, "pitch_case": 6_000, "pitch_decide": 8_000, "collide": 3_000, "kind": 1_500, "route": 2_500,
            "talk_round": 14_700, "talk_verdict": 10_200, "diagnose": 11_200, "ground": 11_200, "settle": 11_200, "decide": 13_500, "section_first": 18_700, "section": 18_700, "join": 8_000, "rewrite": 24_000, "fork": 6_000, "project_q": 13_200, "loop": 13_200, "tree": 13_200, "hypotheses": 13_200, "ask": 12_200, "concerns": 16_200, "sketch": 12_000,
            "journal": 10_000,       # spec 125 §C: the steps that are given the journals (talk_round, talk_verdict, decide, section_first, section, ask, concerns) grew by 3,000 for them; `journal` is the digest's own
@@ -144,7 +138,7 @@ READS = {"goal": 8, "draft": 6, "plan": 6, "talk": 2, "answer": 2, "accept": 4,
          "pitch_view": 4, "pitch_case": 0, "pitch_decide": 0, "collide": 0, "kind": 0, "route": 0,
          "talk_round": 0, "talk_verdict": 0, "diagnose": 4, "ground": 4, "settle": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "rewrite": 0, "fork": 0, "project_q": 0, "loop": 0, "tree": 0, "hypotheses": 0, "ask": 0, "concerns": 0, "sketch": 0, "journal": 0, "fold": 0, "slice": 0, "slice_digest": 0, "finding": 4, "finding_level": 0, "cascade": 0, "measure_read": 4, "groups": 0, "accept_step": 4}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
 CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60, "accept": 0.60,
-        "op_prepare": 0.30, "op_act": 0.10, "op_learn": 0.10, "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05, "kind": 0.03, "route": 0.03,
+        "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05, "kind": 0.03, "route": 0.03,
         "talk_round": 0.08, "talk_verdict": 0.06, "diagnose": 0.20, "ground": 0.20, "settle": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "rewrite": 0.08, "fork": 0.12, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "hypotheses": 0.10, "ask": 0.05, "concerns": 0.10, "sketch": 0.40, "journal": 0.05, "fold": 0.05, "slice": 0.05, "slice_digest": 0.05, "finding": 0.20, "finding_level": 0.05, "cascade": 0.05, "measure_read": 0.20, "groups": 0.05, "accept_step": 0.30}
 READS_FOR = {("concerns", "design"): 4, ("sketch", "design"): 1}                 # a step's reads for a craft that has more: Design's look at its map reads the pictures of the screens changed (spec 108 §2.3)
 BUDGET_SHARE = {"thrift": 0.5, "balance": 1.0, "quality": 2.0}

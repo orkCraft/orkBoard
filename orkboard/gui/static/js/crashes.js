@@ -1,5 +1,5 @@
 // The window's own errors go to the host as crash reports (core/crashes.py, docs/crash-reports.md), which
-// sends them only after a yes and only as file, function and line of Orkline's scripts. A few per page.
+// sends them only after a yes and only as file, function and line of Orkboard's scripts. A few per page.
 // The page also keeps its last errors, a message and the first line of the stack each, console.error's too, for the logs
 // Save logs writes (`recentErrors`, shell/errors.js `saveLogs`; docs/specs/107-what-the-owners-day-said.md §2.4).
 // **A crash the page shows** (docs/specs/139-the-die-the-door-and-the-bug.md A.5, decisions §246.6): a window error or an unhandled rejection is said at the window's top right (`CrashNote`, mounted by frame/frame.js): *Something broke: <its words>*, with

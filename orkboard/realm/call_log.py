@@ -1,9 +1,8 @@
-"""📜 Every model call, kept: a Test bench run's in its run folder, the town's by day and building.
+"""📜 Every model call, kept: a project's by day and building, a block's (`kept`) in its own folder.
 
     with call_log.kept(folder / "calls", "building"):   the calls in this block are kept there, as this side's
         …
     with call_log.of_project(root):                      this thread's calls: the project's day log and ledger
-    with call_log.apart(folder, "ops", ledger):          … kept in `folder`, charged in `ledger` (Operations')
     call_log.keep_days(root)                             from now on, every other call goes to the day's log
     with call_log.bounded(n):                            the read calls here are held to n files: their line says if they went over
     call_log.record(env, "work", harness, model, prompt, stdout, stderr, code, seconds, cost, tokens, …)
@@ -22,15 +21,14 @@ brain folder). A Claude read call's line says what it read (`reads`, from its st
 `over` when it read more files) and the flags that kept the person's MCP servers and skills out (`bare`). The environment
 is never written.
 
-A bench run's calls go to its `calls/` (`kept`, process-wide: it wins). Outside one, a call goes where its caller
-placed it on its thread: a project's Board to that project's `.orkcraft/logs/<day>/<building>/` (`of_project`), whichever
-project is shown, Operations' to the person's folder (`apart`); a call placed nowhere goes to the day log the host
-named (`keep_days`: the shown project's; realm/day_log.py keeps and clears those days), else it is not kept. The place
-also names the call's ledger (sources/telemetry.py `ledger_at`).
+A `kept` block's calls go to its `calls/` (process-wide: it wins). Outside one, a call goes where its caller placed it
+on its thread: a project's Board to that project's `.orkcraft/logs/<day>/<building>/` (`of_project`), whichever project
+is shown; a call placed nowhere goes to the day log the host named (`keep_days`: the shown project's; realm/day_log.py
+keeps and clears those days), else it is not kept. The place also names the call's ledger (sources/telemetry.py
+`ledger_at`).
 
-The calls come from every seam that starts an AI tool: an ork's work and a reader (realm/jobs.py), a road's agent
-(realm/road_agents.py), a one-off answer (realm/builders.py `ask`: a steward's, the retros', the Council's) and a
-connector's look (realm/feeds_agent.py).
+The calls come from every seam that starts an AI tool: an ork's work and a reader (realm/jobs.py) and a one-off answer
+(realm/tool_run.py `ask`).
 """
 from __future__ import annotations
 
@@ -92,14 +90,6 @@ def of_project(root: Path):
 
 
 @contextlib.contextmanager
-def apart(folder: Path, side: str, ledger: Path | None):
-    """The calls made in this block, on this thread, are kept in `folder` as `side`'s and charged in `ledger`, never in
-    a project's (Operations', spec 38 §9); a project's call made meanwhile on another thread stays the project's."""
-    with _placed((None, Path(folder), side), ledger):
-        yield
-
-
-@contextlib.contextmanager
 def bounded(files: int | None):
     """The read calls made in this block, on this thread, were told to read `files` files at most: their lines say so, and
     say `over` when they read more (None: no bound). Nothing stops them; the log counts (spec 97 §3)."""
@@ -111,8 +101,8 @@ def bounded(files: int | None):
 
 
 def keep_days(root: Path | None) -> None:
-    """Every call outside a bench run that no caller placed (`of_project`, `apart`) goes to `root`'s day log from now
-    on (None: none is kept)."""
+    """Every call outside a `kept` block that no caller placed (`of_project`) goes to `root`'s day log from now on (None:
+    none is kept)."""
     with _LOCK:
         _KEPT["days"] = root
 

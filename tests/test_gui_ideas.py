@@ -1,5 +1,5 @@
 """The board's host commands (spec 29a §6), the phone's allowlist and its compact snapshot, on Orkboard's host
-(gui/board_host.py; Orkline ran them on its town's host too, spec 37 B)."""
+(gui/board_host.py)."""
 from __future__ import annotations
 
 import base64
@@ -26,7 +26,7 @@ BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.
                   "ideas.revise", "ideas.revise_answer",
                   "ideas.judge", "ideas.pitch_send", "ideas.pitch_again", "ideas.pitch_pass",
                   "ideas.release_out", "ideas.release_candidates", "ideas.shown", "ideas.party_for", "ideas.kind_for", "ideas.proposals",
-                  "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.night_allow", "ideas.seen",
+                  "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.seen",
                   "ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_hold", "ideas.route_start",
                   "ideas.talk_answer", "ideas.cause_answer", "ideas.confirm", "ideas.fork_answer", "ideas.stage", "ideas.stage_set", "ideas.project_ask", "ideas.project_answer", "ideas.project_facts", "ideas.project_fact_set", "ideas.project_kind_set", "ideas.talk_read", "ideas.loop", "ideas.loop_set", "ideas.loop_propose", "ideas.art_map", "ideas.release_map", "ideas.way_map", "ideas.screens", "ideas.pain_pin", "ideas.tree", "ideas.tree_set", "ideas.tree_attach", "ideas.tree_propose", "ideas.paid"}   # spec 105 §3: going on paid, … … the project's questions (spec 99 §8), the project's stage (spec 99 §1.2), the decision and the forks (spec 99 §6, §7), talk's two (spec 99 §5), the route's four (spec 99 §4), spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
 
@@ -230,11 +230,11 @@ def test_a_secret_todo_is_stored_and_the_plan_says_stored(host):
     assert idea_secrets.get(host.ideas.state_dir, slug, "t1") is None
 
 
-def test_the_snapshot_carries_focus_and_the_phone_hears_an_idea(host):
+def test_the_snapshot_carries_the_board_and_the_phone_hears_an_idea(host):
     snap = host.snapshot()
-    assert snap["focus"] == "board" and "ideas_rev" in snap and snap["needs_you"] == 0
+    assert "ideas_rev" in snap and snap["needs_you"] == 0
     before = BoardPhone.phone_snapshot(host)
-    assert before["focus"] == "board" and before["needs_you"] == 0
+    assert before["needs_you"] == 0
     slug = _add(host, "phone idea")["slug"]
     mid = BoardPhone.phone_snapshot(host)
     assert mid["ideas_rev"] > before["ideas_rev"] and mid["rev"] != before["rev"]

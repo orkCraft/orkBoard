@@ -1,5 +1,5 @@
 """The Warder for Hermes, Cursor and pi (hooks/warder.py, hooks/pi_extension.py): each tool's payload is judged as the
-Claude Code tool it is, and each hears the verdict its way. Installing the hooks (hooks/install.py) is Orkline's."""
+Claude Code tool it is, and each hears the verdict its way."""
 from __future__ import annotations
 
 import io

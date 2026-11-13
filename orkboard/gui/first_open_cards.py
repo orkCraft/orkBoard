@@ -101,7 +101,7 @@ class FirstOpen:
 
     def tools_skip(self, args: dict) -> dict:
         self.tools_skipped = True
-        self.host.machine.onboarded = True                          # the machine is set up, with no tool: Orkline's onboarding reads the same settings
+        self.host.machine.onboarded = True                          # the machine is set up, with no tool
         settings.save(self.host.machine)
         self.host.on_change()
         return {"ok": True, "line": "No AI tool: the Board opens, and nothing is worked on until you add one"}

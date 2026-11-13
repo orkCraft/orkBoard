@@ -133,7 +133,7 @@ def _adr(root: Path, rel: str) -> list[dict]:
 
 
 def _board_files(root: Path, state_dir: Path) -> dict[str, list[dict]]:
-    """`{path: entries}` of the Board's own decisions files, only for a project whose journal holds no decision yet (a project that ran Orkline before)."""
+    """`{path: entries}` of the Board's own decisions files, only for a project whose journal holds no decision yet (one whose decisions were kept before the journals)."""
     if any(e["kind"] == "decision" for e in journals.read(state_dir, journals.PROJECT, struck=True)):
         return {}
     out = {}

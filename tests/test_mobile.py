@@ -1,6 +1,5 @@
 """The mobile API on Orkboard's host (docs/design/mobile.md; gui/board_host.py `BoardPhone`): the handshake, the
-compact snapshot and what a phone may send. Orkline's phone face (gui/mobile.py: the town's acts, its questions, the
-notifier) stays there."""
+compact snapshot and what a phone may send."""
 from __future__ import annotations
 
 import asyncio
@@ -47,16 +46,13 @@ def test_the_compact_snapshot_is_small_and_names_its_content(fake_repo):
     host.tick()
     full, snap = host.snapshot(), host.command("mobile.snapshot")
     json.dumps(snap)
-    assert snap["v"] == phones.API and snap["project"] == fake_repo.name
     assert len(json.dumps(snap)) < len(json.dumps(full))
-    assert set(snap) == {"v", "project", "focus", "look", "ideas_rev", "ops_rev", "ops_team", "needs_you", "idea_states",
+    assert set(snap) == {"ideas_rev", "needs_you", "idea_states",
                          "review_count", "review_results", "limits", "reserve", "rate", "hud", "version", "update", "rev",
-                         "canvases_new", "canvases_rev", "sleep", "mana", "projects",
+                         "canvases_new", "canvases_rev", "mana", "projects",
                          "repair", "presence", "stopped"}   # spec 139 B.2: stopped; C.1: Here or Away, the phone reads it too; spec 94 B: the page's, less COMPUTER_ONLY; spec 119: Fix it is the phone's too
-    assert snap["focus"] == "board" and snap["look"] == "office"
     assert "words" not in snap and not set(snap) & set(host.COMPUTER_ONLY)
-    assert host.command("mobile.snapshot", {"since": snap["rev"]}) == {"v": phones.API, "rev": snap["rev"],
-                                                                       "same": True}
+    assert host.command("mobile.snapshot", {"since": snap["rev"]}) == {"rev": snap["rev"], "same": True}
     host.command("ideas.track_add", {"title": "A goal"})                   # what the Board holds: the phone's too
     moved = host.command("mobile.snapshot", {"since": snap["rev"]})
     assert not moved.get("same") and moved["ideas_rev"] > snap["ideas_rev"]
@@ -93,7 +89,7 @@ async def test_the_version_handshake_takes_the_token(fake_repo):
 
 
 def test_the_phone_sees_a_newer_version_small_and_installs_it(fake_repo, monkeypatch):
-    """A newer Orkline on the phone (js/shell/update.js): what it is and a few notes, then `update.install` from the
+    """A newer Orkboard on the phone (js/shell/update.js): what it is and a few notes, then `update.install` from the
     phone installs it on the computer, which restarts on it (gui/updates.py)."""
     from types import SimpleNamespace
     from orkboard.core import updates

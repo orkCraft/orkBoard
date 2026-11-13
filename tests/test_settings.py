@@ -55,18 +55,24 @@ def test_the_old_look_and_office_hours_load_and_are_not_written_again(tmp_path: 
     assert not {"mode", "office", "office_days"} & set(json.loads(f.read_text(encoding="utf-8")))
 
 
-def test_orklines_look_is_kept_in_the_shared_file_and_never_read(tmp_path: Path):
-    """Orkboard draws orkUI's one look; Orkline reads `look` from the same file, so a save keeps what it picked."""
+def test_keys_no_one_reads_here_load_and_are_not_written_again(tmp_path: Path):
+    """Orkboard draws orkUI's one look and keeps nothing for another product: an older file's `look`, `work`, `autonomy`,
+    `profile`, `growth`, `focus`, `ops`… load, are ignored, and go with the next save (decisions §305)."""
     f = tmp_path / "settings.json"
-    f.write_text(json.dumps({"onboarded": True, "look": "camp"}), encoding="utf-8")
-    settings.save(settings.load(f), f)
-    assert json.loads(f.read_text(encoding="utf-8"))["look"] == "camp"
-    assert not hasattr(settings, "look_now") and not hasattr(settings, "LOOKS")
+    gone = {"look": "camp", "work": {"start": "09:00", "end": "18:00"}, "autonomy": "free", "autonomy_wait": 7, "rebuild_wait": 12,
+            "profile": {"role": "dev"}, "growth": {"stage": 2}, "agy_warder_checked": True, "fire": False, "recent_folders": ["/w"],
+            "focus": "", "ops": {"target": "quality"}}
+    f.write_text(json.dumps({"onboarded": True, **gone}), encoding="utf-8")
+    s = settings.load(f)
+    assert s.onboarded and not any(hasattr(s, k) for k in gone)
+    settings.save(s, f)
+    assert not set(gone) & set(json.loads(f.read_text(encoding="utf-8")))
+    assert not hasattr(settings, "look_now") and not hasattr(settings, "LOOKS") and not hasattr(settings, "FOCUSES")
 
 
-def test_the_board_is_in_focus_by_default_and_its_settings_are_cleaned():
+def test_the_boards_settings_are_cleaned():
     s = settings.MachineSettings()
-    assert s.focus == "board" and s.ideas == {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1,
+    assert s.ideas == {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1,
                                               "merge_into": "dev", "push": False, "review": False, "review_v": 2,      # spec 84 §1: off by default
                                               # spec 35 §12: the Board's Target, autostart, night, reserves, own paths
                                               "target": "balance", "autostart": True, "night": "01:00-07:00",
@@ -74,15 +80,13 @@ def test_the_board_is_in_focus_by_default_and_its_settings_are_cleaned():
                                               "work_at_night": False,      # spec 121 §4.1: off until the person says
                                               "look_wait": "2h",           # spec 144 A.1: Give me time to look
                                               "hours": [], "presence": None}      # spec 138 B.1, spec 139 C.1: no hours, no press
-    back = settings.MachineSettings.from_dict({"focus": "", "ideas": {"batch_minutes": 0, "max_parallel": 2,
-                                                                      "merge_into": "../x", "push": "yes"}})
-    assert back.focus == "" and back.ideas["max_parallel"] == 2 and back.ideas["batch_minutes"] == 30
+    back = settings.MachineSettings.from_dict({"ideas": {"batch_minutes": 0, "max_parallel": 2, "merge_into": "../x", "push": "yes"}})
+    assert back.ideas["max_parallel"] == 2 and back.ideas["batch_minutes"] == 30
     assert back.ideas["merge_into"] == "dev" and back.ideas["push"] is False and back.ideas["review"] is False
     owner = settings.MachineSettings.from_dict({"ideas": {"merge_into": "main", "push": True, "review": False, "review_v": 2}})
     assert owner.ideas["merge_into"] == "main" and owner.ideas["push"] is True and owner.ideas["review"] is False
     looking = settings.MachineSettings.from_dict({"ideas": {"review": True, "review_v": 2}})
     assert looking.ideas["review"] is True and not looking.review_notice          # what a person set after the move stays
-    assert settings.MachineSettings.from_dict({"focus": "town"}).focus == "board"
     assert settings.MachineSettings.from_dict(back.to_dict()).ideas == back.ideas
 
 

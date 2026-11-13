@@ -12,7 +12,7 @@ class IdeasError(Exception):
 
 
 def _device(args: dict) -> str:
-    """"phone" when the listener says so (gui/mobile.py `guard`), else the computer's own window."""
+    """"phone" when the listener says so (gui/board_host.py `BoardPhone.guard`), else the computer's own window."""
     return "phone" if args.get("device") == "phone" else "desktop"
 
 

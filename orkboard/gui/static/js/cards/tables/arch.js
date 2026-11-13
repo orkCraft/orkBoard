@@ -34,7 +34,7 @@ export function Architecture({ ctx, data }) {
       <span class="tb-ln">${l.name}<i>${l.line}</i></span>
       ${l.cards.map((c) => (c.kind === "pile" ? html`<${Pile} key=${c.id} ctx=${ctx} c=${c} open=${!!open[c.id]} toggle=${() => flip(c.id)} limit=${data.limit} />`
         : html`<${TCard} key=${c.id} ctx=${ctx} id=${c.id} title=${c.title} line=${c.line} kind=${c.kind} size=${c.kind === "ext" ? "wide" : "md"} sign=${SIGN[c.kind] || "work"} mono=${c.kind !== "ext"}
-          back=${c.kind === "ext" ? ["Orkline is the line; Orkboard is the Board on its own.", "Orkboard starts with no module of Orkline's."] : backOf(c, data.limit)} />`))}
+          back=${backOf(c, data.limit)} />`))}
       ${(l.stray || []).map((s) => html`<${TCard} key=${s.id} ctx=${ctx} id=${s.id} title=${s.title} line=${s.line} kind="stray" size="md" tilt=${8} mono=${true} back=${backOf(s, data.limit)}
         tokens=${risks.has(s.id) ? [{ leader: ctx.party, view: "risk" }] : []} />`)}
       ${l.cards.filter((c) => c.kind === "pile" && open[c.id]).map((c) => html`<${Spread} key=${c.id} ctx=${ctx} c=${c} limit=${data.limit} />`)}

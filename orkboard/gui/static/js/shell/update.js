@@ -1,4 +1,4 @@
-// A newer Orkline (gui/updates.py, core/updates.py, docs/updates.md): asked once per version, loudly for a critical
+// A newer Orkboard (gui/updates.py, core/updates.py, docs/updates.md): asked once per version, loudly for a critical
 // one, plainly for a major one (a later line, 0.2 → 0.3); one click installs it with the tool that installed this copy,
 // and the window opens again on it. "Later" hides an ordinary or a major update until the next version, a critical one
 // until the window opens again (under the default policy it installs by itself then). It lies over the pane (spec 98 §7). Settings shows it too.

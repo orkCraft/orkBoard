@@ -80,7 +80,7 @@ READ_CHARS = 4000                  # of an instruction written before spec 36, t
 TIERS = ("elder", "warrior", "laborer")
 CRAFTS = ("engineering", "design", "data", "marketing", "product")
 CRAFT_LABELS = {"engineering": "Engineering", "design": "Design", "data": "Data", "marketing": "Marketing", "product": "Product"}
-# orkUI's race ids: ork, elf, goblin, gnome; product is the undead's (a mummy in Orkline 0.2: a lich until orkUI draws one). A role alone (the Agents page, a pitch's
+# orkUI's race ids: ork, elf, goblin, gnome; product is the undead's (a lich). A role alone (the Agents page, a pitch's
 # view) is drawn by its craft; a role in a party is drawn by its party (`PARTY_RACES`).
 RACES = {"engineering": "peon", "design": "elf", "data": "goblin", "marketing": "gnome", "product": "lich"}
 # A party's craft is its race (decisions §53, §158.4–§158.5, §162): every seat of a party wears the party's race, its leader that race's higher form.

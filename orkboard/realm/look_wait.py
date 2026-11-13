@@ -9,7 +9,7 @@ made waits until before its plan is passed by itself. Pure: no file, no model, n
     LINES                                # the line under the setting, for each choice
     BUILD_STARTS                         # ("now", "30m", "2h", "tonight", "hand"): *The build starts*, `autostart` and `look_wait` as one setting (spec 168 H2, decisions §283.31)
     build_start(autostart, look)         # the one value the two stored keys say: autostart off is "hand"; on, the look's wait ("none" is "now")
-    build_start_keys(value, look)        # the two stored keys a value writes (the Board keeps `autostart` and `look_wait`, so Orkline reads the same file); "hand" leaves the look as it was
+    build_start_keys(value, look)        # the two stored keys a value writes (the Board keeps `autostart` and `look_wait`); "hand" leaves the look as it was
 """
 from __future__ import annotations
 

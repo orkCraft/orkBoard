@@ -261,7 +261,6 @@ def test_a_refused_command_and_a_broken_one_are_events_but_not_the_logs_own(fake
     assert call("boom")["error"] == "ZeroDivisionError: division by zero"
     for silent in ("logs.refuse", "crash.refuse"):
         assert call(silent)["ok"] is False
-    assert call("watch", ids=["x"])["ok"] is True
     refused, empty, broken = _event(fake_repo, "command_refused")
     assert (refused["command"], refused["error"], refused["device"], refused["kind"]) == ("nonesuch", "Unknown command: nonesuch", "desktop", "refused")
     assert empty["command"] == "ideas.add" and empty["kind"] == "refused"

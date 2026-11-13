@@ -10,7 +10,7 @@ import { keepTabsBy } from "../frame/state.js";
 import { leaving } from "./store.js";
 
 export const projectList = computed(() => town.value?.projects || { current: null, open: [], recent: [] });
-/** Orkboard's host sends `projects`; Orkline's page (same shell) has one fixed project and none of this. */
+/** Orkboard's host sends `projects`; before the first snapshot there are none. */
 export const projectsOn = computed(() => !!town.value?.projects);
 export const currentProject = computed(() => {
   const p = projectList.value;

@@ -1,4 +1,4 @@
-"""Tailscale, when this machine runs it: how a phone on the road reaches the town at home
+"""Tailscale, when this machine runs it: how a paired phone away from home reaches this computer
 (docs/design/phone-places.md §3).
 
     tail = find()           # Tail("100.101.102.103", "town.tail1234.ts.net"), or None

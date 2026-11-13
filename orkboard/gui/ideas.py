@@ -44,7 +44,6 @@ from __future__ import annotations
 
 import base64
 import datetime as dt
-import os
 import re
 import threading
 import time
@@ -124,13 +123,6 @@ PHONE_ZIP_MAX = 8 * 1024 * 1024   # a zip the phone is handed in a message: larg
 OPENED = ("idea", "plan", "todo", "task", "result", "tab", "map", "recap", "flag", "week", "push", "party", "gate", "today", "pick")
 
 
-def focus_of(machine) -> str:
-    """The focus the window and the phone show: `ORKCRAFT_FOCUS` when set ("" the whole town, "board"), else the
-    machine's setting. Tests set it to "" (tests/conftest.py), so the town's own suites see the town."""
-    env = os.environ.get("ORKCRAFT_FOCUS")
-    return env if env in settings.FOCUSES else machine.focus
-
-
 class _Settings:
     """The settings as the runner reads them (`ideas.<key>`): the project's Board settings, read when asked."""
 
@@ -155,8 +147,7 @@ class _Hop:
 class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, RefineMixin, HaltMixin, GoalViewMixin, ChangeMixin, CascadeFace, GroupsFace, FindingsFace, ChronicleMixin, ConflictMixin, InCodeMixin, SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, StallMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
-        """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
-        host makes one from its town, Orkboard its own."""
+        """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4)."""
         self.host = host
         self.state_dir = Path(self.host.repo_root) / ".orkcraft"
         self.rev = 0
@@ -216,15 +207,13 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
         return self.tree_root(wiki, make=used)
 
     def wiki(self) -> Path:
-        """The Wiki joined to the board: `ideas.wiki` (a folder in the repository) when it is set, else the one the
-        host finds (Orkline's: the Task board's `wiki`, else the camp's first Wiki, `BoardHost.wiki_of`), else
+        """The Wiki joined to the board: `ideas.wiki` (a folder in the repository) when it is set, else
         `llm-wiki/general/` in the repository (spec 37 §3.5). The keeper reads its index here."""
         repo = Path(self.host.repo_root)
         own = str(self.settings_now().get("wiki") or "")
         if own:
             return repo / own
-        found = self.host.wiki_of() if self.host.wiki_of is not None else None
-        return Path(found) if found is not None else wiki.root_of(repo, None, "general")
+        return wiki.root_of(repo, None, "general")
 
     # -- the bus, the clock, the snapshot ------------------------------------------------------------------
 
@@ -369,8 +358,8 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
                 pass
 
     def snapshot(self) -> dict[str, Any]:
-        """What the page's snapshot carries of the board: the focus, the rev, how many ideas need the person, and
-        each idea's state (what a push says when it changes: gui/mobile.py `news`)."""
+        """What the page's snapshot carries of the board: the rev, how many ideas need the person, and each idea's
+        state."""
         now = time.monotonic()
         if self._cache is None or self._cache[0] != self.rev or now - self._cache[1] > SNAPSHOT_S:
             try:
@@ -383,10 +372,10 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
                         "preview": self.preview_kind(),                  # whether the project has a preview to play (spec 113 §2)
                         "laid": first_open.laid(self.state_dir, self.root(False)),
                         "keep_off_offered": board_in_code.keepable(self.host.repo_root, self.state_dir)}      # whether the new goal's card offers *Keep off the repository*: a public or unreadable repository with the yes (spec 151 F.4)
-            except Exception:                   # a broken page never breaks the town's snapshot
+            except Exception:                   # a broken page never breaks the host's snapshot
                 data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": "", "laid": True, "keep_off_offered": False}      # a broken page never hides the table
             self._cache = (self.rev, now, data)
-        return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
+        return {"ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
                 "play_face": self.play_face(),                   # what the die's up face says: Play's state changes without the Board's rev (spec 118 §3)
                 "new_n": self.new_n(),                           # …and how many goals landed in dev since Play last tried it: the pips of the up face (decisions §200.5)
                 "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "passing": self.passing_rows(), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
@@ -760,7 +749,7 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
                  "ideas.goal": self.goal, "ideas.read_now": self.read_now, "ideas.doc": self.doc, "ideas.roles": self.roles,
                  "ideas.role_save": self.role_save, "ideas.role_add": self.role_add, "ideas.role_drop": self.role_drop,
                  "ideas.kind_set": self.kind_set,
-                 "ideas.queue": self.queue, "ideas.night_allow": self.night_allow, "ideas.read_stop": self.read_stop, "ideas.seen": self.seen, "ideas.start_now": self.start_now,
+                 "ideas.queue": self.queue, "ideas.read_stop": self.read_stop, "ideas.seen": self.seen, "ideas.start_now": self.start_now,
                  "ideas.proposal": self.proposal, "ideas.board_set": self.board_set, "ideas.answer": self.answer,
                  "ideas.spend": self.spend, "ideas.lens": self.lens, "ideas.lens_code": self.lens_code,
                  "ideas.lens_screen": self.lens_screen, "ideas.check_skip": self.check_skip,
@@ -769,7 +758,7 @@ class Ideas(ReachMixin, NightMixin, PhaseMixin,LookMixin, SpecChangeFace, Refine
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **night_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **pass_commands(self), **change_commands(self), **spec_change_commands(self), **findings_commands(self), **chronicle_commands(self), **conflict_commands(self), **in_code_commands(self), **refine_commands(self), **cascade_commands(self), **groups_commands(self), **goalview_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **stall_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **reach_commands(self),**tree_commands(self), **hypotheses_commands(self), **journal_commands(self), **read_in_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self), **say_commands(self), **mats_commands(self), **battle_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **night_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **pass_commands(self), **change_commands(self), **spec_change_commands(self), **findings_commands(self), **chronicle_commands(self), **conflict_commands(self), **in_code_commands(self), **refine_commands(self), **cascade_commands(self), **groups_commands(self), **goalview_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **stall_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **reach_commands(self),**tree_commands(self), **hypotheses_commands(self), **journal_commands(self), **read_in_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self), **say_commands(self), **mats_commands(self), **battle_commands(self)})
         table.update(sketch_commands(self))                # spec 121 A: *Sketch it first*, *No sketch* (gui/ideas_sketch.py)
         table["ideas.night"] = self.night                  # spec 121 D: what the night did, for the morning's card (gui/ideas_recap.py)
         table["ideas.feed"] = self.feed                    # goal 169 E: the phone's feed, what waits first, then the leaders' posts (gui/ideas_recap.py)

@@ -100,8 +100,8 @@ TERMS: tuple[Term, ...] = (
     _t("war_tent", "Terminals", "", "War Tent"),
     _t("orders", "Answers", "", "Orders"),
     _t("war_raven", "Phone", "Phones", "War Raven", "War Ravens"),   # a phone paired with the town (docs/design/mobile.md)
-    _t("place", "place", "places"),                                # an area a phone says it came to or left (docs/design/phone-places.md)
-    _t("update", "update", "updates"),                             # a newer Orkline (core/updates.py, docs/updates.md)
+    _t("place", "place", "places"),                                # one at the hand's right, each opening a table: the die, the backpack, the history book (decisions §145)
+    _t("update", "update", "updates"),                             # a newer Orkboard (core/updates.py, docs/updates.md)
     _t("critical_update", "critical update", "critical updates"),  # …that installs by itself when the town opens
     _t("major_update", "major update", "major updates"),           # …that starts a later line (0.1 → 0.2), offered louder
     _t("standing_orders", "Instructions", "", "Standing orders"),   # what an ork is told to do
@@ -126,7 +126,7 @@ TERMS: tuple[Term, ...] = (
     # the night's council of orks (realm/elders.py, realm/fastpath.py ROLES): orks, so their Camp name, whatever the look
     _t("elders", "Elders", "Elders"),                               # never "Elder" alone: that was the heaviest tier
     _t("builders", "Building designer", "", "Mason & Artisan"),
-    _t("orc.farseer", "Farseer", "Farseers"),     # the Elders' product manager: reads a day with the Mechanic (design/agents/farseer.md)
+    _t("orc.farseer", "Farseer", "Farseers"),     # the Elders' product manager: reads a day with the Mechanic
     # the Town Hall's own orks
     _t("orc.mason", "Mason"),
     _t("orc.artisan", "Artisan"),
@@ -143,7 +143,7 @@ TERMS: tuple[Term, ...] = (
     # what the agent does, the gear on its head its tier (a novice bare, a seasoned in iron, a veteran hooded)
     _t("craft", "craft", "crafts"),
     _t("team", "team", "teams"),                                   # a party's agents, picked from the library (realm/goal_team.py)
-    _t("library", "library"),                                      # the agents that come with Orkline (realm/library.py)
+    _t("library", "library"),                                      # the agents that come with Orkboard (realm/library.py)
     _t("check", "check", "checks"),                                # what a team's checker holds each goal to (realm/idea_checks.py)
     _t("checker", "checker", "checkers"),                          # an agent of the library that brings a check
     _t("pace", "the week's pace"),                                  # the Claude week's share left against the share of it still to come (spec 44)
@@ -157,7 +157,7 @@ TERMS: tuple[Term, ...] = (
     _t("craft.design", "Design"),                                  # an elf
     _t("craft.data", "Data"),                                      # a goblin
     _t("craft.marketing", "Marketing"),                            # a gnome
-    _t("craft.product", "Product"),                                # the undead: a lich (a mummy in Orkline 0.2, until orkUI draws one)
+    _t("craft.product", "Product"),                                # the undead: a lich
     _t("canvas", "canvas", "canvases"),                             # what an AI tool drew outside the code: a page, a design, a deck, a document, a picture (spec 78)
     _t("race", "race", "races"),                                   # orkUI's heads (races/<race>-<tier>.png)
     _t("race.peon", "ork", "orks"),                                # orkUI's id for the ork's head is the site's class, peon
@@ -219,24 +219,12 @@ TERMS: tuple[Term, ...] = (
     _t("proposal", "proposal", "proposals"),                       # a goal the keeper proposes at night, for the morning (spec 35 §8)
     _t("scribble", "note", "notes", "scribble", "scribbles"),       # a goal or a note on the board
     *WINDOW,                                                         # the window's words (realm/lexicon_table.py)
-    # Operations (docs/specs/38-operations.md §0): the person's everyday work by templates, across projects
     _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)
-    _t("operations", "Operations"),                                # the person's list, one for all projects (decisions §51); reached through the Team party once there is one, and in the left column until then (spec 92 §3)
     _t("team_party", "Team"),                                      # a party that holds the person's Operations, put in one project of their choosing; only one across all of them (spec 92 §3). Not `team`, a party's agents
     _t("run", "Run"),                                              # a project's running when it runs: an app, a site, a service, code, data; a stage party by the project's kind, with recurring goals (spec 92 §1)
     _t("upkeep", "Upkeep"),                                        # a project's running when it is kept true: a wiki, a design, texts (spec 92 §1)
     _t("liveops", "LiveOps"),                                      # a game's running, after launch: events, numbers, small fixes (spec 91 §7); Run and Upkeep are the other kinds'
     _t("recurring_goal", "recurring goal", "recurring goals"),     # a goal that comes back every day, week or month once it is done; a running party proposes some when it is made (spec 92 §2; realm/recurring.py)
-    _t("operation", "operation", "operations"),                    # one piece of it, from one template
-    _t("op_template", "template", "templates"),                    # a Claude skill with Orkboard's manifest beside it
-    _t("op_check", "check", "checks"),                             # the person's look before its action
-    _t("op_alone", "by itself"),                                   # a template whose operations need no check
-    _t("op_rules", "rules"),                                       # what a template learned from the corrections
-    # Team briefs (docs/specs/66-team-briefs.md §0): the daily, the retro, the refinement and a 1:1, as teams say them
-    _t("op_brief", "brief", "briefs"),                             # an operation that prepares a page to read and does nothing outside
-    _t("op_standing", "standing brief", "standing briefs"),        # one prepared on its own time, before a meeting
-    _t("op_keep", "Keep"),                                         # the brief's check's button: saved as corrected, the person's alone
-    _t("op_forget", "Forget"),                                     # removes everything kept of one person
     _t("card_context", "context"),                                 # a card's wiki pages, 📜 (realm/cardlore.py)
     _t("todo_plan", "plan", "plans"),                              # a to-do's steps from a light model, 🧭
     _t("personal_card", "personal"),                               # a card that never reaches a model, 🔒
@@ -247,8 +235,6 @@ TERMS: tuple[Term, ...] = (
     _t("claim", "Area in work", "Areas in work"),                   # the files an open task changes, until merged
     _t("overlap", "Overlap", "Overlaps"),                           # a task on another open task's area
     _t("design_brief", "Design brief", "Design briefs"),            # the design a planned task leaves in its PR
-    # Improve Orkline: Orkline's own changes, from this machine (docs/design/improve-buildings.md §14)
-    _t("improve_orkcraft", "Improve Orkline"),                     # the comments and fixes of Orkline itself (gui/fixes.py)
     _t("remark", "Comment", "Comments"),                            # what the person said about a part of the window
     _t("comment_mode", "Comment mode"),                             # a press on any part of the window comments on it
     _t("fix", "Fix", "Fixes"),                                      # Claude Code started on Orkboard's own code with the logs, to fix it and push to main (spec 119, decisions §197)
@@ -331,8 +317,8 @@ TERMS: tuple[Term, ...] = (
     _t("orc.forest", "Woodcutter"),
     _t("orc.scrolls", "Scroll Scrapper"),
     _t("orc.gramophone", "Bard"),
-    _t("orc.lab", "Mechanic", "Mechanics", "Gearhead", "Gearheads"),  # the Test bench's: a senior AI engineer (design/agents/mechanic.md)
-    _t("orc.ux_lab", "Alchemist", "Alchemists"),        # the UX bench's: a senior UI/UX designer (design/agents/alchemist.md)
+    _t("orc.lab", "Mechanic", "Mechanics", "Gearhead", "Gearheads"),  # the Test bench's: a senior AI engineer
+    _t("orc.ux_lab", "Alchemist", "Alchemists"),        # the UX bench's: a senior UI/UX designer
     _t("orc.mine", "Prospector", "Prospectors"),
     _t("orc.lake", "Seer"),
     _t("orc.forge", "Smith", "Smiths"),
@@ -402,7 +388,7 @@ def _alternation() -> str:
     return "|".join(re.escape(n) for n in sorted(set(names), key=len, reverse=True))
 
 
-# A name stands alone: not inside another word (`ork` in `work` or in `Orkline`, `town` in `downtown`)
+# A name stands alone: not inside another word (`ork` in `work` or in `Orkboard`, `town` in `downtown`)
 # nor in a path (`./loot/`, `loot/screenshots`, `src/roads.py`): those name files, not concepts.
 _WORD = re.compile(rf"(?<![\w\-/\\.])(?:{_alternation()})(?![\w\-/\\]|\.\w)")
 

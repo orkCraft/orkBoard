@@ -19,7 +19,7 @@ NAME_MAX = 80
 
 
 def refused(host: Any, name: str, error: str, device: str = "desktop", broken: bool = False) -> None:
-    if name.startswith(SILENT) or name == "watch" or getattr(host, "demo", False):
+    if name.startswith(SILENT) or getattr(host, "demo", False):
         return
     root = getattr(host, "repo_root", None)
     if root is not None:

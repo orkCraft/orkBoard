@@ -1,24 +1,13 @@
 """The GUI's server: the page, the design system and one WebSocket, on 127.0.0.1 only.
 
-One asyncio loop runs it and the host (`gui/host.py`): the town lives on this loop's thread. The
-page gets a snapshot of the town whenever it changes (at most every `FLUSH_S`, and only when it
-differs from the last one), toasts as they come, and sends commands back:
+One asyncio loop runs it and the host (gui/board_host.py `Orkboard`) on this loop's thread. The page gets a snapshot
+whenever the host changes (at most every `FLUSH_S`, and only when it differs from the last one), toasts as they come,
+and sends commands back:
 
-    → {"t": "cmd", "id": 7, "name": "hut.move", "args": {"id": "lake", "x": 0.4, "y": 0.2}}
-    ← {"t": "reply", "id": 7, "ok": true, "result": null}      (or "ok": false, "error": "...")
-    ← {"t": "state", "state": {...}}                             (gui/state.py)
+    → {"t": "cmd", "id": 7, "name": "ideas.board", "args": {}}
+    ← {"t": "reply", "id": 7, "ok": true, "result": {...}}      (or "ok": false, "error": "...")
+    ← {"t": "state", "state": {...}}                             (the host's `snapshot`)
     ← {"t": "toast", "message": "...", "title": "...", "severity": "information", "timeout": null}
-    → {"t": "cmd", "id": 8, "name": "watch", "args": {"ids": ["lake"]}}   (the buildings open in the page)
-    ← {"t": "detail", "detail": {"id": "lake", "type": "lake", "ui": {...}, "data": {...}}}
-
-A building's own state (`detail`, gui/views/) goes only to the pages that have it open, when its
-worker says it changed.
-
-A session's bytes go as binary frames, only to the pages that show it (`term.attach`):
-
-    → {"t": "cmd", "id": 9, "name": "term.attach", "args": {"keys": ["new:claude:1"]}}   (all it shows)
-    → {"t": "cmd", "id": 10, "name": "term.replay", "args": {"key": "new:claude:1"}}      (a terminal opened)
-    ← [kind: 1 byte][key length: 1 byte][key, UTF-8][bytes]    kind 0: output, 1: all of it again (replay)
 
 The socket takes only the page this server gave out: a random token in its address and an Origin
 of this server (127.0.0.1 or localhost, its port), so another page open in a browser cannot drive the town.
@@ -34,10 +23,7 @@ and is the proof, so it needs no token and an `<img>`, `<audio>` or `<video>` lo
 `GET /api/analytics?days=7` (the same token) is the day logs of the last days, with what each day added up to, as one
 zip (realm/analytics.py, the host's `day_logs`).
 
-Orkboard's (spec 37 §4): it serves whichever host it is given, Orkboard's own (gui/board_host.py) or Orkline's
-(gui/host.py). A host may name the page's script (`entry`) and hand the server its own part (`serve(server)`):
-Orkline's adds the town's routes (an Audio briefing's episode, a building's day log, a Test bench's runs, the last
-check), its terminals' bytes, its building windows' preview and the phones' news (gui/server_town.py).
+It serves Orkboard's host (gui/board_host.py, spec 37 §4).
 """
 from __future__ import annotations
 
@@ -49,7 +35,6 @@ import secrets
 import threading
 from http import HTTPStatus
 from pathlib import Path
-from typing import Callable
 from urllib.parse import parse_qs, quote, urlsplit
 
 from websockets.asyncio.server import ServerConnection, serve
@@ -57,7 +42,7 @@ from websockets.datastructures import Headers
 from websockets.exceptions import ConnectionClosed
 from websockets.http11 import Request, Response
 
-from orkboard import __version__, brand
+from orkboard import __version__
 from orkboard.design import logo, tokens
 from orkboard.gui import command_log, media, phones, pwa
 from orkboard.gui.board_host import CommandError
@@ -79,20 +64,8 @@ def _response(status: HTTPStatus, body: bytes, content_type: str = "text/plain; 
     return Response(status.value, status.phrase, headers, body)
 
 
-def named(page: bytes) -> bytes:
-    """A page with the product's name (brand.py, decisions §95): its files say Orkboard, Orkline's host serves Orkline."""
-    own = brand.name()
-    return page if own == brand.DEFAULT else page.replace(brand.DEFAULT.encode(), own.encode())
-
-
-def resolve(path: str, preview: Path | None = None) -> Path | None:
-    """The file a static path names, never one outside its folder; with a fix's page in preview (gui/fixes.py), its
-    copy's file first."""
-    if preview is not None and path.startswith("/static/"):
-        page = preview.resolve()
-        mine = (page / path[len("/static/"):]).resolve()
-        if mine.is_file() and mine.is_relative_to(page):
-            return mine
+def resolve(path: str) -> Path | None:
+    """The file a static path names, never one outside its folder."""
     for prefix, root in ROUTES.items():
         if path.startswith(prefix):
             root = root.resolve()
@@ -113,32 +86,14 @@ class Server:
         self._stop: asyncio.Event | None = None
         self._last = ""
         self._dirty = False
-        self.watching: dict[ServerConnection, set[str]] = {}
-        self._details: set[str] = set()             # buildings whose detail waits to be sent
-        self._sent: dict[tuple[int, str], str] = {}  # (page, building) → the detail it has
-        self.attached: dict[ServerConnection, set[str]] = {}
-        # What a host adds (gui/server_town.py): routes by path (a prefix ends in "/"), and the page of a fix in preview
-        self.routes: dict[str, Callable[[Request, str], Response]] = {}
-        self.preview: Callable[[], Path | None] = lambda: None
         host.on_change = self._changed
-        host.on_detail = self._detail_changed
         host.on_toast = lambda data: self._send_all({"t": "toast", **data})
         host.faces = lambda: len(self.clients) + len(self.phones.phones)      # the faces open now: a goal the leaders agreed on starts by itself only while one is (spec 120 §3.5)
         # The listener for phones (gui/phones.py): on the LAN, TLS, a device token; only while one is paired.
         self.phones = phones.Listener(host)
         host.commands.update(self.phones.commands())
-        self.tail_watch = pwa.TailWatch(self.phones)   # Tailscale that came after the town (gui/pwa.py)
+        self.tail_watch = pwa.TailWatch(self.phones)   # Tailscale that came after the server (gui/pwa.py)
         host.commands.update(pwa.commands(self.phones))   # the app in a phone's browser: Tailscale's state
-        serve = getattr(host, "serve", None)
-        if serve is not None:
-            serve(self)
-
-    def _preview(self) -> Path | None:
-        """The page of the fix shown in preview (gui/fixes.py, through the host's `serve`), or None."""
-        try:
-            return self.preview()
-        except Exception:
-            return None
 
     def capture(self, e: BaseException, where: str, **kw) -> None:
         """An error the server caught, to the host's crash reports (core/crashes.py), when it keeps them, and with its traceback to the
@@ -194,18 +149,13 @@ class Server:
                 return _response(HTTPStatus.FORBIDDEN, b"Forbidden")
             days = parse_qs(parts.query).get("days", ["7"])[0]
             return self._zip(self.host.day_logs.pack_period(int(days) if days.isdigit() else 7))
-        for route, answer in self.routes.items():
-            if parts.path == route or (route.endswith("/") and parts.path.startswith(route)):
-                return answer(request, parts.path.removeprefix(route) if route.endswith("/") else "")
-        preview = self._preview()
         if parts.path in ("/", "/index.html"):
-            page = preview / "index.html" if preview is not None and (preview / "index.html").is_file() else None
-            return _response(HTTPStatus.OK, page.read_bytes() if page else self.page(), "text/html; charset=utf-8")
-        if parts.path == "/favicon.ico":                  # Orkboard's mark, else the ork mark of Orkline (design/logo.py)
+            return _response(HTTPStatus.OK, self.page(), "text/html; charset=utf-8")
+        if parts.path == "/favicon.ico":                  # Orkboard's mark (design/logo.py)
             return _response(HTTPStatus.OK, logo.favicon().read_bytes(), "image/x-icon")
         if parts.path == "/roles.css":
             return _response(HTTPStatus.OK, tokens.roles_css().encode(), "text/css; charset=utf-8")
-        target = resolve(parts.path, preview)
+        target = resolve(parts.path)
         if target is None:
             return _response(HTTPStatus.NOT_FOUND, b"Not found")
         kind = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
@@ -220,7 +170,7 @@ class Server:
 
     @staticmethod
     def _zip(packed: tuple[str, bytes] | None) -> Response:
-        """A zip to download (a day log, a Test bench's runs); 404 when there is nothing of that name."""
+        """A zip to download (the day logs); 404 when there is nothing of that name."""
         if packed is None:
             return _response(HTTPStatus.NOT_FOUND, b"Not found")
         name, data = packed
@@ -230,7 +180,7 @@ class Server:
 
     def page(self) -> bytes:
         """The page: `static/index.html`, its script `board.js`."""
-        return named((STATIC / "index.html").read_bytes())
+        return (STATIC / "index.html").read_bytes()
 
     # -- the socket ----------------------------------------------------------------------------
 
@@ -244,71 +194,6 @@ class Server:
             pass
         finally:
             self.clients.discard(ws)
-            self.watching.pop(ws, None)
-            self.attached.pop(ws, None)
-            self._sent = {k: v for k, v in self._sent.items() if k[0] != id(ws)}
-
-    def _watch(self, ws: ServerConnection | None, args: dict) -> list[str]:
-        """The buildings this page has open: each one's detail now, and again when it changes."""
-        ids = [str(x) for x in (args.get("ids") or [])][:50]
-        if ws is not None:
-            self.watching[ws] = set(ids)
-            for bid in ids:
-                self._send_detail(ws, bid, force=True)
-        return ids
-
-    @staticmethod
-    def frame(kind: int, key: str, data: bytes) -> bytes:
-        k = key.encode("utf-8")[:255]
-        return bytes([kind, len(k)]) + k + data
-
-    def _attach(self, ws: ServerConnection | None, args: dict) -> list[str]:
-        """The sessions this page shows: their bytes as they come."""
-        keys = [str(x) for x in (args.get("keys") or [])][:20]
-        if ws is not None:
-            self.attached[ws] = set(keys)
-        return keys
-
-    def _replay(self, ws: ServerConnection | None, args: dict) -> bool:
-        """A terminal opened on the page: the session as it stands now, then its bytes as they come."""
-        key = str(args.get("key") or "")
-        sessions = getattr(self.host, "sessions", None)
-        s = sessions.get(key) if sessions is not None else None
-        if ws is None or s is None:
-            return False
-        self.attached.setdefault(ws, set()).add(key)
-        asyncio.ensure_future(self._send(ws, self.frame(1, key, s.replay())))
-        return True
-
-    def _output(self, key: str, data: bytes) -> None:
-        frame = None
-        for ws, keys in list(self.attached.items()):
-            if key in keys:
-                frame = frame or self.frame(0, key, data)
-                asyncio.ensure_future(self._send(ws, frame))
-
-    def _send_detail(self, ws: ServerConnection, bid: str, force: bool = False) -> None:
-        detail = self.host.detail(bid)
-        if detail is None:
-            return
-        text = json.dumps({"t": "detail", "detail": detail}, ensure_ascii=False)
-        key = (id(ws), bid)
-        if force or self._sent.get(key) != text:
-            self._sent[key] = text
-            asyncio.ensure_future(self._send(ws, text))
-
-    def _detail_changed(self, bid: str) -> None:
-        if self.loop is None or not any(bid in ids for ids in self.watching.values()):
-            return
-        if not self._details:
-            self.loop.call_later(FLUSH_S, self._flush_details)
-        self._details.add(bid)
-
-    def _flush_details(self) -> None:
-        bids, self._details = self._details, set()
-        for ws, ids in list(self.watching.items()):
-            for bid in bids & ids:
-                self._send_detail(ws, bid)
 
     def _handle(self, raw: str | bytes, ws: ServerConnection | None = None) -> dict:
         try:
@@ -322,17 +207,10 @@ class Server:
             name, args = str(msg.get("name", "")), msg.get("args") or {}
             if not isinstance(args, dict):
                 raise CommandError("Arguments are an object")
-            if name == "watch":
-                result = self._watch(ws, args)
-            elif name == "term.attach":
-                result = self._attach(ws, args)
-            elif name == "term.replay":
-                result = self._replay(ws, args)
-            else:
-                args.pop("device_id", None)                 # a paired phone's to say (`BoardPhone.guard`), never the page's
-                if name.startswith(("ideas.", "ops.", "projects.", "files.")) or name in ("halt", "resume"):
-                    args.pop("link", None)                  # (the onboarding's `link` is a person's own words)
-                result = self.host.command(name, args)
+            args.pop("device_id", None)                 # a paired phone's to say (`BoardPhone.guard`), never the page's
+            if name.startswith(("ideas.", "projects.", "files.")) or name in ("halt", "resume"):
+                args.pop("link", None)                  # (the onboarding's `link` is a person's own words)
+            result = self.host.command(name, args)
             return {"t": "reply", "id": cid, "ok": True, "result": result}
         except CommandError as e:
             command_log.refused(self.host, str(msg.get("name", "")), str(e))
