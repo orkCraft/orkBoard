@@ -94,7 +94,7 @@ export function close() {
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Plays the portal: the chosen goal goes to main, alone with the goals it stands on. A sealed portal says its reason again and plays nothing. */
-export async function play() {
+export async function play(from = "") {
   const slug = chosen.value;
   if (!slug || going.value) return;
   await planning;
@@ -120,7 +120,7 @@ export async function play() {
     return;
   }
   stopped.value = null;
-  await enter(slug, false);
+  await enter(slug, false, from);
 }
 
 /** **To main without the tests** (decisions §274.3): the one way past a project that has no tests, sent only from the card that said so. */
@@ -130,9 +130,9 @@ export async function playUntested(slug) {
 }
 
 /** Sends the goal (`untested` only from *To main without the tests*); a refusal of the host is said on the card in its words. */
-async function enter(slug, untested) {
+async function enter(slug, untested, from = "") {
   let got = null;
-  try { got = await command("ideas.to_main", { idea: slug, sealed: true, ...(untested ? { untested: true } : {}) }, true); } catch (e) { if (!e.refused) toast(e.message, "error", "ideas.to_main"); stoppedBy(slug, e.message); return; }
+  try { got = await command("ideas.to_main", { idea: slug, sealed: true, ...(untested ? { untested: true } : {}), ...(from ? { from } : {}) }, true); } catch (e) { if (!e.refused) toast(e.message, "error", "ideas.to_main"); stoppedBy(slug, e.message); return; }
   if (got?.error) { toast(got.error, "error"); stoppedBy(slug, got.error); return; }
   got = got || {};
   if (got.note) toast(got.note, "warning");
@@ -175,13 +175,13 @@ export const chosenSlug = () => chosen.value;
 
 /** The discard's **To main** (spec 149 G.1, decisions §253.7): the portal's way, not dev whole. The goal is chosen (as a card pressed is), its plan asked and, at the wide width, its checks run; the press waits while they run and then plays the portal:
  *  a red check or a seal says its reason as the portal does, and nothing is sent. */
-export async function toMain(slug) {
+export async function toMain(slug, from = "") {
   if (!slug) return;
   choose(slug);
   await planning;
   await whenAsked();
   while (chosen.value === slug && (pending.value === slug || checksOf(slug).some((c) => c.state === "waiting" || c.state === "running"))) await wait(150);
-  if (chosen.value === slug) await play();
+  if (chosen.value === slug) await play(from);
 }
 
 /** Whether the window is at the narrow width (under 760 px): the table's end is laid always above it and only as it is needed below. */
@@ -238,7 +238,7 @@ function PortalDoor() {
   const state = p?.state === "ok" ? (sealed ? "sealed" : "open") : p?.state || "wait";
   const line = p?.state === "ok" ? lineOf(p, slug, main) : p?.state === "fail" ? `Into ${main}: ${titleOf(slug, p)}` : `Checking ${titleOf(slug, p)}…`;
   const button = html`<button type="button" ref=${door} class=${cls("ork-portal small", { "is-taking": taking.value, "is-sealed": sealed, "is-new": first.value })}
-      aria-label=${labelOf(p, slug, main)} disabled=${red || checkedOpen(slug)} aria-disabled=${p?.state === "wait" ? "true" : undefined} onClick=${play}
+      aria-label=${labelOf(p, slug, main)} disabled=${red || checkedOpen(slug)} aria-disabled=${p?.state === "wait" ? "true" : undefined} onClick=${() => play()}
       onDragEnter=${held} onDragOver=${held} onDragLeave=${left} onDrop=${drop}></button>`;
   const hint = first.value && !sealed && html`<p class="portal__hint">Tap the portal to send it to main</p>`;
   return html`<div class=${cls("portal-host", { "is-new": first.value })} data-portal=${state}>

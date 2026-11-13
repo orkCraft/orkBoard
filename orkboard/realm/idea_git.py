@@ -100,6 +100,7 @@ class GateRun(NamedTuple):
     flaky: tuple[str, ...] = ()          # tests red in the run and green run again alone
     left: str = ""                       # the browser tests the gate left for main, by folder: `56 of pwa/` (spec 149 C.3)
     timed_out: bool = False              # the run was killed at its clock: it tested nothing it can be blamed for (spec 149 D)
+    files: tuple[str, ...] = ()          # the test files the gate ran, as it named them to its command (the battle and the gate, stage E)
 
 
 class IdeaGit:
@@ -261,9 +262,9 @@ class IdeaGit:
             minutes = round(timeout_s / 60)
             return GateRun(False, f"$ {line}\n{out[-GATE_KEEP:]}{note}{said}", True, line, None, round(time.monotonic() - began, 1),
                            env=DID_NOT_FINISH.format(minutes=minutes, s="" if minutes == 1 else "s", n=len(files), f="" if len(files) == 1 else "s"),
-                           browser=in_browser, left=left, timed_out=True)
+                           browser=in_browser, left=left, timed_out=True, files=tuple(files))
         return GateRun(proc.returncode == 0, f"$ {line}\n{out[-GATE_KEEP:]}{note}{said}", True, line, proc.returncode, round(time.monotonic() - began, 1),
-                       gate_env.could_not_run(out, proc.returncode), browser=in_browser, left=left)
+                       gate_env.could_not_run(out, proc.returncode), browser=in_browser, left=left, files=tuple(files))
 
     def workers(self, python: str) -> list[str]:
         """`-n <workers>` for a run with browser tests in it, where `python` imports xdist and the machine has cores to spare: two fewer than it has, six at most

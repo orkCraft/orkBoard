@@ -15,16 +15,24 @@ export function giveBack(from) {
   const go = (el) => { try { el.focus({ preventScroll: true }); } catch { /* not focusable */ } return document.activeElement === el; };
   if (!from) return;
   if (from.isConnected && go(from)) return;
-  const again = () => {
-    const el = from.isConnected ? from : standIn(from);
-    if (el && go(el)) return;
+  const find = () => (from.isConnected ? from : standIn(from));
+  const settle = () => {                                     // nothing has the focus: the first card of the table
     const active = document.activeElement;
-    if (active && active !== document.body) return;            // something has the focus already
+    if (active && active !== document.body) return;
     const first = document.querySelector(CARDS);
     if (first) go(first);
   };
-  again();
-  if (document.activeElement === document.body && typeof requestAnimationFrame === "function") requestAnimationFrame(again);     // drawn again a frame later
+  const el = find();
+  if (el && go(el)) return;
+  if (typeof requestAnimationFrame !== "function") { settle(); return; }
+  let frames = 12;                                           // the hand is drawn anew when a mat is put away (its cards come back from a pile): the card may be a few frames late
+  const later = () => requestAnimationFrame(() => {
+    if (document.activeElement && document.activeElement !== document.body) return;      // something has the focus already
+    const now = find();
+    if (now && go(now)) return;
+    if (frames-- > 0) later(); else settle();
+  });
+  later();
 }
 
 /** Keeps Tab inside a dialog (`root`, or the list of its parts: the mat and the hand that follows it): from its last act it goes to its first and back; a focus outside comes in. Call it from the dialog's keydown. */

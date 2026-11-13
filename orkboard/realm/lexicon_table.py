@@ -95,9 +95,10 @@ WINDOW: tuple[Term, ...] = (
     _t("agree_line", "<A> and <B> agree"),                         # the card's one line when no leader disagreed: *Tech and Art agree* (decisions §237.6)
     _t("answer_the_fork_first", "Answer the fork first"),          # what Confirm says while a leader's disagreement has no answer
     _t("goes_against", "Goes against §<n>"),                       # a conflict's line: the goal's decision goes against a standing decision, the point in conflict beside it (spec 150 E1, decisions §254.6)
-    _t("new_one_replaces", "The new one replaces §<n>"),           # … its first choice: the decision says it changes §N, and its slices replace §N's (§233.2)
-    _t("keep_decision", "Keep §<n>"),                              # … its second: the goal is talked again within §N
-    _t("conflict_other", "Other…"),                                # … its third: the person's own words, the decision worded again with them
+    _t("new_wins", "New wins", was="The new one replaces §<n>"),   # a battle's first way (the old table's conflict card too): §N gives way, the new decision replaces it; one press with its Undo (goal "The battle and the gate" K, decisions §303.4)
+    _t("old_wins", "Old wins", was="Keep §<n>"),                   # … its second: the new decision is worded again within §N; sealed, its cost said first
+    _t("keep_decision", "Keep §<n>"),                              # the line the keeper is given when the old one wins (*Keep §N: <point>*), not a way's name
+    _t("your_words", "Your words", was="Other…"),                  # … its third: the new decision is worded again with the person's own words; written first, then sealed
     _t("aspect", "aspect", "aspects"),                            # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
     _t("reach", "reach", "reaches"),                               # what a goal not yet started would change on a leader's map, one and two steps out (spec 165, decisions §280.1)
@@ -218,6 +219,16 @@ WINDOW: tuple[Term, ...] = (
     _t("dev_task_running", "That goal still has a task running"),                                          # refused: a task of the goal is at work
     _t("dev_no_branch", "That goal has no branch waiting for <dev>"),                                      # refused: the goal is in dev already or never had a branch
     _t("dev_not_done", "That goal is not done: its last step is not accepted yet"),                       # refused: more steps to go
+    # -- a red gate's Fix it, by where the goal is (goal "The battle and the gate" G, H; decisions §303.5). <tests> the failing tests, <way> dev or main --------
+    _t("fix_stage", "Run its stage again"),                        # Fix it on a goal unmerged on its own branch whose way to dev went red: sealed, one task added, the goal at work (`ideas.gate_fix_stage`)
+    _t("fix_stage_task", "Make the failing tests pass: <tests>"),   # … the one task it adds to the goal's plan
+    _t("fix_goal_title", "Fix: <tests>"),                           # Fix it on a goal done whose way to main went red: the new goal it lays in one press, its first line (`ideas.gate_fix_goal`)
+    _t("fix_goal_named", "The failing tests: <tests>"),             # … its Gist's line naming every failing test
+    _t("fix_goal_of", "The goal whose way to main went red: <goal>"),     # … and the goal it fixes (`fixes: <slug>` in its page)
+    _t("fix_not_done", "That goal is not in dev yet: Fix it runs its stage again"),                        # refused: `ideas.gate_fix_goal` on a goal not done in dev
+    _t("fix_in_dev", "That goal is in dev already: Fix it lays a new Fix goal"),                           # refused: `ideas.gate_fix_stage` on a goal done in dev
+    _t("fix_not_red", "No test failed on its way to <way>: nothing to fix"),                              # refused: its gate is not red, or named no failing test
+    _t("fix_no_party", "This project has no Tech party to fix it"),                                       # refused: a Fix goal is routed to Tech
     _t("to_main_runes", "its goals go through the portal's ring of runes"),                                # what To main does with the cards it takes (nothing moves under reduced motion)
     _t("step_lacks", "its tool cannot do what this step needs"),    # a seat marked ! on a spec's header of steps (spec 168 C4, decisions §283.16.6)
     _t("spec_now", "Now"),                                         # a spec's part as it is, and ...

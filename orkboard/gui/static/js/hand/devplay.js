@@ -9,6 +9,8 @@ import { command } from "../link.js";
 import { ORKMASTER, lower, playing } from "../frame/state.js";
 import { mapData } from "../shell/store.js";
 import { PlayWays } from "./sayplay.js";
+import { cardsOn } from "../cards/on.js";
+import { openSpread } from "../cards/spreads/open.js";
 import { TO_DEV, TO_DEV_UNTESTED, TRY_AGAIN, CANNOT, devName, devRow } from "./devcard.js";
 
 const CROWN = { race: "peon", tier: "crown" };                    // the Orkmaster's head: it asks the plates' questions
@@ -42,6 +44,10 @@ export function DevPlay({ s }) {
   const r = s.ref, n = s.node, row = devRow(r.idea), dev = r.dev;
   const ways = [{ id: "try_again", name: TRY_AGAIN, line: WAY_LINE.again(dev), pick: false, kind: "start_again", run: () => send(r.idea) }];
   if (r.dev_kind === "no_tests") ways.push({ id: "to_dev_untested", name: TO_DEV_UNTESTED, line: WAY_LINE.untested(dev), pick: false, kind: "accept_risk", run: () => send(r.idea, true) });
+  if (r.dev_kind === "red" && cardsOn()) {     // a red gate: its mat lies on the table of cards, opened by this card so its moves say `from: "hand"` (goal "The battle and the gate" L)
+    const from = () => document.querySelector(`.frame-hand button.hand-card[data-key="${CSS.escape(s.key)}"]`);
+    ways.push({ id: "at_gate", name: "At the gate", line: "Opens the gate: what its tests guard, and the ways to mend it.", pick: false, kind: "other", run: () => { openSpread({ kind: "gate", slug: r.idea, from: from(), opened: "hand" }); lower(); } });
+  }
   const card = row?.dev_blocked ? { title: s.title, foot: row.dev_why || r.why, sign: "alert", element: n?.element || "", hue: n?.hue || "", head: s.head, tab: n?.goal || ORKMASTER, ways } : null;
   return html`<${PlayWays} card=${card} id=${s.key} idea=${r.idea} kind="dev_blocked" />`;
 }

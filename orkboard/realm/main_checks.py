@@ -7,7 +7,9 @@ there in order, with the gate's timeout.
 
 `state` is `waiting`, `running`, `passed` or `failed`; `words` says why in a few words (a failed check's reason, the last line of what it printed; a passed
 check's note). `on_step` gets the whole list (a copy) at the start and at every change. *The merge* is the picks applying (the plan's own trial), so a pick
-that conflicts fails it and leaves the others `waiting`; a check that fails stops the run, the checks after it stay `waiting`. A check that runs the gate (*Tests*)
+that conflicts fails it and leaves the others `waiting`; a check that fails stops the run, the checks after it stay `waiting`. A check whose run names test files
+keeps them (`files`), its failed tests (`failures`) and the §N those name read in the trial while it is there (`named`: `decision_refs.of_run`; the trial is a
+tree of its own, main's head with the picks, never the person's checkout). A check that runs the gate (*Tests*)
 runs it as a task's result does (`IdeaGit.gate_run`: `[gate]`, else the project's own, on the files the picks touched); a project with no tests has nothing to run
 there and the check passes saying so, since this is the last way into main and not a task's result. A check that calls a model would carry its tool's mark (none
 does yet). No face and no model. The worktree is gone whatever happens; the repository's lock is held only while it is made and removed, and no ref moves, so the
@@ -23,7 +25,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import gate_config, gate_rerun, goal_main, jobs, worktrees
+from orkboard.realm import decision_refs, gate_config, gate_rerun, goal_main, jobs, worktrees
 from orkboard.realm.gate_config import Check
 from orkboard.realm.idea_git import GateRun, IdeaGit, _git, _ok
 
@@ -121,6 +123,8 @@ def _checked(git, path, base, check, cancel, timeout, alone: bool = False):
                  else _command(path, check.run, cancel, timeout, details))
     run = details.get("run")
     record = {}
+    if ok and run is not None and run.files:                    # a green run keeps the test files it ran too: `ideas.gate_guards` lays its agreeing pile from them
+        record = {"files": list(run.files)}
     if not ok and run is not None:
         ids = gate_rerun.ids_failing(run.out)
         try:
@@ -130,7 +134,7 @@ def _checked(git, path, base, check, cancel, timeout, alone: bool = False):
             raise
         except Exception:
             found = None
-        record = {"failures": [{"id": i, "classification":
+        record = {"files": list(run.files), "failures": [{"id": i, "classification":
                    "flaky" if found and i in found.flaky else
                    "pre-existing" if found and i in found.red_before else
                    "new" if found and i in found.left else "unresolved"} for i in ids]} if ids else {}
@@ -140,6 +144,8 @@ def _checked(git, path, base, check, cancel, timeout, alone: bool = False):
             told = record["failures"][:SAID_MAX]
             more = len(ids) - len(told)
             words += "; " + "; ".join(f"{f['classification']}: {f['id']}" for f in told) + (f"; and {more} more" if more else "")
+    if record:                                                  # the §N its tests name, read in the trial it ran in while that trial is there (`goal_main.trial` removes it)
+        record["named"] = decision_refs.of_run(path, [f["id"] for f in record.get("failures") or []], record["files"])
     return ok, words, record
 
 

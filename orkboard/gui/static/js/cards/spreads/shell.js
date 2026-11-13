@@ -24,10 +24,10 @@ export const Chk = ({ no = false }) => html`<span class=${cls("sp-chk", { "is-no
 
 /** A card face up in a spread: its party's colour (`party`), the goal's rune and sign (`n`), its name, a line, and more under them (children).
  *  `kind`: goal, decision or part (its sign at the top right and its name, decisions §300.4); `size`: xl, lg, md or sm; `tilt`: its turn in degrees; `mark`: "ok" or "no" puts a check on it. */
-export function SpCard({ party, n = null, kind = "goal", name, line = "", size = "lg", tilt = 0, mark = "", muted = false, portal = false, label = "", onPress = null, picked = false, children }) {
+export function SpCard({ party, n = null, kind = "goal", name, line = "", size = "lg", tilt = 0, mark = "", muted = false, portal = false, label = "", onPress = null, picked = false, stop = false, children }) {
   const w = whoOf(party || "orkmaster"), Tag = onPress ? "button" : "div", face = { ...n, sign: signOf(kind, n?.sign) };
-  return html`<${Tag} type=${onPress ? "button" : undefined} onClick=${onPress || undefined} aria-pressed=${onPress && picked !== null ? String(!!picked) : undefined}
-    class=${cls("ork-card cards-s sp-card", { [`is-${size}`]: true, "is-muted": muted, "is-portal": portal, "is-pick": !!onPress, "is-picked": picked })} data-race=${w.race || "orkmaster"} data-cardkind=${kind} style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${named(label || `${name}${line ? `: ${line}` : ""}`, kind)}>
+  return html`<${Tag} type=${onPress ? "button" : undefined} tabindex=${stop && !onPress ? "0" : undefined} role=${stop && !onPress ? "group" : undefined} onClick=${onPress || undefined} aria-pressed=${onPress && picked !== null ? String(!!picked) : undefined}
+    class=${cls("ork-card cards-s sp-card", { [`is-${size}`]: true, "is-muted": muted, "is-portal": portal, "is-pick": !!onPress, "is-picked": picked, "is-stop": stop && !onPress })} data-race=${w.race || "orkmaster"} data-cardkind=${kind} style=${tilt ? `--rot:${tilt}deg` : ""} aria-label=${named(label || `${name}${line ? `: ${line}` : ""}`, kind)}>
     <${Index} n=${face} rune=${size !== "sm"} />${mark && html`<${Chk} no=${mark === "no"} />`}
     ${(size === "xl" || size === "lg") && html`<span class="sp-pic"><${HeadOf} w=${w} size=${size === "xl" ? "big" : "mid"} /></span>`}
     <b class="sp-card__name">${name}</b>${line && html`<small class="sp-card__line">${line}</small>`}${children}</${Tag}>`;

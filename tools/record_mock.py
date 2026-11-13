@@ -15,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 FOLDER = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT).resolve()
 OUT = ROOT / "orkboard/gui/static/mock/board.json"
 EXTRA = [["ideas.feed", {}], ["ideas.recap", {"since": ""}], ["ideas.turns", {}], ["ideas.verdicts", {}], ["ideas.tables", {}], ["ideas.ask_cost", {}]]
+# what a mat asks when it opens (decisions §303): read for one goal of the Board, which here keeps no conflict and no red gate (`against: []`, nothing failing)
+MATS = ["ideas.battle", "ideas.gate_guards"]
 SPY = """(() => {
   const Real = window.WebSocket; window.__mock = { state: null, replies: [], sent: {} };
   window.WebSocket = function (url, p) {
@@ -43,6 +45,8 @@ def main() -> None:
                 # what the new faces read and the old ones do not ask yet: the feed, the recap since the last look, the cards' turns, verdicts, tables and the cost of a paid pass (gui/ideas_mats.py)
                 page.evaluate("""() => import("/static/js/link.js").then((l) => Promise.all(%s.map(([n, a]) =>
                     l.command(n, a, true).catch(() => null))))""" % json.dumps(EXTRA))
+                page.evaluate("""() => import("/static/js/link.js").then((l) => l.command("ideas.map", {}, true).then((m) => { const g = ((m && m.nodes) || [])[0];
+                    return g ? Promise.all(%s.map((n) => l.command(n, { idea: g.slug }, true).catch(() => null))) : null; }))""" % json.dumps(MATS))
                 page.wait_for_timeout(2000)
                 for tab in page.locator("[role=tab], .ork-tab, .gui-tab").all()[:12]:   # every leader's lane asks its own
                     try: tab.click(timeout=1500); page.wait_for_timeout(1200)

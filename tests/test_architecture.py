@@ -274,3 +274,27 @@ def test_the_one_post_imports_none_of_the_windows_state_the_store_or_the_phones_
     text = (ROOT / "gui/static/js/table/post.js").read_text(encoding="utf-8")
     mods = re.findall(r'^import .* from "([^"]+)"', text, re.M)
     assert mods and not [m for m in mods if any(x in m for x in ("frame/", "shell/", "pwa/", "data.js", "board/"))], mods
+
+
+def test_decision_refs_is_pure_and_short():
+    """Goal "The battle and the gate" C (decisions §303): realm/decision_refs.py reads files only: no git, no model, no write, no gui; under 600 lines."""
+    path = ROOT / "realm/decision_refs.py"
+    text = path.read_text(encoding="utf-8")
+    assert len(text.splitlines()) < 600
+    mods = {m for _l, m in _imports(path)}
+    assert not {m for m in mods if m.split(".")[0] in {"subprocess", "os", "shutil", "socket", "urllib", "http", "requests"}
+                or m.startswith(("orkboard.gui", "orkboard.core", "orkboard.realm.harnesses"))}, mods
+    assert not any(w in text for w in ("write_text", "write_bytes", ".unlink(", ".mkdir(", "Popen"))
+
+
+def test_the_stage_again_is_a_mixin_of_the_runner_which_grows_by_its_line_only():
+    """Goal "The battle and the gate" H: core/idea_runner.py (618 lines, a hotspot) grows only by its mixin's import, the mixin named among its bases and nothing else of it there;
+    core/idea_fix_stage.py and gui/ideas_battle.py stay under 600 lines, and gui/ideas.py registers the battle's commands by its one line."""
+    text = (ROOT / "core/idea_runner.py").read_text(encoding="utf-8")
+    assert len(text.splitlines()) <= 619
+    assert "\nfrom orkboard.core.idea_fix_stage import FixStageMixin\n" in text and "\nclass IdeaRunner(FixStageMixin, GoalDevMixin, " in text
+    assert text.count("FixStageMixin") == 2 and text.count("idea_fix_stage") == 1 and "fix_stage(" not in text
+    for rel in ("core/idea_fix_stage.py", "gui/ideas_battle.py"):
+        assert len((ROOT / rel).read_text(encoding="utf-8").splitlines()) < 600, rel
+    ideas_py = (ROOT / "gui/ideas.py").read_text(encoding="utf-8")
+    assert ideas_py.count("battle_commands") == 2 and "gate_fix" not in ideas_py           # its import and its one registering line

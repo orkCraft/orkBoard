@@ -26,6 +26,11 @@ from orkboard.realm import commit_goal, event_log, findings_gather, first_open, 
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
+def _shown(checks: list[dict]) -> list[dict]:
+    """The checks as the face gets them (the snapshot, `main.check`, `ideas.to_main_checks`): without `named`, the §N their tests name, which only `ideas.gate_guards` answers."""
+    return [{k: v for k, v in c.items() if k != "named"} for c in checks]
+
+
 class GateMixin:
     def _gate_main(self, git: IdeaGit) -> str:
         """The repository's main: the release branch kept at the first open (realm/first_open.py) while it is still there, else the default branch;
@@ -326,7 +331,7 @@ class GateMixin:
             got = self._main_checks.get(slug)
             if got and ((any(c["state"] == "failed" for c in got["checks"]) and args.get("again") is not True)
                         or (got["key"] == key and (got["running"] or args.get("again") is not True))):
-                return {"idea": slug, "checks": list(got["checks"]), "running": got["running"]}
+                return {"idea": slug, "checks": _shown(got["checks"]), "running": got["running"]}
             if got:
                 got["stop"].set()                                   # an older run of this goal ends, its worktree gone
             entry = {"key": key, "checks": [{"name": c.name, "state": "waiting", "words": ""} for c in gate_config.main_checks(Path(self.host.repo_root))],
@@ -334,7 +339,7 @@ class GateMixin:
             self._main_checks[slug] = entry
         threading.Thread(target=self._checks_run, args=(slug, where, entry), name=f"main-checks-{slug}", daemon=True).start()
         self._checks_said(slug, entry)
-        return {"idea": slug, "checks": list(entry["checks"]), "running": True}
+        return {"idea": slug, "checks": _shown(entry["checks"]), "running": True}
 
     def _checks_run(self, slug: str, where: dict, entry: dict) -> None:
         """The run, on its own thread: each step is kept and published; whatever happens the run ends (a failure of the run itself fails the first check
@@ -373,7 +378,7 @@ class GateMixin:
         with self._main_lock:
             if self._main_checks.get(slug) is not entry:                # an older run of the goal ended: its steps say nothing now
                 return
-            checks = [dict(c) for c in entry["checks"]]
+            checks = _shown(entry["checks"])
         def publish():
             with self._main_lock:
                 if self._main_checks.get(slug) is not entry:
@@ -384,7 +389,7 @@ class GateMixin:
     def main_checks_now(self) -> dict[str, list[dict]]:
         """The last results of the checks, by goal, for the snapshot (the face follows them there): `{slug: [{name, state, words}]}`."""
         with self._main_lock:
-            return {slug: [dict(c) for c in got["checks"]] for slug, got in self._main_checks.items()}
+            return {slug: _shown(got["checks"]) for slug, got in self._main_checks.items()}
 
     def _flag_after_goal(self, goals: list[str], commit: str, git: IdeaGit, into: str, main: str) -> None:
         """After the pick: each goal it took that is done and has no flag, all of whose commits are in main now (by patch id: a pick is a

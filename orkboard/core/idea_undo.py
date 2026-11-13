@@ -3,6 +3,7 @@
     idea_undo.way("drop")                                # "press": one press, its Undo kept · "sealed": it goes only on its seal · KeyError for a kind that is neither
     idea_undo.snapshot(root, state_dir, slug)            # the goal's page and state as text (None: not there), before and after a move
     idea_undo.keep(state_dir, slug, kind, before, after, publish)   # the one writer of `<state_dir>/goals/<slug>/undo.json`; publishes `bus.MOVE_PLAYED`
+    idea_undo.keep(state_dir, slug, "fix_goal", {"page": None, "state": None}, after, publish, laid=fix)   # a move on `slug` that laid another goal (`fix`): its record names the goal laid
     idea_undo.undo(root, state_dir, slug, publish, kind="")         # puts the bytes back only while they are still the after; ValueError in plain words else
 
 A reverse writes the page into `root`, which is the Board's tree (`realm/board_tree.py`: the host's `Ideas.root()`), so the Board's next commit takes it;
@@ -16,13 +17,16 @@ from pathlib import Path
 from typing import Callable
 
 from orkboard.core import bus
-from orkboard.realm import ideas
+from orkboard.realm import idea_ripe, ideas, lexicon, spec_sections
 
 # The hand's moves, a closed table: each kind is one press with its reverse, or sealed (a move that cannot be undone). No kind is neither.
 ONE_PRESS = {"drop": "put the page and its state back",
              "hold": "put the state back",
-             "answer": "put the page and its state back"}
-SEALED = {"merge_main": "Merge into main", "send_branch": "Send to a branch", "ship_release": "Ship a release", "paid_pass": "a paid pass", "start_work": "Start the work"}
+             "answer": "put the page and its state back",
+             "new_wins": "put the decision back and forget the wait it began",      # a battle's New wins (`ideas.conflict` `replace`, decisions §303.4): only way.json's `decision` is kept, never the whole file
+             "fix_goal": "remove the Fix goal it laid"}          # Fix it on a goal done whose way to main went red (decisions §303.5): the record keeps the goal laid, none before
+SEALED = {"merge_main": "Merge into main", "send_branch": "Send to a branch", "ship_release": "Ship a release", "paid_pass": "a paid pass", "start_work": "Start the work",
+          "fix_stage": lexicon.term("fix_stage")}          # Fix it on a goal unmerged on its branch whose way to dev went red: one task added, the goal at work (core/idea_fix_stage.py)
 
 CHANGED_SINCE = "It changed since: nothing undone"
 NOTHING = "Nothing to undo"
@@ -63,17 +67,37 @@ def snapshot(root: Path, state_dir: Path, slug: str, party: bool = False) -> dic
     return out
 
 
-def keep(state_dir: Path, slug: str, kind: str, before: dict, after: dict, publish: Callable[..., None] | None = None, origin: str = "", party: bool = False) -> bool:
-    """The Undo of a one-press move just played: the bytes before and after. False when the move changed nothing (nothing to undo). KeyError for a sealed kind."""
+def keep(state_dir: Path, slug: str, kind: str, before: dict, after: dict, publish: Callable[..., None] | None = None, origin: str = "", party: bool = False,
+         laid: str = "") -> bool:
+    """The Undo of a one-press move just played: the bytes before and after. False when the move changed nothing (nothing to undo). KeyError for a sealed kind.
+    `laid`: a goal the move laid, whose page and state `before` and `after` are (Fix it lays a new goal from a done one's gate): the record is `slug`'s, its Undo too."""
     if way(kind) != "press":
         raise KeyError(kind)
     if before == after:
         return False
     path = record_path(state_dir, slug, party)
+    row = {"kind": kind, **({"laid": _slug(laid)} if laid and laid != slug else {}), "before": before, "after": after}
     with ideas.LOCK:
-        ideas._write(path, json.dumps({"kind": kind, "before": before, "after": after}, ensure_ascii=False, indent=1) + "\n")
+        ideas._write(path, json.dumps(row, ensure_ascii=False, indent=1) + "\n")
     if publish is not None:
         publish(bus.MOVE_PLAYED, idea=slug, kind=kind, origin=origin)
+    return True
+
+
+def decision_of(state_dir: Path, slug: str) -> object:
+    """The goal's decision as way.json keeps it (None with none): the one thing New wins changes and its Undo compares. The rest of the file (the wait's tick rewrites it) is not."""
+    return spec_sections.record(state_dir, slug).get("decision")
+
+
+def keep_decision(state_dir: Path, slug: str, before: object, after: object, publish: Callable[..., None] | None = None, origin: str = "") -> bool:
+    """The Undo of New wins just played: the decision before and after, nothing else of way.json. False when the decision did not change."""
+    if before == after:
+        return False
+    row = {"kind": "new_wins", "before": {"decision": before}, "after": {"decision": after}}
+    with ideas.LOCK:
+        ideas._write(record_path(state_dir, slug), json.dumps(row, ensure_ascii=False, indent=1) + "\n")
+    if publish is not None:
+        publish(bus.MOVE_PLAYED, idea=slug, kind="new_wins", origin=origin)
     return True
 
 
@@ -82,7 +106,8 @@ def read(state_dir: Path, slug: str, party: bool = False) -> dict | None:
         row = json.loads(record_path(state_dir, slug, party).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    ok = isinstance(row, dict) and row.get("kind") in ONE_PRESS and isinstance(row.get("before"), dict) and isinstance(row.get("after"), dict)
+    ok = isinstance(row, dict) and row.get("kind") in ONE_PRESS and isinstance(row.get("before"), dict) and isinstance(row.get("after"), dict) \
+        and re.fullmatch(r"[a-z0-9-]+", str(row.get("laid", slug))) is not None
     return row if ok else None
 
 
@@ -93,13 +118,30 @@ def undo(root: Path, state_dir: Path, slug: str, publish: Callable[..., None] | 
         row = read(state_dir, slug, party)
         if row is None or (kind and row["kind"] != kind):
             raise ValueError(NOTHING)
-        now, files = snapshot(root, state_dir, slug, party), _files(root, state_dir, slug, party)
+        if row["kind"] == "new_wins":
+            if decision_of(state_dir, slug) != row["after"].get("decision"):
+                raise ValueError(CHANGED_SINCE)
+            way = spec_sections.record(state_dir, slug)
+            way["decision"] = row["before"].get("decision")                  # the decision as it was; the rest of the file stays as the wait's tick has it
+            spec_sections.save_record(state_dir, slug, way)
+            idea_ripe.drop(state_dir, slug)                                   # the wait New wins began is forgotten
+            record_path(state_dir, slug, party).unlink(missing_ok=True)
+            if publish is not None:
+                publish(bus.MOVE_UNDONE, idea=slug, kind="new_wins")
+            return {"kind": "new_wins"}
+        whose = row.get("laid") or slug                          # the goal whose page and state the move changed: `slug`, or the one it laid
+        now, files = snapshot(root, state_dir, whose, party), _files(root, state_dir, whose, party)
         names = [n for n in files if row["before"].get(n) != row["after"].get(n)]
         if any(now.get(n) != row["after"].get(n) for n in names):
             raise ValueError(CHANGED_SINCE)
         for n in names:
             if row["before"].get(n) is None:
                 files[n].unlink(missing_ok=True)
+                if n == "state":                                   # a goal the move laid leaves no folder of its state behind
+                    try:
+                        files[n].parent.rmdir()
+                    except OSError:
+                        pass
             else:
                 ideas._write(files[n], row["before"][n])
         ideas._reindex(Path(root))

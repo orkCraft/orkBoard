@@ -2,6 +2,7 @@
 // cases are question cards of the same stack, before it (questions.js `questionStops`; a press on one deals its choices over the pane: questioncard.js). Lifted, the guess (*I think …*) with its parts named (`where`, each a press that
 // lights the part on System), **Yes**, **No, it's elsewhere** (one line opens for where) and **Other…** (one line for the person's own words); each sends `ideas.cause_answer` with the case questions' answers.
 import { useState } from "preact/hooks";
+const OTHER_CHOICE = "Other…";      // realm/lexicon.py other_choice: a question card's own last choice (a conflict's third way is *Your words*)
 import { html } from "../html.js";
 import { closeOver, openTab, over, partKey } from "../frame/state.js";
 import { litKey } from "../table/card.js";
@@ -39,7 +40,7 @@ function Cause({ s, close }) {
       : html`<div class="hand-answers" role="group" aria-label="Answers">
         <button type="button" class="ork-btn primary" disabled=${busy} title=${`${named(lead)} goes on with this cause`} onClick=${() => send(true)}>Yes</button>
         <button type="button" class="ork-btn" disabled=${busy} title="One line says where" onClick=${() => { setLine(""); setMode("no"); }}>No, it's elsewhere</button>
-        <button type="button" class="ork-btn" disabled=${busy} title="Your own words" onClick=${() => { setLine(""); setMode("other"); }}>Other…</button></div>`}
+        <button type="button" class="ork-btn" disabled=${busy} title="Your own words" onClick=${() => { setLine(""); setMode("other"); }}>${OTHER_CHOICE}</button></div>`}
   </div>`;
 }
 

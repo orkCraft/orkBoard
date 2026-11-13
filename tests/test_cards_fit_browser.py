@@ -103,7 +103,7 @@ FOCUS = """(root) => { const key = %s, a = document.activeElement; if (!a || a =
 
 @pytest.fixture(scope="module")
 def page_url():
-    s = serve_mock.serve(0, mock_kit.lay_turned)
+    s = serve_mock.serve(0, mock_kit.lay_battled)
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_port}/?mock=1"
     s.shutdown()
@@ -159,6 +159,19 @@ def open_mat(pg, goal="174-example-3"):
     pg.wait_for_selector(".frame-hand .mathand")
 
 
+BATTLE = mock_kit.lay_battle(mock_kit.recording())      # the goal the recording's battle is laid for (three old cards: the most that lie face up)
+
+
+def open_by_address(kind, slug):
+    """A mat laid by its own module (cards/spreads/open.js, the module the page itself opens a spread with; on the phone's page it lies under /app/page/): the battle's, the gate's of a goal."""
+    def opener(pg):
+        root = "/app/page" if pg.viewport_size["width"] <= 700 else "/static"
+        pg.evaluate("([r, k, s]) => import(r + '/js/cards/spreads/open.js').then((m) => m.openSpread({ kind: k, slug: s, opened: 'hand' }))", [root, kind, slug])
+        pg.wait_for_selector(f"[data-spread={kind}] .mf-field", timeout=20000)
+        pg.wait_for_selector(f"[data-spread={kind}] [data-old], [data-spread={kind}] .gt[data-way]:not([data-way=''])", timeout=20000)
+    return opener
+
+
 def closed_mat(pg):
     pg.wait_for_selector(".cards-m[data-mat]:visible")
     pg.locator(".cards-m[data-mat]:visible").first.scroll_into_view_if_needed()
@@ -167,10 +180,28 @@ def closed_mat(pg):
 SURFACES = {"the table": (lambda pg: None, ".frame"), "an L": (open_l, ".cards-l"),
             "the gate spread": (open_gate, ".sp-veil"), "a leader's table": (open_table, ".sp-veil"),
             "an open mat": (open_mat, "[data-spread=track]"), "a closed mat": (closed_mat, ".cards-m[data-mat]"),
-            "the hand with a mat open": (open_mat, ".frame-hand")}
+            "the hand with a mat open": (open_mat, ".frame-hand"),
+            "the battle": (open_by_address("battle", BATTLE), "[data-spread=battle]"), "the hand with a battle open": (open_by_address("battle", BATTLE), ".frame-hand"),
+            "the gate, all agreeing": (open_by_address("gate", mock_kit.CHRONICLE), "[data-spread=gate]"), "the gate, one failing": (open_by_address("gate", "35-goals-window"), "[data-spread=gate]")}
 PHONE_ROOT = {"a closed mat": ".up-ct .cards-m[data-mat]", "the hand with a mat open": "[data-spread=track] .mf-foot"}      # a phone's hand is the foot of the mat's screen
-ON_PHONE = {"an open mat", "a closed mat", "the hand with a mat open", "the gate spread"}
+ON_PHONE = {"an open mat", "a closed mat", "the hand with a mat open", "the gate spread", "the battle", "the gate, all agreeing", "the gate, one failing"}
 CASES = [(n, z) for n in SURFACES for z in MAT_SIZES if z in SIZES or n in ON_PHONE]
+
+
+# The battle's and the gate's field (goal "The battle and the gate", stage N): it never scrolls, no sideways scroll of the page, and every card, zone and label lies whole inside it and clear of the hand's ways below it.
+FIELD = """(root) => { const sp = document.querySelector(root), f = sp.querySelector('.mf-field'), fr = f.getBoundingClientRect(), bad = [];
+  if (f.scrollHeight - f.clientHeight > 1 || f.scrollWidth - f.clientWidth > 1) bad.push(`the field scrolls by ${f.scrollHeight - f.clientHeight} x ${f.scrollWidth - f.clientWidth}`);
+  if (document.documentElement.scrollWidth > innerWidth) bad.push("the page scrolls sideways");
+  for (const e of f.querySelectorAll('.mf-zone, .mf-zl, .sp-card, .bt-one, .bt-rests, .bt-line, .gt-line, .gt-agree, .gt-more')) { const r = e.getBoundingClientRect();
+    if (r.width && (r.top < fr.top - 1 || r.bottom > fr.bottom + 1 || r.left < fr.left - 1 || r.right > fr.right + 1)) bad.push(`outside its field: ${e.className.toString().slice(0, 30)}`); }
+  const hand = sp.querySelector('.sp-hand'); if (hand) { const hr = hand.getBoundingClientRect(); for (const e of f.querySelectorAll('.sp-card')) { const r = e.getBoundingClientRect(); if (r.width && r.bottom > hr.top + 1 && r.top < hr.bottom - 1) bad.push("a card under the ways' row"); } }
+  return bad; }"""
+MAT_FIELDS = {"the battle", "the gate, all agreeing", "the gate, one failing", "the gate spread"}
+
+
+def check_field(pg, root, what):
+    bad = pg.evaluate(f"({FIELD})({root!r})")
+    assert not bad, f"{what}:\n" + "\n".join(bad)
 
 
 def check_texts(pg, root, what):
@@ -228,6 +259,8 @@ def test_a_surface_fits(page_url, name, size):
         what = f"{name} at {size[0]}x{size[1]}"
         check_texts(pg, root, what)
         check_acts(pg, root, what)
+        if name in MAT_FIELDS:
+            check_field(pg, root, what)
         b.close()
 
 
@@ -295,10 +328,11 @@ def test_the_gate_mat_on_the_phone_is_laid_unscaled_and_no_check_is_cut_at_the_s
         pg = fresh(b, page_url, (390, 844))
         open_gate(pg)
         pg.wait_for_timeout(500)
-        got = pg.evaluate("""() => { const scales = [], gate = document.querySelector('.sp-gate');
+        pg.locator(".gt-line").wait_for()
+        got = pg.evaluate("""() => { const scales = [], gate = document.querySelector('.gt');
           for (let e = gate; e && e !== document.documentElement; e = e.parentElement) { const t = getComputedStyle(e).transform; if (t !== 'none') { const m = new DOMMatrix(t); scales.push(Math.hypot(m.a, m.b)); } }
-          const checks = [...document.querySelectorAll('.sp-gk')].map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; });
-          const words = [...gate.querySelectorAll('.sp-gk small, .sp-card__name, .sp-card__line')].map((e) => parseFloat(getComputedStyle(e).fontSize) * (e.getBoundingClientRect().width / (e.offsetWidth || 1)));
+          const checks = [...document.querySelectorAll('.gt .sp-card, .gt .mf-zone')].map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; });
+          const words = [...gate.querySelectorAll('.sp-card__name, .sp-card__line')].map((e) => parseFloat(getComputedStyle(e).fontSize) * (e.getBoundingClientRect().width / (e.offsetWidth || 1)));
           return { scales, checks, words }; }""")
         assert all(k >= 1 for k in got["scales"]), got["scales"]
         assert got["checks"] and all(left >= 0 and right <= 390 for left, right in got["checks"]), got["checks"]

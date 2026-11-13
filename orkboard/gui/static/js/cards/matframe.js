@@ -24,6 +24,9 @@ export function useNarrowMat() {
   return narrow;
 }
 
+/** Where Tab goes, in order: the field (the old cards, the line, Yours), the hand's ways, the foot (the seal), then the head's Close. */
+const tabRoots = (mat) => [mat?.querySelector(".mf-field"), ...handRoots(), mat?.querySelector(".mf-foot"), mat?.querySelector(".mf-h")];
+
 /** The felt's party: its `data-party` (orkUI's list); one it does not know lies on the Orkmaster's. */
 const PARTIES = new Set(["ork", "tech", "knight", "game", "product", "elf", "design", "art", "undead", "release", "goblin", "run", "liveops", "gnome", "market", "marketing", "orkmaster"]);
 export const feltOf = (party) => (PARTIES.has(party) ? party : "orkmaster");
@@ -69,7 +72,8 @@ export function MatFrame({ kind, party = "orkmaster", title, line = "", say = ""
   useLayoutEffect(() => () => { matHand.value = null; }, []);
   useLayoutEffect(() => {   // the keys at once, before the first paint: an Esc pressed as the mat opens closes it
     root.current?.querySelector(".sp-shut")?.focus();
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); } else keepTab([root.current, ...handRoots()], e); };
+    const key = (e) => { if (e.key === "Escape" && e.target?.closest?.(".hand-pen")) return;   // Esc in the hand's field closes the field (hand/penfield.js), not the mat
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); } else keepTab(tabRoots(root.current), e); };
     addEventListener("keydown", key, true);
     return () => removeEventListener("keydown", key, true);
   }, []);

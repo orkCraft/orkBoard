@@ -1,5 +1,5 @@
 {
- "recorded": "2026-11-12 18:18",
+ "recorded": "2026-11-13 07:32",
  "folder": "orkBoard",
  "state": {
   "focus": "board",
@@ -33760,6 +33760,38 @@
       }
      ]
     }
+   },
+   "error": null
+  },
+  {
+   "name": "ideas.battle",
+   "args": {
+    "idea": "33-v1-shell"
+   },
+   "ok": true,
+   "result": {
+    "idea": "33-v1-shell",
+    "against": [],
+    "cost": {
+     "calls": 1,
+     "usd_high": 0.15
+    }
+   },
+   "error": null
+  },
+  {
+   "name": "ideas.gate_guards",
+   "args": {
+    "idea": "33-v1-shell"
+   },
+   "ok": true,
+   "result": {
+    "idea": "33-v1-shell",
+    "way": "main",
+    "failing": [],
+    "files": [],
+    "agreeing": [],
+    "cost": null
    },
    "error": null
   }

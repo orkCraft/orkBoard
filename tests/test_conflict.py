@@ -190,4 +190,71 @@ def test_two_conflicts_are_answered_one_at_a_time_and_confirm_waits_for_the_last
 
 
 def test_the_words_of_a_conflict_are_in_the_glossary():
-    assert [lexicon.term(k) for k in ("goes_against", "new_one_replaces", "keep_decision", "conflict_other")] == ["Goes against §<n>", "The new one replaces §<n>", "Keep §<n>", "Other…"]
+    assert [lexicon.term(k) for k in ("goes_against", "new_wins", "old_wins", "your_words", "keep_decision")] == ["Goes against §<n>", "New wins", "Old wins", "Your words", "Keep §<n>"]
+    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
+    assert [rows[k][1] for k in ("new_wins", "old_wins", "your_words")] == ["The new one replaces §<n>", "Keep §<n>", "Other…"]       # each keeps its old spelling
+
+
+# -- goal "The battle and the gate" I: the battle's three ways from a card or a mat (decisions §303.4) -----------------------------------------------
+
+def _played(host):
+    return [e for e in event_log.read(host.repo_root) if e["event"] == event_log.MOVE_PLAYED]
+
+
+def test_new_wins_from_the_hand_is_one_press_with_its_undo_and_logs_the_move(host, tech, goal, model):
+    from orkboard.core import idea_undo
+    slug = _conflicted(host, tech, goal, model)
+    before = _decision(host, slug)
+    assert host.command("ideas.conflict", {"idea": slug, "number": 6, "choice": "replace", "from": "hand"})["left"] == 0
+    assert idea_undo.read(host.ideas.state_dir, slug)["kind"] == "new_wins"
+    (row,) = _played(host)
+    assert (row["idea"], row["kind"], row["from"]) == (slug, "new_wins", "hand")
+    assert _decision(host, slug)["conflicts"][0]["answer"] == "replace"
+    host.command("ideas.undo", {"idea": slug})
+    assert _decision(host, slug) == before and not idea_ripe.running(host.ideas.state_dir, slug)           # the decision as before, the wait forgotten
+    host.command("ideas.conflict", {"idea": slug, "number": 6, "choice": "replace", "from": "mat"})
+    assert [e["from"] for e in _played(host)] == ["hand", "mat"]
+    assert [e["choice"] for e in event_log.read(host.repo_root) if e["event"] == event_log.CONFLICT_ANSWERED] == ["replace", "replace"]
+
+
+def test_new_wins_undo_ignores_the_waits_tick_and_is_refused_once_the_decision_changed(host, tech, goal, model):
+    slug = _conflicted(host, tech, goal, model)
+    host.command("ideas.conflict", {"idea": slug, "number": 6, "choice": "replace", "from": "hand"})
+    way = spec_sections.record(host.ideas.state_dir, slug)
+    way["ripe"] = {"left_s": 12.0, "seconds": 30, "risk": "low", "priority": "normal", "held": False, "by": "", "why": ""}      # a tick of the wait rewrites way.json
+    spec_sections.save_record(host.ideas.state_dir, slug, way)
+    way["decision"] = {**way["decision"], "title": "Changed by hand"}
+    spec_sections.save_record(host.ideas.state_dir, slug, way)
+    with pytest.raises(CommandError, match="It changed since: nothing undone"):
+        host.command("ideas.undo", {"idea": slug})
+    assert _decision(host, slug)["title"] == "Changed by hand"
+
+
+def test_the_waits_tick_between_is_no_change(host, tech, goal, model):
+    slug = _conflicted(host, tech, goal, model)
+    host.command("ideas.conflict", {"idea": slug, "number": 6, "choice": "replace", "from": "hand"})
+    way = spec_sections.record(host.ideas.state_dir, slug)
+    way["ripe"] = {"left_s": 12.0, "seconds": 30, "risk": "low", "priority": "normal", "held": False, "by": "", "why": ""}
+    spec_sections.save_record(host.ideas.state_dir, slug, way)
+    host.command("ideas.undo", {"idea": slug})
+    assert [c["number"] for c in decision_conflicts.open_of(_decision(host, slug))] == [6] and "ripe" not in spec_sections.record(host.ideas.state_dir, slug)
+
+
+def test_old_wins_and_your_words_from_the_hand_go_only_sealed_and_keep_the_words_out_of_the_log(host, tech, goal, model):
+    slug = _conflicted(host, tech, goal, model)
+    for args in ({"choice": "keep"}, {"choice": "other", "text": "Make it eight seconds."}):
+        with pytest.raises(CommandError, match="cannot be undone: it goes only on its seal"):
+            host.command("ideas.conflict", {"idea": slug, "number": 6, "from": "hand", **args})
+    assert [c["number"] for c in decision_conflicts.open_of(_decision(host, slug))] == [6] and not _played(host)
+    model.said["decide"] = {"title": "Screens hold eight seconds", "why": "A middle way.", "points": ["Screens hold 8 seconds.", "Art follows."]}
+    host.command("ideas.conflict", {"idea": slug, "number": 6, "choice": "other", "text": "Make it eight seconds.", "from": "hand", "sealed": True})
+    (row,) = _played(host)
+    assert (row["idea"], row["kind"], row["from"]) == (slug, "paid_pass", "hand")
+    assert "Make it eight seconds" not in repr(event_log.read(host.repo_root))                   # neither move_played nor conflict_answered holds the words
+
+
+def test_no_from_goes_as_before_with_no_seal_and_no_undo(host, tech, goal, model):
+    from orkboard.core import idea_undo
+    slug = _conflicted(host, tech, goal, model)
+    host.command("ideas.conflict", {"idea": slug, "number": 6, "choice": "replace"})
+    assert idea_undo.read(host.ideas.state_dir, slug) is None and not _played(host)

@@ -78,7 +78,8 @@ def test_the_stages_of_a_route_are_a_pile_the_one_now_and_the_ones_to_come_face_
         b.close()
 
 
-def test_the_gate_opens_from_a_goal_to_review_and_to_main_waits_for_its_checks(page_url):
+def test_the_gate_opens_from_a_goal_to_review_upright_with_what_its_tests_guard_and_its_seal_dim_while_a_check_disagrees(page_url):
+    """The gate is a battle nobody disputes (goal "The battle and the gate" L): no ring, the host's `ideas.gate_guards` laid as zones, the seal dim with its why."""
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1440, "height": 900})
@@ -88,31 +89,14 @@ def test_the_gate_opens_from_a_goal_to_review_and_to_main_waits_for_its_checks(p
         pg.locator(".cards-dealer .cards-row .cards-s[data-goal]").first.click()
         pg.get_by_role("button", name="At the gate").click()
         gate = pg.locator("[data-spread=gate]")
-        gate.wait_for()
-        assert gate.locator(".sp-gate__mid .sp-card.is-portal").count() == 1 and gate.locator(".sp-ring").count() == 1
-        assert gate.locator(".sp-gk").count() >= 3 and gate.locator(".sp-gk[data-check=waiting] .sp-back").count() >= 2
-        main = gate.get_by_role("button", name="To main opens after", exact=False)
-        assert main.is_disabled()
+        gate.locator(".gt-line").wait_for()
+        assert gate.locator(".sp-ring, .sp-gate, .sp-gk").count() == 0
+        assert gate.locator(".mf-zl").all_text_contents() == ["What its tests guard", "Yours"]
+        assert gate.locator(".gt-guards .sp-card[data-cardkind=decision]").count() == 1 and gate.locator(".gt-guards .sp-card[data-cardkind=part]").count() == 1
+        seal = gate.locator(".mf-seal")
+        assert seal.get_attribute("aria-disabled") == "true" and "2 checks disagree" in seal.inner_text()
         pg.keyboard.press("Escape")
         assert pg.locator(".sp-veil").count() == 0
-        b.close()
-
-
-def test_the_gate_turns_a_check_green_and_opens_to_main_when_all_are_green(page_url):
-    with sync_playwright() as p:
-        b = launch(p)
-        pg = b.new_page(viewport={"width": 1440, "height": 900})
-        opened(pg, page_url)
-        pg.evaluate("""async (slug) => { const link = await import("/static/js/link.js"), sp = await import("/static/js/cards/spreads/open.js");
-          const names = ["Critical tests", "Tests of what it touched"];
-          link.town.value = { ...link.town.value, main_checks: { [slug]: names.map((name, i) => ({ name, state: i ? "failed" : "passed", words: i ? "2 tests fail" : "312 passed" })) } };
-          sp.openSpread({ kind: "gate", slug }); }""", THREE)
-        gate = pg.locator("[data-spread=gate]")
-        gate.wait_for()
-        assert gate.locator(".sp-gk[data-check=passed] .sp-chk").count() >= 1
-        assert gate.locator(".sp-gk[data-check=failed] .sp-chk.is-no").count() == 1       # red stays face up, with what failed
-        assert "2 tests fail" in gate.inner_text()
-        assert "sealed" in gate.get_by_role("button", name="To main is sealed", exact=False).inner_text()
         b.close()
 
 
