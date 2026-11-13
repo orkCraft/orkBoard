@@ -38,7 +38,8 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .gt { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; --card-w: 76px; }
 .gt .mf-zone { padding: 18px 12px 8px; }
 .gt .sp-card.is-md { --card-w: 76px; padding: 20px 6px 10px; gap: 1px; aspect-ratio: auto; min-height: 106px; }
-.gt .sp-card.is-md:has(> .sp-chk) { padding-top: 30px; }      /* the check's badge lies at the card's corner: the first line starts under it */
+.gt .sp-card.is-md:has(> .sp-chk) { padding-top: 16px; padding-bottom: 26px; }      /* the check's badge lies at the card's foot corner, so the sign at the top right stays seen: the last line ends above it */
+.gt .sp-card > .sp-chk { top: auto; bottom: 4px; right: 4px; }
 .gt .sp-card.is-md[data-cardkind="part"] { --card-w: 104px; }
 [data-spread="gate"] .mf-field { padding-block: 8px 4px; }
 .gt .sp-card .sp-card__name { font-size: 12px; line-height: 15px; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
@@ -177,6 +178,7 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .bt-decision { cursor: pointer; text-align: center; }
 .bt-decision .bt-sect { display: grid; place-items: center; height: 30px; font: var(--ork-type-heading); color: var(--ork-ink); }
 .bt-slip { align-self: stretch; max-width: 260px; max-height: 150px; overflow: auto; padding: 6px 10px; font: var(--ork-type-caption); }
+.sp-card.is-stop:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 3px; }
 .bt-slip b { display: block; font: var(--ork-type-button); } .bt-slip ul { margin: 0 0 4px; padding-left: 16px; } .bt-slip code { font-family: var(--ork-font-code); overflow-wrap: anywhere; }
 .bt-line { position: relative; display: flex; align-items: flex-start; justify-content: center; gap: 22px; flex-wrap: wrap; width: 100%; }
 .bt-line::before { content: ""; position: absolute; left: 0; right: 0; top: 12px; border-top: 2px solid var(--ork-bronze); }
@@ -189,11 +191,12 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .sp-cards .bt-way.ork-card { flex: none; display: flex; flex-direction: column; gap: 6px; width: 148px; height: 150px; aspect-ratio: auto; padding: 12px 10px; text-align: left; cursor: pointer; border: 1px solid var(--ork-card-frame); color: var(--ork-ink);
   box-shadow: inset 0 3px 0 var(--ork-card-frame), 0 4px 0 var(--ork-room); }
 .bt-way b { font: var(--ork-type-button); } .bt-way small { font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow: hidden; }
-.bt-way:hover, .bt-way:focus-visible { border-color: var(--ork-ink); } .bt-way:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.bt-way:hover, .bt-way:focus-visible, .bt-way[aria-pressed="true"] { border-color: var(--ork-ink); } .bt-way[aria-pressed="true"] { outline: 2px solid var(--ork-action); outline-offset: 2px; } .bt-way:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 [data-spread="battle"] .sp-cards { align-self: flex-end; }
 @media (max-width: 700px) {
   [data-spread="battle"] .sp-t small { display: none; } [data-spread="battle"] .sp-t b { font: var(--ork-type-heading); }
   [data-spread="battle"] .sp-h { padding: 12px 16px 0; } [data-spread="battle"] .sp-say { display: none; }
   [data-spread="battle"] .sp-cards { gap: 8px; align-self: center; width: 100%; }
   .sp-cards .bt-way.ork-card { width: auto; height: auto; padding: 8px 12px; } .bt-way small { display: none; }
+  .bt-against:has(> .bt-slip) { flex-wrap: wrap; } .bt-slip { flex: 0 0 100%; max-width: none; max-height: none; overflow: visible; box-sizing: border-box; }      /* the slip lies under the old cards at the zone's width, its list whole */
 }

@@ -205,9 +205,24 @@ def test_the_battle_opened_from_its_address_after_a_reload_is_the_whole_screen_u
     got = pg.evaluate(NO_CUT, "battle")
     assert got["bad"] == [] and got["small"] == [] and got["row"] == "auto" and not got["sideways"], got
     names = tab_order(pg, "battle")
-    assert [n for n in names if n in ("§212", "§213", "line", "new", "old", "words", "seal", "back")] == ["§212", "§213", "line", "new", "old", "words", "seal", "back"], names
+    assert [n for n in names if n in ("§212", "§213", "line", "yours", "new", "old", "words", "seal", "back")] == ["§212", "§213", "line", "yours", "new", "old", "words", "seal", "back"], names
     pg.keyboard.press("Escape")
     pg.wait_for_selector("[data-spread=battle]", state="detached", timeout=WAIT_MS)
+    pg.close()
+
+
+def test_the_slip_of_an_old_card_lies_under_the_old_cards_at_the_zones_width_its_list_whole(gui):
+    pg, _host = battle_kit.opened(gui, 390, 844, **TOUCH)
+    pg.evaluate("() => import('/static/js/cards/spreads/open.js').then((m) => m.openSpread({ kind: 'battle', slug: 'timer' }))")
+    sp = pg.locator("[data-spread=battle]")
+    sp.locator("[data-old]").first.wait_for(timeout=WAIT_MS)
+    sp.locator("[data-old] button").first.click()
+    slip = sp.locator(".bt-slip")
+    slip.wait_for(timeout=WAIT_MS)
+    got = slip.evaluate("""e => { const z = e.closest('.bt-against'), cs = getComputedStyle(z), zr = z.getBoundingClientRect(), r = e.getBoundingClientRect(),
+      last = [...z.querySelectorAll('[data-old]')].pop().getBoundingClientRect();
+      return { inner: zr.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth), w: r.width, top: r.top, last: last.bottom, sh: e.scrollHeight, ch: e.clientHeight }; }""")
+    assert abs(got["w"] - got["inner"]) <= 2 and got["sh"] == got["ch"] and got["top"] >= got["last"] - 1, got
     pg.close()
 
 
