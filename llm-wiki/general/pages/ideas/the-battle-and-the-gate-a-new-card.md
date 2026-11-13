@@ -84,16 +84,16 @@ The first goal taken after 171 (the person, 12 November 2026, on the gate still 
 - [x] N3. Tech's not accepted, the second time: every N an item joins with "and", a spec's §k never a decision; the gate's §N read where it ran
   - party: Tech. realm/decision_refs.py reads every number an item joins with "and" (§273's `176.3 and 167` rests on §167, §268's `115 and 148` on §148, on this repository's real log) and an item starting with `§` as a spec's point, never a decision; the §N a red gate's tests name are read in the worktree the gate ran in, before goal_branch removes it, and kept with E's record, so ideas.gate_guards answers a test the goal itself added as its §N and the branch's own passing files in the agreeing pile; tested on what goal_branch.to_dev really leaves (a fixture goal branch adding a failing test that names a decision), not a hand-written record.
   - proves: Tech's *Done when* lines 1 and 3, made again (the last time: what is still not met goes under Not accepted)
-- [ ] O. Tech accepts the step
+- [x] O. Tech accepts the step
   - party: Tech. Its pass of its own (its role file, its section, the gate's record of B to N, the files they changed), against its *Done when* and *Will be*; what it does not accept is one more stage, twice at most.
   - proves: Tech's *Done when* and *Will be*, accepted
-- [ ] P. Design accepts on pictures
+- [x] P. Design accepts on pictures
   - party: Design. The real page drawn at 1440 and 390 on a fixture Board's host (no ?mock=1): the battle (a decision in conflict with §N), the gate with one test failing and with every check agreeing, each laid beside battle-2, gate and gate-ok (desk and phone) in docs/mockups/mats/shots, in 171's frame with the window's frame unchanged (§104.0, §145): the felt, bronze zones and their labels, plates, upright, the seal, the phases; three ways, no Merge, no Not a battle, no ring. Its *Done when* tests and checks read on the gate's record; what it does not accept is one more stage, twice at most.
   - proves: Design's *Done when* line 5 ("When the battle and the gate (one test failing, and all agreeing) are drawn on the real page at 1440 and 390…"); Design's *Done when* and *Will be* (changed home), accepted
 - [x] P2. Design's not accepted: Yours a Tab stop, the gate's token off the kind sign, the battle's slip at 390 under the old cards
   - party: Tech (a simpler model). In spreads/battle.js the new card in Yours is a Tab stop with a visible focus between the line and the hand's ways, as the table's non-button cards are, named in the Tab lists of tests/test_cards_battle_browser.py and tests/test_cards_phone_browser.py; on the gate the no token (`.sp-chk`) lies where the card's kind sign stays visible (spreads.css `.gt`, shell.js `SpCard`), tested by elementFromPoint on the sign; at 390 the battle's slip of an old card lies under the old cards at the zone's full width, its list whole without an inner scroll (spreads.css `.bt-slip`), tested at 390.
   - proves: Design's *Done when* line 3 and its checks 2 and 3, made again
-- [ ] Q. Product accepts the step
+- [x] Q. Product accepts the step
   - party: Product. Its pass of its own (its role file, its section, the gate's record of A to N, the files they changed), against its *Done when* and *Will be* (H7 changed, H8 new); what it does not accept is one more stage, twice at most.
   - proves: Product's *Done when* and *Will be*, accepted
 
@@ -153,6 +153,12 @@ The first goal taken after 171 (the person, 12 November 2026, on the gate still 
 - What rests on §N: the goals whose pages name §N, the other decisions whose text names it and the test files naming `decisions §N`, each counted once, §N itself not.
 - `from` is `hand` when the gate mat or the battle was opened from its hand card, `mat` when from the goal's card on the table; the discard's older faces keep "" as today.
 - H8 is the next free number (H1 to H7 taken); its signal needs no new event (`conflict_answered` keeps idea, number, choice and device).
+### Accepted
+- met: When the person seals Merge into main on the gate mat (?table=cards, the mat opened from the goal's card), then the real `ideas.to_main` logs `move_played` with the goal read from `idea`, kind `merge_main` and `from: mat` (`hand` when its hand card opened the mat); Send to dev on the real `ideas.goal_to_dev` likewise as `send_branch`
+- met: When the person plays a battle's way (New wins, Old wins, Your words) from its mat or its hand card, then the event log keeps `move_played` with the goal, the way's kind and its from, and `conflict_answered` its choice; Your words' text is in neither
+- met: When the table of cards opens (?table=cards) on a fixture Board where one goal's decision keeps a conflict with §N and a goal run by the skills keeps none, then the first has one battle card in the hand, §N above its line, and the second has no battle
+- met: When the person opens that battle from its hand card, then under §N lie the goals, the decisions and the tests that name §N, as the fixture's files hold them, with no mana or price shown, and opening it starts no pass and spends nothing
+- met: When the gate goes red, then Fix it on a goal unmerged on its own branch puts its stage back to work on that goal, and on a goal done on its way to main lays a new Fix goal naming it, the done goal's page byte for byte as before
 
 ## Design
 ### Talk
