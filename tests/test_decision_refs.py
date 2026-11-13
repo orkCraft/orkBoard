@@ -72,3 +72,20 @@ def test_reading_writes_nothing(tmp_path):
     refs.guards(root, ["tests/test_a.py::test_one"])
     refs.named_by(root, ["tests/test_a.py"])
     assert _snap(root) == before
+
+
+def test_a_changes_paragraph_counts_each_items_n_and_never_a_specs(tmp_path):
+    root = _repo(tmp_path)
+    (root / "docs/decisions.md").write_text(LOG + "\n## 4. Fourth\nChanges: 2, 174.1;\nspec 34, spec 103, 1.\n\nText after, 3 and 5.\n\n## 103. A number\nPlain.\n", encoding="utf-8")
+    assert refs.rests_on(root, 2)["decisions"] == [3, 4]              # the first line's N
+    assert refs.rests_on(root, 1)["decisions"] == [4]                 # a later line's N
+    assert refs.rests_on(root, 103)["decisions"] == []                # `spec 103` is a spec's
+    assert refs.rests_on(root, 3)["decisions"] == []                  # past the blank line it is no Changes paragraph
+
+
+def test_this_repositorys_log_does_not_rest_103_on_a_decision_naming_spec_103():
+    root = Path(__file__).resolve().parent.parent
+    text = (root / "docs/decisions.md").read_text(encoding="utf-8")
+    assert "Changes: 174, 180, 218; spec 34, spec 103." in text
+    assert 219 in refs.rests_on(root, 218)["decisions"] and 219 in refs.rests_on(root, 174)["decisions"]
+    assert 219 not in refs.rests_on(root, 103)["decisions"] and 219 not in refs.rests_on(root, 34)["decisions"]

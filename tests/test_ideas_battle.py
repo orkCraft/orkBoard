@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import pytest
 
 from orkboard.core import idea_fix_stage, idea_undo
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, goal_branch, harnesses, ideas, spec_sections
+from orkboard.realm import event_log, gate_config, goal_branch, harnesses, ideas, main_checks, spec_sections
 
 LOG = "# Decisions\n\n## 1. First\nPlain.\n\n## 2. Second, the old card\nIt stands.\n\n## 3. Third\nAlso stands.\n"
 PAGE = "---\nowner: board\nkind: idea\ntrack: tech\norder: 1\nphase: talk\nschema: 3\n---\n# {t}\n\n## Gist\nA goal.\n"
@@ -110,6 +112,31 @@ def test_an_all_green_gate_lays_nothing_failing(host):
     goal_branch.update(host.ideas.state_dir, "goal", branch="goal/goal", failing=[], files=["tests/test_ok.py"])
     got = host.command("ideas.gate_guards", {"idea": "goal"})
     assert got["failing"] == [] and got["files"] == [] and got["agreeing"] == [{"number": 3, "title": "Third"}]
+
+
+
+def test_a_green_tests_step_as_the_writer_leaves_it_lays_the_agreeing_pile(host, fake_repo):
+    from orkboard.realm.idea_git import IdeaGit
+    def git(*a):
+        return subprocess.run(["git", *a], cwd=fake_repo, check=True, capture_output=True, text=True).stdout.strip()
+    (fake_repo / "orkcraft.toml").write_text('[gate]\nalways = ["tests/test_ok.py"]\n', encoding="utf-8")      # the gate's own pytest (no `run`) on the critical file
+    git("add", "-A")
+    git("commit", "-q", "-m", "the fixture's files")
+    base = git("rev-parse", "HEAD")
+    (fake_repo / "tests/test_ok.py").write_text('"""Guards decisions §3."""\n\ndef test_d():\n    pass\n\n# touched\n', encoding="utf-8")
+    git("add", "tests/test_ok.py")
+    git("commit", "-q", "-m", "touch the test")
+    py = fake_repo / ".venv/bin/python"                                  # the repository's own Python, as the gate looks for it (untracked): ours, with pytest
+    py.parent.mkdir(parents=True)
+    py.write_text(f'#!/bin/sh\nexec "{Path(sys.prefix) / "bin/python"}" "$@"\n', encoding="utf-8")
+    py.chmod(0o755)
+    ok, _words, record = main_checks._checked(IdeaGit(fake_repo), fake_repo, base, gate_config.Check("Tests", gate=True), threading.Event(), 120, alone=True)
+    assert ok, _words
+    assert record["files"] == ["tests/test_ok.py"]
+    host.ideas._main_checks["goal"] = {"running": False, "checks": [{"name": "The merge", "state": "passed", "words": ""},
+                                                                       {"name": "Tests", "state": "passed", "words": "", **record}]}
+    got = host.command("ideas.gate_guards", {"idea": "goal"})
+    assert got["way"] == "main" and got["failing"] == [] and got["files"] == [] and got["agreeing"] == [{"number": 3, "title": "Third"}]
 
 
 # -- G: Fix it after dev, one press with its Undo ---------------------------------------------------------------------------------------------
