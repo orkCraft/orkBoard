@@ -68,13 +68,13 @@ export function Gate({ slug, opened }) {
   if (!ready) seal = html`<${Seal} word=${`Send to ${branch}`} why=${g === false ? "The gate could not be read" : "reading the gate"} kind="dev" />`;
   else if (pick === "stale") {
     const text = `The gate is red on ${failingIds(g).slice(0, 3).join(", ")}. Is the test out of date? If it is, a new decision comes first. Say what the decision should be.`;
-    seal = html`<${Seal} word="Ask Tech" why=${ask.words} lit=${ask.ready} kind="ask" onPress=${() => playMove("ideas.ask_leader", { slug, leader: "tech", text }, { from, goal: slug, sealed: true, said: "Tech is asked: a new decision comes first.", done: () => setPick("") })} />`;
+    seal = html`<${Seal} word="Ask Tech" why=${ask.words} lit=${ask.ready} kind="ask" onPress=${() => playMove("ideas.ask_leader", { slug, leader: "tech", text, sealed: true }, { from, goal: slug, sealed: true, said: "Tech is asked: a new decision comes first.", done: () => setPick("") })} />`;
   } else if (pick === "fix" && dev) {
-    seal = html`<${Seal} word="Fix it" why=${costWords(g.cost)} lit=${true} kind="fix" onPress=${() => playMove("ideas.gate_fix_stage", { idea: slug }, { from, goal: slug, sealed: true, said: "Its stage runs again.", done: closeSpread })} />`;
+    seal = html`<${Seal} word="Fix it" why=${costWords(g.cost)} lit=${true} kind="fix" onPress=${() => playMove("ideas.gate_fix_stage", { idea: slug, sealed: true }, { from, goal: slug, sealed: true, said: "Its stage runs again.", done: closeSpread })} />`;
   } else if (bad > 0) {
     seal = html`<${Seal} word=${dev ? `Send to ${branch}` : "Merge into main"} why=${disagreeWords(bad)} kind=${dev ? "dev" : "merge"} />`;
   } else if (dev) {
-    seal = html`<${Seal} word=${`Send to ${branch}`} why="every check agrees" lit=${true} kind="dev" onPress=${() => playMove("ideas.goal_to_dev", { idea: slug }, { from, goal: slug, sealed: true, said: `Sent to ${branch}.`, done: closeSpread })} />`;
+    seal = html`<${Seal} word=${`Send to ${branch}`} why="every check agrees" lit=${true} kind="dev" onPress=${() => playMove("ideas.goal_to_dev", { idea: slug, sealed: true }, { from, goal: slug, sealed: true, said: `Sent to ${branch}.`, done: closeSpread })} />`;
   } else {
     seal = html`<${Seal} word="Merge into main" why="it cannot be undone" lit=${true} kind="merge" onPress=${() => toMain(slug, from).then(closeSpread).catch(() => {})} />`;
   }
