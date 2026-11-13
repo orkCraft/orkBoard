@@ -44,10 +44,6 @@ export function Chair({ big = false, empty = false, small = false, lit = false }
   return html`<span class=${`ork-chair${big && !empty ? " big" : ""}${empty ? " is-empty" : ""}${empty && small ? " small" : ""}${lit ? " is-lit" : ""}`} aria-hidden="true"></span>`;
 }
 
-/** orkUI's door (door/, 0.27.0; spec 123 §7.6): Stop all's mark, 28 x 40 (`small` 14 x 20), shut at rest and `open` once everything is stopped; nothing swings. `lit` lights its frame (a hovered or focused one is lit by orkUI itself). `aria-hidden`; the word is the button's. */
-export function Door({ open = false, small = false, lit = false }) {
-  return html`<span class=${`ork-door${open ? " is-open" : ""}${small ? " small" : ""}${lit ? " is-lit" : ""}`} aria-hidden="true"></span>`;
-}
 
 // The races that have faces (orkUI 0.27.0 `races/<race>-<tier>-<mood>.png`): the leaders' (the higher forms, decisions §158) and the Orkmaster's crowned ork; a member's race has one face.
 const LEADER_RACES = ["shaman", "dryad", "imp", "fairy", "unicorn", "lich"];

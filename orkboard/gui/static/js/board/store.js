@@ -10,7 +10,6 @@ export const page = signal(null);           // ideas.page of the open idea
 export const track = signal("");            // the track shown ("" = all)
 export const adding = signal(false);        // the Drop it field is up
 
-export const PROJECT = "@project";         // the project's level (spec 70): the parties as columns, their goals as decks; shown in place of a party
 
 export const BUSY = ["reading", "planning", "working"];
 

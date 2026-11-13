@@ -6,21 +6,37 @@
 // A card is **lifted where it lies** and turns over (`Lifted`): its back the details and **Open**; Esc or a press away lowers it, one at a time. A card leans toward the pointer and rises on orkUI's motion tokens (`.ork-leans`, the page sets `--ork-lean-x/-y`); nothing moves under
 // reduced motion (orkUI's own rule). At the narrow width what is lifted is a screen.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+
 import { signal } from "@preact/signals";
+
 import { html, cls } from "../html.js";
+
 import { Sign, WhoHead, headWords } from "../orkui.js";
+
 import { lifted, lift, lower, picked, pick, openOver, partKey, linkKey } from "../frame/state.js";
+
 import { TASK_STATE } from "../board/maplayout.js";
+
 import { typeTone } from "../arena/goalwords.js";
+
 import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
-import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
+
+import { ConcernsBack } from "./concerns.js";
+                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
-import { StepsList, StepsWindow, WaitingWindow, FailedWindow, labelWords, countWords, showsSteps, stepsOf, seatWords } from "./steps.js";       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
-import { CornerTop, CornerFoot, muchOf, figureOf, timeWords, secondsBetween } from "./corners.js";                 // a card is read by its four corners (spec 147 A, decisions §251)
-import { CardWindow, windowOf } from "./cardwindow.js";                // a window never empty: the goal's picture, else words (spec 148)
-import { MadeWindow, madeOf } from "./made.js";                           // what a task done or at Review made, by its craft (spec 142 D)
-import { movesOn } from "./lit.js";                                  // a rune glows only on the goal that moves: the one picked, else the first at work (spec 140 C3)
-import { ThrownPlace, thrown } from "./flight.js";                         // a failed task's card thrown to the hand leaves its place (spec 128 C.2)
+
+import { StepsList, StepsWindow, WaitingWindow, FailedWindow, labelWords, showsSteps, stepsOf, seatWords } from "./steps.js";
+       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
+import { CornerTop, CornerFoot, muchOf, figureOf, timeWords, secondsBetween } from "./corners.js";
+                 // a card is read by its four corners (spec 147 A, decisions §251)
+import { CardWindow, windowOf } from "./cardwindow.js";
+                // a window never empty: the goal's picture, else words (spec 148)
+import { MadeWindow, madeOf } from "./made.js";
+                           // what a task done or at Review made, by its craft (spec 142 D)
+import { movesOn } from "./lit.js";
+                                  // a rune glows only on the goal that moves: the one picked, else the first at work (spec 140 C3)
+import { ThrownPlace, thrown } from "./flight.js";
+                         // a failed task's card thrown to the hand leaves its place (spec 128 C.2)
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
 export const litKey = signal("");

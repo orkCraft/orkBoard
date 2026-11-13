@@ -6,12 +6,18 @@
 // Nothing plays by itself (no `autoplay`, `play()` only on a press), a clip's sound is off until the person turns it on, and one plays at a time on the
 // whole page (the others pause when one starts). Nothing here animates: the bar only says where the media is.
 import { Fragment } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+
+import { useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
+
 import { html, cls } from "../html.js";
+
 import { MakerReceipt } from "./makerreceipt.js";
+
 import { Sign } from "../orkui.js";
+
 import { groupWords, isCapped, isPixel, labelOf, lengthWords, UPSCALE_MAX, variantOf } from "./pickwords.js";
+
 
 /** What the person has picked and noted, by pick (goal/task/round): the card and the drawer of one pick share it. */
 export const choices = signal({});          // "<goal>/<task>/<round>" → {key, note}

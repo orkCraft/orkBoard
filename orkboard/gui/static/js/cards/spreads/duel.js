@@ -4,14 +4,22 @@
 // (`ideas.order {order: [slug]}`: the host keeps no order of goals yet, so the order so far lies empty until the order's mat lays it). ← and → choose, ↓ skips the
 // pair (the goal is asked again after the others; the last one left stays out of the order).
 import { Fragment } from "preact";
+
 import { useEffect, useState } from "preact/hooks";
-import { html, cls } from "../../html.js";
+
+import { html } from "../../html.js";
 import { command, toast } from "../../link.js";
+
 import { Icon } from "../../orkui.js";
+
 import { whoOf } from "../../table/post.js";
+
 import { nodeOf, nodes } from "../feed.js";
+
 import { closeSpread } from "./open.js";
+
 import { Key, SpCard, SpreadFrame, Thick, faceOf } from "./shell.js";
+
 
 const IN_TALK = new Set(["new", "talk", "spec", "idea"]);
 

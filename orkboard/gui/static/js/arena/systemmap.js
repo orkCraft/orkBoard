@@ -19,8 +19,6 @@ import { lift, lifted, lower, partKey, pick as pickGoal } from "../frame/state.j
 import { reducedMotion } from "./motion.js";
 import { ArrowLines, across, fine } from "./arrows.js";
 
-// -- the words (spec 89 §0) ---------------------------------------------------------------------------------------------------------------------------------------------------
-export const TABS = [["system", "System"], ["modules", "Feature modules"], ["board", "Board"]];
 export const READING = "Reading the project…";
 export const NOTHING_CHANGED = "Nothing changed since your last look";
 export const NOTHING = "Nothing here yet";

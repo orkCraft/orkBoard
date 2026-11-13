@@ -531,7 +531,7 @@ def _open(gui, viewport=None, host=None, ready=".arena-hc[data-kind=result]", qu
 
 
 def _parties(pg):
-    """The left column's list of the parties (docs/specs/69-parties-in-the-column.md): waited for; a heading for each party."""
+    """The left column's list of the parties: waited for; a heading for each party."""
     col = pg.get_by_role("complementary", name="Parties")
     col.wait_for(timeout=WAIT_MS)
     return col
@@ -552,23 +552,6 @@ def _show_goal(pg, slug="ship-sync"):
     else:
         pg.locator(f'.arena[data-goal="{slug}"]').wait_for(timeout=WAIT_MS)
         pg.wait_for_function("() => !document.querySelector('.is-leaving') && !document.querySelector('.is-drawn')", timeout=WAIT_MS)
-
-
-def _stop(pg, kind, nth=0):
-    """A stop in the fan along the bottom, raised (its quick answers are then in reach): the focus brings it up, as a hover does."""
-    item = pg.locator(f".arena-hc[data-kind={kind}]").nth(nth)
-    item.wait_for(timeout=WAIT_MS)
-    item.locator(".arena-hc__open").focus()
-    pg.wait_for_function("(el) => getComputedStyle(el).transform === 'matrix(1, 0, 0, 1, 0, -184)'", arg=item.element_handle(), timeout=WAIT_MS)   # it stands whole before a press
-    return item
-
-
-def _new_ideas(pg):
-    """The goals list's *New · n* row, its fold open: its rows (a goal is a row of the list: `.arena-goal`)."""
-    fold = pg.locator(".arena-raw .arena-frow__main")
-    if fold.get_attribute("aria-expanded") != "true":
-        fold.click()
-    return pg.locator(".arena-goal")
 
 
 def _goal_row(pg, title):

@@ -6,13 +6,19 @@
 // Whether a side follows the default (docs/specs/114-the-mana-in-two-windows.md §3.5, decisions §192.4; the node's `does_default`, `checks_default`: gui/ideas_map.py): a side that does was drawn **in a small frame** (spec 114); with §247.7 it is on the default, so it is not drawn at all (its words stay); a side set to a tool on purpose is a **bare mark**, dim with orkUI's `moon` beside it while that tool is dry (a
 // window of it at 0: hand/windows.js). The default's potion, hovered or focused, lights the tabs whose sides follow it (`markedDefault`). The words: *Does on the default (now Claude Code)*, *Does on Claude Code, set for this party*,
 // *Does waits for Claude Code until Thu 09:00*, the same for Checks. A host that does not say (no `does_default`) draws bare marks and the words of before.
-import { html, cls } from "../html.js";
+import { html } from "../html.js";
 import { Sign } from "../orkui.js";
+
 import { town } from "../link.js";
+
 import { markedDefault, markedTool } from "../hand/state.js";
+
 import { windowsOf } from "../hand/windows.js";
+
 import { untilWords } from "../arena/arenawords.js";
+
 import { MARKED, markSrc } from "./data.js";
+
 
 /** A tool's name as the potions say it (the limits' own), else its id with a capital. */
 export function toolName(id) {

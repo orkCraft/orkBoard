@@ -1,24 +1,41 @@
 import { MakerStop } from "../arena/makerreceipt.js";
+
 // A stop of the hand opened over the pane (a line that repeats its title is not drawn: docs/specs/140 A4, decisions §247.6) (its header as a card's: the element at the left, the action's sign by its kind, the asker's head at the right; docs/specs/101 §4.5) (`stop`, docs/specs/98-the-table-and-the-hand.md §0.2): what a card has no room for. A lifted card's *Open…* opens it here, whole: the
 // stop's text and why, a plan's tasks, a failure's error and log, a question's choices, a pick's variants large with their note (the old drawer's `PickView`), and the same answers as the
 // lifted card. Props: `{key}` of the stop (data.js `stopsOfProject`). When the stop is answered it is gone from the Board and the pane goes back.
 import { useEffect, useState } from "preact/hooks";
+
 import { html } from "../html.js";
-import { Elem, Head } from "../orkui.js";
+
+import { Head } from "../orkui.js";
 import { command } from "../link.js";
+
 import { closeOver } from "../frame/state.js";
+
 import { PickView } from "../shell/pickview.js";
+
 import { LogView, happened } from "../shell/logview.js";
+
 import { askedOf } from "../arena/arenawords.js";
+
 import { TASK_STATE } from "../board/maplayout.js";
+
 import { GoalMenu } from "../table/dropgoal.js";
+
 import { goalOfStop, stopsOfProject } from "./data.js";
+
 import { Answers } from "./answers.js";
+
 import { AskForm } from "./askform.js";
+
 import { TodoForm } from "./todoform.js";
+
 import { costOf, Spend } from "./cost.js";
+
 import { ElemOf, Mark, labelOf } from "./stopcard.js";
+
 import { notTitle } from "./sayonce.js";
+
 
 /** A failed task's log, read once. */
 function useLog(s) {

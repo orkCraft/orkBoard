@@ -1,15 +1,24 @@
 // The one window's words and lists (docs/specs/49-one-window.md): pure functions over `ideas.map`, `ideas.board`, `ideas.agents`,
 // `ideas.gate`, `ideas.today` and the snapshot. No signal and no template here; the parts of the window (arena.js and its
 // neighbours) draw what these say. The backend writes no words: the member's state, a task's foot and a stop's text are said here.
-import { leftToDo, TASK_STATE } from "../board/maplayout.js";
+import { leftToDo } from "../board/maplayout.js";
+
 import { soFarWords, todayWords } from "../board/mapstage.js";
-import { holdWords, hhmm } from "../board/store.js";
+
+
+import { hhmm } from "../board/store.js";
+
 import { TIER_WORDS, RACE_WORDS } from "../orkui.js";
+
+
 import { kindCount } from "./pickwords.js";
+
+
 import { pctOf, pctRange, pctDelta, rated, SHARE_TIP } from "../spend.js";
 
+
+
 export const RUN = ["running", "testing"];
-export const RANK = { running: 0, testing: 0, failed: 1, picking: 1.5, review: 2, ready: 3, waiting: 4, held: 5 };      // a column, from the member up (§5.4); a pick waits for the person, after a failure (spec 51)
 const LEVEL = { laborer: 1, warrior: 2, elder: 3 };      // the level's chevrons (marks/rank-1 … 3)
 
 export const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -65,32 +74,6 @@ export const costWords = (g) => [soFarWords(g.usd), todayWords(g.today)].filter(
 // -- the stops: what waits for the person ----------------------------------------------------------------------------------------
 
 const STOP_KINDS = ["asks", "plan", "proposal"];                 // the stops of Planning (§4.3)
-/** The party's Planning: the goals in stage planning that are not raw, the stops first; the raw ones apart (*New (n)*). Its `mark` is a sign's name. */
-export function planningOf(g, nodes, leader) {
-  const lead = leader || g.leader?.name || "Taskmaster";
-  const asks = (n) => n.asked?.[0]?.by?.name;
-  const words = (n) => {
-    if (n.needs_you === "plan") return "plan ready";
-    if (n.needs_you === "asks") return `asks you · ${asks(n) || lead}`;
-    if (n.needs_you === "proposal") return "proposed";
-    if (n.state === "reading") return `${lead} is reading`;
-    if (n.state === "planning") return `${lead} is planning`;
-    if (n.busy === "accepting") return `${lead} is accepting`;         // the goal stays working: its leader's acceptance is a busy run, not a state (spec 152 B.5)
-    if (n.waits?.kind === "week" || n.waits?.kind === "sign_in") return waitsWords(n.waits);
-    if (n.state === "ready") return `ready · ${lead} plans it next`;
-    return n.state;
-  };
-  const row = (n) => {
-    const stop = STOP_KINDS.includes(n.needs_you), busy = n.state === "reading" || n.state === "planning" || n.busy === "accepting";
-    return { slug: n.slug, title: n.short || n.title, full: n.title, stop, busy, mark: stop ? "alert" : busy ? "work" : "", words: words(n), ...(n.busy === "accepting" ? { doing: "accepting" } : {}),
-      cost: n.needs_you === "plan" ? rangeWords(n.plan_estimate || n.estimate) : "", kind: n.needs_you === "plan" ? "plan" : "idea", node: n };
-  };
-  const mine = nodes.filter((n) => n.stage === "planning" || n.busy === "accepting");
-  const rows = mine.filter((n) => n.state !== "raw").map(row);
-  const raw = mine.filter((n) => n.state === "raw").map((n) => ({ slug: n.slug, title: n.short || n.title, full: n.title, node: n, kind: "idea", stop: false, busy: false,
-    mark: "", cost: "", words: n.waits?.kind === "week" || n.waits?.kind === "sign_in" ? waitsWords(n.waits) : n.queue === "hold" ? "stopped" : `new · ${lead} reads it later` }));
-  return { rows: [...rows.filter((r) => r.stop), ...rows.filter((r) => !r.stop)], raw };
-}
 
 // -- the party -----------------------------------------------------------------------------------------------------------------------
 
@@ -125,9 +108,6 @@ export function phaseOf(n, t) {
   return Math.max(0, t.wave - Math.min(t.wave, ...open.map((x) => x.wave)));
 }
 export const ROWS = ["now", "next", "later"];
-export const rowName = (phase) => ROWS[Math.min(phase, ROWS.length - 1)];
-/** A task's phase (0 now, 1 next, 2 later): the host's `row` (1–3, `map_stage.row_of`, spec 82 §2: one row across the whole field), else its goal's own wave (`phaseOf`). */
-export const phaseFor = (n, t) => (Number.isInteger(t.row) && t.row >= 1 ? t.row - 1 : phaseOf(n, t));
 
 /** A column's items as its rows by phase, each row its stacks: one per goal (in the Board's order, `nodes`'), the front card first.
  *  `list`: items as the column shows them ([{it: {n, t, row}, …}]); [{row, stacks: [{goal, items: [...]}]}], a row with nothing not there. */
@@ -201,51 +181,9 @@ export const raceOf = (head) => (head ? RACE_WORDS[head.race] || "" : "");
 
 // -- the columns -------------------------------------------------------------------------------------------------------------------
 
-/** A check that waits for the whole build says so: *after the build* (every build task of its goal is among those it follows). */
-export function followsBuild(t, n) {
-  const builds = (n?.tasks || []).filter((x) => x.band !== "check");
-  return t.band === "check" && builds.length > 0 && builds.every((b) => (t.after || []).includes(b.id));
-}
-/** What a task follows, by name (spec 67 §3): *after Challenge store, Credential table*, or *after the build* for a check that waits for all of it; an id with no task found is left out ("" when none is left). */
-export function afterWords(t, n) {
-  if (followsBuild(t, n)) return "after the build";
-  const names = (t.after || []).map((id) => (n?.tasks || []).find((x) => x.id === id)).filter(Boolean).map((x) => x.short || x.title);
-  return names.length ? `after ${names.join(", ")}` : "";
-}
 
-/** Why a held task is held (spec 82 §3): {kind, word, sign}. `kind`: window · sign_in · week · files · "" (not known); `word` is what the foot says after *held:*,
- *  `sign` the sign before it. A task held for the tool's window or the person's reserve is *window*. */
-export function heldOf(t, n) {
-  const note = String(t.note || ""), w = n?.waits?.kind || "";
-  if (t.held_for === "sign_in" || w === "sign_in") return { kind: "sign_in", word: "sign in", sign: "alert" };
-  if (w === "week" || note.startsWith("week")) return { kind: "week", word: "week", sign: "pause" };
-  if (w === "files" || /^files/.test(note)) return { kind: "files", word: "", sign: "before" };
-  if (w === "limits" || w === "reserve" || note.startsWith("reserve") || /^after \d\d:\d\d/.test(note) || n?.held_until) return { kind: "window", word: "window", sign: "pause" };
-  return { kind: "", word: "", sign: "pause" };
-}
 
-/** A held task's long words (its tooltip): *waits for limits · after 14:20*, *waits: the week is behind*. */
-export function heldWords(t, n) {
-  if (n?.waits?.kind === "week") return waitsWords(n.waits);
-  if (t.held_for === "sign_in" || n?.waits?.kind === "sign_in") return waitsWords(n?.waits?.kind === "sign_in" ? n.waits : { kind: "sign_in" });   // held for its tool's sign-in (spec 45 §7)
-  return holdWords(t.note, n?.waits?.title, t.why) || "held";
-}
 
-/** A task's foot: its state in words (*working 4 min*, *in Review*, *after Challenge store*, *held: window*, *failed*). */
-export function taskFoot(t, n) {
-  if (t.state === "running") return `working${sinceWords(t.started) ? ` ${sinceWords(t.started)}` : ""}`;
-  if (t.state === "testing") return "testing";
-  if (t.state === "review") return "in Review";
-  if (t.state === "picking") return "asks you to pick";
-  if (t.state === "failed") return "failed";
-  if (t.state === "held") {
-    const h = heldOf(t, n);
-    return h.word ? `held: ${h.word}` : heldWords(t, n);                          // spec 82 §0; a hold for the same files names the goal in its own words
-  }
-  if (t.state === "waiting") return afterWords(t, n) || "waiting";
-  if (t.state === "ready") return t.note || "next";
-  return TASK_STATE[t.state] || t.state;
-}
 
 /** The tasks that wait for `src` (they list it in `after`), in the same goal, not done. */
 export function waitersOf(n, src) {
@@ -438,24 +376,7 @@ export function byUrgency(stops) {
   return stops.map((s, i) => [s, i]).sort(([a, i], [b, j]) => urgencyOf(a) - urgencyOf(b) || ageOf(a).localeCompare(ageOf(b)) || i - j).map(([s]) => s);
 }
 
-/** *n goals ready for main* (docs/specs/90-what-the-first-look-said.md §2.3, decisions §104.9): what dev holds that main lacks, one card for the batch, its answer *Merge into main*; none when nothing
- *  waits or dev and main are one branch (`ideas.gate`). The goals' titles are its text (*k commits ready for main* when no goal's are among them). */
-export function gateStop(gate, shown, ork = null) {
-  const shape = gateOf(gate);
-  if (!shape || shape.off) return null;
-  const n = (gate.ideas || []).length;
-  const title = n ? `${n === 1 ? "1 goal" : `${n} goals`} ready for ${gate.main}` : `${plural(gate.commits, "commit", "commits")} ready for ${gate.main}`;
-  return { key: "gate", kind: "gate", row: null, node: null, task: null, gate, label: `${gate.into} → ${gate.main}`, gem: "", tone: "", gemTip: "", small: false, whoTip: "",
-    head: ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null, title, full: title,
-    text: n ? gate.ideas.map((i) => i.title).join(" · ") : plural(gate.files, "file", "files"),
-    g: null, party: { slug: shown, name: "", head: null, lead: "" }, other: false };
-}
 
-/** A fan's turn, rise and order for the item at place `i` of `n` (the middle ones higher): the values of `--rot`, `--dy` and `--z`. A long hand turns less. */
-export function fanOf(i, n, fanned = true) {
-  const off = i - (n - 1) / 2, ease = n > 6 ? 6 / n : 1;
-  return { rot: fanned ? Math.round(off * 5 * ease * 10) / 10 : 0, dy: fanned ? Math.round(off * off * 4 * ease * ease) : 0, z: 10 + i };
-}
 
 /** A result among the stops (§3; on the desktop's party at every width since spec 90 §2.3): *To look at*, with a result's own answers. */
 export function resultStop(r, nodes) {

@@ -17,15 +17,7 @@
 .arena-refs__pic .ork-btn { position: absolute; right: 0; top: 0; min-width: 0; height: 20px; padding: 0 var(--ork-2); }
 /* -- the main row: the strip, the left column, the field ------------------------------------------------------------------------ */
 .arena { flex: 1; min-width: 0; display: flex; }
-/* -- the left column (spec 69): the project's line at its top, then the parties — a heading each, the open one's body under it — and + New party; the list scrolls under the line -- */
-.arena-sec { margin: var(--ork-4) var(--ork-2) var(--ork-1); color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
-/* the flags raised (spec 64): the line's goals' elements travel to their places in its row from the gate (--dx, --dy, --s set from the gate's box, --delay 35 ms apart) as copies over everything,
-   taking no press; a place stays empty until its copy lands; the flag stands 6 px lower until the last has landed (--delay on the line), then steps up, and the line is lit once */
-@keyframes arena-lit { from { background: var(--ork-ink); color: var(--ork-on-ink); } }
 /* the field is one grid (spec 82 §2, glance.css): a track per member, the rows (label, cards) across them; a member's column is a subgrid of its rows */
-.arena-cols__grid { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--cols); grid-template-rows: repeat(6, auto) auto; column-gap: var(--ork-4); align-content: start; align-items: stretch; overflow-y: auto; scrollbar-width: none; }
-.arena-cols__grid::-webkit-scrollbar { display: none; }
-.arena-phase { position: relative; flex: none; display: flex; flex-wrap: wrap; align-content: flex-start; gap: var(--ork-4) var(--ork-4); padding-top: var(--ork-6); }
 .arena-stk { position: relative; flex: 0 1 calc(50% - var(--ork-2)); min-width: 0; max-width: 128px; }
 .arena-stk.is-many { margin-top: var(--ork-4); }
 .arena-stk.is-wide, .arena-phase.is-wide > .arena-stk { flex: 0 0 128px; }
@@ -33,8 +25,6 @@
 .arena-stk.is-fail .arena-stk__edge { border-color: var(--ork-danger); }
 .arena-stk__n { position: absolute; right: var(--ork-2); bottom: var(--ork-2); min-width: 22px; height: 18px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 0 var(--ork-2);
   background: var(--ork-ink); color: var(--ork-on-ink); clip-path: var(--ork-notch-control); font: var(--ork-type-label); font-variant-numeric: tabular-nums; }
-.arena-solo { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: var(--ork-4); padding: var(--ork-3) var(--ork-4) 10px var(--ork-2); overflow-y: auto; scrollbar-width: none; }
-.arena-solo::-webkit-scrollbar { display: none; }
 /* a card is 5:7 (128 × 180 at most, spec 87 §2): the goal's element top left, its type top right in the element's colour (spec 55), the goal, the task, its foot */
 .arena-task { appearance: none; position: relative; display: flex; flex-direction: column; gap: var(--ork-1); width: 100%; min-width: 0; padding: 5px var(--ork-3) var(--ork-3); box-sizing: border-box;
   text-align: left; background: var(--ork-raised); border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); color: var(--ork-ink); cursor: pointer; font: var(--ork-type-caption); }
@@ -66,11 +56,6 @@
 .arena-task.is-gone { visibility: hidden; pointer-events: none; }
 @keyframes arena-leave { to { opacity: 0; } }
 @keyframes arena-rise { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
-/* the deal (spec 57): a plan started from the hand deals its cards from the stop's box (--dx, --dy, --s set from it, --delay 35 ms apart) over the whole field; a card takes the pointer when it lands */
-.arena-stk .arena-task.is-dealt { position: relative; z-index: 60; animation: arena-deal 0.3s steps(6) var(--delay, 0s) backwards; }
-@keyframes arena-deal { from { transform: translate(var(--dx, 0), var(--dy, 0)) scale(var(--s, 1)); opacity: 0.2; pointer-events: none; } to { transform: none; opacity: 1; pointer-events: auto; } }
-.arena-solo.is-dealing { overflow: visible; }
-/* the gather (spec 63): a new party's heads, copies fixed over the page (goaltabs.js sets their box, --dx --dy to the deck's centre, --s, --delay 35 ms apart), travel in the deal's steps and are gone on landing */
 /* a stop looked at rings its task's cards (spec 58 §2): 2 px of ink, 2 px outside, on the stack's box (the card itself is clipped to its notch); drawn and taken away at once */
 .arena-stk.is-linked { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 /* -- a spread: the field dimmed, a stack's cards dealt in a row; the arrows over the field and under the drawer ------------------------------ */
@@ -156,13 +141,7 @@
 @media (prefers-reduced-motion: reduce) {
 .arena-task.is-drawn,
 .arena-task.is-leaving { animation: none; }
-.arena-stk .arena-task.is-dealt { animation: none; }
 .arena-arrow line, .arena-arrow polyline, .arena-arrow polygon, .arena-arrow.is-leaving line, .arena-arrow.is-leaving polyline { animation: none; }
 }
-/* New goal of A release: What goes in; New party and Edit the party: Releases from (spec 68 §7.3, §7.6). */
-.arena-goesin__list, .arena-releasesfrom__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); }
-.arena-goesin__row, .arena-releasesfrom__row { display: flex; align-items: center; gap: var(--ork-4); min-height: 32px; cursor: pointer; }
-.arena-goesin__row.is-held { opacity: 0.5; cursor: default; }
-.arena-goesin__text { display: flex; flex-direction: column; min-width: 0; }
 
 .pick-receipt { color: var(--ork-warning); }

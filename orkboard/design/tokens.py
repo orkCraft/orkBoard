@@ -1,11 +1,10 @@
 """The design tokens (`tokens.json`, docs/specs/40-design-system.md): roles for fonts, colours and space.
 
-A building's UI document names roles only (`"font": "status"`, `"tone": "fire"`). A face maps a role to what it can
+A UI document names roles only (`"font": "status"`, `"tone": "fire"`). A face maps a role to what it can
 draw: the TUI to a text style and a hex colour, the page to orkUI's own tokens (`design-system/orkui/`, the copy
 design/orkui.py keeps; linked here as `system/orkui/`): a type style, a colour token. orkUI has one look, office.
 
     tokens.FONTS                     # ("title", "heading", "body", "mono", "status", "label", "number")
-    tokens.font("status")            # {"about": ..., "tui": ""}
     tokens.color("fire", "office")   # the TUI's hex
     tokens.style("title")            # "title": a type style of orkUI's tokens.json (--ork-type-title)
     tokens.css_var("fire")           # "--ork-alert": a colour token of orkUI's tokens.css
@@ -52,10 +51,6 @@ FONTS: tuple[str, ...] = _fonts()
 TONES: tuple[str, ...] = _tones()
 
 
-def font(role: str) -> dict:
-    return dict(load()["fonts"][role])
-
-
 def style(role: str) -> str:
     """orkUI's type style a font role wears (`title`, `body`, `caption`, …: `--ork-type-<style>`)."""
     return load()["gui"]["fonts"][role]
@@ -83,11 +78,6 @@ def roles_css() -> str:
     for tone in TONES:
         lines.append(f".ok-tone-{_css_class(tone)} {{ color: var({css_var(tone)}); }}")
     return "\n".join(lines) + "\n"
-
-
-def space(step: int, unit: str = "px") -> int:
-    steps = load()["space"][unit]
-    return steps[max(0, min(step, len(steps) - 1))]
 
 
 def problems() -> list[str]:

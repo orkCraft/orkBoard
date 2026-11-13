@@ -4,15 +4,24 @@
 // Pressed, a slot deals its ways to the hand (hand/slotdeal.js: `dealt`, frame/state.js); pressed again, it puts them back. A way played is written by `ideas.stall_take` and Undo, on the table's line (`SlotsLine`, in the pane's title),
 // takes the old one back. The host's data and calls: stallstate.js; the faces: slotface.js; the sheet: slots.css. The narrow page and the phone keep the stall (stall.js).
 import { useEffect } from "preact/hooks";
+
 import { html, cls } from "../html.js";
+
 import { Icon } from "../orkui.js";
+
 import { board } from "../board/store.js";
+
 import { dealt, inventory } from "../frame/state.js";
+
 import { Pips, SlotPic } from "./slotface.js";
+
 import { Makers } from "./slotmakers.js";
+
 import { readPictures } from "./slotpics.js";
+
 import { StallSeats } from "./stallseats.js";
-import { cardOf, load, receipt, reset, stall, undo } from "./stallstate.js";
+
+import { load, receipt, reset, stall, undo } from "./stallstate.js";
 
 export const COIN_TITLE = "A cheaper way exists";
 export const AS_SET = "as set";

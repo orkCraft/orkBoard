@@ -10,7 +10,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_shell_browser import StubHost, _calls, _new_ideas, _sent, _show_goal, _stop  # noqa: E402
+from tests.test_shell_browser import StubHost, _calls, _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -249,29 +249,6 @@ def test_the_need_is_a_stop_of_the_hand_with_sign_in(gui):
         pg.keyboard.press("Escape")
         pg.locator(".table-tab").nth(1).click()                             # it holds every party's work: it is in every party's hand
         pg.locator('.hand-card[data-kind="sign_in"]').wait_for(timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
-
-
-# -- a goal or a task held by it ----------------------------------------------------------------------------------------------------
-
-WAIT = {"kind": "sign_in", "ref": "claude", "title": "Claude Code", "tool": "Claude Code", "until": "2026-10-21T10:00:00"}
-
-
-def test_a_goal_and_a_task_held_for_the_sign_in_say_so_and_not_limits(gui):
-    host = StubHost()
-    pg, errors = _page(gui, host)
-    try:
-        got = pg.evaluate("""async (w) => {
-          const base = document.querySelector('link[href$="shell.css"]').href.replace('shell/shell.css', 'arena/');
-          const m = await import(base + 'arenawords.js');
-          const goal = { slug: "offline", title: "Offline mode", stage: "planning", state: "ready", waits: w, held_until: w.until };
-          return [m.waitsWords(w), m.planningOf({ slug: "ship-sync" }, [goal], "Taskmaster").rows[0].words,
-            m.taskFoot({ state: "held", note: "", held_for: "sign_in" }, { waits: w }), m.taskFoot({ state: "held", note: "", held_for: "sign_in" }, {}),
-            m.heldWords({ state: "held", note: "", held_for: "sign_in" }, { waits: w }), m.heldWords({ state: "held", note: "", held_for: "sign_in" }, {})]; }""", WAIT)
-        assert got == ["waits: Claude Code's sign-in", "waits: Claude Code's sign-in", "held: sign in", "held: sign in",           # the card's foot says *held: sign in* (spec 82 §3); its tooltip says whose
-                       "waits: Claude Code's sign-in", "waits: the tool's sign-in"]
     finally:
         pg.close()
     assert not errors, "\n".join(errors)

@@ -7,7 +7,6 @@ export function dayWord(day) {
   return m && Number(m[2]) >= 1 && Number(m[2]) <= 12 ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]}` : "";
 }
 
-export const UNRELEASED = "Unreleased";
 
 /** The title of a decision's entry or a goal as it was, opened over the pane from the past (chronicle.js): *Decision §238*, *The goal as it was*; the tab's own name leads (*through Design*) on a party's tab. */
 export const entryTitle = (through, props = {}) => `${props.goal ? "The goal as it was" : `Decision §${props.decision || props.lit || ""}`}${through ? ` · through ${through}` : ""}`;

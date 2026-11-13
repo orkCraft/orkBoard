@@ -3,15 +3,23 @@
 // the whole side runs on one tool) and its seats, *Checks* (the shield, the word, its tool) and its seats, the size in one word, then at the right the aspects its leader looks at (concerns.js `Aspects`) and the party's **…** (*Edit*, *Ask again*, *Remove party*). A seat is its head
 // with its role under it (the caption face, muted, cut at 76 px), its own tool's mark only when it is not its side's, the busy mark while it works; pressed it opens its popover (seatpop.js: nothing only on hover). `Seat` is also the phone's (hand/upparty.js), which draws it as it
 // did: the head and its tool's mark, no role under it.
-import { useRef, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
+
 import { Head, Sign, TIER_WORDS } from "../orkui.js";
+
 import { MARKED, nameOf, wide, markSrc, sizeTip, sizeWord, squadOf, toolOf } from "./data.js";
+
 import { SeatPop } from "./seatpop.js";
+
 import { Menu } from "./menu.js";
+
 import { Aspects } from "./concerns.js";
+
 import { partyItems } from "./partymenu.js";
+
 import { LeaderHead } from "./leaderhead.js";
+
 
 const SIDE_SIGN = { build: "sword", check: "shield" };
 

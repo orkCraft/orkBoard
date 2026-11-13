@@ -2,15 +2,23 @@
 // goal that changed it at the left of its header — none when no goal did —, its name in the body face, a low window with its picture or a two-tone big sign, a label row with its word and, at its right, the gem where the data says
 // the card is new), the card lifted where it lies and turned over (card.js `Lifted`, with the table's own key, `data-lkey`, Esc and press-away), a file opened over the pane, and the read of a map's command. Each card is wrapped in
 // `Pickable` (maps.js; part F fills it). Written for part E; the sheet is maps.css.
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
+
 import { Elem } from "../orkui.js";
+
 import { command } from "../link.js";
+
 import { lift, lifted, lower, openOver, tab } from "../frame/state.js";
+
 import { mapData } from "../shell/store.js";
+
 import { Lifted, leans, litKey } from "./card.js";
+
 import { mapName, partiesAll } from "./data.js";
+
 import { Pickable } from "./maps.js";
+
 
 if (typeof document !== "undefined") {                                  // the sheet, once, as frame.js links the others
   const href = new URL("./maps.css", import.meta.url).href;

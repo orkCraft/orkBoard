@@ -74,14 +74,13 @@ def test_the_copy_is_orkui_0_27_0_with_the_room_the_chair_the_door_and_the_leade
         assert f"races/peon-crown-{mood}.png" in stamp["files"] and f"races/peon-crown-{mood}@2x.png" in stamp["files"], mood
 
 
-def test_head_draws_a_mood_only_for_a_leader_or_the_crown_and_chair_and_door_are_orkuis_spans():
+def test_head_draws_a_mood_only_for_a_leader_or_the_crown_and_chair_is_orkuis_span():
     js = (STATIC / "js" / "orkui.js").read_text(encoding="utf-8")
     head = js.split("export function Head")[1].split("export function Switch")[0]
     assert "mood" in head and "hasFaces(race, tier)" in head and 'LEADER_RACES = ["shaman", "dryad", "imp", "fairy", "unicorn", "lich"]' in js
     assert 'race === "peon" && tier === "crown"' in js
-    chair = js.split("export function Chair")[1].split("export function Door")[0]
-    door = js.split("export function Door")[1].split("const LEADER_RACES")[0]
-    assert "ork-chair" in chair and "is-empty" in chair and "aria-hidden" in chair and "ork-door" in door and "is-open" in door and "aria-hidden" in door
+    chair = js.split("export function Chair")[1].split("const LEADER_RACES")[0]
+    assert "ork-chair" in chair and "is-empty" in chair and "aria-hidden" in chair
 
 
 def test_the_page_draws_the_ink_marks_the_moon_and_no_head_at_12_x_11():
