@@ -32,7 +32,6 @@
 .release-lane .portal-host.is-ring { position: relative; overflow: clip; display: block; align-self: stretch; width: auto; margin: 0; padding: 0; text-align: left; }
 .release-lane .portal-host.is-ring .ork-portal-ring { opacity: 0; position: absolute; left: 50%; top: 50%; margin: 0; z-index: 0; pointer-events: none; transform: translate(-50%, -50%) scale(1.3); }
 .release-lane .portal-host.is-ring .ork-portal-ring:is(.is-sending, .is-waking) { opacity: 1; }
-.release-lane .portal-host.is-ring .discard-posts { position: relative; z-index: 1; }
 /* the past: Unreleased, then a deck a version (chronicleparts.js `Deck`, chronicle.css), a deck pressed deals its cards in place */
 
 /* a decision newer than the party's last look: a muted dot on its tab (pastdot.js) */

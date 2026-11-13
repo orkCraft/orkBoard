@@ -1,6 +1,5 @@
 """Spec 128 part D.3 (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md, decisions §206.6), in a real browser against a stub host that keeps the snapshot's `passing` as the keeper does: a question passed on is a small card
-over the Orkmaster's column's foot (its goal's rune, the two heads, the question, *passing on · N s*); pressed, **Answer it myself** (`ideas.pass_take`) and **Pass it now** (`ideas.pass_now`), each with the row's id; once its call begins the card flies to
-the answering leader's tab, which says *answering…*; the answer given, a copy flies back into the goal's card; the goal's card says *Asked Tech* with the faint `question` sign, not yellow. Screenshots to $PASS_SHOTS when it is set."""
+over the Orkmaster's column's foot (its goal's rune, the two heads, the question, *passing on · N s*); pressed, **Answer it myself** (`ideas.pass_take`) and **Pass it now** (`ideas.pass_now`), each with the row's id. Screenshots to $PASS_SHOTS when it is set."""
 from __future__ import annotations
 
 import json
@@ -12,7 +11,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_column_browser import ColumnHost, open_column  # noqa: E402
+from tests.column_kit import ColumnHost, open_column  # noqa: E402
 from tests.test_shell_browser import _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -99,67 +98,6 @@ def test_pressed_it_offers_answer_it_myself_and_pass_it_now_with_its_id(gui):
         assert _sent(pg, host, ("ideas.pass_take", {"id": "talk~q1"}))
         now.click()
         assert _sent(pg, host, ("ideas.pass_now", {"id": "talk~q1"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_piles_line_says_asked_tech_in_the_faint_ink_and_the_goals_back_is_not_yellow(gui):
-    """Spec 147 B.2: a back of the Orkmaster's hand has no room for words, so the question passed on is the pile's line (as it was for a card under the front one), faint, never yellow."""
-    pg, host, log = start(gui, [row(idea="reading", by="design", to="tech")])
-    try:
-        pg.wait_for_selector(".col-pass", timeout=WAIT_MS)
-        asked = pg.locator('[data-under-asked="analysis"]')
-        asked.wait_for(timeout=WAIT_MS)
-        assert asked.inner_text().strip() == "Asked Tech" and asked.evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const s = document.createElement('i'); s.style.color = 'var(--ork-ink-faint)'; document.body.append(s); const v = getComputedStyle(s).color; s.remove(); return v; }"), "faint, not yellow"
-        assert "asks" not in (pg.locator('.frame-column .col-card[data-goal="reading"]').get_attribute("class") or "").split(), "not yellow: it waits for no one"
-        shot(pg, "asked")
-        host.put([row(idea="talk", by="tech", to="design")])
-        pg.wait_for_function("() => (document.querySelector('[data-under-asked=analysis]')?.textContent || '') === 'Asked Design'", timeout=WAIT_MS)
-        assert pg.locator("[data-asked]").count() == 0, "a back of the hand says nothing itself: it is read in the pile's line"
-        pg.locator(".col-pass__main").click()
-        pg.locator("[data-pass-take]").wait_for(timeout=WAIT_MS)
-        host.put([])
-        pg.wait_for_function("() => !document.querySelector('[data-asked]') && !document.querySelector('.col-pass') && !document.querySelector('[data-under-asked]')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_once_its_call_begins_the_card_flies_to_the_leaders_tab_which_says_answering_and_the_answer_flies_back(gui):
-    pg, host, log = start(gui, [row()])
-    try:
-        pg.wait_for_selector(".col-pass", timeout=WAIT_MS)
-        assert pg.locator("[data-answering]").count() == 0
-        host.put([row(left_s=0, answering=True)])
-        tab = pg.locator('[data-answering="tech"]')
-        tab.wait_for(timeout=WAIT_MS)
-        assert tab.inner_text() == "answering…" and tab.evaluate("e => !!e.closest('#tab-tech')"), "on the answering leader's own tab"
-        pg.wait_for_function("() => !document.querySelector('.col-pass')", timeout=WAIT_MS)
-        assert flights(pg)["out"] == 1, "the card flew to the tab"
-        assert pg.locator('[data-under-asked=analysis]').inner_text() == "Asked Tech", "the goal still says Asked Tech while it is answered"
-        shot(pg, "answering")
-        host.put([])
-        pg.wait_for_function("() => !document.querySelector('[data-answering]')", timeout=WAIT_MS)
-        assert flights(pg)["back"] == 1, "the answer flew back into the goal's card"
-        pg.wait_for_function("() => !document.querySelector('.table-flyer')", timeout=WAIT_MS)
-        assert pg.locator('[data-under-asked]').count() == 0 and pg.locator(".table-flyer").count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_under_reduced_motion_the_card_is_simply_gone_and_the_tab_says_answering(gui):
-    server, browser = gui
-    pg, host, log = start(gui, [row()])
-    try:
-        pg.emulate_media(reduced_motion="reduce")
-        pg.wait_for_selector(".col-pass", timeout=WAIT_MS)
-        host.put([row(left_s=0, answering=True)])
-        pg.locator('[data-answering="tech"]').wait_for(timeout=WAIT_MS)
-        host.put([])
-        pg.wait_for_function("() => !document.querySelector('[data-answering]')", timeout=WAIT_MS)
-        assert flights(pg) == {"out": 0, "back": 0, "now": 0}
     finally:
         pg.close()
     assert not log, "\n".join(log)

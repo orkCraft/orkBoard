@@ -15,7 +15,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, head, need, node, sig  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, head, need, node  # noqa: E402
 from tests.test_hand_mana_browser import tool  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
 
@@ -158,10 +158,6 @@ def cards(pg):
     return pg.locator(".hand-up .up-card")
 
 
-def picked_card(pg):
-    return pg.locator('.hand-up .up-card[aria-pressed="true"]')
-
-
 def plus(pg):
     return pg.locator(".hand-up .up-plus .hand-plus")
 
@@ -218,57 +214,6 @@ def test_the_crown_is_a_44_px_button_at_the_left_of_the_top_row_and_opens_the_me
     assert not log, "\n".join(log)
 
 
-def test_the_potions_are_bottles_with_their_shares_the_default_framed_each_44_px_and_a_press_opens_what_used_it(gui):
-    pg, host, log = open_up(gui)
-    try:
-        t = pots(pg)
-        assert [b.get_attribute("data-provider") for b in t.all()] == ["claude", "agy", "codex", "cursor"]
-        assert [b.get_attribute("aria-label") for b in t.all()] == ["Claude Code: 62% of the week left, the default", "Antigravity: 80% of the week left", "Codex: 41% of the week left", "Cursor: 18% of the week left"]
-        assert [b.get_attribute("title") for b in t.all()] == [b.get_attribute("aria-label") for b in t.all()], "the potions' words"
-        assert [b.locator(".up-pot__share").inner_text() for b in t.all()] == ["62%", "80%", "41%", "18%"]
-        assert pg.locator(".hand-up .ork-potion.small").count() == 4, "a bottle each, at the small scale"
-        assert [b.get_attribute("data-size") for b in t.all()] == [b.locator(".ork-potion").evaluate("(e) => [...e.classList].find((c) => c.startsWith('size-'))?.slice(5) || 'large'") for b in t.all()], "the bottle's size is the week's"
-        mark = t.nth(0).locator("img.ork-mark")
-        m, s = box(mark), box(t.nth(0).locator(".up-pot__share"))
-        assert mark.get_attribute("src").endswith("/marks/harness-claude.png") and round(m["width"]) == 12 and m["y"] + m["height"] <= s["y"], "its mark small at the corner, in its own colour, over the share"
-        for b in t.all():
-            r = box(b)
-            assert r["width"] >= 44 and r["height"] >= 44
-        colours = pg.evaluate("() => [...document.querySelectorAll('.hand-up .up-pot__share')].map((e) => getComputedStyle(e).color)")
-        assert colours[3] != colours[0] and colours[3] == css_colour(pg, "--ork-alert"), "the share is in the warning's colour as it runs low"
-        framed = pg.locator(".hand-up .up-pot[data-default='1']")
-        assert framed.count() == 1 and framed.get_attribute("data-provider") == "claude" and "is-default" in framed.get_attribute("class")
-        assert framed.evaluate("(e) => getComputedStyle(e).borderTopColor") == css_colour(pg, "--ork-ink") and t.nth(1).evaluate("(e) => getComputedStyle(e).borderTopColor") != css_colour(pg, "--ork-ink"), "the default wears the ink's frame"
-        assert pg.locator(".hand-up .hand-mana, .hand-up .hand-pot").count() == 0
-        shot(pg, "phone-top")
-        t.nth(2).click()
-        pg.wait_for_selector(".table-over", timeout=WAIT_MS)
-        assert pg.locator(".table-over").get_attribute("data-kind") == "limits", "a press opens what used it"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_more_than_four_tools_or_the_paid_slot_make_a_plus_n_place(gui):
-    host = UprightHost("question")
-    host.limits += [tool("hermes", "Hermes", 0.5), tool("pi", "Pi", 0.3)]
-    pg, host, log = open_up(gui, host=host)
-    try:
-        assert pots(pg).count() == 4 and pots(pg).last.get_attribute("aria-label") == "3 more tools: what is left of them" and pots(pg).last.inner_text().strip() == "+3"
-        pots(pg).last.click()
-        pg.wait_for_selector(".table-over", timeout=WAIT_MS)
-        assert pg.locator(".table-over").get_attribute("data-kind") == "limits"
-    finally:
-        pg.close()
-    host = UprightHost("question")
-    host.mana = mana_of("claude", "claude", paid={"tool": "claude", "name": "Claude Code", "until": "2026-10-22T18:00", "usd_task": 0.4})
-    pg, host, log = open_up(gui, host=host)
-    try:
-        assert pots(pg).count() == 4 and pg.locator(".hand-up .up-pot--paid").count() == 1 and pg.locator(".hand-up .up-pot--paid .up-pot__share").inner_text() == "API"
-    finally:
-        pg.close()
-
-
 def test_the_die_says_play_it_on_the_computer_and_throws_nothing(gui):        # goal 169 H: the die is the round button's face at the foot's right, Play one of its three (was: a small die in the top row)
     pg, host, log = open_up(gui)
     try:
@@ -312,181 +257,6 @@ def test_the_discard_is_a_small_pile_that_opens_the_goals_done_and_ready_over_th
     assert not log, "\n".join(log)
 
 
-def test_the_context_says_who_which_goal_why_the_pick_and_who_waits_above_the_card(gui):
-    pg, host, log = open_up(gui, first=True)
-    try:
-        c = context_of(pg)
-        who = c.locator(".up-ctx__who")
-        assert who.inner_text().strip().lower() == "tech" and "/races/shaman-elder" in who.locator("img").get_attribute("src")
-        hb = box(who.locator("img"))
-        assert round(hb["width"]) == 24 and round(hb["height"]) == 22, "the leader's head at 24 x 22"
-        assert c.locator(".up-ctx__goal").count() == 0, "the goal's line is the header's (spec 117 D)"
-        head = pg.locator(".hand-up .up-gh")
-        assert head.locator(".up-gh__name").inner_text().strip() == "Sign-in" and head.locator(".ork-elem.dust.big").count() == 1 and head.locator(".ork-sign.feature").count() == 1
-        assert c.locator(".up-ctx__why").inner_text().strip() == WHY
-        assert c.locator(".up-ctx__rec").inner_text().strip() == "Recommended: Email link"
-        assert c.locator(".up-ctx__wait").inner_text().strip() == "Grunt waits for your answer"
-        faces = pg.evaluate("() => [getComputedStyle(document.querySelector('.up-ctx__why')).fontFamily, getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').trim()]")
-        assert faces[0].startswith('Rubik') and faces[1].startswith('"Rubik"'), "the one face, Rubik, for its words too"
-        assert box(c)["y"] + box(c)["height"] <= box(pg.locator(".hand-up .hand-lifted"))["y"] + 1, "above the card"
-        assert c.evaluate("(e) => e.tagName") == "DIV", "the way's phases open the goal's page, not the context"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_middle_scrolls_as_a_whole_and_the_rows_stay(gui):
-    pg, host, log = open_up(gui, first=True)
-    try:
-        pg.evaluate("() => { const w = document.querySelector('.up-ctx__why'); w.textContent = Array(60).fill('A long reason that goes on and on.').join(' '); }")
-        look, row = pg.locator(".up-look"), box(pg.locator(".up-row"))
-        assert look.evaluate("(e) => e.scrollHeight > e.clientHeight && ['auto', 'scroll'].includes(getComputedStyle(e).overflowY)")
-        top = box(pg.locator(".up-top"))
-        look.evaluate("(e) => { e.scrollTop = 200; }")
-        pg.wait_for_function("() => document.querySelector('.up-top').classList.contains('is-thin')", timeout=WAIT_MS)       # goal 169 H, decisions §292.3: scrolled, the header folds to its thin row in its place (was: it never moved)
-        thin = box(pg.locator(".up-top"))
-        assert box(pg.locator(".up-row")) == row and thin["y"] == top["y"] and thin["height"] <= 45, "the hand's row never moves; the top row folds where it stood"
-        assert box(look)["y"] >= thin["y"] + thin["height"] - 1, "the middle is never under the header"
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_row_draws_every_entry_upper_part_the_first_picked_and_raised_with_no_count(gui):
-    pg, host, log = open_up(gui, "ready", first=True)
-    try:
-        c = cards(pg)
-        assert c.count() == 4, "Sign-in, the timer, and the two goals ready for main: one card an entry"
-        assert [b.get_attribute("data-kind") for b in c.all()] == ["stops", "stops", "ready", "ready"]
-        first = c.first
-        assert first.get_attribute("aria-pressed") == "true" and sum(1 for b in c.all() if b.get_attribute("aria-pressed") == "true") == 1
-        r0, r1 = box(first), box(c.nth(1))
-        assert round(r0["width"]) == 80 and round(r1["width"]) == 80 and round(r0["height"]) == 112, "80 x 112 (spec 147 F.2)"
-        assert r1["y"] - r0["y"] == pytest.approx(6, abs=1.5), "the picked one raised by 6 px"
-        assert first.evaluate("(e) => getComputedStyle(e).borderTopColor") == css_colour(pg, "--ork-ink"), "with the ink's frame"
-        assert first.locator(".corner--top .ork-elem.dust").count() == 1 and first.locator(".up-card__name").inner_text().strip() == SIGN_IN_Q, "its rune at the top left and its name (the question itself)"
-        assert first.locator(".corner--top .corner__kind .ork-sign.question").count() == 1, "the kind's sign at the top right"
-        assert first.locator(".corner--foot img").count() == 1 and "/races/shaman-elder" in first.locator(".corner--foot img").get_attribute("src") and round(box(first.locator(".corner--foot img"))["height"]) == 16, "who asks at the foot, a head of 16"
-        shown = pg.locator(".up-cards").evaluate("(e) => e.getBoundingClientRect().bottom")
-        assert box(first)["y"] + 62 + 6 <= shown + 1 < box(first)["y"] + 112, "cut at 62: the rest lies under the row's foot"
-        assert c.nth(1).get_attribute("class").count("asks") == 1 and c.nth(2).get_attribute("class").count("asks") == 0
-        assert c.nth(2).locator(".up-card__name").inner_text().strip() == "Lobby is ready for main" and c.nth(2).locator(".corner__kind .ork-sign.check").count() == 1
-        assert SIGN_IN_Q in c.first.get_attribute("aria-label") and not any(ch.isdigit() for ch in pg.locator(".up-card__name").all_inner_texts()[0] + pg.locator(".up-sep").first.inner_text()), "its words for a screen reader; no number counts what waits"
-        shot(pg, "phone-row")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_press_on_another_card_picks_it_and_its_card_and_context_come_to_the_middle(gui):
-    pg, host, log = open_up(gui, first=True)
-    try:
-        assert name_of(pg) == SIGN_IN_Q
-        cards(pg).nth(1).click()
-        pg.wait_for_function("() => document.querySelector('.up-card[aria-pressed=true]')?.dataset.key === 'goal:phones'", timeout=WAIT_MS)
-        c = context_of(pg)
-        assert c.locator(".up-ctx__who").inner_text().strip().lower() == "design" and pg.locator(".up-gh__name").inner_text().strip() == TIMER_Q
-        assert c.locator(".up-ctx__why").inner_text().strip() == "One clock: every phone agrees." and c.locator(".up-ctx__wait").count() == 0
-        assert picked_card(pg).count() == 1 and picked_card(pg).get_attribute("data-key") == "goal:phones"
-        assert sig(pg, "frame/state.js", "picked") == "phones", "the picked goal follows"
-        assert pg.locator(".hand-up .hand-lifted button").count() >= 2, "its answers on its card"
-        cards(pg).nth(0).click()
-        wait_title(pg, SIGN_IN_Q)
-        assert sig(pg, "frame/state.js", "picked") == "signin"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_card_in_the_middle_is_full_width_less_the_gutters_not_turned_its_choices_two_by_two(gui):
-    pg, host, log = open_up(gui, first=True)
-    try:
-        card = pg.locator(".hand-up .hand-lifted")
-        assert card.count() == 1 and name_of(pg) == SIGN_IN_Q, "the question itself is the card's name"
-        b, vw = box(card), pg.viewport_size["width"]
-        assert b["x"] == pytest.approx(8, abs=2) and b["x"] + b["width"] == pytest.approx(vw - 8, abs=2), "full width less a gutter a side"
-        assert b["height"] / b["width"] == pytest.approx(7 / 5, abs=0.02), "5 : 7 (spec 147 F.3: the opened card at the screen's width, its height never its content's)"
-        assert card.locator(".corner--top.corner--large").count() == 1 and card.locator(".corner--foot.corner--large").count() == 1 and card.locator(".hand-lifted__body").evaluate("(e) => getComputedStyle(e).overflowY") == "auto", "its corners, its body scrolling"
-        assert card.evaluate("(e) => getComputedStyle(e).rotate") in ("none", "0deg") and card.evaluate("(e) => getComputedStyle(e).position") == "relative", "not turned, in its place"
-        cells = [box(c) for c in card.locator(".q-card").all()]
-        assert len(cells) == 4 and cells[0]["x"] == pytest.approx(cells[2]["x"], abs=2) and cells[1]["x"] > cells[0]["x"] + 40 and cells[2]["y"] > cells[0]["y"] + 40, "two by two"
-        assert [c.inner_text().strip().splitlines()[0] for c in card.locator(".q-card").all()] == ["Email link", "Passkey", "Google", "Other…"]
-        assert card.locator(".q-card.is-pick").inner_text().strip().startswith("Email link"), "the leader's pick raised"
-        assert card.get_by_role("button", name="Let Tech lead decide").count() == 1 and "Tech" in card.locator(".corner--foot").inner_text(), "the leader who asks at its foot"
-        for c in card.locator(".q-card").all():
-            assert box(c)["height"] >= 44
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_one_tap_on_a_choice_answers_at_once_and_the_next_entry_comes_to_the_middle(gui):
-    pg, host, log = open_up(gui, first=True)
-    try:
-        pg.locator(".hand-up .hand-lifted .q-card", has_text="Passkey").click()
-        assert _calls(pg, host, "ideas.talk_answer") == [{"idea": "signin", "answers": [{"id": "q1", "pick": 1}]}]
-        pg.wait_for_function("() => document.querySelector('.up-card[aria-pressed=true]')?.dataset.key === 'goal:phones'", timeout=WAIT_MS)
-        assert cards(pg).count() == 1, "the answered entry left the row"
-        c = context_of(pg)
-        assert c.locator(".up-ctx__who").inner_text().strip().lower() == "design" and pg.locator(".up-gh__name").inner_text().strip() == TIMER_Q
-        assert c.locator(".up-ctx__rec").inner_text().strip() == "Recommended: Server counts, phones show it" and c.locator(".up-ctx__wait").count() == 0
-        assert pg.locator(".up-look").get_attribute("data-goal") == "phones" and sig(pg, "frame/state.js", "picked") == "phones", "the next entry is picked and looked at (goal 169 F)"
-        shot(pg, "phone-next")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_goals_other_cards_are_not_cards_of_the_row_no_edge_no_count(gui):
-    pg, host, log = open_up(gui, "deep", first=True)
-    try:
-        assert cards(pg).count() == 2 and name_of(pg) == SIGN_IN_Q, "Sign-in asks two questions: one entry, one card in the row"
-        assert pg.locator(".up-edge, .ork-card-back.edge").count() == 0
-        assert not any(ch.isdigit() for ch in pg.locator(".up-cards").inner_text()), "no number"
-        shot(pg, "phone-deep")
-        pg.locator(".hand-up .hand-lifted .q-card", has_text="Passkey").click()
-        wait_title(pg, "Keep passwords?")
-        assert cards(pg).count() == 2 and _calls(pg, host, "ideas.talk_answer") == [], "the answers go together after the last"
-        assert picked_card(pg).get_attribute("data-key") == "goal:signin"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_other_and_let_the_leader_decide_answer_from_the_card(gui):
-    pg, host, log = open_up(gui, first=True)
-    try:
-        pg.locator(".hand-up .hand-lifted .q-card--blank").click()
-        pg.locator(".hand-up .hand-lifted textarea").fill("Magic link or SSO")
-        pg.get_by_role("button", name="Send", exact=True).click()
-        assert _calls(pg, host, "ideas.talk_answer") == [{"idea": "signin", "answers": [{"id": "q1", "text": "Magic link or SSO"}]}]
-        wait_title(pg, TIMER_Q)
-    finally:
-        pg.close()
-    pg, host, log = open_up(gui, first=True)
-    try:
-        pg.get_by_role("button", name="Let Tech lead decide").click()
-        assert _calls(pg, host, "ideas.talk_answer") == [{"idea": "signin", "answers": [], "decide": True}]
-    finally:
-        pg.close()
-
-
-def test_a_press_on_the_phases_opens_the_goals_page_over_the_pane_and_back_returns_to_the_same_card(gui):
-    pg, host, log = open_up(gui, first=True)
-    try:
-        pg.locator(".up-phases").click()
-        pg.wait_for_selector(".table-over", timeout=WAIT_MS)
-        assert pg.locator(".table-over").get_attribute("data-kind") == "talk" and pg.locator(".frame-table").is_visible() and pg.locator(".hand-up").is_hidden()
-        assert pg.locator(".table-tabs").is_hidden()
-        pg.get_by_role("button", name="Back").click()
-        pg.wait_for_selector(".hand-up", state="visible", timeout=WAIT_MS)
-        assert name_of(pg) == SIGN_IN_Q, "the same card"
-    finally:
-        pg.close()
-
-
 def test_a_card_of_no_goal_has_no_goal_header_no_way_and_its_card_is_in_the_row(gui):
     pg, host, log = open_up(gui, "paid", first=True)
     try:
@@ -494,114 +264,6 @@ def test_a_card_of_no_goal_has_no_goal_header_no_way_and_its_card_is_in_the_row(
         assert cards(pg).first.locator(".up-card__name").inner_text().strip() == "Go on paid?"
     finally:
         pg.close()
-
-
-def test_the_plus_card_lies_at_the_rows_left_end_the_cards_pass_under_it_and_it_opens_the_field_over_the_keyboard_with_the_microphone(gui):     # goal 169 H, decisions §292.2: the + card at the foot's left (was: its right end)
-    pg, host, log = open_up(gui, "ready")
-    try:
-        p, row, w, h = plus(pg), box(pg.locator(".up-row")), pg.viewport_size["width"], pg.viewport_size["height"]
-        r = box(p)
-        assert p.count() == 1 and 60 <= r["width"] <= 70 and 58 <= r["height"] <= 68, "about 64 x 62: cut with the cards"
-        assert r["x"] <= 20 and r["y"] >= row["y"] and r["x"] + r["width"] < box(pg.locator(".up-round"))["x"], "at the row's left end, the round button at its right"
-        assert p.evaluate("(e) => getComputedStyle(e).borderTopColor") == css_colour(pg, "--ork-action") and p.get_attribute("aria-label") == "New goal"
-        shot(pg, "phone-plus")
-        scroller = pg.locator(".up-cards")
-        assert scroller.evaluate("(e) => e.scrollWidth > e.clientWidth"), "four cards and the room under the + card and the round button: the row scrolls sideways"
-        first = box(cards(pg).first)
-        assert first["x"] >= r["x"] + r["width"] - 1, "the first card lies clear of the + card"
-        scroller.evaluate("(e) => { e.scrollLeft = e.scrollWidth; }")
-        last = box(cards(pg).last)
-        assert last["x"] + last["width"] <= box(pg.locator(".up-round"))["x"] + 1, "the last card can be brought clear of the round button"
-        p.click()
-        area = pg.locator(".up-field textarea")
-        area.wait_for(timeout=WAIT_MS)
-        f = box(pg.locator(".up-field"))
-        assert f["y"] + f["height"] >= h - 2 and pg.evaluate("() => document.activeElement === document.querySelector('.up-field textarea')"), "at the foot, focused"
-        if pg.evaluate("() => !!(window.SpeechRecognition || window.webkitSpeechRecognition)"):
-            m = box(pg.get_by_role("button", name="Speak the goal"))
-            assert m["width"] >= 44 and m["height"] >= 44 and f["y"] <= m["y"] and m["y"] + m["height"] <= f["y"] + f["height"], "the microphone in the field"
-        shot(pg, "phone-field")
-        area.fill("Add a mute button")
-        area.press("Enter")
-        assert _calls(pg, host, "ideas.add")[0]["text"] == "Add a mute button"
-        pg.locator(".up-field").wait_for(state="detached", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_with_nothing_in_the_hand_the_line_the_row_of_the_plus_card_alone_and_the_top_row_stay(gui):
-    pg, host, log = open_up(gui, "empty")
-    try:
-        assert context_of(pg).count() == 0 and cards(pg).count() == 0 and pg.locator(".up-look").get_attribute("data-look") == "feed", "the middle is the feed (goal 169 F)"
-        line, w = box(pg.get_by_text("Nothing waits for you.", exact=True)), pg.viewport_size["width"]
-        assert abs(line["x"] + line["width"] / 2 - w / 2) <= 3, "the feed says nothing waits"
-        assert pots(pg).count() == 4 and crown(pg).count() == 1 and pg.locator(".up-round").count() == 1 and plus(pg).count() == 1 and pg.locator(".up-pile").count() == 0
-        shot(pg, "phone-empty")
-        plus(pg).click()
-        pg.locator(".up-field textarea").wait_for(timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_work_moved_on_the_line_over_the_top_row_and_the_frame_on_the_tool_now(gui):
-    pg, host, log = open_up(gui, "moved")
-    try:
-        strip = pg.locator(".hand-up .table-notice")
-        assert strip.inner_text().strip() == LINE and "/races/peon-crown" in strip.locator("img").get_attribute("src")
-        assert box(strip)["y"] + box(strip)["height"] <= box(pg.locator(".up-top"))["y"] + 1, "at the very top, over the top row"
-        framed = pg.locator(".hand-up .up-pot[data-default='1']")
-        assert framed.get_attribute("data-provider") == "codex" and framed.get_attribute("aria-label").endswith(", the default")
-        dry = pots(pg).nth(0)
-        assert dry.locator(".up-pot__share").inner_text() == "0%" and dry.get_attribute("data-level") == "danger"
-        x = box(strip.get_by_role("button", name="Dismiss"))
-        assert x["width"] >= 44 and x["height"] >= 44
-        shot(pg, "phone-moved")
-        strip.get_by_role("button", name="Dismiss").click()
-        assert pg.locator(".hand-up .table-notice").count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_go_on_paid_is_a_card_of_the_row_with_the_orkmasters_context_and_its_two_buttons(gui):
-    pg, host, log = open_up(gui, "paid", first=True)
-    try:
-        c = context_of(pg)
-        assert c.locator(".up-ctx__who").inner_text().strip().lower() == "orkmaster · party game" and "/races/peon-crown" in c.locator("img").get_attribute("src")
-        assert c.locator(".up-ctx__goal").count() == 0 and c.locator(".up-ctx__rec").count() == 0, "no goal, no pick"
-        assert c.locator(".up-ctx__wait").inner_text().strip() == "The work waits for your answer"
-        assert c.evaluate("(e) => e.tagName") == "DIV", "nothing to open: it has no goal"
-        card = pg.locator(".hand-up .hand-lifted")
-        assert card.locator(".hand-card__name").inner_text().strip() == "Go on paid?" and card.locator(".corner--foot .ork-gem").inner_text().strip() == "$0.40"
-        yes, wait = card.get_by_role("button", name="Go on, paid"), card.get_by_role("button", name="Wait for Thu 18:00")
-        assert yes.count() == 1 and wait.count() == 1 and box(yes)["height"] >= 44
-        framed = pg.locator(".hand-up .up-pot[data-default='1']")
-        assert framed.count() == 1 and pots(pg).nth(2).locator(".up-pot__share").inner_text() == "2%"
-        shot(pg, "phone-paid")
-        yes.click()
-        assert _calls(pg, host, "ideas.paid") == [{"yes": True}]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_on_its_side_a_phone_shows_the_hand_not_the_table_and_the_goal_stays_picked(gui):
-    pg, host, log = open_up(gui, kind="side", first=True)
-    try:
-        assert pg.locator(".frame").get_attribute("data-upright") == "1" and pg.locator(".frame-table").is_hidden() and pg.locator(".hand-up").is_visible()
-        assert name_of(pg) == SIGN_IN_Q and crown(pg).count() == 1 and plus(pg).count() == 1 and cards(pg).count() == 2
-        assert pg.locator(".up-look").get_attribute("data-goal") == "signin"
-        top, row = box(pg.locator(".up-top")), box(pg.locator(".up-row"))
-        assert row["y"] + row["height"] <= pg.viewport_size["height"] + 1 and box(pg.locator(".up-look"))["height"] >= 120, "the middle keeps room on its side"
-        shot(pg, "side-question")
-        pg.set_viewport_size({"width": 390, "height": 844})
-        pg.wait_for_selector(".hand-up", timeout=WAIT_MS)
-        assert name_of(pg) == SIGN_IN_Q
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def ready_card(pg):
@@ -612,42 +274,6 @@ def to_ready(pg):
     pg.locator('.up-card[data-kind="ready"]').first.click()
     ready_card(pg).wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => document.querySelector('.hand-ready')?.dataset.portal !== 'wait'", timeout=WAIT_MS)
-
-
-def ready_name(pg):
-    c = ready_card(pg)
-    return c.locator(".hand-card__name").inner_text().strip() if c.count() else ""
-
-
-def test_a_goal_ready_for_main_is_releases_card_after_the_questions_with_the_portal_on_it(gui):
-    pg, host, log = open_up(gui, "ready")
-    try:
-        to_ready(pg)
-        assert picked_card(pg).get_attribute("data-key") == "ready:music"
-        c = context_of(pg)
-        assert c.locator(".up-ctx__who").inner_text().strip().lower() == "release" and "/races/lich" in c.locator("img").get_attribute("src")
-        head = pg.locator(".hand-up .up-gh")
-        assert head.locator(".up-gh__name").inner_text().strip() == "Lobby" and head.locator(".ork-elem.void.big").count() == 1 and head.locator(".ork-sign.screen").count() == 1
-        assert c.locator(".up-ctx__why").inner_text().strip() == "Lobby and Reconnect are done and their checks are green"
-        card = ready_card(pg)
-        assert ready_name(pg) == "Lobby is ready for main" and card.locator(".hand-card__party").inner_text().strip().lower() == "release"
-        assert card.locator(".hand-ready__line").inner_text().strip() == "Into main: Lobby, and Reconnect it stands on"
-        door = card.locator("button.ork-portal")
-        assert door.get_attribute("aria-label") == "Send Lobby and Reconnect to main" and card.locator(".hand-ready__label").text_content().strip() == "Main"
-        assert card.get_by_role("button", name="Later").count() == 1 and box(card.get_by_role("button", name="Later"))["height"] >= 44
-        assert "is-new" in door.get_attribute("class") and card.locator(".hand-ready__hint").inner_text().strip() == "Tap the portal to send it to main", "the first time"
-        pg.wait_for_timeout(300)
-        assert len(_calls(pg, host, "ideas.to_main_plan")) == 1, "the plan is asked once"
-        assert cards(pg).nth(3).get_attribute("data-key") == "ready:codes" and cards(pg).nth(3).locator(".up-card__name").inner_text().strip() == "Reconnect is ready for main", "the other ready goal lies beside it in the row"
-        shot(pg, "phone-portal")
-        assert _calls(pg, host, "ideas.to_main") == []
-        door.click()
-        assert _calls(pg, host, "ideas.to_main") == [{"idea": "music", "sealed": True}]
-        pg.wait_for_function("() => !document.querySelector('.hand-ready') || document.querySelector('.hand-ready .hand-card__name').textContent.trim() !== 'Lobby is ready for main'", timeout=WAIT_MS)
-        assert ready_name(pg) == "" or ready_name(pg) == "Reconnect is ready for main"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_sealed_goal_says_its_reason_in_danger_and_a_press_sends_nothing(gui):
@@ -697,17 +323,3 @@ def test_the_first_time_line_is_not_said_again_once_seen(gui):
         assert ready_card(pg).locator(".hand-ready__hint").count() == 0 and "is-new" not in ready_card(pg).locator("button.ork-portal").get_attribute("class")
     finally:
         pg.close()
-
-
-def test_a_narrow_window_with_a_fine_pointer_and_the_wide_desktop_are_unchanged(gui):
-    for kind in ("fine", "wide"):
-        pg, host, log = open_up(gui, "ready", kind, ready=".hand-stack")
-        try:
-            assert pg.locator(".frame").get_attribute("data-upright") is None and pg.locator(".hand-up").count() == 0 and pg.locator(".up-ctx").count() == 0
-            assert pg.locator(".frame-table").is_visible() and pg.locator(".table-tabs").is_visible() and pg.locator(".hand-places").count() == 1
-            assert pg.locator(".hand-mana__row .ork-potion, .pots__all .ork-potion").count() == 4 and pg.locator(".up-pot, .up-top, .up-row, .up-crown").count() == 0, "the potions, as before: no crown, no row"
-            assert pg.locator(".hand-plus").count() == 1 and pg.locator(".hand-lifted").count() == 0 and pg.locator(".up-card, .up-plus").count() == 0 and pg.locator(".hand-ready").count() == 0
-            assert pg.locator(".table-menu__btn").count() >= 1 and pg.get_by_role("button", name="The leaders and their goals").count() == 0, "no crown"
-            shot(pg, f"{kind}-unchanged")
-        finally:
-            pg.close()

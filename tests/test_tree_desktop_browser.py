@@ -333,7 +333,7 @@ def test_plus_on_an_empty_job_opens_the_field_addressed_to_product_with_the_job_
 
 def test_plus_puts_the_address_back_when_the_person_had_taken_it_off(tree):
     pg, host, w = tree
-    pg.locator(".hand .hand-plus").click()
+    pg.locator(".hand :is(.hand-plus, [data-blank-deck])").click()
     pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
     pg.get_by_role("button", name="Take off Product").click()
     assert pg.locator(".hand-chip[data-by=tab]").count() == 0

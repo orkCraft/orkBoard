@@ -140,29 +140,6 @@ def test_make_it_a_change_sends_the_words_with_the_goal_the_party_and_the_part_a
     assert host.sent("ideas.ask_clear") == [{}] and host.ask is None, "the answer is put away: the change is the card now"
 
 
-def test_the_decision_in_the_hand_shows_now_and_proposed_the_cost_and_accept_talk_more_keep_the_spec(asked):
-    pg, host = asked
-    host.needs = [row()]
-    host.push()
-    card = pg.locator('.hand-card[data-kind="leader_change"]')
-    card.wait_for(timeout=WAIT_MS)
-    assert card.get_attribute("data-party") == "tech" and card.locator(".ork-gem").get_attribute("data-cost") == "$0.20–0.60"
-    card.click(position={"x": 10, "y": 20})
-    lifted = pg.locator(".hand-lifted")
-    lifted.wait_for(timeout=WAIT_MS)
-    assert "Keep the seat for a minute after a drop" in lifted.inner_text() and "server/lobby.ts" in lifted.inner_text()
-    now, proposed = lifted.locator('[data-side="now"]'), lifted.locator('[data-side="proposed"]')
-    assert "Keep seat" in now.inner_text() and "Old timer" in now.inner_text() and "~ Rounds — no wait" in now.inner_text()
-    assert "Seat 60 s" in proposed.inner_text() and "Timer test" in proposed.inner_text() and "+ Seats — a map of seats" in proposed.inner_text()
-    assert now.locator('[data-op="drop"]').count() == 1 and proposed.locator('[data-op="add"]').count() == 1
-    assert lifted.locator(".hand-spend").count() == 1, "the cost, in words"
-    for name in ("Accept", "Talk more", "Keep the spec"):
-        assert lifted.get_by_role("button", name=name).count() == 1, name
-    lifted.get_by_role("button", name="Accept").click()
-    pg.wait_for_function("() => !document.querySelector('.hand-card[data-kind=\"leader_change\"]')", timeout=WAIT_MS)
-    assert host.sent("ideas.change_take") == [{"idea": "results", "id": "c1", "via": "hand"}]
-
-
 def test_keep_the_spec_drops_it_and_talk_more_opens_the_bubble_again_with_the_part_and_the_words_kept(asked):
     pg, host = asked
     host.needs = [row()]

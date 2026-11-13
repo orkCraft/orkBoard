@@ -47,7 +47,7 @@ def open_log(gui, host, size=(1366, 768)):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     pg.evaluate("() => import('/static/js/frame/state.js').then((m) => m.openOver('log', { slug: 'seat', task: 's1' }, null, 'Keep the seat when a socket reconnects'))")
     pg.locator('.table-over[data-kind="log"]').wait_for(timeout=WAIT_MS)
     return pg, ctx, errors

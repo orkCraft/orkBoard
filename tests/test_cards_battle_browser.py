@@ -1,4 +1,4 @@
-"""**A battle** (goal "The battle and the gate", stage J; decisions §303), in a real browser on the `gui` fixture's host, `?table=cards` and no `?mock=1`: the hand's conflict card is the battle's card, one a goal however
+"""**A battle** (goal "The battle and the gate", stage J; decisions §303), in a real browser on the `gui` fixture's host, no `?mock=1`: the hand's conflict card is the battle's card, one a goal however
 many conflicts it keeps, with its emblem and *vs §N*; pressed, it opens the battle mat on the host's answer (`ideas.battle`) laid upright in goal 171's frame, with no lifted pair: §N face up above with what rests on it by
 kind as the Board's files hold it, the route's columns with the new card's tokens, *No total*, the new card in Yours, no word of mana or price. A goal the skills laid keeps no conflict and so no battle. Opening it starts no pass, writes
 nothing and spends nothing. The mat's ways are stage K's; these cases are the ones goal 171's stage G removed (the card's emblem and *vs*, the mat's cards, the phone's stack, Esc's focus), on the host's answer."""
@@ -61,7 +61,7 @@ def opened(gui, width=1440, height=900, **kw):
     host = lay(gui)
     server, browser = gui
     pg = browser.new_page(viewport={"width": width, "height": height}, **kw)
-    pg.goto(server.url + ("&" if "?" in server.url else "?") + "table=cards")
+    pg.goto(server.url)
     pg.wait_for_selector(".cards-lane", state="attached", timeout=WAIT_MS)
     return pg, host
 

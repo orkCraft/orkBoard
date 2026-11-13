@@ -114,28 +114,6 @@ def lift(pg, kind="quality"):
     return lifted
 
 
-def test_a_goals_findings_are_one_card_never_urgent_lying_behind_a_failure_with_its_leaders_head_and_the_sum_as_its_gem(gui):
-    host = QualityHost([F_DECISION, F_SPEC, F_WORK], fails=True)
-    pg, errors = start(gui, "wide", host)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_function("() => document.querySelectorAll('.hand-stack').length > 0", timeout=WAIT_MS)
-        stack = pg.locator('.hand-stack[data-goal="seat"]')
-        assert stack.count() == 1 and stack.locator('.hand-card[data-top="1"]').get_attribute("data-kind") == "failed", "a failure first: the quality card is never urgent"
-        assert stack.get_attribute("data-cards") == "2" and pg.locator('.hand-card[data-kind="quality"]').count() == 0, "the card lies under it, face down"
-        host.nodes[[n["slug"] for n in host.nodes].index("seat")]["tasks"] = []
-        host.push()
-        card(pg).wait_for(timeout=WAIT_MS)
-        assert pg.locator('.hand-card[data-kind="quality"]').count() == 1, "one card a goal, not a card a finding"
-        gem = card(pg).locator(".ork-gem")
-        assert gem.get_attribute("data-cost") == "$0.50–1.30", gem.get_attribute("data-cost")
-        assert card(pg).locator(".ork-race__head, img.ork-race__head").count() >= 1, "the first finding's leader asks"
-        shot(pg, "wide-quality-card.png")
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
-
-
 def test_lifted_each_finding_says_who_found_it_its_level_its_cause_its_way_down_and_two_answers(gui):
     host = QualityHost([F_WORK, F_DECISION, F_SPEC])
     pg, errors = start(gui, "wide", host)

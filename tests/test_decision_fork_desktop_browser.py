@@ -118,25 +118,6 @@ def box(loc):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_decision_is_a_card_with_its_number_the_orkmasters_head_and_no_gem_under_the_first_lane(gui, width):
-    pg, host, log = open_decision(gui, width)
-    try:
-        c = front(pg, "chat")
-        assert c.get_attribute("data-kind") == "decision"
-        assert c.locator(".hand-card__name").text_content().strip() == "Players chat in the lobby, one room each" and c.locator(".corner--top .ork-elem.ice").count() == 1       # the goal's element and the decision's title
-        assert c.locator(".corner--top .ork-sign.page").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1
-        if width == "wide":
-            assert c.locator(".hand-card__foot").text_content().strip() == "Decision 118", "its face says its number, not the decision's text"
-        assert c.locator(".ork-gem").count() == 0, "it spends nothing new"
-        assert pg.locator(".hand-lane").nth(0).locator('.hand-stack[data-goal="chat"]').count() == 1, "the whole goal's: under the first lane"
-        shot(pg, f"{width}-decision-face")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
 def test_lifted_the_decision_says_why_and_its_numbered_points_and_has_one_button_that_confirms(gui, width):
     pg, host, log = open_decision(gui, width)
     try:
@@ -223,24 +204,6 @@ def test_a_decision_written_already_asks_the_sections_again_and_has_no_change(gu
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_fork_is_a_card_saying_who_disagrees_with_a_leaders_head_under_the_first_lane(gui, width):
-    pg, host, log = open_decision(gui, width)
-    try:
-        c = front(pg, "rooms")
-        assert c.get_attribute("data-kind") == "fork" and c.get_attribute("aria-label").startswith("A fork: "), "what the card is, in plain words"
-        assert c.locator(".corner--top .ork-sign.question").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1
-        if width == "wide":
-            assert c.locator(".hand-card__foot").text_content().strip() == "Design and Tech disagree"
-        assert c.locator(".ork-gem").count() == 0
-        assert pg.locator(".hand-lane").nth(0).locator('.hand-stack[data-goal="rooms"]').count() == 1
-        shot(pg, f"{width}-fork-face")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
 def test_lifted_a_fork_is_a_hearing_over_the_pane_with_the_spec_lit_under_it_and_a_press_throws_a_side(gui, width):
     pg, host, log = open_decision(gui, width)
     try:
@@ -294,7 +257,7 @@ def test_the_persons_own_words_throw_a_fork_as_text_and_the_next_fork_takes_the_
     pg, host, log = open_decision(gui, width, two=True)
     try:
         press(pg, "rooms")
-        pg.locator('.table-over[data-kind="choose"] .hr').wait_for(timeout=WAIT_MS)
+        pg.locator('.table-over[data-kind="choose"] .hr[data-kind=hearing]').wait_for(timeout=WAIT_MS)
         pg.get_by_role("button", name="Or say it in your own words").click()
         field = pg.locator(".hr-field__text")
         field.wait_for(timeout=WAIT_MS)

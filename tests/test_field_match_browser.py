@@ -11,9 +11,8 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_context_narrow_browser import UprightHost, open_up, plus  # noqa: E402
+from tests.test_hand_context_narrow_browser import UprightHost  # noqa: E402
 from tests.test_hand_desktop_browser import HandHost, _calls, _field, _plus, open_hand  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -128,38 +127,6 @@ def test_add_to_it_sends_the_words_with_the_rune_and_via_match_closes_the_field_
         assert len(_calls(pg, host, "ideas.add")) == 1, "the goal was never added"
         _plus(pg).click()
         assert _field(pg)[1].input_value() == "", "the words went with it"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_no_match_adds_as_it_did_and_the_phones_field_says_the_same_line(gui):
-    pg, host, log = open_hand(gui, host=Desk())
-    try:
-        _plus(pg).click()
-        written(pg, "Reset the clock after a reconnect")[1].press("Enter")
-        pg.locator(".hand-field").wait_for(state="detached", timeout=WAIT_MS)
-        assert _calls(pg, host, "ideas.add")[-1]["text"] == "Reset the clock after a reconnect" and line(pg).count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-    pg, host, log = open_up(gui, host=Phone("question"))
-    try:
-        plus(pg).click()
-        area = pg.locator(".up-field textarea")
-        area.wait_for(timeout=WAIT_MS)
-        area.fill(WORDS)
-        area.press("Enter")
-        line(pg).wait_for(timeout=WAIT_MS)
-        assert " ".join(line(pg).locator("[data-part=looks]").inner_text().split()) == LINE and pg.locator(".up-field").is_visible()
-        buttons = line(pg).get_by_role("button")
-        assert [b.inner_text() for b in buttons.all()] == ["Add to it", "Keep apart"]
-        assert all(b.bounding_box()["height"] >= 40 for b in buttons.all()), "a thumb's size"
-        shot(pg, "field-match-phone.png")
-        narrow.no_sideways(pg)
-        line(pg).get_by_role("button", name="Add to it").click()
-        pg.locator(".up-field").wait_for(state="detached", timeout=WAIT_MS)
-        assert [a for n, a in host.log if n == "ideas.add_to_goal"][-1]["via"] == "match"
     finally:
         pg.close()
     assert not log, "\n".join(log)

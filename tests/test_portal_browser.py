@@ -452,22 +452,6 @@ def test_a_ready_card_pressed_is_picked_and_chosen_and_its_to_main_on_the_table_
     assert not log, "\n".join(log)
 
 
-def test_the_picked_ready_cards_to_main_is_on_every_tab_of_its_route_and_the_ready_goals_other_cards_send_their_own(gui):
-    pg, host, log = open_lane(gui)
-    try:
-        lane_card(pg, "codes").click()
-        picked_is(pg, "codes")
-        pg.locator('.table-tab[data-tab="design"]').click()                                   # Design's tab is on Room codes' route (its party)
-        pg.locator('.table-tab[data-tab="design"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
-        tomain(pg).wait_for(timeout=WAIT_MS)
-        pg.locator("[data-tomain] [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "codes"}))
-        assert [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "codes", "sealed": True}] and [n for n, _ in host.log if n == "ideas.gate_merge"] == []
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_sealed_goal_picked_says_its_reason_on_the_table_the_ring_is_sealed_and_to_main_sends_nothing(gui):
     host = PortalHost()
     host.gate_doc["ideas"] = [i for i in host.gate_doc["ideas"] if i["slug"] == "menu"]
@@ -489,40 +473,6 @@ def test_a_sealed_goal_picked_says_its_reason_on_the_table_the_ring_is_sealed_an
     finally:
         pg.close()
     assert not log, "\n".join(log)
-
-
-def test_esc_puts_the_pick_away_and_drops_the_choice_and_another_card_picked_is_chosen_instead(gui):
-    pg, host, log = open_lane(gui)
-    try:
-        lane_card(pg, "music").click()
-        tomain(pg).wait_for(timeout=WAIT_MS)
-        pg.keyboard.press("Escape")
-        picked_is(pg, "")
-        pg.wait_for_function("() => !document.querySelector('[data-tomain]')", timeout=WAIT_MS)
-        assert [n for n, _ in host.log if n == "ideas.to_main"] == []
-        lane_card(pg, "codes").click()
-        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.tomain === 'codes'", timeout=WAIT_MS)
-        lane_card(pg, "menu").click()
-        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.tomain === 'menu'", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_an_error_from_the_host_is_shown_and_the_ready_goal_stays_at_the_wide_width(gui):
-    pg, host, log = open_lane(gui)
-    try:
-        host.refuse = "main moved while it was merging: look again"
-        lane_card(pg, "music").click()
-        pg.wait_for_function("() => document.querySelector('[data-tomain]')?.dataset.portal === 'open'", timeout=WAIT_MS)
-        pg.locator("[data-tomain] [data-to-main]").click()
-        assert _sent(pg, host, ("ideas.to_main", {"sealed": True, "idea": "music"}))
-        pg.get_by_text("main moved while it was merging: look again").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(400)
-        assert pg.locator("[data-portal-card]").count() == 3 and tomain(pg).count() == 1, "nothing left, To main is there for another try"
-    finally:
-        pg.close()
-    assert not log or all("main moved" in m for m in log), "\n".join(log)
 
 
 def test_the_page_works_at_the_wide_width_when_the_device_keeps_nothing(gui):

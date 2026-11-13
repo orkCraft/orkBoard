@@ -414,36 +414,6 @@ def test_a_tool_without_a_mark_shows_its_initial_in_the_body_face(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_lifted_card_that_spends_hatches_its_share_off_its_tools_potion(gui, width):
-    pg, host, log = open_mana(gui, TWO, width)
-    try:
-        p = pots(pg)
-        assert p.locator(".hand-pot__took").count() == 0 and "--ork-potion-spend" not in p.nth(0).locator(".ork-potion").get_attribute("style")
-        _stack(pg, "export").wait_for(timeout=WAIT_MS)
-        _press(pg, "export")                                                                                                     # a plan: about 2–4% of Claude's week
-        pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        claude = p.nth(0)
-        assert "--ork-potion-spend:0.04" in claude.locator(".ork-potion").get_attribute("style").replace(" ", "")
-        assert claude.locator(".hand-pot__share").inner_text().replace("\n", " ") == "62% −4%"
-        assert "This card takes about 4%" in claude.get_attribute("aria-label")
-        assert "--ork-potion-spend" not in p.nth(1).locator(".ork-potion").get_attribute("style")                                # the other tool's potion is as it was
-        shot(pg, f"{width}-spend")
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.hand-lifted')", timeout=WAIT_MS)
-        assert p.locator(".hand-pot__took").count() == 0 and "--ork-potion-spend" not in claude.locator(".ork-potion").get_attribute("style")
-        pg.evaluate("() => document.activeElement.blur()")                                                                       # the card that had the focus or the pointer lies risen, whole, over its neighbours (the die takes room at the narrow width: they lie closer)
-        pg.mouse.move(pg.viewport_size["width"] / 2, 20)
-        pg.wait_for_timeout(400)
-        _press(pg, "theme")                                                                                                      # a question spends nothing
-        pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-        assert p.locator(".hand-pot__took").count() == 0
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_no_limits_no_mana(gui):
     pg, host, log = open_mana(gui, [])
     try:
@@ -686,45 +656,6 @@ def test_the_paid_slot_with_no_known_cost_says_so_and_has_no_price(gui):
 
 # -- who drinks from a potion (spec 111 §3.4, decisions §189.2) ---------------------------------------------------------------------------------
 
-def with_marks(host):
-    """The four parties with their sword and shield as `ideas.map` serves them: Tech does on Claude and checks on Codex, Design is Lean on Claude, Product does on Codex and checks on Claude, Release does and checks on Claude."""
-    for p, (does, checks, lean) in zip(host.parties, [("claude", "codex", False), ("claude", "", True), ("codex", "claude", False), ("claude", "claude", False)]):
-        p.update(does_tool=does, checks_tool=checks, does_mixed=False, checks_mixed=False, lean=lean)
-
 
 def lit(pg):
     return sorted(pg.locator(".table-tab.is-lit").evaluate_all("els => els.map((e) => e.dataset.tab)"))
-
-
-def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_its_tool_and_its_words_say_who_drinks_from_it(gui):
-    host = HandHost()
-    host.limits = TWO
-    with_marks(host)
-    pg, host, log = open_hand(gui, host)
-    try:
-        pg.locator(":is(.hand-mana, .pots__all) .hand-pot").first.wait_for(state="attached", timeout=WAIT_MS)
-        p = pg.locator(":is(.hand-mana, .pots__all) .hand-pot")
-        pg.locator(".table-tab__marks").first.wait_for(timeout=WAIT_MS)
-        assert lit(pg) == []
-        assert p.nth(0).get_attribute("aria-label") == "Claude Code: 62% of the week left. 3 parties do on it, 2 parties check on it"     # Tech, Design and Release do (Product does on Codex), Product and Release check (Design is Lean)
-        assert p.nth(1).get_attribute("aria-label") == "Codex: 18% of the week left. 1 party does on it, 1 party checks on it" and p.nth(1).get_attribute("title") == p.nth(1).get_attribute("aria-label")
-        unroll(pg)
-        p.nth(1).hover()
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
-        assert lit(pg) == ["product", "tech"]                                                                                  # the parties that run on Codex only, lit as a tab hovered is
-        assert pg.locator(".table-tab.is-lit").first.evaluate("e => getComputedStyle(e).outlineStyle") == "none" and pg.locator(".table-tab .is-marked").count() == 0
-        shot(pg, "wide-potion-marks")
-        pg.mouse.move(640, 300)
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
-        pg.mouse.move(640, 300)
-        pg.locator(".pots[data-open]").wait_for(state="detached", timeout=WAIT_MS)
-        pg.locator(".pots__row .pot-s").first.focus()                                                                          # the focus unrolls the list, then a potion has it
-        pg.locator(".pots[data-open]").wait_for(timeout=WAIT_MS)
-        p.nth(0).focus()
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length > 0", timeout=WAIT_MS)
-        assert lit(pg) == ["design", "product", "release", "tech"], "Claude: every party that does or checks on it, though a side on the default draws no mark"
-        pg.evaluate("() => document.activeElement.blur()")
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab.is-lit').length === 0", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

@@ -1,4 +1,4 @@
-// The leaders' tables (goal 170, the talk of 11 November 2026; docs/mockups/frameworks/), on the table of cards only (cards/on.js): a leader whose
+// The leaders' tables (goal 170, the talk of 11 November 2026; docs/mockups/frameworks/): a leader whose
 // framework the host holds (`ideas.tables`) gets a switch in its lane's head, *Feed* and its framework's name; the framework is drawn in the
 // pane in place of the lanes, as the mockup draws it (the whole table, its rules beside it, a line under it), because a framework
 // is read as a spread across the pane, not as a column; the same switch, at its head, goes back to the lanes. Product's (knights') is Jobs to be done, Tech's (orks') Architecture.

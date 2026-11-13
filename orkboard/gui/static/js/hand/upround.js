@@ -1,21 +1,17 @@
 // The phone's round button (goal 169 H, decisions §292.1, §292.4, §293.6; the mockup docs/mockups/phone/feed.html v3, screens 7 and 8): at the foot's right, where the die stood, **one round button whose face is the die in its state** (§223.7: faint while nothing can be
-// run, `asleepNow`; white while dev can; in the picked goal's rune while a goal done or at work is picked, `runeGoal`; orkUI's cartoon die, `die/die-rest.png`, tumbling, `die-tumble.png`, while dev has something new to play: `faceNow`). No count on it. Pressed, **a selector of
-// three rises over the foot**, each a pill with its picture, its word and its line, 44 px at least: **Play** (the die: on a phone Play runs on the computer, so it says so, `PLAY_UP`, and throws nothing), **Inventory** (the backpack: table/backpack.js's `openInventory`)
-// and **History** (the book: table/history.js `openHistory`). **On the table of cards** (decisions §298.9) the fan is the moves only, *New goal* (what the + card does: the + card is drawn only while there is no goal) and *Play*, two small cards each with its word in a label beside it, the button showing a cross while it is open; the backpack and the book are under *Yours* (upyours.js). A second press, a tap outside (the scrim) or Esc closes it, the focus back on the button; the arrows walk the three. Layout only (upround.css); every colour, face and corner is orkUI's.
+// run, `asleepNow`; white while dev can; in the picked goal's rune while a goal done or at work is picked, `runeGoal`; orkUI's cartoon die, `die/die-rest.png`, tumbling, `die-tumble.png`, while dev has something new to play: `faceNow`). No count on it. Pressed, **the fan rises
+// over the foot** (decisions §298.9): the moves only, *New goal* (what the + card does: the + card is drawn only while there is no goal) and *Play* (on a phone Play runs on the computer, so it says so, `PLAY_UP`, and throws nothing), two small cards each with its word in a label beside it,
+// the button showing a cross while it is open; the backpack and the book are under *Yours* (upyours.js). A second press, a tap outside (the scrim) or Esc closes it, the focus back on the button; the arrows walk the two. Layout only (upround.css); every colour, face and corner is orkUI's.
 import { useEffect, useRef } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Icon, ORKUI } from "../orkui.js";
-import { cardsOn } from "../cards/on.js";
 import { toast } from "../link.js";
-import { openInventory } from "../frame/state.js";
-import { openHistory } from "../table/history.js";
 import { ASLEEP, FAILED_WORDS, NEW_WORDS, asleepNow, faceNow, goalPlayWords, newCount, newGoalsWords, runeGoal } from "./playdie.js";
 
 export const PLAY_UP = "Play it on the computer";       // the die's line on a phone
-export const ROUND = "Play, Inventory, History";        // the round button's name
 export const roundOpen = signal(false);                 // the selector is up
-export const FAN = "New goal, Play";                    // the round button's name on the table of cards (decisions §298.9)
+export const FAN = "New goal, Play";                    // the round button's name (decisions §298.9)
 
 /** One of orkUI's cartoon pictures (office/<thing>/<name>.png, its @2x and @3x). */
 export const Pic = ({ thing, name, w, h }) => {
@@ -35,20 +31,13 @@ const close = (back = true) => {
   if (back) document.querySelector(".up-round")?.focus();
 };
 
-/** The selector's three: each its picture, its word and its line; a press closes the selector and does what the place does today. */
-const OPTIONS = [
-  { key: "play", word: "Play", line: "on the computer", label: PLAY_UP, pic: ["die", "die-rest", 31, 32], go: () => toast(PLAY_UP, "information") },
-  { key: "inventory", word: "Inventory", line: "how the project is set", label: "Inventory: how the project is set", pic: ["pack", "pack-shut", 32, 32], go: () => openInventory() },
-  { key: "history", word: "History", line: "what was done, by day", label: "History: what was done, by day", pic: ["book", "book-shut", 47, 40], go: () => openHistory() },
-];
-
-/** The fan on the table of cards (decisions §298.9): the moves only, two small cards rising over the foot, each with its word in a label beside it; *New goal* does what the + card does (`plus`), *Play* what the die does. */
+/** The fan (decisions §298.9): the moves only, two small cards rising over the foot, each with its word in a label beside it; *New goal* does what the + card does (`plus`), *Play* what the die does. */
 const MOVES = [
   { key: "new", word: "New goal", label: "New goal", go: (plus) => plus?.() },
   { key: "play", word: "Play", label: PLAY_UP, go: () => toast(PLAY_UP, "information") },
 ];
 
-function Selector({ plus, cards }) {
+function Selector({ plus }) {
   const box = useRef();
   useEffect(() => {
     box.current?.querySelector("button")?.focus();
@@ -64,22 +53,18 @@ function Selector({ plus, cards }) {
     return () => document.removeEventListener("keydown", keys, true);
   }, []);
   return html`<div class="up-round__scrim" aria-hidden="true" onClick=${() => close()}></div>
-    ${cards ? html`<div class="up-sel up-fan" id="up-sel" ref=${box} role="group" aria-label=${FAN}>${MOVES.map((o) => html`
+    <div class="up-sel up-fan" id="up-sel" ref=${box} role="group" aria-label=${FAN}>${MOVES.map((o) => html`
       <button key=${o.key} type="button" class="up-fan__opt" data-place=${o.key} aria-label=${o.label} title=${o.label} onClick=${() => { close(false); o.go(plus); }}>
         <b class="up-fan__lab">${o.word}</b>
-        <span class="ork-card up-fan__card" aria-hidden="true">${o.key === "new" ? html`<${Icon} name="plus" />` : html`<${Pic} thing="die" name="die-rest" w=${31} h=${32} />`}</span></button>`)}</div>`
-    : html`<div class="up-sel" id="up-sel" ref=${box} role="group" aria-label=${ROUND}>${OPTIONS.map((o) => html`
-      <button key=${o.key} type="button" class="up-sel__opt" data-place=${o.key} aria-label=${o.label} title=${o.label} onClick=${() => { close(false); o.go(); }}>
-        <span class="up-sel__words"><b class="up-sel__word">${o.word}</b><span class="up-sel__line">${o.line}</span></span><${Pic} thing=${o.pic[0]} name=${o.pic[1]} w=${o.pic[2]} h=${o.pic[3]} /></button>`)}</div>`}`;
+        <span class="ork-card up-fan__card" aria-hidden="true">${o.key === "new" ? html`<${Icon} name="plus" />` : html`<${Pic} thing="die" name="die-rest" w=${31} h=${32} />`}</span></button>`)}</div>`;
 }
 
 /** The round button and, while it is pressed, its selector. */
 export function Round({ plus }) {
-  const d = dieState(), open = roundOpen.value, cards = cardsOn();
+  const d = dieState(), open = roundOpen.value, name = FAN;
   useEffect(() => () => { roundOpen.value = false; }, []);
-  const name = cards ? FAN : ROUND;
-  return html`${open && html`<${Selector} plus=${plus} cards=${cards} />`}
+  return html`${open && html`<${Selector} plus=${plus} />`}
     <button type="button" class=${cls("up-round", { "is-open": open })} data-state=${d.state} data-elem=${d.elem || undefined} data-face=${d.face} aria-label=${name} title=${d.words ? `${name} · ${d.words}` : name}
       aria-expanded=${open ? "true" : "false"} aria-controls="up-sel" onClick=${() => { if (roundOpen.peek()) close(); else roundOpen.value = true; }}>
-      <span class="up-round__face">${cards && open ? html`<${Icon} name="close" />` : html`<${Pic} thing="die" name=${d.tumbling ? "die-tumble" : "die-rest"} w=${31} h=${32} />`}</span></button>`;
+      <span class="up-round__face">${open ? html`<${Icon} name="close" />` : html`<${Pic} thing="die" name=${d.tumbling ? "die-tumble" : "die-rest"} w=${31} h=${32} />`}</span></button>`;
 }

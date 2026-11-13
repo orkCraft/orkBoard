@@ -298,19 +298,3 @@ def test_stop_all_holds_every_wait_that_counts_down(host, tech, model):
     got = _ripe(host, slug)
     assert got["held"] is True and got["by"] == "stopped" and "Stopped" in got["why"]
     assert ideas.state(host.ideas.state_dir, slug)["state"] == "decided"
-
-
-def test_back_to_review_begins_a_held_wait_again_and_is_refused_when_none_is_held(host, tech, model):
-    """Spec 128 B.5: *Back to review* on a put-off card of the Orkmaster's column."""
-    from orkboard.gui.board_host import CommandError
-    slug = _agreed(host, tech)
-    with pytest.raises(CommandError, match="Nothing is held here"):
-        host.command("ideas.ripe_back", {"idea": slug})                                                             # it runs: nothing is held
-    host.ideas.ripe_hold_goal(slug)
-    assert _ripe(host, slug)["held"] is True
-    assert host.command("ideas.ripe_back", {"idea": slug}) == {"ok": True}
-    got = _ripe(host, slug)
-    assert got["held"] is False and got["by"] == "" and got["left_s"] == float(got["seconds"])                      # a whole wait again, running
-    assert ideas.state(host.ideas.state_dir, slug)["state"] == "decided"
-    with pytest.raises(CommandError, match="Nothing is held here"):
-        host.command("ideas.ripe_back", {"idea": slug})

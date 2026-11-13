@@ -241,11 +241,7 @@ def start(gui, width, errors, **kw):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
-    if width == "wide":                                                                                                   # a failed task's card lies as a place while its failure is in the hand (spec 128 C.2: tests/test_thrown_browser.py);
-        pg.locator(".table-thrown").first.wait_for(timeout=WAIT_MS)                                                       # this file looks at the cards themselves, so they are put back in their lanes
-        pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")
-        pg.locator('[data-lkey="t:task:seat/s2"]').wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     return pg, host
 
 
@@ -381,7 +377,7 @@ def test_the_orkmasters_menu_has_settings_files_and_report_a_problem_and_the_pro
     assert title(pg) == "Board · Projects" and pg.locator(".table-projects__one").count() == 3                          # the open projects, the recent ones
     assert pg.locator('[role="dialog"][aria-modal="true"]').count() == 0                                                 # in the pane, never a dialog
     pg.locator(".table-title__back").click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     open_menu(pg)
     pg.get_by_role("menuitem", name="Settings").click()
     pg.locator('.table-over--form[data-kind="settings"]').wait_for(timeout=WAIT_MS)
@@ -389,12 +385,12 @@ def test_the_orkmasters_menu_has_settings_files_and_report_a_problem_and_the_pro
     assert pg.locator(".place").count() == 1 and pg.locator(".shell-backdrop").count() == 0
     shot(pg, f"table-settings-{w}.png")
     pg.get_by_role("button", name="Done").click()                                                                        # the form closes itself: the pane is the Board again
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     open_menu(pg)
     pg.get_by_role("menuitem", name="Files").click()
     pg.locator('.table-over[data-kind="files"] .shell-tree__row').first.wait_for(timeout=WAIT_MS)
     pg.keyboard.press("Escape")                                                                                          # Esc goes back
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
 
 
 def test_the_chair_deals_its_crafts_wide_or_opens_the_parties_narrow_and_a_potion_opens_what_used_the_tool(table):
@@ -409,7 +405,7 @@ def test_the_chair_deals_its_crafts_wide_or_opens_the_parties_narrow_and_a_potio
         pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
         assert title(pg) == "Board · Parties" and pg.locator(".place").count() == 0
         pg.get_by_role("button", name="Back").click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     if wide(w):
         narrow.unroll_drum(pg)
         pg.locator('.hand-pot[data-provider="codex"]').click()
@@ -432,392 +428,9 @@ def keys(pg, scope):
     return [e.get_attribute("data-lkey") for e in pg.locator(f"{scope} [data-lkey]").all()]
 
 
-def test_the_lanes_stand_under_their_tabs_every_lane_one_width_and_the_first_is_the_projects(table):
-    pg, host, w = table
-    lanes = pg.locator(".table-lane")
-    k = 4 if wide(w) else 5                                                                                              # the lanes: the project's first at the narrow width; at the wide the project's is the Orkmaster's column (spec 128 B.1)
-    if wide(w):
-        assert pg.locator(".table-lane--first").count() == 0 and [l.get_attribute("data-party") for l in lanes.all()[:4]] == ["game", "tech", "art", "release"]
-    else:
-        assert lanes.first.get_attribute("data-lane") == "first" and [l.get_attribute("data-party") for l in lanes.all()[1:5]] == ["game", "tech", "art", "release"]
-        assert lanes.first.get_attribute("aria-label") == "shop"                                                         # the first lane is the whole project's
-    for slug in ("orkmaster", "game", "tech", "art", "release")[1 if wide(w) else 0:]:
-        lane = lanes.first if slug == "orkmaster" else pg.locator(f'.table-lane[data-party="{slug}"]')
-        t, l = cell(pg, slug).bounding_box(), lane.bounding_box()
-        assert abs(t["x"] - l["x"]) <= 1 and abs(t["width"] - l["width"]) <= 1, slug                                      # a tab's cell is its lane's head: the same x, the same width (the open tab's head is in its cell, beside its button)
-    widths = {round(l.bounding_box()["width"]) for l in lanes.all()[:k]}
-    assert len(widths) == 1, widths                                                                                       # every lane the same width, the first too
-    if wide(w):
-        assert 144 <= widths.pop() <= 181                                                                                # a card and a quarter at most (frame.css `--col-w`), narrower by what the edge's column takes (spec 150 D.1): a card still fits
-    else:
-        assert widths.pop() <= 48                                                                                        # a token wide
-    assert pg.locator(".table-board").evaluate("e => e.scrollWidth <= e.clientWidth + 1")                                # no sideways scroll
-    assert pg.locator(".table-board").evaluate("e => getComputedStyle(e).gridTemplateColumns.split(' ').length") == (5 if wide(w) else 6)    # the lanes and the tabs' end: the frame's `--cols`, no `--tabs`
-
-
-def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label_row_and_no_head(table):
-    pg, host, w = table
-    failed = pg.locator('[data-lkey="t:task:seat/s2"]')                                                                   # the front of its goal's cascade
-    assert failed.get_attribute("data-state") == "failed"
-    if not wide(w):
-        tok = failed
-        assert "table-token" in tok.get_attribute("class") and tok.get_attribute("aria-label").startswith("Keep the seat when a socket reconnects")
-        assert tok.locator(".ork-elem.ice").count() == 1 and tok.locator(".ork-sign.feature").count() == 1 and tok.locator(".ork-sign.sword").count() == 1     # its element, its type, its stage
-        assert tok.evaluate("e => e.parentElement.dataset.n") == "1"                                                      # one edge: one more task behind
-        assert tok.bounding_box()["width"] <= 46 and pg.locator(".table-card").count() == 0
-        return
-    box = failed.bounding_box()
-    assert abs(box["width"] - 144) <= 1 and abs(box["height"] - 202) <= 2                                                 # 144 wide (frame.css `--card-w`), 5 : 7 (spec 147 A.2)
-    head = failed.locator(".table-card__head")
-    assert head.locator(".ork-elem").count() == 0 and head.evaluate("e => e.firstElementChild.classList.contains('table-card__nm')")      # no rune in the header: the goal's rune is the top corner's (spec 147 A, decisions §251.2)
-    nm = head.locator(".table-card__nm")
-    assert nm.inner_text().strip() == "Reset the round timer when a player rejoins"
-    assert nm.evaluate("e => getComputedStyle(e).textAlign") in ("left", "start") and nm.evaluate("e => getComputedStyle(e).webkitLineClamp") == "2"        # left-aligned, two lines at most (spec 147 A.2)
-    text = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-text').trim()")
-    assert text and nm.evaluate("e => getComputedStyle(e).fontFamily").replace(chr(34), "") == text.replace(chr(34), "")                                           # a person's words: the text face token (orkUI 0.40 draws every face in Rubik, decisions §291, so "not the pixel face" no longer tells)
-    win = failed.locator(".table-card__win")
-    assert 80 <= win.bounding_box()["height"] <= 92                                                                      # what the corners and the title leave of the card (spec 147 A.2), so a lane's cards line up
-    assert win.get_attribute("data-window") == "fail" and win.locator(".ork-sign.alert").count() == 1 and win.locator(".ork-sign").count() == 1      # a failed task: orkUI's alert sign and its reason (spec 142 C, decisions §249.3)
-    danger = pg.evaluate("() => { const d = document.createElement('i'); d.style.color = 'var(--ork-danger)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; }")
-    assert win.locator(".table-win__reason").inner_text().strip() and win.evaluate("e => getComputedStyle(e.querySelector('.ork-sign')).color") == danger      # its reason, the sign in the danger colour
-    assert win.evaluate("e => getComputedStyle(e).borderTopWidth") == "1px"                                              # a hairline
-    row = failed.locator(".corner--foot")
-    assert failed.locator(".corner--top .ork-elem").count() == 1 and failed.get_attribute("data-stage") == "doing"        # the goal's rune and the stage (said in the card's words) (spec 147 A)
-    assert row.locator(".ork-race__head").count() == 1 and abs(row.locator(".ork-race__head").bounding_box()["height"] - 16) <= 1      # the seat's head in the foot, 16 px (spec 147 A.2: who works is on the card's face)
-    assert abs(failed.locator(".corner--top .ork-sign").bounding_box()["width"] - 14) <= 1
-    assert row.locator(".ork-gem").inner_text().strip() == "$1" and row.evaluate("e => e.lastElementChild.querySelector('.ork-gem') !== null")                      # a retry spends: the gem at the right
-    assert "fails" in failed.get_attribute("class")                                                                      # a failure: orkUI's danger frame
-    check = pg.locator('[data-lkey="t:task:recheck/c2"]')                                                                 # a failed check
-    assert "fails" in check.get_attribute("class") and check.get_attribute("data-stage") == "checking" and check.locator(".ork-gem").count() == 0     # no gem: it is not a retry
-    assert check.locator(".table-card__win .ork-sign.alert").count() == 1
-    shot(pg, f"table-cards-{w}.png")
-
-
-def test_a_goal_is_a_strip_over_its_cascade_the_front_by_the_rule_and_the_others_a_fan_behind_it(table):
-    pg, host, w = table
-    if not wide(w):
-        assert pg.locator(".table-casc").count() == 0 and pg.locator(".table-gstrip").count() == 0 and pg.locator(".table-stack").count() >= 4      # a goal one token with its stack's edges
-        return
-    seat = pg.locator('.table-casc[data-goal="seat"]')
-    assert keys(pg, '.table-casc[data-goal="seat"]') == ["t:task:seat/s1", "t:task:seat/s2"]                              # the fan first, the front last
-    assert pg.locator('[data-lkey="t:task:seat/s1"]').evaluate("e => e.classList.contains('table-tedge')") and pg.locator('[data-lkey="t:task:seat/s2"]').evaluate("e => e.classList.contains('table-card')")
-    assert keys(pg, '.table-casc[data-goal="recheck"]') == ["t:task:recheck/c1", "t:task:recheck/c2"]                    # a failed check is the front, before a task being done
-    assert keys(pg, '.table-casc[data-goal="bar"]') == ["t:task:bar/a3", "t:task:bar/a1", "t:task:bar/a2"]               # Checking in front, then Doing, then Planning at the top
-    bar = pg.locator('.table-casc[data-goal="bar"]')
-    assert [e.get_attribute("data-stage") for e in bar.locator("[data-lkey]").all()] == ["planning", "doing", "checking"]
-    assert bar.locator(".table-tedge").count() == 2 and bar.locator(".table-card").count() == 1 and bar.get_attribute("data-open") == "false"                  # collapsed: nothing is picked
-    edge = pg.locator('[data-lkey="t:task:bar/a1"]')
-    assert edge.locator(".ork-sign.sword").count() == 1 and edge.locator(".ork-sign").count() == 1 and edge.locator(".ork-elem.void.is-glowing").count() == 1     # the stage's small sign and, a task at work, the goal's rune glowing before it (spec 111 §3.1)
-    assert pg.locator('[data-lkey="t:task:bar/a3"] .ork-elem').count() == 0 and pg.locator('[data-lkey="t:task:bar/a3"] .ork-sign.page').count() == 1                # a task that only asks has the sign and no flame
-    assert edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "0" and edge.get_attribute("title") == "Draw the bar"       # no name at rest (it is the edge's label for a screen reader)
-    assert "asks" in pg.locator('[data-lkey="t:task:bar/a3"]').get_attribute("class")                                    # a pick asked for: orkUI's alert frame
-    gs = pg.locator('.table-lane[data-party="tech"] > .table-goal .table-gstrip')
-    assert [g.get_attribute("data-goal") for g in gs.all()] == ["seat", "recheck", "calm"]                                # the hand's order: the failures first, a goal with nothing wrong last (though it is first on the Board)
-    top = pg.locator('.table-lane[data-party="tech"] .table-goal').first
-    assert abs(top.locator(".table-gstrip").bounding_box()["height"] - 22) <= 1 and top.locator(".table-gstrip .ork-elem.ice").count() == 1
-    assert "Keep the seat" in top.locator(".table-gstrip").inner_text() and top.locator(".table-gstrip").evaluate("e => e.tagName") == "BUTTON"
-    assert seat.locator(".table-tedge").count() == 1 and pg.locator(".table-tstrip").count() == 0                         # no strip of names
-    shot(pg, f"table-cascade-{w}.png")
-    open_fan(pg, "t:task:bar/a1")
-    shot(pg, f"table-fan-open-{w}.png")
-
-
-FLAME = ".ork-elem.is-glowing"
-AT_WORK = ("r1", "k1", "s1", "c1", "a1", "a2")                                                                           # the tasks the stub has running or testing
-
-
-def test_a_goals_rune_stands_once_on_its_strip_and_a_task_at_work_shows_the_flame_in_the_stages_place(table):
-    pg, host, w = table
-    if not wide(w):
-        glowing = pg.locator('[data-lkey="t:task:rules/r1"]')                                                             # a lane a token wide: the token keeps its rune, glowing while its front task is at work
-        assert glowing.locator(".ork-elem.meadow.is-glowing").count() == 1 and glowing.locator(".ork-elem").count() == 1
-        assert pg.locator('[data-lkey="t:task:seat/s2"] .ork-elem.ice').count() == 1 and pg.locator('[data-lkey="t:task:seat/s2"] .is-glowing').count() == 0       # its front task failed: the rune is still
-        assert anim(glowing.locator(".ork-elem"))[0] == ("none" if "is-still" in glowing.locator(".ork-elem").get_attribute("class") else "ork-glow") and glowing.locator(".table-card__win > *").evaluate_all("els => els.map((e) => getComputedStyle(e).animationName)") == ["none"]
-        return
-    assert pg.locator(".table-lane[data-party] .table-card__head .ork-elem, .table-lane[data-party] .table-tedge > .ork-elem:not(.is-glowing)").count() == 0       # no rune on a card's header or on an edge that does not work
-    for slug in ("rules", "seat", "calm", "recheck", "bar"):
-        assert pg.locator(f'.table-lane[data-party] .table-goal[data-goal="{slug}"] .table-gstrip .ork-elem').count() == 1, slug                  # the goal's one rune: its strip's
-    r1 = pg.locator('[data-lkey="t:task:rules/r1"]')                                                                      # at work, the front card
-    flame = r1.locator(".corner--top .ork-elem.meadow.is-glowing")
-    assert flame.count() == 1 and r1.get_attribute("data-stage") == "doing"                                               # the flame is the top corner's rune, glowing (spec 147 A)
-    assert flame.evaluate("e => e.offsetWidth") == 14 and flame.get_attribute("aria-hidden") == "true"
-    moving = pg.locator(f".table-lane[data-party] {FLAME}").evaluate_all("els => els.filter((e) => getComputedStyle(e).animationName === 'ork-glow').map((e) => [getComputedStyle(e).animationDuration, getComputedStyle(e).animationTimingFunction])")
-    assert len(moving) <= 1, moving                                                                                       # one place moves at a time (spec 140 C3): the others' flames stand, lit
-    assert all(d == "2.4s" and t.startswith("steps(6") for d, t in moving), moving                                        # orkUI's glow: six steps over 2.4 s
-    assert pg.locator('[data-lkey="t:task:bar/a2"] .corner--top .ork-elem.void.is-glowing').count() == 1                 # a task being checked is at work too
-    edge = pg.locator('[data-lkey="t:task:seat/s1"]')                                                                     # at work, behind the front one: the rune glowing before the stage's sign
-    assert edge.locator(".ork-elem.ice.is-glowing").count() == 1 and edge.locator(".ork-sign.sword").count() == 1 and edge.evaluate("e => e.firstElementChild.classList.contains('ork-elem')")
-    for key in ("t:task:seat/s2", "t:task:recheck/c2", "t:task:bar/a3"):                                                  # failed, or asking: no flame (the rune stands, lit)
-        assert pg.locator(f'[data-lkey="{key}"] .ork-elem.is-glowing').count() == 0, key
-    assert pg.locator(f".table-lane[data-party] {FLAME}").count() == len(AT_WORK)                                          # as many flames as tasks at work
-    assert anim(r1.locator(".table-card__win > *").first)[0] == "none" and anim(r1, "::after")[0] == "none"              # the card's own motion of before is gone (the tab's head step stays)
-    pg.emulate_media(reduced_motion="reduce")                                                                             # under reduced motion the flame stands, at full strength
-    assert anim(flame)[0] == "none" and flame.evaluate("e => getComputedStyle(e).opacity") == "1"
-    pg.emulate_media(reduced_motion="no-preference")
-    shot(pg, "table-flame-wide.png")
-    for n in host.nodes:                                                                                                  # the task stops working: the flame goes, the sign comes back
-        for t in n["tasks"]:
-            if t["id"] == "r1":
-                t["state"] = "failed"
-    host.push()
-    pg.locator('[data-lkey="t:task:rules/r1"][data-state="failed"]').wait_for(timeout=WAIT_MS)
-    assert r1.locator(".ork-elem.is-glowing").count() == 0 and r1.locator(".corner--top .ork-elem").count() == 1
-
-
-def test_a_goals_tasks_lie_as_a_fan_turned_one_to_three_degrees_by_their_place_and_a_hover_opens_it(table):
-    pg, host, w = table
-    if not wide(w):
-        assert pg.locator(".table-fan").count() == 0                                                                      # a goal one token with its edges
-        return
-    turn = lambda key: pg.locator(f'[data-lkey="{key}"]').evaluate("e => { const m = new DOMMatrix(getComputedStyle(e).transform); return [Math.atan2(m.b, m.a) * 180 / Math.PI, m.e]; }")  # noqa: E731
-    at_rest = {k: turn(k) for k in ("t:task:bar/a1", "t:task:bar/a3", "t:task:recheck/c1", "t:task:seat/s1")}              # bar: a2 in front, a1 behind it, a3 farthest
-    for key, (deg, aside) in at_rest.items():
-        assert 1 <= abs(deg) <= 3 and 2 <= abs(aside) <= 5, (key, deg, aside)                                             # turned 1° to 3°, moved a few px aside
-    assert at_rest["t:task:seat/s1"] == at_rest["t:task:recheck/c1"] == at_rest["t:task:bar/a1"]                          # a fixed turn by the place from the front, never by the goal
-    assert at_rest["t:task:bar/a1"][0] * at_rest["t:task:bar/a3"][0] < 0 and at_rest["t:task:bar/a1"][1] * at_rest["t:task:bar/a3"][1] < 0       # by turns left and right
-    assert pg.locator('[data-lkey="t:task:seat/s2"]').evaluate("e => getComputedStyle(e).transform") in ("none", "matrix(1, 0, 0, 1, 0, 0)")      # the front card lies straight
-    edge = pg.locator('[data-lkey="t:task:bar/a1"]')
-    fan = pg.locator('.table-fan:has([data-lkey="t:task:bar/a1"])')
-    closed = fan.bounding_box()["height"]
-    open_fan(pg, "t:task:bar/a1")                                                                                         # a hover opens the fan a little
-    assert fan.bounding_box()["height"] > closed + 10 and fan.bounding_box()["height"] < closed + 60
-    assert edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "1" and "Draw the bar" in edge.inner_text()      # and the names are read
-    assert turn("t:task:bar/a1") == at_rest["t:task:bar/a1"]                                                              # the turn is the same open
-    pg.mouse.move(5, 5)
-    pg.wait_for_function("(k) => getComputedStyle(document.querySelector(`[data-lkey=\"${k}\"] .table-fan__nm`)).opacity === '0'", arg="t:task:bar/a1", timeout=WAIT_MS)       # the pointer away: closed again
-    edge.focus()                                                                                                         # the focus opens it too
-    pg.wait_for_function("(k) => getComputedStyle(document.querySelector(`[data-lkey=\"${k}\"] .table-fan__nm`)).opacity === '1'", arg="t:task:bar/a1", timeout=WAIT_MS)
-    pg.emulate_media(reduced_motion="reduce")
-    assert turn("t:task:bar/a1") == at_rest["t:task:bar/a1"]                                                              # the turns are still under reduced motion
-    assert pg.locator('.table-fan__slot').first.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"          # and nothing glides
-    pg.emulate_media(reduced_motion="no-preference")
-
-
-def test_an_edge_lifts_its_task_and_a_goals_strip_picks_the_goal(table):
-    pg, host, w = table
-    if wide(w):
-        edge_click(pg, "t:task:bar/a1")                                                                                   # a card behind the front one, pressed on its edge, lifts its task
-        back = pg.locator(".table-back")
-        back.wait_for(timeout=WAIT_MS)
-        assert back.get_attribute("data-lifted") == "t:task:bar/a1" and "Draw the bar" in back.text_content()
-        pg.keyboard.press("Escape")
-        pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
-        assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
-        pg.locator('.table-casc[data-goal="seat"]').locator("xpath=..").locator(".table-gstrip").click()                  # the strip of a goal picks it
-        pg.wait_for_selector('.table-board--plan[data-plan="seat"]', timeout=WAIT_MS)                                       # the goal picked: the Board is its plan alone (spec 128 F.1; tests/test_plan_arrows_browser.py)
-        assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
-        pg.keyboard.press("Escape")                                                                                       # and Esc puts it down (no cross in the title: spec 156 B.3)
-        pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
-    else:
-        pg.locator('[data-lkey="t:task:bar/a2"]').click()                                                                 # a token lifts its front task: a screen over the pane, its tasks listed
-        back = pg.locator(".table-back.is-screen")
-        back.wait_for(timeout=WAIT_MS)
-        assert [b.get_attribute("data-task") for b in back.locator(".table-back__task").all()] == ["a1", "a3"]            # the goal's other tasks, the next in turn first
-        back.locator('.table-back__task[data-task="a1"]').click()
-        pg.wait_for_function("() => document.querySelector('.table-back').dataset.lifted === 't:task:bar/a1'", timeout=WAIT_MS)
-        pg.get_by_role("button", name="Back").click()
-        pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
-
-
-def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_others_stay_collapsed(table):
-    pg, host, w = table
-    assert pg.locator(".ork-picked").count() == 0
-    pick(pg, "bar")                                                                                                       # in the first lane it is being joined, in Art's it is at work
-    if wide(w):                                                                                                          # the Orkmaster's tab, a goal picked: its plan alone (spec 128 F.1: its tasks in their leaders' lanes, no strip, no fan; tests/test_plan_arrows_browser.py)
-        pg.wait_for_selector('.table-board--plan[data-plan="bar"]', timeout=WAIT_MS)
-        assert title(pg) == "A timer bar that drains · through the Orkmaster"
-        assert pg.locator(".table .ork-picked").count() == 0 and pg.locator(".table-gstrip, .table-fan, .table-casc").count() == 0
-        assert sorted(keys(pg, '.table-lane[data-party="art"]')) == ["t:task:bar/a1", "t:task:bar/a2", "t:task:bar/a3"]
-        assert pg.locator('[data-lkey="t:task:bar/a1"] .corner--top .ork-sign.picture').count() == 1                     # a task of a kind of its own: its kind's sign in the top corner, not the goal's
-        assert pg.locator('[data-lkey^="t:task:seat/"]').count() == 0                                                     # the other goals' tasks are not drawn
-        shot(pg, f"table-picked-{w}.png")
-        pick(pg, "")
-        pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
-        return
-    pg.wait_for_function("(n) => document.querySelectorAll('.table .ork-picked').length === n", arg=2, timeout=WAIT_MS)
-    assert title(pg) == "A timer bar that drains · through the Orkmaster"
-    lit = pg.locator(".table .ork-picked")
-    assert [l.get_attribute("data-goal") for l in lit.all()] == ["bar", "bar"]                                          # its token in both lanes, lit alike
-    assert pg.locator('.table-lane[data-party="art"] .ork-picked').count() == 1
-    assert pg.locator('.table-lane[data-lane="first"] .ork-picked').count() == 1
-    shot(pg, f"table-picked-{w}.png")
-    pick(pg, "")
-    pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 0", timeout=WAIT_MS)
-
-
-def test_the_first_lane_holds_what_is_the_whole_projects_the_goals_read_routed_and_joined_then_the_line(table):
-    pg, host, w = table
-    if wide(w):
-        assert pg.locator(".table-lane--first").count() == 0 and pg.locator(".table-card--own").count() == 0       # the Orkmaster's goals are the column's at the wide width (spec 128 B; tests/test_column_browser.py)
-        assert pg.locator('.frame-column .col-card[data-goal="timer"]').count() == 1 and pg.locator('.frame-column .col-card[data-goal="results"]').count() == 1
-        return
-    first = pg.locator('.table-lane[data-lane="first"]')
-    assert keys(pg, '.table-lane[data-lane="first"]') == ["t:orc:timer", "t:orc:results", "t:orc:bar"]                      # what the Orkmaster does itself, in the Board's order
-    assert [o.get_attribute("data-stage") for o in first.locator("[data-lkey]").all()] == ["reading", "routing", "joining"]
-    if wide(w):
-        words = [o.locator(".table-stage").inner_text().strip().lower() for o in first.locator(".table-card--own").all()]
-        assert words == ["reading", "routing", "joining"]
-        assert first.locator(".table-card--own .ork-race__head").count() == 0                                             # no crown: who works is not on a card of the Board
-        goal = first.locator('.table-goal[data-goal="results"]')
-        assert goal.locator(".table-gstrip").count() == 0 and goal.locator(".table-card--own").count() == 1               # a card a goal, no strip over it: the card is the goal's (spec 111 §3.1, decisions §187.1)
-        own = goal.locator(".table-card--own .table-card__head")
-        assert own.locator(".ork-elem.dust").count() == 1 and own.evaluate("e => e.firstElementChild.classList.contains('ork-elem')") and own.locator(".table-card__nm").inner_text().strip() == "Results screen with the round's best answer"     # its rune and its whole title
-        assert goal.locator(".table-card__win .ork-sign.screen").count() == 1
-        assert first.locator(".table-casc--line").count() == 1 and first.locator(".table-goal").last.bounding_box()["y"] < first.locator(".table-casc--line").bounding_box()["y"]       # the line last
-    else:
-        assert first.locator(".table-line-tokens").count() == 1 and first.locator(".table-token[data-lkey^='t:orc:']").count() == 3
-    pg.locator('[data-lkey="t:orc:results"]').click()                                                                     # lifted: its own back
-    pg.locator(".table-back").wait_for(timeout=WAIT_MS)
-    assert "routing it" in pg.locator(".table-back").inner_text()
-    pg.keyboard.press("Escape") if wide(w) else pg.get_by_role("button", name="Back").click()
-    pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
-
-
-def open_fan(pg, key):
-    """Hover the fan the card `key` lies on and wait for it to be open: the card's visible edge is then its top 30 px."""
-    fan = pg.locator(f'.table-fan:has([data-lkey="{key}"])')
-    fan.hover(position={"x": 70, "y": 3})
-    pg.wait_for_function("(k) => { const f = document.querySelector(`.table-fan:has([data-lkey=\"${k}\"])`); return Math.abs(f.offsetHeight - parseFloat(getComputedStyle(f).getPropertyValue('--span'))) < 1; }", arg=key, timeout=WAIT_MS)
-    pg.wait_for_timeout(300)                                                                                              # the slots have glided
-    return fan
-
-
-def edge_click(pg, key):
-    """A press on the visible edge of a card behind the front one (the middle of its box lies under the cards in front)."""
-    open_fan(pg, key)
-    pg.locator(f'[data-lkey="{key}"]').click(position={"x": 40, "y": 8})
-
-
-def line_slugs(pg):
-    return [e.get_attribute("data-slug") for e in pg.locator(".table-lane[data-lane='first'] [data-line-item], .table-lane[data-lane='first'] .table-line-tokens .table-token[data-slug]").all()]
-
-
-def test_the_line_is_the_first_lanes_last_cascade_in_the_orkmasters_order_with_the_moon_on_a_goal_that_waits(table):
-    pg, host, w = table
-    if wide(w):
-        return                                                                                                            # at the wide width the line is the column's In analysis (spec 128 B.3; tests/test_column_browser.py)
-    assert line_slugs(pg) == ["ln1", "ln2", "ln3"]                                                                    # a token a goal (no drag here: the list over the pane has its arrows)
-    t2 = pg.locator('.table-line-tokens [data-slug="ln2"]')
-    assert t2.locator(".ork-sign.moon").count() == 1 and t2.locator(".ork-sign.sound").count() == 1 and t2.locator(".ork-elem.ice").count() == 1
-    t2.click()
-    pg.wait_for_function("() => document.querySelector('.table-line-tokens [data-slug=\"ln2\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
-    pg.locator(".table-board").evaluate("e => { e.scrollTop = e.scrollHeight; }")
-    shot(pg, f"table-line-{w}.png")
-
-
 def test_a_goal_dragged_among_the_line_moves_with_ideas_move_and_a_drop_among_other_partys_goals_goes_back(lined):
     pg, host, w = lined
     pytest.skip("the line's drag lived in the first lane's cascade; at the wide width the column's In analysis has Next (spec 128 B.3, tests/test_column_browser.py), at the narrow a touch screen scrolls the lane and its moves are the list's arrows")
-
-
-def test_past_seven_goals_all_search_opens_the_line_over_the_pane(crowded):
-    pg, host, w = crowded
-    if wide(w):
-        return                                                                                                            # the column holds the line at the wide width (spec 128 B.3)
-    items = line_slugs(pg)
-    assert len(items) == 7 and set(items) == {"ln1", "ln2", "ln3", "ln4", "ln5", "ln6", "ln7"}                            # seven at most
-    all_ = pg.locator(".table-lstrip--all, .table-token--all")
-    assert all_.count() == 1 and "All · search" in (all_.get_attribute("title") or all_.inner_text())
-    all_.click()
-    pg.locator('.table-over[data-kind="line"] .table-line').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · In line" and pg.locator('[data-kind="line"][data-owner="table"]').count() == 1           # kind `line`, the table's own
-    assert pg.locator(".table-line__row").count() == 9                                                                    # every goal in line
-    search = pg.get_by_role("searchbox", name="Search the goals in line")
-    search.fill("goal 8")
-    assert pg.locator(".table-line__row").count() == 1 and "Goal 8 in line" in pg.locator(".table-line__row").inner_text()
-    search.fill("")
-    assert pg.locator('.table-line__row[data-slug="ln2"]').text_content().lower().count("waits for the reset") == 1 and pg.locator('.table-line__row[data-slug="ln2"] .ork-sign.moon').count() == 1
-    host.log.clear()
-    pg.get_by_role("button", name="Move later: Chat in the lobby").click()                                                # ln1 and ln4 are Tech's: the next of Tech's after it
-    for _ in range(40):
-        if any(n == "ideas.move" for n, _ in host.log):
-            break
-        pg.wait_for_timeout(50)
-    assert [a for n, a in host.log if n == "ideas.move"] == [{"slug": "ln1", "before": "ln5"}]
-    pg.locator('.table-line__row[data-slug="ln3"]').click()                                                               # a row picks its goal
-    pg.wait_for_function("() => document.querySelector('.table-line__row[data-slug=\"ln3\"]').classList.contains('is-on')", timeout=WAIT_MS)
-    pg.keyboard.press("Escape") if wide(w) else pg.locator(".table-title__back").click()                                  # back to the Board as it was
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".ork-picked[data-slug='ln3']").count() == 1
-
-
-def test_a_card_is_lifted_where_it_lies_and_turns_over_esc_or_a_press_away_lowers_it_one_at_a_time(table):
-    pg, host, w = table
-    seat, other = pg.locator('[data-lkey="t:task:seat/s2"]'), pg.locator('[data-lkey="t:task:rules/r1"]')
-    seat.click()
-    back = pg.locator(".table-back")
-    back.wait_for(timeout=WAIT_MS)
-    assert seat.get_attribute("aria-pressed") == "true" and back.get_attribute("data-lifted") == "t:task:seat/s2"
-    assert "Reset the round timer when a player rejoins" in back.text_content() and "Brief" in back.text_content()
-    pg.wait_for_function("() => document.querySelector('.table-back').innerText.includes('Keep a player')", timeout=WAIT_MS)
-    assert ("ideas.task", {"slug": "seat", "task": "s2"}) in host.log                                                    # its brief, read when it is lifted
-    assert [b.get_attribute("data-task") for b in back.locator(".table-back__task").all()] == ["s1"]                      # its goal's other tasks, each a press that lifts it
-    if wide(w):
-        b, c = back.bounding_box(), seat.bounding_box()
-        assert abs(b["x"] - c["x"]) <= 8 and abs(b["y"] - c["y"]) <= 8                                                    # lifted where it lies (the card leans toward the pointer a little)
-    else:
-        assert back.bounding_box()["width"] >= 380 and "is-screen" in back.get_attribute("class")                         # a screen at the narrow width
-    shot(pg, f"table-lifted-{w}.png")
-    pg.keyboard.press("Escape")
-    pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
-    assert seat.get_attribute("aria-pressed") == "false"
-    seat.click()
-    pg.locator(".table-back").wait_for(timeout=WAIT_MS)
-    back.locator('.table-back__task[data-task="s1"]').click()                                                             # another task of the goal
-    pg.wait_for_function("() => document.querySelectorAll('.table-back').length === 1 && document.querySelector('.table-back').dataset.lifted === 't:task:seat/s1'", timeout=WAIT_MS)
-    if wide(w):
-        pg.locator(".table-title").click()                                                                               # a press away
-        pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
-        seat.click()
-        other.click()                                                                                                    # another card: one at a time
-        pg.wait_for_function("() => document.querySelectorAll('.table-back').length === 1 && document.querySelector('.table-back').dataset.lifted === 't:task:rules/r1'", timeout=WAIT_MS)
-        pg.keyboard.press("Escape")
-    else:
-        pg.get_by_role("button", name="Back").click()
-    pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
-
-
-def test_open_on_a_task_card_opens_its_log_or_its_task_over_the_pane_and_back_lights_the_card(table):
-    pg, host, w = table
-    failed = pg.locator('[data-lkey="t:task:seat/s2"]')
-    failed.click()
-    pg.locator(".table-back .table-back__open").click()                                                                  # a failure: its lines
-    if wide(w):
-        pg.locator('.table-over[data-kind="log"] .shell-logterm .xterm-rows').wait_for(timeout=WAIT_MS)                # the log in a terminal's face from 760 px up (spec 168 I1)
-        pg.wait_for_function("() => document.querySelector('.shell-logterm .xterm-rows')?.textContent.includes('tests: 3 failed')", timeout=WAIT_MS)
-    else:                                                                                                                # the narrow page keeps its log as it was (spec 168 *Every stage keeps*, shell/preview.js)
-        pg.locator('.table-over[data-kind="log"] .shell-logview pre').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".shell-logterm").count() == 0 and "tests: 3 failed" in pg.locator(".shell-logview pre").text_content()
-    assert title(pg) == "Board · Reset the round timer when a player rejoins"
-    assert pg.locator(".table-board").count() == 0 and pg.locator(".table-back").count() == 0                          # the map is under it, not drawn
-    pg.locator(".table-title__back").click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
-    assert "is-lit" in pg.locator('[data-lkey="t:task:seat/s2"]').get_attribute("class")                                 # the card it came from lit
-    pg.locator('[data-lkey="t:task:seat/s2"]').click()
-    pg.locator('.table-back__task[data-task="s1"]').click()
-    pg.locator(".table-back .table-back__open").click()
-    pg.locator('.table-over[data-kind="task"] .shell-facts').wait_for(timeout=WAIT_MS)
-    pg.keyboard.press("Escape")
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
-
-
-def test_a_goal_picked_through_the_orkmasters_tab_is_its_plan_alone_at_the_wide_width_and_keeps_every_goal_on_the_board_at_the_narrow(table):
-    pg, host, w = table
-    cards = pg.locator("[data-lkey]").count()
-    pick(pg, "seat")
-    if wide(w):                                                                                                          # the wide width: its plan alone (spec 128 F.1)
-        pg.wait_for_selector('.table-board--plan[data-plan="seat"]', timeout=WAIT_MS)
-        assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
-        assert sorted(keys(pg, ".table-board--plan")) == ["t:task:seat/s1", "t:task:seat/s2"], "its tasks only: every other goal's are not drawn"
-        pick(pg, "")
-        pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
-        assert pg.locator("[data-lkey]").count() == cards
-        return
-    pg.wait_for_function("() => document.querySelector('.table-casc[data-goal=\"seat\"], .table-token[data-goal=\"seat\"]') !== null && document.querySelectorAll('.table .ork-picked').length === 1", timeout=WAIT_MS)
-    assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
-    assert pg.locator("[data-lkey]").count() >= cards                                                                    # nothing is hidden for it (a picked goal's unfolded cascade only adds cards)
-    pick(pg, "")
-    pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 0", timeout=WAIT_MS)
 
 
 def pick(pg, slug):
@@ -1025,25 +638,8 @@ def test_esc_goes_back_from_a_file_and_the_browsers_back_does_at_the_narrow_widt
         pg.keyboard.press("Escape")
     else:
         pg.go_back()                                                                                                     # ← the browser's back
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     assert pg.locator(".table-over").count() == 0
-
-
-def test_with_many_parties_the_tabs_keep_their_heads_and_the_board_lays_tokens(gui):
-    server, browser = gui
-    host = TableHost(crowd=5)
-    pg = narrow.page(browser, "wide")
-    errors: list[str] = []
-    watch(pg, errors)
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    pg.locator(".table-tab").nth(8).wait_for(timeout=WAIT_MS)
-    pg.wait_for_selector('.table[data-compact="true"]', timeout=WAIT_MS)
-    assert tab(pg, "tech").locator(".table-tab__txt").is_hidden() and tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"           # more than fit: the heads alone, the words said
-    assert pg.locator('.table-board[data-tokens="true"]').count() == 1
-    narrow.no_sideways(pg)
-    pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
 # -- the sword and shield on a tab (spec 111 §3.4, decisions §189) ----------------------------------------------------------------------------------------------
@@ -1053,37 +649,6 @@ def marks_of(pg, slug):
     return pg.locator(f'.table-tab[data-tab="{slug}"] .table-tab__marks').evaluate("""e => [...e.children].filter((c) => !c.classList.contains('table-tab__gap')).map((c) =>
         c.classList.contains('ork-sign') ? [[...c.classList].find((k) => k === 'sword' || k === 'shield'), ''] : c.classList.contains('table-tab__off') ? ['off', c.firstElementChild.classList.contains('shield') ? 'shield' : '']
         : c.classList.contains('table-tab__more') ? ['more', ''] : ['tool', c.dataset.tool])""")
-
-
-def test_a_tab_has_a_second_line_the_sword_and_the_tool_its_does_run_on_the_shield_and_the_tool_its_checks_run_on(table):
-    pg, host, w = table
-    if not wide(w):
-        assert tab(pg, "tech").locator(".table-tab__marks").is_hidden() and tab(pg, "tech").locator(".table-tab__txt").is_hidden()      # a row of heads: no second line
-        assert "Does on Claude · Checks on Codex" in tab(pg, "tech").get_attribute("title")                              # its words are still said
-        return
-    assert tab(pg, "game").locator(".table-tab__marks").count() == 0                                                      # Does and Checks on the project's default tool (Claude): no second line (decisions §247.7)
-    assert marks_of(pg, "tech") == [["shield", ""], ["tool", "codex"]]                                                    # only the side on another tool is drawn: its Checks run on Codex
-    assert pg.locator('.col-head__tab .table-tab__marks').count() == 0                                                    # the Orkmaster's tab is the column's head: no sword and shield (the project's tool is the hand's potions)
-    assert marks_of(pg, "art") == [["off", "shield"]]                                                                     # Lean: the shield faint, no mark (its Does is on the default: not drawn)
-    assert marks_of(pg, "release") == [["sword", ""], ["tool", "codex"], ["more", ""]]                                    # a dot: one of its roles runs on another tool; its Checks on the default are not drawn
-    assert tab(pg, "art").locator(".table-tab__off").evaluate("e => getComputedStyle(e).opacity") == "0.35"
-    assert tab(pg, "tech").get_attribute("title") == "Tech · Does on Claude · Checks on Codex"                           # the words say both sides
-    assert tab(pg, "game").get_attribute("title").endswith("Does on Claude · Checks on Claude")
-    assert tab(pg, "art").get_attribute("aria-label") == "Art · Does on Claude · no separate check"
-    assert tab(pg, "release").get_attribute("aria-label") == "Release · Does on Codex and others · Checks on Claude"
-    line = tab(pg, "tech").locator(".table-tab__marks")
-    assert line.get_attribute("aria-hidden") == "true"                                                                    # the words are the tab's label, the marks are drawn
-    assert all(abs(b["width"] - 14) <= 1 and abs(b["height"] - 14) <= 1 for b in (e.bounding_box() for e in line.locator(".ork-sign, img").all()))        # 14 px, as the signs' small size
-    head, name, tb = tab(pg, "tech").bounding_box(), tab(pg, "tech").locator(".table-tab__main").bounding_box(), line.bounding_box()
-    assert head["height"] >= 60 and tb["y"] >= name["y"] + name["height"] - 1 and tb["y"] + tb["height"] <= head["y"] + head["height"] and abs(tb["x"] - name["x"]) <= 1      # under the name, inside the tab (the row is as high as the open head: spec 123 §7.1)
-    ink = lambda slug, i: tab(pg, slug).locator(".table-tab__marks img").nth(i).get_attribute("src")                          # noqa: E731
-    gone = lambda slug: tab(pg, slug).locator(".table-tab__marks img").count() == 0                                           # noqa: E731
-    assert ink("tech", 0).endswith("/marks/harness-codex-ink.png")                                                          # in ink
-    assert tab(pg, "tech").locator(".table-tab__marks img").first.get_attribute("srcset").endswith("harness-codex-ink@2x.png 2x")
-    open_tab(pg, "tech")
-    assert ink("tech", 0).endswith("/marks/harness-codex.png")                                                              # Tech is open: its mark in colour
-    assert gone("orkmaster") and gone("game") and ink("release", 0).endswith("/marks/harness-codex-ink.png")                 # and the others back in ink
-    shot(pg, "table-tabs-marks-wide.png")
 
 
 def test_a_potion_hovered_or_focused_lights_the_tabs_of_the_parties_that_run_on_its_tool_and_says_who_drinks_from_it(table):
@@ -1267,7 +832,7 @@ def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_it
     assert pg.locator("#open-folder-form").count() == 1 and title(pg) == "Open a project…"
     assert pg.locator(".shell-backdrop").count() == 0 and pg.locator("[aria-modal]").count() == 0                       # in the pane, not over the page
     pg.get_by_role("button", name="Cancel").click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     pg.get_by_role("button", name="Switch project").click()
     pg.locator('.table-projects__one[data-path="/work/other"]').click()
     for _ in range(40):
@@ -1275,75 +840,11 @@ def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_it
             break
         pg.wait_for_timeout(50)
     assert ("projects.use", {"path": "/work/other"}) in host.log
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)                                                                 # another project: the map again, nothing open
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)                                                                 # another project: the map again, nothing open
     assert tab(pg, "orkmaster").get_attribute("aria-label") == ("The Orkmaster · other" if wide(w) else "other · Does on Claude · Checks on Claude")
 
 
-def test_nothing_moves_under_reduced_motion_and_a_card_turns_on_orkuis_tokens_otherwise(table):
-    pg, host, w = table
-    seat = pg.locator('[data-lkey="t:task:seat/s2"]')
-    seat.click()
-    back = pg.locator(".table-back")
-    back.wait_for(timeout=WAIT_MS)
-    assert back.evaluate("e => getComputedStyle(e).animationName") == "table-turn"
-    assert back.evaluate("e => getComputedStyle(e).animationDuration") == "0.25s"                                       # orkUI's sure token
-    pg.keyboard.press("Escape")
-    pg.emulate_media(reduced_motion="reduce")
-    seat.click()
-    pg.locator(".table-back").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".table-back").evaluate("e => getComputedStyle(e).animationName") == "none"
-    assert seat.evaluate("e => getComputedStyle(e).transform") in ("none", "matrix(1, 0, 0, 1, 0, 0)")                   # a card at rest is flat, and lifted too
-    if wide(w):
-        assert pg.locator('[data-lkey="t:task:seat/s1"]').evaluate("e => getComputedStyle(e).transform") not in ("none", "matrix(1, 0, 0, 1, 0, 0)")      # a card of the fan stays turned (a turn is not a motion)
-    pg.emulate_media(reduced_motion="no-preference")
-
-
-def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_hover(gui):
-    # Since spec 103 A / decisions §180 a touch window under 760 px is the phone's hand, never the table; a touch screen that
-    # shows the table is a tablet's (800 px wide here), and the rule (`pointer: coarse`, spec 94 §1.3) is the same.
-    server, browser = gui
-    errors: list[str] = []
-    host = TableHost()
-    pg = browser.new_context(viewport={"width": 800, "height": 700}, has_touch=True).new_page()
-    watch(pg, errors)
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
-    open_tab(pg, "tech")
-    squad(pg, "wide")                                                                                                    # 800 px is the wide width: the seats lie in the leader's inventory (spec 168 E1)
-    pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
-    for sel in (".table-tab", ".table-chair", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
-        for el in pg.locator(sel).all():
-            box = el.bounding_box()
-            assert box["width"] >= 43.5 and box["height"] >= 43.5, (sel, box)
-    for el in pg.locator(".table-tab").all():
-        assert el.get_attribute("aria-label") and el.get_attribute("title")                                              # a tab's name is its label too, not only a tooltip
-    pg.locator('.table-tab[data-tab="art"]').dispatch_event("pointerdown", {"pointerType": "touch"})                     # a long press says the name
-    pg.locator(".gui-toast").wait_for(timeout=WAIT_MS)
-    assert "Art" in pg.locator(".gui-toast").text_content()
-    pg.context.close()
-    assert not errors, "\n".join(errors)
-
-
 # -- spec 130 C.5–C.6: nothing of the table lies beside a form; the window not yet laid, and the laying (decisions §232.1, §232.2, §247.1) -----------------------------------------
-
-def test_a_form_over_the_pane_keeps_the_discards_column_and_the_hand(gui):
-    from tests.test_discard_table_browser import open_maps
-    pg, host, log = open_maps(gui, "wide")
-    try:
-        pg.locator(".release-lane .post-card").first.wait_for(timeout=WAIT_MS)
-        pg.get_by_role("button", name="The Orkmaster's menu").click()
-        pg.get_by_role("menuitem", name="Settings").click()
-        pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-end").count() == 0 and pg.locator(".release-lane").count() == 1 and pg.locator('.table-body[data-end="form"]').count() == 1, "the discard's column stays beside a form (spec 168 A3, decisions §283.5)"
-        assert pg.locator(".hand-end > .hand-die").count() == 1 and pg.locator(".release-lane__head .pots").count() == 1, "the die stays in the hand, the potions in the column's head"
-        assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
-        pg.keyboard.press("Escape")
-        pg.locator(".release-lane .post-card").first.wait_for(timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def unlaid(desk, tmp_path, hand=("claude",), **more):
@@ -1377,21 +878,6 @@ def test_settings_stays_reachable_before_start_over_the_whole_table(desk, tmp_pa
     assert not d.errors, d.errors
 
 
-def test_start_lays_the_table_in_order_and_says_so_and_the_ring_waits_for_its_first_content(desk, tmp_path):
-    d = unlaid(desk, tmp_path)
-    pg = d.open()
-    pg.locator('[data-place="table"] .fo-chair').first.click()                                    # a chair pressed seats its leader (spec 150 G.2.3)
-    pg.locator('[data-act="start"]:not([disabled])').click()
-    pg.locator(".frame[data-laying] .table-tabcell").first.wait_for(timeout=WAIT_MS)
-    delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.hand-end > .hand-die'), plus: ms('.hand-slot.is-plus') }; }""")
-    assert delays["tab"] < delays["chair"] < delays["die"] < delays["plus"], delays
-    pg.locator(".hand-field [data-first-lit]").wait_for(timeout=WAIT_MS)                       # the + card's card is open, its first corner lit (spec 150 G.2.4): no tour
-    assert pg.locator(".table-end, .ork-card-place, .release-lane .post-card").count() == 0, "§247.1: no pile and no dashed place before the first content (Release's lane is there, empty)"
-    pg.locator('.frame:not([data-laying])').wait_for(timeout=WAIT_MS)
-    pg.locator(".fo-bubble").wait_for(state="detached", timeout=WAIT_MS)
-    assert not d.errors, d.errors
-
-
 def test_under_reduced_motion_the_table_is_laid_all_at_once(desk, tmp_path):
     d = unlaid(desk, tmp_path)
     pg = d.pg
@@ -1402,17 +888,6 @@ def test_under_reduced_motion_the_table_is_laid_all_at_once(desk, tmp_path):
     pg.locator(".table-tabcell").first.wait_for(timeout=WAIT_MS)
     pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
     assert pg.locator(".frame[data-laying]").count() == 0
-    assert not d.errors, d.errors
-
-
-def test_a_project_opened_laid_is_laid_at_once_with_no_motion(desk, tmp_path):
-    from orkboard.realm import first_open
-    d = unlaid(desk, tmp_path)
-    first_open.lay(d.host.ideas.state_dir)
-    pg = d.open()
-    pg.locator('.frame[data-laid="1"]').wait_for(timeout=WAIT_MS)
-    pg.locator(".hand-plus").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".frame[data-laying]").count() == 0 and pg.locator(".fo-bubble").count() == 0
     assert not d.errors, d.errors
 
 

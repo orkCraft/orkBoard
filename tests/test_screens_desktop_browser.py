@@ -328,40 +328,6 @@ def test_a_pain_pressed_and_then_a_screen_pressed_is_pinned_there(screens):
     assert pg.locator('.scr-pain[aria-pressed="true"]').count() == 0 and len(pins(host)) == 2
 
 
-def test_a_pain_dragged_onto_another_screen_pins_it_there(screens):
-    pg, host, w = screens
-    if not wide(w):
-        pytest.skip("a touch screen presses the pain and then the screen")
-    pain = pg.locator('.scr-pain[data-pain="Too many taps to set up"]')
-    pain.scroll_into_view_if_needed()                                                                               # the hand lies over the foot of the window (decisions §104.0): a pain below the map's scroll area is under it
-    pain = pain.bounding_box()
-    pg.mouse.move(pain["x"] + 20, pain["y"] + 20)
-    pg.mouse.down()
-    pg.mouse.move(pain["x"] + 40, pain["y"] + 40, steps=4)
-    target = card(pg, "round").bounding_box()
-    pg.mouse.move(target["x"] + target["width"] / 2, target["y"] + target["height"] / 2, steps=8)
-    assert pg.locator(".scr-ghost").count() == 1 and pg.locator('.scr-card[data-screen="round"].is-over').count() == 1   # the pain follows; the screen under it is aimed
-    shot(pg, "design-drag-wide.png")
-    pg.mouse.up()
-    pg.locator('.scr-rail[data-on="round"] .scr-pain').wait_for(timeout=WAIT_MS)
-    assert pins(host) == [{"segment": "Hosts", "pain": "Too many taps to set up", "on": "round"}]
-    assert pains_under(pg, "host") == [] and pg.locator(".scr-ghost").count() == 0 and pg.locator(".table-back").count() == 0   # the click after the drag lifted nothing
-
-
-def test_a_pain_dragged_onto_a_step_pins_it_to_the_step_and_a_press_without_a_drag_pins_nothing(screens):
-    pg, host, w = screens
-    if not wide(w):
-        pytest.skip("a touch screen presses the pain and then the step")
-    pain = pg.locator('.scr-pain[data-pain="Can\'t tell who has joined"]').bounding_box()
-    pg.mouse.move(pain["x"] + 20, pain["y"] + 20)
-    pg.mouse.down()
-    step = pg.locator('.scr-step[data-step="5"]').bounding_box()
-    pg.mouse.move(step["x"] + step["width"] / 2, step["y"] + 6, steps=10)
-    pg.mouse.up()
-    pg.locator('.scr-rail[data-on="step:5"] .scr-pain').wait_for(timeout=WAIT_MS)
-    assert pins(host) == [{"segment": "Hosts", "pain": "Can't tell who has joined", "on": "step:5"}]
-
-
 # -- the edges -------------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)

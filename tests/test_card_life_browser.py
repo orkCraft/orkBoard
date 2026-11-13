@@ -11,7 +11,6 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import HandHost, call, head, need, node, open_hand, task  # noqa: E402
 from tests.test_shell_browser import _calls, _sent  # noqa: E402
@@ -65,7 +64,7 @@ class LifeHost(HandHost):
             element = a.get("element") or "ice"
             self.nodes.append(node("new-goal", a.get("party") or "design", a["text"][:40], "table", state="talk", element=element, back=back()))
             return self.bump({"slug": "new-goal", "queue": "now", "element": element, "route": ["design", "tech"]})
-        if name in ("ideas.ripe_hold", "ideas.confirm", "ideas.route_set"):
+        if name in ("ideas.confirm", "ideas.route_set"):
             self.log.append((name, a))
             return self.bump({"ok": True, "route": a.get("route")}) if name != "ideas.route_set" else {"route": [STEP[p] for p in a["route"]], "cost": {"calls": 2}, "short": False, "offer": []}
         return super().handle(name, a)
@@ -73,13 +72,8 @@ class LifeHost(HandHost):
 
 def open_life(gui, width="wide", host=None):
     pg, host, log = open_hand(gui, host=host or LifeHost(), width=width)
-    pg.locator(".hand .hand-plus").wait_for(timeout=WAIT_MS)
+    pg.locator(".hand :is(.hand-plus, [data-blank-deck])").wait_for(timeout=WAIT_MS)
     return pg, host, log
-
-
-def back_of(pg, slug):
-    """A goal's card face down in the Orkmaster's column (spec 147 B.2: a back of In analysis, the Orkmaster's hand, with no name on its face)."""
-    return pg.locator(f'.frame-column .col-card--down[data-goal="{slug}"]')
 
 
 # -- the + card turned into the card of the text (§6.1) ---------------------------------------------------------------------------------------
@@ -88,7 +82,7 @@ def test_the_plus_card_turns_over_into_a_card_with_the_field_focused_in_the_pres
     pg, host, log = open_life(gui)
     try:
         pg.evaluate("""() => { window.__atClick = []; document.addEventListener('click', () => window.__atClick.push(document.activeElement && document.activeElement.tagName), false); }""")
-        pg.locator(".hand .hand-plus").click(position={"x": 8, "y": 60})
+        pg.locator(".hand :is(.hand-plus, [data-blank-deck])").click(position={"x": 8, "y": 60})
         assert pg.evaluate("() => window.__atClick[0]") in ("TEXTAREA", "INPUT"), "the focus was given inside the press itself (on iOS a keyboard rises only for that)"
         field = pg.locator(".hand-field")
         field.wait_for(timeout=WAIT_MS)
@@ -118,37 +112,11 @@ def test_the_plus_card_turns_over_into_a_card_with_the_field_focused_in_the_pres
     assert not log, "\n".join(log)
 
 
-def test_esc_or_a_press_away_turns_the_card_back_into_the_plus_card_keeping_its_text_and_rune(gui):
-    pg, host, log = open_life(gui)
-    try:
-        plus = pg.locator(".hand .hand-plus")
-        plus.click(position={"x": 8, "y": 60})
-        field = pg.locator(".hand-field")
-        field.wait_for(timeout=WAIT_MS)
-        field.get_by_role("textbox", name="Write a goal").fill("Players see who answered first")
-        field.locator(".hand-field__rune").click()
-        pg.locator(".hand-dealt[data-open=rune]").get_by_role("menuitemradio", name="Rune 5").click(position={"x": 20, "y": 30})
-        pg.keyboard.press("Escape")                                              # the focus is on the rune button, not in the text: Esc is the card's
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-        assert pg.locator(".hand-ghost").count() >= 0                            # the copy that turns back may be in the air a moment
-        pg.wait_for_function("() => !document.querySelector('.hand-ghost') && getComputedStyle(document.querySelector('.hand .hand-plus')).visibility === 'visible'", timeout=WAIT_MS)
-        plus.click(position={"x": 8, "y": 60})
-        field.wait_for(timeout=WAIT_MS)
-        assert field.get_by_role("textbox", name="Write a goal").input_value() == "Players see who answered first"
-        assert field.locator(".hand-field__rune").get_attribute("aria-label") == "Its rune: Rune 5, change it", "its rune kept"
-        pg.mouse.click(640, 120)                                                 # a press away
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-        assert not host.added, "nothing was sent"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_under_reduced_motion_the_card_is_there_with_no_turn_and_no_growth_and_no_copy_in_the_air(gui):
     pg, host, log = open_life(gui)
     try:
         pg.emulate_media(reduced_motion="reduce")
-        pg.locator(".hand .hand-plus").click(position={"x": 8, "y": 60})
+        pg.locator(".hand :is(.hand-plus, [data-blank-deck])").click(position={"x": 8, "y": 60})
         field = pg.locator(".hand-field")
         field.wait_for(timeout=WAIT_MS)
         assert field.evaluate("e => e.getAnimations().length") == 0, "no growth"
@@ -162,37 +130,8 @@ def test_under_reduced_motion_the_card_is_there_with_no_turn_and_no_growth_and_n
 
 # -- sent: it turns back and goes face down to the Orkmaster (§6.2) --------------------------------------------------------------------------
 
-def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_column_its_rune_lit_and_no_name_never_green(gui):
-    """Spec 128 B.3: the goal sent lies face down and sideways in the column's In analysis, its rune lit at the seal's top, glowing while it is talked over, with no name (the name is on its other side)."""
-    pg, host, log = open_life(gui)
-    try:
-        pg.locator(".hand .hand-plus").click(position={"x": 8, "y": 60})
-        field = pg.locator(".hand-field")
-        field.wait_for(timeout=WAIT_MS)
-        field.get_by_role("textbox", name="Write a goal").fill("Players see who answered first, with a small crown over their name")
-        field.get_by_role("textbox", name="Write a goal").press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "Players see who answered first, with a small crown over their name"}))
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-        card = pg.locator('.frame-column .col-card--down[data-goal="new-goal"]')
-        card.wait_for(timeout=WAIT_MS)
-        pg.wait_for_function("() => !document.querySelector('.hand-ghost')", timeout=WAIT_MS)
-        assert card.locator(".col-fan__seal .ork-elem.ice.is-glowing").count() == 1, "its own rune lit in the middle of its back (spec 147 B.2), glowing while it is talked over"
-        assert card.inner_text().strip() == "" and pg.locator(".table-back-nm").count() == 0, "no name on the face-down card"
-        assert card.locator(".ork-plus, .ork-icon").count() == 0, "no +: the + card alone keeps that"
-        colours = card.evaluate("e => { const c = getComputedStyle(e); const action = getComputedStyle(document.documentElement).getPropertyValue('--ork-action').trim(); const probe = document.createElement('i'); probe.style.color = action; document.body.appendChild(probe); const a = getComputedStyle(probe).color; probe.remove(); return [c.borderTopColor, c.color, c.backgroundColor, a]; }")
-        assert colours[3] not in colours[:3], f"never the + card's green: {colours}"
-        assert pg.locator('.frame-column .col-sec[data-pile="analysis"] .col-card').count() == 1 and pg.locator(".frame-table .table-card--back").count() == 0, "in the column, not the Orkmaster's lane"
-        assert pg.locator(".hand .hand-plus").count() == 1, "a new + card lies at the lane's end"
-        shot(pg, "send-landed")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
 
 # -- talked over, face down (§6.3) ---------------------------------------------------------------------------------------------------------
-
-def _talking(host, **more):
-    host.put("dark", "Players see who answered first", "talk", "dust", back=back(**more))
 
 
 def test_a_held_goals_decision_card_in_the_hand_says_start_and_a_decision_with_no_wait_says_confirm_and_start(gui):
@@ -215,64 +154,6 @@ def test_a_held_goals_decision_card_in_the_hand_says_start_and_a_decision_with_n
         host.bump({})
         pg.locator('.hand-card[data-kind="decision"]').click(position={"x": 10, "y": 20})
         assert pg.locator(".hand-lifted").get_by_role("button", name="Confirm and start").count() == 1
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", ["narrow"])
-def test_at_the_narrow_width_a_goal_talked_over_is_one_token_its_rune_glowing(gui, width):
-    pg, host, log = open_life(gui, width=width)
-    try:
-        _talking(host)
-        pg.locator('.frame-table .table-token[data-goal="dark"] .ork-elem.dust.is-glowing').wait_for(timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_on_a_phone_the_plus_card_turns_into_a_field_the_screens_width_less_its_gutters_with_the_focus_given_in_the_press(gui):
-    pg, host, log = open_life(gui, width="phone")
-    try:
-        pg.locator(".up-plus .hand-plus").wait_for(timeout=WAIT_MS)
-        pg.evaluate("""() => { window.__atClick = []; document.addEventListener('click', () => window.__atClick.push(document.activeElement && document.activeElement.tagName), false); }""")
-        pg.locator(".up-plus .hand-plus").click()
-        assert pg.evaluate("() => window.__atClick[0]") in ("TEXTAREA", "INPUT"), "the phone's keyboard rises for a focus given inside the press"
-        field = pg.locator(".up-field .hand-field")
-        field.wait_for(timeout=WAIT_MS)
-        pg.wait_for_function("() => document.activeElement && document.activeElement.classList.contains('hand-field__text')", timeout=WAIT_MS)
-        pg.wait_for_function("() => document.querySelector('.hand-field').getAnimations().length === 0", timeout=WAIT_MS)
-        box = field.bounding_box()
-        assert abs(box["width"] - (pg.viewport_size["width"] - 16)) <= 2, f"the screen's width less the gutters: {box}"
-        assert field.locator(".hand-field__rune").count() == 1 and field.locator(".hand-field__runes").count() == 0
-        narrow.no_sideways(pg)
-        shot(pg, "phone-field")
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_on_a_phone_the_menus_back_of_a_goal_talked_over_is_the_one_read_its_rune_glows_where_the_page_moves_and_a_goal_that_waits_does_not(gui):
-    pg, host, log = open_life(gui, width="phone")
-    try:
-        pg.locator(".up-crown").wait_for(timeout=WAIT_MS)
-        _talking(host)
-        host.put("timer", "Round timer shows on every phone", "decided", "ice", back=back(heard=["design", "tech"], ripe=ripe(60, 240)))
-        pg.locator(".up-crown").click()
-        menu = pg.locator(".up-menu")
-        menu.wait_for(timeout=WAIT_MS)
-        dark, timer = menu.locator('.up-piles .col-card--fan[data-goal="dark"]'), menu.locator('.up-piles .col-card--fan[data-goal="timer"]')
-        assert dark.count() == 1 and dark.get_attribute("class").count("is-reading") == 1 and dark.locator(".ork-elem.dust").count() == 1, "the goal talked over is the back being read, in the Orkmaster's hand (spec 147 F.1)"
-        assert timer.locator(".ork-elem.ice").count() == 1 and timer.locator(".ork-elem.is-glowing").count() == 0 and timer.get_attribute("class").count("is-reading") == 0
-        dark.click()                                                  # picked: the page's one motion is on it (lit.js `movesOn`), as on the column
-        menu.wait_for(state="detached", timeout=WAIT_MS)
-        pg.locator(".up-crown").click()
-        menu.wait_for(timeout=WAIT_MS)
-        assert menu.locator('.up-piles .col-card--fan[data-goal="dark"] .ork-elem.dust.is-glowing').count() == 1, "the back's rune glowing"
-        assert menu.locator('.up-piles .col-card--fan[data-goal="timer"] .ork-elem.is-glowing').count() == 0
-        shot(pg, "phone-menu-glowing")
     finally:
         pg.close()
     assert not log, "\n".join(log)

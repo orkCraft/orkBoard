@@ -13,7 +13,6 @@ pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_goal_view_browser import RESULT, GoalHost  # noqa: E402
-from tests.test_hand_desktop_browser import sig  # noqa: E402
 from tests.test_table_desktop_browser import pick, shot, watch  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -50,7 +49,7 @@ def open_result(gui, errors, result=None):
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+    pg.wait_for_selector(".cards-lane", timeout=WAIT_MS)
     return pg, host
 
 
@@ -65,35 +64,6 @@ def sizes(pg, selector):
 
 def texts(pg, selector):
     return [" ".join(t.split()) for t in pg.locator(selector).all_text_contents()]
-
-
-def test_through_the_orkmaster_a_goal_done_is_a_lane_a_leader_with_planned_against_built_and_its_problems_lit(gui):
-    errors: list[str] = []
-    pg, host = open_result(gui, errors)
-    assert sig(pg, "frame/state.js", "tab") == "orkmaster"
-    pick(pg, "codes")
-    pg.locator('.sb--result [data-result-card="tech"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator(".table-board--plan").count() == 0, "a goal done is its result, not its plan"
-    tech, design = pg.locator('.sb--result .table-lane[data-party="tech"]'), pg.locator('.sb--result .table-lane[data-party="design"]')
-    assert tech.locator("[data-result-card]").count() == 1 and design.locator("[data-result-card]").count() == 1, "a lane a leader of the goal"
-    assert pg.locator('.sb--result .table-lane[data-party="product"] [data-result-card]').count() == 0
-    card = tech.locator("[data-result-card]")
-    assert texts(pg, '[data-result-card="tech"] [data-line]') == ["Planned 3 · built 1", "✓ 1 · ≠ 1 · ✗ 1 · + 1", "Done when: 1 met · 1 not checked"], "planned against built, in the honest words"
-    assert texts(pg, '[data-result-card="design"] [data-line]') == ["Planned 2 · built 1", "✓ 1 · ✗ 1", "Done when: 1 not met"]
-    assert card.get_attribute("data-signal") == "danger" and design.locator("[data-result-card]").get_attribute("data-signal") == "danger", "a failed task, a line not met: the danger frame"
-    kinds = lambda lane: [e.get_attribute("data-problem") for e in lane.locator(".rb-smalls .ork-card").all()]  # noqa: E731
-    assert kinds(tech) == ["failed", "test", "not_checked", "finding"] and kinds(design) == ["not_met", "sent_back"], "a small card for each kind of problem, the worst first"
-    assert tech.locator('.rb-smalls [data-problem="failed"]').get_attribute("data-signal") == "danger" and tech.locator('.rb-smalls [data-problem="finding"]').get_attribute("data-signal") == "alert"
-    assert texts(pg, '.table-lane[data-party="tech"] .rb-lines li') == [
-        "Not checked The lobby opens", "Failed Keep the rounds: npm test: 2 failed", "Red test tests/test_score.py::test_round · Make the codes", "Finding src/score: leaks a timer"]
-    assert texts(pg, '.table-lane[data-party="design"] .rb-lines li') == ["Not met The winner shows first", "Sent back Draw the winner: sent back 2 times"]
-    assert "4 to look at" not in pg.locator(".rb-plate").inner_text() and "6 to look at" in pg.locator(".rb-plate").inner_text()
-    assert sizes(pg, ".sb--result .ork-card") == SIZES, "the two sizes only"
-    assert sizes(pg, ".sb--result [data-result-card]") == {(144, 202)} and sizes(pg, ".sb--result .rb-smalls .ork-card") == {(56, 78)}
-    shot(pg, "g2-orkmaster.png")
-    card.click()
-    assert sig(pg, "frame/state.js", "picked") == "codes" and sig(pg, "frame/state.js", "tab") == "tech", "a card pressed opens its leader's tab"
-    finish(pg, errors)
 
 
 def test_a_leader_with_no_problem_is_not_lit_and_the_goal_not_read_says_so(gui):

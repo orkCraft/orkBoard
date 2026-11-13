@@ -5,7 +5,7 @@ no face; `core/idea_verdict.py` begins the wait, `gui/ideas_route.py` ticks it, 
     outcome(rec, has_product)              # what the verdicts of a Talk's record make: "hearing" (any no or doubt) · "agreed" · "decision" (all go, but nobody could weigh it)
     wait_s(priority, risk)                 # the seconds the wait lasts (60 or 600), None for no wait: the decision's card as it always was
     begin(state_dir, slug, priority, risk) # the wait written beside the goal's decision (`way.json` `ripe`), None when there is none to wait for
-    hold(state_dir, slug, by, why)         # the wait stopped: the time gone, the goal waits for the person's Start (`ideas.ripe_hold`); the time that was left, None with no wait
+    hold(state_dir, slug, by, why)         # the wait stopped: the time gone, the goal waits for the person's Start; the time that was left, None with no wait
     tick(state_dir, slugs, dt)             # `dt` seconds taken from each running wait; the slugs whose wait has ended
     done(state_dir, slug) / drop(...)      # the wait ended by the leaders, written · forgotten (the decision was confirmed by the person, or the goal went)
 
@@ -91,7 +91,7 @@ def running(state_dir: Path, slug: str) -> bool:
 
 
 def hold(state_dir: Path, slug: str, by: str = "person", why: str = "") -> float | None:
-    """**Hold** (`ideas.ripe_hold`): the wait stopped, the time gone; the goal's top card is its decision with *Start* (`ideas.confirm`, by the person). Returns the time that was left,
+    """**Hold**: the wait stopped, the time gone; the goal's top card is its decision with *Start* (`ideas.confirm`, by the person). Returns the time that was left,
     None when there was no wait to hold (or it was held already)."""
     r = of(state_dir, slug)
     if r is None or r.get("held"):

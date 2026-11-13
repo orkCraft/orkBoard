@@ -148,24 +148,6 @@ def test_a_decision_named_by_the_conflict_or_the_bubble_opens_its_entry(gui):
     finish(pg, log)
 
 
-def test_a_decision_newer_than_the_partys_last_look_is_a_muted_dot_on_its_tab_gone_once_the_history_is_opened(gui):
-    pg, host, log = open_past(gui, tab="orkmaster", host=PastHost(newest=241), seen=240)
-    pg.set_viewport_size({"width": 1440, "height": 900})                                                       # the discard is a column beside the table: five tracks keep their names (not compact) from this width
-    pg.locator('.table-tab[data-tab="design"] .table-tab__new').wait_for(timeout=WAIT_MS)
-    dot = pg.locator('.table-tab[data-tab="design"] .table-tab__new')
-    assert dot.get_attribute("aria-label") == "A decision is newer than your last look at this party's past" and pg.locator('.table-tab[data-tab="tech"] .table-tab__new').count() == 0, "Design's tab only"
-    hue = pg.evaluate("() => { const s = document.createElement('i'); s.style.backgroundColor = 'var(--ork-party-elf)'; document.body.append(s); const c = getComputedStyle(s).backgroundColor; s.remove(); return c; }")
-    assert hue in dot.evaluate("e => getComputedStyle(e).backgroundImage"), "a dot in its party's colour (goal 170 C), named by its label, never a number"
-    assert dot.inner_text().strip() == ""
-    shot(pg, "past-dot.png")
-    call(pg, "frame/state.js", "openTab", "design")                                                          # its history opened by the book: the newest decision is seen
-    pg.locator("[data-book]").click()
-    pg.wait_for_function("() => localStorage.getItem('orkboard.past.seen.design') === '241'", timeout=WAIT_MS)
-    call(pg, "frame/state.js", "openTab", "orkmaster")
-    pg.wait_for_function("() => !document.querySelector('.table-tab .table-tab__new')", timeout=WAIT_MS)
-    finish(pg, log)
-
-
 def test_never_looked_at_nothing_is_new_the_first_read_is_taken_as_seen(gui):
     pg, host, log = open_past(gui, tab="orkmaster", host=PastHost(newest=241))
     pg.wait_for_function("() => localStorage.getItem('orkboard.past.seen.design') === '241'", timeout=WAIT_MS)

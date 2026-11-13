@@ -1,4 +1,4 @@
-"""Goal 171 L3, on the `gui` fixture's real host (`?table=cards`, no `?mock=1`, nothing laid by hand): every question's way the hand deals is one press. A goal that asks, a goal at Talk whose
+"""Goal 171 L3, on the `gui` fixture's real host (no `?mock=1`, nothing laid by hand): every question's way the hand deals is one press. A goal that asks, a goal at Talk whose
 leader asks the person (the keeper's record holds the card, the page does not yet), a bug's cause and a party's own question each deal a turn card; pressing a way sends `ideas.answer_way`
 (the answer lands under its question, no keeper or model is reached) and its Undo puts the pages back byte for byte; no request of the hand's ways is `ideas.talk_answer`, `ideas.answer` or
 `ideas.cause_answer`, and the old Needs you card of those questions is not dealt."""
@@ -81,7 +81,7 @@ def test_every_question_deals_a_turn_card_whose_way_is_one_press_with_its_undo_a
                 sent.append({"name": row["name"], "args": row["args"]})
         ws.on("framesent", frame)
     pg.on("websocket", on_ws)
-    pg.goto(server.url + ("&" if "?" in server.url else "?") + "table=cards")
+    pg.goto(server.url)
     pg.wait_for_selector(".cards-lane", timeout=WAIT_MS)
     hand = ".frame-hand button.hand-card"
     card = lambda goal: f"{hand}[data-key='turn/{goal}/asks']"      # noqa: E731  (a party's card has no goal of its own: its key names it)

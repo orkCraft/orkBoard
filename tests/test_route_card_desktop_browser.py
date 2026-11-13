@@ -131,29 +131,6 @@ def fits(pg):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_route_cards_face_is_the_goals_element_and_name_the_route_sign_the_orkmasters_head_and_the_costs_gem(gui, width):
-    host = RouteHost()
-    pg, log = open_route(gui, host, width)
-    try:
-        card = pg.locator('.hand-card[data-kind="route"]')
-        assert card.get_attribute("data-goal") == "fresh" and pg.locator('.hand-lane[data-lane="0"] .hand-card[data-kind="route"]').count() == 1, "under the first lane: it is the whole goal's"
-        assert "el-ice" in card.get_attribute("class") and card.locator(".corner--top .ork-elem.ice").count() == 1
-        assert card.locator(".hand-card__name").inner_text() == "A team-vs-team round"
-        assert card.locator(".corner--top .ork-sign.after").count() == 1, "the route's sign in its window"
-        img = card.locator(".corner--foot img")
-        assert img.count() == 1 and "/races/peon-crown" in img.get_attribute("src"), "the Orkmaster's crowned head over its corner"
-        assert card.locator(".corner--foot .ork-gem").inner_text() == "3–9%", "the gem of its cost in the label row"
-        if width == "wide":
-            pg.mouse.move(640, 300)
-            pg.wait_for_timeout(700)
-        shot(pg, f"{width}-route-face")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
 def test_the_lifted_route_card_has_the_heads_the_words_the_cost_its_place_and_talk(gui, width):
     host = RouteHost()
     pg, log = open_route(gui, host, width)
@@ -311,31 +288,6 @@ def test_a_bug_alone_is_talk_to_find_the_cause_or_start_with_the_long_way_beside
     try:
         lift(pg).get_by_role("button", name="Start", exact=True).click()
         assert _sent(pg, host, ("ideas.route_start", {"idea": "fresh"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_start_card_says_the_new_cost_with_the_old_one_struck_and_starts(gui, width):
-    host = RouteHost("start")
-    pg, log = open_route(gui, host, width)
-    try:
-        card = pg.locator('.hand-card[data-kind="start"]')
-        assert card.locator(".corner--top .ork-sign.after").count() == 1 and "/races/peon-crown" in card.locator(".corner--foot img").get_attribute("src")
-        assert card.locator(".corner--foot .ork-gem").inner_text() == "4–12%", "the new cost's gem"
-        lifted = lift(pg, "start")
-        now, old = lifted.locator(".hand-way__cost").first, lifted.locator("del .hand-spend")
-        assert now.locator(".hand-spend__words").inner_text() == "about 8 calls, about 4–12% of Claude's week"
-        assert old.locator(".hand-spend__words").inner_text() == "about 6 calls, about 3–9% of Claude's week"
-        assert old.locator(".hand-spend__words").evaluate("e => getComputedStyle(e).textDecorationLine") == "line-through", "the old cost struck"
-        assert now.locator(".hand-spend__words").evaluate("e => getComputedStyle(e).textDecorationLine") == "none"
-        assert pg.locator(".hand-lifted .hand-spend:visible").count() == 2
-        fits(pg)
-        shot(pg, f"{width}-start-card")
-        lifted.get_by_role("button", name="Start").click()
-        assert _sent(pg, host, ("ideas.start", {"idea": "fresh"}))
-        pg.locator(".hand-lifted").wait_for(state="detached", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)

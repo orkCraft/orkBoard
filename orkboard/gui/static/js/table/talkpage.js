@@ -19,7 +19,7 @@ export function useKept(idea, sig) {
   const [kept, setKept] = useState(undefined);
   useEffect(() => {
     let live = true;
-    if (!idea) { setKept(undefined); return undefined; }                                                       // nothing to ask (planboard.js asks only for a goal with no tasks yet)
+    if (!idea) { setKept(undefined); return undefined; }                                                       // nothing to ask
     command("ideas.talk_read", { idea }, true).then((a) => { if (live) setKept(a && Array.isArray(a.stances) ? a : null); }).catch(() => { if (live) setKept(null); });
     return () => { live = false; };
   }, [idea, sig]);

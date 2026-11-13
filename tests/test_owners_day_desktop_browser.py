@@ -14,7 +14,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_table_desktop_browser import SHOP, TableHost, open_tab, shot, system_doc, tab, title, watch  # noqa: E402
+from tests.test_table_desktop_browser import TableHost, open_tab, shot, system_doc, tab, title, watch  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -82,29 +82,6 @@ def open_system(pg):
 
 # -- F: the System fits ------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_system_is_scaled_to_the_panes_width_its_right_edge_in_view_and_its_arrows_on_the_columns(gui):
-    errors: list[str] = []
-    pg = start(gui, {"width": 1280, "height": 800}, errors, Host(n=3))
-    open_system(pg)
-    f = scale_of(pg)
-    assert 0.5 <= f < 1, f                                                                                             # three columns of three cards are wider than the pane
-    pg.wait_for_function("() => document.querySelector('.arch').getBoundingClientRect().width > 0")
-    scroller = pg.locator(".sys-scroll").bounding_box()
-    fit = pg.locator(".arch-fit").bounding_box()
-    assert fit["x"] + fit["width"] <= scroller["x"] + scroller["width"] + 0.5, (fit, scroller)                          # no clipped right edge
-    assert pg.evaluate("() => { const e = document.querySelector('.sys-scroll'); return e.scrollWidth <= e.clientWidth + 1; }")   # and nothing to scroll sideways
-    assert pg.locator(".arch").evaluate("e => getComputedStyle(e).transform") != "none"
-    right = pg.locator(".arch-col").last.bounding_box()
-    assert right["x"] + right["width"] <= scroller["x"] + scroller["width"] + 0.5                                       # the last column lies inside the pane
-    for edge, slot in (("c0>c1", -14), ("c1>c2", 0)):                                                                   # an arrow ends on its column's top, measured in the unscaled box: the middle, or a slot (28 px) beside it where two meet
-        head = pg.locator(f'.arena-arrow[data-edge="{edge}"] polygon').bounding_box()
-        col = pg.locator(f'.arch-col[data-container="{edge.split(">")[1]}"]').bounding_box()
-        assert abs((head["x"] + head["width"] / 2) - (col["x"] + col["width"] / 2) - slot * f) <= 1.5, (edge, head, col, f)
-        assert abs((head["y"] + head["height"]) - col["y"]) <= 4, (edge, head, col)
-    shot(pg, "owners-day-system-fitted.png")
-    pg.context.close()
-    assert not errors, "\n".join(errors)
-
 
 def test_a_system_that_would_pass_half_scrolls_sideways_marks_its_edge_and_a_drag_on_empty_ground_pans(gui):
     errors: list[str] = []
@@ -124,35 +101,6 @@ def test_a_system_that_would_pass_half_scrolls_sideways_marks_its_edge_and_a_dra
     assert scroller.evaluate("e => e.scrollLeft") > 100, "a drag on the empty ground pans"
     assert "left" in (scroller.get_attribute("data-more") or "").split()
     assert pg.locator(".table-back").count() == 0                                                                      # and presses nothing
-    pg.context.close()
-    assert not errors, "\n".join(errors)
-
-
-def test_fit_and_100_percent_in_the_corner_the_choice_kept_for_the_project(gui):
-    errors: list[str] = []
-    host = Host(n=3)
-    pg = start(gui, {"width": 1280, "height": 800}, errors, host)
-    open_system(pg)
-    fitted = scale_of(pg)
-    assert fitted < 1 and pg.locator('.arch-zoom [data-fit="fit"]').get_attribute("aria-pressed") == "true"
-    assert [b.inner_text().strip() for b in pg.locator(".arch-zoom button").all()] == ["Fit", "100 %"]
-    pg.get_by_role("button", name="100 %").click()
-    pg.wait_for_function("() => document.querySelector('.arch').dataset.scale === '1.000'")
-    assert pg.locator('.arch-zoom [data-fit="full"]').get_attribute("aria-pressed") == "true"
-    scroller = pg.locator(".sys-scroll")
-    assert scroller.evaluate("e => e.scrollWidth > e.clientWidth + 10")                                                # its own size passes the pane: it scrolls
-    assert pg.evaluate(f"() => localStorage.getItem('orkboard.system.fit.{SHOP}')") == "full"
-    for slug in ("art", "tech"):                                                                                       # away and back, and the page again: kept
-        open_tab(pg, slug)
-    pg.locator(".arch").wait_for(timeout=WAIT_MS)
-    assert scale_of(pg) == 1
-    pg.reload()
-    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    open_system(pg)
-    assert scale_of(pg) == 1
-    pg.get_by_role("button", name="Fit").click()
-    pg.wait_for_function(f"() => Number(document.querySelector('.arch').dataset.scale) === {fitted}")
-    assert pg.evaluate(f"() => localStorage.getItem('orkboard.system.fit.{SHOP}')") == "fit"
     pg.context.close()
     assert not errors, "\n".join(errors)
 
@@ -184,7 +132,7 @@ def tabs(gui, request):
     errors: list[str] = []
     host = Host(n=3)
     pg = start(gui, request.param, errors, host)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
     pg.context.close()
     assert not errors, "\n".join(errors)
@@ -205,7 +153,7 @@ def test_plus_party_and_the_arrow_after_the_project_name_open_the_parties_and_th
     pg.locator('.table-over[data-kind="projects"]').wait_for(timeout=WAIT_MS)
     assert title(pg) == "Board · Projects" and pg.locator(".table-projects__one").count() == 3
     pg.locator(".table-title__back").click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"                                               # the ▾ is no tab
     plus.click()
     pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
@@ -215,7 +163,7 @@ def test_a_party_with_an_ork_at_work_has_data_working_and_its_leaders_head_stand
     errors: list[str] = []
     host = Host(n=3)
     pg = start(gui, {"width": 1280, "height": 800}, errors, host)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     assert tab(pg, "tech").get_attribute("data-working") is not None and tab(pg, "game").get_attribute("data-working") is not None
     assert tab(pg, "release").get_attribute("data-working") is None and tab(pg, "orkmaster").get_attribute("data-working") is None
     assert tab(pg, "tech").locator(".ork-race__head").evaluate("e => getComputedStyle(e).animationName") == "none"          # a face changes with its state and stands still (spec 123 §7.3: the leader's *focused* face is what says it, the step is gone)
@@ -231,7 +179,7 @@ def test_a_party_with_an_ork_at_work_has_data_working_and_its_leaders_head_stand
 def test_the_head_stands_still_under_reduced_motion(gui):
     errors: list[str] = []
     pg = start(gui, {"width": 1280, "height": 800}, errors, Host(n=3), reduced_motion="reduce")
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     assert tab(pg, "tech").get_attribute("data-working") is not None
     assert tab(pg, "tech").locator(".ork-race__head").evaluate("e => getComputedStyle(e).animationName") == "none"
     pg.context.close()

@@ -309,27 +309,6 @@ def test_a_card_that_spends_hatches_the_liquid_the_now_share_shows(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_four_to_six_tools_keep_their_two_lines_in_two_small_rows(gui, width):
-    limits = [*TOOLS, two("hermes", "Hermes", 0.5, 0.5), two("aider", "Aider", 0.4, 0.2)]
-    pg, host, log = open_mana(gui, limits, width)
-    try:
-        p = pg.locator(":is(.hand-mana, .pots__all) .hand-pot")
-        assert p.count() == 6 and all(b.locator(".hand-pot__slot").evaluate("e => e.classList.contains('is-small')") == (width == "narrow") for b in p.all())      # small in two rows at the narrow width; the unrolled row at the wide one keeps the bottles' own size
-        assert [b.get_attribute("data-size") for b in p.all()] == ["large", "medium", "small", "vial", "medium", "small"]
-        hand = pg.locator(".hand").bounding_box()
-        if width == "narrow":
-            mana = pg.locator(".hand-mana").bounding_box()
-            assert mana["y"] + mana["height"] <= hand["y"] + hand["height"] + 1 and hand["height"] <= 260                   # the hand holds both rows and grows by what they need
-        else:
-            assert hand["height"] <= 140 and all(b.bounding_box()["x"] + b.bounding_box()["width"] <= pg.viewport_size["width"] for b in p.all())      # the hand keeps its rim; the list lies inside the window
-        narrow.no_sideways(pg)
-        shot(pg, f"{width}-six")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_upright_on_a_phone_a_tool_is_a_bottle_by_its_week_its_now_share_in_the_colour_of_the_lower_share(gui):
     pg, host, log = open_mana(gui, [two("claude", "Claude Code", 0.3, 0.82), two("agy", "Antigravity", 1.0, 0.04)], "phone")
     try:
@@ -378,26 +357,6 @@ def line(pg, slug):
     return pg.locator(f'.table-tab[data-tab="{slug}"]').evaluate("""e => [...e.querySelectorAll('.table-tab__marks [data-tool]')].map((m) => [m.closest('.table-tab__dry') ? 'dry' : 'bare', m.dataset.tool])""")
 
 
-def test_only_a_side_on_another_tool_than_the_default_is_drawn_and_a_following_side_is_said_in_words_alone(gui):
-    pg, host, log = open_tabs(gui)                                                                         # the default (Main) is Claude; Claude is out: the work is on Codex
-    try:
-        assert tab(pg, "tech").locator(".table-tab__marks").count() == 0 and line(pg, "tech") == []        # both sides follow the default: no second line
-        assert line(pg, "design") == [["bare", "codex"]]                                                   # Does is Codex on purpose, Checks follow: only Does is drawn
-        assert line(pg, "product") == [["bare", "codex"]]                                                  # Does is Claude, the default's own tool: not drawn; Checks set to Codex
-        assert line(pg, "release") == [["bare", "codex"]] and tab(pg, "release").locator(".table-tab__off").count() == 1      # Lean: the shield stays, faint, with no mark
-        assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on the default (now Codex) · Checks on the default (now Codex)"      # the words still say all
-        assert tab(pg, "design").get_attribute("aria-label") == "Design · Does on Codex, set for this party · Checks on the default (now Codex)"
-        assert tab(pg, "release").get_attribute("aria-label") == "Release · Does on Codex, set for this party · no separate check" and tab(pg, "release").get_attribute("title") == tab(pg, "release").get_attribute("aria-label")
-        assert pg.locator(".table-tab__follow").count() == 0, "no frame for a following side any more"
-        head, line_box = tab(pg, "design").bounding_box(), tab(pg, "design").locator(".table-tab__marks").bounding_box()
-        assert head["height"] >= 60 and line_box["y"] + line_box["height"] <= head["y"] + head["height"]
-        assert tab(pg, "design").locator(".table-tab__marks").get_attribute("aria-hidden") == "true"
-        shot(pg, "wide-tabs-marks")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_following_side_has_no_mark_when_the_default_moves_on_and_a_set_one_stays(gui):
     pg, host, log = open_tabs(gui)
     try:
@@ -411,26 +370,6 @@ def test_a_following_side_has_no_mark_when_the_default_moves_on_and_a_set_one_st
         host.bump({})
         pg.wait_for_timeout(200)
         assert line(pg, "tech") == [] and line(pg, "design") == [["bare", "codex"]]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_set_tool_that_is_dry_is_dim_with_the_moon_beside_it_and_the_words_say_when_it_is_back(gui):
-    pg, host, log = open_tabs(gui, mana=mana_of("codex", "codex", until=WEEK))                           # the default is Codex: a Claude set on purpose is the other tool
-    try:
-        assert line(pg, "product") == [["dry", "claude"]]                                                  # Claude is dry: Does waits (Checks on Codex is the default's: not drawn)
-        dim = tab(pg, "product").locator(".table-tab__dry")
-        assert dim.count() == 1 and dim.locator(".ork-sign.moon").count() == 1 and dim.locator("[data-tool]").evaluate("e => getComputedStyle(e).opacity") == "0.35"
-        assert dim.locator(".ork-sign.moon").bounding_box()["x"] > dim.locator("[data-tool]").bounding_box()["x"]      # the moon beside it
-        assert tab(pg, "product").locator(".ork-sign.moon").count() == 1                                    # only the dry one has a moon
-        assert tab(pg, "product").get_attribute("aria-label") == f"Product · Does waits for Claude Code until {WEEK_SAID} · Checks on Codex, set for this party"
-        assert tab(pg, "tech").locator(".ork-sign.moon").count() == 0 and tab(pg, "design").locator(".ork-sign.moon").count() == 0
-        host.limits = [two("claude", "Claude Code", 0.6, 0.5), *LIMITS[1:]]                                # Claude has its 5 hours back
-        host.bump({})
-        pg.wait_for_function("() => document.querySelectorAll('.table-tab[data-tab=\"product\"] .ork-sign.moon').length === 0", timeout=WAIT_MS)
-        assert line(pg, "product") == [["bare", "claude"]]
-        assert tab(pg, "product").get_attribute("aria-label") == "Product · Does on Claude Code, set for this party · Checks on Codex, set for this party"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -519,27 +458,6 @@ def test_a_full_week_is_a_large_full_bottle_and_a_low_five_hours_a_large_bottle_
 
 MORE = [two("hermes", "Hermes", 0.5, 0.5), two("aider", "Aider", 0.4, 0.2)]
 PAID = {"tool": "agy", "name": "Antigravity", "until": "2026-10-29T18:00", "usd_task": 0.4}
-
-
-@pytest.mark.parametrize("tools,paid", [(4, False), (6, False), (6, True)], ids=["four", "six", "six-and-paid"])
-def test_at_1280_by_800_the_row_and_the_unrolled_list_leave_the_portal_ring_and_its_label_clear_of_the_panes_head(gui, tools, paid):
-    pg, host, log = open_mana(gui, (TOOLS + MORE)[:tools], "wide", mana_of("claude", "claude", paid=PAID if paid else None))
-    try:
-        pg.locator(".hand-end .hand-die").wait_for(timeout=WAIT_MS)
-        head, lane = pg.locator(".release-lane__head").bounding_box(), pg.locator(".release-lane").bounding_box()
-        row = pg.locator(".pots__row").bounding_box()
-        assert row["y"] >= head["y"] and row["y"] + row["height"] <= head["y"] + head["height"] + 1 and len(pg.locator(".pots__row .pot-s").all()) == 3, "at most three bottles, inside the head"
-        assert pg.evaluate("() => { const e = document.querySelector('.release-lane__scroll'); return !e || e.scrollWidth <= e.clientWidth; }"), "the Release column does not scroll sideways"
-        assert pg.locator(".hand").bounding_box()["height"] <= 140                                                  # the hand keeps its rim
-        unrolled = pg.locator(".pots__all").bounding_box()
-        assert unrolled["x"] >= 0 and unrolled["x"] + unrolled["width"] <= lane["x"] + lane["width"] + 1 and unrolled["y"] + unrolled["height"] <= pg.viewport_size["height"] + 1      # the unrolled list is anchored at the column's right edge and lies inside the window
-        label = pg.locator(".release-lane__label").bounding_box()
-        assert unrolled["y"] >= head["y"] + head["height"] - 4                                                    # it hangs under the head
-        narrow.no_sideways(pg)
-        shot(pg, f"fix-wide-row-{tools}{'-paid' if paid else ''}")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("tools", [3, 4, 6])

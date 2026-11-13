@@ -5,7 +5,6 @@
 import { signal, effect } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { command, town } from "../link.js";
-import { cardsOn } from "./on.js";
 import { raceOf } from "../table/felt.js";
 import { whoOf } from "../table/post.js";
 
@@ -23,7 +22,7 @@ export const verdicts = signal(null);
 let asked = null;
 effect(() => {
   const snap = town.value;
-  if (!cardsOn() || !snap || snap === asked) return;
+  if (!snap || snap === asked) return;
   asked = snap;
   command("ideas.verdicts", {}, true).then((r) => { verdicts.value = r && typeof r === "object" ? r : {}; }).catch(() => { verdicts.value = verdicts.peek() || {}; });
 });

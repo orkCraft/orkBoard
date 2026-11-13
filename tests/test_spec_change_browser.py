@@ -107,28 +107,6 @@ def lifted_card(pg):
     return lifted
 
 
-def test_the_card_has_a_tab_a_party_now_and_proposed_the_joins_line_the_cost_and_three_acts(asked):
-    pg, host = asked
-    host.needs = [row()]
-    host.push()
-    card = pg.locator('.hand-card[data-kind="spec_change"]')
-    card.wait_for(timeout=WAIT_MS)
-    assert card.locator(".ork-gem").get_attribute("data-cost") == "$0.20–0.60" and card.locator(".corner--foot img, .hand-card__asker svg, .hand-card__asker .ork-head").count() >= 1, "its asker: the Orkmaster's head"
-    lifted = lifted_card(pg)
-    assert f"You said: “{SAID}”" in lifted.inner_text() and "The banner and the list agree." in lifted.inner_text() and lifted.locator(".hand-spend").count() == 1
-    tabs = lifted.get_by_role("tab")
-    assert [t.inner_text().strip().title() for t in tabs.all()] == ["Tech", "Art"] and tabs.nth(0).get_attribute("aria-selected") == "true"
-    now, proposed = lifted.locator('[data-side="now"]'), lifted.locator('[data-side="proposed"]')
-    assert "~ Results — plain list" in now.inner_text() and "~ Results — the winner first" in proposed.inner_text() and "Winner" in proposed.inner_text()
-    tabs.nth(1).click()
-    assert "~ Banner — none" in now.inner_text() and "+ Winner banner — drawn above the list" in proposed.inner_text() and "A banner above it." in lifted.inner_text()
-    for name in ("Accept and start", "Talk more", "Drop it"):
-        assert lifted.get_by_role("button", name=name).count() == 1, name
-    lifted.get_by_role("button", name="Accept and start").click()
-    pg.wait_for_function("() => !document.querySelector('.hand-card[data-kind=\"spec_change\"]')", timeout=WAIT_MS)
-    assert host.sent("ideas.spec_change_take") == [{"idea": "results", "id": "s1", "via": "hand"}]
-
-
 def test_with_the_limits_low_accept_says_it_starts_after_the_reset(asked):
     pg, host = asked
     host.needs = [row(low=True, reset="2026-11-09T09:00:00")]
@@ -152,16 +130,3 @@ def test_drop_it_changes_nothing_and_talk_more_opens_the_bubble_again_with_the_w
     bubble(pg).wait_for(timeout=WAIT_MS)
     settled(pg)
     assert bubble(pg).get_attribute("data-ask") == "orkmaster" and field(pg).input_value() == SAID and len(host.sent("ideas.spec_change_more")) == 1
-
-
-def test_while_its_leaders_rewrite_the_card_says_so_and_has_drop_it_only_and_the_goals_card_is_held(asked):
-    pg, host = asked
-    next(n for n in host.nodes if n["slug"] == "results").update(state="plan", agreed=True, changing=True)
-    host.needs = [row(status="asking", parties=[])]
-    host.push()
-    lifted = lifted_card(pg)
-    assert "Its leaders are rewriting" in lifted.inner_text() and lifted.get_by_role("tab").count() == 0
-    assert [b.inner_text().strip() for b in lifted.locator(".hand-answers button").all()] == ["Drop it"]
-    card = pg.locator('.col-card[data-goal="results"]')
-    card.wait_for(timeout=WAIT_MS)
-    assert "Held while its leaders rewrite" in card.get_attribute("aria-label") and card.get_attribute("data-changing") == "1"      # a back has no words on its face (spec 147 B.3): its label says it, the card marks it

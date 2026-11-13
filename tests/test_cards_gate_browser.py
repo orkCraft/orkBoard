@@ -1,5 +1,5 @@
 """Goal "The battle and the gate", stage L (decisions §300.8, §303): the gate mat laid upright on the host's `ideas.gate_guards`, its ring gone, in a real browser on the `gui` fixture's Board
-(`?table=cards`, no `?mock=1`), a red gate laid in its state as stage E keeps it: one failing test in a file naming §N, a failing file naming none, a passing file naming §M. The Fix it way's commands
+(no `?mock=1`), a red gate laid in its state as stage E keeps it: one failing test in a file naming §N, a failing file naming none, a passing file naming §M. The Fix it way's commands
 (`ideas.gate_fix_goal`, `ideas.gate_fix_stage`) are stages G and H's: here they are stubs that log what the page sent, and the tests check which one was sent and how, never their effect."""
 from __future__ import annotations
 
@@ -72,8 +72,7 @@ def open_gate(gui, slug, size=(1440, 900), hash_=None):
     pg = browser.new_page(viewport={"width": size[0], "height": size[1]})
     seen = []
     pg.on("pageerror", lambda e: seen.append(str(e)))
-    base = server.url + ("&table=cards" if "?" in server.url else "?table=cards")
-    pg.goto(base + (hash_ or f"#mat=gate:{slug}"))
+    pg.goto(server.url + (hash_ or f"#mat=gate:{slug}"))
     pg.wait_for_selector("[data-spread=gate] .gt-line, [data-spread=gate] .gt-guards", timeout=WAIT_MS)
     pg.wait_for_selector("[data-spread=gate] .gt[data-way]:not([data-way=''])", timeout=WAIT_MS)
     return pg, seen

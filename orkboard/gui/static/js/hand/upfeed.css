@@ -32,21 +32,6 @@
 .up-fd__lab { flex: none; align-self: flex-start; margin: var(--ork-4) 0 calc(var(--ork-2) * -1); padding: var(--ork-1) var(--ork-3); background: var(--_plate); font: var(--ork-type-label); font-size: 14px; font-weight: 700; }
 .up-fd__only { flex: none; align-self: flex-start; margin: 0; padding: var(--ork-1) var(--ork-3); background: var(--_plate); font: var(--ork-type-caption); color: var(--ork-ink); }
 
-
-/* a block of several goals: sideways cards, a button each way */
-.up-fd__car { display: flex; gap: var(--ork-4); margin: 0 calc(var(--ork-5) * -1); padding: var(--ork-1) var(--ork-5); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--ork-5); scrollbar-width: none; }
-.up-fd__car::-webkit-scrollbar { display: none; }
-.up-fd__gc { appearance: none; flex: none; box-sizing: border-box; width: 156px; min-height: 112px; margin: 0; padding: var(--ork-4) var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-2); scroll-snap-align: start;
-  border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-raised); color: var(--ork-ink); text-align: left; cursor: pointer; box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)); }
-.up-fd__gc:focus-visible { outline: 0; box-shadow: inset 0 3px 0 var(--party-hue, var(--ork-card-frame)), inset 0 0 0 2px var(--ork-ink); }
-.up-fd__gtop { display: flex; align-items: center; gap: var(--ork-2); }
-.up-fd__gtop .ork-sign { color: var(--ork-ink-muted); }
-.up-fd__gcn { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-heading); font-size: 16px; line-height: 20px; }
-.up-fd__gfoot { margin-top: auto; display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-caption); font-size: 14px; line-height: 18px; color: var(--ork-ink-muted); }
-.up-fd__arrows { display: flex; justify-content: flex-end; gap: var(--ork-4); }
-.post-card .ork-btn.up-fd__arrow { min-width: var(--ork-tap); padding: 0; justify-content: center; }
-.up-fd__arrow .ork-icon { width: 20px; height: 20px; }
-
 /* a party's concerns in the feed narrowed to it */
 .up-fd__concerns { flex: none; box-sizing: border-box; padding: var(--ork-5); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); clip-path: var(--ork-notch); color: var(--ork-ink); }
 .up-fd__concerns:empty { display: none; }

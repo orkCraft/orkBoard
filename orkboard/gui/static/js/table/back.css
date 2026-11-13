@@ -1,26 +1,11 @@
 /* A goal's own card face down (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.3–§6.5, decisions §198.8): its sheet. Layout only; every colour, face, corner and motion is orkUI's (`.ork-card`, `.ork-leans`, `.ork-sigil`, `.ork-elem.is-glowing`, `.ork-race__head`).
    The back is the + card's seal with the goal's own rune lit at its top and its short name at its foot (backbody.js); the seal's ring of runes is the wait: orkUI's `.ork-sigil.is-waiting` (0.28.0) lights it from the share the page sets
-   (`--ork-sigil-share`, 0 to 1; orkUI rounds it down to eighths), the page only gives the lit runes the goal's colour. The card turns in orkUI's `.ork-turn` (back.css `.table-turn`); nothing here moves on its own. */
-.table-card--back.ork-card { display: block; aspect-ratio: 5 / 7; padding: 0; overflow: hidden; }
-/* the goal's own card turns in place, orkUI's `.ork-turn` (5 : 7, face down by default, `.is-up` shows the face; the sides are orkUI's, the lean is on the card inside a side, never on the side) */
-.table-turn { width: 100%; }
-.table-turn > .ork-turn__back > .table-card, .table-turn > .ork-turn__face > .table-card { width: 100%; height: 100%; }
+   (`--ork-sigil-share`, 0 to 1; orkUI rounds it down to eighths), the page only gives the lit runes the goal's colour. Nothing here moves on its own. */
 .table-back-sigil.ork-sigil { width: 112px; height: 112px; top: -18px; color: var(--ork-ink-faint); }
 .table-back-sigil > .ork-sigil__seal { left: 49px; top: 9px; }
-.table-back-nm { position: absolute; left: var(--ork-3); right: var(--ork-3); bottom: var(--ork-3); padding: var(--ork-1) var(--ork-2); background: var(--ork-card); color: var(--ork-ink); font: var(--ork-type-caption); text-align: center;
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }                                  /* a person's words: the body face */
 /* the ring: orkUI's `.ork-sigil.is-waiting` lights it from the rune clockwise in `color` of the ring (the sigil's own `color` is the faint ink); the lit runes wear the goal's colour */
 .table-back-sigil.is-waiting.is-meadow::after { color: var(--ork-elem-meadow); }
 .table-back-sigil.is-waiting.is-ice::after { color: var(--ork-elem-ice); }
 .table-back-sigil.is-waiting.is-dust::after { color: var(--ork-elem-dust); }
 .table-back-sigil.is-waiting.is-void::after { color: var(--ork-elem-void); }
 .table-back-sigil.is-waiting.is-lava::after { color: var(--ork-elem-lava); }
-/* the route's heads under the card: small, faint until the leader has said */
-.table-back-heads { display: flex; justify-content: center; gap: var(--ork-1); min-height: 18px; }
-.table-back-head .ork-race__head { width: 18px; height: 16px; opacity: 0.3; filter: grayscale(1); transition: opacity var(--ork-motion-base) steps(3); }
-.table-back-head.is-said .ork-race__head { opacity: 1; filter: none; }
-.table-back-under { box-sizing: border-box; padding-right: var(--ork-6); text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); }      /* the **…** of the card lies at the lower right: the words keep clear of it */
-/* its face, drawn over the card where it lies (card.js `Lifted`) */
-.table-back__goal { overflow-wrap: anywhere; }
-.table-back__stances { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; }
-@media (prefers-reduced-motion: reduce) { .table-back-head .ork-race__head { transition: none; } }

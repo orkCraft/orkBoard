@@ -11,19 +11,16 @@ import { TESTING, mergeGate, testing } from "../arena/gate.js";
 import { ORKMASTER, pick, picked, tab } from "../frame/state.js";
 import { readyOf, readyWords } from "../hand/data.js";
 import { nightMoons } from "../hand/nightcard.js";
-import { mainLine, shownDone, useNightDeal } from "./discard.js";
-import { DonePost, ReadyPosts } from "./donepost.js";
+import { shownDone, useNightDeal } from "./discard.js";
 import { columnOn, isLive, isRelease, nameOf, noGate, openTabOf, partiesAll, roadParties, routeParties } from "./data.js";
 import { laidNow } from "./laying.js";
-import { LowerPile, PLATE_WORDS, Plate, lowerHeld } from "./plates.js";            // the two piles and the plates over them (spec 168 F2)
+import { lowerHeld } from "./plates.js";            // the two piles and the plates over them (spec 168 F2)
 import { discardLabel } from "./chroniclewords.js";
-import { choose, chosenSlug, close, sending } from "./portal.js";
-import { RingAround } from "./ring.js";
+import { choose, chosenSlug, close } from "./portal.js";
 import { PotionRow } from "../hand/potionrow.js";
 import { StopAll } from "./stopall.js";
 import { PresenceChain } from "./presence.js";
-import { cardsOn } from "../cards/on.js";                                          // the table of cards' look (goal 170): the piles as S cards
-import { CardsPiles } from "../cards/discard.js";
+import { CardsPiles } from "../cards/discard.js";                                  // the table of cards' look (goal 170): the piles as S cards
 
 /** Whether the lane is drawn: the table is laid. A form over the pane leaves it, nothing changes size by what is open (decisions §283.5). */
 export const laneShown = () => laidNow();
@@ -32,7 +29,8 @@ export const laneShown = () => laidNow();
 const eyesOf = (g) => (g && !isRelease(g) && !isLive(g) ? g.slug : "");
 
 export function ReleaseLane({ tab, parties }) {
-  const g = parties.find((x) => x.slug === tab) || null, party = eyesOf(g), scroll = useRef(), dealing = useNightDeal(), moons = nightMoons();
+  const g = parties.find((x) => x.slug === tab) || null, party = eyesOf(g), scroll = useRef(), moons = nightMoons();
+  useNightDeal();                                                                                   // the night's goals are dealt into the pile one by one (discard.js `shownDone`)
   const headless = !roadParties().release, label = headless || tab === ORKMASTER || !g ? discardLabel() : discardLabel(nameOf(g));
   const held = (slug) => !party || routeParties(slug).has(party);                                    // a goal is a party's when its route held it
   const ready = noGate() ? null : readyOf(), goals = (ready?.goals || []).filter((x) => held(x.slug)), top = goals[0] || null, own = !!ready && !ready.goals.length && !party && ready.commits > 0;
@@ -53,14 +51,7 @@ export function ReleaseLane({ tab, parties }) {
     <div class="release-lane__head" data-room-things="discard"><${PotionRow} /><div class="release-lane__side"><${PresenceChain} half=${true} /><${StopAll} /></div></div>
     <span class="release-lane__label">${label}</span>
     <div class="release-lane__scroll" ref=${scroll}>
-      ${cardsOn() ? html`<${CardsPiles} p=${{ upper, goals, ready, own: ownNode, done, lowerGoals, now, press, moons }} />` : html`
-      ${upper && html`<${Plate} which="main" /><p class="discard-pile__words">${PLATE_WORDS.main}</p>`}
-      ${(top || sending.value) && html`<${RingAround} slug=${top?.slug || null}>${top && html`<${ReadyPosts} goals=${[top]} main=${ready.main} on=${now} onPress=${press} ringed=${true} />`}<//>`}
-      ${goals.length > 1 && html`<${ReadyPosts} goals=${goals.slice(1)} main=${ready.main} on=${now} onPress=${press} />`}
-      ${ownNode}
-      ${done.length > 0 && html`<ul class="release-lane__done discard-posts" aria-label="Done, not yet seen">${done.map((x) => html`<li key=${x.slug}><${DonePost} g=${x} kind="done" sub="done" picked=${now === x.slug} dealing=${dealing === x.slug ? dealing : ""} moon=${moons.has(x.slug)}
-        line=${mainLine(x)} label=${`${x.full}, done`} onPick=${press} /></li>`)}</ul>`}
-      <${LowerPile} goals=${lowerGoals} />`}
+      <${CardsPiles} p=${{ upper, goals, ready, own: ownNode, done, lowerGoals, now, press, moons }} />
     </div>
   </aside>`;
 }

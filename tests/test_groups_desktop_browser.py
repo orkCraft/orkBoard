@@ -65,20 +65,6 @@ def lifted(pg):
     return pg.locator(".hand-lifted")
 
 
-def test_the_groups_are_one_card_with_the_page_sign_the_first_groups_titles_and_the_orkmaster_as_asker(groups):
-    pg, host, w = groups
-    assert pg.locator('.hand-card[data-kind="groups"]').count() == 1
-    c = front(pg)
-    assert c.locator(".hand-card__name").text_content().strip() == "Add a dark mode option + Dark mode needs a timer"
-    assert c.locator(".corner--top .ork-sign.page").count() == 1
-    asker = c.locator(".corner--foot .ork-race__head")
-    assert asker.count() == 1 and "crown" in asker.get_attribute("src"), "the Orkmaster asks"
-    assert c.locator(".ork-gem").count() == 0, "no worded decision: no cost"
-    if w == "wide":
-        assert c.locator(".hand-card__foot").text_content().strip() == "These look like one goal"
-    narrow.no_sideways(pg)
-
-
 def test_lifted_each_group_lists_its_goals_with_their_heads_its_why_and_its_two_answers_and_not_now_is_at_the_foot(groups):
     pg, host, w = groups
     card_ = lifted(pg)

@@ -1,13 +1,7 @@
-/* A goal picked (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md F, decisions §206.4, §206.8): the Orkmaster's tab draws its plan with arrows (planboard.js, planarrows.js), a leader's tab what it will change or what it changed
+/* A goal picked (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md F, decisions §206.4, §206.8): a leader's tab draws what it will change or what it changed
    (goalview.js). Layout and orkUI's tokens only: no colour, font or corner of its own. */
 
 /* -- the plan over the lanes ------------------------------------------------------------------------------------------------------------- */
-.table-board--plan { position: relative; }
-.plan-slot { position: relative; width: min(var(--card-w, 144px), 100%); flex: none; }
-.plan-slot.is-planned { opacity: 0.6; }                                                  /* planned: faint, it has not begun */
-.plan-slot.is-done { opacity: 0.42; filter: grayscale(1); }                              /* done: grey */
-.plan-none { margin: 0; }
-.plan-wait { grid-column: 1 / -1; grid-row: 1; align-self: center; justify-self: center; z-index: 1; max-width: 40ch; }
 .plan-talk { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; padding: var(--ork-3); border: var(--ork-line) solid var(--ork-frame); overflow-wrap: anywhere; }
 .plan-talk p, .plan-talk ul { margin: 0; }
 .plan-talk__verdict { align-self: flex-start; }
@@ -15,10 +9,6 @@
 .plan-talk__ways { padding: 0; list-style: none; }
 .plan-talk__ways li[data-pick] { font-weight: 600; }
 .plan-talk__ask { display: flex; flex-direction: column; gap: var(--ork-1); padding-top: var(--ork-2); border-top: var(--ork-line) solid var(--ork-frame); }
-.plan-arrows { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; z-index: 6; }
-.plan-arrow { fill: none; stroke: var(--ork-ink-muted); stroke-width: 2; }
-.plan-arrow.is-done { stroke-dasharray: 4 3; opacity: 0.6; }                             /* from a task done: dashed */
-.plan-arrows marker path { fill: var(--ork-ink-muted); stroke: none; }
 
 /* -- the goal at a leader ---------------------------------------------------------------------------------------------------------------- */
 .gv { --c: var(--ork-ink); flex: 1; min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--ork-6); padding: var(--ork-5) var(--ork-6); overflow: hidden; }

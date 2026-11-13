@@ -38,7 +38,7 @@ class OfferHost(HandHost):
 
 def open_field(gui, width="wide", offered=True):
     pg, host, log = open_hand(gui, host=OfferHost(offered), width=width)
-    pg.locator(".hand .hand-plus").click()
+    pg.locator(".hand :is(.hand-plus, [data-blank-deck])").click()
     return pg, host, log
 
 
@@ -79,8 +79,8 @@ def test_a_goal_sent_with_the_toggle_on_carries_keep_off_and_the_toggle_is_put_b
         area.press("Enter")
         sent = _calls(pg, host, "ideas.add")
         assert sent[-1].get("keep_off") is True and sent[-1]["text"] == "Rotate the signing key"
-        pg.locator(".hand .hand-plus").wait_for(timeout=WAIT_MS)
-        pg.locator(".hand .hand-plus").click()
+        pg.locator(".hand :is(.hand-plus, [data-blank-deck])").wait_for(timeout=WAIT_MS)
+        pg.locator(".hand :is(.hand-plus, [data-blank-deck])").click()
         field, _area = _field(pg)
         assert field.locator("[data-keep-off]").get_attribute("aria-checked") == "false"
     finally:

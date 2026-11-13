@@ -10,7 +10,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import _field, _plus, call, open_hand, shot  # noqa: E402
+from tests.test_hand_desktop_browser import _field, _plus, open_hand, shot  # noqa: E402
 from tests.test_hand_mention_browser import MentionHost  # noqa: E402
 from tests.test_shell_browser import _calls  # noqa: E402
 
@@ -41,32 +41,6 @@ def _open_row(pg):
 
 def _list(pg):
     return pg.locator(".hand-field .hand-pick").get_attribute("data-open") if pg.locator(".hand-field .hand-pick").count() else ""
-
-
-def test_the_field_grows_from_the_plus_card_the_card_whole_at_the_tables_foot_at_its_left_and_turns_back_on_esc(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        pg.mouse.move(640, 300)
-        pg.wait_for_timeout(500)
-        _plus(pg).click(position={"x": 8, "y": 60})
-        field, area = _field(pg)
-        pg.wait_for_function("() => document.querySelector('.hand-field__card').getAnimations().every((a) => a.playState === 'finished') && !document.querySelector('.hand-ghost')", timeout=WAIT_MS)
-        box, hand = pg.locator(".hand-field__card").bounding_box(), pg.locator(".hand").bounding_box()
-        assert [round(box["width"]), round(box["height"])] == [144, 202], f"the card's size, 144 x 202 (spec 168 D2): {box}"
-        assert box["y"] >= 0 and box["y"] + box["height"] <= hand["y"] + 1, f"it stands whole over the hand, its corners in view: {box}, hand {hand}"
-        assert _plus(pg).evaluate("e => getComputedStyle(e).visibility") == "hidden", "the + card is hidden while the field is open"
-        assert pg.locator(".hand-field__proxy").count() == 0
-        shot(pg, "field-grown-where-it-lies")
-        area.fill("Players see who answered first")
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-        pg.wait_for_function("() => !document.querySelector('.hand-ghost') && getComputedStyle(document.querySelector('.hand .hand-plus')).visibility === 'visible'", timeout=WAIT_MS)
-        _plus(pg).click(position={"x": 8, "y": 60})
-        assert _field(pg)[1].input_value() == "Players see who answered first", "the words kept"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_under_reduced_motion_the_field_is_there_at_once(gui):
@@ -102,51 +76,10 @@ def test_on_a_narrow_window_the_field_is_as_wide_as_the_screen_as_before(gui):
     assert not log, "\n".join(log)
 
 
-CORNERS4 = [*CORNERS, "go"]
 
 
 def _dealt(pg):
     return pg.locator(".hand-dealt").get_attribute("data-open") if pg.locator(".hand-dealt").count() else ""
-
-
-def test_four_corners_each_deals_its_choices_to_the_hand_one_at_a_time_and_esc_brings_the_field_back(gui):
-    pg, host, log = open_hand(gui, host=MentionHost())
-    try:
-        field, area = _open(pg)
-        call(pg, "frame/state.js", "openTab", "tech")
-        assert [_co(pg, n).count() for n in CORNERS4] == [1, 1, 1, 1] and pg.locator(".hand-field .hand-sq").count() == 1, "the Rune, To and Type squares are gone: Files stays"
-        card = pg.locator(".hand-field__card").bounding_box()
-        rune, kind, who, go = (_co(pg, n).bounding_box() for n in CORNERS4)
-        assert rune["x"] < kind["x"] and abs(rune["y"] - kind["y"]) <= 2 and rune["y"] < card["y"] + 40, "rune top left, kind top right"
-        assert who["y"] > card["y"] + card["height"] - 40 and who["x"] < go["x"] and abs(who["y"] - go["y"]) <= 4, "who bottom left, Now or Later bottom right"
-        assert _dealt(pg) == "" and pg.locator(".hand-fieldbox").count() == 1
-        for name in CORNERS4:                                                                              # each deals its own choices; the one before is put back
-            _co(pg, name).click()
-            assert _dealt(pg) == name and pg.locator(".hand-dealt").count() == 1 and pg.locator(".hand-fieldbox").count() == 0
-            assert [_co(pg, n).get_attribute("aria-expanded") for n in CORNERS4] == ["true" if n == name else "false" for n in CORNERS4]
-            cards = pg.locator(".hand-dealt .hand-deal")
-            assert cards.count() >= 1 and all([round(c["width"]), round(c["height"])] == [144, 202] for c in (cards.nth(i).bounding_box() for i in range(cards.count()))), "cards of the hand's size"
-        shot(pg, "field-corner-dealt")
-        _co(pg, "go").click()
-        assert _dealt(pg) == "" and pg.locator(".hand-fieldbox").count() == 1, "pressed again, the choices go back and the field comes"
-        _co(pg, "to").click()
-        assert pg.locator(".hand-dealt .hand-deal").count() == 6, "the Orkmaster's crown and the five leaders' heads"
-        pg.keyboard.press("Escape")
-        assert _dealt(pg) == "" and pg.locator(".hand-field").count() == 1, "Esc brings the field back first"
-        _co(pg, "rune").click()
-        items = pg.locator(".hand-dealt[data-open=rune] [data-rune]")
-        assert items.count() == 5 and [i.get_attribute("aria-label") for i in items.all()] == [f"Rune {n}" for n in range(1, 6)]
-        first = pg.evaluate("() => [...document.querySelectorAll('.hand-dealt [data-rune]')].indexOf(document.activeElement)")
-        pg.keyboard.press("ArrowRight")                                                                    # the arrows move in the row
-        assert pg.evaluate("() => [...document.querySelectorAll('.hand-dealt [data-rune]')].indexOf(document.activeElement)") == (first + 1) % 5
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.hand-dealt') && document.querySelector('.hand-fieldbox')", timeout=WAIT_MS)
-        pg.wait_for_function("() => document.activeElement && document.activeElement.classList.contains('hand-field__text')", timeout=WAIT_MS)      # the field comes back focused
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)              # and then Esc lays the card back
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_who_addresses_a_leader_the_kinds_come_by_their_signs_and_a_kind_picked_is_sent_as_type(gui):
@@ -256,54 +189,7 @@ def _png():
     return base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
 
 
-def test_the_seals_ring_is_whole_while_the_runes_are_offered_three_of_orkuis_own_in_the_three_places_left(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        call(pg, "frame/state.js", "openTab", "tech")                                                      # free: ice (the default), void, lava
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
-        deco = pg.locator(".hand .hand-plus .ork-sigil > .ork-sigil__free.hand-deco")
-        assert deco.evaluate_all("els => els.map((e) => [e.classList[1], e.firstElementChild.className])") == [["at-135", "ork-rune eye"], ["at-225", "ork-rune key"], ["at-315", "ork-rune hourglass"]]
-        assert deco.evaluate_all("els => els.map((e) => [getComputedStyle(e).left, getComputedStyle(e).top])") == [["96px", "98px"], ["28px", "98px"], ["28px", "26px"]]
-        assert pg.locator(".hand .hand-plus .ork-sigil > .ork-sigil__free:not(.hand-deco)").count() == 2, "the free runes (void and lava; ice is at the top) in their places as before"
-        _plus(pg).hover()
-        pg.wait_for_function("() => [...document.querySelectorAll('.hand .hand-plus .ork-sigil__free')].every((e) => getComputedStyle(e).opacity === '0.75')", timeout=WAIT_MS)      # all lit at three quarters
-        assert pg.locator(".hand .hand-plus .ork-sigil__free").count() == 5
-        call(pg, "frame/state.js", "openTab", "orkmaster")
-        # spec 149 J.2 (supersedes §187.3's "" with no party): the runes are the project's, the same at every party, so on the Orkmaster's tab (no party addressed) the first party's are read
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem')", timeout=WAIT_MS)
-        assert pg.locator(".hand .hand-plus .ork-sigil__free").count() == 5, "no party addressed: the project's runes and the three of orkUI's, as at a party"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 # -- spec 147 D.2 and spec 148 B.6: the new goal's card, its corners dashed until they fill, its window the place what is attached lies and is dropped on --------------------
-
-def test_a_new_goals_card_has_three_dashed_corners_that_fill_as_the_goal_is_made(gui):
-    """Spec 150 F.1, decisions §254.9 (spec 168 D2: a fourth corner, *Now or Later*, is a button too): the rune, the kind and who are dashed buttons saying their defaults; picked, each is drawn whole."""
-    pg, host, log = open_hand(gui, host=MentionHost())
-    try:
-        field, area = _open(pg)
-        corners = pg.locator(".hand-field__card .hand-corner")
-        assert corners.evaluate_all("els => els.map((e) => [e.dataset.corner, e.dataset.set, getComputedStyle(e).borderTopStyle])") == [["rune", "0", "dashed"], ["type", "0", "dashed"], ["to", "0", "dashed"], ["go", "1", "solid"]], "three dashed corners and *Now*"
-        assert "the Orkmaster reads it" in _co(pg, "type").get_attribute("aria-label")
-        assert _co(pg, "to").locator("img.ork-race__head").count() == 1, "the crowned head"
-        shot(pg, "field-corners-default")
-        assert pg.locator(".hand-field__card .corner--top .corner__kind .ork-sign").count() == 0, "no kind until one is picked"
-        box = pg.locator(".hand-field__card").bounding_box()
-        assert [round(box["width"]), round(box["height"])] == [144, 202], "the card's size"
-        _co(pg, "to").click()
-        pg.locator(".hand-dealt[data-open=to]").get_by_role("menuitemradio", name="Game design").click(position={"x": 20, "y": 30})
-        assert [_co(pg, n).get_attribute("data-set") for n in CORNERS] == ["0", "0", "1"] and _co(pg, "to").evaluate("e => getComputedStyle(e).borderTopStyle") == "solid", "who fills when the party is picked"
-        assert _co(pg, "to").get_attribute("aria-label") == "To: Game design, change it"
-        _co(pg, "type").click()
-        pg.locator(".hand-dealt[data-open=type]").get_by_role("menuitemradio", name="Balance pass").click(position={"x": 20, "y": 30})
-        assert _co(pg, "type").get_attribute("data-set") == "1" and _co(pg, "type").locator(".ork-sign").count() == 1, "the kind's corner fills when a kind is picked"
-        shot(pg, "field-corners-filled")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_new_goals_window_shows_what_is_attached_and_is_where_a_picture_is_dropped(gui):

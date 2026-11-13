@@ -24,9 +24,4 @@
 .sb-spec--back:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 1px; }
 .sb-spec__say { position: absolute; left: 0; right: 0; top: 100%; margin-top: var(--ork-1); text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); pointer-events: none; }      /* under the back, not on its ring */
 /* the project's lane: a row of small cards for each stage over the cascade */
-.sb-rows { display: flex; flex-direction: column; gap: var(--ork-3); align-self: stretch; }
-.sb-row { display: flex; flex-direction: column; gap: var(--ork-1); }
-.sb-row__label { color: var(--ork-ink-muted); }
-.sb-row__cards { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
 /* a later leader's step on the plan, until the step before it is accepted */
-.sb-later { box-sizing: border-box; width: min(var(--card-w, 144px), 100%); aspect-ratio: 5 / 7; display: grid; place-items: center; padding: var(--ork-3); margin: 0; border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; overflow-wrap: anywhere; }

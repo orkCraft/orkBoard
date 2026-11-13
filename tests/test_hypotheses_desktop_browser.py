@@ -401,20 +401,6 @@ def lifted(pg):
     return pg.locator(".hand-lifted")
 
 
-def test_a_hypothesis_tested_is_a_card_with_the_flask_its_name_the_hypothesis_and_its_proposers_head(due):
-    pg, host, w = due
-    c = front(pg)
-    assert c.locator(".hand-card__name").text_content().strip() == ROW["text"]
-    assert c.locator(".corner--top .ork-sign.flask").count() == 1
-    asker = c.locator(".corner--foot .ork-race__head")
-    assert asker.count() == 1 and "unicorn" in asker.get_attribute("src"), "Product's leader asks"
-    assert c.locator(".ork-gem").count() == 0, "it spends nothing"
-    if w == "wide":
-        assert c.locator(".hand-card__foot").text_content().strip() == "Did it hold?"
-    assert pg.locator('.hand-stack[data-goal^="party:product"], .hand-stack').count() >= 1
-    narrow.no_sideways(pg)
-
-
 def test_lifted_the_card_asks_did_it_hold_and_shows_the_signal_what_was_found_and_the_tests(due):
     pg, host, w = due
     card_ = lifted(pg)

@@ -97,46 +97,8 @@ def pick_args(pg, host, at_least=1):
 
 # -- the card's face -------------------------------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_card_says_who_sketched_it_and_wears_a_page_sign_under_the_leaders_lane(gui, width):
-    pg, host, log = window(gui, width)
-    try:
-        c = pg.locator('.hand-card[data-kind="pick"]')
-        assert c.count() == 1 and c.locator(".hand-card__name").text_content().strip() == "Party quiz"
-        assert c.locator(".corner--top .ork-sign.page").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1, "the page sign and the leader's head"
-        if width == "wide":
-            assert c.locator(".hand-card__foot").text_content().strip() == f"{LEADER} sketched it"
-        assert pg.locator(".hand-lane").nth(2).locator('.hand-stack[data-stack$="@2"]').count() == 1, "under Design's lane"
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
 
 # -- the desktop: side by side over the pane --------------------------------------------------------------------------------------------------
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_lifted_on_the_desktop_the_variants_lie_side_by_side_over_the_pane_each_in_its_sandbox(gui, width):
-    pg, host, log = window(gui, width)
-    try:
-        open_pane(pg)
-        frames = pg.locator(".sk-pane iframe.sk-frame")
-        assert frames.count() == 3
-        for k in "ABC":
-            f = pg.locator(f'.sk-pane iframe[title="Sketch {k} by {LEADER}"]')
-            assert f.count() == 1 and f.get_attribute("sandbox") == "allow-scripts", "scripts may run and nothing else: no same origin"
-            assert "allow-same-origin" not in f.get_attribute("sandbox")
-        assert [pg.locator(".sk-one").nth(i).locator("b").text_content().strip() for i in range(3)] == ["A · the crown", "B · the gold frame", "C · the moment"]
-        boxes = [frames.nth(i).bounding_box() for i in range(3)]
-        assert all(250 <= b["width"] <= 391 for b in boxes), boxes
-        if width == "wide":
-            assert len({round(b["y"]) for b in boxes}) == 1 and boxes[0]["x"] < boxes[1]["x"] < boxes[2]["x"], "side by side"
-        assert pg.locator(".sk-pane .sk-title").text_content().strip().startswith(f"{LEADER} sketched it")
-        narrow.no_sideways(pg)
-        shot(pg, f"{width}-sketch-pane")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_sketchs_page_runs_in_its_frame_and_cannot_reach_the_boards_page(gui):

@@ -129,7 +129,7 @@ def test_the_stage_pressed_deals_three_cards_the_present_marked_and_a_card_sends
         ways.first.wait_for(timeout=WAIT_MS)
         assert ways.count() == 3 and [w.locator(".hand-ans__name").inner_text().strip() for w in ways.all()] == ["Idea", "Being made", "Live"]
         for w in ways.all():
-            assert w.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [144, 202]
+            assert w.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [120, 168]
         marked = pg.locator(".hand-ways-row .hand-ans[data-pick='1']")
         assert marked.count() == 1 and marked.locator(".hand-ans__name").inner_text().strip() == "Being made"
         assert ways.nth(2).locator(".hand-ans__line").inner_text().strip() == "LiveOps and Marketing join the chair's crafts"

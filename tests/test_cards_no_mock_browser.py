@@ -1,4 +1,4 @@
-"""Spec 171 F in a real browser, on the `gui` fixture's Board, `?table=cards` and no `?mock=1`: the page fetches nothing under js/mock/ or static/mock/, Product's Jobs to be done lays its zones
+"""Spec 171 F in a real browser, on the `gui` fixture's Board, no `?mock=1`: the page fetches nothing under js/mock/ or static/mock/, Product's Jobs to be done lays its zones
 empty with who fills each (the host's `fills`), and no word on the page ends in « · example»."""
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ def open_cards(gui):
     pg = browser.new_page(viewport={"width": 1440, "height": 900})
     seen: list[str] = []
     pg.on("request", lambda r: seen.append(r.url))
-    pg.goto(server.url + "&table=cards" if "?" in server.url else server.url + "?table=cards")
+    pg.goto(server.url)
     pg.wait_for_selector(".cards-lane", timeout=WAIT_MS)
     return pg, seen
 

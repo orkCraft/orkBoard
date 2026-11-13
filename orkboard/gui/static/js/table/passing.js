@@ -1,8 +1,7 @@
 // A question passed on (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part D.3, decisions §206.6): a leader's question that another party's map or the code answers is not dealt to the hand; the host keeps it
 // in the snapshot's `passing` (`{id, idea, task, by, to, q, left_s, answering}`, realm/idea_pass.py) for ten seconds. **On the page** it is a small card over the Orkmaster's column's foot: its goal's rune, the two heads (who asked, who it
 // is passed to), the question and *passing on · 6 s* (counted down here between snapshots). Pressed it shows **Answer it myself** (`ideas.pass_take`: the person's, dealt to the hand now) and **Pass it now** (`ideas.pass_now`).
-// When the call begins (`answering`) the card flies to the answering leader's tab, which says *answering…*; the answer given (the row is gone) a copy of the card flies back from the tab into the goal's card in the column. The goal's card says
-// *Asked Tech* with the `question` sign faint — not yellow: it does not wait for the person. A flight plays once and only when seen (the page shown, no reduced motion: §89.0); otherwise the card is simply gone, the line simply there.
+// When the call begins (`answering`) the card flies to the answering leader's tab, which says *answering…*; the answer given, the row is gone. A flight plays once and only when seen (the page shown, no reduced motion: §89.0); otherwise the card is simply gone, the line simply there.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head } from "../orkui.js";
@@ -11,7 +10,7 @@ import { act, mapData } from "../shell/store.js";
 import { boxIn, reduced, spring, tokenMs } from "../hand/motion.js";
 import { nameOf, partiesAll } from "./data.js";
 
-export const passFlights = { out: 0, back: 0, now: 0 };       // how many cards have flown to a tab, back into a goal's card, and fly now (what a test reads)
+export const passFlights = { out: 0, now: 0 };                // how many cards have flown to a tab, and fly now (what a test reads)
 const CROWN = { race: "peon", tier: "crown" };                 // the Orkmaster's head: a question asked with no party of its own
 const SHOWN = 3;                                               // a round asks three questions at most (core/idea_pass.py `MAX_PASSING`)
 
@@ -58,8 +57,8 @@ function Card({ row, node }) {
 
 const kept = new Map();          // id → {rect, copy, idea, to, out}: the card as it last lay (to fly from), and whether it has flown to its tab
 
-/** A copy of the card flies between its box and a point (the tab's top middle): there when `back` is false (shrinking, fading), from there when it is true. */
-async function fly(copy, box, at, back) {
+/** A copy of the card flies from its box to a point (the tab's top middle), shrinking and fading. */
+async function fly(copy, box, at) {
   const g = copy, dx = at.left - box.left, dy = at.top - box.top, away = `translate(${dx}px, ${dy}px) scale(0.25)`;
   g.classList.add("table-flyer");
   g.setAttribute("aria-hidden", "true");
@@ -69,7 +68,7 @@ async function fly(copy, box, at, back) {
   passFlights.now++;
   try {
     const frames = [{ transform: "none", opacity: 1 }, { transform: away, opacity: 0.2 }];
-    await g.animate(back ? frames.reverse() : frames, { duration: tokenMs("--ork-motion-play", 400) * 1.2, easing: spring(), fill: "forwards" }).finished;
+    await g.animate(frames, { duration: tokenMs("--ork-motion-play", 400) * 1.2, easing: spring(), fill: "forwards" }).finished;
   } finally { g.remove(); passFlights.now--; }
 }
 
@@ -84,15 +83,8 @@ function useFlights(rows) {
       const r = now.get(id), tab = tabAt(was.to);
       if (r?.answering && !was.out) {
         was.out = true;
-        if (was.copy && tab && seen()) { passFlights.out++; fly(was.copy.cloneNode(true), was.rect, tab, false).catch(() => {}); }
-      } else if (!r) {
-        kept.delete(id);
-        const card = document.querySelector(`.frame-column .col-card[data-goal="${CSS.escape(was.idea)}"]`)?.getBoundingClientRect();
-        if (was.out && was.copy && tab && card && card.width && seen()) {
-          passFlights.back++;
-          fly(was.copy.cloneNode(true), { left: card.left, top: card.top, width: was.rect.width, height: was.rect.height }, tab, true).catch(() => {});
-        }
-      }
+        if (was.copy && tab && seen()) { passFlights.out++; fly(was.copy.cloneNode(true), was.rect, tab).catch(() => {}); }
+      } else if (!r) kept.delete(id);
     }
     for (const r of rows) {
       const el = document.querySelector(`.col-pass[data-pass="${CSS.escape(r.id)}"]`), was = kept.get(r.id);

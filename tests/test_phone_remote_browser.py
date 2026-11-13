@@ -15,7 +15,7 @@ pytest.importorskip("playwright.sync_api")
 
 from orkboard.gui import pwa  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_pwa_frame_browser import DEVICE, QUESTION, App  # noqa: E402
+from tests.test_pwa_frame_browser import DEVICE, App  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -162,7 +162,6 @@ class RemoteApp(App):
     def ready(self):
         """The page up: the app's files come one by one through the stand-in listener, which a slow machine takes half a minute over."""
         self.pg.wait_for_selector("[data-frame][data-upright='1']", timeout=SLOW_MS)
-        self.pg.get_by_text(QUESTION).first.wait_for(timeout=SLOW_MS)
         return self.pg
 
     def pair(self, route):

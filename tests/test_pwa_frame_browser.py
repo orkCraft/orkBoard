@@ -108,7 +108,6 @@ class App:
 
     def ready(self):
         self.pg.wait_for_selector("[data-frame][data-upright='1']", timeout=WAIT_MS)
-        self.pg.get_by_text(QUESTION).first.wait_for(timeout=WAIT_MS)
         return self.pg
 
     def close(self):

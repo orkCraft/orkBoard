@@ -25,9 +25,6 @@ export function holdWords(n, now = new Date()) {
   return n.state === "working" ? `the work goes on at ${when}` : `not before ${when}`;
 }
 
-/** What a goal kept off the repository says on its row (spec 151 F.4; the map's `kept_off`): *Kept off the repository: on this computer only*; "" for a goal that goes with the rest. */
-export const offWords = (n) => n?.kept_off || "";
-
 /** The line under In analysis while goals put off wait for the reset (spec 130 E.4, decisions §239.4): *waits for the reset · Mon 09:00*, the earliest of them, a state and never a count; "" with none. A held goal has no reset to wait for, and a reset passed says nothing. */
 export function waitsWords(nodes, now = new Date()) {
   const at = nodes.filter((n) => n.state === "routed" && n.held_until && !n.held_for).map((n) => n.held_until).filter((iso) => new Date(iso).getTime() > now.getTime())

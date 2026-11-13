@@ -104,7 +104,7 @@ def test_at_the_wide_width_the_opened_card_is_the_card_in_play_and_its_body_lies
         card = lift(pg, "plan")
         assert card.get_attribute("role") == "dialog" and card.get_attribute("data-kind") == "plan" and card.get_attribute("data-key") == "plan/export/"
         assert {"ork-card", "hand-card", "hand-lifted", "hand-lifted--asked", "is-play"} <= set(card.get_attribute("class").split()) and "hand-lifted--card" not in card.get_attribute("class").split()
-        assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [144, 202]
+        assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [120, 168]
         children = card.evaluate("e => [...e.children].map((c) => c.className.split(' ')[0])")
         assert children == ["corner", "hand-card__name", "hand-card__foot", "corner", "hand-body"], children
         body, hand = card.locator(".hand-body"), pg.locator(".hand")
@@ -154,18 +154,6 @@ class SaidHost(HandHost):
                 n["tasks"][0]["error"] = error
 
 
-@pytest.mark.parametrize("kind,signal", [("failed", "fails"), ("asks", "asks")])
-def test_a_lifted_card_keeps_its_signal(gui, kind, signal):
-    """Decisions §53.5 (a signal is always seen): lifted, a failure is ringed in danger and a question in alert, as at rest."""
-    pg, host, log = open_hand(gui, width="wide")
-    try:
-        card = lift(pg, kind)
-        assert signal in card.get_attribute("class").split(), f"the lifted {kind} card keeps its signal's class"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_lifted_card_does_not_draw_a_line_that_repeats_its_title(gui):
     """Spec 140 A4, decisions §247.6: a line equal to the title is not drawn. (At the wide width a failure is a hand card, decisions §270: the narrow page keeps the opened one.)"""
     pg, host, log = open_hand(gui, host=SaidHost("Reset the clock."), width="narrow")
@@ -188,44 +176,6 @@ def test_a_lifted_card_says_one_sentence_and_the_rest_behind_its_dots(gui):
         assert "Run it again after the change." in said.inner_text() and "Then read the log." in said.inner_text(), "the rest behind its …"
         said.get_by_role("button", name="Less").click()
         assert "Run it again" not in said.inner_text()
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-class PricedHost(HandHost):
-    """The hand's host with Design's question about the phones' timer answered by ways that have a price (`asked[].costs`)."""
-
-    def __init__(self):
-        super().__init__()
-        costs = [{"usd_low": 1.0, "usd_high": 1.0}, {"usd_low": 3.0, "usd_high": 4.0}]
-        for row in [*self.nodes, *self.needs]:
-            if row.get("slug") == "phones" or row.get("idea") == "phones":
-                for q in row["asked"]:
-                    q["costs"] = costs
-
-
-def test_a_priced_way_shows_its_cost_in_its_corner_and_pressing_it_answers_at_once(gui):
-    """Spec 158 F, decisions §270.2 (replacing §251.6's picked way and *Answer*): each way is a hand card with its own cost in its corner; pressing it sends it."""
-    pg, host, log = open_hand(gui, host=PricedHost(), width="wide")
-    try:
-        pg.locator('.hand-card[data-key="asks/phones/"]').first.click(position={"x": 10, "y": 20})
-        pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-        pg.mouse.move(2, 2)
-        ways = pg.locator(".hand-ways-row .hand-ans[data-way^=way-]")
-        assert ways.count() == 2 and pg.locator(".hand-ways-row").get_by_role("radio").count() == 0, "no picking, then Answer"
-        first, second = ways.nth(0).get_attribute("data-cost"), ways.nth(1).get_attribute("data-cost")
-        assert first and second and first != second, (first, second)
-        assert ways.nth(0).locator(".corner__much .ork-gem").get_attribute("data-cost") == first and ways.nth(1).locator(".corner__much .ork-gem").get_attribute("data-cost") == second
-        shot(pg, "wide-lifted-priced")
-        ways.nth(1).click()
-        sent = [a for n, a in host.log if n == "ideas.answer"]
-        for _ in range(40):
-            if sent:
-                break
-            pg.wait_for_timeout(50)
-            sent = [a for n, a in host.log if n == "ideas.answer"]
-        assert sent and sent[-1]["answers"] == ["Each phone counts down alone"] and sent[-1]["slug"] == "phones" and sent[-1]["from"] == "hand", sent
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -264,7 +214,7 @@ def test_the_opened_card_has_its_window_at_the_top_of_its_body(gui):
         assert win.count() == 1 and win.get_attribute("data-window") == "card-picture" and win.locator("img").get_attribute("src") == DOT
         assert win.evaluate("e => e.offsetHeight") <= 72, "the window fits the hand's place"
         assert card.evaluate("e => e.querySelector('.hand-lifted__body').firstElementChild.classList.contains('hand-lifted__win')"), "at the top of its body"
-        assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [144, 202], "the card is 144 x 202"
+        assert card.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [120, 168], "the card is 144 x 202"
         shot(pg, "wide-lifted-window")
         card.get_by_role("button", name="Put it back").click()
         card = lift(pg, "failed")

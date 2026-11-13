@@ -69,7 +69,7 @@ def test_an_alert_is_a_card_in_the_hand_one_stack_a_leader_under_its_lane_and_a_
     assert sorted(stacks.nth(i).get_attribute("data-stack").split("@")[0] for i in range(stacks.count())) == ["concerns:game", "concerns:tech"]
     lanes = [pg.locator(f'.hand-lane:has({CARD}[data-key="concern/{p}/{c}"])').get_attribute("data-lane") for p, c in (("tech", "c1"), ("game", "g1"))]
     assert len(set(lanes)) == 2 and "0" not in lanes, "each under its own leader's lane, not the project's"
-    assert box(cards.first) == (144, 202)
+    assert box(cards.first) == (120, 168)
     assert pg.locator(f'{CARD} .hand-card__name').first.inner_text()
 
 
@@ -105,7 +105,7 @@ def test_one_hovered_lights_the_others_the_hand_the_header_and_the_mark_on_the_s
 def test_played_it_rises_at_the_tables_foot_its_leaders_tab_open_its_ways_the_hand_by_their_kinds(hand):
     pg, host = hand
     lifted = play(pg)
-    assert box(lifted) == (144, 202)
+    assert box(lifted) == (120, 168)
     pg.locator('.table-tab[data-tab="tech"][aria-selected="true"], .col-head__tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
     ways = pg.locator(".hand-ways-cards button[data-way-kind]")
     assert [(ways.nth(i).get_attribute("data-way-kind"), ways.nth(i).locator(".hand-ans__name").inner_text()) for i in range(ways.count())] == list(zip(KINDS, ["Not a problem", "Later", "Make it a goal"]))
@@ -216,7 +216,7 @@ def test_a_doubt_left_is_a_card_in_the_doubting_leaders_stack_with_its_why(doubt
     pg, host = doubt
     cards = pg.locator(DOUBT)
     assert cards.count() == 1 and cards.first.get_attribute("data-key") == "doubt/dark-mode/tech"
-    assert "The Architect still doubts" in cards.first.text_content() and box(cards.first) == (144, 202)
+    assert "The Architect still doubts" in cards.first.text_content() and box(cards.first) == (120, 168)
     lane = pg.locator(f'.hand-lane:has({DOUBT})').get_attribute("data-lane")
     assert lane not in (None, "0"), "under the doubting leader's lane"
     assert pg.locator(f'.hand-lane:has({DOUBT}) .hand-stack').count() >= 1
@@ -225,7 +225,7 @@ def test_a_doubt_left_is_a_card_in_the_doubting_leaders_stack_with_its_why(doubt
 def test_played_it_has_the_two_ways_by_their_kinds_and_judge_again_now_sends_the_command(doubt):
     pg, host = doubt
     lifted = play_doubt(pg)
-    assert box(lifted) == (144, 202) and WHY in lifted.text_content()
+    assert box(lifted) == (120, 168) and WHY in lifted.text_content()
     ways = pg.locator(".hand-ways-cards button[data-way-kind]")
     assert [(ways.nth(i).get_attribute("data-way-kind"), ways.nth(i).locator(".hand-ans__name").inner_text()) for i in range(ways.count())] == [("ask_more", "Judge again now"), ("go_on", "To the hearing")]
     pg.locator('.table-tab[data-tab="tech"][aria-selected="true"], .col-head__tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)

@@ -48,44 +48,6 @@ def table(gui):
 
 
 @pytest.mark.browser
-def test_a_lane_card_has_a_top_row_and_a_foot_row_and_is_5_by_7(table):
-    pg, host = table
-    cards = pg.locator(".table-lane[data-party] .table-card--task")
-    assert cards.count() >= 4
-    for card in cards.all():
-        box = card.bounding_box()
-        assert abs(box["width"] - 144) <= 1 and abs(box["width"] / box["height"] - 5 / 7) <= 0.012, box          # 144 x 202, 5 : 7
-        corners_ok(card)
-    working = pg.locator('[data-lkey="t:task:rules/r1"]')
-    assert working.locator(".corner--foot .ork-race__head").count() == 1, "who works: the seat's head in the foot"
-    window = working.locator(".table-card__win").bounding_box()
-    assert 80 <= window["height"] <= 92, "the window onto the work lies between the title and the foot"
-    assert working.locator(".table-card__head").bounding_box()["y"] >= working.locator(".corner--top").bounding_box()["y"] + 18
-    assert working.locator(".table-card__win").bounding_box()["y"] + window["height"] <= working.locator(".corner--foot").bounding_box()["y"] + 1
-
-
-@pytest.mark.browser
-def test_the_figure_at_the_foots_right_is_the_one_the_state_gives(table):
-    pg, host = table
-    failed = pg.locator('[data-lkey="t:task:seat/s2"]')
-    assert failed.locator(".corner--foot .corner__much .ork-gem").inner_text().strip() == "$1", "a retry spends: its cost"
-    working = pg.locator('[data-lkey="t:task:rules/r1"]')
-    much = working.locator(".corner--foot .corner__much")
-    assert much.count() == 0, "at work with steps and no spend known: nothing known draws nothing (the time is not on the foot: §283.17)"
-    got = pg.evaluate("""async () => { const c = await import('/static/js/table/corners.js');
-      const tok = { tokens: 18000, usd: null, tool: 'codex' }, paid = { tokens: 5000, usd: 0.42, tool: 'claude' };
-      return [c.muchOf({ asks: true, spend: c.figureOf(tok), cost: '$1' }), c.muchOf({ spend: c.figureOf(tok) }), c.muchOf({ spend: c.figureOf(paid) }), c.muchOf({ est: c.figureOf(tok) }), c.muchOf({ est: c.figureOf(paid) }),
-              c.muchOf({ cost: '$2' }), c.muchOf({}), c.muchOf({ spend: c.figureOf({ tokens: 0, usd: null }) }),
-              c.timeWords({ done: true, took: 1080 }), c.timeWords({ left: 240 }), c.timeWords({ left: 240, worked: 30 }), c.timeWords({ worked: 30 }), c.timeWords({ done: true })]; }""")
-    assert got[0] == {"kind": "ask", "text": "asks you"}, "asks you still wins while a question waits"
-    assert got[1] == {"kind": "spend", "unit": "tokens", "text": "18k tok", "est": False}, "a tool with no price (Codex): tokens, no money"
-    assert got[2] == {"kind": "spend", "unit": "usd", "text": "$0.42", "est": False}, "a priced spend with no window measured: money"
-    assert got[3] == {"kind": "spend", "unit": "tokens", "text": "≈ 18k tok", "est": True} and got[4]["text"] == "≈ $0.42" and got[4]["est"] is True, "ahead: an estimate, after ≈"
-    assert got[5] == {"kind": "gem", "text": "$2"} and got[6] is None and got[7] is None, "nothing known draws nothing"
-    assert got[8] == "took 18 min" and got[9] == "4 min left" and got[10] == got[9] and got[11] == "worked 30 s" and got[12] == "", "the time, now in the preview and the tooltip (§283.17), keeps its words"
-
-
-@pytest.mark.browser
 # Goal 170 B: the lane at the wide width draws each goal done as a post (post.js; its act held by tests/test_discard_table_browser.py), so the card's four corners are read on the narrow pile, which keeps DoneFace.
 def test_the_discards_card_has_a_top_row_and_a_foot_row(gui):
     server, browser = gui

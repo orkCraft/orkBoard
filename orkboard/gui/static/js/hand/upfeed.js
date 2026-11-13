@@ -8,18 +8,16 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
-import { Elem, Head, Icon, Sign } from "../orkui.js";
+import { Icon, Sign } from "../orkui.js";
 import { command, looked, town } from "../link.js";
 import { ORKMASTER, openTab, picked, tab } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
-import { nameOf, partiesAll } from "../table/data.js";
-import { raceOf } from "../table/felt.js";
+import { partiesAll } from "../table/data.js";
 import { HeadOf, PostBody, PostCard, PostHead, Stack, Wait, when, whoOf } from "../table/post.js";
 import { pickGoal } from "./entries.js";
 import { workOf } from "./upmenu.js";
 import { Concerns } from "./upparty.js";
-import { cardsOn } from "../cards/on.js";                 // the table of cards on the phone (goal 170 P): the feed in cards (cards/phone.js)
-import { PhoneCards } from "../cards/phone.js";
+import { PhoneCards } from "../cards/phone.js";           // the feed in cards (goal 170 P)
 
 export const FEED = "ideas.feed";
 export const onlyOrk = signal(false);                        // the Orkmaster's head pressed: the feed narrowed to its posts (a party's head narrows by `tab`)
@@ -51,28 +49,6 @@ function useLook(project) {
     return () => { document.removeEventListener("visibilitychange", hide); looked.set(project); };
   }, [project]);
   return since;
-}
-
-/** Goals laid as sideways cards, a button each way (44 px) beside the row that scrolls; a press on a card picks its goal. */
-function Work({ goals, onPick, leader }) {
-  const row = useRef(), [ends, setEnds] = useState({ l: false, r: goals.length > 1 });
-  const edge = () => { const e = row.current; if (e) setEnds({ l: e.scrollLeft > 2, r: e.scrollLeft + e.clientWidth < e.scrollWidth - 2 }); };
-  useEffect(edge, [goals.length]);
-  const by = (dir) => {
-    const e = row.current, c = e?.querySelector(".up-fd__gc");
-    if (!e) return;
-    const still = matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    e.scrollBy({ left: dir * ((c?.offsetWidth || 150) + 8), behavior: still ? "auto" : "smooth" });
-  };
-  return html`<${PostCard} leader=${leader} kind="work" label=${`${whoOf(leader).name}: goals at work`}>
-    <${PostHead} leader=${leader} sub="at work" />
-    <div class="up-fd__car" ref=${row} role="group" aria-label="Goals at work" onScroll=${edge}>${goals.map((r) => html`<button key=${r.slug} type="button" class="ork-card up-fd__gc" data-goal=${r.slug} data-race=${raceOf(r.g) || undefined}
-        aria-label=${`${r.name}: ${r.phase}, ${nameOf(r.g)}`} onClick=${() => onPick(r.slug)}>
-      <span class="up-fd__gtop"><${Elem} name=${r.element} hue=${r.hue} dim=${!r.element} />${r.sign && html`<${Sign} name=${r.sign} />`}</span><span class="up-fd__gcn">${r.name}</span>
-      <span class="up-fd__gfoot">${r.g?.leader?.head && html`<${Head} race=${r.g.leader.head.race} tier=${r.g.leader.head.tier} />`}<span>${r.phase}</span></span></button>`)}</div>
-    ${goals.length > 1 && html`<div class="up-fd__arrows"><button type="button" class="ork-btn up-fd__arrow" aria-label="Previous goals" disabled=${!ends.l} onClick=${() => by(-1)}><${Icon} name="chevron-left" /></button>
-      <button type="button" class="ork-btn up-fd__arrow" aria-label="Next goals" disabled=${!ends.r} onClick=${() => by(1)}><${Icon} name="chevron-right" /></button></div>`}
-  </${PostCard}>`;
 }
 
 /** The one seen line: what came before the last look, its heads small; pressed it spreads its cards, each card's head showing. */
@@ -118,19 +94,8 @@ export function Feed({ g, entries }) {
   const work = only && only !== ORKMASTER ? [] : atWork(), mineWork = g ? atWork(g) : [];
   const news = feed?.since ? `New since your last look · ${when(feed.since)}` : "News";
   const empty = feed && !waits.length && !stacks.length && !work.length && !mineWork.length && !seen;
-  if (cardsOn()) return html`<${PhoneCards} only=${only} party=${g ? g.slug : ""} heads=${html`<${Heads} heads=${heads} only=${only} press=${(l) => pressHead(l, only)} />`} waits=${waits} stacks=${stacks}
+  return html`<${PhoneCards} only=${only} party=${g ? g.slug : ""} heads=${html`<${Heads} heads=${heads} only=${only} press=${(l) => pressHead(l, only)} />`} waits=${waits} stacks=${stacks}
     news=${news} seen=${seen && html`<${Seen} seen=${seen} onPick=${onPick} />`} empty=${empty} onPick=${onPick} reload=${reload} concerns=${g && html`<${ConcernsBlock} g=${g} />`} />`;
-  return html`<div class="up-look up-feed" data-look="feed" data-only=${only || undefined} data-since=${since ?? undefined}>
-    <${Heads} heads=${heads} only=${only} press=${(l) => pressHead(l, only)} />
-    ${only && html`<p class="up-fd__only" role="status">The feed shows only ${whoOf(only).name}</p>`}
-    ${waits.length > 0 && html`<p class="up-lab up-fd__lab">Waits for you</p>${waits.map((w) => html`<${Wait} key=${`${w.kind}:${w.goal}`} w=${w} onPick=${onPick} onDone=${reload} />`)}`}
-    ${g && mineWork.length > 0 && html`<${Work} goals=${mineWork} onPick=${onPick} leader=${g.slug} />`}
-    ${g && html`<${ConcernsBlock} g=${g} />`}
-    ${stacks.length > 0 && html`<p class="up-lab up-fd__lab">${news}</p>${stacks.map((s, i) => html`<${Stack} key=${`${s.leader}:${s.post.at}:${i}`} s=${s} onPick=${onPick} />`)}`}
-    ${work.length > 0 && html`<${Work} goals=${work} onPick=${onPick} leader=${ORKMASTER} />`}
-    ${seen && html`<${Seen} seen=${seen} onPick=${onPick} />`}
-    ${empty && html`<p class="up-none" role="status">Nothing waits for you.</p>`}
-  </div>`;
 }
 
 /** A party's concerns as a block of its leader's, in the feed narrowed to it. */

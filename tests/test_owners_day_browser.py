@@ -93,7 +93,7 @@ def day(gui, request):
     pg.on("console", lambda m: m.type == "error" and not m.text.startswith("Failed to load resource") and errors.append(f"console: {m.text}"))
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
     narrow.no_sideways(pg)
     pg.context.close()
@@ -106,19 +106,6 @@ def wide(w):
 
 def first(pg):
     return pg.locator('.table-lane[data-lane="first"]')
-
-
-def column_ask(pg, slug):
-    """At the wide width: the goal's face-down card picked (spec 156 B, decisions §261.5: no pile list), its lift's menu and **Drop this goal…**, which asks in place; returns the lift (the question lies in it) and the question."""
-    lift = pg.locator('.col-lift[data-lift="acts"]')
-    if not lift.count():
-        pg.locator(f'.col-card--down[data-goal="{slug}"]').click()
-        lift.wait_for(timeout=WAIT_MS)
-    lift.locator(".table-menu__btn").click()
-    lift.get_by_role("menuitem", name="Drop this goal…").click()
-    ask = lift.get_by_role("alertdialog")
-    ask.wait_for(timeout=WAIT_MS)
-    return lift, ask
 
 
 def ask_drop(box):
@@ -134,115 +121,8 @@ def ask_drop(box):
 
 # -- E: a goal sent lies on the table ------------------------------------------------------------------------------------------------------------
 
-def test_a_goal_sent_lies_in_the_orkmasters_lane_at_once_and_in_no_partys(day):
-    pg, host, w = day
-    assert pg.locator('.table-lane[data-party] [data-goal="fresh"]:not([data-assessing])').count() == 0, "not drawn in a party's lane too, but as the back of the leader that is assessing it (spec 168 C3, decisions 283.16.1)"
-    if wide(w):
-        card = pg.locator('.col-card--down[data-goal="fresh"]')                                                           # a card of the column is picked; no pile list (§261.5)
-        card.click()
-        pg.locator('.col-lift[data-lift="acts"]').wait_for(timeout=WAIT_MS)
-        assert card.get_attribute("aria-pressed") == "true"
-        assert pg.locator('.frame-column [data-pile="analysis"] .col-card--down').count() >= 1, "face down in the column's In analysis (spec 128 B.3)"
-        assert pg.locator('.table-lane [data-lkey="t:orc:fresh"]').count() == 0
-        return
-    keys = [e.get_attribute("data-lkey") for e in first(pg).locator("[data-lkey]").all()]
-    assert "t:orc:fresh" in keys, keys
-    pg.locator('[data-lkey="t:orc:fresh"]').click()
-    back = pg.locator(".table-back")
-    back.wait_for(timeout=WAIT_MS)
-    assert "waits for your Talk" in back.inner_text()
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_goal_sent_stays_a_route_card_in_the_hand_while_it_lies_in_the_orkmasters_lane(gui, width):
-    host = DayRoute()
-    pg, log = open_route(gui, host, width)
-    try:
-        if width == "wide":
-            pg.locator('.frame-column .col-card--down').first.wait_for(timeout=WAIT_MS)
-        else:
-            pg.locator('[data-lkey="t:orc:fresh"]').wait_for(timeout=WAIT_MS)
-            assert pg.locator('.table-lane[data-lane="first"] [data-lkey="t:orc:fresh"]').count() == 1
-        assert pg.locator('.hand-lane[data-lane="0"] .hand-card[data-kind="route"][data-goal="fresh"]').count() == 1, "its route card is in the hand too"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
 
 # -- D: drop a goal from its card ----------------------------------------------------------------------------------------------------------------
-
-def test_drop_this_goal_asks_in_place_keep_it_changes_nothing_and_drop_it_sends_ideas_drop(day):
-    pg, host, w = day
-    if not wide(w):                                                                                                       # a lane a token wide: the card's back holds the **…**
-        pg.locator('[data-lkey="t:orc:fresh"]').click()
-        box = pg.locator(".table-back")
-        box.wait_for(timeout=WAIT_MS)
-        ask = ask_drop(box)
-    else:
-        box, ask = column_ask(pg, "fresh")                                                                                # the column's In analysis: Remove asks the same question
-    text = ask.locator(".table-drop__text").text_content()
-    assert ask.locator(".table-drop__title").text_content() == "Drop this goal?" and text == "Its page and its plan go; what it spent stays counted."
-    assert ask.get_by_role("button", name="Keep it").count() == 1 and "danger" in ask.get_by_role("button", name="Drop it").get_attribute("class")
-    ask.get_by_role("button", name="Keep it").click()
-    box.get_by_role("alertdialog").wait_for(state="detached", timeout=WAIT_MS)
-    pg.wait_for_timeout(200)
-    assert not [n for n, _ in host.log if n in ("ideas.drop", "ideas.stop")]
-    ask = ask_drop(box) if not wide(w) else column_ask(pg, "fresh")[1]
-    ask.get_by_role("button", name="Drop it").click()
-    assert _calls(pg, host, "ideas.drop") == [{"slug": "fresh"}] and not [n for n, _ in host.log if n == "ideas.stop"]
-    pg.locator('[data-lkey="t:orc:fresh"], .col-card[data-goal="fresh"]').wait_for(state="detached", timeout=WAIT_MS)
-
-
-def test_a_goal_with_tasks_running_stops_its_work_first_and_says_so(day):
-    pg, host, w = day
-    assert any(t["state"] == "running" for n in host.nodes if n["slug"] == "bar" for t in n["tasks"])
-    if wide(w):
-        pytest.skip("a goal at work lies in the column's At work pile (spec 128 B.3) and is not dropped from it: its work stops with Stop all")
-    pg.locator('[data-lkey="t:orc:bar"]').click()
-    box = pg.locator(".table-back")
-    box.wait_for(timeout=WAIT_MS)
-    ask = ask_drop(box)
-    assert ask.locator(".table-drop__text").text_content() == "Its page and its plan go; what it spent stays counted. Its work stops first."
-    ask.get_by_role("button", name="Drop it").click()
-    _calls(pg, host, "ideas.drop")
-    sent = [(n, a) for n, a in host.log if n in ("ideas.stop", "ideas.drop")]
-    assert sent == [("ideas.stop", {"slug": "bar"}), ("ideas.drop", {"slug": "bar"})], sent
-
-
-def test_a_refusal_is_said_in_the_card_the_orkmaster_reading_it_in_its_own_words(day):
-    pg, host, w = day
-    host.refuse = REFUSED
-    if not wide(w):
-        pg.locator('[data-lkey="t:orc:fresh"]').click()
-        box = pg.locator(".table-back")
-        box.wait_for(timeout=WAIT_MS)
-        ask = ask_drop(box)
-    else:
-        box, ask = column_ask(pg, "fresh")
-    ask.get_by_role("button", name="Drop it").click()
-    ask.get_by_role("alert").wait_for(timeout=WAIT_MS)
-    assert ask.get_by_role("alert").inner_text() == SAID, "the host's words are said in the person's"
-    assert ask.get_by_role("button", name="Drop it").is_enabled() and box.get_by_role("alertdialog").count() == 1, "the question stays; the goal is still there"
-    assert pg.locator('[data-lkey="t:orc:fresh"], .col-card[data-goal="fresh"]').count() == 1
-    host.refuse = "Nothing to drop here"
-    ask.get_by_role("button", name="Drop it").click()
-    pg.get_by_text("Nothing to drop here").wait_for(timeout=WAIT_MS)                                                      # any other refusal is said as it came
-    ask.get_by_role("button", name="Keep it").click()
-    box.get_by_role("alertdialog").wait_for(state="detached", timeout=WAIT_MS)
-
-
-def test_esc_closes_the_question_and_gives_the_focus_back_to_the_menu_button(day):
-    pg, host, w = day
-    if wide(w):
-        pytest.skip("the column's Remove opens the question with the same Keep it focused; Esc keeps the goal (tests/test_column_browser.py)")
-    pg.locator('[data-lkey="t:orc:fresh"]').click()
-    box = pg.locator(".table-back")
-    ask_drop(box)
-    pg.wait_for_function("() => document.activeElement && document.activeElement.textContent.trim() === 'Keep it'", timeout=WAIT_MS)      # the safe answer has the focus (set once it is drawn)
-    pg.keyboard.press("Escape")
-    box.get_by_role("alertdialog").wait_for(state="detached", timeout=WAIT_MS)
-    assert "table-menu__btn" in pg.evaluate("() => document.activeElement.className")
-    assert not [n for n, _ in host.log if n == "ideas.drop"]
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -281,121 +161,10 @@ def test_a_goals_face_over_the_pane_has_the_menu_in_its_head(gui):
     assert not log, "\n".join(log)
 
 
-def test_under_touch_the_menu_button_and_the_answers_are_44_by_44(gui):
-    """A touch screen wide enough for the table (1280 px); the menu button of the picked card's lift and the two answers are each a 44 px target (spec 94 §1.3)."""
-    server, browser = gui
-    errors: list[str] = []
-    host = DayHost(line=4)
-    pg = browser.new_context(viewport={"width": 1280, "height": 800}, has_touch=True).new_page()
-    pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    try:
-        pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
-        pg.locator('.col-card--down[data-goal="fresh"]').click()
-        lift = pg.locator('.col-lift[data-lift="acts"]')
-        lift.wait_for(timeout=WAIT_MS)
-        box = lift.locator(".table-menu__btn").bounding_box()
-        assert box["height"] >= 43.5 and box["width"] >= 43.5, box
-        ask = column_ask(pg, "fresh")[1]
-        for el in ask.get_by_role("button").all():
-            b = el.bounding_box()
-            assert b["height"] >= 43.5, b
-        assert lift.get_by_role("alertdialog").count() == 1
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
-
-
 # -- G: what works shows the flame (spec 111 §3.1, decisions §187.2; the steps and the dotted line of spec 107 §7 are gone) --------------------------------------------------------------------------------------------------------------------------
 
 WORKING = '.table-card[data-state="running"], .table-card[data-state="testing"]'
-DRAWING = ".table-card__win > *"
 
 
 def anim(el, pseudo=""):
     return el.evaluate("(e, p) => { const s = getComputedStyle(e, p || null); return [s.animationName, s.animationDuration, s.animationTimingFunction]; }", pseudo)
-
-
-def test_a_task_card_at_work_shows_the_flame_and_says_the_time_it_has_worked_and_nothing_else_moves(day):
-    pg, host, w = day
-    if not wide(w):
-        pytest.skip("a lane a token wide has no stage word: its token's rune glows, tested below")
-    card = pg.locator('.table-card[data-task="r1"]')
-    assert card.get_attribute("data-state") == "running"
-    flame = card.locator(".corner--top .ork-elem.is-glowing")                                                          # the goal's rune glowing, the top corner's (spec 147 A, decisions §251.2; spec 111 §3.1)
-    assert flame.count() == 1 and card.locator(".table-stage").count() == 0
-    name, duration, timing = anim(flame)
-    still = "is-still" in flame.get_attribute("class")                                                                    # one place moves at a time (spec 140 C3): a goal that does not move keeps its flame lit, still
-    assert name == ("none" if still else "ork-glow") and (still or (duration == "2.4s" and timing.startswith("steps(6"))), (name, duration, timing)
-    assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none", "the stepping drawing and the dotted line of before are gone"
-    assert card.evaluate("e => getComputedStyle(e, '::after').backgroundImage") in ("none", "")
-    words = card.get_attribute("title").split(" · ", 1)[-1].strip()                                                    # spec 168 C5: the foot's figure is the spend; the time worked is in the card's tooltip
-    assert words.lower().startswith("worked 1 m "), words
-    ticked = card.get_attribute("title")
-    pg.wait_for_function("([sel, was]) => document.querySelector(sel).title !== was", arg=['.table-card[data-task="r1"]', ticked], timeout=3000)   # it ticks
-    pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")           # (a failed task's card lies as a place while its failure is in the hand, spec 128 C.2: here it is put back to be looked at)
-    waiting = pg.locator('.table-card[data-state="failed"]').first
-    assert waiting.locator(".ork-elem.is-glowing").count() == 0 and waiting.locator(".corner--top .ork-elem").count() == 1, "what does not work shows no flame (its rune stands)"
-    assert "worked" not in waiting.locator(".corner--foot").inner_text(), "and counts no time"
-
-
-def test_a_token_at_work_has_its_rune_glow_at_the_narrow_width(day):
-    pg, host, w = day
-    if wide(w):
-        pytest.skip("the narrow width's")
-    token = pg.locator('.table-token[data-state="running"]').first
-    token.wait_for(timeout=WAIT_MS)
-    assert anim(token.locator(".ork-elem"))[0] == ("none" if "is-still" in token.locator(".ork-elem").get_attribute("class") else "ork-glow") and anim(token.locator(DRAWING).first)[0] == "none"
-    assert anim(pg.locator('.table-token[data-state="failed"]').first.locator(".ork-elem"))[0] == "none"
-
-
-def test_a_card_whose_state_changed_flashes_its_frame_twice_once_and_then_is_still(day):
-    pg, host, w = day
-    if not wide(w):
-        pytest.skip("the flash is the card's")
-    card = pg.locator('.table-card[data-task="r1"]')
-    assert card.count() == 1 and "is-changed" not in card.get_attribute("class"), "none on the first read"
-    for n in host.nodes:
-        for t in n["tasks"]:
-            if t["id"] == "r1":
-                t["state"] = "testing"
-    host.push()
-    card = pg.locator('.table-card[data-task="r1"][data-state="testing"]')
-    card.wait_for(timeout=WAIT_MS)
-    got = pg.evaluate_handle("""() => new Promise((resolve) => {              // read in the one frame the class appears in: it lasts 0.65 s, and a busy machine is slow
-        const el = document.querySelector('.table-card[data-task="r1"]');
-        const read = () => { if (!el.classList.contains('is-changed')) return requestAnimationFrame(read);
-          const s = getComputedStyle(el); resolve([s.animationName, s.animationDuration, s.animationTimingFunction, s.animationIterationCount]); };
-        read();
-    })""").json_value()
-    name, duration, timing, count = got
-    assert name == "table-flash" and duration == "0.3s" and timing.startswith("steps(2") and count == "2", got           # twice: 2 x 0.3 s
-    pg.wait_for_function("() => !document.querySelector('.table-card[data-task=\"r1\"]').classList.contains('is-changed')", timeout=3000)
-    assert anim(card)[0] == "none"
-    host.push()                                                                                                         # a redraw with the same state flashes nothing
-    pg.wait_for_timeout(300)
-    assert "is-changed" not in card.get_attribute("class")
-
-
-def test_under_reduced_motion_nothing_moves_the_flame_stands_and_the_time_still_ticks(day):
-    pg, host, w = day
-    if not wide(w):
-        pytest.skip("the card's")
-    pg.emulate_media(reduced_motion="reduce")
-    card = pg.locator('.table-card[data-task="r1"]')
-    flame = card.locator(".corner--top .ork-elem.is-glowing")
-    assert anim(flame)[0] == "none" and flame.evaluate("e => getComputedStyle(e).opacity") == "1", "the flame stands, at full strength"
-    assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none"
-    was = card.get_attribute("title")
-    assert "worked" in was
-    for n in host.nodes:
-        for t in n["tasks"]:
-            if t["id"] == "r1":
-                t["state"] = "testing"
-    host.push()
-    pg.locator('.table-card[data-task="r1"][data-state="testing"]').wait_for(timeout=WAIT_MS)
-    pg.wait_for_timeout(300)
-    assert anim(pg.locator('.table-card[data-task="r1"]'))[0] == "none", "no flash either"
-    pg.wait_for_function("([sel, was]) => document.querySelector(sel).title !== was", arg=['.table-card[data-task="r1"]', was], timeout=3000)
-    pg.emulate_media(reduced_motion="no-preference")

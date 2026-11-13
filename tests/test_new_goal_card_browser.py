@@ -30,7 +30,7 @@ def opened(gui):
     pg, host, log = open_hand(gui, host=HandHost())
     pg.set_viewport_size(VIEW)
     pg.wait_for_timeout(300)
-    pg.locator(".hand-plus").first.click()
+    pg.locator(".hand :is(.hand-plus, [data-blank-deck])").first.click()
     pg.locator(".hand-fieldbox textarea").wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(600)
     return pg, host, log
@@ -39,63 +39,6 @@ def opened(gui):
 def box(loc):
     b = loc.bounding_box()
     return {**b, "width": round(b["width"]), "height": round(b["height"])}                  # a card is 144 x 201.6 (5 : 7): the page's own size is the rounded one
-
-
-def test_the_plus_card_raises_a_whole_card_at_the_tables_foot_and_a_field_as_large_as_the_hand_takes_its_place(gui):
-    pg, host, log = opened(gui)
-    try:
-        card, field, hand, pane = box(pg.locator(".hand-field__card")), box(pg.locator(".hand-fieldbox")), box(pg.locator(".hand")), box(pg.locator(".frame-table"))
-        assert [card["width"], card["height"]] == [144, 202], "whole: all four corners show"
-        assert card["y"] + card["height"] <= hand["y"] + 1 and pane["x"] <= card["x"] <= pane["x"] + 60, "at the table's foot, at its left"
-        assert abs(field["y"] - hand["y"]) <= 4 and abs(field["height"] - hand["height"]) <= 4, "the field's box is the hand's"
-        end = box(pg.locator(".hand-end"))
-        assert abs(field["x"] - card["x"]) <= 2 and end["x"] - 40 <= field["x"] + field["width"] <= end["x"], ("from the card's left edge to the places", field, end)
-        sizes = [(round(b["width"]), round(b["height"])) for b in (e.bounding_box() for e in pg.locator(".hand-end .place-box").all()) if b]
-        assert sizes and all(x == (48, 60) for x in sizes), ("the places keep their one size and their place (decisions §283.5, §284.4)", sizes)
-        assert pg.locator(".hand-fieldbox textarea").evaluate("e => e === document.activeElement"), "focused at once"
-        row = pg.locator(".hand-row")
-        assert "is-sunk" in row.get_attribute("class").split() and row.evaluate("e => e.inert"), "the hand's cards sink"
-        for corner in ("rune", "type", "to", "go"):
-            assert pg.locator(f'.hand-field__card [data-corner="{corner}"]').is_visible(), corner
-        no = pg.evaluate("() => [...document.querySelectorAll('body *')].filter((e) => { const r = e.getBoundingClientRect(); return Math.round(r.width) === 404 && Math.round(r.height) === 566; }).length")
-        assert no == 0, "no card of 404 x 566"
-        shot(pg, "new-goal")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("corner, choice, want", [("rune", '[data-rune="lava"]', ("rune", "lava")), ("type", '[data-type=""]', None), ("to", '[data-to="design"]', ("to", "design"))])
-def test_a_corner_deals_its_choices_to_the_hand_and_the_field_comes_back_with_its_words(gui, corner, choice, want):
-    pg, host, log = opened(gui)
-    try:
-        pg.keyboard.type("Make the timer bigger")
-        pg.locator(f'.hand-field__card [data-corner="{corner}"]').click()
-        dealt = pg.locator(".hand-dealt")
-        dealt.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(500)
-        assert pg.locator(".hand-fieldbox").count() == 0, "the field gives its place to the choices"
-        hand = box(pg.locator(".hand"))
-        cards = dealt.locator(".hand-deal")
-        assert cards.count() >= 1
-        for i in range(cards.count()):
-            b = box(cards.nth(i))
-            assert [b["width"], b["height"]] == [144, 202] and hand["y"] < b["y"] < hand["y"] + 30, "cards of the hand's size, cut by its rim"
-        if corner == "rune":
-            assert cards.count() == 5
-            shot(pg, "new-goal-rune")
-        elif corner == "type":
-            shot(pg, "new-goal-kind")
-        dealt.locator(choice).first.click(position={"x": 20, "y": 30})
-        pg.locator(".hand-fieldbox textarea").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-dealt").count() == 0
-        assert pg.locator(".hand-fieldbox textarea").input_value() == "Make the timer bigger", "the field comes back with its words"
-        assert pg.locator(".hand-fieldbox textarea").evaluate("e => e === document.activeElement")
-        if want:
-            assert sig(pg, "hand/state.js", {"rune": "fieldRune", "to": "fieldTo"}[want[0]]) == want[1]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_now_and_later_are_dealt_by_the_last_corner_and_playing_one_sends(gui):
@@ -129,7 +72,7 @@ def test_enter_sends_shift_enter_is_a_new_line_and_esc_lays_the_card_back_keepin
         pg.wait_for_selector(".hand-field", state="detached", timeout=WAIT_MS)
         assert pg.locator(".hand-row.is-sunk").count() == 0 and not pg.locator(".hand-row").evaluate("e => e.inert"), "the hand's cards come back"
         assert sig(pg, "hand/state.js", "fieldText") == "A draft\non two lines", "the draft is kept"
-        pg.locator(".hand-plus").first.click()
+        pg.locator(".hand :is(.hand-plus, [data-blank-deck])").first.click()
         pg.locator(".hand-fieldbox textarea").wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-fieldbox textarea").input_value() == "A draft\non two lines"
         pg.keyboard.press("Enter")

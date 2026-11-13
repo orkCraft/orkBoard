@@ -7,7 +7,6 @@ import { signal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { ORKMASTER } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
-import { turnFly } from "../table/turnfly.js";
 
 export const reduced = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -55,21 +54,20 @@ export function fromWhere({ goal = "", party = "", ork = false, task = "" } = {}
   }
   const own = goal && task ? find(`.frame-table [data-goal="${name}"][data-task="${CSS.escape(String(task))}"]`) : null;                  // the asking (or failed) task's own card first
   if (own) return { el: own, at: "goal" };
-  const card = goal ? [".frame-table .table-card", ".frame-table .table-token", ".frame-table .table-goal", ".frame-column .col-card"].map((k) => find(`${k}[data-goal="${name}"]`)).find(Boolean) : null;       // its own card, else its token, else its block, else its card in the Orkmaster's column (spec 128 B)
+  const card = goal ? find(`.frame-table .table-card[data-goal="${name}"]`) : null;       // its own card
   if (card) return { el: card, at: "goal" };
   const slug = ork ? ORKMASTER : party, tab = slug ? find(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"], .frame-column .col-head__tab[data-tab="${CSS.escape(slug)}"]`) : null;
   return tab ? { el: tab, at: "tab" } : null;
 }
 
-/** The head of who plays a card, at its origin (spec 120 §6.9): the leader's head under the goal's face-down card (`.table-back-head`), else the leader's tab head (the Orkmaster's for what the Orkmaster plays); on the phone the crown's. `where`: `fromWhere`'s. */
+/** The head of who plays a card, at its origin (spec 120 §6.9): the leader's tab head (the Orkmaster's for what the Orkmaster plays); on the phone the crown's. `where`: `fromWhere`'s. */
 export function headAt(where, { party = "", ork = false } = {}) {
   if (!where?.el) return null;
   const head = (root) => root?.querySelector?.(".ork-race__head") || null;
   if (where.at === "crown" || uprightNow.value) return head(document.querySelector(".up-crown"));
   const slug = ork ? ORKMASTER : party;
-  const under = !ork && party && where.at === "goal" ? head(where.el.closest(".table-cardwrap")?.querySelector(`.table-back-head[data-party="${CSS.escape(party)}"]`)) : null;
   const tab = slug ? [...document.querySelectorAll(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"], .frame-column .col-head__tab[data-tab="${CSS.escape(slug)}"]`)].find((el) => boxIn(el)) : null;
-  return under || (tab ? head(tab) || head(tab.closest(".table-tabcell")) : null);            // the open tab's head stands beside its button, in its cell (spec 123 §7.2)
+  return tab ? head(tab) || head(tab.closest(".table-tabcell")) : null;            // the open tab's head stands beside its button, in its cell (spec 123 §7.2)
 }
 
 /** One beat on a head: orkUI's `.ork-gives` is put on and taken off at its `animationend` named `ork-give` (nothing plays under reduced motion; orkUI's rule says so too, and the class is not put on). */
@@ -119,7 +117,7 @@ export function useHanded(items) {
       came.forEach((c, i) => {
         const where = flying < FLY_MAX ? fromWhere(c) : null;
         if (where) flying++;
-        live.current[c.key] = { i, ...(where ? { el: where.el, head: headAt(where, c), ...(where.el.matches?.(".col-card--deck, .col-card--spec") ? { back: true } : {}) } : {}), ...(hold ? { hold: true } : {}) };
+        live.current[c.key] = { i, ...(where ? { el: where.el, head: headAt(where, c) } : {}), ...(hold ? { hold: true } : {}) };
       });
       const begin = (drawing = false) => {                                    // the deal begins (while this very draw, or when the pointer is up)
         if (begun) return;
@@ -148,7 +146,6 @@ export function useFlight(ref, dealt, copy = false) {
     if (!dealt.el) return undefined;
     const origin = boxIn(dealt.el);
     if (origin) give(dealt.head);                                                       // the head of who plays it gives it: one beat at the origin, as the card is let go
-    if (origin && dealt.back) return turnFromBack(el, origin);                 // a goal that asks: its back in To review lifts, turns up and stands on its way (spec 147 E.2)
     if (copy && origin) return flyCopy(el, origin, dealt.i);
     if (origin) {
       const v = between(el.getBoundingClientRect(), origin);
@@ -159,16 +156,6 @@ export function useFlight(ref, dealt, copy = false) {
     const t = setTimeout(() => el.classList.remove("ork-deal"), DEAL_MS + (dealt.i + 1) * tokenMs("--ork-motion-deal-gap", 40));
     return () => { clearTimeout(t); el.classList.remove("ork-deal"); };                 // the deal is over (the card is not handed any more) or begins again
   }, [dealt?.hold, dealt?.el]);
-}
-
-/** A goal that asks the person (spec 147 E.2, decisions §251.7): its back in To review (`origin`, lying on its side, its ring in the alert) lifts, turns to its face and stands on its way to its place in the hand; the real card is hidden until it lands. */
-function turnFromBack(el, origin) {
-  const to = el.getBoundingClientRect();
-  el.style.visibility = "hidden";
-  const fly = turnFly({ from: origin, to, face: el, sideways: true, asks: true, ms: DEAL_MS - 60, easing: ease(), kind: "hand" });
-  const done = () => { el.style.visibility = ""; };
-  fly.finished.then(done, done);
-  return () => { fly.cancel(); done(); };
 }
 
 /** A card whose row clips what flies in it (a phone's row scrolls sideways): a copy of it flies over everything from `origin` to its place while the real card is hidden, and takes the pointer when the copy has landed. */
