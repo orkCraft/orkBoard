@@ -273,3 +273,20 @@ def test_the_one_post_imports_none_of_the_windows_state_the_store_or_the_phones_
     text = (ROOT / "gui/static/js/table/post.js").read_text(encoding="utf-8")
     mods = re.findall(r'^import .* from "([^"]+)"', text, re.M)
     assert mods and not [m for m in mods if any(x in m for x in ("frame/", "shell/", "pwa/", "data.js", "board/"))], mods
+
+
+def test_the_phone_has_one_face_the_frame_around_the_page():
+    """Spec 94 §5.3: the phone's app is the desktop's page in its frame, so nothing lies under pwa/ but what its page (index.html), its worker
+    and its manifest name and the modules frame.js imports; a face is under js/. The old face (old.html, board-app.js, shell-*.js, app.css) stays gone."""
+    import json
+    import re
+    pwa = ROOT / "gui/static/pwa"
+    reached = {"index.html", "sw.js", "manifest.webmanifest", *re.findall(r'(?:src|href)="([^"/:#]+)"', (pwa / "index.html").read_text(encoding="utf-8"))}
+    reached |= {icon["src"] for icon in json.loads((pwa / "manifest.webmanifest").read_text(encoding="utf-8"))["icons"]}
+    todo = [name for name in reached if name.endswith(".js")]
+    while todo:
+        for name in re.findall(r'(?:from|import)\s*\(?\s*"\./([^"/]+\.js)"', (pwa / todo.pop()).read_text(encoding="utf-8")):
+            if name not in reached:
+                reached.add(name)
+                todo.append(name)
+    assert sorted(p.name for p in pwa.iterdir() if p.is_file() and p.name not in reached) == []

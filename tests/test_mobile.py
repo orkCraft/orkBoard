@@ -38,7 +38,7 @@ def test_a_phone_may_send_the_boards_commands_and_halt_but_not_build_or_type(fak
     for name in ("town.build", "town.demolish", "term.input", "sessions.new", "hut.move", "roads.lay",
                  "orders.answer", "phones.pair", "update.policy", "update.restart", "link.open"):
         assert not may(name, {}), name
-    assert may("update.check") and may("update.install")         # a newer version, installed from the phone (shell-update.js)
+    assert may("update.check") and may("update.install")         # a newer version, installed from the phone (js/shell/update.js)
     assert may("repair.start") and may("repair.stop") and may("repair.update")   # Fix it (spec 119 §3.3, decisions §197.4)
 
 
@@ -93,7 +93,7 @@ async def test_the_version_handshake_takes_the_token(fake_repo):
 
 
 def test_the_phone_sees_a_newer_version_small_and_installs_it(fake_repo, monkeypatch):
-    """A newer Orkline on the phone (pwa/shell-update.js): what it is and a few notes, then `update.install` from the
+    """A newer Orkline on the phone (js/shell/update.js): what it is and a few notes, then `update.install` from the
     phone installs it on the computer, which restarts on it (gui/updates.py)."""
     from types import SimpleNamespace
     from orkboard.core import updates

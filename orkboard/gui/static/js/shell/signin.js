@@ -5,7 +5,7 @@
 // - says what is going on in a toast: while the sign-in is open (in the browser, or in a terminal's own window) it stays; then
 //   *signed in* with how much goes on by itself, or *did not finish*;
 // - gives every line of a failure that a sign-in helps its **Sign in** (`SignInButton`, `entryFor`).
-// The phone shows the wait and opens nothing (pwa/shell-needs.js): this file is the desktop's.
+// The phone shows the wait and opens nothing: this file is the desktop's.
 import { useEffect } from "preact/hooks";
 import { html } from "../html.js";
 import { town, toast, toasts, dismiss, command, copyText } from "../link.js";

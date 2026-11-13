@@ -1,5 +1,5 @@
 """Spec 37 C on the Review card, in a real browser: the tests' line reads `ran` first, then `null` counts as the exit code,
-then the counts as today — desktop at 1 440 × 900 (a stub host's results; the phone's is in test_gate_phone_browser.py). Screenshots go to the folder
+then the counts as today — desktop at 1 440 × 900 (a stub host's results). Screenshots go to the folder
 named by GATE_SHOTS when it is set."""
 from __future__ import annotations
 
@@ -11,8 +11,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_pwa_shell_browser import task  # noqa: E402
-from tests.test_shell_browser import StubHost, _open  # noqa: E402
+from tests.test_shell_browser import StubHost, _open, task  # noqa: E402
 
 pytestmark = pytest.mark.browser
 

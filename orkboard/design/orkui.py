@@ -27,7 +27,7 @@ SOURCE = "https://github.com/orkCraft/orkUI"
 LOOK = "office"
 OWN = ("LICENSE", "NOTICE")           # orkUI's own, beside the look's files
 SKIP = ("emblems",)                   # what of `office/` the window does not draw: not copied, not stamped (spec 96 §1);
-                                      # `moons/` and the goal types' signs stay, the phone still draws them (until spec 94 E)
+                                      # `moons/` stays (components.css masks them) and so do the goal types' signs (the page draws them)
 
 
 def _files(root: Path, skip: tuple[str, ...] = ()) -> dict[str, str]:

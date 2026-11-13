@@ -5,7 +5,7 @@ import { html } from "../html.js";
 import { toast } from "../link.js";
 
 export const MAX_PICTURES = 4;                     // realm/idea_photos.py MAX_PHOTOS
-export const MAX_PX = 1600;                        // as the phone's (pwa/shell-idea-field.js): a JPEG of at most this, for the leader to read
+export const MAX_PX = 1600;                        // a JPEG of at most this, for the leader to read
 export const PICTURE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
 /** A picture the person likes, as `ideas.add`'s `photos` takes it: a JPEG of at most MAX_PX on its longer side, as a data URL. */

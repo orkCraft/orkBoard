@@ -321,7 +321,7 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 .table-logs__text { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
 .table-logs__error { margin: 0; max-height: 160px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: var(--ork-3); background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink); font: var(--ork-type-caption); }
 /* the fix's states (spec 119 §4, decisions §197; the pictures are logsbtn.js `PICTURES`): the hammer over the bug's lower right as the glass was, striking while Claude works (orkUI's
-   `is-striking`), a sign over it (failed's cross) the same; ready is the one state in a colour: the signal the update's own notice wears (pwa/app.css `.update-bar.is-critical`), so the
+   `is-striking`), a sign over it (failed's cross) the same; ready is the one state in a colour: the signal (`--ork-alert`), so the
    eye finds it; working and failed are the ink */
 .table-logs__pic > .ork-sign:not(.big) { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; color: var(--ork-ink);
   filter: drop-shadow(1px 0 0 var(--ork-canvas)) drop-shadow(-1px 0 0 var(--ork-canvas)) drop-shadow(0 1px 0 var(--ork-canvas)) drop-shadow(0 -1px 0 var(--ork-canvas)); }

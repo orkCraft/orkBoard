@@ -19,7 +19,7 @@ def test_link_js_has_no_proposed():
 
 
 def test_no_face_reads_a_proposed_part_from_link_js():
-    """`proposed(` as a call: the pwa's own `proposed(core)` (pwa/shell-proposals.js) is another thing and stays."""
+    """`proposed(` as a call with a part's name: a call with anything else (`proposed(core)`) is another thing."""
     calls = re.compile(r"(?<![\w.])proposed\(\s*[\"']")
     found = [str(p.relative_to(STATIC)) for p in SOURCES if MOCK not in p.parents and calls.search(text(p))]
     assert not found, found

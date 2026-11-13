@@ -321,7 +321,7 @@ def test_the_words_of_a_goal_complete_new_idea_titles_first_then_its_terms(host)
 
 
 def test_needs_you_carries_every_question_with_its_likely_answers_and_one_answered_on_the_phone_leaves_the_rest_to_decide(host, model):
-    """The phone answers a question in its card (shell-needs.js): the row carries the questions, the Taskmaster is asked to end
+    """The phone answers a question in its card: the row carries the questions, the Taskmaster is asked to end
     each with its likely answers "(one / other)", and a goal's answers may be fewer than its questions."""
     model.answers["goal"] = {"summary": "Installs first.", "questions": ["Which channel first? (npm / brew)", "Which week?"], "metrics": []}
     slug = host.command("ideas.goal_save", GOAL)["slug"]
