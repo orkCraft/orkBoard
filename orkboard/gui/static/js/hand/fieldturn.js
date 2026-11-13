@@ -100,7 +100,7 @@ export function turnBack(box) {
 /** The card's width on the table (frame.css `--card-w`). */
 const cardWidth = () => parseFloat(token("--card-w", "") || getComputedStyle(document.querySelector(".frame-table") || document.body).getPropertyValue("--card-w")) || 144;
 
-/** Sent (spec 147 D.2, decisions §251.3): the card turns face down where the field lay, its goal's rune lights in the middle of its back, and the back, scaling to 56 x 78, flies into the Orkmaster's fan (the goal's back there, `.col-card[data-goal]`) where it lies at the end:
+/** Sent (spec 147 D.2, decisions §251.3): the card turns face down where the field lay, its goal's rune lights in the middle of its back, and the back, scaling to 56 x 78, flies to the goal's card on the table where it lies at the end:
  *  the turn, the light, the flight, about 1.4 s in all; the real back is hidden until the copy lands. With no place in view (a phone has no column) the copy turns and is taken away. Nothing under reduced motion (the back is in the fan at once). `box`: the field's box;
  *  `goal`: `{slug, element, hue, name}`. */
 export async function sendBack(box, goal) {
@@ -123,7 +123,7 @@ export async function sendBack(box, goal) {
     await new Promise((r) => { const t = setTimeout(r, play + 60); g.addEventListener("transitionend", (e) => { if (e.propertyName === "transform") { clearTimeout(t); r(); } }, { once: true }); });
     rune?.animate([{ transform: "scale(1)" }, { transform: "scale(1.5)", offset: 0.45 }, { transform: "scale(1)" }], { duration: play * 1.1, easing: ease() });      // the rune lights in the middle of the back
     for (let tries = 0; tries < 20 && !target; tries++) {                                // the Board answers in a moment: the goal's back is drawn in the fan
-      target = [...document.querySelectorAll(`.frame-column .col-card[data-goal="${CSS.escape(goal.slug)}"], .frame-table .table-card[data-goal="${CSS.escape(goal.slug)}"]`)].find((el) => boxIn(el)) || null;      // its back in the column (spec 128 B), else its card on the table
+      target = [...document.querySelectorAll(`.frame-table .table-card[data-goal="${CSS.escape(goal.slug)}"]`)].find((el) => boxIn(el)) || null;      // its card on the table
       if (!target) await new Promise((r) => setTimeout(r, 100));
     }
     const to = target?.getBoundingClientRect();
