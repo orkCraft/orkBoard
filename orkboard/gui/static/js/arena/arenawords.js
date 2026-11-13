@@ -142,9 +142,6 @@ export function rowsOf(list, nodes) {
 /** The role of ideas.agents behind a party member. */
 export const roleOf = (agents, slug) => (agents?.roles || []).find((r) => r.role === slug) || null;
 
-  return named ? named[1] : TIER_WORDS[id] ? "" : id;
-};
-
 /** A member's two numbers, its price, its marks and the words that say them (§5.2). `lead`: the leader (plans, not runs). */
 export function statsOf(m, role, lead = false) {
   const w = role?.week || null, cw = role?.check_week || null;
