@@ -4,7 +4,9 @@ refuses the other in words.
 
     ideas.battle {idea}        # {idea, against: [{number, title, point, rests: {goals, decisions, tests}}], cost: {calls, usd_high}}: one entry for each conflict of the goal's decision not answered
     ideas.gate_guards {idea}   # {idea, way: "dev" | "main", failing: [{number, title, ids}], files: [{file, ids}], agreeing: [{number, title}], cost}: the decisions the gate's tests name;
-                               #   `cost` on the way to dev what its stage again is capped at (core/idea_fix_stage.py `COST`: not known yet), None on the way to main
+                               #   `cost` on the way to dev what its stage again is capped at (core/idea_fix_stage.py `COST`: not known yet), None on the way to main.
+                               #   The §N are the ones the gate's record kept, read in the tree the gate ran in (`named`, stage N3); a record written before that is read here
+                               #   in the person's checkout
     ideas.gate_fix_goal {idea, from}            # a goal done in dev whose way to main went red: a new goal *Fix: <the failing tests>* marked `fixes: <idea>`, routed to Tech, laid as
                                                 #   `ideas.add` lays one, no model; one press, its Undo (`ideas.undo {idea}`) removes it while it is as laid. The done page is never touched
     ideas.gate_fix_stage {idea, sealed, from}   # a goal unmerged on its own branch whose way to dev went red: its stage again (core/idea_fix_stage.py), only on its seal, its cost said
@@ -64,35 +66,46 @@ class Battle:
                    for c in decision_conflicts.open_of(decision)]
         return {"idea": slug, "against": against, "cost": self.i._cost_of_word(slug)}
 
-    def _last_gate(self, slug: str) -> tuple[str, list[str], list[str]]:
-        """(way, the failing test ids, the test files the run ran) of the goal's last gate: on its branch unmerged, the way to dev (stage E's record); else the way to main (the Tests step's record)."""
+    def _last_gate(self, slug: str) -> tuple[str, list[str], list[str], dict | None]:
+        """(way, the failing test ids, the test files the run ran, what they name read where it ran) of the goal's last gate: on its branch unmerged, the way to dev
+        (stage E's record); else the way to main (the checks' records). The last is None for a record written before the §N were kept with it (stage N3)."""
         if goal_branch.in_use(self.i.state_dir, slug):
             rec = goal_branch.read(self.i.state_dir, slug)
-            return "dev", [str(x) for x in rec.get("failing") or []], [str(x) for x in rec.get("files") or []]
+            named = rec.get("named") if isinstance(rec.get("named"), dict) else None
+            return "dev", [str(x) for x in rec.get("failing") or []], [str(x) for x in rec.get("files") or []], named
         with self.i._main_lock:
-            steps = list((self.i._main_checks.get(slug) or {}).get("checks") or [])
+            steps = [s for s in (self.i._main_checks.get(slug) or {}).get("checks") or [] if s.get("failures") or s.get("files")]
         ids = [str(f["id"]) for s in steps for f in s.get("failures") or [] if isinstance(f, dict) and f.get("id")]
         files = [str(x) for s in steps for x in s.get("files") or []]
-        return "main", list(dict.fromkeys(ids)), list(dict.fromkeys(files))
+        kept = [s.get("named") for s in steps]
+        named = None if not all(isinstance(k, dict) for k in kept) else {
+            "failing": [g for k in kept for g in k.get("failing") or []], "files": sorted({n for k in kept for n in k.get("files") or []}),
+            "titles": {t: v for k in kept for t, v in (k.get("titles") or {}).items()}}
+        return "main", list(dict.fromkeys(ids)), list(dict.fromkeys(files)), named
 
     def gate_guards(self, args: dict) -> dict:
         slug = self._goal(args)
-        way, ids, ran = self._last_gate(slug)
+        way, ids, ran, named = self._last_gate(slug)
         repo = Path(self.i.host.repo_root)
         titles = _titles(repo)
+        if named is None:                                     # a record written before the §N were kept where the gate ran: read in the person's checkout, as before
+            named = {"failing": decision_refs.guards(repo, ids, limit=NAMED_MAX), "files": decision_refs.named_by(repo, ran), "titles": {}}
+        titles.update({int(k): str(v) for k, v in (named.get("titles") or {}).items() if str(k).isdigit() and v})     # the titles where the gate ran win
+        read = {str(g.get("id")): g for g in named.get("failing") or [] if isinstance(g, dict)}
         by_number: dict[int, list[str]] = {}
         by_file: dict[str, list[str]] = {}
-        for g in decision_refs.guards(repo, ids, limit=NAMED_MAX):
-            if g["decisions"]:
-                for n in g["decisions"]:
-                    by_number.setdefault(n, []).append(g["id"])
+        for tid in ids:
+            got = read.get(tid) or {}
+            if got.get("decisions"):
+                for n in got["decisions"]:
+                    by_number.setdefault(int(n), []).append(tid)
             else:
-                by_file.setdefault(g["file"], []).append(g["id"])
+                by_file.setdefault(str(got.get("file") or tid.split("::")[0]), []).append(tid)
         cost = dict(idea_fix_stage.COST) if way == "dev" else None           # what its stage again is capped at: the runner gives a task's run no cap, so not known yet
         return {"idea": slug, "way": way,
                 "failing": [{"number": n, "title": titles.get(n, ""), "ids": v} for n, v in sorted(by_number.items())],
                 "files": [{"file": f, "ids": v} for f, v in sorted(by_file.items())],
-                "agreeing": [{"number": n, "title": titles.get(n, "")} for n in decision_refs.named_by(repo, ran) if n not in by_number],
+                "agreeing": [{"number": n, "title": titles.get(n, "")} for n in sorted({int(x) for x in named.get("files") or []}) if n not in by_number],
                 "cost": cost}
 
 
@@ -105,7 +118,7 @@ class Battle:
         slug, i = self._goal(args), self.i
         if goal_branch.in_use(i.state_dir, slug) or ideas.state(i.state_dir, slug)["state"] != "done":
             raise IdeasError(lexicon.term("fix_not_done"))
-        _way, ids, _ran = self._last_gate(slug)
+        _way, ids, _ran, _named = self._last_gate(slug)
         if not ids:
             raise IdeasError(lexicon.term("fix_not_red").replace("<way>", "main"))
         root = i.root()

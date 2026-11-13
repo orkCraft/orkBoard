@@ -10,7 +10,8 @@
     goal_branch.row(state_dir, slug, review)                    # `{goal_branch, waits_for_dev, dev_why}` for the Board's row (empty for a goal with none)
 
 **The branch is `goal/<slug>`, never `idea/<slug>`**: git cannot hold a ref `idea/x` and `idea/x/k1` (a task's), so the goal's is under `goal/`.
-**Old goals and new ones are told apart by a file**: `<state>/ideas/<slug>/goal_branch.json` (`branch`, `from`, `at`, `synced`, `ready`, `blocked`, `blocked_kind`, `untested_ok`, `merged`; a red gate on the way to dev adds `failing`, the failing test ids, and `files`, the test files the gate ran).
+**Old goals and new ones are told apart by a file**: `<state>/ideas/<slug>/goal_branch.json` (`branch`, `from`, `at`, `synced`, `ready`, `blocked`, `blocked_kind`, `untested_ok`, `merged`; a red gate on the way to dev adds `failing`, the failing test ids, `files`, the test files the gate ran, and
+`named`, the §N those name read in the worktree the gate ran in before it is removed: `realm/decision_refs.py` `of_run`).
 It is laid when a goal's first task starts and nothing of it has landed in dev (no task `merged` with a commit); a goal with such a task and no file is
 an old goal at work in dev, and its tasks land in dev as before. Once `merged` is set (the branch is gone) the goal lands in dev as before, so a goal
 sent back to work after dev goes on there. Nothing here pushes a goal's branch; dev is pushed when the project pushes after merging.
@@ -28,14 +29,14 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard import brand
-from orkboard.realm import dep_links, gate_config, gate_rerun, lexicon, worktrees
+from orkboard.realm import decision_refs, dep_links, gate_config, gate_rerun, lexicon, worktrees
 from orkboard.realm.idea_git import GateRun, IdeaGit, _git, _ok
 
 PREFIX = "goal/"
 FILE = "goal_branch.json"
 TRIES = 3                                   # dev moved while the tests ran: the merge and the tests are made again, this many times
 WHY_MAX = 600
-_NO_RED = {"failing": [], "files": []}      # what a red gate kept (stage E): the failing test ids and the test files it ran, cleared with the block
+_NO_RED = {"failing": [], "files": [], "named": {}}     # what a red gate kept (stages E, N3): the failing test ids, the test files it ran and the §N they name where it ran, cleared with the block
 
 
 def words(key: str, **fill: str) -> str:
@@ -203,6 +204,13 @@ def _trial(git: IdeaGit, tip: str) -> Path:
     return path
 
 
+def _kept(path: Path, run: GateRun) -> dict:
+    """What a red gate keeps (stages E and N3), read in the worktree it ran in, before that worktree is removed: the failing test ids, the test files it ran,
+    and `named`, the §N those name there (`decision_refs.of_run`), so a test only the goal's branch holds is read as the goal wrote it."""
+    failing, files = gate_rerun.ids_failing(run.out), list(run.files)
+    return {"failing": failing, "files": files, "named": decision_refs.of_run(path, failing, files)}
+
+
 def _red(run: GateRun, dev: str = "dev") -> str:
     if run.env:
         return words("dev_could_not_run", why=run.env)
@@ -249,13 +257,13 @@ def to_dev(git: IdeaGit, state_dir: Path, slug: str, dev: str, cancel: threading
             path = _trial(git, tip)
             try:
                 run = git.gate_run(path, old, cancel)
+                red = not run.ok and not run.env
+                kept = _kept(path, run) if red else _NO_RED
             finally:
                 git.remove(path)
             if not run.ok or run.env or not (run.ran or run.docs or got.get("untested_ok")):         # a gate that ran no test is no green (a goal of documents only has none to run), unless the person merged a result no test ran on
                 why = _red(run, dev)
-                red = not run.ok and not run.env
-                update(state_dir, slug, blocked=why, blocked_kind="env" if run.env else "red" if not run.ok else "no_tests",
-                       failing=gate_rerun.ids_failing(run.out) if red else [], files=list(run.files) if red else [])
+                update(state_dir, slug, blocked=why, blocked_kind="env" if run.env else "red" if not run.ok else "no_tests", **kept)
                 raise GoalRed(why)
         with git.lock:
             if _ok(_git(git.root, "rev-parse", f"refs/heads/{dev}")) != old \
